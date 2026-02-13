@@ -1,0 +1,41 @@
+{
+  "name": "ImmoParticuliers - Gestion Locative",
+  "short_name": "ImmoParticuliers",
+  "description": "Plateforme de gestion locative entre particuliers. Publiez vos annonces, gérez vos visites et communiquez directement avec les locataires.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "lifestyle", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Rechercher",
+      "short_name": "Recherche",
+      "description": "Rechercher des propriétés",
+      "url": "/search"
+    },
+    {
+      "name": "Mes Messages",
+      "short_name": "Messages",
+      "description": "Accéder à mes messages",
+      "url": "/messages"
+    },
+    {
+      "name": "Mes Visites",
+      "short_name": "Visites",
+      "description": "Gérer mes visites",
+      "url": "/my-bookings"
+    }
+  ],
+  "prefer_related_applications": false
+}

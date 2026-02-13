@@ -1,0 +1,410 @@
+// Prisma Schema for Plateforme Gestion Locative
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserRole {
+  TENANT      // Locataire
+  OWNER       // Propriétaire
+  ADMIN       // Admin plateforme
+}
+
+enum PropertyType {
+  APARTMENT   // Appartement
+  HOUSE       // Maison
+  STUDIO      // Studio
+  DUPLEX      // Duplex
+  LOFT        // Loft
+}
+
+enum PropertyStatus {
+  AVAILABLE   // Disponible
+  OCCUPIED    // Occupé
+  RESERVED    // Réservé
+  DRAFT       // Brouillon
+}
+
+enum BookingStatus {
+  PENDING     // En attente
+  CONFIRMED   // Confirmée
+  CANCELLED   // Annulée
+  COMPLETED   // Terminée
+}
+
+enum ContractStatus {
+  DRAFT       // Brouillon
+  ACTIVE      // Actif
+  EXPIRED     // Expiré
+  TERMINATED  // Résilié
+}
+
+enum DateOverrideType {
+  BLOCKED     // Bloquer une date (aucune visite)
+  EXTRA       // Ajouter une dispo exceptionnelle
+}
+
+// ============================================
+// MODELS
+// ============================================
+
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  password          String    // bcrypt hashed
+  role              UserRole  @default(TENANT)
+
+  // Personal Information
+  firstName         String
+  lastName          String
+  phone             String?
+  avatar            String?
+  bio               String?   @db.Text
+
+  // Verification
+  emailVerified     Boolean   @default(false)
+  emailVerifiedAt   DateTime?
+  phoneVerified     Boolean   @default(false)
+  phoneVerifiedAt   DateTime?
+
+  // Timestamps
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  lastLoginAt       DateTime?
+
+  // Relations
+  ownedProperties     Property[]       @relation("PropertyOwner")
+  bookings            Booking[]        @relation("BookingTenant")
+  sentMessages        Message[]        @relation("MessageSender")
+  receivedMessages    Message[]        @relation("MessageReceiver")
+  tenantContracts     Contract[]       @relation("ContractTenant")
+  ownerContracts      Contract[]       @relation("ContractOwner")
+  favorites           Favorite[]
+  notifications       Notification[]
+  refreshTokens       RefreshToken[]
+  conversationsUser1  Conversation[]   @relation("ConversationUser1")
+  conversationsUser2  Conversation[]   @relation("ConversationUser2")
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
+
+model Property {
+  id            String         @id @default(uuid())
+  ownerId       String
+  owner         User           @relation("PropertyOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  // Basic Information
+  title         String
+  description   String         @db.Text
+  type          PropertyType
+  status        PropertyStatus @default(DRAFT)
+
+  // Location
+  address       String
+  city          String
+  postalCode    String
+  country       String         @default("France")
+  latitude      Float?
+  longitude     Float?
+
+  // Characteristics
+  bedrooms      Int
+  bathrooms     Int
+  surface       Float          // m²
+  floor         Int?
+  totalFloors   Int?
+  furnished     Boolean        @default(false)
+
+  // Financial
+  price         Float          // Monthly rent
+  charges       Float?         // Charges
+  deposit       Float?         // Security deposit
+
+  // Media
+  images        String[]       // Array of image URLs
+  virtualTour   String?        // 360° tour URL
+
+  // Amenities
+  hasParking    Boolean        @default(false)
+  hasBalcony    Boolean        @default(false)
+  hasElevator   Boolean        @default(false)
+  hasGarden     Boolean        @default(false)
+  amenities     String[]       // ["wifi", "dishwasher", "ac", ...]
+
+  // Availability
+  availableFrom DateTime?
+  visitDuration Int            @default(30) // Duration of visit slots in minutes
+
+  // Statistics
+  views         Int            @default(0)
+  contactCount  Int            @default(0)
+
+  // Timestamps
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  publishedAt   DateTime?
+
+  // Relations
+  bookings               Booking[]
+  favorites              Favorite[]
+  contracts              Contract[]
+  visitAvailabilitySlots VisitAvailabilitySlot[]
+  visitDateOverrides     VisitDateOverride[]
+
+  @@index([ownerId])
+  @@index([city])
+  @@index([status])
+  @@index([type])
+  @@index([price])
+  @@index([createdAt])
+  @@map("properties")
+}
+
+model Booking {
+  id          String        @id @default(uuid())
+  propertyId  String
+  property    Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  tenantId    String
+  tenant      User          @relation("BookingTenant", fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Visit Details
+  visitDate   DateTime      // Date of the visit
+  visitTime   String        // Time slot (e.g., "14:00")
+  duration    Int           @default(30) // Duration in minutes
+
+  status      BookingStatus @default(PENDING)
+
+  // Notes
+  tenantNotes String?       @db.Text
+  ownerNotes  String?       @db.Text
+
+  // Status tracking
+  confirmedAt         DateTime?
+  cancelledAt         DateTime?
+  cancellationReason  String?   @db.Text
+
+  // Timestamps
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([propertyId])
+  @@index([tenantId])
+  @@index([visitDate])
+  @@index([status])
+  @@index([createdAt])
+  @@map("bookings")
+}
+
+model Conversation {
+  id            String    @id @default(uuid())
+
+  // Participants (always 2 users in a conversation)
+  user1Id       String
+  user1         User      @relation("ConversationUser1", fields: [user1Id], references: [id], onDelete: Cascade)
+
+  user2Id       String
+  user2         User      @relation("ConversationUser2", fields: [user2Id], references: [id], onDelete: Cascade)
+
+  // Last message info (denormalized for performance)
+  lastMessageAt     DateTime?
+  lastMessageText   String?   @db.Text
+
+  // Unread counts
+  unreadCountUser1  Int       @default(0)
+  unreadCountUser2  Int       @default(0)
+
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  messages      Message[]
+
+  @@unique([user1Id, user2Id])
+  @@index([user1Id])
+  @@index([user2Id])
+  @@index([lastMessageAt])
+  @@map("conversations")
+}
+
+model Message {
+  id              String       @id @default(uuid())
+
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  senderId        String
+  sender          User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  receiverId      String
+  receiver        User         @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  // Content
+  content         String       @db.Text
+  attachments     String[]     // Array of file URLs
+
+  // Read status
+  isRead          Boolean      @default(false)
+  readAt          DateTime?
+
+  // Timestamps
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+model Contract {
+  id          String         @id @default(uuid())
+
+  propertyId  String
+  property    Property       @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  tenantId    String
+  tenant      User           @relation("ContractTenant", fields: [tenantId], references: [id], onDelete: Cascade)
+
+  ownerId     String
+  owner       User           @relation("ContractOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  status      ContractStatus @default(DRAFT)
+
+  // Contract Details
+  startDate   DateTime
+  endDate     DateTime
+
+  // Financial Terms
+  monthlyRent Float
+  charges     Float?
+  deposit     Float?
+
+  // Documents
+  pdfUrl          String?
+  signedByTenant  DateTime?
+  signedByOwner   DateTime?
+
+  // Additional Terms
+  terms           String?       @db.Text
+
+  // Timestamps
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([propertyId])
+  @@index([tenantId])
+  @@index([ownerId])
+  @@index([status])
+  @@index([startDate])
+  @@index([endDate])
+  @@map("contracts")
+}
+
+model Favorite {
+  id          String   @id @default(uuid())
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, propertyId])
+  @@index([userId])
+  @@index([propertyId])
+  @@map("favorites")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Notification Details
+  type      String   // "booking_created", "message_received", "payment_received", etc.
+  title     String
+  message   String   @db.Text
+
+  // Read status
+  isRead    Boolean  @default(false)
+  readAt    DateTime?
+
+  // Metadata (JSON for flexible data)
+  metadata  Json?
+
+  // Action link
+  actionUrl String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model VisitAvailabilitySlot {
+  id          String   @id @default(uuid())
+
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  dayOfWeek   Int      // 0 = Dimanche, 1 = Lundi, ..., 6 = Samedi
+  startTime   String   // "09:00"
+  endTime     String   // "18:00"
+
+  createdAt   DateTime @default(now())
+
+  @@index([propertyId])
+  @@map("visit_availability_slots")
+}
+
+model VisitDateOverride {
+  id          String           @id @default(uuid())
+
+  propertyId  String
+  property    Property         @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  date        DateTime         // Date spécifique
+  type        DateOverrideType // BLOCKED ou EXTRA
+
+  startTime   String?          // Requis si type = EXTRA
+  endTime     String?          // Requis si type = EXTRA
+
+  createdAt   DateTime         @default(now())
+
+  @@index([propertyId])
+  @@index([date])
+  @@map("visit_date_overrides")
+}

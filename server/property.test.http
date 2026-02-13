@@ -1,0 +1,201 @@
+### Plateforme Gestion Locative - Property API Tests
+### Base URL
+@baseUrl = http://localhost:5000/api/v1
+@accessToken = YOUR_ACCESS_TOKEN_HERE
+
+###############################################
+# 1. CREATE PROPERTY (Owner only)
+###############################################
+POST {{baseUrl}}/properties
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "title": "Appartement 3P Centre-Ville Montpellier",
+  "description": "Magnifique appartement de 75m² en plein centre-ville de Montpellier. Lumineux, refait à neuf, avec balcon. Proche de toutes commodités.",
+  "type": "APARTMENT",
+  "address": "15 Rue de la Loge",
+  "city": "Montpellier",
+  "postalCode": "34000",
+  "country": "France",
+  "latitude": 43.6108,
+  "longitude": 3.8767,
+  "bedrooms": 2,
+  "bathrooms": 1,
+  "surface": 75,
+  "floor": 3,
+  "totalFloors": 5,
+  "furnished": true,
+  "price": 1200,
+  "charges": 150,
+  "deposit": 2400,
+  "images": [],
+  "hasParking": false,
+  "hasBalcony": true,
+  "hasElevator": true,
+  "hasGarden": false,
+  "amenities": ["wifi", "dishwasher", "washing_machine", "ac"],
+  "availableFrom": "2026-03-01T00:00:00.000Z"
+}
+
+###############################################
+# 2. CREATE ANOTHER PROPERTY - House
+###############################################
+POST {{baseUrl}}/properties
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "title": "Maison Familiale avec Jardin - Toulouse",
+  "description": "Superbe maison de 120m² avec grand jardin, idéale pour une famille. 4 chambres, garage, calme.",
+  "type": "HOUSE",
+  "address": "42 Avenue Jean Jaurès",
+  "city": "Toulouse",
+  "postalCode": "31000",
+  "bedrooms": 4,
+  "bathrooms": 2,
+  "surface": 120,
+  "furnished": false,
+  "price": 1800,
+  "charges": 0,
+  "deposit": 3600,
+  "hasParking": true,
+  "hasBalcony": false,
+  "hasElevator": false,
+  "hasGarden": true,
+  "amenities": ["garage", "garden", "terrace"]
+}
+
+###############################################
+# 3. GET ALL PROPERTIES (Public)
+###############################################
+GET {{baseUrl}}/properties
+Content-Type: application/json
+
+###############################################
+# 4. GET PROPERTIES WITH FILTERS
+###############################################
+GET {{baseUrl}}/properties?city=Montpellier&type=APARTMENT&minPrice=800&maxPrice=1500&bedrooms=2
+Content-Type: application/json
+
+###############################################
+# 5. GET PROPERTY BY ID
+###############################################
+GET {{baseUrl}}/properties/PROPERTY_ID_HERE
+Content-Type: application/json
+
+###############################################
+# 6. GET PROPERTY BY ID WITH OWNER INFO
+###############################################
+GET {{baseUrl}}/properties/PROPERTY_ID_HERE?includeOwner=true
+Content-Type: application/json
+
+###############################################
+# 7. GET MY PROPERTIES (Owner)
+###############################################
+GET {{baseUrl}}/properties/owner/me
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+###############################################
+# 8. GET MY PROPERTIES WITH PAGINATION
+###############################################
+GET {{baseUrl}}/properties/owner/me?page=1&limit=10&sortBy=createdAt&sortOrder=desc
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+###############################################
+# 9. GET MY STATISTICS (Owner)
+###############################################
+GET {{baseUrl}}/properties/owner/me/statistics
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+###############################################
+# 10. UPDATE PROPERTY
+###############################################
+PUT {{baseUrl}}/properties/PROPERTY_ID_HERE
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "title": "Appartement 3P Centre-Ville Montpellier - Mise à jour",
+  "price": 1250,
+  "furnished": true,
+  "description": "Description mise à jour"
+}
+
+###############################################
+# 11. PUBLISH PROPERTY (Draft -> Available)
+###############################################
+PUT {{baseUrl}}/properties/PROPERTY_ID_HERE/publish
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+###############################################
+# 12. MARK AS OCCUPIED
+###############################################
+PUT {{baseUrl}}/properties/PROPERTY_ID_HERE/occupy
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+###############################################
+# 13. SEARCH PROPERTIES BY TEXT
+###############################################
+GET {{baseUrl}}/properties/search?q=Montpellier&page=1&limit=10
+Content-Type: application/json
+
+###############################################
+# 14. CONTACT PROPERTY OWNER (Increment counter)
+###############################################
+POST {{baseUrl}}/properties/PROPERTY_ID_HERE/contact
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+###############################################
+# 15. DELETE PROPERTY
+###############################################
+DELETE {{baseUrl}}/properties/PROPERTY_ID_HERE
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+###############################################
+# UPLOAD TESTS
+###############################################
+
+### 16. Upload Single Image
+POST {{baseUrl}}/upload/image
+Authorization: Bearer {{accessToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="image"; filename="property.jpg"
+Content-Type: image/jpeg
+
+< /path/to/your/image.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+###############################################
+# FILTER EXAMPLES
+###############################################
+
+### Get apartments in Montpellier, 2+ bedrooms, price 800-1500€
+GET {{baseUrl}}/properties?city=Montpellier&type=APARTMENT&bedrooms=2&minPrice=800&maxPrice=1500
+
+### Get furnished properties with parking
+GET {{baseUrl}}/properties?furnished=true&hasParking=true
+
+### Get properties with specific amenities
+GET {{baseUrl}}/properties?amenities=wifi&amenities=ac
+
+### Get available properties only
+GET {{baseUrl}}/properties?status=AVAILABLE
+
+### Get houses with garden
+GET {{baseUrl}}/properties?type=HOUSE&hasGarden=true
+
+### Get properties sorted by price (ascending)
+GET {{baseUrl}}/properties?sortBy=price&sortOrder=asc
+
+### Get properties with pagination
+GET {{baseUrl}}/properties?page=2&limit=5

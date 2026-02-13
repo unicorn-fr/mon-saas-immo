@@ -1,0 +1,193 @@
+### Plateforme Gestion Locative - Authentication API Tests
+### Base URL
+@baseUrl = http://localhost:5000/api/v1
+@accessToken =
+@refreshToken =
+
+###############################################
+# 1. REGISTER - Create new Owner account
+###############################################
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "owner.test@example.com",
+  "password": "OwnerPass123",
+  "firstName": "Jean",
+  "lastName": "Propriétaire",
+  "role": "OWNER",
+  "phone": "+33612345678"
+}
+
+###############################################
+# 2. REGISTER - Create new Tenant account
+###############################################
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "tenant.test@example.com",
+  "password": "TenantPass123",
+  "firstName": "Marie",
+  "lastName": "Locataire",
+  "role": "TENANT",
+  "phone": "+33687654321"
+}
+
+###############################################
+# 3. LOGIN - Owner
+###############################################
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "owner.test@example.com",
+  "password": "OwnerPass123"
+}
+
+###############################################
+# 4. LOGIN - Tenant
+###############################################
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "tenant.test@example.com",
+  "password": "TenantPass123"
+}
+
+###############################################
+# 5. GET CURRENT USER PROFILE
+###############################################
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{accessToken}}
+
+###############################################
+# 6. REFRESH TOKEN
+###############################################
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+###############################################
+# 7. CHANGE PASSWORD
+###############################################
+POST {{baseUrl}}/auth/change-password
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "currentPassword": "OwnerPass123",
+  "newPassword": "NewOwnerPass456"
+}
+
+###############################################
+# 8. FORGOT PASSWORD
+###############################################
+POST {{baseUrl}}/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "owner.test@example.com"
+}
+
+###############################################
+# 9. LOGOUT
+###############################################
+POST {{baseUrl}}/auth/logout
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+###############################################
+# 10. LOGOUT FROM ALL DEVICES
+###############################################
+POST {{baseUrl}}/auth/logout-all
+Authorization: Bearer {{accessToken}}
+
+###############################################
+# ERROR CASES
+###############################################
+
+### Register - Missing fields
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "Test123"
+}
+
+### Register - Weak password
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "weak@example.com",
+  "password": "weak",
+  "firstName": "Test",
+  "lastName": "User",
+  "role": "TENANT"
+}
+
+### Register - Invalid email
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "invalid-email",
+  "password": "Test123Pass",
+  "firstName": "Test",
+  "lastName": "User",
+  "role": "TENANT"
+}
+
+### Register - Duplicate email (should fail after first registration)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "owner.test@example.com",
+  "password": "AnotherPass123",
+  "firstName": "Duplicate",
+  "lastName": "User",
+  "role": "OWNER"
+}
+
+### Login - Wrong password
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "owner.test@example.com",
+  "password": "WrongPassword123"
+}
+
+### Login - Non-existent user
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "nonexistent@example.com",
+  "password": "Test123Pass"
+}
+
+### Get Profile - No token
+GET {{baseUrl}}/auth/me
+
+### Get Profile - Invalid token
+GET {{baseUrl}}/auth/me
+Authorization: Bearer invalid.token.here
+
+### Refresh - Invalid refresh token
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "invalid.refresh.token"
+}

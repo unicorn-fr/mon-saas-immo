@@ -1,0 +1,14 @@
+{
+  "name": "immoparticuliers-platform",
+  "version": "1.0.0",
+  "description": "Plateforme de gestion locative entre particuliers",
+  "scripts": {
+    "start": "echo '🚀 Lancement de l\\'application...' && echo '\n📦 Backend: http://localhost:5000' && echo '🌐 Frontend: http://localhost:5173\n' && (cd server && npm run dev) & (cd client && npm run dev)",
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install",
+    "db:reset": "cd server && npx prisma migrate reset --force && npx tsx prisma/seed.ts",
+    "db:seed": "cd server && npx tsx prisma/seed.ts"
+  },
+  "keywords": ["immobilier", "location", "gestion-locative"],
+  "author": "ImmoParticuliers",
+  "license": "MIT"
+}
