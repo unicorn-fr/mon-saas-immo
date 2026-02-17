@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { messageService } from '../services/message.service'
+import { messageService } from '../services/message.service.js'
 import { AuthRequest } from '../middlewares/auth.middleware.js'
 
 class MessageController {

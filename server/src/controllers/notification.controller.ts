@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { notificationService } from '../services/notification.service'
+import { notificationService } from '../services/notification.service.js'
 import { AuthRequest } from '../middlewares/auth.middleware.js'
 
 class NotificationController {
