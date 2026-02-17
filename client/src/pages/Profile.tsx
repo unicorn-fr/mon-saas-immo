@@ -104,7 +104,7 @@ export default function Profile() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Profil vérifié</span>
-                    {user?.isVerified ? (
+                    {user?.emailVerified ? (
                       <CheckCircle className="w-5 h-5 text-green-600" />
                     ) : (
                       <XCircle className="w-5 h-5 text-red-600" />
