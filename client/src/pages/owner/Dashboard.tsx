@@ -140,24 +140,6 @@ export default function Dashboard() {
   return (
     <Layout>
       <div className="bg-gray-50">
-        {/* Header */}
-        <div className="bg-white border-b">
-          <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                <BarChart3 className="w-7 h-7 text-primary-600" />
-                Tableau de Bord
-              </h1>
-              <p className="text-gray-600 mt-1">Vue d'ensemble de votre activité</p>
-            </div>
-            <Link to="/properties/new" className="btn btn-primary">
-              <Plus className="w-5 h-5 mr-2" />
-              Ajouter un bien
-            </Link>
-          </div>
-        </div>
-      </div>
 
       {/* Content */}
       <div className="container mx-auto px-4 py-8">

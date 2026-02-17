@@ -2,6 +2,18 @@ import axios from 'axios'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'
 
+let isRedirecting = false
+
+const clearAuthAndRedirect = () => {
+  localStorage.removeItem('accessToken')
+  localStorage.removeItem('refreshToken')
+  localStorage.removeItem('auth-storage')
+  if (!isRedirecting) {
+    isRedirecting = true
+    window.location.href = '/login'
+  }
+}
+
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -35,12 +47,9 @@ api.interceptors.response.use(
 
       try {
         const refreshToken = localStorage.getItem('refreshToken')
-        
+
         if (!refreshToken) {
-          // No refresh token, redirect to login
-          localStorage.removeItem('accessToken')
-          localStorage.removeItem('refreshToken')
-          window.location.href = '/login'
+          clearAuthAndRedirect()
           return Promise.reject(error)
         }
 
@@ -61,10 +70,7 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${accessToken}`
         return api(originalRequest)
       } catch (refreshError) {
-        // Refresh failed, clear tokens and redirect to login
-        localStorage.removeItem('accessToken')
-        localStorage.removeItem('refreshToken')
-        window.location.href = '/login'
+        clearAuthAndRedirect()
         return Promise.reject(refreshError)
       }
     }

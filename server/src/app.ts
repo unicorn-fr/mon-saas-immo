@@ -30,7 +30,7 @@ app.use(helmet())
 // CORS - restrict to allowed origin in production
 app.use(
   cors({
-    origin: '*',
+    origin: env.IS_PRODUCTION ? env.CORS_ORIGIN : true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

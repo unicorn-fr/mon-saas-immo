@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useProperties } from '../../hooks/useProperties'
+import { useContractStore } from '../../store/contractStore'
+import { useAuth } from '../../hooks/useAuth'
 import { Property, PropertyStatus, PROPERTY_STATUS } from '../../types/property.types'
 import {
   Home,
@@ -20,6 +22,7 @@ import { StatusChangeModal } from '../../components/property/StatusChangeModal'
 
 export default function MyProperties() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const {
     myProperties,
     myPropertiesTotal,
@@ -30,6 +33,7 @@ export default function MyProperties() {
     changePropertyStatus,
     setError,
   } = useProperties()
+  const { createContract } = useContractStore()
 
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [statusModalProperty, setStatusModalProperty] = useState<Property | null>(null)
@@ -53,8 +57,26 @@ export default function MyProperties() {
     }
   }
 
-  const handleChangeStatus = async (status: PropertyStatus) => {
+  const handleChangeStatus = async (status: PropertyStatus, tenantId?: string) => {
     if (!statusModalProperty) return
+
+    // If setting to OCCUPIED with a tenant, create a draft contract
+    if (status === 'OCCUPIED' && tenantId && user) {
+      const now = new Date()
+      const oneYearLater = new Date(now)
+      oneYearLater.setFullYear(oneYearLater.getFullYear() + 1)
+
+      await createContract({
+        propertyId: statusModalProperty.id,
+        tenantId,
+        startDate: now.toISOString().split('T')[0],
+        endDate: oneYearLater.toISOString().split('T')[0],
+        monthlyRent: statusModalProperty.price,
+        charges: statusModalProperty.charges || undefined,
+        deposit: statusModalProperty.deposit || undefined,
+      })
+    }
+
     await changePropertyStatus(statusModalProperty.id, status)
   }
 

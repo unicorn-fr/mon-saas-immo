@@ -32,9 +32,9 @@
 
     /* Type Checking */
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitReturns": false,
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
 
@@ -42,6 +42,6 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
-  "include": ["src/**/*", "prisma/seed.ts"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

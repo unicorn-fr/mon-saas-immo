@@ -47,12 +47,6 @@ export const Header = () => {
                 {user?.role === 'OWNER' && (
                   <>
                     <Link
-                      to="/dashboard/owner"
-                      className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
-                    >
-                      Tableau de bord
-                    </Link>
-                    <Link
                       to="/properties/owner/me"
                       className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
                     >
@@ -70,12 +64,6 @@ export const Header = () => {
                 {/* Tenant Links */}
                 {user?.role === 'TENANT' && (
                   <>
-                    <Link
-                      to="/dashboard/tenant"
-                      className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
-                    >
-                      Tableau de bord
-                    </Link>
                     <Link
                       to="/favorites"
                       className="text-gray-700 hover:text-primary-600 font-medium transition-colors flex items-center gap-1"
@@ -204,14 +192,6 @@ export const Header = () => {
 
             {isAuthenticated ? (
               <>
-                <Link
-                  to={getDashboardLink()}
-                  className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
-                  onClick={() => setShowMobileMenu(false)}
-                >
-                  Tableau de bord
-                </Link>
-
                 {user?.role === 'OWNER' && (
                   <>
                     <Link

@@ -1,4 +1,4 @@
-import api from './api'
+import { apiClient as api } from './api.service'
 import { PlatformStatistics, AdminUser, RecentActivity } from '../types/admin.types'
 
 interface UsersResponse {

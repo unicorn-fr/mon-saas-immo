@@ -503,8 +503,8 @@ class PropertyService {
    * Change property status (AVAILABLE, OCCUPIED, DRAFT)
    */
   async changePropertyStatus(id: string, ownerId: string, newStatus: PropertyStatus) {
-    const allowedStatuses = [PropertyStatus.AVAILABLE, PropertyStatus.OCCUPIED, PropertyStatus.DRAFT]
-    if (!allowedStatuses.includes(newStatus)) {
+    const allowedStatuses: PropertyStatus[] = [PropertyStatus.AVAILABLE, PropertyStatus.OCCUPIED, PropertyStatus.DRAFT]
+    if (!allowedStatuses.includes(newStatus as PropertyStatus)) {
       throw new Error('Invalid status. Allowed: AVAILABLE, OCCUPIED, DRAFT')
     }
 

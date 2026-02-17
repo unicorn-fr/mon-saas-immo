@@ -1,6 +1,8 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'
+
+let isRedirecting = false
 
 /**
  * In-memory token storage (per-tab, not shared between browser tabs)
@@ -96,8 +98,12 @@ apiClient.interceptors.response.use(
         // Refresh failed, clear tokens and redirect to login
         setApiTokens(null, null)
         localStorage.removeItem('user')
+        localStorage.removeItem('auth-storage')
 
-        window.location.href = '/login'
+        if (!isRedirecting) {
+          isRedirecting = true
+          window.location.href = '/login'
+        }
 
         return Promise.reject(refreshError)
       }

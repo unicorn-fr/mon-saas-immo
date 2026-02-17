@@ -1,4 +1,4 @@
-import api from './api'
+import { apiClient as api } from './api.service'
 import {
   Contract,
   CreateContractInput,

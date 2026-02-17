@@ -319,8 +319,8 @@ class ContractService {
     }
 
     // Allow signing from DRAFT, SENT, SIGNED_OWNER, SIGNED_TENANT
-    const allowedStatuses = [ContractStatus.DRAFT, ContractStatus.SENT, ContractStatus.SIGNED_OWNER, ContractStatus.SIGNED_TENANT]
-    if (!allowedStatuses.includes(contract.status)) {
+    const allowedStatuses: ContractStatus[] = [ContractStatus.DRAFT, ContractStatus.SENT, ContractStatus.SIGNED_OWNER, ContractStatus.SIGNED_TENANT]
+    if (!allowedStatuses.includes(contract.status as ContractStatus)) {
       throw new Error('This contract cannot be signed in its current status')
     }
 

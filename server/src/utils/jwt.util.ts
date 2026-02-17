@@ -12,10 +12,10 @@ export interface JwtPayload {
  */
 export const generateAccessToken = (payload: JwtPayload): string => {
   return jwt.sign(payload, env.JWT_SECRET, {
-    expiresIn: env.JWT_ACCESS_EXPIRATION, // 15 minutes
+    expiresIn: env.JWT_ACCESS_EXPIRATION as string,
     issuer: 'immo-particuliers',
     audience: 'immo-particuliers-api',
-  })
+  } as jwt.SignOptions)
 }
 
 /**
@@ -23,10 +23,10 @@ export const generateAccessToken = (payload: JwtPayload): string => {
  */
 export const generateRefreshToken = (payload: JwtPayload): string => {
   return jwt.sign(payload, env.JWT_REFRESH_SECRET, {
-    expiresIn: env.JWT_REFRESH_EXPIRATION, // 7 days
+    expiresIn: env.JWT_REFRESH_EXPIRATION as string,
     issuer: 'immo-particuliers',
     audience: 'immo-particuliers-api',
-  })
+  } as jwt.SignOptions)
 }
 
 /**
