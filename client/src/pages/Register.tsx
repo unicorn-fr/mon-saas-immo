@@ -1,6 +1,6 @@
 import { useState, FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Home, Mail, Lock, User, Users, AlertCircle, CheckCircle } from 'lucide-react'
+import { Home, Mail, Lock, Users, AlertCircle, CheckCircle } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { UserRole } from '../types/auth.types'
 
@@ -19,7 +19,7 @@ export default function Register() {
     terms: false,
   })
   const [error, setError] = useState('')
-  const [passwordErrors, setPasswordErrors] = useState<string[]>([])
+  const [, setPasswordErrors] = useState<string[]>([])
 
   // Password validation
   const validatePassword = (password: string) => {

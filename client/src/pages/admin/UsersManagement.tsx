@@ -4,7 +4,6 @@ import { AdminUser } from '../../types/admin.types'
 import {
   Users,
   Search,
-  Filter,
   MoreVertical,
   Shield,
   Home as HomeIcon,
@@ -25,7 +24,7 @@ export default function UsersManagement() {
   const [searchQuery, setSearchQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState<string>('ALL')
   const [emailVerifiedFilter, setEmailVerifiedFilter] = useState<string>('ALL')
-  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null)
+  const [, setSelectedUser] = useState<AdminUser | null>(null)
   const [showActionMenu, setShowActionMenu] = useState<string | null>(null)
 
   const limit = 20

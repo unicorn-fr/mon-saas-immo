@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
   Calendar as CalendarIcon,
-  Filter,
   Search,
   TrendingUp,
   Clock,

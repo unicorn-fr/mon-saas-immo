@@ -27,7 +27,7 @@ export default function SearchProperties() {
   const { loadFavorites } = useFavoriteStore()
   const {
     properties,
-    propertiesTotal,
+    totalProperties: propertiesTotal,
     fetchProperties,
     searchProperties,
     isLoading,

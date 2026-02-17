@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Heart, Loader, Search, Grid, List, SlidersHorizontal } from 'lucide-react'
+import { Heart, Loader, Search, Grid, List } from 'lucide-react'
 import { useProperties } from '../../hooks/useProperties'
 import { useFavoriteStore } from '../../store/favoriteStore'
 import { PropertyCard } from '../../components/property/PropertyCard'

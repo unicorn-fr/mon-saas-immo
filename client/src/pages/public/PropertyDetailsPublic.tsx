@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import {
-  ArrowLeft,
   MapPin,
   Bed,
   Bath,
@@ -9,7 +8,6 @@ import {
   Home as HomeIcon,
   CheckCircle,
   XCircle,
-  Euro,
   Calendar,
   Share2,
   Heart,
@@ -31,7 +29,7 @@ export default function PropertyDetailsPublic() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
-  const { currentProperty, fetchPropertyById, incrementViews, isLoading, error } = useProperties()
+  const { currentProperty, fetchPropertyById, isLoading, error } = useProperties()
   const { isFavorite, toggleFavorite, loadFavorites } = useFavoriteStore()
 
   const [selectedImage, setSelectedImage] = useState(0)
@@ -369,8 +367,8 @@ export default function PropertyDetailsPublic() {
                 address={property.address}
                 city={property.city}
                 postalCode={property.postalCode}
-                latitude={property.latitude}
-                longitude={property.longitude}
+                latitude={property.latitude ?? undefined}
+                longitude={property.longitude ?? undefined}
               />
             </div>
           </div>

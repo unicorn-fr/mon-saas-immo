@@ -113,7 +113,7 @@ export default function Profile() {
                 </div>
               </div>
 
-              {!user?.isVerified && (
+              {!user?.emailVerified && (
                 <div className="mt-6">
                   <button className="btn btn-primary w-full text-sm">
                     Vérifier mon profil

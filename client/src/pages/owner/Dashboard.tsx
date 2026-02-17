@@ -12,7 +12,6 @@ import {
   XCircle,
   Clock,
   Euro,
-  BarChart3,
   ArrowRight,
   MapPin,
   Bed,
@@ -329,7 +328,7 @@ export default function Dashboard() {
             </div>
 
             {/* Revenue Estimate (if properties have prices) */}
-            {statistics && statistics.total > 0 && (
+            {statistics && statistics.totalProperties > 0 && (
               <div className="card bg-gradient-to-br from-green-50 to-green-100 border-green-200">
                 <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                   <Euro className="w-5 h-5 text-green-600" />

@@ -59,7 +59,7 @@ interface PropertyActions {
   uploadImages: (files: File[]) => Promise<string[]>
 
   // Actions
-  contactProperty: (id: string) => Promise<void>
+  contactProperty: (id: string, contactData: { name: string; email: string; phone?: string; message: string }) => Promise<void>
 
   // State management
   setCurrentProperty: (property: Property | null) => void
@@ -89,7 +89,7 @@ const initialState: PropertyState = {
   error: null,
 }
 
-export const usePropertyStore = create<PropertyStore>((set, get) => ({
+export const usePropertyStore = create<PropertyStore>((set) => ({
   ...initialState,
 
   /**
@@ -376,9 +376,9 @@ export const usePropertyStore = create<PropertyStore>((set, get) => ({
   /**
    * Contact property owner
    */
-  contactProperty: async (id) => {
+  contactProperty: async (id, contactData) => {
     try {
-      await propertyService.contactProperty(id)
+      await propertyService.contactProperty(id, contactData)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to contact owner'
       set({ error: errorMessage })
