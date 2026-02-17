@@ -12,6 +12,8 @@ export interface CreateContractInput {
   charges?: number
   deposit?: number
   terms?: string
+  content?: any
+  customClauses?: any
 }
 
 export interface UpdateContractInput {
@@ -22,6 +24,8 @@ export interface UpdateContractInput {
   deposit?: number
   terms?: string
   status?: ContractStatus
+  content?: any
+  customClauses?: any
 }
 
 export interface ContractFilters {
@@ -38,17 +42,50 @@ export interface PaginationOptions {
   sortOrder?: 'asc' | 'desc'
 }
 
+const contractIncludes = {
+  property: {
+    select: {
+      id: true,
+      title: true,
+      address: true,
+      city: true,
+      postalCode: true,
+      type: true,
+      bedrooms: true,
+      bathrooms: true,
+      surface: true,
+      images: true,
+    },
+  },
+  tenant: {
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      phone: true,
+    },
+  },
+  owner: {
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      phone: true,
+    },
+  },
+}
+
 class ContractService {
   /**
    * Create a new contract
    */
   async createContract(data: CreateContractInput): Promise<Contract> {
-    // Validate dates
     if (new Date(data.startDate) >= new Date(data.endDate)) {
       throw new Error('End date must be after start date')
     }
 
-    // Check if property exists
     const property = await prisma.property.findUnique({
       where: { id: data.propertyId },
     })
@@ -57,12 +94,10 @@ class ContractService {
       throw new Error('Property not found')
     }
 
-    // Check if owner owns the property
     if (property.ownerId !== data.ownerId) {
       throw new Error('Unauthorized: You do not own this property')
     }
 
-    // Check if tenant exists
     const tenant = await prisma.user.findUnique({
       where: { id: data.tenantId },
     })
@@ -71,12 +106,11 @@ class ContractService {
       throw new Error('Tenant not found or invalid role')
     }
 
-    // Check for overlapping active contracts for this property
     const overlappingContract = await prisma.contract.findFirst({
       where: {
         propertyId: data.propertyId,
         status: {
-          in: [ContractStatus.ACTIVE, ContractStatus.DRAFT],
+          in: [ContractStatus.ACTIVE, ContractStatus.DRAFT, ContractStatus.SENT, ContractStatus.COMPLETED],
         },
         OR: [
           {
@@ -91,7 +125,6 @@ class ContractService {
       throw new Error('A contract already exists for this property during this period')
     }
 
-    // Create contract
     const contract = await prisma.contract.create({
       data: {
         propertyId: data.propertyId,
@@ -103,37 +136,11 @@ class ContractService {
         charges: data.charges,
         deposit: data.deposit,
         terms: data.terms,
+        content: data.content ?? undefined,
+        customClauses: data.customClauses ?? undefined,
         status: ContractStatus.DRAFT,
       },
-      include: {
-        property: {
-          select: {
-            id: true,
-            title: true,
-            address: true,
-            city: true,
-            postalCode: true,
-          },
-        },
-        tenant: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            phone: true,
-          },
-        },
-        owner: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            phone: true,
-          },
-        },
-      },
+      include: contractIncludes,
     })
 
     return contract
@@ -145,47 +152,13 @@ class ContractService {
   async getContractById(contractId: string, userId: string): Promise<Contract> {
     const contract = await prisma.contract.findUnique({
       where: { id: contractId },
-      include: {
-        property: {
-          select: {
-            id: true,
-            title: true,
-            address: true,
-            city: true,
-            postalCode: true,
-            type: true,
-            bedrooms: true,
-            bathrooms: true,
-            surface: true,
-            images: true,
-          },
-        },
-        tenant: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            phone: true,
-          },
-        },
-        owner: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            phone: true,
-          },
-        },
-      },
+      include: contractIncludes,
     })
 
     if (!contract) {
       throw new Error('Contract not found')
     }
 
-    // Check authorization
     if (contract.tenantId !== userId && contract.ownerId !== userId) {
       throw new Error('Unauthorized: You do not have access to this contract')
     }
@@ -203,24 +176,20 @@ class ContractService {
   ): Promise<Contract> {
     const contract = await prisma.contract.findUnique({
       where: { id: contractId },
-      include: { property: true },
     })
 
     if (!contract) {
       throw new Error('Contract not found')
     }
 
-    // Only owner can update contract
     if (contract.ownerId !== userId) {
       throw new Error('Unauthorized: Only the owner can update this contract')
     }
 
-    // Cannot update active or expired contracts
-    if (contract.status === ContractStatus.EXPIRED) {
-      throw new Error('Cannot update expired contract')
+    if (contract.status === ContractStatus.EXPIRED || contract.status === ContractStatus.COMPLETED || contract.status === ContractStatus.ACTIVE) {
+      throw new Error('Cannot update a contract in this status')
     }
 
-    // Validate dates if provided
     if (data.startDate && data.endDate) {
       if (new Date(data.startDate) >= new Date(data.endDate)) {
         throw new Error('End date must be after start date')
@@ -230,35 +199,7 @@ class ContractService {
     const updatedContract = await prisma.contract.update({
       where: { id: contractId },
       data,
-      include: {
-        property: {
-          select: {
-            id: true,
-            title: true,
-            address: true,
-            city: true,
-            postalCode: true,
-          },
-        },
-        tenant: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            phone: true,
-          },
-        },
-        owner: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            phone: true,
-          },
-        },
-      },
+      include: contractIncludes,
     })
 
     return updatedContract
@@ -276,12 +217,10 @@ class ContractService {
       throw new Error('Contract not found')
     }
 
-    // Only owner can delete contract
     if (contract.ownerId !== userId) {
       throw new Error('Unauthorized: Only the owner can delete this contract')
     }
 
-    // Can only delete draft contracts
     if (contract.status !== ContractStatus.DRAFT) {
       throw new Error('Can only delete draft contracts')
     }
@@ -303,7 +242,6 @@ class ContractService {
     const sortBy = pagination.sortBy || 'createdAt'
     const sortOrder = pagination.sortOrder || 'desc'
 
-    // Build where clause
     const where: any = {}
 
     if (filters.propertyId) where.propertyId = filters.propertyId
@@ -311,55 +249,141 @@ class ContractService {
     if (filters.ownerId) where.ownerId = filters.ownerId
     if (filters.status) where.status = filters.status
 
-    // Count total
     const total = await prisma.contract.count({ where })
 
-    // Fetch contracts
     const contracts = await prisma.contract.findMany({
       where,
-      include: {
-        property: {
-          select: {
-            id: true,
-            title: true,
-            address: true,
-            city: true,
-            postalCode: true,
-            images: true,
-          },
-        },
-        tenant: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        },
-        owner: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        },
-      },
+      include: contractIncludes,
       orderBy: { [sortBy]: sortOrder },
       skip: (page - 1) * limit,
       take: limit,
     })
 
-    return {
-      contracts,
-      total,
-      page,
-      limit,
-    }
+    return { contracts, total, page, limit }
   }
 
   /**
-   * Activate contract (both parties have signed)
+   * Send contract to tenant (DRAFT -> SENT)
+   */
+  async sendContract(contractId: string, userId: string): Promise<Contract> {
+    const contract = await prisma.contract.findUnique({
+      where: { id: contractId },
+    })
+
+    if (!contract) {
+      throw new Error('Contract not found')
+    }
+
+    if (contract.ownerId !== userId) {
+      throw new Error('Unauthorized: Only the owner can send this contract')
+    }
+
+    if (contract.status !== ContractStatus.DRAFT) {
+      throw new Error('Can only send draft contracts')
+    }
+
+    const updatedContract = await prisma.contract.update({
+      where: { id: contractId },
+      data: { status: ContractStatus.SENT },
+      include: contractIncludes,
+    })
+
+    // Create notification for tenant
+    await prisma.notification.create({
+      data: {
+        userId: contract.tenantId,
+        type: 'contract_sent',
+        title: 'Nouveau contrat reçu',
+        message: 'Un propriétaire vous a envoyé un contrat de location à signer.',
+        actionUrl: `/contracts/${contractId}`,
+      },
+    })
+
+    return updatedContract
+  }
+
+  /**
+   * Sign contract with signature image
+   */
+  async signContract(contractId: string, userId: string, signatureData?: string): Promise<Contract> {
+    const contract = await prisma.contract.findUnique({
+      where: { id: contractId },
+    })
+
+    if (!contract) {
+      throw new Error('Contract not found')
+    }
+
+    if (contract.tenantId !== userId && contract.ownerId !== userId) {
+      throw new Error('Unauthorized: You are not part of this contract')
+    }
+
+    // Allow signing from DRAFT, SENT, SIGNED_OWNER, SIGNED_TENANT
+    const allowedStatuses = [ContractStatus.DRAFT, ContractStatus.SENT, ContractStatus.SIGNED_OWNER, ContractStatus.SIGNED_TENANT]
+    if (!allowedStatuses.includes(contract.status)) {
+      throw new Error('This contract cannot be signed in its current status')
+    }
+
+    const now = new Date()
+    const updateData: any = {}
+
+    const isOwner = contract.ownerId === userId
+    const isTenant = contract.tenantId === userId
+
+    if (isOwner) {
+      if (contract.signedByOwner) {
+        throw new Error('You have already signed this contract')
+      }
+      updateData.ownerSignature = signatureData || null
+      updateData.signedByOwner = now
+
+      // Determine new status
+      if (contract.signedByTenant) {
+        // Both have now signed
+        updateData.status = ContractStatus.COMPLETED
+        updateData.signedAt = now
+      } else {
+        updateData.status = ContractStatus.SIGNED_OWNER
+      }
+    } else if (isTenant) {
+      if (contract.signedByTenant) {
+        throw new Error('You have already signed this contract')
+      }
+      updateData.tenantSignature = signatureData || null
+      updateData.signedByTenant = now
+
+      if (contract.signedByOwner) {
+        // Both have now signed
+        updateData.status = ContractStatus.COMPLETED
+        updateData.signedAt = now
+      } else {
+        updateData.status = ContractStatus.SIGNED_TENANT
+      }
+    }
+
+    const updatedContract = await prisma.contract.update({
+      where: { id: contractId },
+      data: updateData,
+      include: contractIncludes,
+    })
+
+    // Notify the other party
+    const otherUserId = isOwner ? contract.tenantId : contract.ownerId
+    await prisma.notification.create({
+      data: {
+        userId: otherUserId,
+        type: 'contract_signed',
+        title: 'Contrat signé',
+        message: `${isOwner ? 'Le propriétaire' : 'Le locataire'} a signé le contrat.`,
+        actionUrl: `/contracts/${contractId}`,
+      },
+    })
+
+    return updatedContract
+  }
+
+  /**
+   * Activate contract (COMPLETED -> ACTIVE)
    */
   async activateContract(contractId: string, userId: string): Promise<Contract> {
     const contract = await prisma.contract.findUnique({
@@ -371,121 +395,23 @@ class ContractService {
       throw new Error('Contract not found')
     }
 
-    // Only owner can activate
     if (contract.ownerId !== userId) {
       throw new Error('Unauthorized: Only the owner can activate this contract')
     }
 
-    // Must be in DRAFT status
-    if (contract.status !== ContractStatus.DRAFT) {
-      throw new Error('Can only activate draft contracts')
+    if (contract.status !== ContractStatus.COMPLETED) {
+      throw new Error('Can only activate completed contracts (both parties must have signed)')
     }
 
-    // Both parties must have signed
-    if (!contract.signedByTenant || !contract.signedByOwner) {
-      throw new Error('Both parties must sign before activation')
-    }
-
-    // Update contract status
     const updatedContract = await prisma.contract.update({
       where: { id: contractId },
       data: { status: ContractStatus.ACTIVE },
-      include: {
-        property: true,
-        tenant: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        },
-        owner: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        },
-      },
+      include: contractIncludes,
     })
 
-    // Update property status to OCCUPIED
     await prisma.property.update({
       where: { id: contract.propertyId },
       data: { status: 'OCCUPIED' },
-    })
-
-    return updatedContract
-  }
-
-  /**
-   * Sign contract (tenant or owner)
-   */
-  async signContract(contractId: string, userId: string): Promise<Contract> {
-    const contract = await prisma.contract.findUnique({
-      where: { id: contractId },
-    })
-
-    if (!contract) {
-      throw new Error('Contract not found')
-    }
-
-    // Check authorization
-    if (contract.tenantId !== userId && contract.ownerId !== userId) {
-      throw new Error('Unauthorized: You are not part of this contract')
-    }
-
-    // Must be in DRAFT status
-    if (contract.status !== ContractStatus.DRAFT) {
-      throw new Error('Can only sign draft contracts')
-    }
-
-    const now = new Date()
-    const updateData: any = {}
-
-    if (contract.tenantId === userId) {
-      if (contract.signedByTenant) {
-        throw new Error('You have already signed this contract')
-      }
-      updateData.signedByTenant = now
-    } else if (contract.ownerId === userId) {
-      if (contract.signedByOwner) {
-        throw new Error('You have already signed this contract')
-      }
-      updateData.signedByOwner = now
-    }
-
-    const updatedContract = await prisma.contract.update({
-      where: { id: contractId },
-      data: updateData,
-      include: {
-        property: {
-          select: {
-            id: true,
-            title: true,
-            address: true,
-            city: true,
-          },
-        },
-        tenant: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        },
-        owner: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        },
-      },
     })
 
     return updatedContract
@@ -504,12 +430,10 @@ class ContractService {
       throw new Error('Contract not found')
     }
 
-    // Only owner can terminate
     if (contract.ownerId !== userId) {
       throw new Error('Unauthorized: Only the owner can terminate this contract')
     }
 
-    // Must be ACTIVE
     if (contract.status !== ContractStatus.ACTIVE) {
       throw new Error('Can only terminate active contracts')
     }
@@ -517,28 +441,9 @@ class ContractService {
     const updatedContract = await prisma.contract.update({
       where: { id: contractId },
       data: { status: ContractStatus.TERMINATED },
-      include: {
-        property: true,
-        tenant: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        },
-        owner: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        },
-      },
+      include: contractIncludes,
     })
 
-    // Update property status back to AVAILABLE
     await prisma.property.update({
       where: { id: contract.propertyId },
       data: { status: 'AVAILABLE' },
@@ -551,42 +456,34 @@ class ContractService {
    * Get contract statistics for owner
    */
   async getOwnerStatistics(ownerId: string) {
-    const [total, active, draft, terminated, expired] = await Promise.all([
+    const [total, active, draft, sent, completed, terminated, expired] = await Promise.all([
       prisma.contract.count({ where: { ownerId } }),
       prisma.contract.count({ where: { ownerId, status: ContractStatus.ACTIVE } }),
       prisma.contract.count({ where: { ownerId, status: ContractStatus.DRAFT } }),
+      prisma.contract.count({ where: { ownerId, status: ContractStatus.SENT } }),
+      prisma.contract.count({ where: { ownerId, status: ContractStatus.COMPLETED } }),
       prisma.contract.count({ where: { ownerId, status: ContractStatus.TERMINATED } }),
       prisma.contract.count({ where: { ownerId, status: ContractStatus.EXPIRED } }),
     ])
 
-    return {
-      total,
-      active,
-      draft,
-      terminated,
-      expired,
-    }
+    return { total, active, draft, sent, completed, terminated, expired }
   }
 
   /**
    * Get contract statistics for tenant
    */
   async getTenantStatistics(tenantId: string) {
-    const [total, active, draft, terminated, expired] = await Promise.all([
+    const [total, active, draft, sent, completed, terminated, expired] = await Promise.all([
       prisma.contract.count({ where: { tenantId } }),
       prisma.contract.count({ where: { tenantId, status: ContractStatus.ACTIVE } }),
       prisma.contract.count({ where: { tenantId, status: ContractStatus.DRAFT } }),
+      prisma.contract.count({ where: { tenantId, status: ContractStatus.SENT } }),
+      prisma.contract.count({ where: { tenantId, status: ContractStatus.COMPLETED } }),
       prisma.contract.count({ where: { tenantId, status: ContractStatus.TERMINATED } }),
       prisma.contract.count({ where: { tenantId, status: ContractStatus.EXPIRED } }),
     ])
 
-    return {
-      total,
-      active,
-      draft,
-      terminated,
-      expired,
-    }
+    return { total, active, draft, sent, completed, terminated, expired }
   }
 }
 

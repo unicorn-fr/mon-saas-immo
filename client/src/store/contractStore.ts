@@ -26,7 +26,8 @@ interface ContractStore {
   createContract: (data: CreateContractInput) => Promise<Contract | null>
   updateContract: (id: string, data: UpdateContractInput) => Promise<Contract | null>
   deleteContract: (id: string) => Promise<boolean>
-  signContract: (id: string) => Promise<Contract | null>
+  sendContract: (id: string) => Promise<Contract | null>
+  signContract: (id: string, signature?: string) => Promise<Contract | null>
   activateContract: (id: string) => Promise<Contract | null>
   terminateContract: (id: string) => Promise<Contract | null>
   fetchStatistics: () => Promise<void>
@@ -34,8 +35,7 @@ interface ContractStore {
   clearError: () => void
 }
 
-export const useContractStore = create<ContractStore>((set, get) => ({
-  // Initial state
+export const useContractStore = create<ContractStore>((set) => ({
   contracts: [],
   currentContract: null,
   statistics: null,
@@ -45,7 +45,6 @@ export const useContractStore = create<ContractStore>((set, get) => ({
   page: 1,
   limit: 20,
 
-  // Fetch contracts with filters
   fetchContracts: async (filters?, page = 1, limit = 20) => {
     set({ isLoading: true, error: null })
     try {
@@ -64,7 +63,6 @@ export const useContractStore = create<ContractStore>((set, get) => ({
     }
   },
 
-  // Fetch single contract
   fetchContractById: async (id: string) => {
     set({ isLoading: true, error: null })
     try {
@@ -77,7 +75,6 @@ export const useContractStore = create<ContractStore>((set, get) => ({
     }
   },
 
-  // Create new contract
   createContract: async (data: CreateContractInput) => {
     set({ isLoading: true, error: null })
     try {
@@ -87,7 +84,7 @@ export const useContractStore = create<ContractStore>((set, get) => ({
         currentContract: contract,
         isLoading: false,
       }))
-      toast.success('Contrat créé avec succès')
+      toast.success('Contrat cree avec succes')
       return contract
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to create contract'
@@ -97,7 +94,6 @@ export const useContractStore = create<ContractStore>((set, get) => ({
     }
   },
 
-  // Update contract
   updateContract: async (id: string, data: UpdateContractInput) => {
     set({ isLoading: true, error: null })
     try {
@@ -107,7 +103,7 @@ export const useContractStore = create<ContractStore>((set, get) => ({
         currentContract: state.currentContract?.id === id ? updatedContract : state.currentContract,
         isLoading: false,
       }))
-      toast.success('Contrat mis à jour avec succès')
+      toast.success('Contrat mis a jour avec succes')
       return updatedContract
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to update contract'
@@ -117,7 +113,6 @@ export const useContractStore = create<ContractStore>((set, get) => ({
     }
   },
 
-  // Delete contract
   deleteContract: async (id: string) => {
     set({ isLoading: true, error: null })
     try {
@@ -127,7 +122,7 @@ export const useContractStore = create<ContractStore>((set, get) => ({
         currentContract: state.currentContract?.id === id ? null : state.currentContract,
         isLoading: false,
       }))
-      toast.success('Contrat supprimé avec succès')
+      toast.success('Contrat supprime avec succes')
       return true
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to delete contract'
@@ -137,17 +132,35 @@ export const useContractStore = create<ContractStore>((set, get) => ({
     }
   },
 
-  // Sign contract
-  signContract: async (id: string) => {
+  sendContract: async (id: string) => {
     set({ isLoading: true, error: null })
     try {
-      const signedContract = await contractService.signContract(id)
+      const contract = await contractService.sendContract(id)
+      set((state) => ({
+        contracts: state.contracts.map((c) => (c.id === id ? contract : c)),
+        currentContract: state.currentContract?.id === id ? contract : state.currentContract,
+        isLoading: false,
+      }))
+      toast.success('Contrat envoye au locataire')
+      return contract
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Failed to send contract'
+      set({ error: message, isLoading: false })
+      toast.error(message)
+      return null
+    }
+  },
+
+  signContract: async (id: string, signature?: string) => {
+    set({ isLoading: true, error: null })
+    try {
+      const signedContract = await contractService.signContract(id, signature)
       set((state) => ({
         contracts: state.contracts.map((c) => (c.id === id ? signedContract : c)),
         currentContract: state.currentContract?.id === id ? signedContract : state.currentContract,
         isLoading: false,
       }))
-      toast.success('Contrat signé avec succès')
+      toast.success('Contrat signe avec succes')
       return signedContract
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to sign contract'
@@ -157,7 +170,6 @@ export const useContractStore = create<ContractStore>((set, get) => ({
     }
   },
 
-  // Activate contract
   activateContract: async (id: string) => {
     set({ isLoading: true, error: null })
     try {
@@ -168,7 +180,7 @@ export const useContractStore = create<ContractStore>((set, get) => ({
           state.currentContract?.id === id ? activatedContract : state.currentContract,
         isLoading: false,
       }))
-      toast.success('Contrat activé avec succès')
+      toast.success('Contrat active avec succes')
       return activatedContract
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to activate contract'
@@ -178,7 +190,6 @@ export const useContractStore = create<ContractStore>((set, get) => ({
     }
   },
 
-  // Terminate contract
   terminateContract: async (id: string) => {
     set({ isLoading: true, error: null })
     try {
@@ -189,7 +200,7 @@ export const useContractStore = create<ContractStore>((set, get) => ({
           state.currentContract?.id === id ? terminatedContract : state.currentContract,
         isLoading: false,
       }))
-      toast.success('Contrat résilié avec succès')
+      toast.success('Contrat resilie avec succes')
       return terminatedContract
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to terminate contract'
@@ -199,7 +210,6 @@ export const useContractStore = create<ContractStore>((set, get) => ({
     }
   },
 
-  // Fetch statistics
   fetchStatistics: async () => {
     set({ isLoading: true, error: null })
     try {
@@ -208,16 +218,13 @@ export const useContractStore = create<ContractStore>((set, get) => ({
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to fetch statistics'
       set({ error: message, isLoading: false })
-      // Don't show toast for statistics errors
     }
   },
 
-  // Clear current contract
   clearCurrentContract: () => {
     set({ currentContract: null })
   },
 
-  // Clear error
   clearError: () => {
     set({ error: null })
   },

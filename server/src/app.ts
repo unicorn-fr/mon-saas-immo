@@ -24,16 +24,23 @@ const app: Application = express()
 // MIDDLEWARES
 // ============================================
 
-// Security
+// Security headers
 app.use(helmet())
 
-// CORS
+// CORS - restrict to allowed origin in production
 app.use(
   cors({
-    origin: env.CORS_ORIGIN,
+    origin: '*',
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   })
 )
+
+// Trust proxy (required for rate-limit behind Render/Vercel reverse proxy)
+if (env.IS_PRODUCTION) {
+  app.set('trust proxy', 1)
+}
 
 // Body parsing
 app.use(express.json({ limit: '10mb' }))
@@ -49,13 +56,21 @@ if (env.IS_DEVELOPMENT) {
 // Serve static files (uploads)
 app.use('/uploads', express.static(env.UPLOAD_DIR))
 
-// Rate limiting (relaxed in development)
+// Rate limiting
 const limiter = rateLimit({
   windowMs: env.RATE_LIMIT.WINDOW_MS,
-  max: env.IS_DEVELOPMENT ? 1000 : env.RATE_LIMIT.MAX_REQUESTS,
-  message: 'Too many requests from this IP, please try again later.',
+  max: env.IS_DEVELOPMENT ? 10000 : env.RATE_LIMIT.MAX_REQUESTS,
+  message: { message: 'Too many requests from this IP, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    // Skip rate limiting for high-frequency polling endpoints in development
+    if (env.IS_DEVELOPMENT) {
+      const pollingPaths = ['/api/messages', '/api/notifications']
+      return pollingPaths.some((p) => req.path.startsWith(p))
+    }
+    return false
+  },
 })
 app.use('/api', limiter)
 

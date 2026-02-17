@@ -16,13 +16,24 @@ export const ConversationList = ({
   onConversationSelect,
 }: ConversationListProps) => {
   const { user } = useAuth()
-  const { conversations, unreadCount, isLoading, fetchConversations, fetchUnreadCount } =
+  const { conversations, unreadCount, isLoading, fetchConversations, pollConversations, fetchUnreadCount } =
     useMessages()
 
+  // Initial fetch
   useEffect(() => {
     fetchConversations()
     fetchUnreadCount()
   }, [fetchConversations, fetchUnreadCount])
+
+  // Poll conversations and unread count every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      pollConversations()
+      fetchUnreadCount()
+    }, 10000)
+
+    return () => clearInterval(interval)
+  }, [pollConversations, fetchUnreadCount])
 
   // Get other user in conversation
   const getOtherUser = (conversation: Conversation) => {

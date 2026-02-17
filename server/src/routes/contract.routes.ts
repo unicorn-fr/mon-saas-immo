@@ -39,7 +39,14 @@ router.delete(
   contractController.deleteContract.bind(contractController)
 )
 
-// PUT /api/v1/contracts/:id/sign - Sign contract
+// PUT /api/v1/contracts/:id/send - Send contract to tenant (owner only)
+router.put(
+  '/:id/send',
+  authorize('OWNER'),
+  contractController.sendContract.bind(contractController)
+)
+
+// PUT /api/v1/contracts/:id/sign - Sign contract (owner or tenant)
 router.put('/:id/sign', contractController.signContract.bind(contractController))
 
 // PUT /api/v1/contracts/:id/activate - Activate contract (owner only)

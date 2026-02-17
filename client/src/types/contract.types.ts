@@ -1,4 +1,12 @@
-export type ContractStatus = 'DRAFT' | 'ACTIVE' | 'EXPIRED' | 'TERMINATED'
+export type ContractStatus = 'DRAFT' | 'SENT' | 'SIGNED_OWNER' | 'SIGNED_TENANT' | 'COMPLETED' | 'ACTIVE' | 'EXPIRED' | 'TERMINATED'
+
+export interface ContractClause {
+  id: string
+  title: string
+  description: string
+  enabled: boolean
+  isCustom?: boolean
+}
 
 export interface Contract {
   id: string
@@ -16,10 +24,19 @@ export interface Contract {
   charges?: number
   deposit?: number
 
+  // Structured content
+  content?: Record<string, any>
+  customClauses?: ContractClause[]
+
   // Documents
   pdfUrl?: string
+
+  // Signatures
+  ownerSignature?: string
+  tenantSignature?: string
   signedByTenant?: string
   signedByOwner?: string
+  signedAt?: string
 
   // Additional terms
   terms?: string
@@ -66,6 +83,8 @@ export interface CreateContractInput {
   charges?: number
   deposit?: number
   terms?: string
+  content?: Record<string, any>
+  customClauses?: ContractClause[]
 }
 
 export interface UpdateContractInput {
@@ -76,6 +95,8 @@ export interface UpdateContractInput {
   deposit?: number
   terms?: string
   status?: ContractStatus
+  content?: Record<string, any>
+  customClauses?: ContractClause[]
 }
 
 export interface ContractFilters {
@@ -89,6 +110,8 @@ export interface ContractStatistics {
   total: number
   active: number
   draft: number
+  sent: number
+  completed: number
   terminated: number
   expired: number
 }

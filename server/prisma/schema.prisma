@@ -42,10 +42,14 @@ enum BookingStatus {
 }
 
 enum ContractStatus {
-  DRAFT       // Brouillon
-  ACTIVE      // Actif
-  EXPIRED     // Expiré
-  TERMINATED  // Résilié
+  DRAFT           // Brouillon
+  SENT            // Envoyé au locataire
+  SIGNED_OWNER    // Signé par le propriétaire
+  SIGNED_TENANT   // Signé par le locataire
+  COMPLETED       // Signé par les deux parties
+  ACTIVE          // Actif (en cours)
+  EXPIRED         // Expiré
+  TERMINATED      // Résilié
 }
 
 enum DateOverrideType {
@@ -307,10 +311,19 @@ model Contract {
   charges     Float?
   deposit     Float?
 
+  // Structured Content (wizard form data as JSON)
+  content         Json?         // Full form data from wizard steps
+  customClauses   Json?         // Array of custom clauses [{title, description, enabled}]
+
   // Documents
   pdfUrl          String?
-  signedByTenant  DateTime?
+
+  // Signatures
+  ownerSignature  String?       @db.Text  // Base64 signature image
+  tenantSignature String?       @db.Text  // Base64 signature image
   signedByOwner   DateTime?
+  signedByTenant  DateTime?
+  signedAt        DateTime?               // When both parties have signed
 
   // Additional Terms
   terms           String?       @db.Text

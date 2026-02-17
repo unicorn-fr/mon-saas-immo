@@ -14,7 +14,8 @@ import {
   XCircle,
   Clock,
   AlertCircle,
-  Eye,
+  Send,
+  PenLine,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -33,13 +34,28 @@ export default function ContractsList() {
     fetchStatistics()
   }, [statusFilter, fetchContracts, fetchStatistics])
 
+  const statusLabels: Record<ContractStatus, string> = {
+    DRAFT: 'Brouillon',
+    SENT: 'Envoyé',
+    SIGNED_OWNER: 'Signé (proprio)',
+    SIGNED_TENANT: 'Signé (locataire)',
+    COMPLETED: 'Signé',
+    ACTIVE: 'Actif',
+    EXPIRED: 'Expiré',
+    TERMINATED: 'Résilié',
+  }
+
   const getStatusBadge = (status: ContractStatus) => {
     const variants: Record<
       ContractStatus,
       { bg: string; text: string; icon: typeof CheckCircle }
     > = {
-      ACTIVE: { bg: 'bg-green-100', text: 'text-green-700', icon: CheckCircle },
       DRAFT: { bg: 'bg-yellow-100', text: 'text-yellow-700', icon: Clock },
+      SENT: { bg: 'bg-blue-100', text: 'text-blue-700', icon: Send },
+      SIGNED_OWNER: { bg: 'bg-indigo-100', text: 'text-indigo-700', icon: PenLine },
+      SIGNED_TENANT: { bg: 'bg-indigo-100', text: 'text-indigo-700', icon: PenLine },
+      COMPLETED: { bg: 'bg-emerald-100', text: 'text-emerald-700', icon: CheckCircle },
+      ACTIVE: { bg: 'bg-green-100', text: 'text-green-700', icon: CheckCircle },
       EXPIRED: { bg: 'bg-gray-100', text: 'text-gray-700', icon: AlertCircle },
       TERMINATED: { bg: 'bg-red-100', text: 'text-red-700', icon: XCircle },
     }
@@ -50,10 +66,7 @@ export default function ContractsList() {
     return (
       <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${variant.bg} ${variant.text}`}>
         <Icon className="w-3 h-3" />
-        {status === 'ACTIVE' && 'Actif'}
-        {status === 'DRAFT' && 'Brouillon'}
-        {status === 'EXPIRED' && 'Expiré'}
-        {status === 'TERMINATED' && 'Résilié'}
+        {statusLabels[status]}
       </span>
     )
   }
@@ -104,11 +117,11 @@ export default function ContractsList() {
           </div>
         </div>
 
-        {contract.status === 'DRAFT' && (
+        {['SENT', 'SIGNED_OWNER', 'SIGNED_TENANT', 'COMPLETED'].includes(contract.status) && (
           <div className="pt-3 border-t border-gray-200">
-            <div className="flex items-center gap-2 text-xs">
+            <div className="flex items-center gap-3 text-xs">
               <div className="flex items-center gap-1">
-                {contract.signedByOwner ? (
+                {contract.ownerSignature || contract.status === 'SIGNED_OWNER' || contract.status === 'COMPLETED' ? (
                   <CheckCircle className="w-3 h-3 text-green-600" />
                 ) : (
                   <Clock className="w-3 h-3 text-yellow-600" />
@@ -116,7 +129,7 @@ export default function ContractsList() {
                 <span className="text-gray-600">Propriétaire</span>
               </div>
               <div className="flex items-center gap-1">
-                {contract.signedByTenant ? (
+                {contract.tenantSignature || contract.status === 'SIGNED_TENANT' || contract.status === 'COMPLETED' ? (
                   <CheckCircle className="w-3 h-3 text-green-600" />
                 ) : (
                   <Clock className="w-3 h-3 text-yellow-600" />
@@ -165,7 +178,7 @@ export default function ContractsList() {
       <div className="container mx-auto px-4 py-8">
         {/* Statistics */}
         {statistics && (
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
             <div className="card text-center">
               <p className="text-sm text-gray-600 mb-1">Total</p>
               <p className="text-3xl font-bold text-gray-900">{statistics.total}</p>
@@ -177,6 +190,14 @@ export default function ContractsList() {
             <div className="card text-center">
               <p className="text-sm text-gray-600 mb-1">Brouillons</p>
               <p className="text-3xl font-bold text-yellow-600">{statistics.draft}</p>
+            </div>
+            <div className="card text-center">
+              <p className="text-sm text-gray-600 mb-1">Envoyés</p>
+              <p className="text-3xl font-bold text-blue-600">{statistics.sent}</p>
+            </div>
+            <div className="card text-center">
+              <p className="text-sm text-gray-600 mb-1">Signés</p>
+              <p className="text-3xl font-bold text-emerald-600">{statistics.completed}</p>
             </div>
             <div className="card text-center">
               <p className="text-sm text-gray-600 mb-1">Résiliés</p>
@@ -192,7 +213,7 @@ export default function ContractsList() {
         {/* Filters */}
         <div className="mb-6">
           <div className="flex gap-2 flex-wrap">
-            {(['ALL', 'ACTIVE', 'DRAFT', 'TERMINATED', 'EXPIRED'] as const).map((status) => (
+            {(['ALL', 'DRAFT', 'SENT', 'SIGNED_OWNER', 'SIGNED_TENANT', 'COMPLETED', 'ACTIVE', 'TERMINATED', 'EXPIRED'] as const).map((status) => (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
@@ -202,11 +223,7 @@ export default function ContractsList() {
                     : 'bg-white text-gray-700 hover:bg-gray-50 border'
                 }`}
               >
-                {status === 'ALL' && 'Tous'}
-                {status === 'ACTIVE' && 'Actifs'}
-                {status === 'DRAFT' && 'Brouillons'}
-                {status === 'TERMINATED' && 'Résiliés'}
-                {status === 'EXPIRED' && 'Expirés'}
+                {status === 'ALL' ? 'Tous' : statusLabels[status]}
               </button>
             ))}
           </div>
