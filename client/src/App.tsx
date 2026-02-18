@@ -8,6 +8,9 @@ import { useAuth } from './hooks/useAuth'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
+import VerifyEmail from './pages/VerifyEmail'
 import NotFound from './pages/NotFound'
 
 // Public Pages
@@ -121,6 +124,9 @@ function AppRoutes() {
         path="/register"
         element={isAuthenticated ? <Navigate to="/" replace /> : <Register />}
       />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
 
       {/* Search & Properties (Public for now, can be protected later) */}
       {/* <Route path="/search" element={<SearchPage />} /> */}

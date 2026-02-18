@@ -2,11 +2,12 @@ import { useState, FormEvent } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Home, Mail, Lock, AlertCircle } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import GoogleSignInButton from '../components/auth/GoogleSignInButton'
 
 export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { login, isLoading, error: authError } = useAuth()
+  const { login, googleLogin, isLoading, error: authError } = useAuth()
 
   const [formData, setFormData] = useState({
     email: '',
@@ -14,11 +15,25 @@ export default function Login() {
   })
   const [error, setError] = useState('')
 
+  const redirectByRole = (role: string) => {
+    const from = (location.state as { from?: string })?.from
+    if (from) {
+      navigate(from, { replace: true })
+    } else if (role === 'OWNER') {
+      navigate('/dashboard/owner', { replace: true })
+    } else if (role === 'TENANT') {
+      navigate('/dashboard/tenant', { replace: true })
+    } else if (role === 'ADMIN') {
+      navigate('/admin', { replace: true })
+    } else {
+      navigate('/', { replace: true })
+    }
+  }
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError('')
 
-    // Validation
     if (!formData.email || !formData.password) {
       setError('Veuillez remplir tous les champs')
       return
@@ -26,25 +41,19 @@ export default function Login() {
 
     try {
       const userData = await login(formData)
-
-      // Redirect based on user role
-      const from = (location.state as { from?: string })?.from
-      if (from) {
-        navigate(from, { replace: true })
-      } else {
-        // Default redirects by role
-        if (userData.role === 'OWNER') {
-          navigate('/dashboard/owner', { replace: true })
-        } else if (userData.role === 'TENANT') {
-          navigate('/dashboard/tenant', { replace: true })
-        } else if (userData.role === 'ADMIN') {
-          navigate('/admin', { replace: true })
-        } else {
-          navigate('/', { replace: true })
-        }
-      }
+      redirectByRole(userData.role)
     } catch (err) {
       setError(authError || 'Échec de la connexion. Veuillez réessayer.')
+    }
+  }
+
+  const handleGoogleSuccess = async (idToken: string) => {
+    setError('')
+    try {
+      const userData = await googleLogin(idToken)
+      redirectByRole(userData.role)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Échec de la connexion Google')
     }
   }
 
@@ -172,8 +181,15 @@ export default function Login() {
             </div>
           </div>
 
+          {/* Google Sign In */}
+          <GoogleSignInButton
+            onSuccess={handleGoogleSuccess}
+            onError={(err) => setError(err)}
+            text="signin_with"
+          />
+
           {/* Register Link */}
-          <p className="text-center text-gray-600">
+          <p className="text-center text-gray-600 mt-6">
             Pas encore de compte ?{' '}
             <Link to="/register" className="text-primary-600 hover:text-primary-700 font-medium">
               S'inscrire

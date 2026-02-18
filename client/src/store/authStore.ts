@@ -13,6 +13,8 @@ interface AuthActions {
   login: (credentials: LoginCredentials) => Promise<User>
   register: (data: RegisterData) => Promise<void>
   logout: () => Promise<void>
+  updateProfile: (data: { firstName?: string; lastName?: string; phone?: string; bio?: string }) => Promise<User>
+  googleLogin: (idToken: string) => Promise<User>
   setUser: (user: User) => void
   setTokens: (accessToken: string, refreshToken: string) => void
   clearAuth: () => void
@@ -93,6 +95,53 @@ export const useAuthStore = create<AuthStore>()(
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : 'Registration failed'
+          set({
+            isLoading: false,
+            error: errorMessage,
+          })
+          throw error
+        }
+      },
+
+      /**
+       * Update user profile
+       */
+      updateProfile: async (data) => {
+        try {
+          const user = await authService.updateProfile(data)
+          set({ user })
+          return user
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : 'Profile update failed'
+          throw new Error(errorMessage)
+        }
+      },
+
+      /**
+       * Google OAuth login
+       */
+      googleLogin: async (idToken: string) => {
+        set({ isLoading: true, error: null })
+
+        try {
+          const response = await authService.googleAuth(idToken)
+
+          setApiTokens(response.accessToken, response.refreshToken)
+
+          set({
+            user: response.user,
+            accessToken: response.accessToken,
+            refreshToken: response.refreshToken,
+            isAuthenticated: true,
+            isLoading: false,
+            error: null,
+          })
+
+          return response.user
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : 'Google login failed'
           set({
             isLoading: false,
             error: errorMessage,

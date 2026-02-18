@@ -19,6 +19,10 @@ const envSchema = z.object({
   REFRESH_TOKEN_EXPIRES_IN: z.string().default('7d'),
 
   CORS_ORIGIN: z.string().default('http://localhost:3000'),
+  FRONTEND_URL: z.string().default('http://localhost:5173'),
+
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
 
   MAX_FILE_SIZE: z.string().default('5242880'),
   UPLOAD_DIR: z.string().default('./uploads'),
@@ -59,6 +63,10 @@ export const env = {
   JWT_REFRESH_EXPIRATION: parsedEnv.data.REFRESH_TOKEN_EXPIRES_IN,
 
   CORS_ORIGIN: parsedEnv.data.CORS_ORIGIN,
+  FRONTEND_URL: parsedEnv.data.FRONTEND_URL,
+
+  GOOGLE_CLIENT_ID: parsedEnv.data.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: parsedEnv.data.GOOGLE_CLIENT_SECRET,
 
   MAX_FILE_SIZE: parseInt(parsedEnv.data.MAX_FILE_SIZE, 10),
   UPLOAD_DIR: parsedEnv.data.UPLOAD_DIR,

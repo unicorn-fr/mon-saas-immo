@@ -26,8 +26,14 @@ router.post(
   authController.forgotPassword.bind(authController)
 )
 
-// POST /api/v1/auth/verify-email - Verify email
+// POST /api/v1/auth/verify-email - Verify email with token
 router.post('/verify-email', authController.verifyEmail.bind(authController))
+
+// POST /api/v1/auth/reset-password - Reset password with token
+router.post('/reset-password', authController.resetPassword.bind(authController))
+
+// POST /api/v1/auth/google - Google OAuth login
+router.post('/google', authController.googleAuth.bind(authController))
 
 /**
  * Protected routes (require authentication)
@@ -35,6 +41,20 @@ router.post('/verify-email', authController.verifyEmail.bind(authController))
 
 // GET /api/v1/auth/me - Get current user profile
 router.get('/me', authenticate, authController.getMe.bind(authController))
+
+// PATCH /api/v1/auth/profile - Update user profile
+router.patch(
+  '/profile',
+  authenticate,
+  authController.updateProfile.bind(authController)
+)
+
+// POST /api/v1/auth/resend-verification - Resend verification email
+router.post(
+  '/resend-verification',
+  authenticate,
+  authController.resendVerification.bind(authController)
+)
 
 // POST /api/v1/auth/change-password - Change password
 router.post(

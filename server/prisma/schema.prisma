@@ -57,6 +57,11 @@ enum DateOverrideType {
   EXTRA       // Ajouter une dispo exceptionnelle
 }
 
+enum TokenType {
+  EMAIL_VERIFY
+  PASSWORD_RESET
+}
+
 // ============================================
 // MODELS
 // ============================================
@@ -64,7 +69,8 @@ enum DateOverrideType {
 model User {
   id                String    @id @default(uuid())
   email             String    @unique
-  password          String    // bcrypt hashed
+  password          String?   // bcrypt hashed, nullable for OAuth-only users
+  googleId          String?   @unique
   role              UserRole  @default(TENANT)
 
   // Personal Information
@@ -86,17 +92,18 @@ model User {
   lastLoginAt       DateTime?
 
   // Relations
-  ownedProperties     Property[]       @relation("PropertyOwner")
-  bookings            Booking[]        @relation("BookingTenant")
-  sentMessages        Message[]        @relation("MessageSender")
-  receivedMessages    Message[]        @relation("MessageReceiver")
-  tenantContracts     Contract[]       @relation("ContractTenant")
-  ownerContracts      Contract[]       @relation("ContractOwner")
-  favorites           Favorite[]
-  notifications       Notification[]
-  refreshTokens       RefreshToken[]
-  conversationsUser1  Conversation[]   @relation("ConversationUser1")
-  conversationsUser2  Conversation[]   @relation("ConversationUser2")
+  ownedProperties       Property[]            @relation("PropertyOwner")
+  bookings              Booking[]             @relation("BookingTenant")
+  sentMessages          Message[]             @relation("MessageSender")
+  receivedMessages      Message[]             @relation("MessageReceiver")
+  tenantContracts       Contract[]            @relation("ContractTenant")
+  ownerContracts        Contract[]            @relation("ContractOwner")
+  favorites             Favorite[]
+  notifications         Notification[]
+  refreshTokens         RefreshToken[]
+  conversationsUser1    Conversation[]        @relation("ConversationUser1")
+  conversationsUser2    Conversation[]        @relation("ConversationUser2")
+  verificationTokens    VerificationToken[]
 
   @@index([email])
   @@index([role])
@@ -114,6 +121,20 @@ model RefreshToken {
   @@index([userId])
   @@index([token])
   @@map("refresh_tokens")
+}
+
+model VerificationToken {
+  id        String    @id @default(uuid())
+  token     String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      TokenType
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([token])
+  @@map("verification_tokens")
 }
 
 model Property {

@@ -124,6 +124,74 @@ class AuthService {
       throw new Error(handleApiError(error))
     }
   }
+
+  /**
+   * Update user profile
+   */
+  async updateProfile(data: {
+    firstName?: string
+    lastName?: string
+    phone?: string
+    bio?: string
+  }): Promise<User> {
+    try {
+      const response = await apiClient.patch<ApiResponse<{ user: User }>>(
+        '/auth/profile',
+        data
+      )
+      return response.data.data.user
+    } catch (error) {
+      throw new Error(handleApiError(error))
+    }
+  }
+
+  /**
+   * Verify email with token
+   */
+  async verifyEmail(token: string): Promise<void> {
+    try {
+      await apiClient.post('/auth/verify-email', { token })
+    } catch (error) {
+      throw new Error(handleApiError(error))
+    }
+  }
+
+  /**
+   * Resend verification email
+   */
+  async resendVerification(): Promise<void> {
+    try {
+      await apiClient.post('/auth/resend-verification')
+    } catch (error) {
+      throw new Error(handleApiError(error))
+    }
+  }
+
+  /**
+   * Reset password with token
+   */
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    try {
+      await apiClient.post('/auth/reset-password', { token, newPassword })
+    } catch (error) {
+      throw new Error(handleApiError(error))
+    }
+  }
+
+  /**
+   * Google OAuth login
+   */
+  async googleAuth(idToken: string): Promise<AuthResponse> {
+    try {
+      const response = await apiClient.post<ApiResponse<AuthResponse>>(
+        '/auth/google',
+        { idToken }
+      )
+      return response.data.data
+    } catch (error) {
+      throw new Error(handleApiError(error))
+    }
+  }
 }
 
 export const authService = new AuthService()

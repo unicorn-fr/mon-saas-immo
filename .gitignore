@@ -44,7 +44,6 @@ uploads/
 public/uploads/
 
 # Prisma
-server/prisma/migrations/**/migration.sql
 
 # Misc
 .cache/

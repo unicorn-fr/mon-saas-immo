@@ -3,10 +3,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Home, Mail, Lock, Users, AlertCircle, CheckCircle } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { UserRole } from '../types/auth.types'
+import GoogleSignInButton from '../components/auth/GoogleSignInButton'
 
 export default function Register() {
   const navigate = useNavigate()
-  const { register, isLoading } = useAuth()
+  const { register, googleLogin, isLoading } = useAuth()
 
   const [userType, setUserType] = useState<UserRole>('TENANT')
   const [formData, setFormData] = useState({
@@ -97,6 +98,17 @@ export default function Register() {
 
     // Clear error when user starts typing
     if (error) setError('')
+  }
+
+  const handleGoogleSuccess = async (idToken: string) => {
+    setError('')
+    try {
+      const userData = await googleLogin(idToken)
+      const redirectPath = userData.role === 'OWNER' ? '/dashboard/owner' : '/dashboard/tenant'
+      navigate(redirectPath, { replace: true })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Échec de la connexion Google')
+    }
   }
 
   return (
@@ -379,8 +391,15 @@ export default function Register() {
             </div>
           </div>
 
+          {/* Google Sign In */}
+          <GoogleSignInButton
+            onSuccess={handleGoogleSuccess}
+            onError={(err) => setError(err)}
+            text="signup_with"
+          />
+
           {/* Login Link */}
-          <p className="text-center text-gray-600">
+          <p className="text-center text-gray-600 mt-6">
             Déjà un compte ?{' '}
             <Link to="/login" className="text-primary-600 hover:text-primary-700 font-medium">
               Se connecter

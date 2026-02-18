@@ -331,8 +331,48 @@ class AuthController {
   }
 
   /**
+   * PATCH /api/v1/auth/profile
+   * Update user profile
+   */
+  async updateProfile(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.id
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Unauthorized',
+        })
+      }
+
+      const { firstName, lastName, phone, bio } = req.body
+
+      const user = await authService.updateProfile(userId, {
+        firstName: firstName ? sanitizeInput(firstName) : undefined,
+        lastName: lastName ? sanitizeInput(lastName) : undefined,
+        phone: phone !== undefined ? sanitizeInput(phone) : undefined,
+        bio: bio !== undefined ? bio.trim() : undefined,
+      })
+
+      return res.status(200).json({
+        success: true,
+        message: 'Profile updated successfully',
+        data: { user },
+      })
+    } catch (error) {
+      if (error instanceof Error) {
+        return res.status(400).json({
+          success: false,
+          message: error.message,
+        })
+      }
+      next(error)
+    }
+  }
+
+  /**
    * POST /api/v1/auth/verify-email
-   * Verify email (to be implemented with token)
+   * Verify email with token
    */
   async verifyEmail(req: Request, res: Response, next: NextFunction) {
     try {
@@ -345,14 +385,125 @@ class AuthController {
         })
       }
 
-      // TODO: Verify token and extract userId
-      // For now, just a placeholder
+      await authService.verifyEmailWithToken(token)
 
       return res.status(200).json({
         success: true,
         message: 'Email verified successfully',
       })
     } catch (error) {
+      if (error instanceof Error) {
+        return res.status(400).json({
+          success: false,
+          message: error.message,
+        })
+      }
+      next(error)
+    }
+  }
+
+  /**
+   * POST /api/v1/auth/resend-verification
+   * Resend verification email
+   */
+  async resendVerification(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.id
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Unauthorized',
+        })
+      }
+
+      await authService.resendVerificationEmail(userId)
+
+      return res.status(200).json({
+        success: true,
+        message: 'Verification email sent',
+      })
+    } catch (error) {
+      if (error instanceof Error) {
+        return res.status(400).json({
+          success: false,
+          message: error.message,
+        })
+      }
+      next(error)
+    }
+  }
+
+  /**
+   * POST /api/v1/auth/reset-password
+   * Reset password with token
+   */
+  async resetPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { token, newPassword } = req.body
+
+      if (!token || !newPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Token and new password are required',
+        })
+      }
+
+      const passwordValidation = validatePasswordStrength(newPassword)
+      if (!passwordValidation.isValid) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password does not meet requirements',
+          errors: passwordValidation.errors,
+        })
+      }
+
+      await authService.resetPasswordWithToken(token, newPassword)
+
+      return res.status(200).json({
+        success: true,
+        message: 'Password reset successfully',
+      })
+    } catch (error) {
+      if (error instanceof Error) {
+        return res.status(400).json({
+          success: false,
+          message: error.message,
+        })
+      }
+      next(error)
+    }
+  }
+
+  /**
+   * POST /api/v1/auth/google
+   * Google OAuth login
+   */
+  async googleAuth(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { idToken } = req.body
+
+      if (!idToken) {
+        return res.status(400).json({
+          success: false,
+          message: 'Google ID token is required',
+        })
+      }
+
+      const result = await authService.googleAuth(idToken)
+
+      return res.status(200).json({
+        success: true,
+        message: 'Google authentication successful',
+        data: result,
+      })
+    } catch (error) {
+      if (error instanceof Error) {
+        return res.status(400).json({
+          success: false,
+          message: error.message,
+        })
+      }
       next(error)
     }
   }
