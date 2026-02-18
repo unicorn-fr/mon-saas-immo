@@ -1,7 +1,6 @@
 import { Check, CheckCheck, Trash2, FileText, Download } from 'lucide-react'
 import { Message } from '../../types/message.types'
 import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
 
 interface MessageBubbleProps {
   message: Message
@@ -113,9 +112,9 @@ export const MessageBubble = ({
           {isOwn && (
             <>
               {message.isRead ? (
-                <CheckCheck className="w-3.5 h-3.5 text-primary-600" title="Lu" />
+                <CheckCheck className="w-3.5 h-3.5 text-primary-600" />
               ) : (
-                <Check className="w-3.5 h-3.5 text-gray-400" title="Envoyé" />
+                <Check className="w-3.5 h-3.5 text-gray-400" />
               )}
             </>
           )}

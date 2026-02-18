@@ -32,7 +32,7 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const [hasMarkedAsRead, setHasMarkedAsRead] = useState(false)
+  const [, setHasMarkedAsRead] = useState(false)
   const isNearBottomRef = useRef(true)
   const prevMessageCountRef = useRef(0)
 

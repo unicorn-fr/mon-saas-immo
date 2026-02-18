@@ -24,7 +24,7 @@ export default function UsersManagement() {
   const [searchQuery, setSearchQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState<string>('ALL')
   const [emailVerifiedFilter, setEmailVerifiedFilter] = useState<string>('ALL')
-  const [, setSelectedUser] = useState<AdminUser | null>(null)
+
   const [showActionMenu, setShowActionMenu] = useState<string | null>(null)
 
   const limit = 20

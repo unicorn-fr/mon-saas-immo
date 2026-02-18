@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { PropertyFilters, PROPERTY_TYPES, AMENITIES } from '../../types/property.types'
-import { X, ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp } from 'lucide-react'
 
 interface SearchFiltersProps {
   filters: PropertyFilters

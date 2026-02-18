@@ -65,7 +65,6 @@ export const BookingCard = ({
 
   // Format date and time
   const visitDate = new Date(booking.visitDate)
-  const formattedDate = format(visitDate, 'EEEE d MMMM yyyy', { locale: fr })
   const formattedDateShort = format(visitDate, 'd MMM yyyy', { locale: fr })
 
   // Check if booking is in the past
@@ -93,7 +92,7 @@ export const BookingCard = ({
             <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
               <MapPin className="w-4 h-4" />
               <span>
-                {booking.property.city}, {booking.property.postalCode}
+                {booking.property.city}
               </span>
             </div>
           </div>
@@ -154,13 +153,13 @@ export const BookingCard = ({
         </div>
 
         {/* Notes */}
-        {booking.notes && (
+        {booking.tenantNotes && (
           <div className="bg-gray-50 rounded-lg p-4 mb-4">
             <div className="flex items-start gap-2">
               <MessageSquare className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-xs text-gray-600 mb-1">Notes</p>
-                <p className="text-sm text-gray-900">{booking.notes}</p>
+                <p className="text-sm text-gray-900">{booking.tenantNotes}</p>
               </div>
             </div>
           </div>

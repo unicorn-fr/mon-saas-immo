@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Property } from '../../types/property.types'
 import { Loader, MapPin } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
 
 interface SearchMapProps {
   properties: Property[]
@@ -20,7 +19,6 @@ export const SearchMap = ({
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const navigate = useNavigate()
 
   // Filter properties with valid coordinates
   const propertiesWithCoords = properties.filter(
@@ -34,7 +32,7 @@ export const SearchMap = ({
     import('leaflet').then((L) => {
       // Initialize map if not already done
       if (!mapInstanceRef.current) {
-        const map = L.map(mapRef.current).setView(
+        const map = L.map(mapRef.current!).setView(
           [
             propertiesWithCoords[0].latitude!,
             propertiesWithCoords[0].longitude!,

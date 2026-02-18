@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Home, User, LogOut, Settings, LayoutDashboard, Menu, X, Heart, Calendar, MessageSquare, Building2 } from 'lucide-react'
+import { Home, User, LogOut, Settings, LayoutDashboard, Menu, X, Heart, Calendar, MessageSquare } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useState } from 'react'
 

@@ -17,7 +17,7 @@ export const ContactModal = ({
   onClose,
   propertyId,
   propertyTitle,
-  ownerName,
+  ownerName: _ownerName,
 }: ContactModalProps) => {
   const { isAuthenticated, user } = useAuth()
   const navigate = useNavigate()

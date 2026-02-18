@@ -1,5 +1,4 @@
 import { Clock, Loader } from 'lucide-react'
-import { TIME_SLOTS } from '../../types/booking.types'
 
 interface TimeSlotPickerProps {
   selectedDate: string
