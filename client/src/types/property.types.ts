@@ -82,6 +82,10 @@ export interface Property {
   // Availability
   availableFrom: string | null
 
+  // Owner Verification Documents
+  ownerIdDocument?: string | null
+  propertyProofDocument?: string | null
+
   // Statistics
   views: number
   contactCount: number

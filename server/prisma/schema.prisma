@@ -186,6 +186,10 @@ model Property {
   availableFrom DateTime?
   visitDuration Int            @default(30) // Duration of visit slots in minutes
 
+  // Owner Verification Documents (required to publish)
+  ownerIdDocument       String?  // URL to owner ID document (CNI/Passport)
+  propertyProofDocument String?  // URL to property proof (titre de propriete/taxe fonciere)
+
   // Statistics
   views         Int            @default(0)
   contactCount  Int            @default(0)

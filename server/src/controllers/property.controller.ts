@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { propertyService } from '../services/property.service.js'
 import { PropertyType, PropertyStatus } from '@prisma/client'
+import { saveFile } from '../utils/upload.util.js'
 
 class PropertyController {
   /**
@@ -766,6 +767,60 @@ class PropertyController {
             message: error.message,
           })
         }
+      }
+      next(error)
+    }
+  }
+  /**
+   * POST /api/v1/properties/:id/verification-document
+   * Upload owner verification document (ID or property proof)
+   */
+  async uploadVerificationDocument(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params
+      const userId = req.user?.id
+      const { type } = req.body // 'ownerIdDocument' or 'propertyProofDocument'
+
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' })
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: 'Aucun fichier fourni' })
+      }
+
+      if (req.file.mimetype !== 'application/pdf') {
+        return res.status(400).json({ success: false, message: 'Seuls les fichiers PDF sont acceptes' })
+      }
+
+      if (req.file.size > 5 * 1024 * 1024) {
+        return res.status(400).json({ success: false, message: 'Le fichier ne doit pas depasser 5 Mo' })
+      }
+
+      if (!type || !['ownerIdDocument', 'propertyProofDocument'].includes(type)) {
+        return res.status(400).json({ success: false, message: 'Type de document invalide' })
+      }
+
+      const fileUrl = saveFile(req.file.buffer, req.file.originalname)
+
+      const property = await propertyService.updateProperty(id, userId, {
+        [type]: fileUrl,
+      })
+
+      return res.status(200).json({
+        success: true,
+        message: 'Document televerse avec succes',
+        data: { property, fileUrl },
+      })
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message === 'Property not found') {
+          return res.status(404).json({ success: false, message: 'Property not found' })
+        }
+        if (error.message.includes('Unauthorized')) {
+          return res.status(403).json({ success: false, message: error.message })
+        }
+        return res.status(400).json({ success: false, message: error.message })
       }
       next(error)
     }

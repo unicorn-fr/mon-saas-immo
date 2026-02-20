@@ -536,8 +536,27 @@ class PropertyService {
 
   /**
    * Publish property (change status from DRAFT to AVAILABLE)
+   * Requires owner verification documents (ID + property proof)
    */
   async publishProperty(id: string, ownerId: string) {
+    const property = await prisma.property.findUnique({ where: { id } })
+
+    if (!property) {
+      throw new Error('Property not found')
+    }
+
+    if (property.ownerId !== ownerId) {
+      throw new Error('Unauthorized: You do not own this property')
+    }
+
+    if (!property.ownerIdDocument) {
+      throw new Error('Vous devez fournir une piece d\'identite en cours de validite avant de publier le bien.')
+    }
+
+    if (!property.propertyProofDocument) {
+      throw new Error('Vous devez fournir une preuve de propriete (titre de propriete ou taxe fonciere) avant de publier le bien.')
+    }
+
     return this.changePropertyStatus(id, ownerId, PropertyStatus.AVAILABLE)
   }
 

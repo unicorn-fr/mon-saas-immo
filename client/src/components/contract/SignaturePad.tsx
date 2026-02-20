@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect, useCallback } from 'react'
 import SignatureCanvas from 'react-signature-canvas'
 import { X, Eraser, PenTool } from 'lucide-react'
 
@@ -16,8 +16,29 @@ export const SignaturePad = ({
   signerName,
 }: SignaturePadProps) => {
   const sigPad = useRef<SignatureCanvas>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const [error, setError] = useState('')
   const [accepted, setAccepted] = useState(false)
+  const [canvasSize, setCanvasSize] = useState({ width: 450, height: 200 })
+
+  const updateCanvasSize = useCallback(() => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect()
+      setCanvasSize({ width: Math.floor(rect.width), height: 200 })
+    }
+  }, [])
+
+  useEffect(() => {
+    if (isOpen) {
+      // Wait for modal to render then measure container
+      const timer = setTimeout(updateCanvasSize, 50)
+      window.addEventListener('resize', updateCanvasSize)
+      return () => {
+        clearTimeout(timer)
+        window.removeEventListener('resize', updateCanvasSize)
+      }
+    }
+  }, [isOpen, updateCanvasSize])
 
   const handleClear = () => {
     sigPad.current?.clear()
@@ -25,6 +46,7 @@ export const SignaturePad = ({
   }
 
   const handleClose = () => {
+    sigPad.current?.clear()
     setAccepted(false)
     setError('')
     onClose()
@@ -36,17 +58,18 @@ export const SignaturePad = ({
       return
     }
 
-    if (sigPad.current?.isEmpty()) {
+    if (!sigPad.current || sigPad.current.isEmpty()) {
       setError('Veuillez dessiner votre signature')
       return
     }
 
     const base64 = sigPad.current
-      ?.getTrimmedCanvas()
+      .getTrimmedCanvas()
       .toDataURL('image/png')
 
     if (base64) {
       setAccepted(false)
+      setError('')
       onConfirm(base64)
     }
   }
@@ -99,15 +122,28 @@ export const SignaturePad = ({
         </div>
 
         {/* Signature canvas */}
-        <div className="p-6">
-          <SignatureCanvas
-            ref={sigPad}
-            penColor="black"
-            canvasProps={{
-              className: 'border rounded bg-white w-full h-64',
-            }}
-            onBegin={() => setError('')}
-          />
+        <div className="p-6" ref={containerRef}>
+          <div className="border-2 border-dashed border-gray-300 rounded-lg bg-white relative">
+            <SignatureCanvas
+              ref={sigPad}
+              penColor="black"
+              minWidth={1.5}
+              maxWidth={3}
+              canvasProps={{
+                width: canvasSize.width,
+                height: canvasSize.height,
+                style: {
+                  width: '100%',
+                  height: '200px',
+                  borderRadius: '0.5rem',
+                },
+              }}
+              onBegin={() => setError('')}
+            />
+            <p className="absolute bottom-2 left-0 right-0 text-center text-xs text-gray-300 pointer-events-none">
+              Signez dans cette zone
+            </p>
+          </div>
           {error && (
             <p className="text-sm text-red-500 mt-2">{error}</p>
           )}

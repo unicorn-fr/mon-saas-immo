@@ -298,6 +298,26 @@ class PropertyService {
       throw new Error(handleApiError(error))
     }
   }
+
+  /**
+   * Upload verification document for property (Owner only)
+   */
+  async uploadVerificationDocument(propertyId: string, type: 'ownerIdDocument' | 'propertyProofDocument', file: File): Promise<{ property: Property; fileUrl: string }> {
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('type', type)
+
+      const response = await apiClient.post<ApiResponse<{ property: Property; fileUrl: string }>>(
+        `/properties/${propertyId}/verification-document`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      )
+      return response.data.data
+    } catch (error) {
+      throw new Error(handleApiError(error))
+    }
+  }
 }
 
 export const propertyService = new PropertyService()

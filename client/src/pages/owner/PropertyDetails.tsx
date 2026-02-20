@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -18,10 +18,15 @@ import {
   AlertCircle,
   Check,
   X,
+  Upload,
+  Shield,
+  Lock,
 } from 'lucide-react'
 import { useProperties } from '../../hooks/useProperties'
+import { propertyService } from '../../services/property.service'
 import { PROPERTY_TYPES, PROPERTY_STATUS, AMENITIES } from '../../types/property.types'
 import { Layout } from '../../components/layout/Layout'
+import toast from 'react-hot-toast'
 
 export default function PropertyDetails() {
   const { id } = useParams<{ id: string }>()
@@ -38,6 +43,8 @@ export default function PropertyDetails() {
   const [selectedImage, setSelectedImage] = useState(0)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isPublishing, setIsPublishing] = useState(false)
+  const [uploadingDoc, setUploadingDoc] = useState<'ownerIdDocument' | 'propertyProofDocument' | null>(null)
+  const docInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (id) {
@@ -65,13 +72,55 @@ export default function PropertyDetails() {
   const handlePublish = async () => {
     if (!currentProperty) return
 
+    if (!currentProperty.ownerIdDocument || !currentProperty.propertyProofDocument) {
+      toast.error('Vous devez fournir les documents de verification avant de publier le bien.')
+      return
+    }
+
     setIsPublishing(true)
     try {
       await publishProperty(currentProperty.id)
-    } catch (err) {
-      console.error('Publish failed:', err)
+      toast.success('Bien publie avec succes')
+    } catch (err: any) {
+      toast.error(err?.message || 'Erreur lors de la publication')
     } finally {
       setIsPublishing(false)
+    }
+  }
+
+  const handleDocUpload = (type: 'ownerIdDocument' | 'propertyProofDocument') => {
+    setUploadingDoc(type)
+    docInputRef.current?.click()
+  }
+
+  const handleDocFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !uploadingDoc || !currentProperty) return
+
+    if (file.type !== 'application/pdf') {
+      toast.error('Seuls les fichiers PDF sont acceptes')
+      setUploadingDoc(null)
+      if (docInputRef.current) docInputRef.current.value = ''
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Le fichier ne doit pas depasser 5 Mo')
+      setUploadingDoc(null)
+      if (docInputRef.current) docInputRef.current.value = ''
+      return
+    }
+
+    try {
+      await propertyService.uploadVerificationDocument(currentProperty.id, uploadingDoc, file)
+      toast.success('Document televerse avec succes')
+      // Refresh property data
+      if (id) fetchPropertyById(id, false)
+    } catch (err: any) {
+      toast.error(err?.message || 'Erreur lors du telechargement')
+    } finally {
+      setUploadingDoc(null)
+      if (docInputRef.current) docInputRef.current.value = ''
     }
   }
 
@@ -460,6 +509,117 @@ export default function PropertyDetails() {
                 </div>
               </div>
             </div>
+
+            {/* Verification Documents Card (only for DRAFT) */}
+            {property.status === 'DRAFT' && (
+              <div className="card">
+                <div className="flex items-center gap-2 mb-4">
+                  <Shield className="w-5 h-5 text-primary-600" />
+                  <h2 className="text-xl font-semibold">Verification du proprietaire</h2>
+                </div>
+                <p className="text-sm text-gray-600 mb-4">
+                  Documents obligatoires avant la mise en ligne du bien (anti-arnaque).
+                </p>
+
+                <input
+                  ref={docInputRef}
+                  type="file"
+                  className="hidden"
+                  accept=".pdf"
+                  onChange={handleDocFileChange}
+                />
+
+                {/* Owner ID Document */}
+                <div className={`p-3 rounded-lg border mb-3 ${property.ownerIdDocument ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={true}
+                      disabled
+                      className="mt-1 rounded border-gray-300 text-primary-600 opacity-60"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-gray-900">Piece d'identite</p>
+                        <Lock className="w-3 h-3 text-gray-400" />
+                        <span className="text-xs text-red-500 font-medium">Obligatoire</span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-0.5">Carte nationale d'identite ou passeport en cours de validite.</p>
+                      {property.ownerIdDocument ? (
+                        <div className="mt-2 flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                          <span className="text-xs text-green-700 font-medium">Document fourni</span>
+                          <a
+                            href={property.ownerIdDocument.startsWith('http') ? property.ownerIdDocument : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}${property.ownerIdDocument}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-blue-600 hover:underline ml-2"
+                          >
+                            Voir
+                          </a>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleDocUpload('ownerIdDocument')}
+                          disabled={uploadingDoc === 'ownerIdDocument'}
+                          className="mt-2 text-xs text-primary-600 hover:text-primary-700 flex items-center gap-1"
+                        >
+                          <Upload className="w-3.5 h-3.5" />
+                          {uploadingDoc === 'ownerIdDocument' ? 'Envoi en cours...' : 'Telecharger le document'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Property Proof Document */}
+                <div className={`p-3 rounded-lg border mb-3 ${property.propertyProofDocument ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={true}
+                      disabled
+                      className="mt-1 rounded border-gray-300 text-primary-600 opacity-60"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-gray-900">Preuve de propriete</p>
+                        <Lock className="w-3 h-3 text-gray-400" />
+                        <span className="text-xs text-red-500 font-medium">Obligatoire</span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-0.5">Titre de propriete ou dernier avis de taxe fonciere.</p>
+                      {property.propertyProofDocument ? (
+                        <div className="mt-2 flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                          <span className="text-xs text-green-700 font-medium">Document fourni</span>
+                          <a
+                            href={property.propertyProofDocument.startsWith('http') ? property.propertyProofDocument : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}${property.propertyProofDocument}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-blue-600 hover:underline ml-2"
+                          >
+                            Voir
+                          </a>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleDocUpload('propertyProofDocument')}
+                          disabled={uploadingDoc === 'propertyProofDocument'}
+                          className="mt-2 text-xs text-primary-600 hover:text-primary-700 flex items-center gap-1"
+                        >
+                          <Upload className="w-3.5 h-3.5" />
+                          {uploadingDoc === 'propertyProofDocument' ? 'Envoi en cours...' : 'Telecharger le document'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-xs text-gray-500 p-2 bg-gray-50 rounded-lg">
+                  Format : PDF uniquement - Taille max : 5 Mo
+                </div>
+              </div>
+            )}
 
             {/* Actions Card */}
             <div className="card">

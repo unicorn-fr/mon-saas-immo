@@ -147,6 +147,14 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
         onChange={handleFileChange}
       />
 
+      {/* Read-only indicator when owner views tenant docs */}
+      {isOwner && userRole === 'TENANT' && (
+        <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+          <Eye className="w-4 h-4 shrink-0" />
+          <span>Mode lecture seule — Vous pouvez consulter et verifier les documents du locataire.</span>
+        </div>
+      )}
+
       {/* Progress bar */}
       <div className="bg-white rounded-xl border p-4">
         <div className="flex items-center justify-between mb-2">
@@ -218,8 +226,10 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
 
                 {/* Actions */}
                 <div className="flex items-center gap-1 shrink-0">
-                  {/* Upload button (for the role that owns this category, or if rejected) */}
-                  {((!doc || doc.status === 'REJECTED') && item.role === userRole) && (
+                  {/* Upload button: only the matching role can upload (owner cannot upload tenant docs) */}
+                  {((!doc || doc.status === 'REJECTED') && item.role === userRole && (
+                    (userRole === 'OWNER' && isOwner) || (userRole === 'TENANT' && !isOwner)
+                  )) && (
                     <button
                       onClick={() => handleFileSelect(item.category)}
                       disabled={isLoading}
@@ -243,8 +253,10 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
                     </a>
                   )}
 
-                  {/* Delete button (uploader or owner) */}
+                  {/* Delete button: only the uploader's role can delete (owner can't delete tenant docs) */}
                   {doc && (doc.status !== 'VALIDATED') && (
+                    (item.role === 'OWNER' && isOwner) || (item.role === 'TENANT' && !isOwner)
+                  ) && (
                     <button
                       onClick={() => handleDelete(doc.id)}
                       className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-red-600 transition-colors"

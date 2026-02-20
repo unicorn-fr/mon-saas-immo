@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { propertyController } from '../controllers/property.controller.js'
 import { authenticate, authorize, optionalAuthenticate } from '../middlewares/auth.middleware.js'
+import { uploadFile } from '../utils/upload.util.js'
 
 const router = Router()
 
@@ -86,6 +87,15 @@ router.put(
   authenticate,
   authorize('OWNER'),
   propertyController.markAsOccupied.bind(propertyController)
+)
+
+// POST /api/v1/properties/:id/verification-document - Upload verification document
+router.post(
+  '/:id/verification-document',
+  authenticate,
+  authorize('OWNER'),
+  uploadFile.single('file'),
+  propertyController.uploadVerificationDocument.bind(propertyController)
 )
 
 /**

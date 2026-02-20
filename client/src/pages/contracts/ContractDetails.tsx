@@ -32,6 +32,7 @@ import {
   X,
   Check,
   Circle,
+  Plus,
 } from 'lucide-react'
 import {
   OWNER_DOCUMENT_CHECKLIST,
@@ -39,6 +40,7 @@ import {
 } from '../../types/document.types'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import toast from 'react-hot-toast'
 
 // Progress stepper configuration
 const CONTRACT_STEPS = [
@@ -85,22 +87,39 @@ export default function ContractDetails() {
   const [confirmModal, setConfirmModal] = useState<ConfirmModalType>(null)
   const [showSignature, setShowSignature] = useState(false)
   const [showSendModal, setShowSendModal] = useState(false)
-  const [requiredDocs, setRequiredDocs] = useState<Set<string>>(() => {
-    // Pre-select required docs by default
-    const defaults = new Set<string>()
-    OWNER_DOCUMENT_CHECKLIST.filter(d => d.required).forEach(d => defaults.add(d.category))
-    TENANT_DOCUMENT_CHECKLIST.filter(d => d.required).forEach(d => defaults.add(d.category))
-    return defaults
-  })
+  const [requiredDocs, setRequiredDocs] = useState<Set<string>>(new Set())
+  const [customDocRequests, setCustomDocRequests] = useState<{ title: string; description: string }[]>([])
+  const [newCustomDoc, setNewCustomDoc] = useState({ title: '', description: '' })
+  const [showCustomDocForm, setShowCustomDocForm] = useState(false)
   const [cancelReason, setCancelReason] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
   const [initialLoaded, setInitialLoaded] = useState(false)
+  const [docsSaved, setDocsSaved] = useState(false)
 
   useEffect(() => {
     if (id) {
       fetchContractById(id).then(() => setInitialLoaded(true))
     }
   }, [id, fetchContractById])
+
+  // Load requiredDocs and customDocRequests from contract content once loaded
+  useEffect(() => {
+    if (contract) {
+      const content = (contract.content as Record<string, any>) || {}
+      if (content.requiredDocuments && Array.isArray(content.requiredDocuments)) {
+        setRequiredDocs(new Set(content.requiredDocuments))
+      } else {
+        // Default: pre-select required docs
+        const defaults = new Set<string>()
+        OWNER_DOCUMENT_CHECKLIST.filter(d => d.required).forEach(d => defaults.add(d.category))
+        TENANT_DOCUMENT_CHECKLIST.filter(d => d.required).forEach(d => defaults.add(d.category))
+        setRequiredDocs(defaults)
+      }
+      if (content.customDocRequests && Array.isArray(content.customDocRequests)) {
+        setCustomDocRequests(content.customDocRequests)
+      }
+    }
+  }, [contract?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Only show full-page spinner on initial load
   if (!initialLoaded || (!contract && isLoading)) {
@@ -140,12 +159,20 @@ export default function ContractDetails() {
   const isTerminal = ['EXPIRED', 'TERMINATED', 'CANCELLED'].includes(contract.status)
 
   const handleSend = async () => {
+    if (requiredDocs.size === 0) {
+      toast.error('Veuillez selectionner au moins un document requis dans la section Dossier')
+      return
+    }
     setActionLoading(true)
     try {
-      // Save required documents to contract content before sending
+      // Save required docs + custom requests to contract content before sending
       const content = (contract.content as Record<string, any>) || {}
       await updateContract(contract.id, {
-        content: { ...content, requiredDocuments: Array.from(requiredDocs) },
+        content: {
+          ...content,
+          requiredDocuments: Array.from(requiredDocs),
+          customDocRequests,
+        },
       })
       await sendContract(contract.id)
       setShowSendModal(false)
@@ -160,6 +187,37 @@ export default function ContractDetails() {
       next.has(category) ? next.delete(category) : next.add(category)
       return next
     })
+    setDocsSaved(false)
+  }
+
+  const handleSaveDocRequirements = async () => {
+    setActionLoading(true)
+    try {
+      const content = (contract.content as Record<string, any>) || {}
+      await updateContract(contract.id, {
+        content: {
+          ...content,
+          requiredDocuments: Array.from(requiredDocs),
+          customDocRequests,
+        },
+      })
+      setDocsSaved(true)
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleAddCustomDoc = () => {
+    if (!newCustomDoc.title.trim()) return
+    setCustomDocRequests(prev => [...prev, { title: newCustomDoc.title.trim(), description: newCustomDoc.description.trim() }])
+    setNewCustomDoc({ title: '', description: '' })
+    setShowCustomDocForm(false)
+    setDocsSaved(false)
+  }
+
+  const handleRemoveCustomDoc = (index: number) => {
+    setCustomDocRequests(prev => prev.filter((_, i) => i !== index))
+    setDocsSaved(false)
   }
 
   const handleSignature = async (signatureBase64: string) => {
@@ -669,7 +727,156 @@ export default function ContractDetails() {
               </div>
             </div>
 
-            {/* Documents - Dossier de location */}
+            {/* Document Requirements Section - DRAFT mode (owner configures required docs) */}
+            {contract.status === 'DRAFT' && isOwner && (
+              <div className="card mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                  <FolderOpen className="w-5 h-5 text-primary-600" />
+                  Dossier de location - Documents requis
+                </h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  Selectionnez les documents que le locataire devra fournir avant la signature du contrat.
+                </p>
+
+                {/* Owner documents (DDT) */}
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-gray-900 mb-2">Documents proprietaire (DDT)</h4>
+                  <div className="space-y-1">
+                    {OWNER_DOCUMENT_CHECKLIST.map((item) => (
+                      <label key={item.category} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={requiredDocs.has(item.category)}
+                          onChange={() => toggleRequiredDoc(item.category)}
+                          className="mt-0.5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900">{item.label}</p>
+                          <p className="text-xs text-gray-500">{item.description}</p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tenant documents */}
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-gray-900 mb-2">Documents locataire</h4>
+                  <div className="space-y-1">
+                    {TENANT_DOCUMENT_CHECKLIST.map((item) => (
+                      <label key={item.category} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={requiredDocs.has(item.category)}
+                          onChange={() => toggleRequiredDoc(item.category)}
+                          className="mt-0.5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900">{item.label}</p>
+                          <p className="text-xs text-gray-500">{item.description}</p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Custom document requests */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-sm font-semibold text-gray-900">Demandes personnalisees</h4>
+                    <button
+                      type="button"
+                      onClick={() => setShowCustomDocForm(true)}
+                      className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Ajouter
+                    </button>
+                  </div>
+
+                  {customDocRequests.length > 0 && (
+                    <div className="space-y-2 mb-3">
+                      {customDocRequests.map((doc, index) => (
+                        <div key={index} className="flex items-start gap-3 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                          <FileText className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900">{doc.title}</p>
+                            {doc.description && (
+                              <p className="text-xs text-gray-500 mt-0.5">{doc.description}</p>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => handleRemoveCustomDoc(index)}
+                            className="p-1 rounded hover:bg-blue-100 text-gray-400 hover:text-red-500"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {showCustomDocForm && (
+                    <div className="p-3 bg-gray-50 border rounded-lg space-y-2">
+                      <input
+                        type="text"
+                        value={newCustomDoc.title}
+                        onChange={(e) => setNewCustomDoc(prev => ({ ...prev, title: e.target.value }))}
+                        placeholder="Titre du document (ex: Garantie Visale)"
+                        className="w-full border rounded-lg px-3 py-2 text-sm"
+                      />
+                      <input
+                        type="text"
+                        value={newCustomDoc.description}
+                        onChange={(e) => setNewCustomDoc(prev => ({ ...prev, description: e.target.value }))}
+                        placeholder="Description (facultatif)"
+                        className="w-full border rounded-lg px-3 py-2 text-sm"
+                      />
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={() => { setShowCustomDocForm(false); setNewCustomDoc({ title: '', description: '' }) }}
+                          className="btn btn-secondary text-xs px-3 py-1"
+                        >
+                          Annuler
+                        </button>
+                        <button
+                          onClick={handleAddCustomDoc}
+                          disabled={!newCustomDoc.title.trim()}
+                          className="btn btn-primary text-xs px-3 py-1 disabled:opacity-50"
+                        >
+                          Ajouter
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {customDocRequests.length === 0 && !showCustomDocForm && (
+                    <p className="text-xs text-gray-400 italic">Aucune demande personnalisee</p>
+                  )}
+                </div>
+
+                <div className="text-xs text-gray-500 mb-4 p-2 bg-gray-50 rounded-lg">
+                  Format accepte : PDF uniquement - Taille max : 5 Mo par document
+                </div>
+
+                <button
+                  onClick={handleSaveDocRequirements}
+                  disabled={actionLoading}
+                  className="btn btn-secondary text-sm flex items-center gap-2"
+                >
+                  {docsSaved ? (
+                    <>
+                      <Check className="w-4 h-4 text-green-500" />
+                      Enregistre
+                    </>
+                  ) : (
+                    'Enregistrer les documents requis'
+                  )}
+                </button>
+              </div>
+            )}
+
+            {/* Documents - Dossier de location (after DRAFT) */}
             {contract.status !== 'DRAFT' && (
               <div className="card mb-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -699,6 +906,26 @@ export default function ContractDetails() {
                     requiredCategories={requiredDocuments}
                   />
                 )}
+
+                {/* Display custom document requests */}
+                {contractContent.customDocRequests && contractContent.customDocRequests.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Documents personnalises demandes</h4>
+                    <div className="space-y-2">
+                      {contractContent.customDocRequests.map((doc: { title: string; description: string }, index: number) => (
+                        <div key={index} className="flex items-start gap-3 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                          <FileText className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900">{doc.title}</p>
+                            {doc.description && (
+                              <p className="text-xs text-gray-500 mt-0.5">{doc.description}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -712,10 +939,10 @@ export default function ContractDetails() {
           signerName={signerName}
         />
 
-        {/* Send Modal - Required Documents Selection */}
+        {/* Send Confirmation Modal */}
         {showSendModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 max-h-[85vh] overflow-y-auto">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-gray-900">Envoyer le contrat</h3>
                 <button
@@ -727,54 +954,18 @@ export default function ContractDetails() {
               </div>
 
               <p className="text-sm text-gray-600 mb-4">
-                Selectionnez les documents que le locataire devra fournir. Ces documents seront requis dans le dossier de location.
+                Le contrat sera envoye au locataire avec la liste des {requiredDocs.size} document(s) requis
+                {customDocRequests.length > 0 ? ` et ${customDocRequests.length} demande(s) personnalisee(s)` : ''}.
               </p>
 
-              {/* Owner documents */}
-              <div className="mb-4">
-                <h4 className="text-sm font-semibold text-gray-900 mb-2">Documents proprietaire (DDT)</h4>
-                <div className="space-y-2">
-                  {OWNER_DOCUMENT_CHECKLIST.map((item) => (
-                    <label key={item.category} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={requiredDocs.has(item.category)}
-                        onChange={() => toggleRequiredDoc(item.category)}
-                        className="mt-0.5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">{item.label}</p>
-                        <p className="text-xs text-gray-500">{item.description}</p>
-                      </div>
-                    </label>
-                  ))}
+              {requiredDocs.size === 0 && (
+                <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
+                  <p className="text-sm text-amber-700">
+                    Veuillez d'abord selectionner les documents requis dans la section "Dossier de location" ci-dessus.
+                  </p>
                 </div>
-              </div>
-
-              {/* Tenant documents */}
-              <div className="mb-4">
-                <h4 className="text-sm font-semibold text-gray-900 mb-2">Documents locataire</h4>
-                <div className="space-y-2">
-                  {TENANT_DOCUMENT_CHECKLIST.map((item) => (
-                    <label key={item.category} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={requiredDocs.has(item.category)}
-                        onChange={() => toggleRequiredDoc(item.category)}
-                        className="mt-0.5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">{item.label}</p>
-                        <p className="text-xs text-gray-500">{item.description}</p>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="text-xs text-gray-500 mb-4 p-2 bg-gray-50 rounded-lg">
-                Format accepte : PDF uniquement - Taille max : 5 Mo par document
-              </div>
+              )}
 
               <div className="flex gap-3 justify-end">
                 <button
@@ -794,7 +985,7 @@ export default function ContractDetails() {
                   ) : (
                     <Send className="w-4 h-4" />
                   )}
-                  Envoyer au locataire
+                  Confirmer l'envoi
                 </button>
               </div>
             </div>
