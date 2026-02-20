@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useContractStore } from '../../store/contractStore'
 import { useAuth } from '../../hooks/useAuth'
 import { Contract, ContractStatus } from '../../types/contract.types'
+import { Layout } from '../../components/layout/Layout'
 import {
   FileText,
   Plus,
@@ -152,6 +153,7 @@ export default function ContractsList() {
   }
 
   return (
+    <Layout>
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b">
@@ -255,5 +257,6 @@ export default function ContractsList() {
         )}
       </div>
     </div>
+    </Layout>
   )
 }

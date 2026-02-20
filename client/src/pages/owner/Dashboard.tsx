@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useProperties } from '../../hooks/useProperties'
+import { useContractStore } from '../../store/contractStore'
 import { Layout } from '../../components/layout/Layout'
 import {
   Home,
@@ -17,6 +18,9 @@ import {
   Bed,
   Bath,
   Square,
+  FileText,
+  Send,
+  PenLine,
 } from 'lucide-react'
 
 export default function Dashboard() {
@@ -29,10 +33,24 @@ export default function Dashboard() {
     isLoading,
   } = useProperties()
 
+  const {
+    contracts,
+    statistics: contractStats,
+    fetchContracts,
+    fetchStatistics: fetchContractStatistics,
+  } = useContractStore()
+
   useEffect(() => {
     fetchMyStatistics()
-    fetchMyProperties({ page: 1, limit: 5 }) // Fetch only 5 most recent
+    fetchMyProperties({ page: 1, limit: 5 })
+    fetchContracts(undefined, 1, 50)
+    fetchContractStatistics()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Calculate monthly revenue from active contracts
+  const activeContracts = contracts.filter((c) => c.status === 'ACTIVE')
+  const monthlyRevenue = activeContracts.reduce((sum, c) => sum + c.monthlyRent + (c.charges || 0), 0)
+  const recentContracts = contracts.slice(0, 3)
 
   const StatCard = ({
     icon: Icon,
@@ -116,16 +134,42 @@ export default function Dashboard() {
             </span>
             <span className="flex items-center">
               <Square className="w-3 h-3 mr-1" />
-              {property.surface}m²
+              {property.surface}m2
             </span>
           </div>
         </div>
         <div className="text-right flex-shrink-0">
-          <p className="font-semibold text-primary-600">{property.price}€</p>
+          <p className="font-semibold text-primary-600">{property.price}EUR</p>
           <p className="text-xs text-gray-500">/ mois</p>
         </div>
       </div>
     )
+  }
+
+  const getContractStatusIcon = (status: string) => {
+    switch (status) {
+      case 'ACTIVE': return <CheckCircle className="w-4 h-4 text-green-600" />
+      case 'DRAFT': return <Clock className="w-4 h-4 text-yellow-600" />
+      case 'SENT': return <Send className="w-4 h-4 text-blue-600" />
+      case 'SIGNED_OWNER':
+      case 'SIGNED_TENANT': return <PenLine className="w-4 h-4 text-indigo-600" />
+      case 'COMPLETED': return <CheckCircle className="w-4 h-4 text-emerald-600" />
+      default: return <FileText className="w-4 h-4 text-gray-400" />
+    }
+  }
+
+  const getContractStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      DRAFT: 'Brouillon',
+      SENT: 'Envoye',
+      SIGNED_OWNER: 'Signe (proprio)',
+      SIGNED_TENANT: 'Signe (locataire)',
+      COMPLETED: 'Signe',
+      ACTIVE: 'Actif',
+      EXPIRED: 'Expire',
+      TERMINATED: 'Resilie',
+    }
+    return labels[status] || status
   }
 
   if (isLoading && !statistics) {
@@ -148,7 +192,7 @@ export default function Dashboard() {
             icon={Home}
             label="Total Biens"
             value={statistics?.totalProperties || 0}
-            subtext="Propriétés enregistrées"
+            subtext="Proprietes enregistrees"
             color="primary"
             onClick={() => navigate('/properties/owner/me')}
           />
@@ -167,13 +211,35 @@ export default function Dashboard() {
             color="blue"
           />
           <StatCard
-            icon={Clock}
-            label="Pas sur le marché"
-            value={statistics?.draftProperties || 0}
-            subtext="Non publiés"
-            color="yellow"
+            icon={Euro}
+            label="Revenus mensuels"
+            value={`${monthlyRevenue.toFixed(0)}EUR`}
+            subtext={`${activeContracts.length} contrat(s) actif(s)`}
+            color="green"
           />
         </div>
+
+        {/* Contract Stats */}
+        {contractStats && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div className="card text-center bg-green-50 border-green-200">
+              <p className="text-sm text-gray-600 mb-1">Contrats actifs</p>
+              <p className="text-2xl font-bold text-green-600">{contractStats.active}</p>
+            </div>
+            <div className="card text-center bg-blue-50 border-blue-200">
+              <p className="text-sm text-gray-600 mb-1">En attente signature</p>
+              <p className="text-2xl font-bold text-blue-600">{contractStats.sent + contractStats.completed}</p>
+            </div>
+            <div className="card text-center bg-yellow-50 border-yellow-200">
+              <p className="text-sm text-gray-600 mb-1">Brouillons</p>
+              <p className="text-2xl font-bold text-yellow-600">{contractStats.draft}</p>
+            </div>
+            <div className="card text-center">
+              <p className="text-sm text-gray-600 mb-1">Total contrats</p>
+              <p className="text-2xl font-bold text-gray-900">{contractStats.total}</p>
+            </div>
+          </div>
+        )}
 
         {/* Engagement Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -186,7 +252,7 @@ export default function Dashboard() {
           />
           <StatCard
             icon={MessageSquare}
-            label="Contacts Reçus"
+            label="Contacts Recus"
             value={statistics?.totalContacts || 0}
             subtext="Messages de locataires"
             color="purple"
@@ -207,11 +273,11 @@ export default function Dashboard() {
         {/* Two Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Recent Properties */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-6">
             <div className="card">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-900">
-                  Propriétés Récentes
+                  Proprietes Recentes
                 </h2>
                 <Link
                   to="/properties/owner/me"
@@ -225,16 +291,67 @@ export default function Dashboard() {
               {myProperties.length === 0 ? (
                 <div className="text-center py-12">
                   <Home className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-600 mb-4">Aucune propriété pour le moment</p>
+                  <p className="text-gray-600 mb-4">Aucune propriete pour le moment</p>
                   <Link to="/properties/new" className="btn btn-primary inline-flex">
                     <Plus className="w-4 h-4 mr-2" />
-                    Créer votre première propriété
+                    Creer votre premiere propriete
                   </Link>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {myProperties.slice(0, 5).map((property) => (
                     <PropertyQuickCard key={property.id} property={property} />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Recent Contracts */}
+            <div className="card">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-primary-600" />
+                  Contrats Recents
+                </h2>
+                <Link
+                  to="/contracts"
+                  className="text-primary-600 hover:text-primary-700 text-sm font-medium flex items-center gap-1"
+                >
+                  Voir mes contrats
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+
+              {recentContracts.length === 0 ? (
+                <div className="text-center py-8">
+                  <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-600 mb-4">Aucun contrat pour le moment</p>
+                  <Link to="/contracts/new" className="btn btn-primary inline-flex">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Creer un contrat
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {recentContracts.map((contract) => (
+                    <div
+                      key={contract.id}
+                      className="flex items-center gap-4 p-4 bg-white rounded-lg border hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => navigate(`/contracts/${contract.id}`)}
+                    >
+                      {getContractStatusIcon(contract.status)}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-gray-900 truncate">
+                          {contract.property?.title || 'Contrat'}
+                        </h4>
+                        <p className="text-sm text-gray-500">
+                          {contract.tenant?.firstName} {contract.tenant?.lastName} - {contract.monthlyRent}EUR/mois
+                        </p>
+                      </div>
+                      <span className="text-xs font-medium text-gray-500">
+                        {getContractStatusLabel(contract.status)}
+                      </span>
+                    </div>
                   ))}
                 </div>
               )}
@@ -257,11 +374,25 @@ export default function Dashboard() {
                   Ajouter un bien
                 </button>
                 <button
+                  onClick={() => navigate('/contracts/new')}
+                  className="btn btn-secondary w-full justify-center"
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Nouveau contrat
+                </button>
+                <button
                   onClick={() => navigate('/properties/owner/me')}
                   className="btn btn-secondary w-full justify-center"
                 >
                   <Home className="w-4 h-4 mr-2" />
-                  Mes propriétés
+                  Mes proprietes
+                </button>
+                <button
+                  onClick={() => navigate('/contracts')}
+                  className="btn btn-secondary w-full justify-center"
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Voir mes contrats
                 </button>
               </div>
             </div>
@@ -296,7 +427,7 @@ export default function Dashboard() {
                 </div>
 
                 <div className="flex items-center justify-between pt-2">
-                  <span className="text-sm text-gray-700">Biens publiés</span>
+                  <span className="text-sm text-gray-700">Biens publies</span>
                   <span className="font-semibold text-gray-900">
                     {statistics?.totalProperties
                       ? Math.round(
@@ -327,34 +458,29 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Revenue Estimate (if properties have prices) */}
-            {statistics && statistics.totalProperties > 0 && (
-              <div className="card bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-                <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <Euro className="w-5 h-5 text-green-600" />
-                  Revenus Potentiels
-                </h3>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-700">Propriétés en location</span>
-                    <span className="font-semibold text-gray-900">
-                      {statistics.occupiedProperties || 0} biens
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-600 mt-2">
-                    💡 Conseil : Vérifiez régulièrement vos propriétés disponibles pour
-                    maximiser votre taux d'occupation.
-                  </p>
+            {/* Revenue Card */}
+            <div className="card bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+              <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <Euro className="w-5 h-5 text-green-600" />
+                Revenus Mensuels
+              </h3>
+              <div className="space-y-2">
+                <p className="text-3xl font-bold text-green-700">{monthlyRevenue.toFixed(2)}EUR</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700">Contrats actifs</span>
+                  <span className="font-semibold text-gray-900">
+                    {activeContracts.length}
+                  </span>
                 </div>
               </div>
-            )}
+            </div>
 
             {/* Tips */}
             <div className="card bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-              <h3 className="font-semibold text-gray-900 mb-3">💡 Conseil du jour</h3>
+              <h3 className="font-semibold text-gray-900 mb-3">Conseil du jour</h3>
               <p className="text-sm text-gray-700 leading-relaxed">
-                Des photos de qualité augmentent jusqu'à 40% les chances de location. Pensez
-                à mettre à jour vos images régulièrement !
+                Des photos de qualite augmentent jusqu'a 40% les chances de location. Pensez
+                a mettre a jour vos images regulierement !
               </p>
             </div>
           </div>
@@ -371,12 +497,12 @@ export default function Dashboard() {
                 Bienvenue sur votre tableau de bord !
               </h2>
               <p className="text-gray-600 mb-6">
-                Commencez par ajouter votre première propriété pour voir vos statistiques
-                apparaître ici.
+                Commencez par ajouter votre premiere propriete pour voir vos statistiques
+                apparaitre ici.
               </p>
               <Link to="/properties/new" className="btn btn-primary inline-flex">
                 <Plus className="w-5 h-5 mr-2" />
-                Créer ma première propriété
+                Creer ma premiere propriete
               </Link>
             </div>
           </div>

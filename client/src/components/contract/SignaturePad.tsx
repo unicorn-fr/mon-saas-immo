@@ -17,13 +17,25 @@ export const SignaturePad = ({
 }: SignaturePadProps) => {
   const sigPad = useRef<SignatureCanvas>(null)
   const [error, setError] = useState('')
+  const [accepted, setAccepted] = useState(false)
 
   const handleClear = () => {
     sigPad.current?.clear()
     setError('')
   }
 
+  const handleClose = () => {
+    setAccepted(false)
+    setError('')
+    onClose()
+  }
+
   const handleConfirm = () => {
+    if (!accepted) {
+      setError('Vous devez cocher "Lu et approuve" pour signer')
+      return
+    }
+
     if (sigPad.current?.isEmpty()) {
       setError('Veuillez dessiner votre signature')
       return
@@ -34,6 +46,7 @@ export const SignaturePad = ({
       .toDataURL('image/png')
 
     if (base64) {
+      setAccepted(false)
       onConfirm(base64)
     }
   }
@@ -53,11 +66,36 @@ export const SignaturePad = ({
             <p className="text-sm text-gray-600 mt-1">Signature de {signerName}</p>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="w-10 h-10 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* Legal text + checkbox */}
+        <div className="px-6 pt-6">
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+            <p className="text-sm text-gray-700 leading-relaxed">
+              En signant electroniquement ce document, je declare avoir lu l'integralite du contrat
+              et en accepter toutes les clauses et conditions. Cette signature a valeur d'engagement
+              contractuel conformement au reglement eIDAS (UE 910/2014).
+            </p>
+          </div>
+          <label className="flex items-start gap-3 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={accepted}
+              onChange={(e) => {
+                setAccepted(e.target.checked)
+                if (e.target.checked) setError('')
+              }}
+              className="mt-0.5 h-5 w-5 text-primary-600 rounded border-gray-300"
+            />
+            <span className="text-sm font-medium text-gray-900">
+              Lu et approuve - Bon pour accord
+            </span>
+          </label>
         </div>
 
         {/* Signature canvas */}
@@ -88,7 +126,7 @@ export const SignaturePad = ({
           <div className="flex-1" />
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="btn btn-secondary"
           >
             Annuler
@@ -96,7 +134,7 @@ export const SignaturePad = ({
           <button
             type="button"
             onClick={handleConfirm}
-            className="btn btn-primary flex items-center gap-2"
+            className={`btn btn-primary flex items-center gap-2 ${!accepted ? 'opacity-60' : ''}`}
           >
             <PenTool className="w-4 h-4" />
             Valider la signature

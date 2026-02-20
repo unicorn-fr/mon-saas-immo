@@ -6,6 +6,7 @@ import { ContractClause } from '../../types/contract.types'
 import { DEFAULT_CLAUSES } from '../../data/loiAlurClauses'
 import { PDFDownloadLink } from '@react-pdf/renderer'
 import { ContractPDF } from '../../components/contract/ContractPDF'
+import { Layout } from '../../components/layout/Layout'
 import {
   FileText,
   ArrowLeft,
@@ -93,7 +94,11 @@ export default function CreateContract() {
 
     if (s === 1) {
       if (!propertyId) newErrors.propertyId = 'Selectionnez une propriete'
-      if (!tenantEmail) newErrors.tenantEmail = 'Renseignez l\'email du locataire'
+      if (!tenantEmail) {
+        newErrors.tenantEmail = 'Renseignez l\'email du locataire'
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(tenantEmail)) {
+        newErrors.tenantEmail = 'Format d\'email invalide'
+      }
     }
 
     if (s === 2) {
@@ -184,6 +189,7 @@ export default function CreateContract() {
   const stepLabels = ['Propriete', 'Conditions', 'Clauses']
 
   return (
+    <Layout>
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b">
@@ -307,7 +313,7 @@ export default function CreateContract() {
                 />
                 {errors.tenantEmail && <p className="text-sm text-red-500 mt-1">{errors.tenantEmail}</p>}
                 <p className="text-sm text-gray-500 mt-1">
-                  Le locataire doit avoir un compte sur la plateforme
+                  Le locataire doit avoir un compte avec cet email sur la plateforme
                 </p>
               </div>
             </div>
@@ -594,5 +600,6 @@ export default function CreateContract() {
         </div>
       </div>
     </div>
+    </Layout>
   )
 }

@@ -238,7 +238,10 @@ class ContractController {
 
       const { signature } = req.body
 
-      const contract = await contractService.signContract(id, userId, signature)
+      const contract = await contractService.signContract(id, userId, signature, {
+        ip: req.ip || req.socket?.remoteAddress,
+        userAgent: req.headers['user-agent'],
+      })
 
       return res.status(200).json({
         success: true,

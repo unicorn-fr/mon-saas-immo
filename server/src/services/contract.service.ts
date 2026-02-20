@@ -1,4 +1,5 @@
 import { PrismaClient, ContractStatus, Contract } from '@prisma/client'
+import { createHash } from 'crypto'
 
 const prisma = new PrismaClient()
 
@@ -98,12 +99,24 @@ class ContractService {
       throw new Error('Unauthorized: You do not own this property')
     }
 
+    // Resolve tenant: support both UUID and email
+    let tenantLookup: { id: string } | { email: string }
+    if (data.tenantId.includes('@')) {
+      tenantLookup = { email: data.tenantId }
+    } else {
+      tenantLookup = { id: data.tenantId }
+    }
+
     const tenant = await prisma.user.findUnique({
-      where: { id: data.tenantId },
+      where: tenantLookup,
     })
 
-    if (!tenant || tenant.role !== 'TENANT') {
-      throw new Error('Tenant not found or invalid role')
+    if (!tenant) {
+      throw new Error('Aucun locataire trouvé avec cet email. Vérifiez que le locataire a bien un compte sur la plateforme.')
+    }
+
+    if (tenant.role !== 'TENANT') {
+      throw new Error('L\'utilisateur trouvé n\'a pas le rôle locataire.')
     }
 
     const overlappingContract = await prisma.contract.findFirst({
@@ -128,7 +141,7 @@ class ContractService {
     const contract = await prisma.contract.create({
       data: {
         propertyId: data.propertyId,
-        tenantId: data.tenantId,
+        tenantId: tenant.id,
         ownerId: data.ownerId,
         startDate: data.startDate,
         endDate: data.endDate,
@@ -303,9 +316,14 @@ class ContractService {
   }
 
   /**
-   * Sign contract with signature image
+   * Sign contract with signature image and metadata
    */
-  async signContract(contractId: string, userId: string, signatureData?: string): Promise<Contract> {
+  async signContract(
+    contractId: string,
+    userId: string,
+    signatureData?: string,
+    meta?: { ip?: string; userAgent?: string }
+  ): Promise<Contract> {
     const contract = await prisma.contract.findUnique({
       where: { id: contractId },
     })
@@ -327,8 +345,23 @@ class ContractService {
     const now = new Date()
     const updateData: any = {}
 
+    // Build signature metadata for legal value
+    const contractContentStr = JSON.stringify(contract.content || '') + JSON.stringify(contract.customClauses || '')
+    const contentHash = createHash('sha256').update(contractContentStr).digest('hex')
+
+    const signatureMeta = {
+      timestamp: now.toISOString(),
+      ip: meta?.ip || 'unknown',
+      userAgent: meta?.userAgent || 'unknown',
+      contentHash,
+    }
+
     const isOwner = contract.ownerId === userId
     const isTenant = contract.tenantId === userId
+
+    // Merge existing signature metadata
+    const existingContent = (contract.content as Record<string, any>) || {}
+    const existingSignatureMetadata = existingContent.signatureMetadata || {}
 
     if (isOwner) {
       if (contract.signedByOwner) {
@@ -337,9 +370,10 @@ class ContractService {
       updateData.ownerSignature = signatureData || null
       updateData.signedByOwner = now
 
+      existingSignatureMetadata.owner = signatureMeta
+
       // Determine new status
       if (contract.signedByTenant) {
-        // Both have now signed
         updateData.status = ContractStatus.COMPLETED
         updateData.signedAt = now
       } else {
@@ -352,13 +386,20 @@ class ContractService {
       updateData.tenantSignature = signatureData || null
       updateData.signedByTenant = now
 
+      existingSignatureMetadata.tenant = signatureMeta
+
       if (contract.signedByOwner) {
-        // Both have now signed
         updateData.status = ContractStatus.COMPLETED
         updateData.signedAt = now
       } else {
         updateData.status = ContractStatus.SIGNED_TENANT
       }
+    }
+
+    // Store signature metadata in content JSON
+    updateData.content = {
+      ...existingContent,
+      signatureMetadata: existingSignatureMetadata,
     }
 
     const updatedContract = await prisma.contract.update({

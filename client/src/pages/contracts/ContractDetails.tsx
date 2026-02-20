@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useContractStore } from '../../store/contractStore'
 import { useAuth } from '../../hooks/useAuth'
 import { ContractClause } from '../../types/contract.types'
 import { SignaturePad } from '../../components/contract/SignaturePad'
 import { ContractPDF } from '../../components/contract/ContractPDF'
+import { DocumentChecklist } from '../../components/document/DocumentChecklist'
+import { Layout } from '../../components/layout/Layout'
 import { PDFDownloadLink } from '@react-pdf/renderer'
 import {
   FileText,
@@ -22,6 +24,9 @@ import {
   PenTool,
   AlertCircle,
   Info,
+  ShieldCheck,
+  FolderOpen,
+  ClipboardCheck,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -129,7 +134,10 @@ export default function ContractDetails() {
     )
   }
 
+  const signatureMetadata = (contract.content as Record<string, any>)?.signatureMetadata
+
   return (
+    <Layout>
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b">
@@ -221,10 +229,16 @@ export default function ContractDetails() {
                 <div className="mt-3">
                   <div className="flex items-center text-sm text-green-600 mb-2">
                     <CheckCircle className="w-4 h-4 mr-1" />
-                    Signe le {format(new Date(contract.signedByOwner), 'dd MMM yyyy', { locale: fr })}
+                    Signe le {format(new Date(contract.signedByOwner), 'dd MMM yyyy HH:mm', { locale: fr })}
                   </div>
                   {contract.ownerSignature && (
                     <img src={contract.ownerSignature} alt="Signature proprietaire" className="h-16 border rounded p-1 bg-white" />
+                  )}
+                  {signatureMetadata?.owner && (
+                    <div className="mt-2 flex items-center gap-1 text-xs text-gray-500">
+                      <ShieldCheck className="w-3 h-3 text-green-500" />
+                      Signature electronique certifiee
+                    </div>
                   )}
                 </div>
               ) : (
@@ -248,10 +262,16 @@ export default function ContractDetails() {
                 <div className="mt-3">
                   <div className="flex items-center text-sm text-green-600 mb-2">
                     <CheckCircle className="w-4 h-4 mr-1" />
-                    Signe le {format(new Date(contract.signedByTenant), 'dd MMM yyyy', { locale: fr })}
+                    Signe le {format(new Date(contract.signedByTenant), 'dd MMM yyyy HH:mm', { locale: fr })}
                   </div>
                   {contract.tenantSignature && (
                     <img src={contract.tenantSignature} alt="Signature locataire" className="h-16 border rounded p-1 bg-white" />
+                  )}
+                  {signatureMetadata?.tenant && (
+                    <div className="mt-2 flex items-center gap-1 text-xs text-gray-500">
+                      <ShieldCheck className="w-3 h-3 text-green-500" />
+                      Signature electronique certifiee
+                    </div>
                   )}
                 </div>
               ) : (
@@ -336,32 +356,77 @@ export default function ContractDetails() {
             </div>
           )}
 
-          {/* PDF Download */}
+          {/* PDF & EDL */}
           <div className="card mb-6">
-            <h3 className="font-semibold text-gray-900 mb-4">Document PDF</h3>
-            <PDFDownloadLink
-              document={
-                <ContractPDF
-                  contract={contract}
-                  clauses={clauses.filter((c) => c.enabled)}
-                />
-              }
-              fileName={`contrat-${contract.property?.title?.replace(/\s+/g, '-').toLowerCase() || 'location'}.pdf`}
-            >
-              {({ loading }) => (
-                <button className="btn btn-secondary" disabled={loading}>
-                  {loading ? (
-                    'Generation du PDF...'
-                  ) : (
-                    <>
-                      <Download className="w-4 h-4 mr-2" />
-                      Telecharger le contrat PDF
-                    </>
-                  )}
-                </button>
+            <h3 className="font-semibold text-gray-900 mb-4">Documents</h3>
+            <div className="flex flex-wrap gap-3">
+              <PDFDownloadLink
+                document={
+                  <ContractPDF
+                    contract={contract}
+                    clauses={clauses.filter((c) => c.enabled)}
+                  />
+                }
+                fileName={`contrat-${contract.property?.title?.replace(/\s+/g, '-').toLowerCase() || 'location'}.pdf`}
+              >
+                {({ loading }) => (
+                  <button className="btn btn-secondary" disabled={loading}>
+                    {loading ? (
+                      'Generation du PDF...'
+                    ) : (
+                      <>
+                        <Download className="w-4 h-4 mr-2" />
+                        Telecharger le contrat PDF
+                      </>
+                    )}
+                  </button>
+                )}
+              </PDFDownloadLink>
+
+              {contract.status !== 'DRAFT' && (
+                <Link
+                  to={`/contracts/${contract.id}/edl`}
+                  className="btn btn-secondary flex items-center gap-2"
+                >
+                  <ClipboardCheck className="w-4 h-4" />
+                  Etat des lieux
+                </Link>
               )}
-            </PDFDownloadLink>
+            </div>
           </div>
+
+          {/* Documents - Dossier de location */}
+          {contract.status !== 'DRAFT' && (
+            <div className="card mb-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <FolderOpen className="w-5 h-5 text-primary-600" />
+                Dossier de location
+              </h2>
+              <p className="text-sm text-gray-600 mb-4">
+                Telechargez les documents obligatoires pour constituer le dossier complet.
+              </p>
+
+              {/* Owner documents */}
+              {isOwner && (
+                <div className="mb-6">
+                  <DocumentChecklist
+                    contractId={contract.id}
+                    userRole="OWNER"
+                    isOwner={true}
+                  />
+                </div>
+              )}
+
+              {/* Tenant documents */}
+              {(isOwner || isTenant) && (
+                <DocumentChecklist
+                  contractId={contract.id}
+                  userRole="TENANT"
+                  isOwner={isOwner}
+                />
+              )}
+            </div>
+          )}
 
           {/* Actions */}
           <div className="card">
@@ -442,5 +507,6 @@ export default function ContractDetails() {
         signerName={signerName}
       />
     </div>
+    </Layout>
   )
 }

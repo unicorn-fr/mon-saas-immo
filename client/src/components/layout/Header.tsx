@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Home, User, LogOut, Settings, LayoutDashboard, Menu, X, Heart, Calendar, MessageSquare } from 'lucide-react'
+import { Home, User, LogOut, Settings, LayoutDashboard, Menu, X, Heart, Calendar, MessageSquare, FileText } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useState } from 'react'
 
@@ -58,6 +58,13 @@ export const Header = () => {
                     >
                       Réservations
                     </Link>
+                    <Link
+                      to="/contracts"
+                      className="text-gray-700 hover:text-primary-600 font-medium transition-colors flex items-center gap-1"
+                    >
+                      <FileText className="w-4 h-4" />
+                      Contrats
+                    </Link>
                   </>
                 )}
 
@@ -77,6 +84,13 @@ export const Header = () => {
                     >
                       <Calendar className="w-4 h-4" />
                       Mes visites
+                    </Link>
+                    <Link
+                      to="/contracts"
+                      className="text-gray-700 hover:text-primary-600 font-medium transition-colors flex items-center gap-1"
+                    >
+                      <FileText className="w-4 h-4" />
+                      Contrats
                     </Link>
                   </>
                 )}
@@ -208,6 +222,13 @@ export const Header = () => {
                     >
                       Réservations
                     </Link>
+                    <Link
+                      to="/contracts"
+                      className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
+                      onClick={() => setShowMobileMenu(false)}
+                    >
+                      Contrats
+                    </Link>
                   </>
                 )}
 
@@ -226,6 +247,13 @@ export const Header = () => {
                       onClick={() => setShowMobileMenu(false)}
                     >
                       Mes visites
+                    </Link>
+                    <Link
+                      to="/contracts"
+                      className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
+                      onClick={() => setShowMobileMenu(false)}
+                    >
+                      Contrats
                     </Link>
                   </>
                 )}

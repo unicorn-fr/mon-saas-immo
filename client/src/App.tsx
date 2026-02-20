@@ -39,6 +39,7 @@ import Profile from './pages/Profile'
 import ContractsList from './pages/contracts/ContractsList'
 import CreateContract from './pages/contracts/CreateContract'
 import ContractDetails from './pages/contracts/ContractDetails'
+import EtatDesLieux from './pages/contracts/EtatDesLieux'
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard'
@@ -157,6 +158,7 @@ function AppRoutes() {
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/contracts" element={<ContractsList />} />
         <Route path="/contracts/:id" element={<ContractDetails />} />
+        <Route path="/contracts/:id/edl" element={<EtatDesLieux />} />
       </Route>
 
       {/* Protected Routes - Create Contract (Owner only) */}

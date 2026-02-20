@@ -8,7 +8,6 @@ import {
 } from '@react-pdf/renderer'
 import { Contract, ContractClause } from '../../types/contract.types'
 
-// Register a clean font (optional - falls back to Helvetica)
 const styles = StyleSheet.create({
   page: {
     padding: 50,
@@ -19,6 +18,12 @@ const styles = StyleSheet.create({
   header: {
     textAlign: 'center',
     marginBottom: 30,
+  },
+  contractNumber: {
+    fontSize: 8,
+    color: '#888',
+    textAlign: 'right',
+    marginBottom: 10,
   },
   title: {
     fontSize: 18,
@@ -107,6 +112,11 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginTop: 20,
   },
+  signatureMeta: {
+    fontSize: 7,
+    color: '#888',
+    marginTop: 4,
+  },
   footer: {
     position: 'absolute',
     bottom: 30,
@@ -143,6 +153,19 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 2,
   },
+  faitA: {
+    fontSize: 10,
+    textAlign: 'center',
+    marginTop: 25,
+    marginBottom: 10,
+    color: '#333',
+  },
+  legalMention: {
+    fontSize: 7,
+    color: '#999',
+    textAlign: 'center',
+    marginTop: 15,
+  },
 })
 
 interface ContractPDFProps {
@@ -159,12 +182,25 @@ const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount)
 }
 
+const paymentMethodLabels: Record<string, string> = {
+  virement: 'Virement bancaire',
+  prelevement: 'Prelevement automatique',
+  cheque: 'Cheque',
+  especes: 'Especes',
+}
+
 export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
   const enabledClauses = clauses?.filter((c) => c.enabled) ?? []
+  const content = (contract.content as Record<string, any>) || {}
+  const signatureMetadata = content.signatureMetadata || {}
+  const contractRef = contract.id?.substring(0, 8).toUpperCase() || 'BROUILLON'
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
+        {/* Contract Number */}
+        <Text style={styles.contractNumber}>Ref. {contractRef}</Text>
+
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>CONTRAT DE LOCATION</Text>
@@ -284,17 +320,35 @@ export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
               Total mensuel : {formatCurrency(contract.monthlyRent + (contract.charges || 0))}
             </Text>
           )}
+
+          {/* Payment modality */}
+          <View style={{ ...styles.row, marginTop: 8 }}>
+            <View style={styles.col}>
+              <Text style={styles.label}>Modalite de paiement</Text>
+              <Text style={styles.value}>
+                {paymentMethodLabels[content.paymentMethod] || content.paymentMethod || 'Non precise'}
+              </Text>
+            </View>
+            <View style={styles.col}>
+              <Text style={styles.label}>Jour de paiement</Text>
+              <Text style={styles.value}>
+                Le {content.paymentDay || '5'} de chaque mois
+              </Text>
+            </View>
+          </View>
         </View>
 
         {/* Footer */}
         <Text style={styles.footer}>
-          Document genere le {new Date().toLocaleDateString('fr-FR')} - Contrat de location - Loi ALUR
+          Ref. {contractRef} - Document genere le {new Date().toLocaleDateString('fr-FR')} - Contrat de location - Loi ALUR
         </Text>
       </Page>
 
       {/* Page 2: Clauses */}
       {enabledClauses.length > 0 && (
         <Page size="A4" style={styles.page}>
+          <Text style={styles.contractNumber}>Ref. {contractRef}</Text>
+
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>CLAUSES ET CONDITIONS</Text>
             {enabledClauses.map((clause, index) => (
@@ -316,13 +370,15 @@ export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
           )}
 
           <Text style={styles.footer}>
-            Document genere le {new Date().toLocaleDateString('fr-FR')} - Contrat de location - Loi ALUR
+            Ref. {contractRef} - Document genere le {new Date().toLocaleDateString('fr-FR')} - Contrat de location - Loi ALUR
           </Text>
         </Page>
       )}
 
       {/* Page 3: Signatures */}
       <Page size="A4" style={styles.page}>
+        <Text style={styles.contractNumber}>Ref. {contractRef}</Text>
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>SIGNATURES</Text>
           <Text style={{ ...styles.value, marginBottom: 15 }}>
@@ -330,6 +386,11 @@ export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
             et les accepter sans reserve. Le present bail est etabli en deux exemplaires originaux.
           </Text>
         </View>
+
+        {/* Fait a */}
+        <Text style={styles.faitA}>
+          Fait a {contract.property?.city || '[Ville]'}, le {contract.signedAt ? formatDate(contract.signedAt) : formatDate(new Date().toISOString())}
+        </Text>
 
         <View style={styles.signatureSection}>
           {/* Owner Signature */}
@@ -347,6 +408,16 @@ export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
               <Image style={styles.signatureImage} src={contract.ownerSignature} />
             ) : (
               <Text style={styles.signaturePlaceholder}>En attente de signature</Text>
+            )}
+            {signatureMetadata.owner && (
+              <Text style={styles.signatureMeta}>
+                Horodatage: {new Date(signatureMetadata.owner.timestamp).toLocaleString('fr-FR')}
+              </Text>
+            )}
+            {signatureMetadata.owner?.contentHash && (
+              <Text style={styles.signatureMeta}>
+                Hash: {signatureMetadata.owner.contentHash.substring(0, 16)}...
+              </Text>
             )}
           </View>
 
@@ -366,11 +437,27 @@ export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
             ) : (
               <Text style={styles.signaturePlaceholder}>En attente de signature</Text>
             )}
+            {signatureMetadata.tenant && (
+              <Text style={styles.signatureMeta}>
+                Horodatage: {new Date(signatureMetadata.tenant.timestamp).toLocaleString('fr-FR')}
+              </Text>
+            )}
+            {signatureMetadata.tenant?.contentHash && (
+              <Text style={styles.signatureMeta}>
+                Hash: {signatureMetadata.tenant.contentHash.substring(0, 16)}...
+              </Text>
+            )}
           </View>
         </View>
 
+        {/* eIDAS legal mention */}
+        <Text style={styles.legalMention}>
+          Signature electronique conforme au reglement eIDAS (UE 910/2014) relatif a l'identification
+          electronique et aux services de confiance pour les transactions electroniques.
+        </Text>
+
         <Text style={styles.footer}>
-          Document genere le {new Date().toLocaleDateString('fr-FR')} - Contrat de location - Loi ALUR
+          Ref. {contractRef} - Document genere le {new Date().toLocaleDateString('fr-FR')} - Contrat de location - Loi ALUR
         </Text>
       </Page>
     </Document>

@@ -104,6 +104,7 @@ model User {
   conversationsUser1    Conversation[]        @relation("ConversationUser1")
   conversationsUser2    Conversation[]        @relation("ConversationUser2")
   verificationTokens    VerificationToken[]
+  uploadedDocuments     ContractDocument[]    @relation("DocumentUploader")
 
   @@index([email])
   @@index([role])
@@ -353,6 +354,9 @@ model Contract {
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
+  // Relations
+  documents   ContractDocument[]
+
   @@index([propertyId])
   @@index([tenantId])
   @@index([ownerId])
@@ -360,6 +364,43 @@ model Contract {
   @@index([startDate])
   @@index([endDate])
   @@map("contracts")
+}
+
+enum DocumentStatus {
+  PENDING
+  UPLOADED
+  VALIDATED
+  REJECTED
+}
+
+model ContractDocument {
+  id            String         @id @default(uuid())
+
+  contractId    String
+  contract      Contract       @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  uploadedById  String
+  uploadedBy    User           @relation("DocumentUploader", fields: [uploadedById], references: [id], onDelete: Cascade)
+
+  // Document info
+  category      String         // DDT_DPE, IDENTITE_LOCATAIRE, etc.
+  status        DocumentStatus @default(UPLOADED)
+  fileName      String
+  fileUrl       String
+  fileSize      Int
+  mimeType      String
+
+  // Validation
+  rejectionReason String?      @db.Text
+
+  // Timestamps
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([contractId])
+  @@index([uploadedById])
+  @@index([category])
+  @@map("contract_documents")
 }
 
 model Favorite {

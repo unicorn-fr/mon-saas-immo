@@ -15,6 +15,7 @@ import bookingRoutes from './routes/booking.routes.js'
 import messageRoutes from './routes/message.routes.js'
 import notificationRoutes from './routes/notification.routes.js'
 import contractRoutes from './routes/contract.routes.js'
+import documentRoutes from './routes/document.routes.js'
 import adminRoutes from './routes/admin.routes.js'
 // import userRoutes from './routes/user.routes.js'
 
@@ -99,6 +100,7 @@ app.use(`${API_PREFIX}/bookings`, bookingRoutes)
 app.use(`${API_PREFIX}/messages`, messageRoutes)
 app.use(`${API_PREFIX}/notifications`, notificationRoutes)
 app.use(`${API_PREFIX}/contracts`, contractRoutes)
+app.use(`${API_PREFIX}/documents`, documentRoutes)
 app.use(`${API_PREFIX}/admin`, adminRoutes)
 // app.use(`${API_PREFIX}/users`, userRoutes)
 
