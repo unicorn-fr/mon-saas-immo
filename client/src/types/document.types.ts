@@ -64,7 +64,7 @@ export const OWNER_DOCUMENT_CHECKLIST: DocumentChecklistItem[] = [
     description: 'Obligatoire pour toute mise en location. Valable 10 ans.',
     role: 'OWNER',
     required: true,
-    acceptedTypes: ['application/pdf', 'image/jpeg', 'image/png'],
+    acceptedTypes: ['application/pdf'],
     maxSizeMB: 5,
   },
   {
@@ -73,7 +73,7 @@ export const OWNER_DOCUMENT_CHECKLIST: DocumentChecklistItem[] = [
     description: 'Obligatoire. Valable 6 mois. A renouveler si necessaire.',
     role: 'OWNER',
     required: true,
-    acceptedTypes: ['application/pdf', 'image/jpeg', 'image/png'],
+    acceptedTypes: ['application/pdf'],
     maxSizeMB: 5,
   },
   {
@@ -82,7 +82,7 @@ export const OWNER_DOCUMENT_CHECKLIST: DocumentChecklistItem[] = [
     description: 'Obligatoire pour les immeubles construits avant le 1er janvier 1949.',
     role: 'OWNER',
     required: false,
-    acceptedTypes: ['application/pdf', 'image/jpeg', 'image/png'],
+    acceptedTypes: ['application/pdf'],
     maxSizeMB: 5,
   },
   {
@@ -91,7 +91,7 @@ export const OWNER_DOCUMENT_CHECKLIST: DocumentChecklistItem[] = [
     description: 'Obligatoire si l\'installation electrique a plus de 15 ans. Valable 6 ans.',
     role: 'OWNER',
     required: false,
-    acceptedTypes: ['application/pdf', 'image/jpeg', 'image/png'],
+    acceptedTypes: ['application/pdf'],
     maxSizeMB: 5,
   },
   {
@@ -100,7 +100,7 @@ export const OWNER_DOCUMENT_CHECKLIST: DocumentChecklistItem[] = [
     description: 'Obligatoire si l\'installation de gaz a plus de 15 ans. Valable 6 ans.',
     role: 'OWNER',
     required: false,
-    acceptedTypes: ['application/pdf', 'image/jpeg', 'image/png'],
+    acceptedTypes: ['application/pdf'],
     maxSizeMB: 5,
   },
   {
@@ -109,7 +109,7 @@ export const OWNER_DOCUMENT_CHECKLIST: DocumentChecklistItem[] = [
     description: 'Obligatoire si le bien est situe dans une zone d\'exposition au bruit des aerodromes.',
     role: 'OWNER',
     required: false,
-    acceptedTypes: ['application/pdf', 'image/jpeg', 'image/png'],
+    acceptedTypes: ['application/pdf'],
     maxSizeMB: 5,
   },
   {
@@ -119,7 +119,7 @@ export const OWNER_DOCUMENT_CHECKLIST: DocumentChecklistItem[] = [
     role: 'OWNER',
     required: false,
     acceptedTypes: ['application/pdf'],
-    maxSizeMB: 10,
+    maxSizeMB: 5,
   },
   {
     category: 'NOTICE_INFO',
@@ -136,8 +136,8 @@ export const OWNER_DOCUMENT_CHECKLIST: DocumentChecklistItem[] = [
     description: 'Releve d\'Identite Bancaire pour le versement du loyer.',
     role: 'OWNER',
     required: true,
-    acceptedTypes: ['application/pdf', 'image/jpeg', 'image/png'],
-    maxSizeMB: 2,
+    acceptedTypes: ['application/pdf'],
+    maxSizeMB: 5,
   },
 ]
 
@@ -148,7 +148,7 @@ export const TENANT_DOCUMENT_CHECKLIST: DocumentChecklistItem[] = [
     description: 'Carte nationale d\'identite, passeport ou titre de sejour en cours de validite.',
     role: 'TENANT',
     required: true,
-    acceptedTypes: ['application/pdf', 'image/jpeg', 'image/png'],
+    acceptedTypes: ['application/pdf'],
     maxSizeMB: 5,
   },
   {
@@ -157,7 +157,7 @@ export const TENANT_DOCUMENT_CHECKLIST: DocumentChecklistItem[] = [
     description: 'Quittance de loyer, facture EDF, attestation d\'hebergement... de moins de 3 mois.',
     role: 'TENANT',
     required: true,
-    acceptedTypes: ['application/pdf', 'image/jpeg', 'image/png'],
+    acceptedTypes: ['application/pdf'],
     maxSizeMB: 5,
   },
   {
@@ -166,7 +166,7 @@ export const TENANT_DOCUMENT_CHECKLIST: DocumentChecklistItem[] = [
     description: 'Contrat de travail, attestation de l\'employeur, ou certificat de scolarite.',
     role: 'TENANT',
     required: true,
-    acceptedTypes: ['application/pdf', 'image/jpeg', 'image/png'],
+    acceptedTypes: ['application/pdf'],
     maxSizeMB: 5,
   },
   {
@@ -175,7 +175,7 @@ export const TENANT_DOCUMENT_CHECKLIST: DocumentChecklistItem[] = [
     description: 'Bulletin de salaire du mois precedent.',
     role: 'TENANT',
     required: true,
-    acceptedTypes: ['application/pdf', 'image/jpeg', 'image/png'],
+    acceptedTypes: ['application/pdf'],
     maxSizeMB: 5,
   },
   {
@@ -184,7 +184,7 @@ export const TENANT_DOCUMENT_CHECKLIST: DocumentChecklistItem[] = [
     description: 'Bulletin de salaire de l\'avant-dernier mois.',
     role: 'TENANT',
     required: true,
-    acceptedTypes: ['application/pdf', 'image/jpeg', 'image/png'],
+    acceptedTypes: ['application/pdf'],
     maxSizeMB: 5,
   },
   {
@@ -193,7 +193,7 @@ export const TENANT_DOCUMENT_CHECKLIST: DocumentChecklistItem[] = [
     description: 'Bulletin de salaire du mois M-3.',
     role: 'TENANT',
     required: true,
-    acceptedTypes: ['application/pdf', 'image/jpeg', 'image/png'],
+    acceptedTypes: ['application/pdf'],
     maxSizeMB: 5,
   },
   {
@@ -202,7 +202,7 @@ export const TENANT_DOCUMENT_CHECKLIST: DocumentChecklistItem[] = [
     description: 'Avis d\'imposition ou de non-imposition sur les revenus N-1.',
     role: 'TENANT',
     required: true,
-    acceptedTypes: ['application/pdf', 'image/jpeg', 'image/png'],
+    acceptedTypes: ['application/pdf'],
     maxSizeMB: 5,
   },
   {
@@ -211,7 +211,7 @@ export const TENANT_DOCUMENT_CHECKLIST: DocumentChecklistItem[] = [
     description: 'Attestation d\'assurance couvrant les risques locatifs. A fournir avant la remise des cles.',
     role: 'TENANT',
     required: true,
-    acceptedTypes: ['application/pdf', 'image/jpeg', 'image/png'],
+    acceptedTypes: ['application/pdf'],
     maxSizeMB: 5,
   },
 ]

@@ -70,6 +70,11 @@ export const contractService = {
     return response.data.data.contract
   },
 
+  async cancelContract(id: string, reason?: string): Promise<Contract> {
+    const response = await api.put(`/contracts/${id}/cancel`, { reason })
+    return response.data.data.contract
+  },
+
   async getStatistics(): Promise<ContractStatistics> {
     const response = await api.get('/contracts/statistics')
     return response.data.data.statistics

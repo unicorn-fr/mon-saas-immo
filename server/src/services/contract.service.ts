@@ -494,6 +494,68 @@ class ContractService {
   }
 
   /**
+   * Cancel contract (SENT, SIGNED_OWNER, SIGNED_TENANT -> CANCELLED)
+   */
+  async cancelContract(contractId: string, userId: string, reason?: string): Promise<Contract> {
+    const contract = await prisma.contract.findUnique({
+      where: { id: contractId },
+    })
+
+    if (!contract) {
+      throw new Error('Contract not found')
+    }
+
+    if (contract.ownerId !== userId) {
+      throw new Error('Unauthorized: Only the owner can cancel this contract')
+    }
+
+    const cancellableStatuses: ContractStatus[] = [
+      ContractStatus.SENT,
+      ContractStatus.SIGNED_OWNER,
+      ContractStatus.SIGNED_TENANT,
+      ContractStatus.COMPLETED,
+    ]
+
+    if (!cancellableStatuses.includes(contract.status as ContractStatus)) {
+      throw new Error('Can only cancel contracts that have been sent or partially signed')
+    }
+
+    const existingContent = (contract.content as Record<string, any>) || {}
+
+    const updatedContract = await prisma.contract.update({
+      where: { id: contractId },
+      data: {
+        status: ContractStatus.CANCELLED,
+        content: {
+          ...existingContent,
+          cancellation: {
+            reason: reason || '',
+            cancelledAt: new Date().toISOString(),
+            cancelledBy: userId,
+            previousStatus: contract.status,
+          },
+        },
+      },
+      include: contractIncludes,
+    })
+
+    // Notify the tenant
+    await prisma.notification.create({
+      data: {
+        userId: contract.tenantId,
+        type: 'contract_cancelled',
+        title: 'Contrat annulé',
+        message: reason
+          ? `Le propriétaire a annulé le contrat. Motif : ${reason}`
+          : 'Le propriétaire a annulé le contrat.',
+        actionUrl: `/contracts/${contractId}`,
+      },
+    })
+
+    return updatedContract
+  }
+
+  /**
    * Get contract statistics for owner
    */
   async getOwnerStatistics(ownerId: string) {

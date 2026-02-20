@@ -329,6 +329,41 @@ class ContractController {
   }
 
   /**
+   * PUT /api/v1/contracts/:id/cancel
+   */
+  async cancelContract(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params
+      const userId = req.user?.id
+
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' })
+      }
+
+      const { reason } = req.body
+
+      const contract = await contractService.cancelContract(id, userId, reason)
+
+      return res.status(200).json({
+        success: true,
+        message: 'Contract cancelled successfully',
+        data: { contract },
+      })
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message.includes('not found')) {
+          return res.status(404).json({ success: false, message: 'Contract not found' })
+        }
+        if (error.message.includes('Unauthorized')) {
+          return res.status(403).json({ success: false, message: error.message })
+        }
+        return res.status(400).json({ success: false, message: error.message })
+      }
+      next(error)
+    }
+  }
+
+  /**
    * GET /api/v1/contracts/statistics
    */
   async getStatistics(req: Request, res: Response, next: NextFunction) {

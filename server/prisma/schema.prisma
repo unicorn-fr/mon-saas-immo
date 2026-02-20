@@ -50,6 +50,7 @@ enum ContractStatus {
   ACTIVE          // Actif (en cours)
   EXPIRED         // Expiré
   TERMINATED      // Résilié
+  CANCELLED       // Annulé
 }
 
 enum DateOverrideType {

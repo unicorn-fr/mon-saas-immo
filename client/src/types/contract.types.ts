@@ -1,4 +1,4 @@
-export type ContractStatus = 'DRAFT' | 'SENT' | 'SIGNED_OWNER' | 'SIGNED_TENANT' | 'COMPLETED' | 'ACTIVE' | 'EXPIRED' | 'TERMINATED'
+export type ContractStatus = 'DRAFT' | 'SENT' | 'SIGNED_OWNER' | 'SIGNED_TENANT' | 'COMPLETED' | 'ACTIVE' | 'EXPIRED' | 'TERMINATED' | 'CANCELLED'
 
 export interface ContractClause {
   id: string

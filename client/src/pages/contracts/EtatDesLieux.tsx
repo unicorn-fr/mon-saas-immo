@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useContractStore } from '../../store/contractStore'
+import { useDocumentStore } from '../../store/documentStore'
 import { useAuth } from '../../hooks/useAuth'
 import { Layout } from '../../components/layout/Layout'
+import { EDLPDF } from '../../components/contract/EDLPDF'
 import {
   EDLType,
   EtatElement,
@@ -10,6 +12,7 @@ import {
   ETAT_LABELS,
   ETAT_COLORS,
   prefillEDLFromContract,
+  createEmptyEDL,
 } from '../../data/etatDesLieuxTemplate'
 import {
   ArrowLeft,
@@ -19,7 +22,14 @@ import {
   ChevronRight,
   Key,
   Gauge,
+  Download,
+  Upload,
+  FileText,
+  CheckCircle,
+  Eye,
+  Trash2,
 } from 'lucide-react'
+import { PDFDownloadLink } from '@react-pdf/renderer'
 import toast from 'react-hot-toast'
 
 export default function EtatDesLieux() {
@@ -27,19 +37,24 @@ export default function EtatDesLieux() {
   const navigate = useNavigate()
   useAuth()
   const { currentContract: contract, fetchContractById } = useContractStore()
+  const { documents, fetchDocuments, uploadDocument, deleteDocument } = useDocumentStore()
 
   const [edlType, setEdlType] = useState<EDLType>('ENTREE')
   const [edl, setEdl] = useState<EDLData | null>(null)
   const [expandedRooms, setExpandedRooms] = useState<Set<string>>(new Set(['entree']))
   const [saving, setSaving] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
-    if (id) fetchContractById(id)
-  }, [id, fetchContractById])
+    if (id) {
+      fetchContractById(id)
+      fetchDocuments(id)
+    }
+  }, [id, fetchContractById, fetchDocuments])
 
   useEffect(() => {
     if (contract) {
-      // Check if there's an existing EDL in contract.content
       const content = contract.content as Record<string, any> || {}
       const existingEdl = content[`edl_${edlType.toLowerCase()}`]
       if (existingEdl) {
@@ -59,6 +74,10 @@ export default function EtatDesLieux() {
       </Layout>
     )
   }
+
+  // Get uploaded EDL documents
+  const edlCategory = edlType === 'ENTREE' ? 'EDL_ENTREE' : 'EDL_SORTIE'
+  const uploadedEdl = documents.find(d => d.category === edlCategory)
 
   const toggleRoom = (roomId: string) => {
     setExpandedRooms(prev => {
@@ -113,7 +132,6 @@ export default function EtatDesLieux() {
       const key = `edl_${edlType.toLowerCase()}`
       const updatedContent = { ...content, [key]: { ...edl, date: new Date().toISOString() } }
 
-      // Use the contract store to update
       const { useContractStore } = await import('../../store/contractStore')
       const store = useContractStore.getState()
       await store.updateContract(contract.id, { content: updatedContent })
@@ -125,6 +143,48 @@ export default function EtatDesLieux() {
       setSaving(false)
     }
   }
+
+  const handleUploadEdl = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !contract) return
+
+    if (file.type !== 'application/pdf') {
+      toast.error('Seuls les fichiers PDF sont acceptes')
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Le fichier ne doit pas depasser 5 Mo')
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+
+    setUploading(true)
+    try {
+      await uploadDocument(contract.id, edlCategory, file)
+      toast.success('EDL scanne televerse avec succes')
+    } catch {
+      toast.error('Erreur lors du telechargement')
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const handleDeleteEdl = async () => {
+    if (!uploadedEdl) return
+    if (!confirm('Supprimer l\'EDL scanne ?')) return
+    try {
+      await deleteDocument(uploadedEdl.id)
+      toast.success('Document supprime')
+    } catch {
+      toast.error('Erreur lors de la suppression')
+    }
+  }
+
+  // Build blank EDL for PDF
+  const blankEdl = contract ? prefillEDLFromContract(edlType, contract) : createEmptyEDL(edlType)
 
   const etatOptions: EtatElement[] = ['NEUF', 'BON', 'USAGE', 'MAUVAIS', 'NA']
 
@@ -173,6 +233,90 @@ export default function EtatDesLieux() {
 
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto space-y-6">
+            {/* PDF Downloads & Upload */}
+            <div className="bg-white rounded-xl border p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-primary-600" />
+                Documents EDL
+              </h3>
+
+              <div className="flex flex-wrap gap-3 mb-4">
+                {/* Download blank PDF */}
+                <PDFDownloadLink
+                  document={<EDLPDF edl={blankEdl} blank={true} />}
+                  fileName={`edl-${edlType.toLowerCase()}-vierge-${contract.property?.title?.replace(/\s+/g, '-').toLowerCase() || 'logement'}.pdf`}
+                >
+                  {({ loading }) => (
+                    <button className="btn btn-secondary flex items-center gap-2" disabled={loading}>
+                      <Download className="w-4 h-4" />
+                      {loading ? 'Generation...' : 'PDF vierge (a remplir)'}
+                    </button>
+                  )}
+                </PDFDownloadLink>
+
+                {/* Download filled PDF */}
+                <PDFDownloadLink
+                  document={<EDLPDF edl={edl} blank={false} />}
+                  fileName={`edl-${edlType.toLowerCase()}-rempli-${contract.property?.title?.replace(/\s+/g, '-').toLowerCase() || 'logement'}.pdf`}
+                >
+                  {({ loading }) => (
+                    <button className="btn btn-secondary flex items-center gap-2" disabled={loading}>
+                      <Download className="w-4 h-4" />
+                      {loading ? 'Generation...' : 'PDF rempli'}
+                    </button>
+                  )}
+                </PDFDownloadLink>
+
+                {/* Upload scanned EDL */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf"
+                  className="hidden"
+                  onChange={handleUploadEdl}
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="btn btn-secondary flex items-center gap-2"
+                >
+                  <Upload className="w-4 h-4" />
+                  {uploading ? 'Telechargement...' : 'Telecharger un EDL scanne'}
+                </button>
+              </div>
+
+              {/* Show uploaded EDL */}
+              {uploadedEdl && (
+                <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-green-900">EDL scanne televerse</p>
+                    <p className="text-xs text-green-700 truncate">{uploadedEdl.fileName}</p>
+                  </div>
+                  <a
+                    href={uploadedEdl.fileUrl.startsWith('http') ? uploadedEdl.fileUrl : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}${uploadedEdl.fileUrl}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 rounded-lg hover:bg-green-100 text-green-600"
+                    title="Voir"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </a>
+                  <button
+                    onClick={handleDeleteEdl}
+                    className="p-2 rounded-lg hover:bg-red-100 text-red-500"
+                    title="Supprimer"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+              <p className="text-xs text-gray-500 mt-3">
+                Format accepte : PDF uniquement - Taille max : 5 Mo
+              </p>
+            </div>
+
             {/* Room-by-room inspection */}
             {edl.rooms.map((room) => (
               <div key={room.id} className="bg-white rounded-xl border overflow-hidden">

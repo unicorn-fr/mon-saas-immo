@@ -533,6 +533,28 @@ export default function CreateContract() {
                   className="input min-h-[100px]"
                   rows={4}
                 />
+                <div className="mt-2">
+                  <p className="text-xs text-gray-500 mb-2">Exemples de conditions particulieres :</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      'Le locataire s\'engage a souscrire un contrat d\'entretien annuel de la chaudiere.',
+                      'Les animaux domestiques sont autorises sous reserve qu\'ils ne causent aucun trouble de voisinage ni degradation.',
+                      'Le logement est loue meuble conformement a l\'inventaire joint en annexe.',
+                      'Le locataire s\'engage a entretenir le jardin et les espaces verts.',
+                      'Le stationnement est attribue au locataire (place n°__).',
+                      'Le locataire devra maintenir les detecteurs de fumee en etat de fonctionnement.',
+                    ].map((example) => (
+                      <button
+                        key={example}
+                        type="button"
+                        onClick={() => setTerms(prev => prev ? `${prev}\n${example}` : example)}
+                        className="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+                      >
+                        + {example.slice(0, 50)}...
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {/* PDF Preview */}

@@ -63,4 +63,11 @@ router.put(
   contractController.terminateContract.bind(contractController)
 )
 
+// PUT /api/v1/contracts/:id/cancel - Cancel contract (owner only)
+router.put(
+  '/:id/cancel',
+  authorize('OWNER'),
+  contractController.cancelContract.bind(contractController)
+)
+
 export default router

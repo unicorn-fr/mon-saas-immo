@@ -44,6 +44,7 @@ export default function ContractsList() {
     ACTIVE: 'Actif',
     EXPIRED: 'Expiré',
     TERMINATED: 'Résilié',
+    CANCELLED: 'Annulé',
   }
 
   const getStatusBadge = (status: ContractStatus) => {
@@ -59,6 +60,7 @@ export default function ContractsList() {
       ACTIVE: { bg: 'bg-green-100', text: 'text-green-700', icon: CheckCircle },
       EXPIRED: { bg: 'bg-gray-100', text: 'text-gray-700', icon: AlertCircle },
       TERMINATED: { bg: 'bg-red-100', text: 'text-red-700', icon: XCircle },
+      CANCELLED: { bg: 'bg-orange-100', text: 'text-orange-700', icon: XCircle },
     }
 
     const variant = variants[status]
@@ -215,7 +217,7 @@ export default function ContractsList() {
         {/* Filters */}
         <div className="mb-6">
           <div className="flex gap-2 flex-wrap">
-            {(['ALL', 'DRAFT', 'SENT', 'SIGNED_OWNER', 'SIGNED_TENANT', 'COMPLETED', 'ACTIVE', 'TERMINATED', 'EXPIRED'] as const).map((status) => (
+            {(['ALL', 'DRAFT', 'SENT', 'SIGNED_OWNER', 'SIGNED_TENANT', 'COMPLETED', 'ACTIVE', 'TERMINATED', 'CANCELLED', 'EXPIRED'] as const).map((status) => (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}

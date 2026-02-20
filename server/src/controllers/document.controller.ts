@@ -26,10 +26,17 @@ class DocumentController {
         })
       }
 
-      if (req.file.size > 10 * 1024 * 1024) {
+      if (req.file.mimetype !== 'application/pdf') {
         return res.status(400).json({
           success: false,
-          message: 'Le fichier ne doit pas depasser 10 Mo',
+          message: 'Seuls les fichiers PDF sont acceptes',
+        })
+      }
+
+      if (req.file.size > 5 * 1024 * 1024) {
+        return res.status(400).json({
+          success: false,
+          message: 'Le fichier ne doit pas depasser 5 Mo',
         })
       }
 

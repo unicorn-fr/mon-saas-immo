@@ -103,4 +103,36 @@ export const DEFAULT_CLAUSES: ContractClause[] = [
     enabled: true,
     isCustom: false,
   },
+  {
+    id: 'clause_resolutoire',
+    title: 'Clause resolutoire',
+    description:
+      'A defaut de paiement du loyer ou des charges aux termes convenus, et deux mois apres un commandement de payer demeure infructueux, le bail sera resilie de plein droit, conformement a l\'article 24 de la loi du 6 juillet 1989. La clause resolutoire est egalement applicable en cas de defaut d\'assurance, de troubles de voisinage constates par decision de justice, et de non-respect de l\'obligation d\'user paisiblement des locaux.',
+    enabled: true,
+    isCustom: false,
+  },
+  {
+    id: 'revision_irl',
+    title: 'Revision annuelle du loyer (IRL)',
+    description:
+      'Le loyer pourra etre revise chaque annee a la date anniversaire du bail, sur la base de la variation de l\'Indice de Reference des Loyers (IRL) publie par l\'INSEE. La formule de revision est la suivante : Loyer revise = Loyer en cours x (dernier IRL connu / IRL du meme trimestre de l\'annee precedente). La revision est applicable de plein droit, sans mise en demeure prealable. A defaut de manifestation du bailleur dans un delai d\'un an suivant la date de revision, celui-ci est repute avoir renonce au benefice de la clause.',
+    enabled: true,
+    isCustom: false,
+  },
+  {
+    id: 'solidarite',
+    title: 'Solidarite et indivisibilite',
+    description:
+      'En cas de pluralite de locataires ou de colocataires, ceux-ci sont tenus solidairement et indivisiblement au paiement du loyer, des charges et de l\'ensemble des obligations decoulant du present bail. Cette solidarite persiste pendant une duree de 6 mois apres le depart d\'un colocataire, sauf si un nouveau colocataire figure au bail dans l\'intervalle, conformement a l\'article 8-1 de la loi du 6 juillet 1989.',
+    enabled: false,
+    isCustom: false,
+  },
+  {
+    id: 'depot_garantie_restitution',
+    title: 'Restitution du depot de garantie',
+    description:
+      'Le depot de garantie est restitue dans un delai maximal d\'un mois a compter de la remise des cles si l\'etat des lieux de sortie est conforme a l\'etat des lieux d\'entree, ou de deux mois en cas de differences constatees. Toute retenue sur le depot de garantie doit etre justifiee par des documents (devis, factures, constats). A defaut de restitution dans les delais legaux, le depot de garantie produit des interets au taux legal au profit du locataire, conformement a l\'article 22 de la loi du 6 juillet 1989.',
+    enabled: true,
+    isCustom: false,
+  },
 ]

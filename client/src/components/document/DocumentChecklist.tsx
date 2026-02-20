@@ -22,9 +22,10 @@ interface DocumentChecklistProps {
   contractId: string
   userRole: 'OWNER' | 'TENANT'
   isOwner: boolean // current user is the contract owner
+  requiredCategories?: string[] // if provided, only show these categories
 }
 
-export const DocumentChecklist = ({ contractId, userRole, isOwner }: DocumentChecklistProps) => {
+export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCategories }: DocumentChecklistProps) => {
   const { documents, isLoading, fetchDocuments, uploadDocument, deleteDocument, updateDocumentStatus } = useDocumentStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploadingCategory, setUploadingCategory] = useState<string | null>(null)
@@ -35,7 +36,10 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner }: DocumentChe
     fetchDocuments(contractId)
   }, [contractId, fetchDocuments])
 
-  const checklist = userRole === 'OWNER' ? OWNER_DOCUMENT_CHECKLIST : TENANT_DOCUMENT_CHECKLIST
+  const fullChecklist = userRole === 'OWNER' ? OWNER_DOCUMENT_CHECKLIST : TENANT_DOCUMENT_CHECKLIST
+  const checklist = requiredCategories
+    ? fullChecklist.filter(item => requiredCategories.includes(item.category))
+    : fullChecklist
 
   const getDocumentForCategory = (category: string): ContractDocument | undefined => {
     return documents.find(d => d.category === category)
@@ -49,6 +53,20 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner }: DocumentChe
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !uploadingCategory) return
+
+    if (file.type !== 'application/pdf') {
+      toast.error('Seuls les fichiers PDF sont acceptes')
+      setUploadingCategory(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Le fichier ne doit pas depasser 5 Mo')
+      setUploadingCategory(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
 
     try {
       await uploadDocument(contractId, uploadingCategory, file)
@@ -125,7 +143,7 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner }: DocumentChe
         ref={fileInputRef}
         type="file"
         className="hidden"
-        accept=".pdf,.jpg,.jpeg,.png"
+        accept=".pdf"
         onChange={handleFileChange}
       />
 
