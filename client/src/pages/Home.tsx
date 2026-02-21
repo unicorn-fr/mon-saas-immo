@@ -687,20 +687,20 @@ export default function Home() {
             <div>
               <h4 className="text-white font-semibold mb-4">Légal</h4>
               <ul className="space-y-2 text-sm">
-                <li><span className="hover:text-primary-400 transition-colors cursor-pointer">Mentions légales</span></li>
-                <li><span className="hover:text-primary-400 transition-colors cursor-pointer">CGU</span></li>
-                <li><span className="hover:text-primary-400 transition-colors cursor-pointer">Politique de confidentialité</span></li>
-                <li><span className="hover:text-primary-400 transition-colors cursor-pointer">Cookies</span></li>
+                <li><Link to="/mentions-legales" className="hover:text-primary-400 transition-colors">Mentions légales</Link></li>
+                <li><Link to="/cgu" className="hover:text-primary-400 transition-colors">CGU</Link></li>
+                <li><Link to="/confidentialite" className="hover:text-primary-400 transition-colors">Politique de confidentialité</Link></li>
+                <li><Link to="/cookies" className="hover:text-primary-400 transition-colors">Cookies</Link></li>
               </ul>
             </div>
 
             <div>
               <h4 className="text-white font-semibold mb-4">Contact</h4>
               <ul className="space-y-2 text-sm">
-                <li><span className="hover:text-primary-400 transition-colors cursor-pointer">FAQ</span></li>
-                <li><span className="hover:text-primary-400 transition-colors cursor-pointer">Nous contacter</span></li>
-                <li><span className="hover:text-primary-400 transition-colors cursor-pointer">Support</span></li>
-                <li><span className="hover:text-primary-400 transition-colors cursor-pointer">Presse</span></li>
+                <li><Link to="/faq" className="hover:text-primary-400 transition-colors">FAQ</Link></li>
+                <li><Link to="/contact" className="hover:text-primary-400 transition-colors">Nous contacter</Link></li>
+                <li><Link to="/support" className="hover:text-primary-400 transition-colors">Support</Link></li>
+                <li><Link to="/presse" className="hover:text-primary-400 transition-colors">Presse</Link></li>
               </ul>
             </div>
           </div>

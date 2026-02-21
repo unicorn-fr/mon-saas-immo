@@ -45,6 +45,18 @@ import EtatDesLieux from './pages/contracts/EtatDesLieux'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import UsersManagement from './pages/admin/UsersManagement'
 
+// Legal Pages
+import MentionsLegales from './pages/legal/MentionsLegales'
+import CGU from './pages/legal/CGU'
+import PolitiqueConfidentialite from './pages/legal/PolitiqueConfidentialite'
+import Cookies from './pages/legal/Cookies'
+
+// Info Pages
+import FAQ from './pages/info/FAQ'
+import Contact from './pages/info/Contact'
+import Support from './pages/info/Support'
+import Presse from './pages/info/Presse'
+
 // PWA Components
 import { InstallPWA } from './components/pwa/InstallPWA'
 import { UpdatePWA } from './components/pwa/UpdatePWA'
@@ -128,6 +140,16 @@ function AppRoutes() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
+
+      {/* Legal & Info Pages */}
+      <Route path="/mentions-legales" element={<MentionsLegales />} />
+      <Route path="/cgu" element={<CGU />} />
+      <Route path="/confidentialite" element={<PolitiqueConfidentialite />} />
+      <Route path="/cookies" element={<Cookies />} />
+      <Route path="/faq" element={<FAQ />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/support" element={<Support />} />
+      <Route path="/presse" element={<Presse />} />
 
       {/* Search & Properties (Public for now, can be protected later) */}
       {/* <Route path="/search" element={<SearchPage />} /> */}

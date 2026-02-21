@@ -58,7 +58,8 @@
       "Bash(npx prisma migrate deploy:*)",
       "Bash(npx vite)",
       "Bash(git reset:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(git -C /Users/enzo/Desktop/Projets/Applications_Web/En_Cours/plateforme-gestion-locative status)"
     ]
   }
 }
