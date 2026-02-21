@@ -82,7 +82,7 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
   const handleDelete = async (docId: string) => {
     if (!confirm('Supprimer ce document ?')) return
     try {
-      await deleteDocument(docId)
+      await deleteDocument(contractId, docId)
       toast.success('Document supprime')
     } catch {
       toast.error('Erreur lors de la suppression')
@@ -91,7 +91,7 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
 
   const handleValidate = async (docId: string) => {
     try {
-      await updateDocumentStatus(docId, 'VALIDATED')
+      await updateDocumentStatus(contractId, docId, 'VALIDATED')
       toast.success('Document valide')
     } catch {
       toast.error('Erreur lors de la validation')
@@ -101,7 +101,7 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
   const handleReject = async () => {
     if (!rejectingDocId) return
     try {
-      await updateDocumentStatus(rejectingDocId, 'REJECTED', rejectReason)
+      await updateDocumentStatus(contractId, rejectingDocId, 'REJECTED', rejectReason)
       toast.success('Document refuse')
       setRejectingDocId(null)
       setRejectReason('')

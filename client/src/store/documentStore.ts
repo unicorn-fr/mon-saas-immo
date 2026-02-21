@@ -6,11 +6,12 @@ interface DocumentState {
   documents: ContractDocument[]
   isLoading: boolean
   error: string | null
+  contractId: string | null
 
   fetchDocuments: (contractId: string) => Promise<void>
   uploadDocument: (contractId: string, category: string, file: File) => Promise<ContractDocument>
-  deleteDocument: (documentId: string) => Promise<void>
-  updateDocumentStatus: (documentId: string, status: 'VALIDATED' | 'REJECTED', rejectionReason?: string) => Promise<void>
+  deleteDocument: (contractId: string, documentId: string) => Promise<void>
+  updateDocumentStatus: (contractId: string, documentId: string, status: 'VALIDATED' | 'REJECTED', rejectionReason?: string) => Promise<void>
   clearDocuments: () => void
 }
 
@@ -18,15 +19,16 @@ export const useDocumentStore = create<DocumentState>((set) => ({
   documents: [],
   isLoading: false,
   error: null,
+  contractId: null,
 
   fetchDocuments: async (contractId: string) => {
-    set({ isLoading: true, error: null })
+    set({ isLoading: true, error: null, contractId })
     try {
       const documents = await documentService.getDocumentsByContract(contractId)
       set({ documents, isLoading: false })
     } catch (error: any) {
       set({
-        error: error.response?.data?.message || 'Erreur lors du chargement des documents',
+        error: error.response?.data?.message || error.message || 'Erreur lors du chargement des documents',
         isLoading: false,
       })
     }
@@ -42,41 +44,43 @@ export const useDocumentStore = create<DocumentState>((set) => ({
       }))
       return doc
     } catch (error: any) {
+      const errorMessage = error.message || error.response?.data?.message || 'Erreur lors du telechargement'
       set({
-        error: error.response?.data?.message || 'Erreur lors du telechargement',
+        error: errorMessage,
         isLoading: false,
       })
       throw error
     }
   },
 
-  deleteDocument: async (documentId: string) => {
+  deleteDocument: async (contractId: string, documentId: string) => {
     try {
-      await documentService.deleteDocument(documentId)
+      await documentService.deleteDocument(documentId, contractId)
       set((state) => ({
         documents: state.documents.filter(d => d.id !== documentId),
       }))
     } catch (error: any) {
       set({
-        error: error.response?.data?.message || 'Erreur lors de la suppression',
+        error: error.message || error.response?.data?.message || 'Erreur lors de la suppression',
       })
       throw error
     }
   },
 
-  updateDocumentStatus: async (documentId: string, status: 'VALIDATED' | 'REJECTED', rejectionReason?: string) => {
+  updateDocumentStatus: async (contractId: string, documentId: string, status: 'VALIDATED' | 'REJECTED', rejectionReason?: string) => {
     try {
-      const updated = await documentService.updateDocumentStatus(documentId, status, rejectionReason)
+      const updated = await documentService.updateDocumentStatus(documentId, contractId, status, rejectionReason)
       set((state) => ({
         documents: state.documents.map(d => d.id === documentId ? updated : d),
       }))
     } catch (error: any) {
       set({
-        error: error.response?.data?.message || 'Erreur lors de la mise a jour',
+        error: error.message || error.response?.data?.message || 'Erreur lors de la mise a jour',
       })
       throw error
     }
   },
 
-  clearDocuments: () => set({ documents: [], error: null }),
+  clearDocuments: () => set({ documents: [], error: null, contractId: null }),
 }))
+
