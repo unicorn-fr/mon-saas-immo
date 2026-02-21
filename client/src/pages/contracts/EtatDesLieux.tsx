@@ -173,10 +173,10 @@ export default function EtatDesLieux() {
   }
 
   const handleDeleteEdl = async () => {
-    if (!uploadedEdl || !id) return
+    if (!uploadedEdl) return
     if (!confirm('Supprimer l\'EDL scanne ?')) return
     try {
-      await deleteDocument(id, uploadedEdl.id)
+      await deleteDocument(uploadedEdl.id)
       toast.success('Document supprime')
     } catch {
       toast.error('Erreur lors de la suppression')

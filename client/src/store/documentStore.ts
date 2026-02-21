@@ -6,12 +6,11 @@ interface DocumentState {
   documents: ContractDocument[]
   isLoading: boolean
   error: string | null
-  contractId: string | null
 
   fetchDocuments: (contractId: string) => Promise<void>
   uploadDocument: (contractId: string, category: string, file: File) => Promise<ContractDocument>
-  deleteDocument: (contractId: string, documentId: string) => Promise<void>
-  updateDocumentStatus: (contractId: string, documentId: string, status: 'VALIDATED' | 'REJECTED', rejectionReason?: string) => Promise<void>
+  deleteDocument: (documentId: string) => Promise<void>
+  updateDocumentStatus: (documentId: string, status: 'VALIDATED' | 'REJECTED', rejectionReason?: string) => Promise<void>
   clearDocuments: () => void
 }
 
@@ -19,16 +18,15 @@ export const useDocumentStore = create<DocumentState>((set) => ({
   documents: [],
   isLoading: false,
   error: null,
-  contractId: null,
 
   fetchDocuments: async (contractId: string) => {
-    set({ isLoading: true, error: null, contractId })
+    set({ isLoading: true, error: null })
     try {
       const documents = await documentService.getDocumentsByContract(contractId)
       set({ documents, isLoading: false })
     } catch (error: any) {
       set({
-        error: error.response?.data?.message || error.message || 'Erreur lors du chargement des documents',
+        error: error.message || error.response?.data?.message || 'Erreur lors du chargement des documents',
         isLoading: false,
       })
     }
@@ -53,9 +51,9 @@ export const useDocumentStore = create<DocumentState>((set) => ({
     }
   },
 
-  deleteDocument: async (contractId: string, documentId: string) => {
+  deleteDocument: async (documentId: string) => {
     try {
-      await documentService.deleteDocument(documentId, contractId)
+      await documentService.deleteDocument(documentId)
       set((state) => ({
         documents: state.documents.filter(d => d.id !== documentId),
       }))
@@ -67,9 +65,9 @@ export const useDocumentStore = create<DocumentState>((set) => ({
     }
   },
 
-  updateDocumentStatus: async (contractId: string, documentId: string, status: 'VALIDATED' | 'REJECTED', rejectionReason?: string) => {
+  updateDocumentStatus: async (documentId: string, status: 'VALIDATED' | 'REJECTED', rejectionReason?: string) => {
     try {
-      const updated = await documentService.updateDocumentStatus(documentId, contractId, status, rejectionReason)
+      const updated = await documentService.updateDocumentStatus(documentId, status, rejectionReason)
       set((state) => ({
         documents: state.documents.map(d => d.id === documentId ? updated : d),
       }))
@@ -81,6 +79,7 @@ export const useDocumentStore = create<DocumentState>((set) => ({
     }
   },
 
-  clearDocuments: () => set({ documents: [], error: null, contractId: null }),
+  clearDocuments: () => set({ documents: [], error: null }),
 }))
+
 
