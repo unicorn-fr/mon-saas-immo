@@ -388,6 +388,166 @@ class ContractController {
       next(error)
     }
   }
+
+  /**
+   * GET /api/v1/contracts/:id/documents
+   */
+  async getContractDocuments(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id: contractId } = req.params
+      const userId = req.user?.id
+
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' })
+      }
+
+      if (!contractId) {
+        return res.status(400).json({ success: false, message: 'Contract ID is required' })
+      }
+
+      const documents = await contractService.getContractDocuments(contractId)
+
+      return res.status(200).json({ success: true, data: { documents } })
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return res.status(404).json({ success: false, message: 'Contract not found' })
+      }
+      next(error)
+    }
+  }
+
+  /**
+   * POST /api/v1/contracts/:id/documents
+   */
+  async uploadDocument(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id: contractId } = req.params
+      const userId = req.user?.id
+      const { fileName, fileSize, mimeType, category, fileUrl } = req.body
+
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' })
+      }
+
+      if (!contractId) {
+        return res.status(400).json({ success: false, message: 'Contract ID is required' })
+      }
+
+      // Validate required fields
+      if (!fileName || !fileSize || !mimeType || !fileUrl) {
+        return res.status(400).json({
+          success: false,
+          message: 'Missing required fields: fileName, fileSize, mimeType, fileUrl',
+        })
+      }
+
+      const document = await contractService.uploadDocument(contractId, userId, {
+        fileName,
+        fileSize,
+        mimeType,
+        category: category || 'CONTRACT_DOCUMENT',
+        fileUrl,
+      })
+
+      return res.status(201).json({ success: true, data: { document } })
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message.includes('not found')) {
+          return res.status(404).json({ success: false, message: 'Contract not found' })
+        }
+        if (error.message.includes('Unauthorized')) {
+          return res.status(403).json({ success: false, message: error.message })
+        }
+        if (error.message.includes('exceeds maximum')) {
+          return res.status(413).json({ success: false, message: error.message })
+        }
+        return res.status(400).json({ success: false, message: error.message })
+      }
+      next(error)
+    }
+  }
+
+  /**
+   * DELETE /api/v1/contracts/:id/documents/:docId
+   */
+  async deleteDocument(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id: contractId, docId } = req.params
+      const userId = req.user?.id
+
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' })
+      }
+
+      if (!contractId || !docId) {
+        return res.status(400).json({ success: false, message: 'Contract ID and Document ID are required' })
+      }
+
+      await contractService.deleteDocument(contractId, docId, userId)
+
+      return res.status(200).json({ success: true, message: 'Document deleted successfully' })
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message.includes('not found')) {
+          return res.status(404).json({ success: false, message: 'Document not found' })
+        }
+        if (error.message.includes('Unauthorized')) {
+          return res.status(403).json({ success: false, message: error.message })
+        }
+        return res.status(400).json({ success: false, message: error.message })
+      }
+      next(error)
+    }
+  }
+
+  /**
+   * PUT /api/v1/contracts/:id/documents/:docId/validate
+   */
+  async validateDocument(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id: contractId, docId } = req.params
+
+      if (!contractId || !docId) {
+        return res.status(400).json({ success: false, message: 'Contract ID and Document ID are required' })
+      }
+
+      const document = await contractService.validateDocument(contractId, docId)
+
+      return res.status(200).json({ success: true, data: { document } })
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return res.status(404).json({ success: false, message: 'Document not found' })
+      }
+      next(error)
+    }
+  }
+
+  /**
+   * PUT /api/v1/contracts/:id/documents/:docId/reject
+   */
+  async rejectDocument(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id: contractId, docId } = req.params
+      const { rejectionReason } = req.body
+
+      if (!contractId || !docId) {
+        return res.status(400).json({ success: false, message: 'Contract ID and Document ID are required' })
+      }
+
+      if (!rejectionReason) {
+        return res.status(400).json({ success: false, message: 'Rejection reason is required' })
+      }
+
+      const document = await contractService.rejectDocument(contractId, docId, rejectionReason)
+
+      return res.status(200).json({ success: true, data: { document } })
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return res.status(404).json({ success: false, message: 'Document not found' })
+      }
+      next(error)
+    }
+  }
 }
 
 export const contractController = new ContractController()

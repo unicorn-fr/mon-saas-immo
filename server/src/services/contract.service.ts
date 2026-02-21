@@ -588,6 +588,170 @@ class ContractService {
 
     return { total, active, draft, sent, completed, terminated, expired }
   }
+
+  /**
+   * Get contract documents
+   */
+  async getContractDocuments(contractId: string) {
+    const contract = await prisma.contract.findUnique({
+      where: { id: contractId },
+    })
+
+    if (!contract) {
+      throw new Error('Contract not found')
+    }
+
+    const documents = await prisma.contractDocument.findMany({
+      where: { contractId },
+      include: {
+        uploadedBy: {
+          select: { id: true, firstName: true, lastName: true, email: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+
+    return documents
+  }
+
+  /**
+   * Upload document to contract
+   */
+  async uploadDocument(
+    contractId: string,
+    userId: string,
+    fileData: {
+      fileName: string
+      fileSize: number
+      mimeType: string
+      category: string
+      fileUrl: string
+    }
+  ) {
+    // Check if contract exists and validate permissions
+    const contract = await prisma.contract.findUnique({
+      where: { id: contractId },
+    })
+
+    if (!contract) {
+      throw new Error('Contract not found')
+    }
+
+    // Only owner or tenant can upload documents
+    if (contract.ownerId !== userId && contract.tenantId !== userId) {
+      throw new Error('Unauthorized to upload document for this contract')
+    }
+
+    // Validate file size (5 KB max)
+    const MAX_FILE_SIZE = 5 * 1024 // 5 KB in bytes
+    if (fileData.fileSize > MAX_FILE_SIZE) {
+      throw new Error(`File size exceeds maximum of 5 KB. Size: ${(fileData.fileSize / 1024).toFixed(2)} KB`)
+    }
+
+    // Create document record
+    const document = await prisma.contractDocument.create({
+      data: {
+        contractId,
+        uploadedById: userId,
+        category: fileData.category,
+        fileName: fileData.fileName,
+        fileUrl: fileData.fileUrl,
+        fileSize: fileData.fileSize,
+        mimeType: fileData.mimeType,
+        status: 'UPLOADED',
+      },
+      include: {
+        uploadedBy: {
+          select: { id: true, firstName: true, lastName: true, email: true },
+        },
+      },
+    })
+
+    return document
+  }
+
+  /**
+   * Delete document
+   */
+  async deleteDocument(contractId: string, documentId: string, userId: string) {
+    const document = await prisma.contractDocument.findUnique({
+      where: { id: documentId },
+      include: { contract: true },
+    })
+
+    if (!document) {
+      throw new Error('Document not found')
+    }
+
+    if (document.contractId !== contractId) {
+      throw new Error('Document does not belong to this contract')
+    }
+
+    // Only uploader or admin can delete
+    if (document.uploadedById !== userId) {
+      throw new Error('Unauthorized to delete this document')
+    }
+
+    await prisma.contractDocument.delete({
+      where: { id: documentId },
+    })
+
+    return { success: true }
+  }
+
+  /**
+   * Validate document (admin only)
+   */
+  async validateDocument(contractId: string, documentId: string) {
+    const document = await prisma.contractDocument.findUnique({
+      where: { id: documentId },
+    })
+
+    if (!document || document.contractId !== contractId) {
+      throw new Error('Document not found')
+    }
+
+    const updated = await prisma.contractDocument.update({
+      where: { id: documentId },
+      data: { status: 'VALIDATED', rejectionReason: null },
+      include: {
+        uploadedBy: {
+          select: { id: true, firstName: true, lastName: true, email: true },
+        },
+      },
+    })
+
+    return updated
+  }
+
+  /**
+   * Reject document (admin only)
+   */
+  async rejectDocument(
+    contractId: string,
+    documentId: string,
+    rejectionReason: string
+  ) {
+    const document = await prisma.contractDocument.findUnique({
+      where: { id: documentId },
+    })
+
+    if (!document || document.contractId !== contractId) {
+      throw new Error('Document not found')
+    }
+
+    const updated = await prisma.contractDocument.update({
+      where: { id: documentId },
+      data: { status: 'REJECTED', rejectionReason },
+      include: {
+        uploadedBy: {
+          select: { id: true, firstName: true, lastName: true, email: true },
+        },
+      },
+    })
+
+    return updated
+  }
 }
 
 export const contractService = new ContractService()

@@ -70,4 +70,40 @@ router.put(
   contractController.cancelContract.bind(contractController)
 )
 
+// ============================================
+// DOCUMENT ROUTES
+// ============================================
+
+// GET /api/v1/contracts/:id/documents - Get contract documents
+router.get(
+  '/:id/documents',
+  contractController.getContractDocuments.bind(contractController)
+)
+
+// POST /api/v1/contracts/:id/documents - Upload document (owner or tenant)
+router.post(
+  '/:id/documents',
+  contractController.uploadDocument.bind(contractController)
+)
+
+// DELETE /api/v1/contracts/:id/documents/:docId - Delete document
+router.delete(
+  '/:id/documents/:docId',
+  contractController.deleteDocument.bind(contractController)
+)
+
+// PUT /api/v1/contracts/:id/documents/:docId/validate - Validate document (admin only)
+router.put(
+  '/:id/documents/:docId/validate',
+  authorize('ADMIN'),
+  contractController.validateDocument.bind(contractController)
+)
+
+// PUT /api/v1/contracts/:id/documents/:docId/reject - Reject document (admin only)
+router.put(
+  '/:id/documents/:docId/reject',
+  authorize('ADMIN'),
+  contractController.rejectDocument.bind(contractController)
+)
+
 export default router
