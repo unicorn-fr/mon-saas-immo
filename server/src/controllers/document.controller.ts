@@ -196,7 +196,21 @@ class DocumentController {
       return res.json({
         success: true,
         message: status === 'VALIDATED' ? 'Document valide' : 'Document refuse',
-        data: document,
+        data: {
+          id: document.id,
+          contractId: document.contractId,
+          category: document.category,
+          fileName: document.fileName,
+          fileUrl: document.fileUrl,
+          fileSize: document.fileSize,
+          mimeType: document.mimeType,
+          status: document.status,
+          uploadedById: document.uploadedById,
+          uploadedBy: document.uploadedBy,
+          rejectionReason: document.rejectionReason,
+          createdAt: document.createdAt,
+          updatedAt: document.updatedAt,
+        },
       })
     } catch (error) {
       if (error instanceof Error) {

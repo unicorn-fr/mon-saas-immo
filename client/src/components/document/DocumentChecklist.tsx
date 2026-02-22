@@ -36,8 +36,25 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
     fetchDocuments(contractId)
   }, [contractId, fetchDocuments])
 
+  // Debug: Log documents state
+  if (import.meta.env.DEV) {
+    console.log('[DocumentChecklist]', {
+      contractId,
+      userRole,
+      isOwner,
+      totalDocuments: documents.length,
+      documents: documents.map(d => ({
+        id: d.id,
+        category: d.category,
+        fileName: d.fileName,
+        status: d.status,
+        fileUrl: d.fileUrl,
+      })),
+    })
+  }
+
   const fullChecklist = userRole === 'OWNER' ? OWNER_DOCUMENT_CHECKLIST : TENANT_DOCUMENT_CHECKLIST
-  const checklist = requiredCategories
+  const checklist = requiredCategories && requiredCategories.length > 0
     ? fullChecklist.filter(item => requiredCategories.includes(item.category))
     : fullChecklist
 
@@ -93,8 +110,10 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
     try {
       await updateDocumentStatus(docId, 'VALIDATED')
       toast.success('Document valide')
-    } catch {
-      toast.error('Erreur lors de la validation')
+    } catch (error: any) {
+      const message = error?.message || 'Erreur lors de la validation'
+      toast.error(message)
+      console.error('[DocumentChecklist Validate Error]', error)
     }
   }
 
@@ -105,8 +124,10 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
       toast.success('Document refuse')
       setRejectingDocId(null)
       setRejectReason('')
-    } catch {
-      toast.error('Erreur lors du refus')
+    } catch (error: any) {
+      const message = error?.message || 'Erreur lors du refus'
+      toast.error(message)
+      console.error('[DocumentChecklist Reject Error]', error)
     }
   }
 
