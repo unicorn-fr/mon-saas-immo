@@ -9,13 +9,13 @@ class DocumentController {
    */
   async uploadDocument(req: Request, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).userId
+      const userId = req.user?.id
       const { contractId, category } = req.body
 
-      if (!contractId || !category) {
-        return res.status(400).json({
+      if (!userId) {
+        return res.status(401).json({
           success: false,
-          message: 'contractId et category sont requis',
+          message: 'Authentification requise',
         })
       }
 
@@ -74,8 +74,15 @@ class DocumentController {
    */
   async getDocuments(req: Request, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).userId
+      const userId = req.user?.id
       const { contractId } = req.params
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Authentification requise',
+        })
+      }
 
       const documents = await documentService.getDocumentsByContract(contractId, userId)
 
@@ -100,8 +107,15 @@ class DocumentController {
    */
   async getChecklist(req: Request, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).userId
+      const userId = req.user?.id
       const { contractId } = req.params
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Authentification requise',
+        })
+      }
 
       const checklist = await documentService.getChecklistStatus(contractId, userId)
 
@@ -126,8 +140,15 @@ class DocumentController {
    */
   async deleteDocument(req: Request, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).userId
+      const userId = req.user?.id
       const { id } = req.params
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Authentification requise',
+        })
+      }
 
       await documentService.deleteDocument(id, userId)
 
@@ -152,9 +173,16 @@ class DocumentController {
    */
   async updateStatus(req: Request, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).userId
+      const userId = req.user?.id
       const { id } = req.params
       const { status, rejectionReason } = req.body
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Authentification requise',
+        })
+      }
 
       if (!status || !['VALIDATED', 'REJECTED'].includes(status)) {
         return res.status(400).json({
