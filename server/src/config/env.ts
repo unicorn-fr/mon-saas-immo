@@ -37,6 +37,8 @@ const envSchema = z.object({
   RATE_LIMIT_MAX_REQUESTS: z.string().default('100'),
 
   LOG_LEVEL: z.string().default('info'),
+
+  TURNSTILE_SECRET_KEY: z.string().optional(),
 })
 
 // Parse and validate environment variables
@@ -85,4 +87,6 @@ export const env = {
   },
 
   LOG_LEVEL: parsedEnv.data.LOG_LEVEL,
+
+  TURNSTILE_SECRET_KEY: parsedEnv.data.TURNSTILE_SECRET_KEY,
 }

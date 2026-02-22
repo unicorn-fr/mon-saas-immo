@@ -4,6 +4,9 @@ import { Home, Mail, Lock, Users, AlertCircle, CheckCircle } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { UserRole } from '../types/auth.types'
 import GoogleSignInButton from '../components/auth/GoogleSignInButton'
+import { Turnstile } from '@marsidev/react-turnstile'
+
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined
 
 export default function Register() {
   const navigate = useNavigate()
@@ -21,6 +24,7 @@ export default function Register() {
   })
   const [error, setError] = useState('')
   const [, setPasswordErrors] = useState<string[]>([])
+  const [turnstileToken, setTurnstileToken] = useState<string>('')
 
   // Password validation
   const validatePassword = (password: string) => {
@@ -71,6 +75,7 @@ export default function Register() {
         lastName: formData.lastName,
         role: userType,
         phone: formData.phone || undefined,
+        ...(turnstileToken ? { 'cf-turnstile-response': turnstileToken } : {}),
       })
 
       // Redirect to dashboard based on role
@@ -348,6 +353,18 @@ export default function Register() {
                 </a>
               </label>
             </div>
+
+            {/* Turnstile anti-bot (only shown if VITE_TURNSTILE_SITE_KEY is set) */}
+            {TURNSTILE_SITE_KEY && (
+              <div className="flex justify-center">
+                <Turnstile
+                  siteKey={TURNSTILE_SITE_KEY}
+                  onSuccess={(token) => setTurnstileToken(token)}
+                  onError={() => setTurnstileToken('')}
+                  onExpire={() => setTurnstileToken('')}
+                />
+              </div>
+            )}
 
             {/* Submit Button */}
             <button

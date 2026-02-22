@@ -28,7 +28,7 @@ export interface ContractDocument {
   id: string
   contractId: string
   uploadedBy: string
-  category: DocumentCategory
+  category: string   // DocumentCategory or dynamic custom category (e.g. CUSTOM_0)
   status: DocumentStatus
   fileName: string
   fileUrl: string

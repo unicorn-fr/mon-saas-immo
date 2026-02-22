@@ -17,6 +17,7 @@ import notificationRoutes from './routes/notification.routes.js'
 import contractRoutes from './routes/contract.routes.js'
 import documentRoutes from './routes/document.routes.js'
 import adminRoutes from './routes/admin.routes.js'
+import marketRoutes from './routes/market.routes.js'
 // import userRoutes from './routes/user.routes.js'
 
 const app: Application = express()
@@ -102,6 +103,7 @@ app.use(`${API_PREFIX}/notifications`, notificationRoutes)
 app.use(`${API_PREFIX}/contracts`, contractRoutes)
 app.use(`${API_PREFIX}/documents`, documentRoutes)
 app.use(`${API_PREFIX}/admin`, adminRoutes)
+app.use(`${API_PREFIX}/market`, marketRoutes)
 // app.use(`${API_PREFIX}/users`, userRoutes)
 
 // API root

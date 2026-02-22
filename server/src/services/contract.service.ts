@@ -336,12 +336,6 @@ class ContractService {
       throw new Error('Unauthorized: You are not part of this contract')
     }
 
-    // Allow signing from DRAFT, SENT, SIGNED_OWNER, SIGNED_TENANT
-    const allowedStatuses: ContractStatus[] = [ContractStatus.DRAFT, ContractStatus.SENT, ContractStatus.SIGNED_OWNER, ContractStatus.SIGNED_TENANT]
-    if (!allowedStatuses.includes(contract.status as ContractStatus)) {
-      throw new Error('This contract cannot be signed in its current status')
-    }
-
     const now = new Date()
     const updateData: any = {}
 
@@ -364,6 +358,11 @@ class ContractService {
     const existingSignatureMetadata = existingContent.signatureMetadata || {}
 
     if (isOwner) {
+      // Owner can sign: DRAFT, SENT, SIGNED_TENANT
+      const ownerAllowedStatuses: ContractStatus[] = [ContractStatus.DRAFT, ContractStatus.SENT, ContractStatus.SIGNED_TENANT]
+      if (!ownerAllowedStatuses.includes(contract.status as ContractStatus)) {
+        throw new Error('This contract cannot be signed in its current status')
+      }
       if (contract.signedByOwner) {
         throw new Error('You have already signed this contract')
       }
@@ -380,6 +379,11 @@ class ContractService {
         updateData.status = ContractStatus.SIGNED_OWNER
       }
     } else if (isTenant) {
+      // Tenant can sign: SENT, SIGNED_OWNER
+      const tenantAllowedStatuses: ContractStatus[] = [ContractStatus.SENT, ContractStatus.SIGNED_OWNER]
+      if (!tenantAllowedStatuses.includes(contract.status as ContractStatus)) {
+        throw new Error('Ce contrat ne peut pas encore être signé. Il doit d\'abord être envoyé par le propriétaire.')
+      }
       if (contract.signedByTenant) {
         throw new Error('You have already signed this contract')
       }

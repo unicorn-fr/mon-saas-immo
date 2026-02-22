@@ -18,14 +18,21 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
+interface CustomChecklistItem {
+  category: string
+  label: string
+  description: string
+}
+
 interface DocumentChecklistProps {
   contractId: string
   userRole: 'OWNER' | 'TENANT'
   isOwner: boolean // current user is the contract owner
-  requiredCategories?: string[] // if provided, only show these categories
+  requiredCategories?: string[] // if provided, only show these standard categories
+  customItems?: CustomChecklistItem[] // extra uploadable items added by owner
 }
 
-export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCategories }: DocumentChecklistProps) => {
+export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCategories, customItems }: DocumentChecklistProps) => {
   const { documents, isLoading, fetchDocuments, uploadDocument, deleteDocument, updateDocumentStatus } = useDocumentStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploadingCategory, setUploadingCategory] = useState<string | null>(null)
@@ -54,9 +61,22 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
   }
 
   const fullChecklist = userRole === 'OWNER' ? OWNER_DOCUMENT_CHECKLIST : TENANT_DOCUMENT_CHECKLIST
-  const checklist = requiredCategories && requiredCategories.length > 0
+  const standardChecklist = requiredCategories && requiredCategories.length > 0
     ? fullChecklist.filter(item => requiredCategories.includes(item.category))
     : fullChecklist
+
+  // Custom items added by owner (only for tenant role, always shown)
+  const customChecklistItems = userRole === 'TENANT' ? (customItems ?? []).map(item => ({
+    category: item.category,
+    label: item.label,
+    description: item.description,
+    role: 'TENANT' as const,
+    required: true,
+    acceptedTypes: ['application/pdf'],
+    maxSizeMB: 5,
+  })) : []
+
+  const checklist = [...standardChecklist, ...customChecklistItems]
 
   const getDocumentForCategory = (category: string): ContractDocument | undefined => {
     return documents.find(d => d.category === category)
@@ -211,10 +231,13 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-medium text-gray-900">
                       {item.label}
                     </p>
+                    {item.category.startsWith('CUSTOM_') && (
+                      <span className="text-xs bg-purple-100 text-purple-700 font-medium px-1.5 py-0.5 rounded">Demande perso.</span>
+                    )}
                     {item.required && (
                       <span className="text-xs text-red-500 font-medium">Obligatoire</span>
                     )}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Layout } from '../components/layout/Layout'
 import { useAuth } from '../hooks/useAuth'
 import { authService } from '../services/auth.service'
@@ -20,6 +20,9 @@ import {
   Link as LinkIcon,
   Trash2,
   FileText,
+  ShieldCheck,
+  ShieldOff,
+  QrCode,
 } from 'lucide-react'
 
 export default function Profile() {
@@ -101,6 +104,65 @@ export default function Profile() {
   }
 
   const hasPassword = true // We don't expose this from the API but default to true
+
+  // ── TOTP state ──────────────────────────────────────────────────────────
+  const [totpEnabled, setTotpEnabled] = useState<boolean | null>(null)
+  const [totpModal, setTotpModal] = useState<'setup' | 'disable' | null>(null)
+  const [totpQr, setTotpQr] = useState<string>('')
+  const [totpSecret, setTotpSecret] = useState<string>('')
+  const [totpCode, setTotpCode] = useState<string>('')
+  const [totpStep, setTotpStep] = useState<'qr' | 'verify'>('qr')
+  const [totpLoading, setTotpLoading] = useState(false)
+
+  useEffect(() => {
+    authService.totpStatus().then(setTotpEnabled).catch(() => setTotpEnabled(false))
+  }, [])
+
+  const openTotpSetup = async () => {
+    setTotpLoading(true)
+    try {
+      const { qrCodeDataUrl, secret } = await authService.totpSetup()
+      setTotpQr(qrCodeDataUrl)
+      setTotpSecret(secret)
+      setTotpStep('qr')
+      setTotpCode('')
+      setTotpModal('setup')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Erreur')
+    } finally {
+      setTotpLoading(false)
+    }
+  }
+
+  const handleTotpEnable = async () => {
+    if (!/^\d{6}$/.test(totpCode)) { toast.error('Code à 6 chiffres requis'); return }
+    setTotpLoading(true)
+    try {
+      await authService.totpEnable(totpCode)
+      setTotpEnabled(true)
+      setTotpModal(null)
+      toast.success('Authentification à deux facteurs activée !')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Code incorrect')
+    } finally {
+      setTotpLoading(false)
+    }
+  }
+
+  const handleTotpDisable = async () => {
+    if (!/^\d{6}$/.test(totpCode)) { toast.error('Code à 6 chiffres requis'); return }
+    setTotpLoading(true)
+    try {
+      await authService.totpDisable(totpCode)
+      setTotpEnabled(false)
+      setTotpModal(null)
+      toast.success('Authentification à deux facteurs désactivée')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Code incorrect')
+    } finally {
+      setTotpLoading(false)
+    }
+  }
 
   return (
     <Layout>
@@ -427,16 +489,40 @@ export default function Profile() {
                     Changer le mot de passe
                   </button>
                 )}
-                <button
-                  disabled
-                  className="btn btn-secondary w-full justify-start gap-3 opacity-60 cursor-not-allowed"
-                >
-                  <Shield className="w-4 h-4" />
-                  Activer l'authentification a deux facteurs
-                  <span className="ml-auto text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
-                    Bientot disponible
-                  </span>
-                </button>
+                {/* 2FA / TOTP */}
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    {totpEnabled ? (
+                      <ShieldCheck className="w-5 h-5 text-green-600" />
+                    ) : (
+                      <ShieldOff className="w-5 h-5 text-gray-400" />
+                    )}
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Authentification à deux facteurs</p>
+                      <p className="text-xs text-gray-500">
+                        {totpEnabled === null ? 'Chargement…' : totpEnabled ? 'Activée (Google Authenticator / Authy)' : 'Désactivée'}
+                      </p>
+                    </div>
+                  </div>
+                  {totpEnabled === null ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                  ) : totpEnabled ? (
+                    <button
+                      onClick={() => { setTotpCode(''); setTotpModal('disable') }}
+                      className="text-sm text-red-600 hover:text-red-700 font-medium"
+                    >
+                      Désactiver
+                    </button>
+                  ) : (
+                    <button
+                      onClick={openTotpSetup}
+                      disabled={totpLoading}
+                      className="text-sm text-primary-600 hover:text-primary-700 font-medium disabled:opacity-50"
+                    >
+                      {totpLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Activer'}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -512,6 +598,116 @@ export default function Profile() {
         isOpen={showPasswordModal}
         onClose={() => setShowPasswordModal(false)}
       />
+
+      {/* TOTP Setup Modal */}
+      {totpModal === 'setup' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setTotpModal(null)} />
+          <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
+            <button onClick={() => setTotpModal(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+              <XIcon className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                <QrCode className="w-5 h-5 text-primary-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Activer la 2FA</h3>
+                <p className="text-xs text-gray-500">Google Authenticator ou Authy</p>
+              </div>
+            </div>
+
+            {totpStep === 'qr' && (
+              <>
+                <p className="text-sm text-gray-600 mb-4">
+                  Scannez ce QR code avec votre application d'authentification, puis cliquez sur Suivant.
+                </p>
+                {totpQr && (
+                  <div className="flex justify-center mb-4">
+                    <img src={totpQr} alt="QR Code 2FA" className="w-48 h-48 rounded-lg border" />
+                  </div>
+                )}
+                <details className="text-xs text-gray-400 mb-4 cursor-pointer">
+                  <summary className="hover:text-gray-600">Saisie manuelle</summary>
+                  <code className="mt-2 block break-all bg-gray-50 p-2 rounded text-gray-700">{totpSecret}</code>
+                </details>
+                <button onClick={() => setTotpStep('verify')} className="btn btn-primary w-full">
+                  Suivant
+                </button>
+              </>
+            )}
+
+            {totpStep === 'verify' && (
+              <>
+                <p className="text-sm text-gray-600 mb-4">
+                  Saisissez le code à 6 chiffres affiché dans votre application pour confirmer l'activation.
+                </p>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="000000"
+                  value={totpCode}
+                  onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
+                  className="input w-full text-center text-2xl tracking-widest mb-4"
+                  autoFocus
+                />
+                <div className="flex gap-3">
+                  <button onClick={() => setTotpStep('qr')} className="btn btn-ghost flex-1">Retour</button>
+                  <button
+                    onClick={handleTotpEnable}
+                    disabled={totpLoading || totpCode.length !== 6}
+                    className="btn btn-primary flex-1 disabled:opacity-50"
+                  >
+                    {totpLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmer'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* TOTP Disable Modal */}
+      {totpModal === 'disable' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setTotpModal(null)} />
+          <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
+            <button onClick={() => setTotpModal(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+              <XIcon className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <ShieldOff className="w-5 h-5 text-red-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Désactiver la 2FA</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Saisissez le code actuel de votre application pour confirmer la désactivation.
+            </p>
+            <input
+              type="text"
+              inputMode="numeric"
+              maxLength={6}
+              placeholder="000000"
+              value={totpCode}
+              onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
+              className="input w-full text-center text-2xl tracking-widest mb-4"
+              autoFocus
+            />
+            <div className="flex gap-3">
+              <button onClick={() => setTotpModal(null)} className="btn btn-ghost flex-1">Annuler</button>
+              <button
+                onClick={handleTotpDisable}
+                disabled={totpLoading || totpCode.length !== 6}
+                className="btn bg-red-600 hover:bg-red-700 text-white flex-1 disabled:opacity-50"
+              >
+                {totpLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Désactiver'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Account Confirmation Dialog */}
       {showDeleteDialog && (

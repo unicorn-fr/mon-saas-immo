@@ -64,7 +64,7 @@ export const SignaturePad = ({
     }
 
     const base64 = sigPad.current
-      .getTrimmedCanvas()
+      .getCanvas()
       .toDataURL('image/png')
 
     if (base64) {

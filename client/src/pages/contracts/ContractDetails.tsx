@@ -150,7 +150,10 @@ export default function ContractDetails() {
   const isTenant = user?.id === contract.tenantId
   const hasSigned = isOwner ? !!contract.signedByOwner : !!contract.signedByTenant
   const otherPartySigned = isOwner ? !!contract.signedByTenant : !!contract.signedByOwner
-  const canSign = ['DRAFT', 'SENT', 'SIGNED_OWNER', 'SIGNED_TENANT'].includes(contract.status) && !hasSigned
+  // Owner can sign: DRAFT, SENT, SIGNED_TENANT | Tenant can sign: SENT, SIGNED_OWNER
+  const ownerCanSign = isOwner && ['DRAFT', 'SENT', 'SIGNED_TENANT'].includes(contract.status) && !hasSigned
+  const tenantCanSign = isTenant && ['SENT', 'SIGNED_OWNER'].includes(contract.status) && !hasSigned
+  const canSign = ownerCanSign || tenantCanSign
   const canSend = isOwner && contract.status === 'DRAFT'
   const canActivate = isOwner && contract.status === 'COMPLETED'
   const canTerminate = isOwner && contract.status === 'ACTIVE'
@@ -162,8 +165,13 @@ export default function ContractDetails() {
   if (import.meta.env.DEV) {
     console.log('[ContractDetails Debug]', {
       userRole: isOwner ? 'OWNER' : isTenant ? 'TENANT' : 'NONE',
+      userId: user?.id,
+      contractOwnerId: contract.ownerId,
+      contractTenantId: contract.tenantId,
       contractStatus: contract.status,
       canSign,
+      ownerCanSign,
+      tenantCanSign,
       hasSigned,
       signedByOwner: contract.signedByOwner,
       signedByTenant: contract.signedByTenant,
@@ -237,8 +245,10 @@ export default function ContractDetails() {
   const handleSignature = async (signatureBase64: string) => {
     setActionLoading(true)
     try {
-      await signContract(contract.id, signatureBase64)
-      setShowSignature(false)
+      const result = await signContract(contract.id, signatureBase64)
+      if (result) {
+        setShowSignature(false)
+      }
     } finally {
       setActionLoading(false)
     }
@@ -440,14 +450,18 @@ export default function ContractDetails() {
               </div>
             )}
 
-            {/* Debug help for tenant signature issues */}
-            {isTenant && !canSign && contract.status !== 'COMPLETED' && contract.status !== 'CANCELLED' && contract.status !== 'TERMINATED' && (
+            {/* Help message for tenant when they can't sign */}
+            {isTenant && !canSign && !['COMPLETED', 'CANCELLED', 'TERMINATED', 'ACTIVE'].includes(contract.status) && (
               <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <div>
                   <p className="font-medium text-amber-900">Impossible de signer pour le moment</p>
                   <p className="text-sm text-amber-700 mt-1">
-                    {hasSigned ? 'Vous avez deja signe ce contrat.' : 'Ce contrat n\'est pas prêt pour être signé. Vérifiez le statut du contrat.'}
+                    {hasSigned
+                      ? 'Vous avez déjà signé ce contrat.'
+                      : contract.status === 'DRAFT'
+                      ? 'Le propriétaire n\'a pas encore envoyé ce contrat. Vous pourrez le signer une fois qu\'il vous l\'aura transmis.'
+                      : 'Ce contrat n\'est pas dans un état permettant la signature.'}
                   </p>
                 </div>
               </div>
@@ -925,34 +939,27 @@ export default function ContractDetails() {
                   </div>
                 )}
 
-                {(isOwner || isTenant) && (
-                  <DocumentChecklist
-                    contractId={contract.id}
-                    userRole="TENANT"
-                    isOwner={isOwner}
-                    requiredCategories={requiredDocuments}
-                  />
-                )}
-
-                {/* Display custom document requests */}
-                {contractContent.customDocRequests && contractContent.customDocRequests.length > 0 && (
-                  <div className="mt-4">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Documents personnalises demandes</h4>
-                    <div className="space-y-2">
-                      {contractContent.customDocRequests.map((doc: { title: string; description: string }, index: number) => (
-                        <div key={index} className="flex items-start gap-3 p-3 bg-blue-50 border border-blue-100 rounded-lg">
-                          <FileText className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900">{doc.title}</p>
-                            {doc.description && (
-                              <p className="text-xs text-gray-500 mt-0.5">{doc.description}</p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                {(isOwner || isTenant) && (() => {
+                  // Build custom items from owner's custom document requests
+                  const customDocItems = (contractContent.customDocRequests ?? []).map(
+                    (req: { title: string; description: string }, i: number) => ({
+                      category: `CUSTOM_${i}`,
+                      label: req.title,
+                      description: req.description || '',
+                    })
+                  )
+                  // Owner sees ALL tenant docs; tenant sees only required ones
+                  const tenantRequired = isOwner ? undefined : requiredDocuments
+                  return (
+                    <DocumentChecklist
+                      contractId={contract.id}
+                      userRole="TENANT"
+                      isOwner={isOwner}
+                      requiredCategories={tenantRequired}
+                      customItems={customDocItems}
+                    />
+                  )
+                })()}
               </div>
             )}
           </div>

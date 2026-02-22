@@ -3,6 +3,9 @@ import { authService } from '../services/auth.service.js'
 import { validatePasswordStrength } from '../utils/password.util.js'
 import { validateEmail, sanitizeInput } from '../utils/validation.util.js'
 import { UserRole } from '@prisma/client'
+import { isTotpEnabled } from '../services/totp.service.js'
+import { prisma } from '../config/database.js'
+import { comparePassword } from '../utils/password.util.js'
 
 class AuthController {
   /**
@@ -100,7 +103,24 @@ class AuthController {
         })
       }
 
-      // Login
+      // Check if user exists and has TOTP enabled BEFORE full login
+      const userCheck = await prisma.user.findUnique({
+        where: { email: email.toLowerCase().trim() },
+        select: { id: true, password: true, totpEnabled: true },
+      })
+      if (userCheck && userCheck.password) {
+        const pwValid = await comparePassword(password, userCheck.password)
+        if (pwValid && userCheck.totpEnabled) {
+          // Password is correct but TOTP is required — don't issue tokens yet
+          return res.status(200).json({
+            success: true,
+            totpRequired: true,
+            userId: userCheck.id,
+          })
+        }
+      }
+
+      // Login (no TOTP or TOTP not enabled)
       const result = await authService.login({
         email: email.toLowerCase().trim(),
         password,

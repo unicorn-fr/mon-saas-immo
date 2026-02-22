@@ -60,7 +60,27 @@ export const saveFile = (buffer: Buffer, originalname: string): string => {
 }
 
 /**
- * Process and save uploaded image
+ * Build a semi-transparent SVG watermark sized relative to the image
+ */
+const buildWatermark = (imgWidth: number): Buffer => {
+  const fontSize = Math.max(14, Math.round(imgWidth * 0.028))
+  const w = Math.round(imgWidth * 0.40)
+  const h = fontSize + 18
+  return Buffer.from(
+    `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
+      <rect width="${w}" height="${h}" rx="4" fill="rgba(0,0,0,0.40)"/>
+      <text x="${Math.round(w / 2)}" y="${Math.round(h / 2 + 1)}"
+        text-anchor="middle" dominant-baseline="middle"
+        font-family="Arial, sans-serif" font-size="${fontSize}"
+        font-weight="bold" fill="rgba(255,255,255,0.88)">
+        ImmoParticuliers.fr
+      </text>
+    </svg>`
+  )
+}
+
+/**
+ * Process and save uploaded image (watermark applied automatically)
  */
 export const processImage = async (
   buffer: Buffer,
@@ -69,26 +89,34 @@ export const processImage = async (
     width?: number
     height?: number
     quality?: number
+    watermark?: boolean
   } = {}
 ): Promise<string> => {
   const {
     width = 1200,
     height = 800,
     quality = 80,
+    watermark = true,
   } = options
 
   const outputFilename = `${Date.now()}-${filename.replace(/\s/g, '-')}`
   const outputPath = path.join(uploadDir, outputFilename)
 
-  await sharp(buffer)
-    .resize(width, height, {
-      fit: 'inside',
-      withoutEnlargement: true,
-    })
-    .jpeg({ quality })
-    .toFile(outputPath)
+  let pipeline = sharp(buffer).resize(width, height, {
+    fit: 'inside',
+    withoutEnlargement: true,
+  })
 
-  // Return relative path for storage in database
+  if (watermark) {
+    const meta = await sharp(buffer)
+      .resize(width, height, { fit: 'inside', withoutEnlargement: true })
+      .metadata()
+    const wm = buildWatermark(meta.width || width)
+    pipeline = pipeline.composite([{ input: wm, gravity: 'southeast', blend: 'over' }])
+  }
+
+  await pipeline.jpeg({ quality }).toFile(outputPath)
+
   return `/uploads/${outputFilename}`
 }
 

@@ -33,6 +33,7 @@ export interface RegisterData {
   lastName: string
   role: UserRole
   phone?: string
+  'cf-turnstile-response'?: string
 }
 
 export interface AuthState {

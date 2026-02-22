@@ -167,6 +167,7 @@ class AuthService {
         role: true,
         avatar: true,
         emailVerified: true,
+        totpEnabled: true,
       },
     })
 

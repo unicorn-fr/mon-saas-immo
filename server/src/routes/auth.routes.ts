@@ -1,6 +1,8 @@
 import { Router } from 'express'
 import { authController } from '../controllers/auth.controller.js'
 import { authenticate } from '../middlewares/auth.middleware.js'
+import * as totpController from '../controllers/totp.controller.js'
+import { verifyTurnstile } from '../middlewares/turnstile.middleware.js'
 
 const router = Router()
 
@@ -8,8 +10,8 @@ const router = Router()
  * Public routes
  */
 
-// POST /api/v1/auth/register - Register new user
-router.post('/register', authController.register.bind(authController))
+// POST /api/v1/auth/register - Register new user (+ Turnstile anti-bot)
+router.post('/register', verifyTurnstile, authController.register.bind(authController))
 
 // POST /api/v1/auth/login - Login user
 router.post('/login', authController.login.bind(authController))
@@ -69,5 +71,24 @@ router.post(
   authenticate,
   authController.logoutAll.bind(authController)
 )
+
+/**
+ * TOTP / 2FA routes
+ */
+
+// POST /api/v1/auth/totp/verify - Verify code during login (public)
+router.post('/totp/verify', totpController.verify)
+
+// GET /api/v1/auth/totp/status - Get 2FA status (protected)
+router.get('/totp/status', authenticate, totpController.status)
+
+// GET /api/v1/auth/totp/setup - Generate QR code (protected)
+router.get('/totp/setup', authenticate, totpController.setup)
+
+// POST /api/v1/auth/totp/enable - Enable 2FA after scanning (protected)
+router.post('/totp/enable', authenticate, totpController.enable)
+
+// POST /api/v1/auth/totp/disable - Disable 2FA (protected)
+router.post('/totp/disable', authenticate, totpController.disable)
 
 export default router

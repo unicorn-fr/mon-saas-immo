@@ -12,6 +12,15 @@ interface ApiResponse<T> {
   data: T
 }
 
+/** Thrown by authService.login when the server requires a TOTP code */
+export class TotpRequiredError extends Error {
+  userId: string
+  constructor(userId: string) {
+    super('TOTP_REQUIRED')
+    this.userId = userId
+  }
+}
+
 class AuthService {
   /**
    * Register new user
@@ -33,12 +42,13 @@ class AuthService {
    */
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      const response = await apiClient.post<ApiResponse<AuthResponse>>(
-        '/auth/login',
-        credentials
-      )
-      return response.data.data
+      const response = await apiClient.post('/auth/login', credentials)
+      if (response.data.totpRequired) {
+        throw new TotpRequiredError(response.data.userId)
+      }
+      return (response.data as ApiResponse<AuthResponse>).data
     } catch (error) {
+      if (error instanceof TotpRequiredError) throw error
       throw new Error(handleApiError(error))
     }
   }
@@ -173,6 +183,51 @@ class AuthService {
   async resetPassword(token: string, newPassword: string): Promise<void> {
     try {
       await apiClient.post('/auth/reset-password', { token, newPassword })
+    } catch (error) {
+      throw new Error(handleApiError(error))
+    }
+  }
+
+  // ── TOTP / 2FA ────────────────────────────────────────────────────────────
+
+  async totpStatus(): Promise<boolean> {
+    try {
+      const response = await apiClient.get<ApiResponse<{ totpEnabled: boolean }>>('/auth/totp/status')
+      return response.data.data.totpEnabled
+    } catch (error) {
+      throw new Error(handleApiError(error))
+    }
+  }
+
+  async totpSetup(): Promise<{ qrCodeDataUrl: string; secret: string }> {
+    try {
+      const response = await apiClient.get<ApiResponse<{ qrCodeDataUrl: string; secret: string }>>('/auth/totp/setup')
+      return response.data.data
+    } catch (error) {
+      throw new Error(handleApiError(error))
+    }
+  }
+
+  async totpEnable(token: string): Promise<void> {
+    try {
+      await apiClient.post('/auth/totp/enable', { token })
+    } catch (error) {
+      throw new Error(handleApiError(error))
+    }
+  }
+
+  async totpDisable(token: string): Promise<void> {
+    try {
+      await apiClient.post('/auth/totp/disable', { token })
+    } catch (error) {
+      throw new Error(handleApiError(error))
+    }
+  }
+
+  async totpVerify(userId: string, token: string): Promise<AuthResponse> {
+    try {
+      const response = await apiClient.post<ApiResponse<AuthResponse>>('/auth/totp/verify', { userId, token })
+      return response.data.data
     } catch (error) {
       throw new Error(handleApiError(error))
     }
