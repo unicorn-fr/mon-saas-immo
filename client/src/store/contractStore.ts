@@ -164,9 +164,10 @@ export const useContractStore = create<ContractStore>((set) => ({
       toast.success('Contrat signe avec succes')
       return signedContract
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to sign contract'
+      const message = error.response?.data?.message || error.message || 'Erreur lors de la signature du contrat'
       set({ error: message, isLoading: false })
       toast.error(message)
+      console.error('[Contract Sign Error]', { error, message })
       return null
     }
   },

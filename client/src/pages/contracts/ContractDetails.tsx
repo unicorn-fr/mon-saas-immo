@@ -158,6 +158,20 @@ export default function ContractDetails() {
   const canCancel = isOwner && ['SENT', 'SIGNED_OWNER', 'SIGNED_TENANT', 'COMPLETED'].includes(contract.status)
   const isTerminal = ['EXPIRED', 'TERMINATED', 'CANCELLED'].includes(contract.status)
 
+  // Debug logging
+  if (import.meta.env.DEV) {
+    console.log('[ContractDetails Debug]', {
+      userRole: isOwner ? 'OWNER' : isTenant ? 'TENANT' : 'NONE',
+      contractStatus: contract.status,
+      canSign,
+      hasSigned,
+      signedByOwner: contract.signedByOwner,
+      signedByTenant: contract.signedByTenant,
+      isOwner,
+      isTenant,
+    })
+  }
+
   const handleSend = async () => {
     if (requiredDocs.size === 0) {
       toast.error('Veuillez selectionner au moins un document requis dans la section Dossier')
@@ -421,6 +435,19 @@ export default function ContractDetails() {
                   <p className="font-medium text-blue-900">Contrat en attente de votre signature</p>
                   <p className="text-sm text-blue-700 mt-1">
                     Le proprietaire vous a envoye ce contrat. Lisez-le attentivement puis signez-le ci-dessous.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Debug help for tenant signature issues */}
+            {isTenant && !canSign && contract.status !== 'COMPLETED' && contract.status !== 'CANCELLED' && contract.status !== 'TERMINATED' && (
+              <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium text-amber-900">Impossible de signer pour le moment</p>
+                  <p className="text-sm text-amber-700 mt-1">
+                    {hasSigned ? 'Vous avez deja signe ce contrat.' : 'Ce contrat n\'est pas prêt pour être signé. Vérifiez le statut du contrat.'}
                   </p>
                 </div>
               </div>
