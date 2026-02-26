@@ -1,8 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
+import { useEffect } from 'react'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { useAuth } from './hooks/useAuth'
+import { useThemeStore } from './store/themeStore'
 
 // Pages
 import Home from './pages/Home'
@@ -29,6 +31,7 @@ import BookingManagement from './pages/owner/BookingManagement'
 import TenantDashboard from './pages/tenant/TenantDashboard'
 import MyBookings from './pages/tenant/MyBookings'
 import Favorites from './pages/tenant/Favorites'
+import DossierLocatif from './pages/tenant/DossierLocatif'
 
 // Shared Pages
 import Messages from './pages/Messages'
@@ -72,9 +75,22 @@ const queryClient = new QueryClient({
   },
 })
 
+function DarkModeSync() {
+  const { isDark } = useThemeStore()
+  useEffect(() => {
+    const html = document.documentElement
+    html.classList.toggle('dark', isDark)
+    // Remove inline styles set by the anti-flash script so they don't override CSS
+    html.style.removeProperty('background-color')
+    html.style.removeProperty('color')
+  }, [isDark])
+  return null
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <DarkModeSync />
       <Router>
         <AppRoutes />
       </Router>
@@ -116,7 +132,7 @@ function AppRoutes() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     )
   }
@@ -171,6 +187,7 @@ function AppRoutes() {
         <Route path="/dashboard/tenant" element={<TenantDashboard />} />
         <Route path="/favorites" element={<Favorites />} />
         <Route path="/my-bookings" element={<MyBookings />} />
+        <Route path="/dossier" element={<DossierLocatif />} />
       </Route>
 
       {/* Protected Routes - All authenticated users */}

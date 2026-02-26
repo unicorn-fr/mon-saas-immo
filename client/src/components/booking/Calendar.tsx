@@ -65,10 +65,10 @@ export const Calendar = ({
     const hasPending = dateBookings.some((b) => b.status === 'PENDING')
     const hasCancelled = dateBookings.some((b) => b.status === 'CANCELLED')
 
-    if (hasConfirmed) return 'bg-green-500'
-    if (hasPending) return 'bg-yellow-500'
+    if (hasConfirmed) return 'bg-success-500'
+    if (hasPending) return 'bg-warning-500'
     if (hasCancelled) return 'bg-red-500'
-    return 'bg-gray-400'
+    return 'bg-slate-400'
   }
 
   const handlePreviousMonth = () => {
@@ -86,10 +86,10 @@ export const Calendar = ({
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+        <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
           <CalendarIcon className="w-5 h-5 text-primary-600" />
           {format(currentMonth, 'MMMM yyyy', { locale: fr })}
         </h3>
@@ -97,17 +97,17 @@ export const Calendar = ({
         <div className="flex items-center gap-2">
           <button
             onClick={handlePreviousMonth}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
             aria-label="Mois précédent"
           >
-            <ChevronLeft className="w-5 h-5 text-gray-600" />
+            <ChevronLeft className="w-5 h-5 text-slate-600 dark:text-slate-400" />
           </button>
           <button
             onClick={handleNextMonth}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
             aria-label="Mois suivant"
           >
-            <ChevronRight className="w-5 h-5 text-gray-600" />
+            <ChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-400" />
           </button>
         </div>
       </div>
@@ -117,7 +117,7 @@ export const Calendar = ({
         {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((day) => (
           <div
             key={day}
-            className="text-center text-xs font-semibold text-gray-600 py-2"
+            className="text-center text-xs font-semibold text-slate-600 dark:text-slate-400 py-2"
           >
             {day}
           </div>
@@ -145,7 +145,7 @@ export const Calendar = ({
               onClick={() => handleDateClick(date)}
               disabled={!isSelectable || !onDateSelect}
               className={`
-                aspect-square p-2 rounded-lg text-sm font-medium transition-all relative
+                aspect-square p-2 rounded-xl text-sm font-medium transition-all relative
                 ${
                   isSelected
                     ? 'bg-primary-600 text-white ring-2 ring-primary-200'
@@ -153,9 +153,9 @@ export const Calendar = ({
                     ? 'bg-primary-50 text-primary-700 border border-primary-300'
                     : isSameMonth(date, currentMonth)
                     ? isSelectable
-                      ? 'text-gray-900 hover:bg-gray-100'
-                      : 'text-gray-400 cursor-not-allowed'
-                    : 'text-gray-300'
+                      ? 'text-slate-900 hover:bg-slate-100'
+                      : 'text-slate-400 cursor-not-allowed'
+                    : 'text-slate-300'
                 }
                 ${!isSelectable || !onDateSelect ? 'cursor-default' : 'cursor-pointer'}
               `}
@@ -184,13 +184,13 @@ export const Calendar = ({
       </div>
 
       {/* Legend */}
-      <div className="mt-6 pt-4 border-t flex flex-wrap items-center gap-4 text-xs text-gray-600">
+      <div className="mt-6 pt-4 border-t flex flex-wrap items-center gap-4 text-xs text-slate-600 dark:text-slate-400">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+          <div className="w-3 h-3 bg-success-500 rounded-full"></div>
           <span>Confirmée</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+          <div className="w-3 h-3 bg-warning-500 rounded-full"></div>
           <span>En attente</span>
         </div>
         <div className="flex items-center gap-2">

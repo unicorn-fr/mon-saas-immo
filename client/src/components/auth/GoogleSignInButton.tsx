@@ -125,7 +125,7 @@ export default function GoogleSignInButton({
           // If clientId exists but GSI not loaded yet
           toast.error('Google Sign-In est en cours de chargement, reessayez.')
         }}
-        className="w-full flex items-center justify-center gap-3 px-4 py-2.5 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-colors text-sm font-medium text-gray-700"
+        className="w-full flex items-center justify-center gap-3 px-4 py-2.5 border border-slate-300 rounded-xl bg-white hover:bg-slate-50/50 transition-colors text-sm font-medium text-slate-700 dark:text-slate-300"
       >
         <svg className="w-5 h-5" viewBox="0 0 24 24">
           <path

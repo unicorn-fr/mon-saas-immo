@@ -108,13 +108,13 @@ export const PropertyMap = ({
   // If no coordinates, show a message to use geocoding service
   if (!latitude || !longitude) {
     return (
-      <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex flex-col items-center justify-center p-6 text-center">
-        <MapPin className="w-12 h-12 text-gray-400 mb-3" />
-        <p className="text-gray-700 font-medium mb-2">Localisation</p>
-        <p className="text-sm text-gray-600 max-w-md">
+      <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex flex-col items-center justify-center p-6 text-center">
+        <MapPin className="w-12 h-12 text-slate-400 mb-3" />
+        <p className="text-slate-700 dark:text-slate-300 font-medium mb-2">Localisation</p>
+        <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md">
           {address}, {city} {postalCode}
         </p>
-        <p className="text-xs text-gray-500 mt-4">
+        <p className="text-xs text-slate-500 mt-4">
           Carte interactive disponible prochainement
         </p>
       </div>
@@ -123,8 +123,8 @@ export const PropertyMap = ({
 
   return (
     <div className="relative">
-      <div ref={mapRef} className="aspect-video rounded-lg shadow-md" />
-      <div className="mt-3 flex items-center gap-2 text-sm text-gray-600">
+      <div ref={mapRef} className="aspect-video rounded-xl shadow-md" />
+      <div className="mt-3 flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
         <MapPin className="w-4 h-4" />
         <span>
           {address}, {city} {postalCode}

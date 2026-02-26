@@ -51,7 +51,18 @@
       "Bash(git reset:*)",
       "Bash(echo:*)",
       "Bash(git -C /Users/enzo/Desktop/Projets/Applications_Web/En_Cours/plateforme-gestion-locative status)",
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "Bash(git -C /Users/enzo/Desktop/Projets/Applications_Web/En_Cours/plateforme-gestion-locative diff --name-only client/src)",
+      "Bash(__NEW_LINE_11619dd376e1260d__ echo \"=== text-orange-* restants ===\")",
+      "Bash(__NEW_LINE_a30764296f9aeb23__ echo \"=== bg-green-* restants \\(not in comments\\) ===\")",
+      "Bash(__NEW_LINE_fd97b932f66f2139__ echo \"=== bg-blue-* restants ===\")",
+      "Bash(__NEW_LINE_410e5277f4112049__ echo \"=== text-blue-* restants ===\")",
+      "Bash(__NEW_LINE_190d0ac9b89b017f__ echo \"=== bg-gray-* restants ===\")",
+      "Bash(__NEW_LINE_f0de2202ef6a6127__ echo \"=== Remaining non-success green ===\")",
+      "Bash(__NEW_LINE_f540a854ab52ffbc__ echo \"=== bg-slate-800/900 SANS dark: prefix \\(éléments intentionnellement sombres\\) ===\")",
+      "Read(//Users/enzo/Desktop/Projets/Applications_Web/En_Cours/**)",
+      "Bash(__NEW_LINE_3281f482edcc6477__ echo \"\")",
+      "Bash(npx vite build --config client/vite.config.ts)"
     ]
   }
 }

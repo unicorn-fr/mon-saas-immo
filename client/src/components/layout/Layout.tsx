@@ -8,7 +8,7 @@ interface LayoutProps {
 
 export const Layout = ({ children, showHeader = true }: LayoutProps) => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--surface-page)' }}>
       {showHeader && <Header />}
       <main>{children}</main>
     </div>

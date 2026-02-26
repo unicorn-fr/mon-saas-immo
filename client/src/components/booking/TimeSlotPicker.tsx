@@ -18,8 +18,8 @@ export const TimeSlotPicker = ({
   if (!selectedDate) {
     return (
       <div className="text-center py-8">
-        <Clock className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-        <p className="text-gray-600">Veuillez d'abord sélectionner une date</p>
+        <Clock className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+        <p className="text-slate-600 dark:text-slate-400">Veuillez d'abord sélectionner une date</p>
       </div>
     )
   }
@@ -28,7 +28,7 @@ export const TimeSlotPicker = ({
     return (
       <div className="text-center py-8">
         <Loader className="w-8 h-8 text-primary-600 animate-spin mx-auto mb-3" />
-        <p className="text-gray-600">Chargement des créneaux disponibles...</p>
+        <p className="text-slate-600 dark:text-slate-400">Chargement des créneaux disponibles...</p>
       </div>
     )
   }
@@ -36,9 +36,9 @@ export const TimeSlotPicker = ({
   if (availableSlots.length === 0) {
     return (
       <div className="text-center py-8">
-        <Clock className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-        <p className="text-gray-900 font-medium mb-2">Aucun créneau disponible</p>
-        <p className="text-sm text-gray-600">
+        <Clock className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+        <p className="text-slate-900 font-medium mb-2">Aucun créneau disponible</p>
+        <p className="text-sm text-slate-600 dark:text-slate-400">
           Tous les créneaux sont réservés pour cette date. Veuillez choisir une autre date.
         </p>
       </div>
@@ -70,13 +70,13 @@ export const TimeSlotPicker = ({
         onClick={() => isAvailable && onTimeSelect(time)}
         disabled={!isAvailable}
         className={`
-          px-4 py-3 rounded-lg font-medium text-sm transition-all
+          px-4 py-3 rounded-xl font-medium text-sm transition-all
           ${
             isSelected
               ? 'bg-primary-600 text-white ring-2 ring-primary-200 shadow-md'
               : isAvailable
-              ? 'bg-white text-gray-700 border border-gray-300 hover:border-primary-400 hover:bg-primary-50'
-              : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
+              ? 'bg-white text-slate-700 dark:text-slate-300 border border-slate-300 hover:border-primary-400 hover:bg-primary-50'
+              : 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-50'
           }
         `}
       >
@@ -87,7 +87,7 @@ export const TimeSlotPicker = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-gray-600">
+      <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
         <Clock className="w-4 h-4" />
         <span>
           {availableSlots.length} créneau{availableSlots.length > 1 ? 'x' : ''} disponible
@@ -98,7 +98,7 @@ export const TimeSlotPicker = ({
       {/* Morning Slots */}
       {morningSlots.length > 0 && (
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-3">Matinée (9h - 12h)</h4>
+          <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Matinée (9h - 12h)</h4>
           <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
             {morningSlots.map((time) => (
               <SlotButton key={time} time={time} />
@@ -110,7 +110,7 @@ export const TimeSlotPicker = ({
       {/* Afternoon Slots */}
       {afternoonSlots.length > 0 && (
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-3">Après-midi (12h - 17h)</h4>
+          <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Après-midi (12h - 17h)</h4>
           <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
             {afternoonSlots.map((time) => (
               <SlotButton key={time} time={time} />
@@ -122,7 +122,7 @@ export const TimeSlotPicker = ({
       {/* Evening Slots */}
       {eveningSlots.length > 0 && (
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-3">Soirée (17h - 18h)</h4>
+          <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Soirée (17h - 18h)</h4>
           <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
             {eveningSlots.map((time) => (
               <SlotButton key={time} time={time} />
@@ -132,17 +132,17 @@ export const TimeSlotPicker = ({
       )}
 
       {/* Legend */}
-      <div className="flex items-center gap-4 text-xs text-gray-600 pt-4 border-t">
+      <div className="flex items-center gap-4 text-xs text-slate-600 dark:text-slate-400 pt-4 border-t">
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 bg-primary-600 rounded"></div>
           <span>Sélectionné</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-white border border-gray-300 rounded"></div>
+          <div className="w-4 h-4 bg-white border border-slate-300 rounded"></div>
           <span>Disponible</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-gray-100 rounded"></div>
+          <div className="w-4 h-4 bg-slate-100 rounded"></div>
           <span>Réservé</span>
         </div>
       </div>

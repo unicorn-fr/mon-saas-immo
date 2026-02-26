@@ -3,13 +3,15 @@ import { Home as HomeIcon } from 'lucide-react'
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-gray-400 pt-16 pb-8">
+    <footer className="bg-slate-900 text-slate-400 pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-4 gap-8 mb-12">
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <HomeIcon className="w-7 h-7 text-primary-400" />
-              <span className="text-xl font-bold text-white">ImmoParticuliers</span>
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="w-8 h-8 bg-primary-700 rounded-xl flex items-center justify-center">
+                <HomeIcon className="w-4 h-4 text-white" />
+              </div>
+              <span className="text-lg font-bold text-white font-heading">ImmoParticuliers</span>
             </div>
             <p className="text-sm">
               La plateforme n°1 en France de l'immobilier entre particuliers.
@@ -47,7 +49,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-gray-800 pt-8 text-center text-sm">
+        <div className="border-t border-slate-800 pt-8 text-center text-sm">
           <p>© 2026 ImmoParticuliers. Tous droits réservés. Réalisé en France.</p>
         </div>
       </div>

@@ -25,16 +25,16 @@ const STATUS_CONFIG: Record<
   PENDING: {
     label: 'En attente',
     icon: AlertCircle,
-    color: 'text-yellow-700',
-    bgColor: 'bg-yellow-50',
-    borderColor: 'border-yellow-200',
+    color: 'text-warning-700',
+    bgColor: 'bg-warning-50',
+    borderColor: 'border-warning-100',
   },
   CONFIRMED: {
     label: 'Confirmée',
     icon: CheckCircle,
-    color: 'text-green-700',
-    bgColor: 'bg-green-50',
-    borderColor: 'border-green-200',
+    color: 'text-success-700',
+    bgColor: 'bg-success-50',
+    borderColor: 'border-success-100',
   },
   CANCELLED: {
     label: 'Annulée',
@@ -46,9 +46,9 @@ const STATUS_CONFIG: Record<
   COMPLETED: {
     label: 'Terminée',
     icon: CheckCircle,
-    color: 'text-gray-700',
-    bgColor: 'bg-gray-50',
-    borderColor: 'border-gray-200',
+    color: 'text-slate-700 dark:text-slate-300',
+    bgColor: 'bg-slate-50/50',
+    borderColor: 'border-slate-200',
   },
 }
 
@@ -85,11 +85,11 @@ export const BookingCard = ({
           <div className="flex-1">
             <h3
               onClick={() => navigate(`/property/${booking.property.id}`)}
-              className="text-lg font-bold text-gray-900 hover:text-primary-600 cursor-pointer transition-colors"
+              className="text-lg font-bold text-slate-900 hover:text-primary-600 cursor-pointer transition-colors"
             >
               {booking.property.title}
             </h3>
-            <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
+            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mt-1">
               <MapPin className="w-4 h-4" />
               <span>
                 {booking.property.city}
@@ -112,36 +112,36 @@ export const BookingCard = ({
         {/* Visit Details */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-primary-50 rounded-lg flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center flex-shrink-0">
               <Calendar className="w-5 h-5 text-primary-600" />
             </div>
             <div>
-              <p className="text-xs text-gray-600 mb-0.5">Date de visite</p>
-              <p className="font-semibold text-gray-900">{formattedDateShort}</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mb-0.5">Date de visite</p>
+              <p className="font-semibold text-slate-900">{formattedDateShort}</p>
             </div>
           </div>
 
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-primary-50 rounded-lg flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center flex-shrink-0">
               <Clock className="w-5 h-5 text-primary-600" />
             </div>
             <div>
-              <p className="text-xs text-gray-600 mb-0.5">Horaire</p>
-              <p className="font-semibold text-gray-900">
+              <p className="text-xs text-slate-600 dark:text-slate-400 mb-0.5">Horaire</p>
+              <p className="font-semibold text-slate-900">
                 {booking.visitTime} ({booking.duration} min)
               </p>
             </div>
           </div>
 
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-primary-50 rounded-lg flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center flex-shrink-0">
               <User className="w-5 h-5 text-primary-600" />
             </div>
             <div>
-              <p className="text-xs text-gray-600 mb-0.5">
+              <p className="text-xs text-slate-600 dark:text-slate-400 mb-0.5">
                 {viewMode === 'owner' ? 'Visiteur' : 'Propriétaire'}
               </p>
-              <p className="font-semibold text-gray-900">
+              <p className="font-semibold text-slate-900">
                 {viewMode === 'owner'
                   ? `${booking.tenant.firstName} ${booking.tenant.lastName}`
                   : booking.property.owner
@@ -154,12 +154,12 @@ export const BookingCard = ({
 
         {/* Notes */}
         {booking.tenantNotes && (
-          <div className="bg-gray-50 rounded-lg p-4 mb-4">
+          <div className="bg-slate-50/50 rounded-xl p-4 mb-4">
             <div className="flex items-start gap-2">
-              <MessageSquare className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
+              <MessageSquare className="w-4 h-4 text-slate-600 dark:text-slate-400 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-xs text-gray-600 mb-1">Notes</p>
-                <p className="text-sm text-gray-900">{booking.tenantNotes}</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Notes</p>
+                <p className="text-sm text-slate-900">{booking.tenantNotes}</p>
               </div>
             </div>
           </div>
@@ -167,7 +167,7 @@ export const BookingCard = ({
 
         {/* Cancellation Reason */}
         {booking.status === 'CANCELLED' && booking.cancellationReason && (
-          <div className="bg-red-50 rounded-lg p-4 mb-4">
+          <div className="bg-red-50 rounded-xl p-4 mb-4">
             <div className="flex items-start gap-2">
               <XCircle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
               <div>
@@ -188,7 +188,7 @@ export const BookingCard = ({
               <button
                 onClick={() => onConfirm(booking.id)}
                 disabled={isLoading}
-                className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isLoading ? (
                   <>
@@ -208,7 +208,7 @@ export const BookingCard = ({
               <button
                 onClick={() => onCancel(booking.id)}
                 disabled={isLoading}
-                className="flex-1 px-4 py-2 bg-white text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2 bg-white text-red-600 border border-red-300 rounded-xl hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <XCircle className="w-4 h-4" />
                 Annuler
@@ -218,7 +218,7 @@ export const BookingCard = ({
         )}
 
         {/* Booking Info Footer */}
-        <div className="flex items-center justify-between pt-4 mt-4 border-t text-xs text-gray-500">
+        <div className="flex items-center justify-between pt-4 mt-4 border-t text-xs text-slate-500">
           <span>Réservation #{booking.id.slice(0, 8)}</span>
           <span>Créée le {format(new Date(booking.createdAt), 'Pp', { locale: fr })}</span>
         </div>

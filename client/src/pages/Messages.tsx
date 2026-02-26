@@ -20,10 +20,10 @@ export default function Messages() {
 
   return (
     <Layout>
-      <div className="h-screen flex flex-col bg-gray-50">
+      <div className="h-screen flex flex-col" style={{ backgroundColor: 'var(--surface-page)' }}>
         {/* Header */}
-        <div className="bg-white border-b px-6 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">Messagerie</h1>
+        <div className="border-b px-6 py-4" style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
+          <h1 className="text-2xl font-bold text-slate-900">Messagerie</h1>
         </div>
 
         {/* Main Content */}
@@ -51,12 +51,12 @@ export default function Messages() {
           {selectedConversation ? (
             <ChatWindow conversation={selectedConversation} onBack={handleBack} />
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-center p-6 bg-white">
+            <div className="flex flex-col items-center justify-center h-full text-center p-6" style={{ backgroundColor: 'var(--surface-card)' }}>
               <div className="w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center mb-6">
                 <MessageSquare className="w-12 h-12 text-primary-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Sélectionnez une conversation</h2>
-              <p className="text-gray-600 max-w-md">
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">Sélectionnez une conversation</h2>
+              <p className="text-slate-600 max-w-md">
                 Choisissez une conversation dans la liste pour commencer à échanger avec un propriétaire ou un locataire.
               </p>
             </div>

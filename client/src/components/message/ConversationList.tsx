@@ -72,11 +72,11 @@ export const ConversationList = ({
   }
 
   return (
-    <div className="flex flex-col h-full bg-white border-r">
+    <div className="flex flex-col h-full border-r" style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
       {/* Header */}
-      <div className="p-4 border-b">
+      <div className="p-4 border-b" style={{ borderColor: 'var(--border)' }}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-gray-900">Messages</h2>
+          <h2 className="text-xl font-bold text-slate-900">Messages</h2>
           {unreadCount > 0 && (
             <span className="flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-primary-600 rounded-full">
               {unreadCount > 99 ? '99+' : unreadCount}
@@ -86,11 +86,12 @@ export const ConversationList = ({
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
             placeholder="Rechercher..."
-            className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 text-sm rounded-xl focus:ring-2 focus:ring-primary-500 focus:outline-none"
+            style={{ backgroundColor: 'var(--surface-subtle)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
           />
         </div>
       </div>
@@ -99,11 +100,11 @@ export const ConversationList = ({
       <div className="flex-1 overflow-y-auto">
         {conversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-6">
-            <MessageSquare className="w-16 h-16 text-gray-300 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <MessageSquare className="w-16 h-16 text-slate-300 mb-4" />
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">
               Aucune conversation
             </h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
               Commencez une conversation en contactant un propriétaire
             </p>
           </div>
@@ -118,9 +119,15 @@ export const ConversationList = ({
                 key={conversation.id}
                 onClick={() => onConversationSelect(conversation)}
                 className={`
-                  w-full p-4 flex items-start gap-3 hover:bg-gray-50 transition-colors border-b
-                  ${isSelected ? 'bg-primary-50 border-l-4 border-l-primary-600' : 'border-l-4 border-l-transparent'}
+                  w-full p-4 flex items-start gap-3 transition-colors border-b
+                  ${isSelected ? 'border-l-4 border-l-primary-600' : 'border-l-4 border-l-transparent'}
                 `}
+                style={{
+                  borderBottomColor: 'var(--border)',
+                  backgroundColor: isSelected ? 'var(--brand-light)' : undefined,
+                }}
+                onMouseEnter={(e) => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--surface-subtle)' }}
+                onMouseLeave={(e) => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = '' }}
               >
                 {/* Avatar */}
                 <div className="relative flex-shrink-0">
@@ -149,13 +156,13 @@ export const ConversationList = ({
                   <div className="flex items-center justify-between mb-1">
                     <h4
                       className={`text-sm font-semibold truncate ${
-                        unread > 0 ? 'text-gray-900' : 'text-gray-700'
+                        unread > 0 ? 'text-slate-900' : 'text-slate-700 dark:text-slate-300'
                       }`}
                     >
                       {otherUser.firstName} {otherUser.lastName}
                     </h4>
                     {conversation.lastMessageAt && (
-                      <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
+                      <span className="text-xs text-slate-500 flex-shrink-0 ml-2">
                         {formatTime(conversation.lastMessageAt)}
                       </span>
                     )}
@@ -163,7 +170,7 @@ export const ConversationList = ({
                   {conversation.lastMessageText && (
                     <p
                       className={`text-sm truncate ${
-                        unread > 0 ? 'text-gray-900 font-medium' : 'text-gray-600'
+                        unread > 0 ? 'text-slate-900 font-medium' : 'text-slate-600 dark:text-slate-400'
                       }`}
                     >
                       {conversation.lastMessageText}

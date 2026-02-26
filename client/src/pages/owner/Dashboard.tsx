@@ -15,12 +15,15 @@ import {
   ArrowRight,
   MapPin,
   Bed,
-  Bath,
   Square,
   FileText,
   Send,
   PenLine,
   AlertTriangle,
+  CalendarCheck,
+  Percent,
+  Users,
+  ChevronRight,
 } from 'lucide-react'
 
 export default function Dashboard() {
@@ -30,376 +33,445 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchMyStatistics()
-    fetchMyProperties({ page: 1, limit: 5 })
+    fetchMyProperties({ page: 1, limit: 6 })
     fetchContracts(undefined, 1, 50)
     fetchContractStatistics()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Derived values
-  const activeContracts = contracts.filter((c) => c.status === 'ACTIVE')
-  const monthlyRevenue = activeContracts.reduce((sum, c) => sum + c.monthlyRent + (c.charges || 0), 0)
-  const recentContracts = contracts.slice(0, 3)
+  // ── Données dérivées ─────────────────────────────────────────────────────
+  const activeContracts   = contracts.filter((c) => c.status === 'ACTIVE')
+  const pendingContracts  = contracts.filter((c) => ['SENT','SIGNED_OWNER','SIGNED_TENANT','COMPLETED'].includes(c.status))
+  const monthlyRevenue    = activeContracts.reduce((sum, c) => sum + c.monthlyRent + (c.charges || 0), 0)
+  const annualRevenue     = monthlyRevenue * 12
 
-  const totalProps = statistics?.totalProperties || 0
+  const totalProps    = statistics?.totalProperties || 0
   const occupiedProps = statistics?.occupiedProperties || 0
+  const availableProps = statistics?.availableProperties || 0
   const occupancyRate = totalProps > 0 ? Math.round((occupiedProps / totalProps) * 100) : 0
 
   const pendingSignatures = (contractStats?.sent || 0) + (contractStats?.completed || 0)
-  const drafts = contractStats?.draft || 0
-  const hasUrgencies = pendingSignatures > 0 || drafts > 0
+  const drafts            = contractStats?.draft || 0
+
+  // Alertes urgentes : signées côté locataire → attente propriétaire
+  const urgentContracts = contracts.filter((c) => c.status === 'SIGNED_TENANT')
+
+  // Statuts des biens
+  const statusBadge: Record<string, { label: string; bg: string; text: string; dot: string }> = {
+    AVAILABLE: { label: 'Disponible',   bg: 'bg-success-100',  text: 'text-success-700',  dot: 'bg-success-500'  },
+    OCCUPIED:  { label: 'En location',  bg: 'bg-blue-100',     text: 'text-blue-700',     dot: 'bg-blue-500'     },
+    RESERVED:  { label: 'Réservé',      bg: 'bg-warning-100',  text: 'text-warning-700',  dot: 'bg-warning-500'  },
+    DRAFT:     { label: 'Hors marché',  bg: 'bg-slate-100',    text: 'text-slate-500',    dot: 'bg-slate-400'    },
+  }
 
   const getContractStatusIcon = (status: string) => {
     switch (status) {
-      case 'ACTIVE': return <CheckCircle className="w-4 h-4 text-green-600" />
-      case 'DRAFT': return <Clock className="w-4 h-4 text-yellow-600" />
-      case 'SENT': return <Send className="w-4 h-4 text-blue-600" />
+      case 'ACTIVE':        return <CheckCircle className="w-4 h-4 text-success-500" />
+      case 'DRAFT':         return <Clock className="w-4 h-4 text-warning-500" />
+      case 'SENT':          return <Send className="w-4 h-4 text-blue-500" />
+      case 'SIGNED_TENANT': return <PenLine className="w-4 h-4 text-orange-500" />
       case 'SIGNED_OWNER':
-      case 'SIGNED_TENANT': return <PenLine className="w-4 h-4 text-indigo-600" />
-      case 'COMPLETED': return <CheckCircle className="w-4 h-4 text-emerald-600" />
-      default: return <FileText className="w-4 h-4 text-gray-400" />
+      case 'COMPLETED':     return <PenLine className="w-4 h-4 text-primary-500" />
+      default:              return <FileText className="w-4 h-4 text-slate-400" />
     }
   }
 
-  const getContractStatusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      DRAFT: 'Brouillon',
-      SENT: 'Envoye',
-      SIGNED_OWNER: 'En signature',
-      SIGNED_TENANT: 'En signature',
-      COMPLETED: 'Signe',
-      ACTIVE: 'Actif',
-      EXPIRED: 'Expire',
-      TERMINATED: 'Resilie',
-    }
-    return labels[status] || status
-  }
-
-  const PropertyQuickCard = ({ property }: { property: any }) => (
-    <div
-      className="flex gap-4 p-4 bg-white rounded-lg border hover:shadow-md transition-shadow cursor-pointer"
-      onClick={() => navigate(`/properties/${property.id}`)}
-    >
-      <img
-        src={property.images[0] || '/placeholder-property.jpg'}
-        alt={property.title}
-        className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
-        onError={(e) => { e.currentTarget.src = '/placeholder-property.jpg' }}
-      />
-      <div className="flex-1 min-w-0">
-        <h4 className="font-semibold text-gray-900 mb-1 truncate">{property.title}</h4>
-        <div className="flex items-center text-sm text-gray-500 mb-2">
-          <MapPin className="w-3 h-3 mr-1" />
-          <span className="truncate">{property.city}, {property.postalCode}</span>
-        </div>
-        <div className="flex items-center gap-3 text-xs text-gray-500">
-          <span className="flex items-center gap-1"><Bed className="w-3 h-3" />{property.bedrooms}</span>
-          <span className="flex items-center gap-1"><Bath className="w-3 h-3" />{property.bathrooms}</span>
-          <span className="flex items-center gap-1"><Square className="w-3 h-3" />{property.surface}m²</span>
-        </div>
-      </div>
-      <div className="text-right flex-shrink-0">
-        <p className="font-semibold text-primary-600">{property.price}€</p>
-        <p className="text-xs text-gray-400">/ mois</p>
-      </div>
-    </div>
-  )
+  const getContractStatusLabel = (status: string) => ({
+    DRAFT: 'Brouillon', SENT: 'Envoyé', SIGNED_OWNER: 'En signature',
+    SIGNED_TENANT: '⚡ Signer maintenant', COMPLETED: 'Signé', ACTIVE: 'Actif',
+    EXPIRED: 'Expiré', TERMINATED: 'Résilié',
+  }[status] || status)
 
   if (isLoading && !statistics) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600" />
-      </div>
+      <Layout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" />
+        </div>
+      </Layout>
+    )
+  }
+
+  // ── Empty state ──────────────────────────────────────────────────────────
+  if (totalProps === 0) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center p-8">
+          <div className="text-center max-w-md">
+            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
+              style={{ background: 'linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%)' }}>
+              <Home className="w-10 h-10 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 mb-3">Bienvenue sur votre espace propriétaire !</h2>
+            <p className="text-slate-500 mb-8">
+              Ajoutez votre première propriété pour commencer à gérer vos locations et visualiser vos statistiques.
+            </p>
+            <Link to="/properties/new" className="btn-cyan-gradient inline-flex items-center gap-2">
+              <Plus className="w-5 h-5" />
+              Ajouter ma première propriété
+            </Link>
+          </div>
+        </div>
+      </Layout>
     )
   }
 
   return (
     <Layout>
-      <div className="bg-gray-50 min-h-screen">
-        <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="min-h-screen py-6 px-4 md:px-6 max-w-7xl mx-auto space-y-6">
 
-          {/* ── NIVEAU 1 : Le Cœur ─────────────────────────────────── */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-
-            {/* Revenus mensuels */}
-            <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl p-6 text-white shadow-lg">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-10 h-10 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
-                  <Euro className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-green-100 text-sm font-medium">Ce mois</span>
-              </div>
-              <p className="text-green-100 text-sm mb-1">Revenus locatifs mensuels</p>
-              <p className="text-4xl font-bold mb-1">
-                {monthlyRevenue.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}
-              </p>
-              <p className="text-green-200 text-sm">
-                {activeContracts.length} contrat{activeContracts.length > 1 ? 's' : ''} actif{activeContracts.length > 1 ? 's' : ''}
-              </p>
-            </div>
-
-            {/* Occupation */}
-            <div className="bg-white rounded-2xl p-6 border shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
-                  <Home className="w-5 h-5 text-primary-600" />
-                </div>
-                <button
-                  onClick={() => navigate('/properties/owner/me')}
-                  className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
-                >
-                  Voir mes biens <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-              <p className="text-gray-500 text-sm mb-1">Taux d'occupation</p>
-              <div className="flex items-end gap-3 mb-3">
-                <p className="text-4xl font-bold text-gray-900">{occupancyRate}%</p>
-                <p className="text-gray-500 text-sm mb-1">{occupiedProps} / {totalProps} biens loues</p>
-              </div>
-              <div className="w-full bg-gray-100 rounded-full h-3">
-                <div
-                  className="bg-primary-600 h-3 rounded-full transition-all"
-                  style={{ width: `${occupancyRate}%` }}
-                />
-              </div>
-              <div className="flex justify-between mt-2 text-xs text-gray-400">
-                <span>{occupiedProps} en location</span>
-                <span>{statistics?.availableProperties || 0} disponibles</span>
-              </div>
-            </div>
+        {/* ── EN-TÊTE ─────────────────────────────────────────────────── */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-extrabold" style={{ color: 'var(--text-primary)' }}>
+              Tableau de bord
+            </h1>
+            <p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+              Vue d'ensemble de votre portefeuille locatif
+            </p>
           </div>
+          <Link to="/properties/new" className="btn-cyan-gradient hidden md:inline-flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            Nouveau bien
+          </Link>
+        </div>
 
-          {/* ── NIVEAU 2 : Alertes urgentes ────────────────────────── */}
-          {hasUrgencies && (
-            <div className="flex flex-wrap gap-3 mb-6">
-              {pendingSignatures > 0 && (
-                <Link
-                  to="/contracts"
-                  className="flex items-center gap-2 px-4 py-2.5 bg-orange-50 border border-orange-200 rounded-xl hover:bg-orange-100 transition-colors"
-                >
-                  <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
-                  <span className="text-sm font-semibold text-orange-700">
-                    {pendingSignatures} signature{pendingSignatures > 1 ? 's' : ''} en attente
-                  </span>
-                  <ArrowRight className="w-3.5 h-3.5 text-orange-500" />
+        {/* ── BANNIÈRE D'ALERTES URGENTES ──────────────────────────────── */}
+        {(urgentContracts.length > 0 || pendingSignatures > 0 || drafts > 0) && (
+          <div className="rounded-2xl border-l-4 border-l-orange-500 p-4 flex flex-wrap gap-3 items-center"
+            style={{ backgroundColor: 'rgba(249,115,22,0.06)', borderColor: 'rgba(249,115,22,0.15)', borderLeftColor: '#f97316' }}>
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse flex-shrink-0" />
+              <p className="text-sm font-semibold text-orange-700">Actions requises</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {urgentContracts.length > 0 && (
+                <Link to="/contracts"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 text-white rounded-lg text-xs font-semibold hover:bg-orange-600 transition-colors">
+                  <PenLine className="w-3.5 h-3.5" />
+                  {urgentContracts.length} contrat{urgentContracts.length > 1 ? 's' : ''} à signer
+                </Link>
+              )}
+              {pendingSignatures > 0 && urgentContracts.length === 0 && (
+                <Link to="/contracts"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-semibold hover:bg-primary-700 transition-colors">
+                  <Send className="w-3.5 h-3.5" />
+                  {pendingSignatures} en attente de signature
                 </Link>
               )}
               {drafts > 0 && (
-                <Link
-                  to="/contracts"
-                  className="flex items-center gap-2 px-4 py-2.5 bg-yellow-50 border border-yellow-200 rounded-xl hover:bg-yellow-100 transition-colors"
-                >
-                  <AlertTriangle className="w-4 h-4 text-yellow-600" />
-                  <span className="text-sm font-semibold text-yellow-700">
-                    {drafts} brouillon{drafts > 1 ? 's' : ''} a finaliser
-                  </span>
-                  <ArrowRight className="w-3.5 h-3.5 text-yellow-500" />
+                <Link to="/contracts"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-warning-100 text-warning-700 rounded-lg text-xs font-semibold hover:bg-warning-200 transition-colors">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  {drafts} brouillon{drafts > 1 ? 's' : ''} à finaliser
                 </Link>
               )}
             </div>
-          )}
+          </div>
+        )}
 
-          {/* ── NIVEAU 3 : Contenu principal (2 colonnes) ──────────── */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {/* ── KPIs — 4 cartes ─────────────────────────────────────────── */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
 
-            {/* Colonne gauche : Propriétés + Contrats récents */}
-            <div className="lg:col-span-2 space-y-6">
-
-              {/* Propriétés récentes */}
-              <div className="bg-white rounded-2xl border p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900">Proprietes recentes</h2>
-                  <Link
-                    to="/properties/owner/me"
-                    className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
-                  >
-                    Voir tout <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-                {myProperties.length === 0 ? (
-                  <div className="text-center py-10">
-                    <Home className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500 mb-4">Aucune propriete pour le moment</p>
-                    <Link to="/properties/new" className="btn btn-primary inline-flex">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Creer votre premiere propriete
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {myProperties.slice(0, 4).map((property) => (
-                      <PropertyQuickCard key={property.id} property={property} />
-                    ))}
-                  </div>
-                )}
+          {/* Revenus mensuels */}
+          <div className="rounded-2xl p-5 text-white col-span-2 lg:col-span-1"
+            style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 60%, #7c3aed 100%)' }}>
+            <div className="flex items-start justify-between mb-3">
+              <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
+                <Euro className="w-5 h-5" />
               </div>
+              <span className="text-white/70 text-xs font-medium">/ mois</span>
+            </div>
+            <p className="text-2xl font-extrabold leading-none mb-1">
+              {monthlyRevenue.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} €
+            </p>
+            <p className="text-white/70 text-xs">{annualRevenue.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} € / an</p>
+          </div>
 
-              {/* Contrats récents */}
-              <div className="bg-white rounded-2xl border p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-primary-600" />
-                    Contrats recents
-                  </h2>
-                  <Link
-                    to="/contracts"
-                    className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
-                  >
-                    Voir mes contrats <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-                {recentContracts.length === 0 ? (
-                  <div className="text-center py-8">
-                    <FileText className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500 mb-4">Aucun contrat pour le moment</p>
-                    <Link to="/contracts/new" className="btn btn-primary inline-flex">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Creer un contrat
+          {/* Taux occupation */}
+          <div className="rounded-2xl p-5 border" style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
+            <div className="flex items-start justify-between mb-3">
+              <div className="w-9 h-9 bg-success-100 rounded-xl flex items-center justify-center">
+                <Percent className="w-4.5 h-4.5 text-success-600" />
+              </div>
+              <button onClick={() => navigate('/properties/owner/me')}
+                className="text-xs text-primary-600 hover:text-primary-700 flex items-center gap-0.5">
+                Voir <ChevronRight className="w-3 h-3" />
+              </button>
+            </div>
+            <p className="text-2xl font-extrabold leading-none mb-1" style={{ color: 'var(--text-primary)' }}>
+              {occupancyRate}%
+            </p>
+            <p className="text-xs mb-2" style={{ color: 'var(--text-secondary)' }}>
+              {occupiedProps} loué{occupiedProps > 1 ? 's' : ''} / {totalProps} biens
+            </p>
+            <div className="w-full rounded-full h-1.5" style={{ backgroundColor: 'var(--surface-subtle)' }}>
+              <div className="h-1.5 rounded-full bg-success-500 transition-all" style={{ width: `${occupancyRate}%` }} />
+            </div>
+          </div>
+
+          {/* Biens disponibles */}
+          <div className="rounded-2xl p-5 border" style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
+            <div className="flex items-start justify-between mb-3">
+              <div className="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center">
+                <Home className="w-4.5 h-4.5 text-blue-600" />
+              </div>
+              <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-medium">{totalProps} total</span>
+            </div>
+            <p className="text-2xl font-extrabold leading-none mb-1" style={{ color: 'var(--text-primary)' }}>
+              {availableProps}
+            </p>
+            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+              bien{availableProps > 1 ? 's' : ''} disponible{availableProps > 1 ? 's' : ''}
+            </p>
+          </div>
+
+          {/* Contrats actifs */}
+          <div className="rounded-2xl p-5 border" style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
+            <div className="flex items-start justify-between mb-3">
+              <div className="w-9 h-9 bg-primary-100 rounded-xl flex items-center justify-center">
+                <CalendarCheck className="w-4.5 h-4.5 text-primary-600" />
+              </div>
+              <button onClick={() => navigate('/contracts')}
+                className="text-xs text-primary-600 hover:text-primary-700 flex items-center gap-0.5">
+                Voir <ChevronRight className="w-3 h-3" />
+              </button>
+            </div>
+            <p className="text-2xl font-extrabold leading-none mb-1" style={{ color: 'var(--text-primary)' }}>
+              {activeContracts.length}
+            </p>
+            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+              contrat{activeContracts.length > 1 ? 's' : ''} actif{activeContracts.length > 1 ? 's' : ''}
+              {pendingContracts.length > 0 && <span className="text-warning-600 font-medium"> · {pendingContracts.length} en cours</span>}
+            </p>
+          </div>
+        </div>
+
+        {/* ── CONTENU PRINCIPAL ────────────────────────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          {/* ── COLONNE PRINCIPALE (2/3) ─────────────────────────────── */}
+          <div className="lg:col-span-2 space-y-6">
+
+            {/* Mes biens — statuts en un coup d'œil */}
+            <div className="rounded-2xl border" style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
+              <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: 'var(--border)' }}>
+                <h2 className="font-semibold text-base" style={{ color: 'var(--text-primary)' }}>
+                  Mes propriétés
+                </h2>
+                <Link to="/properties/owner/me"
+                  className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1">
+                  Tout voir <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+              <div className="divide-y" style={{ borderColor: 'var(--border)' }}>
+                {myProperties.length === 0 ? (
+                  <div className="text-center py-12 px-6">
+                    <Home className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-tertiary)' }} />
+                    <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>Aucune propriété pour le moment</p>
+                    <Link to="/properties/new" className="btn btn-primary inline-flex">
+                      <Plus className="w-4 h-4 mr-2" /> Ajouter un bien
                     </Link>
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    {recentContracts.map((contract) => (
-                      <div
-                        key={contract.id}
-                        className="flex items-center gap-3 p-3 rounded-xl border hover:bg-gray-50 transition-colors cursor-pointer"
-                        onClick={() => navigate(`/contracts/${contract.id}`)}
+                  myProperties.slice(0, 5).map((property) => {
+                    const badge = statusBadge[property.status] || statusBadge['DRAFT']
+                    return (
+                      <button
+                        key={property.id}
+                        onClick={() => navigate(`/properties/${property.id}`)}
+                        className="w-full flex items-center gap-4 p-4 text-left transition-colors hover:bg-slate-50 group"
                       >
-                        {getContractStatusIcon(contract.status)}
+                        <img
+                          src={property.images[0] || '/placeholder-property.jpg'}
+                          alt={property.title}
+                          className="w-16 h-14 rounded-xl object-cover flex-shrink-0 group-hover:scale-[1.02] transition-transform"
+                          onError={(e) => { e.currentTarget.src = '/placeholder-property.jpg' }}
+                        />
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900 truncate text-sm">
-                            {contract.property?.title || 'Contrat'}
+                          <p className="font-semibold text-sm truncate group-hover:text-primary-600 transition-colors"
+                            style={{ color: 'var(--text-primary)' }}>
+                            {property.title}
                           </p>
-                          <p className="text-xs text-gray-500">
-                            {contract.tenant?.firstName} {contract.tenant?.lastName} — {contract.monthlyRent}€/mois
-                          </p>
+                          <div className="flex items-center gap-1 text-xs mt-0.5 mb-1.5" style={{ color: 'var(--text-tertiary)' }}>
+                            <MapPin className="w-3 h-3 flex-shrink-0" />
+                            <span className="truncate">{property.city}, {property.postalCode}</span>
+                          </div>
+                          <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                            <span className="flex items-center gap-0.5"><Bed className="w-3 h-3" />{property.bedrooms} ch.</span>
+                            <span className="flex items-center gap-0.5"><Square className="w-3 h-3" />{property.surface}m²</span>
+                          </div>
                         </div>
-                        <span className={`text-xs font-medium px-2 py-1 rounded-full shrink-0 ${
-                          contract.status === 'ACTIVE' ? 'bg-green-100 text-green-700' :
-                          contract.status === 'DRAFT' ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-blue-100 text-blue-700'
-                        }`}>
-                          {getContractStatusLabel(contract.status)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                        <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                          <p className="font-bold text-sm text-primary-600">{property.price}€<span className="font-normal text-xs text-slate-400">/mois</span></p>
+                          <span className={`flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${badge.bg} ${badge.text}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
+                            {badge.label}
+                          </span>
+                        </div>
+                      </button>
+                    )
+                  })
                 )}
               </div>
             </div>
 
-            {/* Colonne droite : Actions rapides */}
-            <div className="space-y-4">
-              <div className="bg-white rounded-2xl border p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Actions rapides</h2>
-                <div className="space-y-2">
-                  <button
-                    onClick={() => navigate('/properties/new')}
-                    className="btn btn-primary w-full justify-center"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Ajouter un bien
-                  </button>
-                  <button
-                    onClick={() => navigate('/contracts/new')}
-                    className="btn btn-secondary w-full justify-center"
-                  >
-                    <FileText className="w-4 h-4 mr-2" />
-                    Nouveau contrat
-                  </button>
-                  <button
-                    onClick={() => navigate('/properties/owner/me')}
-                    className="btn btn-secondary w-full justify-center"
-                  >
-                    <Home className="w-4 h-4 mr-2" />
-                    Mes proprietes
-                  </button>
-                  <button
-                    onClick={() => navigate('/contracts')}
-                    className="btn btn-secondary w-full justify-center"
-                  >
-                    <FileText className="w-4 h-4 mr-2" />
-                    Voir mes contrats
-                  </button>
-                </div>
+            {/* Contrats récents */}
+            <div className="rounded-2xl border" style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
+              <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: 'var(--border)' }}>
+                <h2 className="font-semibold text-base flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                  <FileText className="w-4.5 h-4.5 text-primary-600" />
+                  Contrats récents
+                </h2>
+                <Link to="/contracts"
+                  className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1">
+                  Tout voir <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
               </div>
-
-              {/* Résumé contrats compact */}
-              {contractStats && (
-                <div className="bg-white rounded-2xl border p-6">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3">Mes contrats</h3>
-                  <div className="space-y-2">
-                    {[
-                      { label: 'Actifs', value: contractStats.active, color: 'text-green-600', bg: 'bg-green-50' },
-                      { label: 'En signature', value: pendingSignatures, color: 'text-blue-600', bg: 'bg-blue-50' },
-                      { label: 'Brouillons', value: contractStats.draft, color: 'text-yellow-600', bg: 'bg-yellow-50' },
-                    ].map(({ label, value, color, bg }) => (
-                      <div key={label} className={`flex items-center justify-between px-3 py-2 rounded-lg ${bg}`}>
-                        <span className="text-sm text-gray-600">{label}</span>
-                        <span className={`text-sm font-bold ${color}`}>{value}</span>
+              {contracts.length === 0 ? (
+                <div className="text-center py-10 px-6">
+                  <FileText className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-tertiary)' }} />
+                  <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>Aucun contrat pour le moment</p>
+                  <Link to="/contracts/new" className="btn btn-primary inline-flex">
+                    <Plus className="w-4 h-4 mr-2" /> Créer un contrat
+                  </Link>
+                </div>
+              ) : (
+                <div className="divide-y" style={{ borderColor: 'var(--border)' }}>
+                  {contracts.slice(0, 4).map((contract) => (
+                    <button
+                      key={contract.id}
+                      onClick={() => navigate(`/contracts/${contract.id}`)}
+                      className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-slate-50 transition-colors group"
+                    >
+                      <div className="flex-shrink-0">{getContractStatusIcon(contract.status)}</div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate group-hover:text-primary-600 transition-colors"
+                          style={{ color: 'var(--text-primary)' }}>
+                          {contract.property?.title || 'Contrat'}
+                        </p>
+                        <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+                          {contract.tenant?.firstName} {contract.tenant?.lastName} · {contract.monthlyRent}€/mois
+                        </p>
                       </div>
-                    ))}
-                  </div>
+                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0 ${
+                        contract.status === 'ACTIVE'        ? 'bg-success-100 text-success-700' :
+                        contract.status === 'DRAFT'         ? 'bg-warning-100 text-warning-700' :
+                        contract.status === 'SIGNED_TENANT' ? 'bg-orange-100 text-orange-700' :
+                        'bg-primary-100 text-primary-700'
+                      }`}>
+                        {getContractStatusLabel(contract.status)}
+                      </span>
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
           </div>
 
-          {/* ── NIVEAU 4 : Stats secondaires (compact) ─────────────── */}
-          {statistics && (
-            <div className="bg-white rounded-2xl border p-4">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Performance — Statistiques</p>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center">
-                  <div className="flex items-center justify-center gap-1.5 mb-1">
-                    <Eye className="w-3.5 h-3.5 text-blue-500" />
-                    <span className="text-xs text-gray-500">Vues totales</span>
+          {/* ── COLONNE LATÉRALE (1/3) ──────────────────────────────── */}
+          <div className="space-y-4">
+
+            {/* Actions rapides */}
+            <div className="rounded-2xl border p-5" style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
+              <h2 className="font-semibold text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>ACTIONS RAPIDES</h2>
+              <div className="space-y-2">
+                <button onClick={() => navigate('/properties/new')} className="btn btn-primary w-full justify-center">
+                  <Plus className="w-4 h-4 mr-2" /> Ajouter un bien
+                </button>
+                <button onClick={() => navigate('/contracts/new')} className="btn btn-secondary w-full justify-center">
+                  <FileText className="w-4 h-4 mr-2" /> Nouveau contrat
+                </button>
+                <button onClick={() => navigate('/messages')} className="btn btn-secondary w-full justify-center">
+                  <MessageSquare className="w-4 h-4 mr-2" /> Mes messages
+                </button>
+              </div>
+            </div>
+
+            {/* Résumé portefeuille */}
+            <div className="rounded-2xl border p-5" style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
+              <h2 className="font-semibold text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>MON PORTEFEUILLE</h2>
+              <div className="space-y-3">
+                {[
+                  { label: 'Biens en location',  value: occupiedProps,    color: 'text-blue-600',    bg: 'bg-blue-100',    dot: 'bg-blue-500' },
+                  { label: 'Biens disponibles',  value: availableProps,   color: 'text-success-600', bg: 'bg-success-100', dot: 'bg-success-500' },
+                  { label: 'Hors marché',         value: totalProps - occupiedProps - availableProps, color: 'text-slate-500', dot: 'bg-slate-400' },
+                ].map(({ label, value, color, dot }) => (
+                  <div key={label} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full ${dot}`} />
+                      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{label}</span>
+                    </div>
+                    <span className={`font-bold text-sm ${color}`}>{value}</span>
                   </div>
-                  <p className="text-xl font-bold text-gray-800">{statistics.totalViews || 0}</p>
-                  <p className="text-xs text-gray-400">~{totalProps > 0 ? Math.round((statistics.totalViews || 0) / totalProps) : 0} / bien</p>
-                </div>
-                <div className="text-center border-x border-gray-100">
-                  <div className="flex items-center justify-center gap-1.5 mb-1">
-                    <MessageSquare className="w-3.5 h-3.5 text-purple-500" />
-                    <span className="text-xs text-gray-500">Contacts recus</span>
+                ))}
+                <div className="pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Total biens</span>
+                    <span className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{totalProps}</span>
                   </div>
-                  <p className="text-xl font-bold text-gray-800">{statistics.totalContacts || 0}</p>
-                  <p className="text-xs text-gray-400">Messages locataires</p>
-                </div>
-                <div className="text-center">
-                  <div className="flex items-center justify-center gap-1.5 mb-1">
-                    <TrendingUp className="w-3.5 h-3.5 text-green-500" />
-                    <span className="text-xs text-gray-500">Conversion</span>
-                  </div>
-                  <p className="text-xl font-bold text-gray-800">
-                    {statistics.totalViews && statistics.totalContacts
-                      ? `${Math.round((statistics.totalContacts / statistics.totalViews) * 100)}%`
-                      : '0%'}
-                  </p>
-                  <p className="text-xs text-gray-400">Contacts / Vues</p>
                 </div>
               </div>
             </div>
-          )}
 
-          {/* Empty state first time */}
-          {statistics?.totalProperties === 0 && (
-            <div className="bg-white rounded-2xl border text-center py-16 mt-6">
-              <div className="max-w-md mx-auto">
-                <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Home className="w-8 h-8 text-primary-600" />
+            {/* Contrats par statut */}
+            {contractStats && (
+              <div className="rounded-2xl border p-5" style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
+                <h2 className="font-semibold text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>CONTRATS</h2>
+                <div className="space-y-2">
+                  {[
+                    { label: 'Actifs',        value: contractStats.active || 0, color: 'text-success-600', bg: 'bg-success-50' },
+                    { label: 'En signature',  value: pendingSignatures,          color: 'text-primary-600', bg: 'bg-primary-50' },
+                    { label: 'Brouillons',    value: contractStats.draft || 0,  color: 'text-warning-600', bg: 'bg-warning-50' },
+                  ].map(({ label, value, color, bg }) => (
+                    <div key={label} className={`flex items-center justify-between px-3 py-2 rounded-xl ${bg}`}>
+                      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{label}</span>
+                      <span className={`text-sm font-bold ${color}`}>{value}</span>
+                    </div>
+                  ))}
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Bienvenue sur votre tableau de bord !</h2>
-                <p className="text-gray-500 mb-6">
-                  Commencez par ajouter votre premiere propriete pour voir vos statistiques apparaitre ici.
-                </p>
-                <Link to="/properties/new" className="btn btn-primary inline-flex">
-                  <Plus className="w-5 h-5 mr-2" />
-                  Creer ma premiere propriete
-                </Link>
               </div>
-            </div>
-          )}
+            )}
 
+            {/* Stats de performance */}
+            {statistics && (
+              <div className="rounded-2xl border p-5" style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
+                <h2 className="font-semibold text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>PERFORMANCE</h2>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 bg-primary-100 rounded-lg flex items-center justify-center">
+                        <Eye className="w-3.5 h-3.5 text-primary-600" />
+                      </div>
+                      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Vues totales</span>
+                    </div>
+                    <span className="font-bold text-sm text-primary-600">{statistics.totalViews || 0}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 bg-success-100 rounded-lg flex items-center justify-center">
+                        <Users className="w-3.5 h-3.5 text-success-600" />
+                      </div>
+                      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Contacts reçus</span>
+                    </div>
+                    <span className="font-bold text-sm text-success-600">{statistics.totalContacts || 0}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 bg-accent-100 rounded-lg flex items-center justify-center">
+                        <TrendingUp className="w-3.5 h-3.5 text-accent-600" />
+                      </div>
+                      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Conversion</span>
+                    </div>
+                    <span className="font-bold text-sm text-accent-600">
+                      {statistics.totalViews && statistics.totalContacts
+                        ? `${Math.round((statistics.totalContacts / statistics.totalViews) * 100)}%`
+                        : '0%'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </Layout>

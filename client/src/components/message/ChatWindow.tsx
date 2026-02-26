@@ -142,16 +142,16 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
   const groupedMessages = groupMessagesByDate()
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full" style={{ backgroundColor: 'var(--surface-card)' }}>
       {/* Header */}
-      <div className="flex items-center gap-4 p-4 border-b bg-white">
+      <div className="flex items-center gap-4 p-4 border-b" style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
         {/* Back Button (mobile) */}
         {onBack && (
           <button
             onClick={onBack}
-            className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="lg:hidden p-2 hover:bg-slate-100 rounded-xl transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
+            <ArrowLeft className="w-5 h-5 text-slate-600 dark:text-slate-400" />
           </button>
         )}
 
@@ -169,7 +169,7 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
             </div>
           )}
           <div>
-            <h3 className="font-semibold text-gray-900">
+            <h3 className="font-semibold text-slate-900">
               {otherUser.firstName} {otherUser.lastName}
             </h3>
           </div>
@@ -178,7 +178,8 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
         {isOwner && (
           <button
             onClick={() => setShowLeaseModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
+            className="flex items-center gap-2 px-4 py-2 text-white rounded-xl transition-opacity text-sm font-medium hover:opacity-90"
+            style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #7c3aed 100%)' }}
           >
             <Home className="w-4 h-4" />
             <span className="hidden sm:inline">Mettre en location</span>
@@ -190,7 +191,8 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto p-4 bg-gray-50"
+        className="flex-1 overflow-y-auto p-4"
+        style={{ backgroundColor: 'var(--surface-page)' }}
       >
         {isLoadingMessages && messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
@@ -198,11 +200,11 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center mb-4">
+            <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: 'var(--brand-light)' }}>
               <UserIcon className="w-10 h-10 text-primary-600" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Commencez la conversation</h3>
-            <p className="text-sm text-gray-600">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">Commencez la conversation</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
               Envoyez votre premier message a {otherUser.firstName}
             </p>
           </div>
@@ -212,8 +214,8 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
               <div key={date}>
                 {/* Date Separator */}
                 <div className="flex items-center justify-center my-6">
-                  <div className="px-4 py-1.5 bg-white rounded-full shadow-sm border">
-                    <span className="text-xs font-medium text-gray-600">{date}</span>
+                  <div className="px-4 py-1.5 rounded-full shadow-sm border" style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
+                    <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>{date}</span>
                   </div>
                 </div>
 

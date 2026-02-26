@@ -35,15 +35,14 @@ export default function VerifyEmail() {
   }, [token])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-2xl font-bold text-gray-900"
-          >
-            <Home className="w-8 h-8 text-primary-500" />
-            ImmoParticuliers
+          <Link to="/" className="inline-flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+            <div className="w-9 h-9 bg-primary-700 rounded-xl flex items-center justify-center">
+              <Home className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold text-slate-900 font-heading">ImmoParticuliers</span>
           </Link>
         </div>
 
@@ -51,10 +50,10 @@ export default function VerifyEmail() {
           {status === 'loading' && (
             <>
               <Loader2 className="w-16 h-16 text-primary-500 animate-spin mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-gray-900 mb-2">
+              <h2 className="text-xl font-bold text-slate-900 mb-2">
                 Verification en cours...
               </h2>
-              <p className="text-gray-600">
+              <p className="text-slate-600">
                 Veuillez patienter pendant que nous verifions votre email.
               </p>
             </>
@@ -62,11 +61,11 @@ export default function VerifyEmail() {
 
           {status === 'success' && (
             <>
-              <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-gray-900 mb-2">
+              <CheckCircle className="w-16 h-16 text-success-500 mx-auto mb-4" />
+              <h2 className="text-xl font-bold text-slate-900 mb-2">
                 Email verifie !
               </h2>
-              <p className="text-gray-600 mb-6">{message}</p>
+              <p className="text-slate-600 mb-6">{message}</p>
               <Link to="/login" className="btn btn-primary">
                 Se connecter
               </Link>
@@ -76,10 +75,10 @@ export default function VerifyEmail() {
           {status === 'error' && (
             <>
               <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-gray-900 mb-2">
+              <h2 className="text-xl font-bold text-slate-900 mb-2">
                 Erreur de verification
               </h2>
-              <p className="text-gray-600 mb-6">{message}</p>
+              <p className="text-slate-600 mb-6">{message}</p>
               <Link to="/login" className="btn btn-primary">
                 Retour a la connexion
               </Link>

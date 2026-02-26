@@ -127,11 +127,11 @@ export const CreateLeaseModal = ({
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
         <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="w-8 h-8 text-green-600" />
+          <div className="w-16 h-16 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle className="w-8 h-8 text-success-600" />
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Contrat cree avec succes</h3>
-          <p className="text-sm text-gray-600">
+          <h3 className="text-xl font-bold text-slate-900 mb-2">Contrat cree avec succes</h3>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             Redirection vers le contrat...
           </p>
         </div>
@@ -148,14 +148,14 @@ export const CreateLeaseModal = ({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b shrink-0">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Mettre en location</h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <h2 className="text-xl font-bold text-slate-900">Mettre en location</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
               Creer un bail pour {tenantName}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="w-10 h-10 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors"
+            className="w-10 h-10 rounded-xl hover:bg-slate-100 flex items-center justify-center transition-colors"
             disabled={isSubmitting}
           >
             <X className="w-5 h-5" />
@@ -166,16 +166,16 @@ export const CreateLeaseModal = ({
         <div className="p-6 space-y-6 overflow-y-auto flex-1">
           {/* Property Select */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               Propriete <span className="text-red-500">*</span>
             </label>
             {isLoadingProperties ? (
-              <div className="flex items-center gap-2 text-sm text-gray-500">
+              <div className="flex items-center gap-2 text-sm text-slate-500">
                 <Loader className="w-4 h-4 animate-spin" />
                 Chargement des proprietes...
               </div>
             ) : availableProperties.length === 0 ? (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-slate-500">
                 Aucune propriete disponible. Vos biens doivent avoir le statut "Disponible".
               </p>
             ) : (
@@ -183,7 +183,7 @@ export const CreateLeaseModal = ({
                 value={selectedPropertyId}
                 onChange={(e) => setSelectedPropertyId(e.target.value)}
                 className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
-                  errors.property ? 'border-red-300' : 'border-gray-300'
+                  errors.property ? 'border-red-300' : 'border-slate-300'
                 }`}
               >
                 <option value="">Selectionner une propriete</option>
@@ -201,25 +201,25 @@ export const CreateLeaseModal = ({
 
           {/* Property Info Card */}
           {selectedProperty && (
-            <div className="bg-gray-50 rounded-xl p-4 flex items-start gap-4">
+            <div className="bg-slate-50/50 rounded-xl p-4 flex items-start gap-4">
               {selectedProperty.images?.[0] ? (
                 <img
                   src={selectedProperty.images[0]}
                   alt={selectedProperty.title}
-                  className="w-20 h-20 rounded-lg object-cover shrink-0"
+                  className="w-20 h-20 rounded-xl object-cover shrink-0"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-lg bg-gray-200 flex items-center justify-center shrink-0">
-                  <Home className="w-8 h-8 text-gray-400" />
+                <div className="w-20 h-20 rounded-xl bg-slate-200 flex items-center justify-center shrink-0">
+                  <Home className="w-8 h-8 text-slate-400" />
                 </div>
               )}
               <div className="min-w-0">
-                <h4 className="font-semibold text-gray-900 truncate">{selectedProperty.title}</h4>
-                <p className="text-sm text-gray-600 flex items-center gap-1 mt-0.5">
+                <h4 className="font-semibold text-slate-900 truncate">{selectedProperty.title}</h4>
+                <p className="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-1 mt-0.5">
                   <MapPin className="w-3.5 h-3.5 shrink-0" />
                   {selectedProperty.address}, {selectedProperty.postalCode} {selectedProperty.city}
                 </p>
-                <div className="flex gap-3 mt-1 text-xs text-gray-500">
+                <div className="flex gap-3 mt-1 text-xs text-slate-500">
                   {selectedProperty.surface && <span>{selectedProperty.surface} m²</span>}
                   {selectedProperty.bedrooms != null && <span>{selectedProperty.bedrooms} ch.</span>}
                 </div>
@@ -230,7 +230,7 @@ export const CreateLeaseModal = ({
           {/* Dates */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Date de debut <span className="text-red-500">*</span>
               </label>
               <input
@@ -238,7 +238,7 @@ export const CreateLeaseModal = ({
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
-                  errors.startDate ? 'border-red-300' : 'border-gray-300'
+                  errors.startDate ? 'border-red-300' : 'border-slate-300'
                 }`}
               />
               {errors.startDate && (
@@ -246,7 +246,7 @@ export const CreateLeaseModal = ({
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Date de fin <span className="text-red-500">*</span>
               </label>
               <input
@@ -254,7 +254,7 @@ export const CreateLeaseModal = ({
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
-                  errors.endDate ? 'border-red-300' : 'border-gray-300'
+                  errors.endDate ? 'border-red-300' : 'border-slate-300'
                 }`}
               />
               {errors.endDate && (
@@ -266,7 +266,7 @@ export const CreateLeaseModal = ({
           {/* Financial Fields */}
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Loyer mensuel (EUR) <span className="text-red-500">*</span>
               </label>
               <input
@@ -277,7 +277,7 @@ export const CreateLeaseModal = ({
                 onChange={(e) => setMonthlyRent(e.target.value ? Number(e.target.value) : '')}
                 placeholder="0.00"
                 className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
-                  errors.monthlyRent ? 'border-red-300' : 'border-gray-300'
+                  errors.monthlyRent ? 'border-red-300' : 'border-slate-300'
                 }`}
               />
               {errors.monthlyRent && (
@@ -285,7 +285,7 @@ export const CreateLeaseModal = ({
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Charges (EUR)
               </label>
               <input
@@ -295,11 +295,11 @@ export const CreateLeaseModal = ({
                 value={charges}
                 onChange={(e) => setCharges(e.target.value ? Number(e.target.value) : '')}
                 placeholder="0.00"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Depot de garantie (EUR)
               </label>
               <input
@@ -309,14 +309,14 @@ export const CreateLeaseModal = ({
                 value={deposit}
                 onChange={(e) => setDeposit(e.target.value ? Number(e.target.value) : '')}
                 placeholder="0.00"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               />
             </div>
           </div>
 
           {/* Terms */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               Conditions particulieres
             </label>
             <textarea
@@ -324,14 +324,14 @@ export const CreateLeaseModal = ({
               onChange={(e) => setTerms(e.target.value)}
               rows={3}
               placeholder="Conditions specifiques du bail..."
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
+              className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
             />
           </div>
 
           {/* Info Banner */}
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex gap-3">
-            <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-            <p className="text-sm text-blue-700">
+          <div className="bg-primary-50 border border-primary-200 rounded-xl p-4 flex gap-3">
+            <Info className="w-5 h-5 text-primary-600 shrink-0 mt-0.5" />
+            <p className="text-sm text-primary-700">
               Le contrat sera cree en brouillon. Les deux parties devront le signer pour qu'il soit active.
             </p>
           </div>

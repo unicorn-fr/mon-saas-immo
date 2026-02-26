@@ -83,14 +83,16 @@ export default function FAQ() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b border-gray-200">
+    <div className="min-h-screen bg-slate-50">
+      <header className="bg-white shadow-sm border-b border-slate-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <HomeIcon className="w-7 h-7 text-primary-600" />
-            <span className="text-xl font-bold text-gray-900 hidden sm:block">ImmoParticuliers</span>
+          <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+            <div className="w-8 h-8 bg-primary-700 rounded-xl flex items-center justify-center">
+              <HomeIcon className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-lg font-bold text-slate-900 hidden sm:block font-heading">ImmoParticuliers</span>
           </Link>
-          <Link to="/" className="flex items-center gap-2 text-sm text-gray-600 hover:text-primary-600 transition-colors">
+          <Link to="/" className="flex items-center gap-2 text-sm text-slate-600 hover:text-primary-600 transition-colors">
             <ArrowLeft className="w-4 h-4" />
             Retour à l'accueil
           </Link>
@@ -99,8 +101,8 @@ export default function FAQ() {
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">Foire aux questions</h1>
-          <p className="text-gray-500">Retrouvez les réponses aux questions les plus fréquentes</p>
+          <h1 className="text-3xl font-bold text-slate-900 mb-3">Foire aux questions</h1>
+          <p className="text-slate-500">Retrouvez les réponses aux questions les plus fréquentes</p>
         </div>
 
         <div className="space-y-8">
@@ -115,14 +117,14 @@ export default function FAQ() {
                     <div key={key} className="bg-white rounded-xl shadow-card overflow-hidden">
                       <button
                         onClick={() => toggleItem(key)}
-                        className="w-full flex items-center justify-between p-5 text-left hover:bg-gray-50 transition-colors"
+                        className="w-full flex items-center justify-between p-5 text-left hover:bg-slate-50 transition-colors"
                       >
-                        <span className="font-medium text-gray-900 pr-4">{item.q}</span>
-                        <ChevronDown className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                        <span className="font-medium text-slate-900 pr-4">{item.q}</span>
+                        <ChevronDown className={`w-5 h-5 text-slate-400 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                       </button>
                       {isOpen && (
                         <div className="px-5 pb-5">
-                          <p className="text-gray-600 text-sm">{item.a}</p>
+                          <p className="text-slate-600 text-sm">{item.a}</p>
                         </div>
                       )}
                     </div>
@@ -134,7 +136,7 @@ export default function FAQ() {
         </div>
 
         <div className="text-center mt-12 p-6 bg-white rounded-xl shadow-card">
-          <p className="text-gray-600 mb-3">Vous n'avez pas trouvé la réponse à votre question ?</p>
+          <p className="text-slate-600 mb-3">Vous n'avez pas trouvé la réponse à votre question ?</p>
           <Link to="/contact" className="btn btn-primary">
             Contactez-nous
           </Link>

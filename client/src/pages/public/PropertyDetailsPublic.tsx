@@ -98,9 +98,9 @@ export default function PropertyDetailsPublic() {
   if (!currentProperty) {
     return (
       <Layout>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center">
           <div className="text-center">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">Propriété introuvable</h2>
+            <h2 className="text-2xl font-semibold text-slate-900 mb-2">Propriété introuvable</h2>
             <Link to="/search" className="text-primary-600 hover:text-primary-700">
               Retour à la recherche
             </Link>
@@ -119,7 +119,7 @@ export default function PropertyDetailsPublic() {
       {/* Error Message */}
       {error && (
         <div className="container mx-auto px-4 mt-4">
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+          <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-red-800">{error}</p>
           </div>
@@ -133,7 +133,7 @@ export default function PropertyDetailsPublic() {
           <div className="lg:col-span-2 space-y-6">
             {/* Image Gallery */}
             <div className="card overflow-hidden">
-              <div className="relative aspect-video bg-gray-200">
+              <div className="relative aspect-video bg-slate-200">
                 <img
                   src={images[selectedImage]}
                   alt={`${property.title} - Image ${selectedImage + 1}`}
@@ -151,17 +151,17 @@ export default function PropertyDetailsPublic() {
                   <div className="relative">
                     <button
                       onClick={handleShare}
-                      className="w-10 h-10 bg-white rounded-lg shadow-md hover:bg-gray-50 transition-colors flex items-center justify-center"
+                      className="w-10 h-10 bg-white rounded-xl shadow-md hover:bg-slate-50 transition-colors flex items-center justify-center"
                     >
-                      <Share2 className="w-5 h-5 text-gray-700" />
+                      <Share2 className="w-5 h-5 text-slate-700" />
                     </button>
 
                     {/* Share Menu */}
                     {showShareMenu && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border p-2">
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border p-2">
                         <button
                           onClick={handleCopyLink}
-                          className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded text-sm"
+                          className="w-full text-left px-3 py-2 hover:bg-slate-50 rounded text-sm"
                         >
                           Copier le lien
                         </button>
@@ -171,12 +171,12 @@ export default function PropertyDetailsPublic() {
 
                   <button
                     onClick={handleFavoriteToggle}
-                    className="w-10 h-10 bg-white rounded-lg shadow-md hover:bg-gray-50 transition-colors flex items-center justify-center"
+                    className="w-10 h-10 bg-white rounded-xl shadow-md hover:bg-slate-50 transition-colors flex items-center justify-center"
                     title={isFavorite(id || '') ? 'Retirer des favoris' : 'Ajouter aux favoris'}
                   >
                     <Heart
                       className={`w-5 h-5 transition-colors ${
-                        isFavorite(id || '') ? 'fill-red-500 text-red-500' : 'text-gray-700'
+                        isFavorite(id || '') ? 'fill-red-500 text-red-500' : 'text-slate-700'
                       }`}
                     />
                   </button>
@@ -192,7 +192,7 @@ export default function PropertyDetailsPublic() {
                       className={`aspect-square rounded overflow-hidden border-2 transition-all ${
                         selectedImage === index
                           ? 'border-primary-600 ring-2 ring-primary-200'
-                          : 'border-gray-200 hover:border-gray-300'
+                          : 'border-slate-200 hover:border-slate-300'
                       }`}
                     >
                       <img
@@ -213,8 +213,8 @@ export default function PropertyDetailsPublic() {
             <div className="card">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{property.title}</h1>
-                  <div className="flex items-center gap-3 text-gray-600">
+                  <h1 className="text-3xl font-bold text-slate-900 mb-2">{property.title}</h1>
+                  <div className="flex items-center gap-3 text-slate-600">
                     <span>{propertyType?.label}</span>
                     <span>•</span>
                     <div className="flex items-center">
@@ -227,14 +227,14 @@ export default function PropertyDetailsPublic() {
 
               <div className="text-3xl font-bold text-primary-600">
                 {property.price}€
-                <span className="text-lg text-gray-600 font-normal">/mois</span>
+                <span className="text-lg text-slate-600 font-normal">/mois</span>
               </div>
             </div>
 
             {/* Description */}
             <div className="card">
               <h2 className="text-xl font-semibold mb-4">Description</h2>
-              <p className="text-gray-700 whitespace-pre-line leading-relaxed">
+              <p className="text-slate-700 whitespace-pre-line leading-relaxed">
                 {property.description}
               </p>
             </div>
@@ -244,57 +244,57 @@ export default function PropertyDetailsPublic() {
               <h2 className="text-xl font-semibold mb-4">Caractéristiques</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
                     <Bed className="w-5 h-5 text-primary-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Chambres</p>
+                    <p className="text-sm text-slate-600">Chambres</p>
                     <p className="font-semibold">{property.bedrooms}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
                     <Bath className="w-5 h-5 text-primary-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Salles de bain</p>
+                    <p className="text-sm text-slate-600">Salles de bain</p>
                     <p className="font-semibold">{property.bathrooms}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
                     <Square className="w-5 h-5 text-primary-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Surface</p>
+                    <p className="text-sm text-slate-600">Surface</p>
                     <p className="font-semibold">{property.surface}m²</p>
                   </div>
                 </div>
 
                 {property.floor !== null && property.floor !== undefined && (
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                    <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
                       <HomeIcon className="w-5 h-5 text-primary-600" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Étage</p>
+                      <p className="text-sm text-slate-600">Étage</p>
                       <p className="font-semibold">{property.floor}</p>
                     </div>
                   </div>
                 )}
 
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
                     {property.furnished ? (
                       <Check className="w-5 h-5 text-primary-600" />
                     ) : (
-                      <X className="w-5 h-5 text-gray-400" />
+                      <X className="w-5 h-5 text-slate-400" />
                     )}
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Meublé</p>
+                    <p className="text-sm text-slate-600">Meublé</p>
                     <p className="font-semibold">{property.furnished ? 'Oui' : 'Non'}</p>
                   </div>
                 </div>
@@ -306,33 +306,33 @@ export default function PropertyDetailsPublic() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <div className="flex items-center gap-2">
                     {property.hasParking ? (
-                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <CheckCircle className="w-5 h-5 text-success-600" />
                     ) : (
-                      <XCircle className="w-5 h-5 text-gray-300" />
+                      <XCircle className="w-5 h-5 text-slate-300" />
                     )}
                     <span className="text-sm">Parking</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {property.hasBalcony ? (
-                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <CheckCircle className="w-5 h-5 text-success-600" />
                     ) : (
-                      <XCircle className="w-5 h-5 text-gray-300" />
+                      <XCircle className="w-5 h-5 text-slate-300" />
                     )}
                     <span className="text-sm">Balcon</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {property.hasElevator ? (
-                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <CheckCircle className="w-5 h-5 text-success-600" />
                     ) : (
-                      <XCircle className="w-5 h-5 text-gray-300" />
+                      <XCircle className="w-5 h-5 text-slate-300" />
                     )}
                     <span className="text-sm">Ascenseur</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {property.hasGarden ? (
-                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <CheckCircle className="w-5 h-5 text-success-600" />
                     ) : (
-                      <XCircle className="w-5 h-5 text-gray-300" />
+                      <XCircle className="w-5 h-5 text-slate-300" />
                     )}
                     <span className="text-sm">Jardin</span>
                   </div>
@@ -349,7 +349,7 @@ export default function PropertyDetailsPublic() {
                       return amenityConfig ? (
                         <span
                           key={amenity}
-                          className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+                          className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm"
                         >
                           {amenityConfig.label}
                         </span>
@@ -381,24 +381,24 @@ export default function PropertyDetailsPublic() {
 
               <div className="space-y-3 mb-6">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-700">Loyer mensuel</span>
+                  <span className="text-slate-700">Loyer mensuel</span>
                   <span className="text-xl font-bold text-primary-600">{property.price}€</span>
                 </div>
                 {property.charges && property.charges > 0 && (
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-700">Charges</span>
+                    <span className="text-slate-700">Charges</span>
                     <span className="font-semibold">{property.charges}€</span>
                   </div>
                 )}
                 {property.deposit && property.deposit > 0 && (
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-700">Dépôt de garantie</span>
+                    <span className="text-slate-700">Dépôt de garantie</span>
                     <span className="font-semibold">{property.deposit}€</span>
                   </div>
                 )}
                 <div className="pt-3 border-t flex items-center justify-between">
-                  <span className="font-semibold text-gray-900">Total mensuel</span>
-                  <span className="text-2xl font-bold text-gray-900">
+                  <span className="font-semibold text-slate-900">Total mensuel</span>
+                  <span className="text-2xl font-bold text-slate-900">
                     {property.price + (property.charges || 0)}€
                   </span>
                 </div>
@@ -414,21 +414,21 @@ export default function PropertyDetailsPublic() {
 
               <button
                 onClick={() => setShowContactModal(true)}
-                className="btn btn-secondary w-full justify-center text-lg py-3 border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                className="btn btn-secondary w-full justify-center text-lg py-3 border-2 border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
               >
                 <MessageSquare className="w-5 h-5 mr-2" />
                 Contacter le propriétaire
               </button>
 
-              <p className="text-xs text-gray-600 text-center mt-3">
+              <p className="text-xs text-slate-600 text-center mt-3">
                 Réponse généralement sous 24h
               </p>
             </div>
 
             {/* Info Card */}
-            <div className="card bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+            <div className="card bg-gradient-to-br from-blue-50 to-blue-100 border-primary-200">
               <h3 className="font-semibold mb-3">💡 Bon à savoir</h3>
-              <ul className="text-sm text-gray-700 space-y-2">
+              <ul className="text-sm text-slate-700 space-y-2">
                 <li>✓ Contact direct avec le propriétaire</li>
                 <li>✓ Aucun frais d'agence</li>
                 <li>✓ Visite possible rapidement</li>
@@ -438,7 +438,7 @@ export default function PropertyDetailsPublic() {
 
             {/* Published Date */}
             <div className="card">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
+              <div className="flex items-center gap-2 text-sm text-slate-600">
                 <Calendar className="w-4 h-4" />
                 <span>
                   Publié le {new Date(property.createdAt).toLocaleDateString('fr-FR')}

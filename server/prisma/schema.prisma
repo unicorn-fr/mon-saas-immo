@@ -110,6 +110,7 @@ model User {
   conversationsUser2    Conversation[]        @relation("ConversationUser2")
   verificationTokens    VerificationToken[]
   uploadedDocuments     ContractDocument[]    @relation("DocumentUploader")
+  tenantDocuments       TenantDocument[]
 
   @@index([email])
   @@index([role])
@@ -410,6 +411,35 @@ model ContractDocument {
   @@index([uploadedById])
   @@index([category])
   @@map("contract_documents")
+}
+
+model TenantDocument {
+  id         String         @id @default(uuid())
+
+  userId     String
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Document classification
+  category   String         // IDENTITE | SITUATION_PRO | REVENUS | HISTORIQUE | GARANTIES
+  docType    String         // e.g. CNI, PASSEPORT, CONTRAT_TRAVAIL, etc.
+  status     DocumentStatus @default(UPLOADED)
+
+  // File info
+  fileName   String
+  fileUrl    String
+  fileSize   Int
+  mimeType   String
+
+  // Optional note / rejection reason
+  note       String?        @db.Text
+
+  // Timestamps
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@index([userId])
+  @@index([category])
+  @@map("tenant_documents")
 }
 
 model Favorite {

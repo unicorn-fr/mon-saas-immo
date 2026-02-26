@@ -190,30 +190,30 @@ export default function EtatDesLieux() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-slate-50">
         {/* Header */}
         <div className="bg-white border-b">
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <button onClick={() => navigate(`/contracts/${id}`)} className="btn btn-ghost p-2">
+                <button onClick={() => navigate(`/contracts/${id}`)} className="btn btn-secondary p-2">
                   <ArrowLeft className="w-5 h-5" />
                 </button>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                  <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
                     <ClipboardCheck className="w-7 h-7 text-primary-600" />
                     Etat des Lieux
                   </h1>
-                  <p className="text-gray-600 mt-1">{contract.property?.title}</p>
+                  <p className="text-slate-600 mt-1">{contract.property?.title}</p>
                 </div>
               </div>
 
               {/* Type toggle */}
-              <div className="flex bg-gray-100 rounded-lg p-1">
+              <div className="flex bg-slate-100 rounded-xl p-1">
                 <button
                   onClick={() => setEdlType('ENTREE')}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    edlType === 'ENTREE' ? 'bg-white text-primary-700 shadow' : 'text-gray-600 hover:text-gray-900'
+                    edlType === 'ENTREE' ? 'bg-white text-primary-700 shadow' : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   Entree
@@ -221,7 +221,7 @@ export default function EtatDesLieux() {
                 <button
                   onClick={() => setEdlType('SORTIE')}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    edlType === 'SORTIE' ? 'bg-white text-primary-700 shadow' : 'text-gray-600 hover:text-gray-900'
+                    edlType === 'SORTIE' ? 'bg-white text-primary-700 shadow' : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   Sortie
@@ -235,7 +235,7 @@ export default function EtatDesLieux() {
           <div className="max-w-4xl mx-auto space-y-6">
             {/* PDF Downloads & Upload */}
             <div className="bg-white rounded-xl border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-primary-600" />
                 Documents EDL
               </h3>
@@ -287,24 +287,24 @@ export default function EtatDesLieux() {
 
               {/* Show uploaded EDL */}
               {uploadedEdl && (
-                <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
+                <div className="flex items-center gap-3 p-3 bg-success-50 border border-success-100 rounded-xl">
+                  <CheckCircle className="w-5 h-5 text-success-600 shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-green-900">EDL scanne televerse</p>
-                    <p className="text-xs text-green-700 truncate">{uploadedEdl.fileName}</p>
+                    <p className="text-sm font-medium text-success-700">EDL scanne televerse</p>
+                    <p className="text-xs text-success-700 truncate">{uploadedEdl.fileName}</p>
                   </div>
                   <a
                     href={uploadedEdl.fileUrl.startsWith('http') ? uploadedEdl.fileUrl : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}${uploadedEdl.fileUrl}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 rounded-lg hover:bg-green-100 text-green-600"
+                    className="p-2 rounded-xl hover:bg-success-100 text-success-600"
                     title="Voir"
                   >
                     <Eye className="w-4 h-4" />
                   </a>
                   <button
                     onClick={handleDeleteEdl}
-                    className="p-2 rounded-lg hover:bg-red-100 text-red-500"
+                    className="p-2 rounded-xl hover:bg-red-100 text-red-500"
                     title="Supprimer"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -312,7 +312,7 @@ export default function EtatDesLieux() {
                 </div>
               )}
 
-              <p className="text-xs text-gray-500 mt-3">
+              <p className="text-xs text-slate-500 mt-3">
                 Format accepte : PDF uniquement - Taille max : 5 Mo
               </p>
             </div>
@@ -322,19 +322,19 @@ export default function EtatDesLieux() {
               <div key={room.id} className="bg-white rounded-xl border overflow-hidden">
                 <button
                   onClick={() => toggleRoom(room.id)}
-                  className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+                  className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors"
                 >
-                  <h3 className="text-lg font-semibold text-gray-900">{room.name}</h3>
+                  <h3 className="text-lg font-semibold text-slate-900">{room.name}</h3>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-slate-500">
                       {room.elements.filter(e => e.etat !== 'NA' && e.etat !== 'BON').length > 0
                         ? `${room.elements.filter(e => e.etat !== 'NA' && e.etat !== 'BON').length} remarque(s)`
                         : 'RAS'}
                     </span>
                     {expandedRooms.has(room.id) ? (
-                      <ChevronDown className="w-5 h-5 text-gray-400" />
+                      <ChevronDown className="w-5 h-5 text-slate-400" />
                     ) : (
-                      <ChevronRight className="w-5 h-5 text-gray-400" />
+                      <ChevronRight className="w-5 h-5 text-slate-400" />
                     )}
                   </div>
                 </button>
@@ -345,7 +345,7 @@ export default function EtatDesLieux() {
                       <div key={element.id} className="p-4">
                         <div className="flex items-start gap-4">
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900">{element.label}</p>
+                            <p className="text-sm font-medium text-slate-900">{element.label}</p>
                             {/* Etat selector */}
                             <div className="flex flex-wrap gap-1.5 mt-2">
                               {etatOptions.map((etat) => (
@@ -355,7 +355,7 @@ export default function EtatDesLieux() {
                                   className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
                                     element.etat === etat
                                       ? ETAT_COLORS[etat]
-                                      : 'text-gray-400 bg-gray-50 hover:bg-gray-100'
+                                      : 'text-slate-400 bg-slate-50 hover:bg-slate-100'
                                   }`}
                                 >
                                   {ETAT_LABELS[etat]}
@@ -369,7 +369,7 @@ export default function EtatDesLieux() {
                             placeholder="Observation..."
                             value={element.observation}
                             onChange={(e) => updateElement(room.id, element.id, 'observation', e.target.value)}
-                            className="w-48 text-sm border rounded-lg px-3 py-1.5 text-gray-700"
+                            className="w-48 text-sm border rounded-xl px-3 py-1.5 text-slate-700"
                           />
                         </div>
                       </div>
@@ -381,27 +381,27 @@ export default function EtatDesLieux() {
 
             {/* Compteurs */}
             <div className="bg-white rounded-xl border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
                 <Gauge className="w-5 h-5 text-primary-600" />
                 Releves des compteurs
               </h3>
               <div className="space-y-4">
                 {edl.compteurs.map((compteur, index) => (
                   <div key={compteur.type} className="grid grid-cols-3 gap-4 items-center">
-                    <label className="text-sm font-medium text-gray-900">{compteur.label}</label>
+                    <label className="text-sm font-medium text-slate-900">{compteur.label}</label>
                     <input
                       type="text"
                       placeholder="N° compteur"
                       value={compteur.numero}
                       onChange={(e) => updateCompteur(index, 'numero', e.target.value)}
-                      className="text-sm border rounded-lg px-3 py-2"
+                      className="text-sm border rounded-xl px-3 py-2"
                     />
                     <input
                       type="text"
                       placeholder="Releve (index)"
                       value={compteur.releve}
                       onChange={(e) => updateCompteur(index, 'releve', e.target.value)}
-                      className="text-sm border rounded-lg px-3 py-2"
+                      className="text-sm border rounded-xl px-3 py-2"
                     />
                   </div>
                 ))}
@@ -410,28 +410,28 @@ export default function EtatDesLieux() {
 
             {/* Cles */}
             <div className="bg-white rounded-xl border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
                 <Key className="w-5 h-5 text-primary-600" />
                 Remise des cles
               </h3>
               <div className="space-y-3">
                 {edl.cles.map((cle, index) => (
                   <div key={cle.type} className="grid grid-cols-3 gap-4 items-center">
-                    <label className="text-sm font-medium text-gray-900">{cle.type}</label>
+                    <label className="text-sm font-medium text-slate-900">{cle.type}</label>
                     <input
                       type="number"
                       min={0}
                       placeholder="Quantite"
                       value={cle.quantite || ''}
                       onChange={(e) => updateCle(index, 'quantite', parseInt(e.target.value) || 0)}
-                      className="text-sm border rounded-lg px-3 py-2"
+                      className="text-sm border rounded-xl px-3 py-2"
                     />
                     <input
                       type="text"
                       placeholder="Description"
                       value={cle.description}
                       onChange={(e) => updateCle(index, 'description', e.target.value)}
-                      className="text-sm border rounded-lg px-3 py-2"
+                      className="text-sm border rounded-xl px-3 py-2"
                     />
                   </div>
                 ))}
@@ -440,13 +440,13 @@ export default function EtatDesLieux() {
 
             {/* Observations generales */}
             <div className="bg-white rounded-xl border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Observations generales</h3>
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">Observations generales</h3>
               <textarea
                 value={edl.observationsGenerales}
                 onChange={(e) => setEdl(prev => prev ? { ...prev, observationsGenerales: e.target.value } : prev)}
                 placeholder="Observations generales sur l'etat du logement..."
                 rows={4}
-                className="w-full border rounded-lg px-3 py-2 text-sm resize-none"
+                className="w-full border rounded-xl px-3 py-2 text-sm resize-none"
               />
             </div>
 

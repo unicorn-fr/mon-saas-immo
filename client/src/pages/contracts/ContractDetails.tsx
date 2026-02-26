@@ -136,8 +136,8 @@ export default function ContractDetails() {
     return (
       <Layout>
         <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-          <AlertCircle className="w-12 h-12 text-gray-400" />
-          <p className="text-gray-600">Contrat introuvable</p>
+          <AlertCircle className="w-12 h-12 text-slate-400" />
+          <p className="text-slate-600">Contrat introuvable</p>
           <button onClick={() => navigate('/contracts')} className="btn btn-primary">
             Retour aux contrats
           </button>
@@ -306,15 +306,15 @@ export default function ContractDetails() {
 
   // Status badge config
   const statusConfig: Record<string, { bg: string; text: string; label: string; icon: typeof CheckCircle }> = {
-    DRAFT: { bg: 'bg-gray-100', text: 'text-gray-700', label: 'Brouillon', icon: Circle },
-    SENT: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Envoye au locataire', icon: Send },
+    DRAFT: { bg: 'bg-slate-100', text: 'text-slate-700', label: 'Brouillon', icon: Circle },
+    SENT: { bg: 'bg-primary-100', text: 'text-primary-700', label: 'Envoye au locataire', icon: Send },
     SIGNED_OWNER: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Signe par le proprietaire', icon: PenTool },
     SIGNED_TENANT: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Signe par le locataire', icon: PenTool },
     COMPLETED: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Signe par les deux parties', icon: CheckCircle },
-    ACTIVE: { bg: 'bg-green-100', text: 'text-green-700', label: 'Actif', icon: CheckCircle },
-    EXPIRED: { bg: 'bg-gray-100', text: 'text-gray-600', label: 'Expire', icon: Clock },
+    ACTIVE: { bg: 'bg-success-100', text: 'text-success-700', label: 'Actif', icon: CheckCircle },
+    EXPIRED: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Expire', icon: Clock },
     TERMINATED: { bg: 'bg-red-100', text: 'text-red-700', label: 'Resilie', icon: Ban },
-    CANCELLED: { bg: 'bg-orange-100', text: 'text-orange-700', label: 'Annule', icon: XCircle },
+    CANCELLED: { bg: 'bg-accent-100', text: 'text-accent-700', label: 'Annule', icon: XCircle },
   }
 
   const status = statusConfig[contract.status] || statusConfig.DRAFT
@@ -322,21 +322,21 @@ export default function ContractDetails() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-slate-50">
         {/* Header */}
         <div className="bg-white border-b">
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <button onClick={() => navigate('/contracts')} className="btn btn-ghost p-2">
+                <button onClick={() => navigate('/contracts')} className="btn btn-secondary p-2">
                   <ArrowLeft className="w-5 h-5" />
                 </button>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                  <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
                     <FileText className="w-7 h-7 text-primary-600" />
                     Contrat de Location
                   </h1>
-                  <p className="text-gray-600 mt-1">{contract.property?.title}</p>
+                  <p className="text-slate-600 mt-1">{contract.property?.title}</p>
                 </div>
               </div>
               <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${status.bg} ${status.text}`}>
@@ -372,10 +372,10 @@ export default function ContractDetails() {
                           <div
                             className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
                               isCompleted
-                                ? 'bg-green-500 text-white'
+                                ? 'bg-success-500 text-white'
                                 : isCurrent
                                 ? 'bg-primary-600 text-white ring-4 ring-primary-100'
-                                : 'bg-gray-200 text-gray-400'
+                                : 'bg-slate-200 text-slate-400'
                             }`}
                           >
                             {isCompleted ? (
@@ -386,7 +386,7 @@ export default function ContractDetails() {
                           </div>
                           <span
                             className={`text-xs font-medium mt-2 ${
-                              isCompleted ? 'text-green-600' : isCurrent ? 'text-primary-700' : 'text-gray-400'
+                              isCompleted ? 'text-success-600' : isCurrent ? 'text-primary-700' : 'text-slate-400'
                             }`}
                           >
                             {step.label}
@@ -398,7 +398,7 @@ export default function ContractDetails() {
                         {index < CONTRACT_STEPS.length - 1 && (
                           <div
                             className={`h-0.5 flex-1 mx-2 -mt-6 ${
-                              isCompleted ? 'bg-green-400' : isUpcoming ? 'bg-gray-200' : 'bg-primary-200'
+                              isCompleted ? 'bg-success-500' : isUpcoming ? 'bg-slate-200' : 'bg-primary-200'
                             }`}
                           />
                         )}
@@ -411,15 +411,15 @@ export default function ContractDetails() {
 
             {/* Terminal status banner */}
             {contract.status === 'CANCELLED' && (
-              <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-xl flex items-start gap-3">
-                <XCircle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
+              <div className="mb-6 p-4 bg-accent-50 border border-accent-200 rounded-xl flex items-start gap-3">
+                <XCircle className="w-5 h-5 text-accent-600 shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium text-orange-900">Contrat annule</p>
+                  <p className="font-medium text-slate-900">Contrat annule</p>
                   {cancellation?.reason && (
-                    <p className="text-sm text-orange-700 mt-1">Motif : {cancellation.reason}</p>
+                    <p className="text-sm text-accent-700 mt-1">Motif : {cancellation.reason}</p>
                   )}
                   {cancellation?.cancelledAt && (
-                    <p className="text-xs text-orange-600 mt-1">
+                    <p className="text-xs text-accent-600 mt-1">
                       Annule le {format(new Date(cancellation.cancelledAt), 'dd MMM yyyy HH:mm', { locale: fr })}
                     </p>
                   )}
@@ -439,11 +439,11 @@ export default function ContractDetails() {
 
             {/* Status Alerts */}
             {contract.status === 'SENT' && isTenant && (
-              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl flex items-start gap-3">
-                <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+              <div className="mb-6 p-4 bg-primary-50 border border-primary-200 rounded-xl flex items-start gap-3">
+                <Info className="w-5 h-5 text-primary-600 shrink-0 mt-0.5" />
                 <div>
                   <p className="font-medium text-blue-900">Contrat en attente de votre signature</p>
-                  <p className="text-sm text-blue-700 mt-1">
+                  <p className="text-sm text-primary-700 mt-1">
                     Le proprietaire vous a envoye ce contrat. Lisez-le attentivement puis signez-le ci-dessous.
                   </p>
                 </div>
@@ -468,11 +468,11 @@ export default function ContractDetails() {
             )}
 
             {contract.status === 'COMPLETED' && isOwner && (
-              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+              <div className="mb-6 p-4 bg-success-50 border border-success-100 rounded-xl flex items-start gap-3">
+                <CheckCircle className="w-5 h-5 text-success-600 shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium text-green-900">Les deux parties ont signe</p>
-                  <p className="text-sm text-green-700 mt-1">
+                  <p className="font-medium text-success-700">Les deux parties ont signe</p>
+                  <p className="text-sm text-success-700 mt-1">
                     Vous pouvez maintenant activer le contrat. Le bien sera marque comme occupe.
                   </p>
                 </div>
@@ -480,9 +480,9 @@ export default function ContractDetails() {
             )}
 
             {hasSigned && !otherPartySigned && !isTerminal && (
-              <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl flex items-start gap-3">
-                <AlertCircle className="w-4 h-4 text-yellow-600 shrink-0 mt-0.5" />
-                <p className="text-sm text-yellow-800">
+              <div className="mb-6 p-4 bg-warning-50 border border-warning-100 rounded-xl flex items-start gap-3">
+                <AlertCircle className="w-4 h-4 text-warning-600 shrink-0 mt-0.5" />
+                <p className="text-sm text-warning-700">
                   Vous avez signe ce contrat. En attente de la signature de l'autre partie.
                 </p>
               </div>
@@ -518,7 +518,7 @@ export default function ContractDetails() {
                     <button
                       onClick={handleActivate}
                       disabled={actionLoading}
-                      className="btn bg-green-600 text-white hover:bg-green-700 flex items-center gap-2"
+                      className="btn btn-primary flex items-center gap-2"
                     >
                       <CheckCircle className="w-4 h-4" />
                       Activer le contrat
@@ -529,7 +529,7 @@ export default function ContractDetails() {
                     <button
                       onClick={() => setConfirmModal('cancel')}
                       disabled={actionLoading}
-                      className="btn btn-secondary flex items-center gap-2 text-orange-600 border-orange-300 hover:bg-orange-50"
+                      className="btn btn-secondary flex items-center gap-2"
                     >
                       <XCircle className="w-4 h-4" />
                       Annuler le contrat
@@ -540,7 +540,7 @@ export default function ContractDetails() {
                     <button
                       onClick={() => setConfirmModal('terminate')}
                       disabled={actionLoading}
-                      className="btn btn-secondary flex items-center gap-2 text-red-600 border-red-300 hover:bg-red-50"
+                      className="btn btn-danger flex items-center gap-2"
                     >
                       <Ban className="w-4 h-4" />
                       Resilier
@@ -551,7 +551,7 @@ export default function ContractDetails() {
                     <button
                       onClick={() => setConfirmModal('delete')}
                       disabled={actionLoading}
-                      className="btn btn-secondary flex items-center gap-2 text-red-600 border-red-300 hover:bg-red-50"
+                      className="btn btn-danger flex items-center gap-2"
                     >
                       <Trash2 className="w-4 h-4" />
                       Supprimer
@@ -563,23 +563,23 @@ export default function ContractDetails() {
 
             {/* Property Info */}
             <div className="card mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Propriete</h2>
+              <h2 className="text-xl font-semibold text-slate-900 mb-4">Propriete</h2>
               <div className="flex gap-4">
                 {contract.property?.images?.[0] && (
                   <img
                     src={contract.property.images[0]}
                     alt={contract.property.title}
-                    className="w-32 h-32 rounded-lg object-cover"
+                    className="w-32 h-32 rounded-xl object-cover"
                   />
                 )}
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 mb-2">{contract.property?.title}</h3>
-                  <div className="flex items-center text-sm text-gray-600 mb-2">
+                  <h3 className="font-semibold text-slate-900 mb-2">{contract.property?.title}</h3>
+                  <div className="flex items-center text-sm text-slate-600 mb-2">
                     <HomeIcon className="w-4 h-4 mr-2" />
                     {contract.property?.address}, {contract.property?.city} {contract.property?.postalCode}
                   </div>
                   {contract.property?.bedrooms != null && (
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-slate-600">
                       {contract.property.bedrooms} chambres - {contract.property.bathrooms} SDB - {contract.property.surface}m2
                     </p>
                   )}
@@ -590,17 +590,17 @@ export default function ContractDetails() {
             {/* Parties */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div className="card">
-                <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
                   <User className="w-5 h-5 text-primary-600" />
                   Proprietaire
                 </h3>
-                <p className="text-gray-900">{contract.owner?.firstName} {contract.owner?.lastName}</p>
-                <p className="text-sm text-gray-600">{contract.owner?.email}</p>
-                {contract.owner?.phone && <p className="text-sm text-gray-600">{contract.owner.phone}</p>}
+                <p className="text-slate-900">{contract.owner?.firstName} {contract.owner?.lastName}</p>
+                <p className="text-sm text-slate-600">{contract.owner?.email}</p>
+                {contract.owner?.phone && <p className="text-sm text-slate-600">{contract.owner.phone}</p>}
 
                 {contract.signedByOwner ? (
                   <div className="mt-3">
-                    <div className="flex items-center text-sm text-green-600 mb-2">
+                    <div className="flex items-center text-sm text-success-600 mb-2">
                       <CheckCircle className="w-4 h-4 mr-1" />
                       Signe le {format(new Date(contract.signedByOwner), 'dd MMM yyyy HH:mm', { locale: fr })}
                     </div>
@@ -608,14 +608,14 @@ export default function ContractDetails() {
                       <img src={contract.ownerSignature} alt="Signature proprietaire" className="h-16 border rounded p-1 bg-white" />
                     )}
                     {signatureMetadata?.owner && (
-                      <div className="mt-2 flex items-center gap-1 text-xs text-gray-500">
-                        <ShieldCheck className="w-3 h-3 text-green-500" />
+                      <div className="mt-2 flex items-center gap-1 text-xs text-slate-500">
+                        <ShieldCheck className="w-3 h-3 text-success-500" />
                         Signature electronique certifiee
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="mt-3 flex items-center text-sm text-yellow-600">
+                  <div className="mt-3 flex items-center text-sm text-warning-600">
                     <Clock className="w-4 h-4 mr-1" />
                     En attente de signature
                   </div>
@@ -623,17 +623,17 @@ export default function ContractDetails() {
               </div>
 
               <div className="card">
-                <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
                   <User className="w-5 h-5 text-primary-600" />
                   Locataire
                 </h3>
-                <p className="text-gray-900">{contract.tenant?.firstName} {contract.tenant?.lastName}</p>
-                <p className="text-sm text-gray-600">{contract.tenant?.email}</p>
-                {contract.tenant?.phone && <p className="text-sm text-gray-600">{contract.tenant.phone}</p>}
+                <p className="text-slate-900">{contract.tenant?.firstName} {contract.tenant?.lastName}</p>
+                <p className="text-sm text-slate-600">{contract.tenant?.email}</p>
+                {contract.tenant?.phone && <p className="text-sm text-slate-600">{contract.tenant.phone}</p>}
 
                 {contract.signedByTenant ? (
                   <div className="mt-3">
-                    <div className="flex items-center text-sm text-green-600 mb-2">
+                    <div className="flex items-center text-sm text-success-600 mb-2">
                       <CheckCircle className="w-4 h-4 mr-1" />
                       Signe le {format(new Date(contract.signedByTenant), 'dd MMM yyyy HH:mm', { locale: fr })}
                     </div>
@@ -641,14 +641,14 @@ export default function ContractDetails() {
                       <img src={contract.tenantSignature} alt="Signature locataire" className="h-16 border rounded p-1 bg-white" />
                     )}
                     {signatureMetadata?.tenant && (
-                      <div className="mt-2 flex items-center gap-1 text-xs text-gray-500">
-                        <ShieldCheck className="w-3 h-3 text-green-500" />
+                      <div className="mt-2 flex items-center gap-1 text-xs text-slate-500">
+                        <ShieldCheck className="w-3 h-3 text-success-500" />
                         Signature electronique certifiee
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="mt-3 flex items-center text-sm text-yellow-600">
+                  <div className="mt-3 flex items-center text-sm text-warning-600">
                     <Clock className="w-4 h-4 mr-1" />
                     En attente de signature
                   </div>
@@ -658,13 +658,13 @@ export default function ContractDetails() {
 
             {/* Contract Details */}
             <div className="card mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Details du contrat</h2>
+              <h2 className="text-xl font-semibold text-slate-900 mb-4">Details du contrat</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
-                  <label className="text-sm text-gray-600">Periode</label>
-                  <div className="flex items-center text-gray-900 mt-1">
-                    <Calendar className="w-5 h-5 mr-2 text-gray-400" />
+                  <label className="text-sm text-slate-600">Periode</label>
+                  <div className="flex items-center text-slate-900 mt-1">
+                    <Calendar className="w-5 h-5 mr-2 text-slate-400" />
                     {format(new Date(contract.startDate), 'dd MMM yyyy', { locale: fr })} -{' '}
                     {format(new Date(contract.endDate), 'dd MMM yyyy', { locale: fr })}
                   </div>
@@ -673,7 +673,7 @@ export default function ContractDetails() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <label className="text-sm text-gray-600">Loyer mensuel</label>
+                  <label className="text-sm text-slate-600">Loyer mensuel</label>
                   <div className="flex items-center text-xl font-bold text-primary-600 mt-1">
                     <Euro className="w-5 h-5 mr-1" />
                     {contract.monthlyRent}EUR
@@ -681,8 +681,8 @@ export default function ContractDetails() {
                 </div>
                 {contract.charges != null && (
                   <div>
-                    <label className="text-sm text-gray-600">Charges</label>
-                    <div className="flex items-center text-xl font-bold text-gray-900 mt-1">
+                    <label className="text-sm text-slate-600">Charges</label>
+                    <div className="flex items-center text-xl font-bold text-slate-900 mt-1">
                       <Euro className="w-5 h-5 mr-1" />
                       {contract.charges}EUR
                     </div>
@@ -690,8 +690,8 @@ export default function ContractDetails() {
                 )}
                 {contract.deposit != null && (
                   <div>
-                    <label className="text-sm text-gray-600">Depot de garantie</label>
-                    <div className="flex items-center text-xl font-bold text-gray-900 mt-1">
+                    <label className="text-sm text-slate-600">Depot de garantie</label>
+                    <div className="flex items-center text-xl font-bold text-slate-900 mt-1">
                       <Euro className="w-5 h-5 mr-1" />
                       {contract.deposit}EUR
                     </div>
@@ -701,8 +701,8 @@ export default function ContractDetails() {
 
               {contract.terms && (
                 <div className="mt-6 pt-6 border-t">
-                  <label className="text-sm text-gray-600 block mb-2">Conditions particulieres</label>
-                  <p className="text-gray-900 whitespace-pre-wrap">{contract.terms}</p>
+                  <label className="text-sm text-slate-600 block mb-2">Conditions particulieres</label>
+                  <p className="text-slate-900 whitespace-pre-wrap">{contract.terms}</p>
                 </div>
               )}
             </div>
@@ -710,19 +710,19 @@ export default function ContractDetails() {
             {/* Clauses */}
             {clauses.length > 0 && (
               <div className="card mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Clauses du contrat</h2>
+                <h2 className="text-xl font-semibold text-slate-900 mb-4">Clauses du contrat</h2>
                 <div className="space-y-3">
                   {clauses.filter((c) => c.enabled).map((clause, index) => (
-                    <div key={clause.id} className="border border-gray-200 rounded-lg p-3">
-                      <h4 className="font-medium text-gray-900 text-sm">
+                    <div key={clause.id} className="border border-slate-200 rounded-xl p-3">
+                      <h4 className="font-medium text-slate-900 text-sm">
                         {index + 1}. {clause.title}
                         {clause.isCustom && (
-                          <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                          <span className="ml-2 text-xs bg-primary-100 text-primary-700 px-2 py-0.5 rounded-full">
                             Personnalisee
                           </span>
                         )}
                       </h4>
-                      <p className="text-sm text-gray-600 mt-1">{clause.description}</p>
+                      <p className="text-sm text-slate-600 mt-1">{clause.description}</p>
                     </div>
                   ))}
                 </div>
@@ -731,7 +731,7 @@ export default function ContractDetails() {
 
             {/* PDF & EDL */}
             <div className="card mb-6">
-              <h3 className="font-semibold text-gray-900 mb-4">Documents</h3>
+              <h3 className="font-semibold text-slate-900 mb-4">Documents</h3>
               <div className="flex flex-wrap gap-3">
                 <PDFDownloadLink
                   document={
@@ -771,29 +771,29 @@ export default function ContractDetails() {
             {/* Document Requirements Section - DRAFT mode (owner configures required docs) */}
             {contract.status === 'DRAFT' && isOwner && (
               <div className="card mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                <h2 className="text-xl font-semibold text-slate-900 mb-2 flex items-center gap-2">
                   <FolderOpen className="w-5 h-5 text-primary-600" />
                   Dossier de location - Documents requis
                 </h2>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-slate-600 mb-4">
                   Selectionnez les documents que le locataire devra fournir avant la signature du contrat.
                 </p>
 
                 {/* Owner documents (DDT) */}
                 <div className="mb-4">
-                  <h4 className="text-sm font-semibold text-gray-900 mb-2">Documents proprietaire (DDT)</h4>
+                  <h4 className="text-sm font-semibold text-slate-900 mb-2">Documents proprietaire (DDT)</h4>
                   <div className="space-y-1">
                     {OWNER_DOCUMENT_CHECKLIST.map((item) => (
-                      <label key={item.category} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+                      <label key={item.category} className="flex items-start gap-3 p-2 rounded-xl hover:bg-slate-50 cursor-pointer">
                         <input
                           type="checkbox"
                           checked={requiredDocs.has(item.category)}
                           onChange={() => toggleRequiredDoc(item.category)}
-                          className="mt-0.5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                          className="mt-0.5 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                         />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900">{item.label}</p>
-                          <p className="text-xs text-gray-500">{item.description}</p>
+                          <p className="text-sm font-medium text-slate-900">{item.label}</p>
+                          <p className="text-xs text-slate-500">{item.description}</p>
                         </div>
                       </label>
                     ))}
@@ -802,19 +802,19 @@ export default function ContractDetails() {
 
                 {/* Tenant documents */}
                 <div className="mb-4">
-                  <h4 className="text-sm font-semibold text-gray-900 mb-2">Documents locataire</h4>
+                  <h4 className="text-sm font-semibold text-slate-900 mb-2">Documents locataire</h4>
                   <div className="space-y-1">
                     {TENANT_DOCUMENT_CHECKLIST.map((item) => (
-                      <label key={item.category} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+                      <label key={item.category} className="flex items-start gap-3 p-2 rounded-xl hover:bg-slate-50 cursor-pointer">
                         <input
                           type="checkbox"
                           checked={requiredDocs.has(item.category)}
                           onChange={() => toggleRequiredDoc(item.category)}
-                          className="mt-0.5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                          className="mt-0.5 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                         />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900">{item.label}</p>
-                          <p className="text-xs text-gray-500">{item.description}</p>
+                          <p className="text-sm font-medium text-slate-900">{item.label}</p>
+                          <p className="text-xs text-slate-500">{item.description}</p>
                         </div>
                       </label>
                     ))}
@@ -824,7 +824,7 @@ export default function ContractDetails() {
                 {/* Custom document requests */}
                 <div className="mb-4">
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-semibold text-gray-900">Demandes personnalisees</h4>
+                    <h4 className="text-sm font-semibold text-slate-900">Demandes personnalisees</h4>
                     <button
                       type="button"
                       onClick={() => setShowCustomDocForm(true)}
@@ -838,17 +838,17 @@ export default function ContractDetails() {
                   {customDocRequests.length > 0 && (
                     <div className="space-y-2 mb-3">
                       {customDocRequests.map((doc, index) => (
-                        <div key={index} className="flex items-start gap-3 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                        <div key={index} className="flex items-start gap-3 p-3 bg-primary-50 border border-blue-100 rounded-xl">
                           <FileText className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900">{doc.title}</p>
+                            <p className="text-sm font-medium text-slate-900">{doc.title}</p>
                             {doc.description && (
-                              <p className="text-xs text-gray-500 mt-0.5">{doc.description}</p>
+                              <p className="text-xs text-slate-500 mt-0.5">{doc.description}</p>
                             )}
                           </div>
                           <button
                             onClick={() => handleRemoveCustomDoc(index)}
-                            className="p-1 rounded hover:bg-blue-100 text-gray-400 hover:text-red-500"
+                            className="p-1 rounded hover:bg-primary-100 text-slate-400 hover:text-red-500"
                           >
                             <X className="w-4 h-4" />
                           </button>
@@ -858,20 +858,20 @@ export default function ContractDetails() {
                   )}
 
                   {showCustomDocForm && (
-                    <div className="p-3 bg-gray-50 border rounded-lg space-y-2">
+                    <div className="p-3 bg-slate-50 border rounded-xl space-y-2">
                       <input
                         type="text"
                         value={newCustomDoc.title}
                         onChange={(e) => setNewCustomDoc(prev => ({ ...prev, title: e.target.value }))}
                         placeholder="Titre du document (ex: Garantie Visale)"
-                        className="w-full border rounded-lg px-3 py-2 text-sm"
+                        className="w-full border rounded-xl px-3 py-2 text-sm"
                       />
                       <input
                         type="text"
                         value={newCustomDoc.description}
                         onChange={(e) => setNewCustomDoc(prev => ({ ...prev, description: e.target.value }))}
                         placeholder="Description (facultatif)"
-                        className="w-full border rounded-lg px-3 py-2 text-sm"
+                        className="w-full border rounded-xl px-3 py-2 text-sm"
                       />
                       <div className="flex gap-2 justify-end">
                         <button
@@ -892,11 +892,11 @@ export default function ContractDetails() {
                   )}
 
                   {customDocRequests.length === 0 && !showCustomDocForm && (
-                    <p className="text-xs text-gray-400 italic">Aucune demande personnalisee</p>
+                    <p className="text-xs text-slate-400 italic">Aucune demande personnalisee</p>
                   )}
                 </div>
 
-                <div className="text-xs text-gray-500 mb-4 p-2 bg-gray-50 rounded-lg">
+                <div className="text-xs text-slate-500 mb-4 p-2 bg-slate-50 rounded-xl">
                   Format accepte : PDF uniquement - Taille max : 5 Mo par document
                 </div>
 
@@ -907,7 +907,7 @@ export default function ContractDetails() {
                 >
                   {docsSaved ? (
                     <>
-                      <Check className="w-4 h-4 text-green-500" />
+                      <Check className="w-4 h-4 text-success-500" />
                       Enregistre
                     </>
                   ) : (
@@ -920,11 +920,11 @@ export default function ContractDetails() {
             {/* Documents - Dossier de location (after DRAFT) */}
             {contract.status !== 'DRAFT' && (
               <div className="card mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <h2 className="text-xl font-semibold text-slate-900 mb-4 flex items-center gap-2">
                   <FolderOpen className="w-5 h-5 text-primary-600" />
                   Dossier de location
                 </h2>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-slate-600 mb-4">
                   Telechargez les documents obligatoires pour constituer le dossier complet.
                 </p>
 
@@ -978,22 +978,22 @@ export default function ContractDetails() {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
             <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-900">Envoyer le contrat</h3>
+                <h3 className="text-lg font-bold text-slate-900">Envoyer le contrat</h3>
                 <button
                   onClick={() => setShowSendModal(false)}
-                  className="p-1 rounded-lg hover:bg-gray-100"
+                  className="p-1 rounded-xl hover:bg-slate-100"
                 >
-                  <X className="w-5 h-5 text-gray-400" />
+                  <X className="w-5 h-5 text-slate-400" />
                 </button>
               </div>
 
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-slate-600 mb-4">
                 Le contrat sera envoye au locataire avec la liste des {requiredDocs.size} document(s) requis
                 {customDocRequests.length > 0 ? ` et ${customDocRequests.length} demande(s) personnalisee(s)` : ''}.
               </p>
 
               {requiredDocs.size === 0 && (
-                <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2">
+                <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
                   <p className="text-sm text-amber-700">
                     Veuillez d'abord selectionner les documents requis dans la section "Dossier de location" ci-dessus.
@@ -1032,25 +1032,25 @@ export default function ContractDetails() {
             <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
               {/* Close button */}
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-900">
+                <h3 className="text-lg font-bold text-slate-900">
                   {confirmModal === 'delete' && 'Supprimer le contrat'}
                   {confirmModal === 'terminate' && 'Resilier le contrat'}
                   {confirmModal === 'cancel' && 'Annuler le contrat'}
                 </h3>
                 <button
                   onClick={() => { setConfirmModal(null); setCancelReason('') }}
-                  className="p-1 rounded-lg hover:bg-gray-100"
+                  className="p-1 rounded-xl hover:bg-slate-100"
                 >
-                  <X className="w-5 h-5 text-gray-400" />
+                  <X className="w-5 h-5 text-slate-400" />
                 </button>
               </div>
 
               {/* Warning */}
-              <div className={`p-3 rounded-lg mb-4 flex items-start gap-2 ${
-                confirmModal === 'delete' ? 'bg-red-50' : confirmModal === 'cancel' ? 'bg-orange-50' : 'bg-red-50'
+              <div className={`p-3 rounded-xl mb-4 flex items-start gap-2 ${
+                confirmModal === 'delete' ? 'bg-red-50' : confirmModal === 'cancel' ? 'bg-accent-50' : 'bg-red-50'
               }`}>
                 <AlertTriangle className={`w-5 h-5 shrink-0 mt-0.5 ${
-                  confirmModal === 'cancel' ? 'text-orange-500' : 'text-red-500'
+                  confirmModal === 'cancel' ? 'text-accent-500' : 'text-red-500'
                 }`} />
                 <div className="text-sm">
                   {confirmModal === 'delete' && (
@@ -1068,7 +1068,7 @@ export default function ContractDetails() {
                       <p className="text-orange-800 font-medium">
                         Attention : cette action annulera le contrat en cours de signature.
                       </p>
-                      <p className="text-orange-700 mt-1">
+                      <p className="text-accent-700 mt-1">
                         {contract.signedByOwner || contract.signedByTenant
                           ? 'Une ou plusieurs signatures ont deja ete apposees. Elles seront invalidees.'
                           : 'Le locataire sera notifie de l\'annulation.'}
@@ -1081,14 +1081,14 @@ export default function ContractDetails() {
               {/* Cancel reason */}
               {confirmModal === 'cancel' && (
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
                     Motif de l'annulation (obligatoire)
                   </label>
                   <textarea
                     value={cancelReason}
                     onChange={(e) => setCancelReason(e.target.value)}
                     placeholder="Ex: Erreur dans les conditions, changement de locataire..."
-                    className="w-full border rounded-lg p-3 text-sm h-24 resize-none"
+                    className="w-full border rounded-xl p-3 text-sm h-24 resize-none"
                   />
                 </div>
               )}
@@ -1109,9 +1109,7 @@ export default function ContractDetails() {
                     handleCancel
                   }
                   disabled={actionLoading || (confirmModal === 'cancel' && !cancelReason.trim())}
-                  className={`btn text-white flex items-center gap-2 ${
-                    confirmModal === 'cancel' ? 'bg-orange-600 hover:bg-orange-700' : 'bg-red-600 hover:bg-red-700'
-                  } disabled:opacity-50`}
+                  className="btn btn-danger flex items-center gap-2"
                 >
                   {actionLoading ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

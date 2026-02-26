@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useContractStore } from '../../store/contractStore'
 import { useProperties } from '../../hooks/useProperties'
+import { useMessages } from '../../hooks/useMessages'
+import { useAuth } from '../../hooks/useAuth'
 import { ContractClause } from '../../types/contract.types'
 import { DEFAULT_CLAUSES } from '../../data/loiAlurClauses'
 import { PDFDownloadLink } from '@react-pdf/renderer'
@@ -18,6 +20,11 @@ import {
   Plus,
   Trash2,
   Eye,
+  MessageSquare,
+  User,
+  ChevronDown,
+  ChevronUp,
+  X,
 } from 'lucide-react'
 
 type WizardStep = 1 | 2 | 3
@@ -26,9 +33,13 @@ export default function CreateContract() {
   const navigate = useNavigate()
   const { createContract, isLoading } = useContractStore()
   const { myProperties, fetchMyProperties } = useProperties()
+  const { conversations, fetchConversations } = useMessages()
+  const { user } = useAuth()
 
   const [step, setStep] = useState<WizardStep>(1)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [showContactPicker, setShowContactPicker] = useState(false)
+  const [selectedContact, setSelectedContact] = useState<{ name: string; email: string; avatar?: string } | null>(null)
 
   // Step 1: Property & Tenant
   const [propertyId, setPropertyId] = useState('')
@@ -51,7 +62,16 @@ export default function CreateContract() {
 
   useEffect(() => {
     fetchMyProperties({ page: 1, limit: 100 })
-  }, [fetchMyProperties])
+    fetchConversations()
+  }, [fetchMyProperties, fetchConversations])
+
+  // Contacts depuis la messagerie (l'autre utilisateur de chaque conversation)
+  const messagingContacts = conversations
+    .map((conv) => {
+      const other = conv.user1Id === user?.id ? conv.user2 : conv.user1
+      return { id: other.id, name: `${other.firstName} ${other.lastName}`, email: other.email || '', avatar: other.avatar || undefined }
+    })
+    .filter((c, i, arr) => arr.findIndex((x) => x.id === c.id) === i) // déduplique
 
   const availableProperties = myProperties.filter((p) => p.status === 'AVAILABLE')
   const selectedProperty = availableProperties.find((p) => p.id === propertyId)
@@ -190,20 +210,20 @@ export default function CreateContract() {
 
   return (
     <Layout>
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       {/* Header */}
       <div className="bg-white border-b">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate('/contracts')} className="btn btn-ghost p-2">
+            <button onClick={() => navigate('/contracts')} className="btn btn-secondary p-2">
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
                 <FileText className="w-7 h-7 text-primary-600" />
                 Nouveau Contrat
               </h1>
-              <p className="text-gray-600 mt-1">Generateur de bail - Loi ALUR</p>
+              <p className="text-slate-600 mt-1">Generateur de bail - Loi ALUR</p>
             </div>
           </div>
         </div>
@@ -225,18 +245,18 @@ export default function CreateContract() {
                         isActive
                           ? 'bg-primary-600 text-white'
                           : isCompleted
-                          ? 'bg-green-500 text-white'
-                          : 'bg-gray-200 text-gray-500'
+                          ? 'bg-success-500 text-white'
+                          : 'bg-slate-200 text-slate-500'
                       }`}
                     >
                       {isCompleted ? <Check className="w-5 h-5" /> : stepNum}
                     </div>
-                    <span className={`text-xs mt-1 ${isActive ? 'text-primary-600 font-semibold' : 'text-gray-500'}`}>
+                    <span className={`text-xs mt-1 ${isActive ? 'text-primary-600 font-semibold' : 'text-slate-500'}`}>
                       {label}
                     </span>
                   </div>
                   {i < stepLabels.length - 1 && (
-                    <div className={`w-16 h-0.5 mx-2 mt-[-12px] ${step > stepNum ? 'bg-green-500' : 'bg-gray-200'}`} />
+                    <div className={`w-16 h-0.5 mx-2 mt-[-12px] ${step > stepNum ? 'bg-success-500' : 'bg-slate-200'}`} />
                   )}
                 </div>
               )
@@ -246,7 +266,7 @@ export default function CreateContract() {
           {/* Step 1: Property & Tenant */}
           {step === 1 && (
             <div className="card">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+              <h2 className="text-xl font-semibold text-slate-900 mb-6">
                 Etape 1 : Informations de base
               </h2>
 
@@ -272,25 +292,25 @@ export default function CreateContract() {
 
               {/* Property Preview */}
               {selectedProperty && (
-                <div className="bg-gray-50 rounded-xl p-4 flex items-start gap-4 mb-6">
+                <div className="bg-slate-50 rounded-xl p-4 flex items-start gap-4 mb-6">
                   {selectedProperty.images?.[0] ? (
                     <img
                       src={selectedProperty.images[0]}
                       alt={selectedProperty.title}
-                      className="w-24 h-24 rounded-lg object-cover shrink-0"
+                      className="w-24 h-24 rounded-xl object-cover shrink-0"
                     />
                   ) : (
-                    <div className="w-24 h-24 rounded-lg bg-gray-200 flex items-center justify-center shrink-0">
-                      <HomeIcon className="w-8 h-8 text-gray-400" />
+                    <div className="w-24 h-24 rounded-xl bg-slate-200 flex items-center justify-center shrink-0">
+                      <HomeIcon className="w-8 h-8 text-slate-400" />
                     </div>
                   )}
                   <div>
-                    <h3 className="font-semibold text-gray-900">{selectedProperty.title}</h3>
-                    <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
+                    <h3 className="font-semibold text-slate-900">{selectedProperty.title}</h3>
+                    <p className="text-sm text-slate-600 flex items-center gap-1 mt-1">
                       <MapPin className="w-3.5 h-3.5" />
                       {selectedProperty.address}, {selectedProperty.postalCode} {selectedProperty.city}
                     </p>
-                    <div className="flex gap-4 mt-2 text-xs text-gray-500">
+                    <div className="flex gap-4 mt-2 text-xs text-slate-500">
                       {selectedProperty.surface && <span>{selectedProperty.surface} m2</span>}
                       {selectedProperty.bedrooms != null && <span>{selectedProperty.bedrooms} ch.</span>}
                       <span>{selectedProperty.price} EUR/mois</span>
@@ -302,19 +322,116 @@ export default function CreateContract() {
               {/* Tenant Email */}
               <div className="mb-6">
                 <label className="label">
-                  Email du locataire <span className="text-red-500">*</span>
+                  Locataire <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="email"
-                  value={tenantEmail}
-                  onChange={(e) => setTenantEmail(e.target.value)}
-                  placeholder="locataire@example.com"
-                  className={`input ${errors.tenantEmail ? 'border-red-300' : ''}`}
-                />
+
+                {/* Contact sélectionné */}
+                {selectedContact ? (
+                  <div className="flex items-center gap-3 p-3 rounded-xl border mb-3"
+                    style={{ backgroundColor: 'var(--surface-subtle)', borderColor: 'var(--border)' }}>
+                    {selectedContact.avatar ? (
+                      <img src={selectedContact.avatar} alt={selectedContact.name}
+                        className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
+                        <User className="w-5 h-5 text-primary-600" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{selectedContact.name}</p>
+                      <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{selectedContact.email}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedContact(null); setTenantEmail('') }}
+                      className="p-1 rounded-lg hover:bg-slate-200 transition-colors"
+                      title="Changer de locataire"
+                    >
+                      <X className="w-4 h-4" style={{ color: 'var(--text-tertiary)' }} />
+                    </button>
+                  </div>
+                ) : null}
+
+                {/* Picker contacts messagerie */}
+                {messagingContacts.length > 0 && !selectedContact && (
+                  <div className="mb-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowContactPicker((v) => !v)}
+                      className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm font-medium transition-colors hover:bg-slate-50"
+                      style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)', backgroundColor: 'var(--surface-card)' }}
+                    >
+                      <span className="flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4 text-primary-500" />
+                        Choisir depuis mes contacts messagerie
+                        <span className="px-1.5 py-0.5 rounded-full text-xs font-semibold bg-primary-100 text-primary-700">
+                          {messagingContacts.length}
+                        </span>
+                      </span>
+                      {showContactPicker ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </button>
+
+                    {showContactPicker && (
+                      <div className="mt-1 rounded-xl border overflow-hidden shadow-card"
+                        style={{ borderColor: 'var(--border)', backgroundColor: 'var(--surface-card)' }}>
+                        {messagingContacts.map((contact) => (
+                          <button
+                            key={contact.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedContact({ name: contact.name, email: contact.email, avatar: contact.avatar })
+                              setTenantEmail(contact.email)
+                              setShowContactPicker(false)
+                              setErrors((e) => ({ ...e, tenantEmail: '' }))
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 transition-colors border-b last:border-b-0"
+                            style={{ borderColor: 'var(--border)' }}
+                          >
+                            {contact.avatar ? (
+                              <img src={contact.avatar} alt={contact.name}
+                                className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+                            ) : (
+                              <div className="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
+                                <User className="w-4 h-4 text-primary-600" />
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>{contact.name}</p>
+                              <p className="text-xs truncate" style={{ color: 'var(--text-tertiary)' }}>{contact.email}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Séparateur */}
+                {messagingContacts.length > 0 && !selectedContact && (
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="flex-1 h-px" style={{ backgroundColor: 'var(--border)' }} />
+                    <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>ou saisir manuellement</span>
+                    <div className="flex-1 h-px" style={{ backgroundColor: 'var(--border)' }} />
+                  </div>
+                )}
+
+                {/* Saisie manuelle (masquée si contact sélectionné) */}
+                {!selectedContact && (
+                  <>
+                    <input
+                      type="email"
+                      value={tenantEmail}
+                      onChange={(e) => setTenantEmail(e.target.value)}
+                      placeholder="locataire@example.com"
+                      className={`input ${errors.tenantEmail ? 'border-red-300' : ''}`}
+                    />
+                    <p className="text-sm text-slate-500 mt-1">
+                      Le locataire doit avoir un compte avec cet email sur la plateforme
+                    </p>
+                  </>
+                )}
+
                 {errors.tenantEmail && <p className="text-sm text-red-500 mt-1">{errors.tenantEmail}</p>}
-                <p className="text-sm text-gray-500 mt-1">
-                  Le locataire doit avoir un compte avec cet email sur la plateforme
-                </p>
               </div>
             </div>
           )}
@@ -322,7 +439,7 @@ export default function CreateContract() {
           {/* Step 2: Juridical Fields */}
           {step === 2 && (
             <div className="card">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+              <h2 className="text-xl font-semibold text-slate-900 mb-6">
                 Etape 2 : Conditions juridiques
               </h2>
 
@@ -441,10 +558,10 @@ export default function CreateContract() {
           {/* Step 3: Clauses */}
           {step === 3 && (
             <div className="card">
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              <h2 className="text-xl font-semibold text-slate-900 mb-2">
                 Etape 3 : Clauses du contrat
               </h2>
-              <p className="text-sm text-gray-600 mb-6">
+              <p className="text-sm text-slate-600 mb-6">
                 Les clauses standard de la Loi ALUR sont activees par defaut. Vous pouvez les desactiver ou ajouter des clauses personnalisees.
               </p>
 
@@ -456,7 +573,7 @@ export default function CreateContract() {
                     className={`border rounded-xl p-4 transition-colors ${
                       clause.enabled
                         ? 'border-primary-200 bg-primary-50/30'
-                        : 'border-gray-200 bg-gray-50 opacity-60'
+                        : 'border-slate-200 bg-slate-50 opacity-60'
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -468,14 +585,14 @@ export default function CreateContract() {
                       />
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <h4 className="font-medium text-gray-900">{clause.title}</h4>
+                          <h4 className="font-medium text-slate-900">{clause.title}</h4>
                           {clause.isCustom && (
-                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                            <span className="text-xs bg-primary-100 text-primary-700 px-2 py-0.5 rounded-full">
                               Personnalisee
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">{clause.description}</p>
+                        <p className="text-sm text-slate-600 mt-1">{clause.description}</p>
                       </div>
                       {clause.isCustom && (
                         <button
@@ -491,8 +608,8 @@ export default function CreateContract() {
               </div>
 
               {/* Add Custom Clause */}
-              <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 mb-6">
-                <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+              <div className="border-2 border-dashed border-slate-300 rounded-xl p-4 mb-6">
+                <h4 className="font-medium text-slate-900 mb-3 flex items-center gap-2">
                   <Plus className="w-4 h-4" />
                   Ajouter une clause personnalisee
                 </h4>
@@ -534,7 +651,7 @@ export default function CreateContract() {
                   rows={4}
                 />
                 <div className="mt-2">
-                  <p className="text-xs text-gray-500 mb-2">Exemples de conditions particulieres :</p>
+                  <p className="text-xs text-slate-500 mb-2">Exemples de conditions particulieres :</p>
                   <div className="flex flex-wrap gap-1.5">
                     {[
                       'Le locataire s\'engage a souscrire un contrat d\'entretien annuel de la chaudiere.',
@@ -548,7 +665,7 @@ export default function CreateContract() {
                         key={example}
                         type="button"
                         onClick={() => setTerms(prev => prev ? `${prev}\n${example}` : example)}
-                        className="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+                        className="text-xs px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 hover:bg-primary-50 hover:text-primary-700 transition-colors"
                       >
                         + {example.slice(0, 50)}...
                       </button>

@@ -34,8 +34,8 @@ export const MessageBubble = ({
               className="w-8 h-8 rounded-full object-cover"
             />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-              <span className="text-xs font-semibold text-gray-600">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--surface-subtle)' }}>
+              <span className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
                 {senderUser?.firstName?.[0] || '?'}
                 {senderUser?.lastName?.[0] || ''}
               </span>
@@ -49,12 +49,12 @@ export const MessageBubble = ({
         <div
           className={`
             relative px-4 py-2 rounded-2xl group
-            ${
-              isOwn
-                ? 'bg-primary-600 text-white rounded-br-none'
-                : 'bg-gray-100 text-gray-900 rounded-bl-none'
-            }
+            ${isOwn ? 'text-white rounded-br-none' : 'rounded-bl-none'}
           `}
+          style={isOwn
+            ? { background: 'linear-gradient(135deg, #3b82f6 0%, #7c3aed 100%)' }
+            : { backgroundColor: 'var(--surface-subtle)', color: 'var(--text-primary)' }
+          }
         >
           {/* Message Content */}
           <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
@@ -73,10 +73,10 @@ export const MessageBubble = ({
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`
-                      flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs
+                      flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs
                       ${isOwn
                         ? 'bg-primary-700 text-white hover:bg-primary-800'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        : 'bg-slate-200 text-slate-700 dark:text-slate-300 hover:bg-slate-300'
                       }
                     `}
                   >
@@ -93,7 +93,7 @@ export const MessageBubble = ({
           {isOwn && onDelete && (
             <button
               onClick={() => onDelete(message.id)}
-              className="absolute -left-8 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute -left-8 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
               title="Supprimer"
             >
               <Trash2 className="w-4 h-4" />
@@ -105,7 +105,7 @@ export const MessageBubble = ({
         <div
           className={`
             flex items-center gap-1 mt-1 text-xs
-            ${isOwn ? 'text-gray-500' : 'text-gray-500'}
+            ${isOwn ? 'text-slate-500' : 'text-slate-500'}
           `}
         >
           <span>{formatTime(message.createdAt)}</span>
@@ -114,7 +114,7 @@ export const MessageBubble = ({
               {message.isRead ? (
                 <CheckCheck className="w-3.5 h-3.5 text-primary-600" />
               ) : (
-                <Check className="w-3.5 h-3.5 text-gray-400" />
+                <Check className="w-3.5 h-3.5 text-slate-400" />
               )}
             </>
           )}

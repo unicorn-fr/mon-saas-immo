@@ -112,12 +112,12 @@ export default function CreateProperty() {
         <div className="container mx-auto px-4 py-4">
           <Link
             to="/properties/owner/me"
-            className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-2"
+            className="inline-flex items-center text-slate-600 hover:text-slate-900 mb-2"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
             Retour à mes propriétés
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900">Ajouter un bien</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Ajouter un bien</h1>
         </div>
       </div>
 
@@ -126,7 +126,7 @@ export default function CreateProperty() {
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
           {/* Error Message */}
           {displayError && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm text-red-800">{displayError}</p>
@@ -140,7 +140,7 @@ export default function CreateProperty() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Titre de l'annonce *
                 </label>
                 <input
@@ -155,7 +155,7 @@ export default function CreateProperty() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Type de bien *
                 </label>
                 <select
@@ -174,7 +174,7 @@ export default function CreateProperty() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Description *
                 </label>
                 <textarea
@@ -196,7 +196,7 @@ export default function CreateProperty() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Adresse *
                 </label>
                 <input
@@ -211,7 +211,7 @@ export default function CreateProperty() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Ville *
                 </label>
                 <input
@@ -226,7 +226,7 @@ export default function CreateProperty() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Code postal *
                 </label>
                 <input
@@ -248,7 +248,7 @@ export default function CreateProperty() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Chambres *
                 </label>
                 <input
@@ -263,7 +263,7 @@ export default function CreateProperty() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Salles de bain *
                 </label>
                 <input
@@ -278,7 +278,7 @@ export default function CreateProperty() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Surface (m²) *
                 </label>
                 <input
@@ -294,7 +294,7 @@ export default function CreateProperty() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Étage
                 </label>
                 <input
@@ -316,7 +316,7 @@ export default function CreateProperty() {
                     onChange={handleChange}
                     className="mr-2"
                   />
-                  <span className="text-sm font-medium text-gray-700">Meublé</span>
+                  <span className="text-sm font-medium text-slate-700">Meublé</span>
                 </label>
               </div>
             </div>
@@ -331,7 +331,7 @@ export default function CreateProperty() {
                   onChange={handleChange}
                   className="mr-2"
                 />
-                <span className="text-sm text-gray-700">Parking</span>
+                <span className="text-sm text-slate-700">Parking</span>
               </label>
 
               <label className="flex items-center">
@@ -342,7 +342,7 @@ export default function CreateProperty() {
                   onChange={handleChange}
                   className="mr-2"
                 />
-                <span className="text-sm text-gray-700">Balcon</span>
+                <span className="text-sm text-slate-700">Balcon</span>
               </label>
 
               <label className="flex items-center">
@@ -353,7 +353,7 @@ export default function CreateProperty() {
                   onChange={handleChange}
                   className="mr-2"
                 />
-                <span className="text-sm text-gray-700">Ascenseur</span>
+                <span className="text-sm text-slate-700">Ascenseur</span>
               </label>
 
               <label className="flex items-center">
@@ -364,7 +364,7 @@ export default function CreateProperty() {
                   onChange={handleChange}
                   className="mr-2"
                 />
-                <span className="text-sm text-gray-700">Jardin</span>
+                <span className="text-sm text-slate-700">Jardin</span>
               </label>
             </div>
           </div>
@@ -375,7 +375,7 @@ export default function CreateProperty() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Loyer mensuel (€) *
                 </label>
                 <input
@@ -391,7 +391,7 @@ export default function CreateProperty() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Charges (€)
                 </label>
                 <input
@@ -406,7 +406,7 @@ export default function CreateProperty() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Dépôt de garantie (€)
                 </label>
                 <input
@@ -435,7 +435,7 @@ export default function CreateProperty() {
                     onChange={() => handleAmenityToggle(amenity.value)}
                     className="mr-2"
                   />
-                  <span className="text-sm text-gray-700">{amenity.label}</span>
+                  <span className="text-sm text-slate-700">{amenity.label}</span>
                 </label>
               ))}
             </div>

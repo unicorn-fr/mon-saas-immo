@@ -109,7 +109,7 @@ export default function DocumentUpload({
       {/* Upload Zone */}
       <div
         onClick={() => fileInputRef.current?.click()}
-        className="border-2 border-dashed border-blue-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all"
+        className="border-2 border-dashed border-primary-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-500 hover:bg-primary-50 transition-all"
       >
         <input
           ref={fileInputRef}
@@ -125,16 +125,16 @@ export default function DocumentUpload({
           {isProcessing ? (
             <>
               <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-              <p className="text-sm text-gray-600">Traitement des fichiers...</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">Traitement des fichiers...</p>
             </>
           ) : (
             <>
               <Upload className="w-8 h-8 text-blue-500" />
               <div>
-                <p className="font-medium text-gray-900">
+                <p className="font-medium text-slate-900">
                   Cliquez pour ajouter des fichiers
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   Maximum 5 KB par fichier · Formats: PDF, JPG, PNG, WebP, DOC, DOCX
                 </p>
               </div>
@@ -144,7 +144,7 @@ export default function DocumentUpload({
       </div>
 
       {/* Size Info Bar */}
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2">
         <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
         <div className="text-sm text-amber-800">
           <p className="font-medium">Limite de taille: 5 KB</p>
@@ -157,7 +157,7 @@ export default function DocumentUpload({
       {/* Uploaded Files List */}
       {uploadedFiles.length > 0 && (
         <div className="space-y-2">
-          <h4 className="text-sm font-semibold text-gray-900">
+          <h4 className="text-sm font-semibold text-slate-900">
             Fichiers ajoutés ({uploadedFiles.length}/{maxFiles})
           </h4>
 
@@ -165,19 +165,19 @@ export default function DocumentUpload({
             {uploadedFiles.map((file) => (
               <div
                 key={file.fileName}
-                className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
                   file.status === 'ERROR'
                     ? 'bg-red-50 border-red-200'
-                    : 'bg-green-50 border-green-200'
+                    : 'bg-success-50 border-success-100'
                 }`}
               >
                 <span className="text-lg">{getFileIcon(file.mimeType)}</span>
 
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-medium text-slate-900 truncate">
                     {file.fileName}
                   </p>
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
                     {formatFileSize(file.fileSize)}
                   </p>
                   {file.error && (
@@ -189,12 +189,12 @@ export default function DocumentUpload({
                   {file.status === 'ERROR' ? (
                     <AlertCircle className="w-5 h-5 text-red-500" />
                   ) : (
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-5 h-5 text-success-500" />
                   )}
 
                   <button
                     onClick={() => removeFile(file.fileName)}
-                    className="p-1 hover:bg-red-100 rounded-lg transition-colors"
+                    className="p-1 hover:bg-red-100 rounded-xl transition-colors"
                     title="Supprimer"
                   >
                     <X className="w-4 h-4 text-red-600" />
@@ -205,7 +205,7 @@ export default function DocumentUpload({
           </div>
 
           {uploadedFiles.filter((f) => f.status !== 'ERROR').length === 0 && (
-            <p className="text-xs text-gray-500 italic">
+            <p className="text-xs text-slate-500 italic">
               Veuillez corriger les erreurs ci-dessus
             </p>
           )}
@@ -214,7 +214,7 @@ export default function DocumentUpload({
 
       {/* Summary */}
       {uploadedFiles.length > 0 && (
-        <div className="text-xs text-gray-600 flex items-center gap-2">
+        <div className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-2">
           <FileText className="w-4 h-4" />
           <span>
             {uploadedFiles.filter((f) => f.status !== 'ERROR').length} fichier(s)

@@ -169,13 +169,13 @@ export default function Profile() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Email verification banner */}
         {user && !user.emailVerified && (
-          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+          <div className="mb-6 p-4 bg-warning-50 border border-warning-100 rounded-xl flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-warning-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-yellow-800">
+              <p className="text-sm font-medium text-warning-700">
                 Votre adresse email n'est pas verifiee
               </p>
-              <p className="text-sm text-yellow-700 mt-1">
+              <p className="text-sm text-slate-600 mt-1">
                 Verifiez votre email pour acceder a toutes les fonctionnalites.
               </p>
             </div>
@@ -195,10 +195,10 @@ export default function Profile() {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">
             Mon Profil
           </h1>
-          <p className="text-gray-600">
+          <p className="text-slate-600">
             Gerez vos informations personnelles et vos parametres
           </p>
         </div>
@@ -206,7 +206,7 @@ export default function Profile() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Profile Card - Left Column */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <div className="text-center">
                 <div className="w-24 h-24 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   {user?.avatar ? (
@@ -219,32 +219,32 @@ export default function Profile() {
                     <User className="w-12 h-12 text-primary-600" />
                   )}
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">
+                <h2 className="text-xl font-bold text-slate-900">
                   {user?.firstName} {user?.lastName}
                 </h2>
-                <p className="text-sm text-gray-600 mt-1">{user?.email}</p>
+                <p className="text-sm text-slate-600 mt-1">{user?.email}</p>
                 <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 bg-primary-50 text-primary-700 rounded-full text-sm font-medium">
                   <Shield className="w-4 h-4" />
                   {getRoleName(user?.role || '')}
                 </div>
               </div>
 
-              <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="mt-6 pt-6 border-t border-slate-200">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Email verifie</span>
+                    <span className="text-sm text-slate-600">Email verifie</span>
                     {user?.emailVerified ? (
-                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <CheckCircle className="w-5 h-5 text-success-600" />
                     ) : (
                       <XCircle className="w-5 h-5 text-red-600" />
                     )}
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-slate-600">
                       Telephone verifie
                     </span>
                     {user?.phoneVerified ? (
-                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <CheckCircle className="w-5 h-5 text-success-600" />
                     ) : (
                       <XCircle className="w-5 h-5 text-red-600" />
                     )}
@@ -268,7 +268,7 @@ export default function Profile() {
                       'Verifier mon email'
                     )}
                   </button>
-                  <p className="text-xs text-gray-500 mt-2 text-center">
+                  <p className="text-xs text-slate-500 mt-2 text-center">
                     La verification augmente la confiance des autres
                     utilisateurs
                   </p>
@@ -280,18 +280,18 @@ export default function Profile() {
           {/* Right Column */}
           <div className="lg:col-span-2 space-y-6">
             {/* ===== Section: Profil ===== */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
-                  <User className="w-5 h-5 text-gray-700" />
-                  <h3 className="text-xl font-bold text-gray-900">
+                  <User className="w-5 h-5 text-slate-700" />
+                  <h3 className="text-xl font-bold text-slate-900">
                     Informations personnelles
                   </h3>
                 </div>
                 {!isEditing ? (
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="btn btn-ghost flex items-center gap-2"
+                    className="btn btn-secondary flex items-center gap-2"
                   >
                     <Edit2 className="w-4 h-4" />
                     Modifier
@@ -300,7 +300,7 @@ export default function Profile() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handleCancel}
-                      className="btn btn-ghost flex items-center gap-2"
+                      className="btn btn-secondary flex items-center gap-2"
                       disabled={isSaving}
                     >
                       <XIcon className="w-4 h-4" />
@@ -325,7 +325,7 @@ export default function Profile() {
               <div className="space-y-6">
                 {/* First Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
                     Prenom
                   </label>
                   {isEditing ? (
@@ -338,16 +338,16 @@ export default function Profile() {
                       disabled={isSaving}
                     />
                   ) : (
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <User className="w-5 h-5 text-gray-400" />
-                      <span className="text-gray-900">{user?.firstName}</span>
+                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                      <User className="w-5 h-5 text-slate-400" />
+                      <span className="text-slate-900">{user?.firstName}</span>
                     </div>
                   )}
                 </div>
 
                 {/* Last Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
                     Nom
                   </label>
                   {isEditing ? (
@@ -360,33 +360,33 @@ export default function Profile() {
                       disabled={isSaving}
                     />
                   ) : (
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <User className="w-5 h-5 text-gray-400" />
-                      <span className="text-gray-900">{user?.lastName}</span>
+                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                      <User className="w-5 h-5 text-slate-400" />
+                      <span className="text-slate-900">{user?.lastName}</span>
                     </div>
                   )}
                 </div>
 
                 {/* Email (read-only) */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
                     Email
                   </label>
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <Mail className="w-5 h-5 text-gray-400" />
-                    <span className="text-gray-900">{user?.email}</span>
+                  <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                    <Mail className="w-5 h-5 text-slate-400" />
+                    <span className="text-slate-900">{user?.email}</span>
                     {user?.emailVerified && (
-                      <CheckCircle className="w-4 h-4 text-green-600 ml-auto" />
+                      <CheckCircle className="w-4 h-4 text-success-600 ml-auto" />
                     )}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-slate-500 mt-1">
                     L'email ne peut pas etre modifie
                   </p>
                 </div>
 
                 {/* Phone */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
                     Telephone
                   </label>
                   {isEditing ? (
@@ -400,13 +400,13 @@ export default function Profile() {
                       disabled={isSaving}
                     />
                   ) : (
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <Phone className="w-5 h-5 text-gray-400" />
-                      <span className="text-gray-900">
+                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                      <Phone className="w-5 h-5 text-slate-400" />
+                      <span className="text-slate-900">
                         {user?.phone || 'Non renseigne'}
                       </span>
                       {user?.phoneVerified && (
-                        <CheckCircle className="w-4 h-4 text-green-600 ml-auto" />
+                        <CheckCircle className="w-4 h-4 text-success-600 ml-auto" />
                       )}
                     </div>
                   )}
@@ -414,7 +414,7 @@ export default function Profile() {
 
                 {/* Bio */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
                     Bio
                   </label>
                   {isEditing ? (
@@ -428,9 +428,9 @@ export default function Profile() {
                       rows={4}
                     />
                   ) : (
-                    <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg min-h-[60px]">
-                      <FileText className="w-5 h-5 text-gray-400 mt-0.5" />
-                      <span className="text-gray-900">
+                    <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl min-h-[60px]">
+                      <FileText className="w-5 h-5 text-slate-400 mt-0.5" />
+                      <span className="text-slate-900">
                         {user?.bio || 'Aucune bio renseignee'}
                       </span>
                     </div>
@@ -439,12 +439,12 @@ export default function Profile() {
 
                 {/* Role */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
                     Type de compte
                   </label>
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <Shield className="w-5 h-5 text-gray-400" />
-                    <span className="text-gray-900">
+                  <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                    <Shield className="w-5 h-5 text-slate-400" />
+                    <span className="text-slate-900">
                       {getRoleName(user?.role || '')}
                     </span>
                   </div>
@@ -452,11 +452,11 @@ export default function Profile() {
 
                 {/* Created At */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
                     Membre depuis
                   </label>
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <span className="text-gray-900">
+                  <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                    <span className="text-slate-900">
                       {user?.createdAt
                         ? new Date(user.createdAt).toLocaleDateString(
                             'fr-FR',
@@ -474,10 +474,10 @@ export default function Profile() {
             </div>
 
             {/* ===== Section: Securite ===== */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <div className="flex items-center gap-2 mb-6">
-                <Lock className="w-5 h-5 text-gray-700" />
-                <h3 className="text-xl font-bold text-gray-900">Securite</h3>
+                <Lock className="w-5 h-5 text-slate-700" />
+                <h3 className="text-xl font-bold text-slate-900">Securite</h3>
               </div>
               <div className="space-y-4">
                 {hasPassword && (
@@ -490,22 +490,22 @@ export default function Profile() {
                   </button>
                 )}
                 {/* 2FA / TOTP */}
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
                   <div className="flex items-center gap-3">
                     {totpEnabled ? (
-                      <ShieldCheck className="w-5 h-5 text-green-600" />
+                      <ShieldCheck className="w-5 h-5 text-success-600" />
                     ) : (
-                      <ShieldOff className="w-5 h-5 text-gray-400" />
+                      <ShieldOff className="w-5 h-5 text-slate-400" />
                     )}
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Authentification à deux facteurs</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-sm font-medium text-slate-900">Authentification à deux facteurs</p>
+                      <p className="text-xs text-slate-500">
                         {totpEnabled === null ? 'Chargement…' : totpEnabled ? 'Activée (Google Authenticator / Authy)' : 'Désactivée'}
                       </p>
                     </div>
                   </div>
                   {totpEnabled === null ? (
-                    <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                    <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
                   ) : totpEnabled ? (
                     <button
                       onClick={() => { setTotpCode(''); setTotpModal('disable') }}
@@ -527,14 +527,14 @@ export default function Profile() {
             </div>
 
             {/* ===== Section: Comptes lies ===== */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <div className="flex items-center gap-2 mb-6">
-                <LinkIcon className="w-5 h-5 text-gray-700" />
-                <h3 className="text-xl font-bold text-gray-900">
+                <LinkIcon className="w-5 h-5 text-slate-700" />
+                <h3 className="text-xl font-bold text-slate-900">
                   Comptes lies
                 </h3>
               </div>
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
                 <div className="flex items-center gap-3">
                   <svg className="w-6 h-6" viewBox="0 0 24 24">
                     <path
@@ -555,13 +555,13 @@ export default function Profile() {
                     />
                   </svg>
                   <div>
-                    <p className="font-medium text-gray-900">Google</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="font-medium text-slate-900">Google</p>
+                    <p className="text-sm text-slate-500">
                       Connectez-vous avec votre compte Google
                     </p>
                   </div>
                 </div>
-                <span className="text-sm text-gray-500 bg-gray-200 px-3 py-1 rounded-full">
+                <span className="text-sm text-slate-500 bg-slate-200 px-3 py-1 rounded-full">
                   {import.meta.env.VITE_GOOGLE_CLIENT_ID
                     ? 'Disponible'
                     : 'Non configure'}
@@ -577,7 +577,7 @@ export default function Profile() {
                   Zone de danger
                 </h3>
               </div>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-slate-600 mb-4">
                 Une fois votre compte supprime, toutes vos donnees seront
                 definitivement perdues. Cette action est irreversible.
               </p>
@@ -604,7 +604,7 @@ export default function Profile() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setTotpModal(null)} />
           <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
-            <button onClick={() => setTotpModal(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+            <button onClick={() => setTotpModal(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
               <XIcon className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-3 mb-5">
@@ -612,24 +612,24 @@ export default function Profile() {
                 <QrCode className="w-5 h-5 text-primary-600" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Activer la 2FA</h3>
-                <p className="text-xs text-gray-500">Google Authenticator ou Authy</p>
+                <h3 className="text-lg font-bold text-slate-900">Activer la 2FA</h3>
+                <p className="text-xs text-slate-500">Google Authenticator ou Authy</p>
               </div>
             </div>
 
             {totpStep === 'qr' && (
               <>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-slate-600 mb-4">
                   Scannez ce QR code avec votre application d'authentification, puis cliquez sur Suivant.
                 </p>
                 {totpQr && (
                   <div className="flex justify-center mb-4">
-                    <img src={totpQr} alt="QR Code 2FA" className="w-48 h-48 rounded-lg border" />
+                    <img src={totpQr} alt="QR Code 2FA" className="w-48 h-48 rounded-xl border" />
                   </div>
                 )}
-                <details className="text-xs text-gray-400 mb-4 cursor-pointer">
-                  <summary className="hover:text-gray-600">Saisie manuelle</summary>
-                  <code className="mt-2 block break-all bg-gray-50 p-2 rounded text-gray-700">{totpSecret}</code>
+                <details className="text-xs text-slate-400 mb-4 cursor-pointer">
+                  <summary className="hover:text-slate-600">Saisie manuelle</summary>
+                  <code className="mt-2 block break-all bg-slate-50 p-2 rounded text-slate-700">{totpSecret}</code>
                 </details>
                 <button onClick={() => setTotpStep('verify')} className="btn btn-primary w-full">
                   Suivant
@@ -639,7 +639,7 @@ export default function Profile() {
 
             {totpStep === 'verify' && (
               <>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-slate-600 mb-4">
                   Saisissez le code à 6 chiffres affiché dans votre application pour confirmer l'activation.
                 </p>
                 <input
@@ -653,7 +653,7 @@ export default function Profile() {
                   autoFocus
                 />
                 <div className="flex gap-3">
-                  <button onClick={() => setTotpStep('qr')} className="btn btn-ghost flex-1">Retour</button>
+                  <button onClick={() => setTotpStep('qr')} className="btn btn-secondary flex-1">Retour</button>
                   <button
                     onClick={handleTotpEnable}
                     disabled={totpLoading || totpCode.length !== 6}
@@ -673,16 +673,16 @@ export default function Profile() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setTotpModal(null)} />
           <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
-            <button onClick={() => setTotpModal(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+            <button onClick={() => setTotpModal(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
               <XIcon className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
                 <ShieldOff className="w-5 h-5 text-red-600" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900">Désactiver la 2FA</h3>
+              <h3 className="text-lg font-bold text-slate-900">Désactiver la 2FA</h3>
             </div>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-slate-600 mb-4">
               Saisissez le code actuel de votre application pour confirmer la désactivation.
             </p>
             <input
@@ -696,7 +696,7 @@ export default function Profile() {
               autoFocus
             />
             <div className="flex gap-3">
-              <button onClick={() => setTotpModal(null)} className="btn btn-ghost flex-1">Annuler</button>
+              <button onClick={() => setTotpModal(null)} className="btn btn-secondary flex-1">Annuler</button>
               <button
                 onClick={handleTotpDisable}
                 disabled={totpLoading || totpCode.length !== 6}
@@ -724,17 +724,17 @@ export default function Profile() {
               <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
                 <AlertTriangle className="w-5 h-5 text-red-600" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900">
+              <h3 className="text-lg font-bold text-slate-900">
                 Supprimer votre compte ?
               </h3>
             </div>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-slate-600 mb-4">
               Cette action est <strong>irreversible</strong>. Toutes vos
               donnees, proprietes, contrats et messages seront supprimes
               definitivement.
             </p>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Tapez <strong>SUPPRIMER</strong> pour confirmer
               </label>
               <input
@@ -751,7 +751,7 @@ export default function Profile() {
                   setShowDeleteDialog(false)
                   setDeleteConfirmText('')
                 }}
-                className="btn btn-ghost flex-1"
+                className="btn btn-secondary flex-1"
               >
                 Annuler
               </button>

@@ -101,12 +101,12 @@ export const BookingManagement = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-slate-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestion des réservations</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Gestion des réservations</h1>
+          <p className="text-slate-600">
             Gérez les demandes de visite de vos propriétés
           </p>
         </div>
@@ -114,72 +114,72 @@ export const BookingManagement = () => {
         {/* Statistics */}
         {statistics && (
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Total</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm text-slate-600 mb-1">Total</p>
+                  <p className="text-2xl font-bold text-slate-900">
                     {statistics.total}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
-                  <CalendarIcon className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 bg-primary-50 rounded-xl flex items-center justify-center">
+                  <CalendarIcon className="w-6 h-6 text-primary-600" />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">En attente</p>
-                  <p className="text-2xl font-bold text-yellow-600">
+                  <p className="text-sm text-slate-600 mb-1">En attente</p>
+                  <p className="text-2xl font-bold text-warning-600">
                     {statistics.pending}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-yellow-50 rounded-lg flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-yellow-600" />
+                <div className="w-12 h-12 bg-warning-50 rounded-xl flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-warning-600" />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Confirmées</p>
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className="text-sm text-slate-600 mb-1">Confirmées</p>
+                  <p className="text-2xl font-bold text-success-600">
                     {statistics.confirmed}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-green-600" />
+                <div className="w-12 h-12 bg-success-50 rounded-xl flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-success-600" />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Annulées</p>
+                  <p className="text-sm text-slate-600 mb-1">Annulées</p>
                   <p className="text-2xl font-bold text-red-600">
                     {statistics.cancelled}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-red-50 rounded-lg flex items-center justify-center">
+                <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center">
                   <XCircle className="w-6 h-6 text-red-600" />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Terminées</p>
-                  <p className="text-2xl font-bold text-gray-600">
+                  <p className="text-sm text-slate-600 mb-1">Terminées</p>
+                  <p className="text-2xl font-bold text-slate-600">
                     {statistics.completed}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6 text-gray-600" />
+                <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center">
+                  <TrendingUp className="w-6 h-6 text-slate-600" />
                 </div>
               </div>
             </div>
@@ -187,17 +187,17 @@ export const BookingManagement = () => {
         )}
 
         {/* Filters and View Toggle */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
                 type="text"
                 placeholder="Rechercher..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
 
@@ -205,7 +205,7 @@ export const BookingManagement = () => {
             <select
               value={selectedProperty}
               onChange={(e) => setSelectedProperty(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="all">Toutes les propriétés</option>
               {properties.map((property) => (
@@ -219,7 +219,7 @@ export const BookingManagement = () => {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value as BookingStatus | 'all')}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="all">Tous les statuts</option>
               <option value="PENDING">En attente</option>
@@ -229,15 +229,15 @@ export const BookingManagement = () => {
             </select>
 
             {/* View Toggle */}
-            <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+            <div className="flex items-center gap-2 bg-slate-100 rounded-xl p-1">
               <button
                 onClick={() => setViewMode('list')}
                 className={`
                   flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors
                   ${
                     viewMode === 'list'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
                   }
                 `}
               >
@@ -249,8 +249,8 @@ export const BookingManagement = () => {
                   flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors
                   ${
                     viewMode === 'calendar'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
                   }
                 `}
               >
@@ -262,7 +262,7 @@ export const BookingManagement = () => {
 
         {/* Error State */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-start gap-3">
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
             <div>
               <p className="font-medium text-red-900">Erreur</p>
@@ -286,12 +286,12 @@ export const BookingManagement = () => {
         ) : (
           <div className="space-y-4">
             {filteredBookings.length === 0 ? (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-                <CalendarIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
+                <CalendarIcon className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">
                   Aucune réservation
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-slate-600">
                   {searchQuery || selectedProperty !== 'all' || selectedStatus !== 'all'
                     ? 'Aucune réservation ne correspond à vos filtres.'
                     : 'Vous n\'avez pas encore reçu de demandes de visite.'}
@@ -314,7 +314,7 @@ export const BookingManagement = () => {
 
         {/* Pagination Info */}
         {filteredBookings.length > 0 && viewMode === 'list' && (
-          <div className="mt-6 text-center text-sm text-gray-600">
+          <div className="mt-6 text-center text-sm text-slate-600">
             Affichage de {filteredBookings.length} sur {bookingsTotal} réservation
             {bookingsTotal > 1 ? 's' : ''}
           </div>

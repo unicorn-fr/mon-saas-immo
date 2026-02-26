@@ -112,10 +112,10 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
         onDrop={handleDrop}
-        className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+        className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
           dragActive
             ? 'border-primary-500 bg-primary-50'
-            : 'border-gray-300 hover:border-gray-400'
+            : 'border-slate-300 hover:border-slate-400'
         } ${isUploadingImages ? 'opacity-50 pointer-events-none' : ''}`}
       >
         <input
@@ -134,22 +134,22 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
             images.length >= maxImages ? 'cursor-not-allowed opacity-50' : ''
           }`}
         >
-          <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-lg font-medium text-gray-900 mb-2">
+          <Upload className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+          <p className="text-lg font-medium text-slate-900 mb-2">
             {isUploadingImages
               ? 'Upload en cours...'
               : 'Glissez vos images ici ou cliquez pour sélectionner'}
           </p>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             PNG, JPG, WebP jusqu'à 5MB • Maximum {maxImages} images
           </p>
-          <p className="text-sm text-gray-500 mt-2">
+          <p className="text-sm text-slate-500 mt-2">
             {images.length}/{maxImages} images uploadées
           </p>
         </label>
 
         {isUploadingImages && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 rounded-lg">
+          <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 rounded-xl">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
           </div>
         )}
@@ -157,7 +157,7 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
 
       {/* Error */}
       {error && (
-        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl">
           <p className="text-sm text-red-800">{error}</p>
         </div>
       )}
@@ -168,7 +168,7 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
           {images.map((url, index) => (
             <div
               key={index}
-              className="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden"
+              className="relative group aspect-square bg-slate-100 rounded-xl overflow-hidden"
             >
               <img
                 src={url}
@@ -194,7 +194,7 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
                 {index > 0 && (
                   <button
                     onClick={() => moveImage(index, index - 1)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity bg-white text-gray-900 p-2 rounded-full hover:bg-gray-100"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity bg-white text-slate-900 p-2 rounded-full hover:bg-slate-100"
                     title="Déplacer à gauche"
                   >
                     ←
@@ -205,7 +205,7 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
                 {index < images.length - 1 && (
                   <button
                     onClick={() => moveImage(index, index + 1)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity bg-white text-gray-900 p-2 rounded-full hover:bg-gray-100"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity bg-white text-slate-900 p-2 rounded-full hover:bg-slate-100"
                     title="Déplacer à droite"
                   >
                     →
@@ -231,7 +231,7 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
 
       {/* Help text */}
       {images.length > 0 && (
-        <p className="mt-3 text-sm text-gray-600">
+        <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
           <ImageIcon className="w-4 h-4 inline mr-1" />
           La première image sera utilisée comme image principale. Glissez pour réorganiser.
         </p>

@@ -117,13 +117,15 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50 flex items-center justify-center p-4 py-12">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 py-12">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 text-2xl font-bold text-gray-900">
-            <Home className="w-8 h-8 text-primary-500" />
-            ImmoParticuliers
+          <Link to="/" className="inline-flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+            <div className="w-9 h-9 bg-primary-700 rounded-xl flex items-center justify-center">
+              <Home className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold text-slate-900 font-heading">ImmoParticuliers</span>
           </Link>
         </div>
 
@@ -133,7 +135,7 @@ export default function Register() {
 
           {/* Error Alert */}
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
               <p className="text-sm text-red-800">{error}</p>
             </div>
@@ -145,20 +147,20 @@ export default function Register() {
               type="button"
               onClick={() => setUserType('TENANT')}
               disabled={isLoading}
-              className={`p-4 rounded-lg border-2 transition-all ${
+              className={`p-4 rounded-xl border-2 transition-all ${
                 userType === 'TENANT'
                   ? 'border-primary-500 bg-primary-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                  : 'border-slate-200 hover:border-slate-300'
               } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <Users
                 className={`w-8 h-8 mx-auto mb-2 ${
-                  userType === 'TENANT' ? 'text-primary-500' : 'text-gray-400'
+                  userType === 'TENANT' ? 'text-primary-500' : 'text-slate-400'
                 }`}
               />
               <p
                 className={`font-medium ${
-                  userType === 'TENANT' ? 'text-primary-700' : 'text-gray-700'
+                  userType === 'TENANT' ? 'text-primary-700' : 'text-slate-700'
                 }`}
               >
                 Locataire
@@ -169,20 +171,20 @@ export default function Register() {
               type="button"
               onClick={() => setUserType('OWNER')}
               disabled={isLoading}
-              className={`p-4 rounded-lg border-2 transition-all ${
+              className={`p-4 rounded-xl border-2 transition-all ${
                 userType === 'OWNER'
                   ? 'border-primary-500 bg-primary-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                  : 'border-slate-200 hover:border-slate-300'
               } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <Home
                 className={`w-8 h-8 mx-auto mb-2 ${
-                  userType === 'OWNER' ? 'text-primary-500' : 'text-gray-400'
+                  userType === 'OWNER' ? 'text-primary-500' : 'text-slate-400'
                 }`}
               />
               <p
                 className={`font-medium ${
-                  userType === 'OWNER' ? 'text-primary-700' : 'text-gray-700'
+                  userType === 'OWNER' ? 'text-primary-700' : 'text-slate-700'
                 }`}
               >
                 Propriétaire
@@ -194,7 +196,7 @@ export default function Register() {
             {/* Name */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="firstName" className="block text-sm font-medium text-slate-700 mb-2">
                   Prénom
                 </label>
                 <input
@@ -210,7 +212,7 @@ export default function Register() {
                 />
               </div>
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="lastName" className="block text-sm font-medium text-slate-700 mb-2">
                   Nom
                 </label>
                 <input
@@ -229,11 +231,11 @@ export default function Register() {
 
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   id="email"
                   name="email"
@@ -250,8 +252,8 @@ export default function Register() {
 
             {/* Phone (optional) */}
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                Téléphone <span className="text-gray-400">(optionnel)</span>
+              <label htmlFor="phone" className="block text-sm font-medium text-slate-700 mb-2">
+                Téléphone <span className="text-slate-400">(optionnel)</span>
               </label>
               <input
                 id="phone"
@@ -267,11 +269,11 @@ export default function Register() {
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-2">
                 Mot de passe
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   id="password"
                   name="password"
@@ -294,11 +296,11 @@ export default function Register() {
                 ].map((req, i) => (
                   <div key={i} className="flex items-center gap-2">
                     {req.met ? (
-                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <CheckCircle className="w-4 h-4 text-success-500" />
                     ) : (
-                      <div className="w-4 h-4 rounded-full border-2 border-gray-300" />
+                      <div className="w-4 h-4 rounded-full border-2 border-slate-300" />
                     )}
-                    <span className={`text-xs ${req.met ? 'text-green-600' : 'text-gray-500'}`}>
+                    <span className={`text-xs ${req.met ? 'text-success-600' : 'text-slate-500'}`}>
                       {req.text}
                     </span>
                   </div>
@@ -310,12 +312,12 @@ export default function Register() {
             <div>
               <label
                 htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text-sm font-medium text-slate-700 mb-2"
               >
                 Confirmer le mot de passe
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   id="confirmPassword"
                   name="confirmPassword"
@@ -342,7 +344,7 @@ export default function Register() {
                 disabled={isLoading}
                 required
               />
-              <label htmlFor="terms" className="text-sm text-gray-600">
+              <label htmlFor="terms" className="text-sm text-slate-600">
                 J'accepte les{' '}
                 <a href="/terms" className="text-primary-600 hover:text-primary-700">
                   conditions d'utilisation
@@ -401,10 +403,10 @@ export default function Register() {
           {/* Separator */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+              <div className="w-full border-t border-slate-300"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">ou</span>
+              <span className="px-2 bg-white text-slate-500">ou</span>
             </div>
           </div>
 
@@ -416,7 +418,7 @@ export default function Register() {
           />
 
           {/* Login Link */}
-          <p className="text-center text-gray-600 mt-6">
+          <p className="text-center text-slate-600 mt-6">
             Déjà un compte ?{' '}
             <Link to="/login" className="text-primary-600 hover:text-primary-700 font-medium">
               Se connecter
@@ -426,7 +428,7 @@ export default function Register() {
 
         {/* Back to Home */}
         <div className="text-center mt-6">
-          <Link to="/" className="text-gray-600 hover:text-gray-900">
+          <Link to="/" className="text-slate-600 hover:text-slate-900">
             ← Retour à l'accueil
           </Link>
         </div>

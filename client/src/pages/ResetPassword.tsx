@@ -30,9 +30,9 @@ export default function ResetPassword() {
   const getStrengthColor = () => {
     const pct = getStrengthPercent()
     if (pct <= 25) return 'bg-red-500'
-    if (pct <= 50) return 'bg-orange-500'
-    if (pct <= 75) return 'bg-yellow-500'
-    return 'bg-green-500'
+    if (pct <= 50) return 'bg-accent-500'
+    if (pct <= 75) return 'bg-warning-500'
+    return 'bg-success-500'
   }
 
   const handleSubmit = async (e: FormEvent) => {
@@ -73,12 +73,12 @@ export default function ResetPassword() {
 
   if (!token) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <div className="card text-center">
             <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Lien invalide</h2>
-            <p className="text-gray-600 mb-6">
+            <h2 className="text-xl font-bold text-slate-900 mb-2">Lien invalide</h2>
+            <p className="text-slate-600 mb-6">
               Ce lien de reinitialisation est invalide ou a expire.
             </p>
             <Link to="/forgot-password" className="btn btn-primary">
@@ -91,26 +91,25 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-2xl font-bold text-gray-900"
-          >
-            <Home className="w-8 h-8 text-primary-500" />
-            ImmoParticuliers
+          <Link to="/" className="inline-flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+            <div className="w-9 h-9 bg-primary-700 rounded-xl flex items-center justify-center">
+              <Home className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold text-slate-900 font-heading">ImmoParticuliers</span>
           </Link>
         </div>
 
         <div className="card">
           {status === 'success' ? (
             <div className="text-center">
-              <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-gray-900 mb-2">
+              <CheckCircle className="w-16 h-16 text-success-500 mx-auto mb-4" />
+              <h2 className="text-xl font-bold text-slate-900 mb-2">
                 Mot de passe reinitialise !
               </h2>
-              <p className="text-gray-600 mb-6">
+              <p className="text-slate-600 mb-6">
                 Votre mot de passe a ete modifie avec succes. Vous pouvez maintenant vous connecter.
               </p>
               <Link to="/login" className="btn btn-primary w-full">
@@ -120,8 +119,8 @@ export default function ResetPassword() {
           ) : status === 'error' ? (
             <div className="text-center">
               <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Erreur</h2>
-              <p className="text-gray-600 mb-6">{error}</p>
+              <h2 className="text-xl font-bold text-slate-900 mb-2">Erreur</h2>
+              <p className="text-slate-600 mb-6">{error}</p>
               <Link to="/forgot-password" className="btn btn-primary w-full">
                 Demander un nouveau lien
               </Link>
@@ -131,23 +130,23 @@ export default function ResetPassword() {
               <h2 className="text-2xl font-bold text-center mb-2">
                 Nouveau mot de passe
               </h2>
-              <p className="text-gray-600 text-center mb-6">
+              <p className="text-slate-600 text-center mb-6">
                 Choisissez votre nouveau mot de passe.
               </p>
 
               {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
                   <p className="text-sm text-red-800">{error}</p>
                 </div>
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
                     Nouveau mot de passe
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <input
                       type="password"
                       value={newPassword}
@@ -160,7 +159,7 @@ export default function ResetPassword() {
 
                   {newPassword && (
                     <div className="mt-2">
-                      <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
                         <div
                           className={`h-full transition-all duration-300 ${getStrengthColor()}`}
                           style={{ width: `${getStrengthPercent()}%` }}
@@ -173,13 +172,13 @@ export default function ResetPassword() {
                     {passwordRequirements.map((req, i) => (
                       <div key={i} className="flex items-center gap-2">
                         {req.met ? (
-                          <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+                          <CheckCircle className="w-3.5 h-3.5 text-success-500" />
                         ) : (
-                          <div className="w-3.5 h-3.5 rounded-full border-2 border-gray-300" />
+                          <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300" />
                         )}
                         <span
                           className={`text-xs ${
-                            req.met ? 'text-green-600' : 'text-gray-500'
+                            req.met ? 'text-success-600' : 'text-slate-500'
                           }`}
                         >
                           {req.text}
@@ -190,11 +189,11 @@ export default function ResetPassword() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
                     Confirmer le mot de passe
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <input
                       type="password"
                       value={confirmPassword}

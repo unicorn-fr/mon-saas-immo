@@ -84,10 +84,10 @@ export default function MyProperties() {
 
   // Status config
   const statusConfig: Record<string, { label: string; bg: string; text: string }> = {
-    AVAILABLE: { label: 'Disponible',    bg: 'bg-green-100', text: 'text-green-700' },
-    OCCUPIED:  { label: 'En location',   bg: 'bg-blue-100',  text: 'text-blue-700' },
-    DRAFT:     { label: 'Hors marche',   bg: 'bg-gray-100',  text: 'text-gray-600' },
-    RESERVED:  { label: 'Reserve',       bg: 'bg-yellow-100',text: 'text-yellow-700' },
+    AVAILABLE: { label: 'Disponible',    bg: 'bg-success-100', text: 'text-success-700' },
+    OCCUPIED:  { label: 'En location',   bg: 'bg-primary-100',  text: 'text-primary-700' },
+    DRAFT:     { label: 'Hors marche',   bg: 'bg-slate-100',  text: 'text-slate-600' },
+    RESERVED:  { label: 'Reserve',       bg: 'bg-warning-100',text: 'text-warning-700' },
   }
 
   // Counts per tab
@@ -103,10 +103,10 @@ export default function MyProperties() {
     : myProperties
 
   const tabs: { key: TabKey; label: string; color: string; activeColor: string }[] = [
-    { key: 'tous',        label: 'Tous',         color: 'text-gray-700',   activeColor: 'bg-gray-800' },
-    { key: 'disponibles', label: 'Disponibles',  color: 'text-green-600',  activeColor: 'bg-green-600' },
-    { key: 'en-location', label: 'En location',  color: 'text-blue-600',   activeColor: 'bg-blue-600' },
-    { key: 'hors-marche', label: 'Hors marche',  color: 'text-gray-500',   activeColor: 'bg-gray-500' },
+    { key: 'tous',        label: 'Tous',         color: 'text-slate-700',   activeColor: 'bg-slate-600' },
+    { key: 'disponibles', label: 'Disponibles',  color: 'text-success-600',  activeColor: 'bg-success-600' },
+    { key: 'en-location', label: 'En location',  color: 'text-primary-600',   activeColor: 'bg-primary-600' },
+    { key: 'hors-marche', label: 'Hors marche',  color: 'text-slate-500',   activeColor: 'bg-slate-500' },
   ]
 
   const PropertyCard = ({ property }: { property: Property }) => {
@@ -116,7 +116,7 @@ export default function MyProperties() {
       <div className="bg-white rounded-2xl border overflow-hidden hover:shadow-lg transition-shadow">
 
         {/* Image */}
-        <div className="relative h-44 bg-gray-100">
+        <div className="relative h-44 bg-slate-100">
           <img
             src={mainImage}
             alt={property.title}
@@ -124,8 +124,8 @@ export default function MyProperties() {
             onError={(e) => { e.currentTarget.src = '/placeholder-property.jpg' }}
           />
           {/* Price badge */}
-          <div className="absolute bottom-3 left-3 bg-white bg-opacity-95 backdrop-blur-sm px-2.5 py-1 rounded-lg shadow text-sm font-bold text-gray-900">
-            {property.price}€<span className="font-normal text-gray-500 text-xs">/mois</span>
+          <div className="absolute bottom-3 left-3 bg-white bg-opacity-95 backdrop-blur-sm px-2.5 py-1 rounded-xl shadow text-sm font-bold text-slate-900">
+            {property.price}€<span className="font-normal text-slate-500 text-xs">/mois</span>
           </div>
           {/* Status badge */}
           <div className="absolute top-3 right-3">
@@ -137,21 +137,21 @@ export default function MyProperties() {
 
         {/* Content */}
         <div className="p-4">
-          <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1">{property.title}</h3>
-          <div className="flex items-center text-sm text-gray-500 mb-3">
+          <h3 className="font-semibold text-slate-900 mb-1 line-clamp-1">{property.title}</h3>
+          <div className="flex items-center text-sm text-slate-500 mb-3">
             <MapPin className="w-3.5 h-3.5 mr-1 shrink-0" />
             <span className="line-clamp-1">{property.city}, {property.postalCode}</span>
           </div>
 
           {/* Characteristics */}
-          <div className="flex items-center gap-3 text-sm text-gray-500 mb-3 pb-3 border-b border-gray-100">
+          <div className="flex items-center gap-3 text-sm text-slate-500 mb-3 pb-3 border-b border-slate-100">
             <span className="flex items-center gap-1"><Bed className="w-3.5 h-3.5" />{property.bedrooms} ch.</span>
             <span className="flex items-center gap-1"><Bath className="w-3.5 h-3.5" />{property.bathrooms} sdb</span>
             <span className="flex items-center gap-1"><Square className="w-3.5 h-3.5" />{property.surface}m²</span>
           </div>
 
           {/* Stats */}
-          <div className="flex items-center gap-3 text-xs text-gray-400 mb-4">
+          <div className="flex items-center gap-3 text-xs text-slate-400 mb-4">
             <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" />{property.views} vues</span>
             <span className="flex items-center gap-1"><MessageSquare className="w-3.5 h-3.5" />{property.contactCount} contacts</span>
           </div>
@@ -186,7 +186,7 @@ export default function MyProperties() {
             <button
               onClick={() => handleDelete(property.id, property.title)}
               disabled={deletingId === property.id}
-              className="p-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+              className="p-1.5 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
               title="Supprimer"
             >
               <Trash2 className="w-4 h-4" />
@@ -199,29 +199,29 @@ export default function MyProperties() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-slate-50">
 
         {/* Header */}
         <div className="bg-white border-b">
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-start justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
                   <Home className="w-7 h-7 text-primary-600" />
                   Mes Proprietes
                 </h1>
-                <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                  <span><strong className="text-gray-900">{myPropertiesTotal}</strong> bien{myPropertiesTotal > 1 ? 's' : ''} au total</span>
+                <div className="flex items-center gap-4 mt-2 text-sm text-slate-500">
+                  <span><strong className="text-slate-900">{myPropertiesTotal}</strong> bien{myPropertiesTotal > 1 ? 's' : ''} au total</span>
                   {counts['en-location'] > 0 && (
                     <>
-                      <span className="text-gray-300">|</span>
-                      <span><strong className="text-blue-600">{counts['en-location']}</strong> en location</span>
+                      <span className="text-slate-300">|</span>
+                      <span><strong className="text-primary-600">{counts['en-location']}</strong> en location</span>
                     </>
                   )}
                   {counts['disponibles'] > 0 && (
                     <>
-                      <span className="text-gray-300">|</span>
-                      <span><strong className="text-green-600">{counts['disponibles']}</strong> disponible{counts['disponibles'] > 1 ? 's' : ''}</span>
+                      <span className="text-slate-300">|</span>
+                      <span><strong className="text-success-600">{counts['disponibles']}</strong> disponible{counts['disponibles'] > 1 ? 's' : ''}</span>
                     </>
                   )}
                 </div>
@@ -246,7 +246,7 @@ export default function MyProperties() {
                     className={`flex items-center gap-2 px-5 py-4 text-sm font-medium transition-colors border-b-2 ${
                       activeTab === tab.key
                         ? `${tab.color} border-current`
-                        : 'text-gray-500 border-transparent hover:text-gray-700'
+                        : 'text-slate-500 border-transparent hover:text-slate-700'
                     }`}
                   >
                     {tab.label}
@@ -254,7 +254,7 @@ export default function MyProperties() {
                       <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
                         activeTab === tab.key
                           ? `${tab.activeColor} text-white`
-                          : 'bg-gray-100 text-gray-600'
+                          : 'bg-slate-100 text-slate-600'
                       }`}>
                         {counts[tab.key]}
                       </span>
@@ -290,11 +290,11 @@ export default function MyProperties() {
           {/* Empty state — no properties at all */}
           {!isLoading && myProperties.length === 0 && (
             <div className="text-center py-20">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Home className="w-8 h-8 text-gray-400" />
+              <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Home className="w-8 h-8 text-slate-400" />
               </div>
-              <h2 className="text-xl font-semibold text-gray-700 mb-2">Aucune propriete</h2>
-              <p className="text-gray-400 mb-6">Commencez par ajouter votre premier bien immobilier.</p>
+              <h2 className="text-xl font-semibold text-slate-700 mb-2">Aucune propriete</h2>
+              <p className="text-slate-400 mb-6">Commencez par ajouter votre premier bien immobilier.</p>
               <Link to="/properties/new" className="btn btn-primary inline-flex">
                 <Plus className="w-5 h-5 mr-2" />
                 Ajouter un bien
@@ -305,7 +305,7 @@ export default function MyProperties() {
           {/* Empty state — tab filter yields nothing */}
           {!isLoading && myProperties.length > 0 && filtered.length === 0 && (
             <div className="text-center py-16">
-              <p className="text-gray-400 text-sm">
+              <p className="text-slate-400 text-sm">
                 Aucun bien dans cette categorie.
               </p>
             </div>

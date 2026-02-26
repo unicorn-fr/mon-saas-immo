@@ -59,14 +59,14 @@ export const CancelBookingModal = ({
                 <AlertTriangle className="w-5 h-5 text-red-600" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-gray-900">Annuler la reservation</h2>
-                <p className="text-sm text-gray-500">Cette action est irreversible</p>
+                <h2 className="text-lg font-bold text-slate-900">Annuler la reservation</h2>
+                <p className="text-sm text-slate-500">Cette action est irreversible</p>
               </div>
             </div>
             <button
               onClick={handleClose}
               disabled={isLoading}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-slate-400 hover:text-slate-600 dark:text-slate-400 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -76,7 +76,7 @@ export const CancelBookingModal = ({
           <form onSubmit={handleSubmit} className="p-6">
             <label
               htmlFor="cancel-reason"
-              className="block text-sm font-medium text-gray-700 mb-2"
+              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
             >
               Raison de l'annulation <span className="text-red-500">*</span>
             </label>
@@ -88,8 +88,8 @@ export const CancelBookingModal = ({
                 if (error) setError('')
               }}
               rows={4}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none ${
-                error ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none ${
+                error ? 'border-red-300' : 'border-slate-300'
               }`}
               placeholder="Indiquez la raison de l'annulation..."
               disabled={isLoading}
@@ -105,14 +105,14 @@ export const CancelBookingModal = ({
                 type="button"
                 onClick={handleClose}
                 disabled={isLoading}
-                className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="px-4 py-2 text-slate-700 dark:text-slate-300 bg-white border border-slate-300 rounded-xl hover:bg-slate-50/50 transition-colors disabled:opacity-50"
               >
                 Retour
               </button>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {isLoading ? (
                   <>

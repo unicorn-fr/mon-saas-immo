@@ -95,12 +95,12 @@ export const ContactModal = ({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Contacter le propriétaire</h2>
-            <p className="text-sm text-gray-600 mt-1 line-clamp-1">{propertyTitle}</p>
+            <h2 className="text-2xl font-bold text-slate-900">Contacter le propriétaire</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 line-clamp-1">{propertyTitle}</p>
           </div>
           <button
             onClick={onClose}
-            className="w-10 h-10 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors"
+            className="w-10 h-10 rounded-xl hover:bg-slate-100 flex items-center justify-center transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -110,11 +110,11 @@ export const ContactModal = ({
         <div className="p-6">
           {/* Success Message */}
           {success && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
-              <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <div className="mb-6 p-4 bg-success-50 border border-success-100 rounded-xl flex items-start gap-3">
+              <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-green-900">Message envoye !</p>
-                <p className="text-sm text-green-700 mt-1">
+                <p className="text-sm font-medium text-success-700">Message envoye !</p>
+                <p className="text-sm text-success-700 mt-1">
                   {isAuthenticated
                     ? 'Votre message a ete envoye. Vous allez etre redirige vers la messagerie.'
                     : 'Le proprietaire a recu votre message et vous repondra dans les plus brefs delais.'}
@@ -125,11 +125,11 @@ export const ContactModal = ({
 
           {/* Not Authenticated Notice */}
           {!isAuthenticated && (
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="mb-6 p-4 bg-primary-50 border border-primary-200 rounded-xl">
               <p className="text-sm text-blue-900">
                 Vous n'etes pas connecte. Vous pouvez toujours envoyer un message, mais nous
                 vous recommandons de{' '}
-                <Link to="/login" className="font-medium text-blue-700 hover:underline">
+                <Link to="/login" className="font-medium text-primary-700 hover:underline">
                   vous connecter
                 </Link>{' '}
                 pour suivre vos echanges dans la messagerie.
@@ -139,7 +139,7 @@ export const ContactModal = ({
 
           {/* Error Message */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
               <p className="text-sm text-red-800">{error}</p>
             </div>
@@ -148,7 +148,7 @@ export const ContactModal = ({
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 <User className="w-4 h-4 inline mr-1" />
                 Votre nom *
               </label>
@@ -164,7 +164,7 @@ export const ContactModal = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 <Mail className="w-4 h-4 inline mr-1" />
                 Votre email *
               </label>
@@ -180,7 +180,7 @@ export const ContactModal = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 <Phone className="w-4 h-4 inline mr-1" />
                 Votre telephone (optionnel)
               </label>
@@ -195,7 +195,7 @@ export const ContactModal = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 <MessageSquare className="w-4 h-4 inline mr-1" />
                 Votre message *
               </label>
@@ -208,15 +208,15 @@ export const ContactModal = ({
                 className="input"
                 required
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Presentez-vous et expliquez votre projet de location
               </p>
             </div>
 
             {/* Tips */}
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm font-medium text-gray-900 mb-2">Conseils</p>
-              <ul className="text-sm text-gray-700 space-y-1">
+            <div className="p-4 bg-slate-50/50 rounded-xl">
+              <p className="text-sm font-medium text-slate-900 mb-2">Conseils</p>
+              <ul className="text-sm text-slate-700 dark:text-slate-300 space-y-1">
                 <li>- Presentez-vous brievement (situation professionnelle, familiale)</li>
                 <li>- Indiquez votre date d'emmenagement souhaitee</li>
                 <li>- Mentionnez si vous avez des garanties (garant, CDI, etc.)</li>

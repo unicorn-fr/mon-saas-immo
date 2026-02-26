@@ -83,17 +83,17 @@ export default function Notifications() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-slate-50 py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-slate-900 mb-2 flex items-center gap-3">
                 <Bell className="w-8 h-8 text-primary-600" />
                 Notifications
               </h1>
-              <p className="text-gray-600">
+              <p className="text-slate-600">
                 {notificationsTotal} notification{notificationsTotal > 1 ? 's' : ''}
                 {unreadCount > 0 && (
                   <span className="ml-2 text-primary-600 font-medium">
@@ -110,7 +110,7 @@ export default function Notifications() {
                   <button
                     onClick={handleMarkAllAsRead}
                     disabled={actionLoading === 'mark-all'}
-                    className="px-4 py-2 text-sm font-medium text-primary-600 hover:bg-primary-50 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                    className="px-4 py-2 text-sm font-medium text-primary-600 hover:bg-primary-50 rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2"
                   >
                     {actionLoading === 'mark-all' ? (
                       <Loader className="w-4 h-4 animate-spin" />
@@ -123,7 +123,7 @@ export default function Notifications() {
                 <button
                   onClick={handleDeleteAll}
                   disabled={actionLoading === 'delete-all'}
-                  className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                  className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2"
                 >
                   {actionLoading === 'delete-all' ? (
                     <Loader className="w-4 h-4 animate-spin" />
@@ -137,7 +137,7 @@ export default function Notifications() {
           </div>
 
           {/* Filters */}
-          <div className="flex items-center gap-2 bg-white rounded-lg p-1 border inline-flex">
+          <div className="flex items-center gap-2 bg-white rounded-xl p-1 border inline-flex">
             <button
               onClick={() => setFilterMode('all')}
               className={`
@@ -145,7 +145,7 @@ export default function Notifications() {
                 ${
                   filterMode === 'all'
                     ? 'bg-primary-600 text-white'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                 }
               `}
             >
@@ -158,7 +158,7 @@ export default function Notifications() {
                 ${
                   filterMode === 'unread'
                     ? 'bg-primary-600 text-white'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                 }
               `}
             >
@@ -183,12 +183,12 @@ export default function Notifications() {
             <Loader className="w-8 h-8 text-primary-600 animate-spin" />
           </div>
         ) : notifications.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-            <Bell className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
+            <Bell className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-slate-900 mb-2">
               {filterMode === 'unread' ? 'Aucune notification non lue' : 'Aucune notification'}
             </h3>
-            <p className="text-gray-600">
+            <p className="text-slate-600">
               {filterMode === 'unread'
                 ? 'Vous êtes à jour ! Toutes vos notifications ont été lues.'
                 : 'Vous n\'avez pas encore de notifications.'}
@@ -207,7 +207,7 @@ export default function Notifications() {
                   disabled={isDeleting}
                   className={`
                     w-full p-5 bg-white rounded-xl shadow-sm border transition-all hover:shadow-md text-left
-                    ${!notification.isRead ? 'border-primary-200 bg-primary-50/30' : 'border-gray-200'}
+                    ${!notification.isRead ? 'border-primary-200 bg-primary-50/30' : 'border-slate-200'}
                     ${isDeleting ? 'opacity-50 cursor-not-allowed' : ''}
                   `}
                 >
@@ -224,7 +224,7 @@ export default function Notifications() {
                       <div className="flex items-start justify-between mb-2">
                         <h4
                           className={`text-base font-semibold ${
-                            !notification.isRead ? 'text-gray-900' : 'text-gray-700'
+                            !notification.isRead ? 'text-slate-900' : 'text-slate-700'
                           }`}
                         >
                           {notification.title}
@@ -239,7 +239,7 @@ export default function Notifications() {
                           <button
                             onClick={(e) => handleDelete(notification.id, e)}
                             disabled={isDeleting}
-                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors disabled:opacity-50"
                             title="Supprimer"
                           >
                             {isDeleting ? (
@@ -250,8 +250,8 @@ export default function Notifications() {
                           </button>
                         </div>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">{notification.message}</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-sm text-slate-600 mb-2">{notification.message}</p>
+                      <p className="text-xs text-slate-500">
                         {format(new Date(notification.createdAt), 'PPPp', { locale: fr })}
                       </p>
                     </div>
@@ -264,7 +264,7 @@ export default function Notifications() {
 
         {/* Results Count */}
         {notifications.length > 0 && (
-          <div className="mt-6 text-center text-sm text-gray-600">
+          <div className="mt-6 text-center text-sm text-slate-600">
             Affichage de {notifications.length} sur {notificationsTotal} notification
             {notificationsTotal > 1 ? 's' : ''}
           </div>

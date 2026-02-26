@@ -224,11 +224,11 @@ export const ETAT_LABELS: Record<EtatElement, string> = {
 }
 
 export const ETAT_COLORS: Record<EtatElement, string> = {
-  NEUF: 'text-blue-600 bg-blue-50',
-  BON: 'text-green-600 bg-green-50',
-  USAGE: 'text-yellow-600 bg-yellow-50',
+  NEUF: 'text-primary-600 bg-primary-50',
+  BON: 'text-success-600 bg-success-50',
+  USAGE: 'text-warning-600 bg-warning-50',
   MAUVAIS: 'text-red-600 bg-red-50',
-  NA: 'text-gray-400 bg-gray-50',
+  NA: 'text-slate-400 bg-slate-50',
 }
 
 /**

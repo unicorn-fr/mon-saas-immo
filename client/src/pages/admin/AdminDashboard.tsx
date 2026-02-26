@@ -59,10 +59,10 @@ export default function AdminDashboard() {
   }) => {
     const colorClasses = {
       primary: 'bg-primary-100 text-primary-600',
-      green: 'bg-green-100 text-green-600',
-      yellow: 'bg-yellow-100 text-yellow-600',
+      green: 'bg-success-100 text-success-600',
+      yellow: 'bg-warning-100 text-warning-600',
       red: 'bg-red-100 text-red-600',
-      blue: 'bg-blue-100 text-blue-600',
+      blue: 'bg-primary-100 text-primary-600',
       purple: 'bg-purple-100 text-purple-600',
     }
 
@@ -70,11 +70,11 @@ export default function AdminDashboard() {
       <div className="card hover:shadow-lg transition-shadow">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <p className="text-sm text-gray-600 mb-1">{label}</p>
-            <p className="text-3xl font-bold text-gray-900 mb-1">{value}</p>
-            {subtext && <p className="text-sm text-gray-500">{subtext}</p>}
+            <p className="text-sm text-slate-600 mb-1">{label}</p>
+            <p className="text-3xl font-bold text-slate-900 mb-1">{value}</p>
+            {subtext && <p className="text-sm text-slate-500">{subtext}</p>}
           </div>
-          <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${colorClasses[color]}`}>
+          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${colorClasses[color]}`}>
             <Icon className="w-6 h-6" />
           </div>
         </div>
@@ -93,17 +93,17 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       {/* Header */}
       <div className="bg-white border-b">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
                 <Shield className="w-7 h-7 text-primary-600" />
                 Administration
               </h1>
-              <p className="text-gray-600 mt-1">Gestion de la plateforme</p>
+              <p className="text-slate-600 mt-1">Gestion de la plateforme</p>
             </div>
             <Link to="/admin/users" className="btn btn-primary">
               <Users className="w-5 h-5 mr-2" />
@@ -117,7 +117,7 @@ export default function AdminDashboard() {
       <div className="container mx-auto px-4 py-8">
         {/* Users Stats */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Utilisateurs</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">Utilisateurs</h2>
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <StatCard
               icon={Users}
@@ -157,7 +157,7 @@ export default function AdminDashboard() {
 
         {/* Properties Stats */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Propriétés</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">Propriétés</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <StatCard
               icon={HomeIcon}
@@ -192,7 +192,7 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Bookings */}
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Visites</h2>
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">Visites</h2>
             <div className="grid grid-cols-2 gap-4">
               <StatCard
                 icon={Calendar}
@@ -223,7 +223,7 @@ export default function AdminDashboard() {
 
           {/* Contracts */}
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Contrats</h2>
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">Contrats</h2>
             <div className="grid grid-cols-2 gap-4">
               <StatCard
                 icon={FileText}
@@ -255,7 +255,7 @@ export default function AdminDashboard() {
 
         {/* Activity Stats */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Activité</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">Activité</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <StatCard
               icon={Eye}
@@ -283,7 +283,7 @@ export default function AdminDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Recent Users */}
             <div className="card">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
                 <Users className="w-5 h-5 text-primary-600" />
                 Utilisateurs Récents
               </h3>
@@ -292,27 +292,27 @@ export default function AdminDashboard() {
                   <Link
                     key={user.id}
                     to={`/admin/users/${user.id}`}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="flex items-center justify-between p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors"
                   >
                     <div>
-                      <p className="font-medium text-gray-900">
+                      <p className="font-medium text-slate-900">
                         {user.firstName} {user.lastName}
                       </p>
-                      <p className="text-sm text-gray-600">{user.email}</p>
+                      <p className="text-sm text-slate-600">{user.email}</p>
                     </div>
                     <div className="text-right">
                       <span
                         className={`text-xs px-2 py-1 rounded-full ${
                           user.role === 'OWNER'
-                            ? 'bg-blue-100 text-blue-700'
+                            ? 'bg-primary-100 text-primary-700'
                             : user.role === 'TENANT'
-                            ? 'bg-green-100 text-green-700'
+                            ? 'bg-success-100 text-success-700'
                             : 'bg-purple-100 text-purple-700'
                         }`}
                       >
                         {user.role}
                       </span>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-slate-500 mt-1">
                         {format(new Date(user.createdAt), 'dd MMM', { locale: fr })}
                       </p>
                     </div>
@@ -323,7 +323,7 @@ export default function AdminDashboard() {
 
             {/* Recent Properties */}
             <div className="card">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
                 <HomeIcon className="w-5 h-5 text-primary-600" />
                 Propriétés Récentes
               </h3>
@@ -331,11 +331,11 @@ export default function AdminDashboard() {
                 {activity.properties.slice(0, 5).map((property) => (
                   <div
                     key={property.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    className="flex items-center justify-between p-3 bg-slate-50 rounded-xl"
                   >
                     <div className="flex-1">
-                      <p className="font-medium text-gray-900">{property.title}</p>
-                      <p className="text-sm text-gray-600">
+                      <p className="font-medium text-slate-900">{property.title}</p>
+                      <p className="text-sm text-slate-600">
                         {property.city} • {property.owner.firstName} {property.owner.lastName}
                       </p>
                     </div>
@@ -343,15 +343,15 @@ export default function AdminDashboard() {
                       <span
                         className={`text-xs px-2 py-1 rounded-full ${
                           property.status === 'AVAILABLE'
-                            ? 'bg-green-100 text-green-700'
+                            ? 'bg-success-100 text-success-700'
                             : property.status === 'OCCUPIED'
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-yellow-100 text-yellow-700'
+                            ? 'bg-primary-100 text-primary-700'
+                            : 'bg-warning-100 text-warning-700'
                         }`}
                       >
                         {property.status}
                       </span>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-slate-500 mt-1">
                         {format(new Date(property.createdAt), 'dd MMM', { locale: fr })}
                       </p>
                     </div>

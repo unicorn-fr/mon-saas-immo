@@ -98,11 +98,11 @@ export const SearchMap = ({
           <div class="p-2" style="min-width: 200px;">
             ${
               property.images && property.images[0]
-                ? `<img src="${property.images[0]}" alt="${property.title}" class="w-full h-32 object-cover rounded-lg mb-2" />`
+                ? `<img src="${property.images[0]}" alt="${property.title}" class="w-full h-32 object-cover rounded-xl mb-2" />`
                 : ''
             }
-            <h4 class="font-semibold text-gray-900 mb-1 line-clamp-1">${property.title}</h4>
-            <p class="text-sm text-gray-600 mb-2 flex items-center gap-1">
+            <h4 class="font-semibold text-slate-900 mb-1 line-clamp-1">${property.title}</h4>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mb-2 flex items-center gap-1">
               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -113,7 +113,7 @@ export const SearchMap = ({
               <p class="text-lg font-bold text-primary-600">${property.price}€/mois</p>
               <button 
                 onclick="window.location.href='/property/${property.id}'" 
-                class="text-xs px-3 py-1 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                class="text-xs px-3 py-1 bg-primary-600 text-white rounded-xl hover:bg-primary-700"
               >
                 Voir
               </button>
@@ -156,10 +156,10 @@ export const SearchMap = ({
 
   if (propertiesWithCoords.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center bg-gray-100">
+      <div className="h-full flex items-center justify-center bg-slate-100">
         <div className="text-center">
-          <MapPin className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-600">
+          <MapPin className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+          <p className="text-slate-600 dark:text-slate-400">
             Aucune propriété avec coordonnées GPS disponible
           </p>
         </div>
@@ -177,8 +177,8 @@ export const SearchMap = ({
       <div ref={mapRef} className="h-full w-full" />
 
       {/* Info overlay */}
-      <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-3 z-[1000]">
-        <p className="text-sm font-medium text-gray-900">
+      <div className="absolute top-4 left-4 bg-white rounded-xl shadow-lg p-3 z-[1000]">
+        <p className="text-sm font-medium text-slate-900">
           {propertiesWithCoords.length} bien{propertiesWithCoords.length > 1 ? 's' : ''} sur la
           carte
         </p>

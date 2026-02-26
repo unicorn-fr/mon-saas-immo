@@ -54,13 +54,13 @@ export const NOTIFICATION_TYPES: Record<
 > = {
   booking_new: {
     icon: '📅',
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-50',
+    color: 'text-primary-600',
+    bgColor: 'bg-primary-50',
   },
   booking_confirmed: {
     icon: '✅',
-    color: 'text-green-600',
-    bgColor: 'bg-green-50',
+    color: 'text-success-600',
+    bgColor: 'bg-success-50',
   },
   booking_cancelled: {
     icon: '❌',
@@ -74,17 +74,17 @@ export const NOTIFICATION_TYPES: Record<
   },
   property_match: {
     icon: '🏠',
-    color: 'text-yellow-600',
-    bgColor: 'bg-yellow-50',
+    color: 'text-warning-600',
+    bgColor: 'bg-warning-50',
   },
   property_status: {
     icon: 'ℹ️',
-    color: 'text-gray-600',
-    bgColor: 'bg-gray-50',
+    color: 'text-slate-600',
+    bgColor: 'bg-slate-50',
   },
   default: {
     icon: '🔔',
-    color: 'text-gray-600',
-    bgColor: 'bg-gray-50',
+    color: 'text-slate-600',
+    bgColor: 'bg-slate-50',
   },
 }

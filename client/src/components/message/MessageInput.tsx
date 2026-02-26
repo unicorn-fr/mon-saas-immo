@@ -109,10 +109,10 @@ export const MessageInput = ({
   }
 
   return (
-    <div className="p-4 bg-white border-t">
+    <div className="p-4 border-t" style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
       {/* Upload Error */}
       {uploadError && (
-        <div className="mb-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
+        <div className="mb-2 px-3 py-2 bg-red-50 border border-red-200 rounded-xl flex items-center justify-between">
           <p className="text-sm text-red-700">{uploadError}</p>
           <button onClick={() => setUploadError(null)} className="text-red-400 hover:text-red-600">
             <X className="w-4 h-4" />
@@ -126,14 +126,14 @@ export const MessageInput = ({
           {attachments.map((attachment, index) => (
             <div
               key={index}
-              className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg text-sm"
+              className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-xl text-sm"
             >
-              <FileText className="w-4 h-4 text-gray-600" />
-              <span className="text-gray-700 max-w-[150px] truncate">{attachment.name}</span>
-              <span className="text-gray-400 text-xs">({formatFileSize(attachment.size)})</span>
+              <FileText className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+              <span className="text-slate-700 dark:text-slate-300 max-w-[150px] truncate">{attachment.name}</span>
+              <span className="text-slate-400 text-xs">({formatFileSize(attachment.size)})</span>
               <button
                 onClick={() => removeAttachment(index)}
-                className="text-gray-400 hover:text-red-600 ml-1"
+                className="text-slate-400 hover:text-red-600 ml-1"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -158,7 +158,7 @@ export const MessageInput = ({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="p-2 text-gray-400 hover:text-primary-600 transition-colors rounded-lg hover:bg-gray-100"
+            className="p-2 text-slate-400 hover:text-primary-600 transition-colors rounded-xl hover:bg-slate-100"
             title="Ajouter un fichier (max 5 Mo)"
             disabled={isSending || isUploading || attachments.length >= 5}
           >
@@ -179,11 +179,14 @@ export const MessageInput = ({
             placeholder={placeholder}
             rows={1}
             disabled={isSending}
-            className="w-full px-4 py-2 border border-gray-300 rounded-xl resize-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-4 py-2 rounded-xl resize-none focus:ring-2 focus:ring-primary-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
               minHeight: '42px',
               maxHeight: '120px',
               height: 'auto',
+              backgroundColor: 'var(--surface-subtle)',
+              border: '1px solid var(--border)',
+              color: 'var(--text-primary)',
             }}
             onInput={(e) => {
               const target = e.target as HTMLTextAreaElement
@@ -197,7 +200,8 @@ export const MessageInput = ({
         <button
           onClick={handleSubmit}
           disabled={(!content.trim() && attachments.length === 0) || isSending}
-          className="p-2.5 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+          className="p-2.5 text-white rounded-xl transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+          style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #7c3aed 100%)' }}
           title="Envoyer (Enter)"
         >
           {isSending ? (
@@ -209,9 +213,9 @@ export const MessageInput = ({
       </div>
 
       {/* Helper Text */}
-      <p className="text-xs text-gray-500 mt-2">
-        <kbd className="px-1 py-0.5 bg-gray-100 rounded text-xs">Entree</kbd> pour envoyer,{' '}
-        <kbd className="px-1 py-0.5 bg-gray-100 rounded text-xs">Maj + Entree</kbd> pour une
+      <p className="text-xs text-slate-500 mt-2">
+        <kbd className="px-1 py-0.5 rounded text-xs" style={{ backgroundColor: 'var(--surface-subtle)', color: 'var(--text-secondary)' }}>Entree</kbd> pour envoyer,{' '}
+        <kbd className="px-1 py-0.5 rounded text-xs" style={{ backgroundColor: 'var(--surface-subtle)', color: 'var(--text-secondary)' }}>Maj + Entree</kbd> pour une
         nouvelle ligne
       </p>
     </div>

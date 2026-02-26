@@ -111,13 +111,13 @@ export default function SearchProperties() {
 
   return (
     <Layout>
-      <div className="bg-gray-50">
+      <div className="bg-slate-50">
         {/* Search Bar Section */}
         <div className="bg-white border-b">
           <div className="container mx-auto px-4 py-4">
             <form onSubmit={handleSearch} className="flex gap-3">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
                 type="text"
                 value={searchQuery}
@@ -132,7 +132,7 @@ export default function SearchProperties() {
                     setSearchQuery('')
                     setSearchParams({})
                   }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -176,8 +176,8 @@ export default function SearchProperties() {
                     <span className="ml-2 w-2 h-2 bg-white rounded-full"></span>
                   )}
                 </button>
-                <p className="text-gray-600">
-                  <span className="font-semibold text-gray-900">{propertiesTotal}</span>{' '}
+                <p className="text-slate-600">
+                  <span className="font-semibold text-slate-900">{propertiesTotal}</span>{' '}
                   {propertiesTotal > 1 ? 'biens trouvés' : 'bien trouvé'}
                 </p>
               </div>
@@ -202,13 +202,13 @@ export default function SearchProperties() {
                 </select>
 
                 {/* View Mode */}
-                <div className="flex border rounded-lg overflow-hidden">
+                <div className="flex border rounded-xl overflow-hidden">
                   <button
                     onClick={() => setViewMode('grid')}
                     className={`p-2 ${
                       viewMode === 'grid'
                         ? 'bg-primary-600 text-white'
-                        : 'bg-white text-gray-600 hover:bg-gray-50'
+                        : 'bg-white text-slate-600 hover:bg-slate-50'
                     }`}
                     title="Vue grille"
                   >
@@ -219,7 +219,7 @@ export default function SearchProperties() {
                     className={`p-2 ${
                       viewMode === 'list'
                         ? 'bg-primary-600 text-white'
-                        : 'bg-white text-gray-600 hover:bg-gray-50'
+                        : 'bg-white text-slate-600 hover:bg-slate-50'
                     }`}
                     title="Vue liste"
                   >
@@ -230,7 +230,7 @@ export default function SearchProperties() {
                     className={`p-2 ${
                       viewMode === 'map'
                         ? 'bg-primary-600 text-white'
-                        : 'bg-white text-gray-600 hover:bg-gray-50'
+                        : 'bg-white text-slate-600 hover:bg-slate-50'
                     }`}
                     title="Vue carte"
                   >
@@ -242,7 +242,7 @@ export default function SearchProperties() {
 
             {/* Error */}
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-red-800">{error}</p>
               </div>
@@ -258,11 +258,11 @@ export default function SearchProperties() {
             {/* Empty State */}
             {!isLoading && properties.length === 0 && (
               <div className="text-center py-20">
-                <HomeIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+                <HomeIcon className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                <h2 className="text-2xl font-semibold text-slate-900 mb-2">
                   Aucun bien trouvé
                 </h2>
-                <p className="text-gray-600 mb-6">
+                <p className="text-slate-600 mb-6">
                   Essayez de modifier vos critères de recherche
                 </p>
                 {hasActiveFilters && (
@@ -277,7 +277,7 @@ export default function SearchProperties() {
             {!isLoading && properties.length > 0 && (
               <>
                 {viewMode === 'map' ? (
-                  <div className="h-[calc(100vh-280px)] rounded-lg overflow-hidden border border-gray-200">
+                  <div className="h-[calc(100vh-280px)] rounded-xl overflow-hidden border border-slate-200">
                     <SearchMap
                       properties={properties}
                       selectedPropertyId={selectedPropertyId}
@@ -330,10 +330,10 @@ export default function SearchProperties() {
                               <button
                                 key={pageNum}
                                 onClick={() => setCurrentPage(pageNum)}
-                                className={`w-10 h-10 rounded-lg font-medium ${
+                                className={`w-10 h-10 rounded-xl font-medium ${
                                   currentPage === pageNum
                                     ? 'bg-primary-600 text-white'
-                                    : 'bg-white text-gray-700 hover:bg-gray-50 border'
+                                    : 'bg-white text-slate-700 hover:bg-slate-50 border'
                                 }`}
                               >
                                 {pageNum}

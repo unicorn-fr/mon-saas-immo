@@ -35,30 +35,29 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-2xl font-bold text-gray-900"
-          >
-            <Home className="w-8 h-8 text-primary-500" />
-            ImmoParticuliers
+          <Link to="/" className="inline-flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+            <div className="w-9 h-9 bg-primary-700 rounded-xl flex items-center justify-center">
+              <Home className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold text-slate-900 font-heading">ImmoParticuliers</span>
           </Link>
         </div>
 
         <div className="card">
           {isSent ? (
             <div className="text-center">
-              <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-gray-900 mb-2">
+              <CheckCircle className="w-16 h-16 text-success-500 mx-auto mb-4" />
+              <h2 className="text-xl font-bold text-slate-900 mb-2">
                 Email envoye !
               </h2>
-              <p className="text-gray-600 mb-6">
+              <p className="text-slate-600 mb-6">
                 Si un compte existe avec l'adresse <strong>{email}</strong>, vous
                 recevrez un lien de reinitialisation.
               </p>
-              <p className="text-sm text-gray-500 mb-6">
+              <p className="text-sm text-slate-500 mb-6">
                 Pensez a verifier vos spams si vous ne recevez rien.
               </p>
               <Link to="/login" className="btn btn-primary w-full">
@@ -70,12 +69,12 @@ export default function ForgotPassword() {
               <h2 className="text-2xl font-bold text-center mb-2">
                 Mot de passe oublie ?
               </h2>
-              <p className="text-gray-600 text-center mb-6">
+              <p className="text-slate-600 text-center mb-6">
                 Entrez votre email et nous vous enverrons un lien pour reinitialiser votre mot de passe.
               </p>
 
               {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
                   <p className="text-sm text-red-800">{error}</p>
                 </div>
               )}
@@ -84,12 +83,12 @@ export default function ForgotPassword() {
                 <div>
                   <label
                     htmlFor="email"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className="block text-sm font-medium text-slate-700 mb-2"
                   >
                     Adresse email
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <input
                       id="email"
                       type="email"
@@ -130,7 +129,7 @@ export default function ForgotPassword() {
           <div className="mt-6 text-center">
             <Link
               to="/login"
-              className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
+              className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900"
             >
               <ArrowLeft className="w-4 h-4" />
               Retour a la connexion

@@ -95,7 +95,7 @@ export const InstallPWA = () => {
         {/* Close Button */}
         <button
           onClick={handleDismiss}
-          className="absolute top-3 right-3 p-1 hover:bg-white/20 rounded-lg transition-colors"
+          className="absolute top-3 right-3 p-1 hover:bg-white/20 rounded-xl transition-colors"
           aria-label="Fermer"
         >
           <X className="w-5 h-5" />
@@ -133,7 +133,7 @@ export const InstallPWA = () => {
         {/* Install Button */}
         <button
           onClick={handleInstallClick}
-          className="w-full px-6 py-3 bg-white text-primary-700 rounded-lg font-semibold hover:bg-primary-50 transition-colors flex items-center justify-center gap-2"
+          className="w-full px-6 py-3 bg-white text-primary-700 rounded-xl font-semibold hover:bg-primary-50 transition-colors flex items-center justify-center gap-2"
         >
           <Download className="w-5 h-5" />
           Installer maintenant

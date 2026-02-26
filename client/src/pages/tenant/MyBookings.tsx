@@ -70,61 +70,61 @@ export const MyBookings = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-slate-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Mes réservations</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Mes réservations</h1>
+          <p className="text-slate-600">
             Consultez et gérez vos demandes de visite
           </p>
         </div>
 
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Total</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                <p className="text-sm text-slate-600 mb-1">Total</p>
+                <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
               </div>
-              <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
-                <Home className="w-6 h-6 text-blue-600" />
+              <div className="w-12 h-12 bg-primary-50 rounded-xl flex items-center justify-center">
+                <Home className="w-6 h-6 text-primary-600" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">En attente</p>
-                <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+                <p className="text-sm text-slate-600 mb-1">En attente</p>
+                <p className="text-2xl font-bold text-warning-600">{stats.pending}</p>
               </div>
-              <div className="w-12 h-12 bg-yellow-50 rounded-lg flex items-center justify-center">
-                <Clock className="w-6 h-6 text-yellow-600" />
+              <div className="w-12 h-12 bg-warning-50 rounded-xl flex items-center justify-center">
+                <Clock className="w-6 h-6 text-warning-600" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Confirmées</p>
-                <p className="text-2xl font-bold text-green-600">{stats.confirmed}</p>
+                <p className="text-sm text-slate-600 mb-1">Confirmées</p>
+                <p className="text-2xl font-bold text-success-600">{stats.confirmed}</p>
               </div>
-              <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
-                <CheckCircle className="w-6 h-6 text-green-600" />
+              <div className="w-12 h-12 bg-success-50 rounded-xl flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-success-600" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Annulées</p>
+                <p className="text-sm text-slate-600 mb-1">Annulées</p>
                 <p className="text-2xl font-bold text-red-600">{stats.cancelled}</p>
               </div>
-              <div className="w-12 h-12 bg-red-50 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center">
                 <XCircle className="w-6 h-6 text-red-600" />
               </div>
             </div>
@@ -132,15 +132,15 @@ export const MyBookings = () => {
         </div>
 
         {/* Filters and View Toggle */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
           <div className="flex items-center gap-4">
             {/* Status Filter */}
             <div className="flex items-center gap-2 flex-1">
-              <Filter className="w-5 h-5 text-gray-400" />
+              <Filter className="w-5 h-5 text-slate-400" />
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value as BookingStatus | 'all')}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="flex-1 px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 <option value="all">Tous les statuts</option>
                 <option value="PENDING">En attente</option>
@@ -151,15 +151,15 @@ export const MyBookings = () => {
             </div>
 
             {/* View Toggle */}
-            <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+            <div className="flex items-center gap-2 bg-slate-100 rounded-xl p-1">
               <button
                 onClick={() => setViewMode('list')}
                 className={`
                   px-4 py-2 rounded-md text-sm font-medium transition-colors
                   ${
                     viewMode === 'list'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
                   }
                 `}
               >
@@ -171,8 +171,8 @@ export const MyBookings = () => {
                   px-4 py-2 rounded-md text-sm font-medium transition-colors
                   ${
                     viewMode === 'calendar'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
                   }
                 `}
               >
@@ -184,7 +184,7 @@ export const MyBookings = () => {
 
         {/* Error State */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-start gap-3">
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
             <div>
               <p className="font-medium text-red-900">Erreur</p>
@@ -208,12 +208,12 @@ export const MyBookings = () => {
         ) : (
           <div className="space-y-4">
             {bookings.length === 0 ? (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-                <CalendarIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
+                <CalendarIcon className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">
                   Aucune réservation
                 </h3>
-                <p className="text-gray-600 mb-6">
+                <p className="text-slate-600 mb-6">
                   {selectedStatus !== 'all'
                     ? 'Aucune réservation ne correspond à votre filtre.'
                     : 'Vous n\'avez pas encore de réservations. Commencez à explorer des propriétés !'}
@@ -221,7 +221,7 @@ export const MyBookings = () => {
                 {selectedStatus === 'all' && (
                   <a
                     href="/search"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors"
                   >
                     <Home className="w-5 h-5" />
                     Explorer les propriétés
@@ -244,7 +244,7 @@ export const MyBookings = () => {
 
         {/* Pagination Info */}
         {bookings.length > 0 && viewMode === 'list' && (
-          <div className="mt-6 text-center text-sm text-gray-600">
+          <div className="mt-6 text-center text-sm text-slate-600">
             Affichage de {bookings.length} sur {bookingsTotal} réservation
             {bookingsTotal > 1 ? 's' : ''}
           </div>

@@ -152,12 +152,12 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
   }
 
   const statusIcon = (doc: ContractDocument | undefined) => {
-    if (!doc) return <Clock className="w-5 h-5 text-gray-300" />
+    if (!doc) return <Clock className="w-5 h-5 text-slate-300" />
     switch (doc.status) {
       case 'UPLOADED': return <Clock className="w-5 h-5 text-blue-500" />
-      case 'VALIDATED': return <CheckCircle className="w-5 h-5 text-green-500" />
+      case 'VALIDATED': return <CheckCircle className="w-5 h-5 text-success-500" />
       case 'REJECTED': return <XCircle className="w-5 h-5 text-red-500" />
-      default: return <Clock className="w-5 h-5 text-gray-400" />
+      default: return <Clock className="w-5 h-5 text-slate-400" />
     }
   }
 
@@ -190,7 +190,7 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
 
       {/* Read-only indicator when owner views tenant docs */}
       {isOwner && userRole === 'TENANT' && (
-        <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+        <div className="flex items-center gap-2 p-3 bg-primary-50 border border-primary-200 rounded-xl text-sm text-primary-700">
           <Eye className="w-4 h-4 shrink-0" />
           <span>Mode lecture seule — Vous pouvez consulter et verifier les documents du locataire.</span>
         </div>
@@ -199,14 +199,14 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
       {/* Progress bar */}
       <div className="bg-white rounded-xl border p-4">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-semibold text-gray-900">
+          <h3 className="text-sm font-semibold text-slate-900">
             {userRole === 'OWNER' ? 'Documents proprietaire' : 'Documents locataire'}
           </h3>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-slate-500">
             {completedCount}/{checklist.length} fournis
           </span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-slate-200 rounded-full h-2">
           <div
             className="bg-primary-600 h-2 rounded-full transition-all"
             style={{ width: `${(completedCount / checklist.length) * 100}%` }}
@@ -232,7 +232,7 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-slate-900">
                       {item.label}
                     </p>
                     {item.category.startsWith('CUSTOM_') && (
@@ -242,17 +242,17 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
                       <span className="text-xs text-red-500 font-medium">Obligatoire</span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{item.description}</p>
 
                   {/* Document info */}
                   {doc && (
                     <div className="mt-2 flex items-center gap-2 text-xs">
-                      <FileText className="w-3.5 h-3.5 text-gray-400" />
-                      <span className="text-gray-600 truncate">{doc.fileName}</span>
+                      <FileText className="w-3.5 h-3.5 text-slate-400" />
+                      <span className="text-slate-600 dark:text-slate-400 truncate">{doc.fileName}</span>
                       <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
-                        doc.status === 'VALIDATED' ? 'bg-green-100 text-green-700' :
+                        doc.status === 'VALIDATED' ? 'bg-success-100 text-success-700' :
                         doc.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
-                        'bg-blue-100 text-blue-700'
+                        'bg-primary-100 text-primary-700'
                       }`}>
                         {statusLabel(doc)}
                       </span>
@@ -277,7 +277,7 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
                     <button
                       onClick={() => handleFileSelect(item.category)}
                       disabled={isLoading}
-                      className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-primary-600 transition-colors"
+                      className="p-2 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-primary-600 transition-colors"
                       title="Telecharger"
                     >
                       <Upload className="w-4 h-4" />
@@ -290,7 +290,7 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
                       href={doc.fileUrl.startsWith('http') ? doc.fileUrl : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}${doc.fileUrl}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-blue-600 transition-colors"
+                      className="p-2 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-primary-600 transition-colors"
                       title="Voir"
                     >
                       <Eye className="w-4 h-4" />
@@ -303,7 +303,7 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
                   ) && (
                     <button
                       onClick={() => handleDelete(doc.id)}
-                      className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-red-600 transition-colors"
+                      className="p-2 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-red-600 transition-colors"
                       title="Supprimer"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -315,14 +315,14 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
                     <>
                       <button
                         onClick={() => handleValidate(doc.id)}
-                        className="p-2 rounded-lg hover:bg-green-50 text-gray-500 hover:text-green-600 transition-colors"
+                        className="p-2 rounded-xl hover:bg-success-50 text-slate-500 hover:text-success-600 transition-colors"
                         title="Valider"
                       >
                         <Shield className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => setRejectingDocId(doc.id)}
-                        className="p-2 rounded-lg hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
+                        className="p-2 rounded-xl hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors"
                         title="Refuser"
                       >
                         <XCircle className="w-4 h-4" />
@@ -340,12 +340,12 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
       {rejectingDocId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Refuser le document</h3>
+            <h3 className="text-lg font-bold text-slate-900 mb-4">Refuser le document</h3>
             <textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               placeholder="Motif du refus (obligatoire)..."
-              className="w-full border rounded-lg p-3 text-sm mb-4 h-24 resize-none"
+              className="w-full border rounded-xl p-3 text-sm mb-4 h-24 resize-none"
             />
             <div className="flex gap-3 justify-end">
               <button

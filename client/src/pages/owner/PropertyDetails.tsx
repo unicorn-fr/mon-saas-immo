@@ -137,9 +137,9 @@ export default function PropertyDetails() {
   if (!currentProperty) {
     return (
       <Layout>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center">
           <div className="text-center">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">Propriété introuvable</h2>
+            <h2 className="text-2xl font-semibold text-slate-900 mb-2">Propriété introuvable</h2>
             <Link to="/properties/owner/me" className="text-primary-600 hover:text-primary-700">
               Retour à mes propriétés
             </Link>
@@ -158,10 +158,10 @@ export default function PropertyDetails() {
     if (!propertyStatus) return null
 
     const colorClasses = {
-      green: 'bg-green-100 text-green-800',
+      green: 'bg-success-100 text-success-700',
       red: 'bg-red-100 text-red-800',
-      yellow: 'bg-yellow-100 text-yellow-800',
-      gray: 'bg-gray-100 text-gray-800',
+      yellow: 'bg-warning-100 text-warning-700',
+      gray: 'bg-slate-100 text-slate-800',
     }
 
     return (
@@ -182,17 +182,17 @@ export default function PropertyDetails() {
         <div className="container mx-auto px-4 py-4">
           <Link
             to="/properties/owner/me"
-            className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-2"
+            className="inline-flex items-center text-slate-600 hover:text-slate-900 mb-2"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
             Retour à mes propriétés
           </Link>
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">{property.title}</h1>
+              <h1 className="text-2xl font-bold text-slate-900 mb-2">{property.title}</h1>
               <div className="flex items-center gap-3">
                 {getStatusBadge()}
-                <span className="text-gray-600">{propertyType?.label}</span>
+                <span className="text-slate-600">{propertyType?.label}</span>
               </div>
             </div>
             <div className="flex gap-2">
@@ -241,7 +241,7 @@ export default function PropertyDetails() {
       {/* Error Message */}
       {error && (
         <div className="container mx-auto px-4 mt-4">
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+          <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-red-800">{error}</p>
           </div>
@@ -255,7 +255,7 @@ export default function PropertyDetails() {
           <div className="lg:col-span-2 space-y-6">
             {/* Image Gallery */}
             <div className="card overflow-hidden">
-              <div className="relative aspect-video bg-gray-200">
+              <div className="relative aspect-video bg-slate-200">
                 <img
                   src={images[selectedImage]}
                   alt={`${property.title} - Image ${selectedImage + 1}`}
@@ -277,7 +277,7 @@ export default function PropertyDetails() {
                       className={`aspect-square rounded overflow-hidden border-2 transition-all ${
                         selectedImage === index
                           ? 'border-primary-600 ring-2 ring-primary-200'
-                          : 'border-gray-200 hover:border-gray-300'
+                          : 'border-slate-200 hover:border-slate-300'
                       }`}
                     >
                       <img
@@ -297,7 +297,7 @@ export default function PropertyDetails() {
             {/* Description */}
             <div className="card">
               <h2 className="text-xl font-semibold mb-4">Description</h2>
-              <p className="text-gray-700 whitespace-pre-line">{property.description}</p>
+              <p className="text-slate-700 whitespace-pre-line">{property.description}</p>
             </div>
 
             {/* Characteristics */}
@@ -305,57 +305,57 @@ export default function PropertyDetails() {
               <h2 className="text-xl font-semibold mb-4">Caractéristiques</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
                     <Bed className="w-5 h-5 text-primary-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Chambres</p>
+                    <p className="text-sm text-slate-600">Chambres</p>
                     <p className="font-semibold">{property.bedrooms}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
                     <Bath className="w-5 h-5 text-primary-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Salles de bain</p>
+                    <p className="text-sm text-slate-600">Salles de bain</p>
                     <p className="font-semibold">{property.bathrooms}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
                     <Square className="w-5 h-5 text-primary-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Surface</p>
+                    <p className="text-sm text-slate-600">Surface</p>
                     <p className="font-semibold">{property.surface}m²</p>
                   </div>
                 </div>
 
                 {property.floor !== null && property.floor !== undefined && (
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                    <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
                       <Home className="w-5 h-5 text-primary-600" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Étage</p>
+                      <p className="text-sm text-slate-600">Étage</p>
                       <p className="font-semibold">{property.floor}</p>
                     </div>
                   </div>
                 )}
 
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
                     {property.furnished ? (
                       <Check className="w-5 h-5 text-primary-600" />
                     ) : (
-                      <X className="w-5 h-5 text-gray-400" />
+                      <X className="w-5 h-5 text-slate-400" />
                     )}
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Meublé</p>
+                    <p className="text-sm text-slate-600">Meublé</p>
                     <p className="font-semibold">{property.furnished ? 'Oui' : 'Non'}</p>
                   </div>
                 </div>
@@ -367,33 +367,33 @@ export default function PropertyDetails() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <div className="flex items-center gap-2">
                     {property.hasParking ? (
-                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <CheckCircle className="w-5 h-5 text-success-600" />
                     ) : (
-                      <XCircle className="w-5 h-5 text-gray-300" />
+                      <XCircle className="w-5 h-5 text-slate-300" />
                     )}
                     <span className="text-sm">Parking</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {property.hasBalcony ? (
-                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <CheckCircle className="w-5 h-5 text-success-600" />
                     ) : (
-                      <XCircle className="w-5 h-5 text-gray-300" />
+                      <XCircle className="w-5 h-5 text-slate-300" />
                     )}
                     <span className="text-sm">Balcon</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {property.hasElevator ? (
-                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <CheckCircle className="w-5 h-5 text-success-600" />
                     ) : (
-                      <XCircle className="w-5 h-5 text-gray-300" />
+                      <XCircle className="w-5 h-5 text-slate-300" />
                     )}
                     <span className="text-sm">Ascenseur</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {property.hasGarden ? (
-                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <CheckCircle className="w-5 h-5 text-success-600" />
                     ) : (
-                      <XCircle className="w-5 h-5 text-gray-300" />
+                      <XCircle className="w-5 h-5 text-slate-300" />
                     )}
                     <span className="text-sm">Jardin</span>
                   </div>
@@ -410,7 +410,7 @@ export default function PropertyDetails() {
                       return amenityConfig ? (
                         <span
                           key={amenity}
-                          className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+                          className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm"
                         >
                           {amenityConfig.label}
                         </span>
@@ -425,13 +425,13 @@ export default function PropertyDetails() {
             <div className="card">
               <h2 className="text-xl font-semibold mb-4">Localisation</h2>
               <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-gray-600 mt-1" />
+                <MapPin className="w-5 h-5 text-slate-600 mt-1" />
                 <div>
                   <p className="font-medium">{property.address}</p>
-                  <p className="text-gray-600">
+                  <p className="text-slate-600">
                     {property.city}, {property.postalCode}
                   </p>
-                  <p className="text-gray-600">{property.country}</p>
+                  <p className="text-slate-600">{property.country}</p>
                 </div>
               </div>
             </div>
@@ -447,23 +447,23 @@ export default function PropertyDetails() {
               </div>
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-gray-600">Loyer mensuel</p>
+                  <p className="text-sm text-slate-600">Loyer mensuel</p>
                   <p className="text-2xl font-bold text-primary-600">{property.price}€</p>
                 </div>
                 {property.charges && property.charges > 0 && (
                   <div>
-                    <p className="text-sm text-gray-600">Charges</p>
+                    <p className="text-sm text-slate-600">Charges</p>
                     <p className="text-lg font-semibold">{property.charges}€</p>
                   </div>
                 )}
                 {property.deposit && property.deposit > 0 && (
                   <div>
-                    <p className="text-sm text-gray-600">Dépôt de garantie</p>
+                    <p className="text-sm text-slate-600">Dépôt de garantie</p>
                     <p className="text-lg font-semibold">{property.deposit}€</p>
                   </div>
                 )}
                 <div className="pt-3 border-t">
-                  <p className="text-sm text-gray-600">Total mensuel</p>
+                  <p className="text-sm text-slate-600">Total mensuel</p>
                   <p className="text-xl font-bold">
                     {property.price + (property.charges || 0)}€
                   </p>
@@ -477,33 +477,33 @@ export default function PropertyDetails() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Eye className="w-5 h-5 text-gray-600" />
-                    <span className="text-gray-700">Vues</span>
+                    <Eye className="w-5 h-5 text-slate-600" />
+                    <span className="text-slate-700">Vues</span>
                   </div>
                   <span className="font-semibold">{property.views}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <MessageSquare className="w-5 h-5 text-gray-600" />
-                    <span className="text-gray-700">Contacts</span>
+                    <MessageSquare className="w-5 h-5 text-slate-600" />
+                    <span className="text-slate-700">Contacts</span>
                   </div>
                   <span className="font-semibold">{property.contactCount}</span>
                 </div>
                 <div className="flex items-center justify-between pt-3 border-t">
                   <div className="flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-gray-600" />
-                    <span className="text-gray-700">Créé le</span>
+                    <Calendar className="w-5 h-5 text-slate-600" />
+                    <span className="text-slate-700">Créé le</span>
                   </div>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-slate-600">
                     {new Date(property.createdAt).toLocaleDateString('fr-FR')}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-gray-600" />
-                    <span className="text-gray-700">Mis à jour le</span>
+                    <Calendar className="w-5 h-5 text-slate-600" />
+                    <span className="text-slate-700">Mis à jour le</span>
                   </div>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-slate-600">
                     {new Date(property.updatedAt).toLocaleDateString('fr-FR')}
                   </span>
                 </div>
@@ -517,7 +517,7 @@ export default function PropertyDetails() {
                   <Shield className="w-5 h-5 text-primary-600" />
                   <h2 className="text-xl font-semibold">Verification du proprietaire</h2>
                 </div>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-slate-600 mb-4">
                   Documents obligatoires avant la mise en ligne du bien (anti-arnaque).
                 </p>
 
@@ -530,30 +530,30 @@ export default function PropertyDetails() {
                 />
 
                 {/* Owner ID Document */}
-                <div className={`p-3 rounded-lg border mb-3 ${property.ownerIdDocument ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+                <div className={`p-3 rounded-xl border mb-3 ${property.ownerIdDocument ? 'bg-success-50 border-success-100' : 'bg-slate-50 border-slate-200'}`}>
                   <div className="flex items-start gap-3">
                     <input
                       type="checkbox"
                       checked={true}
                       disabled
-                      className="mt-1 rounded border-gray-300 text-primary-600 opacity-60"
+                      className="mt-1 rounded border-slate-300 text-primary-600 opacity-60"
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium text-gray-900">Piece d'identite</p>
-                        <Lock className="w-3 h-3 text-gray-400" />
+                        <p className="text-sm font-medium text-slate-900">Piece d'identite</p>
+                        <Lock className="w-3 h-3 text-slate-400" />
                         <span className="text-xs text-red-500 font-medium">Obligatoire</span>
                       </div>
-                      <p className="text-xs text-gray-500 mt-0.5">Carte nationale d'identite ou passeport en cours de validite.</p>
+                      <p className="text-xs text-slate-500 mt-0.5">Carte nationale d'identite ou passeport en cours de validite.</p>
                       {property.ownerIdDocument ? (
                         <div className="mt-2 flex items-center gap-2">
-                          <CheckCircle className="w-4 h-4 text-green-500" />
-                          <span className="text-xs text-green-700 font-medium">Document fourni</span>
+                          <CheckCircle className="w-4 h-4 text-success-500" />
+                          <span className="text-xs text-success-700 font-medium">Document fourni</span>
                           <a
                             href={property.ownerIdDocument.startsWith('http') ? property.ownerIdDocument : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}${property.ownerIdDocument}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-blue-600 hover:underline ml-2"
+                            className="text-xs text-primary-600 hover:underline ml-2"
                           >
                             Voir
                           </a>
@@ -573,30 +573,30 @@ export default function PropertyDetails() {
                 </div>
 
                 {/* Property Proof Document */}
-                <div className={`p-3 rounded-lg border mb-3 ${property.propertyProofDocument ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+                <div className={`p-3 rounded-xl border mb-3 ${property.propertyProofDocument ? 'bg-success-50 border-success-100' : 'bg-slate-50 border-slate-200'}`}>
                   <div className="flex items-start gap-3">
                     <input
                       type="checkbox"
                       checked={true}
                       disabled
-                      className="mt-1 rounded border-gray-300 text-primary-600 opacity-60"
+                      className="mt-1 rounded border-slate-300 text-primary-600 opacity-60"
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium text-gray-900">Preuve de propriete</p>
-                        <Lock className="w-3 h-3 text-gray-400" />
+                        <p className="text-sm font-medium text-slate-900">Preuve de propriete</p>
+                        <Lock className="w-3 h-3 text-slate-400" />
                         <span className="text-xs text-red-500 font-medium">Obligatoire</span>
                       </div>
-                      <p className="text-xs text-gray-500 mt-0.5">Titre de propriete ou dernier avis de taxe fonciere.</p>
+                      <p className="text-xs text-slate-500 mt-0.5">Titre de propriete ou dernier avis de taxe fonciere.</p>
                       {property.propertyProofDocument ? (
                         <div className="mt-2 flex items-center gap-2">
-                          <CheckCircle className="w-4 h-4 text-green-500" />
-                          <span className="text-xs text-green-700 font-medium">Document fourni</span>
+                          <CheckCircle className="w-4 h-4 text-success-500" />
+                          <span className="text-xs text-success-700 font-medium">Document fourni</span>
                           <a
                             href={property.propertyProofDocument.startsWith('http') ? property.propertyProofDocument : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}${property.propertyProofDocument}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-blue-600 hover:underline ml-2"
+                            className="text-xs text-primary-600 hover:underline ml-2"
                           >
                             Voir
                           </a>
@@ -615,7 +615,7 @@ export default function PropertyDetails() {
                   </div>
                 </div>
 
-                <div className="text-xs text-gray-500 p-2 bg-gray-50 rounded-lg">
+                <div className="text-xs text-slate-500 p-2 bg-slate-50 rounded-xl">
                   Format : PDF uniquement - Taille max : 5 Mo
                 </div>
               </div>

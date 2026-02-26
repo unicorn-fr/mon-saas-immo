@@ -85,12 +85,12 @@ export const SignaturePad = ({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Signer le contrat</h2>
-            <p className="text-sm text-gray-600 mt-1">Signature de {signerName}</p>
+            <h2 className="text-xl font-bold text-slate-900">Signer le contrat</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Signature de {signerName}</p>
           </div>
           <button
             onClick={handleClose}
-            className="w-10 h-10 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors"
+            className="w-10 h-10 rounded-xl hover:bg-slate-100 flex items-center justify-center transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -98,8 +98,8 @@ export const SignaturePad = ({
 
         {/* Legal text + checkbox */}
         <div className="px-6 pt-6">
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
-            <p className="text-sm text-gray-700 leading-relaxed">
+          <div className="bg-slate-50/50 border border-slate-200 rounded-xl p-4 mb-4">
+            <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
               En signant electroniquement ce document, je declare avoir lu l'integralite du contrat
               et en accepter toutes les clauses et conditions. Cette signature a valeur d'engagement
               contractuel conformement au reglement eIDAS (UE 910/2014).
@@ -113,9 +113,9 @@ export const SignaturePad = ({
                 setAccepted(e.target.checked)
                 if (e.target.checked) setError('')
               }}
-              className="mt-0.5 h-5 w-5 text-primary-600 rounded border-gray-300"
+              className="mt-0.5 h-5 w-5 text-primary-600 rounded border-slate-300"
             />
-            <span className="text-sm font-medium text-gray-900">
+            <span className="text-sm font-medium text-slate-900">
               Lu et approuve - Bon pour accord
             </span>
           </label>
@@ -123,7 +123,7 @@ export const SignaturePad = ({
 
         {/* Signature canvas */}
         <div className="p-6" ref={containerRef}>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg bg-white relative">
+          <div className="border-2 border-dashed border-slate-300 rounded-xl bg-white relative">
             <SignatureCanvas
               ref={sigPad}
               penColor="black"
@@ -140,7 +140,7 @@ export const SignaturePad = ({
               }}
               onBegin={() => setError('')}
             />
-            <p className="absolute bottom-2 left-0 right-0 text-center text-xs text-gray-300 pointer-events-none">
+            <p className="absolute bottom-2 left-0 right-0 text-center text-xs text-slate-300 pointer-events-none">
               Signez dans cette zone
             </p>
           </div>

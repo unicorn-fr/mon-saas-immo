@@ -34,7 +34,7 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
   return (
     <div className="card sticky top-4">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-gray-900">Filtres</h2>
+        <h2 className="text-lg font-semibold text-slate-900">Filtres</h2>
         {hasActiveFilters && (
           <button
             onClick={onReset}
@@ -48,7 +48,7 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
       <div className="space-y-6">
         {/* Property Type */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             Type de bien
           </label>
           <select
@@ -67,7 +67,7 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
 
         {/* Price Range */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             Prix (€/mois)
           </label>
           <div className="grid grid-cols-2 gap-2">
@@ -96,7 +96,7 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
 
         {/* Surface Area */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             Surface (m²)
           </label>
           <div className="grid grid-cols-2 gap-2">
@@ -125,16 +125,16 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
 
         {/* Bedrooms */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Chambres</label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Chambres</label>
           <div className="grid grid-cols-5 gap-2">
             {[1, 2, 3, 4, 5].map((num) => (
               <button
                 key={num}
                 onClick={() => handleChange('bedrooms', filters.bedrooms === num ? undefined : num)}
-                className={`py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${
+                className={`py-2 px-3 rounded-xl border text-sm font-medium transition-colors ${
                   filters.bedrooms === num
                     ? 'bg-primary-600 text-white border-primary-600'
-                    : 'bg-white text-gray-700 border-gray-300 hover:border-primary-400'
+                    : 'bg-white text-slate-700 dark:text-slate-300 border-slate-300 hover:border-primary-400'
                 }`}
               >
                 {num === 5 ? '5+' : num}
@@ -145,7 +145,7 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
 
         {/* Bathrooms */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             Salles de bain
           </label>
           <div className="grid grid-cols-4 gap-2">
@@ -155,10 +155,10 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
                 onClick={() =>
                   handleChange('bathrooms', filters.bathrooms === num ? undefined : num)
                 }
-                className={`py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${
+                className={`py-2 px-3 rounded-xl border text-sm font-medium transition-colors ${
                   filters.bathrooms === num
                     ? 'bg-primary-600 text-white border-primary-600'
-                    : 'bg-white text-gray-700 border-gray-300 hover:border-primary-400'
+                    : 'bg-white text-slate-700 dark:text-slate-300 border-slate-300 hover:border-primary-400'
                 }`}
               >
                 {num === 4 ? '4+' : num}
@@ -171,7 +171,7 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
         <div>
           <button
             onClick={() => setShowFeatures(!showFeatures)}
-            className="flex items-center justify-between w-full text-sm font-medium text-gray-700 mb-2"
+            className="flex items-center justify-between w-full text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
           >
             <span>Caractéristiques</span>
             {showFeatures ? (
@@ -189,7 +189,7 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
                   onChange={(e) => handleChange('furnished', e.target.checked || undefined)}
                   className="mr-2"
                 />
-                <span className="text-sm text-gray-700">Meublé</span>
+                <span className="text-sm text-slate-700 dark:text-slate-300">Meublé</span>
               </label>
               <label className="flex items-center cursor-pointer">
                 <input
@@ -198,7 +198,7 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
                   onChange={(e) => handleChange('hasParking', e.target.checked || undefined)}
                   className="mr-2"
                 />
-                <span className="text-sm text-gray-700">Parking</span>
+                <span className="text-sm text-slate-700 dark:text-slate-300">Parking</span>
               </label>
               <label className="flex items-center cursor-pointer">
                 <input
@@ -207,7 +207,7 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
                   onChange={(e) => handleChange('hasBalcony', e.target.checked || undefined)}
                   className="mr-2"
                 />
-                <span className="text-sm text-gray-700">Balcon</span>
+                <span className="text-sm text-slate-700 dark:text-slate-300">Balcon</span>
               </label>
               <label className="flex items-center cursor-pointer">
                 <input
@@ -216,7 +216,7 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
                   onChange={(e) => handleChange('hasElevator', e.target.checked || undefined)}
                   className="mr-2"
                 />
-                <span className="text-sm text-gray-700">Ascenseur</span>
+                <span className="text-sm text-slate-700 dark:text-slate-300">Ascenseur</span>
               </label>
               <label className="flex items-center cursor-pointer">
                 <input
@@ -225,7 +225,7 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
                   onChange={(e) => handleChange('hasGarden', e.target.checked || undefined)}
                   className="mr-2"
                 />
-                <span className="text-sm text-gray-700">Jardin</span>
+                <span className="text-sm text-slate-700 dark:text-slate-300">Jardin</span>
               </label>
             </div>
           )}
@@ -235,7 +235,7 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
         <div>
           <button
             onClick={() => setShowAmenities(!showAmenities)}
-            className="flex items-center justify-between w-full text-sm font-medium text-gray-700 mb-2"
+            className="flex items-center justify-between w-full text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
           >
             <span>
               Équipements
@@ -261,7 +261,7 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
                     onChange={() => handleAmenityToggle(amenity.value)}
                     className="mr-2"
                   />
-                  <span className="text-sm text-gray-700">{amenity.label}</span>
+                  <span className="text-sm text-slate-700 dark:text-slate-300">{amenity.label}</span>
                 </label>
               ))}
             </div>
