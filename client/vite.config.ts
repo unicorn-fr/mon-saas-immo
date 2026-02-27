@@ -103,7 +103,9 @@ export default defineConfig({
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'ui-vendor': ['lucide-react'],
           'form-vendor': ['react-hook-form', 'zod', '@hookform/resolvers'],
-          'map-vendor': ['leaflet', 'react-leaflet']
+          'map-vendor': ['leaflet', 'react-leaflet'],
+          'pdf-vendor': ['pdfjs-dist'],
+          'ocr-vendor': ['tesseract.js', 'jsqr', 'jszip']
         }
       }
     }
