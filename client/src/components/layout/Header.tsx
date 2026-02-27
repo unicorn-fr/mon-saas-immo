@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Home, User, LogOut, Settings, LayoutDashboard, Menu, X, Heart, Calendar, MessageSquare, FileText, Sun, Moon, FolderOpen } from 'lucide-react'
+import { Home, User, LogOut, Settings, LayoutDashboard, Menu, X, Heart, Calendar, MessageSquare, FileText, Sun, Moon, FolderOpen, TrendingUp, Tag } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useThemeStore } from '../../store/themeStore'
 import { useState } from 'react'
@@ -44,13 +44,6 @@ export const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
-            <Link
-              to="/search"
-              className="text-slate-600 hover:text-primary-600 font-medium transition-colors dark:text-slate-400 dark:hover:text-primary-400"
-            >
-              Rechercher
-            </Link>
-
             {isAuthenticated ? (
               <>
                 {/* Owner Links */}
@@ -119,6 +112,20 @@ export const Header = () => {
                 >
                   <MessageSquare className="w-4 h-4" />
                   Messages
+                </Link>
+                <Link
+                  to="/calculateur"
+                  className="text-slate-600 hover:text-primary-600 font-medium transition-colors flex items-center gap-1 dark:text-slate-400 dark:hover:text-primary-400"
+                >
+                  <TrendingUp className="w-4 h-4" />
+                  Calculateur
+                </Link>
+                <Link
+                  to="/pricing"
+                  className="text-slate-600 hover:text-primary-600 font-medium transition-colors flex items-center gap-1 dark:text-slate-400 dark:hover:text-primary-400"
+                >
+                  <Tag className="w-4 h-4" />
+                  Tarifs
                 </Link>
 
                 {/* Dark Mode Toggle */}
@@ -196,7 +203,23 @@ export const Header = () => {
               </>
             ) : (
               <>
-                {/* Dark Mode Toggle (unauthenticated) */}
+                {/* Public nav — same as Home page */}
+                <Link to="/" className="text-slate-600 hover:text-primary-600 font-medium transition-colors dark:text-slate-400 dark:hover:text-primary-400">
+                  Accueil
+                </Link>
+                <Link to="/#how-it-works" className="text-slate-600 hover:text-primary-600 font-medium transition-colors dark:text-slate-400 dark:hover:text-primary-400">
+                  Comment ça marche
+                </Link>
+                <Link to="/search" className="text-slate-600 hover:text-primary-600 font-medium transition-colors dark:text-slate-400 dark:hover:text-primary-400">
+                  Les biens
+                </Link>
+                <Link to="/calculateur" className="text-slate-600 hover:text-primary-600 font-medium transition-colors flex items-center gap-1 dark:text-slate-400 dark:hover:text-primary-400">
+                  <TrendingUp className="w-4 h-4" /> Calculateur
+                </Link>
+                <Link to="/pricing" className="text-slate-600 hover:text-primary-600 font-medium transition-colors flex items-center gap-1 dark:text-slate-400 dark:hover:text-primary-400">
+                  <Tag className="w-4 h-4" /> Tarifs
+                </Link>
+                {/* Dark Mode Toggle */}
                 <button
                   onClick={toggleDark}
                   className="p-2 rounded-xl hover:bg-slate-100 transition-colors text-slate-600 dark:hover:bg-slate-800 dark:text-slate-400"
@@ -239,14 +262,6 @@ export const Header = () => {
         {/* Mobile Menu */}
         {showMobileMenu && (
           <div className="md:hidden border-t border-slate-200 py-4 space-y-1 dark:border-slate-800">
-            <Link
-              to="/search"
-              className="block px-4 py-2.5 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
-              onClick={() => setShowMobileMenu(false)}
-            >
-              Rechercher
-            </Link>
-
             {isAuthenticated ? (
               <>
                 {user?.role === 'OWNER' && (
@@ -334,22 +349,31 @@ export const Header = () => {
                 </div>
               </>
             ) : (
-              <div className="flex flex-col gap-2 pt-2">
-                <Link
-                  to="/login"
-                  className="btn btn-secondary w-full text-center"
-                  onClick={() => setShowMobileMenu(false)}
-                >
-                  Connexion
+              <>
+                <Link to="/" className="block px-4 py-2.5 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-colors dark:text-slate-300 dark:hover:bg-slate-800" onClick={() => setShowMobileMenu(false)}>
+                  Accueil
                 </Link>
-                <Link
-                  to="/register"
-                  className="btn btn-primary w-full text-center"
-                  onClick={() => setShowMobileMenu(false)}
-                >
-                  Inscription
+                <Link to="/#how-it-works" className="block px-4 py-2.5 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-colors dark:text-slate-300 dark:hover:bg-slate-800" onClick={() => setShowMobileMenu(false)}>
+                  Comment ça marche
                 </Link>
-              </div>
+                <Link to="/search" className="block px-4 py-2.5 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-colors dark:text-slate-300 dark:hover:bg-slate-800" onClick={() => setShowMobileMenu(false)}>
+                  Les biens
+                </Link>
+                <Link to="/calculateur" className="block px-4 py-2.5 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-colors dark:text-slate-300 dark:hover:bg-slate-800" onClick={() => setShowMobileMenu(false)}>
+                  Calculateur
+                </Link>
+                <Link to="/pricing" className="block px-4 py-2.5 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-colors dark:text-slate-300 dark:hover:bg-slate-800" onClick={() => setShowMobileMenu(false)}>
+                  Tarifs
+                </Link>
+                <div className="flex flex-col gap-2 pt-2">
+                  <Link to="/login" className="btn btn-secondary w-full text-center" onClick={() => setShowMobileMenu(false)}>
+                    Connexion
+                  </Link>
+                  <Link to="/register" className="btn btn-primary w-full text-center" onClick={() => setShowMobileMenu(false)}>
+                    Inscription
+                  </Link>
+                </div>
+              </>
             )}
           </div>
         )}
