@@ -1,0 +1,59 @@
+{
+  "version": "3.0.0",
+  "lastUpdated": "2026-02-27",
+  "project": "Plateforme Gestion Locative — Dossier Locataire Intelligent",
+  "engine": {
+    "current": "UniversalScraper",
+    "previous": "SmartDocumentScanner",
+    "ocr": "tesseract.js@7.0.0",
+    "pdf": "pdfjs-dist@5.4.624",
+    "qr": "jsqr@1.4.0",
+    "animations": "framer-motion@12.34.3"
+  },
+  "implementedDocumentTypes": [
+    { "family": "BULLETIN",         "types": ["BULLETIN_1","BULLETIN_2","BULLETIN_3","DERNIER_BULLETIN"], "status": "done", "alternanceFixed": true },
+    { "family": "REVENUS_FISCAUX",  "types": ["AVIS_IMPOSITION_1","AVIS_IMPOSITION_2"],                  "status": "done" },
+    { "family": "IDENTITE",         "types": ["CNI","PASSEPORT","TITRE_SEJOUR"],                          "status": "done" },
+    { "family": "DOMICILE",         "types": ["JUSTIFICATIF_DOMICILE"],                                  "status": "done" },
+    { "family": "EMPLOI",           "types": ["CONTRAT_TRAVAIL","ATTESTATION_EMPLOYEUR","KBIS_SIRET"],    "status": "done" },
+    { "family": "GARANTIE",         "types": ["ATTESTATION_VISALE","ACTE_CAUTION"],                      "status": "done" },
+    { "family": "BANCAIRE",         "types": ["RELEVE_BANCAIRE"],                                        "status": "done" },
+    { "family": "LOGEMENT",         "types": ["QUITTANCE_1","QUITTANCE_2","QUITTANCE_3","ATTESTATION_PAIEMENT","ASSURANCE_HABITATION"], "status": "done" }
+  ],
+  "resolvedFalsePositives": [
+    {
+      "issue": "Bulletins d'alternance/apprentissage non reconnus",
+      "root_cause": "SmartDocumentScanner exigeait 'cotisations sociales' ET 'salaire brut' — absents sur bulletins d'apprenti",
+      "fix": "UniversalScraper utilise une logique OR-of-ANDs : ['net à payer','apprenti'], ['net à payer','alternance'], ['gratification','stage'] comme ensembles requis alternatifs",
+      "version": "3.0.0"
+    },
+    {
+      "issue": "Garantie Visale parfois classifiée LOGEMENT",
+      "root_cause": "Mot-clé 'locataire' était partagé entre LOGEMENT et GARANTIE sans pondération différentielle",
+      "fix": "Ajout de 'n° de visa', 'action logement', 'garantie visale' comme requis spécifiques, poids 120 vs 60",
+      "version": "3.0.0"
+    },
+    {
+      "issue": "Titre de séjour classifié comme CNI",
+      "root_cause": "Pas de règle distincte pour titre de séjour",
+      "fix": "Famille IDENTITE séparée en sous-types avec keywords 'titre de séjour', 'prefecture', 'étranger'",
+      "version": "3.0.0"
+    }
+  ],
+  "knownLimitations": [
+    "Tesseract.js OCR sur images complexes peut être lent (5-30s) — progression affichée",
+    "2D-Doc QR extraction non vérifiée contre serveurs DGFIP (CORS) — présence détectée seulement",
+    "Bulletins de paie scannés en très basse résolution (<150 DPI) peuvent ne pas être reconnus par OCR"
+  ],
+  "uiComponents": {
+    "MagicDropZone": "Zone glassmorphism multi-fichiers, classification automatique à la volée",
+    "FileScanCard": "Carte par fichier avec barre de progression en temps réel et badge type détecté (framer-motion)",
+    "MagicDashboard": "Récapitulatif catégorisé auto-généré post-scan, score complétude, confirmation",
+    "WizardMode": "Tunnel 5 étapes guidé (conservé pour utilisateurs préférant un flux pas-à-pas)"
+  },
+  "changelog": [
+    { "version": "1.0.0", "desc": "Wizard 5 étapes basique, upload manuel par catégorie" },
+    { "version": "2.0.0", "desc": "SmartDocumentScanner OCR, LaserScanAnimation, ProofOfLife, Dashboard confirmation" },
+    { "version": "3.0.0", "desc": "UniversalScraper OR-of-ANDs, MagicDrop multi-fichiers, FileScanCard framer-motion, auto-slot assignment" }
+  ]
+}
