@@ -5,6 +5,11 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    include: ['src/tests/**/*.test.ts'],
+  },
   plugins: [
     react(),
     VitePWA({
