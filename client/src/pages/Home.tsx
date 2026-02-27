@@ -24,9 +24,12 @@ import {
   Loader2,
   Sun,
   Moon,
+  TrendingUp,
+  Tag,
 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useThemeStore } from '../store/themeStore'
+import { useReveal } from '../hooks/useReveal'
 import { propertyService } from '../services/property.service'
 import { Property } from '../types/property.types'
 
@@ -79,6 +82,12 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [featuredProperties, setFeaturedProperties] = useState<Property[]>([])
   const [loadingProperties, setLoadingProperties] = useState(true)
+
+  const heroReveal = useReveal()
+  const statsReveal = useReveal()
+  const featuresReveal = useReveal()
+  const aboutReveal = useReveal()
+  const ctaReveal = useReveal()
 
   // Redirect authenticated users to their dashboard
   if (isAuthenticated && user) {
@@ -151,9 +160,12 @@ export default function Home() {
               <button onClick={() => scrollTo('featured')} className="text-slate-600 hover:text-blue-600 font-medium transition-colors">
                 Les biens
               </button>
-              <button onClick={() => scrollTo('features')} className="text-slate-600 hover:text-blue-600 font-medium transition-colors">
-                Avantages
-              </button>
+              <Link to="/calculateur" className="text-slate-600 hover:text-blue-600 font-medium transition-colors flex items-center gap-1">
+                <TrendingUp className="w-4 h-4" /> Calculateur
+              </Link>
+              <Link to="/pricing" className="text-slate-600 hover:text-blue-600 font-medium transition-colors flex items-center gap-1">
+                <Tag className="w-4 h-4" /> Tarifs
+              </Link>
               {/* Dark Mode Toggle */}
               <button
                 onClick={toggleDark}
@@ -200,6 +212,12 @@ export default function Home() {
               <button onClick={() => scrollTo('features')} className="block w-full text-left px-4 py-2.5 rounded-xl font-medium transition-colors hover:bg-slate-50 dark:hover:bg-slate-800" style={{ color: 'var(--text-primary)' }}>
                 Avantages
               </button>
+              <Link to="/calculateur" className="block w-full text-left px-4 py-2.5 rounded-xl font-medium transition-colors hover:bg-slate-50 dark:hover:bg-slate-800" style={{ color: 'var(--text-primary)' }} onClick={() => setMobileMenuOpen(false)}>
+                Calculateur de rentabilité
+              </Link>
+              <Link to="/pricing" className="block w-full text-left px-4 py-2.5 rounded-xl font-medium transition-colors hover:bg-slate-50 dark:hover:bg-slate-800" style={{ color: 'var(--text-primary)' }} onClick={() => setMobileMenuOpen(false)}>
+                Tarifs
+              </Link>
               <div className="flex flex-col gap-2 pt-2">
                 <Link to="/login" className="btn btn-secondary w-full text-center" onClick={() => setMobileMenuOpen(false)}>
                   Connexion
@@ -224,7 +242,11 @@ export default function Home() {
       </div>
 
       {/* ─── HERO SECTION ─────────────────────────────────────────── */}
-      <section id="hero" className="py-16 md:py-24">
+      <section
+        id="hero"
+        ref={heroReveal.ref as React.RefObject<HTMLElement>}
+        className={`py-16 md:py-24 transition-all duration-700 ${heroReveal.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-4">
             <span className="text-slate-900">Location </span>
@@ -304,6 +326,30 @@ export default function Home() {
               </Link>
             </div>
           </div>
+
+          {/* Calculateur teaser */}
+          <div className="mt-8 py-4 border-t" style={{ borderTopColor: 'var(--border)' }}>
+            <p className="text-sm mb-3" style={{ color: 'var(--text-tertiary)' }}>
+              Propriétaire bailleur ou investisseur ?
+            </p>
+            <Link
+              to="/calculateur"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors group"
+            >
+              <TrendingUp className="w-4 h-4" />
+              Calculez votre rentabilité locative gratuitement
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <span className="mx-4 text-slate-300">·</span>
+            <Link
+              to="/pricing"
+              className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors group"
+              style={{ color: 'var(--text-tertiary)' }}
+            >
+              <Tag className="w-3.5 h-3.5" />
+              Voir les tarifs
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -368,7 +414,10 @@ export default function Home() {
       </section>
 
       {/* ─── STATISTICS BAR ───────────────────────────────────────── */}
-      <section className="py-12">
+      <section
+        ref={statsReveal.ref as React.RefObject<HTMLElement>}
+        className={`py-12 transition-all duration-700 delay-100 ${statsReveal.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+      >
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="card text-center">
@@ -554,7 +603,11 @@ export default function Home() {
       </section>
 
       {/* ─── FEATURES / WHY US ────────────────────────────────────── */}
-      <section id="features" className="py-16">
+      <section
+        id="features"
+        ref={featuresReveal.ref as React.RefObject<HTMLElement>}
+        className={`py-16 transition-all duration-700 ${featuresReveal.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -596,11 +649,45 @@ export default function Home() {
               <p className="text-sm text-slate-600">Des experts à votre écoute et des assurances optionnelles pour louer en toute tranquillité.</p>
             </div>
           </div>
+
+          {/* Calculateur promo strip */}
+          <div
+            className="mt-12 rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-6"
+            style={{ backgroundColor: 'var(--surface-card)', border: '1px solid var(--border)' }}
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: 'linear-gradient(135deg, #059669 0%, #0891b2 100%)' }}>
+                <TrendingUp className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
+                  Calculateur de rentabilité locative
+                </h3>
+                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                  Rentabilité brute, nette, cash-flow mensuel et retour sur investissement — en quelques secondes.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <Link to="/pricing" className="btn btn-secondary whitespace-nowrap">
+                Voir les tarifs
+              </Link>
+              <Link to="/calculateur" className="btn btn-primary whitespace-nowrap inline-flex items-center gap-2">
+                Essayer gratuitement
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* ─── ABOUT SECTION ────────────────────────────────────────── */}
-      <section id="about" className="py-16">
+      <section
+        id="about"
+        ref={aboutReveal.ref as React.RefObject<HTMLElement>}
+        className={`py-16 transition-all duration-700 ${aboutReveal.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-2">
@@ -685,7 +772,8 @@ export default function Home() {
 
       {/* ─── FINAL CTA — Full brand gradient ─────────────────────── */}
       <section
-        className="py-20"
+        ref={ctaReveal.ref as React.RefObject<HTMLElement>}
+        className={`py-20 transition-all duration-700 ${ctaReveal.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
         style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 45%, #7c3aed 100%)' }}
       >
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -699,13 +787,22 @@ export default function Home() {
             Rejoignez la communauté ImmoParticuliers et facilitez-vous la vie. Que vous soyez locataire ou
             propriétaire, trouvez votre bonheur sans frais d'agence.
           </p>
-          <Link
-            to="/register"
-            className="inline-flex items-center gap-2 bg-white text-blue-700 font-semibold px-8 py-3 rounded-full hover:bg-white/90 transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-          >
-            Créer mon compte gratuitement
-            <ArrowRight className="w-5 h-5" />
-          </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              to="/register"
+              className="inline-flex items-center gap-2 bg-white text-blue-700 font-semibold px-8 py-3 rounded-full hover:bg-white/90 transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+            >
+              Créer mon compte gratuitement
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+            <Link
+              to="/pricing"
+              className="inline-flex items-center gap-2 bg-white/15 text-white font-semibold px-8 py-3 rounded-full hover:bg-white/25 transition-all duration-200 border border-white/30"
+            >
+              <Tag className="w-4 h-4" />
+              Voir les formules
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -735,7 +832,8 @@ export default function Home() {
                 <li><button onClick={() => scrollTo('hero')} className="hover:text-blue-400 transition-colors">Accueil</button></li>
                 <li><button onClick={() => scrollTo('how-it-works')} className="hover:text-blue-400 transition-colors">Comment ça marche</button></li>
                 <li><Link to="/search" className="hover:text-blue-400 transition-colors">Trouver un bien</Link></li>
-                <li><button onClick={() => scrollTo('features')} className="hover:text-blue-400 transition-colors">Avantages</button></li>
+                <li><Link to="/calculateur" className="hover:text-blue-400 transition-colors">Calculateur</Link></li>
+                <li><Link to="/pricing" className="hover:text-blue-400 transition-colors">Tarifs</Link></li>
               </ul>
             </div>
 

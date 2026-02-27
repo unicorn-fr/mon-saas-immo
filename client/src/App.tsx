@@ -59,6 +59,8 @@ import FAQ from './pages/info/FAQ'
 import Contact from './pages/info/Contact'
 import Support from './pages/info/Support'
 import Presse from './pages/info/Presse'
+import Calculateur from './pages/Calculateur'
+import Pricing from './pages/Pricing'
 
 // PWA Components
 import { InstallPWA } from './components/pwa/InstallPWA'
@@ -166,6 +168,8 @@ function AppRoutes() {
       <Route path="/contact" element={<Contact />} />
       <Route path="/support" element={<Support />} />
       <Route path="/presse" element={<Presse />} />
+      <Route path="/calculateur" element={<Calculateur />} />
+      <Route path="/pricing" element={<Pricing />} />
 
       {/* Search & Properties (Public for now, can be protected later) */}
       {/* <Route path="/search" element={<SearchPage />} /> */}
