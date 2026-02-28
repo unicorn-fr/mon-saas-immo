@@ -30,13 +30,14 @@ import {
   validateNIR,
 } from '../../utils/validateDocumentIntegrity'
 import {
-  scanDocument,
+  runIntelligence,
   assignDocTypeSlot,
   crossCheckSalaries,
-  UniversalScanResult,
+  IntelligenceResult,
   FAMILY_LABELS,
   FAMILY_COLORS,
-} from '../../utils/UniversalScraper'
+  type DocFamily,
+} from '../../utils/DocumentIntelligence'
 import { saveProgress, updateDocProgress } from '../../utils/progressState'
 import toast from 'react-hot-toast'
 
@@ -172,14 +173,14 @@ function ScoreGauge({ score }: { score: number }) {
 
 // ─── FileScanCard (magic mode — per-file animated card) ───────────────────────
 
-type ScanPhase = 'queued' | 'pdf' | 'ocr' | 'qr' | 'uploading' | 'done' | 'error'
+type ScanPhase = 'queued' | 'pdf' | 'ocr' | 'qr' | 'uploading' | 'done' | 'error' | 'needs_confirm'
 
 interface FileEntry {
   id: string
   file: File
   phase: ScanPhase
   phasePct: number
-  scanResult: UniversalScanResult | null
+  scanResult: IntelligenceResult | null
   uploadedDoc: TenantDocument | null
   assignedDocType: string | null
   error?: string
@@ -187,13 +188,14 @@ interface FileEntry {
 
 function phaseLabel(e: FileEntry): string {
   switch (e.phase) {
-    case 'queued':    return 'En attente…'
-    case 'pdf':       return `Extraction texte PDF — ${e.phasePct}%`
-    case 'ocr':       return `Reconnaissance optique (OCR) — ${e.phasePct}%`
-    case 'qr':        return 'Détection QR code 2D-Doc…'
-    case 'uploading': return 'Envoi sécurisé…'
-    case 'done':      return 'Analyse complète'
-    case 'error':     return e.error ?? 'Erreur'
+    case 'queued':       return 'En attente…'
+    case 'pdf':          return `Extraction texte PDF — ${e.phasePct}%`
+    case 'ocr':          return `Reconnaissance optique (OCR) — ${e.phasePct}%`
+    case 'qr':           return 'Détection QR code 2D-Doc…'
+    case 'uploading':    return 'Envoi sécurisé…'
+    case 'done':         return 'Analyse complète'
+    case 'needs_confirm':return 'Confirmation du type…'
+    case 'error':        return e.error ?? 'Erreur'
   }
 }
 
@@ -962,6 +964,14 @@ export default function DossierLocatif() {
   const [crossDocWarnings, setCrossDocWarnings] = useState<string[]>([])
   const assignedSlots = useRef<Set<string>>(new Set())
 
+  // Confirmation dialog state (for needsConfirmation=true scans)
+  const [pendingConfirm, setPendingConfirm] = useState<{
+    id: string
+    file: File
+    scanResult: IntelligenceResult
+  } | null>(null)
+  const confirmResolveRef = useRef<((family: DocFamily | null) => void) | null>(null)
+
   // Wizard mode state
   const [currentStep, setCurrentStep] = useState(1)
   const [uploadingKey, setUploadingKey] = useState<string | null>(null)
@@ -989,13 +999,30 @@ export default function DossierLocatif() {
       setEntries((prev) => prev.map((e) => e.id === id ? { ...e, ...updates } : e))
 
     try {
-      // Scan
-      const scanResult = await scanDocument(file, (phase, pct) => {
+      // Scan with DocumentIntelligence (proximity anchors + metadata forensics)
+      const scanResult = await runIntelligence(file, (phase, pct) => {
         setPhase({ phase: phase as ScanPhase, phasePct: pct })
       })
 
+      // If confidence is 40–69%, ask the user to confirm the detected type
+      let confirmedFamily = scanResult.docFamily
+      if (scanResult.needsConfirmation) {
+        setPhase({ phase: 'needs_confirm', scanResult })
+        const userChoice = await new Promise<DocFamily | null>((resolve) => {
+          setPendingConfirm({ id, file, scanResult })
+          confirmResolveRef.current = resolve
+        })
+        setPendingConfirm(null)
+        if (userChoice === null) {
+          setPhase({ phase: 'error', error: 'Document non confirmé — glissez-le à nouveau avec un nom explicite.' })
+          return
+        }
+        confirmedFamily = userChoice
+        scanResult.docFamily = confirmedFamily
+      }
+
       // Assign slot
-      const docType = assignDocTypeSlot(scanResult.docFamily, assignedSlots.current, scanResult.keywords)
+      const docType = assignDocTypeSlot(confirmedFamily, assignedSlots.current, scanResult.keywords)
       if (docType) assignedSlots.current.add(docType)
 
       // Find category for this docType
@@ -1342,10 +1369,103 @@ export default function DossierLocatif() {
           style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
           <Cpu className="w-4 h-4 text-violet-400 flex-shrink-0 mt-0.5" />
           <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-            <strong style={{ color: 'var(--text-primary)' }}>Analyse 100 % locale</strong> — L'OCR (tesseract.js), la détection QR (jsqr) et la classification par mots-clés s'exécutent entièrement dans votre navigateur. Aucun document n'est transmis à un serveur d'intelligence artificielle externe. Le score de confiance est indicatif.
+            <strong style={{ color: 'var(--text-primary)' }}>Analyse 100 % locale</strong> — OCR (tesseract.js), détection QR (jsqr), forensique metadata PDF et classification par ancrage textuel s'exécutent entièrement dans votre navigateur. Aucun document n'est transmis à un serveur externe. Le score de confiance est indicatif.
           </p>
         </div>
       </div>
+
+      {/* ── Confirmation Modal (confidence 40–69%) ──────────────────────────── */}
+      <AnimatePresence>
+        {pendingConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+          >
+            <motion.div
+              initial={{ scale: 0.92, y: 16 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.92, y: 16 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+              className="rounded-2xl border shadow-2xl max-w-md w-full p-6"
+              style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}
+            >
+              {/* Header */}
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>
+                    Confirmation du type de document
+                  </h3>
+                  <p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                    Confiance : <span className="font-semibold text-amber-600">{pendingConfirm.scanResult.confidence}%</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Detection result */}
+              <div className="rounded-xl p-4 mb-4" style={{ backgroundColor: 'var(--surface-subtle)' }}>
+                <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                  Nous avons détecté un{' '}
+                  <strong>{FAMILY_LABELS[pendingConfirm.scanResult.docFamily]}</strong> dans le fichier :{' '}
+                  <span className="font-mono text-xs" style={{ color: 'var(--text-secondary)' }}>
+                    {pendingConfirm.file.name}
+                  </span>
+                </p>
+                {pendingConfirm.scanResult.matchedGroups.length > 0 && (
+                  <p className="text-xs mt-2" style={{ color: 'var(--text-tertiary)' }}>
+                    Ancre détectée : {pendingConfirm.scanResult.matchedGroups[0]}
+                  </p>
+                )}
+              </div>
+
+              {/* Confirm button */}
+              <button
+                onClick={() => confirmResolveRef.current?.(pendingConfirm.scanResult.docFamily)}
+                className="btn btn-primary w-full flex items-center justify-center gap-2 mb-2"
+              >
+                <CheckCircle className="w-4 h-4" />
+                Oui, c'est bien un {FAMILY_LABELS[pendingConfirm.scanResult.docFamily]}
+              </button>
+
+              {/* Family picker — override */}
+              <p className="text-xs text-center mb-2" style={{ color: 'var(--text-tertiary)' }}>
+                ou sélectionnez le type correct :
+              </p>
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                {(Object.entries(FAMILY_LABELS) as [DocFamily, string][])
+                  .filter(([f]) => f !== 'UNKNOWN' && f !== pendingConfirm.scanResult.docFamily)
+                  .map(([family, label]) => {
+                    const col = FAMILY_COLORS[family]
+                    return (
+                      <button
+                        key={family}
+                        onClick={() => confirmResolveRef.current?.(family)}
+                        className={`text-xs font-medium px-3 py-2 rounded-lg border text-left truncate ${col.bg} ${col.text} ${col.border}`}
+                      >
+                        {label}
+                      </button>
+                    )
+                  })}
+              </div>
+
+              {/* Cancel */}
+              <button
+                onClick={() => confirmResolveRef.current?.(null)}
+                className="w-full text-xs py-2 rounded-lg"
+                style={{ color: 'var(--text-tertiary)' }}
+              >
+                <XCircle className="w-3.5 h-3.5 inline mr-1" />
+                Annuler ce document
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Layout>
   )
 }

@@ -273,3 +273,359 @@ describe('completeness score formula', () => {
     expect(score).toBe(100)
   })
 })
+
+// ─── DocumentIntelligence — classifyText ─────────────────────────────────────
+//
+// Tests the proximity-anchored classification engine against simulated
+// text extracted from real documents (edge cases: alternance, Visale, CDD, MRZ).
+
+import {
+  classifyText,
+  scoreAnchorGroup,
+  extractFieldsFromText,
+  crossCheckSalaries,
+} from '../utils/DocumentIntelligence'
+
+// ── Standard bulletin de salaire ─────────────────────────────────────────────
+
+describe('classifyText — BULLETIN', () => {
+  const standardText = `
+    ENTREPRISE DUPONT SAS  SIRET 55204944776279
+    Bulletin de salaire — Période : Janvier 2025
+    Salaire brut : 2 800,00 €
+    Cotisations sociales : 560,00 €
+    Net à payer : 2 240,00 €
+    Employeur : Dupont SAS, 12 rue de la Paix, Paris
+  `
+
+  it('classifies a standard bulletin as BULLETIN', () => {
+    const res = classifyText(standardText)
+    expect(res.family).toBe('BULLETIN')
+  })
+
+  it('standard bulletin confidence ≥ 70', () => {
+    const res = classifyText(standardText)
+    expect(res.score).toBeGreaterThanOrEqual(70)
+  })
+
+  it('extractFieldsFromText extracts valid SIRET and net salary', () => {
+    const data = extractFieldsFromText(standardText)
+    expect(data.siret).toBe('55204944776279')
+    expect(data.netSalary).toBe(2240)
+    expect(data.grossSalary).toBe(2800)
+    expect(data.salaryRatio).toBeCloseTo(0.8, 1)
+  })
+})
+
+// ── Bulletin alternance / apprentissage (edge case) ───────────────────────────
+
+describe('classifyText — BULLETIN alternance (edge case)', () => {
+  // This is the historically failing case: no "cotisations" or "salaire brut"
+  const alternanceText = `
+    CFA DES METIERS  SIRET 33561960700014
+    Contrat d'apprentissage — Période : Mars 2025
+    Rémunération apprenti : 75 % du SMIC
+    Net à payer : 1 050,00 €
+    Employeur : Dupont SAS  Apprenti : Jean Martin
+    Centre de formation : CFA Paris Est
+  `
+
+  it('classifies alternance bulletin as BULLETIN (not UNKNOWN)', () => {
+    const res = classifyText(alternanceText)
+    expect(res.family).toBe('BULLETIN')
+  })
+
+  it('matchedGroups contains apprentissage label', () => {
+    const res = classifyText(alternanceText)
+    expect(res.matchedGroups.some(g => g.toLowerCase().includes('apprenti') || g.toLowerCase().includes('alternance'))).toBe(true)
+  })
+
+  it('confidence ≥ 60 despite missing "cotisations"', () => {
+    const res = classifyText(alternanceText)
+    expect(res.score).toBeGreaterThanOrEqual(60)
+  })
+})
+
+// ── Bulletins avec "net à payer" + "alternance" ────────────────────────────────
+
+describe('classifyText — BULLETIN contrat alternance', () => {
+  const alternantText = `
+    ACADÉMIE DUPONT  SIRET 77562200900059
+    Bulletin de paie — Alternant : Sophie Durand
+    Contrat d'alternance — CFA Paris
+    Net à payer : 890,50 €
+    Employeur : Académie Dupont, Lyon
+  `
+
+  it('classifies "alternant" bulletin as BULLETIN', () => {
+    const res = classifyText(alternantText)
+    expect(res.family).toBe('BULLETIN')
+  })
+})
+
+// ── Garantie Visale ───────────────────────────────────────────────────────────
+
+describe('classifyText — GARANTIE Visale', () => {
+  const visaleText = `
+    Action Logement Services
+    ATTESTATION DE GARANTIE VISALE
+    N° de visa : VIS-2025-0012345
+    Bailleur : Mme Renard Sophie
+    Locataire : M. Dubois Paul
+    Loyer mensuel garanti : 750 €
+    Cautionnement loyers impayés et dégradations
+  `
+
+  it('classifies Visale as GARANTIE', () => {
+    const res = classifyText(visaleText)
+    expect(res.family).toBe('GARANTIE')
+  })
+
+  it('Visale classified as GARANTIE not LOGEMENT (false positive fix)', () => {
+    const res = classifyText(visaleText)
+    expect(res.family).not.toBe('LOGEMENT')
+  })
+
+  it('certaintyToken found for "garantie visale"', () => {
+    const res = classifyText(visaleText)
+    expect(res.certaintyToken).toBeTruthy()
+    expect(res.certaintyToken?.toLowerCase()).toContain('garantie visale')
+  })
+
+  it('confidence = 100 when certainty token present', () => {
+    const res = classifyText(visaleText)
+    expect(res.score).toBe(100)
+  })
+})
+
+// ── Carte Nationale d'Identité avec MRZ ───────────────────────────────────────
+
+describe('classifyText — IDENTITE CNI (MRZ certainty token)', () => {
+  const cniTextWithMrz = `
+    CARTE NATIONALE D'IDENTITÉ
+    République Française
+    Nom : MARTIN
+    Prénom : Paul Jean
+    Né le : 15/04/1990 à PARIS
+    IDFRXMARTIN<<PAUL<JEAN<<<<<<<<<<<<
+    900415001<0804151M2812319FRA<<<<<6
+  `
+
+  it('classifies CNI with MRZ as IDENTITE', () => {
+    const res = classifyText(cniTextWithMrz)
+    expect(res.family).toBe('IDENTITE')
+  })
+
+  it('certaintyToken matches MRZ token', () => {
+    const res = classifyText(cniTextWithMrz)
+    expect(res.certaintyToken).toBeTruthy()
+  })
+
+  it('confidence = 100 on MRZ certainty', () => {
+    const res = classifyText(cniTextWithMrz)
+    expect(res.score).toBe(100)
+  })
+})
+
+describe('classifyText — IDENTITE CNI (no MRZ, textual anchors)', () => {
+  const cniTextNoMrz = `
+    CARTE NATIONALE D'IDENTITÉ FRANÇAISE
+    Nationalité : Française
+    Valable jusqu'au 15/03/2034
+    Lieu de naissance : BORDEAUX
+    Nom : LEROY   Prénom : Marie
+  `
+
+  it('classifies CNI without MRZ as IDENTITE', () => {
+    const res = classifyText(cniTextNoMrz)
+    expect(res.family).toBe('IDENTITE')
+  })
+
+  it('confidence ≥ 70 from textual anchors alone', () => {
+    const res = classifyText(cniTextNoMrz)
+    expect(res.score).toBeGreaterThanOrEqual(70)
+  })
+
+  it('no certaintyToken for text-only CNI', () => {
+    const res = classifyText(cniTextNoMrz)
+    expect(res.certaintyToken).toBeNull()
+  })
+})
+
+// ── Avis d'imposition ─────────────────────────────────────────────────────────
+
+describe('classifyText — REVENUS_FISCAUX', () => {
+  const taxText = `
+    DIRECTION GÉNÉRALE DES FINANCES PUBLIQUES — DGFIP
+    AVIS D'IMPÔT SUR LE REVENU — Revenus 2023
+    Contribuable : DUPONT Jean — N° fiscal : 0123456789012
+    Revenu fiscal de référence : 32 450 €
+    Situation de famille : Célibataire
+    Foyer fiscal : 1 part
+  `
+
+  it('classifies avis imposition as REVENUS_FISCAUX', () => {
+    const res = classifyText(taxText)
+    expect(res.family).toBe('REVENUS_FISCAUX')
+  })
+
+  it('RFR extracted correctly', () => {
+    const data = extractFieldsFromText(taxText)
+    expect(data.fiscalRef).toBe(32450)
+  })
+
+  it('confidence ≥ 75', () => {
+    const res = classifyText(taxText)
+    expect(res.score).toBeGreaterThanOrEqual(75)
+  })
+})
+
+// ── Contrat CDD ───────────────────────────────────────────────────────────────
+
+describe('classifyText — EMPLOI (CDD)', () => {
+  const cddText = `
+    CONTRAT À DURÉE DÉTERMINÉE
+    Entre les soussignés :
+    Employeur : SARL Dupont — SIRET 55204944776279
+    Salarié : M. Roux Antoine
+    Poste : Développeur web
+    Durée du contrat : du 01/03/2025 au 31/08/2025
+    Motif de recours : Remplacement salarié absent
+    Rémunération brute mensuelle : 2 500 €
+  `
+
+  it('classifies CDD as EMPLOI', () => {
+    const res = classifyText(cddText)
+    expect(res.family).toBe('EMPLOI')
+  })
+
+  it('confidence ≥ 65', () => {
+    const res = classifyText(cddText)
+    expect(res.score).toBeGreaterThanOrEqual(65)
+  })
+})
+
+// ── Titre de séjour (distinct de CNI) ─────────────────────────────────────────
+
+describe('classifyText — IDENTITE Titre de séjour', () => {
+  const titreSejourText = `
+    PRÉFECTURE DES HAUTS-DE-SEINE
+    TITRE DE SÉJOUR
+    Nationalité : Sénégalaise
+    Durée de validité : 10 ans
+    Délivré par le Préfet
+    Nom : DIALLO   Prénom : Mamadou
+  `
+
+  it('classifies titre de séjour as IDENTITE', () => {
+    const res = classifyText(titreSejourText)
+    expect(res.family).toBe('IDENTITE')
+  })
+
+  it('certaintyToken is "titre de séjour"', () => {
+    const res = classifyText(titreSejourText)
+    expect(res.certaintyToken).toBeTruthy()
+    expect(res.certaintyToken?.toLowerCase()).toContain('titre de séjour')
+  })
+
+  it('titre de séjour NOT classified as CNI (disambiguation fix)', () => {
+    const res = classifyText(titreSejourText)
+    expect(res.matchedGroups[0]).not.toContain('Carte Nationale')
+  })
+})
+
+// ── Proximity scoring ─────────────────────────────────────────────────────────
+
+describe('scoreAnchorGroup — proximity window', () => {
+  const ANCHOR_GROUP = {
+    label: 'Test',
+    primary: ['net à payer', 'cotisations'],
+    secondary: ['siret'],
+    proximityChars: 200,
+    baseWeight: 80,
+  }
+
+  it('full score when anchors are within proximityChars', () => {
+    const closeText = 'Net à payer : 2000 € — Cotisations : 400 €'
+    const { score } = scoreAnchorGroup(closeText, ANCHOR_GROUP)
+    expect(score).toBe(80) // baseWeight, no secondary matched
+  })
+
+  it('partial score (60%) when anchors are spread beyond window', () => {
+    // Put 500 chars between the two anchors
+    const spread = 'Net à payer : 2000 € ' + ' '.repeat(500) + ' cotisations diverses'
+    const { score } = scoreAnchorGroup(spread, ANCHOR_GROUP)
+    // proximate=false → 60% of 80 = 48
+    expect(score).toBe(48)
+  })
+
+  it('score 0 when a primary anchor is missing', () => {
+    const missingText = 'Net à payer : 2000 € — aucune mention'
+    const { score } = scoreAnchorGroup(missingText, ANCHOR_GROUP)
+    expect(score).toBe(0)
+  })
+
+  it('secondary keyword adds +5 bonus', () => {
+    const textWithSiret = 'Net à payer : 2000 € SIRET 12345 Cotisations : 400 €'
+    const { score } = scoreAnchorGroup(textWithSiret, ANCHOR_GROUP)
+    expect(score).toBe(85) // 80 + 5 (siret)
+  })
+
+  it('proximity=0 accepts spread anchors at full score', () => {
+    const group0 = { ...ANCHOR_GROUP, proximityChars: 0 }
+    const spread = 'Net à payer : 2000 € ' + ' '.repeat(5000) + ' cotisations diverses'
+    const { score } = scoreAnchorGroup(spread, group0)
+    expect(score).toBe(80)
+  })
+})
+
+// ── crossCheckSalaries ────────────────────────────────────────────────────────
+
+describe('crossCheckSalaries', () => {
+  const makeScan = (net: number, siret?: string) => ({
+    docFamily: 'BULLETIN' as const,
+    docType: null,
+    confidence: 80,
+    certaintyTokenFound: null,
+    matchedGroups: [],
+    keywords: [],
+    extractedData: { netSalary: net, siret },
+    fraudSignals: [],
+    pdfMetadata: { isSuspect: false },
+    rawText: '',
+    hasQrCode: false,
+    ocrUsed: false,
+    scanMs: 0,
+    needsConfirmation: false,
+  })
+
+  it('no warnings when salaries are consistent', () => {
+    const scans = [makeScan(2200), makeScan(2300)]
+    expect(crossCheckSalaries(scans)).toHaveLength(0)
+  })
+
+  it('warns when salary variance > 30%', () => {
+    const scans = [makeScan(1000), makeScan(3000)]
+    const warnings = crossCheckSalaries(scans)
+    expect(warnings.length).toBeGreaterThan(0)
+    expect(warnings[0]).toContain('%')
+  })
+
+  it('warns when SIRET differs across bulletins', () => {
+    const scans = [
+      makeScan(2000, '55204944776279'),
+      makeScan(2100, '77562200900059'),
+    ]
+    const warnings = crossCheckSalaries(scans)
+    expect(warnings.some(w => w.toLowerCase().includes('siret'))).toBe(true)
+  })
+
+  it('no SIRET warning when all bulletins share same SIRET', () => {
+    const scans = [
+      makeScan(2000, '55204944776279'),
+      makeScan(2100, '55204944776279'),
+    ]
+    const warnings = crossCheckSalaries(scans)
+    expect(warnings.every(w => !w.toLowerCase().includes('siret'))).toBe(true)
+  })
+})
