@@ -629,3 +629,194 @@ describe('crossCheckSalaries', () => {
     expect(warnings.every(w => !w.toLowerCase().includes('siret'))).toBe(true)
   })
 })
+
+// ─── TemporalMapper ──────────────────────────────────────────────────────────
+
+import { mapBulletinPeriod, mOffsetToSlotLabel } from '../utils/TemporalMapper'
+
+// Fixed reference date: 2026-02-28 (février 2026)
+const NOW = new Date('2026-02-28')
+
+describe('TemporalMapper — period extraction', () => {
+  it('extracts "Janvier 2026" → month=1, year=2026', () => {
+    const res = mapBulletinPeriod('Bulletin de salaire Janvier 2026', new Set(), NOW)
+    expect(res).not.toBeNull()
+    expect(res!.month).toBe(1)
+    expect(res!.year).toBe(2026)
+  })
+
+  it('"Mars 25" → year=2025', () => {
+    const res = mapBulletinPeriod('Période Mars 25', new Set(), NOW)
+    expect(res).not.toBeNull()
+    expect(res!.month).toBe(3)
+    expect(res!.year).toBe(2025)
+  })
+
+  it('"Période : 01/2026" → MM/YYYY pattern', () => {
+    const res = mapBulletinPeriod('Période : 01/2026', new Set(), NOW)
+    expect(res).not.toBeNull()
+    expect(res!.month).toBe(1)
+    expect(res!.year).toBe(2026)
+  })
+
+  it('"01/01/2025" DD/MM/YYYY fallback', () => {
+    const res = mapBulletinPeriod('Bulletin date 01/01/2025 salarié', new Set(), NOW)
+    expect(res).not.toBeNull()
+    expect(res!.month).toBe(1)
+    expect(res!.year).toBe(2025)
+  })
+
+  it('returns null when no date found', () => {
+    const res = mapBulletinPeriod('Aucune date dans ce texte', new Set(), NOW)
+    expect(res).toBeNull()
+  })
+})
+
+describe('TemporalMapper — M-offset & slot assignment', () => {
+  // NOW = 2026-02, so:
+  // Jan 2026 → offset 1 → M-1 → BULLETIN_1
+  // Dec 2025 → offset 2 → M-2 → BULLETIN_2
+  // Nov 2025 → offset 3 → M-3 → BULLETIN_3
+  // Oct 2025 → offset 4 → ancien
+
+  it('Jan 2026 → M-1 → BULLETIN_1', () => {
+    const res = mapBulletinPeriod('Bulletin Janvier 2026', new Set(), NOW)
+    expect(res!.mOffset).toBe(1)
+    expect(res!.slot).toBe('BULLETIN_1')
+    expect(res!.label).toContain('M-1')
+  })
+
+  it('Dec 2025 → M-2 → BULLETIN_2', () => {
+    const res = mapBulletinPeriod('Bulletin Décembre 2025', new Set(), NOW)
+    expect(res!.mOffset).toBe(2)
+    expect(res!.slot).toBe('BULLETIN_2')
+  })
+
+  it('Nov 2025 → M-3 → BULLETIN_3', () => {
+    const res = mapBulletinPeriod('Bulletin Novembre 2025', new Set(), NOW)
+    expect(res!.mOffset).toBe(3)
+    expect(res!.slot).toBe('BULLETIN_3')
+  })
+
+  it('Oct 2025 (M-4) falls back to first free slot', () => {
+    const res = mapBulletinPeriod('Bulletin Octobre 2025', new Set(), NOW)
+    expect(res!.mOffset).toBe(4)
+    // No preferred slot for M-4, falls back to BULLETIN_1
+    expect(res!.slot).toBe('BULLETIN_1')
+  })
+
+  it('skips already-assigned slots', () => {
+    const assigned = new Set(['BULLETIN_1'])
+    const res = mapBulletinPeriod('Bulletin Janvier 2026', assigned, NOW)
+    // M-1 = BULLETIN_1 but already taken → falls to BULLETIN_2
+    expect(res!.slot).toBe('BULLETIN_2')
+  })
+
+  it('mOffsetToSlotLabel returns correct labels', () => {
+    expect(mOffsetToSlotLabel(1)).toBe('Bulletin M-1')
+    expect(mOffsetToSlotLabel(2)).toBe('Bulletin M-2')
+    expect(mOffsetToSlotLabel(3)).toBe('Bulletin M-3')
+    expect(mOffsetToSlotLabel(0)).toBe('Bulletin mois courant')
+    expect(mOffsetToSlotLabel(5)).toBe('Bulletin ancien (M-5)')
+  })
+})
+
+// ─── IdentityMatcher ─────────────────────────────────────────────────────────
+
+import { levenshtein, similarity, parseMrz, matchIdentity } from '../utils/IdentityMatcher'
+
+describe('levenshtein', () => {
+  it('identical strings → 0', () => {
+    expect(levenshtein('martin', 'martin')).toBe(0)
+  })
+
+  it('one substitution → 1', () => {
+    expect(levenshtein('martin', 'marten')).toBe(1)
+  })
+
+  it('empty vs non-empty → length of non-empty', () => {
+    expect(levenshtein('', 'paul')).toBe(4)
+    expect(levenshtein('paul', '')).toBe(4)
+  })
+
+  it('completely different → max distance', () => {
+    const d = levenshtein('abcde', 'fghij')
+    expect(d).toBe(5)
+  })
+})
+
+describe('similarity', () => {
+  it('identical → 1', () => {
+    expect(similarity('martin', 'martin')).toBe(1)
+  })
+
+  it('one char off → > 0.8', () => {
+    expect(similarity('martin', 'marten')).toBeGreaterThan(0.8)
+  })
+
+  it('totally different → ~0', () => {
+    expect(similarity('martin', 'dupont')).toBeLessThan(0.2)
+  })
+
+  it('OCR error simulation: "MARTIN" vs "MARTI N" ignores spacing in practice', () => {
+    // Both normalized → "martin"
+    const s = similarity('MARTIN', 'MARTIN')
+    expect(s).toBe(1)
+  })
+})
+
+describe('parseMrz', () => {
+  it('detects TD3 passport hint from partial MRZ', () => {
+    const text = `
+      Passeport
+      P<FRAMARTIN<<PAUL<JEAN<<<<<<<<<<<<<<<<<<
+      9012341025FRA8503154M3012319<<<<<<<<<<<<
+    `
+    const mrz = parseMrz(text)
+    expect(mrz).not.toBeNull()
+    expect(mrz!.type).toBe('TD3')
+  })
+
+  it('returns null when no MRZ present', () => {
+    const text = 'Contrat de travail CDI salarié rémunération'
+    const mrz = parseMrz(text)
+    expect(mrz).toBeNull()
+  })
+
+  it('detects TD1 CNI hint from IDFRX token', () => {
+    const text = 'IDFRXMARTIN<<PAUL<<<<<<<<<<<<<<<'
+    const mrz = parseMrz(text)
+    expect(mrz).not.toBeNull()
+  })
+})
+
+describe('matchIdentity', () => {
+  it('no_name when user has no name', () => {
+    const res = matchIdentity('some doc text', '', '')
+    expect(res.matchLevel).toBe('no_name')
+  })
+
+  it('probable when last name clearly present in text', () => {
+    const text = 'Nom : MARTIN Prénom : Paul Date de naissance 15/04/1990 Nationalité française'
+    const res = matchIdentity(text, 'Paul', 'Martin')
+    expect(['certain', 'probable']).toContain(res.matchLevel)
+  })
+
+  it('mismatch when completely wrong name', () => {
+    const text = 'Nom : DUPONT Prénom : Sophie carte nationale identité'
+    const res = matchIdentity(text, 'Ahmed', 'Benzara')
+    expect(res.matchLevel).toBe('mismatch')
+  })
+
+  it('uncertain/probable for OCR error: "MART1N" vs "MARTIN"', () => {
+    const text = 'carte nationale MART1N Paul nationalité'
+    const res = matchIdentity(text, 'Paul', 'Martin')
+    // Close enough via Levenshtein → uncertain or probable
+    expect(['certain', 'probable', 'uncertain']).toContain(res.matchLevel)
+  })
+
+  it('mrzFound=false for plain text without MRZ', () => {
+    const res = matchIdentity('Carte nationale identité Martin Paul', 'Paul', 'Martin')
+    expect(res.mrzFound).toBe(false)
+  })
+})

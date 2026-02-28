@@ -38,6 +38,9 @@ import {
   FAMILY_COLORS,
   type DocFamily,
 } from '../../utils/DocumentIntelligence'
+import { mapBulletinPeriod } from '../../utils/TemporalMapper'
+import { matchIdentity, matchLevelIcon } from '../../utils/IdentityMatcher'
+import { KanbanBoard, type KanbanEntry } from '../../components/dossier/KanbanBoard'
 import { saveProgress, updateDocProgress } from '../../utils/progressState'
 import toast from 'react-hot-toast'
 
@@ -184,6 +187,13 @@ interface FileEntry {
   uploadedDoc: TenantDocument | null
   assignedDocType: string | null
   error?: string
+  /** Live scan log lines shown in the kanban card terminal */
+  scanLogs: string[]
+  /** Human-readable period label for bulletins: "Janvier 2025 (M-1)" */
+  temporalLabel?: string
+  /** Identity match result summary: "✓ MRZ · Martin Paul" */
+  identityLabel?: string
+  identityMatchLevel?: string
 }
 
 function phaseLabel(e: FileEntry): string {
@@ -944,7 +954,7 @@ function WizardStepBar({ steps, current, completed }: { steps: WizardStep[]; cur
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 type AppMode = 'magic' | 'wizard'
-type MagicPhase = 'drop' | 'scanning' | 'dashboard'
+type MagicPhase = 'drop' | 'scanning' | 'dashboard' | 'kanban'
 
 // Max concurrent scans to avoid browser freeze
 const MAX_CONCURRENT = 3
@@ -995,19 +1005,56 @@ export default function DossierLocatif() {
 
   // ── Magic mode: process one file ──────────────────────────────────────────
   const processEntry = useCallback(async (id: string, file: File) => {
+    const logs: string[] = []
+    const addLog = (line: string) => {
+      logs.push(line)
+      setEntries((prev) => prev.map((e) => e.id === id ? { ...e, scanLogs: [...logs] } : e))
+    }
     const setPhase = (updates: Partial<FileEntry>) =>
       setEntries((prev) => prev.map((e) => e.id === id ? { ...e, ...updates } : e))
 
     try {
+      addLog('[INFO] Démarrage de l\'analyse...')
+
       // Scan with DocumentIntelligence (proximity anchors + metadata forensics)
       const scanResult = await runIntelligence(file, (phase, pct) => {
         setPhase({ phase: phase as ScanPhase, phasePct: pct })
+        if (phase === 'pdf' && pct === 70) addLog('[OK] Texte PDF extrait')
+        if (phase === 'ocr' && pct >= 95)  addLog('[OK] OCR terminé')
+        if (phase === 'qr')                addLog('[INFO] Détection QR code 2D-Doc...')
       })
+
+      // Log classification result
+      if (scanResult.docFamily !== 'UNKNOWN') {
+        addLog(`[OK] Famille détectée : ${scanResult.docFamily} (confiance ${scanResult.confidence}%)`)
+      } else {
+        addLog('[WARN] Document non reconnu (confiance trop faible)')
+      }
+
+      if (scanResult.certaintyTokenFound) {
+        addLog(`[OK] Marqueur de certitude : "${scanResult.certaintyTokenFound}"`)
+      }
+      if (scanResult.pdfMetadata.isSuspect) {
+        addLog(`[WARN] Metadata suspecte : ${scanResult.pdfMetadata.producer ?? 'outil inconnu'}`)
+      }
+      if (scanResult.hasQrCode) {
+        addLog('[OK] QR code 2D-Doc détecté')
+      }
+
+      // SIRET validation log
+      if (scanResult.extractedData.siret) {
+        const siretValid = !scanResult.fraudSignals.some((s) => s.type === 'siret_invalid')
+        addLog(siretValid
+          ? `[OK] SIRET ${scanResult.extractedData.siret} — valide (Luhn)`
+          : `[ERR] SIRET ${scanResult.extractedData.siret} — INVALIDE (Luhn)`
+        )
+      }
 
       // If confidence is 40–69%, ask the user to confirm the detected type
       let confirmedFamily = scanResult.docFamily
       if (scanResult.needsConfirmation) {
-        setPhase({ phase: 'needs_confirm', scanResult })
+        addLog('[INFO] Confiance intermédiaire — confirmation requise')
+        setPhase({ phase: 'needs_confirm', scanResult, scanLogs: [...logs] })
         const userChoice = await new Promise<DocFamily | null>((resolve) => {
           setPendingConfirm({ id, file, scanResult })
           confirmResolveRef.current = resolve
@@ -1019,25 +1066,68 @@ export default function DossierLocatif() {
         }
         confirmedFamily = userChoice
         scanResult.docFamily = confirmedFamily
+        addLog(`[OK] Type confirmé manuellement : ${confirmedFamily}`)
       }
 
-      // Assign slot
-      const docType = assignDocTypeSlot(confirmedFamily, assignedSlots.current, scanResult.keywords)
-      if (docType) assignedSlots.current.add(docType)
+      // ── Temporal mapping for bulletins ─────────────────────────────────────
+      let temporalLabel: string | undefined
+      let finalDocType: string | null
+
+      if (confirmedFamily === 'BULLETIN') {
+        const period = mapBulletinPeriod(scanResult.rawText, assignedSlots.current)
+        if (period) {
+          temporalLabel = period.label
+          finalDocType = period.slot
+          if (finalDocType) assignedSlots.current.add(finalDocType)
+          addLog(`[OK] Détection période : ${period.label}`)
+        } else {
+          finalDocType = assignDocTypeSlot(confirmedFamily, assignedSlots.current, scanResult.keywords)
+          if (finalDocType) assignedSlots.current.add(finalDocType)
+          addLog('[WARN] Période non détectée — slot séquentiel attribué')
+        }
+      } else {
+        finalDocType = assignDocTypeSlot(confirmedFamily, assignedSlots.current, scanResult.keywords)
+        if (finalDocType) assignedSlots.current.add(finalDocType)
+      }
+
+      // ── Identity matching for IDENTITE documents ───────────────────────────
+      let identityLabel: string | undefined
+      let identityMatchLevel: string | undefined
+
+      if (confirmedFamily === 'IDENTITE' && (user?.firstName || user?.lastName)) {
+        const idMatch = matchIdentity(
+          scanResult.rawText,
+          user?.firstName ?? '',
+          user?.lastName ?? '',
+        )
+        identityMatchLevel = idMatch.matchLevel
+        identityLabel = `${matchLevelIcon(idMatch.matchLevel)}${idMatch.mrzFound ? ' · MRZ' : ''}`
+        addLog(idMatch.mrzFound
+          ? `[OK] Zone MRZ détectée — ${idMatch.detail}`
+          : `[INFO] ${idMatch.detail}`
+        )
+        if (idMatch.matchLevel === 'mismatch') {
+          addLog('[WARN] Nom sur le document ≠ profil utilisateur')
+        }
+      }
 
       // Find category for this docType
-      const specEntry = ALL_DOCS.find((d) => d.docType === docType)
+      const specEntry = ALL_DOCS.find((d) => d.docType === finalDocType)
       const category = specEntry?.category ?? 'IDENTITE'
 
-      setPhase({ phase: 'uploading', phasePct: 0, scanResult, assignedDocType: docType })
+      addLog('[INFO] Envoi sécurisé...')
+      setPhase({ phase: 'uploading', phasePct: 0, scanResult, assignedDocType: finalDocType, scanLogs: [...logs] })
 
       // Upload
-      const uploadedDoc = docType
-        ? await uploadFile(docType, category, file).catch(() => null)
+      const uploadedDoc = finalDocType
+        ? await uploadFile(finalDocType, category, file).catch(() => null)
         : null
 
-      if (docType) {
-        updateDocProgress(docType, {
+      if (uploadedDoc) addLog('[OK] Document envoyé avec succès')
+      else             addLog('[WARN] Envoi échoué ou ignoré (type non attribué)')
+
+      if (finalDocType) {
+        updateDocProgress(finalDocType, {
           uploaded: !!uploadedDoc,
           trustScore: scanResult.confidence,
           fraudSignalCount: scanResult.fraudSignals.length,
@@ -1045,22 +1135,33 @@ export default function DossierLocatif() {
         })
       }
 
-      setPhase({ phase: 'done', phasePct: 100, scanResult, assignedDocType: docType, uploadedDoc })
+      setPhase({
+        phase: 'done',
+        phasePct: 100,
+        scanResult,
+        assignedDocType: finalDocType,
+        uploadedDoc,
+        scanLogs: [...logs],
+        temporalLabel,
+        identityLabel,
+        identityMatchLevel,
+      })
     } catch (err) {
-      setPhase({ phase: 'error', error: err instanceof Error ? err.message : 'Erreur inconnue' })
+      setPhase({ phase: 'error', error: err instanceof Error ? err.message : 'Erreur inconnue', scanLogs: [...logs] })
     }
-  }, [uploadFile])
+  }, [uploadFile, user])
 
   // ── Magic mode: process all dropped files ─────────────────────────────────
   const handleMagicFiles = useCallback(async (files: File[]) => {
     const newEntries: FileEntry[] = files.map((file) => ({
       id: `${Date.now()}-${Math.random()}`,
       file,
-      phase: 'queued',
+      phase: 'queued' as ScanPhase,
       phasePct: 0,
       scanResult: null,
       uploadedDoc: null,
       assignedDocType: null,
+      scanLogs: [],
     }))
 
     setEntries((prev) => [...prev, ...newEntries])
@@ -1077,7 +1178,7 @@ export default function DossierLocatif() {
     const workers = Array.from({ length: Math.min(MAX_CONCURRENT, queue.length) }, runNext)
     await Promise.all(workers)
 
-    // After all done: compute cross-doc warnings and show dashboard
+    // After all done: compute cross-doc warnings and switch to kanban
     setEntries((current) => {
       const completedScans = current
         .filter((e) => e.scanResult)
@@ -1086,7 +1187,7 @@ export default function DossierLocatif() {
       setCrossDocWarnings(warnings)
       return current
     })
-    setMagicPhase('dashboard')
+    setMagicPhase('kanban')
   }, [processEntry])
 
   // ── Wizard mode: upload ────────────────────────────────────────────────────
@@ -1108,6 +1209,25 @@ export default function DossierLocatif() {
       setDocuments((prev) => prev.filter((d) => d.id !== id))
       toast.success('Document supprimé')
     } catch { toast.error('Erreur lors de la suppression') }
+  }, [])
+
+  // ── Kanban: move entry to another family (manual reclassification) ─────────
+  const handleMoveEntry = useCallback(async (entryId: string, newFamily: DocFamily) => {
+    setEntries((prev) => prev.map((e) => {
+      if (e.id !== entryId) return e
+      const newDocType = assignDocTypeSlot(newFamily, new Set(
+        prev.filter((x) => x.id !== entryId).map((x) => x.assignedDocType).filter(Boolean) as string[]
+      ), e.scanResult?.keywords ?? [])
+      // Note: backend update on reclassification requires re-upload via wizard mode
+      const updatedResult = e.scanResult ? { ...e.scanResult, docFamily: newFamily, docType: newDocType } : null
+      toast.success(`Reclassé → ${FAMILY_LABELS[newFamily]}`)
+      return {
+        ...e,
+        scanResult: updatedResult,
+        assignedDocType: newDocType,
+        scanLogs: [...(e.scanLogs ?? []), `[INFO] Reclassé manuellement → ${FAMILY_LABELS[newFamily]}`],
+      }
+    }))
   }, [])
 
   const score = computeScore(documents)
@@ -1145,9 +1265,9 @@ export default function DossierLocatif() {
                 ? <><Layers className="w-4 h-4" /> Mode guidé</>
                 : <><Sparkles className="w-4 h-4" /> Magic Drop</>}
             </button>
-            {documents.length > 0 && mode === 'magic' && magicPhase !== 'dashboard' && (
-              <button onClick={() => setMagicPhase('dashboard')} className="btn btn-secondary text-sm flex items-center gap-2">
-                <LayoutDashboard className="w-4 h-4" /> Récapitulatif
+            {mode === 'magic' && entries.length > 0 && magicPhase !== 'kanban' && (
+              <button onClick={() => setMagicPhase('kanban')} className="btn btn-secondary text-sm flex items-center gap-2">
+                <Layers className="w-4 h-4" /> Tableau
               </button>
             )}
           </div>
@@ -1173,9 +1293,9 @@ export default function DossierLocatif() {
                         Analyse en cours… {allDoneCount}/{totalCount} fichiers traités
                       </p>
                       {isAllDone && (
-                        <button onClick={() => setMagicPhase('dashboard')}
+                        <button onClick={() => setMagicPhase('kanban')}
                           className="btn btn-primary text-xs flex items-center gap-1.5 py-1.5">
-                          <LayoutDashboard className="w-3.5 h-3.5" /> Voir le récapitulatif
+                          <Layers className="w-3.5 h-3.5" /> Tableau de contrôle
                         </button>
                       )}
                     </div>
@@ -1215,10 +1335,9 @@ export default function DossierLocatif() {
               </div>
             )}
 
-            {/* Dashboard phase */}
+            {/* Dashboard phase (legacy summary) */}
             {magicPhase === 'dashboard' && (
               <div className="space-y-5">
-                {/* Scan card summary (collapsed) */}
                 {entries.length > 0 && (
                   <div className="rounded-2xl border p-4 flex items-center justify-between gap-4"
                     style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
@@ -1231,13 +1350,18 @@ export default function DossierLocatif() {
                         {' '}{entries.filter((e) => e.scanResult?.fraudSignals.some((s) => s.severity === 'high')).length} suspects
                       </p>
                     </div>
-                    <button onClick={() => setMagicPhase('scanning')}
-                      className="btn btn-secondary text-xs flex items-center gap-1.5 py-1.5">
-                      <Eye className="w-3.5 h-3.5" /> Détail scan
-                    </button>
+                    <div className="flex gap-2">
+                      <button onClick={() => setMagicPhase('kanban')}
+                        className="btn btn-primary text-xs flex items-center gap-1.5 py-1.5">
+                        <Layers className="w-3.5 h-3.5" /> Tableau de contrôle
+                      </button>
+                      <button onClick={() => setMagicPhase('scanning')}
+                        className="btn btn-secondary text-xs flex items-center gap-1.5 py-1.5">
+                        <Eye className="w-3.5 h-3.5" /> Détail scan
+                      </button>
+                    </div>
                   </div>
                 )}
-
                 <MagicDashboard
                   documents={documents}
                   entries={entries}
@@ -1245,9 +1369,69 @@ export default function DossierLocatif() {
                   score={score}
                   hasVisale={hasVisale}
                   userLastName={user?.lastName ?? 'Locataire'}
-                  onReset={() => {
-                    setMagicPhase(entries.length > 0 ? 'scanning' : 'drop')
-                  }}
+                  onReset={() => setMagicPhase(entries.length > 0 ? 'scanning' : 'drop')}
+                />
+              </div>
+            )}
+
+            {/* Kanban phase — Tableau de contrôle drag & drop */}
+            {magicPhase === 'kanban' && (
+              <div className="space-y-4">
+                {/* Header bar */}
+                <div className="flex items-center justify-between gap-4 rounded-2xl border p-4"
+                  style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
+                  <div>
+                    <h2 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+                      Tableau de contrôle — {entries.length} document{entries.length > 1 ? 's' : ''}
+                    </h2>
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                      Glissez une carte vers une autre colonne pour la reclasser manuellement.
+                    </p>
+                  </div>
+                  <div className="flex gap-2 flex-shrink-0">
+                    <button onClick={() => setMagicPhase('dashboard')}
+                      className="btn btn-secondary text-xs flex items-center gap-1.5 py-1.5">
+                      <LayoutDashboard className="w-3.5 h-3.5" /> Récapitulatif
+                    </button>
+                    <button onClick={() => setMagicPhase('drop')}
+                      className="btn btn-secondary text-xs flex items-center gap-1.5 py-1.5">
+                      <Upload className="w-3.5 h-3.5" /> Ajouter
+                    </button>
+                  </div>
+                </div>
+
+                {/* Cross-doc warnings */}
+                {crossDocWarnings.length > 0 && (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 space-y-1">
+                    {crossDocWarnings.map((w, i) => (
+                      <p key={i} className="text-xs text-amber-800 flex items-start gap-1.5">
+                        <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />{w}
+                      </p>
+                    ))}
+                  </div>
+                )}
+
+                {/* Kanban board */}
+                <KanbanBoard
+                  entries={entries.map((e): KanbanEntry => ({
+                    id: e.id,
+                    file: e.file,
+                    phase: e.phase,
+                    confidence: e.scanResult?.confidence ?? 0,
+                    docFamily: e.scanResult?.docFamily ?? 'UNKNOWN',
+                    docType: e.scanResult?.docType ?? null,
+                    assignedDocType: e.assignedDocType,
+                    fraudSignalCount: e.scanResult?.fraudSignals.length ?? 0,
+                    hasMediumRisk: e.scanResult?.fraudSignals.some((s) => s.severity === 'medium') ?? false,
+                    hasHighRisk: e.scanResult?.fraudSignals.some((s) => s.severity === 'high') ?? false,
+                    hasQrCode: e.scanResult?.hasQrCode ?? false,
+                    ocrUsed: e.scanResult?.ocrUsed ?? false,
+                    mrzFound: !!e.scanResult?.certaintyTokenFound,
+                    temporalLabel: e.temporalLabel,
+                    identityLabel: e.identityLabel,
+                    scanLogs: e.scanLogs ?? [],
+                  }))}
+                  onMoveEntry={handleMoveEntry}
                 />
               </div>
             )}

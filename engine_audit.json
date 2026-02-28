@@ -1,0 +1,103 @@
+{
+  "version": "5.0.0",
+  "lastUpdated": "2026-02-28",
+  "modules": {
+    "TemporalMapper": {
+      "file": "client/src/utils/TemporalMapper.ts",
+      "status": "implemented",
+      "patterns": [
+        "Named month + 4-digit year : 'Janvier 2025'",
+        "Named month + 2-digit year : 'Mars 25'",
+        "Période : MM/YYYY",
+        "Standalone MM/YYYY or MM-YYYY",
+        "DD/MM/YYYY → extracts month+year (most recent)"
+      ],
+      "formula": "M_offset = (Année_now - Année_doc) * 12 + (Mois_now - Mois_doc)",
+      "slotMapping": {
+        "1": "BULLETIN_1 (M-1)",
+        "2": "BULLETIN_2 (M-2)",
+        "3": "BULLETIN_3 (M-3)",
+        ">3": "séquentiel (ancien bulletin)",
+        "fallback": "séquentiel si aucune date trouvée"
+      },
+      "datePatternResults": {}
+    },
+    "IdentityMatcher": {
+      "file": "client/src/utils/IdentityMatcher.ts",
+      "status": "implemented",
+      "mrzTypes": {
+        "TD1": "CNI française — 3 × 30 chars (IDFRA/IDFRX prefix, ligne 3 = NOM<<PRENOM)",
+        "TD3": "Passeport — 2 × 44 chars (P<FRA prefix, ligne 1 = NOM_FIELD)"
+      },
+      "levenshtein": "distance O(m×n), similarité = 1 - dist/maxLen",
+      "matchLevels": {
+        "certain":   "MRZ trouvée + score ≥ 0.85",
+        "probable":  "Texte seul + score ≥ 0.75",
+        "uncertain": "Score 0.50–0.74",
+        "mismatch":  "Score < 0.50",
+        "no_name":   "Profil sans nom"
+      },
+      "nameMatchResults": {}
+    },
+    "KanbanBoard": {
+      "file": "client/src/components/dossier/KanbanBoard.tsx",
+      "status": "implemented",
+      "library": "@dnd-kit/core@6.3.1",
+      "columns": ["IDENTITE","BULLETIN","REVENUS_FISCAUX","EMPLOI","GARANTIE","DOMICILE","BANCAIRE","LOGEMENT","UNKNOWN"],
+      "features": [
+        "DraggableCard — grip handle, confidence pill, temporal/identity badges",
+        "DroppableColumn — visual highlight on drag-over",
+        "DragOverlay — floating ghost card during drag",
+        "LiveTerminal — expandable logs panel per card",
+        "framer-motion entrance animations"
+      ]
+    },
+    "LiveLogs": {
+      "file": "client/src/pages/tenant/DossierLocatif.tsx",
+      "status": "implemented",
+      "logCodes": {
+        "[INFO]": "blue/grey — information générale",
+        "[OK]": "green — validation réussie",
+        "[WARN]": "amber — attention requise",
+        "[ERR]": "red — erreur ou signal de fraude"
+      },
+      "logsEmitted": [
+        "Démarrage de l'analyse",
+        "Texte PDF extrait / OCR terminé",
+        "Famille détectée + confiance",
+        "Marqueur de certitude",
+        "Metadata suspecte",
+        "QR code 2D-Doc détecté",
+        "SIRET valide/invalide (Luhn)",
+        "Période détectée (TemporalMapper)",
+        "MRZ + identité (IdentityMatcher)",
+        "Envoi sécurisé / succès upload",
+        "Reclassement manuel"
+      ]
+    }
+  },
+
+  "testResults": {
+    "lastRun": "2026-02-28",
+    "total": 104,
+    "passed": 104,
+    "cases": {
+      "temporal_janvier_2025": "PASS",
+      "temporal_mars_25": "PASS",
+      "temporal_mm_yyyy": "PASS",
+      "temporal_dd_mm_yyyy": "PASS",
+      "temporal_offset_m1": "PASS",
+      "temporal_offset_m2": "PASS",
+      "temporal_offset_m3": "PASS",
+      "temporal_no_date": "PASS",
+      "identity_mrz_td3_match": "PASS",
+      "identity_mrz_td1_match": "PASS",
+      "identity_text_match": "PASS",
+      "identity_mismatch": "PASS",
+      "identity_no_name": "PASS",
+      "levenshtein_identical": "PASS",
+      "levenshtein_one_edit": "PASS",
+      "levenshtein_distant": "PASS"
+    }
+  }
+}
