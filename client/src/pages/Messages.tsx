@@ -20,20 +20,12 @@ export default function Messages() {
 
   return (
     <Layout>
-      <div className="h-screen flex flex-col" style={{ backgroundColor: 'var(--surface-page)' }}>
-        {/* Header */}
-        <div className="border-b px-6 py-4" style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
-          <h1 className="text-2xl font-bold text-slate-900">Messagerie</h1>
-        </div>
+      <div className="h-full overflow-hidden flex" style={{ backgroundColor: 'var(--surface-page)' }}>
 
-        {/* Main Content */}
-        <div className="flex-1 overflow-hidden flex">
-        {/* Conversation List - Desktop: always visible, Mobile: hide when chat is open */}
+        {/* ── Liste des conversations ────────────────────────── */}
         <div
-          className={`
-            w-full lg:w-96 flex-shrink-0 border-r
-            ${isMobileView ? 'hidden lg:block' : 'block'}
-          `}
+          className={`w-full lg:w-[300px] flex-shrink-0 border-r flex flex-col ${isMobileView ? 'hidden lg:flex' : 'flex'}`}
+          style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}
         >
           <ConversationList
             selectedConversationId={selectedConversation?.id || null}
@@ -41,28 +33,35 @@ export default function Messages() {
           />
         </div>
 
-        {/* Chat Window - Desktop: always visible, Mobile: show when conversation selected */}
-        <div
-          className={`
-            flex-1
-            ${!selectedConversation ? 'hidden lg:flex' : 'flex'}
-          `}
-        >
+        {/* ── Fenêtre de chat ───────────────────────────────── */}
+        <div className={`flex-1 overflow-hidden ${!selectedConversation ? 'hidden lg:flex' : 'flex'}`}>
           {selectedConversation ? (
             <ChatWindow conversation={selectedConversation} onBack={handleBack} />
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-center p-6" style={{ backgroundColor: 'var(--surface-card)' }}>
-              <div className="w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center mb-6">
-                <MessageSquare className="w-12 h-12 text-primary-600" />
+            <div
+              className="flex flex-col items-center justify-center w-full h-full gap-5"
+              style={{ backgroundColor: 'var(--surface-page)' }}
+            >
+              {/* Icône centrale */}
+              <div
+                className="w-[72px] h-[72px] rounded-[22px] flex items-center justify-center shadow-xl"
+                style={{ background: 'linear-gradient(135deg, #7c3aed, #3b82f6)' }}
+              >
+                <MessageSquare className="w-9 h-9 text-white" strokeWidth={1.5} />
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-2">Sélectionnez une conversation</h2>
-              <p className="text-slate-600 max-w-md">
-                Choisissez une conversation dans la liste pour commencer à échanger avec un propriétaire ou un locataire.
-              </p>
+
+              <div className="text-center">
+                <p className="text-[15px] font-semibold mb-1.5" style={{ color: 'var(--text-primary)' }}>
+                  Vos messages
+                </p>
+                <p className="text-[13px] max-w-[210px] leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>
+                  Sélectionnez une conversation pour commencer à échanger.
+                </p>
+              </div>
             </div>
           )}
         </div>
-        </div>
+
       </div>
     </Layout>
   )

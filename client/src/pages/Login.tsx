@@ -24,6 +24,8 @@ export default function Login() {
     const from = (location.state as { from?: string })?.from
     if (from) {
       navigate(from, { replace: true })
+    } else if (role === 'SUPER_ADMIN') {
+      navigate('/super-admin', { replace: true })
     } else if (role === 'OWNER') {
       navigate('/dashboard/owner', { replace: true })
     } else if (role === 'TENANT') {
@@ -95,8 +97,11 @@ export default function Login() {
   // ── TOTP verification step ────────────────────────────────────────────────
   if (totpRequired) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ background: 'var(--bg-gradient)' }}>
+        <div className="absolute -top-48 -left-48 w-[600px] h-[600px] rounded-full opacity-50 pointer-events-none" style={{ background: 'radial-gradient(circle, #7c3aed 0%, transparent 65%)', filter: 'blur(80px)' }} />
+        <div className="absolute top-1/3 -right-32 w-[500px] h-[500px] rounded-full opacity-38 pointer-events-none" style={{ background: 'radial-gradient(circle, #3b82f6 0%, transparent 65%)', filter: 'blur(80px)' }} />
+        <div className="absolute -bottom-32 left-1/4 w-[420px] h-[420px] rounded-full opacity-30 pointer-events-none" style={{ background: 'radial-gradient(circle, #ec4899 0%, transparent 65%)', filter: 'blur(80px)' }} />
+        <div className="w-full max-w-md relative z-10">
           <div className="text-center mb-8">
             <Link to="/" className="inline-flex items-center gap-2.5 hover:opacity-80 transition-opacity">
               <div className="w-9 h-9 bg-primary-700 rounded-xl flex items-center justify-center">
@@ -157,13 +162,19 @@ export default function Login() {
 
   // ── Normal login form ─────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ background: 'var(--bg-gradient)' }}>
+      {/* Glass blobs */}
+      <div className="absolute -top-48 -left-48 w-[600px] h-[600px] rounded-full opacity-50 pointer-events-none" style={{ background: 'radial-gradient(circle, #7c3aed 0%, transparent 65%)', filter: 'blur(80px)' }} />
+      <div className="absolute top-1/3 -right-32 w-[500px] h-[500px] rounded-full opacity-38 pointer-events-none" style={{ background: 'radial-gradient(circle, #3b82f6 0%, transparent 65%)', filter: 'blur(80px)' }} />
+      <div className="absolute -bottom-32 left-1/4 w-[420px] h-[420px] rounded-full opacity-28 pointer-events-none" style={{ background: 'radial-gradient(circle, #ec4899 0%, transparent 65%)', filter: 'blur(80px)' }} />
+      <div className="w-full max-w-md relative z-10">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 text-2xl font-bold text-slate-900">
-            <Home className="w-8 h-8 text-primary-500" />
-            ImmoParticuliers
+          <Link to="/" className="inline-flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #7c3aed, #3b82f6)' }}>
+              <Home className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold font-heading text-gradient-brand">ImmoParticuliers</span>
           </Link>
         </div>
 
@@ -228,13 +239,10 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-slate-500">ou</span>
-            </div>
+          <div className="flex items-center gap-3 my-6">
+            <div className="flex-1 h-px" style={{ background: 'var(--glass-border)' }} />
+            <span className="text-xs font-medium" style={{ color: 'var(--text-tertiary)' }}>ou</span>
+            <div className="flex-1 h-px" style={{ background: 'var(--glass-border)' }} />
           </div>
 
           <GoogleSignInButton

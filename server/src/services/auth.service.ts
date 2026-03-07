@@ -1,4 +1,4 @@
-import { UserRole } from '@prisma/client'
+import { UserRole, Prisma } from '@prisma/client'
 import { prisma } from '../config/database.js'
 import {
   generateAccessToken,
@@ -652,29 +652,48 @@ class AuthService {
    */
   async updateProfile(
     userId: string,
-    data: { firstName?: string; lastName?: string; phone?: string; bio?: string }
+    data: {
+      firstName?: string; lastName?: string; phone?: string; bio?: string
+      // Identity document fields
+      birthDate?: string; birthCity?: string; nationality?: string
+      nationalNumber?: string; documentNumber?: string; documentExpiry?: string
+      // Flexible AI-extracted metadata (JSON — merged, not overwritten)
+      profileMeta?: Record<string, unknown>
+    }
   ) {
+    // profileMeta: deep-merge existing JSON with incoming data
+    let mergedMeta: Record<string, unknown> | undefined
+    if (data.profileMeta) {
+      const existing = await prisma.user.findUnique({
+        where: { id: userId }, select: { profileMeta: true },
+      })
+      const existingMeta = (existing?.profileMeta as Record<string, unknown>) ?? {}
+      mergedMeta = { ...existingMeta, ...data.profileMeta }
+    }
+
     const user = await prisma.user.update({
       where: { id: userId },
       data: {
-        ...(data.firstName !== undefined && { firstName: data.firstName }),
-        ...(data.lastName !== undefined && { lastName: data.lastName }),
-        ...(data.phone !== undefined && { phone: data.phone || null }),
-        ...(data.bio !== undefined && { bio: data.bio || null }),
+        ...(data.firstName      !== undefined && { firstName:      data.firstName }),
+        ...(data.lastName       !== undefined && { lastName:       data.lastName }),
+        ...(data.phone          !== undefined && { phone:          data.phone || null }),
+        ...(data.bio            !== undefined && { bio:            data.bio || null }),
+        ...(data.birthDate      !== undefined && { birthDate:      data.birthDate || null }),
+        ...(data.birthCity      !== undefined && { birthCity:      data.birthCity || null }),
+        ...(data.nationality    !== undefined && { nationality:    data.nationality || null }),
+        ...(data.nationalNumber !== undefined && { nationalNumber: data.nationalNumber || null }),
+        ...(data.documentNumber !== undefined && { documentNumber: data.documentNumber || null }),
+        ...(data.documentExpiry !== undefined && { documentExpiry: data.documentExpiry || null }),
+        ...(mergedMeta          !== undefined && { profileMeta:    mergedMeta as Prisma.InputJsonValue }),
       },
       select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        avatar: true,
-        phone: true,
-        bio: true,
-        emailVerified: true,
-        phoneVerified: true,
-        createdAt: true,
-        updatedAt: true,
+        id: true, email: true, firstName: true, lastName: true,
+        role: true, avatar: true, phone: true, bio: true,
+        emailVerified: true, phoneVerified: true,
+        birthDate: true, birthCity: true, nationality: true,
+        nationalNumber: true, documentNumber: true, documentExpiry: true,
+        profileMeta: true,
+        createdAt: true, updatedAt: true,
       },
     })
 
@@ -688,18 +707,13 @@ class AuthService {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        avatar: true,
-        phone: true,
-        bio: true,
-        emailVerified: true,
-        phoneVerified: true,
-        createdAt: true,
-        updatedAt: true,
+        id: true, email: true, firstName: true, lastName: true,
+        role: true, avatar: true, phone: true, bio: true,
+        emailVerified: true, phoneVerified: true,
+        birthDate: true, birthCity: true, nationality: true,
+        nationalNumber: true, documentNumber: true, documentExpiry: true,
+        profileMeta: true,
+        createdAt: true, updatedAt: true,
       },
     })
 

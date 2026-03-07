@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { dossierService } from '../services/dossier.service.js'
+import { dossierService, ProfileData } from '../services/dossier.service.js'
 import { saveFile } from '../utils/upload.util.js'
 
 class DossierController {
@@ -71,6 +71,24 @@ class DossierController {
       })
 
       return res.status(201).json({ success: true, data: doc })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  /**
+   * PATCH /api/v1/dossier/profile
+   * Save AI-extracted profile data (identity, salary, employer…) to user account.
+   */
+  async saveProfile(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.id
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'Authentification requise' })
+      }
+      const data: ProfileData = req.body
+      await dossierService.saveProfile(userId, data)
+      return res.json({ success: true, message: 'Profil mis à jour' })
     } catch (error) {
       next(error)
     }

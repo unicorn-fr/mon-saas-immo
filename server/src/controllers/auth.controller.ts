@@ -365,13 +365,27 @@ class AuthController {
         })
       }
 
-      const { firstName, lastName, phone, bio } = req.body
+      const {
+        firstName, lastName, phone, bio,
+        birthDate, birthCity, nationality, nationalNumber, documentNumber, documentExpiry,
+        profileMeta,
+      } = req.body
 
       const user = await authService.updateProfile(userId, {
-        firstName: firstName ? sanitizeInput(firstName) : undefined,
-        lastName: lastName ? sanitizeInput(lastName) : undefined,
-        phone: phone !== undefined ? sanitizeInput(phone) : undefined,
-        bio: bio !== undefined ? bio.trim() : undefined,
+        firstName:      firstName      ? sanitizeInput(firstName)      : undefined,
+        lastName:       lastName       ? sanitizeInput(lastName)       : undefined,
+        phone:          phone          !== undefined ? sanitizeInput(phone) : undefined,
+        bio:            bio            !== undefined ? bio.trim()           : undefined,
+        birthDate:      birthDate      !== undefined ? sanitizeInput(birthDate)      : undefined,
+        birthCity:      birthCity      !== undefined ? sanitizeInput(birthCity)      : undefined,
+        nationality:    nationality    !== undefined ? sanitizeInput(nationality)    : undefined,
+        nationalNumber: nationalNumber !== undefined ? sanitizeInput(nationalNumber) : undefined,
+        documentNumber: documentNumber !== undefined ? sanitizeInput(documentNumber) : undefined,
+        documentExpiry: documentExpiry !== undefined ? sanitizeInput(documentExpiry) : undefined,
+        // profileMeta: validated JSON object only
+        profileMeta:    (profileMeta && typeof profileMeta === 'object' && !Array.isArray(profileMeta))
+                          ? profileMeta as Record<string, unknown>
+                          : undefined,
       })
 
       return res.status(200).json({

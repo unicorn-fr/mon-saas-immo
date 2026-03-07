@@ -101,6 +101,9 @@ export interface Property {
   visitAvailabilitySlots?: VisitAvailabilitySlot[]
   visitDateOverrides?: VisitDateOverride[]
 
+  // Selection criteria (pre-qualification requirements set by the owner)
+  selectionCriteria?: import('./application.types').SelectionCriteria
+
   // Timestamps
   createdAt: string
   updatedAt: string
@@ -137,6 +140,7 @@ export interface CreatePropertyInput {
   visitDuration?: number
   visitAvailabilitySlots?: VisitAvailabilitySlot[]
   visitDateOverrides?: VisitDateOverride[]
+  selectionCriteria?: import('./application.types').SelectionCriteria
 }
 
 export interface UpdatePropertyInput {
@@ -170,6 +174,7 @@ export interface UpdatePropertyInput {
   visitDuration?: number
   visitAvailabilitySlots?: VisitAvailabilitySlot[]
   visitDateOverrides?: VisitDateOverride[]
+  selectionCriteria?: import('./application.types').SelectionCriteria
 }
 
 export interface PropertyFilters {

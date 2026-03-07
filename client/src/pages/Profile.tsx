@@ -23,6 +23,11 @@ import {
   ShieldCheck,
   ShieldOff,
   QrCode,
+  CreditCard,
+  MapPin,
+  Calendar,
+  Globe,
+  Hash,
 } from 'lucide-react'
 
 export default function Profile() {
@@ -472,6 +477,139 @@ export default function Profile() {
                 </div>
               </div>
             </div>
+
+            {/* ===== Section: Mes données (IA — toutes catégories) ===== */}
+            {user?.role === 'TENANT' && (
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <div className="flex items-center gap-2 mb-1">
+                  <CreditCard className="w-5 h-5 text-slate-700" />
+                  <h3 className="text-xl font-bold text-slate-900">Mes données extraites</h3>
+                </div>
+                <p className="text-xs text-slate-400 mb-6">Classifiées automatiquement par l'IA depuis vos documents scannés</p>
+
+                {/* ─── Identité ─── */}
+                {(user.birthDate || user.birthCity || user.nationality || user.documentNumber || user.documentExpiry || user.nationalNumber) && (
+                  <div className="mb-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-2 h-2 rounded-full bg-cyan-500" />
+                      <span className="text-xs font-semibold text-cyan-700 uppercase tracking-wide">Identité</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {user.birthDate && (
+                        <div className="flex items-center gap-2 p-3 bg-cyan-50 rounded-xl">
+                          <Calendar className="w-4 h-4 text-cyan-500 flex-shrink-0" />
+                          <div><p className="text-xs text-cyan-600 font-medium">Date de naissance</p><p className="text-sm text-slate-900">{user.birthDate}</p></div>
+                        </div>
+                      )}
+                      {user.birthCity && (
+                        <div className="flex items-center gap-2 p-3 bg-cyan-50 rounded-xl">
+                          <MapPin className="w-4 h-4 text-cyan-500 flex-shrink-0" />
+                          <div><p className="text-xs text-cyan-600 font-medium">Lieu de naissance</p><p className="text-sm text-slate-900">{user.birthCity}</p></div>
+                        </div>
+                      )}
+                      {user.nationality && (
+                        <div className="flex items-center gap-2 p-3 bg-cyan-50 rounded-xl">
+                          <Globe className="w-4 h-4 text-cyan-500 flex-shrink-0" />
+                          <div><p className="text-xs text-cyan-600 font-medium">Nationalité</p><p className="text-sm text-slate-900">{user.nationality}</p></div>
+                        </div>
+                      )}
+                      {user.documentNumber && (
+                        <div className="flex items-center gap-2 p-3 bg-cyan-50 rounded-xl">
+                          <Hash className="w-4 h-4 text-cyan-500 flex-shrink-0" />
+                          <div><p className="text-xs text-cyan-600 font-medium">N° de pièce d'identité</p><p className="text-sm text-slate-900 font-mono">{user.documentNumber}</p></div>
+                        </div>
+                      )}
+                      {user.documentExpiry && (
+                        <div className="flex items-center gap-2 p-3 bg-cyan-50 rounded-xl">
+                          <Calendar className="w-4 h-4 text-cyan-500 flex-shrink-0" />
+                          <div><p className="text-xs text-cyan-600 font-medium">Validité du document</p><p className="text-sm text-slate-900">{user.documentExpiry}</p></div>
+                        </div>
+                      )}
+                      {user.nationalNumber && (
+                        <div className="flex items-center gap-2 p-3 bg-cyan-50 rounded-xl">
+                          <Shield className="w-4 h-4 text-cyan-500 flex-shrink-0" />
+                          <div><p className="text-xs text-cyan-600 font-medium">N° sécurité sociale</p><p className="text-sm text-slate-900 font-mono">{user.nationalNumber}</p></div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ─── Sections dynamiques depuis profileMeta ─── */}
+                {user.profileMeta && Object.entries(user.profileMeta)
+                  .filter(([family]) => family !== 'IDENTITE')
+                  .map(([family, meta]) => {
+                    const SECTION_CONFIG: Record<string, { label: string; color: string; bg: string; dot: string }> = {
+                      BULLETIN:       { label: 'Revenus — Bulletins de salaire', color: 'text-violet-700', bg: 'bg-violet-50', dot: 'bg-violet-500' },
+                      REVENUS_FISCAUX:{ label: 'Revenus fiscaux',               color: 'text-emerald-700', bg: 'bg-emerald-50', dot: 'bg-emerald-500' },
+                      DOMICILE:       { label: 'Domicile',                       color: 'text-amber-700',   bg: 'bg-amber-50',   dot: 'bg-amber-500' },
+                      GARANTIE:       { label: 'Garanties (Visale / Caution)',   color: 'text-blue-700',    bg: 'bg-blue-50',    dot: 'bg-blue-500' },
+                      BANCAIRE:       { label: 'Compte bancaire',                color: 'text-slate-700',   bg: 'bg-slate-50',   dot: 'bg-slate-500' },
+                      EMPLOI:         { label: 'Emploi',                         color: 'text-orange-700',  bg: 'bg-orange-50',  dot: 'bg-orange-500' },
+                      LOGEMENT:       { label: 'Logement',                       color: 'text-teal-700',    bg: 'bg-teal-50',    dot: 'bg-teal-500' },
+                    }
+                    const cfg = SECTION_CONFIG[family] ?? { label: family, color: 'text-slate-700', bg: 'bg-slate-50', dot: 'bg-slate-400' }
+                    const FIELD_LABELS: Record<string, string> = {
+                      employerName: 'Employeur', netSalary: 'Salaire net', grossSalary: 'Salaire brut',
+                      bulletinPeriod: 'Période', contractType: 'Type de contrat', siret: 'SIRET',
+                      fiscalRef: 'Revenu fiscal de référence', cafAmount: 'Allocations CAF (€/mois)',
+                      areAmount: 'Allocation chômage (€/mois)', pensionAmount: 'Pension retraite (€/mois)',
+                      address: 'Adresse', issuerName: 'Émetteur',
+                      visaleAmount: 'Loyer garanti (€/mois)', visaleDuration: 'Durée garantie',
+                      visaNumber: 'N° Visa Visale', guarantorLastName: 'Nom garant',
+                      guarantorFirstName: 'Prénom garant',
+                      ibanPrefix: 'IBAN (préfixe)', loanAmount: 'Échéance crédit (€/mois)',
+                    }
+                    const displayFields = Object.entries(meta)
+                      .filter(([k]) => !k.startsWith('_') && FIELD_LABELS[k])
+                    if (!displayFields.length) return null
+                    return (
+                      <div key={family} className="mb-5">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className={`w-2 h-2 rounded-full ${cfg.dot}`} />
+                          <span className={`text-xs font-semibold ${cfg.color} uppercase tracking-wide`}>{cfg.label}</span>
+                          {meta._docType ? <span className="text-xs text-slate-400 ml-auto">{String(meta._docType)}</span> : null}
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {displayFields.map(([key, value]) => (
+                            <div key={key} className={`flex items-center gap-2 p-3 ${cfg.bg} rounded-xl`}>
+                              <FileText className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                              <div>
+                                <p className={`text-xs ${cfg.color} font-medium`}>{FIELD_LABELS[key]}</p>
+                                <p className="text-sm text-slate-900">
+                                  {typeof value === 'number'
+                                    ? `${value.toLocaleString('fr-FR')} ${['netSalary','grossSalary','cafAmount','areAmount','pensionAmount','visaleAmount','loanAmount'].includes(key) ? '€' : ''}`
+                                    : String(value)}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })
+                }
+
+                {/* Empty state */}
+                {!user.birthDate && !user.birthCity && !user.nationality && !user.documentNumber &&
+                  !user.nationalNumber && (!user.profileMeta || Object.keys(user.profileMeta).length === 0) && (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-3">
+                      <CreditCard className="w-6 h-6 text-slate-400" />
+                    </div>
+                    <p className="text-sm font-medium text-slate-600">Aucune donnée extraite pour le moment</p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Déposez vos documents dans le dossier locataire — l'IA extraira et classifiera automatiquement vos données.
+                    </p>
+                  </div>
+                )}
+
+                <p className="text-xs text-slate-400 mt-4 flex items-center gap-1">
+                  <Shield className="w-3 h-3" />
+                  Données chiffrées et sécurisées — utilisées uniquement pour valider votre dossier locataire.
+                </p>
+              </div>
+            )}
 
             {/* ===== Section: Securite ===== */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">

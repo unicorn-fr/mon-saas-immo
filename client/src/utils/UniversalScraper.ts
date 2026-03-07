@@ -332,7 +332,11 @@ export function assignDocTypeSlot(
       if (lower.includes('passeport') || lower.includes('passport')) return 'PASSEPORT'
       if (lower.includes('titre de séjour') || lower.includes('résident') || lower.includes('prefecture'))
         return 'TITRE_SEJOUR'
-      return 'CNI'
+      // CNI recto/verso — caller overrides based on MRZ detection after identity matching;
+      // here we default to recto then verso if recto already filled
+      if (!alreadyAssigned.has('CNI_RECTO')) return 'CNI_RECTO'
+      if (!alreadyAssigned.has('CNI_VERSO')) return 'CNI_VERSO'
+      return 'CNI_RECTO'
     }
     case 'DOMICILE':
       return 'JUSTIFICATIF_DOMICILE'

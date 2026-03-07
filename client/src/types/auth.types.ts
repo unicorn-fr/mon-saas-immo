@@ -1,4 +1,4 @@
-export type UserRole = 'TENANT' | 'OWNER' | 'ADMIN'
+export type UserRole = 'TENANT' | 'OWNER' | 'ADMIN' | 'SUPER_ADMIN'
 
 export interface User {
   id: string
@@ -11,6 +11,15 @@ export interface User {
   bio: string | null
   emailVerified: boolean
   phoneVerified: boolean
+  // Identity document fields (extracted by AI scanner)
+  birthDate: string | null
+  birthCity: string | null
+  nationality: string | null
+  nationalNumber: string | null
+  documentNumber: string | null
+  documentExpiry: string | null
+  // Flexible AI-extracted metadata from ALL scanned documents
+  profileMeta: Record<string, Record<string, unknown>> | null
   createdAt: string
   updatedAt: string
 }

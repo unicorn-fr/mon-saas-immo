@@ -5,6 +5,7 @@ import morgan from 'morgan'
 import { rateLimit } from 'express-rate-limit'
 import { env } from './config/env.js'
 import { errorHandler } from './middlewares/error.middleware.js'
+import { sanitizeInput } from './middlewares/security.middleware.js'
 
 // Routes
 import authRoutes from './routes/auth.routes.js'
@@ -18,7 +19,9 @@ import contractRoutes from './routes/contract.routes.js'
 import documentRoutes from './routes/document.routes.js'
 import dossierRoutes from './routes/dossier.routes.js'
 import adminRoutes from './routes/admin.routes.js'
+import superAdminRoutes from './routes/superAdmin.routes.js'
 import marketRoutes from './routes/market.routes.js'
+import applicationRoutes from './routes/application.routes.js'
 // import userRoutes from './routes/user.routes.js'
 
 const app: Application = express()
@@ -27,8 +30,34 @@ const app: Application = express()
 // MIDDLEWARES
 // ============================================
 
-// Security headers
-app.use(helmet())
+// Security headers — hardened CSP
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+        connectSrc: ["'self'"],
+        fontSrc: ["'self'", 'https:', 'data:'],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'"],
+        frameSrc: ["'none'"],
+        upgradeInsecureRequests: [],
+      },
+    },
+    crossOriginEmbedderPolicy: false, // allow PDF/image loads
+    hsts: {
+      maxAge: 31536000, // 1 year
+      includeSubDomains: true,
+      preload: true,
+    },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    noSniff: true,
+    xssFilter: true,
+  })
+)
 
 // CORS - restrict to allowed origin in production
 app.use(
@@ -48,6 +77,9 @@ if (env.IS_PRODUCTION) {
 // Body parsing
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
+
+// Global input sanitization (null bytes, control chars, injection patterns)
+app.use(sanitizeInput)
 
 // Logging
 if (env.IS_DEVELOPMENT) {
@@ -105,7 +137,9 @@ app.use(`${API_PREFIX}/contracts`, contractRoutes)
 app.use(`${API_PREFIX}/documents`, documentRoutes)
 app.use(`${API_PREFIX}/dossier`, dossierRoutes)
 app.use(`${API_PREFIX}/admin`, adminRoutes)
+app.use(`${API_PREFIX}/super-admin`, superAdminRoutes)
 app.use(`${API_PREFIX}/market`, marketRoutes)
+app.use(`${API_PREFIX}/applications`, applicationRoutes)
 // app.use(`${API_PREFIX}/users`, userRoutes)
 
 // API root

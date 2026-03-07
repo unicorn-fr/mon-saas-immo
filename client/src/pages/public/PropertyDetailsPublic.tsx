@@ -15,6 +15,8 @@ import {
   AlertCircle,
   Check,
   X,
+  SendHorizonal,
+  Clock,
 } from 'lucide-react'
 import { useProperties } from '../../hooks/useProperties'
 import { useAuth } from '../../hooks/useAuth'
@@ -22,13 +24,18 @@ import { useFavoriteStore } from '../../store/favoriteStore'
 import { ContactModal } from '../../components/property/ContactModal'
 import { PropertyMap } from '../../components/property/PropertyMap'
 import { BookingModal } from '../../components/booking/BookingModal'
+import { PreQualificationModal } from '../../components/application/PreQualificationModal'
 import { PROPERTY_TYPES, AMENITIES } from '../../types/property.types'
 import { Layout } from '../../components/layout/Layout'
+import { applicationService } from '../../services/application.service'
+import { dossierService } from '../../services/dossierService'
+import type { Application } from '../../types/application.types'
+import { DEFAULT_CRITERIA } from '../../types/application.types'
 
 export default function PropertyDetailsPublic() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const { currentProperty, fetchPropertyById, isLoading, error } = useProperties()
   const { isFavorite, toggleFavorite, loadFavorites } = useFavoriteStore()
 
@@ -36,6 +43,9 @@ export default function PropertyDetailsPublic() {
   const [showContactModal, setShowContactModal] = useState(false)
   const [showBookingModal, setShowBookingModal] = useState(false)
   const [showShareMenu, setShowShareMenu] = useState(false)
+  const [showPreQualModal, setShowPreQualModal] = useState(false)
+  const [myApplication, setMyApplication] = useState<Application | null | undefined>(undefined)
+  const [docCategories, setDocCategories] = useState<string[]>([])
 
   useEffect(() => {
     if (id) {
@@ -48,6 +58,20 @@ export default function PropertyDetailsPublic() {
       loadFavorites()
     }
   }, [isAuthenticated, loadFavorites])
+
+  // Load tenant's existing application + doc categories for pre-qual
+  useEffect(() => {
+    if (!isAuthenticated || !id || user?.role !== 'TENANT') return
+    Promise.all([
+      applicationService.list(id).then((apps) => {
+        const mine = apps.find((a) => a.tenantId === user?.id)
+        setMyApplication(mine ?? null)
+      }).catch(() => setMyApplication(null)),
+      dossierService.getDocuments().then((docs) => {
+        setDocCategories([...new Set(docs.map((d) => d.category))])
+      }).catch(() => setDocCategories([])),
+    ])
+  }, [isAuthenticated, id, user?.id, user?.role]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleShare = () => {
     if (navigator.share) {
@@ -404,13 +428,49 @@ export default function PropertyDetailsPublic() {
                 </div>
               </div>
 
-              <button
-                onClick={() => setShowBookingModal(true)}
-                className="btn btn-primary w-full justify-center text-lg py-3 mb-3"
-              >
-                <Calendar className="w-5 h-5 mr-2" />
-                Réserver une visite
-              </button>
+              {/* Smart CTA: pre-qual tunnel for tenants */}
+              {!isAuthenticated ? (
+                <button
+                  onClick={() => navigate('/login')}
+                  className="btn btn-primary w-full justify-center text-lg py-3 mb-3"
+                >
+                  <SendHorizonal className="w-5 h-5 mr-2" />
+                  Postuler à cette annonce
+                </button>
+              ) : user?.role === 'TENANT' ? (
+                <>
+                  {myApplication?.status === 'APPROVED' ? (
+                    <button
+                      onClick={() => setShowBookingModal(true)}
+                      className="btn btn-primary w-full justify-center text-lg py-3 mb-3"
+                    >
+                      <Calendar className="w-5 h-5 mr-2" />
+                      Réserver une visite
+                    </button>
+                  ) : myApplication?.status === 'PENDING' ? (
+                    <div className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-sm font-medium py-3 mb-3">
+                      <Clock className="w-4 h-4" />
+                      Candidature en cours d'examen
+                    </div>
+                  ) : myApplication?.status === 'REJECTED' ? (
+                    <div className="w-full rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium p-3 mb-3 text-center">
+                      Candidature non retenue
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setShowPreQualModal(true)}
+                      className="btn btn-primary w-full justify-center text-lg py-3 mb-3"
+                    >
+                      <SendHorizonal className="w-5 h-5 mr-2" />
+                      Postuler à cette annonce
+                    </button>
+                  )}
+                </>
+              ) : user?.role === 'OWNER' ? (
+                <div className="w-full text-center text-sm text-slate-500 py-2 mb-3">
+                  Votre annonce — candidatures via le tableau de bord
+                </div>
+              ) : null}
 
               <button
                 onClick={() => setShowContactModal(true)}
@@ -466,10 +526,26 @@ export default function PropertyDetailsPublic() {
         propertyTitle={property.title}
         visitDuration={property.visitDuration || 30}
         onSuccess={() => {
-          // Optionally navigate to my bookings page after successful booking
-          // navigate('/my-bookings')
+          navigate('/my-bookings')
         }}
       />
+
+      {/* Pre-Qualification Modal */}
+      {showPreQualModal && (
+        <PreQualificationModal
+          propertyId={property.id}
+          propertyTitle={property.title}
+          propertyPrice={property.price}
+          criteria={property.selectionCriteria ?? DEFAULT_CRITERIA}
+          tenantProfileMeta={(user?.profileMeta as Record<string, unknown>) ?? null}
+          tenantDocCategories={docCategories}
+          onClose={() => setShowPreQualModal(false)}
+          onSuccess={() => {
+            setShowPreQualModal(false)
+            setMyApplication({ id: '', propertyId: property.id, tenantId: user?.id ?? '', status: 'PENDING', score: 0, matchDetails: null, coverLetter: null, hasGuarantor: false, guarantorType: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() })
+          }}
+        />
+      )}
     </Layout>
   )
 }

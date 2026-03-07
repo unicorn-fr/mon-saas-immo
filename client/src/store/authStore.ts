@@ -13,7 +13,12 @@ interface AuthActions {
   login: (credentials: LoginCredentials) => Promise<User>
   register: (data: RegisterData) => Promise<void>
   logout: () => Promise<void>
-  updateProfile: (data: { firstName?: string; lastName?: string; phone?: string; bio?: string }) => Promise<User>
+  updateProfile: (data: {
+    firstName?: string; lastName?: string; phone?: string; bio?: string
+    birthDate?: string; birthCity?: string; nationality?: string
+    nationalNumber?: string; documentNumber?: string; documentExpiry?: string
+    profileMeta?: Record<string, Record<string, unknown>>
+  }) => Promise<User>
   googleLogin: (idToken: string) => Promise<User>
   setUser: (user: User) => void
   setTokens: (accessToken: string, refreshToken: string) => void

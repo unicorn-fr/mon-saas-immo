@@ -43,7 +43,7 @@ export const PropertyCard = ({
       <div
         onClick={handleClick}
         className="flex gap-3 p-3 rounded-2xl border hover:shadow-card hover:border-primary-100 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group"
-        style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}
+        style={{ background: 'var(--surface-card)', backdropFilter: 'blur(16px) saturate(180%)', WebkitBackdropFilter: 'blur(16px) saturate(180%)', borderColor: 'var(--glass-border)' }}
       >
         <img
           src={mainImage}
@@ -74,7 +74,7 @@ export const PropertyCard = ({
     <div
       onClick={handleClick}
       className="group relative rounded-3xl border shadow-card hover:shadow-card-glow-violet hover:-translate-y-1.5 transition-all duration-300 cursor-pointer"
-      style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}
+      style={{ background: 'var(--surface-card)', backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)', borderColor: 'var(--glass-border)' }}
     >
       {/* Image — edge-to-edge, clips dans ses propres coins arrondis */}
       <div className="relative h-52 overflow-hidden rounded-t-3xl">

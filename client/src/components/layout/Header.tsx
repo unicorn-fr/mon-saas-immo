@@ -1,15 +1,33 @@
+/**
+ * Header / Topbar
+ *
+ * Mode public (non authentifié) :
+ *   Logo · Nav · [Connexion] [Inscription] — barre pleine largeur
+ *
+ * Mode dashboard (authentifié OWNER/TENANT) :
+ *   Topbar slim dans la colonne droite — hamburger mobile · espace · mode sombre · notifs · profil
+ *   Le logo est dans la sidebar, pas besoin de le répéter ici.
+ */
 import { Link, useNavigate } from 'react-router-dom'
-import { Home, User, LogOut, Settings, LayoutDashboard, Menu, X, Heart, Calendar, MessageSquare, FileText, Sun, Moon, FolderOpen, TrendingUp, Tag } from 'lucide-react'
+import {
+  Home, User, LogOut, Settings, LayoutDashboard, Menu,
+  Sun, Moon, TrendingUp, Tag, Terminal,
+  CreditCard, Bell, X,
+} from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useThemeStore } from '../../store/themeStore'
+import { useSidebarStore } from '../../store/sidebarStore'
 import { useState } from 'react'
 
 export const Header = () => {
   const { isAuthenticated, user, logout } = useAuth()
   const navigate = useNavigate()
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [showMobileMenu, setShowMobileMenu] = useState(false)
+  const [showMobilePublicMenu, setShowMobilePublicMenu] = useState(false)
   const { isDark, toggleDark } = useThemeStore()
+  const { toggle: toggleSidebar } = useSidebarStore()
+
+  const hasSidebar = isAuthenticated && (user?.role === 'OWNER' || user?.role === 'TENANT')
 
   const handleLogout = () => {
     logout()
@@ -18,182 +36,273 @@ export const Header = () => {
   }
 
   const getDashboardLink = () => {
+    if (user?.role === 'SUPER_ADMIN') return '/super-admin'
     if (user?.role === 'OWNER') return '/dashboard/owner'
     if (user?.role === 'TENANT') return '/dashboard/tenant'
     if (user?.role === 'ADMIN') return '/admin'
     return '/'
   }
 
-  return (
-    <header
-      className="backdrop-blur-sm border-b shadow-sm sticky top-0 z-50"
-      style={{ background: 'var(--surface-overlay)', borderBottomColor: 'var(--border)' }}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-            <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm"
-              style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #7c3aed 100%)' }}
-            >
-              <Home className="w-4 h-4 text-white" />
+  const headerStyle = {
+    background: hasSidebar
+      ? 'rgba(255,255,255,0.07)'
+      : 'rgba(255,255,255,0.12)',
+    backdropFilter: 'blur(24px) saturate(200%)',
+    WebkitBackdropFilter: 'blur(24px) saturate(200%)',
+    borderBottom: '1px solid var(--glass-border)',
+    boxShadow: hasSidebar
+      ? 'inset 0 -1px 0 rgba(255,255,255,0.08)'
+      : 'inset 0 -1px 0 rgba(255,255,255,0.15), 0 4px 24px rgba(0,0,0,0.05)',
+  }
+
+  // ── MODE DASHBOARD — Topbar slim (h-12) ───────────────────────────────────
+  if (hasSidebar) {
+    return (
+      <header className="flex-shrink-0 z-40 sticky top-0 border-b" style={headerStyle}>
+        <div className="flex items-center justify-between h-12 px-4">
+
+          {/* Gauche — hamburger mobile uniquement */}
+          <button
+            onClick={toggleSidebar}
+            className="md:hidden p-2 rounded-xl transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
+            aria-label="Menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+
+          {/* Espace vide sur desktop (la sidebar a le logo) */}
+          <div className="hidden md:block flex-1" />
+
+          {/* Super Admin badge */}
+          {user?.role === 'SUPER_ADMIN' && (
+            <Link to="/super-admin"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold mr-2"
+              style={{ background: 'rgba(0,180,216,0.12)', color: '#00b4d8', border: '1px solid rgba(0,180,216,0.3)' }}>
+              <Terminal className="w-3.5 h-3.5" /> Cerveau Central
+            </Link>
+          )}
+
+          {/* Droite — actions */}
+          <div className="flex items-center gap-1">
+
+            {/* Mode sombre */}
+            <button onClick={toggleDark}
+              className="p-2 rounded-xl transition-all hover:scale-110"
+              style={{ color: 'var(--text-tertiary)' }}
+              aria-label="Basculer le mode sombre">
+              {isDark ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
+            </button>
+
+            {/* Notifications */}
+            <Link to="/notifications"
+              className="relative p-2 rounded-xl transition-colors"
+              style={{ color: 'var(--text-tertiary)' }}>
+              <Bell className="w-[18px] h-[18px]" />
+            </Link>
+
+            {/* Profil dropdown */}
+            <div className="relative">
+              <button onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center gap-2 pl-1.5 pr-2 py-1.5 rounded-xl transition-colors ml-1"
+                style={{
+                  background: showUserMenu ? 'var(--surface-subtle)' : '',
+                  border: '1px solid var(--glass-border)',
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--surface-subtle)' }}
+                onMouseLeave={(e) => { if (!showUserMenu) (e.currentTarget as HTMLElement).style.background = '' }}>
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3b82f6, #7c3aed)' }}>
+                  <User className="w-3 h-3 text-white" />
+                </div>
+                <span className="text-[13px] font-medium hidden sm:block" style={{ color: 'var(--text-primary)' }}>
+                  {user?.firstName}
+                </span>
+              </button>
+
+              {showUserMenu && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
+                  <div className="absolute right-0 mt-2 w-56 rounded-2xl shadow-xl border py-2 z-20"
+                    style={{
+                      background: 'rgba(255,255,255,0.12)',
+                      backdropFilter: 'blur(24px) saturate(200%)',
+                      WebkitBackdropFilter: 'blur(24px) saturate(200%)',
+                      borderColor: 'var(--glass-border)',
+                      boxShadow: '0 16px 48px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.70)',
+                    }}>
+                    <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--glass-border)' }}>
+                      <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                        {user?.firstName} {user?.lastName}
+                      </p>
+                      <p className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>{user?.email}</p>
+                      <span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium"
+                        style={{ background: 'rgba(124,58,237,0.12)', color: '#a78bfa', border: '1px solid rgba(124,58,237,0.25)' }}>
+                        {user?.role === 'OWNER' ? 'Propriétaire' : user?.role === 'TENANT' ? 'Locataire' : user?.role}
+                      </span>
+                    </div>
+
+                    {[
+                      { to: getDashboardLink(), icon: <LayoutDashboard className="w-4 h-4" />, label: 'Tableau de bord' },
+                      { to: '/profile', icon: <Settings className="w-4 h-4" />, label: 'Mon profil' },
+                      { to: '/pricing', icon: <CreditCard className="w-4 h-4" />, label: 'Mon abonnement' },
+                    ].map(({ to, icon, label }) => (
+                      <Link key={to} to={to}
+                        className="flex items-center gap-3 px-4 py-2 text-sm transition-colors"
+                        style={{ color: 'var(--text-primary)' }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--surface-subtle)' }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
+                        onClick={() => setShowUserMenu(false)}>
+                        {icon} {label}
+                      </Link>
+                    ))}
+
+                    <div className="border-t mt-2 pt-2" style={{ borderColor: 'var(--glass-border)' }}>
+                      <button onClick={handleLogout}
+                        className="flex items-center gap-3 px-4 py-2 text-sm text-red-500 w-full transition-colors"
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.06)' }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
+                        <LogOut className="w-4 h-4" /> Déconnexion
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
-            <span className="text-lg font-bold hidden sm:block font-heading" style={{ color: 'var(--text-primary)' }}>ImmoParticuliers</span>
+          </div>
+        </div>
+      </header>
+    )
+  }
+
+  // ── MODE PUBLIC — Header pleine largeur ───────────────────────────────────
+  return (
+    <header className="sticky top-0 z-50 flex-shrink-0 border-b" style={headerStyle}>
+      <div className="max-w-full px-4 sm:px-6">
+        <div className="flex items-center justify-between h-14">
+
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <div
+              className="w-7 h-7 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0"
+              style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)' }}
+            >
+              <Home className="w-3.5 h-3.5 text-white" />
+            </div>
+            <span className="text-base font-bold hidden sm:block font-heading text-gradient-brand">
+              ImmoParticuliers
+            </span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
+          {/* Navigation publique desktop */}
+          {!isAuthenticated && (
+            <nav className="hidden md:flex items-center gap-5">
+              <Link to="/" className="text-sm font-medium transition-colors" style={{ color: 'var(--text-secondary)' }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)' }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)' }}>
+                Accueil
+              </Link>
+              <Link to="/search" className="text-sm font-medium transition-colors" style={{ color: 'var(--text-secondary)' }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)' }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)' }}>
+                Les biens
+              </Link>
+              <Link to="/calculateur" className="text-sm font-medium flex items-center gap-1 transition-colors" style={{ color: 'var(--text-secondary)' }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)' }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)' }}>
+                <TrendingUp className="w-3.5 h-3.5" /> Calculateur
+              </Link>
+              <Link to="/pricing" className="text-sm font-medium flex items-center gap-1 transition-colors" style={{ color: 'var(--text-secondary)' }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)' }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)' }}>
+                <Tag className="w-3.5 h-3.5" /> Tarifs
+              </Link>
+            </nav>
+          )}
+
+          {/* Super Admin badge */}
+          {isAuthenticated && user?.role === 'SUPER_ADMIN' && (
+            <Link to="/super-admin"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold"
+              style={{ background: 'rgba(0,180,216,0.12)', color: '#00b4d8', border: '1px solid rgba(0,180,216,0.3)' }}>
+              <Terminal className="w-3.5 h-3.5" /> Cerveau Central
+            </Link>
+          )}
+
+          {/* Droite */}
+          <div className="flex items-center gap-1.5">
+
+            {/* Mode sombre */}
+            <button onClick={toggleDark}
+              className="p-2 rounded-xl transition-all hover:scale-110"
+              style={{ color: 'var(--text-tertiary)' }}
+              aria-label="Basculer le mode sombre">
+              {isDark ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
+            </button>
+
             {isAuthenticated ? (
               <>
-                {/* Owner Links */}
-                {user?.role === 'OWNER' && (
-                  <>
-                    <Link
-                      to="/properties/owner/me"
-                      className="text-slate-600 hover:text-primary-600 font-medium transition-colors dark:text-slate-400 dark:hover:text-primary-400"
-                    >
-                      Mes biens
-                    </Link>
-                    <Link
-                      to="/bookings/manage"
-                      className="text-slate-600 hover:text-primary-600 font-medium transition-colors dark:text-slate-400 dark:hover:text-primary-400"
-                    >
-                      Réservations
-                    </Link>
-                    <Link
-                      to="/contracts"
-                      className="text-slate-600 hover:text-primary-600 font-medium transition-colors flex items-center gap-1 dark:text-slate-400 dark:hover:text-primary-400"
-                    >
-                      <FileText className="w-4 h-4" />
-                      Contrats
-                    </Link>
-                  </>
-                )}
-
-                {/* Tenant Links */}
-                {user?.role === 'TENANT' && (
-                  <>
-                    <Link
-                      to="/favorites"
-                      className="text-slate-600 hover:text-primary-600 font-medium transition-colors flex items-center gap-1 dark:text-slate-400 dark:hover:text-primary-400"
-                    >
-                      <Heart className="w-4 h-4" />
-                      Favoris
-                    </Link>
-                    <Link
-                      to="/my-bookings"
-                      className="text-slate-600 hover:text-primary-600 font-medium transition-colors flex items-center gap-1 dark:text-slate-400 dark:hover:text-primary-400"
-                    >
-                      <Calendar className="w-4 h-4" />
-                      Mes visites
-                    </Link>
-                    <Link
-                      to="/contracts"
-                      className="text-slate-600 hover:text-primary-600 font-medium transition-colors flex items-center gap-1 dark:text-slate-400 dark:hover:text-primary-400"
-                    >
-                      <FileText className="w-4 h-4" />
-                      Contrats
-                    </Link>
-                    <Link
-                      to="/dossier"
-                      className="text-slate-600 hover:text-primary-600 font-medium transition-colors flex items-center gap-1 dark:text-slate-400 dark:hover:text-primary-400"
-                    >
-                      <FolderOpen className="w-4 h-4" />
-                      Mon dossier
-                    </Link>
-                  </>
-                )}
-
-                {/* Common Links for all authenticated users */}
-                <Link
-                  to="/messages"
-                  className="text-slate-600 hover:text-primary-600 font-medium transition-colors flex items-center gap-1 dark:text-slate-400 dark:hover:text-primary-400"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  Messages
-                </Link>
-                <Link
-                  to="/calculateur"
-                  className="text-slate-600 hover:text-primary-600 font-medium transition-colors flex items-center gap-1 dark:text-slate-400 dark:hover:text-primary-400"
-                >
-                  <TrendingUp className="w-4 h-4" />
-                  Calculateur
-                </Link>
-                <Link
-                  to="/pricing"
-                  className="text-slate-600 hover:text-primary-600 font-medium transition-colors flex items-center gap-1 dark:text-slate-400 dark:hover:text-primary-400"
-                >
-                  <Tag className="w-4 h-4" />
-                  Tarifs
+                <Link to="/notifications"
+                  className="relative p-2 rounded-xl transition-colors"
+                  style={{ color: 'var(--text-tertiary)' }}>
+                  <Bell className="w-[18px] h-[18px]" />
                 </Link>
 
-                {/* Dark Mode Toggle */}
-                <button
-                  onClick={toggleDark}
-                  className="p-2 rounded-xl hover:bg-slate-100 transition-colors text-slate-600 dark:hover:bg-slate-800 dark:text-slate-400"
-                  aria-label="Basculer le mode sombre"
-                >
-                  {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                </button>
-
-                {/* User Menu */}
                 <div className="relative">
-                  <button
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-100 transition-colors dark:hover:bg-slate-800"
-                  >
-                    <div className="w-8 h-8 bg-primary-100 rounded-xl flex items-center justify-center dark:bg-primary-900">
-                      <User className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                  <button onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center gap-2 pl-1.5 pr-2.5 py-1.5 rounded-xl transition-colors"
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--surface-subtle)' }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3b82f6, #7c3aed)' }}>
+                      <User className="w-3.5 h-3.5 text-white" />
                     </div>
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    <span className="text-sm font-medium hidden sm:block" style={{ color: 'var(--text-primary)' }}>
                       {user?.firstName}
                     </span>
                   </button>
 
-                  {/* Dropdown Menu */}
                   {showUserMenu && (
                     <>
-                      <div
-                        className="fixed inset-0 z-10"
-                        onClick={() => setShowUserMenu(false)}
-                      />
-                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-modal border border-slate-200 py-2 z-20 dark:border-slate-700">
-                        <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700">
-                          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
+                      <div className="absolute right-0 mt-2 w-56 rounded-2xl shadow-xl border py-2 z-20"
+                        style={{
+                          background: 'rgba(255,255,255,0.14)',
+                          backdropFilter: 'blur(24px) saturate(200%)',
+                          WebkitBackdropFilter: 'blur(24px) saturate(200%)',
+                          borderColor: 'var(--glass-border)',
+                          boxShadow: '0 16px 48px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.70)',
+                        }}>
+                        <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--glass-border)' }}>
+                          <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
                             {user?.firstName} {user?.lastName}
                           </p>
-                          <p className="text-xs text-slate-700 truncate dark:text-slate-400">{user?.email}</p>
-                          <p className="text-xs text-primary-600 mt-1 capitalize dark:text-primary-400">
+                          <p className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>{user?.email}</p>
+                          <span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium"
+                            style={{ background: 'rgba(124,58,237,0.10)', color: '#7c3aed' }}>
                             {user?.role === 'OWNER' ? 'Propriétaire' : user?.role === 'TENANT' ? 'Locataire' : user?.role}
-                          </p>
+                          </span>
                         </div>
 
-                        <Link
-                          to={getDashboardLink()}
-                          className="flex items-center gap-3 px-4 py-2 text-sm text-slate-900 hover:bg-slate-50 transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
-                          onClick={() => setShowUserMenu(false)}
-                        >
-                          <LayoutDashboard className="w-4 h-4" />
-                          Tableau de bord
-                        </Link>
+                        {[
+                          { to: getDashboardLink(), icon: <LayoutDashboard className="w-4 h-4" />, label: 'Tableau de bord' },
+                          { to: '/profile', icon: <Settings className="w-4 h-4" />, label: 'Mon profil' },
+                          { to: '/pricing', icon: <CreditCard className="w-4 h-4" />, label: 'Mon abonnement' },
+                        ].map(({ to, icon, label }) => (
+                          <Link key={to} to={to}
+                            className="flex items-center gap-3 px-4 py-2 text-sm transition-colors"
+                            style={{ color: 'var(--text-primary)' }}
+                            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--surface-subtle)' }}
+                            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
+                            onClick={() => setShowUserMenu(false)}>
+                            {icon} {label}
+                          </Link>
+                        ))}
 
-                        <Link
-                          to="/profile"
-                          className="flex items-center gap-3 px-4 py-2 text-sm text-slate-900 hover:bg-slate-50 transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
-                          onClick={() => setShowUserMenu(false)}
-                        >
-                          <Settings className="w-4 h-4" />
-                          Mon profil
-                        </Link>
-
-                        <div className="border-t border-slate-100 mt-2 pt-2 dark:border-slate-700">
-                          <button
-                            onClick={handleLogout}
-                            className="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full transition-colors dark:text-red-400 dark:hover:bg-red-900/20"
-                          >
-                            <LogOut className="w-4 h-4" />
-                            Déconnexion
+                        <div className="border-t mt-2 pt-2" style={{ borderColor: 'var(--glass-border)' }}>
+                          <button onClick={handleLogout}
+                            className="flex items-center gap-3 px-4 py-2 text-sm text-red-500 w-full transition-colors"
+                            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.06)' }}
+                            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
+                            <LogOut className="w-4 h-4" /> Déconnexion
                           </button>
                         </div>
                       </div>
@@ -203,178 +312,45 @@ export const Header = () => {
               </>
             ) : (
               <>
-                {/* Public nav — same as Home page */}
-                <Link to="/" className="text-slate-600 hover:text-primary-600 font-medium transition-colors dark:text-slate-400 dark:hover:text-primary-400">
-                  Accueil
-                </Link>
-                <Link to="/#how-it-works" className="text-slate-600 hover:text-primary-600 font-medium transition-colors dark:text-slate-400 dark:hover:text-primary-400">
-                  Comment ça marche
-                </Link>
-                <Link to="/search" className="text-slate-600 hover:text-primary-600 font-medium transition-colors dark:text-slate-400 dark:hover:text-primary-400">
-                  Les biens
-                </Link>
-                <Link to="/calculateur" className="text-slate-600 hover:text-primary-600 font-medium transition-colors flex items-center gap-1 dark:text-slate-400 dark:hover:text-primary-400">
-                  <TrendingUp className="w-4 h-4" /> Calculateur
-                </Link>
-                <Link to="/pricing" className="text-slate-600 hover:text-primary-600 font-medium transition-colors flex items-center gap-1 dark:text-slate-400 dark:hover:text-primary-400">
-                  <Tag className="w-4 h-4" /> Tarifs
-                </Link>
-                {/* Dark Mode Toggle */}
-                <button
-                  onClick={toggleDark}
-                  className="p-2 rounded-xl hover:bg-slate-100 transition-colors text-slate-600 dark:hover:bg-slate-800 dark:text-slate-400"
-                  aria-label="Basculer le mode sombre"
-                >
-                  {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                {/* Mobile burger public */}
+                <button onClick={() => setShowMobilePublicMenu(!showMobilePublicMenu)}
+                  className="md:hidden p-2 rounded-xl transition-colors"
+                  style={{ color: 'var(--text-secondary)' }}>
+                  {showMobilePublicMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                 </button>
-                <Link to="/login" className="btn btn-secondary">
-                  Connexion
-                </Link>
-                <Link to="/register" className="btn btn-primary">
-                  Inscription
-                </Link>
+
+                {/* CTA desktop */}
+                <div className="hidden md:flex items-center gap-2">
+                  <Link to="/login" className="btn-neon-violet text-sm px-4 py-2">Connexion</Link>
+                  <Link to="/register" className="btn btn-primary text-sm py-2 px-4">Inscription</Link>
+                </div>
               </>
             )}
-          </nav>
-
-          {/* Mobile: Dark toggle + Menu Button */}
-          <div className="md:hidden flex items-center gap-2">
-            <button
-              onClick={toggleDark}
-              className="p-2 rounded-xl hover:bg-slate-100 transition-colors text-slate-600 dark:hover:bg-slate-800 dark:text-slate-400"
-              aria-label="Basculer le mode sombre"
-            >
-              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
-            <button
-              onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="p-2 rounded-xl hover:bg-slate-100 transition-colors dark:hover:bg-slate-800"
-            >
-              {showMobileMenu ? (
-                <X className="w-6 h-6 text-slate-700 dark:text-slate-300" />
-              ) : (
-                <Menu className="w-6 h-6 text-slate-700 dark:text-slate-300" />
-              )}
-            </button>
           </div>
         </div>
 
-        {/* Mobile Menu */}
-        {showMobileMenu && (
-          <div className="md:hidden border-t border-slate-200 py-4 space-y-1 dark:border-slate-800">
-            {isAuthenticated ? (
-              <>
-                {user?.role === 'OWNER' && (
-                  <>
-                    <Link
-                      to="/properties/owner/me"
-                      className="block px-4 py-2.5 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
-                      onClick={() => setShowMobileMenu(false)}
-                    >
-                      Mes biens
-                    </Link>
-                    <Link
-                      to="/bookings/manage"
-                      className="block px-4 py-2.5 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
-                      onClick={() => setShowMobileMenu(false)}
-                    >
-                      Réservations
-                    </Link>
-                    <Link
-                      to="/contracts"
-                      className="block px-4 py-2.5 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
-                      onClick={() => setShowMobileMenu(false)}
-                    >
-                      Contrats
-                    </Link>
-                  </>
-                )}
-
-                {user?.role === 'TENANT' && (
-                  <>
-                    <Link
-                      to="/favorites"
-                      className="block px-4 py-2.5 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
-                      onClick={() => setShowMobileMenu(false)}
-                    >
-                      Favoris
-                    </Link>
-                    <Link
-                      to="/my-bookings"
-                      className="block px-4 py-2.5 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
-                      onClick={() => setShowMobileMenu(false)}
-                    >
-                      Mes visites
-                    </Link>
-                    <Link
-                      to="/contracts"
-                      className="block px-4 py-2.5 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
-                      onClick={() => setShowMobileMenu(false)}
-                    >
-                      Contrats
-                    </Link>
-                    <Link
-                      to="/dossier"
-                      className="block px-4 py-2.5 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
-                      onClick={() => setShowMobileMenu(false)}
-                    >
-                      Mon dossier
-                    </Link>
-                  </>
-                )}
-
-                <Link
-                  to="/messages"
-                  className="block px-4 py-2.5 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
-                  onClick={() => setShowMobileMenu(false)}
-                >
-                  Messages
-                </Link>
-
-                <Link
-                  to="/profile"
-                  className="block px-4 py-2.5 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
-                  onClick={() => setShowMobileMenu(false)}
-                >
-                  Mon profil
-                </Link>
-
-                <div className="pt-2 border-t border-slate-100 mt-2 dark:border-slate-700">
-                  <button
-                    onClick={handleLogout}
-                    className="block w-full text-left px-4 py-2.5 text-red-600 hover:bg-red-50 rounded-xl font-medium transition-colors dark:text-red-400 dark:hover:bg-red-900/20"
-                  >
-                    Déconnexion
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <Link to="/" className="block px-4 py-2.5 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-colors dark:text-slate-300 dark:hover:bg-slate-800" onClick={() => setShowMobileMenu(false)}>
-                  Accueil
-                </Link>
-                <Link to="/#how-it-works" className="block px-4 py-2.5 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-colors dark:text-slate-300 dark:hover:bg-slate-800" onClick={() => setShowMobileMenu(false)}>
-                  Comment ça marche
-                </Link>
-                <Link to="/search" className="block px-4 py-2.5 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-colors dark:text-slate-300 dark:hover:bg-slate-800" onClick={() => setShowMobileMenu(false)}>
-                  Les biens
-                </Link>
-                <Link to="/calculateur" className="block px-4 py-2.5 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-colors dark:text-slate-300 dark:hover:bg-slate-800" onClick={() => setShowMobileMenu(false)}>
-                  Calculateur
-                </Link>
-                <Link to="/pricing" className="block px-4 py-2.5 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-colors dark:text-slate-300 dark:hover:bg-slate-800" onClick={() => setShowMobileMenu(false)}>
-                  Tarifs
-                </Link>
-                <div className="flex flex-col gap-2 pt-2">
-                  <Link to="/login" className="btn btn-secondary w-full text-center" onClick={() => setShowMobileMenu(false)}>
-                    Connexion
-                  </Link>
-                  <Link to="/register" className="btn btn-primary w-full text-center" onClick={() => setShowMobileMenu(false)}>
-                    Inscription
-                  </Link>
-                </div>
-              </>
-            )}
+        {/* Menu mobile public */}
+        {!isAuthenticated && showMobilePublicMenu && (
+          <div className="md:hidden border-t py-3 space-y-1" style={{ borderColor: 'var(--glass-border)' }}>
+            {[
+              { to: '/', label: 'Accueil' },
+              { to: '/search', label: 'Les biens' },
+              { to: '/calculateur', label: 'Calculateur' },
+              { to: '/pricing', label: 'Tarifs' },
+            ].map(({ to, label }) => (
+              <Link key={to} to={to}
+                className="block px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
+                style={{ color: 'var(--text-primary)' }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--surface-subtle)' }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
+                onClick={() => setShowMobilePublicMenu(false)}>
+                {label}
+              </Link>
+            ))}
+            <div className="flex flex-col gap-2 pt-2 px-4">
+              <Link to="/login" className="btn-neon-violet w-full text-center justify-center" onClick={() => setShowMobilePublicMenu(false)}>Connexion</Link>
+              <Link to="/register" className="btn btn-primary w-full text-center" onClick={() => setShowMobilePublicMenu(false)}>Inscription</Link>
+            </div>
           </div>
         )}
       </div>

@@ -1,47 +1,42 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Calendar,
-  Heart,
-  MessageSquare,
-  Search,
-  Home,
-  Clock,
-  MapPin,
-  TrendingUp,
-  AlertCircle,
-  Loader,
-  CheckCircle,
-  Eye,
-  FileText,
-  Euro,
-  PenTool,
-  FolderOpen,
+  Calendar, Heart, MessageSquare, Search, Home, Clock, MapPin,
+  CheckCircle, FileText, PenTool, FolderOpen, SendHorizonal,
+  ChevronRight, ArrowRight, Loader2, Star, CreditCard, Briefcase, Banknote,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useBookings } from '../../hooks/useBookings'
 import { useFavoriteStore } from '../../store/favoriteStore'
 import { useMessages } from '../../hooks/useMessages'
-import { useProperties } from '../../hooks/useProperties'
 import { useContractStore } from '../../store/contractStore'
+import { applicationService } from '../../services/application.service'
+import { dossierService } from '../../services/dossierService'
 import { Layout } from '../../components/layout/Layout'
+import type { Application } from '../../types/application.types'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
+// ─── Catégories requises pour le calcul de complétion du dossier ──────────────
+// Correspond aux IDs définis dans DossierLocatif.tsx
+const REQUIRED_CATEGORIES = ['IDENTITE', 'EMPLOI', 'REVENUS', 'DOMICILE'] as const
+
+function computeDossierPercent(docs: { category: string }[]): number {
+  if (docs.length === 0) return 0
+  const uploaded = new Set(docs.map((d) => d.category))
+  const covered = REQUIRED_CATEGORIES.filter((cat) => uploaded.has(cat)).length
+  return Math.round((covered / REQUIRED_CATEGORIES.length) * 100)
+}
+
+// ─── Composant principal ──────────────────────────────────────────────────────
 export default function TenantDashboard() {
   const { user } = useAuth()
   const { bookings, fetchBookings, isLoading: isLoadingBookings } = useBookings()
   const { favoriteIds, loadFavorites } = useFavoriteStore()
   const { unreadCount, fetchUnreadCount } = useMessages()
-  const { properties, fetchProperties, isLoading: isLoadingProperties } = useProperties()
-  const {
-    contracts,
-    statistics: contractStats,
-    fetchContracts,
-    fetchStatistics: fetchContractStatistics,
-  } = useContractStore()
-
-  const [favoriteProperties, setFavoriteProperties] = useState<any[]>([])
+  const { contracts, fetchContracts, fetchStatistics: fetchContractStatistics } = useContractStore()
+  const [applications, setApplications] = useState<Application[]>([])
+  const [dossierPercent, setDossierPercent] = useState(0)
 
   useEffect(() => {
     fetchBookings()
@@ -49,566 +44,536 @@ export default function TenantDashboard() {
     fetchUnreadCount()
     fetchContracts(undefined, 1, 50)
     fetchContractStatistics()
+    applicationService.list().then(setApplications).catch(() => {})
+    dossierService.getDocuments().then((docs) => {
+      setDossierPercent(computeDossierPercent(docs))
+    }).catch(() => {})
   }, [fetchBookings, loadFavorites, fetchUnreadCount, fetchContracts, fetchContractStatistics])
 
-  // Fetch favorite properties details
-  useEffect(() => {
-    const fetchFavoriteProperties = async () => {
-      if (favoriteIds.size > 0) {
-        await fetchProperties()
-      }
-    }
-    fetchFavoriteProperties()
-  }, [favoriteIds, fetchProperties])
-
-  // Filter favorite properties
-  useEffect(() => {
-    if (properties.length > 0) {
-      const favProps = properties.filter((p) => favoriteIds.has(p.id))
-      setFavoriteProperties(favProps.slice(0, 4))
-    }
-  }, [properties, favoriteIds])
-
-  // Get upcoming bookings
-  const upcomingBookings = bookings
-    .filter((b) => {
-      const visitDate = new Date(b.visitDate)
-      const isPendingOrConfirmed = b.status === 'PENDING' || b.status === 'CONFIRMED'
-      return isPendingOrConfirmed && visitDate >= new Date()
-    })
-    .sort((a, b) => new Date(a.visitDate).getTime() - new Date(b.visitDate).getTime())
-    .slice(0, 3)
-
-  // Contract data
-  const activeContract = contracts.find((c) => c.status === 'ACTIVE')
-  const pendingSignatureContracts = contracts.filter(
-    (c) => ['SENT', 'SIGNED_OWNER'].includes(c.status) && !c.signedByTenant
+  // ── Données dérivées ──────────────────────────────────────────────────────
+  const upcomingBookings = useMemo(() =>
+    bookings
+      .filter((b) => (b.status === 'PENDING' || b.status === 'CONFIRMED') && new Date(b.visitDate) >= new Date())
+      .sort((a, b) => new Date(a.visitDate).getTime() - new Date(b.visitDate).getTime())
+      .slice(0, 3),
+    [bookings]
   )
 
-  // Calculate stats
-  const stats = {
-    bookings: {
-      total: bookings.length,
-      pending: bookings.filter((b) => b.status === 'PENDING').length,
-      confirmed: bookings.filter((b) => b.status === 'CONFIRMED').length,
-    },
-    favorites: favoriteIds.size,
-    messages: unreadCount,
-    contracts: contractStats?.total || 0,
+  const activeContract             = contracts.find((c) => c.status === 'ACTIVE')
+  const pendingSignatureContracts  = contracts.filter((c) => ['SENT', 'SIGNED_OWNER'].includes(c.status) && !c.signedByTenant)
+  const pendingApps                = applications.filter((a) => a.status === 'PENDING')
+  const approvedApps               = applications.filter((a) => a.status === 'APPROVED')
+  const activeApps                 = applications.filter((a) => a.status !== 'WITHDRAWN')
+
+  // Greeting
+  const hour     = new Date().getHours()
+  const greeting = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir'
+
+  // Dossier color
+  const dossierColor =
+    dossierPercent >= 80 ? '#10b981'
+    : dossierPercent >= 50 ? '#f59e0b'
+    : '#ef4444'
+
+  const STATUS_STYLE: Record<string, string> = {
+    PENDING:  'bg-amber-100 text-amber-700 border-amber-200',
+    APPROVED: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    REJECTED: 'bg-red-100 text-red-700 border-red-200',
+  }
+  const STATUS_LABEL: Record<string, string> = {
+    PENDING:  'En examen',
+    APPROVED: 'Approuvée ✓',
+    REJECTED: 'Non retenue',
+  }
+
+  // ── Panel style helper ─────────────────────────────────────────────────────
+  const panelStyle = {
+    background: 'var(--glass-bg-heavy)',
+    backdropFilter: 'blur(24px) saturate(200%)',
+    WebkitBackdropFilter: 'blur(24px) saturate(200%)',
+    border: '1px solid var(--glass-border)',
+    boxShadow: 'var(--glass-reflection), 0 8px 32px rgba(0,0,0,0.07)',
   }
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">
-            Bonjour {user?.firstName}
-          </h1>
-          <p className="text-slate-600">
-            Bienvenue sur votre tableau de bord. Voici un apercu de votre activite.
-          </p>
-        </div>
+      <div className="py-5 px-4 md:px-6 space-y-5 page-enter">
 
-        {/* Signature Alert Banner */}
-        {pendingSignatureContracts.length > 0 && (
-          <div className="mb-6 p-4 bg-accent-50 border border-accent-200 rounded-xl flex items-start gap-3">
-            <PenTool className="w-6 h-6 text-accent-600 shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="font-semibold text-slate-900">
-                {pendingSignatureContracts.length === 1
-                  ? 'Un contrat attend votre signature'
-                  : `${pendingSignatureContracts.length} contrats attendent votre signature`}
+          {/* ── EN-TÊTE ───────────────────────────────────────────── */}
+          <div className="flex items-center justify-between animate-fade-up">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-widest mb-1"
+                style={{ color: 'var(--text-tertiary)', letterSpacing: '0.10em' }}>
+                {format(new Date(), "EEEE d MMMM yyyy", { locale: fr })}
               </p>
-              <p className="text-sm text-slate-600 mt-1">
-                Un proprietaire vous a envoye un contrat de location. Lisez-le et signez-le pour finaliser votre bail.
-              </p>
-              <Link
-                to={`/contracts/${pendingSignatureContracts[0].id}`}
-                className="btn btn-primary mt-3 inline-flex items-center gap-2 text-sm"
-              >
-                <PenTool className="w-4 h-4" />
-                Voir et signer le contrat
-              </Link>
+              <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+                {greeting}, {user?.firstName}
+              </h1>
             </div>
+            <Link to="/search"
+              className="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white shimmer-btn"
+              style={{
+                background: 'linear-gradient(135deg, #7c3aed, #3b82f6)',
+                boxShadow: '0 4px 14px rgba(124,58,237,0.38)',
+                transition: 'all 0.25s cubic-bezier(0.16,1,0.3,1)',
+              }}>
+              <Search className="w-4 h-4" /> Chercher un logement
+            </Link>
           </div>
-        )}
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-          {/* Bookings */}
-          <Link
-            to="/my-bookings"
-            className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-600 mb-1">Mes visites</p>
-                <p className="text-3xl font-bold text-slate-900">{stats.bookings.total}</p>
-                <p className="text-xs text-slate-500 mt-1">
-                  {stats.bookings.pending} en attente
+          {/* ── ALERTE SIGNATURE ──────────────────────────────────── */}
+          {pendingSignatureContracts.length > 0 && (
+            <div className="rounded-2xl p-3.5 flex items-start gap-3 animate-fade-up delay-50"
+              style={{
+                background: 'rgba(245,158,11,0.08)',
+                border: '1px solid rgba(245,158,11,0.20)',
+                borderLeft: '3px solid #f59e0b',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+              }}>
+              <div className="icon-box flex-shrink-0" style={{ background: 'linear-gradient(135deg,#f59e0b,#ea580c)', width: 32, height: 32, borderRadius: 10 }}>
+                <PenTool className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-sm" style={{ color: '#92400e' }}>
+                  {pendingSignatureContracts.length === 1
+                    ? 'Un contrat attend votre signature'
+                    : `${pendingSignatureContracts.length} contrats attendent votre signature`}
                 </p>
-              </div>
-              <div className="w-12 h-12 bg-primary-50 rounded-xl flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-primary-600" />
-              </div>
-            </div>
-          </Link>
-
-          {/* Favorites */}
-          <Link
-            to="/favorites"
-            className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-600 mb-1">Favoris</p>
-                <p className="text-3xl font-bold text-slate-900">{stats.favorites}</p>
-                <p className="text-xs text-slate-500 mt-1">Proprietes sauvegardees</p>
-              </div>
-              <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center">
-                <Heart className="w-6 h-6 text-red-600" />
-              </div>
-            </div>
-          </Link>
-
-          {/* Messages */}
-          <Link
-            to="/messages"
-            className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-600 mb-1">Messages</p>
-                <p className="text-3xl font-bold text-slate-900">{stats.messages}</p>
-                <p className="text-xs text-slate-500 mt-1">Non lus</p>
-              </div>
-              <div className="w-12 h-12 bg-success-50 rounded-xl flex items-center justify-center">
-                <MessageSquare className="w-6 h-6 text-success-600" />
-              </div>
-            </div>
-          </Link>
-
-          {/* Contracts */}
-          <Link
-            to="/contracts"
-            className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-600 mb-1">Contrats</p>
-                <p className="text-3xl font-bold text-slate-900">{stats.contracts}</p>
-                <p className="text-xs text-slate-500 mt-1">
-                  {contractStats?.active || 0} actif(s)
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center">
-                <FileText className="w-6 h-6 text-indigo-600" />
-              </div>
-            </div>
-          </Link>
-
-          {/* Search CTA */}
-          <Link
-            to="/search"
-            className="bg-gradient-to-br from-primary-600 to-primary-700 rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow text-white"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-primary-100 mb-1">Nouvelle recherche</p>
-                <p className="text-2xl font-bold">Trouver un bien</p>
-              </div>
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                <Search className="w-6 h-6 text-white" />
-              </div>
-            </div>
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Active Lease / Mon bail */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-primary-600" />
-                  Mon bail
-                </h2>
-                <Link
-                  to="/contracts"
-                  className="text-sm text-primary-600 hover:text-primary-700 font-medium"
-                >
-                  Tous mes contrats
+                <Link to={`/contracts/${pendingSignatureContracts[0].id}`}
+                  className="inline-flex items-center gap-1 mt-1.5 text-xs font-semibold transition-opacity hover:opacity-70"
+                  style={{ color: '#b45309' }}>
+                  Voir et signer <ChevronRight className="w-3 h-3" />
                 </Link>
               </div>
+            </div>
+          )}
 
-              {activeContract ? (
-                <Link
-                  to={`/contracts/${activeContract.id}`}
-                  className="block p-4 border border-success-100 bg-success-50/50 rounded-xl hover:shadow-md transition-all"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="font-semibold text-slate-900">
-                        {activeContract.property?.title}
-                      </h3>
-                      <p className="text-sm text-slate-600 flex items-center gap-1 mt-1">
-                        <MapPin className="w-3.5 h-3.5" />
-                        {activeContract.property?.address}, {activeContract.property?.city}
-                      </p>
-                    </div>
-                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-success-100 text-success-700">
-                      <CheckCircle className="w-3 h-3" />
-                      Actif
-                    </span>
+          {/* ── QUICK STATS ───────────────────────────────────────── */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              {
+                to: '/my-bookings',
+                iconGradient: 'linear-gradient(135deg,#7c3aed,#a855f7)',
+                icon: <Calendar className="w-4 h-4 text-white" />,
+                accent: 'linear-gradient(90deg,#7c3aed,#3b82f6)',
+                value: upcomingBookings.length,
+                label: 'Visites à venir',
+                sub: upcomingBookings.length > 0
+                  ? `Prochaine le ${format(new Date(upcomingBookings[0].visitDate), 'd MMM', { locale: fr })}`
+                  : 'Aucune programmée',
+              },
+              {
+                to: '/my-applications',
+                iconGradient: 'linear-gradient(135deg,#3b82f6,#1d4ed8)',
+                icon: <SendHorizonal className="w-4 h-4 text-white" />,
+                accent: 'linear-gradient(90deg,#3b82f6,#1e40af)',
+                value: activeApps.length,
+                label: 'Candidatures',
+                sub: pendingApps.length > 0
+                  ? `${pendingApps.length} en attente`
+                  : approvedApps.length > 0
+                    ? `${approvedApps.length} approuvée${approvedApps.length > 1 ? 's' : ''}`
+                    : 'Aucune en cours',
+                live: pendingApps.length > 0,
+              },
+              {
+                to: '/messages',
+                iconGradient: 'linear-gradient(135deg,#3b82f6,#6366f1)',
+                icon: <MessageSquare className="w-4 h-4 text-white" />,
+                accent: 'linear-gradient(90deg,#3b82f6,#7c3aed)',
+                value: unreadCount,
+                label: 'Messages',
+                sub: unreadCount > 0 ? `${unreadCount} non lu${unreadCount > 1 ? 's' : ''}` : 'Tout lu',
+                live: unreadCount > 0,
+              },
+              {
+                to: '/favorites',
+                iconGradient: 'linear-gradient(135deg,#ef4444,#f43f5e)',
+                icon: <Heart className="w-4 h-4 text-white" />,
+                accent: 'linear-gradient(90deg,#f43f5e,#d946ef)',
+                value: favoriteIds.size,
+                label: 'Favoris',
+                sub: favoriteIds.size > 0 ? `${favoriteIds.size} bien${favoriteIds.size > 1 ? 's' : ''}` : 'Aucun favori',
+              },
+            ].map(({ to, iconGradient, icon, accent, value, label, sub, live }, i) => (
+              <Link key={label} to={to}
+                className="kpi-card flex flex-col gap-3 group animate-fade-up"
+                style={{ '--kpi-accent': accent, animationDelay: `${i * 55}ms` } as React.CSSProperties}>
+                <div className="flex items-start justify-between">
+                  <div className="icon-box" style={{ background: iconGradient }}>
+                    {icon}
                   </div>
-                  <div className="grid grid-cols-3 gap-4 mt-4">
-                    <div>
-                      <p className="text-xs text-slate-500">Loyer</p>
-                      <p className="text-lg font-bold text-primary-600 flex items-center">
-                        <Euro className="w-4 h-4 mr-0.5" />
-                        {activeContract.monthlyRent}
-                        <span className="text-sm font-normal text-slate-500">/mois</span>
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500">Debut</p>
-                      <p className="text-sm font-medium text-slate-900">
-                        {format(new Date(activeContract.startDate), 'dd MMM yyyy', { locale: fr })}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500">Fin</p>
-                      <p className="text-sm font-medium text-slate-900">
-                        {format(new Date(activeContract.endDate), 'dd MMM yyyy', { locale: fr })}
-                      </p>
-                    </div>
+                  <div className="flex items-center gap-1.5">
+                    {live && <span className="live-dot-violet" style={{ width: 7, height: 7 }} />}
+                    <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-40 transition-opacity" style={{ color: 'var(--text-tertiary)' }} />
                   </div>
-                  {activeContract.charges != null && activeContract.charges > 0 && (
-                    <p className="text-xs text-slate-500 mt-3">
-                      + {activeContract.charges}EUR charges/mois | Total: {(activeContract.monthlyRent + activeContract.charges).toFixed(2)}EUR/mois
-                    </p>
-                  )}
-                </Link>
-              ) : (
-                <div className="text-center py-8">
-                  <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                  <p className="text-slate-600 mb-2">Aucun bail actif</p>
-                  <p className="text-sm text-slate-500">
-                    Votre contrat de location apparaitra ici une fois active par le proprietaire.
-                  </p>
                 </div>
-              )}
-            </div>
-
-            {/* Upcoming Visits */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-primary-600" />
-                  Visites a venir
-                </h2>
-                <Link
-                  to="/my-bookings"
-                  className="text-sm text-primary-600 hover:text-primary-700 font-medium"
-                >
-                  Voir tout
-                </Link>
-              </div>
-
-              {isLoadingBookings ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader className="w-8 h-8 text-primary-600 animate-spin" />
+                <div className="mt-auto">
+                  <p className="text-[26px] font-extrabold leading-none tracking-tight mb-1 animate-count-up"
+                    style={{ color: 'var(--text-primary)', animationDelay: `${i * 60}ms` }}>{value}</p>
+                  <p className="text-xs font-semibold mb-0.5" style={{ color: 'var(--text-secondary)' }}>{label}</p>
+                  <p className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>{sub}</p>
                 </div>
-              ) : upcomingBookings.length === 0 ? (
-                <div className="text-center py-8">
-                  <Calendar className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                  <p className="text-slate-600 mb-4">Aucune visite programmee</p>
-                  <Link
-                    to="/search"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors"
-                  >
-                    <Search className="w-4 h-4" />
-                    Rechercher un bien
+              </Link>
+            ))}
+          </div>
+
+          {/* ── CONTENU PRINCIPAL ─────────────────────────────────── */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 animate-fade-up delay-200">
+
+            {/* ── Colonne principale (2/3) ──────────────────────── */}
+            <div className="lg:col-span-2 space-y-5">
+
+              {/* Widget dossier locatif */}
+              <div className="rounded-2xl overflow-hidden" style={panelStyle}>
+                <div className="section-header">
+                  <span className="section-header-title">
+                    <div className="icon-box" style={{ background: 'linear-gradient(135deg,#f59e0b,#f97316)', width: 28, height: 28, borderRadius: 8 }}>
+                      <FolderOpen className="w-3.5 h-3.5 text-white" />
+                    </div>
+                    Mon dossier locatif
+                  </span>
+                  <Link to="/dossier" className="text-xs font-semibold flex items-center gap-1 hover:opacity-70 transition-opacity"
+                    style={{ color: '#7c3aed' }}>
+                    Gérer <ArrowRight className="w-3 h-3" />
                   </Link>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {upcomingBookings.map((booking) => (
-                    <Link
-                      key={booking.id}
-                      to={`/property/${booking.property.id}`}
-                      className="block p-4 border border-slate-200 rounded-xl hover:border-primary-300 hover:bg-primary-50/50 transition-all"
-                    >
-                      <div className="flex items-start gap-4">
+                <div className="p-5">
+                  <div className="flex items-center gap-4 mb-4">
+                    {/* Anneau circulaire */}
+                    <div className="relative w-16 h-16 flex-shrink-0">
+                      <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
+                        <circle cx="32" cy="32" r="26" strokeWidth="4.5" className="fill-none" style={{ stroke: 'var(--surface-subtle)' }} />
+                        <circle cx="32" cy="32" r="26" strokeWidth="4.5" className="fill-none"
+                          style={{
+                            stroke: dossierColor,
+                            strokeDasharray: 2 * Math.PI * 26,
+                            strokeDashoffset: 2 * Math.PI * 26 * (1 - dossierPercent / 100),
+                            strokeLinecap: 'round',
+                            transition: 'stroke-dashoffset 0.8s cubic-bezier(0.16,1,0.3,1)',
+                          }} />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-base font-extrabold" style={{ color: dossierColor }}>{dossierPercent}%</span>
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
+                        {dossierPercent === 100
+                          ? 'Dossier complet — prêt à candidater !'
+                          : dossierPercent >= 50
+                            ? 'Dossier en bonne voie, continuez !'
+                            : 'Complétez votre dossier pour postuler'}
+                      </p>
+                      <p className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
+                        {Math.round(dossierPercent / 100 * REQUIRED_CATEGORIES.length)} / {REQUIRED_CATEGORIES.length} catégories complètes
+                      </p>
+                      <div className="w-full h-1.5 rounded-full mt-2 overflow-hidden" style={{ background: 'var(--surface-subtle)' }}>
+                        <div className="h-1.5 rounded-full transition-all duration-700"
+                          style={{ width: `${dossierPercent}%`, background: `linear-gradient(90deg, ${dossierColor}cc, ${dossierColor})` }} />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {([
+                      { id: 'IDENTITE', label: 'Identité',  Icon: CreditCard },
+                      { id: 'EMPLOI',   label: 'Emploi',    Icon: Briefcase },
+                      { id: 'REVENUS',  label: 'Revenus',   Icon: Banknote },
+                      { id: 'DOMICILE', label: 'Domicile',  Icon: Home },
+                    ] as const).map(({ id, label, Icon }, i) => {
+                      const done = i < Math.round(dossierPercent / 100 * REQUIRED_CATEGORIES.length)
+                      return (
+                        <Link key={id} to="/dossier"
+                          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all"
+                          style={done
+                            ? { background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.28)', color: '#059669' }
+                            : { background: 'var(--surface-subtle)', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)' }}>
+                          <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+                          <span className="truncate flex-1">{label}</span>
+                          {done && <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" />}
+                        </Link>
+                      )
+                    })}
+                  </div>
+                  {dossierPercent < 100 && (
+                    <Link to="/dossier"
+                      className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-white shimmer-btn transition-all hover:opacity-90"
+                      style={{ background: '#2563eb', boxShadow: '0 2px 8px rgba(37,99,235,0.25)' }}>
+                      <FolderOpen className="w-4 h-4" /> Compléter mon dossier
+                    </Link>
+                  )}
+                </div>
+              </div>
+
+              {/* Mes candidatures */}
+              <div className="rounded-2xl overflow-hidden" style={panelStyle}>
+                <div className="section-header">
+                  <span className="section-header-title">
+                    <div className="icon-box" style={{ background: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', width: 28, height: 28, borderRadius: 8 }}>
+                      <SendHorizonal className="w-3.5 h-3.5 text-white" />
+                    </div>
+                    Mes candidatures
+                    {pendingApps.length > 0 && (
+                      <span className="text-[11px] font-bold text-white rounded-full px-2 py-0.5"
+                        style={{ background: 'linear-gradient(135deg,#f59e0b,#ea580c)' }}>
+                        {pendingApps.length}
+                      </span>
+                    )}
+                  </span>
+                  <Link to="/my-applications" className="text-xs font-semibold flex items-center gap-1 hover:opacity-70 transition-opacity"
+                    style={{ color: '#7c3aed' }}>
+                    Tout voir <ArrowRight className="w-3 h-3" />
+                  </Link>
+                </div>
+                {activeApps.length === 0 ? (
+                  <div className="p-6 text-center">
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: 'var(--surface-subtle)' }}>
+                      <SendHorizonal className="w-5 h-5 opacity-40" style={{ color: 'var(--text-tertiary)' }} />
+                    </div>
+                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Aucune candidature en cours</p>
+                    <Link to="/search" className="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold hover:opacity-80" style={{ color: '#7c3aed' }}>
+                      <Search className="w-3.5 h-3.5" /> Parcourir les annonces
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="divide-y" style={{ borderColor: 'var(--glass-border)' }}>
+                    {activeApps.slice(0, 4).map((app) => (
+                      <div key={app.id} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>
+                            {app.property?.title}
+                          </p>
+                          <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+                            {app.property?.city} · {app.property?.price} €/mois · Score {app.score}/100
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className={`text-[11px] border rounded-full px-2.5 py-0.5 font-semibold ${STATUS_STYLE[app.status] || ''}`}>
+                            {STATUS_LABEL[app.status] || app.status}
+                          </span>
+                          {app.status === 'APPROVED' && (
+                            <Link to={`/property/${app.property?.id}`}
+                              className="text-[11px] font-semibold text-white px-2.5 py-1.5 rounded-lg transition-all hover:-translate-y-px"
+                              style={{ background: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', boxShadow: '0 2px 8px rgba(37,99,235,0.22)' }}>
+                              Réserver
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Visites à venir */}
+              <div className="rounded-2xl overflow-hidden" style={panelStyle}>
+                <div className="section-header">
+                  <span className="section-header-title">
+                    <div className="icon-box" style={{ background: 'linear-gradient(135deg,#3b82f6,#6366f1)', width: 28, height: 28, borderRadius: 8 }}>
+                      <Clock className="w-3.5 h-3.5 text-white" />
+                    </div>
+                    Visites à venir
+                  </span>
+                  <Link to="/my-bookings" className="text-xs font-semibold flex items-center gap-1 hover:opacity-70 transition-opacity"
+                    style={{ color: '#7c3aed' }}>
+                    Tout voir <ArrowRight className="w-3 h-3" />
+                  </Link>
+                </div>
+                {isLoadingBookings ? (
+                  <div className="flex items-center justify-center py-10">
+                    <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'var(--text-tertiary)' }} />
+                  </div>
+                ) : upcomingBookings.length === 0 ? (
+                  <div className="text-center py-8 px-6">
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: 'var(--surface-subtle)' }}>
+                      <Calendar className="w-5 h-5 opacity-40" style={{ color: 'var(--text-tertiary)' }} />
+                    </div>
+                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Aucune visite programmée</p>
+                    <Link to="/search" className="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold hover:opacity-80" style={{ color: '#7c3aed' }}>
+                      <Search className="w-3.5 h-3.5" /> Trouver un bien à visiter
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="divide-y" style={{ borderColor: 'var(--glass-border)' }}>
+                    {upcomingBookings.map((booking) => (
+                      <Link key={booking.id} to={`/property/${booking.property.id}`}
+                        className="flex items-center gap-3 p-4 hover:bg-white/5 transition-colors">
                         {booking.property.images?.[0] ? (
-                          <img
-                            src={booking.property.images[0]}
-                            alt={booking.property.title}
-                            className="w-20 h-20 rounded-xl object-cover flex-shrink-0"
-                          />
+                          <img src={booking.property.images[0]} alt={booking.property.title}
+                            className="w-12 h-12 rounded-xl object-cover flex-shrink-0" />
                         ) : (
-                          <div className="w-20 h-20 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0">
-                            <Home className="w-8 h-8 text-slate-400" />
+                          <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--surface-subtle)' }}>
+                            <Home className="w-5 h-5" style={{ color: 'var(--text-tertiary)' }} />
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-slate-900 mb-1 truncate">
-                            {booking.property.title}
-                          </h4>
-                          <p className="text-sm text-slate-600 mb-2 flex items-center gap-1">
-                            <MapPin className="w-3.5 h-3.5" />
-                            {booking.property.city}
+                          <p className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>{booking.property.title}</p>
+                          <p className="text-[11px] flex items-center gap-1 mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+                            <MapPin className="w-2.5 h-2.5" />{booking.property.city}
                           </p>
-                          <div className="flex items-center gap-4 text-sm">
-                            <span className="flex items-center gap-1 text-slate-700">
-                              <Calendar className="w-4 h-4" />
+                          <div className="flex items-center gap-3 mt-1 text-[11px]" style={{ color: 'var(--text-secondary)' }}>
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
                               {format(new Date(booking.visitDate), 'dd MMM yyyy', { locale: fr })}
                             </span>
-                            <span className="flex items-center gap-1 text-slate-700">
-                              <Clock className="w-4 h-4" />
-                              {booking.visitTime}
-                            </span>
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                booking.status === 'CONFIRMED'
-                                  ? 'bg-success-100 text-success-700'
-                                  : 'bg-warning-100 text-warning-700'
-                              }`}
-                            >
-                              {booking.status === 'CONFIRMED' ? (
-                                <span className="flex items-center gap-1">
-                                  <CheckCircle className="w-3 h-3" />
-                                  Confirmee
-                                </span>
-                              ) : (
-                                <span className="flex items-center gap-1">
-                                  <AlertCircle className="w-3 h-3" />
-                                  En attente
-                                </span>
-                              )}
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" />{booking.visitTime}
                             </span>
                           </div>
                         </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Favorite Properties */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                  <Heart className="w-5 h-5 text-red-600" />
-                  Mes favoris
-                </h2>
-                <Link
-                  to="/favorites"
-                  className="text-sm text-primary-600 hover:text-primary-700 font-medium"
-                >
-                  Voir tout
-                </Link>
+                        <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full flex-shrink-0 ${booking.status === 'CONFIRMED' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                          {booking.status === 'CONFIRMED' ? 'Confirmée' : 'En attente'}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {isLoadingProperties ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader className="w-8 h-8 text-primary-600 animate-spin" />
-                </div>
-              ) : favoriteProperties.length === 0 ? (
-                <div className="text-center py-8">
-                  <Heart className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                  <p className="text-slate-600 mb-4">Aucun favori pour le moment</p>
-                  <Link
-                    to="/search"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors"
-                  >
-                    <Search className="w-4 h-4" />
-                    Decouvrir des biens
-                  </Link>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {favoriteProperties.map((property) => (
-                    <Link
-                      key={property.id}
-                      to={`/property/${property.id}`}
-                      className="block border border-slate-200 rounded-xl overflow-hidden hover:border-primary-300 hover:shadow-md transition-all"
-                    >
-                      {property.images?.[0] ? (
-                        <img
-                          src={property.images[0]}
-                          alt={property.title}
-                          className="w-full h-40 object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-40 bg-slate-100 flex items-center justify-center">
-                          <Home className="w-12 h-12 text-slate-400" />
+              {/* Mon bail actif */}
+              {activeContract && (
+                <div className="rounded-2xl overflow-hidden" style={panelStyle}>
+                  <div className="section-header">
+                    <span className="section-header-title">
+                      <div className="icon-box" style={{ background: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', width: 28, height: 28, borderRadius: 8 }}>
+                        <FileText className="w-3.5 h-3.5 text-white" />
+                      </div>
+                      Mon bail actif
+                    </span>
+                    <Link to="/contracts" className="text-xs font-semibold flex items-center gap-1 hover:opacity-70 transition-opacity"
+                      style={{ color: '#7c3aed' }}>
+                      Voir le contrat <ArrowRight className="w-3 h-3" />
+                    </Link>
+                  </div>
+                  <div className="p-4">
+                    <Link to={`/contracts/${activeContract.id}`}
+                      className="block p-4 rounded-xl transition-all hover:-translate-y-0.5"
+                      style={{ border: '1px solid rgba(59,130,246,0.20)', background: 'rgba(59,130,246,0.04)', boxShadow: '0 0 0 1px rgba(59,130,246,0.06)' }}>
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{activeContract.property?.title}</p>
+                          <p className="text-[11px] flex items-center gap-1 mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+                            <MapPin className="w-2.5 h-2.5" />
+                            {activeContract.property?.address}, {activeContract.property?.city}
+                          </p>
                         </div>
-                      )}
-                      <div className="p-4">
-                        <h4 className="font-semibold text-slate-900 mb-1 truncate">
-                          {property.title}
-                        </h4>
-                        <p className="text-sm text-slate-600 mb-2 flex items-center gap-1">
-                          <MapPin className="w-3.5 h-3.5" />
-                          {property.city}
+                        <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-700">
+                          <CheckCircle className="w-3 h-3" /> Actif
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-3">
+                        {[
+                          { label: 'Loyer', value: `${activeContract.monthlyRent} €/mois` },
+                          { label: 'Début', value: format(new Date(activeContract.startDate), 'dd MMM yyyy', { locale: fr }) },
+                          { label: 'Fin',   value: format(new Date(activeContract.endDate),   'dd MMM yyyy', { locale: fr }) },
+                        ].map(({ label, value }) => (
+                          <div key={label}>
+                            <p className="text-[11px] mb-0.5" style={{ color: 'var(--text-tertiary)' }}>{label}</p>
+                            <p className="text-sm font-bold" style={{ color: label === 'Loyer' ? '#7c3aed' : 'var(--text-primary)' }}>{value}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ── Sidebar droite (1/3) ──────────────────────────── */}
+            <div className="space-y-4">
+
+              {/* CTA recherche */}
+              <div className="rounded-2xl p-4 overflow-hidden relative"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(124,58,237,0.10) 0%, rgba(59,130,246,0.10) 100%)',
+                  border: '1px solid rgba(124,58,237,0.20)',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                }}>
+                {/* Subtle background glow */}
+                <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full pointer-events-none"
+                  style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%)' }} />
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="icon-box" style={{ background: 'linear-gradient(135deg,#7c3aed,#3b82f6)', width: 28, height: 28, borderRadius: 8 }}>
+                    <Search className="w-3.5 h-3.5 text-white" />
+                  </div>
+                  <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Trouver votre logement</p>
+                </div>
+                <p className="text-[11px] mb-3" style={{ color: 'var(--text-tertiary)' }}>
+                  {favoriteIds.size > 0
+                    ? `${favoriteIds.size} bien${favoriteIds.size > 1 ? 's' : ''} en favori`
+                    : 'Explorez les annonces disponibles.'}
+                </p>
+                <Link to="/search"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold text-white shimmer-btn transition-all hover:opacity-90"
+                  style={{ background: 'linear-gradient(135deg,#7c3aed,#3b82f6)', boxShadow: '0 4px 14px rgba(124,58,237,0.38)' }}>
+                  <Search className="w-3.5 h-3.5" /> Parcourir les annonces
+                </Link>
+              </div>
+
+              {/* Prochaines étapes */}
+              <div className="rounded-2xl p-4" style={panelStyle}>
+                <p className="text-[11px] font-bold uppercase tracking-widest mb-3 flex items-center gap-1.5"
+                  style={{ color: 'var(--text-tertiary)', letterSpacing: '0.08em' }}>
+                  <Star className="w-3.5 h-3.5 text-amber-500" /> Parcours
+                </p>
+                <div className="space-y-3">
+                  {[
+                    { done: dossierPercent === 100, label: 'Dossier complet', sub: `${dossierPercent}% complété`, link: '/dossier' },
+                    { done: applications.length > 0, label: 'Postuler à une annonce', sub: applications.length > 0 ? `${applications.length} candidature${applications.length > 1 ? 's' : ''}` : "Aucune pour l'instant", link: '/search' },
+                    { done: upcomingBookings.length > 0, label: 'Réserver une visite', sub: upcomingBookings.length > 0 ? `${upcomingBookings.length} visite${upcomingBookings.length > 1 ? 's' : ''} à venir` : 'Aucune programmée', link: '/search' },
+                    { done: !!activeContract, label: 'Obtenir un bail actif', sub: activeContract ? 'Bail en cours ✓' : 'En attente', link: '/contracts' },
+                  ].map(({ done, label, sub, link }) => (
+                    <Link key={label} to={link} className="flex items-start gap-3 group">
+                      <div className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all"
+                        style={done
+                          ? { borderColor: '#10b981', background: '#10b981' }
+                          : { borderColor: 'var(--glass-border)' }}>
+                        {done && <CheckCircle className="w-3 h-3 text-white" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold transition-colors"
+                          style={{ color: done ? 'var(--text-tertiary)' : 'var(--text-primary)', textDecoration: done ? 'line-through' : 'none' }}>
+                          {label}
                         </p>
-                        <p className="text-lg font-bold text-primary-600">
-                          {property.price}EUR<span className="text-sm font-normal">/mois</span>
-                        </p>
+                        <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{sub}</p>
                       </div>
                     </Link>
                   ))}
                 </div>
-              )}
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Quick Actions */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <h3 className="font-semibold text-slate-900 mb-4">Actions rapides</h3>
-              <div className="space-y-3">
-                <Link
-                  to="/search"
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors"
-                >
-                  <div className="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center">
-                    <Search className="w-5 h-5 text-primary-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-slate-900">Rechercher</p>
-                    <p className="text-xs text-slate-600">Trouver un bien</p>
-                  </div>
-                </Link>
-
-                <Link
-                  to="/my-bookings"
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors"
-                >
-                  <div className="w-10 h-10 bg-success-50 rounded-xl flex items-center justify-center">
-                    <Calendar className="w-5 h-5 text-success-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-slate-900">Mes visites</p>
-                    <p className="text-xs text-slate-600">Gerer reservations</p>
-                  </div>
-                </Link>
-
-                <Link
-                  to="/contracts"
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors"
-                >
-                  <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-indigo-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-slate-900">Mes contrats</p>
-                    <p className="text-xs text-slate-600">Voir mes baux</p>
-                  </div>
-                </Link>
-
-                <Link
-                  to="/messages"
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors"
-                >
-                  <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
-                    <MessageSquare className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-slate-900">Messages</p>
-                    <p className="text-xs text-slate-600">Contacter proprietaires</p>
-                  </div>
-                </Link>
-
-                <Link
-                  to="/favorites"
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors"
-                >
-                  <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
-                    <Heart className="w-5 h-5 text-red-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-slate-900">Favoris</p>
-                    <p className="text-xs text-slate-600">Mes biens sauvegardes</p>
-                  </div>
-                </Link>
-
-                <Link
-                  to="/dossier"
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors"
-                >
-                  <div className="w-10 h-10 bg-fuchsia-50 rounded-xl flex items-center justify-center">
-                    <FolderOpen className="w-5 h-5 text-fuchsia-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-slate-900">Mon dossier</p>
-                    <p className="text-xs text-slate-600">Documents locatifs</p>
-                  </div>
-                </Link>
               </div>
-            </div>
 
-            {/* Tips Card */}
-            <div className="bg-gradient-to-br from-primary-50 to-blue-50 rounded-xl border border-primary-200 p-6">
-              <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-primary-600" />
-                Conseils
-              </h3>
-              <ul className="space-y-2 text-sm text-slate-700">
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-4 h-4 text-success-600 mt-0.5 flex-shrink-0" />
-                  <span>Visitez plusieurs biens avant de decider</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-4 h-4 text-success-600 mt-0.5 flex-shrink-0" />
-                  <span>Preparez vos questions avant la visite</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-4 h-4 text-success-600 mt-0.5 flex-shrink-0" />
-                  <span>Verifiez l'etat general du logement</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-4 h-4 text-success-600 mt-0.5 flex-shrink-0" />
-                  <span>Renseignez-vous sur le quartier</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Activity Summary */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <h3 className="font-semibold text-slate-900 mb-4">Activite recente</h3>
-              <div className="space-y-3 text-sm">
-                <div className="flex items-center gap-3">
-                  <Eye className="w-4 h-4 text-slate-400" />
-                  <span className="text-slate-600">Recherches effectuees</span>
-                  <span className="ml-auto font-semibold text-slate-900">-</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Calendar className="w-4 h-4 text-slate-400" />
-                  <span className="text-slate-600">Visites reservees</span>
-                  <span className="ml-auto font-semibold text-slate-900">
-                    {stats.bookings.total}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Heart className="w-4 h-4 text-slate-400" />
-                  <span className="text-slate-600">Biens favoris</span>
-                  <span className="ml-auto font-semibold text-slate-900">{stats.favorites}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <FileText className="w-4 h-4 text-slate-400" />
-                  <span className="text-slate-600">Contrats</span>
-                  <span className="ml-auto font-semibold text-slate-900">{stats.contracts}</span>
+              {/* Navigation rapide */}
+              <div className="rounded-2xl p-4" style={panelStyle}>
+                <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-tertiary)', letterSpacing: '0.08em' }}>
+                  Accès rapides
+                </p>
+                <div className="space-y-1">
+                  {[
+                    { to: '/my-bookings',     iconBg: 'linear-gradient(135deg,#7c3aed,#a855f7)', icon: <Calendar className="w-3.5 h-3.5 text-white" />,      label: 'Mes visites',  badge: upcomingBookings.length },
+                    { to: '/my-applications', iconBg: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', icon: <SendHorizonal className="w-3.5 h-3.5 text-white" />, label: 'Candidatures', badge: pendingApps.length },
+                    { to: '/dossier',         iconBg: 'linear-gradient(135deg,#f59e0b,#f97316)', icon: <FolderOpen className="w-3.5 h-3.5 text-white" />,    label: 'Mon dossier',  badge: 0 },
+                    { to: '/messages',        iconBg: 'linear-gradient(135deg,#3b82f6,#6366f1)', icon: <MessageSquare className="w-3.5 h-3.5 text-white" />, label: 'Messages',     badge: unreadCount },
+                    { to: '/favorites',       iconBg: 'linear-gradient(135deg,#ef4444,#f43f5e)', icon: <Heart className="w-3.5 h-3.5 text-white" />,         label: 'Favoris',      badge: 0 },
+                    { to: '/contracts',       iconBg: 'linear-gradient(135deg,#d946ef,#7c3aed)', icon: <FileText className="w-3.5 h-3.5 text-white" />,      label: 'Contrats',     badge: pendingSignatureContracts.length },
+                  ].map(({ to, iconBg, icon, label, badge }) => (
+                    <Link key={to} to={to}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all hover:bg-white/5">
+                      <div className="icon-box flex-shrink-0" style={{ background: iconBg, width: 28, height: 28, borderRadius: 8 }}>{icon}</div>
+                      <span className="flex-1 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{label}</span>
+                      {badge > 0 ? (
+                        <span className="text-[11px] font-bold text-white rounded-full px-1.5 py-0.5 min-w-[20px] text-center flex-shrink-0"
+                          style={{ background: 'linear-gradient(135deg,#7c3aed,#a855f7)' }}>{badge}</span>
+                      ) : (
+                        <ChevronRight className="w-3.5 h-3.5 opacity-25 flex-shrink-0" style={{ color: 'var(--text-tertiary)' }} />
+                      )}
+                    </Link>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
-        </div>
       </div>
     </Layout>
   )

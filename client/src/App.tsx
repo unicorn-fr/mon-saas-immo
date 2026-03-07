@@ -26,10 +26,12 @@ import CreateProperty from './pages/owner/CreateProperty'
 import EditProperty from './pages/owner/EditProperty'
 import PropertyDetails from './pages/owner/PropertyDetails'
 import BookingManagement from './pages/owner/BookingManagement'
+import ApplicationManagement from './pages/owner/ApplicationManagement'
 
 // Tenant Pages
 import TenantDashboard from './pages/tenant/TenantDashboard'
 import MyBookings from './pages/tenant/MyBookings'
+import MyApplications from './pages/tenant/MyApplications'
 import Favorites from './pages/tenant/Favorites'
 import DossierLocatif from './pages/tenant/DossierLocatif'
 
@@ -47,6 +49,17 @@ import EtatDesLieux from './pages/contracts/EtatDesLieux'
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard'
 import UsersManagement from './pages/admin/UsersManagement'
+
+// Super Admin Pages — Cerveau Central
+import SuperAdminLayout from './pages/super-admin/SuperAdminLayout'
+import SADashboard from './pages/super-admin/SADashboard'
+import SAUsers from './pages/super-admin/SAUsers'
+import SADossiers from './pages/super-admin/SADossiers'
+import SADatabase from './pages/super-admin/SADatabase'
+import SAMessages from './pages/super-admin/SAMessages'
+import SAAuditLogs from './pages/super-admin/SAAuditLogs'
+import SAContracts from './pages/super-admin/SAContracts'
+import SAUserDetail from './pages/super-admin/SAUserDetail'
 
 // Legal Pages
 import MentionsLegales from './pages/legal/MentionsLegales'
@@ -183,7 +196,7 @@ function AppRoutes() {
         <Route path="/properties/:id/edit" element={<EditProperty />} />
         <Route path="/properties/:id" element={<PropertyDetails />} />
         <Route path="/bookings/manage" element={<BookingManagement />} />
-        {/* <Route path="/tenants" element={<TenantsManagement />} /> */}
+        <Route path="/applications/manage" element={<ApplicationManagement />} />
       </Route>
 
       {/* Protected Routes - Tenant Dashboard */}
@@ -191,6 +204,7 @@ function AppRoutes() {
         <Route path="/dashboard/tenant" element={<TenantDashboard />} />
         <Route path="/favorites" element={<Favorites />} />
         <Route path="/my-bookings" element={<MyBookings />} />
+        <Route path="/my-applications" element={<MyApplications />} />
         <Route path="/dossier" element={<DossierLocatif />} />
       </Route>
 
@@ -210,9 +224,24 @@ function AppRoutes() {
       </Route>
 
       {/* Protected Routes - Admin Dashboard */}
-      <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+      <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN']} />}>
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/users" element={<UsersManagement />} />
+      </Route>
+
+      {/* Super Admin — Cerveau Central (full dark mode layout) */}
+      <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']} />}>
+        <Route path="/super-admin" element={<SuperAdminLayout />}>
+          <Route index element={<Navigate to="/super-admin/dashboard" replace />} />
+          <Route path="dashboard" element={<SADashboard />} />
+          <Route path="users" element={<SAUsers />} />
+          <Route path="users/:id" element={<SAUserDetail />} />
+          <Route path="dossiers" element={<SADossiers />} />
+          <Route path="contracts" element={<SAContracts />} />
+          <Route path="messages" element={<SAMessages />} />
+          <Route path="database" element={<SADatabase />} />
+          <Route path="audit" element={<SAAuditLogs />} />
+        </Route>
       </Route>
 
       {/* 404 */}

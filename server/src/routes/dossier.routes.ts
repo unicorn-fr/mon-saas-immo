@@ -13,6 +13,9 @@ router.get('/', dossierController.getDocuments.bind(dossierController))
 // POST /api/v1/dossier - upload a dossier document
 router.post('/', uploadFile.single('file'), dossierController.uploadDocument.bind(dossierController))
 
+// PATCH /api/v1/dossier/profile - save AI-extracted profile data to user account
+router.patch('/profile', dossierController.saveProfile.bind(dossierController))
+
 // DELETE /api/v1/dossier/:id - delete a document
 router.delete('/:id', dossierController.deleteDocument.bind(dossierController))
 

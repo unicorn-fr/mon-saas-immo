@@ -14,9 +14,10 @@ datasource db {
 // ============================================
 
 enum UserRole {
-  TENANT      // Locataire
-  OWNER       // Propriétaire
-  ADMIN       // Admin plateforme
+  TENANT        // Locataire
+  OWNER         // Propriétaire
+  ADMIN         // Admin plateforme
+  SUPER_ADMIN   // Super Admin — accès total plateforme
 }
 
 enum PropertyType {
@@ -58,6 +59,13 @@ enum DateOverrideType {
   EXTRA       // Ajouter une dispo exceptionnelle
 }
 
+enum ApplicationStatus {
+  PENDING     // En attente de décision du propriétaire
+  APPROVED    // Approuvée — accès aux créneaux de visite débloqué
+  REJECTED    // Refusée
+  WITHDRAWN   // Retirée par le locataire
+}
+
 enum TokenType {
   EMAIL_VERIFY
   PASSWORD_RESET
@@ -80,6 +88,17 @@ model User {
   phone             String?
   avatar            String?
   bio               String?   @db.Text
+
+  // Identity document data (extracted by AI scanner)
+  birthDate         String?   // date de naissance (DD/MM/YY)
+  birthCity         String?   // ville de naissance
+  nationality       String?   // nationalité (code 3 lettres, ex: "FRA")
+  nationalNumber    String?   // n° de sécu (masqué)
+  documentNumber    String?   // numéro CNI / passeport / titre de séjour
+  documentExpiry    String?   // date de validité du document
+
+  // Flexible AI-extracted metadata from all scanned documents (JSON)
+  profileMeta       Json?     // { IDENTITE: {...}, BULLETIN: {...}, REVENUS_FISCAUX: {...}, ... }
 
   // Verification
   emailVerified     Boolean   @default(false)
@@ -111,6 +130,7 @@ model User {
   verificationTokens    VerificationToken[]
   uploadedDocuments     ContractDocument[]    @relation("DocumentUploader")
   tenantDocuments       TenantDocument[]
+  applications          Application[]
 
   @@index([email])
   @@index([role])
@@ -195,6 +215,11 @@ model Property {
   ownerIdDocument       String?  // URL to owner ID document (CNI/Passport)
   propertyProofDocument String?  // URL to property proof (titre de propriete/taxe fonciere)
 
+  // Selection Criteria (JSON) — owner's pre-qualification requirements
+  // { minSalaryRatio, requiredGuarantor, acceptedGuarantorTypes, requiredDocCategories,
+  //   preferredContractTypes, autoPilot, minScore }
+  selectionCriteria Json?
+
   // Statistics
   views         Int            @default(0)
   contactCount  Int            @default(0)
@@ -210,6 +235,7 @@ model Property {
   contracts              Contract[]
   visitAvailabilitySlots VisitAvailabilitySlot[]
   visitDateOverrides     VisitDateOverride[]
+  applications           Application[]
 
   @@index([ownerId])
   @@index([city])
@@ -521,4 +547,69 @@ model VisitDateOverride {
   @@index([propertyId])
   @@index([date])
   @@map("visit_date_overrides")
+}
+
+model Application {
+  id            String            @id @default(uuid())
+
+  propertyId    String
+  property      Property          @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  tenantId      String
+  tenant        User              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  status        ApplicationStatus @default(PENDING)
+
+  // Matching score (0–100) computed at submission time
+  score         Int               @default(0)
+  matchDetails  Json?             // { salary: {...}, guarantor: {...}, documents: {...}, contractType: {...} }
+
+  // Tenant's cover letter / message
+  coverLetter   String?           @db.Text
+
+  // Guarantor info supplied by tenant
+  hasGuarantor    Boolean         @default(false)
+  guarantorType   String?         // "physique" | "visale"
+
+  // Timestamps
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  // Each tenant can only have one active application per property
+  @@unique([propertyId, tenantId])
+  @@index([propertyId])
+  @@index([tenantId])
+  @@index([status])
+  @@index([score])
+  @@map("applications")
+}
+
+// ============================================
+// SUPER ADMIN — AUDIT LOGS
+// ============================================
+
+model AuditLog {
+  id          String   @id @default(uuid())
+
+  // Who did the action
+  actorId     String?              // null if system action
+  actorEmail  String?
+
+  // What they did
+  action      String               // e.g. "DELETE_USER", "UPDATE_ROLE", "VIEW_MESSAGES"
+  resource    String               // e.g. "User", "Contract", "TenantDocument"
+  resourceId  String?              // ID of the affected resource
+
+  // Details
+  metadata    Json?                // { before: {...}, after: {...}, ip, userAgent, ... }
+  severity    String  @default("INFO")  // INFO | WARNING | CRITICAL
+
+  createdAt   DateTime @default(now())
+
+  @@index([actorId])
+  @@index([action])
+  @@index([resource])
+  @@index([createdAt])
+  @@index([severity])
+  @@map("audit_logs")
 }

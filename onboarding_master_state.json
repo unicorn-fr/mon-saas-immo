@@ -1,0 +1,257 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-02-28",
+  "project": "plateforme-gestion-locative",
+  "description": "Master state — Dossier Locataire anti-fraude engine. Consolidates engine_status.json (v4) and engine_audit.json (v5).",
+
+  "modules": {
+    "DocumentIntelligence": {
+      "file": "client/src/utils/DocumentIntelligence.ts",
+      "version": "4.0.0",
+      "status": "production",
+      "algorithm": "proximity-anchored scoring (OR-of-ANDs)",
+      "dependencies": ["pdfjs-dist@5", "tesseract.js@7", "jsqr"],
+      "exports": [
+        "runIntelligence(file, onProgress): Promise<IntelligenceResult>",
+        "crossCheckSalaries(scans: IntelligenceResult[]): string[]",
+        "classifyText / classifyDocument",
+        "scoreAnchorGroup / scoreGroup",
+        "extractFieldsFromText / extractFields",
+        "FAMILY_LABELS, FAMILY_COLORS, assignDocTypeSlot"
+      ],
+      "anchorFamilies": {
+        "BULLETIN":        { "groups": 8, "requireSiretLuhn": true,  "certaintyTokens": [],                        "status": "validated" },
+        "REVENUS_FISCAUX": { "groups": 4, "requireSiretLuhn": false, "certaintyTokens": ["dgfip.fr"],              "status": "validated" },
+        "GARANTIE":        { "groups": 5, "requireSiretLuhn": false, "certaintyTokens": ["garantie visale"],       "status": "validated" },
+        "IDENTITE":        { "groups": 9, "requireSiretLuhn": false, "certaintyTokens": ["<<<<<<<<<<<<<<<","idfra","idfrx","p<fra","p<<fra","titre de séjour","carte de résident"], "status": "validated" },
+        "DOMICILE":        { "groups": 5, "requireSiretLuhn": false, "certaintyTokens": [],                        "status": "validated" },
+        "EMPLOI":          { "groups": 8, "requireSiretLuhn": false, "certaintyTokens": ["extrait kbis"],          "status": "validated" },
+        "BANCAIRE":        { "groups": 4, "requireSiretLuhn": false, "certaintyTokens": [],                        "status": "validated" },
+        "LOGEMENT":        { "groups": 5, "requireSiretLuhn": false, "certaintyTokens": ["quittance de loyer"],    "status": "validated" }
+      },
+      "forensics": {
+        "pdfMetadata": {
+          "method": "Read first 10 KB as Latin-1, regex /Producer and /Creator",
+          "suspectProducers": ["canva","photoshop","illustrator","ilovepdf","wondershare","sejda","smallpdf","snagit","paint.net","pdfzorro","pdfescape","pdf24","web2pdf"],
+          "penaltyOnSuspect": -20,
+          "status": "active"
+        },
+        "luhnSiret": {
+          "enabled": true,
+          "appliesTo": ["BULLETIN"],
+          "penaltyOnInvalid": -18,
+          "status": "active"
+        },
+        "salaryRatio": {
+          "normalRange": [0.65, 0.95],
+          "highSeverityRange": [0.0, 0.50],
+          "appliesTo": ["BULLETIN"],
+          "status": "active"
+        },
+        "qr2DDoc": {
+          "appliesTo": ["REVENUS_FISCAUX"],
+          "missingQrPenalty": -7,
+          "status": "active"
+        }
+      },
+      "confidenceLevels": {
+        "certain":      { "range": [100, 100], "action": "auto-accept",  "mrzOrToken": true  },
+        "high":         { "range": [70,  99],  "action": "auto-accept",  "mrzOrToken": false },
+        "needsConfirm": { "range": [40,  69],  "action": "ask-user",     "mrzOrToken": false },
+        "low":          { "range": [1,   39],  "action": "unknown-flow", "mrzOrToken": false },
+        "unknown":      { "range": [0,   0],   "action": "unknown-flow", "mrzOrToken": false }
+      },
+      "testResults": {
+        "lastRun": "2026-02-28",
+        "total": 77,
+        "passed": 77,
+        "notable": [
+          "alternance_bulletin: PASS",
+          "visale_garantie: PASS — certaintyToken forces GARANTIE not LOGEMENT",
+          "cni_mrz_certainty: PASS — IDFRX token → confidence=100",
+          "proximity_same_zone: PASS",
+          "cross_salaries_variance: PASS"
+        ]
+      }
+    },
+
+    "TemporalMapper": {
+      "file": "client/src/utils/TemporalMapper.ts",
+      "version": "1.0.0",
+      "status": "production",
+      "formula": "M_offset = (Année_now - Année_doc) × 12 + (Mois_now - Mois_doc)",
+      "slotMapping": {
+        "1": "BULLETIN_1 (M-1)",
+        "2": "BULLETIN_2 (M-2)",
+        "3": "BULLETIN_3 (M-3)",
+        ">3": "séquentiel fallback (ancien bulletin)",
+        "fallback": "séquentiel si aucune date trouvée"
+      },
+      "extractionPatterns": [
+        "Named month + 4-digit year : 'Janvier 2025'",
+        "Named month + 2-digit year : 'Mars 25'",
+        "Période : MM/YYYY",
+        "Standalone MM/YYYY or MM-YYYY (not inside DD/MM/YYYY)",
+        "DD/MM/YYYY → extracts most-recent month+year"
+      ],
+      "yearRange": [2015, 2040],
+      "alreadyAssignedRespected": true,
+      "testResults": {
+        "lastRun": "2026-02-28",
+        "total": 11,
+        "passed": 11
+      }
+    },
+
+    "IdentityMatcher": {
+      "file": "client/src/utils/IdentityMatcher.ts",
+      "version": "1.0.0",
+      "status": "production",
+      "implementation": "custom Levenshtein O(m×n) — no external npm package",
+      "mrzTypes": {
+        "TD1": "CNI française — 3 × 30 chars, prefix IDFRA/IDFRX, ligne 3 = SURNAME<<GIVEN",
+        "TD3": "Passeport — 2 × 44 chars, prefix P<FRA, ligne 1 = name field"
+      },
+      "matching": {
+        "levenshtein": "distance O(m×n), similarité = 1 - dist/maxLen",
+        "weightedScore": "lastName × 0.6 + firstName × 0.4",
+        "fuzzyWindow": "sliding word window + bigrams for compound names"
+      },
+      "matchLevels": {
+        "certain":   "MRZ trouvée + score ≥ 0.85",
+        "probable":  "Texte seul + score ≥ 0.75",
+        "uncertain": "Score 0.50–0.74",
+        "mismatch":  "Score < 0.50",
+        "no_name":   "Profil sans nom"
+      },
+      "testResults": {
+        "lastRun": "2026-02-28",
+        "total": 16,
+        "passed": 16
+      }
+    },
+
+    "KanbanBoard": {
+      "file": "client/src/components/dossier/KanbanBoard.tsx",
+      "version": "1.0.0",
+      "status": "production",
+      "library": "@dnd-kit/core@6.3.1 + @dnd-kit/utilities@3.2.2",
+      "columns": ["IDENTITE","BULLETIN","REVENUS_FISCAUX","EMPLOI","GARANTIE","DOMICILE","BANCAIRE","LOGEMENT","UNKNOWN"],
+      "features": [
+        "DraggableCard — grip handle, confidence pill, temporal/identity badges",
+        "DroppableColumn — visual highlight on drag-over",
+        "DragOverlay — floating ghost card during drag",
+        "PointerSensor — activationConstraint: { distance: 6 }",
+        "LiveTerminal — expandable logs panel per card ([OK]/[WARN]/[ERR])",
+        "framer-motion entrance animations"
+      ],
+      "onMoveEntry": "visual reclassification only — backend update requires re-upload (dossierService.updateDocument not implemented)"
+    },
+
+    "DossierLocatif": {
+      "file": "client/src/pages/tenant/DossierLocatif.tsx",
+      "version": "5.0.0",
+      "status": "production",
+      "magicPhases": ["drop", "scanning", "dashboard", "kanban"],
+      "defaultPostScan": "kanban",
+      "liveLogs": {
+        "codes": { "[INFO]": "grey", "[OK]": "green", "[WARN]": "amber", "[ERR]": "red" },
+        "events": 14,
+        "examples": [
+          "[INFO] Démarrage de l'analyse : {filename}",
+          "[OK] Texte PDF extrait ({chars} caractères)",
+          "[OK] OCR Tesseract terminé",
+          "[OK] QR code 2D-Doc détecté",
+          "[OK] Famille détectée : {family} (confiance : {conf}%)",
+          "[OK] SIRET {siret} — Luhn ✓",
+          "[ERR] SIRET {siret} — Luhn invalide",
+          "[WARN] Métadonnée suspecte : {producer}",
+          "[OK] Période détectée : {label}",
+          "[WARN] Période non détectée — bulletin séquentiel",
+          "[OK] Identité : {icon} (score {pct}%)",
+          "[WARN] Nom introuvable ou profil sans identité",
+          "[OK] Envoi sécurisé : {filename}",
+          "[INFO] Reclassé manuellement → {family}"
+        ]
+      },
+      "integrations": {
+        "TemporalMapper": "BULLETIN slot assignment via M-offset",
+        "IdentityMatcher": "IDENTITE name verification via MRZ + Levenshtein",
+        "KanbanBoard": "Post-scan drag & drop with handleMoveEntry callback",
+        "DocumentIntelligence": "Core scanner replacing UniversalScraper v3"
+      }
+    },
+
+    "ValidateDocumentIntegrity": {
+      "file": "client/src/utils/validateDocumentIntegrity.ts",
+      "version": "1.0.0",
+      "status": "production",
+      "checks": [
+        { "id": "mime_ext",     "label": "Type MIME ↔ extension",         "method": "file.type vs .split('.').pop()" },
+        { "id": "size_nonzero", "label": "Taille > 0 Ko",                 "method": "file.size > 0" },
+        { "id": "pdf_producer", "label": "Pas de modification suspecte",  "method": "regex /Producer in first 4096 bytes" },
+        { "id": "siret_luhn",   "label": "SIRET valide (Luhn)",           "method": "JS pur Luhn checksum" },
+        { "id": "nss_format",   "label": "NIR 15 chiffres valide",        "method": "Regex + slice checks" },
+        { "id": "date_recent",  "label": "Document non périmé",           "method": "User checklist" },
+        { "id": "salary_ratio", "label": "Ratio Net/Brut ∈ [0.72–0.82]", "method": "User checklist" },
+        { "id": "2ddoc_prompt", "label": "QR filigrane RF (avis impôt)", "method": "User checkbox" }
+      ],
+      "trustScore": {
+        "green":  "≥ 80 — Vérifié",
+        "orange": "50–79 — À confirmer",
+        "red":    "< 50 — Suspect"
+      }
+    }
+  },
+
+  "packages": {
+    "installed": {
+      "@dnd-kit/core":       "6.3.1",
+      "@dnd-kit/utilities":  "3.2.2",
+      "pdfjs-dist":          "5.x",
+      "tesseract.js":        "7.x",
+      "jsqr":                "latest",
+      "jszip":               "3.10.x",
+      "framer-motion":       "12.x",
+      "date-fns":            "latest"
+    },
+    "pending": {
+      "levenshtein-edit-distance": "NOT INSTALLED — custom implementation used in IdentityMatcher.ts"
+    }
+  },
+
+  "pendingWork": {
+    "rectoverso_fusion": {
+      "description": "Si un PDF a 2 pages, fusionner les données de la p1 (en-tête) et p2 (zone MRZ)",
+      "status": "not_implemented",
+      "note": "pdfjs reads up to 5 pages, text is concatenated, but no explicit two-page CNI fusion logic"
+    },
+    "backend_reclassification": {
+      "description": "Update DB when user reclassifies a card via Kanban drag & drop",
+      "status": "not_implemented",
+      "note": "dossierService.updateDocument does not exist — visual only for now"
+    }
+  },
+
+  "testSummary": {
+    "lastRun": "2026-02-28",
+    "runner": "vitest",
+    "file": "client/src/tests/dossier_logic.test.ts",
+    "total": 104,
+    "passed": 104,
+    "breakdown": {
+      "validateDocumentIntegrity": 34,
+      "DocumentIntelligence_anchors": 30,
+      "DocumentIntelligence_crossCheck": 6,
+      "TemporalMapper": 11,
+      "IdentityMatcher": 16,
+      "DossierLogic_misc": 7
+    }
+  },
+
+  "commits": [
+    { "hash": "9272561", "desc": "feat: dossier v3 — UniversalScraper OR-of-ANDs + Magic Drop framer-motion + auto-dashboard" },
+    { "hash": "cfcab85", "desc": "feat: DocumentIntelligence v4 — proximity-anchored scoring, PDF forensics, certainty tokens" },
+    { "hash": "72c232d", "desc": "feat: dossier v5 — TemporalMapper M-x, IdentityMatcher MRZ+Levenshtein, Kanban drag & drop, live logs" }
+  ]
+}

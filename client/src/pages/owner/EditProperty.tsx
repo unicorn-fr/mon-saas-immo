@@ -1,14 +1,16 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Save, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Save, AlertCircle, Filter } from 'lucide-react'
 import { useProperties } from '../../hooks/useProperties'
 import { ImageUpload } from '../../components/property/ImageUpload'
 import { AvailabilityScheduler } from '../../components/property/AvailabilityScheduler'
+import { SelectionCriteriaForm } from '../../components/application/SelectionCriteriaForm'
 import {
   PROPERTY_TYPES,
   AMENITIES,
   UpdatePropertyInput,
 } from '../../types/property.types'
+import { DEFAULT_CRITERIA, type SelectionCriteria } from '../../types/application.types'
 import { Layout } from '../../components/layout/Layout'
 
 export default function EditProperty() {
@@ -24,6 +26,7 @@ export default function EditProperty() {
   } = useProperties()
 
   const [formData, setFormData] = useState<UpdatePropertyInput>({})
+  const [criteria, setCriteria] = useState<SelectionCriteria>(DEFAULT_CRITERIA)
   const [error, setLocalError] = useState('')
   const [isInitialized, setIsInitialized] = useState(false)
 
@@ -71,6 +74,9 @@ export default function EditProperty() {
           endTime: o.endTime,
         })) || [],
       })
+      if (currentProperty.selectionCriteria) {
+        setCriteria(currentProperty.selectionCriteria as SelectionCriteria)
+      }
       setIsInitialized(true)
     }
   }, [currentProperty, isInitialized])
@@ -128,7 +134,7 @@ export default function EditProperty() {
     if (!validateForm()) return
 
     try {
-      await updateProperty(id, formData)
+      await updateProperty(id, { ...formData, selectionCriteria: criteria })
       navigate(`/properties/${id}`)
     } catch (err) {
       console.error('Update failed:', err)
@@ -501,6 +507,18 @@ export default function EditProperty() {
               images={formData.images || []}
               onImagesChange={(images) => setFormData((prev) => ({ ...prev, images }))}
             />
+          </div>
+
+          {/* Selection Criteria */}
+          <div className="card mb-6">
+            <h2 className="text-lg font-semibold mb-1 flex items-center gap-2">
+              <Filter className="w-5 h-5 text-violet-600" />
+              Critères de sélection
+            </h2>
+            <p className="text-sm text-slate-500 mb-5">
+              Définissez les prérequis que les candidats doivent remplir pour postuler.
+            </p>
+            <SelectionCriteriaForm criteria={criteria} onChange={setCriteria} />
           </div>
 
           {/* Visit Availability */}

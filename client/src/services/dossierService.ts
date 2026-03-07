@@ -1,5 +1,20 @@
 import api from './api'
 
+export interface ProfileSaveData {
+  firstName?: string
+  lastName?: string
+  birthDate?: string
+  birthCity?: string
+  nationality?: string
+  documentNumber?: string
+  documentExpiry?: string
+  nationalNumber?: string
+  address?: string
+  employerName?: string
+  contractType?: string
+  netSalary?: number | null
+}
+
 export interface TenantDocument {
   id: string
   userId: string
@@ -37,6 +52,10 @@ class DossierService {
 
   async deleteDocument(id: string): Promise<void> {
     await api.delete(`/dossier/${id}`)
+  }
+
+  async saveProfile(data: ProfileSaveData): Promise<void> {
+    await api.patch('/dossier/profile', data)
   }
 }
 

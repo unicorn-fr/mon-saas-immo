@@ -8,19 +8,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        // ── Primary : Violet Profond (auth, contracts, éléments partagés) ──
+        // ── Primary : Blue-500 / Navy (Bleu ardoise institutionnel) ──
         primary: {
-          50:  '#f5f3ff',
-          100: '#ede9fe',
-          200: '#ddd6fe',
-          300: '#c4b5fd',
-          400: '#a78bfa',
-          500: '#8b5cf6',
-          600: '#7c3aed',
-          700: '#6d28d9',
-          800: '#5b21b6',
-          900: '#4c1d95',
-          950: '#2e1065',
+          50:  '#eff6ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
+          300: '#93c5fd',
+          400: '#60a5fa',
+          500: '#3b82f6',
+          600: '#2563eb',
+          700: '#1d4ed8',
+          800: '#1e40af',
+          900: '#1e3a8a',
+          950: '#172554',
         },
         // ── Brand Blue : Couleur de l'agence (bleu électrique) ────────────
         blue: {
@@ -119,12 +119,13 @@ export default {
         // ── Cards flottantes avec glow coloré ─────────────────────────
         'card-glow-cyan':    '0 16px 48px -8px rgba(6, 182, 212, 0.28), 0 4px 12px -2px rgba(0,0,0,0.06)',
         'card-glow-fuchsia': '0 16px 48px -8px rgba(217, 70, 239, 0.24), 0 4px 12px -2px rgba(0,0,0,0.06)',
-        'card-glow-violet':  '0 16px 48px -8px rgba(124, 58, 237, 0.24), 0 4px 12px -2px rgba(0,0,0,0.06)',
+        'card-glow-violet':  '0 16px 48px -8px rgba(124, 58, 237, 0.20), 0 4px 12px -2px rgba(0,0,0,0.06)',
         'card-glow-blue':    '0 16px 48px -8px rgba(59, 130, 246, 0.24), 0 4px 12px -2px rgba(0,0,0,0.06)',
         // ── Glows boutons/CTA (micro-interactions) ────────────────────
-        'glow-primary': '0 6px 20px rgba(124, 58, 237, 0.50)',
-        'glow-cyan':    '0 6px 20px rgba(6, 182, 212, 0.55)',
-        'glow-blue':    '0 6px 20px rgba(59, 130, 246, 0.55)',
+        'glow-primary': '0 4px 16px rgba(59, 130, 246, 0.30)',
+        'glow-emerald': '0 4px 16px rgba(16, 185, 129, 0.28)',
+        'glow-cyan':    '0 4px 16px rgba(6, 182, 212, 0.28)',
+        'glow-blue':    '0 4px 16px rgba(59, 130, 246, 0.32)',
         'glow-magenta': '0 6px 20px rgba(217, 70, 239, 0.50)',
         'glow-accent':  '0 6px 20px rgba(255, 107, 53, 0.55)',
         'glow-success': '0 4px 16px rgba(22, 163, 74, 0.35)',

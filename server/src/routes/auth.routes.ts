@@ -3,6 +3,7 @@ import { authController } from '../controllers/auth.controller.js'
 import { authenticate } from '../middlewares/auth.middleware.js'
 import * as totpController from '../controllers/totp.controller.js'
 import { verifyTurnstile } from '../middlewares/turnstile.middleware.js'
+import { loginRateLimiter, emailRateLimiter } from '../middlewares/security.middleware.js'
 
 const router = Router()
 
@@ -13,8 +14,8 @@ const router = Router()
 // POST /api/v1/auth/register - Register new user (+ Turnstile anti-bot)
 router.post('/register', verifyTurnstile, authController.register.bind(authController))
 
-// POST /api/v1/auth/login - Login user
-router.post('/login', authController.login.bind(authController))
+// POST /api/v1/auth/login - Login user (brute-force protected: 10 attempts / 15 min)
+router.post('/login', loginRateLimiter, authController.login.bind(authController))
 
 // POST /api/v1/auth/refresh - Refresh access token
 router.post('/refresh', authController.refresh.bind(authController))
@@ -22,9 +23,10 @@ router.post('/refresh', authController.refresh.bind(authController))
 // POST /api/v1/auth/logout - Logout user
 router.post('/logout', authController.logout.bind(authController))
 
-// POST /api/v1/auth/forgot-password - Request password reset
+// POST /api/v1/auth/forgot-password - Request password reset (5 per hour)
 router.post(
   '/forgot-password',
+  emailRateLimiter,
   authController.forgotPassword.bind(authController)
 )
 
@@ -51,9 +53,10 @@ router.patch(
   authController.updateProfile.bind(authController)
 )
 
-// POST /api/v1/auth/resend-verification - Resend verification email
+// POST /api/v1/auth/resend-verification - Resend verification email (5 per hour)
 router.post(
   '/resend-verification',
+  emailRateLimiter,
   authenticate,
   authController.resendVerification.bind(authController)
 )

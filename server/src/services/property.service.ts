@@ -1,4 +1,8 @@
 import { PropertyType, PropertyStatus, DateOverrideType, Prisma } from '@prisma/client'
+
+// Helper: coerce a plain object to Prisma's InputJsonValue
+const toJson = (v: Record<string, unknown>): Prisma.InputJsonValue =>
+  JSON.parse(JSON.stringify(v)) as Prisma.InputJsonValue
 import { prisma } from '../config/database.js'
 import { messageService } from './message.service.js'
 
@@ -46,6 +50,7 @@ export interface CreatePropertyInput {
   visitDuration?: number
   visitAvailabilitySlots?: VisitAvailabilitySlotInput[]
   visitDateOverrides?: VisitDateOverrideInput[]
+  selectionCriteria?: Record<string, unknown>
 }
 
 export interface UpdatePropertyInput {
@@ -79,6 +84,7 @@ export interface UpdatePropertyInput {
   visitDuration?: number
   visitAvailabilitySlots?: VisitAvailabilitySlotInput[]
   visitDateOverrides?: VisitDateOverrideInput[]
+  selectionCriteria?: Record<string, unknown>
 }
 
 export interface PropertyFilters {
@@ -157,6 +163,7 @@ class PropertyService {
           amenities: propertyData.amenities || [],
           availableFrom: propertyData.availableFrom,
           visitDuration: propertyData.visitDuration || 30,
+          ...(propertyData.selectionCriteria !== undefined ? { selectionCriteria: toJson(propertyData.selectionCriteria) } : {}),
         },
         include: {
           owner: {
@@ -265,12 +272,12 @@ class PropertyService {
       throw new Error('Unauthorized: You do not own this property')
     }
 
-    const { visitAvailabilitySlots, visitDateOverrides, ...propertyData } = data
+    const { visitAvailabilitySlots, visitDateOverrides, selectionCriteria: sc, ...propertyData } = data
 
     const updatedProperty = await prisma.$transaction(async (tx) => {
       const updated = await tx.property.update({
         where: { id },
-        data: propertyData,
+        data: { ...propertyData, ...(sc !== undefined ? { selectionCriteria: toJson(sc) } : {}) },
         include: {
           owner: {
             select: {

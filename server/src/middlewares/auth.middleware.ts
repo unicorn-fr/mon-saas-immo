@@ -10,7 +10,7 @@ declare global {
       user?: {
         id: string
         email: string
-        role: 'TENANT' | 'OWNER' | 'ADMIN'
+        role: 'TENANT' | 'OWNER' | 'ADMIN' | 'SUPER_ADMIN'
       }
     }
   }
@@ -47,7 +47,7 @@ export const authenticate = async (
     req.user = {
       id: user.id,
       email: user.email,
-      role: user.role as 'TENANT' | 'OWNER' | 'ADMIN',
+      role: user.role as 'TENANT' | 'OWNER' | 'ADMIN' | 'SUPER_ADMIN',
     }
 
     next()
@@ -78,7 +78,7 @@ export const optionalAuthenticate = async (
         req.user = {
           id: user.id,
           email: user.email,
-          role: user.role as 'TENANT' | 'OWNER' | 'ADMIN',
+          role: user.role as 'TENANT' | 'OWNER' | 'ADMIN' | 'SUPER_ADMIN',
         }
       }
     }
@@ -89,13 +89,13 @@ export const optionalAuthenticate = async (
 }
 
 // Role-based access control
-export const authorize = (...roles: ('TENANT' | 'OWNER' | 'ADMIN')[]) => {
+export const authorize = (...roles: ('TENANT' | 'OWNER' | 'ADMIN' | 'SUPER_ADMIN')[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
       return next(new AppError(401, 'Authentication required'))
     }
 
-    if (!roles.includes(req.user.role)) {
+    if (!roles.includes(req.user.role as any)) {
       return next(new AppError(403, 'Insufficient permissions'))
     }
 

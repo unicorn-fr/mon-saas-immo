@@ -4,11 +4,29 @@
 
 /* ── Light Mode Variables ──────────────────────────────────────────────────── */
 :root {
-  /* Surfaces — neutre, cartes blanches, unifié avec bg-slate-50 */
+  /* Surfaces — transparentes pour laisser le gradient du body transparaître */
   --surface-page:    #f8fafc;
-  --surface-card:    #ffffff;
-  --surface-subtle:  #f1f5f9;
-  --surface-overlay: rgba(255, 255, 255, 0.96);
+  --surface-card:    rgba(255, 255, 255, 0.14);
+  --surface-subtle:  rgba(255, 255, 255, 0.08);
+  --surface-overlay: rgba(255, 255, 255, 0.85);
+
+  /* ── Glassmorphism tokens (VisionOS level) ────────────────────────────── */
+  --glass-bg:         rgba(255, 255, 255, 0.10);
+  --glass-bg-heavy:   rgba(255, 255, 255, 0.16);
+  --glass-border:     rgba(255, 255, 255, 0.60);
+  --glass-border-dim: rgba(203, 213, 225, 0.30);
+  --glass-shadow:     0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.06);
+  --glass-reflection: inset 0 1px 0 0 rgba(255, 255, 255, 0.90);
+  --glass-blur:       20px;
+  --bg-gradient:      radial-gradient(ellipse 160% 120% at top left, #eff6ff 0%, #f8fafc 40%, #f5f0ff 100%);
+  /* ── Crystal Glass tokens (PBR — opacité proche de 0, flou massif) ────── */
+  --crystal-bg:        rgba(255, 255, 255, 0.08);
+  --crystal-border:    rgba(255, 255, 255, 0.28);
+  --crystal-highlight: inset 0 1px 1px 0 rgba(255, 255, 255, 0.45);
+  /* Ombres colorées (Revolut style) */
+  --glow-violet: 0 8px 32px rgba(124, 58, 237, 0.22), 0 2px 8px rgba(124, 58, 237, 0.12);
+  --glow-blue:   0 8px 32px rgba(59, 130, 246, 0.22), 0 2px 8px rgba(59, 130, 246, 0.12);
+  --glow-cyan:   0 8px 32px rgba(6, 182, 212, 0.22),  0 2px 8px rgba(6, 182, 212, 0.12);
 
   /* Text — foncés, lisibles */
   --text-primary:     #0f172a;
@@ -20,16 +38,16 @@
   --border:           #e2e8f0;
   --border-strong:    #cbd5e1;
 
-  /* Brand */
-  --brand:            #06b6d4;
-  --brand-hover:      #0891b2;
-  --brand-light:      #ecfeff;
+  /* Brand — Bleu ardoise / Navy (institutionnel sobre) */
+  --brand:            #3b82f6;
+  --brand-hover:      #2563eb;
+  --brand-light:      #eff6ff;
   --brand-blue:       #3b82f6;
-  --brand-violet:     #7c3aed;
-  --brand-fuchsia:    #d946ef;
+  --brand-violet:     #6366f1;
+  --brand-fuchsia:    #a855f7;
 
   /* Semantic (static) */
-  --primary-color:  #7c3aed;
+  --primary-color:  #3b82f6;
   --accent-color:   #ff6b35;
   --success-color:  #22c55e;
   --warning-color:  #f59e0b;
@@ -46,6 +64,11 @@
   --gray-700: #334155;
   --gray-800: #1e293b;
   --gray-900: #0f172a;
+
+  /* Aliases compat — components using these legacy names */
+  --bg-primary:    var(--surface-page);
+  --bg-secondary:  var(--surface-card);
+  --border-primary: var(--border);
 }
 
 /* ── Dark Mode Variables ───────────────────────────────────────────────────── */
@@ -55,6 +78,27 @@
   --surface-card:    #1e293b;
   --surface-subtle:  #243349;
   --surface-overlay: rgba(15, 23, 42, 0.97);
+
+  /* Surfaces dark — transparentes */
+  --surface-card:    rgba(22, 33, 52, 0.80);
+  --surface-subtle:  rgba(36, 51, 73, 0.78);
+  --surface-overlay: rgba(10, 16, 32, 0.92);
+
+  /* ── Glassmorphism dark (VisionOS) ────────────────────────────────────── */
+  --glass-bg:         rgba(255, 255, 255, 0.05);
+  --glass-bg-heavy:   rgba(255, 255, 255, 0.09);
+  --glass-border:     rgba(255, 255, 255, 0.14);
+  --glass-border-dim: rgba(255, 255, 255, 0.07);
+  --glass-shadow:     0 10px 25px -5px rgba(0, 0, 0, 0.40), 0 8px 10px -6px rgba(0, 0, 0, 0.25);
+  --glass-reflection: inset 0 1px 0 0 rgba(255, 255, 255, 0.22);
+  --bg-gradient:      radial-gradient(ellipse 160% 120% at top left, #0c1428 0%, #0f172a 45%, #130f28 100%);
+  /* ── Crystal Glass dark ─────────────────────────────────────────────── */
+  --crystal-bg:        rgba(10, 15, 30, 0.22);
+  --crystal-border:    rgba(255, 255, 255, 0.08);
+  --crystal-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+  --glow-violet: 0 8px 32px rgba(124, 58, 237, 0.35), 0 2px 8px rgba(124, 58, 237, 0.20);
+  --glow-blue:   0 8px 32px rgba(59, 130, 246, 0.35), 0 2px 8px rgba(59, 130, 246, 0.20);
+  --glow-cyan:   0 8px 32px rgba(6, 182, 212, 0.35),  0 2px 8px rgba(6, 182, 212, 0.20);
 
   /* Text — clairs, visibles sur fond sombre */
   --text-primary:     #e2e8f0;
@@ -77,11 +121,11 @@
   }
 
   body {
-    background-color: var(--surface-page);
+    background: var(--bg-gradient);
     color: var(--text-primary);
     @apply antialiased;
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    transition: background-color 0.25s ease, color 0.25s ease;
+    transition: background 0.4s ease, color 0.25s ease;
   }
 
   /* Titres : Plus Jakarta Sans */
@@ -107,25 +151,125 @@
 /* ── Component Styles ─────────────────────────────────────────────────────── */
 @layer components {
 
+  /* ── Glass ────────────────────────────────────────────────────────────── */
+  /* Classe utilitaire glassmorphism — à appliquer sur Cards, Modals, Panels */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-reflection), var(--glass-shadow);
+  }
+
+  .glass-heavy {
+    background: var(--glass-bg-heavy);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-reflection), var(--glass-shadow);
+  }
+
   /* ── Card ─────────────────────────────────────────────────────────────── */
   .card {
-    @apply rounded-3xl border shadow-card p-6 md:p-8 transition-all duration-300;
-    background-color: var(--surface-card);
-    border-color: var(--border);
+    @apply rounded-3xl p-6 md:p-8 transition-all duration-200;
+    background: var(--glass-bg-heavy);
+    backdrop-filter: blur(32px) saturate(200%);
+    -webkit-backdrop-filter: blur(32px) saturate(200%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-reflection), 0 4px 24px rgba(0, 0, 0, 0.07), 0 1px 4px rgba(0, 0, 0, 0.04);
+    transform: translateZ(0);
   }
 
   .card:hover {
-    @apply shadow-card-hover -translate-y-1;
+    box-shadow: var(--glass-reflection), 0 0 0 1px rgba(59, 130, 246, 0.18), 0 20px 50px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.05);
+    border-color: rgba(59, 130, 246, 0.16);
   }
 
   .card-sm {
-    @apply rounded-2xl border shadow-card p-4 transition-all duration-300;
-    background-color: var(--surface-card);
-    border-color: var(--border);
+    @apply rounded-2xl p-4 transition-all duration-200;
+    background: var(--glass-bg-heavy);
+    backdrop-filter: blur(32px) saturate(200%);
+    -webkit-backdrop-filter: blur(32px) saturate(200%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-reflection), 0 2px 12px rgba(0, 0, 0, 0.05), 0 1px 4px rgba(0, 0, 0, 0.03);
+    transform: translateZ(0);
   }
 
   .card-sm:hover {
-    @apply shadow-card-hover;
+    box-shadow: var(--glass-reflection), 0 8px 28px rgba(0, 0, 0, 0.10), 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  /* ── Glass Button (verre dépoli — spéculaire + scale) ───────────────── */
+  .glass-button {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm;
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.52);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 2px 8px rgba(0, 0, 0, 0.08);
+    color: var(--text-primary);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .glass-button::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -75%;
+    width: 50%;
+    height: 200%;
+    background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.30) 50%, transparent 100%);
+    transform: skewX(-15deg);
+    animation: shimmerPass 5s ease-in-out infinite;
+  }
+  .glass-button:hover {
+    background: rgba(255, 255, 255, 0.32);
+    border-color: rgba(255, 255, 255, 0.78);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 8px 24px rgba(0, 0, 0, 0.10);
+  }
+  .glass-button:active {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.70);
+  }
+
+  /* ── Shimmer sweep (boutons principaux) ───────────────────────────────── */
+  .shimmer-btn {
+    position: relative;
+    overflow: hidden;
+  }
+  .shimmer-btn::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -75%;
+    width: 50%;
+    height: 200%;
+    background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.28) 50%, transparent 100%);
+    transform: skewX(-15deg);
+    animation: shimmerPass 4s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  /* ── Luminous border (gradient border via pseudo-element mask) ─────────── */
+  .border-glow {
+    position: relative;
+  }
+  .border-glow::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg,
+      rgba(124, 58, 237, 0.55) 0%,
+      rgba(59, 130, 246, 0.35) 40%,
+      rgba(6, 182, 212, 0.55) 100%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+    pointer-events: none;
   }
 
   /* ── Buttons ──────────────────────────────────────────────────────────── */
@@ -135,66 +279,75 @@
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
-  /* Primaire — Bleu → Violet (Brand agence + violet) */
+  /* Primaire — Blue-600 sobre */
   .btn-primary {
-    @apply text-white hover:-translate-y-0.5 active:translate-y-0
-           disabled:opacity-50 disabled:cursor-not-allowed;
-    background: linear-gradient(135deg, #3b82f6 0%, #7c3aed 100%);
-    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    @apply text-white disabled:opacity-50 disabled:cursor-not-allowed;
+    background: #2563eb;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.28);
     transition: all 0.2s ease;
   }
   .btn-primary:hover {
-    background: linear-gradient(135deg, #2563eb 0%, #6d28d9 100%);
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.50);
+    background: #1d4ed8;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.36);
   }
   .btn-primary:active {
     box-shadow: 0 2px 8px rgba(99, 102, 241, 0.30);
   }
 
-  /* Secondaire — Neutre adaptatif */
+  /* Secondaire — Verre dépoli (frosted glass) */
   .btn-secondary {
     @apply inline-flex items-center justify-center px-5 py-2.5 rounded-xl font-semibold text-sm
-           border transition-all duration-200
-           hover:-translate-y-px active:translate-y-0 shadow-sm
-           disabled:opacity-50 disabled:cursor-not-allowed;
-    background-color: var(--surface-card);
-    color: var(--text-secondary);
-    border-color: var(--border);
-  }
-  .btn-secondary:hover {
-    background-color: var(--surface-subtle);
-    border-color: var(--border-strong);
-  }
-
-  /* Owner CTA — Cyan → Bleu + Pillule + Cyan Glow */
-  .btn-cyan-gradient {
-    @apply inline-flex items-center justify-center px-6 py-3 rounded-full font-semibold text-sm
-           text-white hover:-translate-y-0.5 active:translate-y-0
            transition-all duration-200
            disabled:opacity-50 disabled:cursor-not-allowed;
-    background: linear-gradient(135deg, #22d3ee 0%, #2563eb 100%);
-    box-shadow: 0 6px 20px rgba(6, 182, 212, 0.45);
+    background: rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 2px 6px rgba(0, 0, 0, 0.07);
+    color: var(--text-secondary);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.38);
+    border-color: rgba(255, 255, 255, 0.75);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 6px 20px rgba(0, 0, 0, 0.10);
+    color: var(--text-primary);
+  }
+  .btn-secondary:active {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.70);
+  }
+
+  /* Owner CTA — Blue sobre */
+  .btn-cyan-gradient {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-full font-semibold text-sm
+           text-white
+           transition-all duration-200
+           disabled:opacity-50 disabled:cursor-not-allowed;
+    background: #2563eb;
+    box-shadow: 0 2px 10px rgba(37, 99, 235, 0.28);
+    transition: all 0.2s ease;
   }
   .btn-cyan-gradient:hover {
-    background: linear-gradient(135deg, #06b6d4 0%, #1d4ed8 100%);
-    box-shadow: 0 8px 28px rgba(6, 182, 212, 0.60);
+    background: #1d4ed8;
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.36);
   }
   .btn-cyan-gradient:active {
     box-shadow: 0 2px 10px rgba(6, 182, 212, 0.35);
   }
 
-  /* Tenant CTA — Fuchsia → Violet + Pillule + Magenta Glow */
+  /* Tenant CTA — Slate-blue sobre */
   .btn-magenta-gradient {
     @apply inline-flex items-center justify-center px-6 py-3 rounded-full font-semibold text-sm
-           text-white hover:-translate-y-0.5 active:translate-y-0
+           text-white
            transition-all duration-200
            disabled:opacity-50 disabled:cursor-not-allowed;
-    background: linear-gradient(135deg, #e879f9 0%, #7c3aed 100%);
-    box-shadow: 0 6px 20px rgba(217, 70, 239, 0.40);
+    background: #1e40af;
+    box-shadow: 0 2px 10px rgba(30, 64, 175, 0.28);
+    transition: all 0.2s ease;
   }
   .btn-magenta-gradient:hover {
-    background: linear-gradient(135deg, #d946ef 0%, #6d28d9 100%);
-    box-shadow: 0 8px 28px rgba(217, 70, 239, 0.55);
+    background: #1e3a8a;
+    box-shadow: 0 4px 16px rgba(30, 64, 175, 0.36);
   }
   .btn-magenta-gradient:active {
     box-shadow: 0 2px 10px rgba(217, 70, 239, 0.30);
@@ -203,7 +356,7 @@
   /* Corail — CTA héros (Constraint WCAG: text-shadow améliore lisibilité sur fond coral) */
   .btn-accent {
     @apply inline-flex items-center justify-center px-5 py-2.5 rounded-xl font-semibold text-sm
-           text-white hover:-translate-y-0.5 active:translate-y-0
+           text-white
            transition-all duration-200
            disabled:opacity-50 disabled:cursor-not-allowed;
     background: linear-gradient(135deg, #ff6b35 0%, #e84e1b 100%);
@@ -218,10 +371,10 @@
     box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
   }
 
-  /* Contour Violet */
+  /* Contour Emerald */
   .btn-outline {
     @apply border-2 border-primary-600 text-primary-600
-           hover:bg-primary-50 hover:-translate-y-px
+           hover:bg-primary-50
            active:bg-primary-100;
   }
 
@@ -239,7 +392,7 @@
   /* Danger */
   .btn-danger {
     @apply bg-red-600 text-white
-           hover:bg-red-700 hover:-translate-y-px
+           hover:bg-red-700
            active:bg-red-800 shadow-sm;
   }
 
@@ -248,8 +401,10 @@
     @apply w-full px-4 py-2.5 rounded-xl border
            focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 focus:border-blue-500
            outline-none transition-all duration-200 shadow-sm;
-    background-color: var(--surface-card);
-    border-color: var(--border);
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-color: rgba(255, 255, 255, 0.65);
     color: var(--text-primary);
   }
   .input::placeholder {
@@ -330,19 +485,22 @@
   }
 
   .modal-panel {
-    @apply rounded-3xl shadow-modal w-full p-6 md:p-8;
-    background-color: var(--surface-card);
+    @apply rounded-3xl w-full p-6 md:p-8;
+    background: var(--glass-bg-heavy);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.90);
     color: var(--text-primary);
   }
 
   /* ── Glass Panel (Glassmorphism — filtres Leaflet, dropdowns flottants) ── */
-  /* Constraint #3 : opacité ≥90% pour lisibilité sur carte dense */
   .glass-panel {
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.60);
-    box-shadow: 0 8px 32px rgba(6, 182, 212, 0.06), 0 2px 8px rgba(0, 0, 0, 0.06);
+    background: var(--glass-bg-heavy);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
   }
 
   /* ── Section sombre (Onyx) ────────────────────────────────────────────── */
@@ -434,6 +592,21 @@
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
+}
+
+/* Shimmer sweep — lumière qui traverse le bouton (Revolut style) */
+@keyframes shimmerPass {
+  0%   { left: -75%; opacity: 0; }
+  8%   { opacity: 1; }
+  92%  { opacity: 1; }
+  100% { left: 125%; opacity: 0; }
+}
+
+/* Blob animation — blobs qui respirent doucement */
+@keyframes blobPulse {
+  0%, 100% { transform: scale(1) translate(0, 0); }
+  33%       { transform: scale(1.08) translate(-2%, 2%); }
+  66%       { transform: scale(0.94) translate(2%, -1%); }
 }
 
 /* ── Print ────────────────────────────────────────────────────────────────── */
@@ -534,20 +707,20 @@
 .dark .bg-slate-50\/50  { background-color: rgba(36, 51, 73, 0.50); }
 .dark .bg-slate-100\/50 { background-color: rgba(36, 51, 73, 0.60); }
 .dark .bg-success-50\/50  { background-color: rgba(34, 197, 94, 0.06); }
-.dark .bg-primary-50\/50  { background-color: rgba(124, 58, 237, 0.07); }
+.dark .bg-primary-50\/50  { background-color: rgba(59, 130, 246, 0.06); }
 .dark .bg-blue-50\/50     { background-color: rgba(59, 130, 246, 0.06); }
 .dark .bg-warning-50\/50  { background-color: rgba(245, 158, 11, 0.06); }
 .dark .bg-red-950\/20     { background-color: rgba(239, 68, 68, 0.10); }
 .dark .bg-red-900\/20     { background-color: rgba(239, 68, 68, 0.10); }
-.dark .bg-primary-900\/30 { background-color: rgba(124, 58, 237, 0.18); }
+.dark .bg-primary-900\/30 { background-color: rgba(59, 130, 246, 0.14); }
 
-/* Brand — fonds adaptés dark */
+/* Brand — fonds adaptés dark (blue-500 primary) */
 .dark .bg-primary-50,
-.dark .bg-indigo-50   { background-color: rgba(124, 58, 237, 0.10); }
+.dark .bg-indigo-50   { background-color: rgba(59, 130, 246, 0.07); }
 .dark .bg-primary-100,
-.dark .bg-indigo-100  { background-color: rgba(124, 58, 237, 0.18); }
+.dark .bg-indigo-100  { background-color: rgba(59, 130, 246, 0.13); }
 .dark .bg-primary-200,
-.dark .bg-indigo-200  { background-color: rgba(124, 58, 237, 0.28); }
+.dark .bg-indigo-200  { background-color: rgba(59, 130, 246, 0.20); }
 
 .dark .bg-blue-50  { background-color: rgba(59, 130, 246, 0.08); }
 .dark .bg-blue-100 { background-color: rgba(59, 130, 246, 0.15); }
@@ -586,8 +759,8 @@
 .dark .border-slate-200 { border-color: var(--border); }
 .dark .border-slate-300 { border-color: var(--border-strong); }
 
-.dark .border-primary-100 { border-color: rgba(124, 58, 237, 0.22); }
-.dark .border-primary-200 { border-color: rgba(124, 58, 237, 0.35); }
+.dark .border-primary-100 { border-color: rgba(59, 130, 246, 0.20); }
+.dark .border-primary-200 { border-color: rgba(59, 130, 246, 0.32); }
 .dark .border-blue-100    { border-color: rgba(59, 130, 246, 0.20); }
 .dark .border-blue-200    { border-color: rgba(59, 130, 246, 0.30); }
 .dark .border-cyan-100    { border-color: rgba(6, 182, 212, 0.20); }
@@ -614,25 +787,25 @@
 .dark .hover\:bg-slate-100:hover { background-color: #243349; }
 .dark .hover\:bg-white:hover     { background-color: var(--surface-subtle); }
 .dark .hover\:bg-red-50:hover    { background-color: rgba(239, 68, 68, 0.12); }
-.dark .hover\:bg-primary-50:hover  { background-color: rgba(124, 58, 237, 0.15); }
+.dark .hover\:bg-primary-50:hover  { background-color: rgba(59, 130, 246, 0.10); }
 .dark .hover\:bg-blue-50:hover     { background-color: rgba(59, 130, 246, 0.12); }
 .dark .hover\:bg-cyan-50:hover     { background-color: rgba(6, 182, 212, 0.12); }
 .dark .hover\:bg-fuchsia-50:hover  { background-color: rgba(217, 70, 239, 0.12); }
 .dark .hover\:bg-success-50:hover  { background-color: rgba(34, 197, 94, 0.10); }
 .dark .hover\:bg-warning-50:hover  { background-color: rgba(245, 158, 11, 0.10); }
 .dark .hover\:bg-red-50:hover      { background-color: rgba(239, 68, 68, 0.12); }
-.dark .hover\:bg-indigo-50:hover   { background-color: rgba(124, 58, 237, 0.12); }
+.dark .hover\:bg-indigo-50:hover   { background-color: rgba(59, 130, 246, 0.09); }
 .dark .hover\:bg-emerald-50:hover  { background-color: rgba(16, 185, 129, 0.12); }
 .dark .hover\:bg-orange-50:hover   { background-color: rgba(234, 88, 12, 0.12); }
-.dark .hover\:bg-violet-50:hover   { background-color: rgba(124, 58, 237, 0.12); }
+.dark .hover\:bg-violet-50:hover   { background-color: rgba(124, 58, 237, 0.10); }
 
 /* ── Gradients dark mode (bg-gradient-to-*) ──────────────────────────────── */
 /* Les --tw-gradient-from/to restent en couleurs light → on les remplace */
-.dark .from-primary-50 { --tw-gradient-from: rgba(124, 58, 237, 0.12) var(--tw-gradient-from-position); }
+.dark .from-primary-50 { --tw-gradient-from: rgba(59, 130, 246, 0.08) var(--tw-gradient-from-position); }
 .dark .from-blue-50    { --tw-gradient-from: rgba(59, 130, 246, 0.08) var(--tw-gradient-from-position); }
 .dark .from-primary-600 { /* intentionally kept — gradient buttons */ }
 .dark .to-blue-50      { --tw-gradient-to: rgba(59, 130, 246, 0.08) var(--tw-gradient-to-position); }
-.dark .to-primary-50   { --tw-gradient-to: rgba(124, 58, 237, 0.12) var(--tw-gradient-to-position); }
+.dark .to-primary-50   { --tw-gradient-to: rgba(59, 130, 246, 0.08) var(--tw-gradient-to-position); }
 .dark .via-blue-50     { --tw-gradient-via: rgba(59, 130, 246, 0.06) var(--tw-gradient-via-position); }
 
 /* ── Placeholder ───────────────────────────────────────────────────────────── */
@@ -650,14 +823,58 @@
 .dark .ring-slate-200 { --tw-ring-color: var(--border); }
 .dark .ring-slate-300 { --tw-ring-color: var(--border-strong); }
 
-/* ── Élévation Dark Mode (Constraint #2) ──────────────────────────────────── */
-/* Les ombres sont invisibles sur fond sombre → border subtile + bg shift au survol */
+/* ── Dark Mode — Glass overrides ──────────────────────────────────────────── */
+/* ── Dark mode : glass vars gèrent le fond, on affine shadow + border ── */
 .dark .card {
-  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow: var(--glass-reflection), 0 4px 24px rgba(0, 0, 0, 0.40), 0 1px 4px rgba(0, 0, 0, 0.20);
 }
 .dark .card:hover {
-  background-color: var(--surface-subtle);
-  border-color: rgba(59, 130, 246, 0.25);
+  border-color: rgba(59, 130, 246, 0.22);
+  box-shadow: var(--glass-reflection), 0 20px 48px rgba(0, 0, 0, 0.50), 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+.dark .card-sm {
+  box-shadow: var(--glass-reflection), 0 2px 12px rgba(0, 0, 0, 0.35), 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+.dark .glass-panel {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+.dark .modal-panel {
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55), var(--glass-reflection);
+}
+
+/* ── Dark mode — inputs ───────────────────────────────────────────────────── */
+.dark .input {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: var(--text-primary);
+}
+.dark .input:focus {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(59, 130, 246, 0.60);
+}
+
+/* ── Dark mode — frosted glass buttons ───────────────────────────────────── */
+.dark .glass-button {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 2px 8px rgba(0, 0, 0, 0.30);
+}
+.dark .glass-button:hover {
+  background: rgba(255, 255, 255, 0.13);
+  border-color: rgba(255, 255, 255, 0.26);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 8px 28px rgba(0, 0, 0, 0.45);
+}
+.dark .btn-secondary {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.13);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 2px 8px rgba(0, 0, 0, 0.30);
+  color: var(--text-secondary);
+}
+.dark .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.13);
+  border-color: rgba(255, 255, 255, 0.24);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 8px 28px rgba(0, 0, 0, 0.45);
+  color: var(--text-primary);
 }
 
 /* ── Card Glow Shadows → Dark Mode Replacement ─────────────────────────────── */
@@ -693,12 +910,7 @@
 .text-slate-500 { color: #475569; }
 .text-slate-400 { color: #64748b; }
 
-/* Glass Panel — dark adaptation */
-.dark .glass-panel {
-  background: rgba(30, 41, 59, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.40);
-}
+/* (glass-panel dark override moved above with other dark glass rules) */
 
 /* ── Scroll-reveal animations ─────────────────────────────────────────────── */
 /* Base state: invisible + offset. JS adds .reveal-visible via useReveal hook. */
@@ -723,8 +935,490 @@
 
 /* ── gradient-text utility ────────────────────────────────────────────────── */
 .text-gradient-emerald-cyan {
-  background: linear-gradient(135deg, #059669 0%, #06b6d4 100%);
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   GLASS HIERARCHY — Classes utilitaires (indépendantes du mode)
+   Tout est piloté par les CSS vars :root / .dark — le toggle Dark/Light fonctionne.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── .glass-crystal — Verre haute-fidélité (Crystal PBR)
+   Secret Apple VisionOS : opacité ~0.08 + blur(40px) saturate(210%) + reflet spéculaire.
+   Le flou massif compense la transparence en créant une profondeur de champ riche. ── */
+.glass-crystal {
+  background: var(--crystal-bg);
+  backdrop-filter: blur(40px) saturate(210%) brightness(1.04);
+  -webkit-backdrop-filter: blur(40px) saturate(210%) brightness(1.04);
+  border: 1px solid var(--crystal-border);
+  box-shadow:
+    var(--crystal-highlight),
+    0 20px 50px rgba(0, 0, 0, 0.18);
+  /* GPU acceleration — évite les re-paints */
+  transform: translateZ(0);
+  will-change: backdrop-filter;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Grain de texture (Noise) via SVG inline — évite le "banding" du blur */
+.glass-crystal::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 150px 150px;
+  opacity: 0.030;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* .glass-main — nav shell (sidebar, header) : crystal par défaut */
+.glass-main {
+  background: var(--crystal-bg);
+  backdrop-filter: blur(40px) saturate(210%) brightness(1.04);
+  -webkit-backdrop-filter: blur(40px) saturate(210%) brightness(1.04);
+  border-color: var(--crystal-border);
+  transform: translateZ(0);
+  will-change: backdrop-filter;
+}
+
+/* .glass-card — verre dépoli surélévé (VisionOS elevation) */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  box-shadow:
+    var(--glass-reflection),
+    0 10px 30px -5px rgba(0, 0, 0, 0.08),
+    0 4px 10px -4px rgba(0, 0, 0, 0.06);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-card:hover {
+  box-shadow:
+    var(--glass-reflection),
+    0 0 0 1px rgba(59, 130, 246, 0.16),
+    0 20px 40px -5px rgba(0, 0, 0, 0.12),
+    0 8px 14px -4px rgba(0, 0, 0, 0.06);
+  border-color: rgba(59, 130, 246, 0.14);
+}
+
+/* .glass-btn — bouton verre dépoli (Apple VisionOS / Linear style) */
+.glass-btn {
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.52);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 2px 8px rgba(0, 0, 0, 0.08);
+  color: var(--text-primary);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-btn:hover {
+  background: rgba(255, 255, 255, 0.32);
+  border-color: rgba(255, 255, 255, 0.78);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 8px 24px rgba(0, 0, 0, 0.10);
+}
+.glass-btn:active {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.70), 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+.dark .glass-btn {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 2px 8px rgba(0, 0, 0, 0.30);
+}
+.dark .glass-btn:hover {
+  background: rgba(255, 255, 255, 0.13);
+  border-color: rgba(255, 255, 255, 0.26);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 8px 28px rgba(0, 0, 0, 0.45);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   NEON GLOW — Boutons et bordures à lueur neon (style Revolut / Linear)
+   Chaque couleur: border neon + halo diffus + glow profond
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* Outline Blue — sobre, institutionnel */
+.btn-neon-violet,
+.btn-neon-cyan,
+.btn-neon-fuchsia {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(59, 130, 246, 0.40);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 1px 4px rgba(0, 0, 0, 0.06);
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+.btn-neon-violet:hover,
+.btn-neon-cyan:hover,
+.btn-neon-fuchsia:hover {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.60);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), 0 3px 12px rgba(59, 130, 246, 0.14);
+}
+
+/* Sobre Emerald — outline discret */
+.btn-neon-emerald {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(59, 130, 246, 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.60), 0 2px 8px rgba(0, 0, 0, 0.06);
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+.btn-neon-emerald:hover {
+  background: rgba(59, 130, 246, 0.10);
+  border-color: rgba(59, 130, 246, 0.65);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.70), 0 4px 14px rgba(59, 130, 246, 0.16);
+}
+
+/* ── Neon Card Borders — pour glass cards avec lueur colorée ── */
+.card-neon-violet {
+  border-color: rgba(139, 92, 246, 0.45) !important;
+  box-shadow:
+    0 0 0 1px rgba(124, 58, 237, 0.12),
+    0 0 16px rgba(124, 58, 237, 0.18),
+    0 20px 40px rgba(0, 0, 0, 0.06) !important;
+}
+.card-neon-violet:hover {
+  border-color: rgba(139, 92, 246, 0.70) !important;
+  box-shadow:
+    0 0 0 1px rgba(124, 58, 237, 0.20),
+    0 0 28px rgba(124, 58, 237, 0.30),
+    0 20px 40px rgba(0, 0, 0, 0.10) !important;
+}
+.card-neon-cyan {
+  border-color: rgba(6, 182, 212, 0.45) !important;
+  box-shadow:
+    0 0 0 1px rgba(6, 182, 212, 0.12),
+    0 0 16px rgba(6, 182, 212, 0.18),
+    0 20px 40px rgba(0, 0, 0, 0.06) !important;
+}
+.card-neon-cyan:hover {
+  border-color: rgba(6, 182, 212, 0.70) !important;
+  box-shadow:
+    0 0 0 1px rgba(6, 182, 212, 0.20),
+    0 0 28px rgba(6, 182, 212, 0.30),
+    0 20px 40px rgba(0, 0, 0, 0.10) !important;
+}
+.card-neon-fuchsia {
+  border-color: rgba(217, 70, 239, 0.45) !important;
+  box-shadow:
+    0 0 0 1px rgba(217, 70, 239, 0.12),
+    0 0 16px rgba(217, 70, 239, 0.18),
+    0 20px 40px rgba(0, 0, 0, 0.06) !important;
+}
+.card-neon-fuchsia:hover {
+  border-color: rgba(217, 70, 239, 0.70) !important;
+  box-shadow:
+    0 0 0 1px rgba(217, 70, 239, 0.20),
+    0 0 28px rgba(217, 70, 239, 0.30),
+    0 20px 40px rgba(0, 0, 0, 0.10) !important;
+}
+
+/* Dark mode neon — lueurs plus intenses sur fond sombre */
+.dark .btn-neon-violet { color: rgba(255, 255, 255, 0.90); border-color: rgba(139, 92, 246, 0.80); }
+.dark .btn-neon-cyan   { color: rgba(255, 255, 255, 0.90); border-color: rgba(6, 182, 212, 0.80); }
+.dark .btn-neon-fuchsia { color: rgba(255, 255, 255, 0.90); border-color: rgba(217, 70, 239, 0.80); }
+.dark .btn-neon-emerald { color: rgba(255, 255, 255, 0.90); border-color: rgba(16, 185, 129, 0.80); }
+.dark .card-neon-violet { box-shadow: 0 0 24px rgba(124, 58, 237, 0.25), 0 0 60px rgba(124, 58, 237, 0.10) !important; }
+.dark .card-neon-cyan   { box-shadow: 0 0 24px rgba(6, 182, 212, 0.25), 0 0 60px rgba(6, 182, 212, 0.10) !important; }
+.dark .card-neon-fuchsia { box-shadow: 0 0 24px rgba(217, 70, 239, 0.25), 0 0 60px rgba(217, 70, 239, 0.10) !important; }
+
+/* ── Auto-glass: tous les panneaux utilisant les vars glass/surface en inline-style
+   reçoivent automatiquement le backdrop-filter sans modification JSX.
+   Couvre toutes les pages non-mises à jour individuellement. ── */
+div[style*="glass-bg"],
+div[style*="surface-card"],
+section[style*="glass-bg"],
+section[style*="surface-card"] {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   DESIGN SYSTEM v2 — Élévation, micro-interactions, animations d'entrée
+   Inspiré de Linear, Vercel, Revolut, Apple Human Interface Guidelines
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Entrance Animations ──────────────────────────────────────────────────── */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulseRing {
+  0%   { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.35); }
+  70%  { box-shadow: 0 0 0 7px rgba(59, 130, 246, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+}
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Animation utility classes */
+.animate-fade-up {
+  animation: fadeSlideUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.animate-scale-in {
+  animation: scaleIn 0.40s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.animate-count-up {
+  animation: countUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Stagger delays for page load */
+.delay-0   { animation-delay: 0ms; }
+.delay-50  { animation-delay: 50ms; }
+.delay-100 { animation-delay: 100ms; }
+.delay-150 { animation-delay: 150ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-250 { animation-delay: 250ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+
+/* ── Input Focus — Neon glow ring ─────────────────────────────────────────── */
+/* Remplace le focus:ring-blue-500 générique par un anneau de lueur coloré */
+.input:focus {
+  border-color: rgba(59, 130, 246, 0.60);
+  box-shadow:
+    0 0 0 3px rgba(59, 130, 246, 0.10),
+    0 0 0 1px rgba(59, 130, 246, 0.35),
+    inset 0 1px 2px rgba(0, 0, 0, 0.03);
+  background: rgba(255, 255, 255, 0.80);
+}
+.dark .input:focus {
+  border-color: rgba(59, 130, 246, 0.50);
+  box-shadow:
+    0 0 0 3px rgba(59, 130, 246, 0.12),
+    0 0 0 1px rgba(59, 130, 246, 0.38),
+    inset 0 1px 2px rgba(0, 0, 0, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ── KPI Card — Carte indicateur (Dashboard) ─────────────────────────────── */
+/* Usage : <div class="kpi-card"> — glass + gradient top-accent + hover lift */
+.kpi-card {
+  position: relative;
+  border-radius: 18px;
+  padding: 1.25rem;
+  overflow: hidden;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.25s ease;
+  background: var(--glass-bg-heavy);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-reflection), 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+.kpi-card:hover {
+  box-shadow: var(--glass-reflection), 0 0 0 1px rgba(59, 130, 246, 0.20), 0 14px 32px rgba(0, 0, 0, 0.10);
+  border-color: rgba(59, 130, 246, 0.18);
+}
+/* Top accent line (gradient) via pseudo-element */
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--kpi-accent, linear-gradient(90deg, #3b82f6, #1d4ed8));
+  opacity: 0.6;
+  transition: opacity 0.25s ease;
+}
+.kpi-card:hover::before {
+  opacity: 1;
+}
+
+/* ── Icon Box — Fond icône dégradé premium ────────────────────────────────── */
+.icon-box {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+/* Reflet spéculaire interne */
+.icon-box::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 50%;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.28) 0%, transparent 100%);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* ── Trend Badge — indicateur de tendance (KPI) ──────────────────────────── */
+.trend-up {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 100px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.22);
+}
+.trend-down {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 100px;
+  background: rgba(239, 68, 68, 0.10);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.18);
+}
+.trend-neutral {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 100px;
+  background: rgba(100, 116, 139, 0.10);
+  color: var(--text-tertiary);
+  border: 1px solid rgba(100, 116, 139, 0.18);
+}
+.dark .trend-up   { background: rgba(16, 185, 129, 0.16); color: #34d399; }
+.dark .trend-down { background: rgba(239, 68, 68, 0.14);  color: #f87171; }
+
+/* ── Section Header — titre de section dashboard ─────────────────────────── */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+.section-header-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  letter-spacing: -0.01em;
+}
+
+/* ── Scrollbar — global upgrade ───────────────────────────────────────────── */
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.25) transparent;
+}
+/* WebKit */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.22);
+  border-radius: 100px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.38);
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.30);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.45);
+}
+/* Masquer la scrollbar sur la scrollbar-hide mais laisser fonctionnel */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.18) transparent;
+}
+.scrollbar-thin::-webkit-scrollbar { width: 4px; }
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.18);
+  border-radius: 100px;
+}
+
+/* ── Page entry animation — pour les layouts dashboard ───────────────────── */
+/* Appliqué sur le container principal de chaque page */
+.page-enter {
+  animation: fadeSlideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Live pulse dot — indicateur actif en temps réel ─────────────────────── */
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45);
+  animation: pulseRing 2s ease-out infinite;
+  flex-shrink: 0;
+}
+.live-dot-violet {
+  background: #7c3aed;
+  box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.45);
+  animation: pulseRing 2s ease-out infinite;
+}
+
+/* ── Text selection ─────────────────────────────────────────────────────── */
+::selection {
+  background: rgba(59, 130, 246, 0.18);
+  color: inherit;
+}
+
+/* ── Focus visible — accessibility ring ─────────────────────────────────── */
+*:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.55);
+  outline-offset: 2px;
+}
+
+/* ── Gradient animated (Living gradients for hero sections) ──────────────── */
+.gradient-animated {
+  background-size: 200% 200%;
+  animation: gradientShift 6s ease infinite;
 }

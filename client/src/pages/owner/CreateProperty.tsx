@@ -1,14 +1,16 @@
 import { useState, FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, Save, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Save, AlertCircle, Filter } from 'lucide-react'
 import { useProperties } from '../../hooks/useProperties'
 import { ImageUpload } from '../../components/property/ImageUpload'
 import { AvailabilityScheduler } from '../../components/property/AvailabilityScheduler'
+import { SelectionCriteriaForm } from '../../components/application/SelectionCriteriaForm'
 import {
   PROPERTY_TYPES,
   AMENITIES,
   CreatePropertyInput,
 } from '../../types/property.types'
+import { DEFAULT_CRITERIA, type SelectionCriteria } from '../../types/application.types'
 import { Layout } from '../../components/layout/Layout'
 
 export default function CreateProperty() {
@@ -44,6 +46,7 @@ export default function CreateProperty() {
   })
 
   const [error, setLocalError] = useState('')
+  const [criteria, setCriteria] = useState<SelectionCriteria>(DEFAULT_CRITERIA)
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -96,7 +99,7 @@ export default function CreateProperty() {
     if (!validateForm()) return
 
     try {
-      const property = await createProperty(formData)
+      const property = await createProperty({ ...formData, selectionCriteria: criteria })
       navigate(`/properties/${property.id}`)
     } catch (err) {
       console.error('Create failed:', err)
@@ -448,6 +451,19 @@ export default function CreateProperty() {
               images={formData.images || []}
               onImagesChange={(images) => setFormData((prev) => ({ ...prev, images }))}
             />
+          </div>
+
+          {/* Selection Criteria */}
+          <div className="card mb-6">
+            <h2 className="text-lg font-semibold mb-1 flex items-center gap-2">
+              <Filter className="w-5 h-5 text-violet-600" />
+              Critères de sélection
+            </h2>
+            <p className="text-sm text-slate-500 mb-5">
+              Définissez les prérequis que les candidats doivent remplir pour postuler.
+              Chaque dossier sera automatiquement scoré et classé selon ces critères.
+            </p>
+            <SelectionCriteriaForm criteria={criteria} onChange={setCriteria} />
           </div>
 
           {/* Visit Availability */}

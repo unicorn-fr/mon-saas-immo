@@ -1,180 +1,163 @@
 /**
- * DossierLocatif.tsx — v3.0 "Magic Drop"
- * Mode par défaut : dépôt en lot → scan OCR autonome → dashboard auto-généré.
- * Mode secondaire : wizard 5 étapes guidé (conservé pour flux guidé).
+ * DossierLocatif.tsx — v8.0 "Slot Drop + IA définitive"
  *
- * Architecture :
- *  view = 'magic'   → MagicDropZone → FileScanCard[] → MagicDashboard
- *  view = 'wizard'  → WizardStepBar + DocCard[] (flux guidé existant)
+ * Layout :
+ *   PageHeader (progress bar + score + ZIP)
+ *   ├── ChecklistPanel (lg:col-span-2)
+ *   │   ├── HeroDropZone (en haut — toujours visible)
+ *   │   └── 5 catégories accordéon
+ *   └── SidePanel (lg:col-span-1) — idle tips / live scan console
+ *
+ * Nouveautés v7 :
+ *   - HeroDropZone proéminente tout en haut
+ *   - Suppression mode avancé (KanbanBoard)
+ *   - Détection de doublons + DuplicateModal
+ *   - Affichage données extraites (salaire, Visale, adresse…)
+ *   - Training IA : corrections utilisateur persistées en localStorage
  */
 import {
   useState, useEffect, useRef, useCallback, useMemo, useId,
 } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Upload, Trash2, CheckCircle, AlertCircle, FileText, User,
-  Briefcase, TrendingUp, Home, Shield, Eye, Lock, Loader,
-  Star, Award, ChevronRight, ChevronLeft, ChevronDown, ChevronUp,
-  Download, ShieldAlert, ShieldCheck, AlertTriangle, Info,
-  ScanLine, LayoutDashboard, FileCheck, XCircle, QrCode, Cpu,
-  Sparkles, Layers, FileX, CheckSquare,
+  Upload, Trash2, CheckCircle, CheckCircle2, AlertTriangle, User,
+  Briefcase, TrendingUp, Home, Shield, Lock, Loader, Loader2, Star, Award,
+  AlertCircle, Download, ShieldAlert, ShieldCheck, Info, Eye, X,
+  Cpu, Sparkles, Layers, FileX, ChevronDown, ChevronUp,
 } from 'lucide-react'
 import JSZip from 'jszip'
 import { useAuth } from '../../hooks/useAuth'
 import { Layout } from '../../components/layout/Layout'
 import { dossierService, TenantDocument } from '../../services/dossierService'
 import {
-  validateDocumentIntegrity,
-  IntegrityResult,
-  luhnSiret,
-  validateNIR,
 } from '../../utils/validateDocumentIntegrity'
 import {
-  runIntelligence,
-  assignDocTypeSlot,
-  crossCheckSalaries,
-  IntelligenceResult,
-  FAMILY_LABELS,
-  FAMILY_COLORS,
-  type DocFamily,
+  runMultiSignalIntelligence, MultiSignalResult,
+  assignDocTypeSlot, crossCheckSalaries,
+  saveTrainingCorrection,
+  FAMILY_LABELS, FAMILY_COLORS,
+  type DocFamily, type ExtractedData,
 } from '../../utils/DocumentIntelligence'
-import { mapBulletinPeriod } from '../../utils/TemporalMapper'
-import { matchIdentity, matchLevelIcon } from '../../utils/IdentityMatcher'
-import { KanbanBoard, type KanbanEntry } from '../../components/dossier/KanbanBoard'
-import { saveProgress, updateDocProgress } from '../../utils/progressState'
+import { mapBulletinPeriod }              from '../../utils/TemporalMapper'
+import { matchIdentity, matchLevelIcon }  from '../../utils/IdentityMatcher'
+import { SignalBreakdown }                from '../../components/dossier/SignalBreakdown'
+import { updateDocProgress } from '../../utils/progressState'
 import toast from 'react-hot-toast'
 
 const SERVER_BASE =
   (import.meta.env.VITE_API_URL as string | undefined)?.replace('/api/v1', '') ??
   'http://localhost:3000'
 
-// ─── Static data (steps / doc specs) ─────────────────────────────────────────
+// ─── Category & slot definitions ──────────────────────────────────────────────
 
-interface DocSpec {
-  docType: string
-  label: string
-  hint: string
-  why: string
+interface SlotSpec {
+  docType:  string
+  label:    string
+  hint:     string
+  why:      string
   required: boolean
-  weight: number
+  weight:   number
   sensitive?: boolean
 }
 
-interface WizardStep {
-  id: string
+interface DocCategory {
+  id:    string
   label: string
-  shortLabel: string
-  icon: React.ElementType
+  icon:  React.ElementType
+  color: string
   accent: string
   accentBg: string
-  headline: string
-  intro: string
-  docs: DocSpec[]
+  slots: SlotSpec[]
 }
 
-const STEPS: WizardStep[] = [
+const CATEGORIES: DocCategory[] = [
   {
-    id: 'IDENTITE', label: 'Identité & Profil', shortLabel: 'Identité',
-    icon: User, accent: 'text-cyan-600', accentBg: 'bg-cyan-50',
-    headline: 'Prouvez qui vous êtes',
-    intro: "Ces documents permettent au propriétaire de s'assurer de votre identité réelle.",
-    docs: [
-      { docType: 'CNI',                  label: "Carte d'identité (recto/verso)", hint: 'Valide, non expirée.',               why: "Preuve d'identité légale.",          required: true,  weight: 3 },
-      { docType: 'PASSEPORT',            label: 'Passeport (page photo)',          hint: 'Page biométrique.',                  why: 'Alternative à la CNI.',              required: false, weight: 2 },
-      { docType: 'JUSTIFICATIF_DOMICILE',label: 'Justificatif de domicile',        hint: 'Facture EDF/eau, < 3 mois.',         why: 'Atteste votre adresse actuelle.',    required: true,  weight: 2 },
+    id: 'IDENTITE', label: 'Identité', icon: User,
+    color: 'cyan', accent: 'text-cyan-600', accentBg: 'bg-cyan-50',
+    slots: [
+      { docType: 'CNI_RECTO',      label: "CNI – Face avant",           hint: 'Face avec photo, nom, prénom.',  why: "Preuve d'identité légale (recto).", required: true,  weight: 5 },
+      { docType: 'CNI_VERSO',     label: "CNI – Face arrière (MRZ)",   hint: 'Zone de lecture optique (MRZ).', why: "La MRZ valide l'authenticité du document.", required: true, weight: 4 },
+      { docType: 'PASSEPORT',     label: 'Passeport',                  hint: 'Page biométrique.',             why: 'Alternative à la CNI.',           required: false, weight: 6 },
+      { docType: 'TITRE_SEJOUR',  label: 'Titre de séjour',            hint: 'En cours de validité.',        why: "Séjour régulier sur le territoire.", required: false, weight: 6 },
     ],
   },
   {
-    id: 'SITUATION_PRO', label: 'Situation Professionnelle', shortLabel: 'Emploi',
-    icon: Briefcase, accent: 'text-violet-600', accentBg: 'bg-violet-50',
-    headline: 'Justifiez votre activité',
-    intro: "Contrat de travail, attestation employeur et dernier bulletin — les 3 piliers.",
-    docs: [
-      { docType: 'CONTRAT_TRAVAIL',       label: 'Contrat de travail',              hint: 'CDI, CDD, alternance…',              why: 'Stabilité de l\'emploi.',            required: true,  weight: 4 },
-      { docType: 'ATTESTATION_EMPLOYEUR', label: "Attestation de l'employeur",      hint: 'Sur papier entête.',                 why: 'Confirmation en poste.',             required: false, weight: 2 },
-      { docType: 'DERNIER_BULLETIN',      label: 'Dernier bulletin de salaire',     hint: 'Bulletin M-1.',                      why: 'Rémunération réelle.',               required: true,  weight: 3, sensitive: true },
-      { docType: 'KBIS_SIRET',            label: 'Kbis / numéro SIRET',            hint: 'Auto-entrepreneurs.',                why: 'Existence légale entreprise.',       required: false, weight: 2 },
+    id: 'EMPLOI', label: 'Situation professionnelle', icon: Briefcase,
+    color: 'violet', accent: 'text-violet-600', accentBg: 'bg-violet-50',
+    slots: [
+      { docType: 'CONTRAT_TRAVAIL',    label: 'Contrat de travail',      hint: 'CDI, CDD, alternance…',       why: "Stabilité de l'emploi.",          required: true,  weight: 7 },
+      { docType: 'KBIS',               label: 'Extrait Kbis',            hint: '< 3 mois, auto-entrepreneur.', why: "Existence légale de l'entreprise.", required: false, weight: 5 },
+      { docType: 'ATTESTATION_EMPLOI', label: 'Attestation employeur',   hint: 'Sur papier à en-tête.',       why: 'Confirmation en poste.',          required: false, weight: 4 },
     ],
   },
   {
-    id: 'REVENUS', label: 'Ressources & Revenus', shortLabel: 'Revenus',
-    icon: TrendingUp, accent: 'text-emerald-600', accentBg: 'bg-emerald-50',
-    headline: 'Démontrez votre capacité financière',
-    intro: "3 bulletins + 2 avis d'imposition = preuve de stabilité sur 2 ans.",
-    docs: [
-      { docType: 'BULLETIN_1',         label: 'Bulletin M-1',               hint: 'Mois le plus récent.',           why: 'Revenu le plus récent.',             required: true,  weight: 3, sensitive: true },
-      { docType: 'BULLETIN_2',         label: 'Bulletin M-2',               hint: 'Avant-dernier mois.',            why: 'Régularité sur 2 mois.',             required: true,  weight: 3, sensitive: true },
-      { docType: 'BULLETIN_3',         label: 'Bulletin M-3',               hint: 'Il y a 3 mois.',                 why: '3 mois = preuve de stabilité.',      required: true,  weight: 3, sensitive: true },
-      { docType: 'AVIS_IMPOSITION_1',  label: "Avis d'imposition N-1",      hint: 'Dernier avis reçu.',             why: 'Revenus officiels déclarés.',        required: true,  weight: 4, sensitive: true },
-      { docType: 'AVIS_IMPOSITION_2',  label: "Avis d'imposition N-2",      hint: 'Avant-dernier avis.',            why: 'Stabilité sur 2 années.',           required: false, weight: 2, sensitive: true },
-      { docType: 'RELEVE_BANCAIRE',    label: 'Relevés bancaires (3 mois)', hint: 'Relevés complets.',              why: 'Gestion financière.',                required: false, weight: 2 },
+    id: 'REVENUS', label: 'Revenus', icon: TrendingUp,
+    color: 'emerald', accent: 'text-emerald-600', accentBg: 'bg-emerald-50',
+    slots: [
+      { docType: 'DERNIER_BULLETIN',  label: 'Dernier bulletin de salaire', hint: 'Bulletin M-1.',           why: 'Rémunération la plus récente.',   required: true,  weight: 5, sensitive: true },
+      { docType: 'BULLETIN_1',        label: 'Bulletin M-1',               hint: 'Mois le plus récent.',     why: 'Revenu le plus récent.',          required: true,  weight: 5, sensitive: true },
+      { docType: 'BULLETIN_2',        label: 'Bulletin M-2',               hint: 'Avant-dernier mois.',      why: 'Régularité sur 2 mois.',          required: true,  weight: 5, sensitive: true },
+      { docType: 'BULLETIN_3',        label: 'Bulletin M-3',               hint: 'Il y a 3 mois.',           why: '3 bulletins = stabilité prouvée.',required: false, weight: 3, sensitive: true },
+      { docType: 'AVIS_IMPOSITION_1', label: "Avis d'imposition (N-1)",   hint: 'Dernier avis reçu.',        why: 'Revenus officiels déclarés.',      required: true,  weight: 6, sensitive: true },
+      { docType: 'AVIS_IMPOSITION_2', label: "Avis d'imposition (N-2)",   hint: 'Avant-dernier avis.',       why: 'Stabilité sur 2 années.',         required: false, weight: 3, sensitive: true },
     ],
   },
   {
-    id: 'HISTORIQUE', label: 'Historique de Logement', shortLabel: 'Historique',
-    icon: Home, accent: 'text-blue-600', accentBg: 'bg-blue-50',
-    headline: 'Montrez que vous payez régulièrement',
-    intro: "Vos quittances = vos «références locatives».",
-    docs: [
-      { docType: 'QUITTANCE_1',           label: 'Quittance M-1',                hint: 'Quittance la plus récente.',     why: 'Paiement à temps.',                  required: false, weight: 2 },
-      { docType: 'QUITTANCE_2',           label: 'Quittance M-2',                hint: 'Deuxième quittance.',            why: 'Régularité sur 2 mois.',             required: false, weight: 2 },
-      { docType: 'QUITTANCE_3',           label: 'Quittance M-3',                hint: 'Troisième quittance.',           why: '3 quittances = fiabilité.',          required: false, weight: 2 },
-      { docType: 'ATTESTATION_PAIEMENT',  label: 'Attestation de bon paiement',  hint: "Délivrée par l'ancien proprio.", why: 'Meilleur signe de confiance.',       required: false, weight: 3 },
-      { docType: 'ASSURANCE_HABITATION',  label: "Assurance habitation",         hint: "Attestation valide.",            why: 'Obligation légale.',                 required: false, weight: 2 },
+    id: 'DOMICILE', label: 'Domicile', icon: Home,
+    color: 'amber', accent: 'text-amber-600', accentBg: 'bg-amber-50',
+    slots: [
+      { docType: 'JUSTIFICATIF_DOMICILE', label: 'Justificatif de domicile', hint: 'Facture EDF/eau, < 3 mois.', why: 'Atteste votre adresse actuelle.', required: true,  weight: 4 },
+      { docType: 'QUITTANCE_1',           label: 'Quittance de loyer',       hint: 'Quittance la plus récente.', why: 'Référence locative positive.',   required: false, weight: 2 },
+      { docType: 'QUITTANCE_2',           label: 'Quittance précédente',     hint: '2e quittance.',              why: 'Régularité sur 2 mois.',         required: false, weight: 2 },
     ],
   },
   {
-    id: 'GARANTIES', label: 'Garanties & Cautions', shortLabel: 'Garanties',
-    icon: Shield, accent: 'text-fuchsia-600', accentBg: 'bg-fuchsia-50',
-    headline: 'Sécurisez votre candidature',
-    intro: "La garantie Visale est gratuite et très appréciée des propriétaires.",
-    docs: [
-      { docType: 'ATTESTATION_VISALE',        label: 'Attestation Visale',               hint: 'Garantie Action Logement.',      why: 'Garantit les loyers impayés.',       required: false, weight: 5 },
-      { docType: 'ACTE_CAUTION',              label: 'Acte de cautionnement solidaire',  hint: 'Document signé par le garant.',  why: 'Engagement légal du garant.',        required: false, weight: 4 },
-      { docType: 'CNI_GARANT',                label: "Pièce d'identité du garant",       hint: 'CNI ou passeport.',              why: 'Identifie le garant.',               required: false, weight: 2 },
-      { docType: 'BULLETINS_GARANT',          label: 'Bulletins du garant',              hint: '3 derniers bulletins.',          why: 'Solvabilité du garant.',             required: false, weight: 3 },
-      { docType: 'AVIS_IMPOSITION_GARANT',    label: "Avis d'imposition du garant",      hint: "Dernier avis.",                  why: 'Revenus officiels du garant.',       required: false, weight: 2 },
+    id: 'GARANTIES', label: 'Garanties', icon: Shield,
+    color: 'fuchsia', accent: 'text-fuchsia-600', accentBg: 'bg-fuchsia-50',
+    slots: [
+      { docType: 'ATTESTATION_VISALE',   label: 'Attestation Visale',        hint: 'Garantie Action Logement.',  why: 'Garantit les loyers impayés.',   required: false, weight: 5 },
+      { docType: 'ACTE_CAUTION',         label: 'Acte de cautionnement',     hint: 'Signé par le garant.',       why: 'Engagement légal du garant.',    required: false, weight: 4 },
+      { docType: 'ASSURANCE_HABITATION', label: 'Assurance habitation',      hint: 'Attestation valide.',        why: 'Obligation légale du locataire.', required: false, weight: 3 },
     ],
   },
 ]
 
-const ALL_DOCS = STEPS.flatMap((s) => s.docs.map((d) => ({ ...d, category: s.id })))
-const TOTAL_WEIGHT = ALL_DOCS.reduce((sum, d) => sum + d.weight, 0)
+const ALL_SLOTS  = CATEGORIES.flatMap((c) => c.slots.map((s) => ({ ...s, category: c.id })))
+const TOTAL_W    = ALL_SLOTS.reduce((sum, s) => sum + s.weight, 0)
 
 function computeScore(docs: TenantDocument[]) {
-  const w = ALL_DOCS.filter((spec) =>
-    docs.some((d) => d.category === spec.category && d.docType === spec.docType),
-  ).reduce((sum, spec) => sum + spec.weight, 0)
-  return Math.round((w / TOTAL_WEIGHT) * 100)
+  const w = ALL_SLOTS.filter((s) => docs.some((d) => d.category === s.category && d.docType === s.docType))
+    .reduce((sum, s) => sum + s.weight, 0)
+  return Math.round((w / TOTAL_W) * 100)
 }
 
 function getStrength(score: number, hasVisale: boolean) {
   if (score >= 90 && hasVisale) return { label: 'Excellent', color: 'text-emerald-600', bg: 'bg-emerald-100', icon: Award }
-  if (score >= 65) return { label: 'Bon',    color: 'text-blue-600',   bg: 'bg-blue-100',   icon: Star }
-  if (score >= 35) return { label: 'Moyen',  color: 'text-amber-600',  bg: 'bg-amber-100',  icon: AlertCircle }
-  return               { label: 'Faible',  color: 'text-red-500',    bg: 'bg-red-100',    icon: AlertCircle }
+  if (score >= 65)              return { label: 'Bon',       color: 'text-blue-600',    bg: 'bg-blue-100',    icon: Star }
+  if (score >= 35)              return { label: 'Moyen',     color: 'text-amber-600',   bg: 'bg-amber-100',   icon: AlertCircle }
+  return                               { label: 'Faible',    color: 'text-red-500',     bg: 'bg-red-100',     icon: AlertCircle }
 }
 
 // ─── Score Gauge ──────────────────────────────────────────────────────────────
 
 function ScoreGauge({ score }: { score: number }) {
   const R = 54, cx = 64, cy = 64
-  const arc = Math.PI * R
+  const arc    = Math.PI * R
   const offset = arc * (1 - Math.min(100, Math.max(0, score)) / 100)
-  const color = score >= 90 ? '#10b981' : score >= 65 ? '#3b82f6' : score >= 35 ? '#f59e0b' : '#ef4444'
+  const color  = score >= 90 ? '#10b981' : score >= 65 ? '#3b82f6' : score >= 35 ? '#f59e0b' : '#ef4444'
   return (
     <svg width={128} height={72} viewBox="0 0 128 76">
       <path d="M 10 64 A 54 54 0 0 1 118 64" fill="none" stroke="var(--border)" strokeWidth={10} strokeLinecap="round" />
       <path d="M 10 64 A 54 54 0 0 1 118 64" fill="none" stroke={color} strokeWidth={10} strokeLinecap="round"
         strokeDasharray={arc} strokeDashoffset={offset}
         style={{ transition: 'stroke-dashoffset 0.8s ease, stroke 0.4s' }} />
-      <text x={cx} y={cy - 4} textAnchor="middle" fontSize={22} fontWeight="bold" fill={color}>{score}%</text>
-      <text x={cx} y={cy + 12} textAnchor="middle" fontSize={9} fill="var(--text-tertiary)">complétude</text>
+      <text x={cx} y={cy - 4}  textAnchor="middle" fontSize={22} fontWeight="bold" fill={color}>{score}%</text>
+      <text x={cx} y={cy + 12} textAnchor="middle" fontSize={9}  fill="var(--text-tertiary)">complétude</text>
     </svg>
   )
 }
 
-// ─── FileScanCard (magic mode — per-file animated card) ───────────────────────
+// ─── FileEntry ────────────────────────────────────────────────────────────────
 
 type ScanPhase = 'queued' | 'pdf' | 'ocr' | 'qr' | 'uploading' | 'done' | 'error' | 'needs_confirm'
 
@@ -183,817 +166,915 @@ interface FileEntry {
   file: File
   phase: ScanPhase
   phasePct: number
-  scanResult: IntelligenceResult | null
+  scanResult: MultiSignalResult | null
   uploadedDoc: TenantDocument | null
   assignedDocType: string | null
   error?: string
-  /** Live scan log lines shown in the kanban card terminal */
   scanLogs: string[]
-  /** Human-readable period label for bulletins: "Janvier 2025 (M-1)" */
   temporalLabel?: string
-  /** Identity match result summary: "✓ MRZ · Martin Paul" */
   identityLabel?: string
   identityMatchLevel?: string
 }
 
-function phaseLabel(e: FileEntry): string {
-  switch (e.phase) {
-    case 'queued':       return 'En attente…'
-    case 'pdf':          return `Extraction texte PDF — ${e.phasePct}%`
-    case 'ocr':          return `Reconnaissance optique (OCR) — ${e.phasePct}%`
-    case 'qr':           return 'Détection QR code 2D-Doc…'
-    case 'uploading':    return 'Envoi sécurisé…'
-    case 'done':         return 'Analyse complète'
-    case 'needs_confirm':return 'Confirmation du type…'
-    case 'error':        return e.error ?? 'Erreur'
+// ─── DocumentRow ──────────────────────────────────────────────────────────────
+
+function DocumentRow({
+  slot, category, doc, scanEntry, serverBase,
+  onUploadSlot, onDelete, onOpenWhy,
+}: {
+  slot: SlotSpec
+  category: string
+  doc: TenantDocument | undefined
+  scanEntry: FileEntry | undefined
+  serverBase: string
+  onUploadSlot: (docType: string, category: string, file: File) => void
+  onDelete: (id: string) => void
+  onOpenWhy: (slot: SlotSpec) => void
+}) {
+  const inputRef   = useRef<HTMLInputElement>(null)
+  const [isDragOver, setIsDragOver] = useState(false)
+
+  const isScanning = !!scanEntry && scanEntry.phase !== 'done' && scanEntry.phase !== 'error'
+  const isDone     = !!doc
+  const isError    = scanEntry?.phase === 'error'
+
+  const confidencePct = scanEntry?.scanResult?.confidence
+  const confColor     = (p?: number) => !p ? '#94a3b8' : p >= 70 ? '#10b981' : p >= 40 ? '#f59e0b' : '#ef4444'
+  const hasHighRisk   = scanEntry?.scanResult?.fraudSignals.some((s) => s.severity === 'high')
+
+  const handleSlotDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+    if (isScanning) return
+    const f = e.dataTransfer.files[0]
+    if (f && /\.(pdf|jpe?g|png|webp)$/i.test(f.name)) onUploadSlot(slot.docType, category, f)
   }
-}
-
-function phaseColor(phase: ScanPhase): string {
-  if (phase === 'done') return '#10b981'
-  if (phase === 'error') return '#ef4444'
-  return '#7c3aed'
-}
-
-function FileScanCard({ entry, index }: { entry: FileEntry; index: number }) {
-  const isDone = entry.phase === 'done'
-  const isError = entry.phase === 'error'
-  const scan = entry.scanResult
-  const family = scan?.docFamily ?? 'UNKNOWN'
-  const colors = FAMILY_COLORS[family]
-  const overallPct =
-    entry.phase === 'queued'    ? 0 :
-    entry.phase === 'pdf'       ? Math.round(entry.phasePct * 0.35) :
-    entry.phase === 'ocr'       ? Math.round(35 + entry.phasePct * 0.4) :
-    entry.phase === 'qr'        ? Math.round(75 + entry.phasePct * 0.1) :
-    entry.phase === 'uploading' ? 88 :
-    entry.phase === 'done'      ? 100 : 0
-
-  const highRisk = scan?.fraudSignals.some((s) => s.severity === 'high')
-  const medRisk  = scan?.fraudSignals.some((s) => s.severity === 'medium')
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 24, scale: 0.96 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.92 }}
-      transition={{ duration: 0.3, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }}
-      className="rounded-2xl border overflow-hidden"
-      style={{
-        backgroundColor: 'var(--surface-card)',
-        borderColor: isDone && highRisk ? '#fca5a5' : isDone && medRisk ? '#fcd34d' : isDone ? '#10b981' : 'var(--border)',
-        boxShadow: isDone ? '0 2px 12px rgba(0,0,0,0.06)' : 'none',
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); if (!isScanning) setIsDragOver(true) }}
+      onDragLeave={(e) => {
+        e.stopPropagation()
+        // Only reset if leaving the row itself (not hovering a child element)
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(false)
       }}
+      onDrop={handleSlotDrop}
+      className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all ${
+        isDragOver && !isScanning
+          ? 'border-violet-400 bg-violet-50/60 shadow-md scale-[1.01]'
+          : isScanning ? 'border-violet-200 bg-violet-50/40' :
+            isDone && hasHighRisk ? 'border-red-200 bg-red-50/30' :
+            isDone ? 'border-emerald-200 bg-emerald-50/30' :
+            slot.required ? 'border-dashed border-slate-300 bg-[var(--surface-subtle)]' :
+            'border-[var(--border)] bg-[var(--surface-subtle)] opacity-70'
+      }`}
     >
-      {/* Header */}
-      <div className="flex items-center gap-3 px-4 pt-4 pb-2">
+      {/* Status icon */}
+      <div className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm">
+        {isScanning ? (
+          <Loader className="w-4 h-4 text-violet-500 animate-spin" />
+        ) : isDone && hasHighRisk ? (
+          <ShieldAlert className="w-4 h-4 text-red-500" />
+        ) : isDone ? (
+          <CheckCircle className="w-4 h-4 text-emerald-500" />
+        ) : isError ? (
+          <FileX className="w-4 h-4 text-red-400" />
+        ) : slot.required ? (
+          <span className="text-red-400 text-xs font-bold">✗</span>
+        ) : (
+          <span className="text-slate-300 text-xs">○</span>
+        )}
+      </div>
+
+      {/* Label + meta */}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+          {slot.label}
+          {slot.required && !isDone && <span className="text-red-400 ml-1 text-xs">*</span>}
+        </p>
+        {isScanning && (
+          <p className="text-xs text-violet-500 animate-pulse">Analyse IA en cours…</p>
+        )}
+        {isDone && doc && (
+          <p className="text-xs truncate" style={{ color: 'var(--text-tertiary)' }}>
+            {doc.fileName} · {(doc.fileSize / 1024).toFixed(0)} Ko
+          </p>
+        )}
+        {!isDone && !isScanning && (
+          <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{slot.hint}</p>
+        )}
+
+        {/* Données extraites (depuis le résultat du scan) */}
+        {isDone && scanEntry?.scanResult?.extractedData && (() => {
+          const d = scanEntry.scanResult.extractedData
+          const chips: { label: string; color: string }[] = []
+          // Identité
+          if (d.lastName || d.firstName)
+            chips.push({ label: `${d.firstName ?? ''} ${d.lastName ?? ''}`.trim(), color: 'bg-cyan-50 text-cyan-700' })
+          if (d.birthDate)    chips.push({ label: `Né(e) ${d.birthDate}`, color: 'bg-cyan-50 text-cyan-600' })
+          if (d.birthCity)    chips.push({ label: `📍 ${d.birthCity}`, color: 'bg-cyan-50 text-cyan-600' })
+          if (d.documentNumber) chips.push({ label: `N° ${d.documentNumber}`, color: 'bg-slate-100 text-slate-500' })
+          // Revenus
+          if (d.netSalary)    chips.push({ label: `Net ${d.netSalary.toLocaleString('fr-FR')} €`, color: 'bg-emerald-50 text-emerald-700' })
+          if (d.grossSalary)  chips.push({ label: `Brut ${d.grossSalary.toLocaleString('fr-FR')} €`, color: 'bg-blue-50 text-blue-700' })
+          if (d.bulletinPeriod) chips.push({ label: d.bulletinPeriod, color: 'bg-violet-50 text-violet-600' })
+          if (d.employerName) chips.push({ label: d.employerName.slice(0, 30), color: 'bg-slate-100 text-slate-600' })
+          if (d.contractType) chips.push({ label: d.contractType, color: 'bg-indigo-50 text-indigo-700' })
+          if (d.cafAmount)    chips.push({ label: `CAF ${d.cafAmount.toLocaleString('fr-FR')} €`, color: 'bg-green-50 text-green-700' })
+          if (d.areAmount)    chips.push({ label: `ARE ${d.areAmount.toLocaleString('fr-FR')} €`, color: 'bg-blue-50 text-blue-600' })
+          if (d.pensionAmount) chips.push({ label: `Pension ${d.pensionAmount.toLocaleString('fr-FR')} €`, color: 'bg-amber-50 text-amber-700' })
+          if (d.fiscalRef)    chips.push({ label: `RFR ${d.fiscalRef.toLocaleString('fr-FR')} €`, color: 'bg-amber-50 text-amber-700' })
+          // Domicile
+          if (d.issuerName)   chips.push({ label: d.issuerName, color: 'bg-slate-100 text-slate-600' })
+          if (d.address)      chips.push({ label: `📍 ${d.address.slice(0, 40)}${d.address.length > 40 ? '…' : ''}`, color: 'bg-amber-50 text-amber-700' })
+          // Visale / Garantie
+          if (d.visaleAmount) chips.push({ label: `Visale ≤ ${d.visaleAmount} €/mois`, color: 'bg-violet-50 text-violet-700' })
+          if (d.visaNumber)   chips.push({ label: `Visa ${d.visaNumber}`, color: 'bg-fuchsia-50 text-fuchsia-700' })
+          if (d.guarantorLastName || d.guarantorFirstName)
+            chips.push({ label: `Garant : ${d.guarantorFirstName ?? ''} ${d.guarantorLastName ?? ''}`.trim(), color: 'bg-fuchsia-50 text-fuchsia-700' })
+          if (!chips.length) return null
+          return (
+            <div className="mt-1 flex flex-wrap gap-1">
+              {chips.map((c, i) => (
+                <span key={i} className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium ${c.color}`}>{c.label}</span>
+              ))}
+            </div>
+          )
+        })()}
+      </div>
+
+      {/* Badges */}
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        {scanEntry?.temporalLabel && (
+          <span className="text-[10px] bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded-full font-medium">
+            {scanEntry.temporalLabel.replace(/\s*\(.*\)/, '')}
+          </span>
+        )}
+        {scanEntry?.identityLabel && (
+          <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+            scanEntry.scanResult?.certaintyTokenFound ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-600'
+          }`}>{scanEntry.identityLabel}</span>
+        )}
+        {confidencePct !== undefined && isDone && (
+          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+            style={{ color: confColor(confidencePct), backgroundColor: `${confColor(confidencePct)}18` }}>
+            {Math.round(confidencePct)}%
+          </span>
+        )}
+        {isDone && !slot.required && (
+          <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full">Optionnel</span>
+        )}
+        {!isDone && !isScanning && !isError && (
+          <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+            slot.required ? 'bg-red-50 text-red-500' : 'bg-slate-100 text-slate-400'
+          }`}>{slot.required ? 'Requis' : 'Optionnel'}</span>
+        )}
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <button onClick={() => onOpenWhy(slot)}
+          className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors" title="Pourquoi ce document ?">
+          <Info className="w-3.5 h-3.5" style={{ color: 'var(--text-tertiary)' }} />
+        </button>
+        {isDone && doc && (
+          <>
+            <a href={`${serverBase}${doc.fileUrl}`} target="_blank" rel="noopener noreferrer"
+              className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors" title="Voir le document">
+              <Eye className="w-3.5 h-3.5" style={{ color: 'var(--text-tertiary)' }} />
+            </a>
+            <button onClick={() => onDelete(doc.id)}
+              className="p-1.5 rounded-lg hover:bg-red-50 transition-colors" title="Supprimer">
+              <Trash2 className="w-3.5 h-3.5 text-red-400" />
+            </button>
+          </>
+        )}
+        {!isDone && !isScanning && (
+          <>
+            <input ref={inputRef} type="file" accept=".pdf,image/jpeg,image/png,image/webp" className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) { onUploadSlot(slot.docType, category, f); e.target.value = '' } }} />
+            <button onClick={() => inputRef.current?.click()}
+              className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg font-medium transition-all"
+              style={isDragOver
+                ? { backgroundColor: 'rgba(124,58,237,0.12)', border: '1px solid #7c3aed', color: '#7c3aed' }
+                : { backgroundColor: 'var(--surface-card)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
+              <Upload className="w-3 h-3" />
+              {isDragOver ? 'Relâcher ici' : 'Déposer'}
+            </button>
+          </>
+        )}
+        {isDone && isDragOver && !isScanning && (
+          <span className="text-[10px] font-semibold text-violet-600 bg-violet-50 border border-violet-200 px-2 py-0.5 rounded-lg animate-pulse">
+            Remplacer
+          </span>
+        )}
+      </div>
+    </motion.div>
+  )
+}
+
+
+// ─── WhyModal ─────────────────────────────────────────────────────────────────
+
+function WhyModal({ slot, onClose }: { slot: SlotSpec; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      style={{ backgroundColor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}
+      onClick={onClose}>
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 24 }}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-sm rounded-3xl p-6 shadow-2xl"
+        style={{ backgroundColor: 'var(--surface-card)', border: '1px solid var(--border)' }}
+      >
+        <h3 className="font-bold text-base mb-1" style={{ color: 'var(--text-primary)' }}>{slot.label}</h3>
+        <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}><span className="font-semibold text-blue-600">Pourquoi ? </span>{slot.why}</p>
+        <p className="text-xs px-3 py-2 rounded-xl" style={{ backgroundColor: 'var(--surface-subtle)', color: 'var(--text-tertiary)' }}>{slot.hint}</p>
+        <button onClick={onClose} className="btn btn-secondary w-full mt-4 text-sm">Fermer</button>
+      </motion.div>
+    </div>
+  )
+}
+
+// ─── DuplicateModal ────────────────────────────────────────────────────────────
+
+function DuplicateModal({
+  pending, onReplace, onKeepBoth, onCancel,
+}: {
+  pending: { assignedDocType: string; file: File; familyLabel: string }
+  onReplace: () => void
+  onKeepBoth: () => void
+  onCancel: () => void
+}) {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center p-4"
+      style={{ backgroundColor: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)', zIndex: 70 }}
+      onClick={onCancel}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden"
+        style={{ backgroundColor: 'var(--surface-card)', border: '1px solid var(--border)' }}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between px-5 pt-5 pb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
+              <AlertTriangle className="w-5 h-5 text-amber-500" />
+            </div>
+            <div>
+              <h3 className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>Fichier déjà ajouté</h3>
+              <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{pending.familyLabel}</p>
+            </div>
+          </div>
+          <button onClick={onCancel}
+            className="p-1.5 rounded-xl hover:bg-[var(--surface-subtle)] transition-colors flex-shrink-0 ml-2">
+            <X className="w-4 h-4" style={{ color: 'var(--text-tertiary)' }} />
+          </button>
+        </div>
+        {/* Body */}
+        <div className="px-5 pb-5 space-y-4">
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            Un document <strong>{pending.familyLabel}</strong> est déjà présent dans votre dossier.
+            Que souhaitez-vous faire avec&nbsp;
+            <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{pending.file.name}</span>&nbsp;?
+          </p>
+          <div className="space-y-2">
+            <button onClick={onReplace}
+              className="w-full py-3 px-4 rounded-2xl text-sm font-semibold text-white transition-colors"
+              style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)' }}>
+              Remplacer le document précédent
+            </button>
+            <button onClick={onKeepBoth}
+              className="w-full py-3 px-4 rounded-2xl text-sm font-medium transition-colors"
+              style={{ backgroundColor: 'var(--surface-subtle)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}>
+              Conserver les deux documents
+            </button>
+            <button onClick={onCancel}
+              className="w-full py-2 text-xs transition-colors rounded-xl hover:bg-[var(--surface-subtle)]"
+              style={{ color: 'var(--text-tertiary)' }}>
+              Annuler l'ajout
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+// ─── ScannerModal — helpers ────────────────────────────────────────────────────
+
+const FAMILY_ICONS: Record<DocFamily, string> = {
+  BULLETIN: '💰', REVENUS_FISCAUX: '📊', IDENTITE: '🪪', DOMICILE: '🏠',
+  EMPLOI: '💼', GARANTIE: '🛡️', BANCAIRE: '🏦', LOGEMENT: '🔑', UNKNOWN: '📄',
+}
+
+function scanProgressPct(entry: FileEntry): number {
+  if (entry.phase === 'queued')          return 4
+  if (entry.phase === 'pdf')             return 4 + Math.round(entry.phasePct * 0.31)
+  if (entry.phase === 'ocr')             return 35 + Math.round(entry.phasePct * 0.40)
+  if (entry.phase === 'qr')              return 80
+  if (entry.phase === 'needs_confirm')   return 100
+  if (entry.phase === 'uploading')       return 100
+  if (entry.phase === 'done')            return 100
+  return 0
+}
+
+
+
+// ─── ExtractedChips ────────────────────────────────────────────────────────────
+
+function ExtractedChips({ data }: { data: ExtractedData }) {
+  const chips: { label: string; color: string; icon?: string }[] = []
+
+  // ── Identité ──────────────────────────────────────────────────────────────
+  if (data.lastName || data.firstName)
+    chips.push({ label: `${data.firstName ?? ''} ${data.lastName ?? ''}`.trim(), color: 'bg-cyan-100 text-cyan-700', icon: '👤' })
+  if (data.birthDate)
+    chips.push({ label: `Né(e) le ${data.birthDate}`, color: 'bg-cyan-50 text-cyan-600', icon: '📅' })
+  if (data.birthCity)
+    chips.push({ label: `à ${data.birthCity}`, color: 'bg-cyan-50 text-cyan-600', icon: '🏙️' })
+  if (data.documentNumber)
+    chips.push({ label: `N° ${data.documentNumber}`, color: 'bg-slate-100 text-slate-600', icon: '🪪' })
+  if (data.documentExpiry)
+    chips.push({ label: `Valide jusqu'au ${data.documentExpiry}`, color: 'bg-slate-100 text-slate-500' })
+  if (data.nationality)
+    chips.push({ label: `Nat. ${data.nationality}`, color: 'bg-cyan-50 text-cyan-500' })
+  if (data.nationalNumber)
+    chips.push({ label: `SS ${data.nationalNumber}`, color: 'bg-slate-100 text-slate-500', icon: '🔒' })
+
+  // ── Revenus / Bulletin ────────────────────────────────────────────────────
+  if (data.netSalary)
+    chips.push({ label: `Net ${data.netSalary.toLocaleString('fr-FR')} €`, color: 'bg-emerald-100 text-emerald-700', icon: '💰' })
+  if (data.grossSalary)
+    chips.push({ label: `Brut ${data.grossSalary.toLocaleString('fr-FR')} €`, color: 'bg-blue-100 text-blue-700' })
+  if (data.bulletinPeriod)
+    chips.push({ label: data.bulletinPeriod, color: 'bg-violet-50 text-violet-600', icon: '📆' })
+  if (data.contractType)
+    chips.push({ label: data.contractType, color: 'bg-indigo-100 text-indigo-700' })
+  if (data.employerName)
+    chips.push({ label: data.employerName.slice(0, 28), color: 'bg-slate-100 text-slate-600', icon: '🏢' })
+  if (data.siret)
+    chips.push({ label: `SIRET ${data.siret}`, color: 'bg-slate-100 text-slate-500' })
+  if (data.cafAmount)
+    chips.push({ label: `CAF ${data.cafAmount.toLocaleString('fr-FR')} €/mois`, color: 'bg-green-100 text-green-700', icon: '🏦' })
+  if (data.areAmount)
+    chips.push({ label: `ARE ${data.areAmount.toLocaleString('fr-FR')} €/mois`, color: 'bg-blue-100 text-blue-600', icon: '🏦' })
+  if (data.pensionAmount)
+    chips.push({ label: `Pension ${data.pensionAmount.toLocaleString('fr-FR')} €/mois`, color: 'bg-amber-100 text-amber-700', icon: '🏦' })
+  if (data.fiscalRef)
+    chips.push({ label: `RFR ${data.fiscalRef.toLocaleString('fr-FR')} €`, color: 'bg-amber-100 text-amber-700', icon: '📊' })
+
+  // ── Domicile ──────────────────────────────────────────────────────────────
+  if (data.issuerName)
+    chips.push({ label: data.issuerName, color: 'bg-slate-100 text-slate-500', icon: '📄' })
+  if (data.address)
+    chips.push({ label: `${data.address.slice(0, 40)}${data.address.length > 40 ? '…' : ''}`, color: 'bg-amber-100 text-amber-700', icon: '📍' })
+  if (data.rentAmount)
+    chips.push({ label: `Loyer ${data.rentAmount.toLocaleString('fr-FR')} €`, color: 'bg-orange-100 text-orange-700' })
+
+  // ── Visale / Garantie ─────────────────────────────────────────────────────
+  if (data.visaleAmount)
+    chips.push({ label: `Visale ≤ ${data.visaleAmount} €/mois`, color: 'bg-violet-100 text-violet-700', icon: '🛡️' })
+  if (data.visaleDuration)
+    chips.push({ label: data.visaleDuration, color: 'bg-violet-50 text-violet-600' })
+  if (data.visaNumber)
+    chips.push({ label: `Visa ${data.visaNumber}`, color: 'bg-fuchsia-100 text-fuchsia-700', icon: '🔑' })
+
+  // ── Garant ────────────────────────────────────────────────────────────────
+  if (data.guarantorLastName || data.guarantorFirstName)
+    chips.push({ label: `Garant : ${data.guarantorFirstName ?? ''} ${data.guarantorLastName ?? ''}`.trim(), color: 'bg-fuchsia-100 text-fuchsia-700', icon: '🤝' })
+  if (data.guarantorAddress)
+    chips.push({ label: data.guarantorAddress.slice(0, 40), color: 'bg-fuchsia-50 text-fuchsia-600', icon: '📍' })
+
+  // ── Bancaire ──────────────────────────────────────────────────────────────
+  if (data.ibanPrefix)
+    chips.push({ label: `IBAN ${data.ibanPrefix}`, color: 'bg-teal-100 text-teal-700', icon: '🏛️' })
+
+  if (!chips.length) return null
+  return (
+    <div className="flex flex-wrap gap-1.5 mt-2">
+      {chips.map((c, i) => (
+        <span key={i} className={`text-[11px] px-2 py-0.5 rounded-lg font-medium ${c.color}`}>
+          {c.icon && <span className="mr-0.5">{c.icon}</span>}{c.label}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+// ─── ScanningView ──────────────────────────────────────────────────────────────
+
+const PHASE_LABELS: Record<ScanPhase, string> = {
+  queued:        'Préparation du document…',
+  pdf:           'Extraction du texte PDF…',
+  ocr:           'Lecture OCR en cours…',
+  qr:            'Détection QR code…',
+  uploading:     'Envoi sécurisé…',
+  done:          'Terminé',
+  error:         'Erreur',
+  needs_confirm: 'En attente…',
+}
+
+function ScanningView({ entry }: { entry: FileEntry }) {
+  const pct = scanProgressPct(entry)
+  const label = PHASE_LABELS[entry.phase] ?? 'Analyse IA en cours…'
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="py-6 space-y-5">
+      {/* Icon + label */}
+      <div className="flex flex-col items-center gap-3">
+        <div className="relative w-14 h-14 flex items-center justify-center">
+          <div className="absolute inset-0 rounded-full animate-ping opacity-20"
+            style={{ background: 'linear-gradient(135deg, #7c3aed, #a78bfa)' }} />
+          <div className="relative w-14 h-14 rounded-full flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, #7c3aed22, #a78bfa22)' }}>
+            <Cpu className="w-6 h-6 text-violet-500 animate-pulse" />
+          </div>
+        </div>
+        <div className="text-center">
+          <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Analyse IA en cours…</p>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{label}</p>
+        </div>
+      </div>
+      {/* Progress bar */}
+      <div className="relative h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--border)' }}>
+        <motion.div
+          className="absolute inset-y-0 left-0 rounded-full"
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          style={{ background: 'linear-gradient(90deg, #7c3aed, #a78bfa)' }}
+        />
+        <motion.div
+          className="absolute inset-y-0 w-16 rounded-full"
+          style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent)' }}
+          animate={{ x: ['-64px', '500px'] }}
+          transition={{ duration: 1.6, repeat: Infinity, ease: 'linear' }}
+        />
+      </div>
+      <p className="text-center text-xs font-medium tabular-nums" style={{ color: 'var(--text-tertiary)' }}>
+        {Math.round(pct)} %
+      </p>
+    </motion.div>
+  )
+}
+
+// ─── ResultView ────────────────────────────────────────────────────────────────
+
+function ResultView({
+  scanResult, onConfirm, onCancel,
+}: {
+  scanResult: MultiSignalResult
+  onConfirm: (family: DocFamily) => void
+  onCancel:  () => void
+}) {
+  const [selectedFamily, setSelectedFamily] = useState<DocFamily>(scanResult.docFamily)
+  // Seuil 90% : en-dessous → picker direct, au-dessus → simple confirmation oui/non
+  const [showPicker, setShowPicker] = useState(scanResult.confidence < 90 && !scanResult.certaintyTokenFound)
+  const colors     = FAMILY_COLORS[scanResult.docFamily]
+  // ≥90% OU marqueur de certitude → mode confirmation simple
+  const isHighConf = scanResult.confidence >= 90 || !!scanResult.certaintyTokenFound
+  const families: DocFamily[] = [
+    'BULLETIN','REVENUS_FISCAUX','IDENTITE','DOMICILE',
+    'EMPLOI','GARANTIE','BANCAIRE','LOGEMENT','UNKNOWN',
+  ]
+
+  const confColor = scanResult.confidence >= 90 ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                  : scanResult.confidence >= 70 ? 'text-blue-700 bg-blue-50 border-blue-200'
+                  : 'text-amber-700 bg-amber-50 border-amber-200'
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-3">
+      {/* Résultat IA */}
+      <div className={`rounded-2xl p-4 border ${colors.bg} ${colors.border}`}>
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
+            style={{ backgroundColor: 'rgba(255,255,255,0.6)' }}>
+            {FAMILY_ICONS[scanResult.docFamily]}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className={`text-[10px] font-medium uppercase tracking-wide ${colors.text} opacity-70`}>
+              {isHighConf ? 'Détecté avec haute confiance :' : 'Détecté (confirmation requise) :'}
+            </p>
+            <p className={`text-base font-bold ${colors.text}`}>{FAMILY_LABELS[scanResult.docFamily]}</p>
+          </div>
+          <span className={`text-sm font-bold px-2.5 py-1 rounded-xl flex-shrink-0 border ${confColor}`}>
+            {Math.round(scanResult.confidence)}%
+          </span>
+        </div>
+        {scanResult.certaintyTokenFound && (
+          <div className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-1.5 mb-1">
+            <ShieldCheck className="w-3.5 h-3.5 flex-shrink-0" />
+            Certifié par marqueur {scanResult.certaintyTokenFound.toUpperCase()}
+          </div>
+        )}
+        {!isHighConf && (
+          <div className="flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-1.5 mb-1">
+            <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+            Confiance &lt; 90 % — veuillez choisir la bonne catégorie ci-dessous.
+          </div>
+        )}
+        <ExtractedChips data={scanResult.extractedData} />
+      </div>
+      {/* Signaux fraude */}
+      {scanResult.fraudSignals.length > 0 && (
+        <div className="space-y-1.5">
+          {scanResult.fraudSignals.map((sig, i) => (
+            <div key={i} className={`flex items-start gap-2 text-xs px-3 py-2 rounded-xl ${
+              sig.severity === 'high'
+                ? 'bg-red-50 text-red-700 border border-red-200'
+                : 'bg-amber-50 text-amber-700 border border-amber-200'
+            }`}>
+              <AlertTriangle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+              {sig.message}
+            </div>
+          ))}
+        </div>
+      )}
+      {/* Confirmation ≥90% : simple oui/non */}
+      {isHighConf && !showPicker ? (
+        <div className="space-y-2 pt-1">
+          <p className="text-xs text-center font-medium" style={{ color: 'var(--text-secondary)' }}>
+            Est-ce bien le bon document ?
+          </p>
+          <motion.button whileTap={{ scale: 0.98 }} onClick={() => onConfirm(selectedFamily)}
+            className="w-full py-3 px-4 rounded-2xl text-sm font-bold text-white shadow-sm"
+            style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+            ✓ Oui, c'est bien {FAMILY_LABELS[scanResult.docFamily]}
+          </motion.button>
+          <button onClick={() => setShowPicker(true)}
+            className="w-full text-xs py-1.5 transition-colors" style={{ color: 'var(--text-tertiary)' }}>
+            Non, ce n'est pas la bonne catégorie →
+          </button>
+        </div>
+      ) : (
+        /* Picker <90% OU correction manuelle */
+        <div className="space-y-2.5 pt-1">
+          <p className="text-xs font-semibold" style={{ color: 'var(--text-tertiary)' }}>
+            {showPicker && isHighConf
+              ? 'Choisir la catégorie correcte :'
+              : 'Dans quelle catégorie classer ce document ?'}
+          </p>
+          <div className="grid grid-cols-3 gap-1.5">
+            {families.map((f) => {
+              const fc = FAMILY_COLORS[f]
+              return (
+                <button key={f} onClick={() => setSelectedFamily(f)}
+                  className={`text-[11px] py-2 px-1 rounded-xl font-medium border transition-all text-center leading-tight ${
+                    selectedFamily === f ? `${fc.bg} ${fc.text} ${fc.border} border` : 'border-[var(--border)]'
+                  }`}
+                  style={selectedFamily === f ? {} : { backgroundColor: 'var(--surface-subtle)', color: 'var(--text-secondary)' }}>
+                  {FAMILY_ICONS[f]}<br /><span>{FAMILY_LABELS[f]}</span>
+                </button>
+              )
+            })}
+          </div>
+          <motion.button whileTap={{ scale: 0.98 }} onClick={() => onConfirm(selectedFamily)}
+            className="w-full py-3 px-4 rounded-2xl text-sm font-bold text-white shadow-sm"
+            style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)' }}>
+            Confirmer — {FAMILY_LABELS[selectedFamily]}
+          </motion.button>
+          {showPicker && isHighConf && (
+            <button onClick={() => setShowPicker(false)}
+              className="w-full text-xs py-1" style={{ color: 'var(--text-tertiary)' }}>
+              ← Retour à la confirmation automatique
+            </button>
+          )}
+          <button onClick={onCancel} className="w-full text-xs py-1 transition-colors" style={{ color: 'var(--text-tertiary)' }}>
+            Annuler
+          </button>
+        </div>
+      )}
+    </motion.div>
+  )
+}
+
+// ─── Upload / Done / Error views ───────────────────────────────────────────────
+
+function UploadingView() {
+  return (
+    <div className="flex flex-col items-center gap-3 py-6">
+      <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
+      <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Envoi sécurisé en cours…</p>
+      <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>100 % local · chiffré TLS</p>
+    </div>
+  )
+}
+
+function DoneView({ entry }: { entry: FileEntry }) {
+  const family = entry.scanResult?.docFamily
+  return (
+    <div className="flex flex-col items-center gap-3 py-6">
+      <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 14 }}>
+        <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+      </motion.div>
+      <p className="text-sm font-semibold text-center" style={{ color: 'var(--text-primary)' }}>Document enregistré !</p>
+      {family && family !== 'UNKNOWN' && (
+        <p className="text-xs text-center" style={{ color: 'var(--text-tertiary)' }}>
+          Ajouté dans la catégorie <strong>{FAMILY_LABELS[family]}</strong>
+        </p>
+      )}
+    </div>
+  )
+}
+
+function ErrorView({ error, onCancel }: { error?: string; onCancel: () => void }) {
+  return (
+    <div className="flex flex-col items-center gap-3 py-6">
+      <AlertCircle className="w-8 h-8 text-red-400" />
+      <p className="text-sm font-medium text-center" style={{ color: 'var(--text-primary)' }}>
+        {error ?? "Erreur lors de l'analyse"}
+      </p>
+      <button onClick={onCancel} className="btn btn-secondary text-sm">Fermer</button>
+    </div>
+  )
+}
+
+// ─── ScannerModal ──────────────────────────────────────────────────────────────
+
+function ScannerModal({
+  entry, pendingConfirm, onConfirm, onCancel, queueInfo,
+}: {
+  entry:         FileEntry
+  pendingConfirm: { id: string; file: File; scanResult: MultiSignalResult } | null
+  onConfirm:     (family: DocFamily) => void
+  onCancel:      () => void
+  queueInfo:     { current: number; total: number }
+}) {
+  const isScanning  = ['queued','pdf','ocr','qr'].includes(entry.phase)
+  const isResult    = entry.phase === 'needs_confirm' && !!pendingConfirm
+  const isUploading = entry.phase === 'uploading'
+  const isDone      = entry.phase === 'done'
+  const isError     = entry.phase === 'error'
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.94, y: 16 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 8 }}
+        transition={{ type: 'spring', stiffness: 360, damping: 26 }}
+        className="w-full max-w-md rounded-3xl shadow-2xl overflow-hidden"
+        style={{ backgroundColor: 'var(--surface-card)', border: '1px solid var(--border)' }}
+      >
+        {/* Header */}
+        <div className="px-6 pt-5 pb-3 flex items-start justify-between border-b" style={{ borderColor: 'var(--border)' }}>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
+                {entry.file.name}
+              </p>
+              {queueInfo.total > 1 && (
+                <span className="text-[10px] bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full font-medium flex-shrink-0">
+                  {queueInfo.current}/{queueInfo.total}
+                </span>
+              )}
+            </div>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+              {(entry.file.size / 1024).toFixed(0)} Ko
+            </p>
+          </div>
+          {(isScanning || isDone || isError) && (
+            <button onClick={onCancel}
+              className="p-1.5 ml-2 rounded-xl hover:bg-[var(--surface-subtle)] transition-colors flex-shrink-0">
+              <X className="w-4 h-4" style={{ color: 'var(--text-tertiary)' }} />
+            </button>
+          )}
+        </div>
+        {/* Body */}
+        <div className="px-6 pt-4 pb-6 max-h-[80vh] overflow-y-auto">
+          <AnimatePresence mode="wait">
+            {isScanning  && <ScanningView  key="scan" entry={entry} />}
+            {isResult    && <ResultView    key="res"  scanResult={pendingConfirm!.scanResult} onConfirm={onConfirm} onCancel={onCancel} />}
+            {isUploading && <UploadingView key="up" />}
+            {isDone      && <DoneView      key="done" entry={entry} />}
+            {isError     && <ErrorView     key="err"  error={entry.error} onCancel={onCancel} />}
+          </AnimatePresence>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+// ─── LiveScanConsole ──────────────────────────────────────────────────────────
+
+function LiveScanConsole({
+  entry, onDismiss,
+}: {
+  entry: FileEntry
+  onDismiss: () => void
+}) {
+  const logRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight
+  }, [entry.scanLogs])
+
+  const isDone  = entry.phase === 'done'
+  const isError = entry.phase === 'error'
+
+  return (
+    <div className="space-y-3">
+      {/* File header */}
+      <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: isDone ? (highRisk ? '#fee2e2' : '#d1fae5') : 'var(--surface-subtle)' }}>
-          {isError  ? <FileX className="w-4.5 h-4.5 text-red-500" /> :
-           isDone   ? <FileCheck className="w-4.5 h-4.5 text-emerald-600" /> :
-                      <FileText className="w-4.5 h-4.5" style={{ color: 'var(--text-tertiary)' }} />}
+          style={{ backgroundColor: isDone ? (entry.scanResult?.fraudSignals.some(s=>s.severity==='high') ? '#fee2e2' : '#d1fae5') : 'var(--surface-subtle)' }}>
+          {isDone
+            ? <CheckCircle className="w-4.5 h-4.5 text-emerald-600" />
+            : isError ? <FileX className="w-4.5 h-4.5 text-red-500" />
+            : <Cpu className="w-4.5 h-4.5 animate-pulse" style={{ color: '#7c3aed' }} />}
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{entry.file.name}</p>
-          <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-            {(entry.file.size / 1024).toFixed(0)} Ko
-            {entry.file.type === 'application/pdf' ? ' · PDF' : ' · Image'}
-          </p>
+          {isDone && entry.scanResult && (
+            <p className="text-xs font-medium" style={{ color: entry.scanResult.docFamily !== 'UNKNOWN' ? '#10b981' : '#94a3b8' }}>
+              {FAMILY_LABELS[entry.scanResult.docFamily]} · {entry.scanResult.confidence}%
+            </p>
+          )}
+          {!isDone && !isError && (
+            <p className="text-xs text-violet-500 animate-pulse">Analyse en cours…</p>
+          )}
         </div>
-
-        {/* Family badge (animates in when detected) */}
-        <AnimatePresence>
-          {isDone && family !== 'UNKNOWN' && (
-            <motion.span
-              initial={{ opacity: 0, scale: 0, rotate: -8 }}
-              animate={{ opacity: 1, scale: 1, rotate: 0 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-              className={`text-xs font-bold px-2 py-1 rounded-full flex-shrink-0 ${colors.bg} ${colors.text}`}
-            >
-              {FAMILY_LABELS[family]}
-            </motion.span>
-          )}
-          {isDone && family === 'UNKNOWN' && (
-            <motion.span
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-xs font-bold px-2 py-1 rounded-full flex-shrink-0 bg-slate-100 text-slate-500"
-            >
-              Non reconnu
-            </motion.span>
-          )}
-        </AnimatePresence>
+        {(isDone || isError) && (
+          <button onClick={onDismiss} className="text-xs px-2 py-1 rounded-lg"
+            style={{ backgroundColor: 'var(--surface-subtle)', color: 'var(--text-tertiary)' }}>OK</button>
+        )}
       </div>
 
       {/* Progress bar */}
-      <div className="px-4 pb-1">
+      {!isDone && !isError && (
         <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--border)' }}>
-          <motion.div
-            className="h-1.5 rounded-full"
+          <motion.div className="h-1.5 rounded-full"
             initial={{ width: 0 }}
-            animate={{ width: `${overallPct}%` }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            style={{ background: `linear-gradient(90deg, ${phaseColor(entry.phase)}, ${phaseColor(entry.phase)}99)` }}
+            animate={{ width: `${
+              entry.phase === 'queued' ? 5 :
+              entry.phase === 'pdf'    ? Math.round(entry.phasePct * 0.35) :
+              entry.phase === 'ocr'    ? Math.round(35 + entry.phasePct * 0.4) :
+              entry.phase === 'qr'     ? 80 :
+              entry.phase === 'uploading' ? 90 : 0
+            }%` }}
+            transition={{ duration: 0.25 }}
+            style={{ background: 'linear-gradient(90deg, #7c3aed, #a78bfa)' }}
           />
-        </div>
-        <p className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>{phaseLabel(entry)}</p>
-      </div>
-
-      {/* Extracted data snippet */}
-      <AnimatePresence>
-        {isDone && scan && (family === 'BULLETIN' || family === 'REVENUS_FISCAUX' || family === 'BANCAIRE') && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            transition={{ duration: 0.2 }}
-            className="px-4 pb-3"
-          >
-            <div className="rounded-xl px-3 py-2 text-xs space-y-0.5"
-              style={{ backgroundColor: 'var(--surface-subtle)' }}>
-              {scan.extractedData.netSalary && (
-                <p style={{ color: 'var(--text-secondary)' }}>
-                  Net : <strong style={{ color: 'var(--text-primary)' }}>{scan.extractedData.netSalary.toLocaleString('fr-FR')} €</strong>
-                  {scan.extractedData.grossSalary && (
-                    <> · Brut : <strong style={{ color: 'var(--text-primary)' }}>{scan.extractedData.grossSalary.toLocaleString('fr-FR')} €</strong></>
-                  )}
-                  {scan.extractedData.salaryRatio && (
-                    <> · {(scan.extractedData.salaryRatio * 100).toFixed(0)} %</>
-                  )}
-                </p>
-              )}
-              {scan.extractedData.siret && (
-                <p style={{ color: 'var(--text-secondary)' }} className="flex items-center gap-1">
-                  {luhnSiret(scan.extractedData.siret)
-                    ? <CheckCircle className="w-3 h-3 text-emerald-500" />
-                    : <XCircle className="w-3 h-3 text-red-500" />}
-                  SIRET : <span className="font-mono">{scan.extractedData.siret}</span>
-                </p>
-              )}
-              {scan.extractedData.fiscalRef && (
-                <p style={{ color: 'var(--text-secondary)' }}>
-                  RFR : <strong style={{ color: 'var(--text-primary)' }}>{scan.extractedData.fiscalRef.toLocaleString('fr-FR')} €</strong>
-                </p>
-              )}
-              {scan.extractedData.ibanPrefix && (
-                <p style={{ color: 'var(--text-secondary)' }}>
-                  IBAN : <span className="font-mono">{scan.extractedData.ibanPrefix}</span>
-                </p>
-              )}
-              {scan.hasQrCode && (
-                <p className="flex items-center gap-1 text-cyan-600 font-semibold">
-                  <QrCode className="w-3 h-3" /> QR code 2D-Doc détecté
-                </p>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Fraud signals */}
-      <AnimatePresence>
-        {isDone && scan && scan.fraudSignals.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            className="px-4 pb-3 space-y-1"
-          >
-            {scan.fraudSignals.map((sig, i) => (
-              <div key={i} className={`flex items-start gap-2 text-xs px-2 py-1.5 rounded-lg ${
-                sig.severity === 'high' ? 'bg-red-50' : 'bg-amber-50'
-              }`}>
-                <AlertTriangle className={`w-3 h-3 flex-shrink-0 mt-0.5 ${
-                  sig.severity === 'high' ? 'text-red-500' : 'text-amber-500'
-                }`} />
-                <span style={{ color: 'var(--text-primary)' }}>{sig.message}</span>
-              </div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Confidence + slot */}
-      {isDone && scan && (
-        <div className="px-4 pb-3 flex items-center gap-2 flex-wrap">
-          {entry.assignedDocType && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-primary-100 text-primary-700 font-medium">
-              → {entry.assignedDocType}
-            </span>
-          )}
-          <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-            Confiance : {scan.confidence}%
-            {scan.ocrUsed ? ' (OCR)' : ' (texte natif)'}
-            {' · '}{scan.scanMs} ms
-          </span>
         </div>
       )}
 
-      {/* Scanning laser overlay */}
-      {!isDone && !isError && entry.phase !== 'queued' && (
-        <div className="relative mx-4 mb-3 h-10 rounded-xl overflow-hidden"
-          style={{ backgroundColor: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.15)' }}>
-          <motion.div
-            className="absolute left-0 right-0 h-0.5 pointer-events-none"
-            animate={{ top: ['10%', '90%', '10%'] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-            style={{
-              background: 'linear-gradient(90deg, transparent, #7c3aed, #a78bfa, #7c3aed, transparent)',
-              boxShadow: '0 0 10px 3px rgba(124,58,237,0.4)',
-            }}
-          />
-          <div className="absolute inset-0 flex items-center justify-center gap-2">
-            <Cpu className="w-3.5 h-3.5 animate-pulse" style={{ color: '#7c3aed' }} />
-            <span className="text-xs font-medium" style={{ color: '#7c3aed' }}>Analyse en cours…</span>
-          </div>
-        </div>
-      )}
-    </motion.div>
-  )
-}
-
-// ─── MagicDropZone ────────────────────────────────────────────────────────────
-
-function MagicDropZone({ onFiles, disabled }: {
-  onFiles: (files: File[]) => void
-  disabled?: boolean
-}) {
-  const [dragging, setDragging] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setDragging(false)
-    const files = Array.from(e.dataTransfer.files).filter((f) =>
-      /\.(pdf|jpe?g|png|webp)$/i.test(f.name),
-    )
-    if (files.length) onFiles(files)
-  }, [onFiles])
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 32 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
-      onDragLeave={() => setDragging(false)}
-      onDrop={handleDrop}
-      onClick={() => !disabled && inputRef.current?.click()}
-      className="relative flex flex-col items-center justify-center gap-5 rounded-3xl cursor-pointer select-none overflow-hidden"
-      style={{
-        minHeight: 340,
-        background: dragging
-          ? 'linear-gradient(135deg, rgba(124,58,237,0.12), rgba(59,130,246,0.12))'
-          : 'linear-gradient(135deg, rgba(124,58,237,0.06), rgba(59,130,246,0.06))',
-        border: `2px dashed ${dragging ? '#7c3aed' : 'var(--border)'}`,
-        backdropFilter: 'blur(8px)',
-        transition: 'all 0.2s ease',
-        transform: dragging ? 'scale(1.01)' : 'scale(1)',
-      }}
-    >
-      {/* Decorative grid lines */}
-      <div className="absolute inset-0 pointer-events-none" style={{
-        backgroundImage: 'linear-gradient(rgba(124,58,237,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(124,58,237,0.05) 1px, transparent 1px)',
-        backgroundSize: '32px 32px',
-      }} />
-
-      <input
-        ref={inputRef}
-        type="file"
-        accept=".pdf,image/jpeg,image/png,image/webp"
-        multiple
-        className="hidden"
-        onChange={(e) => {
-          const files = Array.from(e.target.files ?? [])
-          if (files.length) onFiles(files)
-          e.target.value = ''
-        }}
-        disabled={disabled}
-      />
-
-      {/* Icon */}
-      <motion.div
-        animate={dragging ? { scale: 1.15, rotate: 5 } : { scale: 1, rotate: 0 }}
-        transition={{ type: 'spring', stiffness: 300 }}
-        className="relative z-10 w-20 h-20 rounded-3xl flex items-center justify-center"
-        style={{
-          background: 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(59,130,246,0.15))',
-          border: '1.5px solid rgba(124,58,237,0.2)',
-          boxShadow: '0 8px 32px rgba(124,58,237,0.15)',
-        }}
-      >
-        {dragging
-          ? <Sparkles className="w-9 h-9 text-violet-500" />
-          : <Upload className="w-9 h-9 text-violet-400" />
+      {/* Logs */}
+      <div ref={logRef}
+        className="font-mono text-[10px] space-y-0.5 max-h-36 overflow-y-auto rounded-xl px-3 py-2"
+        style={{ backgroundColor: 'var(--surface-subtle)' }}>
+        {entry.scanLogs.length === 0
+          ? <p style={{ color: 'var(--text-tertiary)' }}>Initialisation…</p>
+          : entry.scanLogs.map((log, i) => (
+            <p key={i} className={
+              log.startsWith('[OK]')   ? 'text-emerald-600' :
+              log.startsWith('[WARN]') ? 'text-amber-600'   :
+              log.startsWith('[ERR]')  ? 'text-red-600'     :
+              'text-[var(--text-tertiary)]'
+            }>{log}</p>
+          ))
         }
-      </motion.div>
-
-      {/* Text */}
-      <div className="relative z-10 text-center px-8">
-        <p className="text-xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
-          {dragging ? 'Relâchez pour analyser' : 'Déposez tous vos documents'}
-        </p>
-        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-          Bulletins, avis d'imposition, CNI, quittances… tout en une seule fois
-        </p>
-        <p className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
-          ou <span className="text-violet-500 font-medium">cliquez pour parcourir</span>
-          {' · '}PDF, JPEG, PNG · max 20 fichiers
-        </p>
       </div>
 
-      {/* Feature chips */}
-      <div className="relative z-10 flex flex-wrap justify-center gap-2">
-        {[
-          { icon: Cpu,         text: 'OCR automatique' },
-          { icon: ScanLine,    text: 'Anti-fraude silencieux' },
-          { icon: Layers,      text: 'Classement auto' },
-          { icon: Lock,        text: '100 % local' },
-        ].map(({ icon: Icon, text }) => (
-          <span key={text} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-medium"
-            style={{ backgroundColor: 'var(--surface-card)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
-            <Icon className="w-3 h-3" /> {text}
-          </span>
-        ))}
-      </div>
-    </motion.div>
+      {/* Signal breakdown (after done) */}
+      {isDone && entry.scanResult && 'signals' in entry.scanResult && (
+        <SignalBreakdown signals={(entry.scanResult as MultiSignalResult).signals} />
+      )}
+
+      {/* Fraud alerts */}
+      {isDone && entry.scanResult && entry.scanResult.fraudSignals.length > 0 && (
+        <div className="space-y-1">
+          {entry.scanResult.fraudSignals.map((sig, i) => (
+            <div key={i} className={`flex items-start gap-2 text-xs px-3 py-2 rounded-xl ${
+              sig.severity === 'high' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'
+            }`}>
+              <AlertTriangle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+              {sig.message}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
-// ─── MagicDashboard ───────────────────────────────────────────────────────────
+// ─── IdleSidePanel ────────────────────────────────────────────────────────────
 
-interface DashSection {
-  step: WizardStep
-  uploaded: TenantDocument[]
-  missing: DocSpec[]
-  suspectCount: number
-}
-
-function MagicDashboard({
-  documents, entries, crossDocWarnings, score, hasVisale, userLastName, onReset,
+function IdleSidePanel({
+  score, documents, entries, crossDocWarnings,
 }: {
+  score: number
   documents: TenantDocument[]
   entries: FileEntry[]
   crossDocWarnings: string[]
-  score: number
-  hasVisale: boolean
-  userLastName: string
-  onReset: () => void
 }) {
-  const [generatingZip, setGeneratingZip] = useState(false)
-  const [confirmed, setConfirmed] = useState(false)
-  const strength = getStrength(score, hasVisale)
-  const StrengthIcon = strength.icon
+  const required  = ALL_SLOTS.filter((s) => s.required)
+  const uploaded  = documents.length
+  const missing   = required.filter((s) => !documents.some((d) => d.docType === s.docType)).length
+  const suspects  = entries.reduce((n, e) => n + (e.scanResult?.fraudSignals.filter(s => s.severity === 'high').length ?? 0), 0)
 
-  const sections: DashSection[] = useMemo(() => STEPS.map((step) => {
-    const uploaded = documents.filter((d) => d.category === step.id)
-    const missing = step.docs.filter(
-      (spec) => !documents.some((d) => d.docType === spec.docType && d.category === step.id),
-    )
-    const suspectCount = entries.filter((e) =>
-      e.assignedDocType && step.docs.some((spec) => spec.docType === e.assignedDocType) &&
-      e.scanResult?.fraudSignals.some((s) => s.severity === 'high'),
-    ).length
-    return { step, uploaded, missing, suspectCount }
-  }), [documents, entries])
-
-  const handleDownloadZip = async () => {
-    setGeneratingZip(true)
-    try {
-      const zip = new JSZip()
-      const folder = zip.folder('dossier_locataire')!
-      const date = new Date().toISOString().slice(0, 10)
-      await Promise.all(documents.map(async (doc) => {
-        try {
-          const r = await fetch(`${SERVER_BASE}${doc.fileUrl}`)
-          if (!r.ok) return
-          const blob = await r.blob()
-          const ext = doc.fileName.split('.').pop() ?? 'pdf'
-          const name = `${userLastName}_${doc.docType}_${date}.${ext}`.replace(/[^a-zA-Z0-9_\-.]/g, '_')
-          folder.file(name, blob)
-        } catch { /* skip */ }
-      }))
-      const blob = await zip.generateAsync({ type: 'blob' })
-      const url = URL.createObjectURL(blob)
-      Object.assign(document.createElement('a'), { href: url, download: `Dossier_${userLastName}_${date}.zip` }).click()
-      URL.revokeObjectURL(url)
-      toast.success('Archive téléchargée !')
-    } catch {
-      toast.error("Erreur lors de la génération")
-    } finally {
-      setGeneratingZip(false)
-    }
-  }
-
-  const handleConfirm = () => {
-    saveProgress({ confirmed: true, globalScore: score })
-    setConfirmed(true)
-    toast.success('Dossier confirmé ✓ — votre propriétaire peut maintenant le consulter.')
-  }
+  const tip = score === 0  ? "Commencez par déposer votre pièce d'identité et votre contrat de travail."
+            : score < 40   ? "Ajoutez vos bulletins de salaire pour renforcer votre dossier."
+            : score < 70   ? "Votre dossier est en bonne voie. Ajoutez l'avis d'imposition."
+            : score < 90   ? "Excellent ! Ajoutez une attestation Visale pour maximiser vos chances."
+            : "Dossier complet et solide. Vous pouvez le télécharger en ZIP."
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="space-y-5"
-    >
-      {/* Score header */}
-      <div className="rounded-2xl border p-5 flex flex-col sm:flex-row items-center gap-5"
-        style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
-        <ScoreGauge score={score} />
-        <div className="flex-1 space-y-2">
-          <div className="flex items-center gap-2 flex-wrap">
-            <LayoutDashboard className="w-5 h-5 text-primary-500" />
-            <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Récapitulatif du dossier</h2>
-          </div>
-          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-semibold ${strength.bg} ${strength.color}`}>
-            <StrengthIcon className="w-4 h-4" /> Dossier {strength.label} — {documents.length} document{documents.length > 1 ? 's' : ''}
-          </div>
-          {crossDocWarnings.map((w, i) => (
-            <div key={i} className="flex items-start gap-2 text-xs px-3 py-2 rounded-xl bg-red-50 border border-red-200">
-              <AlertTriangle className="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" />
-              <span className="text-red-700">{w}</span>
+    <div className="space-y-4">
+      <div className="rounded-2xl p-4 border" style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
+        <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--text-tertiary)' }}>Résumé rapide</p>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { label: 'Uploadés',   value: uploaded, color: 'text-emerald-600' },
+            { label: 'Manquants',  value: missing,  color: missing  > 0 ? 'text-amber-600' : 'text-emerald-600' },
+            { label: 'Suspects',   value: suspects, color: suspects > 0 ? 'text-red-600'   : 'text-emerald-600' },
+            { label: 'Score',      value: `${score}%`, color: score >= 65 ? 'text-blue-600' : 'text-amber-600' },
+          ].map(({ label, value, color }) => (
+            <div key={label} className="rounded-xl px-3 py-2 text-center" style={{ backgroundColor: 'var(--surface-subtle)' }}>
+              <p className={`text-lg font-bold ${color}`}>{value}</p>
+              <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{label}</p>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Category sections */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        {sections.map(({ step, uploaded, missing, suspectCount }) => {
-          const Icon = step.icon
-          const allRequired = step.docs.filter((d) => d.required)
-          const requiredDone = allRequired.filter((spec) =>
-            uploaded.some((d) => d.docType === spec.docType),
-          ).length
-          const sectionScore = allRequired.length > 0
-            ? Math.round((requiredDone / allRequired.length) * 100)
-            : uploaded.length > 0 ? 100 : 0
+      {crossDocWarnings.length > 0 && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 space-y-2">
+          <p className="text-xs font-bold text-amber-700 flex items-center gap-1.5">
+            <AlertTriangle className="w-3.5 h-3.5" /> Cohérence inter-documents
+          </p>
+          {crossDocWarnings.map((w, i) => (
+            <p key={i} className="text-xs text-amber-600">{w}</p>
+          ))}
+        </div>
+      )}
 
-          return (
-            <motion.div
-              key={step.id}
-              layout
-              className="rounded-2xl border overflow-hidden"
-              style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}
-            >
-              {/* Section header */}
-              <div className={`px-4 py-3 flex items-center gap-2 ${step.accentBg} border-b`}
-                style={{ borderColor: 'var(--border)' }}>
-                <Icon className={`w-4 h-4 ${step.accent}`} />
-                <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{step.label}</span>
-                <div className="ml-auto flex items-center gap-2">
-                  {suspectCount > 0 && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-600 font-semibold">
-                      ⚠ {suspectCount} suspect{suspectCount > 1 ? 's' : ''}
-                    </span>
-                  )}
-                  <span className={`text-xs font-bold ${
-                    sectionScore === 100 ? 'text-emerald-600' :
-                    sectionScore >= 50   ? 'text-amber-600' : 'text-red-500'
-                  }`}>{sectionScore}%</span>
-                </div>
-              </div>
-
-              {/* Uploaded docs */}
-              {uploaded.map((doc) => {
-                const entry = entries.find((e) => e.assignedDocType === doc.docType)
-                const scan = entry?.scanResult
-                const isHighRisk = scan?.fraudSignals.some((s) => s.severity === 'high')
-                const isMedRisk  = scan?.fraudSignals.some((s) => s.severity === 'medium')
-                return (
-                  <div key={doc.id} className="flex items-center gap-3 px-4 py-2.5 border-b last:border-b-0"
-                    style={{ borderColor: 'var(--border)' }}>
-                    {isHighRisk  ? <ShieldAlert className="w-4 h-4 text-red-500 flex-shrink-0" /> :
-                     isMedRisk   ? <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" /> :
-                                   <CheckSquare className="w-4 h-4 text-emerald-500 flex-shrink-0" />}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm truncate" style={{ color: 'var(--text-primary)' }}>{doc.fileName}</p>
-                      <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                        {doc.docType}
-                        {scan?.extractedData.netSalary ? ` · Net ${scan.extractedData.netSalary.toLocaleString('fr-FR')} €` : ''}
-                        {scan?.hasQrCode ? ' · QR ✓' : ''}
-                      </p>
-                    </div>
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${
-                      isHighRisk ? 'bg-red-100 text-red-600' :
-                      isMedRisk  ? 'bg-amber-100 text-amber-600' :
-                                   'bg-emerald-100 text-emerald-600'
-                    }`}>
-                      {isHighRisk ? 'Suspect' : isMedRisk ? 'À vérifier' : 'Certifié'}
-                    </span>
-                  </div>
-                )
-              })}
-
-              {/* Missing required docs */}
-              {missing.filter((s) => s.required).map((spec) => (
-                <div key={spec.docType} className="flex items-center gap-3 px-4 py-2.5 border-b last:border-b-0"
-                  style={{ borderColor: 'var(--border)', opacity: 0.7 }}>
-                  <FileX className="w-4 h-4 text-red-400 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{spec.label}</p>
-                  </div>
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 bg-red-50 text-red-500">Manquant</span>
-                </div>
-              ))}
-
-              {uploaded.length === 0 && missing.filter((s) => s.required).length === 0 && (
-                <p className="px-4 py-3 text-xs" style={{ color: 'var(--text-tertiary)' }}>Aucun document obligatoire</p>
-              )}
-            </motion.div>
-          )
-        })}
+      <div className="rounded-2xl p-4 border" style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
+        <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--text-tertiary)' }}>Conseil IA</p>
+        <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{tip}</p>
       </div>
 
-      {/* Action bar */}
-      <div className="rounded-2xl border p-5 flex flex-col sm:flex-row items-center justify-between gap-4"
-        style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
-        <div className="flex-1">
-          {confirmed
-            ? <p className="text-emerald-600 font-semibold flex items-center gap-2">
-                <CheckCircle className="w-5 h-5" /> Dossier confirmé — visible par votre propriétaire
-              </p>
-            : <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                Tout est en ordre ? Confirmez pour rendre le dossier accessible.
-              </p>
-          }
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button onClick={onReset}
-            className="btn btn-secondary flex items-center gap-2 text-sm">
-            <Upload className="w-4 h-4" /> Ajouter des fichiers
-          </button>
-          <button onClick={handleDownloadZip} disabled={generatingZip || documents.length === 0}
-            className="btn btn-secondary flex items-center gap-2 text-sm disabled:opacity-40">
-            {generatingZip ? <Loader className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-            Télécharger .zip
-          </button>
-          {!confirmed && (
-            <button onClick={handleConfirm} disabled={documents.length === 0}
-              className="btn btn-primary flex items-center gap-2 disabled:opacity-40">
-              <FileCheck className="w-4 h-4" /> Confirmer mon dossier
-            </button>
-          )}
-        </div>
-      </div>
-
-      <p className="text-xs text-center" style={{ color: 'var(--text-tertiary)' }}>
-        <Lock className="w-3 h-3 inline mr-1" />
-        Chiffré AES-256 · Analyse 100 % locale · Aucune donnée transmise à une IA externe
+      <p className="text-[10px] text-center flex items-center justify-center gap-1" style={{ color: 'var(--text-tertiary)' }}>
+        <Lock className="w-3 h-3" />
+        Analyse 100 % locale · Aucune donnée transmise
       </p>
-    </motion.div>
-  )
-}
-
-// ─── Wizard sub-components (unchanged from v2) ────────────────────────────────
-
-function SensitiveChecklist({ docType, confirms, onChange }: {
-  docType: string
-  confirms: Record<string, boolean | string>
-  onChange: (k: string, v: boolean | string) => void
-}) {
-  const isSalary = ['BULLETIN_1','BULLETIN_2','BULLETIN_3','DERNIER_BULLETIN'].includes(docType)
-  const isTax    = ['AVIS_IMPOSITION_1','AVIS_IMPOSITION_2'].includes(docType)
-  if (!isSalary && !isTax) return null
-  return (
-    <div className="mt-3 rounded-xl border p-3 space-y-3"
-      style={{ backgroundColor: 'var(--surface-subtle)', borderColor: 'var(--border)' }}>
-      <p className="text-xs font-semibold flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
-        <ScanLine className="w-3.5 h-3.5" /> Checklist de vérification manuelle
-      </p>
-      {isSalary && (
-        <>
-          <label className="flex items-start gap-2 cursor-pointer">
-            <input type="checkbox" className="mt-0.5 w-3.5 h-3.5 accent-emerald-500"
-              checked={!!confirms['date_recent']} onChange={(e) => onChange('date_recent', e.target.checked)} />
-            <span className="text-xs" style={{ color: 'var(--text-primary)' }}>
-              Bulletin daté de moins de <strong>4 mois</strong>
-            </span>
-          </label>
-          <label className="flex items-start gap-2 cursor-pointer">
-            <input type="checkbox" className="mt-0.5 w-3.5 h-3.5 accent-emerald-500"
-              checked={!!confirms['salary_ratio']} onChange={(e) => onChange('salary_ratio', e.target.checked)} />
-            <span className="text-xs" style={{ color: 'var(--text-primary)' }}>
-              Ratio <strong>Net ÷ Brut</strong> entre 72 % et 82 %
-            </span>
-          </label>
-          <div>
-            <label className="block text-xs mb-1" style={{ color: 'var(--text-primary)' }}>SIRET (14 chiffres)</label>
-            <input type="text" placeholder="73282932000074" maxLength={14} className="input text-xs py-1.5"
-              value={(confirms['siret_value'] as string) ?? ''}
-              onChange={(e) => onChange('siret_value', e.target.value.replace(/\D/g, ''))} />
-            {(confirms['siret_value'] as string)?.length === 14 && (
-              <p className={`text-xs mt-0.5 ${luhnSiret(confirms['siret_value'] as string) ? 'text-emerald-600' : 'text-red-600'}`}>
-                {luhnSiret(confirms['siret_value'] as string) ? '✓ SIRET valide' : '✗ SIRET invalide (Luhn)'}
-              </p>
-            )}
-          </div>
-          <div>
-            <label className="block text-xs mb-1" style={{ color: 'var(--text-primary)' }}>NIR (15 chiffres)</label>
-            <input type="text" placeholder="185066900123456" maxLength={15} className="input text-xs py-1.5"
-              value={(confirms['nir_value'] as string) ?? ''}
-              onChange={(e) => onChange('nir_value', e.target.value.replace(/\D/g, ''))} />
-            {(confirms['nir_value'] as string)?.length === 15 && (() => {
-              const r = validateNIR(confirms['nir_value'] as string)
-              return <p className={`text-xs mt-0.5 ${r.valid ? 'text-emerald-600' : 'text-red-600'}`}>{r.valid ? '✓ NIR valide' : `✗ ${r.reason}`}</p>
-            })()}
-          </div>
-        </>
-      )}
-      {isTax && (
-        <>
-          <label className="flex items-start gap-2 cursor-pointer">
-            <input type="checkbox" className="mt-0.5 w-3.5 h-3.5 accent-emerald-500"
-              checked={!!confirms['date_recent']} onChange={(e) => onChange('date_recent', e.target.checked)} />
-            <span className="text-xs" style={{ color: 'var(--text-primary)' }}>Avis N-1 ou N-2 (non périmé)</span>
-          </label>
-          <label className="flex items-start gap-2 cursor-pointer">
-            <input type="checkbox" className="mt-0.5 w-3.5 h-3.5 accent-emerald-500"
-              checked={!!confirms['2ddoc_rf']} onChange={(e) => onChange('2ddoc_rf', e.target.checked)} />
-            <span className="text-xs" style={{ color: 'var(--text-primary)' }}>Filigrane <strong>"RF"</strong> ou QR 2D-Doc présent</span>
-          </label>
-        </>
-      )}
-    </div>
-  )
-}
-
-function WizardDocCard({ spec, category, doc, onUpload, onDelete, uploading }: {
-  spec: DocSpec; category: string
-  doc: TenantDocument | undefined
-  onUpload: (docType: string, category: string, file: File) => Promise<void>
-  onDelete: (id: string) => void
-  uploading: boolean
-}) {
-  const [showWhy, setShowWhy] = useState(false)
-  const [integrity, setIntegrity] = useState<IntegrityResult | null>(null)
-  const [confirms, setConfirms] = useState<Record<string, boolean | string>>({})
-  const [showAnalysis, setShowAnalysis] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    if (!doc?.mimeType) return
-    validateDocumentIntegrity(new File([''], doc.fileName, { type: doc.mimeType }), spec.docType, confirms as Record<string, boolean>)
-      .then(setIntegrity)
-  }, [confirms, doc, spec.docType])
-
-  const borderColor = !doc ? 'var(--border)' :
-    integrity?.level === 'green' ? '#10b981' : integrity?.level === 'orange' ? '#f59e0b' : integrity?.level === 'red' ? '#ef4444' : '#3b82f6'
-
-  return (
-    <div className="rounded-2xl border p-4" style={{ borderColor, backgroundColor: 'var(--surface-card)' }}>
-      <div className="flex items-start gap-3">
-        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${doc ? 'bg-emerald-100' : 'bg-slate-100'}`}>
-          {doc ? <CheckCircle className="w-5 h-5 text-emerald-600" /> : <FileText className="w-5 h-5 text-slate-400" />}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{spec.label}</p>
-            {spec.required && <span className="text-xs text-red-500 font-bold">*</span>}
-            <button onClick={() => setShowWhy((v) => !v)} className="p-0.5 rounded hover:opacity-70">
-              <Info className="w-3.5 h-3.5" style={{ color: 'var(--text-tertiary)' }} />
-            </button>
-          </div>
-          {showWhy && (
-            <div className="mt-1.5 rounded-lg px-3 py-2 text-xs"
-              style={{ backgroundColor: 'rgba(59,130,246,0.08)', color: 'var(--text-secondary)' }}>
-              <span className="font-semibold text-blue-600">Pourquoi ? </span>{spec.why}
-              <p className="mt-1 italic" style={{ color: 'var(--text-tertiary)' }}>{spec.hint}</p>
-            </div>
-          )}
-          {doc && <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-tertiary)' }}>{doc.fileName} · {(doc.fileSize / 1024).toFixed(0)} Ko</p>}
-        </div>
-        <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-          {integrity && <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold ${
-            integrity.level === 'green' ? 'bg-emerald-100 text-emerald-700' :
-            integrity.level === 'orange' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
-          }`}>
-            {integrity.level === 'green' ? <ShieldCheck className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
-            {integrity.trustScore}%
-          </span>}
-          {!doc && spec.required && <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-500 font-medium">Requis</span>}
-          {!doc && !spec.required && <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">Optionnel</span>}
-          {doc && (
-            <div className="flex gap-1">
-              <a href={`${SERVER_BASE}${doc.fileUrl}`} target="_blank" rel="noopener noreferrer"
-                className="p-1.5 rounded-lg hover:bg-slate-100"><Eye className="w-3.5 h-3.5" style={{ color: 'var(--text-tertiary)' }} /></a>
-              <button onClick={() => onDelete(doc.id)} className="p-1.5 rounded-lg hover:bg-red-50">
-                <Trash2 className="w-3.5 h-3.5 text-red-400" /></button>
-            </div>
-          )}
-        </div>
-      </div>
-      <div className="mt-3">
-        <div className={`flex items-center gap-2 rounded-xl border-2 border-dashed px-3 py-2.5 cursor-pointer transition-all hover:border-primary-300 ${uploading ? 'opacity-60' : ''}`}
-          style={{ borderColor: 'var(--border)' }}
-          onClick={() => !uploading && fileInputRef.current?.click()}>
-          <input ref={fileInputRef} type="file" accept=".pdf,image/jpeg,image/png,image/webp" className="hidden"
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(spec.docType, category, f) }}
-            disabled={uploading} />
-          {uploading ? <Loader className="w-4 h-4 text-primary-500 animate-spin" /> : <Upload className="w-4 h-4" style={{ color: 'var(--text-tertiary)' }} />}
-          <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{uploading ? 'Envoi…' : doc ? 'Remplacer' : 'Déposer le fichier'}</p>
-        </div>
-      </div>
-      {doc && spec.sensitive && <SensitiveChecklist docType={spec.docType} confirms={confirms} onChange={(k, v) => setConfirms((p) => ({ ...p, [k]: v }))} />}
-      {doc && integrity && (
-        <>
-          <button onClick={() => setShowAnalysis((v) => !v)}
-            className="mt-2 flex items-center gap-1.5 text-xs hover:opacity-80" style={{ color: 'var(--text-tertiary)' }}>
-            {showAnalysis ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            Détails de l'analyse ({integrity.checks.filter((c) => c.passed !== 'na').length} vérifications)
-          </button>
-          {showAnalysis && (
-            <div className="mt-2 rounded-xl border p-3 space-y-1.5" style={{ backgroundColor: 'var(--surface-subtle)', borderColor: 'var(--border)' }}>
-              {integrity.checks.filter((c) => c.passed !== 'na').map((check) => (
-                <div key={check.id} className="flex items-start gap-2 text-xs">
-                  {check.passed ? <CheckCircle className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" /> : <AlertCircle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />}
-                  <span style={{ color: 'var(--text-primary)' }}>{check.label}</span>
-                  {check.detail && <span style={{ color: 'var(--text-tertiary)' }}>— {check.detail}</span>}
-                </div>
-              ))}
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  )
-}
-
-function WizardStepBar({ steps, current, completed }: { steps: WizardStep[]; current: number; completed: boolean[] }) {
-  return (
-    <div className="mb-8">
-      <div className="flex items-center gap-2 mb-3">
-        <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--border)' }}>
-          <div className="h-1.5 rounded-full transition-all duration-500"
-            style={{ width: `${(current / steps.length) * 100}%`, background: 'linear-gradient(90deg,#7c3aed,#3b82f6)' }} />
-        </div>
-        <span className="text-xs font-semibold tabular-nums" style={{ color: 'var(--text-tertiary)' }}>{current}/{steps.length}</span>
-      </div>
-      <div className="hidden md:flex items-center justify-between">
-        {steps.map((step, i) => {
-          const Icon = step.icon; const done = completed[i]; const active = i === current - 1
-          return (
-            <div key={step.id} className="flex items-center flex-1">
-              <div className="flex flex-col items-center">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${done ? 'bg-emerald-500 shadow-lg' : active ? 'ring-2 ring-primary-500 ring-offset-2 shadow-md' : ''}`}
-                  style={{ backgroundColor: done ? undefined : active ? 'var(--brand,#4338ca)' : 'var(--surface-subtle)' }}>
-                  {done ? <CheckCircle className="w-5 h-5 text-white" /> : <Icon className={`w-5 h-5 ${active ? 'text-white' : ''}`} style={{ color: active ? undefined : 'var(--text-tertiary)' }} />}
-                </div>
-                <span className={`text-xs font-medium mt-1.5 ${active ? 'text-primary-600' : ''}`} style={{ color: active ? undefined : 'var(--text-tertiary)' }}>{step.shortLabel}</span>
-              </div>
-              {i < steps.length - 1 && <div className="flex-1 h-0.5 mx-2 rounded-full" style={{ backgroundColor: done ? '#10b981' : 'var(--border)' }} />}
-            </div>
-          )
-        })}
-      </div>
     </div>
   )
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-type AppMode = 'magic' | 'wizard'
-type MagicPhase = 'drop' | 'scanning' | 'dashboard' | 'kanban'
-
-// Max concurrent scans to avoid browser freeze
-const MAX_CONCURRENT = 3
+// MAX_CONCURRENT kept for reference — replaced by serial runner in handleFiles
+// const MAX_CONCURRENT = 3
 
 export default function DossierLocatif() {
-  const { user } = useAuth()
-  useId() // reserved for future stable key generation
+  const { user, updateProfile } = useAuth()
+  useId()
 
-  // Shared state
-  const [documents, setDocuments] = useState<TenantDocument[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [mode, setMode] = useState<AppMode>('magic')
-
-  // Magic mode state
-  const [entries, setEntries] = useState<FileEntry[]>([])
-  const [magicPhase, setMagicPhase] = useState<MagicPhase>('drop')
-  const [crossDocWarnings, setCrossDocWarnings] = useState<string[]>([])
+  const [documents,        setDocuments]        = useState<TenantDocument[]>([])
+  const [isLoading,        setIsLoading]         = useState(true)
+  const [entries,          setEntries]           = useState<FileEntry[]>([])
+  const [crossDocWarnings, setCrossDocWarnings]  = useState<string[]>([])
+  const [activeScanId,     setActiveScanId]      = useState<string | null>(null)
+  const [whySlot,          setWhySlot]           = useState<SlotSpec | null>(null)
+  const [pendingDuplicate, setPendingDuplicate]  = useState<{
+    id: string; file: File; assignedDocType: string; familyLabel: string; existingDocId?: string
+  } | null>(null)
+  const [generatingZip,    setGeneratingZip]     = useState(false)
   const assignedSlots = useRef<Set<string>>(new Set())
 
-  // Confirmation dialog state (for needsConfirmation=true scans)
   const [pendingConfirm, setPendingConfirm] = useState<{
-    id: string
-    file: File
-    scanResult: IntelligenceResult
+    id: string; file: File; scanResult: MultiSignalResult
   } | null>(null)
-  const confirmResolveRef = useRef<((family: DocFamily | null) => void) | null>(null)
-
-  // Wizard mode state
-  const [currentStep, setCurrentStep] = useState(1)
-  const [uploadingKey, setUploadingKey] = useState<string | null>(null)
+  const [scannerModalEntryId, setScannerModalEntryId] = useState<string | null>(null)
+  const confirmResolveRef   = useRef<((family: DocFamily | null) => void) | null>(null)
+  const duplicateResolveRef = useRef<((choice: 'replace' | 'keep' | 'cancel') => void) | null>(null)
 
   useEffect(() => {
     dossierService.getDocuments()
-      .then(setDocuments)
+      .then((docs) => {
+        setDocuments(docs)
+        // Pre-fill assignedSlots from already-uploaded docs
+        docs.forEach((d) => { if (d.docType) assignedSlots.current.add(d.docType) })
+      })
       .catch(() => toast.error('Impossible de charger le dossier'))
       .finally(() => setIsLoading(false))
   }, [])
 
-  // ── Core upload helper ─────────────────────────────────────────────────────
+  const score    = useMemo(() => computeScore(documents), [documents])
+  const hasVisale = documents.some((d) => d.docType === 'ATTESTATION_VISALE')
+  const strength = getStrength(score, hasVisale)
+  const StrIcon  = strength.icon
+
+  // ── Upload helper ──────────────────────────────────────────────────────────
   const uploadFile = useCallback(async (docType: string, category: string, file: File): Promise<TenantDocument> => {
     const doc = await dossierService.uploadDocument(category, docType, file)
     setDocuments((prev) => {
@@ -1003,7 +1084,7 @@ export default function DossierLocatif() {
     return doc
   }, [])
 
-  // ── Magic mode: process one file ──────────────────────────────────────────
+  // ── Process one file ───────────────────────────────────────────────────────
   const processEntry = useCallback(async (id: string, file: File) => {
     const logs: string[] = []
     const addLog = (line: string) => {
@@ -1013,63 +1094,59 @@ export default function DossierLocatif() {
     const setPhase = (updates: Partial<FileEntry>) =>
       setEntries((prev) => prev.map((e) => e.id === id ? { ...e, ...updates } : e))
 
-    try {
-      addLog('[INFO] Démarrage de l\'analyse...')
+    setActiveScanId(id)
 
-      // Scan with DocumentIntelligence (proximity anchors + metadata forensics)
-      const scanResult = await runIntelligence(file, (phase, pct) => {
+    try {
+      addLog('[INFO] Démarrage de l\'analyse IA multi-signaux…')
+
+      const scanResult = await runMultiSignalIntelligence(file, (phase, pct) => {
         setPhase({ phase: phase as ScanPhase, phasePct: pct })
-        if (phase === 'pdf' && pct === 70) addLog('[OK] Texte PDF extrait')
-        if (phase === 'ocr' && pct >= 95)  addLog('[OK] OCR terminé')
-        if (phase === 'qr')                addLog('[INFO] Détection QR code 2D-Doc...')
+        if (phase === 'pdf' && pct >= 70) addLog('[OK] Texte PDF extrait')
+        if (phase === 'ocr' && pct >= 95) addLog('[OK] OCR Tesseract terminé')
+        if (phase === 'qr')               addLog('[INFO] Détection QR code 2D-Doc…')
       })
 
-      // Log classification result
+      // Log fusion result
       if (scanResult.docFamily !== 'UNKNOWN') {
-        addLog(`[OK] Famille détectée : ${scanResult.docFamily} (confiance ${scanResult.confidence}%)`)
+        const fuseLabel = scanResult.signals.fusion === 'consensus' ? ` (+${scanResult.signals.fusionBonus}pts consensus)` : ''
+        addLog(`[OK] Famille détectée : ${FAMILY_LABELS[scanResult.docFamily]} (${scanResult.confidence}%${fuseLabel})`)
       } else {
-        addLog('[WARN] Document non reconnu (confiance trop faible)')
+        addLog('[WARN] Document non reconnu — confiance insuffisante')
       }
 
-      if (scanResult.certaintyTokenFound) {
-        addLog(`[OK] Marqueur de certitude : "${scanResult.certaintyTokenFound}"`)
-      }
-      if (scanResult.pdfMetadata.isSuspect) {
-        addLog(`[WARN] Metadata suspecte : ${scanResult.pdfMetadata.producer ?? 'outil inconnu'}`)
-      }
-      if (scanResult.hasQrCode) {
-        addLog('[OK] QR code 2D-Doc détecté')
-      }
-
-      // SIRET validation log
+      if (scanResult.certaintyTokenFound)   addLog(`[OK] Marqueur certitude : "${scanResult.certaintyTokenFound}"`)
+      if (scanResult.pdfMetadata.isSuspect) addLog(`[WARN] Métadonnée suspecte : ${scanResult.pdfMetadata.producer ?? 'outil inconnu'}`)
+      if (scanResult.hasQrCode)             addLog('[OK] QR code 2D-Doc détecté')
       if (scanResult.extractedData.siret) {
-        const siretValid = !scanResult.fraudSignals.some((s) => s.type === 'siret_invalid')
-        addLog(siretValid
-          ? `[OK] SIRET ${scanResult.extractedData.siret} — valide (Luhn)`
-          : `[ERR] SIRET ${scanResult.extractedData.siret} — INVALIDE (Luhn)`
-        )
+        const ok = !scanResult.fraudSignals.some((s) => s.type === 'siret_invalid')
+        addLog(ok ? `[OK] SIRET ${scanResult.extractedData.siret} — Luhn ✓` : `[ERR] SIRET ${scanResult.extractedData.siret} — invalide`)
       }
 
-      // If confidence is 40–69%, ask the user to confirm the detected type
+      // Confirmation — toujours demandée :
+      //   ≥90% (ou marqueur certitude) → "Est-ce le bon fichier ?" (oui/non)
+      //   <90% → sélecteur de catégorie
       let confirmedFamily = scanResult.docFamily
-      if (scanResult.needsConfirmation) {
-        addLog('[INFO] Confiance intermédiaire — confirmation requise')
+      const skipConfirmation = false  // On demande TOUJOURS confirmation
+      if (!skipConfirmation) {
+        const confMsg = scanResult.confidence >= 90
+          ? `[INFO] Confiance ${scanResult.confidence}% ≥ 90 % — confirmation simple requise`
+          : `[INFO] Confiance ${scanResult.confidence}% < 90 % — sélection catégorie requise`
+        addLog(confMsg)
         setPhase({ phase: 'needs_confirm', scanResult, scanLogs: [...logs] })
-        const userChoice = await new Promise<DocFamily | null>((resolve) => {
+        const choice = await new Promise<DocFamily | null>((resolve) => {
           setPendingConfirm({ id, file, scanResult })
           confirmResolveRef.current = resolve
         })
         setPendingConfirm(null)
-        if (userChoice === null) {
-          setPhase({ phase: 'error', error: 'Document non confirmé — glissez-le à nouveau avec un nom explicite.' })
-          return
+        if (choice === null) {
+          setPhase({ phase: 'error', error: 'Document annulé.' }); return
         }
-        confirmedFamily = userChoice
+        confirmedFamily = choice
         scanResult.docFamily = confirmedFamily
-        addLog(`[OK] Type confirmé manuellement : ${confirmedFamily}`)
+        addLog(`[OK] Type confirmé : ${FAMILY_LABELS[confirmedFamily]}`)
       }
 
-      // ── Temporal mapping for bulletins ─────────────────────────────────────
+      // Temporal mapping
       let temporalLabel: string | undefined
       let finalDocType: string | null
 
@@ -1079,7 +1156,7 @@ export default function DossierLocatif() {
           temporalLabel = period.label
           finalDocType = period.slot
           if (finalDocType) assignedSlots.current.add(finalDocType)
-          addLog(`[OK] Détection période : ${period.label}`)
+          addLog(`[OK] Période : ${period.label}`)
         } else {
           finalDocType = assignDocTypeSlot(confirmedFamily, assignedSlots.current, scanResult.keywords)
           if (finalDocType) assignedSlots.current.add(finalDocType)
@@ -1090,41 +1167,238 @@ export default function DossierLocatif() {
         if (finalDocType) assignedSlots.current.add(finalDocType)
       }
 
-      // ── Identity matching for IDENTITE documents ───────────────────────────
+      // Identity matching + MRZ enrichment → injecté dans extractedData
       let identityLabel: string | undefined
       let identityMatchLevel: string | undefined
-
       if (confirmedFamily === 'IDENTITE' && (user?.firstName || user?.lastName)) {
-        const idMatch = matchIdentity(
-          scanResult.rawText,
-          user?.firstName ?? '',
-          user?.lastName ?? '',
-        )
+        const idMatch = matchIdentity(scanResult.rawText, user?.firstName ?? '', user?.lastName ?? '')
         identityMatchLevel = idMatch.matchLevel
         identityLabel = `${matchLevelIcon(idMatch.matchLevel)}${idMatch.mrzFound ? ' · MRZ' : ''}`
-        addLog(idMatch.mrzFound
-          ? `[OK] Zone MRZ détectée — ${idMatch.detail}`
-          : `[INFO] ${idMatch.detail}`
-        )
-        if (idMatch.matchLevel === 'mismatch') {
-          addLog('[WARN] Nom sur le document ≠ profil utilisateur')
+        addLog(idMatch.mrzFound ? `[OK] Zone MRZ — ${idMatch.detail}` : `[INFO] ${idMatch.detail}`)
+        if (idMatch.matchLevel === 'mismatch') addLog('[WARN] Nom sur le document ≠ profil utilisateur')
+        // Injecter les données MRZ enrichies dans extractedData pour les chips
+        if (idMatch.mrzFound && idMatch.mrzData) {
+          if (idMatch.birthDate)      scanResult.extractedData.birthDate      = idMatch.birthDate
+          if (idMatch.nationality)    scanResult.extractedData.nationality    = idMatch.nationality as string
+          if (idMatch.documentNumber) scanResult.extractedData.documentNumber = idMatch.documentNumber
+          if (idMatch.documentExpiry) scanResult.extractedData.documentExpiry = idMatch.documentExpiry
+          if (idMatch.mrzData.surname)         scanResult.extractedData.lastName  = idMatch.mrzData.surname
+          if (idMatch.mrzData.givenNames?.[0]) scanResult.extractedData.firstName = idMatch.mrzData.givenNames[0]
+          addLog(`[OK] MRZ enrichie : ${idMatch.mrzData.surname} ${idMatch.mrzData.givenNames.join(' ')}${idMatch.birthDate ? ` · Né le ${idMatch.birthDate}` : ''}`)
+        }
+        // Auto-save identity data to user profile (MRZ enriched)
+        const profilePatch: Record<string, string> = {}
+        // Données biographiques prioritaires : nom, prénom, naissance
+        if (idMatch.mrzData?.surname)          profilePatch.lastName      = idMatch.mrzData.surname
+        if (idMatch.mrzData?.givenNames?.[0])  profilePatch.firstName     = idMatch.mrzData.givenNames[0]
+        if (idMatch.birthDate)                 profilePatch.birthDate     = idMatch.birthDate
+        if (idMatch.nationality)               profilePatch.nationality   = idMatch.nationality
+        if (idMatch.documentNumber)            profilePatch.documentNumber = idMatch.documentNumber
+        if (idMatch.documentExpiry)            profilePatch.documentExpiry = idMatch.documentExpiry
+        if (scanResult.extractedData.birthCity)      profilePatch.birthCity      = scanResult.extractedData.birthCity as string
+        if (scanResult.extractedData.nationalNumber) profilePatch.nationalNumber = scanResult.extractedData.nationalNumber as string
+        if (Object.keys(profilePatch).length > 0) {
+          updateProfile(profilePatch)
+            .then(() => addLog('[OK] Identité (nom, prénom, naissance) sauvegardée dans le profil'))
+            .catch(() => addLog('[WARN] Impossible de sauvegarder les données identité'))
         }
       }
 
-      // Find category for this docType
-      const specEntry = ALL_DOCS.find((d) => d.docType === finalDocType)
-      const category = specEntry?.category ?? 'IDENTITE'
+      // ── Sauvegarde identité depuis extractedData (même sans idMatch) ─────────
+      // Garantit que nom, prénom, date + lieu de naissance sont sauvegardés
+      // même si l'utilisateur n'a pas encore renseigné son nom dans le profil.
+      if (confirmedFamily === 'IDENTITE') {
+        const ed = scanResult.extractedData
+        const identPatch: Record<string, string> = {}
+        if (ed.lastName  && typeof ed.lastName  === 'string') identPatch.lastName  = ed.lastName
+        if (ed.firstName && typeof ed.firstName === 'string') identPatch.firstName = ed.firstName
+        if (ed.birthDate && typeof ed.birthDate === 'string') identPatch.birthDate = ed.birthDate
+        if (ed.birthCity && typeof ed.birthCity === 'string') identPatch.birthCity = ed.birthCity
+        if (Object.keys(identPatch).length > 0) {
+          updateProfile(identPatch)
+            .then(() => addLog(`[OK] Données civiles extraites : ${Object.keys(identPatch).join(', ')}`))
+            .catch(() => null)
+        }
+      }
 
-      addLog('[INFO] Envoi sécurisé...')
-      setPhase({ phase: 'uploading', phasePct: 0, scanResult, assignedDocType: finalDocType, scanLogs: [...logs] })
+      // ── PDF CNI multi-pages → split recto + verso automatiquement ───────────
+      const isPdfFile = file.name.toLowerCase().endsWith('.pdf') || file.type.includes('pdf')
+      if (confirmedFamily === 'IDENTITE' && isPdfFile && scanResult.pageCount >= 2) {
+        try {
+          addLog(`[INFO] PDF ${scanResult.pageCount} pages détecté → split recto/verso automatique`)
+          const { splitPdfToPageImages } = await import('../../utils/DocumentIntelligence')
+          const pageBlobs = await splitPdfToPageImages(file)
+
+          const { parseMrz: detectMrzFn } = await import('../../utils/IdentityMatcher')
+          const uploadedSlots: string[] = []
+
+          // Split the rawText by page markers (from OCR path) or use full text
+          const pageTexts = scanResult.rawText.split(/---\s*PAGE\s+\d+\s*---/).filter((t) => t.trim())
+          const nPages = Math.min(pageBlobs.length, 2)
+
+          for (let i = 0; i < nPages; i++) {
+            const pageBlob = pageBlobs[i]
+            // Use per-page text if available, otherwise entire rawText
+            const pageText = pageTexts[i] ?? scanResult.rawText
+
+            // Detect recto/verso for this page
+            const pageMrz      = detectMrzFn(pageText)
+            const pageAngles   = (pageText.match(/</g) ?? []).length
+            const rawNS        = pageText.replace(/\s/g, '').toUpperCase()
+            const hasTd1       = /ID[A-Z]{3}[A-Z0-9<]{20,}/.test(rawNS)
+            const isVerso      = pageMrz !== null || pageAngles >= 6 || hasTd1
+            const slot         = isVerso ? 'CNI_VERSO' : 'CNI_RECTO'
+
+            if (assignedSlots.current.has(slot)) {
+              addLog(`[INFO] Page ${i + 1} : slot ${slot} déjà rempli — ignoré`)
+              continue
+            }
+            assignedSlots.current.add(slot)
+
+            const pageFile = new File(
+              [pageBlob],
+              `${file.name.replace(/\.pdf$/i, '')}_p${i + 1}.png`,
+              { type: 'image/png' },
+            )
+
+            addLog(`[OK] Page ${i + 1} → ${isVerso ? 'Verso (MRZ' + (pageMrz ? ' ✓)' : ' ~)') : 'Recto (face photo)'}`)
+
+            const doc = await uploadFile(slot, 'IDENTITE', pageFile).catch(() => null)
+            if (doc) {
+              uploadedSlots.push(slot)
+              addLog(`[OK] ${slot} uploadée`)
+              setDocuments((prev) => {
+                const filtered = prev.filter((d) => !(d.category === 'IDENTITE' && d.docType === slot))
+                return [doc, ...filtered]
+              })
+              // Enrich extractedData from MRZ
+              if (pageMrz) {
+                if (!scanResult.extractedData.lastName  && pageMrz.surname)          scanResult.extractedData.lastName  = pageMrz.surname
+                if (!scanResult.extractedData.firstName && pageMrz.givenNames?.[0])  scanResult.extractedData.firstName = pageMrz.givenNames[0]
+                if (!scanResult.extractedData.birthDate && pageMrz.birthDate)        scanResult.extractedData.birthDate = pageMrz.birthDate
+                if (!scanResult.extractedData.documentNumber && pageMrz.cardNumber)  scanResult.extractedData.documentNumber = pageMrz.cardNumber
+              }
+            }
+          }
+
+          if (uploadedSlots.length > 0) {
+            finalDocType = null   // ne pas re-uploader le PDF original
+            addLog(`[OK] CNI splitée en ${uploadedSlots.length} page(s) : ${uploadedSlots.join(' + ')}`)
+          }
+        } catch (splitErr) {
+          addLog(`[WARN] Split PDF impossible : ${splitErr instanceof Error ? splitErr.message : 'erreur'}`)
+        }
+      }
+
+      // ── CNI recto/verso — détection fiable multi-signaux ────────────────────
+      if (confirmedFamily === 'IDENTITE' && finalDocType &&
+          ['CNI_RECTO', 'CNI_VERSO', 'CNI'].includes(finalDocType)) {
+        const raw = scanResult.rawText
+        const rawNoSpaces = raw.replace(/\s/g, '').toUpperCase()
+
+        // Signal 1 — nombre de '<' dans le texte (MRZ = 40-80 '<', recto ≈ 0)
+        const angleBracketCount = (raw.match(/</g) ?? []).length
+
+        // Signal 2 — parseMrz sur le texte brut (chiminfo/mrz)
+        const { parseMrz: detectMrz } = await import('../../utils/IdentityMatcher')
+        const mrzParsed = detectMrz(raw)
+
+        // Signal 3 — patterns MRZ (après suppression des espaces OCR)
+        const hasTd1Pattern = /ID[A-Z]{3}[A-Z0-9<]{20,}/.test(rawNoSpaces)
+        const hasTd3Pattern = /P<[A-Z]{3}[A-Z<]{30,}/.test(rawNoSpaces)
+        const hasLongMrzBlock = /[A-Z0-9<]{30}/.test(rawNoSpaces)
+
+        // Signal 4 — indicateurs recto : libellés présents sur la face avant
+        const rectoScore =
+          (/carte\s+nationale\s+d.identit/i.test(raw) ? 2 : 0) +
+          (/r[eé]publique\s+fran[cç]aise/i.test(raw)  ? 2 : 0) +
+          (/date\s+de\s+naissance/i.test(raw)          ? 1 : 0) +
+          (/lieu\s+de\s+naissance/i.test(raw)           ? 1 : 0) +
+          (/nationalit[eé]/i.test(raw)                  ? 1 : 0)
+
+        // Signal 5 — indicateurs verso : adresse, signature
+        const versoScore =
+          (/adresse/i.test(raw)                           ? 1 : 0) +
+          (/signature\s+du\s+titulaire/i.test(raw)        ? 2 : 0) +
+          (angleBracketCount >= 8                         ? 3 : angleBracketCount >= 3 ? 1 : 0) +
+          (mrzParsed !== null                             ? 5 : 0) +
+          (hasTd1Pattern || hasTd3Pattern                 ? 3 : 0) +
+          (hasLongMrzBlock && angleBracketCount >= 3       ? 2 : 0)
+
+        const hasMrz = versoScore > rectoScore || versoScore >= 4
+        const cniSlot = hasMrz ? 'CNI_VERSO' : 'CNI_RECTO'
+
+        // Enrich log
+        addLog(`[OK] Face CNI — score verso:${versoScore} recto:${rectoScore} → ${hasMrz ? 'Verso (MRZ ✓)' : 'Recto (face photo)'}`)
+        if (mrzParsed) addLog(`[OK] MRZ parsée : ${mrzParsed.surname} ${mrzParsed.givenNames.join(' ')}`)
+
+        // Remove previously guessed slot, assign correct one
+        if (finalDocType !== cniSlot) {
+          assignedSlots.current.delete(finalDocType)
+          finalDocType = cniSlot
+          assignedSlots.current.add(finalDocType)
+        }
+      }
+
+      // ── Duplicate detection ───────────────────────────────────────────────
+      if (finalDocType) {
+        const existingDoc   = documents.find((d) => d.docType === finalDocType)
+        const existingEntry = entries.find((e) =>
+          e.id !== id &&
+          e.assignedDocType === finalDocType &&
+          (e.phase === 'done' || e.phase === 'uploading'),
+        )
+        if (existingDoc || existingEntry) {
+          // Pause before upload — ask user
+          const familyLabel = FAMILY_LABELS[confirmedFamily] ?? finalDocType
+          setPhase({ phase: 'needs_confirm', scanResult })
+          const choice = await new Promise<'replace' | 'keep' | 'cancel'>((resolve) => {
+            setPendingDuplicate({
+              id, file, assignedDocType: finalDocType, familyLabel,
+              existingDocId: existingDoc?.id,
+            })
+            duplicateResolveRef.current = resolve
+          })
+          setPendingDuplicate(null)
+          if (choice === 'cancel') { setPhase({ phase: 'error', error: 'Upload annulé (doublon).' }); return }
+          if (choice === 'replace' && existingDoc) {
+            await dossierService.deleteDocument(existingDoc.id).catch(() => null)
+            setDocuments((prev) => prev.filter((d) => d.id !== existingDoc.id))
+            addLog(`[INFO] Ancien document remplacé`)
+          }
+        }
+      }
 
       // Upload
+      const specEntry  = ALL_SLOTS.find((s) => s.docType === finalDocType)
+      const category   = specEntry?.category ?? 'IDENTITE'
+
+      addLog('[INFO] Envoi sécurisé…')
+      setPhase({ phase: 'uploading', phasePct: 0, scanResult, assignedDocType: finalDocType, scanLogs: [...logs] })
+
       const uploadedDoc = finalDocType
         ? await uploadFile(finalDocType, category, file).catch(() => null)
         : null
 
       if (uploadedDoc) addLog('[OK] Document envoyé avec succès')
-      else             addLog('[WARN] Envoi échoué ou ignoré (type non attribué)')
+      else             addLog('[WARN] Envoi ignoré (type non attribué)')
+
+      // ── Invite à compléter la CNI recto/verso ────────────────────────────
+      if (confirmedFamily === 'IDENTITE' && uploadedDoc) {
+        const rectoUploaded = finalDocType === 'CNI_RECTO' ||
+          documents.some((d) => d.docType === 'CNI_RECTO')
+        const versoUploaded = finalDocType === 'CNI_VERSO' ||
+          documents.some((d) => d.docType === 'CNI_VERSO')
+        if (finalDocType === 'CNI_RECTO' && !versoUploaded) {
+          setTimeout(() => toast('Ajoutez maintenant le verso de votre CNI (face avec la MRZ) pour une vérification complète.', {
+            duration: 7000, icon: 'ℹ️',
+          }), 1500)
+        } else if (finalDocType === 'CNI_VERSO' && !rectoUploaded) {
+          setTimeout(() => toast('Ajoutez également le recto de votre CNI (face avec la photo).', {
+            duration: 7000, icon: 'ℹ️',
+          }), 1500)
+        }
+      }
 
       if (finalDocType) {
         updateDocProgress(finalDocType, {
@@ -1135,521 +1409,727 @@ export default function DossierLocatif() {
         })
       }
 
-      setPhase({
-        phase: 'done',
-        phasePct: 100,
-        scanResult,
-        assignedDocType: finalDocType,
-        uploadedDoc,
-        scanLogs: [...logs],
-        temporalLabel,
-        identityLabel,
-        identityMatchLevel,
-      })
-    } catch (err) {
-      setPhase({ phase: 'error', error: err instanceof Error ? err.message : 'Erreur inconnue', scanLogs: [...logs] })
-    }
-  }, [uploadFile, user])
+      // ── Save ALL extracted data to user profileMeta (AI-classified by doc family) ──
+      const ed = scanResult.extractedData
+      const metaEntry: Record<string, unknown> = {
+        _docType:    finalDocType ?? confirmedFamily,
+        _confidence: scanResult.confidence,
+        _scannedAt:  new Date().toISOString(),
+      }
+      // Fields by family
+      if (confirmedFamily === 'IDENTITE') {
+        if (ed.firstName)      metaEntry.firstName      = ed.firstName
+        if (ed.lastName)       metaEntry.lastName       = ed.lastName
+        if (ed.birthDate)      metaEntry.birthDate      = ed.birthDate
+        if (ed.birthCity)      metaEntry.birthCity      = ed.birthCity
+        if (ed.nationality)    metaEntry.nationality    = ed.nationality
+        if (ed.documentNumber) metaEntry.documentNumber = ed.documentNumber
+        if (ed.documentExpiry) metaEntry.documentExpiry = ed.documentExpiry
+        if (ed.nationalNumber) metaEntry.nationalNumber = ed.nationalNumber
+      } else if (confirmedFamily === 'BULLETIN') {
+        if (ed.employerName)   metaEntry.employerName   = ed.employerName
+        if (ed.netSalary)      metaEntry.netSalary      = ed.netSalary
+        if (ed.grossSalary)    metaEntry.grossSalary    = ed.grossSalary
+        if (ed.bulletinPeriod) metaEntry.bulletinPeriod = ed.bulletinPeriod
+        if (ed.siret)          metaEntry.siret          = ed.siret
+        if (ed.contractType)   metaEntry.contractType   = ed.contractType
+      } else if (confirmedFamily === 'REVENUS_FISCAUX') {
+        if (ed.fiscalRef)  metaEntry.fiscalRef  = ed.fiscalRef
+        if (ed.cafAmount)  metaEntry.cafAmount  = ed.cafAmount
+        if (ed.areAmount)  metaEntry.areAmount  = ed.areAmount
+        if (ed.pensionAmount) metaEntry.pensionAmount = ed.pensionAmount
+      } else if (confirmedFamily === 'DOMICILE') {
+        if (ed.address)    metaEntry.address    = ed.address
+        if (ed.issuerName) metaEntry.issuerName = ed.issuerName
+        if (ed.firstName)  metaEntry.firstName  = ed.firstName
+        if (ed.lastName)   metaEntry.lastName   = ed.lastName
+      } else if (confirmedFamily === 'GARANTIE') {
+        if (ed.visaleAmount)   metaEntry.visaleAmount   = ed.visaleAmount
+        if (ed.visaleDuration) metaEntry.visaleDuration = ed.visaleDuration
+        if (ed.visaNumber)     metaEntry.visaNumber     = ed.visaNumber
+        if (ed.guarantorLastName)  metaEntry.guarantorLastName  = ed.guarantorLastName
+        if (ed.guarantorFirstName) metaEntry.guarantorFirstName = ed.guarantorFirstName
+      } else if (confirmedFamily === 'BANCAIRE') {
+        if (ed.ibanPrefix)  metaEntry.ibanPrefix  = ed.ibanPrefix
+        if (ed.loanAmount)  metaEntry.loanAmount  = ed.loanAmount
+      }
 
-  // ── Magic mode: process all dropped files ─────────────────────────────────
-  const handleMagicFiles = useCallback(async (files: File[]) => {
-    const newEntries: FileEntry[] = files.map((file) => ({
-      id: `${Date.now()}-${Math.random()}`,
-      file,
-      phase: 'queued' as ScanPhase,
+      if (Object.keys(metaEntry).length > 3) {  // at least one real field beyond meta
+        updateProfile({ profileMeta: { [confirmedFamily]: metaEntry } })
+          .then(() => addLog(`[OK] Données "${FAMILY_LABELS[confirmedFamily] ?? confirmedFamily}" sauvegardées dans votre profil`))
+          .catch(() => null)
+      }
+
+      setPhase({
+        phase: 'done', phasePct: 100, scanResult, assignedDocType: finalDocType,
+        uploadedDoc, scanLogs: [...logs], temporalLabel, identityLabel, identityMatchLevel,
+      })
+
+      // Fermer ScannerModal après 1.2s pour laisser voir l'état "done"
+      setTimeout(() => setScannerModalEntryId(null), 1200)
+
+      // Cross-doc check
+      setEntries((prev) => {
+        const done = prev.filter((e) => e.scanResult).map((e) => e.scanResult!)
+        setCrossDocWarnings(crossCheckSalaries(done))
+        return prev
+      })
+
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Erreur inconnue'
+      addLog(`[ERR] ${msg}`)
+      setPhase({ phase: 'error', error: msg, scanLogs: [...logs] })
+    } finally {
+      setActiveScanId(null)
+    }
+  }, [uploadFile, user, updateProfile])
+
+  // ── Handle new files ───────────────────────────────────────────────────────
+  const handleFiles = useCallback((files: File[], hintDocType?: string) => {
+    const valid = files.filter((f) => /\.(pdf|jpe?g|png|webp)$/i.test(f.name)).slice(0, 20)
+    if (!valid.length) { toast.error('Format non supporté (PDF, JPEG, PNG, WebP uniquement)'); return }
+
+    const newEntries: FileEntry[] = valid.map((f) => ({
+      id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      file: f,
+      phase: 'queued',
       phasePct: 0,
       scanResult: null,
       uploadedDoc: null,
-      assignedDocType: null,
+      assignedDocType: hintDocType ?? null,
       scanLogs: [],
     }))
-
     setEntries((prev) => [...prev, ...newEntries])
-    setMagicPhase('scanning')
 
-    // Process with concurrency limit
-    const queue = [...newEntries]
-    const runNext = async (): Promise<void> => {
-      const entry = queue.shift()
-      if (!entry) return
-      await processEntry(entry.id, entry.file)
-      await runNext()
+    // Runner sériel : une ScannerModal à la fois
+    const runSerial = (queue: FileEntry[]) => {
+      if (!queue.length) return
+      const [head, ...tail] = queue
+      setScannerModalEntryId(head.id)  // ouvre la modal immédiatement
+      processEntry(head.id, head.file).finally(() => {
+        // Avancer vers le fichier suivant après 900ms (temps pour voir "done")
+        setTimeout(() => runSerial(tail), 900)
+      })
     }
-    const workers = Array.from({ length: Math.min(MAX_CONCURRENT, queue.length) }, runNext)
-    await Promise.all(workers)
-
-    // After all done: compute cross-doc warnings and switch to kanban
-    setEntries((current) => {
-      const completedScans = current
-        .filter((e) => e.scanResult)
-        .map((e) => e.scanResult!)
-      const warnings = crossCheckSalaries(completedScans)
-      setCrossDocWarnings(warnings)
-      return current
-    })
-    setMagicPhase('kanban')
+    runSerial(newEntries)
   }, [processEntry])
 
-  // ── Wizard mode: upload ────────────────────────────────────────────────────
-  const handleWizardUpload = useCallback(async (docType: string, category: string, file: File) => {
-    setUploadingKey(`${category}:${docType}`)
-    try {
-      await uploadFile(docType, category, file)
-      toast.success('Document ajouté ✓')
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Erreur lors de l'upload")
-    } finally {
-      setUploadingKey(null)
-    }
-  }, [uploadFile])
-
+  // ── Delete document ────────────────────────────────────────────────────────
   const handleDelete = useCallback(async (id: string) => {
     try {
       await dossierService.deleteDocument(id)
       setDocuments((prev) => prev.filter((d) => d.id !== id))
       toast.success('Document supprimé')
-    } catch { toast.error('Erreur lors de la suppression') }
+    } catch {
+      toast.error('Erreur lors de la suppression')
+    }
   }, [])
 
-  // ── Kanban: move entry to another family (manual reclassification) ─────────
-  const handleMoveEntry = useCallback(async (entryId: string, newFamily: DocFamily) => {
-    setEntries((prev) => prev.map((e) => {
-      if (e.id !== entryId) return e
-      const newDocType = assignDocTypeSlot(newFamily, new Set(
-        prev.filter((x) => x.id !== entryId).map((x) => x.assignedDocType).filter(Boolean) as string[]
-      ), e.scanResult?.keywords ?? [])
-      // Note: backend update on reclassification requires re-upload via wizard mode
-      const updatedResult = e.scanResult ? { ...e.scanResult, docFamily: newFamily, docType: newDocType } : null
-      toast.success(`Reclassé → ${FAMILY_LABELS[newFamily]}`)
-      return {
-        ...e,
-        scanResult: updatedResult,
-        assignedDocType: newDocType,
-        scanLogs: [...(e.scanLogs ?? []), `[INFO] Reclassé manuellement → ${FAMILY_LABELS[newFamily]}`],
-      }
-    }))
-  }, [])
 
-  const score = computeScore(documents)
-  const hasVisale = documents.some((d) => d.docType === 'ATTESTATION_VISALE')
-  const stepCompletedMap = useMemo(() => STEPS.map((step) => {
-    const required = step.docs.filter((d) => d.required)
-    if (!required.length) return documents.some((d) => d.category === step.id)
-    return required.every((spec) => documents.some((d) => d.category === step.id && d.docType === spec.docType))
-  }), [documents])
+  // ── ZIP export ─────────────────────────────────────────────────────────────
+  const handleDownloadZip = useCallback(async () => {
+    if (!documents.length) return
+    setGeneratingZip(true)
+    try {
+      const zip = new JSZip()
+      const lastName = user?.lastName ?? 'locataire'
+      await Promise.all(documents.map(async (doc) => {
+        try {
+          const res = await fetch(`${SERVER_BASE}${doc.fileUrl}`)
+          if (!res.ok) return
+          const blob = await res.blob()
+          const ext  = doc.fileName.split('.').pop() ?? 'pdf'
+          zip.file(`${lastName}_${doc.docType}_${doc.createdAt.slice(0,10)}.${ext}`, blob)
+        } catch { /* skip */ }
+      }))
+      const blob = await zip.generateAsync({ type: 'blob' })
+      const url  = URL.createObjectURL(blob)
+      Object.assign(document.createElement('a'), { href: url, download: `dossier_${lastName}.zip` }).click()
+      URL.revokeObjectURL(url)
+      toast.success('ZIP généré !')
+    } catch {
+      toast.error('Erreur lors de la génération du ZIP')
+    } finally {
+      setGeneratingZip(false)
+    }
+  }, [documents, user])
 
-  const allDoneCount   = entries.filter((e) => e.phase === 'done').length
-  const totalCount     = entries.length
-  const isAllDone      = totalCount > 0 && allDoneCount === totalCount
+
+  const activeScanEntry = activeScanId ? entries.find((e) => e.id === activeScanId) : null
+
+  // ── Global drop handlers ───────────────────────────────────────────────────
+  const globalInputRef = useRef<HTMLInputElement>(null)
+  const [draggingGlobal, setDraggingGlobal] = useState(false)
+
+  // ─────────────────────────────────────────────────────────────────────────
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader className="w-6 h-6 animate-spin" style={{ color: 'var(--brand-violet)' }} />
+        </div>
+      </Layout>
+    )
+  }
 
   return (
     <Layout>
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6"
+        onDragOver={(e) => { e.preventDefault(); setDraggingGlobal(true) }}
+        onDragLeave={() => setDraggingGlobal(false)}
+        onDrop={(e) => {
+          e.preventDefault(); setDraggingGlobal(false)
+          const files = Array.from(e.dataTransfer.files).filter((f) => /\.(pdf|jpe?g|png|webp)$/i.test(f.name))
+          if (files.length) handleFiles(files)
+        }}
+      >
 
-        {/* Page header */}
-        <div className="flex items-center justify-between mb-6 gap-4">
-          <div>
-            <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Mon Dossier Locatif</h1>
-            <p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-              {mode === 'magic'
-                ? 'Mode Intelligent — déposez tout en une fois, l\'IA fait le reste'
-                : 'Mode Guidé — suivez les 5 étapes'}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setMode(mode === 'magic' ? 'wizard' : 'magic')}
-              className="btn btn-secondary flex items-center gap-2 text-sm"
-            >
-              {mode === 'magic'
-                ? <><Layers className="w-4 h-4" /> Mode guidé</>
-                : <><Sparkles className="w-4 h-4" /> Magic Drop</>}
-            </button>
-            {mode === 'magic' && entries.length > 0 && magicPhase !== 'kanban' && (
-              <button onClick={() => setMagicPhase('kanban')} className="btn btn-secondary text-sm flex items-center gap-2">
-                <Layers className="w-4 h-4" /> Tableau
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* ── MAGIC MODE ─────────────────────────────────────────────── */}
-        {mode === 'magic' && (
-          <>
-            {/* Drop phase */}
-            {magicPhase === 'drop' && (
-              <MagicDropZone onFiles={handleMagicFiles} />
-            )}
-
-            {/* Scanning phase */}
-            {magicPhase === 'scanning' && (
-              <div className="space-y-4">
-                {/* Global progress */}
-                <div className="rounded-2xl border p-4 flex items-center gap-4"
-                  style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-                        Analyse en cours… {allDoneCount}/{totalCount} fichiers traités
-                      </p>
-                      {isAllDone && (
-                        <button onClick={() => setMagicPhase('kanban')}
-                          className="btn btn-primary text-xs flex items-center gap-1.5 py-1.5">
-                          <Layers className="w-3.5 h-3.5" /> Tableau de contrôle
-                        </button>
-                      )}
-                    </div>
-                    <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--border)' }}>
-                      <motion.div className="h-2 rounded-full" animate={{ width: `${(allDoneCount / Math.max(totalCount, 1)) * 100}%` }}
-                        transition={{ duration: 0.3 }}
-                        style={{ background: 'linear-gradient(90deg, #7c3aed, #3b82f6)' }} />
-                    </div>
-                  </div>
-                  <Cpu className="w-7 h-7 text-violet-500 animate-pulse flex-shrink-0" />
-                </div>
-
-                {/* Drop zone to add more files */}
-                <div className="rounded-2xl border-2 border-dashed flex items-center justify-center gap-3 p-4 cursor-pointer hover:border-primary-300 transition-colors"
-                  style={{ borderColor: 'var(--border)' }}
-                  onClick={() => {
-                    const input = document.createElement('input')
-                    input.type = 'file'; input.multiple = true; input.accept = '.pdf,image/jpeg,image/png,image/webp'
-                    input.onchange = (e) => {
-                      const files = Array.from((e.target as HTMLInputElement).files ?? [])
-                      if (files.length) handleMagicFiles(files)
-                    }
-                    input.click()
-                  }}>
-                  <Upload className="w-4 h-4" style={{ color: 'var(--text-tertiary)' }} />
-                  <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Ajouter d'autres fichiers</span>
-                </div>
-
-                {/* File cards */}
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <AnimatePresence>
-                    {entries.map((entry, i) => (
-                      <FileScanCard key={entry.id} entry={entry} index={i} />
-                    ))}
-                  </AnimatePresence>
-                </div>
-              </div>
-            )}
-
-            {/* Dashboard phase (legacy summary) */}
-            {magicPhase === 'dashboard' && (
-              <div className="space-y-5">
-                {entries.length > 0 && (
-                  <div className="rounded-2xl border p-4 flex items-center justify-between gap-4"
-                    style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
-                    <div>
-                      <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-                        {allDoneCount} fichier{allDoneCount > 1 ? 's' : ''} analysé{allDoneCount > 1 ? 's' : ''}
-                      </p>
-                      <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                        {entries.filter((e) => e.scanResult?.docFamily !== 'UNKNOWN').length} reconnus ·
-                        {' '}{entries.filter((e) => e.scanResult?.fraudSignals.some((s) => s.severity === 'high')).length} suspects
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <button onClick={() => setMagicPhase('kanban')}
-                        className="btn btn-primary text-xs flex items-center gap-1.5 py-1.5">
-                        <Layers className="w-3.5 h-3.5" /> Tableau de contrôle
-                      </button>
-                      <button onClick={() => setMagicPhase('scanning')}
-                        className="btn btn-secondary text-xs flex items-center gap-1.5 py-1.5">
-                        <Eye className="w-3.5 h-3.5" /> Détail scan
-                      </button>
-                    </div>
-                  </div>
-                )}
-                <MagicDashboard
-                  documents={documents}
-                  entries={entries}
-                  crossDocWarnings={crossDocWarnings}
-                  score={score}
-                  hasVisale={hasVisale}
-                  userLastName={user?.lastName ?? 'Locataire'}
-                  onReset={() => setMagicPhase(entries.length > 0 ? 'scanning' : 'drop')}
-                />
-              </div>
-            )}
-
-            {/* Kanban phase — Tableau de contrôle drag & drop */}
-            {magicPhase === 'kanban' && (
-              <div className="space-y-4">
-                {/* Header bar */}
-                <div className="flex items-center justify-between gap-4 rounded-2xl border p-4"
-                  style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
-                  <div>
-                    <h2 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
-                      Tableau de contrôle — {entries.length} document{entries.length > 1 ? 's' : ''}
-                    </h2>
-                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-                      Glissez une carte vers une autre colonne pour la reclasser manuellement.
-                    </p>
-                  </div>
-                  <div className="flex gap-2 flex-shrink-0">
-                    <button onClick={() => setMagicPhase('dashboard')}
-                      className="btn btn-secondary text-xs flex items-center gap-1.5 py-1.5">
-                      <LayoutDashboard className="w-3.5 h-3.5" /> Récapitulatif
-                    </button>
-                    <button onClick={() => setMagicPhase('drop')}
-                      className="btn btn-secondary text-xs flex items-center gap-1.5 py-1.5">
-                      <Upload className="w-3.5 h-3.5" /> Ajouter
-                    </button>
-                  </div>
-                </div>
-
-                {/* Cross-doc warnings */}
-                {crossDocWarnings.length > 0 && (
-                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 space-y-1">
-                    {crossDocWarnings.map((w, i) => (
-                      <p key={i} className="text-xs text-amber-800 flex items-start gap-1.5">
-                        <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />{w}
-                      </p>
-                    ))}
-                  </div>
-                )}
-
-                {/* Kanban board */}
-                <KanbanBoard
-                  entries={entries.map((e): KanbanEntry => ({
-                    id: e.id,
-                    file: e.file,
-                    phase: e.phase,
-                    confidence: e.scanResult?.confidence ?? 0,
-                    docFamily: e.scanResult?.docFamily ?? 'UNKNOWN',
-                    docType: e.scanResult?.docType ?? null,
-                    assignedDocType: e.assignedDocType,
-                    fraudSignalCount: e.scanResult?.fraudSignals.length ?? 0,
-                    hasMediumRisk: e.scanResult?.fraudSignals.some((s) => s.severity === 'medium') ?? false,
-                    hasHighRisk: e.scanResult?.fraudSignals.some((s) => s.severity === 'high') ?? false,
-                    hasQrCode: e.scanResult?.hasQrCode ?? false,
-                    ocrUsed: e.scanResult?.ocrUsed ?? false,
-                    mrzFound: !!e.scanResult?.certaintyTokenFound,
-                    temporalLabel: e.temporalLabel,
-                    identityLabel: e.identityLabel,
-                    scanLogs: e.scanLogs ?? [],
-                  }))}
-                  onMoveEntry={handleMoveEntry}
-                />
-              </div>
-            )}
-          </>
-        )}
-
-        {/* ── WIZARD MODE ────────────────────────────────────────────── */}
-        {mode === 'wizard' && (
-          <>
-            {/* Score banner */}
-            <div className="rounded-2xl border p-5 mb-6 flex flex-col sm:flex-row items-center gap-5"
-              style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
+        {/* ── PageHeader ─────────────────────────────────────────────────── */}
+        <div className="rounded-3xl p-5 sm:p-6 border"
+          style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            {/* Score gauge */}
+            <div className="flex-shrink-0">
               <ScoreGauge score={score} />
-              <div className="flex-1 space-y-2 w-full">
-                {(() => {
-                  const strength = getStrength(score, hasVisale)
-                  const StrengthIcon = strength.icon
-                  return (
-                    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-semibold ${strength.bg} ${strength.color}`}>
-                      <StrengthIcon className="w-4 h-4" /> Dossier {strength.label}
-                    </div>
-                  )
-                })()}
-                <div className="flex flex-wrap gap-4 text-sm">
-                  <div><span style={{ color: 'var(--text-tertiary)' }}>Documents : </span>
-                    <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{documents.length}</span></div>
-                  {hasVisale && <div className="flex items-center gap-1 text-emerald-600 font-semibold"><Shield className="w-4 h-4" /> Garantie Visale</div>}
+            </div>
+
+            {/* Title + progress */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap mb-1">
+                <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                  Mon Dossier Locataire
+                </h1>
+                {user?.firstName && (
+                  <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
+                    — {user.firstName} {user.lastName}
+                  </span>
+                )}
+                <span className={`inline-flex items-center gap-1.5 text-sm font-bold px-3 py-1 rounded-full ${strength.bg} ${strength.color}`}>
+                  <StrIcon className="w-4 h-4" /> {strength.label}
+                </span>
+              </div>
+
+              {/* Progress bar */}
+              <div className="flex items-center gap-3 mt-2">
+                <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--border)' }}>
+                  <motion.div className="h-full rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${score}%` }}
+                    transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+                    style={{ background: score >= 65 ? 'linear-gradient(90deg, #10b981, #3b82f6)' : score >= 35 ? 'linear-gradient(90deg, #f59e0b, #f97316)' : '#ef4444' }}
+                  />
                 </div>
-                <div className="w-full h-1.5 rounded-full" style={{ backgroundColor: 'var(--border)' }}>
-                  <div className="h-1.5 rounded-full transition-all duration-700"
-                    style={{ width: `${score}%`, background: score >= 90 ? '#10b981' : score >= 65 ? '#3b82f6' : score >= 35 ? '#f59e0b' : '#ef4444' }} />
-                </div>
-                <p className="text-xs flex items-center gap-1.5" style={{ color: 'var(--text-tertiary)' }}>
-                  <Lock className="w-3.5 h-3.5" /> Chiffré AES-256 · Accès réservé
-                </p>
+                <span className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
+                  {documents.length} / {ALL_SLOTS.filter((s) => s.required).length + 3} documents
+                </span>
               </div>
             </div>
 
-            <WizardStepBar steps={STEPS} current={currentStep} completed={stepCompletedMap} />
+            {/* Actions */}
+            <div className="flex flex-wrap gap-2 flex-shrink-0">
+              <button onClick={handleDownloadZip} disabled={generatingZip || documents.length === 0}
+                className="btn btn-secondary flex items-center gap-2 text-sm disabled:opacity-40">
+                {generatingZip ? <Loader className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                ZIP
+              </button>
+            </div>
+          </div>
+        </div>
 
-            {isLoading ? (
-              <div className="flex items-center justify-center py-24">
-                <Loader className="w-10 h-10 text-primary-500 animate-spin" />
+        {/* ── Main grid ─────────────────────────────────────────────────────*/}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+
+          {/* ── ChecklistPanel (2/3) ──────────────────────────────────────── */}
+          <div className="lg:col-span-2 space-y-4">
+
+            {/* ── Hero Drop Zone (toujours visible en haut) ─────────────── */}
+            <motion.div
+              animate={draggingGlobal ? { scale: 1.02, y: -2 } : { scale: 1, y: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              className="rounded-2xl border-2 border-dashed px-6 py-7 text-center cursor-pointer transition-all"
+              style={{
+                borderColor: draggingGlobal ? '#7c3aed' : 'rgba(124,58,237,0.3)',
+                backgroundColor: draggingGlobal ? 'rgba(124,58,237,0.06)' : 'rgba(124,58,237,0.02)',
+              }}
+              onClick={() => globalInputRef.current?.click()}
+            >
+              <input ref={globalInputRef} type="file" accept=".pdf,image/jpeg,image/png,image/webp" multiple className="hidden"
+                onChange={(e) => { const f = Array.from(e.target.files ?? []); if (f.length) { handleFiles(f); e.target.value = '' } }} />
+              <motion.div animate={draggingGlobal ? { scale: 1.18 } : { scale: 1 }} transition={{ type: 'spring', stiffness: 400 }}>
+                {draggingGlobal
+                  ? <Sparkles className="w-10 h-10 mx-auto mb-3 text-violet-500" />
+                  : <Upload className="w-10 h-10 mx-auto mb-3 text-violet-400" />}
+              </motion.div>
+              <p className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
+                {draggingGlobal ? 'Relâchez pour analyser' : 'Déposez vos documents ici'}
+              </p>
+              <p className="text-sm mb-4" style={{ color: 'var(--text-tertiary)' }}>
+                ≥ 90 % de confiance → confirmation simple · &lt; 90 % → vous choisissez la catégorie
+              </p>
+              <div className="flex justify-center gap-2 flex-wrap">
+                {[
+                  { icon: Cpu,    text: 'OCR intégré' },
+                  { icon: Layers, text: 'Auto-classement' },
+                  { icon: Lock,   text: '100% local' },
+                ].map(({ icon: I, text }) => (
+                  <span key={text} className="flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg"
+                    style={{ backgroundColor: 'var(--surface-card)', border: '1px solid var(--border)', color: 'var(--text-tertiary)' }}>
+                    <I className="w-3 h-3" /> {text}
+                  </span>
+                ))}
               </div>
-            ) : (
-              <>
-                {/* Step intro */}
-                <div className="rounded-2xl border p-5 mb-5"
-                  style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
-                  {(() => {
-                    const step = STEPS[currentStep - 1]
-                    const Icon = step.icon
-                    return (
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${step.accentBg}`}>
-                          <Icon className={`w-5 h-5 ${step.accent}`} />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Étape {currentStep} / {STEPS.length}</p>
-                          <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{step.headline}</h2>
-                        </div>
-                        {stepCompletedMap[currentStep - 1] && (
-                          <div className="flex items-center gap-1 text-sm text-emerald-600 font-semibold">
-                            <CheckCircle className="w-4 h-4" /> Complète
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })()}
-                  <p className="text-sm mt-3" style={{ color: 'var(--text-secondary)' }}>{STEPS[currentStep - 1].intro}</p>
-                </div>
+            </motion.div>
 
-                {/* Doc cards */}
-                <div className="space-y-4 mb-8">
-                  {STEPS[currentStep - 1].docs.map((spec) => (
-                    <WizardDocCard
-                      key={spec.docType} spec={spec}
-                      category={STEPS[currentStep - 1].id}
-                      doc={documents.find((d) => d.category === STEPS[currentStep - 1].id && d.docType === spec.docType)}
-                      onUpload={handleWizardUpload}
-                      onDelete={handleDelete}
-                      uploading={uploadingKey === `${STEPS[currentStep - 1].id}:${spec.docType}`}
+            {CATEGORIES.map((cat) => {
+              const CatIcon = cat.icon
+              const catDocs  = documents.filter((d) => d.category === cat.id)
+              const doneCount = cat.slots.filter((s) => catDocs.some((d) => d.docType === s.docType)).length
+              const hasIssue  = cat.slots.some((s) =>
+                entries.find((e) => e.assignedDocType === s.docType)?.scanResult?.fraudSignals.some((f) => f.severity === 'high')
+              )
+              const allDone = doneCount === cat.slots.filter((s) => s.required).length
+
+              return (
+                <CategorySection
+                  key={cat.id}
+                  cat={cat}
+                  CatIcon={CatIcon}
+                  doneCount={doneCount}
+                  allDone={allDone}
+                  hasIssue={hasIssue}
+                  documents={documents}
+                  entries={entries}
+                  onUploadSlot={(docType, _category, file) => handleFiles([file], docType)}
+                  onDelete={handleDelete}
+                  onOpenWhy={setWhySlot}
+                  serverBase={SERVER_BASE}
+                />
+              )
+            })}
+
+          </div>
+
+          {/* ── SidePanel (1/3) ───────────────────────────────────────────── */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-6 rounded-3xl p-5 border space-y-4"
+              style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
+
+              <AnimatePresence mode="wait">
+                {activeScanEntry ? (
+                  <motion.div key="scanning" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    <p className="text-xs font-bold uppercase tracking-wide mb-3 flex items-center gap-2"
+                      style={{ color: 'var(--text-tertiary)' }}>
+                      <Cpu className="w-3.5 h-3.5 text-violet-500 animate-pulse" /> Analyse IA
+                    </p>
+                    <LiveScanConsole entry={activeScanEntry} onDismiss={() => setActiveScanId(null)} />
+                  </motion.div>
+                ) : (
+                  <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    <p className="text-xs font-bold uppercase tracking-wide mb-3"
+                      style={{ color: 'var(--text-tertiary)' }}>Vue d'ensemble</p>
+                    <IdleSidePanel
+                      score={score}
+                      documents={documents}
+                      entries={entries}
+                      crossDocWarnings={crossDocWarnings}
                     />
-                  ))}
-                </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </div>
+      </div>
 
-                {/* Navigation */}
-                <div className="flex items-center justify-between pt-6 border-t" style={{ borderTopColor: 'var(--border)' }}>
-                  <button onClick={() => setCurrentStep((s) => Math.max(1, s - 1))}
-                    disabled={currentStep === 1}
-                    className="btn btn-secondary flex items-center gap-2 disabled:opacity-40">
-                    <ChevronLeft className="w-4 h-4" /> Précédent
-                  </button>
-                  <div className="flex items-center gap-1.5">
-                    {STEPS.map((_, i) => (
-                      <button key={i} onClick={() => setCurrentStep(i + 1)}
-                        className={`h-2 rounded-full transition-all ${i + 1 === currentStep ? 'w-5 bg-primary-500' : 'w-2 bg-slate-300 hover:bg-slate-400'}`} />
-                    ))}
-                  </div>
-                  {currentStep < STEPS.length
-                    ? <button onClick={() => setCurrentStep((s) => Math.min(STEPS.length, s + 1))}
-                        className="btn btn-primary flex items-center gap-2">
-                        Suivant <ChevronRight className="w-4 h-4" />
-                      </button>
-                    : <button onClick={() => { saveProgress({ confirmed: true, globalScore: score }); toast.success('Dossier confirmé ✓') }}
-                        disabled={documents.length === 0}
-                        className="btn btn-primary flex items-center gap-2 disabled:opacity-40">
-                        <FileCheck className="w-4 h-4" /> Confirmer mon dossier
-                      </button>
-                  }
-                </div>
-              </>
-            )}
-          </>
+      {/* ── Composer le dossier final ────────────────────────────────────── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-10">
+        <ProfileComposer documents={documents} serverBase={SERVER_BASE} user={user} />
+      </div>
+
+      {/* ── Modals ───────────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {pendingDuplicate && (
+          <DuplicateModal
+            pending={pendingDuplicate}
+            onReplace={() => { duplicateResolveRef.current?.('replace'); duplicateResolveRef.current = null }}
+            onKeepBoth={() => { duplicateResolveRef.current?.('keep'); duplicateResolveRef.current = null }}
+            onCancel={() => { duplicateResolveRef.current?.('cancel'); duplicateResolveRef.current = null }}
+          />
         )}
+        {scannerModalEntryId && !pendingDuplicate && (() => {
+          const scanEntry = entries.find((e) => e.id === scannerModalEntryId)
+          if (!scanEntry) return null
+          const activeCount = entries.filter((e) =>
+            ['queued','pdf','ocr','qr','needs_confirm','uploading'].includes(e.phase)
+          ).length
+          return (
+            <ScannerModal
+              entry={scanEntry}
+              pendingConfirm={pendingConfirm?.id === scannerModalEntryId ? pendingConfirm : null}
+              onConfirm={(family) => {
+                if (pendingConfirm && family !== pendingConfirm.scanResult.docFamily) {
+                  saveTrainingCorrection(pendingConfirm.file.name, family)
+                  toast.success("L'IA a appris de cette correction !", { icon: '🧠' })
+                }
+                confirmResolveRef.current?.(family)
+                confirmResolveRef.current = null
+              }}
+              onCancel={() => {
+                if (scanEntry.phase === 'done' || scanEntry.phase === 'error') {
+                  setScannerModalEntryId(null)
+                } else {
+                  confirmResolveRef.current?.(null)
+                  confirmResolveRef.current = null
+                }
+              }}
+              queueInfo={{ current: 1, total: Math.max(activeCount, 1) }}
+            />
+          )
+        })()}
+        {whySlot && <WhyModal slot={whySlot} onClose={() => setWhySlot(null)} />}
+      </AnimatePresence>
+    </Layout>
+  )
+}
 
-        {/* Disclaimer */}
-        <div className="mt-8 rounded-xl border p-4 flex gap-3"
-          style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
-          <Cpu className="w-4 h-4 text-violet-400 flex-shrink-0 mt-0.5" />
-          <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-            <strong style={{ color: 'var(--text-primary)' }}>Analyse 100 % locale</strong> — OCR (tesseract.js), détection QR (jsqr), forensique metadata PDF et classification par ancrage textuel s'exécutent entièrement dans votre navigateur. Aucun document n'est transmis à un serveur externe. Le score de confiance est indicatif.
+// ─── ProfileComposer ──────────────────────────────────────────────────────────
+
+type ComposerPhase = 'idle' | 'analyzing' | 'review'
+
+interface ProfileFields {
+  firstName: string; lastName: string
+  birthDate: string; birthCity: string; nationality: string
+  documentNumber: string; documentExpiry: string; nationalNumber: string
+  address: string
+  employerName: string; contractType: string; netSalary: string
+}
+
+function ProfileComposer({
+  documents, serverBase, user,
+}: {
+  documents: TenantDocument[]
+  serverBase: string
+  user: { firstName?: string | null; lastName?: string | null } | null
+}) {
+  const [phase, setPhase] = useState<ComposerPhase>('idle')
+  const [progress, setProgress] = useState<{ done: number; total: number }>({ done: 0, total: 0 })
+  const [fields, setFields] = useState<ProfileFields>({
+    firstName: '', lastName: '', birthDate: '', birthCity: '', nationality: '',
+    documentNumber: '', documentExpiry: '', nationalNumber: '',
+    address: '', employerName: '', contractType: '', netSalary: '',
+  })
+  const [saving, setSaving] = useState(false)
+
+  async function handleAnalyze() {
+    if (documents.length === 0) {
+      toast.error('Ajoutez des documents avant de composer le dossier.')
+      return
+    }
+    setPhase('analyzing')
+    setProgress({ done: 0, total: documents.length })
+
+    const merged: Partial<ExtractedData> = {}
+
+    for (let i = 0; i < documents.length; i++) {
+      const doc = documents[i]
+      try {
+        const url = serverBase + doc.fileUrl
+        const resp = await fetch(url)
+        if (!resp.ok) { setProgress({ done: i + 1, total: documents.length }); continue }
+        const blob = await resp.blob()
+        const file = new File([blob], doc.fileName, { type: doc.mimeType })
+        const result = await runMultiSignalIntelligence(file)
+        const ex = result.extractedData ?? {}
+        // Merge: first non-empty value wins
+        const keys = Object.keys(ex) as (keyof ExtractedData)[]
+        for (const k of keys) {
+          if (merged[k] === undefined || merged[k] === null || merged[k] === '') {
+            // @ts-ignore
+            merged[k] = ex[k]
+          }
+        }
+      } catch {
+        // skip unreadable doc
+      }
+      setProgress({ done: i + 1, total: documents.length })
+    }
+
+    // Pre-fill form: AI results first, then fall back to existing user data
+    setFields({
+      firstName:      merged.firstName      || (user?.firstName as string) || '',
+      lastName:       merged.lastName       || (user?.lastName  as string) || '',
+      birthDate:      merged.birthDate      || '',
+      birthCity:      merged.birthCity      || '',
+      nationality:    merged.nationality    || '',
+      documentNumber: merged.documentNumber || '',
+      documentExpiry: merged.documentExpiry || '',
+      nationalNumber: merged.nationalNumber || '',
+      address:        merged.address        || '',
+      employerName:   merged.employerName   || '',
+      contractType:   merged.contractType   || '',
+      netSalary:      merged.netSalary != null ? String(merged.netSalary) : '',
+    })
+    setPhase('review')
+  }
+
+  async function handleSave() {
+    setSaving(true)
+    try {
+      await dossierService.saveProfile({
+        firstName:      fields.firstName      || undefined,
+        lastName:       fields.lastName       || undefined,
+        birthDate:      fields.birthDate      || undefined,
+        birthCity:      fields.birthCity      || undefined,
+        nationality:    fields.nationality    || undefined,
+        documentNumber: fields.documentNumber || undefined,
+        documentExpiry: fields.documentExpiry || undefined,
+        nationalNumber: fields.nationalNumber || undefined,
+        address:        fields.address        || undefined,
+        employerName:   fields.employerName   || undefined,
+        contractType:   fields.contractType   || undefined,
+        netSalary:      fields.netSalary ? parseFloat(fields.netSalary) : null,
+      })
+      toast.success('Profil enregistré avec succès !')
+      setPhase('idle')
+    } catch {
+      toast.error('Erreur lors de la sauvegarde.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  function Field({ label, name, type = 'text', placeholder }: { label: string; name: keyof ProfileFields; type?: string; placeholder?: string }) {
+    return (
+      <div className="flex flex-col gap-1">
+        <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>{label}</label>
+        <input
+          type={type}
+          value={fields[name]}
+          onChange={e => setFields(prev => ({ ...prev, [name]: e.target.value }))}
+          placeholder={placeholder}
+          className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-500"
+          style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-8 rounded-2xl border p-6" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
+      <div className="flex items-center gap-3 mb-4">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-100">
+          <Sparkles className="w-5 h-5 text-violet-600" />
+        </div>
+        <div>
+          <h3 className="font-semibold text-base" style={{ color: 'var(--text-primary)' }}>Composer mon dossier final</h3>
+          <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+            L'IA analyse tous vos documents et extrait vos informations personnelles.
           </p>
         </div>
       </div>
 
-      {/* ── Confirmation Modal (confidence 40–69%) ──────────────────────────── */}
-      <AnimatePresence>
-        {pendingConfirm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
-          >
-            <motion.div
-              initial={{ scale: 0.92, y: 16 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.92, y: 16 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-              className="rounded-2xl border shadow-2xl max-w-md w-full p-6"
-              style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}
+      {phase === 'idle' && (
+        <button
+          onClick={handleAnalyze}
+          disabled={documents.length === 0}
+          className="flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-violet-700 disabled:opacity-40 transition-colors"
+        >
+          <Cpu className="w-4 h-4" />
+          Analyser mes {documents.length} document{documents.length !== 1 ? 's' : ''}
+        </button>
+      )}
+
+      {phase === 'analyzing' && (
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3 text-sm" style={{ color: 'var(--text-secondary)' }}>
+            <Loader2 className="w-4 h-4 animate-spin text-violet-500" />
+            Analyse en cours… {progress.done}/{progress.total} document{progress.total !== 1 ? 's' : ''}
+          </div>
+          <div className="h-2 w-full rounded-full overflow-hidden" style={{ background: 'var(--bg-tertiary)' }}>
+            <div
+              className="h-2 rounded-full bg-violet-500 transition-all duration-300"
+              style={{ width: `${progress.total ? (progress.done / progress.total) * 100 : 0}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {phase === 'review' && (
+        <div className="flex flex-col gap-6">
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            Vérifiez et corrigez les informations extraites par l'IA avant de les enregistrer.
+          </p>
+
+          {/* Identité */}
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide mb-3 flex items-center gap-1.5" style={{ color: 'var(--text-tertiary)' }}>
+              <User className="w-3.5 h-3.5" /> Identité
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <Field label="Prénom" name="firstName" placeholder="Jean" />
+              <Field label="Nom" name="lastName" placeholder="Dupont" />
+              <Field label="Date de naissance" name="birthDate" placeholder="DD/MM/YYYY" />
+              <Field label="Ville de naissance" name="birthCity" placeholder="Paris" />
+              <Field label="Nationalité" name="nationality" placeholder="Française" />
+              <Field label="N° document d'identité" name="documentNumber" placeholder="123456789" />
+              <Field label="Date d'expiration" name="documentExpiry" placeholder="DD/MM/YYYY" />
+              <Field label="N° sécurité sociale" name="nationalNumber" placeholder="1 85 12 75…" />
+            </div>
+          </div>
+
+          {/* Coordonnées */}
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide mb-3 flex items-center gap-1.5" style={{ color: 'var(--text-tertiary)' }}>
+              <Home className="w-3.5 h-3.5" /> Coordonnées
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="Adresse postale" name="address" placeholder="12 rue de la Paix, 75001 Paris" />
+            </div>
+          </div>
+
+          {/* Situation professionnelle */}
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide mb-3 flex items-center gap-1.5" style={{ color: 'var(--text-tertiary)' }}>
+              <Briefcase className="w-3.5 h-3.5" /> Situation professionnelle
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Field label="Employeur" name="employerName" placeholder="Société Exemple" />
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Type de contrat</label>
+                <select
+                  value={fields.contractType}
+                  onChange={e => setFields(prev => ({ ...prev, contractType: e.target.value }))}
+                  className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-500"
+                  style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+                >
+                  <option value="">— Sélectionner —</option>
+                  <option value="CDI">CDI</option>
+                  <option value="CDD">CDD</option>
+                  <option value="Intérim">Intérim</option>
+                  <option value="Alternance">Alternance</option>
+                  <option value="Indépendant">Indépendant / Freelance</option>
+                  <option value="Retraite">Retraite</option>
+                  <option value="Sans emploi">Sans emploi</option>
+                </select>
+              </div>
+              <Field label="Salaire net mensuel (€)" name="netSalary" type="number" placeholder="2500" />
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-3 pt-2">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-violet-700 disabled:opacity-50 transition-colors"
             >
-              {/* Header */}
-              <div className="flex items-start gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
-                  <AlertTriangle className="w-5 h-5 text-amber-600" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>
-                    Confirmation du type de document
-                  </h3>
-                  <p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-                    Confiance : <span className="font-semibold text-amber-600">{pendingConfirm.scanResult.confidence}%</span>
-                  </p>
-                </div>
-              </div>
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+              {saving ? 'Enregistrement…' : 'Enregistrer dans mon compte'}
+            </button>
+            <button
+              onClick={() => setPhase('idle')}
+              className="rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors hover:opacity-70"
+              style={{ borderColor: 'var(--border-primary)', color: 'var(--text-secondary)' }}
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
-              {/* Detection result */}
-              <div className="rounded-xl p-4 mb-4" style={{ backgroundColor: 'var(--surface-subtle)' }}>
-                <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
-                  Nous avons détecté un{' '}
-                  <strong>{FAMILY_LABELS[pendingConfirm.scanResult.docFamily]}</strong> dans le fichier :{' '}
-                  <span className="font-mono text-xs" style={{ color: 'var(--text-secondary)' }}>
-                    {pendingConfirm.file.name}
-                  </span>
-                </p>
-                {pendingConfirm.scanResult.matchedGroups.length > 0 && (
-                  <p className="text-xs mt-2" style={{ color: 'var(--text-tertiary)' }}>
-                    Ancre détectée : {pendingConfirm.scanResult.matchedGroups[0]}
-                  </p>
-                )}
-              </div>
+// ─── CategorySection ──────────────────────────────────────────────────────────
 
-              {/* Confirm button */}
-              <button
-                onClick={() => confirmResolveRef.current?.(pendingConfirm.scanResult.docFamily)}
-                className="btn btn-primary w-full flex items-center justify-center gap-2 mb-2"
-              >
-                <CheckCircle className="w-4 h-4" />
-                Oui, c'est bien un {FAMILY_LABELS[pendingConfirm.scanResult.docFamily]}
-              </button>
+function CategorySection({
+  cat, CatIcon, doneCount, allDone, hasIssue,
+  documents, entries, onUploadSlot, onDelete, onOpenWhy, serverBase,
+}: {
+  cat: DocCategory
+  CatIcon: React.ElementType
+  doneCount: number
+  allDone: boolean
+  hasIssue: boolean
+  documents: TenantDocument[]
+  entries: FileEntry[]
+  onUploadSlot: (docType: string, category: string, file: File) => void
+  onDelete: (id: string) => void
+  onOpenWhy: (slot: SlotSpec) => void
+  serverBase: string
+}) {
+  const [open, setOpen] = useState(true)
+  const totalRequired = cat.slots.filter((s) => s.required).length
 
-              {/* Family picker — override */}
-              <p className="text-xs text-center mb-2" style={{ color: 'var(--text-tertiary)' }}>
-                ou sélectionnez le type correct :
-              </p>
-              <div className="grid grid-cols-2 gap-2 mb-3">
-                {(Object.entries(FAMILY_LABELS) as [DocFamily, string][])
-                  .filter(([f]) => f !== 'UNKNOWN' && f !== pendingConfirm.scanResult.docFamily)
-                  .map(([family, label]) => {
-                    const col = FAMILY_COLORS[family]
-                    return (
-                      <button
-                        key={family}
-                        onClick={() => confirmResolveRef.current?.(family)}
-                        className={`text-xs font-medium px-3 py-2 rounded-lg border text-left truncate ${col.bg} ${col.text} ${col.border}`}
-                      >
-                        {label}
-                      </button>
-                    )
-                  })}
-              </div>
+  return (
+    <div className="rounded-2xl border overflow-hidden" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--surface-card)' }}>
+      {/* Category header */}
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className={`w-full flex items-center gap-3 px-5 py-4 text-left transition-colors ${cat.accentBg} hover:opacity-90`}
+      >
+        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-white/60`}>
+          <CatIcon className={`w-4.5 h-4.5 ${cat.accent}`} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className={`text-sm font-bold ${cat.accent}`}>{cat.label}</p>
+          <p className="text-xs opacity-70" style={{ color: 'inherit' }}>
+            {doneCount} / {cat.slots.length} document{cat.slots.length > 1 ? 's' : ''}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {hasIssue ? (
+            <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
+              <ShieldAlert className="w-3 h-3" /> Alerte
+            </span>
+          ) : allDone && totalRequired > 0 ? (
+            <span className="text-[10px] bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
+              <ShieldCheck className="w-3 h-3" /> Complet
+            </span>
+          ) : doneCount > 0 ? (
+            <span className="text-[10px] bg-white/70 text-slate-500 px-2 py-0.5 rounded-full font-medium">
+              {doneCount}/{totalRequired} requis
+            </span>
+          ) : (
+            <span className="text-[10px] bg-white/50 text-slate-400 px-2 py-0.5 rounded-full">Vide</span>
+          )}
+          {open ? <ChevronUp className="w-4 h-4 opacity-60" /> : <ChevronDown className="w-4 h-4 opacity-60" />}
+        </div>
+      </button>
 
-              {/* Cancel */}
-              <button
-                onClick={() => confirmResolveRef.current?.(null)}
-                className="w-full text-xs py-2 rounded-lg"
-                style={{ color: 'var(--text-tertiary)' }}
-              >
-                <XCircle className="w-3.5 h-3.5 inline mr-1" />
-                Annuler ce document
-              </button>
-            </motion.div>
+      {/* Slots */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="p-3 space-y-2">
+              {cat.slots.map((slot) => {
+                const doc       = documents.find((d) => d.category === cat.id && d.docType === slot.docType)
+                const scanEntry = entries.find((e) => e.assignedDocType === slot.docType)
+                return (
+                  <DocumentRow
+                    key={slot.docType}
+                    slot={slot}
+                    category={cat.id}
+                    doc={doc}
+                    scanEntry={scanEntry}
+                    serverBase={serverBase}
+                    onUploadSlot={onUploadSlot}
+                    onDelete={onDelete}
+                    onOpenWhy={onOpenWhy}
+                  />
+                )
+              })}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </Layout>
+    </div>
   )
 }

@@ -143,6 +143,15 @@ class AuthService {
     lastName?: string
     phone?: string
     bio?: string
+    // Identity document fields
+    birthDate?: string
+    birthCity?: string
+    nationality?: string
+    nationalNumber?: string
+    documentNumber?: string
+    documentExpiry?: string
+    // AI-extracted metadata for all doc types
+    profileMeta?: Record<string, Record<string, unknown>>
   }): Promise<User> {
     try {
       const response = await apiClient.patch<ApiResponse<{ user: User }>>(
