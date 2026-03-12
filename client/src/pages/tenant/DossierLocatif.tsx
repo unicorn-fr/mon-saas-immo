@@ -316,9 +316,25 @@ function DocumentRow({
           <p className="text-xs text-blue-500 animate-pulse">Analyse IA en cours…</p>
         )}
         {isDone && doc && (
-          <p className="text-xs truncate" style={{ color: 'var(--text-tertiary)' }}>
-            {doc.fileName} · {(doc.fileSize / 1024).toFixed(0)} Ko
-          </p>
+          <>
+            <p className="text-xs truncate" style={{ color: 'var(--text-tertiary)' }}>
+              {doc.fileName} · {(doc.fileSize / 1024).toFixed(0)} Ko
+            </p>
+            {doc.expiresAt && (() => {
+              const exp = new Date(doc.expiresAt)
+              const daysLeft = Math.ceil((exp.getTime() - Date.now()) / 86400000)
+              const isUrgent = daysLeft <= 14
+              return (
+                <p className="text-[10px] mt-0.5 flex items-center gap-1"
+                  style={{ color: isUrgent ? '#ef4444' : '#94a3b8' }}>
+                  <span>{isUrgent ? '⚠' : '🔒'}</span>
+                  {isUrgent
+                    ? `Supprimé dans ${daysLeft} jour${daysLeft > 1 ? 's' : ''}`
+                    : `Suppression auto le ${exp.toLocaleDateString('fr-FR')}`}
+                </p>
+              )
+            })()}
+          </>
         )}
         {!isDone && !isScanning && (
           <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{slot.hint}</p>

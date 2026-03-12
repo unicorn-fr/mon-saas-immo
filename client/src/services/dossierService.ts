@@ -26,8 +26,18 @@ export interface TenantDocument {
   fileSize: number
   mimeType: string
   note?: string
+  expiresAt: string | null
   createdAt: string
   updatedAt: string
+}
+
+export interface DossierAccessLog {
+  id: string
+  viewerId: string
+  viewerName: string
+  viewerEmail: string
+  propertyTitle: string | null
+  createdAt: string
 }
 
 export interface TenantDossierProfile {
@@ -83,3 +93,26 @@ class DossierService {
 }
 
 export const dossierService = new DossierService()
+
+// ── Privacy API ──────────────────────────────────────────────────────────────
+
+export const privacyApi = {
+  async getAccessLog(): Promise<DossierAccessLog[]> {
+    const res = await api.get('/privacy/access-log')
+    return res.data.data
+  },
+
+  async exportData(): Promise<void> {
+    const res = await api.get('/privacy/export', { responseType: 'blob' })
+    const url = URL.createObjectURL(new Blob([res.data], { type: 'application/json' }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `mes-donnees-${new Date().toISOString().split('T')[0]}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  },
+
+  async deleteAccount(confirmEmail: string): Promise<void> {
+    await api.delete('/privacy/account', { data: { confirmEmail } })
+  },
+}

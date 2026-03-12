@@ -459,13 +459,38 @@ model TenantDocument {
   // Optional note / rejection reason
   note       String?        @db.Text
 
+  // Auto-deletion — null = no expiry, set at upload
+  expiresAt  DateTime?
+
   // Timestamps
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
 
   @@index([userId])
   @@index([category])
+  @@index([expiresAt])
   @@map("tenant_documents")
+}
+
+// Tracks every time an owner views a tenant's dossier — visible to the tenant
+model DossierAccessLog {
+  id          String   @id @default(uuid())
+
+  tenantId    String   // whose dossier was accessed
+  viewerId    String   // owner who accessed
+  viewerName  String   // snapshot of owner name at time of access
+  viewerEmail String   // snapshot of owner email
+
+  // Context (optional — from which application/conversation)
+  propertyId    String?
+  propertyTitle String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([viewerId])
+  @@index([createdAt])
+  @@map("dossier_access_logs")
 }
 
 model Favorite {

@@ -2,6 +2,15 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
+// Retention durations by document category (ms)
+const RETENTION: Record<string, number> = {
+  IDENTITE:   90  * 24 * 60 * 60 * 1000,  // 90 days  — identity docs
+  EMPLOI:     365 * 24 * 60 * 60 * 1000,  // 1 year
+  REVENUS:    365 * 24 * 60 * 60 * 1000,  // 1 year
+  DOMICILE:   180 * 24 * 60 * 60 * 1000,  // 6 months
+  GARANTIES:  365 * 24 * 60 * 60 * 1000,  // 1 year
+}
+
 export interface ProfileData {
   firstName?: string
   lastName?: string
@@ -36,6 +45,10 @@ class DossierService {
   }
 
   async createDocument(data: CreateTenantDocumentInput) {
+    // Compute auto-deletion date based on category
+    const retentionMs = RETENTION[data.category] ?? RETENTION['EMPLOI']
+    const expiresAt = new Date(Date.now() + retentionMs)
+
     // Replace existing doc if same category + docType for this user
     const existing = await prisma.tenantDocument.findFirst({
       where: { userId: data.userId, category: data.category, docType: data.docType },
@@ -51,11 +64,12 @@ class DossierService {
           mimeType: data.mimeType,
           status: 'UPLOADED',
           note: null,
+          expiresAt,
         },
       })
     }
 
-    return prisma.tenantDocument.create({ data })
+    return prisma.tenantDocument.create({ data: { ...data, expiresAt } })
   }
 
   async reassignDocument(id: string, userId: string, category: string, docType: string) {
@@ -94,7 +108,7 @@ class DossierService {
     // Verify requester is an OWNER
     const requester = await prisma.user.findUnique({
       where: { id: requesterId },
-      select: { role: true },
+      select: { role: true, firstName: true, lastName: true, email: true },
     })
     if (!requester || requester.role !== 'OWNER') {
       throw new Error('Accès refusé')
@@ -120,6 +134,18 @@ class DossierService {
     })
 
     if (!tenant) throw new Error('Locataire introuvable')
+
+    // Log this access so the tenant can see it in their privacy center
+    // Fire-and-forget — don't block the response
+    prisma.dossierAccessLog.create({
+      data: {
+        tenantId,
+        viewerId: requesterId,
+        viewerName: `${requester.firstName ?? ''} ${requester.lastName ?? ''}`.trim(),
+        viewerEmail: requester.email ?? '',
+      },
+    }).catch(() => { /* non-fatal */ })
+
     return tenant
   }
 
