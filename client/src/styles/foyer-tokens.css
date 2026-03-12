@@ -1,0 +1,110 @@
+/* ─────────────────────────────────────────
+   FOYER Design System — Apple Style
+   bg #f5f5f7 · text #1d1d1f · accent #007AFF
+   ───────────────────────────────────────── */
+
+:root {
+  /* ── Backgrounds ────────────────────────── */
+  --bg-primary:    #f5f5f7;
+  --bg-surface:    #ffffff;
+  --bg-subtle:     #f5f5f7;
+  --bg-muted:      #e8e8ed;
+
+  /* ── Thread (accent principal) ──────────── */
+  --thread:        #007AFF;
+  --thread-hover:  #0066d6;
+  --thread-light:  #e8f0fe;
+  --thread-dark:   #0055b3;
+
+  /* ── Borders ────────────────────────────── */
+  --border:        #d2d2d7;
+  --border-hover:  #b0b0b8;
+  --border-strong: #86868b;
+
+  /* ── Textes ──────────────────────────────── */
+  --text-primary:   #1d1d1f;
+  --text-secondary: #515154;
+  --text-muted:     #86868b;
+  --text-tertiary:  #86868b;
+
+  /* ── Accent ─────────────────────────────── */
+  --accent:         #007AFF;
+  --accent-hover:   #0066d6;
+  --accent-light:   #e8f0fe;
+
+  /* ── Status ─────────────────────────────── */
+  --f-success:        #34C759;
+  --f-success-bg:     #f0fdf4;
+  --f-success-border: #bbf7d0;
+  --f-warning:        #FF9500;
+  --f-warning-bg:     #fff7ed;
+  --f-warning-border: #fed7aa;
+  --f-danger:         #FF3B30;
+  --f-danger-bg:      #fef2f2;
+  --f-danger-border:  #fecaca;
+  --f-info:           #007AFF;
+  --f-info-bg:        #e8f0fe;
+  --f-info-border:    #bfdbfe;
+
+  /* ── Shadows (Apple-style: très subtiles) ─ */
+  --shadow-card:    0 1px 0 rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-hover:   0 4px 16px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06);
+  --shadow-modal:   0 24px 64px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06);
+  --shadow-sidebar: 1px 0 0 rgba(0,0,0,0.06);
+  --shadow-header:  0 1px 0 rgba(0,0,0,0.06);
+
+  /* ── Radius (Apple: plus arrondi) ────────── */
+  --radius-sm:   10px;
+  --radius-md:   14px;
+  --radius-lg:   18px;
+  --radius-xl:   22px;
+  --radius-pill: 999px;
+
+  /* ── Sidebar ────────────────────────────── */
+  --f-sidebar-bg:     #ffffff;
+  --f-sidebar-border: #d2d2d7;
+  --f-sidebar-width:  240px;
+
+  /* ── Legacy compat ──────────────────────── */
+  --surface-page:    var(--bg-primary);
+  --surface-card:    var(--bg-surface);
+  --surface-subtle:  var(--bg-subtle);
+  --surface-overlay: rgba(255,255,255,0.97);
+  --glass-bg:        var(--bg-surface);
+  --glass-bg-heavy:  var(--bg-surface);
+  --glass-border:    var(--border);
+  --glass-shadow:    var(--shadow-card);
+  --glass-reflection: none;
+  --bg-gradient:     var(--bg-primary);
+  --brand:           var(--thread);
+  --brand-hover:     var(--thread-hover);
+  --brand-light:     var(--thread-light);
+  --brand-blue:      #007AFF;
+  --brand-violet:    #5856D6;
+  --bg-secondary:    var(--bg-surface);
+  --bg-tertiary:     var(--bg-subtle);
+  --border-primary:  var(--border);
+}
+
+/* ── DUAL THREAD ──────────────────────────── */
+[data-role='owner'] {
+  --thread:       #007AFF;
+  --thread-hover: #0066d6;
+  --thread-light: #e8f0fe;
+  --thread-dark:  #0055b3;
+}
+
+[data-role='tenant'] {
+  --thread:       #007AFF;
+  --thread-hover: #0066d6;
+  --thread-light: #e8f0fe;
+  --thread-dark:  #0055b3;
+}
+
+/* ── Accessibility ──────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

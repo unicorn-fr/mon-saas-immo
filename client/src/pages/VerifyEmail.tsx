@@ -12,7 +12,7 @@ export default function VerifyEmail() {
   useEffect(() => {
     if (!token) {
       setStatus('error')
-      setMessage('Token de verification manquant')
+      setMessage('Token de vérification manquant')
       return
     }
 
@@ -20,13 +20,13 @@ export default function VerifyEmail() {
       try {
         await authService.verifyEmail(token)
         setStatus('success')
-        setMessage('Votre adresse email a ete verifiee avec succes !')
+        setMessage('Votre adresse email a été vérifiée avec succès !')
       } catch (err) {
         setStatus('error')
         setMessage(
           err instanceof Error
             ? err.message
-            : 'Erreur lors de la verification de votre email'
+            : 'Erreur lors de la vérification de votre email'
         )
       }
     }
@@ -35,41 +35,46 @@ export default function VerifyEmail() {
   }, [token])
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ background: 'var(--bg-gradient)' }}>
-      <div className="absolute -top-48 -left-48 w-[600px] h-[600px] rounded-full opacity-50 pointer-events-none" style={{ background: 'radial-gradient(circle, #7c3aed 0%, transparent 65%)', filter: 'blur(80px)' }} />
-      <div className="absolute top-1/3 -right-32 w-[500px] h-[500px] rounded-full opacity-38 pointer-events-none" style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 65%)', filter: 'blur(80px)' }} />
-      <div className="absolute -bottom-32 left-1/4 w-[420px] h-[420px] rounded-full opacity-28 pointer-events-none" style={{ background: 'radial-gradient(circle, #3b82f6 0%, transparent 65%)', filter: 'blur(80px)' }} />
-      <div className="w-full max-w-md relative z-10">
+    <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Logo */}
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #7c3aed, #3b82f6)' }}>
+          <Link to="/" className="inline-flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <div className="w-9 h-9 bg-[#007AFF] rounded-xl flex items-center justify-center shadow-sm">
               <Home className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold font-heading text-gradient-brand">ImmoParticuliers</span>
+            <span className="text-xl font-bold text-[#1d1d1f]" style={{ fontFamily: "'Plus Jakarta Sans', Inter, system-ui" }}>FOYER</span>
           </Link>
         </div>
 
-        <div className="card text-center">
+        <div className="bg-white rounded-2xl p-8 shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-[#d2d2d7] text-center">
           {status === 'loading' && (
             <>
-              <Loader2 className="w-16 h-16 text-primary-500 animate-spin mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-slate-900 mb-2">
-                Verification en cours...
+              <div className="w-16 h-16 bg-[#e8f0fe] rounded-2xl flex items-center justify-center mx-auto mb-5">
+                <Loader2 className="w-8 h-8 text-[#007AFF] animate-spin" />
+              </div>
+              <h2 className="text-xl font-bold text-[#1d1d1f] mb-2" style={{ fontFamily: "'Plus Jakarta Sans', Inter, system-ui" }}>
+                Vérification en cours...
               </h2>
-              <p className="text-slate-600">
-                Veuillez patienter pendant que nous verifions votre email.
+              <p className="text-[#515154] text-sm">
+                Veuillez patienter pendant que nous vérifions votre email.
               </p>
             </>
           )}
 
           {status === 'success' && (
             <>
-              <CheckCircle className="w-16 h-16 text-success-500 mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-slate-900 mb-2">
-                Email verifie !
+              <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                <CheckCircle className="w-9 h-9 text-emerald-500" />
+              </div>
+              <h2 className="text-xl font-bold text-[#1d1d1f] mb-2" style={{ fontFamily: "'Plus Jakarta Sans', Inter, system-ui" }}>
+                Email vérifié !
               </h2>
-              <p className="text-slate-600 mb-6">{message}</p>
-              <Link to="/login" className="btn btn-primary">
+              <p className="text-[#515154] text-sm mb-6">{message}</p>
+              <Link
+                to="/login"
+                className="inline-block bg-[#007AFF] text-white hover:bg-[#0066d6] rounded-xl font-semibold px-8 py-2.5 transition-colors"
+              >
                 Se connecter
               </Link>
             </>
@@ -77,13 +82,18 @@ export default function VerifyEmail() {
 
           {status === 'error' && (
             <>
-              <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-slate-900 mb-2">
-                Erreur de verification
+              <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                <XCircle className="w-9 h-9 text-red-500" />
+              </div>
+              <h2 className="text-xl font-bold text-[#1d1d1f] mb-2" style={{ fontFamily: "'Plus Jakarta Sans', Inter, system-ui" }}>
+                Erreur de vérification
               </h2>
-              <p className="text-slate-600 mb-6">{message}</p>
-              <Link to="/login" className="btn btn-primary">
-                Retour a la connexion
+              <p className="text-[#515154] text-sm mb-6">{message}</p>
+              <Link
+                to="/login"
+                className="inline-block bg-[#007AFF] text-white hover:bg-[#0066d6] rounded-xl font-semibold px-8 py-2.5 transition-colors"
+              >
+                Retour à la connexion
               </Link>
             </>
           )}

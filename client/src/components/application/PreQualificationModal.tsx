@@ -222,7 +222,7 @@ export function PreQualificationModal({
                   ) : (
                     <button
                       onClick={() => setPhase('apply')}
-                      className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-violet-700 transition-colors"
+                      className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#007AFF] px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-[#0066d6] transition-colors"
                     >
                       Continuer ma candidature <ChevronRight className="w-4 h-4" />
                     </button>
@@ -243,7 +243,7 @@ export function PreQualificationModal({
               <div className="p-5 space-y-4">
                 <button
                   onClick={() => setPhase('check')}
-                  className="text-xs text-violet-600 hover:underline flex items-center gap-1"
+                  className="text-xs text-[#007AFF] hover:underline flex items-center gap-1"
                 >
                   ← Retour au score
                 </button>
@@ -268,7 +268,7 @@ export function PreQualificationModal({
                   <button
                     onClick={handleSubmit}
                     disabled={phase === 'submitting'}
-                    className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-violet-700 disabled:opacity-60 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#007AFF] px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-[#0066d6] disabled:opacity-60 transition-colors"
                   >
                     {phase === 'submitting'
                       ? <><Loader2 className="w-4 h-4 animate-spin" /> Envoi…</>

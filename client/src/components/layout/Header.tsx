@@ -1,33 +1,39 @@
 /**
- * Header / Topbar
- *
- * Mode public (non authentifié) :
- *   Logo · Nav · [Connexion] [Inscription] — barre pleine largeur
- *
- * Mode dashboard (authentifié OWNER/TENANT) :
- *   Topbar slim dans la colonne droite — hamburger mobile · espace · mode sombre · notifs · profil
- *   Le logo est dans la sidebar, pas besoin de le répéter ici.
+ * Header / Topbar — Light Premium
+ * Mode public: bg white, border, logo FOYER, nav links, auth buttons
+ * Mode dashboard: slim topbar bg white, hamburger, notifs, profile
  */
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  Home, User, LogOut, Settings, LayoutDashboard, Menu,
-  Sun, Moon, TrendingUp, Tag, Terminal,
-  CreditCard, Bell, X,
+  Home, LogOut, Settings, LayoutDashboard, Menu,
+  TrendingUp, Tag, Terminal, CreditCard, Bell, X,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
-import { useThemeStore } from '../../store/themeStore'
 import { useSidebarStore } from '../../store/sidebarStore'
 import { useState } from 'react'
+
+// ── Tokens ──────────────────────────────────────────────────────────────────
+const H = {
+  bg:        '#ffffff',
+  border:    '#d2d2d7',
+  text:      '#1d1d1f',
+  secondary: '#515154',
+  muted:     '#86868b',
+  hover:     '#f5f5f7',
+  shadow:    '0 1px 0 rgba(0,0,0,0.06)',
+  accent:    '#007AFF',
+}
 
 export const Header = () => {
   const { isAuthenticated, user, logout } = useAuth()
   const navigate = useNavigate()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showMobilePublicMenu, setShowMobilePublicMenu] = useState(false)
-  const { isDark, toggleDark } = useThemeStore()
   const { toggle: toggleSidebar } = useSidebarStore()
 
   const hasSidebar = isAuthenticated && (user?.role === 'OWNER' || user?.role === 'TENANT')
+
+  const threadColor = user?.role === 'OWNER' ? '#007AFF' : '#34C759'
 
   const handleLogout = () => {
     logout()
@@ -44,77 +50,67 @@ export const Header = () => {
   }
 
   const headerStyle = {
-    background: hasSidebar
-      ? 'rgba(255,255,255,0.07)'
-      : 'rgba(255,255,255,0.12)',
-    backdropFilter: 'blur(24px) saturate(200%)',
-    WebkitBackdropFilter: 'blur(24px) saturate(200%)',
-    borderBottom: '1px solid var(--glass-border)',
-    boxShadow: hasSidebar
-      ? 'inset 0 -1px 0 rgba(255,255,255,0.08)'
-      : 'inset 0 -1px 0 rgba(255,255,255,0.15), 0 4px 24px rgba(0,0,0,0.05)',
+    background: H.bg,
+    borderBottom: `1px solid ${H.border}`,
+    boxShadow: H.shadow,
   }
 
-  // ── MODE DASHBOARD — Topbar slim (h-12) ───────────────────────────────────
+  const initials = `${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}`.toUpperCase() || '?'
+
+  // ── DASHBOARD TOPBAR ──────────────────────────────────────────────────────
   if (hasSidebar) {
     return (
-      <header className="flex-shrink-0 z-40 sticky top-0 border-b" style={headerStyle}>
-        <div className="flex items-center justify-between h-12 px-4">
+      <header className="flex-shrink-0 z-40 sticky top-0" style={headerStyle}>
+        <div className="flex items-center justify-between h-14 px-4">
 
-          {/* Gauche — hamburger mobile uniquement */}
-          <button
-            onClick={toggleSidebar}
+          {/* Hamburger mobile */}
+          <button onClick={toggleSidebar}
             className="md:hidden p-2 rounded-xl transition-colors"
-            style={{ color: 'var(--text-secondary)' }}
-            aria-label="Menu"
-          >
+            style={{ color: H.secondary }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = H.hover }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
+            aria-label="Menu">
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* Espace vide sur desktop (la sidebar a le logo) */}
           <div className="hidden md:block flex-1" />
 
           {/* Super Admin badge */}
           {user?.role === 'SUPER_ADMIN' && (
             <Link to="/super-admin"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold mr-2"
-              style={{ background: 'rgba(0,180,216,0.12)', color: '#00b4d8', border: '1px solid rgba(0,180,216,0.3)' }}>
+              style={{ background: 'rgba(0,180,216,0.10)', color: '#00b4d8', border: '1px solid rgba(0,180,216,0.25)' }}>
               <Terminal className="w-3.5 h-3.5" /> Cerveau Central
             </Link>
           )}
 
-          {/* Droite — actions */}
+          {/* Actions droite */}
           <div className="flex items-center gap-1">
-
-            {/* Mode sombre */}
-            <button onClick={toggleDark}
-              className="p-2 rounded-xl transition-all hover:scale-110"
-              style={{ color: 'var(--text-tertiary)' }}
-              aria-label="Basculer le mode sombre">
-              {isDark ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
-            </button>
 
             {/* Notifications */}
             <Link to="/notifications"
-              className="relative p-2 rounded-xl transition-colors"
-              style={{ color: 'var(--text-tertiary)' }}>
+              className="p-2 rounded-xl transition-colors"
+              style={{ color: H.muted }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = H.hover; (e.currentTarget as HTMLElement).style.color = H.secondary }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = H.muted }}>
               <Bell className="w-[18px] h-[18px]" />
             </Link>
 
-            {/* Profil dropdown */}
+            {/* Profile */}
             <div className="relative">
               <button onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center gap-2 pl-1.5 pr-2 py-1.5 rounded-xl transition-colors ml-1"
+                className="flex items-center gap-2 pl-1.5 pr-2.5 py-1.5 rounded-xl transition-all ml-1"
                 style={{
-                  background: showUserMenu ? 'var(--surface-subtle)' : '',
-                  border: '1px solid var(--glass-border)',
+                  border: `1px solid ${H.border}`,
+                  background: showUserMenu ? H.hover : 'transparent',
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--surface-subtle)' }}
-                onMouseLeave={(e) => { if (!showUserMenu) (e.currentTarget as HTMLElement).style.background = '' }}>
-                <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3b82f6, #7c3aed)' }}>
-                  <User className="w-3 h-3 text-white" />
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = H.hover }}
+                onMouseLeave={(e) => { if (!showUserMenu) (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
+                  style={{ background: threadColor }}>
+                  {initials}
                 </div>
-                <span className="text-[13px] font-medium hidden sm:block" style={{ color: 'var(--text-primary)' }}>
+                <span className="text-[13px] font-medium hidden sm:block" style={{ color: H.text }}>
                   {user?.firstName}
                 </span>
               </button>
@@ -122,21 +118,19 @@ export const Header = () => {
               {showUserMenu && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
-                  <div className="absolute right-0 mt-2 w-56 rounded-2xl shadow-xl border py-2 z-20"
+                  <div className="absolute right-0 mt-2 w-56 rounded-2xl py-2 z-20"
                     style={{
-                      background: 'rgba(255,255,255,0.12)',
-                      backdropFilter: 'blur(24px) saturate(200%)',
-                      WebkitBackdropFilter: 'blur(24px) saturate(200%)',
-                      borderColor: 'var(--glass-border)',
-                      boxShadow: '0 16px 48px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.70)',
+                      background: H.bg,
+                      border: `1px solid ${H.border}`,
+                      boxShadow: '0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06)',
                     }}>
-                    <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--glass-border)' }}>
-                      <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    <div className="px-4 py-3" style={{ borderBottom: `1px solid ${H.border}` }}>
+                      <p className="text-sm font-semibold" style={{ color: H.text }}>
                         {user?.firstName} {user?.lastName}
                       </p>
-                      <p className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>{user?.email}</p>
-                      <span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium"
-                        style={{ background: 'rgba(124,58,237,0.12)', color: '#a78bfa', border: '1px solid rgba(124,58,237,0.25)' }}>
+                      <p className="text-xs truncate mt-0.5" style={{ color: H.secondary }}>{user?.email}</p>
+                      <span className="inline-block mt-1.5 text-[11px] px-2 py-0.5 rounded-full font-semibold"
+                        style={{ background: `${threadColor}14`, color: threadColor }}>
                         {user?.role === 'OWNER' ? 'Propriétaire' : user?.role === 'TENANT' ? 'Locataire' : user?.role}
                       </span>
                     </div>
@@ -147,19 +141,19 @@ export const Header = () => {
                       { to: '/pricing', icon: <CreditCard className="w-4 h-4" />, label: 'Mon abonnement' },
                     ].map(({ to, icon, label }) => (
                       <Link key={to} to={to}
-                        className="flex items-center gap-3 px-4 py-2 text-sm transition-colors"
-                        style={{ color: 'var(--text-primary)' }}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--surface-subtle)' }}
+                        className="flex items-center gap-3 px-4 py-2.5 text-[13px] transition-colors"
+                        style={{ color: H.text }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = H.hover }}
                         onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
                         onClick={() => setShowUserMenu(false)}>
-                        {icon} {label}
+                        <span style={{ color: H.muted }}>{icon}</span> {label}
                       </Link>
                     ))}
 
-                    <div className="border-t mt-2 pt-2" style={{ borderColor: 'var(--glass-border)' }}>
+                    <div className="mt-1 pt-1" style={{ borderTop: `1px solid ${H.border}` }}>
                       <button onClick={handleLogout}
-                        className="flex items-center gap-3 px-4 py-2 text-sm text-red-500 w-full transition-colors"
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.06)' }}
+                        className="flex items-center gap-3 px-4 py-2.5 text-[13px] text-red-500 w-full transition-colors"
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#fef2f2' }}
                         onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
                         <LogOut className="w-4 h-4" /> Déconnexion
                       </button>
@@ -174,48 +168,40 @@ export const Header = () => {
     )
   }
 
-  // ── MODE PUBLIC — Header pleine largeur ───────────────────────────────────
+  // ── PUBLIC HEADER ──────────────────────────────────────────────────────────
   return (
-    <header className="sticky top-0 z-50 flex-shrink-0 border-b" style={headerStyle}>
+    <header className="sticky top-0 z-50 flex-shrink-0" style={headerStyle}>
       <div className="max-w-full px-4 sm:px-6">
-        <div className="flex items-center justify-between h-14">
+        <div className="flex items-center justify-between h-16">
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div
-              className="w-7 h-7 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0"
-              style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)' }}
-            >
-              <Home className="w-3.5 h-3.5 text-white" />
+          <Link to="/" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: '#007AFF' }}>
+              <Home className="w-4 h-4 text-white" />
             </div>
-            <span className="text-base font-bold hidden sm:block font-heading text-gradient-brand">
-              ImmoParticuliers
+            <span className="text-base font-extrabold" style={{ color: H.text, fontFamily: '"Plus Jakarta Sans", Inter, sans-serif' }}>
+              FOYER
             </span>
           </Link>
 
           {/* Navigation publique desktop */}
           {!isAuthenticated && (
-            <nav className="hidden md:flex items-center gap-5">
-              <Link to="/" className="text-sm font-medium transition-colors" style={{ color: 'var(--text-secondary)' }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)' }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)' }}>
-                Accueil
-              </Link>
-              <Link to="/search" className="text-sm font-medium transition-colors" style={{ color: 'var(--text-secondary)' }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)' }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)' }}>
-                Les biens
-              </Link>
-              <Link to="/calculateur" className="text-sm font-medium flex items-center gap-1 transition-colors" style={{ color: 'var(--text-secondary)' }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)' }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)' }}>
-                <TrendingUp className="w-3.5 h-3.5" /> Calculateur
-              </Link>
-              <Link to="/pricing" className="text-sm font-medium flex items-center gap-1 transition-colors" style={{ color: 'var(--text-secondary)' }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)' }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)' }}>
-                <Tag className="w-3.5 h-3.5" /> Tarifs
-              </Link>
+            <nav className="hidden md:flex items-center gap-6">
+              {[
+                { to: '/', label: 'Accueil' },
+                { to: '/search', label: 'Les biens' },
+                { to: '/calculateur', label: 'Calculateur', icon: <TrendingUp className="w-3.5 h-3.5" /> },
+                { to: '/pricing', label: 'Tarifs', icon: <Tag className="w-3.5 h-3.5" /> },
+              ].map(({ to, label, icon }) => (
+                <Link key={to} to={to}
+                  className="text-sm font-medium flex items-center gap-1.5 transition-colors"
+                  style={{ color: H.secondary }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#007AFF' }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = H.secondary }}>
+                  {icon}{label}
+                </Link>
+              ))}
             </nav>
           )}
 
@@ -223,39 +209,37 @@ export const Header = () => {
           {isAuthenticated && user?.role === 'SUPER_ADMIN' && (
             <Link to="/super-admin"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold"
-              style={{ background: 'rgba(0,180,216,0.12)', color: '#00b4d8', border: '1px solid rgba(0,180,216,0.3)' }}>
+              style={{ background: 'rgba(0,180,216,0.10)', color: '#00b4d8', border: '1px solid rgba(0,180,216,0.25)' }}>
               <Terminal className="w-3.5 h-3.5" /> Cerveau Central
             </Link>
           )}
 
           {/* Droite */}
-          <div className="flex items-center gap-1.5">
-
-            {/* Mode sombre */}
-            <button onClick={toggleDark}
-              className="p-2 rounded-xl transition-all hover:scale-110"
-              style={{ color: 'var(--text-tertiary)' }}
-              aria-label="Basculer le mode sombre">
-              {isDark ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
-            </button>
-
+          <div className="flex items-center gap-2">
             {isAuthenticated ? (
               <>
                 <Link to="/notifications"
-                  className="relative p-2 rounded-xl transition-colors"
-                  style={{ color: 'var(--text-tertiary)' }}>
+                  className="p-2 rounded-xl transition-colors"
+                  style={{ color: H.muted }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = H.hover }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
                   <Bell className="w-[18px] h-[18px]" />
                 </Link>
 
                 <div className="relative">
                   <button onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-2 pl-1.5 pr-2.5 py-1.5 rounded-xl transition-colors"
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--surface-subtle)' }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3b82f6, #7c3aed)' }}>
-                      <User className="w-3.5 h-3.5 text-white" />
+                    className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl transition-all"
+                    style={{
+                      border: `1px solid ${H.border}`,
+                      background: showUserMenu ? H.hover : 'transparent',
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = H.hover }}
+                    onMouseLeave={(e) => { if (!showUserMenu) (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold text-white"
+                      style={{ background: threadColor }}>
+                      {initials}
                     </div>
-                    <span className="text-sm font-medium hidden sm:block" style={{ color: 'var(--text-primary)' }}>
+                    <span className="text-sm font-medium hidden sm:block" style={{ color: H.text }}>
                       {user?.firstName}
                     </span>
                   </button>
@@ -263,44 +247,40 @@ export const Header = () => {
                   {showUserMenu && (
                     <>
                       <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
-                      <div className="absolute right-0 mt-2 w-56 rounded-2xl shadow-xl border py-2 z-20"
+                      <div className="absolute right-0 mt-2 w-56 rounded-2xl py-2 z-20"
                         style={{
-                          background: 'rgba(255,255,255,0.14)',
-                          backdropFilter: 'blur(24px) saturate(200%)',
-                          WebkitBackdropFilter: 'blur(24px) saturate(200%)',
-                          borderColor: 'var(--glass-border)',
-                          boxShadow: '0 16px 48px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.70)',
+                          background: H.bg,
+                          border: `1px solid ${H.border}`,
+                          boxShadow: '0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06)',
                         }}>
-                        <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--glass-border)' }}>
-                          <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                        <div className="px-4 py-3" style={{ borderBottom: `1px solid ${H.border}` }}>
+                          <p className="text-sm font-semibold" style={{ color: H.text }}>
                             {user?.firstName} {user?.lastName}
                           </p>
-                          <p className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>{user?.email}</p>
-                          <span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium"
-                            style={{ background: 'rgba(124,58,237,0.10)', color: '#7c3aed' }}>
+                          <p className="text-xs truncate mt-0.5" style={{ color: H.secondary }}>{user?.email}</p>
+                          <span className="inline-block mt-1.5 text-[11px] px-2 py-0.5 rounded-full font-semibold"
+                            style={{ background: `${threadColor}14`, color: threadColor }}>
                             {user?.role === 'OWNER' ? 'Propriétaire' : user?.role === 'TENANT' ? 'Locataire' : user?.role}
                           </span>
                         </div>
-
                         {[
                           { to: getDashboardLink(), icon: <LayoutDashboard className="w-4 h-4" />, label: 'Tableau de bord' },
                           { to: '/profile', icon: <Settings className="w-4 h-4" />, label: 'Mon profil' },
                           { to: '/pricing', icon: <CreditCard className="w-4 h-4" />, label: 'Mon abonnement' },
                         ].map(({ to, icon, label }) => (
                           <Link key={to} to={to}
-                            className="flex items-center gap-3 px-4 py-2 text-sm transition-colors"
-                            style={{ color: 'var(--text-primary)' }}
-                            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--surface-subtle)' }}
+                            className="flex items-center gap-3 px-4 py-2.5 text-[13px] transition-colors"
+                            style={{ color: H.text }}
+                            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = H.hover }}
                             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
                             onClick={() => setShowUserMenu(false)}>
-                            {icon} {label}
+                            <span style={{ color: H.muted }}>{icon}</span> {label}
                           </Link>
                         ))}
-
-                        <div className="border-t mt-2 pt-2" style={{ borderColor: 'var(--glass-border)' }}>
+                        <div className="mt-1 pt-1" style={{ borderTop: `1px solid ${H.border}` }}>
                           <button onClick={handleLogout}
-                            className="flex items-center gap-3 px-4 py-2 text-sm text-red-500 w-full transition-colors"
-                            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.06)' }}
+                            className="flex items-center gap-3 px-4 py-2.5 text-[13px] text-red-500 w-full transition-colors"
+                            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#fef2f2' }}
                             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
                             <LogOut className="w-4 h-4" /> Déconnexion
                           </button>
@@ -312,17 +292,31 @@ export const Header = () => {
               </>
             ) : (
               <>
-                {/* Mobile burger public */}
+                {/* Mobile burger */}
                 <button onClick={() => setShowMobilePublicMenu(!showMobilePublicMenu)}
                   className="md:hidden p-2 rounded-xl transition-colors"
-                  style={{ color: 'var(--text-secondary)' }}>
+                  style={{ color: H.secondary }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = H.hover }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
                   {showMobilePublicMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                 </button>
 
                 {/* CTA desktop */}
                 <div className="hidden md:flex items-center gap-2">
-                  <Link to="/login" className="btn-neon-violet text-sm px-4 py-2">Connexion</Link>
-                  <Link to="/register" className="btn btn-primary text-sm py-2 px-4">Inscription</Link>
+                  <Link to="/login"
+                    className="px-4 py-2 text-sm font-semibold rounded-xl transition-all"
+                    style={{ color: H.text, border: `1px solid ${H.border}` }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = H.hover }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
+                    Connexion
+                  </Link>
+                  <Link to="/register"
+                    className="px-4 py-2 text-sm font-semibold rounded-xl text-white transition-all"
+                    style={{ background: '#007AFF', boxShadow: '0 2px 8px rgba(0,122,255,0.28)' }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#0066d6' }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '#007AFF' }}>
+                    Inscription
+                  </Link>
                 </div>
               </>
             )}
@@ -331,7 +325,7 @@ export const Header = () => {
 
         {/* Menu mobile public */}
         {!isAuthenticated && showMobilePublicMenu && (
-          <div className="md:hidden border-t py-3 space-y-1" style={{ borderColor: 'var(--glass-border)' }}>
+          <div className="md:hidden py-3 space-y-1" style={{ borderTop: `1px solid ${H.border}` }}>
             {[
               { to: '/', label: 'Accueil' },
               { to: '/search', label: 'Les biens' },
@@ -340,16 +334,24 @@ export const Header = () => {
             ].map(({ to, label }) => (
               <Link key={to} to={to}
                 className="block px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
-                style={{ color: 'var(--text-primary)' }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--surface-subtle)' }}
+                style={{ color: H.text }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = H.hover }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
                 onClick={() => setShowMobilePublicMenu(false)}>
                 {label}
               </Link>
             ))}
             <div className="flex flex-col gap-2 pt-2 px-4">
-              <Link to="/login" className="btn-neon-violet w-full text-center justify-center" onClick={() => setShowMobilePublicMenu(false)}>Connexion</Link>
-              <Link to="/register" className="btn btn-primary w-full text-center" onClick={() => setShowMobilePublicMenu(false)}>Inscription</Link>
+              <Link to="/login"
+                className="btn-secondary w-full text-center justify-center py-2 text-sm"
+                onClick={() => setShowMobilePublicMenu(false)}>
+                Connexion
+              </Link>
+              <Link to="/register"
+                className="btn-primary w-full text-center py-2 text-sm"
+                onClick={() => setShowMobilePublicMenu(false)}>
+                Inscription
+              </Link>
             </div>
           </div>
         )}

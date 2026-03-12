@@ -9,55 +9,6 @@ interface LayoutProps {
   showHeader?: boolean
 }
 
-/**
- * Blobs de couleur floutés — la "matière" que le glassmorphism floute.
- * position: fixed, z-index: -10 → toujours derrière le contenu, même en scroll.
- */
-function GlassBackground() {
-  return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10" aria-hidden="true">
-      {/* Violet — top-left */}
-      <div
-        className="absolute -top-48 -left-48 w-[700px] h-[700px] rounded-full opacity-[0.50] dark:opacity-[0.55]"
-        style={{
-          background: 'radial-gradient(circle, #7c3aed 0%, transparent 65%)',
-          filter: 'blur(90px)',
-          animation: 'blobPulse 12s ease-in-out infinite',
-        }}
-      />
-      {/* Blue — center-right */}
-      <div
-        className="absolute top-1/3 -right-40 w-[600px] h-[600px] rounded-full opacity-[0.40] dark:opacity-[0.44]"
-        style={{
-          background: 'radial-gradient(circle, #3b82f6 0%, transparent 65%)',
-          filter: 'blur(90px)',
-          animation: 'blobPulse 16s ease-in-out infinite reverse',
-        }}
-      />
-      {/* Cyan — bottom-left */}
-      <div
-        className="absolute -bottom-40 left-1/4 w-[550px] h-[550px] rounded-full opacity-[0.36] dark:opacity-[0.40]"
-        style={{
-          background: 'radial-gradient(circle, #06b6d4 0%, transparent 65%)',
-          filter: 'blur(90px)',
-          animation: 'blobPulse 20s ease-in-out infinite',
-          animationDelay: '-6s',
-        }}
-      />
-      {/* Rose — bottom-right */}
-      <div
-        className="absolute -bottom-32 right-1/4 w-[480px] h-[480px] rounded-full opacity-[0.30] dark:opacity-[0.34]"
-        style={{
-          background: 'radial-gradient(circle, #ec4899 0%, transparent 65%)',
-          filter: 'blur(90px)',
-          animation: 'blobPulse 18s ease-in-out infinite reverse',
-          animationDelay: '-3s',
-        }}
-      />
-    </div>
-  )
-}
-
 export const Layout = ({ children, showHeader = true }: LayoutProps) => {
   const { isAuthenticated, user } = useAuth()
 
@@ -65,32 +16,36 @@ export const Layout = ({ children, showHeader = true }: LayoutProps) => {
     isAuthenticated &&
     (user?.role === 'OWNER' || user?.role === 'TENANT')
 
+  const dataRole = user?.role === 'OWNER' ? 'owner' : user?.role === 'TENANT' ? 'tenant' : undefined
+
   // ── Layout sans sidebar (pages publiques, admin) ──────────────────────────
   if (!hasSidebar) {
     return (
-      <div className="min-h-screen relative">
-        <GlassBackground />
+      <div className="min-h-screen" style={{ background: '#f5f5f7' }}>
         {showHeader && <Header />}
-        <main className="relative">{children}</main>
+        <main id="main-content">{children}</main>
       </div>
     )
   }
 
-  // ── Layout SaaS — Sidebar fixe à gauche (hauteur totale) ─────────────────
-  // Structure : [Sidebar] | [Topbar + Main scrollable]
-  // La sidebar va du haut en bas de l'écran, sans être coupée par le header.
+  // ── Layout SaaS — Sidebar fixe + colonne principale ────────────────────────
   return (
-    <div className="h-screen flex overflow-hidden relative">
-      <GlassBackground />
+    <div className="h-screen flex overflow-hidden" data-role={dataRole} style={{ background: '#f5f5f7' }}>
+      {/* Skip to content */}
+      <a href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-lg focus:text-white focus:font-semibold focus:text-sm"
+        style={{ background: 'var(--thread, #007AFF)' }}>
+        Aller au contenu principal
+      </a>
 
-      {/* Sidebar — pleine hauteur, à gauche */}
+      {/* Sidebar — pleine hauteur */}
       {user?.role === 'OWNER' && <OwnerSidebar />}
       {user?.role === 'TENANT' && <TenantSidebar />}
 
-      {/* Colonne droite : Topbar + Contenu scrollable */}
+      {/* Colonne droite */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {showHeader && <Header />}
-        <main className="flex-1 overflow-y-auto relative">
+        <main id="main-content" className="flex-1 overflow-y-auto">
           {children}
         </main>
       </div>

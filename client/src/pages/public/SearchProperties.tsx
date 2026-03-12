@@ -111,253 +111,265 @@ export default function SearchProperties() {
 
   return (
     <Layout>
-      <div className="bg-slate-50">
+      <div style={{ background: '#f5f5f7' }} className="min-h-screen">
         {/* Search Bar Section */}
-        <div className="bg-white border-b">
+        <div className="bg-white border-b border-[#d2d2d7]" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
           <div className="container mx-auto px-4 py-4">
             <form onSubmit={handleSearch} className="flex gap-3">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Rechercher par ville, adresse, code postal..."
-                className="input pl-10 pr-10"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery('')
-                    setSearchParams({})
-                  }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              )}
-            </div>
-            <button type="submit" className="btn btn-primary">
-              Rechercher
-            </button>
-          </form>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex gap-6">
-          {/* Filters Sidebar */}
-          <div
-            className={`${
-              showFilters ? 'w-80' : 'w-0'
-            } transition-all duration-300 overflow-hidden flex-shrink-0`}
-          >
-            <SearchFilters
-              filters={filters}
-              onFiltersChange={handleFiltersChange}
-              onReset={handleResetFilters}
-            />
-          </div>
-
-          {/* Main Content */}
-          <div className="flex-1 min-w-0">
-            {/* Toolbar */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={`btn ${showFilters ? 'btn-primary' : 'btn-secondary'}`}
-                >
-                  <SlidersHorizontal className="w-4 h-4 mr-2" />
-                  Filtres
-                  {hasActiveFilters && (
-                    <span className="ml-2 w-2 h-2 bg-white rounded-full"></span>
-                  )}
-                </button>
-                <p className="text-slate-600">
-                  <span className="font-semibold text-slate-900">{propertiesTotal}</span>{' '}
-                  {propertiesTotal > 1 ? 'biens trouvés' : 'bien trouvé'}
-                </p>
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Rechercher par ville, adresse, code postal..."
+                  className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-[#d2d2d7] bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#007AFF]/30 focus:border-[#007AFF] transition-colors"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery('')
+                      setSearchParams({})
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                )}
               </div>
+              <button
+                type="submit"
+                className="px-5 py-2.5 rounded-xl bg-[#007AFF] text-white font-semibold text-sm hover:bg-[#0066d6] transition-colors"
+              >
+                Rechercher
+              </button>
+            </form>
+          </div>
+        </div>
 
-              <div className="flex items-center gap-3">
-                {/* Sort */}
-                <select
-                  value={`${sortBy}-${sortOrder}`}
-                  onChange={(e) => {
-                    const [newSortBy, newSortOrder] = e.target.value.split('-')
-                    setSortBy(newSortBy as any)
-                    setSortOrder(newSortOrder as any)
-                    setCurrentPage(1)
-                  }}
-                  className="input text-sm"
-                >
-                  <option value="createdAt-desc">Plus récent</option>
-                  <option value="createdAt-asc">Plus ancien</option>
-                  <option value="price-asc">Prix croissant</option>
-                  <option value="price-desc">Prix décroissant</option>
-                  <option value="views-desc">Plus vus</option>
-                </select>
+        {/* Content */}
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex gap-6">
+            {/* Filters Sidebar */}
+            <div
+              className={`${
+                showFilters ? 'w-80' : 'w-0'
+              } transition-all duration-300 overflow-hidden flex-shrink-0`}
+            >
+              <SearchFilters
+                filters={filters}
+                onFiltersChange={handleFiltersChange}
+                onReset={handleResetFilters}
+              />
+            </div>
 
-                {/* View Mode */}
-                <div className="flex border rounded-xl overflow-hidden">
+            {/* Main Content */}
+            <div className="flex-1 min-w-0">
+              {/* Toolbar */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
                   <button
-                    onClick={() => setViewMode('grid')}
-                    className={`p-2 ${
-                      viewMode === 'grid'
-                        ? 'bg-primary-600 text-white'
-                        : 'bg-white text-slate-600 hover:bg-slate-50'
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                      showFilters
+                        ? 'bg-[#007AFF] text-white hover:bg-[#0066d6]'
+                        : 'bg-white text-slate-700 border border-[#d2d2d7] hover:bg-slate-50'
                     }`}
-                    title="Vue grille"
                   >
-                    <Grid3x3 className="w-5 h-5" />
+                    <SlidersHorizontal className="w-4 h-4" />
+                    Filtres
+                    {hasActiveFilters && (
+                      <span className="ml-1 w-2 h-2 bg-white rounded-full opacity-90"></span>
+                    )}
                   </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`p-2 ${
-                      viewMode === 'list'
-                        ? 'bg-primary-600 text-white'
-                        : 'bg-white text-slate-600 hover:bg-slate-50'
-                    }`}
-                    title="Vue liste"
+                  <p className="text-slate-600 text-sm">
+                    <span className="font-semibold text-slate-900">{propertiesTotal}</span>{' '}
+                    {propertiesTotal > 1 ? 'biens trouvés' : 'bien trouvé'}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  {/* Sort */}
+                  <select
+                    value={`${sortBy}-${sortOrder}`}
+                    onChange={(e) => {
+                      const [newSortBy, newSortOrder] = e.target.value.split('-')
+                      setSortBy(newSortBy as any)
+                      setSortOrder(newSortOrder as any)
+                      setCurrentPage(1)
+                    }}
+                    className="px-3 py-2 rounded-xl border border-[#d2d2d7] bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#007AFF]/30 focus:border-[#007AFF]"
                   >
-                    <List className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('map')}
-                    className={`p-2 ${
-                      viewMode === 'map'
-                        ? 'bg-primary-600 text-white'
-                        : 'bg-white text-slate-600 hover:bg-slate-50'
-                    }`}
-                    title="Vue carte"
-                  >
-                    <MapIcon className="w-5 h-5" />
-                  </button>
+                    <option value="createdAt-desc">Plus récent</option>
+                    <option value="createdAt-asc">Plus ancien</option>
+                    <option value="price-asc">Prix croissant</option>
+                    <option value="price-desc">Prix décroissant</option>
+                    <option value="views-desc">Plus vus</option>
+                  </select>
+
+                  {/* View Mode */}
+                  <div className="flex border border-[#d2d2d7] rounded-xl overflow-hidden bg-white">
+                    <button
+                      onClick={() => setViewMode('grid')}
+                      className={`p-2 transition-colors ${
+                        viewMode === 'grid'
+                          ? 'bg-[#007AFF] text-white'
+                          : 'text-slate-500 hover:bg-slate-50'
+                      }`}
+                      title="Vue grille"
+                    >
+                      <Grid3x3 className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode('list')}
+                      className={`p-2 transition-colors border-l border-[#d2d2d7] ${
+                        viewMode === 'list'
+                          ? 'bg-[#007AFF] text-white'
+                          : 'text-slate-500 hover:bg-slate-50'
+                      }`}
+                      title="Vue liste"
+                    >
+                      <List className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode('map')}
+                      className={`p-2 transition-colors border-l border-[#d2d2d7] ${
+                        viewMode === 'map'
+                          ? 'bg-[#007AFF] text-white'
+                          : 'text-slate-500 hover:bg-slate-50'
+                      }`}
+                      title="Vue carte"
+                    >
+                      <MapIcon className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Error */}
-            {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-800">{error}</p>
-              </div>
-            )}
+              {/* Error */}
+              {error && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
+              )}
 
-            {/* Loading */}
-            {isLoading && (
-              <div className="flex justify-center items-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-              </div>
-            )}
+              {/* Loading */}
+              {isLoading && (
+                <div className="flex justify-center items-center py-20">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#007AFF]"></div>
+                </div>
+              )}
 
-            {/* Empty State */}
-            {!isLoading && properties.length === 0 && (
-              <div className="text-center py-20">
-                <HomeIcon className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-                <h2 className="text-2xl font-semibold text-slate-900 mb-2">
-                  Aucun bien trouvé
-                </h2>
-                <p className="text-slate-600 mb-6">
-                  Essayez de modifier vos critères de recherche
-                </p>
-                {hasActiveFilters && (
-                  <button onClick={handleResetFilters} className="btn btn-primary">
-                    Réinitialiser les filtres
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* Properties Grid/List/Map */}
-            {!isLoading && properties.length > 0 && (
-              <>
-                {viewMode === 'map' ? (
-                  <div className="h-[calc(100vh-280px)] rounded-xl overflow-hidden border border-slate-200">
-                    <SearchMap
-                      properties={properties}
-                      selectedPropertyId={selectedPropertyId}
-                      onPropertySelect={(property) => setSelectedPropertyId(property?.id || null)}
-                    />
+              {/* Empty State */}
+              {!isLoading && properties.length === 0 && (
+                <div className="text-center py-20">
+                  <div className="w-16 h-16 bg-[#e8f0fe] rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <HomeIcon className="w-8 h-8 text-[#007AFF]" />
                   </div>
-                ) : (
-                  <>
-                    <div
-                      className={
-                        viewMode === 'grid'
-                          ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
-                          : 'space-y-4'
-                      }
+                  <h2 className="text-xl font-semibold text-slate-900 mb-2">
+                    Aucun bien trouvé
+                  </h2>
+                  <p className="text-slate-500 mb-6 text-sm">
+                    Essayez de modifier vos critères de recherche
+                  </p>
+                  {hasActiveFilters && (
+                    <button
+                      onClick={handleResetFilters}
+                      className="px-5 py-2.5 rounded-xl bg-[#007AFF] text-white font-semibold text-sm hover:bg-[#0066d6] transition-colors"
                     >
-                      {properties.map((property) => (
-                        <PropertyCard
-                          key={property.id}
-                          property={property}
-                          variant={viewMode === 'list' ? 'compact' : 'default'}
-                        />
-                      ))}
+                      Réinitialiser les filtres
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Properties Grid/List/Map */}
+              {!isLoading && properties.length > 0 && (
+                <>
+                  {viewMode === 'map' ? (
+                    <div className="h-[calc(100vh-280px)] rounded-2xl overflow-hidden border border-[#d2d2d7]">
+                      <SearchMap
+                        properties={properties}
+                        selectedPropertyId={selectedPropertyId}
+                        onPropertySelect={(property) => setSelectedPropertyId(property?.id || null)}
+                      />
                     </div>
-
-                    {/* Pagination */}
-                    {totalPages > 1 && (
-                      <div className="flex items-center justify-center gap-2 mt-8">
-                        <button
-                          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                          disabled={currentPage === 1}
-                          className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <ChevronLeft className="w-5 h-5" />
-                        </button>
-
-                        <div className="flex items-center gap-2">
-                          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                            let pageNum
-                            if (totalPages <= 5) {
-                              pageNum = i + 1
-                            } else if (currentPage <= 3) {
-                              pageNum = i + 1
-                            } else if (currentPage >= totalPages - 2) {
-                              pageNum = totalPages - 4 + i
-                            } else {
-                              pageNum = currentPage - 2 + i
-                            }
-
-                            return (
-                              <button
-                                key={pageNum}
-                                onClick={() => setCurrentPage(pageNum)}
-                                className={`w-10 h-10 rounded-xl font-medium ${
-                                  currentPage === pageNum
-                                    ? 'bg-primary-600 text-white'
-                                    : 'bg-white text-slate-700 hover:bg-slate-50 border'
-                                }`}
-                              >
-                                {pageNum}
-                              </button>
-                            )
-                          })}
-                        </div>
-
-                        <button
-                          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                          disabled={currentPage === totalPages}
-                          className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <ChevronRight className="w-5 h-5" />
-                        </button>
+                  ) : (
+                    <>
+                      <div
+                        className={
+                          viewMode === 'grid'
+                            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+                            : 'space-y-4'
+                        }
+                      >
+                        {properties.map((property) => (
+                          <PropertyCard
+                            key={property.id}
+                            property={property}
+                            variant={viewMode === 'list' ? 'compact' : 'default'}
+                          />
+                        ))}
                       </div>
-                    )}
-                  </>
-                )}
-              </>
-            )}
+
+                      {/* Pagination */}
+                      {totalPages > 1 && (
+                        <div className="flex items-center justify-center gap-2 mt-8">
+                          <button
+                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            className="p-2 rounded-xl border border-[#d2d2d7] bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                          >
+                            <ChevronLeft className="w-5 h-5" />
+                          </button>
+
+                          <div className="flex items-center gap-1.5">
+                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                              let pageNum
+                              if (totalPages <= 5) {
+                                pageNum = i + 1
+                              } else if (currentPage <= 3) {
+                                pageNum = i + 1
+                              } else if (currentPage >= totalPages - 2) {
+                                pageNum = totalPages - 4 + i
+                              } else {
+                                pageNum = currentPage - 2 + i
+                              }
+
+                              return (
+                                <button
+                                  key={pageNum}
+                                  onClick={() => setCurrentPage(pageNum)}
+                                  className={`w-10 h-10 rounded-xl text-sm font-semibold transition-colors ${
+                                    currentPage === pageNum
+                                      ? 'bg-[#007AFF] text-white'
+                                      : 'bg-white text-slate-600 border border-[#d2d2d7] hover:bg-slate-50'
+                                  }`}
+                                >
+                                  {pageNum}
+                                </button>
+                              )
+                            })}
+                          </div>
+
+                          <button
+                            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                            className="p-2 rounded-xl border border-[#d2d2d7] bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                          >
+                            <ChevronRight className="w-5 h-5" />
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
-      </div>
       </div>
     </Layout>
   )

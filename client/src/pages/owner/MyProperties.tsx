@@ -30,6 +30,13 @@ const TAB_STATUSES: Record<TabKey, PropertyStatus[] | null> = {
   'hors-marche': ['DRAFT', 'RESERVED'],
 }
 
+const cardStyle: React.CSSProperties = {
+  background: '#ffffff',
+  border: '1px solid #d2d2d7',
+  borderRadius: 16,
+  boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)',
+}
+
 export default function MyProperties() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -82,15 +89,13 @@ export default function MyProperties() {
     await changePropertyStatus(statusModalProperty.id, status)
   }
 
-  // Status config
-  const statusConfig: Record<string, { label: string; bg: string; text: string }> = {
-    AVAILABLE: { label: 'Disponible',    bg: 'bg-success-100', text: 'text-success-700' },
-    OCCUPIED:  { label: 'En location',   bg: 'bg-primary-100',  text: 'text-primary-700' },
-    DRAFT:     { label: 'Hors marche',   bg: 'bg-slate-100',  text: 'text-slate-600' },
-    RESERVED:  { label: 'Reserve',       bg: 'bg-warning-100',text: 'text-warning-700' },
+  const statusConfig: Record<string, { label: string; bg: string; color: string }> = {
+    AVAILABLE: { label: 'Disponible',   bg: '#f0fdf4', color: '#15803d' },
+    OCCUPIED:  { label: 'En location',  bg: '#eff6ff', color: '#1d4ed8' },
+    DRAFT:     { label: 'Hors marché',  bg: '#f5f5f7', color: '#64748b' },
+    RESERVED:  { label: 'Réservé',      bg: '#fffbeb', color: '#b45309' },
   }
 
-  // Counts per tab
   const counts: Record<TabKey, number> = {
     'tous':        myProperties.length,
     'disponibles': myProperties.filter(p => p.status === 'AVAILABLE').length,
@@ -102,21 +107,25 @@ export default function MyProperties() {
     ? myProperties.filter(p => (TAB_STATUSES[activeTab] as PropertyStatus[]).includes(p.status))
     : myProperties
 
-  const tabs: { key: TabKey; label: string; color: string; activeColor: string }[] = [
-    { key: 'tous',        label: 'Tous',         color: 'text-slate-700',   activeColor: 'bg-slate-600' },
-    { key: 'disponibles', label: 'Disponibles',  color: 'text-success-600',  activeColor: 'bg-success-600' },
-    { key: 'en-location', label: 'En location',  color: 'text-primary-600',   activeColor: 'bg-primary-600' },
-    { key: 'hors-marche', label: 'Hors marche',  color: 'text-slate-500',   activeColor: 'bg-slate-500' },
+  const tabs: { key: TabKey; label: string }[] = [
+    { key: 'tous',        label: 'Tous' },
+    { key: 'disponibles', label: 'Disponibles' },
+    { key: 'en-location', label: 'En location' },
+    { key: 'hors-marche', label: 'Hors marché' },
   ]
 
   const PropertyCard = ({ property }: { property: Property }) => {
     const cfg = statusConfig[property.status] || statusConfig['DRAFT']
     const mainImage = property.images[0] || '/placeholder-property.jpg'
     return (
-      <div className="bg-white rounded-2xl border overflow-hidden hover:shadow-lg transition-shadow">
+      <div className="rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-0.5"
+        style={{
+          ...cardStyle,
+          boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)',
+        }}>
 
         {/* Image */}
-        <div className="relative h-44 bg-slate-100">
+        <div className="relative h-44" style={{ background: '#f0f0f2' }}>
           <img
             src={mainImage}
             alt={property.title}
@@ -124,12 +133,14 @@ export default function MyProperties() {
             onError={(e) => { e.currentTarget.src = '/placeholder-property.jpg' }}
           />
           {/* Price badge */}
-          <div className="absolute bottom-3 left-3 bg-white bg-opacity-95 backdrop-blur-sm px-2.5 py-1 rounded-xl shadow text-sm font-bold text-slate-900">
-            {property.price}€<span className="font-normal text-slate-500 text-xs">/mois</span>
+          <div className="absolute bottom-3 left-3 bg-white px-2.5 py-1 rounded-xl shadow text-sm font-bold"
+            style={{ color: '#1d1d1f' }}>
+            {property.price}€<span className="font-normal text-xs" style={{ color: '#86868b' }}>/mois</span>
           </div>
           {/* Status badge */}
           <div className="absolute top-3 right-3">
-            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${cfg.bg} ${cfg.text}`}>
+            <span className="px-2.5 py-1 rounded-full text-xs font-semibold"
+              style={{ background: cfg.bg, color: cfg.color }}>
               {cfg.label}
             </span>
           </div>
@@ -137,21 +148,21 @@ export default function MyProperties() {
 
         {/* Content */}
         <div className="p-4">
-          <h3 className="font-semibold text-slate-900 mb-1 line-clamp-1">{property.title}</h3>
-          <div className="flex items-center text-sm text-slate-500 mb-3">
+          <h3 className="font-semibold mb-1 line-clamp-1" style={{ color: '#1d1d1f' }}>{property.title}</h3>
+          <div className="flex items-center text-sm mb-3" style={{ color: '#86868b' }}>
             <MapPin className="w-3.5 h-3.5 mr-1 shrink-0" />
             <span className="line-clamp-1">{property.city}, {property.postalCode}</span>
           </div>
 
           {/* Characteristics */}
-          <div className="flex items-center gap-3 text-sm text-slate-500 mb-3 pb-3 border-b border-slate-100">
+          <div className="flex items-center gap-3 text-sm mb-3 pb-3" style={{ color: '#86868b', borderBottom: '1px solid #f0f0f2' }}>
             <span className="flex items-center gap-1"><Bed className="w-3.5 h-3.5" />{property.bedrooms} ch.</span>
             <span className="flex items-center gap-1"><Bath className="w-3.5 h-3.5" />{property.bathrooms} sdb</span>
             <span className="flex items-center gap-1"><Square className="w-3.5 h-3.5" />{property.surface}m²</span>
           </div>
 
           {/* Stats */}
-          <div className="flex items-center gap-3 text-xs text-slate-400 mb-4">
+          <div className="flex items-center gap-3 text-xs mb-4" style={{ color: '#86868b' }}>
             <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" />{property.views} vues</span>
             <span className="flex items-center gap-1"><MessageSquare className="w-3.5 h-3.5" />{property.contactCount} contacts</span>
           </div>
@@ -160,16 +171,18 @@ export default function MyProperties() {
           <div className="flex gap-2 mb-2">
             <button
               onClick={() => navigate(`/properties/${property.id}`)}
-              className="btn btn-secondary flex-1 text-sm py-2"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-medium transition-colors hover:bg-slate-50"
+              style={{ border: '1px solid #d2d2d7', color: '#515154' }}
             >
-              <Eye className="w-3.5 h-3.5 mr-1.5" />
+              <Eye className="w-3.5 h-3.5" />
               Voir
             </button>
             <button
               onClick={() => navigate(`/properties/${property.id}/edit`)}
-              className="btn btn-primary flex-1 text-sm py-2"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:-translate-y-px"
+              style={{ background: '#007AFF' }}
             >
-              <Edit className="w-3.5 h-3.5 mr-1.5" />
+              <Edit className="w-3.5 h-3.5" />
               Modifier
             </button>
           </div>
@@ -178,15 +191,17 @@ export default function MyProperties() {
           <div className="flex gap-2">
             <button
               onClick={() => setStatusModalProperty(property)}
-              className="btn btn-secondary flex-1 text-xs py-1.5"
+              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-xs font-medium transition-colors hover:bg-slate-50"
+              style={{ border: '1px solid #d2d2d7', color: '#515154' }}
             >
-              <RefreshCw className="w-3.5 h-3.5 mr-1" />
+              <RefreshCw className="w-3 h-3" />
               Changer le statut
             </button>
             <button
               onClick={() => handleDelete(property.id, property.title)}
               disabled={deletingId === property.id}
-              className="p-1.5 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+              className="p-1.5 rounded-xl transition-colors hover:bg-red-50 disabled:opacity-50"
+              style={{ border: '1px solid #fecaca', color: '#ef4444' }}
               title="Supprimer"
             >
               <Trash2 className="w-4 h-4" />
@@ -199,35 +214,39 @@ export default function MyProperties() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen" style={{ background: '#f5f5f7' }}>
 
         {/* Header */}
-        <div className="bg-white border-b">
+        <div style={{ background: '#ffffff', borderBottom: '1px solid #d2d2d7' }}>
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-start justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                  <Home className="w-7 h-7 text-primary-600" />
-                  Mes Proprietes
+                <h1 className="text-2xl font-extrabold flex items-center gap-2.5" style={{ color: '#1d1d1f' }}>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: '#e8f0fe' }}>
+                    <Home className="w-5 h-5" style={{ color: '#007AFF' }} />
+                  </div>
+                  Mes Propriétés
                 </h1>
-                <div className="flex items-center gap-4 mt-2 text-sm text-slate-500">
-                  <span><strong className="text-slate-900">{myPropertiesTotal}</strong> bien{myPropertiesTotal > 1 ? 's' : ''} au total</span>
+                <div className="flex items-center gap-4 mt-2 text-sm" style={{ color: '#86868b' }}>
+                  <span><strong style={{ color: '#1d1d1f' }}>{myPropertiesTotal}</strong> bien{myPropertiesTotal > 1 ? 's' : ''} au total</span>
                   {counts['en-location'] > 0 && (
                     <>
-                      <span className="text-slate-300">|</span>
-                      <span><strong className="text-primary-600">{counts['en-location']}</strong> en location</span>
+                      <span style={{ color: '#d2d2d7' }}>|</span>
+                      <span><strong style={{ color: '#1d4ed8' }}>{counts['en-location']}</strong> en location</span>
                     </>
                   )}
                   {counts['disponibles'] > 0 && (
                     <>
-                      <span className="text-slate-300">|</span>
-                      <span><strong className="text-success-600">{counts['disponibles']}</strong> disponible{counts['disponibles'] > 1 ? 's' : ''}</span>
+                      <span style={{ color: '#d2d2d7' }}>|</span>
+                      <span><strong style={{ color: '#15803d' }}>{counts['disponibles']}</strong> disponible{counts['disponibles'] > 1 ? 's' : ''}</span>
                     </>
                   )}
                 </div>
               </div>
-              <Link to="/properties/new" className="btn btn-primary">
-                <Plus className="w-5 h-5 mr-2" />
+              <Link to="/properties/new"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:-translate-y-px"
+                style={{ background: '#007AFF', boxShadow: '0 4px 14px rgba(0,122,255,0.25)' }}>
+                <Plus className="w-4 h-4" />
                 Ajouter un bien
               </Link>
             </div>
@@ -236,26 +255,26 @@ export default function MyProperties() {
 
         {/* Smart Tabs */}
         {myProperties.length > 0 && (
-          <div className="bg-white border-b">
+          <div style={{ background: '#ffffff', borderBottom: '1px solid #d2d2d7' }}>
             <div className="container mx-auto px-4">
               <div className="flex gap-1">
                 {tabs.map((tab) => (
                   <button
                     key={tab.key}
                     onClick={() => setActiveTab(tab.key)}
-                    className={`flex items-center gap-2 px-5 py-4 text-sm font-medium transition-colors border-b-2 ${
-                      activeTab === tab.key
-                        ? `${tab.color} border-current`
-                        : 'text-slate-500 border-transparent hover:text-slate-700'
-                    }`}
+                    className="flex items-center gap-2 px-5 py-4 text-sm font-medium transition-colors"
+                    style={{
+                      color: activeTab === tab.key ? '#007AFF' : '#86868b',
+                      borderBottom: activeTab === tab.key ? '2px solid #007AFF' : '2px solid transparent',
+                    }}
                   >
                     {tab.label}
                     {counts[tab.key] > 0 && (
-                      <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
-                        activeTab === tab.key
-                          ? `${tab.activeColor} text-white`
-                          : 'bg-slate-100 text-slate-600'
-                      }`}>
+                      <span className="text-xs font-bold px-1.5 py-0.5 rounded-full"
+                        style={{
+                          background: activeTab === tab.key ? '#007AFF' : '#f0f0f2',
+                          color: activeTab === tab.key ? '#ffffff' : '#64748b',
+                        }}>
                         {counts[tab.key]}
                       </span>
                     )}
@@ -271,11 +290,12 @@ export default function MyProperties() {
 
           {/* Error */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+            <div className="mb-6 p-4 rounded-xl flex items-start gap-3"
+              style={{ background: '#fef2f2', border: '1px solid #fecaca' }}>
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" style={{ color: '#dc2626' }} />
               <div>
-                <p className="text-sm text-red-800">{error}</p>
-                <button onClick={() => setError(null)} className="text-sm text-red-600 underline mt-1">Fermer</button>
+                <p className="text-sm" style={{ color: '#991b1b' }}>{error}</p>
+                <button onClick={() => setError(null)} className="text-sm underline mt-1" style={{ color: '#dc2626' }}>Fermer</button>
               </div>
             </div>
           )}
@@ -283,20 +303,23 @@ export default function MyProperties() {
           {/* Loading */}
           {isLoading && (
             <div className="flex justify-center py-20">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" />
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: '#007AFF' }} />
             </div>
           )}
 
           {/* Empty state — no properties at all */}
           {!isLoading && myProperties.length === 0 && (
             <div className="text-center py-20">
-              <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Home className="w-8 h-8 text-slate-400" />
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                style={{ background: '#e8f0fe' }}>
+                <Home className="w-8 h-8" style={{ color: '#007AFF' }} />
               </div>
-              <h2 className="text-xl font-semibold text-slate-700 mb-2">Aucune propriete</h2>
-              <p className="text-slate-400 mb-6">Commencez par ajouter votre premier bien immobilier.</p>
-              <Link to="/properties/new" className="btn btn-primary inline-flex">
-                <Plus className="w-5 h-5 mr-2" />
+              <h2 className="text-xl font-semibold mb-2" style={{ color: '#1d1d1f' }}>Aucune propriété</h2>
+              <p className="mb-6" style={{ color: '#86868b' }}>Commencez par ajouter votre premier bien immobilier.</p>
+              <Link to="/properties/new"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white"
+                style={{ background: '#007AFF' }}>
+                <Plus className="w-4 h-4" />
                 Ajouter un bien
               </Link>
             </div>
@@ -305,8 +328,8 @@ export default function MyProperties() {
           {/* Empty state — tab filter yields nothing */}
           {!isLoading && myProperties.length > 0 && filtered.length === 0 && (
             <div className="text-center py-16">
-              <p className="text-slate-400 text-sm">
-                Aucun bien dans cette categorie.
+              <p className="text-sm" style={{ color: '#86868b' }}>
+                Aucun bien dans cette catégorie.
               </p>
             </div>
           )}

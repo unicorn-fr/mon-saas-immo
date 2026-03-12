@@ -20,12 +20,11 @@ export default function Messages() {
 
   return (
     <Layout>
-      <div className="h-full overflow-hidden flex" style={{ backgroundColor: 'var(--surface-page)' }}>
+      <div className="h-full overflow-hidden flex" style={{ backgroundColor: '#f5f5f7' }}>
 
-        {/* ── Liste des conversations ────────────────────────── */}
+        {/* Conversation list */}
         <div
-          className={`w-full lg:w-[300px] flex-shrink-0 border-r flex flex-col ${isMobileView ? 'hidden lg:flex' : 'flex'}`}
-          style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}
+          className={`w-full lg:w-[300px] flex-shrink-0 border-r border-[#d2d2d7] flex flex-col bg-white ${isMobileView ? 'hidden lg:flex' : 'flex'}`}
         >
           <ConversationList
             selectedConversationId={selectedConversation?.id || null}
@@ -33,28 +32,24 @@ export default function Messages() {
           />
         </div>
 
-        {/* ── Fenêtre de chat ───────────────────────────────── */}
-        <div className={`flex-1 overflow-hidden ${!selectedConversation ? 'hidden lg:flex' : 'flex'}`}>
+        {/* Chat window */}
+        <div
+          className={`flex-1 overflow-hidden bg-[#f5f5f7] ${!selectedConversation ? 'hidden lg:flex' : 'flex'}`}
+        >
           {selectedConversation ? (
             <ChatWindow conversation={selectedConversation} onBack={handleBack} />
           ) : (
-            <div
-              className="flex flex-col items-center justify-center w-full h-full gap-5"
-              style={{ backgroundColor: 'var(--surface-page)' }}
-            >
-              {/* Icône centrale */}
-              <div
-                className="w-[72px] h-[72px] rounded-[22px] flex items-center justify-center shadow-xl"
-                style={{ background: 'linear-gradient(135deg, #7c3aed, #3b82f6)' }}
-              >
-                <MessageSquare className="w-9 h-9 text-white" strokeWidth={1.5} />
+            <div className="flex flex-col items-center justify-center w-full h-full gap-4">
+              {/* Central icon */}
+              <div className="w-16 h-16 bg-[#e8f0fe] rounded-2xl flex items-center justify-center shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_16px_rgba(0,0,0,0.05)]">
+                <MessageSquare className="w-8 h-8 text-[#007AFF]" strokeWidth={1.5} />
               </div>
 
               <div className="text-center">
-                <p className="text-[15px] font-semibold mb-1.5" style={{ color: 'var(--text-primary)' }}>
+                <p className="text-[15px] font-semibold text-[#1d1d1f] mb-1.5" style={{ fontFamily: "'Plus Jakarta Sans', Inter, system-ui" }}>
                   Vos messages
                 </p>
-                <p className="text-[13px] max-w-[210px] leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>
+                <p className="text-[13px] text-[#86868b] max-w-[210px] leading-relaxed">
                   Sélectionnez une conversation pour commencer à échanger.
                 </p>
               </div>

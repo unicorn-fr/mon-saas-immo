@@ -10,15 +10,15 @@ import { Layout } from '../components/layout/Layout'
 
 interface Inputs {
   acquisitionPrice: number
-  notaryFees: number          // % du prix
+  notaryFees: number
   monthlyRent: number
-  annualCharges: number       // copro + assurance + entretien
-  propertyTax: number         // taxe foncière
-  vacancyRate: number         // % taux de vacance
+  annualCharges: number
+  propertyTax: number
+  vacancyRate: number
   loanAmount: number
-  loanRate: number            // %
-  loanDuration: number        // années
-  taxRate: number             // TMI en %
+  loanRate: number
+  loanDuration: number
+  taxRate: number
 }
 
 interface Results {
@@ -39,19 +39,15 @@ function engine(inp: Inputs): Results {
   const annualRentGross = inp.monthlyRent * 12
   const annualRentEffective = annualRentGross * (1 - inp.vacancyRate / 100)
 
-  // Rentabilité brute (sur investissement total)
   const grossYield = (annualRentEffective / totalInvestment) * 100
 
-  // Revenu net avant impôt
   const annualNetBeforeTax = annualRentEffective - inp.annualCharges - inp.propertyTax
   const netYieldBeforeTax = (annualNetBeforeTax / totalInvestment) * 100
 
-  // Impôt sur revenus fonciers
   const tax = Math.max(0, annualNetBeforeTax * (inp.taxRate / 100))
   const annualNetAfterTax = annualNetBeforeTax - tax
   const netYieldAfterTax = (annualNetAfterTax / totalInvestment) * 100
 
-  // Mensualité crédit
   let monthlyPayment = 0
   if (inp.loanAmount > 0 && inp.loanRate > 0 && inp.loanDuration > 0) {
     const r = inp.loanRate / 100 / 12
@@ -59,16 +55,13 @@ function engine(inp: Inputs): Results {
     monthlyPayment = inp.loanAmount * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1)
   }
 
-  // Cash-flow mensuel
   const monthlyChargesShare = (inp.annualCharges + inp.propertyTax) / 12
   const monthlyCashflow = inp.monthlyRent * (1 - inp.vacancyRate / 100) - monthlyPayment - monthlyChargesShare
   const annualCashflow = monthlyCashflow * 12
 
-  // ROI sur 10 ans (capital + revenus nets cumulés)
   const equity = inp.acquisitionPrice - inp.loanAmount
   const roi10y = equity > 0 ? ((annualNetAfterTax * 10) / equity) * 100 : 0
 
-  // Point mort (années)
   const breakEvenYears = annualNetAfterTax > 0
     ? Math.ceil((totalInvestment - inp.loanAmount) / annualNetAfterTax)
     : Infinity
@@ -94,21 +87,21 @@ function fmt(n: number, decimals = 2) {
 }
 
 function yieldColor(pct: number) {
-  if (pct >= 6) return 'text-emerald-600'
-  if (pct >= 4) return 'text-amber-500'
-  return 'text-red-500'
+  if (pct >= 6) return '#059669'
+  if (pct >= 4) return '#d97706'
+  return '#dc2626'
 }
 
-function yieldBg(pct: number) {
-  if (pct >= 6) return 'bg-emerald-50 border-emerald-200'
-  if (pct >= 4) return 'bg-amber-50 border-amber-200'
-  return 'bg-red-50 border-red-200'
+function yieldBg(pct: number): React.CSSProperties {
+  if (pct >= 6) return { backgroundColor: '#ecfdf5', borderColor: '#a7f3d0' }
+  if (pct >= 4) return { backgroundColor: '#fffbeb', borderColor: '#fde68a' }
+  return { backgroundColor: '#fef2f2', borderColor: '#fecaca' }
 }
 
 function YieldIcon({ pct }: { pct: number }) {
-  if (pct >= 6) return <CheckCircle className="w-5 h-5 text-emerald-600" />
-  if (pct >= 4) return <AlertTriangle className="w-5 h-5 text-amber-500" />
-  return <XCircle className="w-5 h-5 text-red-500" />
+  if (pct >= 6) return <CheckCircle className="w-5 h-5" style={{ color: '#059669' }} />
+  if (pct >= 4) return <AlertTriangle className="w-5 h-5" style={{ color: '#d97706' }} />
+  return <XCircle className="w-5 h-5" style={{ color: '#dc2626' }} />
 }
 
 function CashflowIcon({ cf }: { cf: number }) {
@@ -128,10 +121,10 @@ function InputRow({
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center gap-1">
-        <label className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{label}</label>
+        <label className="text-sm font-medium text-[#1d1d1f]">{label}</label>
         {hint && (
           <span title={hint}>
-            <Info className="w-3.5 h-3.5 cursor-help" style={{ color: 'var(--text-tertiary)' }} />
+            <Info className="w-3.5 h-3.5 cursor-help text-[#86868b]" />
           </span>
         )}
       </div>
@@ -143,10 +136,9 @@ function InputRow({
           step={step}
           max={max}
           onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-          className="input pr-10 w-full"
+          className="w-full pr-10 px-3 py-2.5 rounded-xl border border-[#d2d2d7] text-[#1d1d1f] text-sm font-medium bg-white focus:outline-none focus:ring-2 focus:ring-[#007AFF]/30 focus:border-[#007AFF] transition-all"
         />
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium pointer-events-none"
-          style={{ color: 'var(--text-tertiary)' }}>
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium pointer-events-none text-[#86868b]">
           {suffix}
         </span>
       </div>
@@ -157,20 +149,22 @@ function InputRow({
 // ─── KPI Card ─────────────────────────────────────────────────────────────────
 
 function KpiCard({
-  label, value, sub, colorClass = '', bgClass = '', icon,
+  label, value, sub, color = '#1d1d1f', style: cardStyle, icon,
 }: {
-  label: string; value: string; sub?: string; colorClass?: string; bgClass?: string
+  label: string; value: string; sub?: string; color?: string; style?: React.CSSProperties
   icon?: React.ReactNode
 }) {
   return (
-    <div className={`rounded-2xl border p-4 flex flex-col gap-1 ${bgClass}`}
-      style={!bgClass ? { backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' } : undefined}>
+    <div
+      className="rounded-2xl border p-4 flex flex-col gap-1"
+      style={{ backgroundColor: '#ffffff', borderColor: '#d2d2d7', ...cardStyle }}
+    >
       <div className="flex items-center justify-between">
-        <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--text-tertiary)' }}>{label}</p>
+        <p className="text-xs font-medium uppercase tracking-wide text-[#86868b]">{label}</p>
         {icon}
       </div>
-      <p className={`text-2xl font-extrabold tracking-tight ${colorClass}`}>{value}</p>
-      {sub && <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{sub}</p>}
+      <p className="text-2xl font-extrabold tracking-tight" style={{ color }}>{value}</p>
+      {sub && <p className="text-xs text-[#86868b]">{sub}</p>}
     </div>
   )
 }
@@ -198,28 +192,35 @@ export default function Calculateur() {
 
   const res = useMemo(() => engine(inp), [inp])
 
-  const cashflowColor = res.monthlyCashflow > 0 ? 'text-emerald-600' : res.monthlyCashflow < 0 ? 'text-red-500' : 'text-slate-500'
+  const cashflowColor = res.monthlyCashflow > 0 ? '#059669' : res.monthlyCashflow < 0 ? '#dc2626' : '#86868b'
 
   return (
     <Layout>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div
+        className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10"
+        style={{ fontFamily: "'Plus Jakarta Sans', Inter, system-ui, sans-serif" }}
+      >
 
         {/* Header */}
         <div className="mb-8">
-          <Link to="/" className="inline-flex items-center gap-1.5 text-sm mb-4 hover:opacity-80 transition-opacity"
-            style={{ color: 'var(--text-tertiary)' }}>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 text-sm mb-4 hover:opacity-80 transition-opacity text-[#86868b]"
+          >
             <ArrowLeft className="w-4 h-4" /> Retour
           </Link>
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
-              style={{ background: 'linear-gradient(135deg, #059669 0%, #06b6d4 100%)' }}>
-              <Calculator className="w-6 h-6 text-white" />
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: '#e8f0fe' }}
+            >
+              <Calculator className="w-6 h-6 text-[#007AFF]" />
             </div>
             <div>
-              <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+              <h1 className="text-2xl font-extrabold tracking-tight text-[#1d1d1f]">
                 Calculateur de Rentabilité
               </h1>
-              <p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+              <p className="text-sm mt-0.5 text-[#515154]">
                 Évaluez la performance locative de n'importe quel bien en quelques secondes.
               </p>
             </div>
@@ -228,23 +229,27 @@ export default function Calculateur() {
 
         <div className="grid lg:grid-cols-5 gap-6">
 
-          {/* ── LEFT: Inputs ───────────────────────────────────────────── */}
+          {/* ── LEFT: Inputs ───────────────────────────────────────── */}
           <div className="lg:col-span-2 space-y-5">
 
             {/* Acquisition */}
-            <section className="rounded-2xl border p-5 space-y-4"
-              style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
-              <h2 className="font-semibold text-sm flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                <Home className="w-4 h-4 text-blue-500" /> Acquisition
+            <section
+              className="rounded-2xl border border-[#d2d2d7] p-5 space-y-4 bg-white"
+              style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+            >
+              <h2 className="font-semibold text-sm flex items-center gap-2 text-[#1d1d1f]">
+                <Home className="w-4 h-4 text-[#007AFF]" /> Acquisition
               </h2>
               <InputRow label="Prix d'achat" value={inp.acquisitionPrice} onChange={set('acquisitionPrice')} step={5000} />
               <InputRow label="Frais de notaire" value={inp.notaryFees} onChange={set('notaryFees')} suffix="%" step={0.1} min={0} max={15} hint="Environ 7-8% dans l'ancien, 2-3% dans le neuf." />
             </section>
 
             {/* Revenus */}
-            <section className="rounded-2xl border p-5 space-y-4"
-              style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
-              <h2 className="font-semibold text-sm flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+            <section
+              className="rounded-2xl border border-[#d2d2d7] p-5 space-y-4 bg-white"
+              style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+            >
+              <h2 className="font-semibold text-sm flex items-center gap-2 text-[#1d1d1f]">
                 <Euro className="w-4 h-4 text-emerald-500" /> Revenus locatifs
               </h2>
               <InputRow label="Loyer mensuel" value={inp.monthlyRent} onChange={set('monthlyRent')} step={50} hint="Loyer hors charges." />
@@ -252,9 +257,11 @@ export default function Calculateur() {
             </section>
 
             {/* Charges */}
-            <section className="rounded-2xl border p-5 space-y-4"
-              style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
-              <h2 className="font-semibold text-sm flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+            <section
+              className="rounded-2xl border border-[#d2d2d7] p-5 space-y-4 bg-white"
+              style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+            >
+              <h2 className="font-semibold text-sm flex items-center gap-2 text-[#1d1d1f]">
                 <TrendingDown className="w-4 h-4 text-amber-500" /> Charges annuelles
               </h2>
               <InputRow label="Charges diverses" value={inp.annualCharges} onChange={set('annualCharges')} hint="Copropriété, assurance PNO, entretien." />
@@ -263,11 +270,13 @@ export default function Calculateur() {
             </section>
 
             {/* Financement */}
-            <section className="rounded-2xl border p-5 space-y-4"
-              style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
-              <h2 className="font-semibold text-sm flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                <TrendingUp className="w-4 h-4 text-violet-500" /> Financement
-                <span className="text-xs font-normal" style={{ color: 'var(--text-tertiary)' }}>(optionnel)</span>
+            <section
+              className="rounded-2xl border border-[#d2d2d7] p-5 space-y-4 bg-white"
+              style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+            >
+              <h2 className="font-semibold text-sm flex items-center gap-2 text-[#1d1d1f]">
+                <TrendingUp className="w-4 h-4 text-[#007AFF]" /> Financement
+                <span className="text-xs font-normal text-[#86868b]">(optionnel)</span>
               </h2>
               <InputRow label="Montant emprunté" value={inp.loanAmount} onChange={set('loanAmount')} step={5000} />
               <InputRow label="Taux annuel" value={inp.loanRate} onChange={set('loanRate')} suffix="%" step={0.1} min={0} max={10} />
@@ -275,12 +284,14 @@ export default function Calculateur() {
             </section>
           </div>
 
-          {/* ── RIGHT: Results ─────────────────────────────────────────── */}
+          {/* ── RIGHT: Results ─────────────────────────────────────── */}
           <div className="lg:col-span-3 space-y-4">
 
             {/* Summary banner */}
-            <div className="rounded-2xl p-5 text-white"
-              style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
+            <div
+              className="rounded-2xl p-5 text-white"
+              style={{ backgroundColor: '#1d1d1f' }}
+            >
               <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">Synthèse de l'investissement</p>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -302,69 +313,76 @@ export default function Calculateur() {
                 label="Rentabilité brute"
                 value={`${fmt(res.grossYield)} %`}
                 sub="Formule Loi ALUR"
-                colorClass={yieldColor(res.grossYield)}
-                bgClass={`rounded-2xl border p-4 flex flex-col gap-1 ${yieldBg(res.grossYield)}`}
+                color={yieldColor(res.grossYield)}
+                style={yieldBg(res.grossYield)}
                 icon={<YieldIcon pct={res.grossYield} />}
               />
               <KpiCard
                 label="Rentabilité nette"
                 value={`${fmt(res.netYieldBeforeTax)} %`}
                 sub="Avant impôts"
-                colorClass={yieldColor(res.netYieldBeforeTax)}
-                bgClass={`rounded-2xl border p-4 flex flex-col gap-1 ${yieldBg(res.netYieldBeforeTax)}`}
+                color={yieldColor(res.netYieldBeforeTax)}
+                style={yieldBg(res.netYieldBeforeTax)}
                 icon={<YieldIcon pct={res.netYieldBeforeTax} />}
               />
               <KpiCard
                 label="Rentabilité nette nette"
                 value={`${fmt(res.netYieldAfterTax)} %`}
                 sub={`Après TMI ${inp.taxRate}%`}
-                colorClass={yieldColor(res.netYieldAfterTax)}
-                bgClass={`rounded-2xl border p-4 flex flex-col gap-1 ${yieldBg(res.netYieldAfterTax)}`}
+                color={yieldColor(res.netYieldAfterTax)}
+                style={yieldBg(res.netYieldAfterTax)}
                 icon={<YieldIcon pct={res.netYieldAfterTax} />}
               />
             </div>
 
             {/* Cashflow */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="rounded-2xl border p-5"
-                style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
+              <div
+                className="rounded-2xl border border-[#d2d2d7] p-5 bg-white"
+                style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+              >
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--text-tertiary)' }}>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[#86868b]">
                     Cash-flow mensuel
                   </p>
                   <CashflowIcon cf={res.monthlyCashflow} />
                 </div>
-                <p className={`text-3xl font-extrabold ${cashflowColor}`}>
+                <p className="text-3xl font-extrabold" style={{ color: cashflowColor }}>
                   {res.monthlyCashflow >= 0 ? '+' : ''}{fmt(res.monthlyCashflow)} €
                 </p>
-                <p className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
+                <p className="text-xs mt-1 text-[#86868b]">
                   Mensualité crédit : {fmt(res.monthlyPayment)} €/mois
                 </p>
-                <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
-                  <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+                <div className="mt-3 pt-3 border-t border-[#d2d2d7]">
+                  <p className="text-sm font-medium text-[#515154]">
                     Cash-flow annuel :
-                    <span className={`ml-2 font-bold ${cashflowColor}`}>
+                    <span className="ml-2 font-bold" style={{ color: cashflowColor }}>
                       {res.annualCashflow >= 0 ? '+' : ''}{fmt(res.annualCashflow, 0)} €
                     </span>
                   </p>
                 </div>
               </div>
 
-              <div className="rounded-2xl border p-5"
-                style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
-                <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: 'var(--text-tertiary)' }}>
+              <div
+                className="rounded-2xl border border-[#d2d2d7] p-5 bg-white"
+                style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+              >
+                <p className="text-xs font-semibold uppercase tracking-wide mb-3 text-[#86868b]">
                   Horizon temporel
                 </p>
                 <div className="space-y-3">
                   <div>
-                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Point mort</p>
-                    <p className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                    <p className="text-sm text-[#515154]">Point mort</p>
+                    <p className="text-xl font-bold text-[#1d1d1f]">
                       {res.breakEvenYears === Infinity ? '∞' : `${res.breakEvenYears} ans`}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>ROI sur 10 ans</p>
-                    <p className={`text-xl font-bold ${res.roi10y >= 50 ? 'text-emerald-600' : res.roi10y >= 20 ? 'text-amber-500' : 'text-red-500'}`}>
+                    <p className="text-sm text-[#515154]">ROI sur 10 ans</p>
+                    <p
+                      className="text-xl font-bold"
+                      style={{ color: res.roi10y >= 50 ? '#059669' : res.roi10y >= 20 ? '#d97706' : '#dc2626' }}
+                    >
                       {fmt(res.roi10y, 1)} %
                     </p>
                   </div>
@@ -373,12 +391,14 @@ export default function Calculateur() {
             </div>
 
             {/* Formulas reference */}
-            <div className="rounded-2xl border p-4"
-              style={{ backgroundColor: 'var(--surface-subtle)', borderColor: 'var(--border)' }}>
-              <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>
+            <div
+              className="rounded-2xl border border-[#d2d2d7] p-4"
+              style={{ backgroundColor: '#f5f5f7' }}
+            >
+              <p className="text-xs font-semibold mb-2 text-[#515154]">
                 Formules utilisées
               </p>
-              <div className="space-y-1 text-xs font-mono" style={{ color: 'var(--text-tertiary)' }}>
+              <div className="space-y-1 text-xs font-mono text-[#86868b]">
                 <p>Brute = (Loyer × 12 × (1 − vacance)) / Investissement total × 100</p>
                 <p>Nette = (Brute − charges − taxe foncière) / Investissement total × 100</p>
                 <p>Cash-flow = Loyer effectif − Mensualité − Charges mensualisées</p>
@@ -386,23 +406,25 @@ export default function Calculateur() {
             </div>
 
             {/* Interpretation guide */}
-            <div className="rounded-2xl border p-4 space-y-2"
-              style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
-              <p className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
+            <div
+              className="rounded-2xl border border-[#d2d2d7] p-4 space-y-2 bg-white"
+              style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+            >
+              <p className="text-xs font-semibold text-[#515154]">
                 Guide d'interprétation
               </p>
               <div className="grid grid-cols-3 gap-3 text-xs">
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
-                  <span style={{ color: 'var(--text-secondary)' }}>≥ 6 % — Excellent</span>
+                  <span className="text-[#515154]">≥ 6 % — Excellent</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />
-                  <span style={{ color: 'var(--text-secondary)' }}>4–6 % — Correct</span>
+                  <span className="text-[#515154]">4–6 % — Correct</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
-                  <span style={{ color: 'var(--text-secondary)' }}>{'< 4 %'} — Faible</span>
+                  <span className="text-[#515154]">{'< 4 %'} — Faible</span>
                 </div>
               </div>
             </div>

@@ -35,46 +35,50 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ background: 'var(--bg-gradient)' }}>
-      <div className="absolute -top-48 -left-48 w-[600px] h-[600px] rounded-full opacity-50 pointer-events-none" style={{ background: 'radial-gradient(circle, #7c3aed 0%, transparent 65%)', filter: 'blur(80px)' }} />
-      <div className="absolute top-1/3 -right-32 w-[500px] h-[500px] rounded-full opacity-38 pointer-events-none" style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 65%)', filter: 'blur(80px)' }} />
-      <div className="absolute -bottom-32 right-1/4 w-[420px] h-[420px] rounded-full opacity-28 pointer-events-none" style={{ background: 'radial-gradient(circle, #3b82f6 0%, transparent 65%)', filter: 'blur(80px)' }} />
-      <div className="w-full max-w-md relative z-10">
+    <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Logo */}
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #7c3aed, #3b82f6)' }}>
+          <Link to="/" className="inline-flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <div className="w-9 h-9 bg-[#007AFF] rounded-xl flex items-center justify-center shadow-sm">
               <Home className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold font-heading text-gradient-brand">ImmoParticuliers</span>
+            <span className="text-xl font-bold text-[#1d1d1f]" style={{ fontFamily: "'Plus Jakarta Sans', Inter, system-ui" }}>FOYER</span>
           </Link>
         </div>
 
-        <div className="card">
+        <div className="bg-white rounded-2xl p-8 shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-[#d2d2d7]">
           {isSent ? (
             <div className="text-center">
-              <CheckCircle className="w-16 h-16 text-success-500 mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-slate-900 mb-2">
-                Email envoye !
+              <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                <CheckCircle className="w-9 h-9 text-emerald-500" />
+              </div>
+              <h2 className="text-xl font-bold text-[#1d1d1f] mb-2" style={{ fontFamily: "'Plus Jakarta Sans', Inter, system-ui" }}>
+                Email envoyé !
               </h2>
-              <p className="text-slate-600 mb-6">
-                Si un compte existe avec l'adresse <strong>{email}</strong>, vous
-                recevrez un lien de reinitialisation.
+              <p className="text-[#515154] text-sm mb-2">
+                Si un compte existe avec l'adresse <span className="font-semibold text-[#1d1d1f]">{email}</span>, vous recevrez un lien de réinitialisation.
               </p>
-              <p className="text-sm text-slate-500 mb-6">
-                Pensez a verifier vos spams si vous ne recevez rien.
+              <p className="text-xs text-[#86868b] mb-6">
+                Pensez à vérifier vos spams si vous ne recevez rien.
               </p>
-              <Link to="/login" className="btn btn-primary w-full">
-                Retour a la connexion
+              <Link
+                to="/login"
+                className="block w-full bg-[#007AFF] text-white hover:bg-[#0066d6] rounded-xl font-semibold py-2.5 text-center transition-colors"
+              >
+                Retour à la connexion
               </Link>
             </div>
           ) : (
             <>
-              <h2 className="text-2xl font-bold text-center mb-2">
-                Mot de passe oublie ?
-              </h2>
-              <p className="text-slate-600 text-center mb-6">
-                Entrez votre email et nous vous enverrons un lien pour reinitialiser votre mot de passe.
-              </p>
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold text-[#1d1d1f]" style={{ fontFamily: "'Plus Jakarta Sans', Inter, system-ui" }}>
+                  Mot de passe oublié ?
+                </h1>
+                <p className="text-[#515154] text-sm mt-1">
+                  Entrez votre email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
+                </p>
+              </div>
 
               {error && (
                 <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
@@ -84,14 +88,11 @@ export default function ForgotPassword() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-slate-700 mb-2"
-                  >
+                  <label htmlFor="email" className="block text-sm font-semibold text-[#1d1d1f] mb-1.5">
                     Adresse email
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868b]" />
                     <input
                       id="email"
                       type="email"
@@ -101,7 +102,7 @@ export default function ForgotPassword() {
                         if (error) setError('')
                       }}
                       placeholder="votre@email.com"
-                      className="input pl-10 w-full"
+                      className="w-full bg-white border border-[#d2d2d7] rounded-xl pl-10 pr-4 py-2.5 text-[#1d1d1f] placeholder-[#86868b] focus:outline-none focus:border-[#007AFF] focus:ring-2 focus:ring-[rgba(0,122,255,0.12)] transition-all text-sm"
                       disabled={isLoading}
                       required
                     />
@@ -110,12 +111,12 @@ export default function ForgotPassword() {
 
                 <button
                   type="submit"
-                  className="btn btn-primary w-full disabled:opacity-50"
+                  className="w-full bg-[#007AFF] text-white hover:bg-[#0066d6] rounded-xl font-semibold py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isLoading}
                 >
                   {isLoading ? (
                     <span className="flex items-center justify-center gap-2">
-                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                       </svg>
@@ -132,10 +133,10 @@ export default function ForgotPassword() {
           <div className="mt-6 text-center">
             <Link
               to="/login"
-              className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900"
+              className="inline-flex items-center gap-2 text-sm text-[#515154] hover:text-[#1d1d1f] transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              Retour a la connexion
+              Retour à la connexion
             </Link>
           </div>
         </div>
@@ -143,4 +144,3 @@ export default function ForgotPassword() {
     </div>
   )
 }
-

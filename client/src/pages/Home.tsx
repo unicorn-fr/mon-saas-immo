@@ -5,15 +5,11 @@ import {
   Search,
   Key,
   MapPin,
-  Euro,
   MessageSquare,
   Shield,
   Headphones,
-  ChevronRight,
   Building2,
-  Users,
   Star,
-  Info,
   ArrowRight,
   Menu,
   X,
@@ -22,21 +18,22 @@ import {
   Bath,
   Square,
   Loader2,
-  Sun,
-  Moon,
   TrendingUp,
   Tag,
+  FileText,
+  Zap,
+  BarChart2,
+  Lock,
 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
-import { useThemeStore } from '../store/themeStore'
 import { useReveal } from '../hooks/useReveal'
 import { propertyService } from '../services/property.service'
 import { Property } from '../types/property.types'
 
 const OWNER_STEPS = [
   {
-    title: 'Créez votre annonce',
-    description: 'Ajoutez vos photos, décrivez votre bien et fixez votre loyer. C\'est rapide et 100% gratuit.',
+    title: "Créez votre annonce",
+    description: "Ajoutez vos photos, décrivez votre bien et fixez votre loyer. C'est rapide et 100% gratuit.",
   },
   {
     title: 'Recevez des profils',
@@ -48,7 +45,7 @@ const OWNER_STEPS = [
   },
   {
     title: 'Signez le contrat',
-    description: 'Une fois le locataire choisi, générez et signez le bail électroniquement. C\'est fait !',
+    description: "Une fois le locataire choisi, générez et signez le bail électroniquement. C'est fait !",
   },
 ]
 
@@ -59,872 +56,636 @@ const TENANT_STEPS = [
   },
   {
     title: 'Trouvez votre bien',
-    description: 'Parcourez nos annonces validées et enregistrez vos coups de coeur pour ne rien rater.',
+    description: "Parcourez des milliers d'annonces vérifiées et contactez les propriétaires directement.",
   },
   {
-    title: 'Préparez votre dossier',
-    description: 'Compilez vos documents en ligne via notre outil sécurisé, certifié par nos équipes.',
+    title: 'Constituez votre dossier',
+    description: 'Téléchargez vos documents sécurisés une seule fois et candidatez à plusieurs biens.',
   },
   {
-    title: 'Louez sans agence',
-    description: 'Contactez les propriétaires, visitez, et signez votre bail en ligne. Pas de frais d\'agence !',
+    title: 'Signez en ligne',
+    description: 'Votre bail est généré automatiquement. Signez électroniquement en quelques clics.',
   },
 ]
 
+const FEATURES = [
+  {
+    icon: Building2,
+    title: 'Annonces vérifiées',
+    description: 'Chaque bien est validé par notre équipe. Fini les fausses annonces et les arnaques.',
+  },
+  {
+    icon: FileText,
+    title: 'Bail automatique',
+    description: 'Générez un contrat conforme à la loi Alur en quelques secondes, avec signature électronique.',
+  },
+  {
+    icon: Shield,
+    title: 'Dossier sécurisé',
+    description: 'Vos documents sont chiffrés AES-256 et hébergés en France. Conformité RGPD garantie.',
+  },
+  {
+    icon: MessageSquare,
+    title: 'Messagerie intégrée',
+    description: 'Communiquez directement avec les propriétaires ou locataires sans exposer vos coordonnées.',
+  },
+  {
+    icon: BarChart2,
+    title: 'Statistiques en temps réel',
+    description: 'Suivez les vues, candidatures et performances de vos annonces depuis votre tableau de bord.',
+  },
+  {
+    icon: Zap,
+    title: 'Réponse rapide',
+    description: "Un algorithme intelligent vous propose les profils les plus adaptés pour accélérer la mise en location.",
+  },
+]
+
+const STATS = [
+  { value: '2 500+', label: 'Propriétaires actifs' },
+  { value: '15 000+', label: 'Locataires inscrits' },
+  { value: '98%', label: 'Taux de satisfaction' },
+  { value: '0 €', label: "Frais d'agence" },
+]
+
 export default function Home() {
-  const navigate = useNavigate()
   const { isAuthenticated, user } = useAuth()
-  const { isDark, toggleDark } = useThemeStore()
-  const [searchCity, setSearchCity] = useState('')
-  const [searchType, setSearchType] = useState('')
-  const [searchBudget, setSearchBudget] = useState('')
-  const [activeTab, setActiveTab] = useState<'owner' | 'tenant'>('owner')
+  const navigate = useNavigate()
+  const heroReveal = useReveal()
+  const featuresReveal = useReveal()
+  const howReveal = useReveal()
+
+  const [searchQuery, setSearchQuery] = useState('')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [featuredProperties, setFeaturedProperties] = useState<Property[]>([])
   const [loadingProperties, setLoadingProperties] = useState(true)
-
-  const heroReveal = useReveal()
-  const statsReveal = useReveal()
-  const featuresReveal = useReveal()
-  const aboutReveal = useReveal()
-  const ctaReveal = useReveal()
-
-  // Redirect authenticated users to their dashboard
-  if (isAuthenticated && user) {
-    if (user.role === 'SUPER_ADMIN') return <Navigate to="/super-admin" replace />
-    if (user.role === 'OWNER') return <Navigate to="/dashboard/owner" replace />
-    if (user.role === 'TENANT') return <Navigate to="/dashboard/tenant" replace />
-    if (user.role === 'ADMIN') return <Navigate to="/admin" replace />
-  }
+  const [activeTab, setActiveTab] = useState<'owner' | 'tenant'>('owner')
 
   useEffect(() => {
-    const fetchFeatured = async () => {
-      try {
-        const result = await propertyService.getProperties(
-          { status: 'AVAILABLE' },
-          { page: 1, limit: 6, sortBy: 'createdAt', sortOrder: 'desc' }
-        )
-        setFeaturedProperties(result.properties)
-      } catch {
-        // Silently fail - section just won't show
-      } finally {
-        setLoadingProperties(false)
-      }
-    }
-    fetchFeatured()
+    propertyService
+      .searchProperties('', { page: 1, limit: 3 })
+      .then((data: any) => {
+        setFeaturedProperties(Array.isArray(data) ? data.slice(0, 3) : data?.properties?.slice(0, 3) ?? [])
+      })
+      .catch(() => setFeaturedProperties([]))
+      .finally(() => setLoadingProperties(false))
   }, [])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    const params = new URLSearchParams()
-    if (searchCity) params.append('city', searchCity)
-    if (searchType) params.append('type', searchType)
-    if (searchBudget) params.append('maxPrice', searchBudget)
-    navigate(`/search?${params.toString()}`)
+    navigate(`/search${searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : ''}`)
   }
 
-  const scrollTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
-    setMobileMenuOpen(false)
+  if (isAuthenticated && user) {
+    if (user.role === 'OWNER') return <Navigate to="/owner/dashboard" replace />
+    if (user.role === 'TENANT') return <Navigate to="/tenant/dashboard" replace />
   }
 
   return (
-    <div className="min-h-screen relative" style={{ background: 'var(--bg-gradient)' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#f5f5f7', fontFamily: "'Plus Jakarta Sans', Inter, system-ui, sans-serif" }}>
 
-      {/* ─── BLOBS FIXES (suivent le scroll avec position:fixed) ─── */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
-        <div className="absolute -top-40 -left-40 w-[700px] h-[700px] rounded-full opacity-[0.18] dark:opacity-[0.22]"
-          style={{ background: 'radial-gradient(circle, #3b82f6 0%, transparent 65%)', filter: 'blur(110px)' }} />
-        <div className="absolute top-1/3 -right-32 w-[600px] h-[600px] rounded-full opacity-[0.14] dark:opacity-[0.18]"
-          style={{ background: 'radial-gradient(circle, #1e40af 0%, transparent 65%)', filter: 'blur(110px)' }} />
-      </div>
-
-      {/* ─── HEADER ─────────────────────────────────────────────── */}
-      <header
-        className="sticky top-0 z-50 border-b"
-        style={{
-          background: 'rgba(255,255,255,0.12)',
-          backdropFilter: 'blur(24px) saturate(200%)',
-          WebkitBackdropFilter: 'blur(24px) saturate(200%)',
-          borderBottomColor: 'var(--glass-border)',
-          boxShadow: 'inset 0 -1px 0 rgba(255,255,255,0.15), 0 4px 24px rgba(0,0,0,0.06)',
-        }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      {/* ── NAVBAR ── */}
+      <header className="sticky top-0 z-50 bg-white border-b border-[#d2d2d7]" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-              <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg"
-                style={{ background: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)' }}
-              >
-                <HomeIcon className="w-4.5 h-4.5 text-white" />
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2.5">
+              <div className="w-8 h-8 bg-[#007AFF] rounded-xl flex items-center justify-center">
+                <HomeIcon className="w-4 h-4 text-white" />
               </div>
-              <span className="text-lg font-bold hidden sm:block font-heading text-gradient-brand">
-                ImmoParticuliers
-              </span>
+              <span className="text-lg font-bold text-[#1d1d1f]">ImmoParticuliers</span>
             </Link>
 
-            {/* Desktop Nav */}
-            <nav className="hidden md:flex items-center gap-5">
-              <button onClick={() => scrollTo('hero')} className="text-sm font-medium transition-colors hover:text-primary-600" style={{ color: 'var(--text-secondary)' }}>
-                Accueil
-              </button>
-              <button onClick={() => scrollTo('how-it-works')} className="text-sm font-medium transition-colors hover:text-primary-600" style={{ color: 'var(--text-secondary)' }}>
-                Comment ça marche
-              </button>
-              <button onClick={() => scrollTo('featured')} className="text-sm font-medium transition-colors hover:text-primary-600" style={{ color: 'var(--text-secondary)' }}>
-                Les biens
-              </button>
-              <Link to="/calculateur" className="text-sm font-medium transition-colors hover:text-primary-600 flex items-center gap-1" style={{ color: 'var(--text-secondary)' }}>
-                <TrendingUp className="w-3.5 h-3.5" /> Calculateur
-              </Link>
-              <Link to="/pricing" className="text-sm font-medium transition-colors hover:text-primary-600 flex items-center gap-1" style={{ color: 'var(--text-secondary)' }}>
-                <Tag className="w-3.5 h-3.5" /> Tarifs
-              </Link>
-              <button
-                onClick={toggleDark}
-                className="p-2 rounded-xl transition-all hover:scale-110"
-                style={{ color: 'var(--text-tertiary)' }}
-                aria-label="Basculer le mode sombre"
-              >
-                {isDark ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
-              </button>
-              <Link to="/login" className="btn-neon-emerald text-sm px-4 py-2">
-                Connexion
-              </Link>
-              <Link to="/register" className="btn btn-primary text-sm px-4 py-2">
-                Inscription
-              </Link>
+            {/* Desktop nav */}
+            <nav className="hidden md:flex items-center gap-6">
+              <Link to="/search" className="text-sm font-medium text-[#515154] hover:text-[#1d1d1f] transition-colors">Annonces</Link>
+              <Link to="/calculateur" className="text-sm font-medium text-[#515154] hover:text-[#1d1d1f] transition-colors">Calculateur</Link>
+              <Link to="/pricing" className="text-sm font-medium text-[#515154] hover:text-[#1d1d1f] transition-colors">Tarifs</Link>
+              <Link to="/faq" className="text-sm font-medium text-[#515154] hover:text-[#1d1d1f] transition-colors">FAQ</Link>
             </nav>
 
-            {/* Mobile */}
-            <div className="md:hidden flex items-center gap-2">
-              <button onClick={toggleDark} className="p-2 rounded-xl transition-colors" style={{ color: 'var(--text-tertiary)' }}>
-                {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              </button>
-              <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 rounded-xl" style={{ color: 'var(--text-secondary)' }}>
-                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
+            {/* Desktop CTAs */}
+            <div className="hidden md:flex items-center gap-3">
+              <Link to="/login" className="text-sm font-semibold text-[#515154] hover:text-[#1d1d1f] px-4 py-2 rounded-xl transition-colors">
+                Connexion
+              </Link>
+              <Link
+                to="/register"
+                className="text-sm font-semibold text-white px-4 py-2 rounded-xl transition-colors"
+                style={{ backgroundColor: '#007AFF' }}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#0066d6')}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#007AFF')}
+              >
+                Commencer gratuitement
+              </Link>
             </div>
+
+            {/* Mobile */}
+            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 rounded-xl text-[#515154]">
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
 
           {/* Mobile menu */}
           {mobileMenuOpen && (
-            <div className="md:hidden border-t py-4 space-y-1" style={{ borderTopColor: 'var(--glass-border)' }}>
-              <button onClick={() => scrollTo('hero')} className="block w-full text-left px-4 py-2.5 rounded-xl font-medium transition-colors" style={{ color: 'var(--text-primary)' }}>Accueil</button>
-              <button onClick={() => scrollTo('how-it-works')} className="block w-full text-left px-4 py-2.5 rounded-xl font-medium transition-colors" style={{ color: 'var(--text-primary)' }}>Comment ça marche</button>
-              <button onClick={() => scrollTo('featured')} className="block w-full text-left px-4 py-2.5 rounded-xl font-medium transition-colors" style={{ color: 'var(--text-primary)' }}>Les biens</button>
-              <Link to="/calculateur" className="block w-full text-left px-4 py-2.5 rounded-xl font-medium" style={{ color: 'var(--text-primary)' }} onClick={() => setMobileMenuOpen(false)}>Calculateur de rentabilité</Link>
-              <Link to="/pricing" className="block w-full text-left px-4 py-2.5 rounded-xl font-medium" style={{ color: 'var(--text-primary)' }} onClick={() => setMobileMenuOpen(false)}>Tarifs</Link>
-              <div className="flex flex-col gap-2 pt-3">
-                <Link to="/login" className="btn-neon-emerald w-full text-center justify-center" onClick={() => setMobileMenuOpen(false)}>Connexion</Link>
-                <Link to="/register" className="btn btn-primary w-full text-center" onClick={() => setMobileMenuOpen(false)}>Inscription</Link>
+            <div className="md:hidden border-t border-[#d2d2d7] py-4 space-y-1">
+              <Link to="/search" className="block px-4 py-2.5 rounded-xl text-sm font-medium text-[#515154] hover:bg-[#f5f5f7]" onClick={() => setMobileMenuOpen(false)}>Annonces</Link>
+              <Link to="/calculateur" className="block px-4 py-2.5 rounded-xl text-sm font-medium text-[#515154] hover:bg-[#f5f5f7]" onClick={() => setMobileMenuOpen(false)}>Calculateur</Link>
+              <Link to="/pricing" className="block px-4 py-2.5 rounded-xl text-sm font-medium text-[#515154] hover:bg-[#f5f5f7]" onClick={() => setMobileMenuOpen(false)}>Tarifs</Link>
+              <Link to="/faq" className="block px-4 py-2.5 rounded-xl text-sm font-medium text-[#515154] hover:bg-[#f5f5f7]" onClick={() => setMobileMenuOpen(false)}>FAQ</Link>
+              <div className="flex flex-col gap-2 pt-3 px-4">
+                <Link to="/login" className="w-full text-center py-2.5 rounded-xl border border-[#d2d2d7] text-sm font-semibold text-[#515154]" onClick={() => setMobileMenuOpen(false)}>Connexion</Link>
+                <Link to="/register" className="w-full text-center py-2.5 rounded-xl text-sm font-semibold text-white bg-[#007AFF]" onClick={() => setMobileMenuOpen(false)}>Commencer gratuitement</Link>
               </div>
             </div>
           )}
         </div>
       </header>
 
-      {/* Tout le contenu en z-10 par rapport aux blobs fixes */}
-      <div className="relative" style={{ zIndex: 1 }}>
-
-        {/* ─── ALERT BANNER ─────────────────────────────────────── */}
-        <div className="border-b" style={{ borderBottomColor: 'var(--glass-border)', background: 'rgba(255,255,255,0.06)' }}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 text-center">
-            <p className="text-sm text-warning-700 font-medium">
-              Nouveau : découvrez notre nouvelle garantie loyers impayés{' '}
-              <ChevronRight className="w-4 h-4 inline-block" />
-            </p>
-          </div>
-        </div>
-
-        {/* ─── HERO SECTION ─────────────────────────────────────── */}
-        <section
-          id="hero"
-          ref={heroReveal.ref as React.RefObject<HTMLElement>}
-          className={`py-16 md:py-24 transition-all duration-700 ${heroReveal.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+      {/* ── HERO ── */}
+      <section
+        id="hero"
+        ref={heroReveal.ref as React.RefObject<HTMLElement>}
+        className="relative overflow-hidden"
+        style={{ backgroundColor: '#1d1d1f' }}
+      >
+        {/* City skyline silhouette */}
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 1440 200"
+          preserveAspectRatio="none"
+          xmlns="http://www.w3.org/2000/svg"
+          style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 200, pointerEvents: 'none' }}
         >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-4">
-              <span style={{ color: 'var(--text-primary)' }}>Location </span>
-              <span className="text-gradient-brand">entre particuliers</span>
-            </h1>
-            <p className="text-lg md:text-xl font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
-              La plateforme n°1 en France de l'immobilier sans agence
-            </p>
-            <p className="max-w-2xl mx-auto mb-10" style={{ color: 'var(--text-tertiary)' }}>
-              Propriétaires et locataires se rencontrent directement sur notre plateforme.
-              Zéro frais d'agence, communication simplifiée, 100% sécurisé.
-            </p>
+          {/* Building outlines */}
+          <g fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.18)" strokeWidth="1">
+            <rect x="8"    y="148" width="48"  height="52" />
+            <rect x="60"   y="68"  width="38"  height="132" />
+            <rect x="63"   y="46"  width="6"   height="22" />
+            <rect x="102"  y="94"  width="58"  height="106" />
+            <rect x="164"  y="118" width="42"  height="82" />
+            <rect x="212"  y="44"  width="78"  height="156" />
+            <rect x="234"  y="15"  width="8"   height="29" />
+            <rect x="295"  y="104" width="52"  height="96" />
+            <rect x="352"  y="74"  width="62"  height="126" />
+            <rect x="355"  y="54"  width="6"   height="20" />
+            <rect x="420"  y="88"  width="48"  height="112" />
+            <rect x="472"  y="50"  width="90"  height="150" />
+            <rect x="514"  y="24"  width="8"   height="26" />
+            <rect x="566"  y="96"  width="46"  height="104" />
+            <rect x="616"  y="66"  width="54"  height="134" />
+            <rect x="676"  y="26"  width="44"  height="174" />
+            <rect x="677"  y="4"   width="5"   height="22" />
+            <rect x="724"  y="76"  width="74"  height="124" />
+            <rect x="802"  y="46"  width="56"  height="154" />
+            <rect x="862"  y="96"  width="70"  height="104" />
+            <rect x="938"  y="60"  width="64"  height="140" />
+            <rect x="940"  y="40"  width="8"   height="20" />
+            <rect x="1006" y="90"  width="50"  height="110" />
+            <rect x="1060" y="36"  width="84"  height="164" />
+            <rect x="1096" y="10"  width="10"  height="26" />
+            <rect x="1148" y="70"  width="54"  height="130" />
+            <rect x="1208" y="96"  width="50"  height="104" />
+            <rect x="1262" y="58"  width="64"  height="142" />
+            <rect x="1264" y="36"  width="8"   height="22" />
+            <rect x="1330" y="110" width="54"  height="90" />
+            <rect x="1388" y="130" width="44"  height="70" />
+          </g>
+          {/* Blue-tinted windows */}
+          <g fill="rgba(0,122,255,0.20)" stroke="none">
+            {/* Tall building center-left x=60 */}
+            <rect x="66" y="74"  width="7" height="5" /><rect x="77" y="74"  width="7" height="5" />
+            <rect x="66" y="86"  width="7" height="5" /><rect x="77" y="86"  width="7" height="5" />
+            <rect x="66" y="98"  width="7" height="5" /><rect x="77" y="98"  width="7" height="5" />
+            <rect x="66" y="110" width="7" height="5" /><rect x="77" y="110" width="7" height="5" />
+            <rect x="66" y="122" width="7" height="5" /><rect x="77" y="122" width="7" height="5" />
+            {/* Tall building x=212 */}
+            <rect x="219" y="52" width="9" height="6" /><rect x="233" y="52" width="9" height="6" />
+            <rect x="247" y="52" width="9" height="6" /><rect x="261" y="52" width="9" height="6" />
+            <rect x="219" y="65" width="9" height="6" /><rect x="233" y="65" width="9" height="6" />
+            <rect x="247" y="65" width="9" height="6" /><rect x="261" y="65" width="9" height="6" />
+            <rect x="219" y="78" width="9" height="6" /><rect x="233" y="78" width="9" height="6" />
+            <rect x="247" y="78" width="9" height="6" /><rect x="261" y="78" width="9" height="6" />
+            {/* Center tallest x=676 */}
+            <rect x="681" y="33" width="7" height="5" /><rect x="692" y="33" width="7" height="5" />
+            <rect x="703" y="33" width="7" height="5" /><rect x="714" y="33" width="7" height="5" />
+            <rect x="681" y="45" width="7" height="5" /><rect x="692" y="45" width="7" height="5" />
+            <rect x="703" y="45" width="7" height="5" /><rect x="714" y="45" width="7" height="5" />
+            <rect x="681" y="57" width="7" height="5" /><rect x="692" y="57" width="7" height="5" />
+            <rect x="703" y="57" width="7" height="5" /><rect x="714" y="57" width="7" height="5" />
+            <rect x="681" y="69" width="7" height="5" /><rect x="692" y="69" width="7" height="5" />
+            <rect x="703" y="69" width="7" height="5" /><rect x="714" y="69" width="7" height="5" />
+            {/* Right tall x=1060 */}
+            <rect x="1067" y="43" width="9" height="6" /><rect x="1081" y="43" width="9" height="6" />
+            <rect x="1095" y="43" width="9" height="6" /><rect x="1109" y="43" width="9" height="6" />
+            <rect x="1067" y="56" width="9" height="6" /><rect x="1081" y="56" width="9" height="6" />
+            <rect x="1095" y="56" width="9" height="6" /><rect x="1109" y="56" width="9" height="6" />
+            <rect x="1067" y="69" width="9" height="6" /><rect x="1081" y="69" width="9" height="6" />
+            <rect x="1095" y="69" width="9" height="6" /><rect x="1109" y="69" width="9" height="6" />
+            <rect x="1067" y="82" width="9" height="6" /><rect x="1081" y="82" width="9" height="6" />
+            <rect x="1095" y="82" width="9" height="6" /><rect x="1109" y="82" width="9" height="6" />
+          </g>
+          {/* Ground line */}
+          <line x1="0" y1="199" x2="1440" y2="199" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+        </svg>
 
-            <p className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Commencez par choisir votre profil :</p>
-            <p className="text-sm mb-8" style={{ color: 'var(--text-tertiary)' }}>
-              Êtes-vous à la recherche d'un bien ou souhaitez-vous mettre le vôtre en location ?
-            </p>
-
-            {/* Profile Cards — glass + neon */}
-            <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-
-              {/* Owner Card — Blue sobre */}
-              <div
-                className="text-left transition-all duration-300 cursor-default"
-                style={{
-                  background: 'var(--glass-bg-heavy)',
-                  backdropFilter: 'blur(20px) saturate(180%)',
-                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                  border: '1px solid rgba(59,130,246,0.22)',
-                  borderRadius: '1.25rem',
-                  padding: '1.5rem',
-                  boxShadow: '0 1px 0 rgba(255,255,255,0.60) inset, 0 16px 36px rgba(0,0,0,0.06)',
-                }}
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center shadow-md"
-                    style={{ background: '#2563eb' }}
-                  >
-                    <Key className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Je suis Propriétaire</h3>
-                </div>
-                <p className="mb-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                  Trouvez le locataire idéal et gérez votre location en toute simplicité.
-                </p>
-                <ul className="space-y-2 mb-6">
-                  {[
-                    'Mise en ligne de votre annonce gratuite',
-                    'Filtrage et vérification des dossiers',
-                    'Contrat de location pré-rempli inclus',
-                    'Garantie loyers impayés en option',
-                  ].map((feat) => (
-                    <li key={feat} className="flex items-start gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                      <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                      {feat}
-                    </li>
-                  ))}
-                </ul>
-                <Link to="/register?role=OWNER" className="btn-cyan-gradient w-full text-center block">
-                  Publier une annonce
-                </Link>
-              </div>
-
-              {/* Tenant Card — Navy sobre */}
-              <div
-                className="text-left transition-all duration-300 cursor-default"
-                style={{
-                  background: 'var(--glass-bg-heavy)',
-                  backdropFilter: 'blur(20px) saturate(180%)',
-                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                  border: '1px solid rgba(30,64,175,0.28)',
-                  borderRadius: '1.25rem',
-                  padding: '1.5rem',
-                  boxShadow: '0 1px 0 rgba(255,255,255,0.60) inset, 0 16px 36px rgba(0,0,0,0.06)',
-                }}
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center shadow-md"
-                    style={{ background: '#1e40af' }}
-                  >
-                    <Search className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Je suis Locataire</h3>
-                </div>
-                <p className="mb-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                  Accédez à des milliers de biens exclusifs sans payer le moindre frais d'agence.
-                </p>
-                <ul className="space-y-2 mb-6">
-                  {[
-                    'Recherche par critères personnalisés',
-                    'Contact direct avec les propriétaires',
-                    'Création de votre dossier locataire',
-                    'Alertes personnalisées en temps réel',
-                  ].map((feat) => (
-                    <li key={feat} className="flex items-start gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                      <Check className="w-4 h-4 text-blue-700 mt-0.5 flex-shrink-0" />
-                      {feat}
-                    </li>
-                  ))}
-                </ul>
-                <Link to="/register?role=TENANT" className="btn-magenta-gradient w-full text-center block">
-                  Trouver mon bien
-                </Link>
-              </div>
-            </div>
-
-            {/* Calculateur teaser */}
-            <div className="mt-8 py-4 border-t" style={{ borderTopColor: 'var(--glass-border)' }}>
-              <p className="text-sm mb-3" style={{ color: 'var(--text-tertiary)' }}>
-                Propriétaire bailleur ou investisseur ?
-              </p>
-              <Link
-                to="/calculateur"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors group"
-              >
-                <TrendingUp className="w-4 h-4" />
-                Calculez votre rentabilité locative gratuitement
-                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
-              <span className="mx-4" style={{ color: 'var(--glass-border)' }}>·</span>
-              <Link
-                to="/pricing"
-                className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors group"
-                style={{ color: 'var(--text-tertiary)' }}
-              >
-                <Tag className="w-3.5 h-3.5" />
-                Voir les tarifs
-              </Link>
-            </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-32 text-center">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 mb-8">
+            <Star className="w-4 h-4 text-[#007AFF]" />
+            <span className="text-sm font-medium text-white/80">Plateforme n°1 de location entre particuliers</span>
           </div>
-        </section>
 
-        {/* ─── QUICK SEARCH ─────────────────────────────────────── */}
-        <section className="py-12">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
-              Ou lancez directement une recherche
-            </h2>
-            <p className="mb-8" style={{ color: 'var(--text-tertiary)' }}>
-              Trouvez le bien qui correspond à vos critères parmi nos annonces validées
-            </p>
-
-            <form
-              onSubmit={handleSearch}
-              className="rounded-2xl p-6 border"
+          {/* Headline */}
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight mb-6 text-white">
+            Gérez votre patrimoine<br />
+            <span
               style={{
-                background: 'rgba(255,255,255,0.12)',
-                backdropFilter: 'blur(20px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                borderColor: 'var(--glass-border)',
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.70), 0 8px 32px rgba(0,0,0,0.07)',
+                backgroundImage: 'linear-gradient(90deg, #5ac8fa 0%, #007AFF 55%, #0051d5 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
               }}
             >
-              <div className="flex gap-4 flex-col md:flex-row">
-                <div className="relative flex-1">
-                  <MapPin className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    placeholder="Où ? (Ex: Paris, Lyon, Marseille...)"
-                    value={searchCity}
-                    onChange={(e) => setSearchCity(e.target.value)}
-                    className="input pl-10"
-                  />
-                </div>
-                <div className="relative md:w-48">
-                  <HomeIcon className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <select
-                    className="input pl-10 appearance-none"
-                    value={searchType}
-                    onChange={(e) => setSearchType(e.target.value)}
-                  >
-                    <option value="">Type de bien</option>
-                    <option value="APARTMENT">Appartement</option>
-                    <option value="HOUSE">Maison</option>
-                    <option value="STUDIO">Studio</option>
-                    <option value="DUPLEX">Duplex</option>
-                    <option value="LOFT">Loft</option>
-                  </select>
-                </div>
-                <div className="relative md:w-44">
-                  <Euro className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="number"
-                    placeholder="Budget max"
-                    value={searchBudget}
-                    onChange={(e) => setSearchBudget(e.target.value)}
-                    className="input pl-10"
-                  />
-                </div>
-                <button type="submit" className="btn btn-primary flex items-center gap-2 justify-center whitespace-nowrap">
-                  <Search className="w-5 h-5" />
-                  Rechercher
-                </button>
-              </div>
-            </form>
-          </div>
-        </section>
+              immobilier avec intelligence
+            </span>
+          </h1>
 
-        {/* ─── STATISTICS BAR ───────────────────────────────────── */}
-        <section
-          ref={statsReveal.ref as React.RefObject<HTMLElement>}
-          className={`py-12 transition-all duration-700 delay-100 ${statsReveal.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
-        >
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                { icon: <Building2 className="w-7 h-7 text-blue-500" />, bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.18)', glow: 'rgba(59,130,246,0.08)', value: '2 000+', label: 'Biens loués', sub: 'cette année' },
-                { icon: <Users className="w-7 h-7 text-blue-600" />, bg: 'rgba(37,99,235,0.08)', border: 'rgba(37,99,235,0.18)', glow: 'rgba(37,99,235,0.08)', value: '15 000+', label: 'Utilisateurs', sub: 'actifs' },
-                { icon: <Star className="w-7 h-7 text-slate-500" />, bg: 'rgba(100,116,139,0.08)', border: 'rgba(100,116,139,0.18)', glow: 'rgba(100,116,139,0.06)', value: '4.8/5', label: 'Note moyenne', sub: 'sur Trustpilot' },
-              ].map(({ icon, bg, border, glow, value, label, sub }) => (
-                <div
-                  key={label}
-                  className="text-center rounded-2xl p-6 transition-all duration-300 "
-                  style={{
-                    background: 'rgba(255,255,255,0.10)',
-                    backdropFilter: 'blur(20px) saturate(180%)',
-                    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                    border: `1px solid ${border}`,
-                    boxShadow: `0 0 20px ${glow}, inset 0 1px 0 rgba(255,255,255,0.70)`,
-                  }}
+          <p className="text-lg md:text-xl max-w-2xl mx-auto mb-10" style={{ color: 'rgba(255,255,255,0.60)' }}>
+            Propriétaires et locataires se rencontrent directement. Zéro frais d'agence, communication simplifiée, 100% sécurisé.
+          </p>
+
+          {/* CTAs */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+            <Link
+              to="/register?role=OWNER"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-white transition-all"
+              style={{ backgroundColor: '#007AFF' }}
+              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#0066d6')}
+              onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#007AFF')}
+            >
+              <Key className="w-5 h-5" />
+              Je suis propriétaire
+            </Link>
+            <Link
+              to="/register?role=TENANT"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold border border-white/30 text-white hover:bg-white/10 transition-all"
+            >
+              <Search className="w-5 h-5" />
+              Je cherche un bien
+            </Link>
+          </div>
+
+          {/* Floating search card */}
+          <div
+            className="max-w-2xl mx-auto rounded-2xl p-6"
+            style={{
+              backgroundColor: '#ffffff',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10)',
+            }}
+          >
+            <p className="text-sm font-semibold text-[#1d1d1f] mb-4 text-left">Rechercher un bien</p>
+            <form onSubmit={handleSearch} className="flex gap-3">
+              <div className="flex-1 relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#86868b]" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Paris, Lyon, Marseille…"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#d2d2d7] text-[#1d1d1f] placeholder-[#86868b] text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#007AFF]/30 focus:border-[#007AFF] transition-all"
+                />
+              </div>
+              <button
+                type="submit"
+                className="flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-white text-sm transition-all"
+                style={{ backgroundColor: '#007AFF' }}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#0066d6')}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#007AFF')}
+              >
+                <Search className="w-4 h-4" />
+                Rechercher
+              </button>
+            </form>
+            <div className="flex gap-2 mt-3">
+              {['Paris', 'Lyon', 'Bordeaux', 'Marseille'].map((city) => (
+                <button
+                  key={city}
+                  type="button"
+                  onClick={() => navigate(`/search?q=${city}`)}
+                  className="text-xs font-medium text-[#007AFF] bg-[#e8f0fe] px-3 py-1 rounded-full hover:bg-[#e0e7ff] transition-colors"
                 >
-                  <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3" style={{ background: bg }}>
-                    {icon}
-                  </div>
-                  <p className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>{value}</p>
-                  <p className="font-medium" style={{ color: 'var(--text-secondary)' }}>{label}</p>
-                  <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>{sub}</p>
-                </div>
+                  {city}
+                </button>
               ))}
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ─── FEATURED PROPERTIES ──────────────────────────────── */}
-        <section id="featured" className="py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
-                Découvrez nos biens d'exception
-              </h2>
-              <p className="max-w-2xl mx-auto" style={{ color: 'var(--text-tertiary)' }}>
-                Une sélection de biens uniques et de qualité. Visitez virtuellement nos dernières
-                pépites ou contactez les propriétaires en un clic pour organiser une visite.
-              </p>
+      {/* ── STATS BAR ── */}
+      <div className="bg-white border-t border-b border-[#d2d2d7]">
+        <div className="max-w-5xl mx-auto px-4 py-6 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          {STATS.map((stat) => (
+            <div key={stat.label}>
+              <p className="text-2xl font-extrabold text-[#007AFF]">{stat.value}</p>
+              <p className="text-sm text-[#515154] mt-0.5">{stat.label}</p>
             </div>
+          ))}
+        </div>
+      </div>
 
-            {loadingProperties ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-              </div>
-            ) : featuredProperties.length > 0 ? (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {featuredProperties.map((property) => (
-                  <div
-                    key={property.id}
-                    onClick={() => navigate(`/property/${property.id}`)}
-                    className="overflow-hidden transition-all duration-300 cursor-pointer group rounded-3xl"
-                    style={{
-                      background: 'rgba(255,255,255,0.12)',
-                      backdropFilter: 'blur(20px) saturate(180%)',
-                      WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                      border: '1px solid var(--glass-border)',
-                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.60), 0 8px 32px rgba(0,0,0,0.08)',
-                    }}
-                  >
-                    <div className="relative h-52 bg-slate-200 overflow-hidden rounded-t-3xl">
-                      <img
-                        src={property.images[0] || '/placeholder-property.jpg'}
-                        alt={property.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        loading="lazy"
-                        onError={(e) => { e.currentTarget.src = '/placeholder-property.jpg' }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent pointer-events-none" />
-                      <span className="absolute top-3 left-3 bg-accent-600 text-white text-xs font-medium px-3 py-1 rounded-full">
-                        Nouveau
-                      </span>
-                      <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-2xl border border-white/50 shadow-sm">
-                        <span className="text-base font-bold text-slate-900">{property.price}€</span>
-                        <span className="text-xs text-slate-500 ml-1">/ mois</span>
-                      </div>
-                      {property.images.length > 1 && (
-                        <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-lg font-medium">
-                          {property.images.length} photos
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-4">
-                      <h3 className="text-lg font-semibold mb-1 group-hover:text-primary-600 transition-colors line-clamp-1" style={{ color: 'var(--text-primary)' }}>
-                        {property.title}
-                      </h3>
-                      <div className="flex items-center text-sm mb-3" style={{ color: 'var(--text-tertiary)' }}>
-                        <MapPin className="w-4 h-4 mr-1 flex-shrink-0 text-blue-400" />
-                        {property.city}
-                      </div>
-                      <div className="flex items-center gap-3 text-sm" style={{ color: 'var(--text-tertiary)' }}>
-                        <span className="flex items-center gap-1"><Square className="w-3.5 h-3.5" />{property.surface} m²</span>
-                        <span className="flex items-center gap-1"><Bed className="w-3.5 h-3.5" />{property.bedrooms} ch.</span>
-                        <span className="flex items-center gap-1"><Bath className="w-3.5 h-3.5" />{property.bathrooms} sdb</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                <p style={{ color: 'var(--text-tertiary)' }}>Aucun bien disponible pour le moment.</p>
-                <p className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>Revenez bientôt pour découvrir nos nouvelles annonces !</p>
-              </div>
-            )}
-
-            <div className="text-center mt-10">
-              <Link to="/search" className="btn-neon-emerald inline-flex items-center gap-2 px-6 py-3">
-                Voir tous les biens
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
+      {/* ── FEATURES ── */}
+      <section
+        id="features"
+        ref={featuresReveal.ref as React.RefObject<HTMLElement>}
+        className={`py-20 transition-all duration-700 ${featuresReveal.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+        style={{ backgroundColor: '#f5f5f7' }}
+      >
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <p className="text-xs font-bold uppercase tracking-widest text-[#007AFF] mb-3">Fonctionnalités</p>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-[#1d1d1f] mb-4">
+              Tout ce dont vous avez besoin,<br />en un seul endroit
+            </h2>
+            <p className="text-[#515154] max-w-xl mx-auto">
+              De la publication d'annonce à la signature du bail, notre plateforme couvre chaque étape de la location.
+            </p>
           </div>
-        </section>
 
-        {/* ─── HOW IT WORKS ─────────────────────────────────────── */}
-        <section id="how-it-works" className="py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
-                Comment ça marche ?
-              </h2>
-              <p className="max-w-2xl mx-auto" style={{ color: 'var(--text-tertiary)' }}>
-                Que vous soyez propriétaire ou locataire, notre plateforme simplifie vos démarches.
-              </p>
-            </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {FEATURES.map((feat) => {
+              const Icon = feat.icon
+              return (
+                <div
+                  key={feat.title}
+                  className="bg-white rounded-2xl border border-[#d2d2d7] p-6 hover:-translate-y-1 transition-all duration-200"
+                  style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)' }}
+                >
+                  <div className="w-11 h-11 bg-[#e8f0fe] rounded-xl flex items-center justify-center mb-4">
+                    <Icon className="w-5 h-5 text-[#007AFF]" />
+                  </div>
+                  <h3 className="font-bold text-[#1d1d1f] mb-2">{feat.title}</h3>
+                  <p className="text-sm text-[#515154] leading-relaxed">{feat.description}</p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
 
-            {/* Tabs */}
-            <div className="flex justify-center gap-3 mb-10">
+      {/* ── HOW IT WORKS ── */}
+      <section
+        id="how-it-works"
+        ref={howReveal.ref as React.RefObject<HTMLElement>}
+        className={`py-20 bg-white transition-all duration-700 ${howReveal.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+      >
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <p className="text-xs font-bold uppercase tracking-widest text-[#007AFF] mb-3">Comment ça marche</p>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-[#1d1d1f] mb-4">Simple et rapide</h2>
+          </div>
+
+          {/* Tab toggle */}
+          <div className="flex justify-center mb-10">
+            <div className="flex bg-[#f5f5f7] rounded-xl border border-[#d2d2d7] p-1 gap-1">
               <button
                 onClick={() => setActiveTab('owner')}
-                className={`px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
-                  activeTab === 'owner' ? 'text-white' : 'btn-neon-cyan'
-                }`}
-                style={activeTab === 'owner'
-                  ? { background: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)', boxShadow: '0 6px 24px rgba(37,99,235,0.28), 0 0 0 1px rgba(37,99,235,0.18)' }
-                  : {}}
+                className={`px-5 py-2.5 rounded-lg font-semibold text-sm transition-all ${activeTab === 'owner' ? 'bg-white text-[#1d1d1f] shadow-sm border border-[#d2d2d7]' : 'text-[#515154]'}`}
               >
-                Pour un propriétaire
+                Propriétaire
               </button>
               <button
                 onClick={() => setActiveTab('tenant')}
-                className={`px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
-                  activeTab === 'tenant' ? 'text-white' : 'btn-neon-cyan'
-                }`}
-                style={activeTab === 'tenant'
-                  ? { background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', boxShadow: '0 6px 24px rgba(59,130,246,0.25), 0 0 0 1px rgba(59,130,246,0.15)' }
-                  : {}}
+                className={`px-5 py-2.5 rounded-lg font-semibold text-sm transition-all ${activeTab === 'tenant' ? 'bg-white text-[#1d1d1f] shadow-sm border border-[#d2d2d7]' : 'text-[#515154]'}`}
               >
-                Pour un locataire
+                Locataire
               </button>
             </div>
+          </div>
 
-            {/* Steps — glass cards */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {(activeTab === 'owner' ? OWNER_STEPS : TENANT_STEPS).map((step, index) => (
-                <div
-                  key={step.title}
-                  className="text-center relative rounded-2xl p-6 transition-all duration-300"
-                  style={{
-                    background: 'rgba(255,255,255,0.10)',
-                    backdropFilter: 'blur(20px) saturate(180%)',
-                    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                    border: '1px solid var(--glass-border)',
-                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.65), 0 8px 24px rgba(0,0,0,0.06)',
-                  }}
-                >
-                  <div
-                    className="w-12 h-12 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-lg font-bold shadow-lg"
-                    style={{
-                      background: activeTab === 'owner'
-                        ? 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)'
-                        : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-                      boxShadow: activeTab === 'owner'
-                        ? '0 4px 16px rgba(37,99,235,0.28)'
-                        : '0 4px 16px rgba(59,130,246,0.25)',
-                    }}
-                  >
-                    {index + 1}
-                  </div>
-                  <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>{step.title}</h3>
-                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{step.description}</p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {(activeTab === 'owner' ? OWNER_STEPS : TENANT_STEPS).map((step, i) => (
+              <div key={step.title} className="text-center">
+                <div className="w-12 h-12 rounded-2xl bg-[#e8f0fe] border-2 border-[#007AFF]/20 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-lg font-extrabold text-[#007AFF]">{i + 1}</span>
                 </div>
+                <h3 className="font-bold text-[#1d1d1f] mb-2">{step.title}</h3>
+                <p className="text-sm text-[#515154] leading-relaxed">{step.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FEATURED PROPERTIES ── */}
+      <section className="py-20" style={{ backgroundColor: '#f5f5f7' }}>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-end justify-between mb-10">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-[#007AFF] mb-2">Annonces récentes</p>
+              <h2 className="text-3xl font-extrabold text-[#1d1d1f]">Biens disponibles</h2>
+            </div>
+            <Link
+              to="/search"
+              className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-[#007AFF] hover:text-[#0066d6] transition-colors"
+            >
+              Voir toutes les annonces <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          {loadingProperties ? (
+            <div className="flex justify-center py-16">
+              <Loader2 className="w-8 h-8 animate-spin text-[#007AFF]" />
+            </div>
+          ) : featuredProperties.length === 0 ? (
+            <div className="text-center py-16 text-[#86868b]">
+              <Building2 className="w-12 h-12 mx-auto mb-3 opacity-40" />
+              <p>Aucun bien disponible pour le moment.</p>
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredProperties.map((property) => (
+                <Link
+                  key={property.id}
+                  to={`/properties/${property.id}`}
+                  className="bg-white rounded-2xl border border-[#d2d2d7] overflow-hidden hover:-translate-y-1 transition-all duration-200 group"
+                  style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)' }}
+                >
+                  <div className="aspect-video bg-[#f0f0f2] relative overflow-hidden">
+                    {property.images && property.images[0] ? (
+                      <img
+                        src={property.images[0]}
+                        alt={property.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => { e.currentTarget.style.display = 'none' }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Building2 className="w-12 h-12 text-[#b0b0b8]" />
+                      </div>
+                    )}
+                    <div className="absolute top-3 left-3">
+                      <span className="text-xs font-bold text-[#007AFF] bg-[#e8f0fe] px-2.5 py-1 rounded-full">
+                        {property.type}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-5">
+                    <h3 className="font-bold text-[#1d1d1f] mb-1 truncate">{property.title}</h3>
+                    <div className="flex items-center gap-1 text-[#515154] text-sm mb-3">
+                      <MapPin className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate">{property.city}</span>
+                    </div>
+                    <div className="flex items-center gap-4 text-xs text-[#86868b] mb-4">
+                      <span className="flex items-center gap-1"><Bed className="w-3.5 h-3.5" /> {property.bedrooms} ch.</span>
+                      <span className="flex items-center gap-1"><Bath className="w-3.5 h-3.5" /> {property.bathrooms} sdb</span>
+                      <span className="flex items-center gap-1"><Square className="w-3.5 h-3.5" /> {property.surface} m²</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xl font-extrabold text-[#007AFF]">
+                        {property.price} €<span className="text-sm font-normal text-[#86868b]">/mois</span>
+                      </span>
+                      <span className="text-xs font-semibold text-[#007AFF] bg-[#e8f0fe] px-3 py-1 rounded-full">
+                        Voir
+                      </span>
+                    </div>
+                  </div>
+                </Link>
               ))}
             </div>
-          </div>
-        </section>
+          )}
 
-        {/* ─── FEATURES / WHY US ────────────────────────────────── */}
-        <section
-          id="features"
-          ref={featuresReveal.ref as React.RefObject<HTMLElement>}
-          className={`py-16 transition-all duration-700 ${featuresReveal.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
-                Pourquoi choisir ImmoParticuliers ?
-              </h2>
-              <p className="max-w-2xl mx-auto" style={{ color: 'var(--text-tertiary)' }}>
-                La première plateforme pensée à 100% pour les particuliers.
+          <div className="text-center mt-8">
+            <Link
+              to="/search"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-[#007AFF] hover:text-[#0066d6] transition-colors sm:hidden"
+            >
+              Voir toutes les annonces <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── PRICING TEASER ── */}
+      <section className="py-16 bg-white border-y border-[#d2d2d7]">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <p className="text-xs font-bold uppercase tracking-widest text-[#007AFF] mb-3">Tarifs</p>
+          <h2 className="text-3xl font-extrabold text-[#1d1d1f] mb-4">Une formule pour chaque besoin</h2>
+          <p className="text-[#515154] mb-8 max-w-lg mx-auto">
+            Démarrez gratuitement. Passez à Pro quand vous en avez besoin. Aucun engagement, aucune surprise.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              to="/pricing"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-white transition-all"
+              style={{ backgroundColor: '#007AFF' }}
+              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#0066d6')}
+              onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#007AFF')}
+            >
+              Voir les tarifs <Tag className="w-4 h-4" />
+            </Link>
+            <Link
+              to="/calculateur"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold border border-[#d2d2d7] text-[#515154] hover:bg-[#f5f5f7] transition-all"
+            >
+              <TrendingUp className="w-4 h-4" />
+              Calculer ma rentabilité
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA SECTION ── */}
+      <section style={{ backgroundColor: '#1d1d1f' }} className="py-20">
+        <div className="max-w-3xl mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">
+            Prêt à louer sans intermédiaire ?
+          </h2>
+          <p className="text-slate-400 mb-10 text-lg">
+            Rejoignez plus de 15 000 utilisateurs qui font confiance à ImmoParticuliers pour leur gestion locative.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              to="/register"
+              className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl font-semibold text-white transition-all"
+              style={{ backgroundColor: '#007AFF' }}
+              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#0066d6')}
+              onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#007AFF')}
+            >
+              Créer mon compte gratuitement
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+            <Link
+              to="/search"
+              className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl font-semibold border border-white/30 text-white hover:bg-white/10 transition-all"
+            >
+              <Search className="w-5 h-5" />
+              Parcourir les annonces
+            </Link>
+          </div>
+          <div className="flex items-center justify-center gap-6 mt-8 text-sm text-slate-500">
+            <span className="flex items-center gap-1.5"><Check className="w-4 h-4 text-emerald-400" /> Inscription gratuite</span>
+            <span className="flex items-center gap-1.5"><Lock className="w-4 h-4 text-emerald-400" /> Données sécurisées</span>
+            <span className="flex items-center gap-1.5"><Headphones className="w-4 h-4 text-emerald-400" /> Support 7j/7</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer className="bg-white border-t border-[#d2d2d7]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+            <div className="col-span-2 md:col-span-1">
+              <Link to="/" className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 bg-[#007AFF] rounded-xl flex items-center justify-center">
+                  <HomeIcon className="w-4 h-4 text-white" />
+                </div>
+                <span className="font-bold text-[#1d1d1f]">ImmoParticuliers</span>
+              </Link>
+              <p className="text-sm text-[#86868b] leading-relaxed">
+                La plateforme de location immobilière entre particuliers.
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                { icon: <Euro className="w-7 h-7 text-blue-500" />, iconBg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.15)', glow: 'transparent', title: '100% Gratuit', desc: 'Aucun frais d\'agence pour le locataire. Publication de l\'annonce gratuite pour le propriétaire.' },
-                { icon: <MessageSquare className="w-7 h-7 text-blue-500" />, iconBg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.15)', glow: 'transparent', title: 'Contact Direct', desc: 'Discutez sans intermédiaire via notre messagerie intégrée. Fini les pertes de temps.' },
-                { icon: <Shield className="w-7 h-7 text-blue-600" />, iconBg: 'rgba(37,99,235,0.08)', border: 'rgba(37,99,235,0.15)', glow: 'transparent', title: '100% Sécurisé', desc: 'Identités vérifiées, dossiers certifiés et paiements en ligne protégés.' },
-                { icon: <Headphones className="w-7 h-7 text-slate-500" />, iconBg: 'rgba(100,116,139,0.08)', border: 'rgba(100,116,139,0.15)', glow: 'transparent', title: 'Support & Garantie', desc: 'Des experts à votre écoute et des assurances optionnelles pour louer en toute tranquillité.' },
-              ].map(({ icon, iconBg, border, glow, title, desc }) => (
-                <div
-                  key={title}
-                  className="text-center rounded-2xl p-6 transition-all duration-300 "
-                  style={{
-                    background: 'rgba(255,255,255,0.10)',
-                    backdropFilter: 'blur(20px) saturate(180%)',
-                    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                    border: `1px solid ${border}`,
-                    boxShadow: `0 0 16px ${glow}, inset 0 1px 0 rgba(255,255,255,0.65)`,
-                  }}
-                >
-                  <div className="w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-4" style={{ background: iconBg }}>
-                    {icon}
-                  </div>
-                  <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>{title}</h3>
-                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{desc}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Calculateur promo strip — glass */}
-            <div
-              className="mt-12 rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-6"
-              style={{
-                background: 'rgba(255,255,255,0.10)',
-                backdropFilter: 'blur(20px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                border: '1px solid rgba(59,130,246,0.20)',
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.65), 0 8px 24px rgba(0,0,0,0.06)',
-              }}
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg"
-                  style={{ background: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)' }}>
-                  <TrendingUp className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
-                    Calculateur de rentabilité locative
-                  </h3>
-                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                    Rentabilité brute, nette, cash-flow mensuel et retour sur investissement — en quelques secondes.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 flex-shrink-0">
-                <Link to="/pricing" className="btn-neon-emerald whitespace-nowrap px-5 py-2.5">
-                  Voir les tarifs
-                </Link>
-                <Link to="/calculateur" className="btn btn-primary whitespace-nowrap inline-flex items-center gap-2">
-                  Essayer gratuitement
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ─── ABOUT SECTION ────────────────────────────────────── */}
-        <section
-          id="about"
-          ref={aboutReveal.ref as React.RefObject<HTMLElement>}
-          className={`py-16 transition-all duration-700 ${aboutReveal.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
-                À propos d'ImmoParticuliers
-              </h2>
-              <p className="text-sm uppercase tracking-widest font-medium" style={{ color: 'var(--text-tertiary)' }}>
-                La plateforme qui révolutionne l'immobilier entre particuliers
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6 mb-12">
-              <div
-                className="rounded-2xl p-6 md:col-span-2 border-l-4 border-l-blue-500"
-                style={{
-                  background: 'rgba(255,255,255,0.10)',
-                  backdropFilter: 'blur(20px) saturate(180%)',
-                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                  border: '1px solid var(--glass-border)',
-                  borderLeftWidth: '4px',
-                  borderLeftColor: '#3b82f6',
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.65)',
-                }}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Info className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Notre mission</h3>
-                    <p style={{ color: 'var(--text-secondary)' }}>
-                      Née d'un constat simple : la location immobilière coûte cher et prend du temps. Nous avons créé
-                      ImmoParticuliers pour redonner le pouvoir aux particuliers. Notre objectif est de fluidifier
-                      le marché locatif en supprimant les intermédiaires tout en garantissant une sécurité maximale.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {[
-                { title: 'Ce qui nous différencie', desc: 'Pas de frais cachés, pas d\'attente interminable. Une plateforme intuitive pensée pour une expérience utilisateur irréprochable et transparente.' },
-                { title: 'Notre Promesse', desc: 'Une mise en relation rapide et pertinente. Des outils numériques de pointe pour sécuriser les dossiers et la gestion de votre location de A à Z.' },
-              ].map(({ title, desc }) => (
-                <div
-                  key={title}
-                  className="rounded-2xl p-6 transition-all duration-300 hover:-translate-y-0.5"
-                  style={{
-                    background: 'rgba(255,255,255,0.10)',
-                    backdropFilter: 'blur(20px) saturate(180%)',
-                    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                    border: '1px solid var(--glass-border)',
-                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.65)',
-                  }}
-                >
-                  <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{title}</h3>
-                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{desc}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Stats Banner */}
-            <div
-              className="rounded-2xl p-8 text-white mb-12 relative overflow-hidden"
-              style={{ background: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)' }}
-            >
-              <div className="absolute inset-0 opacity-20" style={{ background: 'radial-gradient(ellipse at 20% 50%, rgba(255,255,255,0.30) 0%, transparent 60%)' }} />
-              <h3 className="text-xl font-bold text-center mb-8 relative z-10">ImmoParticuliers en chiffres</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center relative z-10">
-                {[
-                  { val: '10 000+', label: 'Annonces' },
-                  { val: '5 000+', label: 'Propriétaires' },
-                  { val: '98%', label: 'Satisfaction' },
-                  { val: '24h', label: 'Délai moyen' },
-                ].map(({ val, label }) => (
-                  <div key={label}>
-                    <p className="text-3xl font-bold">{val}</p>
-                    <p className="text-white/80 text-sm">{label}</p>
-                  </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-[#86868b] mb-4">Plateforme</p>
+              <ul className="space-y-2.5">
+                {[{ to: '/search', label: 'Recherche' }, { to: '/pricing', label: 'Tarifs' }, { to: '/calculateur', label: 'Calculateur' }].map(l => (
+                  <li key={l.to}><Link to={l.to} className="text-sm text-[#515154] hover:text-[#1d1d1f] transition-colors">{l.label}</Link></li>
                 ))}
-              </div>
+              </ul>
             </div>
 
-            <div className="text-center">
-              <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>Rejoignez notre réseau de membres satisfaits</p>
-              <Link to="/register" className="btn-neon-emerald inline-flex items-center gap-2 px-8 py-3 text-base">
-                Créer mon compte gratuitement
-                <ArrowRight className="w-5 h-5" />
-              </Link>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-[#86868b] mb-4">Aide</p>
+              <ul className="space-y-2.5">
+                {[{ to: '/faq', label: 'FAQ' }, { to: '/support', label: 'Support' }, { to: '/contact', label: 'Contact' }, { to: '/presse', label: 'Presse' }].map(l => (
+                  <li key={l.to}><Link to={l.to} className="text-sm text-[#515154] hover:text-[#1d1d1f] transition-colors">{l.label}</Link></li>
+                ))}
+              </ul>
             </div>
-          </div>
-        </section>
 
-        {/* ─── FINAL CTA ────────────────────────────────────────── */}
-        <section
-          ref={ctaReveal.ref as React.RefObject<HTMLElement>}
-          className={`py-20 relative overflow-hidden transition-all duration-700 ${ctaReveal.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
-          style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%)' }}
-        >
-          {/* Glass overlay for depth */}
-          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 30% 60%, rgba(255,255,255,0.18) 0%, transparent 60%)' }} />
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
-              style={{ background: 'rgba(255,255,255,0.20)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.40)' }}>
-              <HomeIcon className="w-10 h-10 text-white" />
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Prêt à démarrer votre projet immobilier ?
-            </h2>
-            <p className="text-white/80 mb-8 max-w-xl mx-auto">
-              Rejoignez la communauté ImmoParticuliers et facilitez-vous la vie. Que vous soyez locataire ou
-              propriétaire, trouvez votre bonheur sans frais d'agence.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                to="/register"
-                className="inline-flex items-center gap-2 bg-white text-blue-700 font-semibold px-8 py-3.5 rounded-full hover:bg-white/90 transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-0.5"
-              >
-                Créer mon compte gratuitement
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-              <Link
-                to="/pricing"
-                className="inline-flex items-center gap-2 font-semibold px-8 py-3.5 rounded-full transition-all duration-200"
-                style={{
-                  background: 'rgba(255,255,255,0.15)',
-                  backdropFilter: 'blur(12px)',
-                  border: '1px solid rgba(255,255,255,0.40)',
-                  color: 'white',
-                  boxShadow: '0 0 20px rgba(255,255,255,0.10)',
-                }}
-              >
-                <Tag className="w-4 h-4" />
-                Voir les formules
-              </Link>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-[#86868b] mb-4">Légal</p>
+              <ul className="space-y-2.5">
+                {[{ to: '/cgu', label: 'CGU' }, { to: '/confidentialite', label: 'Confidentialité' }, { to: '/cookies', label: 'Cookies' }, { to: '/mentions-legales', label: 'Mentions légales' }].map(l => (
+                  <li key={l.to}><Link to={l.to} className="text-sm text-[#515154] hover:text-[#1d1d1f] transition-colors">{l.label}</Link></li>
+                ))}
+              </ul>
             </div>
           </div>
-        </section>
 
-        {/* ─── FOOTER ───────────────────────────────────────────── */}
-        <footer
-          style={{
-            background: 'rgba(5,10,24,0.92)',
-            backdropFilter: 'blur(24px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-            borderTop: '1px solid rgba(255,255,255,0.08)',
-          }}
-          className="text-slate-400 pt-16 pb-8"
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid md:grid-cols-4 gap-8 mb-12">
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)' }}>
-                    <HomeIcon className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-xl font-bold text-white">ImmoParticuliers</span>
-                </div>
-                <p className="text-sm">La plateforme n°1 en France de l'immobilier entre particuliers.</p>
-              </div>
-
-              <div>
-                <h4 className="text-white font-semibold mb-4">Navigation</h4>
-                <ul className="space-y-2 text-sm">
-                  <li><button onClick={() => scrollTo('hero')} className="hover:text-blue-400 transition-colors">Accueil</button></li>
-                  <li><button onClick={() => scrollTo('how-it-works')} className="hover:text-blue-400 transition-colors">Comment ça marche</button></li>
-                  <li><Link to="/search" className="hover:text-blue-400 transition-colors">Trouver un bien</Link></li>
-                  <li><Link to="/calculateur" className="hover:text-blue-400 transition-colors">Calculateur</Link></li>
-                  <li><Link to="/pricing" className="hover:text-blue-400 transition-colors">Tarifs</Link></li>
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="text-white font-semibold mb-4">Légal</h4>
-                <ul className="space-y-2 text-sm">
-                  <li><Link to="/mentions-legales" className="hover:text-blue-400 transition-colors">Mentions légales</Link></li>
-                  <li><Link to="/cgu" className="hover:text-blue-400 transition-colors">CGU</Link></li>
-                  <li><Link to="/confidentialite" className="hover:text-blue-400 transition-colors">Politique de confidentialité</Link></li>
-                  <li><Link to="/cookies" className="hover:text-blue-400 transition-colors">Cookies</Link></li>
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="text-white font-semibold mb-4">Contact</h4>
-                <ul className="space-y-2 text-sm">
-                  <li><Link to="/faq" className="hover:text-blue-400 transition-colors">FAQ</Link></li>
-                  <li><Link to="/contact" className="hover:text-blue-400 transition-colors">Nous contacter</Link></li>
-                  <li><Link to="/support" className="hover:text-blue-400 transition-colors">Support</Link></li>
-                  <li><Link to="/presse" className="hover:text-blue-400 transition-colors">Presse</Link></li>
-                </ul>
-              </div>
-            </div>
-
-            <div className="border-t pt-8 text-center text-sm" style={{ borderTopColor: 'rgba(255,255,255,0.08)' }}>
-              <p>© 2026 ImmoParticuliers. Tous droits réservés. Réalisé en France.</p>
+          <div className="pt-6 border-t border-[#d2d2d7] flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-[#86868b]">© {new Date().getFullYear()} ImmoParticuliers. Tous droits réservés.</p>
+            <div className="flex items-center gap-4 text-sm text-[#86868b]">
+              <span className="flex items-center gap-1.5"><Shield className="w-4 h-4" /> RGPD conforme</span>
+              <span className="flex items-center gap-1.5"><Lock className="w-4 h-4" /> Hébergé en France</span>
             </div>
           </div>
-        </footer>
+        </div>
+      </footer>
 
-      </div>
     </div>
   )
 }

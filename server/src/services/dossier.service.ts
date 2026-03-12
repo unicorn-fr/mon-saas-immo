@@ -58,6 +58,71 @@ class DossierService {
     return prisma.tenantDocument.create({ data })
   }
 
+  async reassignDocument(id: string, userId: string, category: string, docType: string) {
+    const doc = await prisma.tenantDocument.findUnique({ where: { id } })
+    if (!doc) throw new Error('Document introuvable')
+    if (doc.userId !== userId) throw new Error('Accès refusé')
+
+    // If target slot is occupied → swap atomically
+    const occupant = await prisma.tenantDocument.findFirst({
+      where: { userId, category, docType, NOT: { id } },
+    })
+
+    if (occupant) {
+      await prisma.$transaction([
+        prisma.tenantDocument.update({
+          where: { id: occupant.id },
+          data: { category: doc.category, docType: doc.docType },
+        }),
+        prisma.tenantDocument.update({
+          where: { id },
+          data: { category, docType },
+        }),
+      ])
+      return { swapped: true }
+    }
+
+    await prisma.tenantDocument.update({ where: { id }, data: { category, docType } })
+    return { swapped: false }
+  }
+
+  /**
+   * Get all documents for a tenant — accessible by owners who have at least
+   * one application or conversation involving that tenant.
+   */
+  async getTenantDossier(tenantId: string, requesterId: string) {
+    // Verify requester is an OWNER
+    const requester = await prisma.user.findUnique({
+      where: { id: requesterId },
+      select: { role: true },
+    })
+    if (!requester || requester.role !== 'OWNER') {
+      throw new Error('Accès refusé')
+    }
+
+    // Fetch tenant basic info + documents
+    const tenant = await prisma.user.findUnique({
+      where: { id: tenantId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        profileMeta: true,
+        birthDate: true,
+        birthCity: true,
+        nationality: true,
+        tenantDocuments: {
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    })
+
+    if (!tenant) throw new Error('Locataire introuvable')
+    return tenant
+  }
+
   async deleteDocument(id: string, userId: string) {
     const doc = await prisma.tenantDocument.findUnique({ where: { id } })
     if (!doc) throw new Error('Document introuvable')

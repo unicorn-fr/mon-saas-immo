@@ -23,8 +23,14 @@ import {
   Upload, Trash2, CheckCircle, CheckCircle2, AlertTriangle, User,
   Briefcase, TrendingUp, Home, Shield, Lock, Loader, Loader2, Star, Award,
   AlertCircle, Download, ShieldAlert, ShieldCheck, Info, Eye, X,
-  Cpu, Sparkles, Layers, FileX, ChevronDown, ChevronUp,
+  Cpu, Sparkles, Layers, FileX, ChevronDown, ChevronUp, GripVertical,
 } from 'lucide-react'
+import {
+  DndContext, useDraggable, useDroppable, DragOverlay, closestCenter,
+  type DragEndEvent, type DragStartEvent,
+} from '@dnd-kit/core'
+import { CSS } from '@dnd-kit/utilities'
+import { DossierWizard } from '../../components/dossier/DossierWizard'
 import JSZip from 'jszip'
 import { useAuth } from '../../hooks/useAuth'
 import { Layout } from '../../components/layout/Layout'
@@ -73,7 +79,7 @@ interface DocCategory {
 const CATEGORIES: DocCategory[] = [
   {
     id: 'IDENTITE', label: 'Identité', icon: User,
-    color: 'cyan', accent: 'text-cyan-600', accentBg: 'bg-cyan-50',
+    color: 'blue', accent: 'text-blue-600', accentBg: 'bg-blue-50',
     slots: [
       { docType: 'CNI_RECTO',      label: "CNI – Face avant",           hint: 'Face avec photo, nom, prénom.',  why: "Preuve d'identité légale (recto).", required: true,  weight: 5 },
       { docType: 'CNI_VERSO',     label: "CNI – Face arrière (MRZ)",   hint: 'Zone de lecture optique (MRZ).', why: "La MRZ valide l'authenticité du document.", required: true, weight: 4 },
@@ -83,7 +89,7 @@ const CATEGORIES: DocCategory[] = [
   },
   {
     id: 'EMPLOI', label: 'Situation professionnelle', icon: Briefcase,
-    color: 'violet', accent: 'text-violet-600', accentBg: 'bg-violet-50',
+    color: 'violet', accent: 'text-blue-600', accentBg: 'bg-blue-50',
     slots: [
       { docType: 'CONTRAT_TRAVAIL',    label: 'Contrat de travail',      hint: 'CDI, CDD, alternance…',       why: "Stabilité de l'emploi.",          required: true,  weight: 7 },
       { docType: 'KBIS',               label: 'Extrait Kbis',            hint: '< 3 mois, auto-entrepreneur.', why: "Existence légale de l'entreprise.", required: false, weight: 5 },
@@ -113,7 +119,7 @@ const CATEGORIES: DocCategory[] = [
   },
   {
     id: 'GARANTIES', label: 'Garanties', icon: Shield,
-    color: 'fuchsia', accent: 'text-fuchsia-600', accentBg: 'bg-fuchsia-50',
+    color: 'indigo', accent: 'text-[#007AFF]', accentBg: 'bg-[#e8f0fe]',
     slots: [
       { docType: 'ATTESTATION_VISALE',   label: 'Attestation Visale',        hint: 'Garantie Action Logement.',  why: 'Garantit les loyers impayés.',   required: false, weight: 5 },
       { docType: 'ACTE_CAUTION',         label: 'Acte de cautionnement',     hint: 'Signé par le garant.',       why: 'Engagement légal du garant.',    required: false, weight: 4 },
@@ -122,13 +128,20 @@ const CATEGORIES: DocCategory[] = [
   },
 ]
 
-const ALL_SLOTS  = CATEGORIES.flatMap((c) => c.slots.map((s) => ({ ...s, category: c.id })))
-const TOTAL_W    = ALL_SLOTS.reduce((sum, s) => sum + s.weight, 0)
+const ALL_SLOTS      = CATEGORIES.flatMap((c) => c.slots.map((s) => ({ ...s, category: c.id })))
+const REQ_SLOTS      = ALL_SLOTS.filter((s) => s.required)
+const OPT_SLOTS      = ALL_SLOTS.filter((s) => !s.required)
+// Required docs = 85 % of score, optional = 15 % bonus
+const REQ_W          = REQ_SLOTS.reduce((sum, s) => sum + s.weight, 0)
+const OPT_W          = OPT_SLOTS.reduce((sum, s) => sum + s.weight, 0)
 
 function computeScore(docs: TenantDocument[]) {
-  const w = ALL_SLOTS.filter((s) => docs.some((d) => d.category === s.category && d.docType === s.docType))
-    .reduce((sum, s) => sum + s.weight, 0)
-  return Math.round((w / TOTAL_W) * 100)
+  const uploaded = ALL_SLOTS.filter((s) => docs.some((d) => d.category === s.category && d.docType === s.docType))
+  const reqDone  = uploaded.filter((s) => s.required).reduce((sum, s) => sum + s.weight, 0)
+  const optDone  = uploaded.filter((s) => !s.required).reduce((sum, s) => sum + s.weight, 0)
+  const base     = Math.min(85, Math.round((reqDone / REQ_W) * 85))
+  const bonus    = Math.round((optDone / OPT_W) * 15)
+  return Math.min(100, base + bonus)
 }
 
 function getStrength(score: number, hasVisale: boolean) {
@@ -192,51 +205,94 @@ function DocumentRow({
   onOpenWhy: (slot: SlotSpec) => void
 }) {
   const inputRef   = useRef<HTMLInputElement>(null)
-  const [isDragOver, setIsDragOver] = useState(false)
+  const [isFileDragOver, setIsFileDragOver] = useState(false)
 
   const isScanning = !!scanEntry && scanEntry.phase !== 'done' && scanEntry.phase !== 'error'
   const isDone     = !!doc
   const isError    = scanEntry?.phase === 'error'
 
   const confidencePct = scanEntry?.scanResult?.confidence
-  const confColor     = (p?: number) => !p ? '#94a3b8' : p >= 70 ? '#10b981' : p >= 40 ? '#f59e0b' : '#ef4444'
+  const confColor     = (p?: number) => !p ? '#86868b' : p >= 70 ? '#10b981' : p >= 40 ? '#f59e0b' : '#ef4444'
   const hasHighRisk   = scanEntry?.scanResult?.fraudSignals.some((s) => s.severity === 'high')
 
-  const handleSlotDrop = (e: React.DragEvent) => {
+  // ── DnD — draggable (only when doc is uploaded) ──────────────────────────
+  const draggableId = doc ? `doc::${doc.id}` : ''
+  const { attributes, listeners, setNodeRef: setDragRef, transform, isDragging } = useDraggable({
+    id: draggableId || '__disabled__',
+    disabled: !doc || isScanning,
+    data: { doc, fromCategory: category, fromDocType: slot.docType },
+  })
+
+  // ── DnD — droppable (always — accepts both file drops and doc reassignments) ─
+  const droppableId = `slot::${category}::${slot.docType}`
+  const { setNodeRef: setDropRef, isOver } = useDroppable({
+    id: droppableId,
+    data: { toCategory: category, toDocType: slot.docType },
+  })
+
+  const setRef = useCallback((el: HTMLDivElement | null) => {
+    setDragRef(el)
+    setDropRef(el)
+  }, [setDragRef, setDropRef])
+
+  const isDragOver = isFileDragOver || isOver
+
+  const handleSlotFileDrop = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setIsDragOver(false)
+    setIsFileDragOver(false)
     if (isScanning) return
-    const f = e.dataTransfer.files[0]
-    if (f && /\.(pdf|jpe?g|png|webp)$/i.test(f.name)) onUploadSlot(slot.docType, category, f)
+    // Only handle OS file drops — DnD kit handles doc-to-doc drops via DndContext
+    if (e.dataTransfer.files.length > 0) {
+      const f = e.dataTransfer.files[0]
+      if (/\.(pdf|jpe?g|png|webp)$/i.test(f.name)) onUploadSlot(slot.docType, category, f)
+    }
   }
+
+  const dragStyle = isDragging
+    ? { opacity: 0.35, transform: CSS.Translate.toString(transform) }
+    : transform
+    ? { transform: CSS.Translate.toString(transform) }
+    : undefined
 
   return (
     <motion.div
       layout
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); if (!isScanning) setIsDragOver(true) }}
+      ref={setRef}
+      style={dragStyle}
+      onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); if (!isScanning && e.dataTransfer.files.length > 0) setIsFileDragOver(true) }}
       onDragLeave={(e) => {
         e.stopPropagation()
-        // Only reset if leaving the row itself (not hovering a child element)
-        if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(false)
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsFileDragOver(false)
       }}
-      onDrop={handleSlotDrop}
+      onDrop={handleSlotFileDrop}
       className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all ${
         isDragOver && !isScanning
-          ? 'border-violet-400 bg-violet-50/60 shadow-md scale-[1.01]'
-          : isScanning ? 'border-violet-200 bg-violet-50/40' :
+          ? 'border-blue-400 bg-blue-50/60 shadow-md scale-[1.01]'
+          : isScanning ? 'border-blue-200 bg-blue-50/40' :
             isDone && hasHighRisk ? 'border-red-200 bg-red-50/30' :
             isDone ? 'border-emerald-200 bg-emerald-50/30' :
             slot.required ? 'border-dashed border-slate-300 bg-[var(--surface-subtle)]' :
             'border-[var(--border)] bg-[var(--surface-subtle)] opacity-70'
       }`}
     >
+      {/* Drag handle — only visible when doc is uploaded */}
+      {isDone && !isScanning && (
+        <div
+          {...listeners}
+          {...attributes}
+          className="flex-shrink-0 cursor-grab active:cursor-grabbing p-0.5 -ml-1 rounded hover:bg-slate-100 transition-colors"
+          title="Glisser vers un autre emplacement"
+        >
+          <GripVertical className="w-3.5 h-3.5 text-slate-300 hover:text-slate-500 transition-colors" />
+        </div>
+      )}
       {/* Status icon */}
       <div className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm">
         {isScanning ? (
-          <Loader className="w-4 h-4 text-violet-500 animate-spin" />
+          <Loader className="w-4 h-4 text-blue-500 animate-spin" />
         ) : isDone && hasHighRisk ? (
           <ShieldAlert className="w-4 h-4 text-red-500" />
         ) : isDone ? (
@@ -257,7 +313,7 @@ function DocumentRow({
           {slot.required && !isDone && <span className="text-red-400 ml-1 text-xs">*</span>}
         </p>
         {isScanning && (
-          <p className="text-xs text-violet-500 animate-pulse">Analyse IA en cours…</p>
+          <p className="text-xs text-blue-500 animate-pulse">Analyse IA en cours…</p>
         )}
         {isDone && doc && (
           <p className="text-xs truncate" style={{ color: 'var(--text-tertiary)' }}>
@@ -274,16 +330,16 @@ function DocumentRow({
           const chips: { label: string; color: string }[] = []
           // Identité
           if (d.lastName || d.firstName)
-            chips.push({ label: `${d.firstName ?? ''} ${d.lastName ?? ''}`.trim(), color: 'bg-cyan-50 text-cyan-700' })
-          if (d.birthDate)    chips.push({ label: `Né(e) ${d.birthDate}`, color: 'bg-cyan-50 text-cyan-600' })
-          if (d.birthCity)    chips.push({ label: `📍 ${d.birthCity}`, color: 'bg-cyan-50 text-cyan-600' })
-          if (d.documentNumber) chips.push({ label: `N° ${d.documentNumber}`, color: 'bg-slate-100 text-slate-500' })
+            chips.push({ label: `${d.firstName ?? ''} ${d.lastName ?? ''}`.trim(), color: 'bg-blue-50 text-blue-700' })
+          if (d.birthDate)    chips.push({ label: `Né(e) ${d.birthDate}`, color: 'bg-blue-50 text-blue-600' })
+          if (d.birthCity)    chips.push({ label: `📍 ${d.birthCity}`, color: 'bg-blue-50 text-blue-600' })
+          // documentNumber and nationalNumber intentionally not shown (privacy)
           // Revenus
           if (d.netSalary)    chips.push({ label: `Net ${d.netSalary.toLocaleString('fr-FR')} €`, color: 'bg-emerald-50 text-emerald-700' })
           if (d.grossSalary)  chips.push({ label: `Brut ${d.grossSalary.toLocaleString('fr-FR')} €`, color: 'bg-blue-50 text-blue-700' })
-          if (d.bulletinPeriod) chips.push({ label: d.bulletinPeriod, color: 'bg-violet-50 text-violet-600' })
+          if (d.bulletinPeriod) chips.push({ label: d.bulletinPeriod, color: 'bg-blue-50 text-blue-600' })
           if (d.employerName) chips.push({ label: d.employerName.slice(0, 30), color: 'bg-slate-100 text-slate-600' })
-          if (d.contractType) chips.push({ label: d.contractType, color: 'bg-indigo-50 text-indigo-700' })
+          if (d.contractType) chips.push({ label: d.contractType, color: 'bg-[#e8f0fe] text-[#0055b3]' })
           if (d.cafAmount)    chips.push({ label: `CAF ${d.cafAmount.toLocaleString('fr-FR')} €`, color: 'bg-green-50 text-green-700' })
           if (d.areAmount)    chips.push({ label: `ARE ${d.areAmount.toLocaleString('fr-FR')} €`, color: 'bg-blue-50 text-blue-600' })
           if (d.pensionAmount) chips.push({ label: `Pension ${d.pensionAmount.toLocaleString('fr-FR')} €`, color: 'bg-amber-50 text-amber-700' })
@@ -292,7 +348,7 @@ function DocumentRow({
           if (d.issuerName)   chips.push({ label: d.issuerName, color: 'bg-slate-100 text-slate-600' })
           if (d.address)      chips.push({ label: `📍 ${d.address.slice(0, 40)}${d.address.length > 40 ? '…' : ''}`, color: 'bg-amber-50 text-amber-700' })
           // Visale / Garantie
-          if (d.visaleAmount) chips.push({ label: `Visale ≤ ${d.visaleAmount} €/mois`, color: 'bg-violet-50 text-violet-700' })
+          if (d.visaleAmount) chips.push({ label: `Visale ≤ ${d.visaleAmount} €/mois`, color: 'bg-blue-50 text-[#007AFF]' })
           if (d.visaNumber)   chips.push({ label: `Visa ${d.visaNumber}`, color: 'bg-fuchsia-50 text-fuchsia-700' })
           if (d.guarantorLastName || d.guarantorFirstName)
             chips.push({ label: `Garant : ${d.guarantorFirstName ?? ''} ${d.guarantorLastName ?? ''}`.trim(), color: 'bg-fuchsia-50 text-fuchsia-700' })
@@ -310,7 +366,7 @@ function DocumentRow({
       {/* Badges */}
       <div className="flex items-center gap-1.5 flex-shrink-0">
         {scanEntry?.temporalLabel && (
-          <span className="text-[10px] bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded-full font-medium">
+          <span className="text-[10px] bg-blue-50 text-[#007AFF] px-1.5 py-0.5 rounded-full font-medium">
             {scanEntry.temporalLabel.replace(/\s*\(.*\)/, '')}
           </span>
         )}
@@ -368,7 +424,7 @@ function DocumentRow({
           </>
         )}
         {isDone && isDragOver && !isScanning && (
-          <span className="text-[10px] font-semibold text-violet-600 bg-violet-50 border border-violet-200 px-2 py-0.5 rounded-lg animate-pulse">
+          <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-lg animate-pulse">
             Remplacer
           </span>
         )}
@@ -497,19 +553,16 @@ function ExtractedChips({ data }: { data: ExtractedData }) {
 
   // ── Identité ──────────────────────────────────────────────────────────────
   if (data.lastName || data.firstName)
-    chips.push({ label: `${data.firstName ?? ''} ${data.lastName ?? ''}`.trim(), color: 'bg-cyan-100 text-cyan-700', icon: '👤' })
+    chips.push({ label: `${data.firstName ?? ''} ${data.lastName ?? ''}`.trim(), color: 'bg-blue-100 text-blue-700', icon: '👤' })
   if (data.birthDate)
-    chips.push({ label: `Né(e) le ${data.birthDate}`, color: 'bg-cyan-50 text-cyan-600', icon: '📅' })
+    chips.push({ label: `Né(e) le ${data.birthDate}`, color: 'bg-blue-50 text-blue-600', icon: '📅' })
   if (data.birthCity)
-    chips.push({ label: `à ${data.birthCity}`, color: 'bg-cyan-50 text-cyan-600', icon: '🏙️' })
-  if (data.documentNumber)
-    chips.push({ label: `N° ${data.documentNumber}`, color: 'bg-slate-100 text-slate-600', icon: '🪪' })
+    chips.push({ label: `à ${data.birthCity}`, color: 'bg-blue-50 text-blue-600', icon: '🏙️' })
   if (data.documentExpiry)
     chips.push({ label: `Valide jusqu'au ${data.documentExpiry}`, color: 'bg-slate-100 text-slate-500' })
   if (data.nationality)
-    chips.push({ label: `Nat. ${data.nationality}`, color: 'bg-cyan-50 text-cyan-500' })
-  if (data.nationalNumber)
-    chips.push({ label: `SS ${data.nationalNumber}`, color: 'bg-slate-100 text-slate-500', icon: '🔒' })
+    chips.push({ label: `Nat. ${data.nationality}`, color: 'bg-blue-50 text-blue-500' })
+  // Note: documentNumber and nationalNumber are NOT displayed for privacy/security reasons
 
   // ── Revenus / Bulletin ────────────────────────────────────────────────────
   if (data.netSalary)
@@ -517,9 +570,9 @@ function ExtractedChips({ data }: { data: ExtractedData }) {
   if (data.grossSalary)
     chips.push({ label: `Brut ${data.grossSalary.toLocaleString('fr-FR')} €`, color: 'bg-blue-100 text-blue-700' })
   if (data.bulletinPeriod)
-    chips.push({ label: data.bulletinPeriod, color: 'bg-violet-50 text-violet-600', icon: '📆' })
+    chips.push({ label: data.bulletinPeriod, color: 'bg-blue-50 text-blue-600', icon: '📆' })
   if (data.contractType)
-    chips.push({ label: data.contractType, color: 'bg-indigo-100 text-indigo-700' })
+    chips.push({ label: data.contractType, color: 'bg-[#d0e6ff] text-[#0055b3]' })
   if (data.employerName)
     chips.push({ label: data.employerName.slice(0, 28), color: 'bg-slate-100 text-slate-600', icon: '🏢' })
   if (data.siret)
@@ -543,9 +596,9 @@ function ExtractedChips({ data }: { data: ExtractedData }) {
 
   // ── Visale / Garantie ─────────────────────────────────────────────────────
   if (data.visaleAmount)
-    chips.push({ label: `Visale ≤ ${data.visaleAmount} €/mois`, color: 'bg-violet-100 text-violet-700', icon: '🛡️' })
+    chips.push({ label: `Visale ≤ ${data.visaleAmount} €/mois`, color: 'bg-blue-50 text-[#007AFF]', icon: '🛡️' })
   if (data.visaleDuration)
-    chips.push({ label: data.visaleDuration, color: 'bg-violet-50 text-violet-600' })
+    chips.push({ label: data.visaleDuration, color: 'bg-blue-50 text-blue-600' })
   if (data.visaNumber)
     chips.push({ label: `Visa ${data.visaNumber}`, color: 'bg-fuchsia-100 text-fuchsia-700', icon: '🔑' })
 
@@ -596,7 +649,7 @@ function ScanningView({ entry }: { entry: FileEntry }) {
             style={{ background: 'linear-gradient(135deg, #7c3aed, #a78bfa)' }} />
           <div className="relative w-14 h-14 rounded-full flex items-center justify-center"
             style={{ background: 'linear-gradient(135deg, #7c3aed22, #a78bfa22)' }}>
-            <Cpu className="w-6 h-6 text-violet-500 animate-pulse" />
+            <Cpu className="w-6 h-6 text-blue-500 animate-pulse" />
           </div>
         </div>
         <div className="text-center">
@@ -761,7 +814,7 @@ function ResultView({
 function UploadingView() {
   return (
     <div className="flex flex-col items-center gap-3 py-6">
-      <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
+      <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
       <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Envoi sécurisé en cours…</p>
       <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>100 % local · chiffré TLS</p>
     </div>
@@ -834,7 +887,7 @@ function ScannerModal({
                 {entry.file.name}
               </p>
               {queueInfo.total > 1 && (
-                <span className="text-[10px] bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full font-medium flex-shrink-0">
+                <span className="text-[10px] bg-blue-50 text-[#007AFF] px-2 py-0.5 rounded-full font-medium flex-shrink-0">
                   {queueInfo.current}/{queueInfo.total}
                 </span>
               )}
@@ -890,17 +943,17 @@ function LiveScanConsole({
           {isDone
             ? <CheckCircle className="w-4.5 h-4.5 text-emerald-600" />
             : isError ? <FileX className="w-4.5 h-4.5 text-red-500" />
-            : <Cpu className="w-4.5 h-4.5 animate-pulse" style={{ color: '#7c3aed' }} />}
+            : <Cpu className="w-4.5 h-4.5 animate-pulse text-blue-500" />}
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{entry.file.name}</p>
           {isDone && entry.scanResult && (
-            <p className="text-xs font-medium" style={{ color: entry.scanResult.docFamily !== 'UNKNOWN' ? '#10b981' : '#94a3b8' }}>
+            <p className="text-xs font-medium" style={{ color: entry.scanResult.docFamily !== 'UNKNOWN' ? '#10b981' : '#86868b' }}>
               {FAMILY_LABELS[entry.scanResult.docFamily]} · {entry.scanResult.confidence}%
             </p>
           )}
           {!isDone && !isError && (
-            <p className="text-xs text-violet-500 animate-pulse">Analyse en cours…</p>
+            <p className="text-xs text-blue-500 animate-pulse">Analyse en cours…</p>
           )}
         </div>
         {(isDone || isError) && (
@@ -922,7 +975,7 @@ function LiveScanConsole({
               entry.phase === 'uploading' ? 90 : 0
             }%` }}
             transition={{ duration: 0.25 }}
-            style={{ background: 'linear-gradient(90deg, #7c3aed, #a78bfa)' }}
+            style={{ background: 'linear-gradient(90deg, #3b82f6, #60a5fa)' }}
           />
         </div>
       )}
@@ -1049,6 +1102,7 @@ export default function DossierLocatif() {
     id: string; file: File; assignedDocType: string; familyLabel: string; existingDocId?: string
   } | null>(null)
   const [generatingZip,    setGeneratingZip]     = useState(false)
+  const [wizardOpen,       setWizardOpen]         = useState(false)
   const assignedSlots = useRef<Set<string>>(new Set())
 
   const [pendingConfirm, setPendingConfirm] = useState<{
@@ -1561,6 +1615,45 @@ export default function DossierLocatif() {
   const globalInputRef = useRef<HTMLInputElement>(null)
   const [draggingGlobal, setDraggingGlobal] = useState(false)
 
+  // ── DnD reassign between slots ─────────────────────────────────────────────
+  const [draggingDoc, setDraggingDoc] = useState<TenantDocument | null>(null)
+
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    const doc = event.active.data.current?.doc as TenantDocument | undefined
+    if (doc) setDraggingDoc(doc)
+  }, [])
+
+  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
+    setDraggingDoc(null)
+    const { active, over } = event
+    if (!over) return
+    const doc = active.data.current?.doc as TenantDocument | undefined
+    if (!doc) return
+    const toCategory = over.data.current?.toCategory as string | undefined
+    const toDocType  = over.data.current?.toDocType  as string | undefined
+    if (!toCategory || !toDocType) return
+    if (doc.category === toCategory && doc.docType === toDocType) return
+
+    // Optimistic update
+    const prev = [...documents]
+    setDocuments((docs) => docs.map((d) => {
+      if (d.id === doc.id) return { ...d, category: toCategory, docType: toDocType }
+      // If target slot occupied → swap it to source position
+      if (d.category === toCategory && d.docType === toDocType)
+        return { ...d, category: doc.category, docType: doc.docType }
+      return d
+    }))
+
+    try {
+      const result = await dossierService.reassignDocument(doc.id, toCategory, toDocType)
+      if (result.swapped) toast.success('Documents échangés')
+      else toast.success('Document déplacé')
+    } catch {
+      setDocuments(prev)
+      toast.error('Erreur lors du déplacement')
+    }
+  }, [documents])
+
   // ─────────────────────────────────────────────────────────────────────────
 
   if (isLoading) {
@@ -1575,8 +1668,13 @@ export default function DossierLocatif() {
 
   return (
     <Layout>
+      <DndContext
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6"
-        onDragOver={(e) => { e.preventDefault(); setDraggingGlobal(true) }}
+        onDragOver={(e) => { if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); setDraggingGlobal(true) } }}
         onDragLeave={() => setDraggingGlobal(false)}
         onDrop={(e) => {
           e.preventDefault(); setDraggingGlobal(false)
@@ -1628,6 +1726,17 @@ export default function DossierLocatif() {
 
             {/* Actions */}
             <div className="flex flex-wrap gap-2 flex-shrink-0">
+              {/* Wizard CTA — primary action */}
+              <button
+                onClick={() => setWizardOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all"
+                style={{ backgroundColor: '#007AFF', boxShadow: '0 2px 8px rgba(0,122,255,0.24)' }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#0066d6' }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#007AFF' }}
+              >
+                <Sparkles className="w-4 h-4" />
+                Constituer mon dossier
+              </button>
               <button onClick={handleDownloadZip} disabled={generatingZip || documents.length === 0}
                 className="btn btn-secondary flex items-center gap-2 text-sm disabled:opacity-40">
                 {generatingZip ? <Loader className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
@@ -1649,8 +1758,8 @@ export default function DossierLocatif() {
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
               className="rounded-2xl border-2 border-dashed px-6 py-7 text-center cursor-pointer transition-all"
               style={{
-                borderColor: draggingGlobal ? '#7c3aed' : 'rgba(124,58,237,0.3)',
-                backgroundColor: draggingGlobal ? 'rgba(124,58,237,0.06)' : 'rgba(124,58,237,0.02)',
+                borderColor: draggingGlobal ? '#3b82f6' : '#bfdbfe',
+                backgroundColor: draggingGlobal ? '#eff6ff' : '#f5f5f7',
               }}
               onClick={() => globalInputRef.current?.click()}
             >
@@ -1658,8 +1767,8 @@ export default function DossierLocatif() {
                 onChange={(e) => { const f = Array.from(e.target.files ?? []); if (f.length) { handleFiles(f); e.target.value = '' } }} />
               <motion.div animate={draggingGlobal ? { scale: 1.18 } : { scale: 1 }} transition={{ type: 'spring', stiffness: 400 }}>
                 {draggingGlobal
-                  ? <Sparkles className="w-10 h-10 mx-auto mb-3 text-violet-500" />
-                  : <Upload className="w-10 h-10 mx-auto mb-3 text-violet-400" />}
+                  ? <Sparkles className="w-10 h-10 mx-auto mb-3 text-blue-500" />
+                  : <Upload className="w-10 h-10 mx-auto mb-3 text-blue-400" />}
               </motion.div>
               <p className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
                 {draggingGlobal ? 'Relâchez pour analyser' : 'Déposez vos documents ici'}
@@ -1720,7 +1829,7 @@ export default function DossierLocatif() {
                   <motion.div key="scanning" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                     <p className="text-xs font-bold uppercase tracking-wide mb-3 flex items-center gap-2"
                       style={{ color: 'var(--text-tertiary)' }}>
-                      <Cpu className="w-3.5 h-3.5 text-violet-500 animate-pulse" /> Analyse IA
+                      <Cpu className="w-3.5 h-3.5 text-blue-500 animate-pulse" /> Analyse IA
                     </p>
                     <LiveScanConsole entry={activeScanEntry} onDismiss={() => setActiveScanId(null)} />
                   </motion.div>
@@ -1788,7 +1897,36 @@ export default function DossierLocatif() {
           )
         })()}
         {whySlot && <WhyModal slot={whySlot} onClose={() => setWhySlot(null)} />}
+
+        {/* Dossier Wizard */}
+        {wizardOpen && (
+          <DossierWizard
+            onClose={() => setWizardOpen(false)}
+            onDocumentUploaded={(doc) => {
+              setDocuments((prev) => {
+                const filtered = prev.filter((d) => !(d.category === doc.category && d.docType === doc.docType))
+                return [doc, ...filtered]
+              })
+            }}
+            existingDocs={documents}
+          />
+        )}
       </AnimatePresence>
+
+      {/* DragOverlay — ghost card shown while dragging a document between slots */}
+      <DragOverlay dropAnimation={{ duration: 180, easing: 'ease' }}>
+        {draggingDoc && (
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-xl border border-blue-300 bg-white"
+            style={{ maxWidth: 280, opacity: 0.95, boxShadow: '0 8px 24px rgba(0,122,255,0.20)' }}>
+            <GripVertical className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold truncate text-[#1d1d1f]">{draggingDoc.fileName}</p>
+              <p className="text-[10px] text-blue-500">{draggingDoc.docType.replace(/_/g, ' ')}</p>
+            </div>
+          </div>
+        )}
+      </DragOverlay>
+      </DndContext>
     </Layout>
   )
 }
@@ -1908,7 +2046,7 @@ function ProfileComposer({
           value={fields[name]}
           onChange={e => setFields(prev => ({ ...prev, [name]: e.target.value }))}
           placeholder={placeholder}
-          className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-500"
+          className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400"
           style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
         />
       </div>
@@ -1918,8 +2056,8 @@ function ProfileComposer({
   return (
     <div className="mt-8 rounded-2xl border p-6" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
       <div className="flex items-center gap-3 mb-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-100">
-          <Sparkles className="w-5 h-5 text-violet-600" />
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50">
+          <Sparkles className="w-5 h-5 text-blue-600" />
         </div>
         <div>
           <h3 className="font-semibold text-base" style={{ color: 'var(--text-primary)' }}>Composer mon dossier final</h3>
@@ -1933,7 +2071,7 @@ function ProfileComposer({
         <button
           onClick={handleAnalyze}
           disabled={documents.length === 0}
-          className="flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-violet-700 disabled:opacity-40 transition-colors"
+          className="flex items-center gap-2 rounded-xl bg-[#3b82f6] px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-[#2563eb] disabled:opacity-40 transition-colors"
         >
           <Cpu className="w-4 h-4" />
           Analyser mes {documents.length} document{documents.length !== 1 ? 's' : ''}
@@ -1943,12 +2081,12 @@ function ProfileComposer({
       {phase === 'analyzing' && (
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-3 text-sm" style={{ color: 'var(--text-secondary)' }}>
-            <Loader2 className="w-4 h-4 animate-spin text-violet-500" />
+            <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
             Analyse en cours… {progress.done}/{progress.total} document{progress.total !== 1 ? 's' : ''}
           </div>
           <div className="h-2 w-full rounded-full overflow-hidden" style={{ background: 'var(--bg-tertiary)' }}>
             <div
-              className="h-2 rounded-full bg-violet-500 transition-all duration-300"
+              className="h-2 rounded-full bg-blue-500 transition-all duration-300"
               style={{ width: `${progress.total ? (progress.done / progress.total) * 100 : 0}%` }}
             />
           </div>
@@ -2000,7 +2138,7 @@ function ProfileComposer({
                 <select
                   value={fields.contractType}
                   onChange={e => setFields(prev => ({ ...prev, contractType: e.target.value }))}
-                  className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-500"
+                  className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400"
                   style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
                 >
                   <option value="">— Sélectionner —</option>
@@ -2022,7 +2160,7 @@ function ProfileComposer({
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-violet-700 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-2 rounded-xl bg-[#3b82f6] px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-[#2563eb] disabled:opacity-50 transition-colors"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
               {saving ? 'Enregistrement…' : 'Enregistrer dans mon compte'}

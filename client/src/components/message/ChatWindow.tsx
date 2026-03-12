@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, User as UserIcon, Loader, Home } from 'lucide-react'
+import { ArrowLeft, User as UserIcon, Loader, Home, FolderOpen } from 'lucide-react'
 import { MessageBubble } from './MessageBubble'
 import { MessageInput } from './MessageInput'
 import { CreateLeaseModal } from './CreateLeaseModal'
+import { TenantDossierModal } from '../dossier/TenantDossierModal'
 import { useMessages } from '../../hooks/useMessages'
 import { useAuth } from '../../hooks/useAuth'
 import { Conversation } from '../../types/message.types'
@@ -19,6 +20,7 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
   const { user, isOwner } = useAuth()
   const navigate = useNavigate()
   const [showLeaseModal, setShowLeaseModal] = useState(false)
+  const [showTenantDossier, setShowTenantDossier] = useState(false)
   const {
     messages,
     isLoadingMessages,
@@ -176,14 +178,26 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
         </div>
 
         {isOwner && (
-          <button
-            onClick={() => setShowLeaseModal(true)}
-            className="flex items-center gap-2 px-4 py-2 text-white rounded-xl transition-opacity text-sm font-medium hover:opacity-90"
-            style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #7c3aed 100%)' }}
-          >
-            <Home className="w-4 h-4" />
-            <span className="hidden sm:inline">Mettre en location</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowTenantDossier(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold transition-colors"
+              style={{ background: '#eff6ff', border: '1px solid #bfdbfe', color: '#2563eb' }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#dbeafe')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = '#eff6ff')}
+            >
+              <FolderOpen className="w-4 h-4" />
+              <span className="hidden sm:inline">Voir le dossier</span>
+            </button>
+            <button
+              onClick={() => setShowLeaseModal(true)}
+              className="flex items-center gap-2 px-4 py-2 text-white rounded-xl transition-opacity text-sm font-medium hover:opacity-90"
+              style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #7c3aed 100%)' }}
+            >
+              <Home className="w-4 h-4" />
+              <span className="hidden sm:inline">Mettre en location</span>
+            </button>
+          </div>
         )}
       </div>
 
@@ -256,6 +270,15 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
           tenantId={otherUserId}
           tenantName={`${otherUser.firstName} ${otherUser.lastName}`}
           onSuccess={(contractId) => navigate(`/contracts/${contractId}`)}
+        />
+      )}
+
+      {/* Tenant Dossier Modal */}
+      {isOwner && showTenantDossier && (
+        <TenantDossierModal
+          tenantId={otherUserId}
+          tenantName={`${otherUser.firstName} ${otherUser.lastName}`}
+          onClose={() => setShowTenantDossier(false)}
         />
       )}
     </div>

@@ -35,44 +35,26 @@ export default {
           800: '#1e40af',
           900: '#1e3a8a',
         },
-        // ── Owner Theme : Cyan / Teal (Propriétaire) ──────────────────────
-        cyan: {
-          50:  '#ecfeff',
-          100: '#cffafe',
-          200: '#a5f3fc',
-          300: '#67e8f9',
-          400: '#22d3ee',
-          500: '#06b6d4',
-          600: '#0891b2',
-          700: '#0e7490',
-          800: '#155e75',
-        },
-        // ── Tenant Theme : Fuchsia / Magenta (Locataire) ──────────────────
-        fuchsia: {
-          50:  '#fdf4ff',
-          100: '#fae8ff',
-          200: '#f5d0fe',
-          300: '#f0abfc',
-          400: '#e879f9',
-          500: '#d946ef',
-          600: '#c026d3',
-          700: '#a21caf',
-          800: '#86198f',
-        },
-        // ── Accent : Corail Vif (CTA héros) ──────────────────────────────
+        // ── Owner Thread : Apple Blue ────────────────────────────────────
+        'f-owner':  '#007AFF',
+        'f-tenant': '#34C759',
+        // ── Accent (Apple Blue) ───────────────────────────────────────────
         accent: {
-          50:  '#fff5f0',
-          100: '#ffede5',
-          200: '#ffd3bd',
-          300: '#ffb899',
-          400: '#ff8a65',
-          500: '#ff6b35',
-          600: '#e84e1b',
-          700: '#c2410c',
-          800: '#9a3412',
+          50:  '#e8f0fe',
+          100: '#d0e6ff',
+          200: '#aacfff',
+          300: '#6eaeff',
+          400: '#3d8ef5',
+          500: '#007AFF',
+          600: '#0066d6',
+          700: '#0055b3',
+          800: '#003f87',
         },
-        // ── Onyx (sections premium sombres) ──────────────────────────────
-        onyx: '#0f172a',
+        // ── Onyx ──────────────────────────────────────────────────────────
+        onyx: '#1d1d1f',
+        // ── Page bg ───────────────────────────────────────────────────────
+        'bg-page':  '#f5f5f7',
+        'bg-surface': '#ffffff',
         // ── Success ──────────────────────────────────────────────────────
         success: {
           50:  '#f0fdf4',
@@ -99,8 +81,9 @@ export default {
         },
       },
       fontFamily: {
-        sans:    ['Inter', 'system-ui', 'sans-serif'],
+        sans:    ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
         heading: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
+        mono:    ['"JetBrains Mono"', '"DM Mono"', 'monospace'],
       },
       letterSpacing: {
         'tighter': '-0.03em',
@@ -113,28 +96,29 @@ export default {
         '4xl': '2rem',
       },
       boxShadow: {
-        // ── Cards ────────────────────────────────────────────────────────
-        'card':       '0 2px 12px 0 rgba(0,0,0,0.06), 0 1px 3px 0 rgba(0,0,0,0.04)',
-        'card-hover': '0 20px 50px -8px rgba(0,0,0,0.14), 0 8px 20px -4px rgba(0,0,0,0.06)',
-        // ── Cards flottantes avec glow coloré ─────────────────────────
-        'card-glow-cyan':    '0 16px 48px -8px rgba(6, 182, 212, 0.28), 0 4px 12px -2px rgba(0,0,0,0.06)',
-        'card-glow-fuchsia': '0 16px 48px -8px rgba(217, 70, 239, 0.24), 0 4px 12px -2px rgba(0,0,0,0.06)',
-        'card-glow-violet':  '0 16px 48px -8px rgba(124, 58, 237, 0.20), 0 4px 12px -2px rgba(0,0,0,0.06)',
-        'card-glow-blue':    '0 16px 48px -8px rgba(59, 130, 246, 0.24), 0 4px 12px -2px rgba(0,0,0,0.06)',
-        // ── Glows boutons/CTA (micro-interactions) ────────────────────
-        'glow-primary': '0 4px 16px rgba(59, 130, 246, 0.30)',
-        'glow-emerald': '0 4px 16px rgba(16, 185, 129, 0.28)',
-        'glow-cyan':    '0 4px 16px rgba(6, 182, 212, 0.28)',
-        'glow-blue':    '0 4px 16px rgba(59, 130, 246, 0.32)',
-        'glow-magenta': '0 6px 20px rgba(217, 70, 239, 0.50)',
-        'glow-accent':  '0 6px 20px rgba(255, 107, 53, 0.55)',
-        'glow-success': '0 4px 16px rgba(22, 163, 74, 0.35)',
-        // ── Premium ──────────────────────────────────────────────────────
-        'float':   '0 24px 64px -12px rgba(0,0,0,0.22)',
-        'modal':   '0 25px 65px -12px rgba(0,0,0,0.18)',
-        'sidebar': '-4px 0 12px -1px rgba(0,0,0,0.08)',
-        // ── Glassmorphism ────────────────────────────────────────────────
-        'glass':   '0 8px 32px rgba(6, 182, 212, 0.08), inset 0 1px 0 rgba(255,255,255,0.60)',
+        // ── Cards (Light Premium) ─────────────────────────────────────────
+        'card':         '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)',
+        'card-hover':   '0 4px 12px rgba(0,0,0,0.10), 0 12px 32px rgba(0,0,0,0.08)',
+        'card-lg':      '0 4px 12px rgba(0,0,0,0.10), 0 12px 32px rgba(0,0,0,0.08)',
+        // ── Accents glow (soft, light-friendly) ───────────────────────────
+        'card-glow-cyan':    '0 4px 16px rgba(99,102,241,0.18), 0 1px 4px rgba(0,0,0,0.06)',
+        'card-glow-fuchsia': '0 4px 16px rgba(99,102,241,0.18), 0 1px 4px rgba(0,0,0,0.06)',
+        'card-glow-violet':  '0 4px 16px rgba(99,102,241,0.18), 0 1px 4px rgba(0,0,0,0.06)',
+        'card-glow-blue':    '0 4px 16px rgba(59,130,246,0.18),  0 1px 4px rgba(0,0,0,0.06)',
+        // ── Button glows ─────────────────────────────────────────────────
+        'glow-primary': '0 4px 14px rgba(99,102,241,0.35)',
+        'glow-emerald': '0 4px 14px rgba(16,185,129,0.28)',
+        'glow-cyan':    '0 4px 14px rgba(99,102,241,0.28)',
+        'glow-blue':    '0 4px 14px rgba(59,130,246,0.30)',
+        'glow-magenta': '0 4px 14px rgba(99,102,241,0.35)',
+        'glow-accent':  '0 4px 14px rgba(99,102,241,0.35)',
+        'glow-success': '0 4px 14px rgba(16,185,129,0.30)',
+        // ── Premium ───────────────────────────────────────────────────────
+        'float':   '0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)',
+        'modal':   '0 20px 60px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.06)',
+        'sidebar': '2px 0 8px rgba(0,0,0,0.06)',
+        'glass':   '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)',
+        'header':  '0 1px 3px rgba(0,0,0,0.06)',
       },
       animation: {
         'slide-in':   'slideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1)',

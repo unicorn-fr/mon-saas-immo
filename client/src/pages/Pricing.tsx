@@ -16,7 +16,6 @@ interface Plan {
   highlighted: boolean
   badge?: string
   icon: React.ElementType
-  iconBg: string
   features: { label: string; included: boolean; note?: string }[]
 }
 
@@ -31,7 +30,6 @@ const PLANS: Plan[] = [
     ctaLink: '/register',
     highlighted: false,
     icon: Building2,
-    iconBg: 'bg-slate-100',
     features: [
       { label: '1 annonce active', included: true },
       { label: 'Recherche & favoris', included: true },
@@ -57,7 +55,6 @@ const PLANS: Plan[] = [
     highlighted: true,
     badge: 'Le plus populaire',
     icon: Zap,
-    iconBg: 'bg-primary-100',
     features: [
       { label: 'Annonces illimitées', included: true },
       { label: 'Recherche & favoris', included: true },
@@ -82,7 +79,6 @@ const PLANS: Plan[] = [
     ctaLink: '/contact',
     highlighted: false,
     icon: Crown,
-    iconBg: 'bg-amber-100',
     features: [
       { label: 'Tout ce qui est dans Pro', included: true },
       { label: 'Gestion multi-utilisateurs', included: true, note: "Jusqu'à 10 comptes" },
@@ -127,22 +123,22 @@ function PlanCard({ plan, delay }: { plan: Plan; delay: number }) {
   return (
     <div
       ref={ref as React.RefObject<HTMLDivElement>}
-      className={`relative flex flex-col rounded-3xl border transition-all duration-500 ${
+      className={`relative flex flex-col rounded-2xl border transition-all duration-500 ${
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
-      } ${plan.highlighted
-        ? 'shadow-float border-primary-200 scale-[1.02]'
-        : 'shadow-card'
       }`}
       style={{
         transitionDelay: `${delay}ms`,
-        backgroundColor: plan.highlighted ? 'var(--surface-card)' : 'var(--surface-card)',
-        borderColor: plan.highlighted ? undefined : 'var(--border)',
-        outline: plan.highlighted ? '2px solid rgba(124,58,237,0.35)' : undefined,
+        backgroundColor: '#ffffff',
+        borderColor: plan.highlighted ? '#007AFF' : '#d2d2d7',
+        boxShadow: plan.highlighted
+          ? '0 0 0 2px rgba(0,122,255,0.12), 0 8px 32px rgba(0,122,255,0.12)'
+          : '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)',
+        transform: plan.highlighted ? 'scale(1.02)' : undefined,
       }}
     >
       {plan.badge && (
         <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-          <span className="bg-primary-600 text-white text-xs font-bold px-4 py-1 rounded-full shadow-sm whitespace-nowrap">
+          <span className="bg-[#007AFF] text-white text-xs font-bold px-4 py-1 rounded-full shadow-sm whitespace-nowrap">
             {plan.badge}
           </span>
         </div>
@@ -151,36 +147,45 @@ function PlanCard({ plan, delay }: { plan: Plan; delay: number }) {
       <div className="p-7 flex-1 flex flex-col">
         {/* Plan header */}
         <div className="flex items-center gap-3 mb-4">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${plan.iconBg}`}>
-            <Icon className={`w-5 h-5 ${plan.highlighted ? 'text-primary-600' : plan.id === 'enterprise' ? 'text-amber-600' : 'text-slate-500'}`} />
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ backgroundColor: plan.highlighted ? '#e8f0fe' : '#f5f5f7' }}
+          >
+            <Icon
+              className="w-5 h-5"
+              style={{ color: plan.highlighted ? '#007AFF' : plan.id === 'enterprise' ? '#d97706' : '#86868b' }}
+            />
           </div>
-          <div>
-            <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>{plan.name}</h3>
-          </div>
+          <h3 className="font-bold text-lg text-[#1d1d1f]">{plan.name}</h3>
         </div>
 
         {/* Price */}
         <div className="mb-4">
           <div className="flex items-baseline gap-1">
-            <span className="text-4xl font-extrabold tracking-tight" style={{ color: 'var(--text-primary)' }}>
-              {plan.price}
-            </span>
+            <span className="text-4xl font-extrabold tracking-tight text-[#1d1d1f]">{plan.price}</span>
           </div>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{plan.priceNote}</p>
+          <p className="text-sm mt-0.5 text-[#86868b]">{plan.priceNote}</p>
         </div>
 
-        <p className="text-sm mb-6 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-          {plan.tagline}
-        </p>
+        <p className="text-sm mb-6 leading-relaxed text-[#515154]">{plan.tagline}</p>
 
         {/* CTA */}
         <Link
           to={plan.ctaLink}
-          className={`w-full text-center py-2.5 px-4 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 mb-7 ${
+          className={`w-full text-center py-2.5 px-4 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 mb-7`}
+          style={
             plan.highlighted
-              ? 'btn-primary shadow-glow-primary'
-              : 'btn btn-secondary'
-          }`}
+              ? { backgroundColor: '#007AFF', color: '#ffffff' }
+              : { backgroundColor: '#f5f5f7', color: '#515154', border: '1px solid #d2d2d7' }
+          }
+          onMouseEnter={e => {
+            if (plan.highlighted) e.currentTarget.style.backgroundColor = '#0066d6'
+            else e.currentTarget.style.backgroundColor = '#f0f0f2'
+          }}
+          onMouseLeave={e => {
+            if (plan.highlighted) e.currentTarget.style.backgroundColor = '#007AFF'
+            else e.currentTarget.style.backgroundColor = '#f5f5f7'
+          }}
         >
           {plan.cta}
           <ArrowRight className="w-4 h-4" />
@@ -192,12 +197,12 @@ function PlanCard({ plan, delay }: { plan: Plan; delay: number }) {
             <li key={f.label} className="flex items-start gap-2.5 text-sm">
               {f.included
                 ? <Check className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
-                : <X className="w-4 h-4 text-slate-300 flex-shrink-0 mt-0.5" />
+                : <X className="w-4 h-4 text-[#d2d2d7] flex-shrink-0 mt-0.5" />
               }
-              <span style={{ color: f.included ? 'var(--text-primary)' : 'var(--text-placeholder)' }}>
+              <span style={{ color: f.included ? '#1d1d1f' : '#86868b' }}>
                 {f.label}
                 {f.note && (
-                  <span className="block text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{f.note}</span>
+                  <span className="block text-xs mt-0.5 text-[#86868b]">{f.note}</span>
                 )}
               </span>
             </li>
@@ -216,7 +221,7 @@ export default function Pricing() {
 
   return (
     <Layout>
-      <div style={{ backgroundColor: 'var(--surface-page)' }}>
+      <div style={{ backgroundColor: '#f5f5f7', fontFamily: "'Plus Jakarta Sans', Inter, system-ui, sans-serif" }}>
 
         {/* Hero */}
         <section
@@ -225,11 +230,11 @@ export default function Pricing() {
             heroReveal.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
           }`}
         >
-          <p className="text-xs font-bold uppercase tracking-widest text-primary-600 mb-3">Tarifs</p>
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4" style={{ color: 'var(--text-primary)' }}>
+          <p className="text-xs font-bold uppercase tracking-widest text-[#007AFF] mb-3">Tarifs</p>
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-[#1d1d1f]">
             Simple. Transparent. Sans surprise.
           </h1>
-          <p className="text-lg max-w-2xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
+          <p className="text-lg max-w-2xl mx-auto text-[#515154]">
             Que vous soyez propriétaire d'un studio ou gestionnaire d'un parc locatif, il existe une formule taillée pour vous — et une période d'essai pour en être certain.
           </p>
         </section>
@@ -243,9 +248,9 @@ export default function Pricing() {
           </div>
 
           {/* Enterprise note */}
-          <p className="text-center text-sm mt-8" style={{ color: 'var(--text-tertiary)' }}>
+          <p className="text-center text-sm mt-8 text-[#86868b]">
             Vous gérez plus de 50 biens ?{' '}
-            <Link to="/contact" className="text-primary-600 hover:underline font-medium">
+            <Link to="/contact" className="text-[#007AFF] hover:underline font-medium">
               Demandez un devis sur mesure
             </Link>.
           </p>
@@ -259,15 +264,18 @@ export default function Pricing() {
           }`}
         >
           <div className="flex items-center gap-2 mb-6">
-            <HelpCircle className="w-5 h-5 text-primary-500" />
-            <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Questions fréquentes</h2>
+            <HelpCircle className="w-5 h-5 text-[#007AFF]" />
+            <h2 className="text-xl font-bold text-[#1d1d1f]">Questions fréquentes</h2>
           </div>
           <div className="space-y-4">
             {FAQ.map((item) => (
-              <div key={item.q} className="rounded-2xl border p-5"
-                style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
-                <p className="font-semibold text-sm mb-2" style={{ color: 'var(--text-primary)' }}>{item.q}</p>
-                <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{item.a}</p>
+              <div
+                key={item.q}
+                className="rounded-2xl border border-[#d2d2d7] p-5 bg-white"
+                style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+              >
+                <p className="font-semibold text-sm mb-2 text-[#1d1d1f]">{item.q}</p>
+                <p className="text-sm leading-relaxed text-[#515154]">{item.a}</p>
               </div>
             ))}
           </div>

@@ -1,23 +1,35 @@
 /**
- * OwnerSidebar — navigation propriétaire
- * Sidebar pleine hauteur (de top à bottom), logo en tête, glassmorphisme.
- * Style SaaS sérieux : Linear / Revolut / Apple.
+ * OwnerSidebar — Light Premium
+ * bg white · thread indigo #007AFF · Plus Jakarta Sans
  */
 import { useEffect, useState } from 'react'
 import { NavLink, Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Home, ClipboardList, Calendar, FileText,
-  MessageSquare, TrendingUp, Plus, X, HomeIcon,
+  MessageSquare, TrendingUp, Plus, X, LogOut,
 } from 'lucide-react'
 import { useSidebarStore } from '../../store/sidebarStore'
 import { useMessages } from '../../hooks/useMessages'
 import { useAuth } from '../../hooks/useAuth'
 import { applicationService } from '../../services/application.service'
+import { useNavigate } from 'react-router-dom'
+
+const S = {
+  bg:        '#ffffff',
+  border:    '#d2d2d7',
+  thread:    '#007AFF',
+  threadBg:  '#e8f0fe',
+  threadBdr: '#aacfff',
+  text:      '#1d1d1f',
+  muted:     '#86868b',
+  secondary: '#515154',
+  hover:     '#f5f5f7',
+}
 
 function SectionLabel({ label }: { label: string }) {
   return (
-    <p className="px-4 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-widest select-none"
-      style={{ color: 'var(--text-tertiary)' }}>
+    <p className="px-4 pt-5 pb-1.5 text-[10px] font-bold uppercase tracking-[0.12em] select-none"
+      style={{ color: S.muted }}>
       {label}
     </p>
   )
@@ -34,20 +46,27 @@ function NavItem({
 
   return (
     <NavLink to={to} end={end} onClick={onClick}
-      className="mx-2 flex items-center gap-2.5 px-3 py-[7px] rounded-[10px] text-[13.5px] transition-all duration-150"
+      className="mx-3 flex items-center gap-3 px-3 py-2 rounded-xl text-[13.5px] transition-all duration-150"
+      aria-current={active ? 'page' : undefined}
       style={active ? {
-        background: 'rgba(59,130,246,0.10)',
-        color: '#2563eb',
+        background: S.threadBg,
+        color: S.thread,
         fontWeight: 600,
-        border: '1px solid rgba(59,130,246,0.22)',
-      } : { color: 'var(--text-secondary)', border: '1px solid transparent' }}
-      onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = 'var(--surface-subtle)' }}
+        borderLeft: `3px solid ${S.thread}`,
+        paddingLeft: 9,
+      } : {
+        color: S.secondary,
+        fontWeight: 400,
+        borderLeft: '3px solid transparent',
+        paddingLeft: 9,
+      }}
+      onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = S.hover }}
       onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = '' }}>
-      <Icon className="w-[15px] h-[15px] flex-shrink-0" />
+      <Icon className="w-4 h-4 flex-shrink-0" />
       <span className="flex-1 truncate">{label}</span>
       {badge !== undefined && badge > 0 && (
         <span className="text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1"
-          style={{ background: 'rgba(59,130,246,0.12)', color: '#2563eb', border: '1px solid rgba(59,130,246,0.22)' }}>
+          style={{ background: S.threadBg, color: S.thread, border: `1px solid ${S.threadBdr}` }}>
           {badge > 99 ? '99+' : badge}
         </span>
       )}
@@ -58,7 +77,8 @@ function NavItem({
 export function OwnerSidebar() {
   const { mobileOpen, setMobileOpen } = useSidebarStore()
   const { unreadCount, fetchUnreadCount } = useMessages()
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
   const [pendingAppsCount, setPendingAppsCount] = useState(0)
 
   useEffect(() => {
@@ -71,55 +91,28 @@ export function OwnerSidebar() {
   const initials = `${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}`.toUpperCase()
   const closeMobile = () => setMobileOpen(false)
 
-  const Content = () => (
-    <div className="flex flex-col h-full">
+  const handleLogout = () => { logout(); navigate('/') }
 
-      {/* ── Logo (en haut de la sidebar, avant tout) ───────── */}
+  const Content = () => (
+    <div className="flex flex-col h-full" style={{ fontFamily: '"Plus Jakarta Sans", Inter, system-ui, sans-serif' }}>
+
+      {/* Logo */}
       <div className="px-4 pt-5 pb-4 flex-shrink-0">
-        <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-          <div
-            className="w-8 h-8 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)' }}
-          >
-            <HomeIcon className="w-4 h-4 text-white" />
+        <Link to="/" onClick={closeMobile} className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: S.thread }}>
+            <Home className="w-4 h-4 text-white" />
           </div>
-          <span className="text-sm font-bold font-heading text-gradient-brand">ImmoParticuliers</span>
+          <div>
+            <p className="text-sm font-extrabold leading-tight" style={{ color: S.text }}>FOYER</p>
+            <p className="text-[10px] leading-tight" style={{ color: S.muted }}>Gestion locative</p>
+          </div>
         </Link>
       </div>
 
-      {/* ── Séparateur ─────────────────────────────────────── */}
-      <div className="mx-4 border-t" style={{ borderColor: 'var(--glass-border)' }} />
+      <div className="mx-4 mb-2" style={{ height: 1, background: S.border }} />
 
-      {/* ── Profil utilisateur ─────────────────────────────── */}
-      <div className="px-4 pt-4 pb-3 flex-shrink-0">
-        <div className="flex items-center gap-2.5">
-          <div
-            className="w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-bold text-white flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)' }}
-          >
-            {initials}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[13px] font-semibold truncate leading-tight" style={{ color: 'var(--text-primary)' }}>
-              {user?.firstName} {user?.lastName}
-            </p>
-            <p className="text-[11px] leading-tight mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
-              Propriétaire
-            </p>
-          </div>
-          <button onClick={() => setMobileOpen(false)}
-            className="md:hidden p-1 rounded-lg flex-shrink-0"
-            style={{ color: 'var(--text-tertiary)' }}>
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* ── Séparateur ─────────────────────────────────────── */}
-      <div className="mx-4 border-t" style={{ borderColor: 'var(--glass-border)' }} />
-
-      {/* ── Navigation ─────────────────────────────────────── */}
-      <nav className="flex-1 overflow-y-auto py-2 scrollbar-thin">
+      {/* Navigation */}
+      <nav role="navigation" aria-label="Navigation principale" className="flex-1 overflow-y-auto py-1 scrollbar-thin">
         <SectionLabel label="Vue d'ensemble" />
         <NavItem to="/dashboard/owner" icon={LayoutDashboard} label="Tableau de bord" end onClick={closeMobile} />
 
@@ -140,30 +133,56 @@ export function OwnerSidebar() {
         <SectionLabel label="Communication" />
         <NavItem to="/messages" icon={MessageSquare} label="Messages" badge={unreadCount} onClick={closeMobile} />
       </nav>
+
+      <div className="mx-4 mt-2" style={{ height: 1, background: S.border }} />
+
+      {/* Profil */}
+      <div className="p-4 flex-shrink-0">
+        <div className="flex items-center gap-2.5 mb-3">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0"
+            style={{ background: S.thread }}>
+            {initials}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[12.5px] font-semibold truncate leading-tight" style={{ color: S.text }}>
+              {user?.firstName} {user?.lastName}
+            </p>
+            <p className="text-[10px] leading-tight" style={{ color: S.muted }}>Propriétaire</p>
+          </div>
+          <button onClick={closeMobile} className="md:hidden p-1 rounded-md" style={{ color: S.muted }} aria-label="Fermer le menu">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <button onClick={handleLogout}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[13px] transition-all"
+          style={{ color: S.muted }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#fef2f2'; (e.currentTarget as HTMLElement).style.color = '#ef4444' }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = S.muted }}>
+          <LogOut className="w-4 h-4" />
+          <span>Déconnexion</span>
+        </button>
+      </div>
     </div>
   )
 
   const sidebarStyle = {
-    background: 'rgba(255,255,255,0.08)',
-    backdropFilter: 'blur(24px) saturate(200%)',
-    WebkitBackdropFilter: 'blur(24px) saturate(200%)',
-    borderRight: '1px solid var(--glass-border)',
-    boxShadow: '2px 0 24px rgba(0,0,0,0.06), inset -1px 0 0 rgba(255,255,255,0.10)',
+    background: S.bg,
+    borderRight: `1px solid ${S.border}`,
+    boxShadow: '2px 0 8px rgba(0,0,0,0.04)',
   }
 
   return (
     <>
-      {/* Desktop — full height, w-56 */}
-      <aside className="hidden md:flex flex-col w-56 flex-shrink-0 overflow-hidden" style={sidebarStyle}>
+      <aside className="hidden md:flex flex-col flex-shrink-0 overflow-hidden" style={{ ...sidebarStyle, width: 240 }}>
         <Content />
       </aside>
 
-      {/* Mobile overlay */}
       {mobileOpen && (
         <>
-          <div className="fixed inset-0 bg-black/40 z-40 md:hidden backdrop-blur-sm" onClick={closeMobile} />
-          <aside className="fixed left-0 top-0 bottom-0 w-64 z-50 flex flex-col md:hidden"
-            style={{ ...sidebarStyle, boxShadow: '8px 0 48px rgba(0,0,0,0.25)' }}>
+          <div className="fixed inset-0 bg-black/30 z-40 md:hidden" onClick={closeMobile} />
+          <aside className="fixed left-0 top-0 bottom-0 z-50 flex flex-col md:hidden"
+            style={{ ...sidebarStyle, width: 256, boxShadow: '4px 0 24px rgba(0,0,0,0.12)' }}>
             <Content />
           </aside>
         </>

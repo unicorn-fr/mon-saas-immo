@@ -95,6 +95,41 @@ class DossierController {
   }
 
   /**
+   * PATCH /api/v1/dossier/:id
+   * Reassign a document to a different slot (category + docType). Swaps if target occupied.
+   */
+  async reassignDocument(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.id
+      if (!userId) return res.status(401).json({ success: false, message: 'Authentification requise' })
+      const { category, docType } = req.body
+      if (!category || !docType) return res.status(400).json({ success: false, message: 'category et docType requis' })
+      const result = await dossierService.reassignDocument(req.params.id, userId, category, docType)
+      return res.json({ success: true, data: result })
+    } catch (error) {
+      if (error instanceof Error) return res.status(404).json({ success: false, message: error.message })
+      next(error)
+    }
+  }
+
+  /**
+   * GET /api/v1/dossier/tenant/:tenantId
+   * Owner-only: view all documents for a specific tenant.
+   */
+  async getTenantDossier(req: Request, res: Response, next: NextFunction) {
+    try {
+      const requesterId = req.user?.id
+      if (!requesterId) return res.status(401).json({ success: false, message: 'Authentification requise' })
+      const { tenantId } = req.params
+      const data = await dossierService.getTenantDossier(tenantId, requesterId)
+      return res.json({ success: true, data })
+    } catch (error) {
+      if (error instanceof Error) return res.status(403).json({ success: false, message: error.message })
+      next(error)
+    }
+  }
+
+  /**
    * DELETE /api/v1/dossier/:id
    */
   async deleteDocument(req: Request, res: Response, next: NextFunction) {

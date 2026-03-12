@@ -66,7 +66,10 @@
       "Bash(npx vitest run src/tests/dossier_logic.test.ts)",
       "Bash(/Users/enzo/Desktop/Projets/Applications_Web/En_Cours/plateforme-gestion-locative/client/src/tests/dossier_logic.test.ts:*)",
       "Bash(npx vitest run --reporter=verbose)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(open http://localhost:5175/)",
+      "Bash(open http://localhost:5175/login)",
+      "Bash(open http://localhost:5175/pricing)"
     ]
   }
 }

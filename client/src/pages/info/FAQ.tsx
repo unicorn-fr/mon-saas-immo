@@ -70,6 +70,13 @@ const FAQ_ITEMS = [
   },
 ]
 
+const cardStyle = {
+  background: '#ffffff',
+  border: '1px solid #d2d2d7',
+  borderRadius: '1rem',
+  boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)',
+}
+
 export default function FAQ() {
   const [openItems, setOpenItems] = useState<Set<string>>(new Set())
 
@@ -83,16 +90,16 @@ export default function FAQ() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-white shadow-sm border-b border-slate-200">
+    <div className="min-h-screen" style={{ background: '#f5f5f7' }}>
+      <header className="bg-white border-b border-[#d2d2d7]" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-            <div className="w-8 h-8 bg-primary-700 rounded-xl flex items-center justify-center">
+            <div className="w-8 h-8 bg-[#007AFF] rounded-xl flex items-center justify-center">
               <HomeIcon className="w-4 h-4 text-white" />
             </div>
-            <span className="text-lg font-bold text-slate-900 hidden sm:block font-heading">ImmoParticuliers</span>
+            <span className="text-lg font-bold text-slate-900 hidden sm:block">ImmoParticuliers</span>
           </Link>
-          <Link to="/" className="flex items-center gap-2 text-sm text-slate-600 hover:text-primary-600 transition-colors">
+          <Link to="/" className="flex items-center gap-2 text-sm text-slate-500 hover:text-[#007AFF] transition-colors">
             <ArrowLeft className="w-4 h-4" />
             Retour à l'accueil
           </Link>
@@ -100,31 +107,33 @@ export default function FAQ() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold text-slate-900 mb-3">Foire aux questions</h1>
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-extrabold text-slate-900 mb-3">Foire aux questions</h1>
           <p className="text-slate-500">Retrouvez les réponses aux questions les plus fréquentes</p>
         </div>
 
         <div className="space-y-8">
           {FAQ_ITEMS.map((category) => (
             <div key={category.category}>
-              <h2 className="text-lg font-semibold text-primary-600 mb-4">{category.category}</h2>
-              <div className="space-y-3">
+              <h2 className="text-sm font-bold text-[#007AFF] uppercase tracking-wider mb-4">{category.category}</h2>
+              <div className="space-y-2">
                 {category.questions.map((item) => {
                   const key = `${category.category}-${item.q}`
                   const isOpen = openItems.has(key)
                   return (
-                    <div key={key} className="bg-white rounded-xl shadow-card overflow-hidden">
+                    <div key={key} style={cardStyle} className="overflow-hidden">
                       <button
                         onClick={() => toggleItem(key)}
                         className="w-full flex items-center justify-between p-5 text-left hover:bg-slate-50 transition-colors"
                       >
-                        <span className="font-medium text-slate-900 pr-4">{item.q}</span>
-                        <ChevronDown className={`w-5 h-5 text-slate-400 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                        <span className="font-semibold text-slate-900 pr-4 text-sm">{item.q}</span>
+                        <ChevronDown
+                          className={`w-5 h-5 text-slate-400 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                        />
                       </button>
                       {isOpen && (
-                        <div className="px-5 pb-5">
-                          <p className="text-slate-600 text-sm">{item.a}</p>
+                        <div className="px-5 pb-5 border-t border-[#d2d2d7]">
+                          <p className="text-slate-600 text-sm leading-relaxed pt-4">{item.a}</p>
                         </div>
                       )}
                     </div>
@@ -135,9 +144,12 @@ export default function FAQ() {
           ))}
         </div>
 
-        <div className="text-center mt-12 p-6 bg-white rounded-xl shadow-card">
-          <p className="text-slate-600 mb-3">Vous n'avez pas trouvé la réponse à votre question ?</p>
-          <Link to="/contact" className="btn btn-primary">
+        <div style={cardStyle} className="text-center mt-10 p-8">
+          <p className="text-slate-600 mb-4 text-sm">Vous n'avez pas trouvé la réponse à votre question ?</p>
+          <Link
+            to="/contact"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#007AFF] text-white font-semibold text-sm hover:bg-[#0066d6] transition-colors"
+          >
             Contactez-nous
           </Link>
         </div>

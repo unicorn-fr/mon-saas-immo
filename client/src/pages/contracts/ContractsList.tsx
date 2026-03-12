@@ -37,13 +37,12 @@ export default function ContractsList() {
   const [activeTab, setActiveTab] = useState<TabKey>('actifs')
 
   useEffect(() => {
-    fetchContracts(undefined, 1, 200) // fetch all, filter client-side
+    fetchContracts(undefined, 1, 200)
     fetchStatistics()
   }, [fetchContracts, fetchStatistics])
 
   const filtered = contracts.filter((c) => TAB_STATUSES[activeTab].includes(c.status))
 
-  // Tab counts
   const counts: Record<TabKey, number> = {
     'actifs':    contracts.filter(c => c.status === 'ACTIVE').length,
     'en-cours':  contracts.filter(c => ['SENT','SIGNED_OWNER','SIGNED_TENANT','COMPLETED'].includes(c.status)).length,
@@ -51,29 +50,29 @@ export default function ContractsList() {
     'archives':  contracts.filter(c => ['TERMINATED','EXPIRED','CANCELLED'].includes(c.status)).length,
   }
 
-  const tabs: { key: TabKey; label: string; color: string; activeColor: string }[] = [
-    { key: 'actifs',     label: 'Actifs',     color: 'text-success-600',  activeColor: 'bg-success-600' },
-    { key: 'en-cours',   label: 'En cours',   color: 'text-primary-600',   activeColor: 'bg-primary-600' },
-    { key: 'brouillons', label: 'Brouillons', color: 'text-warning-600', activeColor: 'bg-warning-500' },
-    { key: 'archives',   label: 'Archives',   color: 'text-slate-500',   activeColor: 'bg-slate-500' },
+  const tabs: { key: TabKey; label: string }[] = [
+    { key: 'actifs',     label: 'Actifs' },
+    { key: 'en-cours',   label: 'En cours' },
+    { key: 'brouillons', label: 'Brouillons' },
+    { key: 'archives',   label: 'Archives' },
   ]
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, { bg: string; text: string; icon: any; label: string }> = {
-      DRAFT:        { bg: 'bg-warning-100', text: 'text-warning-700', icon: Clock,       label: 'Brouillon' },
-      SENT:         { bg: 'bg-primary-100',   text: 'text-primary-700',   icon: Send,        label: 'Envoye' },
-      SIGNED_OWNER: { bg: 'bg-indigo-100', text: 'text-indigo-700', icon: PenLine,     label: 'Signe (proprio)' },
-      SIGNED_TENANT:{ bg: 'bg-indigo-100', text: 'text-indigo-700', icon: PenLine,     label: 'Signe (locataire)' },
-      COMPLETED:    { bg: 'bg-emerald-100',text: 'text-emerald-700',icon: CheckCircle, label: 'Signe' },
-      ACTIVE:       { bg: 'bg-success-100',  text: 'text-success-700',  icon: CheckCircle, label: 'Actif' },
-      EXPIRED:      { bg: 'bg-slate-100',   text: 'text-slate-700',   icon: AlertCircle, label: 'Expire' },
-      TERMINATED:   { bg: 'bg-red-100',    text: 'text-red-700',    icon: XCircle,     label: 'Resilie' },
-      CANCELLED:    { bg: 'bg-accent-100', text: 'text-accent-700', icon: XCircle,     label: 'Annule' },
+    const variants: Record<string, { bg: string; text: string; border: string; icon: any; label: string }> = {
+      DRAFT:        { bg: 'bg-amber-50',   text: 'text-amber-700',   border: 'border-amber-200',  icon: Clock,       label: 'Brouillon' },
+      SENT:         { bg: 'bg-blue-50',    text: 'text-blue-700',    border: 'border-blue-200',   icon: Send,        label: 'Envoyé' },
+      SIGNED_OWNER: { bg: 'bg-[#e8f0fe]',  text: 'text-[#0055b3]',  border: 'border-[#aacfff]', icon: PenLine,     label: 'Signé (proprio)' },
+      SIGNED_TENANT:{ bg: 'bg-[#e8f0fe]',  text: 'text-[#0055b3]',  border: 'border-[#aacfff]', icon: PenLine,     label: 'Signé (locataire)' },
+      COMPLETED:    { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200',icon: CheckCircle, label: 'Signé' },
+      ACTIVE:       { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200',icon: CheckCircle, label: 'Actif' },
+      EXPIRED:      { bg: 'bg-slate-100',  text: 'text-slate-600',   border: 'border-slate-200',  icon: AlertCircle, label: 'Expiré' },
+      TERMINATED:   { bg: 'bg-red-50',     text: 'text-red-700',     border: 'border-red-200',    icon: XCircle,     label: 'Résilié' },
+      CANCELLED:    { bg: 'bg-slate-100',  text: 'text-slate-600',   border: 'border-slate-200',  icon: XCircle,     label: 'Annulé' },
     }
     const v = variants[status] || variants['DRAFT']
     const Icon = v.icon
     return (
-      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${v.bg} ${v.text}`}>
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${v.bg} ${v.text} ${v.border}`}>
         <Icon className="w-3 h-3" />
         {v.label}
       </span>
@@ -87,14 +86,17 @@ export default function ContractsList() {
 
     return (
       <div
-        className="bg-white rounded-xl border hover:shadow-md transition-shadow cursor-pointer p-5"
+        className="bg-white rounded-2xl border border-[#d2d2d7] hover:border-[#bfdbfe] transition-all cursor-pointer p-5 group"
+        style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)' }}
         onClick={() => navigate(`/contracts/${contract.id}`)}
       >
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-slate-900 truncate mb-1">{contract.property?.title}</h3>
-            <div className="flex items-center text-sm text-slate-500">
-              <HomeIcon className="w-3.5 h-3.5 mr-1" />
+            <h3 className="font-semibold text-[#1d1d1f] truncate mb-1 group-hover:text-[#3b82f6] transition-colors">
+              {contract.property?.title}
+            </h3>
+            <div className="flex items-center text-sm text-[#86868b]">
+              <HomeIcon className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
               {contract.property?.city}
             </div>
           </div>
@@ -102,42 +104,42 @@ export default function ContractsList() {
         </div>
 
         <div className="space-y-1.5 mb-3">
-          <div className="flex items-center text-sm text-slate-600">
-            <User className="w-3.5 h-3.5 mr-2 text-slate-400" />
-            <span className="text-slate-400 mr-1">{isOwner ? 'Locataire :' : 'Proprietaire :'}</span>
-            <span className="font-medium truncate">{otherParty?.firstName} {otherParty?.lastName}</span>
+          <div className="flex items-center text-sm text-[#515154]">
+            <User className="w-3.5 h-3.5 mr-2 text-[#86868b] flex-shrink-0" />
+            <span className="text-[#86868b] mr-1">{isOwner ? 'Locataire :' : 'Propriétaire :'}</span>
+            <span className="font-medium truncate text-[#1d1d1f]">{otherParty?.firstName} {otherParty?.lastName}</span>
           </div>
-          <div className="flex items-center text-sm text-slate-600">
-            <Calendar className="w-3.5 h-3.5 mr-2 text-slate-400" />
+          <div className="flex items-center text-sm text-[#515154]">
+            <Calendar className="w-3.5 h-3.5 mr-2 text-[#86868b] flex-shrink-0" />
             {format(new Date(contract.startDate), 'dd MMM yyyy', { locale: fr })} →{' '}
             {format(new Date(contract.endDate), 'dd MMM yyyy', { locale: fr })}
           </div>
           <div className="flex items-center text-sm">
-            <Euro className="w-3.5 h-3.5 mr-2 text-slate-400" />
-            <span className="font-semibold text-primary-600">{contract.monthlyRent}€/mois</span>
-            {contract.charges ? <span className="text-slate-400 ml-1">+ {contract.charges}€ charges</span> : null}
+            <Euro className="w-3.5 h-3.5 mr-2 text-[#86868b] flex-shrink-0" />
+            <span className="font-semibold text-[#3b82f6]">{contract.monthlyRent}€/mois</span>
+            {contract.charges ? <span className="text-[#86868b] ml-1">+ {contract.charges}€ charges</span> : null}
           </div>
         </div>
 
         {inSignature && (
-          <div className="pt-3 border-t border-slate-100">
-            <p className="text-xs text-slate-400 mb-1.5">Progression des signatures</p>
+          <div className="pt-3 border-t border-[#f0f0f2]">
+            <p className="text-xs text-[#86868b] mb-1.5">Progression des signatures</p>
             <div className="flex items-center gap-4 text-xs">
               <div className="flex items-center gap-1.5">
                 {contract.ownerSignature || ['SIGNED_OWNER','COMPLETED'].includes(contract.status) ? (
-                  <CheckCircle className="w-3.5 h-3.5 text-success-500" />
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
                 ) : (
-                  <Clock className="w-3.5 h-3.5 text-warning-500" />
+                  <Clock className="w-3.5 h-3.5 text-amber-400" />
                 )}
-                <span className="text-slate-600">Proprietaire</span>
+                <span className="text-[#515154]">Propriétaire</span>
               </div>
               <div className="flex items-center gap-1.5">
                 {contract.tenantSignature || ['SIGNED_TENANT','COMPLETED'].includes(contract.status) ? (
-                  <CheckCircle className="w-3.5 h-3.5 text-success-500" />
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
                 ) : (
-                  <Clock className="w-3.5 h-3.5 text-warning-500" />
+                  <Clock className="w-3.5 h-3.5 text-amber-400" />
                 )}
-                <span className="text-slate-600">Locataire</span>
+                <span className="text-[#515154]">Locataire</span>
               </div>
             </div>
           </div>
@@ -149,8 +151,11 @@ export default function ContractsList() {
   if (isLoading && contracts.length === 0) {
     return (
       <Layout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600" />
+        <div className="flex items-center justify-center min-h-screen bg-[#f5f5f7]">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-10 h-10 border-2 border-[#3b82f6] border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-[#515154]">Chargement des contrats…</p>
+          </div>
         </div>
       </Layout>
     )
@@ -160,34 +165,39 @@ export default function ContractsList() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-[#f5f5f7]">
 
         {/* Header */}
-        <div className="bg-white border-b">
+        <div className="bg-white border-b border-[#d2d2d7]">
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-start justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                  <FileText className="w-7 h-7 text-primary-600" />
+                <h1 className="text-2xl font-bold text-[#1d1d1f] flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-[#eff6ff] flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-[#3b82f6]" />
+                  </div>
                   Mes Contrats
                 </h1>
                 {statistics && (
-                  <div className="flex items-center gap-4 mt-2 text-sm text-slate-500">
-                    <span><strong className="text-slate-900">{statistics.total}</strong> au total</span>
-                    <span className="text-slate-300">|</span>
-                    <span><strong className="text-success-600">{statistics.active}</strong> actifs</span>
+                  <div className="flex items-center gap-4 mt-2 text-sm text-[#86868b]">
+                    <span><strong className="text-[#1d1d1f]">{statistics.total}</strong> au total</span>
+                    <span className="text-[#d2d2d7]">|</span>
+                    <span><strong className="text-emerald-600">{statistics.active}</strong> actifs</span>
                     {pendingSignatures > 0 && (
                       <>
-                        <span className="text-slate-300">|</span>
-                        <span><strong className="text-primary-600">{pendingSignatures}</strong> en attente de signature</span>
+                        <span className="text-[#d2d2d7]">|</span>
+                        <span><strong className="text-[#3b82f6]">{pendingSignatures}</strong> en attente de signature</span>
                       </>
                     )}
                   </div>
                 )}
               </div>
               {user?.role === 'OWNER' && (
-                <Link to="/contracts/new" className="btn btn-primary">
-                  <Plus className="w-5 h-5 mr-2" />
+                <Link
+                  to="/contracts/new"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#3b82f6] text-white rounded-xl font-semibold text-sm hover:bg-[#2563eb] transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
                   Nouveau contrat
                 </Link>
               )}
@@ -195,8 +205,8 @@ export default function ContractsList() {
           </div>
         </div>
 
-        {/* Smart Tabs */}
-        <div className="bg-white border-b">
+        {/* Tabs */}
+        <div className="bg-white border-b border-[#d2d2d7]">
           <div className="container mx-auto px-4">
             <div className="flex gap-1">
               {tabs.map((tab) => (
@@ -205,16 +215,16 @@ export default function ContractsList() {
                   onClick={() => setActiveTab(tab.key)}
                   className={`relative flex items-center gap-2 px-5 py-4 text-sm font-medium transition-colors border-b-2 ${
                     activeTab === tab.key
-                      ? `${tab.color} border-current`
-                      : 'text-slate-500 border-transparent hover:text-slate-700'
+                      ? 'text-[#3b82f6] border-[#3b82f6]'
+                      : 'text-[#86868b] border-transparent hover:text-[#515154]'
                   }`}
                 >
                   {tab.label}
                   {counts[tab.key] > 0 && (
                     <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
                       activeTab === tab.key
-                        ? `${tab.activeColor} text-white`
-                        : 'bg-slate-100 text-slate-600'
+                        ? 'bg-[#3b82f6] text-white'
+                        : 'bg-[#f0f0f2] text-[#86868b]'
                     }`}>
                       {counts[tab.key]}
                     </span>
@@ -229,23 +239,28 @@ export default function ContractsList() {
         <div className="container mx-auto px-4 py-6">
           {filtered.length === 0 ? (
             <div className="text-center py-20">
-              <FileText className="w-14 h-14 text-slate-300 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-slate-700 mb-2">
+              <div className="w-16 h-16 rounded-2xl bg-[#eff6ff] flex items-center justify-center mx-auto mb-4">
+                <FileText className="w-8 h-8 text-[#bfdbfe]" />
+              </div>
+              <h2 className="text-xl font-semibold text-[#1d1d1f] mb-2">
                 {activeTab === 'actifs'     ? 'Aucun contrat actif'          :
                  activeTab === 'en-cours'   ? 'Aucun contrat en cours'       :
                  activeTab === 'brouillons' ? 'Aucun brouillon'              :
-                                             'Aucun contrat archive'}
+                                             'Aucun contrat archivé'}
               </h2>
-              <p className="text-slate-400 mb-6">
-                {activeTab === 'actifs'     ? 'Les contrats actives apparaitront ici.' :
-                 activeTab === 'en-cours'   ? 'Les contrats en attente de signature apparaitront ici.' :
-                 activeTab === 'brouillons' ? 'Commencez par creer un nouveau contrat.' :
-                                             'Les contrats termines apparaitront ici.'}
+              <p className="text-[#86868b] mb-6 max-w-sm mx-auto">
+                {activeTab === 'actifs'     ? 'Les contrats actifs apparaîtront ici.' :
+                 activeTab === 'en-cours'   ? 'Les contrats en attente de signature apparaîtront ici.' :
+                 activeTab === 'brouillons' ? 'Commencez par créer un nouveau contrat.' :
+                                             'Les contrats terminés apparaîtront ici.'}
               </p>
               {user?.role === 'OWNER' && activeTab === 'brouillons' && (
-                <Link to="/contracts/new" className="btn btn-primary inline-flex">
-                  <Plus className="w-5 h-5 mr-2" />
-                  Creer mon premier contrat
+                <Link
+                  to="/contracts/new"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#3b82f6] text-white rounded-xl font-semibold text-sm hover:bg-[#2563eb] transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Créer mon premier contrat
                 </Link>
               )}
             </div>

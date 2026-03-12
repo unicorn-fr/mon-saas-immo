@@ -28,6 +28,13 @@ function computeDossierPercent(docs: { category: string }[]): number {
   return Math.round((covered / REQUIRED_CATEGORIES.length) * 100)
 }
 
+const cardStyle = {
+  background: '#ffffff',
+  border: '1px solid #d2d2d7',
+  borderRadius: '1rem',
+  boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)',
+}
+
 // ─── Composant principal ──────────────────────────────────────────────────────
 export default function TenantDashboard() {
   const { user } = useAuth()
@@ -71,78 +78,61 @@ export default function TenantDashboard() {
 
   // Dossier color
   const dossierColor =
-    dossierPercent >= 80 ? '#10b981'
-    : dossierPercent >= 50 ? '#f59e0b'
-    : '#ef4444'
+    dossierPercent >= 80 ? '#059669'
+    : dossierPercent >= 50 ? '#d97706'
+    : '#dc2626'
 
-  const STATUS_STYLE: Record<string, string> = {
-    PENDING:  'bg-amber-100 text-amber-700 border-amber-200',
-    APPROVED: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-    REJECTED: 'bg-red-100 text-red-700 border-red-200',
+  const STATUS_STYLE: Record<string, React.CSSProperties> = {
+    PENDING:  { background: '#fffbeb', border: '1px solid #fde68a', color: '#d97706' },
+    APPROVED: { background: '#ecfdf5', border: '1px solid #a7f3d0', color: '#059669' },
+    REJECTED: { background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626' },
   }
   const STATUS_LABEL: Record<string, string> = {
     PENDING:  'En examen',
-    APPROVED: 'Approuvée ✓',
+    APPROVED: 'Approuvée',
     REJECTED: 'Non retenue',
-  }
-
-  // ── Panel style helper ─────────────────────────────────────────────────────
-  const panelStyle = {
-    background: 'var(--glass-bg-heavy)',
-    backdropFilter: 'blur(24px) saturate(200%)',
-    WebkitBackdropFilter: 'blur(24px) saturate(200%)',
-    border: '1px solid var(--glass-border)',
-    boxShadow: 'var(--glass-reflection), 0 8px 32px rgba(0,0,0,0.07)',
   }
 
   return (
     <Layout>
-      <div className="py-5 px-4 md:px-6 space-y-5 page-enter">
+      <div className="min-h-screen p-6 lg:p-8" style={{ background: '#f5f5f7' }}>
 
           {/* ── EN-TÊTE ───────────────────────────────────────────── */}
-          <div className="flex items-center justify-between animate-fade-up">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-widest mb-1"
-                style={{ color: 'var(--text-tertiary)', letterSpacing: '0.10em' }}>
+              <p className="text-xs font-semibold uppercase tracking-widest mb-1 text-slate-400">
                 {format(new Date(), "EEEE d MMMM yyyy", { locale: fr })}
               </p>
-              <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+              <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">
                 {greeting}, {user?.firstName}
               </h1>
             </div>
             <Link to="/search"
-              className="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white shimmer-btn"
-              style={{
-                background: 'linear-gradient(135deg, #7c3aed, #3b82f6)',
-                boxShadow: '0 4px 14px rgba(124,58,237,0.38)',
-                transition: 'all 0.25s cubic-bezier(0.16,1,0.3,1)',
-              }}>
+              className="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:-translate-y-0.5"
+              style={{ background: '#3b82f6', boxShadow: '0 4px 14px rgba(59,130,246,0.30)' }}>
               <Search className="w-4 h-4" /> Chercher un logement
             </Link>
           </div>
 
           {/* ── ALERTE SIGNATURE ──────────────────────────────────── */}
           {pendingSignatureContracts.length > 0 && (
-            <div className="rounded-2xl p-3.5 flex items-start gap-3 animate-fade-up delay-50"
+            <div className="rounded-2xl p-4 flex items-start gap-3 mb-6"
               style={{
-                background: 'rgba(245,158,11,0.08)',
-                border: '1px solid rgba(245,158,11,0.20)',
-                borderLeft: '3px solid #f59e0b',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
+                background: '#fffbeb',
+                border: '1px solid #fde68a',
+                borderLeft: '3px solid #d97706',
               }}>
-              <div className="icon-box flex-shrink-0" style={{ background: 'linear-gradient(135deg,#f59e0b,#ea580c)', width: 32, height: 32, borderRadius: 10 }}>
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#f59e0b' }}>
                 <PenTool className="w-4 h-4 text-white" />
               </div>
               <div className="flex-1">
-                <p className="font-semibold text-sm" style={{ color: '#92400e' }}>
+                <p className="font-semibold text-sm text-amber-800">
                   {pendingSignatureContracts.length === 1
                     ? 'Un contrat attend votre signature'
                     : `${pendingSignatureContracts.length} contrats attendent votre signature`}
                 </p>
                 <Link to={`/contracts/${pendingSignatureContracts[0].id}`}
-                  className="inline-flex items-center gap-1 mt-1.5 text-xs font-semibold transition-opacity hover:opacity-70"
-                  style={{ color: '#b45309' }}>
+                  className="inline-flex items-center gap-1 mt-1.5 text-xs font-semibold text-amber-700 hover:opacity-70 transition-opacity">
                   Voir et signer <ChevronRight className="w-3 h-3" />
                 </Link>
               </div>
@@ -150,24 +140,23 @@ export default function TenantDashboard() {
           )}
 
           {/* ── QUICK STATS ───────────────────────────────────────── */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
             {[
               {
                 to: '/my-bookings',
-                iconGradient: 'linear-gradient(135deg,#7c3aed,#a855f7)',
+                iconBg: '#3b82f6',
                 icon: <Calendar className="w-4 h-4 text-white" />,
-                accent: 'linear-gradient(90deg,#7c3aed,#3b82f6)',
                 value: upcomingBookings.length,
                 label: 'Visites à venir',
                 sub: upcomingBookings.length > 0
                   ? `Prochaine le ${format(new Date(upcomingBookings[0].visitDate), 'd MMM', { locale: fr })}`
                   : 'Aucune programmée',
+                live: false,
               },
               {
                 to: '/my-applications',
-                iconGradient: 'linear-gradient(135deg,#3b82f6,#1d4ed8)',
+                iconBg: '#3b82f6',
                 icon: <SendHorizonal className="w-4 h-4 text-white" />,
-                accent: 'linear-gradient(90deg,#3b82f6,#1e40af)',
                 value: activeApps.length,
                 label: 'Candidatures',
                 sub: pendingApps.length > 0
@@ -179,9 +168,8 @@ export default function TenantDashboard() {
               },
               {
                 to: '/messages',
-                iconGradient: 'linear-gradient(135deg,#3b82f6,#6366f1)',
+                iconBg: '#3b82f6',
                 icon: <MessageSquare className="w-4 h-4 text-white" />,
-                accent: 'linear-gradient(90deg,#3b82f6,#7c3aed)',
                 value: unreadCount,
                 label: 'Messages',
                 sub: unreadCount > 0 ? `${unreadCount} non lu${unreadCount > 1 ? 's' : ''}` : 'Tout lu',
@@ -189,53 +177,60 @@ export default function TenantDashboard() {
               },
               {
                 to: '/favorites',
-                iconGradient: 'linear-gradient(135deg,#ef4444,#f43f5e)',
+                iconBg: '#ef4444',
                 icon: <Heart className="w-4 h-4 text-white" />,
-                accent: 'linear-gradient(90deg,#f43f5e,#d946ef)',
                 value: favoriteIds.size,
                 label: 'Favoris',
                 sub: favoriteIds.size > 0 ? `${favoriteIds.size} bien${favoriteIds.size > 1 ? 's' : ''}` : 'Aucun favori',
+                live: false,
               },
-            ].map(({ to, iconGradient, icon, accent, value, label, sub, live }, i) => (
+            ].map(({ to, iconBg, icon, value, label, sub, live }) => (
               <Link key={label} to={to}
-                className="kpi-card flex flex-col gap-3 group animate-fade-up"
-                style={{ '--kpi-accent': accent, animationDelay: `${i * 55}ms` } as React.CSSProperties}>
+                className="flex flex-col gap-3 p-4 rounded-2xl group transition-all hover:-translate-y-0.5"
+                style={{
+                  ...cardStyle,
+                  transition: 'box-shadow 0.2s, transform 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 12px rgba(0,0,0,0.10), 0 12px 32px rgba(0,0,0,0.08)'
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)'
+                }}>
                 <div className="flex items-start justify-between">
-                  <div className="icon-box" style={{ background: iconGradient }}>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: iconBg }}>
                     {icon}
                   </div>
                   <div className="flex items-center gap-1.5">
-                    {live && <span className="live-dot-violet" style={{ width: 7, height: 7 }} />}
-                    <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-40 transition-opacity" style={{ color: 'var(--text-tertiary)' }} />
+                    {live && <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />}
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-400 transition-colors" />
                   </div>
                 </div>
                 <div className="mt-auto">
-                  <p className="text-[26px] font-extrabold leading-none tracking-tight mb-1 animate-count-up"
-                    style={{ color: 'var(--text-primary)', animationDelay: `${i * 60}ms` }}>{value}</p>
-                  <p className="text-xs font-semibold mb-0.5" style={{ color: 'var(--text-secondary)' }}>{label}</p>
-                  <p className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>{sub}</p>
+                  <p className="text-[26px] font-extrabold leading-none tracking-tight mb-1 text-slate-900">{value}</p>
+                  <p className="text-xs font-semibold mb-0.5 text-slate-700">{label}</p>
+                  <p className="text-[11px] text-slate-400">{sub}</p>
                 </div>
               </Link>
             ))}
           </div>
 
           {/* ── CONTENU PRINCIPAL ─────────────────────────────────── */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 animate-fade-up delay-200">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             {/* ── Colonne principale (2/3) ──────────────────────── */}
             <div className="lg:col-span-2 space-y-5">
 
               {/* Widget dossier locatif */}
-              <div className="rounded-2xl overflow-hidden" style={panelStyle}>
-                <div className="section-header">
-                  <span className="section-header-title">
-                    <div className="icon-box" style={{ background: 'linear-gradient(135deg,#f59e0b,#f97316)', width: 28, height: 28, borderRadius: 8 }}>
+              <div className="rounded-2xl overflow-hidden" style={cardStyle}>
+                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#f59e0b' }}>
                       <FolderOpen className="w-3.5 h-3.5 text-white" />
                     </div>
-                    Mon dossier locatif
-                  </span>
-                  <Link to="/dossier" className="text-xs font-semibold flex items-center gap-1 hover:opacity-70 transition-opacity"
-                    style={{ color: '#7c3aed' }}>
+                    <span className="font-semibold text-sm text-slate-900">Mon dossier locatif</span>
+                  </div>
+                  <Link to="/dossier" className="text-xs font-semibold text-blue-500 flex items-center gap-1 hover:opacity-70 transition-opacity">
                     Gérer <ArrowRight className="w-3 h-3" />
                   </Link>
                 </div>
@@ -244,7 +239,7 @@ export default function TenantDashboard() {
                     {/* Anneau circulaire */}
                     <div className="relative w-16 h-16 flex-shrink-0">
                       <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
-                        <circle cx="32" cy="32" r="26" strokeWidth="4.5" className="fill-none" style={{ stroke: 'var(--surface-subtle)' }} />
+                        <circle cx="32" cy="32" r="26" strokeWidth="4.5" className="fill-none" stroke="#d2d2d7" />
                         <circle cx="32" cy="32" r="26" strokeWidth="4.5" className="fill-none"
                           style={{
                             stroke: dossierColor,
@@ -259,19 +254,19 @@ export default function TenantDashboard() {
                       </div>
                     </div>
                     <div className="flex-1">
-                      <p className="font-semibold text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
+                      <p className="font-semibold text-sm mb-1 text-slate-900">
                         {dossierPercent === 100
                           ? 'Dossier complet — prêt à candidater !'
                           : dossierPercent >= 50
                             ? 'Dossier en bonne voie, continuez !'
                             : 'Complétez votre dossier pour postuler'}
                       </p>
-                      <p className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
+                      <p className="text-[11px] text-slate-400">
                         {Math.round(dossierPercent / 100 * REQUIRED_CATEGORIES.length)} / {REQUIRED_CATEGORIES.length} catégories complètes
                       </p>
-                      <div className="w-full h-1.5 rounded-full mt-2 overflow-hidden" style={{ background: 'var(--surface-subtle)' }}>
+                      <div className="w-full h-1.5 rounded-full mt-2 overflow-hidden bg-slate-100">
                         <div className="h-1.5 rounded-full transition-all duration-700"
-                          style={{ width: `${dossierPercent}%`, background: `linear-gradient(90deg, ${dossierColor}cc, ${dossierColor})` }} />
+                          style={{ width: `${dossierPercent}%`, background: dossierColor }} />
                       </div>
                     </div>
                   </div>
@@ -287,8 +282,8 @@ export default function TenantDashboard() {
                         <Link key={id} to="/dossier"
                           className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all"
                           style={done
-                            ? { background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.28)', color: '#059669' }
-                            : { background: 'var(--surface-subtle)', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)' }}>
+                            ? { background: '#ecfdf5', border: '1px solid #a7f3d0', color: '#059669' }
+                            : { background: '#f5f5f7', border: '1px solid #d2d2d7', color: '#515154' }}>
                           <Icon className="w-3.5 h-3.5 flex-shrink-0" />
                           <span className="truncate flex-1">{label}</span>
                           {done && <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" />}
@@ -298,8 +293,8 @@ export default function TenantDashboard() {
                   </div>
                   {dossierPercent < 100 && (
                     <Link to="/dossier"
-                      className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-white shimmer-btn transition-all hover:opacity-90"
-                      style={{ background: '#2563eb', boxShadow: '0 2px 8px rgba(37,99,235,0.25)' }}>
+                      className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
+                      style={{ background: '#3b82f6', boxShadow: '0 2px 8px rgba(59,130,246,0.25)' }}>
                       <FolderOpen className="w-4 h-4" /> Compléter mon dossier
                     </Link>
                   )}
@@ -307,55 +302,54 @@ export default function TenantDashboard() {
               </div>
 
               {/* Mes candidatures */}
-              <div className="rounded-2xl overflow-hidden" style={panelStyle}>
-                <div className="section-header">
-                  <span className="section-header-title">
-                    <div className="icon-box" style={{ background: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', width: 28, height: 28, borderRadius: 8 }}>
+              <div className="rounded-2xl overflow-hidden" style={cardStyle}>
+                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#3b82f6' }}>
                       <SendHorizonal className="w-3.5 h-3.5 text-white" />
                     </div>
-                    Mes candidatures
+                    <span className="font-semibold text-sm text-slate-900">Mes candidatures</span>
                     {pendingApps.length > 0 && (
-                      <span className="text-[11px] font-bold text-white rounded-full px-2 py-0.5"
-                        style={{ background: 'linear-gradient(135deg,#f59e0b,#ea580c)' }}>
+                      <span className="text-[11px] font-bold text-white rounded-full px-2 py-0.5 bg-blue-500">
                         {pendingApps.length}
                       </span>
                     )}
-                  </span>
-                  <Link to="/my-applications" className="text-xs font-semibold flex items-center gap-1 hover:opacity-70 transition-opacity"
-                    style={{ color: '#7c3aed' }}>
+                  </div>
+                  <Link to="/my-applications" className="text-xs font-semibold text-blue-500 flex items-center gap-1 hover:opacity-70 transition-opacity">
                     Tout voir <ArrowRight className="w-3 h-3" />
                   </Link>
                 </div>
                 {activeApps.length === 0 ? (
                   <div className="p-6 text-center">
-                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: 'var(--surface-subtle)' }}>
-                      <SendHorizonal className="w-5 h-5 opacity-40" style={{ color: 'var(--text-tertiary)' }} />
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center mx-auto mb-3 bg-slate-50">
+                      <SendHorizonal className="w-5 h-5 text-slate-300" />
                     </div>
-                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Aucune candidature en cours</p>
-                    <Link to="/search" className="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold hover:opacity-80" style={{ color: '#7c3aed' }}>
+                    <p className="text-sm text-slate-500">Aucune candidature en cours</p>
+                    <Link to="/search" className="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold text-blue-500 hover:opacity-80">
                       <Search className="w-3.5 h-3.5" /> Parcourir les annonces
                     </Link>
                   </div>
                 ) : (
-                  <div className="divide-y" style={{ borderColor: 'var(--glass-border)' }}>
+                  <div className="divide-y divide-slate-100">
                     {activeApps.slice(0, 4).map((app) => (
-                      <div key={app.id} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
+                      <div key={app.id} className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50 transition-colors">
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>
+                          <p className="font-semibold text-sm truncate text-slate-900">
                             {app.property?.title}
                           </p>
-                          <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+                          <p className="text-[11px] mt-0.5 text-slate-400">
                             {app.property?.city} · {app.property?.price} €/mois · Score {app.score}/100
                           </p>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          <span className={`text-[11px] border rounded-full px-2.5 py-0.5 font-semibold ${STATUS_STYLE[app.status] || ''}`}>
+                          <span className="text-[11px] border rounded-full px-2.5 py-0.5 font-semibold"
+                            style={STATUS_STYLE[app.status] || {}}>
                             {STATUS_LABEL[app.status] || app.status}
                           </span>
                           {app.status === 'APPROVED' && (
                             <Link to={`/property/${app.property?.id}`}
                               className="text-[11px] font-semibold text-white px-2.5 py-1.5 rounded-lg transition-all hover:-translate-y-px"
-                              style={{ background: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', boxShadow: '0 2px 8px rgba(37,99,235,0.22)' }}>
+                              style={{ background: '#3b82f6', boxShadow: '0 2px 8px rgba(59,130,246,0.22)' }}>
                               Réserver
                             </Link>
                           )}
@@ -367,52 +361,51 @@ export default function TenantDashboard() {
               </div>
 
               {/* Visites à venir */}
-              <div className="rounded-2xl overflow-hidden" style={panelStyle}>
-                <div className="section-header">
-                  <span className="section-header-title">
-                    <div className="icon-box" style={{ background: 'linear-gradient(135deg,#3b82f6,#6366f1)', width: 28, height: 28, borderRadius: 8 }}>
+              <div className="rounded-2xl overflow-hidden" style={cardStyle}>
+                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#3b82f6' }}>
                       <Clock className="w-3.5 h-3.5 text-white" />
                     </div>
-                    Visites à venir
-                  </span>
-                  <Link to="/my-bookings" className="text-xs font-semibold flex items-center gap-1 hover:opacity-70 transition-opacity"
-                    style={{ color: '#7c3aed' }}>
+                    <span className="font-semibold text-sm text-slate-900">Visites à venir</span>
+                  </div>
+                  <Link to="/my-bookings" className="text-xs font-semibold text-blue-500 flex items-center gap-1 hover:opacity-70 transition-opacity">
                     Tout voir <ArrowRight className="w-3 h-3" />
                   </Link>
                 </div>
                 {isLoadingBookings ? (
                   <div className="flex items-center justify-center py-10">
-                    <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'var(--text-tertiary)' }} />
+                    <Loader2 className="w-6 h-6 animate-spin text-slate-300" />
                   </div>
                 ) : upcomingBookings.length === 0 ? (
                   <div className="text-center py-8 px-6">
-                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: 'var(--surface-subtle)' }}>
-                      <Calendar className="w-5 h-5 opacity-40" style={{ color: 'var(--text-tertiary)' }} />
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center mx-auto mb-3 bg-slate-50">
+                      <Calendar className="w-5 h-5 text-slate-300" />
                     </div>
-                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Aucune visite programmée</p>
-                    <Link to="/search" className="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold hover:opacity-80" style={{ color: '#7c3aed' }}>
+                    <p className="text-sm text-slate-500">Aucune visite programmée</p>
+                    <Link to="/search" className="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold text-blue-500 hover:opacity-80">
                       <Search className="w-3.5 h-3.5" /> Trouver un bien à visiter
                     </Link>
                   </div>
                 ) : (
-                  <div className="divide-y" style={{ borderColor: 'var(--glass-border)' }}>
+                  <div className="divide-y divide-slate-100">
                     {upcomingBookings.map((booking) => (
                       <Link key={booking.id} to={`/property/${booking.property.id}`}
-                        className="flex items-center gap-3 p-4 hover:bg-white/5 transition-colors">
+                        className="flex items-center gap-3 p-4 hover:bg-slate-50 transition-colors">
                         {booking.property.images?.[0] ? (
                           <img src={booking.property.images[0]} alt={booking.property.title}
                             className="w-12 h-12 rounded-xl object-cover flex-shrink-0" />
                         ) : (
-                          <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--surface-subtle)' }}>
-                            <Home className="w-5 h-5" style={{ color: 'var(--text-tertiary)' }} />
+                          <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-slate-100">
+                            <Home className="w-5 h-5 text-slate-400" />
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>{booking.property.title}</p>
-                          <p className="text-[11px] flex items-center gap-1 mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+                          <p className="font-semibold text-sm truncate text-slate-900">{booking.property.title}</p>
+                          <p className="text-[11px] flex items-center gap-1 mt-0.5 text-slate-400">
                             <MapPin className="w-2.5 h-2.5" />{booking.property.city}
                           </p>
-                          <div className="flex items-center gap-3 mt-1 text-[11px]" style={{ color: 'var(--text-secondary)' }}>
+                          <div className="flex items-center gap-3 mt-1 text-[11px] text-slate-500">
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
                               {format(new Date(booking.visitDate), 'dd MMM yyyy', { locale: fr })}
@@ -422,7 +415,10 @@ export default function TenantDashboard() {
                             </span>
                           </div>
                         </div>
-                        <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full flex-shrink-0 ${booking.status === 'CONFIRMED' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                        <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full flex-shrink-0"
+                          style={booking.status === 'CONFIRMED'
+                            ? { background: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0' }
+                            : { background: '#fffbeb', color: '#d97706', border: '1px solid #fde68a' }}>
                           {booking.status === 'CONFIRMED' ? 'Confirmée' : 'En attente'}
                         </span>
                       </Link>
@@ -433,32 +429,32 @@ export default function TenantDashboard() {
 
               {/* Mon bail actif */}
               {activeContract && (
-                <div className="rounded-2xl overflow-hidden" style={panelStyle}>
-                  <div className="section-header">
-                    <span className="section-header-title">
-                      <div className="icon-box" style={{ background: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', width: 28, height: 28, borderRadius: 8 }}>
+                <div className="rounded-2xl overflow-hidden" style={cardStyle}>
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#3b82f6' }}>
                         <FileText className="w-3.5 h-3.5 text-white" />
                       </div>
-                      Mon bail actif
-                    </span>
-                    <Link to="/contracts" className="text-xs font-semibold flex items-center gap-1 hover:opacity-70 transition-opacity"
-                      style={{ color: '#7c3aed' }}>
+                      <span className="font-semibold text-sm text-slate-900">Mon bail actif</span>
+                    </div>
+                    <Link to="/contracts" className="text-xs font-semibold text-blue-500 flex items-center gap-1 hover:opacity-70 transition-opacity">
                       Voir le contrat <ArrowRight className="w-3 h-3" />
                     </Link>
                   </div>
                   <div className="p-4">
                     <Link to={`/contracts/${activeContract.id}`}
                       className="block p-4 rounded-xl transition-all hover:-translate-y-0.5"
-                      style={{ border: '1px solid rgba(59,130,246,0.20)', background: 'rgba(59,130,246,0.04)', boxShadow: '0 0 0 1px rgba(59,130,246,0.06)' }}>
+                      style={{ border: '1px solid #bfdbfe', background: '#eff6ff' }}>
                       <div className="flex items-start justify-between mb-3">
                         <div>
-                          <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{activeContract.property?.title}</p>
-                          <p className="text-[11px] flex items-center gap-1 mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+                          <p className="font-semibold text-sm text-slate-900">{activeContract.property?.title}</p>
+                          <p className="text-[11px] flex items-center gap-1 mt-0.5 text-slate-400">
                             <MapPin className="w-2.5 h-2.5" />
                             {activeContract.property?.address}, {activeContract.property?.city}
                           </p>
                         </div>
-                        <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-700">
+                        <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold"
+                          style={{ background: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0' }}>
                           <CheckCircle className="w-3 h-3" /> Actif
                         </span>
                       </div>
@@ -469,8 +465,8 @@ export default function TenantDashboard() {
                           { label: 'Fin',   value: format(new Date(activeContract.endDate),   'dd MMM yyyy', { locale: fr }) },
                         ].map(({ label, value }) => (
                           <div key={label}>
-                            <p className="text-[11px] mb-0.5" style={{ color: 'var(--text-tertiary)' }}>{label}</p>
-                            <p className="text-sm font-bold" style={{ color: label === 'Loyer' ? '#7c3aed' : 'var(--text-primary)' }}>{value}</p>
+                            <p className="text-[11px] mb-0.5 text-slate-400">{label}</p>
+                            <p className="text-sm font-bold" style={{ color: label === 'Loyer' ? '#3b82f6' : '#1d1d1f' }}>{value}</p>
                           </div>
                         ))}
                       </div>
@@ -484,60 +480,51 @@ export default function TenantDashboard() {
             <div className="space-y-4">
 
               {/* CTA recherche */}
-              <div className="rounded-2xl p-4 overflow-hidden relative"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(124,58,237,0.10) 0%, rgba(59,130,246,0.10) 100%)',
-                  border: '1px solid rgba(124,58,237,0.20)',
-                  backdropFilter: 'blur(16px)',
-                  WebkitBackdropFilter: 'blur(16px)',
-                }}>
-                {/* Subtle background glow */}
-                <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full pointer-events-none"
-                  style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%)' }} />
+              <div className="rounded-2xl p-4 overflow-hidden"
+                style={{ background: '#eff6ff', border: '1px solid #bfdbfe' }}>
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="icon-box" style={{ background: 'linear-gradient(135deg,#7c3aed,#3b82f6)', width: 28, height: 28, borderRadius: 8 }}>
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#3b82f6' }}>
                     <Search className="w-3.5 h-3.5 text-white" />
                   </div>
-                  <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Trouver votre logement</p>
+                  <p className="font-semibold text-sm text-slate-900">Trouver votre logement</p>
                 </div>
-                <p className="text-[11px] mb-3" style={{ color: 'var(--text-tertiary)' }}>
+                <p className="text-[11px] mb-3 text-slate-500">
                   {favoriteIds.size > 0
                     ? `${favoriteIds.size} bien${favoriteIds.size > 1 ? 's' : ''} en favori`
                     : 'Explorez les annonces disponibles.'}
                 </p>
                 <Link to="/search"
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold text-white shimmer-btn transition-all hover:opacity-90"
-                  style={{ background: 'linear-gradient(135deg,#7c3aed,#3b82f6)', boxShadow: '0 4px 14px rgba(124,58,237,0.38)' }}>
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
+                  style={{ background: '#3b82f6', boxShadow: '0 4px 14px rgba(59,130,246,0.30)' }}>
                   <Search className="w-3.5 h-3.5" /> Parcourir les annonces
                 </Link>
               </div>
 
               {/* Prochaines étapes */}
-              <div className="rounded-2xl p-4" style={panelStyle}>
-                <p className="text-[11px] font-bold uppercase tracking-widest mb-3 flex items-center gap-1.5"
-                  style={{ color: 'var(--text-tertiary)', letterSpacing: '0.08em' }}>
-                  <Star className="w-3.5 h-3.5 text-amber-500" /> Parcours
+              <div className="rounded-2xl p-4" style={cardStyle}>
+                <p className="text-[11px] font-bold uppercase tracking-widest mb-3 flex items-center gap-1.5 text-slate-400">
+                  <Star className="w-3.5 h-3.5 text-amber-400" /> Parcours
                 </p>
                 <div className="space-y-3">
                   {[
                     { done: dossierPercent === 100, label: 'Dossier complet', sub: `${dossierPercent}% complété`, link: '/dossier' },
                     { done: applications.length > 0, label: 'Postuler à une annonce', sub: applications.length > 0 ? `${applications.length} candidature${applications.length > 1 ? 's' : ''}` : "Aucune pour l'instant", link: '/search' },
                     { done: upcomingBookings.length > 0, label: 'Réserver une visite', sub: upcomingBookings.length > 0 ? `${upcomingBookings.length} visite${upcomingBookings.length > 1 ? 's' : ''} à venir` : 'Aucune programmée', link: '/search' },
-                    { done: !!activeContract, label: 'Obtenir un bail actif', sub: activeContract ? 'Bail en cours ✓' : 'En attente', link: '/contracts' },
+                    { done: !!activeContract, label: 'Obtenir un bail actif', sub: activeContract ? 'Bail en cours' : 'En attente', link: '/contracts' },
                   ].map(({ done, label, sub, link }) => (
                     <Link key={label} to={link} className="flex items-start gap-3 group">
                       <div className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all"
                         style={done
-                          ? { borderColor: '#10b981', background: '#10b981' }
-                          : { borderColor: 'var(--glass-border)' }}>
+                          ? { borderColor: '#059669', background: '#059669' }
+                          : { borderColor: '#d2d2d7' }}>
                         {done && <CheckCircle className="w-3 h-3 text-white" />}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold transition-colors"
-                          style={{ color: done ? 'var(--text-tertiary)' : 'var(--text-primary)', textDecoration: done ? 'line-through' : 'none' }}>
+                          style={{ color: done ? '#86868b' : '#1d1d1f', textDecoration: done ? 'line-through' : 'none' }}>
                           {label}
                         </p>
-                        <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{sub}</p>
+                        <p className="text-[11px] mt-0.5 text-slate-400">{sub}</p>
                       </div>
                     </Link>
                   ))}
@@ -545,28 +532,27 @@ export default function TenantDashboard() {
               </div>
 
               {/* Navigation rapide */}
-              <div className="rounded-2xl p-4" style={panelStyle}>
-                <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-tertiary)', letterSpacing: '0.08em' }}>
+              <div className="rounded-2xl p-4" style={cardStyle}>
+                <p className="text-[11px] font-bold uppercase tracking-widest mb-3 text-slate-400">
                   Accès rapides
                 </p>
                 <div className="space-y-1">
                   {[
-                    { to: '/my-bookings',     iconBg: 'linear-gradient(135deg,#7c3aed,#a855f7)', icon: <Calendar className="w-3.5 h-3.5 text-white" />,      label: 'Mes visites',  badge: upcomingBookings.length },
-                    { to: '/my-applications', iconBg: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', icon: <SendHorizonal className="w-3.5 h-3.5 text-white" />, label: 'Candidatures', badge: pendingApps.length },
-                    { to: '/dossier',         iconBg: 'linear-gradient(135deg,#f59e0b,#f97316)', icon: <FolderOpen className="w-3.5 h-3.5 text-white" />,    label: 'Mon dossier',  badge: 0 },
-                    { to: '/messages',        iconBg: 'linear-gradient(135deg,#3b82f6,#6366f1)', icon: <MessageSquare className="w-3.5 h-3.5 text-white" />, label: 'Messages',     badge: unreadCount },
-                    { to: '/favorites',       iconBg: 'linear-gradient(135deg,#ef4444,#f43f5e)', icon: <Heart className="w-3.5 h-3.5 text-white" />,         label: 'Favoris',      badge: 0 },
-                    { to: '/contracts',       iconBg: 'linear-gradient(135deg,#d946ef,#7c3aed)', icon: <FileText className="w-3.5 h-3.5 text-white" />,      label: 'Contrats',     badge: pendingSignatureContracts.length },
+                    { to: '/my-bookings',     iconBg: '#3b82f6', icon: <Calendar className="w-3.5 h-3.5 text-white" />,      label: 'Mes visites',  badge: upcomingBookings.length },
+                    { to: '/my-applications', iconBg: '#3b82f6', icon: <SendHorizonal className="w-3.5 h-3.5 text-white" />, label: 'Candidatures', badge: pendingApps.length },
+                    { to: '/dossier',         iconBg: '#f59e0b', icon: <FolderOpen className="w-3.5 h-3.5 text-white" />,    label: 'Mon dossier',  badge: 0 },
+                    { to: '/messages',        iconBg: '#3b82f6', icon: <MessageSquare className="w-3.5 h-3.5 text-white" />, label: 'Messages',     badge: unreadCount },
+                    { to: '/favorites',       iconBg: '#ef4444', icon: <Heart className="w-3.5 h-3.5 text-white" />,         label: 'Favoris',      badge: 0 },
+                    { to: '/contracts',       iconBg: '#3b82f6', icon: <FileText className="w-3.5 h-3.5 text-white" />,      label: 'Contrats',     badge: pendingSignatureContracts.length },
                   ].map(({ to, iconBg, icon, label, badge }) => (
                     <Link key={to} to={to}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all hover:bg-white/5">
-                      <div className="icon-box flex-shrink-0" style={{ background: iconBg, width: 28, height: 28, borderRadius: 8 }}>{icon}</div>
-                      <span className="flex-1 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{label}</span>
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all hover:bg-slate-50">
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: iconBg }}>{icon}</div>
+                      <span className="flex-1 text-sm font-medium text-slate-700">{label}</span>
                       {badge > 0 ? (
-                        <span className="text-[11px] font-bold text-white rounded-full px-1.5 py-0.5 min-w-[20px] text-center flex-shrink-0"
-                          style={{ background: 'linear-gradient(135deg,#7c3aed,#a855f7)' }}>{badge}</span>
+                        <span className="text-[11px] font-bold text-white rounded-full px-1.5 py-0.5 min-w-[20px] text-center flex-shrink-0 bg-blue-500">{badge}</span>
                       ) : (
-                        <ChevronRight className="w-3.5 h-3.5 opacity-25 flex-shrink-0" style={{ color: 'var(--text-tertiary)' }} />
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-300 flex-shrink-0" />
                       )}
                     </Link>
                   ))}

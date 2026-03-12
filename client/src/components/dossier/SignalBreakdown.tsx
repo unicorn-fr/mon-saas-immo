@@ -28,7 +28,7 @@ function SignalBar({ signal, label, icon }: { signal: SignalDetail | null; label
   }
 
   const pct   = Math.round(signal.score)
-  const color = pct >= 70 ? '#10b981' : pct >= 40 ? '#f59e0b' : '#94a3b8'
+  const color = pct >= 70 ? '#10b981' : pct >= 40 ? '#f59e0b' : '#86868b'
   const family = FAMILY_LABELS[signal.family] ?? signal.family
 
   return (
@@ -51,9 +51,9 @@ function fusionLabel(fusion: MultiSignalResult['signals']['fusion'], bonus: numb
   switch (fusion) {
     case 'certain':          return { text: 'Certifié (token MRZ / officiel)',  color: '#10b981' }
     case 'consensus':        return { text: `Consensus · +${bonus} pts`,        color: '#3b82f6' }
-    case 'text_dominant':    return { text: 'Texte dominant',                    color: '#6366f1' }
+    case 'text_dominant':    return { text: 'Texte dominant',                    color: '#007AFF' }
     case 'filename_override':return { text: 'Fichier override (texte < 40%)',    color: '#f59e0b' }
-    case 'unknown':          return { text: 'Non reconnu',                       color: '#94a3b8' }
+    case 'unknown':          return { text: 'Non reconnu',                       color: '#86868b' }
   }
 }
 
