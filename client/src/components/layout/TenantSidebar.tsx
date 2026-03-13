@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import { NavLink, Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Home, Search, Heart, Calendar,
-  FolderOpen, SendHorizonal, FileText, MessageSquare, X, LogOut,
+  FolderOpen, SendHorizonal, FileText, MessageSquare, X, LogOut, ShieldCheck,
 } from 'lucide-react'
 import { useSidebarStore } from '../../store/sidebarStore'
 import { useMessages } from '../../hooks/useMessages'
@@ -145,6 +145,9 @@ export function TenantSidebar() {
 
         <SectionLabel label="Communication" />
         <NavItem to="/messages" icon={MessageSquare} label="Messages" badge={unreadCount} onClick={closeMobile} />
+
+        <SectionLabel label="Confidentialité" />
+        <NavItem to="/privacy" icon={ShieldCheck} label="Mes données & RGPD" onClick={closeMobile} />
       </nav>
 
       {/* Dossier progress */}
