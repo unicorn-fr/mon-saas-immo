@@ -69,7 +69,9 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(open http://localhost:5175/)",
       "Bash(open http://localhost:5175/login)",
-      "Bash(open http://localhost:5175/pricing)"
+      "Bash(open http://localhost:5175/pricing)",
+      "Bash(npm audit)",
+      "Bash(npm ls glob rimraf)"
     ]
   }
 }
