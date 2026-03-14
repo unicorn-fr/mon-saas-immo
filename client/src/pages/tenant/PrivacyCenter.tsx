@@ -242,7 +242,7 @@ export default function PrivacyCenter() {
   useEffect(() => {
     privacyApi.getAccessLog()
       .then(setAccessLogs)
-      .catch(() => toast.error('Impossible de charger le journal d'accès'))
+      .catch(() => toast.error("Impossible de charger le journal d'accès"))
       .finally(() => setLogsLoading(false))
   }, [])
 
