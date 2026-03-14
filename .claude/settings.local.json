@@ -71,7 +71,22 @@
       "Bash(open http://localhost:5175/login)",
       "Bash(open http://localhost:5175/pricing)",
       "Bash(npm audit)",
-      "Bash(npm ls glob rimraf)"
+      "Bash(npm ls glob rimraf)",
+      "Bash(npm audit fix)",
+      "Bash(npm show @typescript-eslint/parser@8 version)",
+      "Bash(npm show vite@6 version)",
+      "Bash(npm show vite-plugin-pwa@latest version)",
+      "Bash(npm show bcrypt@6 version)",
+      "Bash(npm show nodemailer@latest version)",
+      "Bash(npm show @vitejs/plugin-react-swc@latest version)",
+      "Bash(npm show vite-plugin-pwa@\"0.x\" version)",
+      "Bash(npm show eslint-plugin-react-hooks@latest version)",
+      "Bash(npm show eslint-plugin-react-refresh@latest version)",
+      "Bash(npm show eslint-plugin-react-hooks versions --json)",
+      "Bash(npm show @typescript-eslint/parser@8.57.0 peerDependencies)",
+      "Bash(npm show serialize-javascript@latest version)",
+      "Bash(npm show workbox-build@latest version)",
+      "Bash(npm ls serialize-javascript)"
     ]
   }
 }

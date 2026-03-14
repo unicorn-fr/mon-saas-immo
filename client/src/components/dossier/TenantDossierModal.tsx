@@ -232,19 +232,19 @@ export function TenantDossierModal({ tenantId, tenantName, onClose }: TenantDoss
                         {profile.nationality}
                       </div>
                     )}
-                    {composed?.employerName && (
+                    {!!composed?.employerName && (
                       <div className="flex items-center gap-1.5" style={{ color: '#475569' }}>
                         <Briefcase className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#94a3b8' }} />
                         {String(composed.employerName)}
                       </div>
                     )}
-                    {composed?.contractType && (
+                    {!!composed?.contractType && (
                       <div className="flex items-center gap-1.5" style={{ color: '#475569' }}>
                         <FileText className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#94a3b8' }} />
                         {String(composed.contractType)}
                       </div>
                     )}
-                    {composed?.netSalary && (
+                    {!!composed?.netSalary && (
                       <div className="flex items-center gap-1.5 font-semibold" style={{ color: '#0f172a' }}>
                         <span className="text-[11px] w-3.5 text-center flex-shrink-0" style={{ color: '#94a3b8' }}>€</span>
                         {Number(composed.netSalary).toLocaleString('fr-FR')} €/mois net

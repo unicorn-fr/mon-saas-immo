@@ -24,7 +24,7 @@ interface UploadSlot {
 interface TextField {
   key:         string
   label:       string
-  type:        'text' | 'date' | 'select'
+  type:        'text' | 'date' | 'select' | 'number'
   required:    boolean
   placeholder: string
   options?:    string[]

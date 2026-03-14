@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   ShieldCheck, Download, Eye, Trash2, AlertTriangle, Clock,
   Lock, FileText, User, ChevronRight, Loader2, CheckCircle2,
-  Building2, X, Mail,
+  X, Mail,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
