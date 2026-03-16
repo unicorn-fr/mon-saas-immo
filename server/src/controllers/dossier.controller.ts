@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { dossierService, ProfileData } from '../services/dossier.service.js'
 import { saveFile } from '../utils/upload.util.js'
+import { serveWatermarkedDocument } from '../services/watermark.service.js'
 
 class DossierController {
   /**
@@ -125,6 +126,126 @@ class DossierController {
       return res.json({ success: true, data })
     } catch (error) {
       if (error instanceof Error) return res.status(403).json({ success: false, message: error.message })
+      next(error)
+    }
+  }
+
+  // ── DOSSIER SHARE MANAGEMENT ───────────────────────────────────────────
+
+  /** POST /api/v1/dossier/share — tenant grants access to an owner */
+  async grantShare(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tenantId = req.user?.id
+      if (!tenantId) return res.status(401).json({ success: false, message: 'Authentification requise' })
+      const { ownerId, propertyId, durationDays } = req.body
+      if (!ownerId) return res.status(400).json({ success: false, message: 'ownerId requis' })
+      const share = await dossierService.grantShare(tenantId, ownerId, propertyId, durationDays ?? 7)
+      return res.status(201).json({ success: true, data: share })
+    } catch (error) {
+      if (error instanceof Error) return res.status(400).json({ success: false, message: error.message })
+      next(error)
+    }
+  }
+
+  /** DELETE /api/v1/dossier/share/:ownerId — tenant revokes an owner's access */
+  async revokeShare(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tenantId = req.user?.id
+      if (!tenantId) return res.status(401).json({ success: false, message: 'Authentification requise' })
+      await dossierService.revokeShare(tenantId, req.params.ownerId)
+      return res.json({ success: true, message: 'Accès révoqué' })
+    } catch (error) {
+      if (error instanceof Error) return res.status(400).json({ success: false, message: error.message })
+      next(error)
+    }
+  }
+
+  /** GET /api/v1/dossier/shares — list all shares for the tenant */
+  async listShares(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tenantId = req.user?.id
+      if (!tenantId) return res.status(401).json({ success: false, message: 'Authentification requise' })
+      const shares = await dossierService.listShares(tenantId)
+      return res.json({ success: true, data: shares })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  // ── WATERMARKED DOCUMENT VIEW ──────────────────────────────────────────
+
+  /**
+   * GET /api/v1/dossier/docs/:docId/view
+   * Owner fetches a document — served watermarked with owner's identity.
+   * Requires active DossierShare (checked via getTenantDossier ACL).
+   */
+  async viewDocument(req: Request, res: Response, next: NextFunction) {
+    try {
+      const requesterId = req.user?.id
+      if (!requesterId) return res.status(401).json({ success: false, message: 'Authentification requise' })
+
+      const { PrismaClient } = await import('@prisma/client')
+      const prisma = new PrismaClient()
+
+      const doc = await prisma.tenantDocument.findUnique({ where: { id: req.params.docId } })
+      if (!doc) return res.status(404).json({ success: false, message: 'Document introuvable' })
+
+      // Verify active share
+      const hasAccess = await dossierService.hasActiveShare(doc.userId, requesterId)
+      if (!hasAccess) {
+        return res.status(403).json({ success: false, message: 'Accès non autorisé — le locataire ne vous a pas partagé son dossier' })
+      }
+
+      const requester = await prisma.user.findUnique({
+        where: { id: requesterId },
+        select: { firstName: true, lastName: true },
+      })
+      const ownerName = `${requester?.firstName ?? ''} ${requester?.lastName ?? ''}`.trim()
+
+      const { buffer, contentType } = await serveWatermarkedDocument(
+        doc.fileUrl,
+        doc.mimeType,
+        { ownerName, ownerId: requesterId },
+      )
+
+      res.setHeader('Content-Type', contentType)
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+      res.setHeader('Pragma', 'no-cache')
+      res.setHeader('X-Content-Type-Options', 'nosniff')
+      res.setHeader('Content-Disposition', 'inline')
+      return res.send(buffer)
+    } catch (error) {
+      if (error instanceof Error) return res.status(403).json({ success: false, message: error.message })
+      next(error)
+    }
+  }
+
+  // ── FRAUD REPORTING ────────────────────────────────────────────────────
+
+  /** POST /api/v1/dossier/report — report a suspicious user */
+  async reportUser(req: Request, res: Response, next: NextFunction) {
+    try {
+      const reporterId = req.user?.id
+      if (!reporterId) return res.status(401).json({ success: false, message: 'Authentification requise' })
+      const { targetId, reason, details } = req.body
+      if (!targetId || !reason) return res.status(400).json({ success: false, message: 'targetId et reason requis' })
+      const report = await dossierService.reportUser(reporterId, targetId, reason, details)
+      return res.status(201).json({ success: true, data: report, message: 'Signalement enregistré. Notre équipe va examiner ce cas.' })
+    } catch (error) {
+      if (error instanceof Error) return res.status(400).json({ success: false, message: error.message })
+      next(error)
+    }
+  }
+
+  // ── TRUST PROFILE ──────────────────────────────────────────────────────
+
+  /** GET /api/v1/dossier/profile/:userId — public trust profile of a user */
+  async getPublicProfile(req: Request, res: Response, next: NextFunction) {
+    try {
+      const profile = await dossierService.getPublicProfile(req.params.userId)
+      if (!profile) return res.status(404).json({ success: false, message: 'Utilisateur introuvable' })
+      return res.json({ success: true, data: profile })
+    } catch (error) {
       next(error)
     }
   }

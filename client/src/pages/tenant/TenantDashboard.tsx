@@ -17,8 +17,33 @@ import type { Application } from '../../types/application.types'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
+// ─── Design tokens ────────────────────────────────────────────────────────────
+const T = {
+  bgBase:        '#fafaf8',
+  bgSurface:     '#ffffff',
+  bgMuted:       '#f4f2ee',
+  ink:           '#0d0c0a',
+  inkMid:        '#5a5754',
+  inkFaint:      '#9e9b96',
+  tenant:        '#1b5e3b',
+  tenantLight:   '#edf7f2',
+  tenantBorder:  '#9fd4ba',
+  caramel:       '#c4976a',
+  caramelLight:  '#fdf5ec',
+  border:        '#e4e1db',
+  borderMid:     '#ccc9c3',
+  shadowCard:    '0 1px 2px rgba(13,12,10,0.05), 0 4px 16px rgba(13,12,10,0.06)',
+  shadowHover:   '0 4px 8px rgba(13,12,10,0.08), 0 12px 32px rgba(13,12,10,0.10)',
+}
+
+const cardBase: React.CSSProperties = {
+  background:   T.bgSurface,
+  border:       `1px solid ${T.border}`,
+  borderRadius: 16,
+  boxShadow:    T.shadowCard,
+}
+
 // ─── Catégories requises pour le calcul de complétion du dossier ──────────────
-// Correspond aux IDs définis dans DossierLocatif.tsx
 const REQUIRED_CATEGORIES = ['IDENTITE', 'EMPLOI', 'REVENUS', 'DOMICILE'] as const
 
 function computeDossierPercent(docs: { category: string }[]): number {
@@ -26,13 +51,6 @@ function computeDossierPercent(docs: { category: string }[]): number {
   const uploaded = new Set(docs.map((d) => d.category))
   const covered = REQUIRED_CATEGORIES.filter((cat) => uploaded.has(cat)).length
   return Math.round((covered / REQUIRED_CATEGORIES.length) * 100)
-}
-
-const cardStyle = {
-  background: '#ffffff',
-  border: '1px solid #d2d2d7',
-  borderRadius: '1rem',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)',
 }
 
 // ─── Composant principal ──────────────────────────────────────────────────────
@@ -66,26 +84,32 @@ export default function TenantDashboard() {
     [bookings]
   )
 
-  const activeContract             = contracts.find((c) => c.status === 'ACTIVE')
-  const pendingSignatureContracts  = contracts.filter((c) => ['SENT', 'SIGNED_OWNER'].includes(c.status) && !c.signedByTenant)
-  const pendingApps                = applications.filter((a) => a.status === 'PENDING')
-  const approvedApps               = applications.filter((a) => a.status === 'APPROVED')
-  const activeApps                 = applications.filter((a) => a.status !== 'WITHDRAWN')
+  const activeContract            = contracts.find((c) => c.status === 'ACTIVE')
+  const pendingSignatureContracts = contracts.filter((c) => ['SENT', 'SIGNED_OWNER'].includes(c.status) && !c.signedByTenant)
+  const pendingApps               = applications.filter((a) => a.status === 'PENDING')
+  const approvedApps              = applications.filter((a) => a.status === 'APPROVED')
+  const activeApps                = applications.filter((a) => a.status !== 'WITHDRAWN')
 
-  // Greeting
-  const hour     = new Date().getHours()
-  const greeting = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir'
+  const todayLabel = new Date().toLocaleDateString('fr-FR', {
+    weekday: 'long', day: 'numeric', month: 'long',
+  })
 
-  // Dossier color
-  const dossierColor =
-    dossierPercent >= 80 ? '#059669'
-    : dossierPercent >= 50 ? '#d97706'
-    : '#dc2626'
+  // Dossier ring geometry
+  const RING_R          = 48
+  const CIRCUMFERENCE   = 2 * Math.PI * RING_R  // ≈ 301.6
+  const ringOffset      = CIRCUMFERENCE * (1 - dossierPercent / 100)
+  const dossierColor    =
+    dossierPercent >= 80 ? T.tenant
+    : dossierPercent >= 50 ? T.caramel
+    : '#b91c1c'
+
+  // Category completion mapping
+  const coveredCount = Math.round(dossierPercent / 100 * REQUIRED_CATEGORIES.length)
 
   const STATUS_STYLE: Record<string, React.CSSProperties> = {
-    PENDING:  { background: '#fffbeb', border: '1px solid #fde68a', color: '#d97706' },
-    APPROVED: { background: '#ecfdf5', border: '1px solid #a7f3d0', color: '#059669' },
-    REJECTED: { background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626' },
+    PENDING:  { background: T.caramelLight, border: `1px solid #e8c9a0`, color: T.caramel },
+    APPROVED: { background: T.tenantLight,  border: `1px solid ${T.tenantBorder}`, color: T.tenant },
+    REJECTED: { background: '#fef2f2',      border: '1px solid #fecaca', color: '#b91c1c' },
   }
   const STATUS_LABEL: Record<string, string> = {
     PENDING:  'En examen',
@@ -95,472 +119,668 @@ export default function TenantDashboard() {
 
   return (
     <Layout>
-      <div className="min-h-screen p-6 lg:p-8" style={{ background: '#f5f5f7' }}>
+      <div style={{ background: T.bgBase, minHeight: '100vh', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 40px' }}>
 
-          {/* ── EN-TÊTE ───────────────────────────────────────────── */}
-          <div className="flex items-center justify-between mb-6">
+          {/* ── Page header ─────────────────────────────────────────────── */}
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 32 }}>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest mb-1 text-slate-400">
-                {format(new Date(), "EEEE d MMMM yyyy", { locale: fr })}
+              <p style={{ fontSize: 13, color: T.inkFaint, fontWeight: 400, marginBottom: 4, textTransform: 'capitalize' }}>
+                {todayLabel}
               </p>
-              <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">
-                {greeting}, {user?.firstName}
+              <h1 style={{
+                fontFamily: "'Cormorant Garamond', Georgia, serif",
+                fontWeight: 700, fontStyle: 'italic',
+                fontSize: 52, color: T.ink, lineHeight: 1.05, margin: 0,
+              }}>
+                Bonjour, {user?.firstName}
               </h1>
             </div>
-            <Link to="/search"
-              className="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:-translate-y-0.5"
-              style={{ background: '#3b82f6', boxShadow: '0 4px 14px rgba(59,130,246,0.30)' }}>
-              <Search className="w-4 h-4" /> Chercher un logement
+            <Link to="/search" style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '10px 20px', borderRadius: 10,
+              background: T.tenant, color: '#ffffff',
+              fontWeight: 600, fontSize: 13, textDecoration: 'none',
+            }}>
+              <Search size={15} /> Chercher un logement
             </Link>
           </div>
 
-          {/* ── ALERTE SIGNATURE ──────────────────────────────────── */}
+          {/* ── Alerte signature ─────────────────────────────────────────── */}
           {pendingSignatureContracts.length > 0 && (
-            <div className="rounded-2xl p-4 flex items-start gap-3 mb-6"
-              style={{
-                background: '#fffbeb',
-                border: '1px solid #fde68a',
-                borderLeft: '3px solid #d97706',
+            <div style={{
+              background: T.caramelLight, border: `1px solid #e8c9a0`,
+              borderLeft: `3px solid ${T.caramel}`,
+              borderRadius: 12, padding: '14px 18px',
+              display: 'flex', alignItems: 'flex-start', gap: 12,
+              marginBottom: 28,
+            }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: 10,
+                background: T.caramel, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               }}>
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#f59e0b' }}>
-                <PenTool className="w-4 h-4 text-white" />
+                <PenTool size={15} style={{ color: '#ffffff' }} />
               </div>
-              <div className="flex-1">
-                <p className="font-semibold text-sm text-amber-800">
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 600, color: '#92400e', margin: '0 0 4px' }}>
                   {pendingSignatureContracts.length === 1
                     ? 'Un contrat attend votre signature'
                     : `${pendingSignatureContracts.length} contrats attendent votre signature`}
                 </p>
-                <Link to={`/contracts/${pendingSignatureContracts[0].id}`}
-                  className="inline-flex items-center gap-1 mt-1.5 text-xs font-semibold text-amber-700 hover:opacity-70 transition-opacity">
-                  Voir et signer <ChevronRight className="w-3 h-3" />
+                <Link to={`/contracts/${pendingSignatureContracts[0].id}`} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                  fontSize: 12, fontWeight: 500, color: '#92400e', textDecoration: 'none',
+                }}>
+                  Voir et signer <ChevronRight size={12} />
                 </Link>
               </div>
             </div>
           )}
 
-          {/* ── QUICK STATS ───────────────────────────────────────── */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+          {/* ── KPI row ─────────────────────────────────────────────────── */}
+          <div style={{
+            display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: 16, marginBottom: 32,
+          }}
+            className="t-lg-grid-4"
+          >
             {[
               {
                 to: '/my-bookings',
-                iconBg: '#3b82f6',
-                icon: <Calendar className="w-4 h-4 text-white" />,
-                value: upcomingBookings.length,
                 label: 'Visites à venir',
+                value: upcomingBookings.length,
                 sub: upcomingBookings.length > 0
                   ? `Prochaine le ${format(new Date(upcomingBookings[0].visitDate), 'd MMM', { locale: fr })}`
                   : 'Aucune programmée',
-                live: false,
               },
               {
                 to: '/my-applications',
-                iconBg: '#3b82f6',
-                icon: <SendHorizonal className="w-4 h-4 text-white" />,
-                value: activeApps.length,
                 label: 'Candidatures',
+                value: activeApps.length,
                 sub: pendingApps.length > 0
                   ? `${pendingApps.length} en attente`
                   : approvedApps.length > 0
                     ? `${approvedApps.length} approuvée${approvedApps.length > 1 ? 's' : ''}`
                     : 'Aucune en cours',
-                live: pendingApps.length > 0,
               },
               {
                 to: '/messages',
-                iconBg: '#3b82f6',
-                icon: <MessageSquare className="w-4 h-4 text-white" />,
-                value: unreadCount,
                 label: 'Messages',
+                value: unreadCount,
                 sub: unreadCount > 0 ? `${unreadCount} non lu${unreadCount > 1 ? 's' : ''}` : 'Tout lu',
-                live: unreadCount > 0,
               },
               {
                 to: '/favorites',
-                iconBg: '#ef4444',
-                icon: <Heart className="w-4 h-4 text-white" />,
-                value: favoriteIds.size,
                 label: 'Favoris',
+                value: favoriteIds.size,
                 sub: favoriteIds.size > 0 ? `${favoriteIds.size} bien${favoriteIds.size > 1 ? 's' : ''}` : 'Aucun favori',
-                live: false,
               },
-            ].map(({ to, iconBg, icon, value, label, sub, live }) => (
-              <Link key={label} to={to}
-                className="flex flex-col gap-3 p-4 rounded-2xl group transition-all hover:-translate-y-0.5"
-                style={{
-                  ...cardStyle,
+            ].map((kpi) => (
+              <Link key={kpi.label} to={kpi.to} style={{ textDecoration: 'none', display: 'block' }}>
+                <div style={{
+                  ...cardBase,
+                  borderTop: `3px solid ${T.tenant}`,
+                  padding: 20,
+                  display: 'flex', flexDirection: 'column',
+                  boxSizing: 'border-box',
                   transition: 'box-shadow 0.2s, transform 0.2s',
                 }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 12px rgba(0,0,0,0.10), 0 12px 32px rgba(0,0,0,0.08)'
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)'
-                }}>
-                <div className="flex items-start justify-between">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: iconBg }}>
-                    {icon}
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    {live && <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />}
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-400 transition-colors" />
-                  </div>
-                </div>
-                <div className="mt-auto">
-                  <p className="text-[26px] font-extrabold leading-none tracking-tight mb-1 text-slate-900">{value}</p>
-                  <p className="text-xs font-semibold mb-0.5 text-slate-700">{label}</p>
-                  <p className="text-[11px] text-slate-400">{sub}</p>
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.boxShadow = T.shadowHover;
+                    (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.boxShadow = T.shadowCard;
+                    (e.currentTarget as HTMLElement).style.transform = 'none'
+                  }}
+                >
+                  <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.inkFaint, marginBottom: 12 }}>
+                    {kpi.label}
+                  </p>
+                  <p style={{
+                    fontFamily: "'Cormorant Garamond', Georgia, serif",
+                    fontWeight: 700, fontSize: 44, color: T.ink,
+                    lineHeight: 1, marginBottom: 4,
+                  }}>
+                    {kpi.value}
+                  </p>
+                  <p style={{ fontSize: 12, color: T.inkFaint }}>
+                    {kpi.sub}
+                  </p>
+                  <ArrowRight size={14} style={{ color: T.inkFaint, marginTop: 'auto', alignSelf: 'flex-end' }} />
                 </div>
               </Link>
             ))}
           </div>
 
-          {/* ── CONTENU PRINCIPAL ─────────────────────────────────── */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* ── Main grid ───────────────────────────────────────────────── */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 24 }} className="t-lg-grid-3col">
 
-            {/* ── Colonne principale (2/3) ──────────────────────── */}
-            <div className="lg:col-span-2 space-y-5">
+            {/* Left column (2/3) */}
+            <div style={{ gridColumn: 'span 2' }} className="t-lg-col-span-2">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
-              {/* Widget dossier locatif */}
-              <div className="rounded-2xl overflow-hidden" style={cardStyle}>
-                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#f59e0b' }}>
-                      <FolderOpen className="w-3.5 h-3.5 text-white" />
-                    </div>
-                    <span className="font-semibold text-sm text-slate-900">Mon dossier locatif</span>
-                  </div>
-                  <Link to="/dossier" className="text-xs font-semibold text-blue-500 flex items-center gap-1 hover:opacity-70 transition-opacity">
-                    Gérer <ArrowRight className="w-3 h-3" />
-                  </Link>
-                </div>
-                <div className="p-5">
-                  <div className="flex items-center gap-4 mb-4">
-                    {/* Anneau circulaire */}
-                    <div className="relative w-16 h-16 flex-shrink-0">
-                      <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
-                        <circle cx="32" cy="32" r="26" strokeWidth="4.5" className="fill-none" stroke="#d2d2d7" />
-                        <circle cx="32" cy="32" r="26" strokeWidth="4.5" className="fill-none"
-                          style={{
-                            stroke: dossierColor,
-                            strokeDasharray: 2 * Math.PI * 26,
-                            strokeDashoffset: 2 * Math.PI * 26 * (1 - dossierPercent / 100),
-                            strokeLinecap: 'round',
-                            transition: 'stroke-dashoffset 0.8s cubic-bezier(0.16,1,0.3,1)',
-                          }} />
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-base font-extrabold" style={{ color: dossierColor }}>{dossierPercent}%</span>
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold text-sm mb-1 text-slate-900">
-                        {dossierPercent === 100
-                          ? 'Dossier complet — prêt à candidater !'
-                          : dossierPercent >= 50
-                            ? 'Dossier en bonne voie, continuez !'
-                            : 'Complétez votre dossier pour postuler'}
-                      </p>
-                      <p className="text-[11px] text-slate-400">
-                        {Math.round(dossierPercent / 100 * REQUIRED_CATEGORIES.length)} / {REQUIRED_CATEGORIES.length} catégories complètes
-                      </p>
-                      <div className="w-full h-1.5 rounded-full mt-2 overflow-hidden bg-slate-100">
-                        <div className="h-1.5 rounded-full transition-all duration-700"
-                          style={{ width: `${dossierPercent}%`, background: dossierColor }} />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {([
-                      { id: 'IDENTITE', label: 'Identité',  Icon: CreditCard },
-                      { id: 'EMPLOI',   label: 'Emploi',    Icon: Briefcase },
-                      { id: 'REVENUS',  label: 'Revenus',   Icon: Banknote },
-                      { id: 'DOMICILE', label: 'Domicile',  Icon: Home },
-                    ] as const).map(({ id, label, Icon }, i) => {
-                      const done = i < Math.round(dossierPercent / 100 * REQUIRED_CATEGORIES.length)
-                      return (
-                        <Link key={id} to="/dossier"
-                          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all"
-                          style={done
-                            ? { background: '#ecfdf5', border: '1px solid #a7f3d0', color: '#059669' }
-                            : { background: '#f5f5f7', border: '1px solid #d2d2d7', color: '#515154' }}>
-                          <Icon className="w-3.5 h-3.5 flex-shrink-0" />
-                          <span className="truncate flex-1">{label}</span>
-                          {done && <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" />}
-                        </Link>
-                      )
-                    })}
-                  </div>
-                  {dossierPercent < 100 && (
-                    <Link to="/dossier"
-                      className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
-                      style={{ background: '#3b82f6', boxShadow: '0 2px 8px rgba(59,130,246,0.25)' }}>
-                      <FolderOpen className="w-4 h-4" /> Compléter mon dossier
-                    </Link>
-                  )}
-                </div>
-              </div>
-
-              {/* Mes candidatures */}
-              <div className="rounded-2xl overflow-hidden" style={cardStyle}>
-                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#3b82f6' }}>
-                      <SendHorizonal className="w-3.5 h-3.5 text-white" />
-                    </div>
-                    <span className="font-semibold text-sm text-slate-900">Mes candidatures</span>
-                    {pendingApps.length > 0 && (
-                      <span className="text-[11px] font-bold text-white rounded-full px-2 py-0.5 bg-blue-500">
-                        {pendingApps.length}
+                {/* ── Dossier locatif widget ──────────────────────────── */}
+                <div style={cardBase}>
+                  <div style={{
+                    padding: '16px 20px', borderBottom: `1px solid ${T.border}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.inkFaint }}>
+                        Mon dossier locatif
                       </span>
+                    </div>
+                    <Link to="/dossier" style={{
+                      display: 'flex', alignItems: 'center', gap: 4,
+                      fontSize: 12, fontWeight: 500, color: T.tenant, textDecoration: 'none',
+                    }}>
+                      Gérer <ArrowRight size={12} />
+                    </Link>
+                  </div>
+
+                  <div style={{ padding: 20 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 20 }}>
+
+                      {/* SVG ring */}
+                      <div style={{ position: 'relative', width: 120, height: 120, flexShrink: 0 }}>
+                        <svg width="120" height="120" viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)' }}>
+                          <circle cx="60" cy="60" r={RING_R} strokeWidth="8" fill="none" stroke={T.bgMuted} />
+                          <circle cx="60" cy="60" r={RING_R} strokeWidth="8" fill="none"
+                            style={{
+                              stroke: dossierColor,
+                              strokeDasharray: CIRCUMFERENCE,
+                              strokeDashoffset: ringOffset,
+                              strokeLinecap: 'round',
+                              transition: 'stroke-dashoffset 0.8s cubic-bezier(0.16,1,0.3,1)',
+                            }}
+                          />
+                        </svg>
+                        <div style={{
+                          position: 'absolute', inset: 0,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          <span style={{
+                            fontFamily: "'Cormorant Garamond', Georgia, serif",
+                            fontSize: 32, fontWeight: 700, color: T.ink, lineHeight: 1,
+                          }}>
+                            {dossierPercent}%
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Right: status + pills */}
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: 15, fontWeight: 600, color: T.ink, marginBottom: 4 }}>
+                          {dossierPercent === 100
+                            ? 'Dossier complet — prêt à candidater !'
+                            : dossierPercent >= 50
+                              ? 'Dossier en bonne voie, continuez !'
+                              : 'Complétez votre dossier pour postuler'}
+                        </p>
+                        <p style={{ fontSize: 12, color: T.inkFaint, marginBottom: 16 }}>
+                          {coveredCount} / {REQUIRED_CATEGORIES.length} catégories complètes
+                        </p>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                          {([
+                            { id: 'IDENTITE', label: 'Identité',  Icon: CreditCard },
+                            { id: 'EMPLOI',   label: 'Emploi',    Icon: Briefcase },
+                            { id: 'REVENUS',  label: 'Revenus',   Icon: Banknote },
+                            { id: 'DOMICILE', label: 'Domicile',  Icon: Home },
+                          ] as const).map(({ id, label, Icon }, i) => {
+                            const done = i < coveredCount
+                            return (
+                              <Link key={id} to="/dossier" style={{
+                                display: 'flex', alignItems: 'center', gap: 6,
+                                padding: '7px 12px', borderRadius: 8, fontSize: 12, fontWeight: 500,
+                                textDecoration: 'none',
+                                background: done ? T.tenantLight : T.bgMuted,
+                                border: `1px solid ${done ? T.tenantBorder : T.borderMid}`,
+                                color: done ? T.tenant : T.inkFaint,
+                                transition: 'opacity 0.15s',
+                              }}>
+                                <Icon size={13} style={{ flexShrink: 0 }} />
+                                <span style={{ flex: 1 }}>{label}</span>
+                                {done && <CheckCircle size={13} style={{ flexShrink: 0 }} />}
+                              </Link>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    {dossierPercent < 100 && (
+                      <Link to="/dossier" style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                        padding: '11px', borderRadius: 10,
+                        background: T.tenant, color: '#ffffff',
+                        fontSize: 13, fontWeight: 600, textDecoration: 'none',
+                      }}>
+                        <FolderOpen size={15} /> Compléter mon dossier
+                      </Link>
                     )}
                   </div>
-                  <Link to="/my-applications" className="text-xs font-semibold text-blue-500 flex items-center gap-1 hover:opacity-70 transition-opacity">
-                    Tout voir <ArrowRight className="w-3 h-3" />
-                  </Link>
                 </div>
-                {activeApps.length === 0 ? (
-                  <div className="p-6 text-center">
-                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center mx-auto mb-3 bg-slate-50">
-                      <SendHorizonal className="w-5 h-5 text-slate-300" />
-                    </div>
-                    <p className="text-sm text-slate-500">Aucune candidature en cours</p>
-                    <Link to="/search" className="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold text-blue-500 hover:opacity-80">
-                      <Search className="w-3.5 h-3.5" /> Parcourir les annonces
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-slate-100">
-                    {activeApps.slice(0, 4).map((app) => (
-                      <div key={app.id} className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50 transition-colors">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm truncate text-slate-900">
-                            {app.property?.title}
-                          </p>
-                          <p className="text-[11px] mt-0.5 text-slate-400">
-                            {app.property?.city} · {app.property?.price} €/mois · Score {app.score}/100
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <span className="text-[11px] border rounded-full px-2.5 py-0.5 font-semibold"
-                            style={STATUS_STYLE[app.status] || {}}>
-                            {STATUS_LABEL[app.status] || app.status}
+
+                {/* ── Candidatures ───────────────────────────────────────── */}
+                <div style={cardBase}>
+                  <div style={{ padding: '16px 20px', borderBottom: `1px solid ${T.border}` }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.inkFaint }}>
+                          Mes candidatures
+                        </span>
+                        {pendingApps.length > 0 && (
+                          <span style={{
+                            fontSize: 11, fontWeight: 700, color: '#ffffff',
+                            background: T.tenant, borderRadius: 20, padding: '1px 8px',
+                          }}>
+                            {pendingApps.length}
                           </span>
-                          {app.status === 'APPROVED' && (
-                            <Link to={`/property/${app.property?.id}`}
-                              className="text-[11px] font-semibold text-white px-2.5 py-1.5 rounded-lg transition-all hover:-translate-y-px"
-                              style={{ background: '#3b82f6', boxShadow: '0 2px 8px rgba(59,130,246,0.22)' }}>
-                              Réserver
-                            </Link>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Visites à venir */}
-              <div className="rounded-2xl overflow-hidden" style={cardStyle}>
-                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#3b82f6' }}>
-                      <Clock className="w-3.5 h-3.5 text-white" />
-                    </div>
-                    <span className="font-semibold text-sm text-slate-900">Visites à venir</span>
-                  </div>
-                  <Link to="/my-bookings" className="text-xs font-semibold text-blue-500 flex items-center gap-1 hover:opacity-70 transition-opacity">
-                    Tout voir <ArrowRight className="w-3 h-3" />
-                  </Link>
-                </div>
-                {isLoadingBookings ? (
-                  <div className="flex items-center justify-center py-10">
-                    <Loader2 className="w-6 h-6 animate-spin text-slate-300" />
-                  </div>
-                ) : upcomingBookings.length === 0 ? (
-                  <div className="text-center py-8 px-6">
-                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center mx-auto mb-3 bg-slate-50">
-                      <Calendar className="w-5 h-5 text-slate-300" />
-                    </div>
-                    <p className="text-sm text-slate-500">Aucune visite programmée</p>
-                    <Link to="/search" className="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold text-blue-500 hover:opacity-80">
-                      <Search className="w-3.5 h-3.5" /> Trouver un bien à visiter
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-slate-100">
-                    {upcomingBookings.map((booking) => (
-                      <Link key={booking.id} to={`/property/${booking.property.id}`}
-                        className="flex items-center gap-3 p-4 hover:bg-slate-50 transition-colors">
-                        {booking.property.images?.[0] ? (
-                          <img src={booking.property.images[0]} alt={booking.property.title}
-                            className="w-12 h-12 rounded-xl object-cover flex-shrink-0" />
-                        ) : (
-                          <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-slate-100">
-                            <Home className="w-5 h-5 text-slate-400" />
-                          </div>
                         )}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm truncate text-slate-900">{booking.property.title}</p>
-                          <p className="text-[11px] flex items-center gap-1 mt-0.5 text-slate-400">
-                            <MapPin className="w-2.5 h-2.5" />{booking.property.city}
-                          </p>
-                          <div className="flex items-center gap-3 mt-1 text-[11px] text-slate-500">
-                            <span className="flex items-center gap-1">
-                              <Calendar className="w-3 h-3" />
-                              {format(new Date(booking.visitDate), 'dd MMM yyyy', { locale: fr })}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Clock className="w-3 h-3" />{booking.visitTime}
-                            </span>
-                          </div>
-                        </div>
-                        <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full flex-shrink-0"
-                          style={booking.status === 'CONFIRMED'
-                            ? { background: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0' }
-                            : { background: '#fffbeb', color: '#d97706', border: '1px solid #fde68a' }}>
-                          {booking.status === 'CONFIRMED' ? 'Confirmée' : 'En attente'}
-                        </span>
+                      </div>
+                      <Link to="/my-applications" style={{
+                        display: 'flex', alignItems: 'center', gap: 4,
+                        fontSize: 12, fontWeight: 500, color: T.tenant, textDecoration: 'none',
+                      }}>
+                        Tout voir <ArrowRight size={12} />
                       </Link>
-                    ))}
+                    </div>
+                    <div style={{ borderTop: `1px solid ${T.border}` }} />
+                  </div>
+
+                  {activeApps.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '36px 24px' }}>
+                      <div style={{
+                        width: 40, height: 40, borderRadius: 12, background: T.bgMuted,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        margin: '0 auto 12px',
+                      }}>
+                        <SendHorizonal size={18} style={{ color: T.inkFaint }} />
+                      </div>
+                      <p style={{ fontSize: 13, color: T.inkMid, marginBottom: 8 }}>Aucune candidature en cours</p>
+                      <Link to="/search" style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 5,
+                        fontSize: 12, fontWeight: 500, color: T.tenant, textDecoration: 'none',
+                      }}>
+                        <Search size={13} /> Parcourir les annonces
+                      </Link>
+                    </div>
+                  ) : (
+                    <div>
+                      {activeApps.slice(0, 4).map((app, idx) => {
+                        const isLast = idx === Math.min(activeApps.length, 4) - 1
+                        return (
+                          <div key={app.id} style={{
+                            display: 'flex', alignItems: 'center', gap: 16,
+                            padding: '12px 20px',
+                            borderBottom: isLast ? 'none' : `1px solid ${T.border}`,
+                            transition: 'background 0.15s',
+                          }}
+                            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = T.bgMuted }}
+                            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+                          >
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p style={{ fontSize: 14, fontWeight: 600, color: T.ink, margin: '0 0 3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {app.property?.title}
+                              </p>
+                              <p style={{ fontSize: 12, color: T.inkMid, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {app.property?.city} · {app.property?.price} €/mois · Score {app.score}/100
+                              </p>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                              <span style={{
+                                fontSize: 11, fontWeight: 600,
+                                padding: '3px 12px', borderRadius: 20,
+                                ...(STATUS_STYLE[app.status] || {}),
+                              }}>
+                                {STATUS_LABEL[app.status] || app.status}
+                              </span>
+                              {app.status === 'APPROVED' && (
+                                <Link to={`/property/${app.property?.id}`} style={{
+                                  display: 'inline-flex', alignItems: 'center',
+                                  padding: '5px 12px', borderRadius: 8,
+                                  background: T.tenant, color: '#ffffff',
+                                  fontSize: 12, fontWeight: 600, textDecoration: 'none',
+                                }}>
+                                  Réserver
+                                </Link>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* ── Visites à venir ────────────────────────────────────── */}
+                <div style={cardBase}>
+                  <div style={{ padding: '16px 20px', borderBottom: `1px solid ${T.border}` }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.inkFaint }}>
+                        Visites à venir
+                      </span>
+                      <Link to="/my-bookings" style={{
+                        display: 'flex', alignItems: 'center', gap: 4,
+                        fontSize: 12, fontWeight: 500, color: T.tenant, textDecoration: 'none',
+                      }}>
+                        Tout voir <ArrowRight size={12} />
+                      </Link>
+                    </div>
+                    <div style={{ borderTop: `1px solid ${T.border}` }} />
+                  </div>
+
+                  {isLoadingBookings ? (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40 }}>
+                      <Loader2 size={24} style={{ color: T.inkFaint, animation: 'spin 0.8s linear infinite' }} />
+                    </div>
+                  ) : upcomingBookings.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '36px 24px' }}>
+                      <div style={{
+                        width: 40, height: 40, borderRadius: 12, background: T.bgMuted,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        margin: '0 auto 12px',
+                      }}>
+                        <Calendar size={18} style={{ color: T.inkFaint }} />
+                      </div>
+                      <p style={{ fontSize: 13, color: T.inkMid, marginBottom: 8 }}>Aucune visite programmée</p>
+                      <Link to="/search" style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 5,
+                        fontSize: 12, fontWeight: 500, color: T.tenant, textDecoration: 'none',
+                      }}>
+                        <Search size={13} /> Trouver un bien à visiter
+                      </Link>
+                    </div>
+                  ) : (
+                    <div>
+                      {upcomingBookings.map((booking, idx) => {
+                        const isLast = idx === upcomingBookings.length - 1
+                        return (
+                          <Link key={booking.id} to={`/property/${booking.property.id}`} style={{
+                            display: 'flex', alignItems: 'center', gap: 14,
+                            padding: '12px 20px',
+                            borderBottom: isLast ? 'none' : `1px solid ${T.border}`,
+                            textDecoration: 'none', transition: 'background 0.15s',
+                          }}
+                            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = T.bgMuted }}
+                            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+                          >
+                            {booking.property.images?.[0] ? (
+                              <img src={booking.property.images[0]} alt={booking.property.title}
+                                style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }}
+                              />
+                            ) : (
+                              <div style={{
+                                width: 56, height: 56, borderRadius: 10, flexShrink: 0,
+                                background: T.bgMuted, border: `1px solid ${T.border}`,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              }}>
+                                <Home size={20} style={{ color: T.inkFaint }} />
+                              </div>
+                            )}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p style={{ fontSize: 14, fontWeight: 600, color: T.ink, margin: '0 0 3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {booking.property.title}
+                              </p>
+                              <p style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: T.inkMid, margin: '0 0 4px' }}>
+                                <MapPin size={11} /> {booking.property.city}
+                              </p>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12, color: T.inkFaint }}>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                  <Calendar size={11} />
+                                  {format(new Date(booking.visitDate), 'dd MMM yyyy', { locale: fr })}
+                                </span>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                  <Clock size={11} />{booking.visitTime}
+                                </span>
+                              </div>
+                            </div>
+                            <span style={{
+                              fontSize: 11, fontWeight: 600, padding: '4px 12px', borderRadius: 20, flexShrink: 0,
+                              ...(booking.status === 'CONFIRMED'
+                                ? { background: T.tenantLight, color: T.tenant, border: `1px solid ${T.tenantBorder}` }
+                                : { background: T.caramelLight, color: T.caramel, border: '1px solid #e8c9a0' }),
+                            }}>
+                              {booking.status === 'CONFIRMED' ? 'Confirmée' : 'En attente'}
+                            </span>
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* ── Bail actif ─────────────────────────────────────────── */}
+                {activeContract && (
+                  <div style={cardBase}>
+                    <div style={{ padding: '16px 20px', borderBottom: `1px solid ${T.border}` }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.inkFaint }}>
+                          Mon bail actif
+                        </span>
+                        <Link to="/contracts" style={{
+                          display: 'flex', alignItems: 'center', gap: 4,
+                          fontSize: 12, fontWeight: 500, color: T.tenant, textDecoration: 'none',
+                        }}>
+                          Voir le contrat <ArrowRight size={12} />
+                        </Link>
+                      </div>
+                      <div style={{ borderTop: `1px solid ${T.border}` }} />
+                    </div>
+
+                    <div style={{ padding: 20 }}>
+                      <Link to={`/contracts/${activeContract.id}`} style={{
+                        display: 'block', padding: 20, borderRadius: 12,
+                        background: T.tenantLight, border: `1px solid ${T.tenantBorder}`,
+                        textDecoration: 'none', transition: 'box-shadow 0.2s, transform 0.2s',
+                      }}
+                        onMouseEnter={(e) => {
+                          (e.currentTarget as HTMLElement).style.boxShadow = T.shadowHover;
+                          (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as HTMLElement).style.boxShadow = 'none';
+                          (e.currentTarget as HTMLElement).style.transform = 'none'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
+                          <div>
+                            <p style={{ fontSize: 15, fontWeight: 600, color: T.ink, margin: '0 0 4px' }}>
+                              {activeContract.property?.title}
+                            </p>
+                            <p style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: T.inkMid, margin: 0 }}>
+                              <MapPin size={11} />
+                              {activeContract.property?.address}, {activeContract.property?.city}
+                            </p>
+                          </div>
+                          <span style={{
+                            display: 'flex', alignItems: 'center', gap: 5,
+                            padding: '4px 12px', borderRadius: 20,
+                            background: '#ffffff', color: T.tenant,
+                            border: `1px solid ${T.tenantBorder}`,
+                            fontSize: 11, fontWeight: 600, flexShrink: 0,
+                          }}>
+                            <CheckCircle size={12} /> Actif
+                          </span>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                          {[
+                            { label: 'Loyer',  value: `${activeContract.monthlyRent} €/mois`, isRent: true },
+                            { label: 'Début',  value: format(new Date(activeContract.startDate), 'dd MMM yyyy', { locale: fr }), isRent: false },
+                            { label: 'Fin',    value: format(new Date(activeContract.endDate),   'dd MMM yyyy', { locale: fr }), isRent: false },
+                          ].map(({ label, value, isRent }) => (
+                            <div key={label}>
+                              <p style={{ fontSize: 11, color: T.inkFaint, margin: '0 0 3px' }}>{label}</p>
+                              <p style={{
+                                margin: 0,
+                                fontFamily: isRent ? "'Cormorant Garamond', Georgia, serif" : "'DM Sans', system-ui, sans-serif",
+                                fontSize: isRent ? 22 : 13,
+                                fontWeight: 700,
+                                color: isRent ? T.tenant : T.ink,
+                              }}>
+                                {value}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </Link>
+                    </div>
                   </div>
                 )}
-              </div>
 
-              {/* Mon bail actif */}
-              {activeContract && (
-                <div className="rounded-2xl overflow-hidden" style={cardStyle}>
-                  <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#3b82f6' }}>
-                        <FileText className="w-3.5 h-3.5 text-white" />
-                      </div>
-                      <span className="font-semibold text-sm text-slate-900">Mon bail actif</span>
-                    </div>
-                    <Link to="/contracts" className="text-xs font-semibold text-blue-500 flex items-center gap-1 hover:opacity-70 transition-opacity">
-                      Voir le contrat <ArrowRight className="w-3 h-3" />
-                    </Link>
-                  </div>
-                  <div className="p-4">
-                    <Link to={`/contracts/${activeContract.id}`}
-                      className="block p-4 rounded-xl transition-all hover:-translate-y-0.5"
-                      style={{ border: '1px solid #bfdbfe', background: '#eff6ff' }}>
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <p className="font-semibold text-sm text-slate-900">{activeContract.property?.title}</p>
-                          <p className="text-[11px] flex items-center gap-1 mt-0.5 text-slate-400">
-                            <MapPin className="w-2.5 h-2.5" />
-                            {activeContract.property?.address}, {activeContract.property?.city}
-                          </p>
-                        </div>
-                        <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold"
-                          style={{ background: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0' }}>
-                          <CheckCircle className="w-3 h-3" /> Actif
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-3 gap-3">
-                        {[
-                          { label: 'Loyer', value: `${activeContract.monthlyRent} €/mois` },
-                          { label: 'Début', value: format(new Date(activeContract.startDate), 'dd MMM yyyy', { locale: fr }) },
-                          { label: 'Fin',   value: format(new Date(activeContract.endDate),   'dd MMM yyyy', { locale: fr }) },
-                        ].map(({ label, value }) => (
-                          <div key={label}>
-                            <p className="text-[11px] mb-0.5 text-slate-400">{label}</p>
-                            <p className="text-sm font-bold" style={{ color: label === 'Loyer' ? '#3b82f6' : '#1d1d1f' }}>{value}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </Link>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
 
-            {/* ── Sidebar droite (1/3) ──────────────────────────── */}
-            <div className="space-y-4">
+            {/* ── Right sidebar (1/3) ──────────────────────────────────── */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-              {/* CTA recherche */}
-              <div className="rounded-2xl p-4 overflow-hidden"
-                style={{ background: '#eff6ff', border: '1px solid #bfdbfe' }}>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#3b82f6' }}>
-                    <Search className="w-3.5 h-3.5 text-white" />
-                  </div>
-                  <p className="font-semibold text-sm text-slate-900">Trouver votre logement</p>
-                </div>
-                <p className="text-[11px] mb-3 text-slate-500">
-                  {favoriteIds.size > 0
-                    ? `${favoriteIds.size} bien${favoriteIds.size > 1 ? 's' : ''} en favori`
-                    : 'Explorez les annonces disponibles.'}
+              {/* Journey checklist */}
+              <div style={{ ...cardBase, padding: 20 }}>
+                <p style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase',
+                  color: T.inkFaint, marginBottom: 16,
+                }}>
+                  <Star size={13} style={{ color: T.caramel }} /> Votre parcours
                 </p>
-                <Link to="/search"
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
-                  style={{ background: '#3b82f6', boxShadow: '0 4px 14px rgba(59,130,246,0.30)' }}>
-                  <Search className="w-3.5 h-3.5" /> Parcourir les annonces
-                </Link>
-              </div>
-
-              {/* Prochaines étapes */}
-              <div className="rounded-2xl p-4" style={cardStyle}>
-                <p className="text-[11px] font-bold uppercase tracking-widest mb-3 flex items-center gap-1.5 text-slate-400">
-                  <Star className="w-3.5 h-3.5 text-amber-400" /> Parcours
-                </p>
-                <div className="space-y-3">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   {[
-                    { done: dossierPercent === 100, label: 'Dossier complet', sub: `${dossierPercent}% complété`, link: '/dossier' },
-                    { done: applications.length > 0, label: 'Postuler à une annonce', sub: applications.length > 0 ? `${applications.length} candidature${applications.length > 1 ? 's' : ''}` : "Aucune pour l'instant", link: '/search' },
-                    { done: upcomingBookings.length > 0, label: 'Réserver une visite', sub: upcomingBookings.length > 0 ? `${upcomingBookings.length} visite${upcomingBookings.length > 1 ? 's' : ''} à venir` : 'Aucune programmée', link: '/search' },
-                    { done: !!activeContract, label: 'Obtenir un bail actif', sub: activeContract ? 'Bail en cours' : 'En attente', link: '/contracts' },
+                    {
+                      done: dossierPercent === 100,
+                      label: 'Dossier complet',
+                      sub: `${dossierPercent}% complété`,
+                      link: '/dossier',
+                    },
+                    {
+                      done: applications.length > 0,
+                      label: 'Postuler à une annonce',
+                      sub: applications.length > 0 ? `${applications.length} candidature${applications.length > 1 ? 's' : ''}` : "Aucune pour l'instant",
+                      link: '/search',
+                    },
+                    {
+                      done: upcomingBookings.length > 0,
+                      label: 'Réserver une visite',
+                      sub: upcomingBookings.length > 0 ? `${upcomingBookings.length} visite${upcomingBookings.length > 1 ? 's' : ''} à venir` : 'Aucune programmée',
+                      link: '/search',
+                    },
+                    {
+                      done: !!activeContract,
+                      label: 'Obtenir un bail actif',
+                      sub: activeContract ? 'Bail en cours' : 'En attente',
+                      link: '/contracts',
+                    },
                   ].map(({ done, label, sub, link }) => (
-                    <Link key={label} to={link} className="flex items-start gap-3 group">
-                      <div className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all"
-                        style={done
-                          ? { borderColor: '#059669', background: '#059669' }
-                          : { borderColor: '#d2d2d7' }}>
-                        {done && <CheckCircle className="w-3 h-3 text-white" />}
+                    <Link key={label} to={link} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, textDecoration: 'none' }}>
+                      <div style={{
+                        flexShrink: 0, marginTop: 2, width: 20, height: 20, borderRadius: '50%',
+                        border: `2px solid ${done ? T.tenant : T.borderMid}`,
+                        background: done ? T.tenant : 'transparent',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        transition: 'all 0.2s',
+                      }}>
+                        {done && <CheckCircle size={12} style={{ color: '#ffffff' }} />}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold transition-colors"
-                          style={{ color: done ? '#86868b' : '#1d1d1f', textDecoration: done ? 'line-through' : 'none' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{
+                          fontSize: 13, fontWeight: 600, margin: '0 0 2px',
+                          color: done ? T.inkFaint : T.ink,
+                          textDecoration: done ? 'line-through' : 'none',
+                        }}>
                           {label}
                         </p>
-                        <p className="text-[11px] mt-0.5 text-slate-400">{sub}</p>
+                        <p style={{ fontSize: 11, color: T.inkFaint, margin: 0 }}>{sub}</p>
                       </div>
                     </Link>
                   ))}
                 </div>
               </div>
 
-              {/* Navigation rapide */}
-              <div className="rounded-2xl p-4" style={cardStyle}>
-                <p className="text-[11px] font-bold uppercase tracking-widest mb-3 text-slate-400">
+              {/* Quick links */}
+              <div style={{ ...cardBase, padding: 20 }}>
+                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.inkFaint, marginBottom: 16 }}>
                   Accès rapides
                 </p>
-                <div className="space-y-1">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
                   {[
-                    { to: '/my-bookings',     iconBg: '#3b82f6', icon: <Calendar className="w-3.5 h-3.5 text-white" />,      label: 'Mes visites',  badge: upcomingBookings.length },
-                    { to: '/my-applications', iconBg: '#3b82f6', icon: <SendHorizonal className="w-3.5 h-3.5 text-white" />, label: 'Candidatures', badge: pendingApps.length },
-                    { to: '/dossier',         iconBg: '#f59e0b', icon: <FolderOpen className="w-3.5 h-3.5 text-white" />,    label: 'Mon dossier',  badge: 0 },
-                    { to: '/messages',        iconBg: '#3b82f6', icon: <MessageSquare className="w-3.5 h-3.5 text-white" />, label: 'Messages',     badge: unreadCount },
-                    { to: '/favorites',       iconBg: '#ef4444', icon: <Heart className="w-3.5 h-3.5 text-white" />,         label: 'Favoris',      badge: 0 },
-                    { to: '/contracts',       iconBg: '#3b82f6', icon: <FileText className="w-3.5 h-3.5 text-white" />,      label: 'Contrats',     badge: pendingSignatureContracts.length },
-                  ].map(({ to, iconBg, icon, label, badge }) => (
-                    <Link key={to} to={to}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all hover:bg-slate-50">
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: iconBg }}>{icon}</div>
-                      <span className="flex-1 text-sm font-medium text-slate-700">{label}</span>
+                    { to: '/my-bookings',     icon: <Calendar size={16} />,       label: 'Mes visites',   badge: upcomingBookings.length },
+                    { to: '/my-applications', icon: <SendHorizonal size={16} />,  label: 'Candidatures',  badge: pendingApps.length },
+                    { to: '/dossier',         icon: <FolderOpen size={16} />,     label: 'Mon dossier',   badge: 0 },
+                    { to: '/messages',        icon: <MessageSquare size={16} />,  label: 'Messages',      badge: unreadCount },
+                    { to: '/favorites',       icon: <Heart size={16} />,          label: 'Favoris',       badge: 0 },
+                    { to: '/contracts',       icon: <FileText size={16} />,       label: 'Contrats',      badge: pendingSignatureContracts.length },
+                  ].map(({ to, icon, label, badge }, idx, arr) => (
+                    <Link key={to} to={to} style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '10px 0',
+                      borderBottom: idx < arr.length - 1 ? `1px solid ${T.border}` : 'none',
+                      textDecoration: 'none', color: T.ink,
+                      transition: 'color 0.15s',
+                    }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = T.tenant }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = T.ink }}
+                    >
+                      <span style={{ color: 'inherit', display: 'flex', flexShrink: 0 }}>{icon}</span>
+                      <span style={{ flex: 1, fontSize: 13, fontWeight: 500 }}>{label}</span>
                       {badge > 0 ? (
-                        <span className="text-[11px] font-bold text-white rounded-full px-1.5 py-0.5 min-w-[20px] text-center flex-shrink-0 bg-blue-500">{badge}</span>
+                        <span style={{
+                          fontSize: 11, fontWeight: 700, color: '#ffffff',
+                          background: T.tenant, borderRadius: 20, padding: '1px 7px', flexShrink: 0,
+                        }}>
+                          {badge}
+                        </span>
                       ) : (
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-300 flex-shrink-0" />
+                        <ChevronRight size={14} style={{ color: T.inkFaint, flexShrink: 0 }} />
                       )}
                     </Link>
                   ))}
                 </div>
               </div>
+
+              {/* Search CTA */}
+              <div style={{
+                borderRadius: 16, padding: 20,
+                background: T.tenantLight, border: `1px solid ${T.tenantBorder}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 8,
+                    background: T.tenant, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <Search size={14} style={{ color: '#ffffff' }} />
+                  </div>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: T.ink, margin: 0 }}>Trouver votre logement</p>
+                </div>
+                <p style={{ fontSize: 12, color: T.inkMid, marginBottom: 14 }}>
+                  {favoriteIds.size > 0
+                    ? `${favoriteIds.size} bien${favoriteIds.size > 1 ? 's' : ''} en favori`
+                    : 'Explorez les annonces disponibles.'}
+                </p>
+                <Link to="/search" style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  padding: '10px', borderRadius: 10,
+                  background: T.tenant, color: '#ffffff',
+                  fontSize: 13, fontWeight: 600, textDecoration: 'none',
+                }}>
+                  <Search size={14} /> Parcourir les annonces
+                </Link>
+              </div>
+
             </div>
           </div>
+
+        </div>
       </div>
+
+      {/* Responsive grid helpers */}
+      <style>{`
+        @media (min-width: 1024px) {
+          .t-lg-grid-4 { grid-template-columns: repeat(4, 1fr) !important; }
+          .t-lg-grid-3col { grid-template-columns: 1fr 1fr 1fr !important; }
+          .t-lg-col-span-2 { grid-column: span 2 !important; }
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
     </Layout>
   )
 }

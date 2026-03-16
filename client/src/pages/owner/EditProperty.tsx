@@ -13,60 +13,82 @@ import {
 import { DEFAULT_CRITERIA, type SelectionCriteria } from '../../types/application.types'
 import { Layout } from '../../components/layout/Layout'
 
+// ─── Maison tokens ────────────────────────────────────────────────────────────
+const M = {
+  bg:          '#fafaf8',
+  surface:     '#ffffff',
+  muted:       '#f4f2ee',
+  inputBg:     '#f8f7f4',
+  ink:         '#0d0c0a',
+  inkMid:      '#5a5754',
+  inkFaint:    '#9e9b96',
+  owner:       '#1a3270',
+  ownerLight:  '#eaf0fb',
+  ownerBorder: '#b8ccf0',
+  border:      '#e4e1db',
+  borderMid:   '#ccc9c3',
+  danger:      '#9b1c1c',
+  dangerBg:    '#fef2f2',
+}
+
 // ─── Shared style constants ───────────────────────────────────────────────────
 
 const cardStyle: React.CSSProperties = {
-  background: '#ffffff',
-  border: '1px solid #d2d2d7',
-  borderRadius: '1rem',
+  background: M.surface,
+  border: `1px solid ${M.border}`,
+  borderRadius: 12,
   padding: '1.5rem',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)',
+  boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
   marginBottom: '1.5rem',
 }
 
 const inputStyle: React.CSSProperties = {
-  background: '#ffffff',
-  border: '1px solid #d2d2d7',
-  borderRadius: '0.75rem',
+  background: M.inputBg,
+  border: `1px solid ${M.border}`,
+  borderRadius: 8,
   padding: '0.625rem 1rem',
-  color: '#1d1d1f',
-  fontSize: '0.875rem',
+  color: M.ink,
+  fontSize: 13,
   outline: 'none',
   width: '100%',
-  fontFamily: '"Plus Jakarta Sans", Inter, system-ui',
+  fontFamily: "'DM Sans', system-ui, sans-serif",
   transition: 'border-color 0.15s, box-shadow 0.15s',
 }
 
 const labelStyle: React.CSSProperties = {
   display: 'block',
-  fontSize: '0.875rem',
-  fontWeight: 600,
-  color: '#515154',
+  fontSize: 12,
+  fontWeight: 500,
+  color: M.inkMid,
   marginBottom: '0.375rem',
-  fontFamily: '"Plus Jakarta Sans", Inter, system-ui',
+  fontFamily: "'DM Sans', system-ui, sans-serif",
 }
 
 function onFocusInput(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
-  e.currentTarget.style.borderColor = '#007AFF'
-  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,122,255,0.12)'
+  e.currentTarget.style.borderColor = M.owner
+  e.currentTarget.style.boxShadow = `0 0 0 3px ${M.ownerLight}`
 }
 function onBlurInput(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
-  e.currentTarget.style.borderColor = '#d2d2d7'
+  e.currentTarget.style.borderColor = M.border
   e.currentTarget.style.boxShadow = 'none'
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2
-      className="text-base font-bold mb-5 pb-3"
-      style={{
-        color: '#1d1d1f',
-        borderBottom: '1px solid #d2d2d7',
-        fontFamily: '"Plus Jakarta Sans", Inter, system-ui',
-      }}
-    >
-      {children}
-    </h2>
+    <div className="mb-5 pb-3" style={{ borderBottom: `1px solid ${M.border}` }}>
+      <p
+        style={{
+          fontFamily: "'DM Sans', system-ui, sans-serif",
+          fontSize: 11,
+          fontWeight: 500,
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase' as const,
+          color: M.inkFaint,
+        }}
+      >
+        {children}
+      </p>
+    </div>
   )
 }
 
@@ -199,11 +221,11 @@ export default function EditProperty() {
   if (isLoading && !isInitialized) {
     return (
       <Layout>
-        <div
-          className="min-h-screen flex items-center justify-center"
-          style={{ background: '#f5f5f7' }}
-        >
-          <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#007AFF' }} />
+        <div className="min-h-screen flex items-center justify-center" style={{ background: M.bg }}>
+          <div
+            className="animate-spin rounded-full"
+            style={{ width: 40, height: 40, borderWidth: 2, borderStyle: 'solid', borderColor: M.border, borderTopColor: M.owner }}
+          />
         </div>
       </Layout>
     )
@@ -213,20 +235,31 @@ export default function EditProperty() {
   if (!currentProperty) {
     return (
       <Layout>
-        <div
-          className="min-h-screen flex items-center justify-center"
-          style={{ background: '#f5f5f7' }}
-        >
+        <div className="min-h-screen flex items-center justify-center" style={{ background: M.bg }}>
           <div className="text-center">
-            <h2 className="text-xl font-semibold mb-3" style={{ color: '#1d1d1f' }}>
+            <h2
+              style={{
+                fontFamily: "'Cormorant Garamond', Georgia, serif",
+                fontSize: 22,
+                fontStyle: 'italic',
+                fontWeight: 600,
+                color: M.ink,
+                marginBottom: 12,
+              }}
+            >
               Propriété introuvable
             </h2>
             <Link
               to="/properties/owner/me"
-              className="text-sm font-medium"
-              style={{ color: '#007AFF' }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#0066d6')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#007AFF')}
+              style={{
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+                fontSize: 13,
+                fontWeight: 500,
+                color: M.owner,
+                textDecoration: 'none',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#142860')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = M.owner)}
             >
               Retour à mes propriétés
             </Link>
@@ -238,24 +271,64 @@ export default function EditProperty() {
 
   return (
     <Layout>
-      <div className="min-h-screen p-6 lg:p-8" style={{ background: '#f5f5f7', fontFamily: '"Plus Jakarta Sans", Inter, system-ui' }}>
+      <div className="min-h-screen p-6 lg:p-8" style={{ background: M.bg, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
         <div className="max-w-4xl mx-auto">
-          {/* Back link + Header */}
-          <div className="mb-6">
+
+          {/* ── Back link + Header ── */}
+          <div className="mb-8">
             <Link
               to="/properties/owner/me"
-              className="inline-flex items-center gap-1.5 text-sm font-medium mb-3 transition-colors"
-              style={{ color: '#007AFF' }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#0066d6')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#007AFF')}
+              className="inline-flex items-center gap-1.5 mb-4 transition-colors"
+              style={{
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+                fontSize: 13,
+                fontWeight: 500,
+                color: M.owner,
+                textDecoration: 'none',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#142860')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = M.owner)}
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft style={{ width: 15, height: 15 }} />
               Retour à mes propriétés
             </Link>
-            <h1 className="text-2xl font-bold" style={{ color: '#1d1d1f' }}>
+
+            {/* Overline */}
+            <p
+              style={{
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+                fontSize: 10,
+                fontWeight: 500,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                color: M.inkFaint,
+                marginBottom: 6,
+              }}
+            >
+              Propriétaire — Modifier
+            </p>
+            {/* Title */}
+            <h1
+              style={{
+                fontFamily: "'Cormorant Garamond', Georgia, serif",
+                fontSize: 40,
+                fontWeight: 700,
+                fontStyle: 'italic',
+                color: M.ink,
+                lineHeight: 1.1,
+                marginBottom: 6,
+              }}
+            >
               Modifier le bien
             </h1>
-            <p className="text-sm mt-1" style={{ color: '#515154' }}>
+            {/* Subtitle */}
+            <p
+              style={{
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+                fontSize: 14,
+                color: M.inkMid,
+              }}
+            >
               {currentProperty.title}
             </p>
           </div>
@@ -264,11 +337,11 @@ export default function EditProperty() {
             {/* Error */}
             {displayError && (
               <div
-                className="mb-6 p-4 rounded-xl flex items-start gap-3"
-                style={{ background: '#fef2f2', border: '1px solid #fecaca' }}
+                className="mb-6 p-4 flex items-start gap-3"
+                style={{ background: M.dangerBg, border: `1px solid ${M.danger}44`, borderRadius: 12 }}
               >
-                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#dc2626' }} />
-                <p className="text-sm" style={{ color: '#b91c1c' }}>{displayError}</p>
+                <AlertCircle style={{ width: 18, height: 18, color: M.danger, flexShrink: 0, marginTop: 2 }} />
+                <p style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 13, color: M.danger }}>{displayError}</p>
               </div>
             )}
 
@@ -438,17 +511,20 @@ export default function EditProperty() {
                 ].map(({ name, checked, label }) => (
                   <label
                     key={name}
-                    className="flex items-center gap-2 cursor-pointer rounded-xl px-3 py-2 transition-all select-none text-sm"
+                    className="flex items-center gap-2 cursor-pointer px-3 py-2 transition-all select-none"
                     style={{
-                      background: checked ? '#e8f0fe' : '#f5f5f7',
-                      border: `1px solid ${checked ? '#aacfff' : '#d2d2d7'}`,
-                      color: checked ? '#0066d6' : '#515154',
+                      background: checked ? M.ownerLight : M.muted,
+                      border: `1px solid ${checked ? M.ownerBorder : M.border}`,
+                      borderRadius: 8,
+                      color: checked ? M.owner : M.inkMid,
                       fontWeight: checked ? 600 : 400,
+                      fontFamily: "'DM Sans', system-ui, sans-serif",
+                      fontSize: 13,
                     }}
                   >
                     <span
                       className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0"
-                      style={{ background: checked ? '#007AFF' : '#d2d2d7', transition: 'background 0.15s' }}
+                      style={{ background: checked ? M.owner : M.borderMid, transition: 'background 0.15s' }}
                     >
                       {checked && (
                         <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 10">
@@ -522,17 +598,20 @@ export default function EditProperty() {
                   return (
                     <label
                       key={amenity.value}
-                      className="flex items-center gap-2 cursor-pointer rounded-xl px-3 py-2 transition-all select-none text-sm"
+                      className="flex items-center gap-2 cursor-pointer px-3 py-2 transition-all select-none"
                       style={{
-                        background: checked ? '#e8f0fe' : '#f5f5f7',
-                        border: `1px solid ${checked ? '#aacfff' : '#d2d2d7'}`,
-                        color: checked ? '#0066d6' : '#515154',
+                        background: checked ? M.ownerLight : M.muted,
+                        border: `1px solid ${checked ? M.ownerBorder : M.border}`,
+                        borderRadius: 8,
+                        color: checked ? M.owner : M.inkMid,
                         fontWeight: checked ? 600 : 400,
+                        fontFamily: "'DM Sans', system-ui, sans-serif",
+                        fontSize: 13,
                       }}
                     >
                       <span
                         className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0"
-                        style={{ background: checked ? '#007AFF' : '#d2d2d7', transition: 'background 0.15s' }}
+                        style={{ background: checked ? M.owner : M.borderMid, transition: 'background 0.15s' }}
                       >
                         {checked && (
                           <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 10">
@@ -565,15 +644,26 @@ export default function EditProperty() {
             {/* ── Section: Critères de sélection ── */}
             <div style={cardStyle}>
               <div className="flex items-center gap-2 mb-1">
-                <Filter className="w-4 h-4" style={{ color: '#007AFF' }} />
-                <h2 className="text-base font-bold" style={{ color: '#1d1d1f' }}>
+                <Filter style={{ width: 15, height: 15, color: M.owner }} />
+                <p
+                  style={{
+                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                    fontSize: 11,
+                    fontWeight: 500,
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                    color: M.inkFaint,
+                  }}
+                >
                   Critères de sélection
-                </h2>
+                </p>
               </div>
-              <p className="text-sm mb-5" style={{ color: '#86868b' }}>
+              <p className="mb-5" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 13, color: M.inkMid }}>
                 Définissez les prérequis que les candidats doivent remplir pour postuler.
               </p>
-              <SelectionCriteriaForm criteria={criteria} onChange={setCriteria} />
+              <div style={{ borderTop: `1px solid ${M.border}`, paddingTop: '1rem' }}>
+                <SelectionCriteriaForm criteria={criteria} onChange={setCriteria} />
+              </div>
             </div>
 
             {/* ── Section: Disponibilités ── */}
@@ -598,29 +688,49 @@ export default function EditProperty() {
                 type="button"
                 onClick={() => navigate('/properties/owner/me')}
                 disabled={isLoading}
-                className="flex-1 rounded-xl font-semibold px-4 py-2.5 text-sm border transition-colors disabled:opacity-50"
-                style={{ background: '#ffffff', border: '1px solid #d2d2d7', color: '#515154' }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f7')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = '#ffffff')}
+                className="flex-1 flex items-center justify-center px-4 py-2.5 disabled:opacity-50"
+                style={{
+                  background: M.surface,
+                  border: `1px solid ${M.border}`,
+                  borderRadius: 8,
+                  fontFamily: "'DM Sans', system-ui, sans-serif",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: M.inkMid,
+                  cursor: 'pointer',
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
+                onMouseLeave={(e) => (e.currentTarget.style.background = M.surface)}
               >
                 Annuler
               </button>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="flex-1 rounded-xl font-semibold px-4 py-2.5 text-sm text-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                style={{ background: '#007AFF' }}
-                onMouseEnter={(e) => !isLoading && (e.currentTarget.style.background = '#0066d6')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = '#007AFF')}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 disabled:opacity-50"
+                style={{
+                  background: M.owner,
+                  border: 'none',
+                  borderRadius: 8,
+                  fontFamily: "'DM Sans', system-ui, sans-serif",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={(e) => !isLoading && (e.currentTarget.style.background = '#142860')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = M.owner)}
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 style={{ width: 15, height: 15 }} className="animate-spin" />
                     Enregistrement...
                   </>
                 ) : (
                   <>
-                    <Save className="w-4 h-4" />
+                    <Save style={{ width: 15, height: 15 }} />
                     Enregistrer les modifications
                   </>
                 )}

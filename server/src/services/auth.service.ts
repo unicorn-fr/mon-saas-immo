@@ -8,6 +8,7 @@ import {
 } from '../utils/jwt.util.js'
 import { hashPassword, comparePassword } from '../utils/password.util.js'
 import { validateEmail } from '../utils/validation.util.js'
+import { validatePasswordStrength } from '../utils/password.util.js'
 import { generateSecureToken } from '../utils/token.util.js'
 import { sendEmail } from '../utils/email.util.js'
 import { env } from '../config/env.js'
@@ -50,6 +51,12 @@ class AuthService {
     // Validate email format
     if (!validateEmail(email)) {
       throw new Error('Invalid email format')
+    }
+
+    // Enforce password strength
+    const pwCheck = validatePasswordStrength(password)
+    if (!pwCheck.isValid) {
+      throw new Error(pwCheck.errors[0])
     }
 
     // Check if user already exists

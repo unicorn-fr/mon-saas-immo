@@ -21,7 +21,7 @@ export const Layout = ({ children, showHeader = true }: LayoutProps) => {
   // ── Layout sans sidebar (pages publiques, admin) ──────────────────────────
   if (!hasSidebar) {
     return (
-      <div className="min-h-screen" style={{ background: '#f5f5f7' }}>
+      <div className="min-h-screen" style={{ background: 'var(--bg-base)', fontFamily: 'var(--font-body)' }}>
         {showHeader && <Header />}
         <main id="main-content">{children}</main>
       </div>
@@ -30,7 +30,7 @@ export const Layout = ({ children, showHeader = true }: LayoutProps) => {
 
   // ── Layout SaaS — Sidebar fixe + colonne principale ────────────────────────
   return (
-    <div className="h-screen flex overflow-hidden" data-role={dataRole} style={{ background: '#f5f5f7' }}>
+    <div className="h-screen flex overflow-hidden" data-role={dataRole} style={{ background: 'var(--bg-base)', fontFamily: 'var(--font-body)' }}>
       {/* Skip to content */}
       <a href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-lg focus:text-white focus:font-semibold focus:text-sm"

@@ -1,12 +1,39 @@
 import { useState, FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Home, Mail, Lock, Users, AlertCircle, CheckCircle } from 'lucide-react'
+import { AlertCircle, CheckCircle } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { UserRole } from '../types/auth.types'
 import GoogleSignInButton from '../components/auth/GoogleSignInButton'
 import { Turnstile } from '@marsidev/react-turnstile'
 
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined
+
+/* ─── Inline styles for the "Maison" design system ─────────────────────── */
+const fontDisplay: React.CSSProperties = { fontFamily: "'Cormorant Garamond', Georgia, serif" }
+const fontBody: React.CSSProperties = { fontFamily: "'DM Sans', system-ui, sans-serif" }
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  background: '#f8f7f4',
+  border: '1px solid #e4e1db',
+  borderRadius: '8px',
+  padding: '12px 16px',
+  fontSize: '14px',
+  color: '#0d0c0a',
+  outline: 'none',
+  fontFamily: "'DM Sans', system-ui, sans-serif",
+  transition: 'border-color 0.15s, box-shadow 0.15s',
+  boxSizing: 'border-box',
+}
+
+/* ─── Benefits for left panel ────────────────────────────────────────────── */
+const benefits = [
+  'Zéro frais d\'agence',
+  'Documents sécurisés & anti-fraude',
+  'Contrats électroniques ALUR',
+  'Dossier locataire intelligent',
+  'Messagerie directe propriétaire-locataire',
+]
 
 export default function Register() {
   const navigate = useNavigate()
@@ -25,6 +52,18 @@ export default function Register() {
   const [error, setError] = useState('')
   const [, setPasswordErrors] = useState<string[]>([])
   const [turnstileToken, setTurnstileToken] = useState<string>('')
+
+  // Focus states
+  const [focused, setFocused] = useState<Record<string, boolean>>({})
+
+  const handleFocus = (name: string) => setFocused(prev => ({ ...prev, [name]: true }))
+  const handleBlur = (name: string) => setFocused(prev => ({ ...prev, [name]: false }))
+
+  const focusedInputStyle = (name: string): React.CSSProperties => ({
+    ...inputStyle,
+    borderColor: focused[name] ? '#1a1a2e' : '#e4e1db',
+    boxShadow: focused[name] ? '0 0 0 3px rgba(26,26,46,0.08)' : 'none',
+  })
 
   // Password validation
   const validatePassword = (password: string) => {
@@ -112,161 +151,245 @@ export default function Register() {
     }
   }
 
-  const inputClass = "w-full bg-white border border-[#d2d2d7] rounded-xl px-4 py-2.5 text-[#1d1d1f] placeholder-[#86868b] focus:outline-none focus:border-[#007AFF] focus:ring-2 focus:ring-[rgba(0,122,255,0.12)] transition-all text-sm"
-  const inputWithIconClass = "w-full bg-white border border-[#d2d2d7] rounded-xl pl-10 pr-4 py-2.5 text-[#1d1d1f] placeholder-[#86868b] focus:outline-none focus:border-[#007AFF] focus:ring-2 focus:ring-[rgba(0,122,255,0.12)] transition-all text-sm"
+  const passwordChecks = [
+    { text: '8 caractères min.', met: formData.password.length >= 8 },
+    { text: 'Majuscule', met: /[A-Z]/.test(formData.password) },
+    { text: 'Minuscule', met: /[a-z]/.test(formData.password) },
+    { text: 'Chiffre', met: /[0-9]/.test(formData.password) },
+  ]
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center p-4 py-12">
-      <div className="w-full max-w-md">
+    <div style={{ minHeight: '100vh', display: 'flex', ...fontBody }}>
+
+      {/* ── Left panel ── */}
+      <div
+        className="hidden md:flex"
+        style={{
+          width: '50%',
+          background: '#c4976a',
+          flexDirection: 'column',
+          padding: '40px 48px',
+          position: 'relative',
+        }}
+      >
         {/* Logo */}
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="w-9 h-9 bg-[#007AFF] rounded-xl flex items-center justify-center shadow-sm">
-              <Home className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-[#1d1d1f]" style={{ fontFamily: "'Plus Jakarta Sans', Inter, system-ui" }}>FOYER</span>
+        <Link to="/" style={{ textDecoration: 'none', display: 'inline-block' }}>
+          <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 600, fontSize: '22px', color: '#1a1a2e', letterSpacing: '-0.01em' }}>
+            ImmoParticuliers
+          </span>
+        </Link>
+
+        {/* Center content */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '32px' }}>
+          <div>
+            <h2 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 600, fontSize: '34px', color: '#1a1a2e', margin: '0 0 6px 0', lineHeight: 1.2 }}>
+              La location sans intermédiaire.
+            </h2>
+            <p style={{ ...fontBody, fontSize: '14px', color: 'rgba(26,26,46,0.65)', margin: 0 }}>
+              Tout ce dont vous avez besoin, en un seul endroit.
+            </p>
+          </div>
+
+          {/* Benefits list */}
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {benefits.map((benefit) => (
+              <li key={benefit} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M2 6l3 3 5-5" stroke="#1a1a2e" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <span style={{ ...fontBody, fontSize: '14px', color: '#1a1a2e', fontWeight: 400 }}>{benefit}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Bottom */}
+        <div>
+          <p style={{ ...fontBody, fontSize: '13px', color: 'rgba(26,26,46,0.6)', margin: 0 }}>
+            Déjà inscrit ?{' '}
+            <Link to="/login" style={{ color: '#1a1a2e', fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: '2px' }}>
+              Se connecter
+            </Link>
+          </p>
+        </div>
+      </div>
+
+      {/* ── Right panel ── */}
+      <div
+        style={{
+          background: '#ffffff',
+          overflowY: 'auto',
+          display: 'flex',
+          justifyContent: 'center',
+          position: 'relative',
+        }}
+        className="w-full md:w-1/2"
+      >
+        {/* Back link */}
+        <div style={{ position: 'absolute', top: '28px', left: '32px' }}>
+          <Link
+            to="/"
+            style={{ ...fontBody, fontSize: '13px', color: '#9e9b96', textDecoration: 'none' }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#5a5754')}
+            onMouseLeave={e => (e.currentTarget.style.color = '#9e9b96')}
+          >
+            ← Accueil
           </Link>
         </div>
 
-        {/* Register Card */}
-        <div className="bg-white rounded-2xl p-8 shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-[#d2d2d7]">
-          {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-[#1d1d1f]" style={{ fontFamily: "'Plus Jakarta Sans', Inter, system-ui" }}>
+        <div style={{ width: '100%', maxWidth: '380px', padding: '72px 32px 48px' }}>
+          {/* Mobile logo */}
+          <div className="flex md:hidden" style={{ justifyContent: 'center', marginBottom: '32px' }}>
+            <Link to="/" style={{ textDecoration: 'none' }}>
+              <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 600, fontSize: '24px', color: '#1a1a2e' }}>
+                ImmoParticuliers
+              </span>
+            </Link>
+          </div>
+
+          {/* Heading */}
+          <div style={{ marginBottom: '28px' }}>
+            <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '36px', color: '#0d0c0a', margin: '0 0 8px 0', letterSpacing: '-0.01em', lineHeight: 1.1 }}>
               Créer un compte
             </h1>
-            <p className="text-[#515154] text-sm mt-1">Rejoignez la plateforme en quelques minutes.</p>
+            <p style={{ ...fontBody, fontWeight: 400, fontSize: '15px', color: '#5a5754', margin: 0 }}>
+              Rejoignez la plateforme en quelques minutes.
+            </p>
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-800">{error}</p>
+            <div style={{ marginBottom: '20px', padding: '12px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <AlertCircle style={{ width: '16px', height: '16px', color: '#dc2626', flexShrink: 0, marginTop: '1px' }} />
+              <p style={{ ...fontBody, fontSize: '13px', color: '#991b1b', margin: 0 }}>{error}</p>
             </div>
           )}
 
-          {/* User Type Selection */}
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            <button
-              type="button"
-              onClick={() => setUserType('TENANT')}
-              disabled={isLoading}
-              className={`p-4 rounded-xl border-2 transition-all text-left ${
-                userType === 'TENANT'
-                  ? 'border-[#007AFF] bg-[#e8f0fe]'
-                  : 'border-[#d2d2d7] hover:border-[#b0b0b8] bg-white'
-              } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-            >
-              <Users
-                className={`w-7 h-7 mb-2 ${userType === 'TENANT' ? 'text-[#007AFF]' : 'text-[#86868b]'}`}
-              />
-              <p className={`text-sm font-semibold ${userType === 'TENANT' ? 'text-[#007AFF]' : 'text-[#1d1d1f]'}`}>
-                Locataire
-              </p>
-              <p className="text-xs text-[#86868b] mt-0.5">Je cherche un logement</p>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setUserType('OWNER')}
-              disabled={isLoading}
-              className={`p-4 rounded-xl border-2 transition-all text-left ${
-                userType === 'OWNER'
-                  ? 'border-[#007AFF] bg-[#e8f0fe]'
-                  : 'border-[#d2d2d7] hover:border-[#b0b0b8] bg-white'
-              } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-            >
-              <Home
-                className={`w-7 h-7 mb-2 ${userType === 'OWNER' ? 'text-[#007AFF]' : 'text-[#86868b]'}`}
-              />
-              <p className={`text-sm font-semibold ${userType === 'OWNER' ? 'text-[#007AFF]' : 'text-[#1d1d1f]'}`}>
-                Propriétaire
-              </p>
-              <p className="text-xs text-[#86868b] mt-0.5">Je mets en location</p>
-            </button>
+          {/* User type toggle */}
+          <div style={{ display: 'flex', gap: '6px', marginBottom: '24px', padding: '4px', background: '#f4f2ee', borderRadius: '10px' }}>
+            {(['TENANT', 'OWNER'] as UserRole[]).map((type) => {
+              const active = userType === type
+              const label = type === 'TENANT' ? 'Locataire' : 'Propriétaire'
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setUserType(type)}
+                  disabled={isLoading}
+                  style={{
+                    flex: 1,
+                    padding: '9px 0',
+                    borderRadius: '7px',
+                    border: 'none',
+                    ...fontBody,
+                    fontWeight: 500,
+                    fontSize: '13px',
+                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                    background: active ? '#1a1a2e' : 'transparent',
+                    color: active ? '#ffffff' : '#5a5754',
+                    transition: 'background 0.15s, color 0.15s',
+                  }}
+                  onMouseEnter={e => { if (!active && !isLoading) (e.currentTarget as HTMLButtonElement).style.background = '#e4e1db' }}
+                  onMouseLeave={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}
+                >
+                  {label}
+                </button>
+              )
+            })}
           </div>
 
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            {/* Name */}
-            <div className="grid grid-cols-2 gap-3">
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* Name row */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
-                <label htmlFor="firstName" className="block text-sm font-semibold text-[#1d1d1f] mb-1.5">
+                <label htmlFor="firstName" style={{ ...fontBody, fontWeight: 500, fontSize: '13px', color: '#0d0c0a', display: 'block', marginBottom: '6px' }}>
                   Prénom
                 </label>
                 <input
                   id="firstName" name="firstName" type="text" placeholder="Jean"
-                  className={inputClass} value={formData.firstName}
-                  onChange={handleChange} disabled={isLoading} required
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  onFocus={() => handleFocus('firstName')}
+                  onBlur={() => handleBlur('firstName')}
+                  disabled={isLoading} required
+                  style={focusedInputStyle('firstName')}
                 />
               </div>
               <div>
-                <label htmlFor="lastName" className="block text-sm font-semibold text-[#1d1d1f] mb-1.5">
+                <label htmlFor="lastName" style={{ ...fontBody, fontWeight: 500, fontSize: '13px', color: '#0d0c0a', display: 'block', marginBottom: '6px' }}>
                   Nom
                 </label>
                 <input
                   id="lastName" name="lastName" type="text" placeholder="Dupont"
-                  className={inputClass} value={formData.lastName}
-                  onChange={handleChange} disabled={isLoading} required
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  onFocus={() => handleFocus('lastName')}
+                  onBlur={() => handleBlur('lastName')}
+                  disabled={isLoading} required
+                  style={focusedInputStyle('lastName')}
                 />
               </div>
             </div>
 
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-[#1d1d1f] mb-1.5">
-                Email
+              <label htmlFor="email" style={{ ...fontBody, fontWeight: 500, fontSize: '13px', color: '#0d0c0a', display: 'block', marginBottom: '6px' }}>
+                Adresse email
               </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868b]" />
-                <input
-                  id="email" name="email" type="email" placeholder="votre@email.com"
-                  className={inputWithIconClass} value={formData.email}
-                  onChange={handleChange} disabled={isLoading} required
-                />
-              </div>
+              <input
+                id="email" name="email" type="email" placeholder="votre@email.com"
+                value={formData.email}
+                onChange={handleChange}
+                onFocus={() => handleFocus('email')}
+                onBlur={() => handleBlur('email')}
+                disabled={isLoading} required
+                style={focusedInputStyle('email')}
+              />
             </div>
 
-            {/* Phone (optional) */}
+            {/* Phone */}
             <div>
-              <label htmlFor="phone" className="block text-sm font-semibold text-[#1d1d1f] mb-1.5">
-                Téléphone <span className="text-[#86868b] font-normal">(optionnel)</span>
+              <label htmlFor="phone" style={{ ...fontBody, fontWeight: 500, fontSize: '13px', color: '#0d0c0a', display: 'block', marginBottom: '6px' }}>
+                Téléphone{' '}
+                <span style={{ fontWeight: 400, color: '#9e9b96' }}>(optionnel)</span>
               </label>
               <input
                 id="phone" name="phone" type="tel" placeholder="+33 6 12 34 56 78"
-                className={inputClass} value={formData.phone}
-                onChange={handleChange} disabled={isLoading}
+                value={formData.phone}
+                onChange={handleChange}
+                onFocus={() => handleFocus('phone')}
+                onBlur={() => handleBlur('phone')}
+                disabled={isLoading}
+                style={focusedInputStyle('phone')}
               />
             </div>
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-[#1d1d1f] mb-1.5">
+              <label htmlFor="password" style={{ ...fontBody, fontWeight: 500, fontSize: '13px', color: '#0d0c0a', display: 'block', marginBottom: '6px' }}>
                 Mot de passe
               </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868b]" />
-                <input
-                  id="password" name="password" type="password" placeholder="••••••••"
-                  className={inputWithIconClass} value={formData.password}
-                  onChange={handleChange} disabled={isLoading} required
-                />
-              </div>
-              {/* Password requirements */}
-              <div className="mt-2 grid grid-cols-2 gap-1">
-                {[
-                  { text: 'Au moins 8 caractères', met: formData.password.length >= 8 },
-                  { text: 'Une majuscule', met: /[A-Z]/.test(formData.password) },
-                  { text: 'Une minuscule', met: /[a-z]/.test(formData.password) },
-                  { text: 'Un chiffre', met: /[0-9]/.test(formData.password) },
-                ].map((req, i) => (
-                  <div key={i} className="flex items-center gap-1.5">
-                    {req.met ? (
-                      <CheckCircle className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+              <input
+                id="password" name="password" type="password" placeholder="••••••••"
+                value={formData.password}
+                onChange={handleChange}
+                onFocus={() => handleFocus('password')}
+                onBlur={() => handleBlur('password')}
+                disabled={isLoading} required
+                style={focusedInputStyle('password')}
+              />
+              {/* Password checklist */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginTop: '10px' }}>
+                {passwordChecks.map((check) => (
+                  <div key={check.text} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {check.met ? (
+                      <CheckCircle style={{ width: '13px', height: '13px', color: '#16a34a', flexShrink: 0 }} />
                     ) : (
-                      <div className="w-3.5 h-3.5 rounded-full border-2 border-[#b0b0b8] flex-shrink-0" />
+                      <div style={{ width: '13px', height: '13px', borderRadius: '50%', border: '1.5px solid #d1d5db', flexShrink: 0 }} />
                     )}
-                    <span className={`text-xs ${req.met ? 'text-emerald-600' : 'text-[#86868b]'}`}>
-                      {req.text}
+                    <span style={{ ...fontBody, fontSize: '11px', color: check.met ? '#16a34a' : '#9e9b96' }}>
+                      {check.text}
                     </span>
                   </div>
                 ))}
@@ -275,34 +398,55 @@ export default function Register() {
 
             {/* Confirm Password */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-semibold text-[#1d1d1f] mb-1.5">
+              <label htmlFor="confirmPassword" style={{ ...fontBody, fontWeight: 500, fontSize: '13px', color: '#0d0c0a', display: 'block', marginBottom: '6px' }}>
                 Confirmer le mot de passe
               </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868b]" />
-                <input
-                  id="confirmPassword" name="confirmPassword" type="password" placeholder="••••••••"
-                  className={inputWithIconClass} value={formData.confirmPassword}
-                  onChange={handleChange} disabled={isLoading} required
-                />
-              </div>
+              <input
+                id="confirmPassword" name="confirmPassword" type="password" placeholder="••••••••"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                onFocus={() => handleFocus('confirmPassword')}
+                onBlur={() => handleBlur('confirmPassword')}
+                disabled={isLoading} required
+                style={focusedInputStyle('confirmPassword')}
+              />
             </div>
 
-            {/* Terms */}
-            <div className="flex items-start gap-2.5">
-              <input
-                id="terms" name="terms" type="checkbox"
-                className="mt-0.5 w-4 h-4 rounded border-[#d2d2d7] text-[#007AFF] focus:ring-[#007AFF] cursor-pointer"
-                checked={formData.terms}
-                onChange={handleChange} disabled={isLoading} required
-              />
-              <label htmlFor="terms" className="text-sm text-[#515154] cursor-pointer">
+            {/* Terms checkbox */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingTop: '2px' }}>
+              <div style={{ position: 'relative', flexShrink: 0, marginTop: '1px' }}>
+                <input
+                  id="terms" name="terms" type="checkbox"
+                  checked={formData.terms}
+                  onChange={handleChange}
+                  disabled={isLoading} required
+                  style={{ position: 'absolute', opacity: 0, width: '18px', height: '18px', cursor: 'pointer', margin: 0, zIndex: 1 }}
+                />
+                <div style={{
+                  width: '18px',
+                  height: '18px',
+                  borderRadius: '4px',
+                  border: `1.5px solid ${formData.terms ? '#1a1a2e' : '#e4e1db'}`,
+                  background: formData.terms ? '#1a1a2e' : '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.15s',
+                }}>
+                  {formData.terms && (
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                      <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+              <label htmlFor="terms" style={{ ...fontBody, fontSize: '13px', color: '#5a5754', cursor: 'pointer', lineHeight: 1.5 }}>
                 J'accepte les{' '}
-                <a href="/terms" className="text-[#007AFF] hover:text-[#0066d6] font-medium">
+                <a href="/terms" style={{ color: '#0d0c0a', fontWeight: 500, textDecoration: 'underline', textDecorationColor: '#c4976a', textUnderlineOffset: '2px' }}>
                   conditions d'utilisation
                 </a>
                 {' '}et la{' '}
-                <a href="/privacy" className="text-[#007AFF] hover:text-[#0066d6] font-medium">
+                <a href="/privacy" style={{ color: '#0d0c0a', fontWeight: 500, textDecoration: 'underline', textDecorationColor: '#c4976a', textUnderlineOffset: '2px' }}>
                   politique de confidentialité
                 </a>
               </label>
@@ -310,7 +454,7 @@ export default function Register() {
 
             {/* Turnstile anti-bot */}
             {TURNSTILE_SITE_KEY && (
-              <div className="flex justify-center">
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
                 <Turnstile
                   siteKey={TURNSTILE_SITE_KEY}
                   onSuccess={(token) => setTurnstileToken(token)}
@@ -320,49 +464,71 @@ export default function Register() {
               </div>
             )}
 
+            {/* Submit */}
             <button
               type="submit"
-              className="w-full bg-[#007AFF] text-white hover:bg-[#0066d6] rounded-xl font-semibold py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isLoading}
+              style={{
+                width: '100%',
+                background: isLoading ? '#4a4a6a' : '#1a1a2e',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '14px 0',
+                ...fontBody,
+                fontWeight: 600,
+                fontSize: '14px',
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                marginTop: '4px',
+                transition: 'background 0.15s',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+              }}
+              onMouseEnter={e => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.background = '#2a2a4a' }}
+              onMouseLeave={e => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.background = '#1a1a2e' }}
             >
               {isLoading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                <>
+                  <svg className="animate-spin" style={{ width: '16px', height: '16px' }} viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Inscription en cours...
-                </span>
+                  Inscription en cours…
+                </>
               ) : (
-                'S\'inscrire'
+                'Créer mon compte'
               )}
             </button>
           </form>
 
-          <div className="flex items-center gap-3 my-5">
-            <div className="flex-1 h-px bg-[#d2d2d7]" />
-            <span className="text-xs font-medium text-[#86868b]">ou</span>
-            <div className="flex-1 h-px bg-[#d2d2d7]" />
+          {/* Separator */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '22px 0' }}>
+            <div style={{ flex: 1, height: '1px', background: '#e4e1db' }} />
+            <span style={{ ...fontBody, fontSize: '12px', color: '#9e9b96' }}>ou</span>
+            <div style={{ flex: 1, height: '1px', background: '#e4e1db' }} />
           </div>
 
-          <GoogleSignInButton
-            onSuccess={handleGoogleSuccess}
-            onError={(err) => setError(err)}
-            text="signup_with"
-          />
+          {/* Google */}
+          <div style={{ border: '1px solid #e4e1db', borderRadius: '8px', overflow: 'hidden' }}>
+            <GoogleSignInButton
+              onSuccess={handleGoogleSuccess}
+              onError={(err) => setError(err)}
+              text="signup_with"
+            />
+          </div>
 
-          <p className="text-center text-[#515154] text-sm mt-6">
+          {/* Login link */}
+          <p style={{ ...fontBody, textAlign: 'center', fontSize: '14px', color: '#5a5754', marginTop: '24px', marginBottom: '0' }}>
             Déjà un compte ?{' '}
-            <Link to="/login" className="text-[#007AFF] hover:text-[#0066d6] font-semibold transition-colors">
+            <Link
+              to="/login"
+              style={{ color: '#0d0c0a', fontWeight: 500, textDecoration: 'underline', textDecorationColor: '#c4976a', textUnderlineOffset: '2px' }}
+            >
               Se connecter
             </Link>
           </p>
-        </div>
-
-        <div className="text-center mt-6">
-          <Link to="/" className="text-sm text-[#515154] hover:text-[#1d1d1f] transition-colors">
-            ← Retour à l'accueil
-          </Link>
         </div>
       </div>
     </div>

@@ -8,13 +8,6 @@ import { Layout } from '../../components/layout/Layout'
 type ViewMode = 'grid' | 'list'
 type SortBy = 'date' | 'price-asc' | 'price-desc'
 
-const cardStyle = {
-  background: '#ffffff',
-  border: '1px solid #d2d2d7',
-  borderRadius: '1rem',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)',
-}
-
 export default function Favorites() {
   const { properties, fetchProperties, isLoading } = useProperties()
   const { favoriteIds, loadFavorites } = useFavoriteStore()
@@ -57,39 +50,91 @@ export default function Favorites() {
 
   return (
     <Layout>
-      <div className="min-h-screen p-6 lg:p-8" style={{ background: '#f5f5f7' }}>
+      <div
+        className="min-h-screen p-6 lg:p-8"
+        style={{ background: '#fafaf8', fontFamily: "'DM Sans', system-ui, sans-serif" }}
+      >
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
+          {/* Page Header */}
           <div className="mb-8">
-            <h1 className="text-2xl font-extrabold text-slate-900 mb-1 flex items-center gap-3">
-              <Heart className="w-6 h-6 text-red-500" />
-              Mes Favoris
-            </h1>
-            <p className="text-slate-500 text-sm">
+            <p
+              className="uppercase tracking-widest mb-1"
+              style={{ fontSize: 10, color: '#9e9b96', letterSpacing: '0.12em' }}
+            >
+              Espace locataire
+            </p>
+            <div className="flex items-baseline gap-3">
+              <h1
+                style={{
+                  fontFamily: "'Cormorant Garamond', Georgia, serif",
+                  fontWeight: 700,
+                  fontStyle: 'italic',
+                  fontSize: 40,
+                  color: '#0d0c0a',
+                  lineHeight: 1,
+                }}
+              >
+                Mes favoris
+              </h1>
+              {favoriteProperties.length > 0 && (
+                <span
+                  style={{
+                    background: '#edf7f2',
+                    color: '#1b5e3b',
+                    border: '1px solid #9fd4ba',
+                    borderRadius: 99,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    padding: '2px 10px',
+                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                  }}
+                >
+                  {favoriteProperties.length}
+                </span>
+              )}
+            </div>
+            <p style={{ fontSize: 14, color: '#5a5754', marginTop: 6 }}>
               {favoriteProperties.length} propriété{favoriteProperties.length > 1 ? 's' : ''}{' '}
               sauvegardée{favoriteProperties.length > 1 ? 's' : ''}
             </p>
           </div>
 
           {/* Filters Bar */}
-          <div className="p-5 mb-5 rounded-2xl" style={cardStyle}>
+          <div
+            className="p-4 mb-6"
+            style={{
+              background: '#ffffff',
+              border: '1px solid #e4e1db',
+              borderRadius: 12,
+              boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
+            }}
+          >
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {/* Search */}
               <div className="md:col-span-2 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
+                  style={{ color: '#9e9b96' }}
+                />
                 <input
                   type="text"
-                  placeholder="Rechercher dans mes favoris..."
+                  placeholder="Rechercher dans mes favoris…"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 rounded-xl text-sm text-slate-700 outline-none transition-all"
-                  style={{ border: '1px solid #d2d2d7', background: '#ffffff' }}
+                  className="w-full pl-9 pr-4 py-2 text-sm outline-none transition-all"
+                  style={{
+                    border: '1px solid #e4e1db',
+                    background: '#f8f7f4',
+                    borderRadius: 8,
+                    color: '#0d0c0a',
+                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                  }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#3b82f6'
-                    e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.12)'
+                    e.target.style.borderColor = '#1b5e3b'
+                    e.target.style.boxShadow = '0 0 0 2px rgba(27,94,59,0.10)'
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = '#d2d2d7'
+                    e.target.style.borderColor = '#e4e1db'
                     e.target.style.boxShadow = 'none'
                   }}
                 />
@@ -99,14 +144,20 @@ export default function Favorites() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortBy)}
-                className="px-4 py-2 rounded-xl text-sm text-slate-700 outline-none transition-all"
-                style={{ border: '1px solid #d2d2d7', background: '#ffffff' }}
+                className="px-3 py-2 text-sm outline-none transition-all"
+                style={{
+                  border: '1px solid #e4e1db',
+                  background: '#f8f7f4',
+                  borderRadius: 8,
+                  color: '#0d0c0a',
+                  fontFamily: "'DM Sans', system-ui, sans-serif",
+                }}
                 onFocus={(e) => {
-                  e.target.style.borderColor = '#3b82f6'
-                  e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.12)'
+                  e.target.style.borderColor = '#1b5e3b'
+                  e.target.style.boxShadow = '0 0 0 2px rgba(27,94,59,0.10)'
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = '#d2d2d7'
+                  e.target.style.borderColor = '#e4e1db'
                   e.target.style.boxShadow = 'none'
                 }}
               >
@@ -116,23 +167,42 @@ export default function Favorites() {
               </select>
 
               {/* View Toggle */}
-              <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
+              <div
+                className="flex items-center gap-1 p-1"
+                style={{ background: '#f4f2ee', borderRadius: 10 }}
+              >
                 <button
                   onClick={() => setViewMode('grid')}
-                  className="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                  style={viewMode === 'grid'
-                    ? { background: '#ffffff', color: '#1d1d1f', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }
-                    : { color: '#64748b' }}
+                  className="flex-1 py-2 text-sm font-medium transition-all flex items-center justify-center gap-2"
+                  style={
+                    viewMode === 'grid'
+                      ? {
+                          background: '#ffffff',
+                          color: '#1b5e3b',
+                          borderRadius: 8,
+                          boxShadow: '0 1px 3px rgba(13,12,10,0.08)',
+                          fontFamily: "'DM Sans', system-ui, sans-serif",
+                        }
+                      : { color: '#9e9b96', fontFamily: "'DM Sans', system-ui, sans-serif" }
+                  }
                 >
                   <Grid className="w-4 h-4" />
                   Grille
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                  style={viewMode === 'list'
-                    ? { background: '#ffffff', color: '#1d1d1f', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }
-                    : { color: '#64748b' }}
+                  className="flex-1 py-2 text-sm font-medium transition-all flex items-center justify-center gap-2"
+                  style={
+                    viewMode === 'list'
+                      ? {
+                          background: '#ffffff',
+                          color: '#1b5e3b',
+                          borderRadius: 8,
+                          boxShadow: '0 1px 3px rgba(13,12,10,0.08)',
+                          fontFamily: "'DM Sans', system-ui, sans-serif",
+                        }
+                      : { color: '#9e9b96', fontFamily: "'DM Sans', system-ui, sans-serif" }
+                  }
                 >
                   <List className="w-4 h-4" />
                   Liste
@@ -144,17 +214,36 @@ export default function Favorites() {
           {/* Content */}
           {isLoading && favoriteProperties.length === 0 ? (
             <div className="flex items-center justify-center py-12">
-              <Loader className="w-8 h-8 text-blue-400 animate-spin" />
+              <Loader className="w-8 h-8 animate-spin" style={{ color: '#1b5e3b' }} />
             </div>
           ) : sortedProperties.length === 0 ? (
-            <div className="rounded-2xl p-12 text-center" style={cardStyle}>
-              <Heart className="w-14 h-14 text-slate-200 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">
-                {favoriteProperties.length === 0
-                  ? 'Aucun favori'
-                  : 'Aucun résultat'}
-              </h3>
-              <p className="text-slate-500 mb-6 text-sm">
+            <div
+              className="p-12 text-center"
+              style={{
+                background: '#ffffff',
+                border: '1px solid #e4e1db',
+                borderRadius: 12,
+                boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
+              }}
+            >
+              <div
+                className="w-16 h-16 flex items-center justify-center mx-auto mb-4"
+                style={{ background: '#f4f2ee', borderRadius: '50%' }}
+              >
+                <Heart className="w-7 h-7" style={{ color: '#9e9b96' }} />
+              </div>
+              <p
+                style={{
+                  fontFamily: "'Cormorant Garamond', Georgia, serif",
+                  fontSize: 22,
+                  fontStyle: 'italic',
+                  color: '#0d0c0a',
+                  marginBottom: 8,
+                }}
+              >
+                {favoriteProperties.length === 0 ? 'Aucun favori' : 'Aucun résultat'}
+              </p>
+              <p style={{ fontSize: 13, color: '#5a5754', marginBottom: 20 }}>
                 {favoriteProperties.length === 0
                   ? 'Commencez à sauvegarder des propriétés pour les retrouver facilement ici.'
                   : 'Aucune propriété ne correspond à votre recherche.'}
@@ -162,8 +251,16 @@ export default function Favorites() {
               {favoriteProperties.length === 0 && (
                 <a
                   href="/search"
-                  className="inline-flex items-center gap-2 px-6 py-3 text-white rounded-xl hover:opacity-90 transition-opacity text-sm font-semibold"
-                  style={{ background: '#3b82f6' }}
+                  className="inline-flex items-center gap-2 transition-opacity hover:opacity-80"
+                  style={{
+                    background: '#1b5e3b',
+                    color: '#ffffff',
+                    borderRadius: 8,
+                    padding: '10px 20px',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                  }}
                 >
                   <Search className="w-4 h-4" />
                   Explorer les propriétés
@@ -194,7 +291,7 @@ export default function Favorites() {
 
           {/* Results Count */}
           {sortedProperties.length > 0 && (
-            <div className="mt-8 text-center text-sm text-slate-400">
+            <div className="mt-8 text-center" style={{ fontSize: 13, color: '#9e9b96' }}>
               Affichage de {sortedProperties.length} sur {favoriteProperties.length} propriété
               {favoriteProperties.length > 1 ? 's' : ''}
             </div>

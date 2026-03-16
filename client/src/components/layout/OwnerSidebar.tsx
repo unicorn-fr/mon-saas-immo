@@ -1,6 +1,6 @@
 /**
- * OwnerSidebar — Light Premium
- * bg white · thread indigo #007AFF · Plus Jakarta Sans
+ * OwnerSidebar — Maison Design System
+ * bg white · accent #1a3270 (deep navy) · DM Sans
  */
 import { useEffect, useState } from 'react'
 import { NavLink, Link, useLocation } from 'react-router-dom'
@@ -15,21 +15,29 @@ import { applicationService } from '../../services/application.service'
 import { useNavigate } from 'react-router-dom'
 
 const S = {
-  bg:        '#ffffff',
-  border:    '#d2d2d7',
-  thread:    '#007AFF',
-  threadBg:  '#e8f0fe',
-  threadBdr: '#aacfff',
-  text:      '#1d1d1f',
-  muted:     '#86868b',
-  secondary: '#515154',
-  hover:     '#f5f5f7',
+  bg:          '#ffffff',
+  border:      '#e4e1db',
+  owner:       '#1a3270',
+  ownerLight:  '#eaf0fb',
+  ownerBorder: '#b8ccf0',
+  caramel:     '#c4976a',
+  ink:         '#0d0c0a',
+  inkMid:      '#5a5754',
+  inkFaint:    '#9e9b96',
+  bgMuted:     '#f4f2ee',
 }
 
 function SectionLabel({ label }: { label: string }) {
   return (
-    <p className="px-4 pt-5 pb-1.5 text-[10px] font-bold uppercase tracking-[0.12em] select-none"
-      style={{ color: S.muted }}>
+    <p className="px-4 pt-5 pb-1 select-none"
+      style={{
+        fontFamily: 'var(--font-body)',
+        fontSize: '10px',
+        fontWeight: 500,
+        letterSpacing: '0.14em',
+        textTransform: 'uppercase',
+        color: S.inkFaint,
+      }}>
       {label}
     </p>
   )
@@ -46,27 +54,31 @@ function NavItem({
 
   return (
     <NavLink to={to} end={end} onClick={onClick}
-      className="mx-3 flex items-center gap-3 px-3 py-2 rounded-xl text-[13.5px] transition-all duration-150"
+      className="mx-3 flex items-center gap-3 px-3 py-[7px] rounded-lg transition-all duration-100"
       aria-current={active ? 'page' : undefined}
       style={active ? {
-        background: S.threadBg,
-        color: S.thread,
+        background: S.ownerLight,
+        color: S.owner,
         fontWeight: 600,
-        borderLeft: `3px solid ${S.thread}`,
-        paddingLeft: 9,
+        borderLeft: `2px solid ${S.owner}`,
+        paddingLeft: 10,
+        fontFamily: 'var(--font-body)',
+        fontSize: '13px',
       } : {
-        color: S.secondary,
+        color: S.inkMid,
         fontWeight: 400,
-        borderLeft: '3px solid transparent',
-        paddingLeft: 9,
+        borderLeft: '2px solid transparent',
+        paddingLeft: 10,
+        fontFamily: 'var(--font-body)',
+        fontSize: '13px',
       }}
-      onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = S.hover }}
+      onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = S.bgMuted }}
       onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = '' }}>
       <Icon className="w-4 h-4 flex-shrink-0" />
       <span className="flex-1 truncate">{label}</span>
       {badge !== undefined && badge > 0 && (
-        <span className="text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1"
-          style={{ background: S.threadBg, color: S.thread, border: `1px solid ${S.threadBdr}` }}>
+        <span className="text-[10px] font-semibold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1"
+          style={{ background: S.caramel, color: '#ffffff' }}>
           {badge > 99 ? '99+' : badge}
         </span>
       )}
@@ -90,29 +102,32 @@ export function OwnerSidebar() {
 
   const initials = `${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}`.toUpperCase()
   const closeMobile = () => setMobileOpen(false)
-
   const handleLogout = () => { logout(); navigate('/') }
 
   const Content = () => (
-    <div className="flex flex-col h-full" style={{ fontFamily: '"Plus Jakarta Sans", Inter, system-ui, sans-serif' }}>
+    <div className="flex flex-col h-full" style={{ fontFamily: 'var(--font-body)' }}>
 
       {/* Logo */}
-      <div className="px-4 pt-5 pb-4 flex-shrink-0">
-        <Link to="/" onClick={closeMobile} className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: S.thread }}>
-            <Home className="w-4 h-4 text-white" />
-          </div>
-          <div>
-            <p className="text-sm font-extrabold leading-tight" style={{ color: S.text }}>FOYER</p>
-            <p className="text-[10px] leading-tight" style={{ color: S.muted }}>Gestion locative</p>
-          </div>
+      <div className="px-5 pt-5 pb-4 flex-shrink-0">
+        <Link to="/" onClick={closeMobile} className="hover:opacity-75 transition-opacity block">
+          <span style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: '20px',
+            fontWeight: 600,
+            fontStyle: 'italic',
+            color: S.owner,
+            letterSpacing: '-0.01em',
+          }}>
+            ImmoParticuliers
+          </span>
+          <p className="text-[10px] mt-0.5" style={{ color: S.inkFaint, fontFamily: 'var(--font-body)' }}>Espace propriétaire</p>
         </Link>
       </div>
 
-      <div className="mx-4 mb-2" style={{ height: 1, background: S.border }} />
+      <div className="mx-4 mb-1" style={{ height: 1, background: S.border }} />
 
       {/* Navigation */}
-      <nav role="navigation" aria-label="Navigation principale" className="flex-1 overflow-y-auto py-1 scrollbar-thin">
+      <nav role="navigation" aria-label="Navigation principale" className="flex-1 overflow-y-auto py-1.5 scrollbar-thin">
         <SectionLabel label="Vue d'ensemble" />
         <NavItem to="/dashboard/owner" icon={LayoutDashboard} label="Tableau de bord" end onClick={closeMobile} />
 
@@ -134,32 +149,32 @@ export function OwnerSidebar() {
         <NavItem to="/messages" icon={MessageSquare} label="Messages" badge={unreadCount} onClick={closeMobile} />
       </nav>
 
-      <div className="mx-4 mt-2" style={{ height: 1, background: S.border }} />
+      <div className="mx-4 mt-1" style={{ height: 1, background: S.border }} />
 
       {/* Profil */}
       <div className="p-4 flex-shrink-0">
         <div className="flex items-center gap-2.5 mb-3">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0"
-            style={{ background: S.thread }}>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold flex-shrink-0"
+            style={{ background: S.ownerLight, color: S.owner }}>
             {initials}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[12.5px] font-semibold truncate leading-tight" style={{ color: S.text }}>
+            <p className="text-[12px] font-semibold truncate leading-tight" style={{ color: S.ink }}>
               {user?.firstName} {user?.lastName}
             </p>
-            <p className="text-[10px] leading-tight" style={{ color: S.muted }}>Propriétaire</p>
+            <p className="text-[10px] leading-tight" style={{ color: S.inkFaint }}>Propriétaire</p>
           </div>
-          <button onClick={closeMobile} className="md:hidden p-1 rounded-md" style={{ color: S.muted }} aria-label="Fermer le menu">
+          <button onClick={closeMobile} className="md:hidden p-1 rounded-md" style={{ color: S.inkFaint }} aria-label="Fermer">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <button onClick={handleLogout}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[13px] transition-all"
-          style={{ color: S.muted }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#fef2f2'; (e.currentTarget as HTMLElement).style.color = '#ef4444' }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = S.muted }}>
-          <LogOut className="w-4 h-4" />
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] transition-all"
+          style={{ color: S.inkFaint }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#fef2f2'; (e.currentTarget as HTMLElement).style.color = '#9b1c1c' }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = S.inkFaint }}>
+          <LogOut className="w-3.5 h-3.5" />
           <span>Déconnexion</span>
         </button>
       </div>
@@ -169,20 +184,19 @@ export function OwnerSidebar() {
   const sidebarStyle = {
     background: S.bg,
     borderRight: `1px solid ${S.border}`,
-    boxShadow: '2px 0 8px rgba(0,0,0,0.04)',
   }
 
   return (
     <>
-      <aside className="hidden md:flex flex-col flex-shrink-0 overflow-hidden" style={{ ...sidebarStyle, width: 240 }}>
+      <aside className="hidden md:flex flex-col flex-shrink-0 overflow-hidden" style={{ ...sidebarStyle, width: 220 }}>
         <Content />
       </aside>
 
       {mobileOpen && (
         <>
-          <div className="fixed inset-0 bg-black/30 z-40 md:hidden" onClick={closeMobile} />
+          <div className="fixed inset-0 bg-black/20 z-40 md:hidden" onClick={closeMobile} />
           <aside className="fixed left-0 top-0 bottom-0 z-50 flex flex-col md:hidden"
-            style={{ ...sidebarStyle, width: 256, boxShadow: '4px 0 24px rgba(0,0,0,0.12)' }}>
+            style={{ ...sidebarStyle, width: 256, boxShadow: '4px 0 24px rgba(13,12,10,0.12)' }}>
             <Content />
           </aside>
         </>

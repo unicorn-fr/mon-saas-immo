@@ -19,16 +19,48 @@ import { Layout } from '../../components/layout/Layout'
 
 type ViewMode = 'list' | 'calendar'
 
+// ─── Maison tokens ────────────────────────────────────────────────────────────
+
+const M = {
+  bg:           '#fafaf8',
+  surface:      '#ffffff',
+  muted:        '#f4f2ee',
+  inputBg:      '#f8f7f4',
+  ink:          '#0d0c0a',
+  inkMid:       '#5a5754',
+  inkFaint:     '#9e9b96',
+  caramel:      '#c4976a',
+  caramelLight: '#fdf5ec',
+  owner:        '#1a3270',
+  ownerLight:   '#eaf0fb',
+  ownerBorder:  '#b8ccf0',
+  border:       '#e4e1db',
+  borderMid:    '#ccc9c3',
+  danger:       '#9b1c1c',
+  dangerBg:     '#fef2f2',
+  warning:      '#92400e',
+  warningBg:    '#fdf5ec',
+  success:      '#1b5e3b',
+  successBg:    '#edf7f2',
+}
+
+const cardStyle: React.CSSProperties = {
+  background: M.surface,
+  border: `1px solid ${M.border}`,
+  borderRadius: 12,
+  boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
+}
+
 const inputStyle: React.CSSProperties = {
-  background: '#ffffff',
-  border: '1px solid #d2d2d7',
-  borderRadius: '0.75rem',
+  background: M.inputBg,
+  border: `1px solid ${M.border}`,
+  borderRadius: 8,
   padding: '0.625rem 1rem',
-  color: '#1d1d1f',
+  color: M.ink,
   fontSize: '0.875rem',
   outline: 'none',
   width: '100%',
-  fontFamily: '"Plus Jakarta Sans", Inter, system-ui',
+  fontFamily: "'DM Sans', system-ui, sans-serif",
 }
 
 export const BookingManagement = () => {
@@ -107,23 +139,78 @@ export const BookingManagement = () => {
   }
 
   const statCards = statistics ? [
-    { label: 'Total',      value: statistics.total,     icon: <CalendarIcon className="w-5 h-5" />, bg: '#e8f0fe', border: '#aacfff', color: '#007AFF' },
-    { label: 'En attente', value: statistics.pending,   icon: <Clock className="w-5 h-5" />,        bg: '#fffbeb', border: '#fde68a', color: '#d97706' },
-    { label: 'Confirmées', value: statistics.confirmed, icon: <CheckCircle className="w-5 h-5" />,  bg: '#ecfdf5', border: '#a7f3d0', color: '#059669' },
-    { label: 'Annulées',   value: statistics.cancelled, icon: <XCircle className="w-5 h-5" />,      bg: '#fef2f2', border: '#fecaca', color: '#dc2626' },
-    { label: 'Terminées',  value: statistics.completed, icon: <TrendingUp className="w-5 h-5" />,   bg: '#f5f5f7', border: '#d2d2d7', color: '#64748b' },
+    {
+      label: 'Total',
+      value: statistics.total,
+      icon: <CalendarIcon className="w-5 h-5" />,
+      bg: M.ownerLight,
+      border: M.ownerBorder,
+      color: M.owner,
+    },
+    {
+      label: 'En attente',
+      value: statistics.pending,
+      icon: <Clock className="w-5 h-5" />,
+      bg: M.warningBg,
+      border: '#e8c98b',
+      color: M.warning,
+    },
+    {
+      label: 'Confirmées',
+      value: statistics.confirmed,
+      icon: <CheckCircle className="w-5 h-5" />,
+      bg: M.successBg,
+      border: '#a8d5bc',
+      color: M.success,
+    },
+    {
+      label: 'Annulées',
+      value: statistics.cancelled,
+      icon: <XCircle className="w-5 h-5" />,
+      bg: M.dangerBg,
+      border: '#f5c6c6',
+      color: M.danger,
+    },
+    {
+      label: 'Terminées',
+      value: statistics.completed,
+      icon: <TrendingUp className="w-5 h-5" />,
+      bg: M.muted,
+      border: M.border,
+      color: M.inkMid,
+    },
   ] : []
 
   return (
     <Layout>
-      <div className="min-h-screen p-6 lg:p-8" style={{ background: '#f5f5f7', fontFamily: '"Plus Jakarta Sans", Inter, system-ui' }}>
+      <div
+        className="min-h-screen p-6 lg:p-8"
+        style={{ background: M.bg, fontFamily: "'DM Sans', system-ui, sans-serif" }}
+      >
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
+
+          {/* Page header — Maison style */}
           <div className="mb-8">
-            <h1 className="text-2xl font-bold mb-1" style={{ color: '#1d1d1f' }}>
-              Gestion des réservations
+            <p
+              className="uppercase tracking-widest mb-1"
+              style={{ fontSize: 10, color: M.inkFaint, letterSpacing: '0.12em' }}
+            >
+              Propriétaire
+            </p>
+            <h1
+              style={{
+                fontFamily: "'Cormorant Garamond', Georgia, serif",
+                fontWeight: 700,
+                fontStyle: 'italic',
+                fontSize: 40,
+                color: M.ink,
+                lineHeight: 1.1,
+                margin: 0,
+              }}
+            >
+              Visites
             </h1>
-            <p className="text-sm" style={{ color: '#515154' }}>
+            <p className="mt-1.5" style={{ fontSize: 14, color: M.inkMid }}>
               Gérez les demandes de visite de vos propriétés
             </p>
           </div>
@@ -134,12 +221,8 @@ export const BookingManagement = () => {
               {statCards.map(({ label, value, icon, bg, border, color }) => (
                 <div
                   key={label}
-                  className="rounded-2xl p-5 flex items-center gap-4"
-                  style={{
-                    background: '#ffffff',
-                    border: '1px solid #d2d2d7',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)',
-                  }}
+                  className="flex items-center gap-4 p-5"
+                  style={cardStyle}
                 >
                   <div
                     className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -148,8 +231,13 @@ export const BookingManagement = () => {
                     {icon}
                   </div>
                   <div>
-                    <p className="text-xs mb-0.5" style={{ color: '#86868b' }}>{label}</p>
-                    <p className="text-2xl font-bold" style={{ color: '#1d1d1f' }}>{value}</p>
+                    <p style={{ fontSize: 12, color: M.inkFaint, marginBottom: 2 }}>{label}</p>
+                    <p
+                      className="text-2xl font-bold"
+                      style={{ color: M.ink, fontFamily: "'DM Sans', system-ui, sans-serif" }}
+                    >
+                      {value}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -158,25 +246,30 @@ export const BookingManagement = () => {
 
           {/* Filters and View Toggle */}
           <div
-            className="rounded-2xl p-5 mb-6"
-            style={{
-              background: '#ffffff',
-              border: '1px solid #d2d2d7',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-            }}
+            className="p-5 mb-6"
+            style={cardStyle}
           >
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {/* Search */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#86868b' }} />
+                <Search
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
+                  style={{ color: M.inkFaint }}
+                />
                 <input
                   type="text"
                   placeholder="Rechercher..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   style={{ ...inputStyle, paddingLeft: '2.25rem' }}
-                  onFocus={(e) => { e.currentTarget.style.borderColor = '#007AFF'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,122,255,0.12)' }}
-                  onBlur={(e) => { e.currentTarget.style.borderColor = '#d2d2d7'; e.currentTarget.style.boxShadow = 'none' }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = M.owner
+                    e.currentTarget.style.boxShadow = `0 0 0 3px ${M.ownerLight}`
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = M.border
+                    e.currentTarget.style.boxShadow = 'none'
+                  }}
                 />
               </div>
 
@@ -185,8 +278,14 @@ export const BookingManagement = () => {
                 value={selectedProperty}
                 onChange={(e) => setSelectedProperty(e.target.value)}
                 style={inputStyle}
-                onFocus={(e) => { e.currentTarget.style.borderColor = '#007AFF'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,122,255,0.12)' }}
-                onBlur={(e) => { e.currentTarget.style.borderColor = '#d2d2d7'; e.currentTarget.style.boxShadow = 'none' }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = M.owner
+                  e.currentTarget.style.boxShadow = `0 0 0 3px ${M.ownerLight}`
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = M.border
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
               >
                 <option value="all">Toutes les propriétés</option>
                 {properties.map((property) => (
@@ -201,8 +300,14 @@ export const BookingManagement = () => {
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value as BookingStatus | 'all')}
                 style={inputStyle}
-                onFocus={(e) => { e.currentTarget.style.borderColor = '#007AFF'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,122,255,0.12)' }}
-                onBlur={(e) => { e.currentTarget.style.borderColor = '#d2d2d7'; e.currentTarget.style.boxShadow = 'none' }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = M.owner
+                  e.currentTarget.style.boxShadow = `0 0 0 3px ${M.ownerLight}`
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = M.border
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
               >
                 <option value="all">Tous les statuts</option>
                 <option value="PENDING">En attente</option>
@@ -213,27 +318,37 @@ export const BookingManagement = () => {
 
               {/* View Toggle */}
               <div
-                className="flex items-center gap-1 p-1 rounded-xl"
-                style={{ background: '#f5f5f7', border: '1px solid #d2d2d7' }}
+                className="flex items-center gap-1 p-1"
+                style={{ background: M.muted, border: `1px solid ${M.border}`, borderRadius: 10 }}
               >
                 <button
                   onClick={() => setViewMode('list')}
-                  className="flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all"
+                  className="flex-1 py-2 px-3 text-sm font-semibold transition-all"
                   style={
                     viewMode === 'list'
-                      ? { background: '#ffffff', color: '#1d1d1f', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }
-                      : { background: 'transparent', color: '#86868b' }
+                      ? {
+                          background: M.surface,
+                          color: M.owner,
+                          borderRadius: 8,
+                          boxShadow: '0 1px 3px rgba(13,12,10,0.08)',
+                        }
+                      : { background: 'transparent', color: M.inkMid, borderRadius: 8 }
                   }
                 >
                   Liste
                 </button>
                 <button
                   onClick={() => setViewMode('calendar')}
-                  className="flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all"
+                  className="flex-1 py-2 px-3 text-sm font-semibold transition-all"
                   style={
                     viewMode === 'calendar'
-                      ? { background: '#ffffff', color: '#1d1d1f', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }
-                      : { background: 'transparent', color: '#86868b' }
+                      ? {
+                          background: M.surface,
+                          color: M.owner,
+                          borderRadius: 8,
+                          boxShadow: '0 1px 3px rgba(13,12,10,0.08)',
+                        }
+                      : { background: 'transparent', color: M.inkMid, borderRadius: 8 }
                   }
                 >
                   Calendrier
@@ -245,13 +360,17 @@ export const BookingManagement = () => {
           {/* Error State */}
           {error && (
             <div
-              className="rounded-xl p-4 mb-6 flex items-start gap-3"
-              style={{ background: '#fef2f2', border: '1px solid #fecaca' }}
+              className="p-4 mb-6 flex items-start gap-3"
+              style={{
+                background: M.dangerBg,
+                border: `1px solid #f5c6c6`,
+                borderRadius: 10,
+              }}
             >
-              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#dc2626' }} />
+              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: M.danger }} />
               <div>
-                <p className="font-semibold text-sm" style={{ color: '#dc2626' }}>Erreur</p>
-                <p className="text-sm" style={{ color: '#b91c1c' }}>{error}</p>
+                <p className="font-semibold text-sm" style={{ color: M.danger }}>Erreur</p>
+                <p className="text-sm" style={{ color: '#7f1d1d' }}>{error}</p>
               </div>
             </div>
           )}
@@ -259,10 +378,10 @@ export const BookingManagement = () => {
           {/* Content */}
           {isLoading && !bookings.length ? (
             <div
-              className="flex items-center justify-center py-16 rounded-2xl"
-              style={{ background: '#ffffff', border: '1px solid #d2d2d7' }}
+              className="flex items-center justify-center py-16"
+              style={cardStyle}
             >
-              <Loader className="w-7 h-7 animate-spin" style={{ color: '#007AFF' }} />
+              <Loader className="w-7 h-7 animate-spin" style={{ color: M.owner }} />
             </div>
           ) : viewMode === 'calendar' ? (
             <Calendar
@@ -275,23 +394,27 @@ export const BookingManagement = () => {
             <div className="space-y-4">
               {filteredBookings.length === 0 ? (
                 <div
-                  className="rounded-2xl p-12 text-center"
-                  style={{
-                    background: '#ffffff',
-                    border: '1px solid #d2d2d7',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-                  }}
+                  className="p-12 text-center"
+                  style={cardStyle}
                 >
                   <div
-                    className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                    style={{ background: '#e8f0fe' }}
+                    className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                    style={{ background: M.ownerLight }}
                   >
-                    <CalendarIcon className="w-8 h-8" style={{ color: '#007AFF' }} />
+                    <CalendarIcon className="w-8 h-8" style={{ color: M.owner }} />
                   </div>
-                  <h3 className="text-lg font-semibold mb-2" style={{ color: '#1d1d1f' }}>
-                    Aucune réservation
+                  <h3
+                    style={{
+                      fontFamily: "'Cormorant Garamond', Georgia, serif",
+                      fontStyle: 'italic',
+                      fontSize: 22,
+                      color: M.ink,
+                      marginBottom: 8,
+                    }}
+                  >
+                    Aucune visite
                   </h3>
-                  <p className="text-sm" style={{ color: '#515154' }}>
+                  <p style={{ fontSize: 13, color: M.inkMid }}>
                     {searchQuery || selectedProperty !== 'all' || selectedStatus !== 'all'
                       ? 'Aucune réservation ne correspond à vos filtres.'
                       : "Vous n'avez pas encore reçu de demandes de visite."}
@@ -314,7 +437,10 @@ export const BookingManagement = () => {
 
           {/* Pagination Info */}
           {filteredBookings.length > 0 && viewMode === 'list' && (
-            <div className="mt-6 text-center text-sm" style={{ color: '#86868b' }}>
+            <div
+              className="mt-6 text-center text-sm"
+              style={{ color: M.inkFaint }}
+            >
               Affichage de {filteredBookings.length} sur {bookingsTotal} réservation
               {bookingsTotal > 1 ? 's' : ''}
             </div>

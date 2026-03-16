@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import { sendEmail } from '../utils/email.util.js'
 
 const prisma = new PrismaClient()
 
@@ -10,6 +11,9 @@ const RETENTION: Record<string, number> = {
   DOMICILE:   180 * 24 * 60 * 60 * 1000,  // 6 months
   GARANTIES:  365 * 24 * 60 * 60 * 1000,  // 1 year
 }
+
+// Default share duration: 7 days
+const SHARE_TTL_MS = 7 * 24 * 60 * 60 * 1000
 
 export interface ProfileData {
   firstName?: string
@@ -101,17 +105,31 @@ class DossierService {
   }
 
   /**
-   * Get all documents for a tenant — accessible by owners who have at least
-   * one application or conversation involving that tenant.
+   * Get all documents for a tenant — the owner MUST have an active DossierShare
+   * granted by the tenant. This is the core anti-fraud access control.
+   *
+   * Flow:
+   *   1. Verify requester is OWNER and not banned
+   *   2. Check active DossierShare exists (tenant explicitly authorised this owner)
+   *   3. Log access (fire-and-forget)
+   *   4. Send security alert email to tenant
    */
   async getTenantDossier(tenantId: string, requesterId: string) {
-    // Verify requester is an OWNER
+    // Verify requester is an active, non-banned OWNER
     const requester = await prisma.user.findUnique({
       where: { id: requesterId },
-      select: { role: true, firstName: true, lastName: true, email: true },
+      select: { role: true, firstName: true, lastName: true, email: true, isBanned: true },
     })
-    if (!requester || requester.role !== 'OWNER') {
-      throw new Error('Accès refusé')
+    if (!requester || requester.role !== 'OWNER') throw new Error('Accès refusé')
+    if (requester.isBanned) throw new Error('Compte suspendu — accès refusé')
+
+    // ── CRITICAL: verify tenant granted access to this specific owner ──────
+    const share = await prisma.dossierShare.findUnique({
+      where: { tenantId_ownerId: { tenantId, ownerId: requesterId } },
+    })
+
+    if (!share || share.revokedAt || share.expiresAt < new Date()) {
+      throw new Error('SHARE_REQUIRED: Le locataire n\'a pas partagé son dossier avec vous')
     }
 
     // Fetch tenant basic info + documents
@@ -135,18 +153,209 @@ class DossierService {
 
     if (!tenant) throw new Error('Locataire introuvable')
 
-    // Log this access so the tenant can see it in their privacy center
-    // Fire-and-forget — don't block the response
+    const viewerName = `${requester.firstName ?? ''} ${requester.lastName ?? ''}`.trim()
+
+    // Log access (fire-and-forget)
     prisma.dossierAccessLog.create({
       data: {
         tenantId,
         viewerId: requesterId,
-        viewerName: `${requester.firstName ?? ''} ${requester.lastName ?? ''}`.trim(),
+        viewerName,
         viewerEmail: requester.email ?? '',
       },
     }).catch(() => { /* non-fatal */ })
 
+    // Send security alert email to tenant (fire-and-forget)
+    this.sendDossierAccessAlert(tenant.email, tenant.firstName ?? '', viewerName, requester.email ?? '')
+
     return tenant
+  }
+
+  /**
+   * Security alert: notify the tenant their dossier was just accessed.
+   */
+  private async sendDossierAccessAlert(
+    tenantEmail: string,
+    tenantFirstName: string,
+    viewerName: string,
+    viewerEmail: string,
+  ): Promise<void> {
+    try {
+      const now = new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris' })
+      await sendEmail({
+        to: tenantEmail,
+        subject: '🔒 Votre dossier locataire a été consulté',
+        html: `
+          <div style="font-family:sans-serif;max-width:560px;margin:auto">
+            <h2 style="color:#0f172a">Accès à votre dossier</h2>
+            <p>Bonjour <strong>${tenantFirstName}</strong>,</p>
+            <p>
+              Votre dossier locataire vient d'être consulté par
+              <strong>${viewerName}</strong> (<code>${viewerEmail}</code>)
+              le <strong>${now}</strong>.
+            </p>
+            <p>
+              Tous les documents consultés sont <em>filigranés</em> avec l'identité
+              du propriétaire et la date, ce qui les rend traçables en cas d'usage frauduleux.
+            </p>
+            <hr style="margin:24px 0;border-color:#e2e8f0"/>
+            <p style="color:#475569;font-size:13px">
+              Si vous n'avez pas partagé votre dossier avec cette personne, ou si quelque chose
+              vous semble suspect, <a href="${process.env.FRONTEND_URL ?? ''}/privacy">révoquez immédiatement l'accès</a>
+              depuis votre centre de confidentialité.
+            </p>
+          </div>
+        `,
+      })
+    } catch {
+      // Email failure must never break the dossier response
+    }
+  }
+
+  // ── DOSSIER SHARE MANAGEMENT ─────────────────────────────────────────────
+
+  /**
+   * Tenant grants an owner access to their dossier for a given duration.
+   * If a share already exists (even revoked / expired), it is refreshed.
+   */
+  async grantShare(tenantId: string, ownerId: string, propertyId?: string, durationDays = 7) {
+    if (tenantId === ownerId) throw new Error('Vous ne pouvez pas partager avec vous-même')
+
+    const owner = await prisma.user.findUnique({
+      where: { id: ownerId },
+      select: { role: true, isBanned: true, firstName: true, lastName: true, email: true },
+    })
+    if (!owner || owner.role !== 'OWNER') throw new Error('Destinataire invalide (doit être un propriétaire)')
+    if (owner.isBanned) throw new Error('Ce propriétaire a été suspendu pour fraude')
+
+    const expiresAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000)
+
+    const share = await prisma.dossierShare.upsert({
+      where: { tenantId_ownerId: { tenantId, ownerId } },
+      update: { expiresAt, revokedAt: null, propertyId: propertyId ?? null },
+      create: { tenantId, ownerId, propertyId: propertyId ?? null, expiresAt },
+    })
+
+    // Notify the tenant by log entry (access log for transparency)
+    await prisma.notification.create({
+      data: {
+        userId: tenantId,
+        type: 'dossier_shared',
+        title: 'Dossier partagé',
+        message: `Vous avez partagé votre dossier avec ${owner.firstName} ${owner.lastName} jusqu'au ${expiresAt.toLocaleDateString('fr-FR')}.`,
+        actionUrl: '/dossier',
+      },
+    })
+
+    return share
+  }
+
+  /**
+   * Tenant revokes an owner's access immediately.
+   */
+  async revokeShare(tenantId: string, ownerId: string) {
+    const share = await prisma.dossierShare.findUnique({
+      where: { tenantId_ownerId: { tenantId, ownerId } },
+    })
+    if (!share) throw new Error('Partage introuvable')
+    if (share.tenantId !== tenantId) throw new Error('Accès refusé')
+
+    return prisma.dossierShare.update({
+      where: { id: share.id },
+      data: { revokedAt: new Date() },
+    })
+  }
+
+  /**
+   * List all active and past shares for a tenant.
+   */
+  async listShares(tenantId: string) {
+    const shares = await prisma.dossierShare.findMany({
+      where: { tenantId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            avatar: true,
+            trustScore: true,
+            isVerifiedOwner: true,
+          },
+        },
+      },
+    })
+    return shares
+  }
+
+  /**
+   * Check if a specific owner has active access to a tenant's dossier.
+   */
+  async hasActiveShare(tenantId: string, ownerId: string): Promise<boolean> {
+    const share = await prisma.dossierShare.findUnique({
+      where: { tenantId_ownerId: { tenantId, ownerId } },
+    })
+    return !!(share && !share.revokedAt && share.expiresAt > new Date())
+  }
+
+  // ── FRAUD REPORTING ───────────────────────────────────────────────────────
+
+  async reportUser(reporterId: string, targetId: string, reason: string, details?: string) {
+    if (reporterId === targetId) throw new Error('Impossible de se signaler soi-même')
+
+    const report = await prisma.fraudReport.create({
+      data: { reporterId, targetId, reason, details: details ?? null },
+    })
+
+    // Increment target's reportCount (atomic)
+    await prisma.user.update({
+      where: { id: targetId },
+      data: { reportCount: { increment: 1 } },
+    })
+
+    // Auto-reduce trust score when reportCount crosses thresholds
+    const target = await prisma.user.findUnique({ where: { id: targetId }, select: { reportCount: true, trustScore: true } })
+    if (target) {
+      let newScore = target.trustScore
+      if (target.reportCount >= 5)  newScore = Math.min(newScore, 20)
+      else if (target.reportCount >= 3) newScore = Math.min(newScore, 35)
+      else if (target.reportCount >= 1) newScore = Math.min(newScore, 50)
+      await prisma.user.update({ where: { id: targetId }, data: { trustScore: newScore } })
+    }
+
+    return report
+  }
+
+  async listFraudReports(targetId: string) {
+    return prisma.fraudReport.findMany({
+      where: { targetId },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, reason: true, status: true, createdAt: true },
+    })
+  }
+
+  // ── TRUST SCORE ───────────────────────────────────────────────────────────
+
+  async getPublicProfile(userId: string) {
+    return prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        avatar: true,
+        role: true,
+        createdAt: true,
+        emailVerified: true,
+        phoneVerified: true,
+        trustScore: true,
+        isVerifiedOwner: true,
+        reportCount: true,
+        isBanned: true,
+      },
+    })
   }
 
   async deleteDocument(id: string, userId: string) {

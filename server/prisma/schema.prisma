@@ -106,6 +106,12 @@ model User {
   phoneVerified     Boolean   @default(false)
   phoneVerifiedAt   DateTime?
 
+  // Trust & Anti-Fraud
+  trustScore        Int       @default(50)   // 0-100 : calculé dynamiquement
+  isVerifiedOwner   Boolean   @default(false) // Vérifié manuellement par admin (badge premium)
+  reportCount       Int       @default(0)    // Nombre de signalements reçus
+  isBanned          Boolean   @default(false) // Banni suite à fraude confirmée
+
   // 2FA — TOTP (Google Authenticator / Authy)
   totpSecret        String?
   totpEnabled       Boolean   @default(false)
@@ -131,6 +137,10 @@ model User {
   uploadedDocuments     ContractDocument[]    @relation("DocumentUploader")
   tenantDocuments       TenantDocument[]
   applications          Application[]
+  dossierSharesGranted  DossierShare[]        @relation("ShareGrantedBy")
+  dossierSharesReceived DossierShare[]        @relation("ShareReceivedBy")
+  fraudReportsFiled     FraudReport[]         @relation("FraudReporter")
+  fraudReportsReceived  FraudReport[]         @relation("FraudTarget")
 
   @@index([email])
   @@index([role])
@@ -607,6 +617,62 @@ model Application {
   @@index([status])
   @@index([score])
   @@map("applications")
+}
+
+// ============================================
+// SÉCURITÉ — PARTAGE CONTRÔLÉ DU DOSSIER
+// ============================================
+
+// Le locataire accorde explicitement à un propriétaire un accès temporaire à son dossier.
+// Sans entrée active ici, aucun propriétaire ne peut voir le dossier.
+model DossierShare {
+  id          String    @id @default(uuid())
+
+  tenantId    String    // Le locataire qui accorde l'accès
+  tenant      User      @relation("ShareGrantedBy", fields: [tenantId], references: [id], onDelete: Cascade)
+
+  ownerId     String    // Le propriétaire qui reçoit l'accès
+  owner       User      @relation("ShareReceivedBy", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  propertyId  String?   // Contexte facultatif (annonce liée)
+
+  expiresAt   DateTime  // Accès limité dans le temps (défaut: 7 jours)
+  revokedAt   DateTime? // Mis à jour si le locataire révoque manuellement
+
+  createdAt   DateTime  @default(now())
+
+  @@unique([tenantId, ownerId])
+  @@index([tenantId])
+  @@index([ownerId])
+  @@index([expiresAt])
+  @@map("dossier_shares")
+}
+
+// Signalement d'un utilisateur suspicieux
+model FraudReport {
+  id          String    @id @default(uuid())
+
+  reporterId  String    // Qui signale
+  reporter    User      @relation("FraudReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  targetId    String    // Qui est signalé
+  target      User      @relation("FraudTarget", fields: [targetId], references: [id], onDelete: Cascade)
+
+  reason      String    // FAKE_LISTING | DATA_THEFT | FAKE_DOCUMENTS | HARASSMENT | OTHER
+  details     String?   @db.Text
+
+  status      String    @default("PENDING")   // PENDING | REVIEWED | DISMISSED | ACTIONED
+  reviewNote  String?   @db.Text
+  reviewedAt  DateTime?
+  reviewedBy  String?   // id du super-admin
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([reporterId])
+  @@index([targetId])
+  @@index([status])
+  @@map("fraud_reports")
 }
 
 // ============================================

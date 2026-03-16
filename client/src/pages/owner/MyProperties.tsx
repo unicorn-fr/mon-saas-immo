@@ -30,11 +30,27 @@ const TAB_STATUSES: Record<TabKey, PropertyStatus[] | null> = {
   'hors-marche': ['DRAFT', 'RESERVED'],
 }
 
-const cardStyle: React.CSSProperties = {
-  background: '#ffffff',
-  border: '1px solid #d2d2d7',
-  borderRadius: 16,
-  boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)',
+// ─── Maison tokens ────────────────────────────────────────────────────────────
+const M = {
+  bg:           '#fafaf8',
+  surface:      '#ffffff',
+  muted:        '#f4f2ee',
+  ink:          '#0d0c0a',
+  inkMid:       '#5a5754',
+  inkFaint:     '#9e9b96',
+  owner:        '#1a3270',
+  ownerLight:   '#eaf0fb',
+  ownerBorder:  '#b8ccf0',
+  border:       '#e4e1db',
+  borderMid:    '#ccc9c3',
+  caramel:      '#c4976a',
+  caramelLight: '#fdf5ec',
+  danger:       '#9b1c1c',
+  dangerBg:     '#fef2f2',
+  warning:      '#92400e',
+  warningBg:    '#fdf5ec',
+  success:      '#1b5e3b',
+  successBg:    '#edf7f2',
 }
 
 export default function MyProperties() {
@@ -90,10 +106,10 @@ export default function MyProperties() {
   }
 
   const statusConfig: Record<string, { label: string; bg: string; color: string }> = {
-    AVAILABLE: { label: 'Disponible',   bg: '#f0fdf4', color: '#15803d' },
-    OCCUPIED:  { label: 'En location',  bg: '#eff6ff', color: '#1d4ed8' },
-    DRAFT:     { label: 'Hors marché',  bg: '#f5f5f7', color: '#64748b' },
-    RESERVED:  { label: 'Réservé',      bg: '#fffbeb', color: '#b45309' },
+    AVAILABLE: { label: 'Disponible',  bg: M.successBg,    color: M.success },
+    OCCUPIED:  { label: 'En location', bg: M.ownerLight,   color: M.owner },
+    DRAFT:     { label: 'Hors marché', bg: M.muted,        color: M.inkMid },
+    RESERVED:  { label: 'Réservé',     bg: M.caramelLight, color: M.caramel },
   }
 
   const counts: Record<TabKey, number> = {
@@ -117,15 +133,26 @@ export default function MyProperties() {
   const PropertyCard = ({ property }: { property: Property }) => {
     const cfg = statusConfig[property.status] || statusConfig['DRAFT']
     const mainImage = property.images[0] || '/placeholder-property.jpg'
-    return (
-      <div className="rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-0.5"
-        style={{
-          ...cardStyle,
-          boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)',
-        }}>
+    const [hovered, setHovered] = useState(false)
 
+    return (
+      <div
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          background: M.surface,
+          border: `1px solid ${M.border}`,
+          borderRadius: 12,
+          overflow: 'hidden',
+          boxShadow: hovered
+            ? '0 4px 16px rgba(13,12,10,0.10), 0 12px 32px rgba(13,12,10,0.08)'
+            : '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
+          transform: hovered ? 'translateY(-1px)' : 'translateY(0)',
+          transition: 'box-shadow 0.2s, transform 0.2s',
+        }}
+      >
         {/* Image */}
-        <div className="relative h-44" style={{ background: '#f0f0f2' }}>
+        <div className="relative" style={{ height: 176, background: M.muted }}>
           <img
             src={mainImage}
             alt={property.title}
@@ -133,14 +160,31 @@ export default function MyProperties() {
             onError={(e) => { e.currentTarget.src = '/placeholder-property.jpg' }}
           />
           {/* Price badge */}
-          <div className="absolute bottom-3 left-3 bg-white px-2.5 py-1 rounded-xl shadow text-sm font-bold"
-            style={{ color: '#1d1d1f' }}>
-            {property.price}€<span className="font-normal text-xs" style={{ color: '#86868b' }}>/mois</span>
+          <div
+            className="absolute bottom-3 left-3 px-2.5 py-1 rounded-xl"
+            style={{
+              background: M.surface,
+              boxShadow: '0 1px 4px rgba(13,12,10,0.12)',
+            }}
+          >
+            <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 20, fontWeight: 700, color: M.ink }}>
+              {property.price}€
+            </span>
+            <span style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 11, color: M.inkFaint }}>/mois</span>
           </div>
           {/* Status badge */}
           <div className="absolute top-3 right-3">
-            <span className="px-2.5 py-1 rounded-full text-xs font-semibold"
-              style={{ background: cfg.bg, color: cfg.color }}>
+            <span
+              className="px-2.5 py-1 rounded-full"
+              style={{
+                background: cfg.bg,
+                color: cfg.color,
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+                fontSize: 11,
+                fontWeight: 500,
+                border: `1px solid ${cfg.color}22`,
+              }}
+            >
               {cfg.label}
             </span>
           </div>
@@ -148,41 +192,91 @@ export default function MyProperties() {
 
         {/* Content */}
         <div className="p-4">
-          <h3 className="font-semibold mb-1 line-clamp-1" style={{ color: '#1d1d1f' }}>{property.title}</h3>
-          <div className="flex items-center text-sm mb-3" style={{ color: '#86868b' }}>
-            <MapPin className="w-3.5 h-3.5 mr-1 shrink-0" />
-            <span className="line-clamp-1">{property.city}, {property.postalCode}</span>
+          <h3
+            className="mb-1 line-clamp-1"
+            style={{
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+              fontSize: 13,
+              fontWeight: 600,
+              color: M.ink,
+            }}
+          >
+            {property.title}
+          </h3>
+          <div className="flex items-center mb-3" style={{ gap: 4 }}>
+            <MapPin style={{ width: 12, height: 12, color: M.inkFaint, flexShrink: 0 }} />
+            <span
+              className="line-clamp-1"
+              style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 11, color: M.inkFaint }}
+            >
+              {property.city}, {property.postalCode}
+            </span>
           </div>
 
           {/* Characteristics */}
-          <div className="flex items-center gap-3 text-sm mb-3 pb-3" style={{ color: '#86868b', borderBottom: '1px solid #f0f0f2' }}>
-            <span className="flex items-center gap-1"><Bed className="w-3.5 h-3.5" />{property.bedrooms} ch.</span>
-            <span className="flex items-center gap-1"><Bath className="w-3.5 h-3.5" />{property.bathrooms} sdb</span>
-            <span className="flex items-center gap-1"><Square className="w-3.5 h-3.5" />{property.surface}m²</span>
+          <div
+            className="flex items-center gap-3 mb-3 pb-3"
+            style={{
+              borderBottom: `1px solid ${M.border}`,
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+              fontSize: 12,
+              color: M.inkMid,
+            }}
+          >
+            <span className="flex items-center gap-1"><Bed style={{ width: 12, height: 12 }} />{property.bedrooms} ch.</span>
+            <span className="flex items-center gap-1"><Bath style={{ width: 12, height: 12 }} />{property.bathrooms} sdb</span>
+            <span className="flex items-center gap-1"><Square style={{ width: 12, height: 12 }} />{property.surface}m²</span>
           </div>
 
           {/* Stats */}
-          <div className="flex items-center gap-3 text-xs mb-4" style={{ color: '#86868b' }}>
-            <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" />{property.views} vues</span>
-            <span className="flex items-center gap-1"><MessageSquare className="w-3.5 h-3.5" />{property.contactCount} contacts</span>
+          <div
+            className="flex items-center gap-3 mb-4"
+            style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 11, color: M.inkFaint }}
+          >
+            <span className="flex items-center gap-1"><Eye style={{ width: 12, height: 12 }} />{property.views} vues</span>
+            <span className="flex items-center gap-1"><MessageSquare style={{ width: 12, height: 12 }} />{property.contactCount} contacts</span>
           </div>
 
           {/* Primary actions */}
           <div className="flex gap-2 mb-2">
             <button
               onClick={() => navigate(`/properties/${property.id}`)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-medium transition-colors hover:bg-slate-50"
-              style={{ border: '1px solid #d2d2d7', color: '#515154' }}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2"
+              style={{
+                background: M.surface,
+                border: `1px solid ${M.border}`,
+                borderRadius: 8,
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+                fontSize: 13,
+                fontWeight: 500,
+                color: M.inkMid,
+                cursor: 'pointer',
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
+              onMouseLeave={(e) => (e.currentTarget.style.background = M.surface)}
             >
-              <Eye className="w-3.5 h-3.5" />
+              <Eye style={{ width: 13, height: 13 }} />
               Voir
             </button>
             <button
               onClick={() => navigate(`/properties/${property.id}/edit`)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:-translate-y-px"
-              style={{ background: '#007AFF' }}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2"
+              style={{
+                background: M.owner,
+                border: 'none',
+                borderRadius: 8,
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+                fontSize: 13,
+                fontWeight: 500,
+                color: '#ffffff',
+                cursor: 'pointer',
+                transition: 'background 0.15s, transform 0.15s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#142860'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = M.owner; e.currentTarget.style.transform = 'translateY(0)' }}
             >
-              <Edit className="w-3.5 h-3.5" />
+              <Edit style={{ width: 13, height: 13 }} />
               Modifier
             </button>
           </div>
@@ -191,20 +285,42 @@ export default function MyProperties() {
           <div className="flex gap-2">
             <button
               onClick={() => setStatusModalProperty(property)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-xs font-medium transition-colors hover:bg-slate-50"
-              style={{ border: '1px solid #d2d2d7', color: '#515154' }}
+              className="flex-1 flex items-center justify-center gap-1.5 py-1.5"
+              style={{
+                background: M.surface,
+                border: `1px solid ${M.border}`,
+                borderRadius: 8,
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+                fontSize: 12,
+                fontWeight: 500,
+                color: M.inkMid,
+                cursor: 'pointer',
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
+              onMouseLeave={(e) => (e.currentTarget.style.background = M.surface)}
             >
-              <RefreshCw className="w-3 h-3" />
+              <RefreshCw style={{ width: 12, height: 12 }} />
               Changer le statut
             </button>
             <button
               onClick={() => handleDelete(property.id, property.title)}
               disabled={deletingId === property.id}
-              className="p-1.5 rounded-xl transition-colors hover:bg-red-50 disabled:opacity-50"
-              style={{ border: '1px solid #fecaca', color: '#ef4444' }}
               title="Supprimer"
+              style={{
+                background: M.dangerBg,
+                border: `1px solid ${M.danger}44`,
+                borderRadius: 8,
+                padding: '0.375rem 0.5rem',
+                color: M.danger,
+                cursor: 'pointer',
+                transition: 'background 0.15s',
+                opacity: deletingId === property.id ? 0.5 : 1,
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#fecaca')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = M.dangerBg)}
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 style={{ width: 14, height: 14 }} />
             </button>
           </div>
         </div>
@@ -214,88 +330,152 @@ export default function MyProperties() {
 
   return (
     <Layout>
-      <div className="min-h-screen" style={{ background: '#f5f5f7' }}>
+      <div className="min-h-screen" style={{ background: M.bg, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
 
-        {/* Header */}
-        <div style={{ background: '#ffffff', borderBottom: '1px solid #d2d2d7' }}>
-          <div className="container mx-auto px-4 py-6">
+        {/* ── Page Header ── */}
+        <div style={{ background: M.surface, borderBottom: `1px solid ${M.border}` }}>
+          <div className="container mx-auto px-4 py-8">
             <div className="flex items-start justify-between">
               <div>
-                <h1 className="text-2xl font-extrabold flex items-center gap-2.5" style={{ color: '#1d1d1f' }}>
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: '#e8f0fe' }}>
-                    <Home className="w-5 h-5" style={{ color: '#007AFF' }} />
-                  </div>
-                  Mes Propriétés
+                {/* Overline */}
+                <p
+                  style={{
+                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                    fontSize: 10,
+                    fontWeight: 500,
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                    color: M.inkFaint,
+                    marginBottom: 6,
+                  }}
+                >
+                  Propriétaire — Patrimoine
+                </p>
+                {/* Title */}
+                <h1
+                  style={{
+                    fontFamily: "'Cormorant Garamond', Georgia, serif",
+                    fontSize: 40,
+                    fontWeight: 700,
+                    fontStyle: 'italic',
+                    color: M.ink,
+                    lineHeight: 1.1,
+                    marginBottom: 6,
+                  }}
+                >
+                  Mes biens
                 </h1>
-                <div className="flex items-center gap-4 mt-2 text-sm" style={{ color: '#86868b' }}>
-                  <span><strong style={{ color: '#1d1d1f' }}>{myPropertiesTotal}</strong> bien{myPropertiesTotal > 1 ? 's' : ''} au total</span>
+                {/* Subtitle */}
+                <div className="flex items-center gap-3" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 14, color: M.inkMid }}>
+                  <span>
+                    <strong style={{ color: M.ink }}>{myPropertiesTotal}</strong> bien{myPropertiesTotal > 1 ? 's' : ''} au total
+                  </span>
                   {counts['en-location'] > 0 && (
                     <>
-                      <span style={{ color: '#d2d2d7' }}>|</span>
-                      <span><strong style={{ color: '#1d4ed8' }}>{counts['en-location']}</strong> en location</span>
+                      <span style={{ color: M.borderMid }}>·</span>
+                      <span><strong style={{ color: M.owner }}>{counts['en-location']}</strong> en location</span>
                     </>
                   )}
                   {counts['disponibles'] > 0 && (
                     <>
-                      <span style={{ color: '#d2d2d7' }}>|</span>
-                      <span><strong style={{ color: '#15803d' }}>{counts['disponibles']}</strong> disponible{counts['disponibles'] > 1 ? 's' : ''}</span>
+                      <span style={{ color: M.borderMid }}>·</span>
+                      <span><strong style={{ color: M.success }}>{counts['disponibles']}</strong> disponible{counts['disponibles'] > 1 ? 's' : ''}</span>
                     </>
                   )}
                 </div>
               </div>
-              <Link to="/properties/new"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:-translate-y-px"
-                style={{ background: '#007AFF', boxShadow: '0 4px 14px rgba(0,122,255,0.25)' }}>
-                <Plus className="w-4 h-4" />
+
+              <Link
+                to="/properties/new"
+                className="inline-flex items-center gap-2 px-4 py-2"
+                style={{
+                  background: M.owner,
+                  borderRadius: 8,
+                  fontFamily: "'DM Sans', system-ui, sans-serif",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: '#ffffff',
+                  textDecoration: 'none',
+                  transition: 'background 0.15s, transform 0.15s',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#142860'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = M.owner; e.currentTarget.style.transform = 'translateY(0)' }}
+              >
+                <Plus style={{ width: 15, height: 15 }} />
                 Ajouter un bien
               </Link>
             </div>
           </div>
         </div>
 
-        {/* Smart Tabs */}
+        {/* ── Tab bar ── */}
         {myProperties.length > 0 && (
-          <div style={{ background: '#ffffff', borderBottom: '1px solid #d2d2d7' }}>
+          <div style={{ background: M.surface, borderBottom: `1px solid ${M.border}` }}>
             <div className="container mx-auto px-4">
               <div className="flex gap-1">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.key}
-                    onClick={() => setActiveTab(tab.key)}
-                    className="flex items-center gap-2 px-5 py-4 text-sm font-medium transition-colors"
-                    style={{
-                      color: activeTab === tab.key ? '#007AFF' : '#86868b',
-                      borderBottom: activeTab === tab.key ? '2px solid #007AFF' : '2px solid transparent',
-                    }}
-                  >
-                    {tab.label}
-                    {counts[tab.key] > 0 && (
-                      <span className="text-xs font-bold px-1.5 py-0.5 rounded-full"
-                        style={{
-                          background: activeTab === tab.key ? '#007AFF' : '#f0f0f2',
-                          color: activeTab === tab.key ? '#ffffff' : '#64748b',
-                        }}>
-                        {counts[tab.key]}
-                      </span>
-                    )}
-                  </button>
-                ))}
+                {tabs.map((tab) => {
+                  const isActive = activeTab === tab.key
+                  return (
+                    <button
+                      key={tab.key}
+                      onClick={() => setActiveTab(tab.key)}
+                      className="flex items-center gap-2 px-5 py-4"
+                      style={{
+                        fontFamily: "'DM Sans', system-ui, sans-serif",
+                        fontSize: 13,
+                        fontWeight: isActive ? 600 : 400,
+                        color: isActive ? M.owner : M.inkMid,
+                        borderBottom: isActive ? `2px solid ${M.owner}` : '2px solid transparent',
+                        background: 'none',
+                        border: 'none',
+                        borderBottomWidth: 2,
+                        borderBottomStyle: 'solid',
+                        borderBottomColor: isActive ? M.owner : 'transparent',
+                        cursor: 'pointer',
+                        transition: 'color 0.15s',
+                      }}
+                    >
+                      {tab.label}
+                      {counts[tab.key] > 0 && (
+                        <span
+                          className="text-xs px-1.5 py-0.5 rounded-full"
+                          style={{
+                            fontFamily: "'DM Sans', system-ui, sans-serif",
+                            fontSize: 11,
+                            fontWeight: 600,
+                            background: isActive ? M.owner : M.muted,
+                            color: isActive ? '#ffffff' : M.inkMid,
+                          }}
+                        >
+                          {counts[tab.key]}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
               </div>
             </div>
           </div>
         )}
 
-        {/* Content */}
-        <div className="container mx-auto px-4 py-6">
+        {/* ── Content ── */}
+        <div className="container mx-auto px-4 py-8">
 
           {/* Error */}
           {error && (
-            <div className="mb-6 p-4 rounded-xl flex items-start gap-3"
-              style={{ background: '#fef2f2', border: '1px solid #fecaca' }}>
-              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" style={{ color: '#dc2626' }} />
+            <div
+              className="mb-6 p-4 rounded-xl flex items-start gap-3"
+              style={{ background: M.dangerBg, border: `1px solid ${M.danger}44` }}
+            >
+              <AlertCircle style={{ width: 18, height: 18, color: M.danger, flexShrink: 0, marginTop: 2 }} />
               <div>
-                <p className="text-sm" style={{ color: '#991b1b' }}>{error}</p>
-                <button onClick={() => setError(null)} className="text-sm underline mt-1" style={{ color: '#dc2626' }}>Fermer</button>
+                <p style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 13, color: M.danger }}>{error}</p>
+                <button
+                  onClick={() => setError(null)}
+                  style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 12, color: M.danger, textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', marginTop: 4 }}
+                >
+                  Fermer
+                </button>
               </div>
             </div>
           )}
@@ -303,23 +483,58 @@ export default function MyProperties() {
           {/* Loading */}
           {isLoading && (
             <div className="flex justify-center py-20">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: '#007AFF' }} />
+              <div
+                className="animate-spin rounded-full"
+                style={{ width: 40, height: 40, borderWidth: 2, borderStyle: 'solid', borderColor: M.border, borderTopColor: M.owner }}
+              />
             </div>
           )}
 
           {/* Empty state — no properties at all */}
           {!isLoading && myProperties.length === 0 && (
-            <div className="text-center py-20">
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                style={{ background: '#e8f0fe' }}>
-                <Home className="w-8 h-8" style={{ color: '#007AFF' }} />
+            <div className="text-center py-24">
+              <div
+                className="flex items-center justify-center mx-auto mb-5"
+                style={{ width: 72, height: 72, borderRadius: '50%', background: M.muted }}
+              >
+                <Home style={{ width: 32, height: 32, color: M.inkFaint }} />
               </div>
-              <h2 className="text-xl font-semibold mb-2" style={{ color: '#1d1d1f' }}>Aucune propriété</h2>
-              <p className="mb-6" style={{ color: '#86868b' }}>Commencez par ajouter votre premier bien immobilier.</p>
-              <Link to="/properties/new"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white"
-                style={{ background: '#007AFF' }}>
-                <Plus className="w-4 h-4" />
+              <h2
+                style={{
+                  fontFamily: "'Cormorant Garamond', Georgia, serif",
+                  fontSize: 22,
+                  fontStyle: 'italic',
+                  fontWeight: 600,
+                  color: M.ink,
+                  marginBottom: 8,
+                }}
+              >
+                Aucune propriété
+              </h2>
+              <p
+                style={{
+                  fontFamily: "'DM Sans', system-ui, sans-serif",
+                  fontSize: 13,
+                  color: M.inkMid,
+                  marginBottom: 24,
+                }}
+              >
+                Commencez par ajouter votre premier bien immobilier.
+              </p>
+              <Link
+                to="/properties/new"
+                className="inline-flex items-center gap-2 px-5 py-2.5"
+                style={{
+                  background: M.owner,
+                  borderRadius: 8,
+                  fontFamily: "'DM Sans', system-ui, sans-serif",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: '#ffffff',
+                  textDecoration: 'none',
+                }}
+              >
+                <Plus style={{ width: 15, height: 15 }} />
                 Ajouter un bien
               </Link>
             </div>
@@ -328,7 +543,7 @@ export default function MyProperties() {
           {/* Empty state — tab filter yields nothing */}
           {!isLoading && myProperties.length > 0 && filtered.length === 0 && (
             <div className="text-center py-16">
-              <p className="text-sm" style={{ color: '#86868b' }}>
+              <p style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 13, color: M.inkMid }}>
                 Aucun bien dans cette catégorie.
               </p>
             </div>

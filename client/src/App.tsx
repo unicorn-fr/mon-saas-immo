@@ -34,6 +34,7 @@ import MyBookings from './pages/tenant/MyBookings'
 import MyApplications from './pages/tenant/MyApplications'
 import Favorites from './pages/tenant/Favorites'
 import DossierLocatif from './pages/tenant/DossierLocatif'
+import DossierShareManager from './pages/tenant/DossierShareManager'
 import PrivacyCenter from './pages/tenant/PrivacyCenter'
 
 // Shared Pages
@@ -207,6 +208,7 @@ function AppRoutes() {
         <Route path="/my-bookings" element={<MyBookings />} />
         <Route path="/my-applications" element={<MyApplications />} />
         <Route path="/dossier" element={<DossierLocatif />} />
+        <Route path="/dossier/partages" element={<DossierShareManager />} />
         <Route path="/privacy" element={<PrivacyCenter />} />
       </Route>
 

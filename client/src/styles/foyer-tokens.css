@@ -1,107 +1,152 @@
-/* ─────────────────────────────────────────
-   FOYER Design System — Apple Style
-   bg #f5f5f7 · text #1d1d1f · accent #007AFF
-   ───────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────
+   MAISON Design System — Light Editorial
+   bg #fafaf8 · ink #0d0c0a · accent night #1a1a2e · caramel #c4976a
+   Typography: Cormorant Garamond (display) + DM Sans (body)
+   ───────────────────────────────────────────────────────────── */
 
 :root {
-  /* ── Backgrounds ────────────────────────── */
-  --bg-primary:    #f5f5f7;
-  --bg-surface:    #ffffff;
-  --bg-subtle:     #f5f5f7;
-  --bg-muted:      #e8e8ed;
+  /* ── Typography ─────────────────────────────────────────── */
+  --font-display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --font-body:    'DM Sans', system-ui, -apple-system, sans-serif;
 
-  /* ── Thread (accent principal) ──────────── */
-  --thread:        #007AFF;
-  --thread-hover:  #0066d6;
-  --thread-light:  #e8f0fe;
-  --thread-dark:   #0055b3;
+  /* ── Backgrounds ────────────────────────────────────────── */
+  --bg-base:     #fafaf8;   /* page background — warm off-white */
+  --bg-surface:  #ffffff;   /* card / panel background */
+  --bg-muted:    #f4f2ee;   /* secondary surfaces, section fills */
+  --bg-input:    #f8f7f4;   /* input fields */
 
-  /* ── Borders ────────────────────────────── */
-  --border:        #d2d2d7;
-  --border-hover:  #b0b0b8;
-  --border-strong: #86868b;
+  /* Legacy compat */
+  --bg-primary:  var(--bg-base);
+  --bg-subtle:   var(--bg-muted);
+  --surface-page:   var(--bg-base);
+  --surface-card:   var(--bg-surface);
+  --surface-subtle: var(--bg-muted);
 
-  /* ── Textes ──────────────────────────────── */
-  --text-primary:   #1d1d1f;
-  --text-secondary: #515154;
-  --text-muted:     #86868b;
-  --text-tertiary:  #86868b;
+  /* ── Ink (text) ─────────────────────────────────────────── */
+  --ink:       #0d0c0a;    /* warm near-black — headlines */
+  --ink-mid:   #5a5754;    /* body text */
+  --ink-faint: #9e9b96;    /* muted labels, placeholders */
 
-  /* ── Accent ─────────────────────────────── */
-  --accent:         #007AFF;
-  --accent-hover:   #0066d6;
-  --accent-light:   #e8f0fe;
+  /* Legacy compat */
+  --text-primary:   var(--ink);
+  --text-secondary: var(--ink-mid);
+  --text-muted:     var(--ink-faint);
+  --text-tertiary:  var(--ink-faint);
 
-  /* ── Status ─────────────────────────────── */
-  --f-success:        #34C759;
-  --f-success-bg:     #f0fdf4;
-  --f-success-border: #bbf7d0;
-  --f-warning:        #FF9500;
-  --f-warning-bg:     #fff7ed;
-  --f-warning-border: #fed7aa;
-  --f-danger:         #FF3B30;
+  /* ── Night (deep navy — primary accent) ─────────────────── */
+  --night:       #1a1a2e;
+  --night-hover: #2a2a4a;
+  --night-light: #edf0f8;
+
+  /* ── Caramel (warm gold — secondary accent) ─────────────── */
+  --caramel:       #c4976a;
+  --caramel-hover: #b07f54;
+  --caramel-light: #fdf5ec;
+
+  /* ── Owner (rich blue) ──────────────────────────────────── */
+  --owner:        #1a3270;
+  --owner-hover:  #122458;
+  --owner-light:  #eaf0fb;
+  --owner-border: #b8ccf0;
+
+  /* ── Tenant (forest green) ──────────────────────────────── */
+  --tenant:        #1b5e3b;
+  --tenant-hover:  #144a2e;
+  --tenant-light:  #edf7f2;
+  --tenant-border: #9fd4ba;
+
+  /* ── Thread (legacy — maps to night for owners by default) ─ */
+  --thread:        var(--night);
+  --thread-hover:  var(--night-hover);
+  --thread-light:  var(--night-light);
+  --thread-dark:   #12122a;
+
+  /* ── Borders ────────────────────────────────────────────── */
+  --border:        #e4e1db;
+  --border-mid:    #ccc9c3;
+  --border-strong: #9e9b96;
+
+  /* Legacy */
+  --border-primary:  var(--border);
+  --border-hover:    var(--border-mid);
+
+  /* ── Status ─────────────────────────────────────────────── */
+  --f-success:        #1b5e3b;
+  --f-success-bg:     #edf7f2;
+  --f-success-border: #9fd4ba;
+  --f-warning:        #92400e;
+  --f-warning-bg:     #fdf5ec;
+  --f-warning-border: #f3c99a;
+  --f-danger:         #9b1c1c;
   --f-danger-bg:      #fef2f2;
-  --f-danger-border:  #fecaca;
-  --f-info:           #007AFF;
-  --f-info-bg:        #e8f0fe;
-  --f-info-border:    #bfdbfe;
+  --f-danger-border:  #fca5a5;
+  --f-info:           var(--night);
+  --f-info-bg:        var(--night-light);
+  --f-info-border:    #c3cce8;
 
-  /* ── Shadows (Apple-style: très subtiles) ─ */
-  --shadow-card:    0 1px 0 rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.06);
-  --shadow-hover:   0 4px 16px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06);
-  --shadow-modal:   0 24px 64px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06);
-  --shadow-sidebar: 1px 0 0 rgba(0,0,0,0.06);
-  --shadow-header:  0 1px 0 rgba(0,0,0,0.06);
+  /* ── Shadows (warm, editorial) ──────────────────────────── */
+  --shadow-card:    0 1px 2px rgba(13,12,10,0.05), 0 4px 16px rgba(13,12,10,0.06);
+  --shadow-hover:   0 4px 8px rgba(13,12,10,0.08), 0 12px 32px rgba(13,12,10,0.10);
+  --shadow-modal:   0 20px 60px rgba(13,12,10,0.14), 0 4px 16px rgba(13,12,10,0.07);
+  --shadow-sidebar: 1px 0 0 var(--border);
+  --shadow-header:  0 1px 0 var(--border);
 
-  /* ── Radius (Apple: plus arrondi) ────────── */
-  --radius-sm:   10px;
-  --radius-md:   14px;
-  --radius-lg:   18px;
-  --radius-xl:   22px;
+  /* ── Radius ─────────────────────────────────────────────── */
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   24px;
   --radius-pill: 999px;
 
-  /* ── Sidebar ────────────────────────────── */
-  --f-sidebar-bg:     #ffffff;
-  --f-sidebar-border: #d2d2d7;
-  --f-sidebar-width:  240px;
+  /* ── Sidebar ────────────────────────────────────────────── */
+  --f-sidebar-bg:     var(--bg-surface);
+  --f-sidebar-border: var(--border);
+  --f-sidebar-width:  220px;
 
-  /* ── Legacy compat ──────────────────────── */
-  --surface-page:    var(--bg-primary);
-  --surface-card:    var(--bg-surface);
-  --surface-subtle:  var(--bg-subtle);
-  --surface-overlay: rgba(255,255,255,0.97);
+  /* ── Legacy compat ──────────────────────────────────────── */
   --glass-bg:        var(--bg-surface);
   --glass-bg-heavy:  var(--bg-surface);
   --glass-border:    var(--border);
   --glass-shadow:    var(--shadow-card);
   --glass-reflection: none;
-  --bg-gradient:     var(--bg-primary);
-  --brand:           var(--thread);
-  --brand-hover:     var(--thread-hover);
-  --brand-light:     var(--thread-light);
-  --brand-blue:      #007AFF;
-  --brand-violet:    #5856D6;
+  --bg-gradient:     var(--bg-base);
+  --brand:           var(--night);
+  --brand-hover:     var(--night-hover);
+  --brand-light:     var(--night-light);
+  --brand-blue:      var(--owner);
+  --brand-violet:    #4a4480;
   --bg-secondary:    var(--bg-surface);
-  --bg-tertiary:     var(--bg-subtle);
-  --border-primary:  var(--border);
+  --bg-tertiary:     var(--bg-muted);
+  --accent:          var(--night);
+  --accent-hover:    var(--night-hover);
+  --accent-light:    var(--night-light);
 }
 
-/* ── DUAL THREAD ──────────────────────────── */
+/* ── DUAL THREAD — Owner: navy · Tenant: forest green ──────── */
 [data-role='owner'] {
-  --thread:       #007AFF;
-  --thread-hover: #0066d6;
-  --thread-light: #e8f0fe;
-  --thread-dark:  #0055b3;
+  --thread:        var(--owner);
+  --thread-hover:  var(--owner-hover);
+  --thread-light:  var(--owner-light);
+  --thread-dark:   #122458;
 }
 
 [data-role='tenant'] {
-  --thread:       #007AFF;
-  --thread-hover: #0066d6;
-  --thread-light: #e8f0fe;
-  --thread-dark:  #0055b3;
+  --thread:        var(--tenant);
+  --thread-hover:  var(--tenant-hover);
+  --thread-light:  var(--tenant-light);
+  --thread-dark:   #144a2e;
 }
 
-/* ── Accessibility ──────────────────────── */
+/* ── Base styles ────────────────────────────────────────────── */
+body {
+  font-family: var(--font-body);
+  background: var(--bg-base);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Accessibility ──────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
