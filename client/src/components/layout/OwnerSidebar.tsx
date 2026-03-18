@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import { NavLink, Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Home, ClipboardList, Calendar, FileText,
-  MessageSquare, TrendingUp, Plus, X, LogOut,
+  MessageSquare, Plus, X, LogOut,
 } from 'lucide-react'
 import { useSidebarStore } from '../../store/sidebarStore'
 import { useMessages } from '../../hooks/useMessages'
@@ -112,15 +112,16 @@ export function OwnerSidebar() {
         <Link to="/" onClick={closeMobile} className="hover:opacity-75 transition-opacity block">
           <span style={{
             fontFamily: 'var(--font-display)',
-            fontSize: '20px',
-            fontWeight: 600,
+            fontSize: '28px',
+            fontWeight: 700,
             fontStyle: 'italic',
             color: S.owner,
-            letterSpacing: '-0.01em',
+            letterSpacing: '-0.02em',
+            lineHeight: 1,
           }}>
-            ImmoParticuliers
+            Bailio
           </span>
-          <p className="text-[10px] mt-0.5" style={{ color: S.inkFaint, fontFamily: 'var(--font-body)' }}>Espace propriétaire</p>
+          <p className="text-[10px] mt-1" style={{ color: S.inkFaint, fontFamily: 'var(--font-body)' }}>Espace propriétaire</p>
         </Link>
       </div>
 
@@ -141,9 +142,6 @@ export function OwnerSidebar() {
 
         <SectionLabel label="Administration" />
         <NavItem to="/contracts" icon={FileText} label="Contrats" onClick={closeMobile} />
-
-        <SectionLabel label="Finance" />
-        <NavItem to="/calculateur" icon={TrendingUp} label="Simulateur rendement" onClick={closeMobile} />
 
         <SectionLabel label="Communication" />
         <NavItem to="/messages" icon={MessageSquare} label="Messages" badge={unreadCount} onClick={closeMobile} />

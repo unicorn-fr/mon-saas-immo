@@ -184,11 +184,8 @@ export default function Home() {
 
           {/* Logo */}
           <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'baseline', gap: 2 }}>
-            <span style={{ fontFamily: T.fontBody, fontWeight: 700, fontSize: 17, color: T.night, letterSpacing: '-0.02em' }}>
-              Immo
-            </span>
-            <span style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 600, fontSize: 19, color: T.night }}>
-              Particuliers
+            <span style={{ fontFamily: T.fontBody, fontWeight: 700, fontSize: 19, color: T.night, letterSpacing: '-0.02em' }}>
+              Bailio
             </span>
           </Link>
 
@@ -197,7 +194,6 @@ export default function Home() {
             {[
               { to: '/',           label: 'Accueil' },
               { to: '/search',     label: 'Annonces' },
-              { to: '/calculateur', label: 'Calculateur' },
               { to: '/pricing',    label: 'Tarifs' },
             ].map(link => (
               <Link
@@ -269,7 +265,6 @@ export default function Home() {
             {[
               { to: '/',            label: 'Accueil' },
               { to: '/search',      label: 'Annonces' },
-              { to: '/calculateur', label: 'Calculateur' },
               { to: '/pricing',     label: 'Tarifs' },
             ].map(link => (
               <Link
@@ -1156,8 +1151,7 @@ export default function Home() {
             {/* Brand */}
             <div className="footer-brand">
               <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'baseline', gap: 2, marginBottom: 16 }}>
-                <span style={{ fontFamily: T.fontBody, fontWeight: 700, fontSize: 16, color: '#f5f4f0', letterSpacing: '-0.02em' }}>Immo</span>
-                <span style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 600, fontSize: 18, color: '#f5f4f0' }}>Particuliers</span>
+                <span style={{ fontFamily: T.fontBody, fontWeight: 700, fontSize: 18, color: '#f5f4f0', letterSpacing: '-0.02em' }}>Bailio</span>
               </Link>
               <p style={{ fontFamily: T.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.40)', lineHeight: 1.65, maxWidth: 260, margin: '0 0 24px' }}>
                 La plateforme de location immobilière entre particuliers. Simple, sécurisée, sans intermédiaire.
@@ -1174,10 +1168,9 @@ export default function Home() {
               </p>
               <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {[
-                  { to: '/search',      label: 'Annonces' },
-                  { to: '/pricing',     label: 'Tarifs' },
-                  { to: '/calculateur', label: 'Calculateur' },
-                  { to: '/register',    label: 'S\'inscrire' },
+                  { to: '/search',   label: 'Annonces' },
+                  { to: '/pricing',  label: 'Tarifs' },
+                  { to: '/register', label: 'S\'inscrire' },
                 ].map(l => (
                   <li key={l.to}>
                     <Link
@@ -1249,7 +1242,7 @@ export default function Home() {
           {/* Bottom bar */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 0 28px', flexWrap: 'wrap', gap: 12 }}>
             <p style={{ fontFamily: T.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.28)', margin: 0 }}>
-              © {new Date().getFullYear()} ImmoParticuliers. Tous droits réservés.
+              © {new Date().getFullYear()} Bailio. Tous droits réservés.
             </p>
             <div style={{ display: 'flex', gap: 24 }}>
               {[

@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, User as UserIcon, Loader, Home, FolderOpen } from 'lucide-react'
+import { ArrowLeft, User as UserIcon, Loader, Home, FolderOpen, ShieldCheck, X } from 'lucide-react'
 import { MessageBubble } from './MessageBubble'
 import { MessageInput } from './MessageInput'
 import { CreateLeaseModal } from './CreateLeaseModal'
-import { TenantDossierModal } from '../dossier/TenantDossierModal'
 import { useMessages } from '../../hooks/useMessages'
 import { useAuth } from '../../hooks/useAuth'
+import { shareApi } from '../../services/dossierService'
 import { Conversation } from '../../types/message.types'
 
-const POLL_INTERVAL = 5000 // 5 seconds
+const POLL_INTERVAL = 5000
 
 interface ChatWindowProps {
   conversation: Conversation
@@ -20,7 +20,8 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
   const { user, isOwner } = useAuth()
   const navigate = useNavigate()
   const [showLeaseModal, setShowLeaseModal] = useState(false)
-  const [showTenantDossier, setShowTenantDossier] = useState(false)
+  const [showSharePrompt, setShowSharePrompt] = useState(false)
+  const [isSharing, setIsSharing] = useState(false)
   const {
     messages,
     isLoadingMessages,
@@ -37,12 +38,11 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
   const [, setHasMarkedAsRead] = useState(false)
   const isNearBottomRef = useRef(true)
   const prevMessageCountRef = useRef(0)
+  const hasPromptedRef = useRef(false)
 
-  // Get other user
   const otherUser = conversation.user1Id === user?.id ? conversation.user2 : conversation.user1
   const otherUserId = conversation.user1Id === user?.id ? conversation.user2Id : conversation.user1Id
 
-  // Track if user is scrolled near the bottom
   const handleScroll = useCallback(() => {
     const container = scrollContainerRef.current
     if (!container) return
@@ -50,56 +50,46 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
     isNearBottomRef.current = scrollHeight - scrollTop - clientHeight < 100
   }, [])
 
-  // Fetch messages when conversation changes
   useEffect(() => {
     if (conversation?.id) {
       fetchMessages(conversation.id)
       setHasMarkedAsRead(false)
       isNearBottomRef.current = true
       prevMessageCountRef.current = 0
+      hasPromptedRef.current = false
+      setShowSharePrompt(false)
     }
   }, [conversation?.id, fetchMessages])
 
-  // Poll for new messages every 3 seconds
   useEffect(() => {
     if (!conversation?.id) return
-
     const interval = setInterval(() => {
       pollMessages(conversation.id)
     }, POLL_INTERVAL)
-
     return () => clearInterval(interval)
   }, [conversation?.id, pollMessages])
 
-  // Mark messages as read when new messages arrive
   useEffect(() => {
     if (!conversation?.id || !user?.id || messages.length === 0) return
-
     const hasUnread = messages.some((m) => !m.isRead && m.receiverId === user.id)
     if (hasUnread) {
       markAsRead(conversation.id, user.id)
     }
   }, [conversation?.id, messages, markAsRead, user?.id])
 
-  // Smart auto-scroll: only scroll when near bottom or when user sends a message
   useEffect(() => {
     const newCount = messages.length
     const prevCount = prevMessageCountRef.current
     prevMessageCountRef.current = newCount
-
     if (newCount > prevCount && isNearBottomRef.current) {
-      // Small delay to allow DOM update
       requestAnimationFrame(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: prevCount === 0 ? 'auto' : 'smooth' })
       })
     }
   }, [messages])
 
-  // Handle send message
   const handleSendMessage = async (content: string, attachments?: string[]) => {
     if (!conversation?.id) return
-
-    // Force scroll to bottom when sending
     isNearBottomRef.current = true
 
     await sendMessage({
@@ -108,9 +98,29 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
       content,
       attachments,
     })
+
+    // After first message sent by tenant → ask about sharing dossier
+    if (!isOwner && !hasPromptedRef.current) {
+      const hasSentBefore = messages.some((m) => m.senderId === user?.id)
+      if (!hasSentBefore) {
+        hasPromptedRef.current = true
+        setShowSharePrompt(true)
+      }
+    }
   }
 
-  // Handle delete message
+  const handleShareDossier = async () => {
+    setIsSharing(true)
+    try {
+      await shareApi.grantShare(otherUserId, undefined, 30)
+    } catch {
+      // silent — share may already exist
+    } finally {
+      setIsSharing(false)
+      setShowSharePrompt(false)
+    }
+  }
+
   const handleDeleteMessage = async (messageId: string) => {
     if (window.confirm('Etes-vous sur de vouloir supprimer ce message ?')) {
       try {
@@ -121,39 +131,36 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
     }
   }
 
-  // Group messages by date
   const groupMessagesByDate = () => {
     const grouped: { [key: string]: typeof messages } = {}
-
     messages.forEach((message) => {
       const date = new Date(message.createdAt).toLocaleDateString('fr-FR', {
         day: 'numeric',
         month: 'long',
         year: 'numeric',
       })
-
-      if (!grouped[date]) {
-        grouped[date] = []
-      }
+      if (!grouped[date]) grouped[date] = []
       grouped[date].push(message)
     })
-
     return grouped
   }
 
   const groupedMessages = groupMessagesByDate()
 
   return (
-    <div className="flex flex-col h-full" style={{ backgroundColor: 'var(--surface-card)' }}>
+    <div className="flex flex-col h-full relative" style={{ background: '#ffffff' }}>
       {/* Header */}
-      <div className="flex items-center gap-4 p-4 border-b" style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
-        {/* Back Button (mobile) */}
+      <div className="flex items-center gap-4 p-4 border-b"
+        style={{ background: '#ffffff', borderColor: '#e4e1db' }}>
         {onBack && (
           <button
             onClick={onBack}
-            className="lg:hidden p-2 hover:bg-slate-100 rounded-xl transition-colors"
+            className="lg:hidden p-2 rounded-xl transition-colors"
+            style={{ color: '#5a5754' }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = '#f4f2ee')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
           >
-            <ArrowLeft className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+            <ArrowLeft className="w-5 h-5" />
           </button>
         )}
 
@@ -166,12 +173,13 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
               className="w-10 h-10 rounded-full object-cover"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
-              <UserIcon className="w-5 h-5 text-primary-600" />
+            <div className="w-10 h-10 rounded-full flex items-center justify-center"
+              style={{ background: '#eaf0fb' }}>
+              <UserIcon className="w-5 h-5" style={{ color: '#1a3270' }} />
             </div>
           )}
           <div>
-            <h3 className="font-semibold text-slate-900">
+            <h3 className="font-semibold" style={{ color: '#0d0c0a', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
               {otherUser.firstName} {otherUser.lastName}
             </h3>
           </div>
@@ -180,19 +188,19 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
         {isOwner && (
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowTenantDossier(true)}
+              onClick={() => navigate(`/owner/tenants/${otherUserId}`)}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold transition-colors"
-              style={{ background: '#eff6ff', border: '1px solid #bfdbfe', color: '#2563eb' }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = '#dbeafe')}
-              onMouseLeave={(e) => (e.currentTarget.style.background = '#eff6ff')}
+              style={{ background: '#eaf0fb', border: '1px solid #b8ccf0', color: '#1a3270' }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#d4e4f7')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = '#eaf0fb')}
             >
               <FolderOpen className="w-4 h-4" />
               <span className="hidden sm:inline">Voir le dossier</span>
             </button>
             <button
               onClick={() => setShowLeaseModal(true)}
-              className="flex items-center gap-2 px-4 py-2 text-white rounded-xl transition-opacity text-sm font-medium hover:opacity-90"
-              style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #7c3aed 100%)' }}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl transition-opacity text-sm font-medium hover:opacity-90"
+              style={{ background: '#1a1a2e', color: '#ffffff' }}
             >
               <Home className="w-4 h-4" />
               <span className="hidden sm:inline">Mettre en location</span>
@@ -206,19 +214,23 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
         ref={scrollContainerRef}
         onScroll={handleScroll}
         className="flex-1 overflow-y-auto p-4"
-        style={{ backgroundColor: 'var(--surface-page)' }}
+        style={{ background: '#fafaf8' }}
       >
         {isLoadingMessages && messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
-            <Loader className="w-8 h-8 text-primary-600 animate-spin" />
+            <Loader className="w-8 h-8 animate-spin" style={{ color: '#1a3270' }} />
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: 'var(--brand-light)' }}>
-              <UserIcon className="w-10 h-10 text-primary-600" />
+            <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4"
+              style={{ background: '#eaf0fb' }}>
+              <UserIcon className="w-10 h-10" style={{ color: '#1a3270' }} />
             </div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">Commencez la conversation</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+            <h3 className="text-lg font-semibold mb-2"
+              style={{ color: '#0d0c0a', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+              Commencez la conversation
+            </h3>
+            <p className="text-sm" style={{ color: '#5a5754' }}>
               Envoyez votre premier message a {otherUser.firstName}
             </p>
           </div>
@@ -228,12 +240,12 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
               <div key={date}>
                 {/* Date Separator */}
                 <div className="flex items-center justify-center my-6">
-                  <div className="px-4 py-1.5 rounded-full shadow-sm border" style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
-                    <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>{date}</span>
+                  <div className="px-4 py-1.5 rounded-full"
+                    style={{ background: '#ffffff', border: '1px solid #e4e1db', boxShadow: '0 1px 2px rgba(13,12,10,0.04)' }}>
+                    <span className="text-xs font-medium" style={{ color: '#5a5754' }}>{date}</span>
                   </div>
                 </div>
 
-                {/* Messages for this date */}
                 {dateMessages.map((message, index) => {
                   const isOwn = message.senderId === user?.id
                   const previousMessage = dateMessages[index - 1]
@@ -252,8 +264,6 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
                 })}
               </div>
             ))}
-
-            {/* Scroll anchor */}
             <div ref={messagesEndRef} />
           </div>
         )}
@@ -262,7 +272,6 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
       {/* Input Area */}
       <MessageInput onSend={handleSendMessage} isSending={isSending} />
 
-      {/* Create Lease Modal */}
       {isOwner && (
         <CreateLeaseModal
           isOpen={showLeaseModal}
@@ -273,14 +282,82 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
         />
       )}
 
-      {/* Tenant Dossier Modal */}
-      {isOwner && showTenantDossier && (
-        <TenantDossierModal
-          tenantId={otherUserId}
-          tenantName={`${otherUser.firstName} ${otherUser.lastName}`}
-          onClose={() => setShowTenantDossier(false)}
-        />
+      {/* Share dossier prompt — tenant side, first message only */}
+      {showSharePrompt && !isOwner && (
+        <div
+          className="absolute inset-0 z-20 flex items-end sm:items-center justify-center p-4"
+          style={{ background: 'rgba(13,12,10,0.45)' }}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl p-5 flex flex-col gap-4"
+            style={{
+              background: '#ffffff',
+              boxShadow: '0 20px 60px rgba(13,12,10,0.18)',
+              border: '1px solid #e4e1db',
+            }}
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: '#eaf0fb' }}>
+                  <ShieldCheck className="w-4 h-4" style={{ color: '#1a3270' }} />
+                </div>
+                <div>
+                  <p className="font-semibold text-[14px]" style={{ color: '#0d0c0a', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+                    Partager votre dossier ?
+                  </p>
+                  <p className="text-[12px]" style={{ color: '#9e9b96' }}>
+                    avec {otherUser.firstName} {otherUser.lastName}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowSharePrompt(false)}
+                className="p-1 rounded-lg transition-colors"
+                style={{ color: '#9e9b96' }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#f4f2ee')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Info */}
+            <p className="text-[12px] leading-relaxed" style={{ color: '#5a5754' }}>
+              Vos documents seront <strong>intégralement filigranés</strong> à votre nom.
+              Le propriétaire peut consulter mais <strong>ne peut pas télécharger</strong>.
+              Accès limité à 30 jours, révocable depuis « Contrôle d'accès ».
+            </p>
+
+            {/* Actions */}
+            <div className="flex gap-2">
+              <button
+                onClick={handleShareDossier}
+                disabled={isSharing}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[13px] font-semibold text-white transition-opacity disabled:opacity-60"
+                style={{ background: '#1b5e3b' }}
+              >
+                {isSharing ? 'Partage…' : <>
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  Oui, partager
+                </>}
+              </button>
+              <button
+                onClick={() => setShowSharePrompt(false)}
+                disabled={isSharing}
+                className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold transition-colors"
+                style={{ background: '#f4f2ee', color: '#5a5754', border: '1px solid #e4e1db' }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#e8e5e0')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = '#f4f2ee')}
+              >
+                Non merci
+              </button>
+            </div>
+          </div>
+        </div>
       )}
+
     </div>
   )
 }

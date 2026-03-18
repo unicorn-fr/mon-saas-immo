@@ -1,58 +1,115 @@
 import { Link } from 'react-router-dom'
-import { Home as HomeIcon } from 'lucide-react'
+
+const fontBody    = "'DM Sans', system-ui, sans-serif"
+const night       = '#1a1a2e'
+const caramel     = '#c4976a'
+
+const NAV = [
+  {
+    heading: 'Plateforme',
+    links: [
+      { to: '/search',   label: 'Annonces' },
+      { to: '/pricing',  label: 'Tarifs' },
+      { to: '/register', label: "S'inscrire" },
+    ],
+  },
+  {
+    heading: 'Ressources',
+    links: [
+      { to: '/faq',     label: 'FAQ' },
+      { to: '/support', label: 'Support' },
+      { to: '/contact', label: 'Contact' },
+      { to: '/presse',  label: 'Presse' },
+    ],
+  },
+  {
+    heading: 'Légal',
+    links: [
+      { to: '/cgu',              label: 'CGU' },
+      { to: '/confidentialite',  label: 'Confidentialité' },
+      { to: '/cookies',          label: 'Cookies' },
+      { to: '/mentions-legales', label: 'Mentions légales' },
+    ],
+  },
+]
 
 export default function Footer() {
   return (
-    <footer className="bg-slate-900 text-slate-400 pt-16 pb-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid md:grid-cols-4 gap-8 mb-12">
+    <footer style={{ backgroundColor: night, padding: '64px 24px 0' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '2fr 1fr 1fr 1fr',
+            gap: 40,
+            paddingBottom: 48,
+            borderBottom: '1px solid rgba(255,255,255,0.08)',
+          }}
+        >
+          {/* Brand */}
           <div>
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-8 h-8 bg-primary-700 rounded-xl flex items-center justify-center">
-                <HomeIcon className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-lg font-bold text-white font-heading">ImmoParticuliers</span>
-            </div>
-            <p className="text-sm">
-              La plateforme n°1 en France de l'immobilier entre particuliers.
-              Simplifiez vos démarches de location.
+            <Link
+              to="/"
+              style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'baseline', gap: 2, marginBottom: 16 }}
+            >
+              <span style={{ fontFamily: fontBody, fontWeight: 700, fontSize: 18, color: '#f5f4f0', letterSpacing: '-0.02em' }}>
+                Bailio
+              </span>
+            </Link>
+            <p style={{ fontFamily: fontBody, fontSize: 14, color: 'rgba(255,255,255,0.40)', lineHeight: 1.65, maxWidth: 260, margin: '0 0 24px' }}>
+              La plateforme de location immobilière entre particuliers. Simple, sécurisée, sans intermédiaire.
+            </p>
+            <p style={{ fontFamily: fontBody, fontSize: 12, color: caramel, opacity: 0.8, margin: 0, fontStyle: 'italic' }}>
+              Hébergé en France · RGPD conforme
             </p>
           </div>
 
-          <div>
-            <h4 className="text-white font-semibold mb-4">Navigation</h4>
-            <ul className="space-y-2 text-sm">
-              <li><Link to="/" className="hover:text-primary-400 transition-colors">Accueil</Link></li>
-              <li><Link to="/search" className="hover:text-primary-400 transition-colors">Trouver un bien</Link></li>
-              <li><Link to="/calculateur" className="hover:text-primary-400 transition-colors">Calculateur</Link></li>
-              <li><Link to="/pricing" className="hover:text-primary-400 transition-colors">Tarifs</Link></li>
-              <li><Link to="/faq" className="hover:text-primary-400 transition-colors">FAQ</Link></li>
-              <li><Link to="/support" className="hover:text-primary-400 transition-colors">Support</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-white font-semibold mb-4">Légal</h4>
-            <ul className="space-y-2 text-sm">
-              <li><Link to="/mentions-legales" className="hover:text-primary-400 transition-colors">Mentions légales</Link></li>
-              <li><Link to="/cgu" className="hover:text-primary-400 transition-colors">CGU</Link></li>
-              <li><Link to="/confidentialite" className="hover:text-primary-400 transition-colors">Politique de confidentialité</Link></li>
-              <li><Link to="/cookies" className="hover:text-primary-400 transition-colors">Cookies</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-white font-semibold mb-4">Contact</h4>
-            <ul className="space-y-2 text-sm">
-              <li><Link to="/contact" className="hover:text-primary-400 transition-colors">Nous contacter</Link></li>
-              <li><Link to="/presse" className="hover:text-primary-400 transition-colors">Presse</Link></li>
-              <li><a href="mailto:support@immoparticuliers.fr" className="hover:text-primary-400 transition-colors">support@immoparticuliers.fr</a></li>
-            </ul>
-          </div>
+          {/* Nav columns */}
+          {NAV.map(({ heading, links }) => (
+            <div key={heading}>
+              <p style={{ fontFamily: fontBody, fontSize: 11, fontWeight: 600, letterSpacing: '0.14em', color: 'rgba(255,255,255,0.30)', textTransform: 'uppercase', marginBottom: 20 }}>
+                {heading}
+              </p>
+              <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {links.map((l) => (
+                  <li key={l.to}>
+                    <Link
+                      to={l.to}
+                      style={{ fontFamily: fontBody, fontSize: 14, color: 'rgba(255,255,255,0.50)', textDecoration: 'none', transition: 'color 0.15s' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = '#f5f4f0' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.50)' }}
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
-        <div className="border-t border-slate-800 pt-8 text-center text-sm">
-          <p>© 2026 ImmoParticuliers. Tous droits réservés. Réalisé en France.</p>
+        {/* Bottom bar */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 0 28px', flexWrap: 'wrap', gap: 12 }}>
+          <p style={{ fontFamily: fontBody, fontSize: 13, color: 'rgba(255,255,255,0.28)', margin: 0 }}>
+            © {new Date().getFullYear()} Bailio. Tous droits réservés.
+          </p>
+          <div style={{ display: 'flex', gap: 24 }}>
+            {[
+              { to: '/cgu',             label: 'CGU' },
+              { to: '/confidentialite', label: 'Vie privée' },
+              { to: '/cookies',         label: 'Cookies' },
+            ].map((l) => (
+              <Link
+                key={l.to}
+                to={l.to}
+                style={{ fontFamily: fontBody, fontSize: 12, color: 'rgba(255,255,255,0.28)', textDecoration: 'none' }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.55)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.28)' }}
+              >
+                {l.label}
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </footer>

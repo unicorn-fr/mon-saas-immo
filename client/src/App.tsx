@@ -5,6 +5,7 @@ import { useEffect } from 'react'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { useAuth } from './hooks/useAuth'
 import { useThemeStore } from './store/themeStore'
+import { ScrollToTop } from './components/ScrollToTop'
 
 // Pages
 import Home from './pages/Home'
@@ -27,6 +28,7 @@ import EditProperty from './pages/owner/EditProperty'
 import PropertyDetails from './pages/owner/PropertyDetails'
 import BookingManagement from './pages/owner/BookingManagement'
 import ApplicationManagement from './pages/owner/ApplicationManagement'
+import TenantProfile from './pages/owner/TenantProfile'
 
 // Tenant Pages
 import TenantDashboard from './pages/tenant/TenantDashboard'
@@ -74,7 +76,6 @@ import FAQ from './pages/info/FAQ'
 import Contact from './pages/info/Contact'
 import Support from './pages/info/Support'
 import Presse from './pages/info/Presse'
-import Calculateur from './pages/Calculateur'
 import Pricing from './pages/Pricing'
 
 // PWA Components
@@ -155,6 +156,8 @@ function AppRoutes() {
   }
 
   return (
+    <>
+    <ScrollToTop />
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<Home />} />
@@ -183,7 +186,6 @@ function AppRoutes() {
       <Route path="/contact" element={<Contact />} />
       <Route path="/support" element={<Support />} />
       <Route path="/presse" element={<Presse />} />
-      <Route path="/calculateur" element={<Calculateur />} />
       <Route path="/pricing" element={<Pricing />} />
 
       {/* Search & Properties (Public for now, can be protected later) */}
@@ -199,6 +201,7 @@ function AppRoutes() {
         <Route path="/properties/:id" element={<PropertyDetails />} />
         <Route path="/bookings/manage" element={<BookingManagement />} />
         <Route path="/applications/manage" element={<ApplicationManagement />} />
+        <Route path="/owner/tenants/:tenantId" element={<TenantProfile />} />
       </Route>
 
       {/* Protected Routes - Tenant Dashboard */}
@@ -251,6 +254,7 @@ function AppRoutes() {
       {/* 404 */}
       <Route path="*" element={<NotFound />} />
     </Routes>
+    </>
   )
 }
 

@@ -1,7 +1,10 @@
 import { Request, Response, NextFunction } from 'express'
+import { PrismaClient } from '@prisma/client'
 import { dossierService, ProfileData } from '../services/dossier.service.js'
 import { saveFile } from '../utils/upload.util.js'
 import { serveWatermarkedDocument } from '../services/watermark.service.js'
+
+const _prisma = new PrismaClient()
 
 class DossierController {
   /**
@@ -184,10 +187,7 @@ class DossierController {
       const requesterId = req.user?.id
       if (!requesterId) return res.status(401).json({ success: false, message: 'Authentification requise' })
 
-      const { PrismaClient } = await import('@prisma/client')
-      const prisma = new PrismaClient()
-
-      const doc = await prisma.tenantDocument.findUnique({ where: { id: req.params.docId } })
+      const doc = await _prisma.tenantDocument.findUnique({ where: { id: req.params.docId } })
       if (!doc) return res.status(404).json({ success: false, message: 'Document introuvable' })
 
       // Verify active share
@@ -196,23 +196,41 @@ class DossierController {
         return res.status(403).json({ success: false, message: 'Accès non autorisé — le locataire ne vous a pas partagé son dossier' })
       }
 
-      const requester = await prisma.user.findUnique({
+      const requester = await _prisma.user.findUnique({
         where: { id: requesterId },
-        select: { firstName: true, lastName: true },
+        select: { firstName: true, lastName: true, email: true },
       })
       const ownerName = `${requester?.firstName ?? ''} ${requester?.lastName ?? ''}`.trim()
+
+      // Horodatage précis de cet accès (intégré au filigrane)
+      const accessedAt = new Date()
 
       const { buffer, contentType } = await serveWatermarkedDocument(
         doc.fileUrl,
         doc.mimeType,
-        { ownerName, ownerId: requesterId },
+        { ownerName, ownerId: requesterId, date: accessedAt },
       )
 
+      // Traçabilité : enregistrer l'accès dans DossierAccessLog (fire-and-forget)
+      _prisma.dossierAccessLog.create({
+        data: {
+          tenantId:    doc.userId,
+          viewerId:    requesterId,
+          viewerName:  ownerName,
+          viewerEmail: requester?.email ?? '',
+        },
+      }).catch(() => { /* silent — ne bloque pas la réponse */ })
+
+      // Headers sécurité renforcés
       res.setHeader('Content-Type', contentType)
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
       res.setHeader('Pragma', 'no-cache')
+      res.setHeader('Expires', '0')
       res.setHeader('X-Content-Type-Options', 'nosniff')
-      res.setHeader('Content-Disposition', 'inline')
+      res.setHeader('X-Frame-Options', 'DENY')
+      res.setHeader('Content-Security-Policy', "frame-ancestors 'none'")
+      res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive')
+      res.setHeader('Content-Disposition', 'inline; filename="document-confidentiel"')
       return res.send(buffer)
     } catch (error) {
       if (error instanceof Error) return res.status(403).json({ success: false, message: error.message })

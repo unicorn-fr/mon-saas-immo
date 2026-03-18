@@ -9,7 +9,7 @@ import { Layout } from '../../components/layout/Layout'
 import {
   Home, Plus, Eye, MessageSquare, TrendingUp,
   Euro, ArrowRight, MapPin, FileText, PenLine,
-  AlertTriangle, CalendarCheck, Users, ChevronRight,
+  AlertTriangle, CalendarCheck, Users,
   ClipboardList, Zap, Banknote, ArrowUpRight,
 } from 'lucide-react'
 import type { Application } from '../../types/application.types'
@@ -259,8 +259,8 @@ export default function Dashboard() {
               {
                 label: 'Rendement estimé',
                 value: monthlyRevenue > 0 ? `${estimatedYield}%` : '—',
-                sub: 'Voir le simulateur',
-                to: '/calculateur',
+                sub: 'Rendement brut annuel',
+                to: '/applications/manage',
               },
               {
                 label: 'Candidatures en attente',
@@ -672,12 +672,6 @@ export default function Dashboard() {
                   <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.inkFaint, margin: 0 }}>
                     Finances
                   </p>
-                  <Link to="/calculateur" style={{
-                    display: 'flex', alignItems: 'center', gap: 3,
-                    fontSize: 12, fontWeight: 500, color: T.owner, textDecoration: 'none',
-                  }}>
-                    Simulateur <ChevronRight size={13} />
-                  </Link>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   {[

@@ -1,5 +1,6 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, ApplicationStatus } from '@prisma/client'
 import { sendEmail } from '../utils/email.util.js'
+import { computeMatchScore } from './application.service.js'
 
 const prisma = new PrismaClient()
 
@@ -235,6 +236,34 @@ class DossierService {
       update: { expiresAt, revokedAt: null, propertyId: propertyId ?? null },
       create: { tenantId, ownerId, propertyId: propertyId ?? null, expiresAt },
     })
+
+    // Auto-create candidature when propertyId is provided (tenant contacts owner for a property)
+    if (propertyId) {
+      try {
+        const property = await prisma.property.findUnique({ where: { id: propertyId } })
+        if (property && property.status === 'AVAILABLE') {
+          const existing = await prisma.application.findUnique({
+            where: { propertyId_tenantId: { propertyId, tenantId } },
+          })
+          if (!existing) {
+            const match = await computeMatchScore(propertyId, tenantId)
+            const criteria = (property.selectionCriteria ?? {}) as { autoPilot?: boolean; minScore?: number }
+            const autoApprove = (criteria.autoPilot ?? false) && match.score >= (criteria.minScore ?? 70)
+            await prisma.application.create({
+              data: {
+                propertyId,
+                tenantId,
+                score: match.score,
+                matchDetails: match.details as object,
+                status: autoApprove ? ApplicationStatus.APPROVED : ApplicationStatus.PENDING,
+              },
+            })
+          }
+        }
+      } catch {
+        // Silent — share succeeded even if application creation fails
+      }
+    }
 
     // Notify the tenant by log entry (access log for transparency)
     await prisma.notification.create({

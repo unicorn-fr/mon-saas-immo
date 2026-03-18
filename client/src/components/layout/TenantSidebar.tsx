@@ -128,15 +128,16 @@ export function TenantSidebar() {
         <Link to="/" onClick={closeMobile} className="hover:opacity-75 transition-opacity block">
           <span style={{
             fontFamily: 'var(--font-display)',
-            fontSize: '20px',
-            fontWeight: 600,
+            fontSize: '28px',
+            fontWeight: 700,
             fontStyle: 'italic',
             color: S.tenant,
-            letterSpacing: '-0.01em',
+            letterSpacing: '-0.02em',
+            lineHeight: 1,
           }}>
-            ImmoParticuliers
+            Bailio
           </span>
-          <p className="text-[10px] mt-0.5" style={{ color: S.inkFaint, fontFamily: 'var(--font-body)' }}>Espace locataire</p>
+          <p className="text-[10px] mt-1" style={{ color: S.inkFaint, fontFamily: 'var(--font-body)' }}>Espace locataire</p>
         </Link>
       </div>
 
@@ -153,7 +154,7 @@ export function TenantSidebar() {
         <NavItem to="/my-bookings" icon={Calendar} label="Mes visites" onClick={closeMobile} />
 
         <SectionLabel label="Mon dossier" />
-        <NavItem to="/dossier" icon={FolderOpen} label="Dossier locatif" onClick={closeMobile} />
+        <NavItem to="/dossier" icon={FolderOpen} label="Dossier locatif" end onClick={closeMobile} />
         <NavItem to="/dossier/partages" icon={ShieldCheck} label="Contrôle d'accès" onClick={closeMobile} />
         <NavItem to="/my-applications" icon={SendHorizonal} label="Candidatures" badge={pendingAppsCount} onClick={closeMobile} />
 

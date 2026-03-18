@@ -378,9 +378,7 @@ class PropertyService {
       where.type = filters.type
     }
 
-    if (filters.status) {
-      where.status = filters.status
-    }
+    where.status = filters.status ?? PropertyStatus.AVAILABLE
 
     if (filters.minPrice || filters.maxPrice) {
       where.price = {}

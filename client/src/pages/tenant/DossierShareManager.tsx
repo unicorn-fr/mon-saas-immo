@@ -8,14 +8,15 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Shield, ShieldCheck, ShieldOff,
-  Clock, User, Mail, Loader2, AlertTriangle, Eye,
+  Clock, User, Loader2, AlertTriangle, Eye, Search,
 } from 'lucide-react'
 import { Layout } from '../../components/layout/Layout'
 import { TrustBadge } from '../../components/security/TrustBadge'
 import { ReportUserModal } from '../../components/security/ReportUserModal'
 import { shareApi, type DossierShare } from '../../services/dossierService'
+import { useMessages } from '../../hooks/useMessages'
+import { useAuth } from '../../hooks/useAuth'
 import toast from 'react-hot-toast'
-import api from '../../services/api'
 
 // ── Design tokens ──────────────────────────────────────────────────────────────
 const T = {
@@ -49,32 +50,39 @@ function daysLeft(expiresAt: string): number {
   return Math.max(0, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 86400000))
 }
 
-// ── Grant form ──────────────────────────────────────────────────────────────────
+// ── Grant form — contact picker ─────────────────────────────────────────────────
 
 function GrantShareForm({ onGranted }: { onGranted: () => void }) {
-  const [email, setEmail] = useState('')
+  const { user } = useAuth()
+  const { conversations, fetchConversations } = useMessages()
+  const [search, setSearch] = useState('')
+  const [selected, setSelected] = useState<{ id: string; firstName: string; lastName: string; avatar?: string | null } | null>(null)
   const [days, setDays] = useState(7)
   const [loading, setLoading] = useState(false)
-  const [focused, setFocused] = useState(false)
+
+  useEffect(() => { fetchConversations() }, [fetchConversations])
+
+  // Extract unique contacts (owner side of conversations)
+  const contacts = conversations
+    .map((c) => c.user1Id === user?.id ? c.user2 : c.user1)
+    .filter((u, i, arr) => arr.findIndex((x) => x.id === u.id) === i)
+    .filter((u) =>
+      !search.trim() ||
+      `${u.firstName} ${u.lastName}`.toLowerCase().includes(search.toLowerCase())
+    )
 
   const handleGrant = async () => {
-    if (!email.trim()) { toast.error('Email requis'); return }
+    if (!selected) { toast.error('Sélectionnez un propriétaire'); return }
     setLoading(true)
     try {
-      const res = await api.get(`/admin/user-by-email?email=${encodeURIComponent(email.trim())}`)
-      const owner = res.data.data
-      if (!owner) { toast.error('Aucun propriétaire avec cet email'); return }
-      await shareApi.grantShare(owner.id, undefined, days)
-      toast.success(`Dossier partagé avec ${owner.firstName} ${owner.lastName} pour ${days} jours`)
-      setEmail('')
+      await shareApi.grantShare(selected.id, undefined, days)
+      toast.success(`Dossier partagé avec ${selected.firstName} ${selected.lastName} pour ${days} jours`)
+      setSelected(null)
       onGranted()
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erreur lors du partage'
-      if (msg.includes('404')) {
-        toast.error('Fonctionnalité bientôt disponible (recherche par email)')
-      } else {
-        toast.error(msg)
-      }
+      const axiosErr = err as { response?: { data?: { message?: string } } }
+      const msg = axiosErr?.response?.data?.message ?? (err instanceof Error ? err.message : 'Erreur lors du partage')
+      toast.error(msg)
     } finally {
       setLoading(false)
     }
@@ -88,73 +96,105 @@ function GrantShareForm({ onGranted }: { onGranted: () => void }) {
       border: `1px solid ${T.border}`,
       boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 16px rgba(13,12,10,0.05)',
     }}>
-      {/* Header */}
       <div style={{ marginBottom: '20px' }}>
-        <h2 style={{
-          fontFamily: T.display,
-          fontSize: '24px',
-          fontWeight: 600,
-          fontStyle: 'italic',
-          color: T.ink,
-          margin: '0 0 4px',
-        }}>
+        <h2 style={{ fontFamily: T.display, fontSize: '24px', fontWeight: 600, fontStyle: 'italic', color: T.ink, margin: '0 0 4px' }}>
           Partager mon dossier
         </h2>
         <p style={{ fontFamily: T.body, fontSize: '13px', color: T.inkMid, margin: 0 }}>
-          Entrez l'email du propriétaire qui vous a contacté
+          Sélectionnez le propriétaire parmi vos contacts
         </p>
       </div>
 
-      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' as const }}>
-        {/* Email input */}
-        <div style={{ flex: '1 1 220px', position: 'relative' as const }}>
-          <Mail style={{
-            position: 'absolute' as const,
-            left: 12, top: '50%', transform: 'translateY(-50%)',
-            width: 14, height: 14, color: T.inkFaint,
-          }} />
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleGrant() }}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            placeholder="email@proprietaire.fr"
-            style={{
-              width: '100%',
-              boxSizing: 'border-box' as const,
-              paddingLeft: '36px',
-              paddingRight: '12px',
-              paddingTop: '10px',
-              paddingBottom: '10px',
-              border: `1px solid ${focused ? T.tenant : T.border}`,
-              borderRadius: '10px',
-              fontSize: '13px',
-              fontFamily: T.body,
-              color: T.ink,
-              background: T.muted,
-              outline: 'none',
-              transition: 'border-color 0.15s',
-              boxShadow: focused ? `0 0 0 3px rgba(27,94,59,0.08)` : 'none',
-            }}
-          />
-        </div>
+      {/* Search input */}
+      <div style={{ position: 'relative' as const, marginBottom: '12px' }}>
+        <Search style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)', width: 14, height: 14, color: T.inkFaint }} />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Rechercher un propriétaire…"
+          style={{
+            width: '100%',
+            boxSizing: 'border-box' as const,
+            paddingLeft: '36px', paddingRight: '12px',
+            paddingTop: '10px', paddingBottom: '10px',
+            border: `1px solid ${T.border}`,
+            borderRadius: '10px',
+            fontSize: '13px', fontFamily: T.body,
+            color: T.ink, background: T.muted,
+            outline: 'none',
+          }}
+        />
+      </div>
 
-        {/* Duration select */}
+      {/* Contact list */}
+      {conversations.length === 0 ? (
+        <div style={{ padding: '20px', textAlign: 'center' as const, borderRadius: '10px', border: `1.5px dashed ${T.border}` }}>
+          <p style={{ fontFamily: T.body, fontSize: '13px', color: T.inkFaint, margin: 0 }}>
+            Aucun contact — envoyez d'abord un message à un propriétaire
+          </p>
+        </div>
+      ) : contacts.length === 0 ? (
+        <div style={{ padding: '16px', textAlign: 'center' as const }}>
+          <p style={{ fontFamily: T.body, fontSize: '13px', color: T.inkFaint, margin: 0 }}>Aucun résultat</p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '6px', maxHeight: '200px', overflowY: 'auto' as const, marginBottom: '14px' }}>
+          {contacts.map((contact) => {
+            const isSelected = selected?.id === contact.id
+            const initials = `${contact.firstName?.[0] ?? ''}${contact.lastName?.[0] ?? ''}`.toUpperCase()
+            return (
+              <button
+                key={contact.id}
+                onClick={() => setSelected(isSelected ? null : contact)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '10px',
+                  padding: '10px 12px',
+                  borderRadius: '10px',
+                  border: `1px solid ${isSelected ? T.tenantBorder : T.border}`,
+                  background: isSelected ? T.tenantLight : T.muted,
+                  cursor: 'pointer',
+                  textAlign: 'left' as const,
+                  transition: 'all 0.15s',
+                }}
+              >
+                {/* Avatar */}
+                <div style={{
+                  width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
+                  background: isSelected ? T.tenantBorder : '#e4e1db',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontFamily: T.body, fontSize: '12px', fontWeight: 600,
+                  color: isSelected ? T.tenant : T.inkMid,
+                  overflow: 'hidden',
+                }}>
+                  {contact.avatar
+                    ? <img src={contact.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' as const }} />
+                    : initials || <User style={{ width: 14, height: 14 }} />
+                  }
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontFamily: T.body, fontSize: '13px', fontWeight: 600, color: T.ink, margin: 0 }}>
+                    {contact.firstName} {contact.lastName}
+                  </p>
+                </div>
+                {isSelected && (
+                  <ShieldCheck style={{ width: 15, height: 15, color: T.tenant, flexShrink: 0 }} />
+                )}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Duration + submit */}
+      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' as const, alignItems: 'center' }}>
         <select
           value={days}
           onChange={(e) => setDays(Number(e.target.value))}
           style={{
-            padding: '10px 12px',
-            border: `1px solid ${T.border}`,
-            borderRadius: '10px',
-            fontSize: '13px',
-            fontFamily: T.body,
-            color: T.inkMid,
-            background: T.muted,
-            outline: 'none',
-            cursor: 'pointer',
+            padding: '10px 12px', border: `1px solid ${T.border}`,
+            borderRadius: '10px', fontSize: '13px', fontFamily: T.body,
+            color: T.inkMid, background: T.muted, outline: 'none', cursor: 'pointer',
           }}
         >
           <option value={3}>3 jours</option>
@@ -163,45 +203,31 @@ function GrantShareForm({ onGranted }: { onGranted: () => void }) {
           <option value={30}>30 jours</option>
         </select>
 
-        {/* Submit */}
         <button
           onClick={handleGrant}
-          disabled={loading}
+          disabled={loading || !selected}
           style={{
-            padding: '10px 20px',
-            borderRadius: '10px',
-            border: 'none',
-            background: loading ? T.inkFaint : T.tenant,
-            color: '#ffffff',
-            fontWeight: 600,
-            fontSize: '13px',
-            fontFamily: T.body,
-            cursor: loading ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
+            flex: 1, padding: '10px 20px', borderRadius: '10px', border: 'none',
+            background: !selected || loading ? T.inkFaint : T.tenant,
+            color: '#ffffff', fontWeight: 600, fontSize: '13px', fontFamily: T.body,
+            cursor: !selected || loading ? 'not-allowed' : 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
             transition: 'background 0.15s',
           }}
-          onMouseEnter={(e) => { if (!loading) (e.currentTarget as HTMLElement).style.background = '#144a2e' }}
-          onMouseLeave={(e) => { if (!loading) (e.currentTarget as HTMLElement).style.background = T.tenant }}
+          onMouseEnter={(e) => { if (selected && !loading) (e.currentTarget as HTMLElement).style.background = '#144a2e' }}
+          onMouseLeave={(e) => { if (selected && !loading) (e.currentTarget as HTMLElement).style.background = T.tenant }}
         >
           {loading
             ? <Loader2 style={{ width: 14, height: 14, animation: 'spin 1s linear infinite' }} />
             : <ShieldCheck style={{ width: 14, height: 14 }} />
           }
-          Partager
+          {selected ? `Partager avec ${selected.firstName}` : 'Sélectionner un contact'}
         </button>
       </div>
 
-      <p style={{
-        marginTop: '12px',
-        fontFamily: T.body,
-        fontSize: '11px',
-        color: T.inkFaint,
-        lineHeight: 1.6,
-      }}>
+      <p style={{ marginTop: '12px', fontFamily: T.body, fontSize: '11px', color: T.inkFaint, lineHeight: 1.6 }}>
         Votre dossier sera accessible uniquement pendant la durée choisie.
-        Vous pouvez révoquer l'accès à tout moment. Tous les documents sont filigranés avec l'identité du propriétaire.
+        Vous pouvez révoquer l'accès à tout moment. Tous les documents sont filigranés.
       </p>
     </div>
   )

@@ -41,18 +41,31 @@ import {
   runMultiSignalIntelligence, MultiSignalResult,
   assignDocTypeSlot, crossCheckSalaries,
   saveTrainingCorrection,
-  FAMILY_LABELS, FAMILY_COLORS,
+  FAMILY_LABELS,
   type DocFamily, type ExtractedData,
 } from '../../utils/DocumentIntelligence'
 import { mapBulletinPeriod }              from '../../utils/TemporalMapper'
 import { matchIdentity, matchLevelIcon }  from '../../utils/IdentityMatcher'
 import { SignalBreakdown }                from '../../components/dossier/SignalBreakdown'
 import { updateDocProgress } from '../../utils/progressState'
+import { celebrateBig } from '../../utils/celebrate'
 import toast from 'react-hot-toast'
 
 const SERVER_BASE =
   (import.meta.env.VITE_API_URL as string | undefined)?.replace('/api/v1', '') ??
   'http://localhost:3000'
+
+const M = {
+  bg: '#fafaf8', surface: '#ffffff', muted: '#f4f2ee', inputBg: '#f8f7f4',
+  ink: '#0d0c0a', inkMid: '#5a5754', inkFaint: '#9e9b96',
+  tenant: '#1b5e3b', tenantLight: '#edf7f2', tenantBorder: '#9fd4ba',
+  border: '#e4e1db', borderMid: '#ccc9c3',
+  danger: '#9b1c1c', dangerBg: '#fef2f2',
+  warning: '#92400e', warningBg: '#fdf5ec',
+  display: "'Cormorant Garamond', Georgia, serif",
+  body: "'DM Sans', system-ui, sans-serif",
+  cardShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
+}
 
 // ─── Category & slot definitions ──────────────────────────────────────────────
 
@@ -119,7 +132,7 @@ const CATEGORIES: DocCategory[] = [
   },
   {
     id: 'GARANTIES', label: 'Garanties', icon: Shield,
-    color: 'indigo', accent: 'text-[#007AFF]', accentBg: 'bg-[#e8f0fe]',
+    color: 'indigo', accent: 'text-[#1b5e3b]', accentBg: 'bg-[#edf7f2]',
     slots: [
       { docType: 'ATTESTATION_VISALE',   label: 'Attestation Visale',        hint: 'Garantie Action Logement.',  why: 'Garantit les loyers impayés.',   required: false, weight: 5 },
       { docType: 'ACTE_CAUTION',         label: 'Acte de cautionnement',     hint: 'Signé par le garant.',       why: 'Engagement légal du garant.',    required: false, weight: 4 },
@@ -145,10 +158,10 @@ function computeScore(docs: TenantDocument[]) {
 }
 
 function getStrength(score: number, hasVisale: boolean) {
-  if (score >= 90 && hasVisale) return { label: 'Excellent', color: 'text-emerald-600', bg: 'bg-emerald-100', icon: Award }
-  if (score >= 65)              return { label: 'Bon',       color: 'text-blue-600',    bg: 'bg-blue-100',    icon: Star }
-  if (score >= 35)              return { label: 'Moyen',     color: 'text-amber-600',   bg: 'bg-amber-100',   icon: AlertCircle }
-  return                               { label: 'Faible',    color: 'text-red-500',     bg: 'bg-red-100',     icon: AlertCircle }
+  if (score >= 90 && hasVisale) return { label: 'Excellent', textColor: M.tenant,  bgColor: M.tenantLight,  icon: Award }
+  if (score >= 65)              return { label: 'Bon',       textColor: '#1d4ed8', bgColor: '#dbeafe',      icon: Star }
+  if (score >= 35)              return { label: 'Moyen',     textColor: M.warning, bgColor: M.warningBg,    icon: AlertCircle }
+  return                               { label: 'Faible',    textColor: M.danger,  bgColor: M.dangerBg,     icon: AlertCircle }
 }
 
 // ─── Score Gauge ──────────────────────────────────────────────────────────────
@@ -157,15 +170,15 @@ function ScoreGauge({ score }: { score: number }) {
   const R = 54, cx = 64, cy = 64
   const arc    = Math.PI * R
   const offset = arc * (1 - Math.min(100, Math.max(0, score)) / 100)
-  const color  = score >= 90 ? '#10b981' : score >= 65 ? '#3b82f6' : score >= 35 ? '#f59e0b' : '#ef4444'
+  const color  = score >= 90 ? M.tenant : score >= 65 ? '#2563eb' : score >= 35 ? '#b45309' : M.danger
   return (
     <svg width={128} height={72} viewBox="0 0 128 76">
-      <path d="M 10 64 A 54 54 0 0 1 118 64" fill="none" stroke="var(--border)" strokeWidth={10} strokeLinecap="round" />
+      <path d="M 10 64 A 54 54 0 0 1 118 64" fill="none" stroke={M.border} strokeWidth={10} strokeLinecap="round" />
       <path d="M 10 64 A 54 54 0 0 1 118 64" fill="none" stroke={color} strokeWidth={10} strokeLinecap="round"
         strokeDasharray={arc} strokeDashoffset={offset}
         style={{ transition: 'stroke-dashoffset 0.8s ease, stroke 0.4s' }} />
       <text x={cx} y={cy - 4}  textAnchor="middle" fontSize={22} fontWeight="bold" fill={color}>{score}%</text>
-      <text x={cx} y={cy + 12} textAnchor="middle" fontSize={9}  fill="var(--text-tertiary)">complétude</text>
+      <text x={cx} y={cy + 12} textAnchor="middle" fontSize={9}  fill={M.inkFaint}>complétude</text>
     </svg>
   )
 }
@@ -212,7 +225,7 @@ function DocumentRow({
   const isError    = scanEntry?.phase === 'error'
 
   const confidencePct = scanEntry?.scanResult?.confidence
-  const confColor     = (p?: number) => !p ? '#86868b' : p >= 70 ? '#10b981' : p >= 40 ? '#f59e0b' : '#ef4444'
+  const confColor     = (p?: number) => !p ? M.inkFaint : p >= 70 ? M.tenant : p >= 40 ? '#b45309' : M.danger
   const hasHighRisk   = scanEntry?.scanResult?.fraudSignals.some((s) => s.severity === 'high')
 
   // ── DnD — draggable (only when doc is uploaded) ──────────────────────────
@@ -261,63 +274,74 @@ function DocumentRow({
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       ref={setRef}
-      style={dragStyle}
+      style={{
+        ...dragStyle,
+        display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px',
+        borderRadius: 10, transition: 'all 0.15s',
+        border: isDragOver && !isScanning
+          ? `1.5px solid ${M.tenant}`
+          : isScanning ? `1px solid ${M.tenantBorder}`
+          : isDone && hasHighRisk ? `1px solid #fca5a5`
+          : isDone ? `1px solid ${M.tenantBorder}`
+          : slot.required ? `1.5px dashed ${M.borderMid}`
+          : `1px solid ${M.border}`,
+        background: isDragOver && !isScanning
+          ? M.tenantLight
+          : isScanning ? '#f0fdf4'
+          : isDone && hasHighRisk ? M.dangerBg
+          : isDone ? M.tenantLight
+          : M.muted,
+        opacity: !isDone && !isScanning && !slot.required ? 0.75 : 1,
+      }}
       onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); if (!isScanning && e.dataTransfer.files.length > 0) setIsFileDragOver(true) }}
       onDragLeave={(e) => {
         e.stopPropagation()
         if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsFileDragOver(false)
       }}
       onDrop={handleSlotFileDrop}
-      className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all ${
-        isDragOver && !isScanning
-          ? 'border-blue-400 bg-blue-50/60 shadow-md scale-[1.01]'
-          : isScanning ? 'border-blue-200 bg-blue-50/40' :
-            isDone && hasHighRisk ? 'border-red-200 bg-red-50/30' :
-            isDone ? 'border-emerald-200 bg-emerald-50/30' :
-            slot.required ? 'border-dashed border-slate-300 bg-[var(--surface-subtle)]' :
-            'border-[var(--border)] bg-[var(--surface-subtle)] opacity-70'
-      }`}
     >
       {/* Drag handle — only visible when doc is uploaded */}
       {isDone && !isScanning && (
         <div
           {...listeners}
           {...attributes}
-          className="flex-shrink-0 cursor-grab active:cursor-grabbing p-0.5 -ml-1 rounded hover:bg-slate-100 transition-colors"
+          style={{ flexShrink: 0, cursor: 'grab', padding: 2, marginLeft: -4, borderRadius: 6, color: M.borderMid }}
           title="Glisser vers un autre emplacement"
+          onMouseEnter={(e) => { e.currentTarget.style.background = M.muted; e.currentTarget.style.color = M.inkMid }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = M.borderMid }}
         >
-          <GripVertical className="w-3.5 h-3.5 text-slate-300 hover:text-slate-500 transition-colors" />
+          <GripVertical className="w-3.5 h-3.5" />
         </div>
       )}
       {/* Status icon */}
-      <div className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm">
+      <div style={{ flexShrink: 0, width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}>
         {isScanning ? (
-          <Loader className="w-4 h-4 text-blue-500 animate-spin" />
+          <Loader className="w-4 h-4 animate-spin" style={{ color: M.tenant }} />
         ) : isDone && hasHighRisk ? (
-          <ShieldAlert className="w-4 h-4 text-red-500" />
+          <ShieldAlert className="w-4 h-4" style={{ color: M.danger }} />
         ) : isDone ? (
-          <CheckCircle className="w-4 h-4 text-emerald-500" />
+          <CheckCircle className="w-4 h-4" style={{ color: M.tenant }} />
         ) : isError ? (
-          <FileX className="w-4 h-4 text-red-400" />
+          <FileX className="w-4 h-4" style={{ color: M.danger }} />
         ) : slot.required ? (
-          <span className="text-red-400 text-xs font-bold">✗</span>
+          <span style={{ color: M.danger, fontSize: 11, fontWeight: 700 }}>✗</span>
         ) : (
-          <span className="text-slate-300 text-xs">○</span>
+          <span style={{ color: M.borderMid, fontSize: 11 }}>○</span>
         )}
       </div>
 
       {/* Label + meta */}
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ fontSize: 13, fontWeight: 600, color: M.ink, fontFamily: M.body, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {slot.label}
-          {slot.required && !isDone && <span className="text-red-400 ml-1 text-xs">*</span>}
+          {slot.required && !isDone && <span style={{ color: M.danger, marginLeft: 4, fontSize: 11 }}>*</span>}
         </p>
         {isScanning && (
-          <p className="text-xs text-blue-500 animate-pulse">Analyse IA en cours…</p>
+          <p style={{ fontSize: 11, color: M.tenant, fontFamily: M.body, margin: 0 }} className="animate-pulse">Analyse IA en cours…</p>
         )}
         {isDone && doc && (
           <>
-            <p className="text-xs truncate" style={{ color: 'var(--text-tertiary)' }}>
+            <p style={{ fontSize: 11, color: M.inkFaint, fontFamily: M.body, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {doc.fileName} · {(doc.fileSize / 1024).toFixed(0)} Ko
             </p>
             {doc.expiresAt && (() => {
@@ -325,8 +349,7 @@ function DocumentRow({
               const daysLeft = Math.ceil((exp.getTime() - Date.now()) / 86400000)
               const isUrgent = daysLeft <= 14
               return (
-                <p className="text-[10px] mt-0.5 flex items-center gap-1"
-                  style={{ color: isUrgent ? '#ef4444' : '#94a3b8' }}>
+                <p style={{ fontSize: 10, marginTop: 2, display: 'flex', alignItems: 'center', gap: 3, color: isUrgent ? M.danger : M.inkFaint, fontFamily: M.body }}>
                   <span>{isUrgent ? '⚠' : '🔒'}</span>
                   {isUrgent
                     ? `Supprimé dans ${daysLeft} jour${daysLeft > 1 ? 's' : ''}`
@@ -337,13 +360,13 @@ function DocumentRow({
           </>
         )}
         {!isDone && !isScanning && (
-          <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{slot.hint}</p>
+          <p style={{ fontSize: 11, color: M.inkFaint, fontFamily: M.body, margin: 0 }}>{slot.hint}</p>
         )}
 
         {/* Données extraites (depuis le résultat du scan) */}
         {isDone && scanEntry?.scanResult?.extractedData && (() => {
           const d = scanEntry.scanResult.extractedData
-          const chips: { label: string; color: string }[] = []
+          const chips: { label: string; color: string; bg?: string }[] = []
           // Identité
           if (d.lastName || d.firstName)
             chips.push({ label: `${d.firstName ?? ''} ${d.lastName ?? ''}`.trim(), color: 'bg-blue-50 text-blue-700' })
@@ -351,28 +374,28 @@ function DocumentRow({
           if (d.birthCity)    chips.push({ label: `📍 ${d.birthCity}`, color: 'bg-blue-50 text-blue-600' })
           // documentNumber and nationalNumber intentionally not shown (privacy)
           // Revenus
-          if (d.netSalary)    chips.push({ label: `Net ${d.netSalary.toLocaleString('fr-FR')} €`, color: 'bg-emerald-50 text-emerald-700' })
-          if (d.grossSalary)  chips.push({ label: `Brut ${d.grossSalary.toLocaleString('fr-FR')} €`, color: 'bg-blue-50 text-blue-700' })
-          if (d.bulletinPeriod) chips.push({ label: d.bulletinPeriod, color: 'bg-blue-50 text-blue-600' })
-          if (d.employerName) chips.push({ label: d.employerName.slice(0, 30), color: 'bg-slate-100 text-slate-600' })
-          if (d.contractType) chips.push({ label: d.contractType, color: 'bg-[#e8f0fe] text-[#0055b3]' })
-          if (d.cafAmount)    chips.push({ label: `CAF ${d.cafAmount.toLocaleString('fr-FR')} €`, color: 'bg-green-50 text-green-700' })
-          if (d.areAmount)    chips.push({ label: `ARE ${d.areAmount.toLocaleString('fr-FR')} €`, color: 'bg-blue-50 text-blue-600' })
-          if (d.pensionAmount) chips.push({ label: `Pension ${d.pensionAmount.toLocaleString('fr-FR')} €`, color: 'bg-amber-50 text-amber-700' })
-          if (d.fiscalRef)    chips.push({ label: `RFR ${d.fiscalRef.toLocaleString('fr-FR')} €`, color: 'bg-amber-50 text-amber-700' })
+          if (d.netSalary)    chips.push({ label: `Net ${d.netSalary.toLocaleString('fr-FR')} €`, bg: M.tenantLight, color: M.tenant })
+          if (d.grossSalary)  chips.push({ label: `Brut ${d.grossSalary.toLocaleString('fr-FR')} €`, bg: '#dbeafe', color: '#1d4ed8' })
+          if (d.bulletinPeriod) chips.push({ label: d.bulletinPeriod, bg: '#dbeafe', color: '#1d4ed8' })
+          if (d.employerName) chips.push({ label: d.employerName.slice(0, 30), bg: M.muted, color: M.inkMid })
+          if (d.contractType) chips.push({ label: d.contractType, bg: '#dbeafe', color: '#1d4ed8' })
+          if (d.cafAmount)    chips.push({ label: `CAF ${d.cafAmount.toLocaleString('fr-FR')} €`, bg: M.tenantLight, color: M.tenant })
+          if (d.areAmount)    chips.push({ label: `ARE ${d.areAmount.toLocaleString('fr-FR')} €`, bg: '#dbeafe', color: '#1d4ed8' })
+          if (d.pensionAmount) chips.push({ label: `Pension ${d.pensionAmount.toLocaleString('fr-FR')} €`, bg: M.warningBg, color: M.warning })
+          if (d.fiscalRef)    chips.push({ label: `RFR ${d.fiscalRef.toLocaleString('fr-FR')} €`, bg: M.warningBg, color: M.warning })
           // Domicile
-          if (d.issuerName)   chips.push({ label: d.issuerName, color: 'bg-slate-100 text-slate-600' })
-          if (d.address)      chips.push({ label: `📍 ${d.address.slice(0, 40)}${d.address.length > 40 ? '…' : ''}`, color: 'bg-amber-50 text-amber-700' })
+          if (d.issuerName)   chips.push({ label: d.issuerName, bg: M.muted, color: M.inkMid })
+          if (d.address)      chips.push({ label: `📍 ${d.address.slice(0, 40)}${d.address.length > 40 ? '…' : ''}`, bg: M.warningBg, color: M.warning })
           // Visale / Garantie
-          if (d.visaleAmount) chips.push({ label: `Visale ≤ ${d.visaleAmount} €/mois`, color: 'bg-blue-50 text-[#007AFF]' })
-          if (d.visaNumber)   chips.push({ label: `Visa ${d.visaNumber}`, color: 'bg-fuchsia-50 text-fuchsia-700' })
+          if (d.visaleAmount) chips.push({ label: `Visale ≤ ${d.visaleAmount} €/mois`, bg: M.tenantLight, color: M.tenant })
+          if (d.visaNumber)   chips.push({ label: `Visa ${d.visaNumber}`, bg: '#fdf4ff', color: '#7e22ce' })
           if (d.guarantorLastName || d.guarantorFirstName)
-            chips.push({ label: `Garant : ${d.guarantorFirstName ?? ''} ${d.guarantorLastName ?? ''}`.trim(), color: 'bg-fuchsia-50 text-fuchsia-700' })
+            chips.push({ label: `Garant : ${d.guarantorFirstName ?? ''} ${d.guarantorLastName ?? ''}`.trim(), bg: '#fdf4ff', color: '#7e22ce' })
           if (!chips.length) return null
           return (
-            <div className="mt-1 flex flex-wrap gap-1">
+            <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
               {chips.map((c, i) => (
-                <span key={i} className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium ${c.color}`}>{c.label}</span>
+                <span key={i} style={{ fontSize: 10, padding: '1px 6px', borderRadius: 6, fontWeight: 500, fontFamily: M.body, background: c.bg, color: c.color }}>{c.label}</span>
               ))}
             </div>
           )
@@ -380,48 +403,61 @@ function DocumentRow({
       </div>
 
       {/* Badges */}
-      <div className="flex items-center gap-1.5 flex-shrink-0">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
         {scanEntry?.temporalLabel && (
-          <span className="text-[10px] bg-blue-50 text-[#007AFF] px-1.5 py-0.5 rounded-full font-medium">
+          <span style={{ fontSize: 10, background: '#dbeafe', color: '#1d4ed8', padding: '1px 6px', borderRadius: 20, fontWeight: 500, fontFamily: M.body }}>
             {scanEntry.temporalLabel.replace(/\s*\(.*\)/, '')}
           </span>
         )}
         {scanEntry?.identityLabel && (
-          <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-            scanEntry.scanResult?.certaintyTokenFound ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-600'
-          }`}>{scanEntry.identityLabel}</span>
+          <span style={{
+            fontSize: 10, padding: '1px 6px', borderRadius: 20, fontWeight: 500, fontFamily: M.body,
+            background: scanEntry.scanResult?.certaintyTokenFound ? M.tenantLight : '#dbeafe',
+            color: scanEntry.scanResult?.certaintyTokenFound ? M.tenant : '#1d4ed8',
+          }}>{scanEntry.identityLabel}</span>
         )}
         {confidencePct !== undefined && isDone && (
-          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-            style={{ color: confColor(confidencePct), backgroundColor: `${confColor(confidencePct)}18` }}>
+          <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 20, fontFamily: M.body,
+            color: confColor(confidencePct), background: `${confColor(confidencePct)}18` }}>
             {Math.round(confidencePct)}%
           </span>
         )}
         {isDone && !slot.required && (
-          <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full">Optionnel</span>
+          <span style={{ fontSize: 10, background: M.muted, color: M.inkFaint, padding: '1px 6px', borderRadius: 20, fontFamily: M.body }}>Optionnel</span>
         )}
         {!isDone && !isScanning && !isError && (
-          <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-            slot.required ? 'bg-red-50 text-red-500' : 'bg-slate-100 text-slate-400'
-          }`}>{slot.required ? 'Requis' : 'Optionnel'}</span>
+          <span style={{
+            fontSize: 10, padding: '1px 6px', borderRadius: 20, fontWeight: 500, fontFamily: M.body,
+            background: slot.required ? M.dangerBg : M.muted,
+            color: slot.required ? M.danger : M.inkFaint,
+          }}>{slot.required ? 'Requis' : 'Optionnel'}</span>
         )}
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-1 flex-shrink-0">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
         <button onClick={() => onOpenWhy(slot)}
-          className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors" title="Pourquoi ce document ?">
-          <Info className="w-3.5 h-3.5" style={{ color: 'var(--text-tertiary)' }} />
+          style={{ padding: 6, borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', color: M.inkFaint, transition: 'background 0.15s' }}
+          title="Pourquoi ce document ?"
+          onMouseEnter={(e) => { e.currentTarget.style.background = M.muted }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'none' }}>
+          <Info className="w-3.5 h-3.5" />
         </button>
         {isDone && doc && (
           <>
             <a href={`${serverBase}${doc.fileUrl}`} target="_blank" rel="noopener noreferrer"
-              className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors" title="Voir le document">
-              <Eye className="w-3.5 h-3.5" style={{ color: 'var(--text-tertiary)' }} />
+              style={{ padding: 6, borderRadius: 8, color: M.inkFaint, transition: 'background 0.15s', display: 'flex', alignItems: 'center' }}
+              title="Voir le document"
+              onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = M.muted }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = 'none' }}>
+              <Eye className="w-3.5 h-3.5" />
             </a>
             <button onClick={() => onDelete(doc.id)}
-              className="p-1.5 rounded-lg hover:bg-red-50 transition-colors" title="Supprimer">
-              <Trash2 className="w-3.5 h-3.5 text-red-400" />
+              style={{ padding: 6, borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', color: M.danger, transition: 'background 0.15s' }}
+              title="Supprimer"
+              onMouseEnter={(e) => { e.currentTarget.style.background = M.dangerBg }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'none' }}>
+              <Trash2 className="w-3.5 h-3.5" />
             </button>
           </>
         )}
@@ -430,17 +466,21 @@ function DocumentRow({
             <input ref={inputRef} type="file" accept=".pdf,image/jpeg,image/png,image/webp" className="hidden"
               onChange={(e) => { const f = e.target.files?.[0]; if (f) { onUploadSlot(slot.docType, category, f); e.target.value = '' } }} />
             <button onClick={() => inputRef.current?.click()}
-              className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg font-medium transition-all"
-              style={isDragOver
-                ? { backgroundColor: 'rgba(124,58,237,0.12)', border: '1px solid #7c3aed', color: '#7c3aed' }
-                : { backgroundColor: 'var(--surface-card)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
+              style={{
+                display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, padding: '4px 10px', borderRadius: 8, fontWeight: 500,
+                fontFamily: M.body, cursor: 'pointer', transition: 'all 0.15s',
+                background: isDragOver ? M.tenantLight : M.surface,
+                border: `1px solid ${isDragOver ? M.tenant : M.border}`,
+                color: isDragOver ? M.tenant : M.inkMid,
+              }}>
               <Upload className="w-3 h-3" />
               {isDragOver ? 'Relâcher ici' : 'Déposer'}
             </button>
           </>
         )}
         {isDone && isDragOver && !isScanning && (
-          <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-lg animate-pulse">
+          <span style={{ fontSize: 10, fontWeight: 600, background: M.tenantLight, color: M.tenant, border: `1px solid ${M.tenantBorder}`, padding: '2px 8px', borderRadius: 8, fontFamily: M.body }}
+            className="animate-pulse">
             Remplacer
           </span>
         )}
@@ -455,20 +495,27 @@ function DocumentRow({
 function WhyModal({ slot, onClose }: { slot: SlotSpec; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-      style={{ backgroundColor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}
+      style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
       onClick={onClose}>
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 24 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-sm rounded-3xl p-6 shadow-2xl"
-        style={{ backgroundColor: 'var(--surface-card)', border: '1px solid var(--border)' }}
+        className="w-full max-w-sm"
+        style={{ background: M.surface, border: `1px solid ${M.border}`, borderRadius: 16, padding: 24, boxShadow: '0 20px 60px rgba(13,12,10,0.18)' }}
       >
-        <h3 className="font-bold text-base mb-1" style={{ color: 'var(--text-primary)' }}>{slot.label}</h3>
-        <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}><span className="font-semibold text-blue-600">Pourquoi ? </span>{slot.why}</p>
-        <p className="text-xs px-3 py-2 rounded-xl" style={{ backgroundColor: 'var(--surface-subtle)', color: 'var(--text-tertiary)' }}>{slot.hint}</p>
-        <button onClick={onClose} className="btn btn-secondary w-full mt-4 text-sm">Fermer</button>
+        <h3 style={{ fontWeight: 700, fontSize: 15, color: M.ink, fontFamily: M.body, margin: '0 0 6px' }}>{slot.label}</h3>
+        <p style={{ fontSize: 13, color: M.inkMid, fontFamily: M.body, margin: '0 0 12px' }}>
+          <span style={{ fontWeight: 600, color: M.tenant }}>Pourquoi ? </span>{slot.why}
+        </p>
+        <p style={{ fontSize: 11, padding: '8px 12px', borderRadius: 8, background: M.muted, color: M.inkFaint, fontFamily: M.body, margin: 0 }}>{slot.hint}</p>
+        <button
+          onClick={onClose}
+          style={{ marginTop: 16, width: '100%', padding: '10px', borderRadius: 8, border: `1px solid ${M.border}`, background: M.muted, color: M.inkMid, fontFamily: M.body, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = M.borderMid }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = M.muted }}
+        >Fermer</button>
       </motion.div>
     </div>
   )
@@ -486,53 +533,58 @@ function DuplicateModal({
 }) {
   return (
     <div className="fixed inset-0 flex items-center justify-center p-4"
-      style={{ backgroundColor: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)', zIndex: 70 }}
+      style={{ backgroundColor: 'rgba(0,0,0,0.55)', zIndex: 70 }}
       onClick={onCancel}>
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden"
-        style={{ backgroundColor: 'var(--surface-card)', border: '1px solid var(--border)' }}
+        className="w-full max-w-sm overflow-hidden"
+        style={{ background: M.surface, border: `1px solid ${M.border}`, borderRadius: 16, boxShadow: '0 20px 60px rgba(13,12,10,0.18)' }}
       >
         {/* Header */}
-        <div className="flex items-start justify-between px-5 pt-5 pb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
-              <AlertTriangle className="w-5 h-5 text-amber-500" />
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '20px 20px 12px', borderBottom: `1px solid ${M.border}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 10, background: M.warningBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <AlertTriangle className="w-5 h-5" style={{ color: M.warning }} />
             </div>
             <div>
-              <h3 className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>Fichier déjà ajouté</h3>
-              <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{pending.familyLabel}</p>
+              <h3 style={{ fontWeight: 700, fontSize: 15, color: M.ink, fontFamily: M.body, margin: 0 }}>Fichier déjà ajouté</h3>
+              <p style={{ fontSize: 11, color: M.inkFaint, fontFamily: M.body, margin: 0 }}>{pending.familyLabel}</p>
             </div>
           </div>
           <button onClick={onCancel}
-            className="p-1.5 rounded-xl hover:bg-[var(--surface-subtle)] transition-colors flex-shrink-0 ml-2">
-            <X className="w-4 h-4" style={{ color: 'var(--text-tertiary)' }} />
+            style={{ padding: 6, borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', color: M.inkFaint, flexShrink: 0, marginLeft: 8 }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = M.muted }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'none' }}>
+            <X className="w-4 h-4" />
           </button>
         </div>
         {/* Body */}
-        <div className="px-5 pb-5 space-y-4">
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-            Un document <strong>{pending.familyLabel}</strong> est déjà présent dans votre dossier.
+        <div style={{ padding: '16px 20px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <p style={{ fontSize: 13, color: M.inkMid, fontFamily: M.body, lineHeight: 1.5, margin: 0 }}>
+            Un document <strong style={{ color: M.ink }}>{pending.familyLabel}</strong> est déjà présent dans votre dossier.
             Que souhaitez-vous faire avec&nbsp;
-            <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{pending.file.name}</span>&nbsp;?
+            <span style={{ fontWeight: 600, color: M.ink }}>{pending.file.name}</span>&nbsp;?
           </p>
-          <div className="space-y-2">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <button onClick={onReplace}
-              className="w-full py-3 px-4 rounded-2xl text-sm font-semibold text-white transition-colors"
-              style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)' }}>
+              style={{ width: '100%', padding: '12px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#fff', background: M.danger, border: 'none', cursor: 'pointer', fontFamily: M.body, transition: 'opacity 0.15s' }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.88' }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}>
               Remplacer le document précédent
             </button>
             <button onClick={onKeepBoth}
-              className="w-full py-3 px-4 rounded-2xl text-sm font-medium transition-colors"
-              style={{ backgroundColor: 'var(--surface-subtle)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}>
+              style={{ width: '100%', padding: '12px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, color: M.ink, background: M.muted, border: `1px solid ${M.border}`, cursor: 'pointer', fontFamily: M.body, transition: 'background 0.15s' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = M.borderMid }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = M.muted }}>
               Conserver les deux documents
             </button>
             <button onClick={onCancel}
-              className="w-full py-2 text-xs transition-colors rounded-xl hover:bg-[var(--surface-subtle)]"
-              style={{ color: 'var(--text-tertiary)' }}>
+              style={{ width: '100%', padding: '8px', fontSize: 11, color: M.inkFaint, background: 'none', border: 'none', cursor: 'pointer', fontFamily: M.body, borderRadius: 8, transition: 'background 0.15s' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = M.muted }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'none' }}>
               Annuler l'ajout
             </button>
           </div>
@@ -565,75 +617,75 @@ function scanProgressPct(entry: FileEntry): number {
 // ─── ExtractedChips ────────────────────────────────────────────────────────────
 
 function ExtractedChips({ data }: { data: ExtractedData }) {
-  const chips: { label: string; color: string; icon?: string }[] = []
+  const chips: { label: string; bg: string; color: string; icon?: string }[] = []
 
   // ── Identité ──────────────────────────────────────────────────────────────
   if (data.lastName || data.firstName)
-    chips.push({ label: `${data.firstName ?? ''} ${data.lastName ?? ''}`.trim(), color: 'bg-blue-100 text-blue-700', icon: '👤' })
+    chips.push({ label: `${data.firstName ?? ''} ${data.lastName ?? ''}`.trim(), bg: '#dbeafe', color: '#1d4ed8', icon: '👤' })
   if (data.birthDate)
-    chips.push({ label: `Né(e) le ${data.birthDate}`, color: 'bg-blue-50 text-blue-600', icon: '📅' })
+    chips.push({ label: `Né(e) le ${data.birthDate}`, bg: '#dbeafe', color: '#1d4ed8', icon: '📅' })
   if (data.birthCity)
-    chips.push({ label: `à ${data.birthCity}`, color: 'bg-blue-50 text-blue-600', icon: '🏙️' })
+    chips.push({ label: `à ${data.birthCity}`, bg: '#dbeafe', color: '#1d4ed8', icon: '🏙️' })
   if (data.documentExpiry)
-    chips.push({ label: `Valide jusqu'au ${data.documentExpiry}`, color: 'bg-slate-100 text-slate-500' })
+    chips.push({ label: `Valide jusqu'au ${data.documentExpiry}`, bg: M.muted, color: M.inkFaint })
   if (data.nationality)
-    chips.push({ label: `Nat. ${data.nationality}`, color: 'bg-blue-50 text-blue-500' })
+    chips.push({ label: `Nat. ${data.nationality}`, bg: '#dbeafe', color: '#1d4ed8' })
   // Note: documentNumber and nationalNumber are NOT displayed for privacy/security reasons
 
   // ── Revenus / Bulletin ────────────────────────────────────────────────────
   if (data.netSalary)
-    chips.push({ label: `Net ${data.netSalary.toLocaleString('fr-FR')} €`, color: 'bg-emerald-100 text-emerald-700', icon: '💰' })
+    chips.push({ label: `Net ${data.netSalary.toLocaleString('fr-FR')} €`, bg: M.tenantLight, color: M.tenant, icon: '💰' })
   if (data.grossSalary)
-    chips.push({ label: `Brut ${data.grossSalary.toLocaleString('fr-FR')} €`, color: 'bg-blue-100 text-blue-700' })
+    chips.push({ label: `Brut ${data.grossSalary.toLocaleString('fr-FR')} €`, bg: '#dbeafe', color: '#1d4ed8' })
   if (data.bulletinPeriod)
-    chips.push({ label: data.bulletinPeriod, color: 'bg-blue-50 text-blue-600', icon: '📆' })
+    chips.push({ label: data.bulletinPeriod, bg: '#dbeafe', color: '#1d4ed8', icon: '📆' })
   if (data.contractType)
-    chips.push({ label: data.contractType, color: 'bg-[#d0e6ff] text-[#0055b3]' })
+    chips.push({ label: data.contractType, bg: '#dbeafe', color: '#1d4ed8' })
   if (data.employerName)
-    chips.push({ label: data.employerName.slice(0, 28), color: 'bg-slate-100 text-slate-600', icon: '🏢' })
+    chips.push({ label: data.employerName.slice(0, 28), bg: M.muted, color: M.inkMid, icon: '🏢' })
   if (data.siret)
-    chips.push({ label: `SIRET ${data.siret}`, color: 'bg-slate-100 text-slate-500' })
+    chips.push({ label: `SIRET ${data.siret}`, bg: M.muted, color: M.inkFaint })
   if (data.cafAmount)
-    chips.push({ label: `CAF ${data.cafAmount.toLocaleString('fr-FR')} €/mois`, color: 'bg-green-100 text-green-700', icon: '🏦' })
+    chips.push({ label: `CAF ${data.cafAmount.toLocaleString('fr-FR')} €/mois`, bg: M.tenantLight, color: M.tenant, icon: '🏦' })
   if (data.areAmount)
-    chips.push({ label: `ARE ${data.areAmount.toLocaleString('fr-FR')} €/mois`, color: 'bg-blue-100 text-blue-600', icon: '🏦' })
+    chips.push({ label: `ARE ${data.areAmount.toLocaleString('fr-FR')} €/mois`, bg: '#dbeafe', color: '#1d4ed8', icon: '🏦' })
   if (data.pensionAmount)
-    chips.push({ label: `Pension ${data.pensionAmount.toLocaleString('fr-FR')} €/mois`, color: 'bg-amber-100 text-amber-700', icon: '🏦' })
+    chips.push({ label: `Pension ${data.pensionAmount.toLocaleString('fr-FR')} €/mois`, bg: M.warningBg, color: M.warning, icon: '🏦' })
   if (data.fiscalRef)
-    chips.push({ label: `RFR ${data.fiscalRef.toLocaleString('fr-FR')} €`, color: 'bg-amber-100 text-amber-700', icon: '📊' })
+    chips.push({ label: `RFR ${data.fiscalRef.toLocaleString('fr-FR')} €`, bg: M.warningBg, color: M.warning, icon: '📊' })
 
   // ── Domicile ──────────────────────────────────────────────────────────────
   if (data.issuerName)
-    chips.push({ label: data.issuerName, color: 'bg-slate-100 text-slate-500', icon: '📄' })
+    chips.push({ label: data.issuerName, bg: M.muted, color: M.inkFaint, icon: '📄' })
   if (data.address)
-    chips.push({ label: `${data.address.slice(0, 40)}${data.address.length > 40 ? '…' : ''}`, color: 'bg-amber-100 text-amber-700', icon: '📍' })
+    chips.push({ label: `${data.address.slice(0, 40)}${data.address.length > 40 ? '…' : ''}`, bg: M.warningBg, color: M.warning, icon: '📍' })
   if (data.rentAmount)
-    chips.push({ label: `Loyer ${data.rentAmount.toLocaleString('fr-FR')} €`, color: 'bg-orange-100 text-orange-700' })
+    chips.push({ label: `Loyer ${data.rentAmount.toLocaleString('fr-FR')} €`, bg: M.warningBg, color: M.warning })
 
   // ── Visale / Garantie ─────────────────────────────────────────────────────
   if (data.visaleAmount)
-    chips.push({ label: `Visale ≤ ${data.visaleAmount} €/mois`, color: 'bg-blue-50 text-[#007AFF]', icon: '🛡️' })
+    chips.push({ label: `Visale ≤ ${data.visaleAmount} €/mois`, bg: M.tenantLight, color: M.tenant, icon: '🛡️' })
   if (data.visaleDuration)
-    chips.push({ label: data.visaleDuration, color: 'bg-blue-50 text-blue-600' })
+    chips.push({ label: data.visaleDuration, bg: M.tenantLight, color: M.tenant })
   if (data.visaNumber)
-    chips.push({ label: `Visa ${data.visaNumber}`, color: 'bg-fuchsia-100 text-fuchsia-700', icon: '🔑' })
+    chips.push({ label: `Visa ${data.visaNumber}`, bg: '#fdf4ff', color: '#7e22ce', icon: '🔑' })
 
   // ── Garant ────────────────────────────────────────────────────────────────
   if (data.guarantorLastName || data.guarantorFirstName)
-    chips.push({ label: `Garant : ${data.guarantorFirstName ?? ''} ${data.guarantorLastName ?? ''}`.trim(), color: 'bg-fuchsia-100 text-fuchsia-700', icon: '🤝' })
+    chips.push({ label: `Garant : ${data.guarantorFirstName ?? ''} ${data.guarantorLastName ?? ''}`.trim(), bg: '#fdf4ff', color: '#7e22ce', icon: '🤝' })
   if (data.guarantorAddress)
-    chips.push({ label: data.guarantorAddress.slice(0, 40), color: 'bg-fuchsia-50 text-fuchsia-600', icon: '📍' })
+    chips.push({ label: data.guarantorAddress.slice(0, 40), bg: '#fdf4ff', color: '#7e22ce', icon: '📍' })
 
   // ── Bancaire ──────────────────────────────────────────────────────────────
   if (data.ibanPrefix)
-    chips.push({ label: `IBAN ${data.ibanPrefix}`, color: 'bg-teal-100 text-teal-700', icon: '🏛️' })
+    chips.push({ label: `IBAN ${data.ibanPrefix}`, bg: M.tenantLight, color: M.tenant, icon: '🏛️' })
 
   if (!chips.length) return null
   return (
-    <div className="flex flex-wrap gap-1.5 mt-2">
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
       {chips.map((c, i) => (
-        <span key={i} className={`text-[11px] px-2 py-0.5 rounded-lg font-medium ${c.color}`}>
-          {c.icon && <span className="mr-0.5">{c.icon}</span>}{c.label}
+        <span key={i} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, fontWeight: 500, fontFamily: M.body, background: c.bg, color: c.color }}>
+          {c.icon && <span style={{ marginRight: 2 }}>{c.icon}</span>}{c.label}
         </span>
       ))}
     </div>
@@ -660,35 +712,32 @@ function ScanningView({ entry }: { entry: FileEntry }) {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="py-6 space-y-5">
       {/* Icon + label */}
       <div className="flex flex-col items-center gap-3">
-        <div className="relative w-14 h-14 flex items-center justify-center">
-          <div className="absolute inset-0 rounded-full animate-ping opacity-20"
-            style={{ background: 'linear-gradient(135deg, #7c3aed, #a78bfa)' }} />
-          <div className="relative w-14 h-14 rounded-full flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg, #7c3aed22, #a78bfa22)' }}>
-            <Cpu className="w-6 h-6 text-blue-500 animate-pulse" />
+        <div style={{ position: 'relative', width: 56, height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="absolute inset-0 rounded-full animate-ping"
+            style={{ background: M.tenantLight, opacity: 0.5 }} />
+          <div style={{ position: 'relative', width: 56, height: 56, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: M.tenantLight, border: `1px solid ${M.tenantBorder}` }}>
+            <Cpu className="w-6 h-6 animate-pulse" style={{ color: M.tenant }} />
           </div>
         </div>
         <div className="text-center">
-          <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Analyse IA en cours…</p>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{label}</p>
+          <p style={{ fontSize: 14, fontWeight: 600, color: M.ink, fontFamily: M.body }}>Analyse IA en cours…</p>
+          <p style={{ fontSize: 11, marginTop: 2, color: M.inkFaint, fontFamily: M.body }}>{label}</p>
         </div>
       </div>
       {/* Progress bar */}
-      <div className="relative h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--border)' }}>
+      <div style={{ position: 'relative', height: 10, borderRadius: 20, overflow: 'hidden', background: M.muted }}>
         <motion.div
-          className="absolute inset-y-0 left-0 rounded-full"
+          style={{ position: 'absolute', inset: '0 auto 0 0', borderRadius: 20, background: `linear-gradient(90deg, ${M.tenant}, #2e9d61)` }}
           animate={{ width: `${pct}%` }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
-          style={{ background: 'linear-gradient(90deg, #7c3aed, #a78bfa)' }}
         />
         <motion.div
-          className="absolute inset-y-0 w-16 rounded-full"
-          style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent)' }}
+          style={{ position: 'absolute', inset: '0 auto 0 0', width: 64, borderRadius: 20, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)' }}
           animate={{ x: ['-64px', '500px'] }}
           transition={{ duration: 1.6, repeat: Infinity, ease: 'linear' }}
         />
       </div>
-      <p className="text-center text-xs font-medium tabular-nums" style={{ color: 'var(--text-tertiary)' }}>
+      <p style={{ textAlign: 'center', fontSize: 11, fontWeight: 500, color: M.inkFaint, fontFamily: M.body }}>
         {Math.round(pct)} %
       </p>
     </motion.div>
@@ -707,7 +756,6 @@ function ResultView({
   const [selectedFamily, setSelectedFamily] = useState<DocFamily>(scanResult.docFamily)
   // Seuil 90% : en-dessous → picker direct, au-dessus → simple confirmation oui/non
   const [showPicker, setShowPicker] = useState(scanResult.confidence < 90 && !scanResult.certaintyTokenFound)
-  const colors     = FAMILY_COLORS[scanResult.docFamily]
   // ≥90% OU marqueur de certitude → mode confirmation simple
   const isHighConf = scanResult.confidence >= 90 || !!scanResult.certaintyTokenFound
   const families: DocFamily[] = [
@@ -715,37 +763,35 @@ function ResultView({
     'EMPLOI','GARANTIE','BANCAIRE','LOGEMENT','UNKNOWN',
   ]
 
-  const confColor = scanResult.confidence >= 90 ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
-                  : scanResult.confidence >= 70 ? 'text-blue-700 bg-blue-50 border-blue-200'
-                  : 'text-amber-700 bg-amber-50 border-amber-200'
+  const confBg    = scanResult.confidence >= 90 ? M.tenantLight : scanResult.confidence >= 70 ? '#dbeafe' : M.warningBg
+  const confColor = scanResult.confidence >= 90 ? M.tenant     : scanResult.confidence >= 70 ? '#1d4ed8' : M.warning
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-3">
       {/* Résultat IA */}
-      <div className={`rounded-2xl p-4 border ${colors.bg} ${colors.border}`}>
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
-            style={{ backgroundColor: 'rgba(255,255,255,0.6)' }}>
+      <div style={{ borderRadius: 12, padding: 16, border: `1px solid ${scanResult.confidence >= 90 ? M.tenantBorder : M.border}`, background: scanResult.confidence >= 90 ? M.tenantLight : M.muted }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, background: 'rgba(255,255,255,0.6)', flexShrink: 0 }}>
             {FAMILY_ICONS[scanResult.docFamily]}
           </div>
-          <div className="flex-1 min-w-0">
-            <p className={`text-[10px] font-medium uppercase tracking-wide ${colors.text} opacity-70`}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em', color: M.inkFaint, fontFamily: M.body, margin: 0 }}>
               {isHighConf ? 'Détecté avec haute confiance :' : 'Détecté (confirmation requise) :'}
             </p>
-            <p className={`text-base font-bold ${colors.text}`}>{FAMILY_LABELS[scanResult.docFamily]}</p>
+            <p style={{ fontSize: 15, fontWeight: 700, color: M.ink, fontFamily: M.body, margin: 0 }}>{FAMILY_LABELS[scanResult.docFamily]}</p>
           </div>
-          <span className={`text-sm font-bold px-2.5 py-1 rounded-xl flex-shrink-0 border ${confColor}`}>
+          <span style={{ fontSize: 13, fontWeight: 700, padding: '4px 10px', borderRadius: 8, flexShrink: 0, background: confBg, color: confColor, border: `1px solid ${confColor}30`, fontFamily: M.body }}>
             {Math.round(scanResult.confidence)}%
           </span>
         </div>
         {scanResult.certaintyTokenFound && (
-          <div className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-1.5 mb-1">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, background: M.tenantLight, color: M.tenant, border: `1px solid ${M.tenantBorder}`, borderRadius: 8, padding: '6px 12px', marginBottom: 4, fontFamily: M.body }}>
             <ShieldCheck className="w-3.5 h-3.5 flex-shrink-0" />
             Certifié par marqueur {scanResult.certaintyTokenFound.toUpperCase()}
           </div>
         )}
         {!isHighConf && (
-          <div className="flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-1.5 mb-1">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, background: M.warningBg, color: M.warning, border: `1px solid #fde68a`, borderRadius: 8, padding: '6px 12px', marginBottom: 4, fontFamily: M.body }}>
             <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
             Confiance &lt; 90 % — veuillez choisir la bonne catégorie ci-dessous.
           </div>
@@ -754,13 +800,14 @@ function ResultView({
       </div>
       {/* Signaux fraude */}
       {scanResult.fraudSignals.length > 0 && (
-        <div className="space-y-1.5">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {scanResult.fraudSignals.map((sig, i) => (
-            <div key={i} className={`flex items-start gap-2 text-xs px-3 py-2 rounded-xl ${
-              sig.severity === 'high'
-                ? 'bg-red-50 text-red-700 border border-red-200'
-                : 'bg-amber-50 text-amber-700 border border-amber-200'
-            }`}>
+            <div key={i} style={{
+              display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 11, padding: '8px 12px', borderRadius: 8, fontFamily: M.body,
+              background: sig.severity === 'high' ? M.dangerBg : M.warningBg,
+              color: sig.severity === 'high' ? M.danger : M.warning,
+              border: `1px solid ${sig.severity === 'high' ? '#fca5a5' : '#fde68a'}`,
+            }}>
               <AlertTriangle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
               {sig.message}
             </div>
@@ -769,54 +816,55 @@ function ResultView({
       )}
       {/* Confirmation ≥90% : simple oui/non */}
       {isHighConf && !showPicker ? (
-        <div className="space-y-2 pt-1">
-          <p className="text-xs text-center font-medium" style={{ color: 'var(--text-secondary)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 4 }}>
+          <p style={{ fontSize: 11, textAlign: 'center', fontWeight: 500, color: M.inkMid, fontFamily: M.body, margin: 0 }}>
             Est-ce bien le bon document ?
           </p>
           <motion.button whileTap={{ scale: 0.98 }} onClick={() => onConfirm(selectedFamily)}
-            className="w-full py-3 px-4 rounded-2xl text-sm font-bold text-white shadow-sm"
-            style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+            style={{ width: '100%', padding: '12px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700, color: '#fff', background: M.tenant, border: 'none', cursor: 'pointer', fontFamily: M.body }}>
             ✓ Oui, c'est bien {FAMILY_LABELS[scanResult.docFamily]}
           </motion.button>
           <button onClick={() => setShowPicker(true)}
-            className="w-full text-xs py-1.5 transition-colors" style={{ color: 'var(--text-tertiary)' }}>
+            style={{ width: '100%', fontSize: 11, padding: '6px', color: M.inkFaint, background: 'none', border: 'none', cursor: 'pointer', fontFamily: M.body }}>
             Non, ce n'est pas la bonne catégorie →
           </button>
         </div>
       ) : (
         /* Picker <90% OU correction manuelle */
-        <div className="space-y-2.5 pt-1">
-          <p className="text-xs font-semibold" style={{ color: 'var(--text-tertiary)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 4 }}>
+          <p style={{ fontSize: 11, fontWeight: 600, color: M.inkFaint, fontFamily: M.body, margin: 0 }}>
             {showPicker && isHighConf
               ? 'Choisir la catégorie correcte :'
               : 'Dans quelle catégorie classer ce document ?'}
           </p>
           <div className="grid grid-cols-3 gap-1.5">
             {families.map((f) => {
-              const fc = FAMILY_COLORS[f]
+              const isSelected = selectedFamily === f
               return (
                 <button key={f} onClick={() => setSelectedFamily(f)}
-                  className={`text-[11px] py-2 px-1 rounded-xl font-medium border transition-all text-center leading-tight ${
-                    selectedFamily === f ? `${fc.bg} ${fc.text} ${fc.border} border` : 'border-[var(--border)]'
-                  }`}
-                  style={selectedFamily === f ? {} : { backgroundColor: 'var(--surface-subtle)', color: 'var(--text-secondary)' }}>
+                  style={{
+                    fontSize: 11, padding: '8px 4px', borderRadius: 8, fontWeight: 500, textAlign: 'center', lineHeight: 1.3, cursor: 'pointer', fontFamily: M.body, transition: 'all 0.15s',
+                    background: isSelected ? M.tenantLight : M.muted,
+                    border: `1px solid ${isSelected ? M.tenant : M.border}`,
+                    color: isSelected ? M.tenant : M.inkMid,
+                  }}>
                   {FAMILY_ICONS[f]}<br /><span>{FAMILY_LABELS[f]}</span>
                 </button>
               )
             })}
           </div>
           <motion.button whileTap={{ scale: 0.98 }} onClick={() => onConfirm(selectedFamily)}
-            className="w-full py-3 px-4 rounded-2xl text-sm font-bold text-white shadow-sm"
-            style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)' }}>
+            style={{ width: '100%', padding: '12px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700, color: '#fff', background: M.tenant, border: 'none', cursor: 'pointer', fontFamily: M.body }}>
             Confirmer — {FAMILY_LABELS[selectedFamily]}
           </motion.button>
           {showPicker && isHighConf && (
             <button onClick={() => setShowPicker(false)}
-              className="w-full text-xs py-1" style={{ color: 'var(--text-tertiary)' }}>
+              style={{ width: '100%', fontSize: 11, padding: '4px', color: M.inkFaint, background: 'none', border: 'none', cursor: 'pointer', fontFamily: M.body }}>
               ← Retour à la confirmation automatique
             </button>
           )}
-          <button onClick={onCancel} className="w-full text-xs py-1 transition-colors" style={{ color: 'var(--text-tertiary)' }}>
+          <button onClick={onCancel}
+            style={{ width: '100%', fontSize: 11, padding: '4px', color: M.inkFaint, background: 'none', border: 'none', cursor: 'pointer', fontFamily: M.body }}>
             Annuler
           </button>
         </div>
@@ -829,10 +877,10 @@ function ResultView({
 
 function UploadingView() {
   return (
-    <div className="flex flex-col items-center gap-3 py-6">
-      <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-      <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Envoi sécurisé en cours…</p>
-      <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>100 % local · chiffré TLS</p>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '24px 0' }}>
+      <Loader2 className="w-8 h-8 animate-spin" style={{ color: M.tenant }} />
+      <p style={{ fontSize: 13, fontWeight: 600, color: M.ink, fontFamily: M.body, margin: 0 }}>Envoi sécurisé en cours…</p>
+      <p style={{ fontSize: 11, color: M.inkFaint, fontFamily: M.body, margin: 0 }}>100 % local · chiffré TLS</p>
     </div>
   )
 }
@@ -840,15 +888,15 @@ function UploadingView() {
 function DoneView({ entry }: { entry: FileEntry }) {
   const family = entry.scanResult?.docFamily
   return (
-    <div className="flex flex-col items-center gap-3 py-6">
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '24px 0' }}>
       <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 400, damping: 14 }}>
-        <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+        <CheckCircle2 className="w-10 h-10" style={{ color: M.tenant }} />
       </motion.div>
-      <p className="text-sm font-semibold text-center" style={{ color: 'var(--text-primary)' }}>Document enregistré !</p>
+      <p style={{ fontSize: 14, fontWeight: 600, textAlign: 'center', color: M.ink, fontFamily: M.body, margin: 0 }}>Document enregistré !</p>
       {family && family !== 'UNKNOWN' && (
-        <p className="text-xs text-center" style={{ color: 'var(--text-tertiary)' }}>
-          Ajouté dans la catégorie <strong>{FAMILY_LABELS[family]}</strong>
+        <p style={{ fontSize: 11, textAlign: 'center', color: M.inkFaint, fontFamily: M.body, margin: 0 }}>
+          Ajouté dans la catégorie <strong style={{ color: M.inkMid }}>{FAMILY_LABELS[family]}</strong>
         </p>
       )}
     </div>
@@ -857,12 +905,17 @@ function DoneView({ entry }: { entry: FileEntry }) {
 
 function ErrorView({ error, onCancel }: { error?: string; onCancel: () => void }) {
   return (
-    <div className="flex flex-col items-center gap-3 py-6">
-      <AlertCircle className="w-8 h-8 text-red-400" />
-      <p className="text-sm font-medium text-center" style={{ color: 'var(--text-primary)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '24px 0' }}>
+      <AlertCircle className="w-8 h-8" style={{ color: M.danger }} />
+      <p style={{ fontSize: 13, fontWeight: 500, textAlign: 'center', color: M.ink, fontFamily: M.body, margin: 0 }}>
         {error ?? "Erreur lors de l'analyse"}
       </p>
-      <button onClick={onCancel} className="btn btn-secondary text-sm">Fermer</button>
+      <button
+        onClick={onCancel}
+        style={{ padding: '8px 20px', borderRadius: 8, border: `1px solid ${M.border}`, background: M.muted, color: M.inkMid, fontFamily: M.body, fontSize: 13, cursor: 'pointer' }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = M.borderMid }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = M.muted }}
+      >Fermer</button>
     </div>
   )
 }
@@ -886,41 +939,43 @@ function ScannerModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }}>
+      style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}>
       <motion.div
         initial={{ opacity: 0, scale: 0.94, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 8 }}
         transition={{ type: 'spring', stiffness: 360, damping: 26 }}
-        className="w-full max-w-md rounded-3xl shadow-2xl overflow-hidden"
-        style={{ backgroundColor: 'var(--surface-card)', border: '1px solid var(--border)' }}
+        className="w-full max-w-md overflow-hidden"
+        style={{ background: M.surface, border: `1px solid ${M.border}`, borderRadius: 16, boxShadow: '0 20px 60px rgba(13,12,10,0.18)' }}
       >
         {/* Header */}
-        <div className="px-6 pt-5 pb-3 flex items-start justify-between border-b" style={{ borderColor: 'var(--border)' }}>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
+        <div style={{ padding: '20px 24px 12px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', borderBottom: `1px solid ${M.border}` }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <p style={{ fontSize: 13, fontWeight: 600, color: M.ink, fontFamily: M.body, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {entry.file.name}
               </p>
               {queueInfo.total > 1 && (
-                <span className="text-[10px] bg-blue-50 text-[#007AFF] px-2 py-0.5 rounded-full font-medium flex-shrink-0">
+                <span style={{ fontSize: 10, background: M.tenantLight, color: M.tenant, padding: '1px 8px', borderRadius: 20, fontWeight: 500, flexShrink: 0, fontFamily: M.body }}>
                   {queueInfo.current}/{queueInfo.total}
                 </span>
               )}
             </div>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+            <p style={{ fontSize: 11, marginTop: 2, color: M.inkFaint, fontFamily: M.body, margin: 0 }}>
               {(entry.file.size / 1024).toFixed(0)} Ko
             </p>
           </div>
           {(isScanning || isDone || isError) && (
             <button onClick={onCancel}
-              className="p-1.5 ml-2 rounded-xl hover:bg-[var(--surface-subtle)] transition-colors flex-shrink-0">
-              <X className="w-4 h-4" style={{ color: 'var(--text-tertiary)' }} />
+              style={{ padding: 6, marginLeft: 8, borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', color: M.inkFaint, flexShrink: 0 }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = M.muted }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'none' }}>
+              <X className="w-4 h-4" />
             </button>
           )}
         </div>
         {/* Body */}
-        <div className="px-6 pt-4 pb-6 max-h-[80vh] overflow-y-auto">
+        <div style={{ padding: '16px 24px 24px', maxHeight: '80vh', overflowY: 'auto' }}>
           <AnimatePresence mode="wait">
             {isScanning  && <ScanningView  key="scan" entry={entry} />}
             {isResult    && <ResultView    key="res"  scanResult={pendingConfirm!.scanResult} onConfirm={onConfirm} onCancel={onCancel} />}
@@ -951,37 +1006,42 @@ function LiveScanConsole({
   const isError = entry.phase === 'error'
 
   return (
-    <div className="space-y-3">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {/* File header */}
-      <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: isDone ? (entry.scanResult?.fraudSignals.some(s=>s.severity==='high') ? '#fee2e2' : '#d1fae5') : 'var(--surface-subtle)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{
+          width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          background: isDone ? (entry.scanResult?.fraudSignals.some(s=>s.severity==='high') ? M.dangerBg : M.tenantLight) : M.muted,
+        }}>
           {isDone
-            ? <CheckCircle className="w-4.5 h-4.5 text-emerald-600" />
-            : isError ? <FileX className="w-4.5 h-4.5 text-red-500" />
-            : <Cpu className="w-4.5 h-4.5 animate-pulse text-blue-500" />}
+            ? <CheckCircle className="w-4 h-4" style={{ color: M.tenant }} />
+            : isError ? <FileX className="w-4 h-4" style={{ color: M.danger }} />
+            : <Cpu className="w-4 h-4 animate-pulse" style={{ color: M.tenant }} />}
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{entry.file.name}</p>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontSize: 13, fontWeight: 600, color: M.ink, fontFamily: M.body, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.file.name}</p>
           {isDone && entry.scanResult && (
-            <p className="text-xs font-medium" style={{ color: entry.scanResult.docFamily !== 'UNKNOWN' ? '#10b981' : '#86868b' }}>
+            <p style={{ fontSize: 11, fontWeight: 500, color: entry.scanResult.docFamily !== 'UNKNOWN' ? M.tenant : M.inkFaint, fontFamily: M.body, margin: 0 }}>
               {FAMILY_LABELS[entry.scanResult.docFamily]} · {entry.scanResult.confidence}%
             </p>
           )}
           {!isDone && !isError && (
-            <p className="text-xs text-blue-500 animate-pulse">Analyse en cours…</p>
+            <p style={{ fontSize: 11, color: M.tenant, fontFamily: M.body, margin: 0 }} className="animate-pulse">Analyse en cours…</p>
           )}
         </div>
         {(isDone || isError) && (
-          <button onClick={onDismiss} className="text-xs px-2 py-1 rounded-lg"
-            style={{ backgroundColor: 'var(--surface-subtle)', color: 'var(--text-tertiary)' }}>OK</button>
+          <button onClick={onDismiss}
+            style={{ fontSize: 11, padding: '4px 10px', borderRadius: 8, background: M.muted, border: `1px solid ${M.border}`, color: M.inkMid, fontFamily: M.body, cursor: 'pointer' }}>
+            OK
+          </button>
         )}
       </div>
 
       {/* Progress bar */}
       {!isDone && !isError && (
-        <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--border)' }}>
-          <motion.div className="h-1.5 rounded-full"
+        <div style={{ height: 6, borderRadius: 20, overflow: 'hidden', background: M.muted }}>
+          <motion.div
+            style={{ height: 6, borderRadius: 20, background: `linear-gradient(90deg, ${M.tenant}, #2e9d61)` }}
             initial={{ width: 0 }}
             animate={{ width: `${
               entry.phase === 'queued' ? 5 :
@@ -991,24 +1051,22 @@ function LiveScanConsole({
               entry.phase === 'uploading' ? 90 : 0
             }%` }}
             transition={{ duration: 0.25 }}
-            style={{ background: 'linear-gradient(90deg, #3b82f6, #60a5fa)' }}
           />
         </div>
       )}
 
       {/* Logs */}
       <div ref={logRef}
-        className="font-mono text-[10px] space-y-0.5 max-h-36 overflow-y-auto rounded-xl px-3 py-2"
-        style={{ backgroundColor: 'var(--surface-subtle)' }}>
+        style={{ fontFamily: 'monospace', fontSize: 10, maxHeight: 144, overflowY: 'auto', borderRadius: 8, padding: '8px 12px', background: '#0d0c0a', display: 'flex', flexDirection: 'column', gap: 2 }}>
         {entry.scanLogs.length === 0
-          ? <p style={{ color: 'var(--text-tertiary)' }}>Initialisation…</p>
+          ? <p style={{ color: '#4a5568', margin: 0 }}>Initialisation…</p>
           : entry.scanLogs.map((log, i) => (
-            <p key={i} className={
-              log.startsWith('[OK]')   ? 'text-emerald-600' :
-              log.startsWith('[WARN]') ? 'text-amber-600'   :
-              log.startsWith('[ERR]')  ? 'text-red-600'     :
-              'text-[var(--text-tertiary)]'
-            }>{log}</p>
+            <p key={i} style={{ margin: 0, color:
+              log.startsWith('[OK]')   ? '#4ade80' :
+              log.startsWith('[WARN]') ? '#fbbf24' :
+              log.startsWith('[ERR]')  ? '#f87171' :
+              '#94a3b8'
+            }}>{log}</p>
           ))
         }
       </div>
@@ -1020,11 +1078,13 @@ function LiveScanConsole({
 
       {/* Fraud alerts */}
       {isDone && entry.scanResult && entry.scanResult.fraudSignals.length > 0 && (
-        <div className="space-y-1">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {entry.scanResult.fraudSignals.map((sig, i) => (
-            <div key={i} className={`flex items-start gap-2 text-xs px-3 py-2 rounded-xl ${
-              sig.severity === 'high' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'
-            }`}>
+            <div key={i} style={{
+              display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 11, padding: '8px 12px', borderRadius: 8, fontFamily: M.body,
+              background: sig.severity === 'high' ? M.dangerBg : M.warningBg,
+              color: sig.severity === 'high' ? M.danger : M.warning,
+            }}>
               <AlertTriangle className="w-3 h-3 mt-0.5 flex-shrink-0" />
               {sig.message}
             </div>
@@ -1057,41 +1117,41 @@ function IdleSidePanel({
             : "Dossier complet et solide. Vous pouvez le télécharger en ZIP."
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-2xl p-4 border" style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
-        <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--text-tertiary)' }}>Résumé rapide</p>
-        <div className="grid grid-cols-2 gap-2">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ background: M.muted, border: `1px solid ${M.border}`, borderRadius: 12, padding: 16 }}>
+        <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: M.inkFaint, fontFamily: M.body, margin: '0 0 12px' }}>Résumé rapide</p>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           {[
-            { label: 'Uploadés',   value: uploaded, color: 'text-emerald-600' },
-            { label: 'Manquants',  value: missing,  color: missing  > 0 ? 'text-amber-600' : 'text-emerald-600' },
-            { label: 'Suspects',   value: suspects, color: suspects > 0 ? 'text-red-600'   : 'text-emerald-600' },
-            { label: 'Score',      value: `${score}%`, color: score >= 65 ? 'text-blue-600' : 'text-amber-600' },
-          ].map(({ label, value, color }) => (
-            <div key={label} className="rounded-xl px-3 py-2 text-center" style={{ backgroundColor: 'var(--surface-subtle)' }}>
-              <p className={`text-lg font-bold ${color}`}>{value}</p>
-              <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{label}</p>
+            { label: 'Uploadés',  value: uploaded,      textColor: M.tenant },
+            { label: 'Manquants', value: missing,       textColor: missing  > 0 ? M.warning : M.tenant },
+            { label: 'Suspects',  value: suspects,      textColor: suspects > 0 ? M.danger  : M.tenant },
+            { label: 'Score',     value: `${score}%`,   textColor: score >= 65 ? '#1d4ed8'  : M.warning },
+          ].map(({ label, value, textColor }) => (
+            <div key={label} style={{ borderRadius: 10, padding: '8px 12px', textAlign: 'center', background: M.surface, border: `1px solid ${M.border}` }}>
+              <p style={{ fontSize: 20, fontWeight: 700, color: textColor, fontFamily: M.body, margin: 0 }}>{value}</p>
+              <p style={{ fontSize: 10, color: M.inkFaint, fontFamily: M.body, margin: 0 }}>{label}</p>
             </div>
           ))}
         </div>
       </div>
 
       {crossDocWarnings.length > 0 && (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 space-y-2">
-          <p className="text-xs font-bold text-amber-700 flex items-center gap-1.5">
+        <div style={{ border: `1px solid #fde68a`, background: M.warningBg, borderRadius: 12, padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: M.warning, fontFamily: M.body, margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
             <AlertTriangle className="w-3.5 h-3.5" /> Cohérence inter-documents
           </p>
           {crossDocWarnings.map((w, i) => (
-            <p key={i} className="text-xs text-amber-600">{w}</p>
+            <p key={i} style={{ fontSize: 11, color: M.warning, fontFamily: M.body, margin: 0 }}>{w}</p>
           ))}
         </div>
       )}
 
-      <div className="rounded-2xl p-4 border" style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
-        <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--text-tertiary)' }}>Conseil IA</p>
-        <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{tip}</p>
+      <div style={{ background: M.muted, border: `1px solid ${M.border}`, borderRadius: 12, padding: 16 }}>
+        <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: M.inkFaint, fontFamily: M.body, margin: '0 0 8px' }}>Conseil IA</p>
+        <p style={{ fontSize: 12, lineHeight: 1.6, color: M.inkMid, fontFamily: M.body, margin: 0 }}>{tip}</p>
       </div>
 
-      <p className="text-[10px] text-center flex items-center justify-center gap-1" style={{ color: 'var(--text-tertiary)' }}>
+      <p style={{ fontSize: 10, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, color: M.inkFaint, fontFamily: M.body }}>
         <Lock className="w-3 h-3" />
         Analyse 100 % locale · Aucune donnée transmise
       </p>
@@ -1142,6 +1202,14 @@ export default function DossierLocatif() {
   const score    = useMemo(() => computeScore(documents), [documents])
   const hasVisale = documents.some((d) => d.docType === 'ATTESTATION_VISALE')
   const strength = getStrength(score, hasVisale)
+
+  const celebratedRef = useRef(false)
+  useEffect(() => {
+    if (score >= 90 && !celebratedRef.current) {
+      celebratedRef.current = true
+      celebrateBig()
+    }
+  }, [score])
   const StrIcon  = strength.icon
 
   // ── Upload helper ──────────────────────────────────────────────────────────
@@ -1675,8 +1743,8 @@ export default function DossierLocatif() {
   if (isLoading) {
     return (
       <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <Loader className="w-6 h-6 animate-spin" style={{ color: 'var(--brand-violet)' }} />
+        <div className="min-h-screen flex items-center justify-center" style={{ background: M.bg }}>
+          <Loader className="w-6 h-6 animate-spin" style={{ color: M.tenant }} />
         </div>
       </Layout>
     )
@@ -1719,7 +1787,7 @@ export default function DossierLocatif() {
                     — {user.firstName} {user.lastName}
                   </span>
                 )}
-                <span className={`inline-flex items-center gap-1.5 text-sm font-bold px-3 py-1 rounded-full ${strength.bg} ${strength.color}`}>
+                <span className="inline-flex items-center gap-1.5 text-sm font-bold px-3 py-1 rounded-full" style={{ background: strength.bgColor, color: strength.textColor }}>
                   <StrIcon className="w-4 h-4" /> {strength.label}
                 </span>
               </div>
@@ -1746,9 +1814,9 @@ export default function DossierLocatif() {
               <button
                 onClick={() => setWizardOpen(true)}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all"
-                style={{ backgroundColor: '#007AFF', boxShadow: '0 2px 8px rgba(0,122,255,0.24)' }}
+                style={{ backgroundColor: '#1b5e3b', boxShadow: '0 2px 8px rgba(27,94,59,0.20)' }}
                 onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#0066d6' }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#007AFF' }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#1b5e3b' }}
               >
                 <Sparkles className="w-4 h-4" />
                 Constituer mon dossier

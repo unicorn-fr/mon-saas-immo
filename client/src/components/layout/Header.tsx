@@ -6,7 +6,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import {
   LogOut, Settings, LayoutDashboard, Menu,
-  TrendingUp, Tag, Terminal, CreditCard, Bell, X,
+  Tag, Terminal, CreditCard, Bell, X,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useSidebarStore } from '../../store/sidebarStore'
@@ -56,111 +56,100 @@ export const Header = () => {
 
   const initials = `${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}`.toUpperCase() || '?'
 
-  // ── DASHBOARD TOPBAR ────────────────────────────────────────────────────────
+  // ── DASHBOARD TOPBAR — compact inline pill (non-fixed, dans le flux) ─────────
   if (hasSidebar) {
     return (
-      <header className="flex-shrink-0 z-40 sticky top-0"
-        style={{ background: '#ffffff', borderBottom: `1px solid ${BORDER}` }}>
-        <div className="flex items-center justify-between h-[52px] px-5">
+      <header className="flex-shrink-0 z-40 flex items-center justify-end px-4 py-2.5 gap-2"
+        style={{ background: 'transparent' }}>
 
-          {/* Hamburger mobile */}
-          <button onClick={toggleSidebar}
-            className="md:hidden p-2 rounded-lg transition-colors"
+        {/* Mobile hamburger */}
+        <button onClick={toggleSidebar}
+          className="md:hidden mr-auto flex items-center justify-center w-9 h-9 rounded-xl transition-colors"
+          style={{ background: '#ffffff', border: `1px solid ${BORDER}`, boxShadow: '0 1px 2px rgba(13,12,10,0.06), 0 4px 12px rgba(13,12,10,0.08)', color: INK_FAINT }}
+          aria-label="Menu">
+          <Menu className="w-4 h-4" />
+        </button>
+
+        {/* Super Admin badge */}
+        {user?.role === 'SUPER_ADMIN' && (
+          <Link to="/super-admin"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold"
+            style={{ background: 'rgba(0,180,216,0.10)', color: '#00b4d8', border: '1px solid rgba(0,180,216,0.25)' }}>
+            <Terminal className="w-3 h-3" />
+            <span className="hidden sm:inline">Admin</span>
+          </Link>
+        )}
+
+        {/* Pill : Bell + Profile */}
+        <div className="flex items-center gap-0.5 px-1.5 py-1.5 rounded-2xl"
+          style={{ background: '#ffffff', border: `1px solid ${BORDER}`, boxShadow: '0 1px 2px rgba(13,12,10,0.06), 0 4px 12px rgba(13,12,10,0.08)' }}>
+
+          <Link to="/notifications"
+            className="p-1.5 rounded-lg transition-colors"
             style={{ color: INK_FAINT }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BG_MUTED }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
-            aria-label="Menu">
-            <Menu className="w-5 h-5" />
-          </button>
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BG_MUTED; (e.currentTarget as HTMLElement).style.color = INK_MID }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = INK_FAINT }}>
+            <Bell className="w-4 h-4" />
+          </Link>
 
-          <div className="hidden md:block flex-1" />
+          <div className="w-px h-4 mx-0.5" style={{ background: BORDER }} />
 
-          {/* Super Admin badge */}
-          {user?.role === 'SUPER_ADMIN' && (
-            <Link to="/super-admin"
-              className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold mr-3"
-              style={{ background: 'rgba(0,180,216,0.10)', color: '#00b4d8', border: '1px solid rgba(0,180,216,0.25)' }}>
-              <Terminal className="w-3 h-3" /> Cerveau Central
-            </Link>
-          )}
+          <div className="relative">
+            <button onClick={() => setShowUserMenu(!showUserMenu)}
+              className="flex items-center gap-1.5 px-1.5 py-1 rounded-lg transition-all"
+              style={{ background: showUserMenu ? BG_MUTED : 'transparent' }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BG_MUTED }}
+              onMouseLeave={(e) => { if (!showUserMenu) (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
+              <div className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
+                style={{ background: threadColor }}>
+                {initials}
+              </div>
+              <span className="text-[12px] font-medium hidden sm:block pr-0.5" style={{ color: INK, fontFamily: 'var(--font-body)' }}>
+                {user?.firstName}
+              </span>
+            </button>
 
-          {/* Actions droite */}
-          <div className="flex items-center gap-1">
-            <Link to="/notifications"
-              className="p-2 rounded-lg transition-colors"
-              style={{ color: INK_FAINT }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BG_MUTED; (e.currentTarget as HTMLElement).style.color = INK_MID }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = INK_FAINT }}>
-              <Bell className="w-[17px] h-[17px]" />
-            </Link>
-
-            {/* Profile */}
-            <div className="relative ml-1">
-              <button onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center gap-2 pl-1.5 pr-2.5 py-1.5 rounded-lg transition-all"
-                style={{
-                  border: `1px solid ${BORDER}`,
-                  background: showUserMenu ? BG_MUTED : 'transparent',
-                }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BG_MUTED }}
-                onMouseLeave={(e) => { if (!showUserMenu) (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
-                <div className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
-                  style={{ background: threadColor }}>
-                  {initials}
-                </div>
-                <span className="text-[13px] font-medium hidden sm:block" style={{ color: INK, fontFamily: 'var(--font-body)' }}>
-                  {user?.firstName}
-                </span>
-              </button>
-
-              {showUserMenu && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
-                  <div className="absolute right-0 mt-2 w-56 rounded-xl py-2 z-20"
-                    style={{
-                      background: '#ffffff',
-                      border: `1px solid ${BORDER}`,
-                      boxShadow: '0 20px 60px rgba(13,12,10,0.12), 0 4px 16px rgba(13,12,10,0.06)',
-                    }}>
-                    <div className="px-4 py-3" style={{ borderBottom: `1px solid ${BORDER}` }}>
-                      <p className="text-[13px] font-semibold" style={{ color: INK, fontFamily: 'var(--font-body)' }}>
-                        {user?.firstName} {user?.lastName}
-                      </p>
-                      <p className="text-[11px] truncate mt-0.5" style={{ color: INK_MID }}>{user?.email}</p>
-                      <span className="inline-block mt-1.5 text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                        style={{ background: `${threadColor}18`, color: threadColor }}>
-                        {user?.role === 'OWNER' ? 'Propriétaire' : user?.role === 'TENANT' ? 'Locataire' : user?.role}
-                      </span>
-                    </div>
-
-                    {[
-                      { to: getDashboardLink(), icon: <LayoutDashboard className="w-4 h-4" />, label: 'Tableau de bord' },
-                      { to: '/profile', icon: <Settings className="w-4 h-4" />, label: 'Mon profil' },
-                      { to: '/pricing', icon: <CreditCard className="w-4 h-4" />, label: 'Mon abonnement' },
-                    ].map(({ to, icon, label }) => (
-                      <Link key={to} to={to}
-                        className="flex items-center gap-3 px-4 py-2 text-[13px] transition-colors"
-                        style={{ color: INK_MID, fontFamily: 'var(--font-body)' }}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BG_MUTED }}
-                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
-                        onClick={() => setShowUserMenu(false)}>
-                        <span style={{ color: INK_FAINT }}>{icon}</span> {label}
-                      </Link>
-                    ))}
-
-                    <div className="mt-1 pt-1" style={{ borderTop: `1px solid ${BORDER}` }}>
-                      <button onClick={handleLogout}
-                        className="flex items-center gap-3 px-4 py-2 text-[13px] w-full transition-colors"
-                        style={{ color: '#9b1c1c', fontFamily: 'var(--font-body)' }}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#fef2f2' }}
-                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
-                        <LogOut className="w-4 h-4" /> Déconnexion
-                      </button>
-                    </div>
+            {showUserMenu && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
+                <div className="absolute right-0 mt-2 w-56 rounded-xl py-2 z-20"
+                  style={{ background: '#ffffff', border: `1px solid ${BORDER}`, boxShadow: '0 20px 60px rgba(13,12,10,0.12), 0 4px 16px rgba(13,12,10,0.06)' }}>
+                  <div className="px-4 py-3" style={{ borderBottom: `1px solid ${BORDER}` }}>
+                    <p className="text-[13px] font-semibold" style={{ color: INK, fontFamily: 'var(--font-body)' }}>
+                      {user?.firstName} {user?.lastName}
+                    </p>
+                    <p className="text-[11px] truncate mt-0.5" style={{ color: INK_MID }}>{user?.email}</p>
+                    <span className="inline-block mt-1.5 text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                      style={{ background: `${threadColor}18`, color: threadColor }}>
+                      {user?.role === 'OWNER' ? 'Propriétaire' : user?.role === 'TENANT' ? 'Locataire' : user?.role}
+                    </span>
                   </div>
-                </>
-              )}
-            </div>
+                  {[
+                    { to: getDashboardLink(), icon: <LayoutDashboard className="w-4 h-4" />, label: 'Tableau de bord' },
+                    { to: '/profile', icon: <Settings className="w-4 h-4" />, label: 'Mon profil' },
+                    { to: '/pricing', icon: <CreditCard className="w-4 h-4" />, label: 'Mon abonnement' },
+                  ].map(({ to, icon, label }) => (
+                    <Link key={to} to={to}
+                      className="flex items-center gap-3 px-4 py-2 text-[13px] transition-colors"
+                      style={{ color: INK_MID, fontFamily: 'var(--font-body)' }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BG_MUTED }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
+                      onClick={() => setShowUserMenu(false)}>
+                      <span style={{ color: INK_FAINT }}>{icon}</span> {label}
+                    </Link>
+                  ))}
+                  <div className="mt-1 pt-1" style={{ borderTop: `1px solid ${BORDER}` }}>
+                    <button onClick={handleLogout}
+                      className="flex items-center gap-3 px-4 py-2 text-[13px] w-full transition-colors"
+                      style={{ color: '#9b1c1c', fontFamily: 'var(--font-body)' }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#fef2f2' }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
+                      <LogOut className="w-4 h-4" /> Déconnexion
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -184,13 +173,14 @@ export const Header = () => {
           <Link to="/" className="hover:opacity-80 transition-opacity flex-shrink-0">
             <span style={{
               fontFamily: 'var(--font-display)',
-              fontSize: '22px',
-              fontWeight: 600,
+              fontSize: '28px',
+              fontWeight: 700,
               fontStyle: 'italic',
               color: NIGHT,
-              letterSpacing: '-0.01em',
+              letterSpacing: '-0.02em',
+              lineHeight: 1,
             }}>
-              ImmoParticuliers
+              Bailio
             </span>
           </Link>
 
@@ -200,7 +190,6 @@ export const Header = () => {
               {[
                 { to: '/', label: 'Accueil' },
                 { to: '/search', label: 'Annonces' },
-                { to: '/calculateur', label: 'Calculateur', icon: <TrendingUp className="w-3.5 h-3.5" /> },
                 { to: '/pricing', label: 'Tarifs', icon: <Tag className="w-3.5 h-3.5" /> },
               ].map(({ to, label, icon }) => (
                 <Link key={to} to={to}
@@ -330,7 +319,6 @@ export const Header = () => {
             {[
               { to: '/', label: 'Accueil' },
               { to: '/search', label: 'Annonces' },
-              { to: '/calculateur', label: 'Calculateur' },
               { to: '/pricing', label: 'Tarifs' },
             ].map(({ to, label }) => (
               <Link key={to} to={to}

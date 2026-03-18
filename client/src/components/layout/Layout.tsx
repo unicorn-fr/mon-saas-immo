@@ -1,5 +1,6 @@
 import { ReactNode } from 'react'
 import { Header } from './Header'
+import Footer from './Footer'
 import { OwnerSidebar } from './OwnerSidebar'
 import { TenantSidebar } from './TenantSidebar'
 import { useAuth } from '../../hooks/useAuth'
@@ -7,9 +8,11 @@ import { useAuth } from '../../hooks/useAuth'
 interface LayoutProps {
   children: ReactNode
   showHeader?: boolean
+  /** Affiche le footer Bailio — true par défaut sur les pages publiques (sans sidebar) */
+  showFooter?: boolean
 }
 
-export const Layout = ({ children, showHeader = true }: LayoutProps) => {
+export const Layout = ({ children, showHeader = true, showFooter }: LayoutProps) => {
   const { isAuthenticated, user } = useAuth()
 
   const hasSidebar =
@@ -20,10 +23,13 @@ export const Layout = ({ children, showHeader = true }: LayoutProps) => {
 
   // ── Layout sans sidebar (pages publiques, admin) ──────────────────────────
   if (!hasSidebar) {
+    // Par défaut : footer visible sur toutes les pages publiques
+    const displayFooter = showFooter !== false
     return (
-      <div className="min-h-screen" style={{ background: 'var(--bg-base)', fontFamily: 'var(--font-body)' }}>
+      <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-base)', fontFamily: 'var(--font-body)' }}>
         {showHeader && <Header />}
-        <main id="main-content">{children}</main>
+        <main id="main-content" className="flex-1">{children}</main>
+        {displayFooter && <Footer />}
       </div>
     )
   }
@@ -34,7 +40,7 @@ export const Layout = ({ children, showHeader = true }: LayoutProps) => {
       {/* Skip to content */}
       <a href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-lg focus:text-white focus:font-semibold focus:text-sm"
-        style={{ background: 'var(--thread, #007AFF)' }}>
+        style={{ background: 'var(--thread, #1a1a2e)' }}>
         Aller au contenu principal
       </a>
 

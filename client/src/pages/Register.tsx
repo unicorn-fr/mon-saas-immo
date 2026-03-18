@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import { UserRole } from '../types/auth.types'
 import GoogleSignInButton from '../components/auth/GoogleSignInButton'
 import { Turnstile } from '@marsidev/react-turnstile'
+import { celebrateBig } from '../utils/celebrate'
 
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined
 
@@ -116,6 +117,7 @@ export default function Register() {
         ...(turnstileToken ? { 'cf-turnstile-response': turnstileToken } : {}),
       })
 
+      celebrateBig()
       const redirectPath = userType === 'OWNER' ? '/dashboard/owner' : '/dashboard/tenant'
       navigate(redirectPath, { replace: true })
     } catch (err) {
@@ -175,7 +177,7 @@ export default function Register() {
         {/* Logo */}
         <Link to="/" style={{ textDecoration: 'none', display: 'inline-block' }}>
           <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 600, fontSize: '22px', color: '#1a1a2e', letterSpacing: '-0.01em' }}>
-            ImmoParticuliers
+            Bailio
           </span>
         </Link>
 
@@ -244,7 +246,7 @@ export default function Register() {
           <div className="flex md:hidden" style={{ justifyContent: 'center', marginBottom: '32px' }}>
             <Link to="/" style={{ textDecoration: 'none' }}>
               <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 600, fontSize: '24px', color: '#1a1a2e' }}>
-                ImmoParticuliers
+                Bailio
               </span>
             </Link>
           </div>

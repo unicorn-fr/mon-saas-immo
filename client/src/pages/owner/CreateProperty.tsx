@@ -2,6 +2,7 @@ import { useState, FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, Save, AlertCircle, Filter, Loader2 } from 'lucide-react'
 import { useProperties } from '../../hooks/useProperties'
+import { celebrateBig } from '../../utils/celebrate'
 import { ImageUpload } from '../../components/property/ImageUpload'
 import { AvailabilityScheduler } from '../../components/property/AvailabilityScheduler'
 import { SelectionCriteriaForm } from '../../components/application/SelectionCriteriaForm'
@@ -217,6 +218,7 @@ export default function CreateProperty() {
     if (!validateForm()) return
     try {
       const property = await createProperty({ ...formData, selectionCriteria: criteria })
+      celebrateBig()
       navigate(`/properties/${property.id}`)
     } catch (err) {
       console.error('Create failed:', err)
@@ -227,7 +229,7 @@ export default function CreateProperty() {
 
   return (
     <Layout>
-      <div className="min-h-screen p-6 lg:p-8" style={{ background: M.bg, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+      <div className="p-6 lg:p-8" style={{ background: M.bg, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
         <div className="max-w-4xl mx-auto">
 
           {/* ── Back link + Header ── */}
