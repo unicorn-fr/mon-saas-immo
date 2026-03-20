@@ -48,7 +48,7 @@ export default function SearchProperties() {
   // UI State
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '')
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid')
-  const [showFilters, setShowFilters] = useState(true)
+  const [showFilters, setShowFilters] = useState(false)
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [sortBy, setSortBy] = useState<'createdAt' | 'price' | 'views'>('createdAt')
@@ -195,31 +195,31 @@ export default function SearchProperties() {
 
         {/* Content */}
         <div className="container mx-auto px-4 py-6">
-          <div className="flex gap-6">
+          <div className="flex flex-col lg:flex-row gap-6">
 
-            {/* Filters Sidebar */}
-            <div
-              className={`${showFilters ? 'w-80' : 'w-0'} transition-all duration-300 overflow-hidden flex-shrink-0`}
-            >
-              <div style={{
-                background: M.surface,
-                border: `1px solid ${M.border}`,
-                borderRadius: 12,
-                boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
-              }}>
-                <SearchFilters
-                  filters={filters}
-                  onFiltersChange={handleFiltersChange}
-                  onReset={handleResetFilters}
-                />
+            {/* Filters Sidebar — mobile: full width block; desktop: side panel */}
+            {showFilters && (
+              <div className="w-full lg:w-80 flex-shrink-0">
+                <div style={{
+                  background: M.surface,
+                  border: `1px solid ${M.border}`,
+                  borderRadius: 12,
+                  boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
+                }}>
+                  <SearchFilters
+                    filters={filters}
+                    onFiltersChange={handleFiltersChange}
+                    onReset={handleResetFilters}
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Main Content */}
             <div className="flex-1 min-w-0">
 
               {/* Toolbar */}
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setShowFilters(!showFilters)}
@@ -249,7 +249,7 @@ export default function SearchProperties() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 flex-wrap">
                   {/* Sort */}
                   <select
                     value={`${sortBy}-${sortOrder}`}
