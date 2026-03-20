@@ -39,7 +39,7 @@ function useCountUp(target: number, duration = 800) {
 
 export function KPICard({
   label, value, icon: Icon, trend, trendLabel, prefix = '', suffix = '',
-  thread = 'var(--thread, #007AFF)', loading = false,
+  thread = 'var(--thread, #1a1a2e)', loading = false,
 }: KPICardProps) {
   const numericValue = typeof value === 'number' ? value : parseInt(String(value)) || 0
   const animated = useCountUp(loading ? 0 : numericValue)

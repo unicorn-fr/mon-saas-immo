@@ -5,6 +5,45 @@ import { useMessageStore } from '../../store/messageStore'
 import { useAuth } from '../../hooks/useAuth'
 import { User as MessageUser } from '../../types/message.types'
 
+const M = {
+  ink: '#0d0c0a',
+  inkMid: '#5a5754',
+  inkFaint: '#9e9b96',
+  night: '#1a1a2e',
+  owner: '#1a3270',
+  ownerLight: '#eaf0fb',
+  ownerBorder: '#b8ccf0',
+  tenant: '#1b5e3b',
+  tenantLight: '#edf7f2',
+  tenantBorder: '#9fd4ba',
+  border: '#e4e1db',
+  borderMid: '#ccc9c3',
+  muted: '#f4f2ee',
+  surface: '#ffffff',
+}
+
+// Maison color sets per semantic color key
+const colorSets = {
+  green: {
+    selectedBorder: M.tenantBorder,
+    selectedBg: M.tenantLight,
+    badgeBg: M.tenantLight,
+    badgeText: M.tenant,
+  },
+  blue: {
+    selectedBorder: M.ownerBorder,
+    selectedBg: M.ownerLight,
+    badgeBg: M.ownerLight,
+    badgeText: M.owner,
+  },
+  gray: {
+    selectedBorder: M.borderMid,
+    selectedBg: M.muted,
+    badgeBg: M.muted,
+    badgeText: M.inkMid,
+  },
+}
+
 interface StatusChangeModalProps {
   isOpen: boolean
   onClose: () => void
@@ -80,44 +119,30 @@ export const StatusChangeModal = ({
 
   if (!isOpen) return null
 
-  const colorClasses: Record<string, { radio: string; border: string; bg: string; text: string }> = {
-    green: {
-      radio: 'text-success-600 focus:ring-green-500',
-      border: 'border-success-100 bg-success-50',
-      bg: 'bg-success-100',
-      text: 'text-success-700',
-    },
-    blue: {
-      radio: 'text-primary-600 focus:ring-blue-500',
-      border: 'border-primary-300 bg-primary-50',
-      bg: 'bg-primary-100',
-      text: 'text-blue-800',
-    },
-    gray: {
-      radio: 'text-slate-600 dark:text-slate-400 focus:ring-slate-500',
-      border: 'border-slate-300 bg-slate-50/50',
-      bg: 'bg-slate-100',
-      text: 'text-slate-800',
-    },
-  }
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
       <div
-        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col"
+        className="rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col"
+        style={{ background: M.surface, boxShadow: '0 8px 32px rgba(13,12,10,0.12)' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b flex-shrink-0">
+        <div
+          className="flex items-center justify-between p-6 flex-shrink-0"
+          style={{ borderBottom: `1px solid ${M.border}` }}
+        >
           <div>
-            <h2 className="text-xl font-bold text-slate-900">
+            <h2 className="text-xl font-bold" style={{ color: M.ink }}>
               {step === 'status' ? 'Changer le statut' : 'Choisir un locataire'}
             </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 line-clamp-1">{propertyTitle}</p>
+            <p className="text-sm mt-1 line-clamp-1" style={{ color: M.inkMid }}>{propertyTitle}</p>
           </div>
           <button
             onClick={onClose}
-            className="w-10 h-10 rounded-xl hover:bg-slate-100 flex items-center justify-center transition-colors"
+            className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
+            style={{ color: M.inkFaint }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
           >
             <X className="w-5 h-5" />
           </button>
@@ -130,14 +155,32 @@ export const StatusChangeModal = ({
               {PROPERTY_STATUS.map((statusOption) => {
                 const isSelected = selectedStatus === statusOption.value
                 const isCurrent = currentStatus === statusOption.value
-                const colors = colorClasses[statusOption.color] || colorClasses.gray
+                const colors = colorSets[statusOption.color as keyof typeof colorSets] || colorSets.gray
 
                 return (
                   <label
                     key={statusOption.value}
-                    className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                      isSelected ? colors.border : 'border-slate-200 hover:border-slate-300'
-                    }`}
+                    className="flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all"
+                    style={
+                      isSelected
+                        ? {
+                            borderColor: colors.selectedBorder,
+                            background: colors.selectedBg,
+                          }
+                        : {
+                            borderColor: M.border,
+                          }
+                    }
+                    onMouseEnter={(e) => {
+                      if (!isSelected) {
+                        (e.currentTarget as HTMLElement).style.borderColor = M.borderMid
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSelected) {
+                        (e.currentTarget as HTMLElement).style.borderColor = M.border
+                      }
+                    }}
                   >
                     <input
                       type="radio"
@@ -145,19 +188,22 @@ export const StatusChangeModal = ({
                       value={statusOption.value}
                       checked={isSelected}
                       onChange={() => setSelectedStatus(statusOption.value)}
-                      className={`mt-0.5 h-4 w-4 ${colors.radio}`}
+                      className="mt-0.5 h-4 w-4"
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors.bg} ${colors.text}`}>
+                        <span
+                          className="px-2 py-0.5 rounded-full text-xs font-medium"
+                          style={{ background: colors.badgeBg, color: colors.badgeText }}
+                        >
                           {statusOption.label}
                         </span>
                         {isCurrent && (
-                          <span className="text-xs text-slate-500 font-medium">(actuel)</span>
+                          <span className="text-xs font-medium" style={{ color: M.inkFaint }}>(actuel)</span>
                         )}
                       </div>
                       {statusOption.description && (
-                        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{statusOption.description}</p>
+                        <p className="text-sm mt-1" style={{ color: M.inkMid }}>{statusOption.description}</p>
                       )}
                     </div>
                   </label>
@@ -166,7 +212,10 @@ export const StatusChangeModal = ({
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3 p-6 border-t flex-shrink-0">
+            <div
+              className="flex gap-3 p-6 flex-shrink-0"
+              style={{ borderTop: `1px solid ${M.border}` }}
+            >
               <button
                 type="button"
                 onClick={onClose}
@@ -193,13 +242,13 @@ export const StatusChangeModal = ({
           <>
             {/* Tenant Selection */}
             <div className="p-6 flex-1 overflow-hidden flex flex-col">
-              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+              <p className="text-sm mb-4" style={{ color: M.inkMid }}>
                 Sélectionnez le locataire pour ce bien parmi vos contacts :
               </p>
 
               {/* Search */}
               <div className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: M.inkFaint }} />
                 <input
                   type="text"
                   placeholder="Rechercher un contact..."
@@ -213,8 +262,8 @@ export const StatusChangeModal = ({
               <div className="flex-1 overflow-y-auto space-y-2 max-h-64">
                 {filteredContacts.length === 0 ? (
                   <div className="text-center py-8">
-                    <MessageCircle className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                    <p className="text-sm text-slate-500">
+                    <MessageCircle className="w-10 h-10 mx-auto mb-2" style={{ color: M.inkFaint }} />
+                    <p className="text-sm" style={{ color: M.inkFaint }}>
                       {contacts.length === 0
                         ? 'Aucun contact. Discutez avec un locataire potentiel pour le voir ici.'
                         : 'Aucun contact trouvé.'}
@@ -224,11 +273,22 @@ export const StatusChangeModal = ({
                   filteredContacts.map((contact) => (
                     <label
                       key={contact.id}
-                      className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                      className="flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all"
+                      style={
                         selectedTenantId === contact.id
-                          ? 'border-primary-300 bg-primary-50'
-                          : 'border-slate-200 hover:border-slate-300'
-                      }`}
+                          ? { borderColor: M.ownerBorder, background: M.ownerLight }
+                          : { borderColor: M.border }
+                      }
+                      onMouseEnter={(e) => {
+                        if (selectedTenantId !== contact.id) {
+                          (e.currentTarget as HTMLElement).style.borderColor = M.borderMid
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (selectedTenantId !== contact.id) {
+                          (e.currentTarget as HTMLElement).style.borderColor = M.border
+                        }
+                      }}
                     >
                       <input
                         type="radio"
@@ -236,21 +296,24 @@ export const StatusChangeModal = ({
                         value={contact.id}
                         checked={selectedTenantId === contact.id}
                         onChange={() => setSelectedTenantId(contact.id)}
-                        className="h-4 w-4 text-primary-600 focus:ring-primary-500"
+                        className="h-4 w-4"
                       />
-                      <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{ background: M.ownerLight }}
+                      >
                         {contact.avatar ? (
                           <img src={contact.avatar} alt="" className="w-10 h-10 rounded-full object-cover" />
                         ) : (
-                          <User className="w-5 h-5 text-primary-600" />
+                          <User className="w-5 h-5" style={{ color: M.owner }} />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-slate-900 text-sm">
+                        <p className="font-medium text-sm" style={{ color: M.ink }}>
                           {contact.firstName} {contact.lastName}
                         </p>
                         {contact.email && (
-                          <p className="text-xs text-slate-500 truncate">{contact.email}</p>
+                          <p className="text-xs truncate" style={{ color: M.inkFaint }}>{contact.email}</p>
                         )}
                       </div>
                     </label>
@@ -260,7 +323,10 @@ export const StatusChangeModal = ({
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3 p-6 border-t flex-shrink-0">
+            <div
+              className="flex gap-3 p-6 flex-shrink-0"
+              style={{ borderTop: `1px solid ${M.border}` }}
+            >
               <button
                 type="button"
                 onClick={() => setStep('status')}

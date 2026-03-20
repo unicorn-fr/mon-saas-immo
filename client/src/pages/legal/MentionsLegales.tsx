@@ -1,82 +1,166 @@
 import { Link } from 'react-router-dom'
-import { Home as HomeIcon, ArrowLeft } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import Footer from '../../components/layout/Footer'
+
+// ─── Maison tokens ────────────────────────────────────────────────────────────
+
+const M = {
+  bg: '#fafaf8', surface: '#ffffff', muted: '#f4f2ee',
+  ink: '#0d0c0a', inkMid: '#5a5754', inkFaint: '#9e9b96',
+  night: '#1a1a2e', caramel: '#c4976a',
+  border: '#e4e1db',
+  display: "'Cormorant Garamond', Georgia, serif",
+  body: "'DM Sans', system-ui, sans-serif",
+}
+
+function SectionH2({ children }: { children: React.ReactNode }) {
+  return (
+    <h2
+      style={{
+        fontFamily: M.display,
+        fontStyle: 'italic',
+        fontSize: '26px',
+        fontWeight: 700,
+        color: M.ink,
+        marginBottom: '12px',
+      }}
+    >
+      {children}
+    </h2>
+  )
+}
+
+function Body({ children }: { children: React.ReactNode }) {
+  return (
+    <p style={{ fontFamily: M.body, fontSize: '15px', color: M.inkMid, lineHeight: 1.7 }}>
+      {children}
+    </p>
+  )
+}
 
 export default function MentionsLegales() {
   return (
-    <div className="min-h-screen" style={{ background: '#f5f5f7' }}>
-      <header className="bg-white border-b border-[#d2d2d7]" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div className="w-8 h-8 bg-[#007AFF] rounded-xl flex items-center justify-center">
-              <HomeIcon className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-lg font-bold text-slate-900 hidden sm:block">ImmoParticuliers</span>
-          </Link>
-          <Link to="/" className="flex items-center gap-2 text-sm text-slate-500 hover:text-[#007AFF] transition-colors">
+    <div style={{ minHeight: '100vh', backgroundColor: M.bg, fontFamily: M.body }}>
+
+      {/* Hero */}
+      <section style={{ backgroundColor: M.night, padding: '64px 16px 56px' }}>
+        <div style={{ maxWidth: '896px', margin: '0 auto' }}>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 transition-opacity hover:opacity-70"
+            style={{ fontFamily: M.body, fontSize: '13px', color: 'rgba(255,255,255,0.45)', marginBottom: '32px', display: 'inline-flex' }}
+          >
             <ArrowLeft className="w-4 h-4" />
             Retour à l'accueil
           </Link>
+
+          <p
+            style={{
+              fontFamily: M.body,
+              fontSize: '10px',
+              fontWeight: 600,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase' as const,
+              color: M.caramel,
+              marginBottom: '12px',
+            }}
+          >
+            Légal
+          </p>
+          <h1
+            style={{
+              fontFamily: M.display,
+              fontStyle: 'italic',
+              fontSize: '40px',
+              fontWeight: 600,
+              color: '#ffffff',
+              lineHeight: 1.15,
+              marginBottom: '12px',
+            }}
+          >
+            Mentions légales
+          </h1>
+          <p style={{ fontFamily: M.body, fontSize: '14px', color: 'rgba(255,255,255,0.45)' }}>
+            Dernière mise à jour : Février 2026
+          </p>
         </div>
-      </header>
+      </section>
 
-      <div className="max-w-3xl mx-auto px-4 py-12">
-        <div className="bg-white rounded-2xl border border-[#d2d2d7] shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-8 lg:p-12">
-          <h1 className="text-3xl font-extrabold text-slate-900 mb-2">Mentions légales</h1>
-          <p className="text-sm text-slate-400 mb-8">Dernière mise à jour : Février 2026</p>
+      {/* Content */}
+      <div style={{ maxWidth: '896px', margin: '0 auto', padding: '56px 16px 80px' }}>
+        <div className="space-y-10">
 
-          <div className="space-y-8">
-            <section>
-              <h2 className="text-lg font-bold text-slate-900 mb-3">1. Éditeur du site</h2>
-              <p className="text-slate-600 leading-relaxed text-sm">
-                Le site ImmoParticuliers est édité par la société ImmoParticuliers SAS,
-                au capital de 10 000 euros, immatriculée au Registre du Commerce et des Sociétés
-                de Paris sous le numéro RCS Paris XXX XXX XXX.
-              </p>
-              <ul className="mt-3 space-y-1.5 text-slate-600 text-sm leading-relaxed">
-                <li><strong className="text-slate-800">Siège social :</strong> 12 Rue de la Paix, 75002 Paris, France</li>
-                <li><strong className="text-slate-800">Directeur de la publication :</strong> [Nom du directeur]</li>
-                <li><strong className="text-slate-800">Email :</strong> contact@immoparticuliers.fr</li>
-                <li><strong className="text-slate-800">Téléphone :</strong> 01 XX XX XX XX</li>
+          <section>
+            <SectionH2>1. Éditeur du site</SectionH2>
+            <Body>
+              Le site Bailio est édité par la société Bailio SAS,
+              au capital de 10 000 euros, immatriculée au Registre du Commerce et des Sociétés
+              de Paris sous le numéro RCS Paris XXX XXX XXX.
+            </Body>
+            <div
+              style={{
+                backgroundColor: M.muted,
+                borderLeft: `3px solid ${M.caramel}`,
+                borderRadius: '0 8px 8px 0',
+                padding: '16px 20px',
+                marginTop: '16px',
+              }}
+            >
+              <ul className="space-y-2.5">
+                {[
+                  { label: 'Siège social', value: '12 Rue de la Paix, 75002 Paris, France' },
+                  { label: 'Directeur de la publication', value: '[Nom du directeur]' },
+                  { label: 'Email', value: 'contact@bailio.fr' },
+                  { label: 'Téléphone', value: '01 XX XX XX XX' },
+                ].map(({ label, value }) => (
+                  <li
+                    key={label}
+                    style={{ fontFamily: M.body, fontSize: '14px', color: M.inkMid, lineHeight: 1.6 }}
+                  >
+                    <span style={{ fontWeight: 600, color: M.ink }}>{label} : </span>
+                    {value}
+                  </li>
+                ))}
               </ul>
-            </section>
+            </div>
+          </section>
 
-            <section>
-              <h2 className="text-lg font-bold text-slate-900 mb-3">2. Hébergement</h2>
-              <p className="text-slate-600 leading-relaxed text-sm">
-                Le site est hébergé par OVH SAS, 2 Rue Kellermann, 59100 Roubaix, France.
-                Téléphone : 1007.
-              </p>
-            </section>
+          <section>
+            <SectionH2>2. Hébergement</SectionH2>
+            <Body>
+              Le site est hébergé par OVH SAS, 2 Rue Kellermann, 59100 Roubaix, France.
+              Téléphone : 1007.
+            </Body>
+          </section>
 
-            <section>
-              <h2 className="text-lg font-bold text-slate-900 mb-3">3. Propriété intellectuelle</h2>
-              <p className="text-slate-600 leading-relaxed text-sm">
-                L'ensemble du contenu de ce site (textes, images, vidéos, logos, icônes, etc.)
-                est la propriété exclusive d'ImmoParticuliers SAS ou de ses partenaires.
-                Toute reproduction, représentation, modification, publication ou adaptation
-                de tout ou partie des éléments du site est interdite sans autorisation écrite préalable.
-              </p>
-            </section>
+          <section>
+            <SectionH2>3. Propriété intellectuelle</SectionH2>
+            <Body>
+              L'ensemble du contenu de ce site (textes, images, vidéos, logos, icônes, etc.)
+              est la propriété exclusive d'Bailio SAS ou de ses partenaires.
+              Toute reproduction, représentation, modification, publication ou adaptation
+              de tout ou partie des éléments du site est interdite sans autorisation écrite préalable.
+            </Body>
+          </section>
 
-            <section>
-              <h2 className="text-lg font-bold text-slate-900 mb-3">4. Responsabilité</h2>
-              <p className="text-slate-600 leading-relaxed text-sm">
-                ImmoParticuliers s'efforce de fournir des informations aussi précises que possible.
-                Toutefois, elle ne pourra être tenue responsable des omissions, des inexactitudes
-                et des carences dans la mise à jour. ImmoParticuliers se réserve le droit de modifier
-                le contenu du site à tout moment et sans préavis.
-              </p>
-            </section>
+          <section>
+            <SectionH2>4. Responsabilité</SectionH2>
+            <Body>
+              Bailio s'efforce de fournir des informations aussi précises que possible.
+              Toutefois, elle ne pourra être tenue responsable des omissions, des inexactitudes
+              et des carences dans la mise à jour. Bailio se réserve le droit de modifier
+              le contenu du site à tout moment et sans préavis.
+            </Body>
+          </section>
 
-            <section>
-              <h2 className="text-lg font-bold text-slate-900 mb-3">5. Droit applicable</h2>
-              <p className="text-slate-600 leading-relaxed text-sm">
-                Les présentes mentions légales sont soumises au droit français. En cas de litige,
-                les tribunaux français seront seuls compétents.
-              </p>
-            </section>
-          </div>
+          <section>
+            <SectionH2>5. Droit applicable</SectionH2>
+            <Body>
+              Les présentes mentions légales sont soumises au droit français. En cas de litige,
+              les tribunaux français seront seuls compétents.
+            </Body>
+          </section>
+
         </div>
       </div>
 

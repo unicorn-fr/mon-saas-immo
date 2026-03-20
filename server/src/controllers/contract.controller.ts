@@ -506,17 +506,19 @@ class ContractController {
   async validateDocument(req: Request, res: Response, next: NextFunction) {
     try {
       const { id: contractId, docId } = req.params
+      const userId = (req as any).user?.id
 
       if (!contractId || !docId) {
         return res.status(400).json({ success: false, message: 'Contract ID and Document ID are required' })
       }
 
-      const document = await contractService.validateDocument(contractId, docId)
+      const document = await contractService.validateDocument(contractId, docId, userId)
 
       return res.status(200).json({ success: true, data: { document } })
     } catch (error) {
-      if (error instanceof Error && error.message.includes('not found')) {
-        return res.status(404).json({ success: false, message: 'Document not found' })
+      if (error instanceof Error) {
+        if (error.message.includes('not found')) return res.status(404).json({ success: false, message: 'Document not found' })
+        if (error.message.includes('Unauthorized')) return res.status(403).json({ success: false, message: error.message })
       }
       next(error)
     }
@@ -529,6 +531,7 @@ class ContractController {
     try {
       const { id: contractId, docId } = req.params
       const { rejectionReason } = req.body
+      const userId = (req as any).user?.id
 
       if (!contractId || !docId) {
         return res.status(400).json({ success: false, message: 'Contract ID and Document ID are required' })
@@ -538,12 +541,13 @@ class ContractController {
         return res.status(400).json({ success: false, message: 'Rejection reason is required' })
       }
 
-      const document = await contractService.rejectDocument(contractId, docId, rejectionReason)
+      const document = await contractService.rejectDocument(contractId, docId, rejectionReason, userId)
 
       return res.status(200).json({ success: true, data: { document } })
     } catch (error) {
-      if (error instanceof Error && error.message.includes('not found')) {
-        return res.status(404).json({ success: false, message: 'Document not found' })
+      if (error instanceof Error) {
+        if (error.message.includes('not found')) return res.status(404).json({ success: false, message: 'Document not found' })
+        if (error.message.includes('Unauthorized')) return res.status(403).json({ success: false, message: error.message })
       }
       next(error)
     }

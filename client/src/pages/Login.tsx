@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import { authService, TotpRequiredError } from '../services/auth.service'
 import { setApiTokens } from '../services/api.service'
 import GoogleSignInButton from '../components/auth/GoogleSignInButton'
+import { BailioLogo } from '../components/BailioLogo'
 
 /* ─── Inline styles for the "Maison" design system ─────────────────────── */
 const fontDisplay: React.CSSProperties = { fontFamily: "'Cormorant Garamond', Georgia, serif" }
@@ -216,9 +217,10 @@ export default function Login() {
         <div style={{ width: '100%', maxWidth: '400px' }}>
           {/* Logo */}
           <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-            <Link to="/" style={{ textDecoration: 'none', display: 'inline-block' }}>
-              <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 600, fontSize: '26px', color: '#1a1a2e', letterSpacing: '-0.01em' }}>
-                ImmoParticuliers
+            <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+              <BailioLogo size={36} />
+              <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '28px', color: '#1a1a2e', letterSpacing: '-0.02em', lineHeight: 1 }}>
+                Bailio
               </span>
             </Link>
           </div>
@@ -314,9 +316,10 @@ export default function Login() {
         }}
       >
         {/* Logo */}
-        <Link to="/" style={{ textDecoration: 'none', display: 'inline-block' }}>
-          <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 600, fontSize: '22px', color: '#ffffff', letterSpacing: '-0.01em' }}>
-            ImmoParticuliers
+        <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+          <BailioLogo size={30} variant="onDark" />
+          <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '22px', color: '#ffffff', letterSpacing: '-0.02em', lineHeight: 1 }}>
+            Bailio
           </span>
         </Link>
 
@@ -372,9 +375,10 @@ export default function Login() {
         <div style={{ width: '100%', maxWidth: '380px', padding: '48px 32px' }}>
           {/* Mobile logo */}
           <div className="flex md:hidden" style={{ justifyContent: 'center', marginBottom: '36px' }}>
-            <Link to="/" style={{ textDecoration: 'none' }}>
-              <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 600, fontSize: '24px', color: '#1a1a2e' }}>
-                ImmoParticuliers
+            <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+              <BailioLogo size={34} />
+              <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '26px', color: '#1a1a2e', letterSpacing: '-0.02em', lineHeight: 1 }}>
+                Bailio
               </span>
             </Link>
           </div>

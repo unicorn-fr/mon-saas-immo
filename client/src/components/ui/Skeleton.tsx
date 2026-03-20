@@ -1,6 +1,5 @@
 /**
- * Skeleton — Light Premium shimmer
- * Uses .skeleton class from index.css (#d2d2d7 → #f0f0f2 shimmer)
+ * Skeleton — Maison Design System shimmer
  */
 
 /** Base skeleton block */
@@ -8,11 +7,11 @@ export function Skeleton({ className = '', style }: { className?: string; style?
   return <div className={`skeleton rounded-lg ${className}`} style={style} />
 }
 
-/** KPI card skeleton (matches KPICard layout) */
+/** KPI card skeleton */
 export function KPICardSkeleton() {
   return (
-    <div className="bg-white rounded-2xl p-5"
-      style={{ border: '1px solid #d2d2d7', borderTop: '3px solid #d2d2d7', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+    <div className="bg-white rounded-xl p-5"
+      style={{ border: '1px solid #e4e1db', borderTop: '3px solid #e4e1db', boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)' }}>
       <div className="flex items-start justify-between mb-3">
         <Skeleton className="h-2.5 w-24 rounded-full" />
         <Skeleton className="w-8 h-8 rounded-xl" />
@@ -39,8 +38,8 @@ export function TableRowSkeleton({ cols = 5 }: { cols?: number }) {
 /** Generic card skeleton */
 export function CardSkeleton({ lines = 3 }: { lines?: number }) {
   return (
-    <div className="bg-white rounded-2xl p-5"
-      style={{ border: '1px solid #d2d2d7', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+    <div className="bg-white rounded-xl p-5"
+      style={{ border: '1px solid #e4e1db', boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)' }}>
       <div className="flex items-center gap-3 mb-4">
         <Skeleton className="w-10 h-10 rounded-xl" />
         <div className="flex-1 space-y-2">
@@ -71,8 +70,8 @@ export function ProfileSkeleton() {
 /** Property card skeleton */
 export function PropertyCardSkeleton() {
   return (
-    <div className="bg-white rounded-2xl overflow-hidden"
-      style={{ border: '1px solid #d2d2d7', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+    <div className="bg-white rounded-xl overflow-hidden"
+      style={{ border: '1px solid #e4e1db', boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)' }}>
       <Skeleton className="w-full h-48 rounded-none" />
       <div className="p-4 space-y-3">
         <Skeleton className="h-5 w-3/4 rounded-full" />
@@ -97,9 +96,9 @@ export function DashboardSkeleton() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[...Array(4)].map((_, i) => <KPICardSkeleton key={i} />)}
       </div>
-      <div className="bg-white rounded-2xl overflow-hidden"
-        style={{ border: '1px solid #d2d2d7', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-        <div className="p-5 border-b" style={{ borderColor: '#d2d2d7' }}>
+      <div className="bg-white rounded-xl overflow-hidden"
+        style={{ border: '1px solid #e4e1db', boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)' }}>
+        <div className="p-5 border-b" style={{ borderColor: '#e4e1db' }}>
           <Skeleton className="h-5 w-40 rounded-full" />
         </div>
         <table className="w-full">

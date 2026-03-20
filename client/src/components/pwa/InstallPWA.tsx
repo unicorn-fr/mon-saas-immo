@@ -109,7 +109,7 @@ export const InstallPWA = () => {
           <div className="flex-1">
             <h3 className="font-bold text-lg mb-1">Installer l'application</h3>
             <p className="text-sm text-primary-100">
-              Accédez rapidement à ImmoParticuliers
+              Accédez rapidement à Bailio
             </p>
           </div>
         </div>

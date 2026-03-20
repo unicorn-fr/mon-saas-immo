@@ -1,112 +1,218 @@
 import { Link } from 'react-router-dom'
-import { Home as HomeIcon, ArrowLeft, MessageCircle, Mail, FileText, Shield } from 'lucide-react'
+import { MessageCircle, Mail, FileText, Shield } from 'lucide-react'
+import { Layout } from '../../components/layout/Layout'
 import Footer from '../../components/layout/Footer'
 
-const cardStyle = {
-  background: '#ffffff',
-  border: '1px solid #d2d2d7',
-  borderRadius: '1rem',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)',
+const M = {
+  bg: '#fafaf8',
+  surface: '#ffffff',
+  muted: '#f4f2ee',
+  ink: '#0d0c0a',
+  inkMid: '#5a5754',
+  inkFaint: '#9e9b96',
+  night: '#1a1a2e',
+  caramel: '#c4976a',
+  caramelLight: '#fdf5ec',
+  border: '#e4e1db',
+  display: "'Cormorant Garamond', Georgia, serif",
+  body: "'DM Sans', system-ui, sans-serif",
 }
+
+const SUPPORT_LINKS = [
+  {
+    to: '/faq',
+    icon: MessageCircle,
+    title: 'FAQ',
+    description: 'Consultez les questions les plus fréquemment posées par nos utilisateurs.',
+    iconBg: M.muted,
+    iconColor: M.night,
+  },
+  {
+    to: '/contact',
+    icon: Mail,
+    title: 'Nous contacter',
+    description: 'Envoyez-nous un message et recevez une réponse sous 24h.',
+    iconBg: M.muted,
+    iconColor: M.night,
+  },
+  {
+    to: '/cgu',
+    icon: FileText,
+    title: 'Conditions d\'utilisation',
+    description: 'Consultez nos CGU et nos conditions de service.',
+    iconBg: M.caramelLight,
+    iconColor: M.caramel,
+  },
+  {
+    to: '/confidentialite',
+    icon: Shield,
+    title: 'Protection des données',
+    description: 'Découvrez comment nous protégeons vos données personnelles.',
+    iconBg: M.caramelLight,
+    iconColor: M.caramel,
+  },
+]
 
 export default function Support() {
   return (
-    <div className="min-h-screen" style={{ background: '#f5f5f7' }}>
-      <header className="bg-white border-b border-[#d2d2d7]" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-            <div className="w-8 h-8 bg-[#007AFF] rounded-xl flex items-center justify-center">
-              <HomeIcon className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-lg font-bold text-slate-900 hidden sm:block">ImmoParticuliers</span>
-          </Link>
-          <Link to="/" className="flex items-center gap-2 text-sm text-slate-500 hover:text-[#007AFF] transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-            Retour à l'accueil
-          </Link>
-        </div>
-      </header>
-
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-extrabold text-slate-900 mb-3">Centre d'aide</h1>
-          <p className="text-slate-500">Besoin d'assistance ? Trouvez rapidement l'aide dont vous avez besoin.</p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-4 mb-8">
-          <Link
-            to="/faq"
-            style={cardStyle}
-            className="p-5 flex items-start gap-4 hover:border-[#007AFF]/40 transition-colors group"
-          >
-            <div className="w-11 h-11 bg-[#e8f0fe] rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-[#007AFF] transition-colors">
-              <MessageCircle className="w-5 h-5 text-[#007AFF] group-hover:text-white transition-colors" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-slate-900 mb-1 text-sm">FAQ</h3>
-              <p className="text-sm text-slate-500">Consultez les questions les plus fréquemment posées par nos utilisateurs.</p>
-            </div>
-          </Link>
-
-          <Link
-            to="/contact"
-            style={cardStyle}
-            className="p-5 flex items-start gap-4 hover:border-[#007AFF]/40 transition-colors group"
-          >
-            <div className="w-11 h-11 bg-[#e8f0fe] rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-[#007AFF] transition-colors">
-              <Mail className="w-5 h-5 text-[#007AFF] group-hover:text-white transition-colors" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-slate-900 mb-1 text-sm">Nous contacter</h3>
-              <p className="text-sm text-slate-500">Envoyez-nous un message et recevez une réponse sous 24h.</p>
-            </div>
-          </Link>
-
-          <Link
-            to="/cgu"
-            style={cardStyle}
-            className="p-5 flex items-start gap-4 hover:border-[#007AFF]/40 transition-colors group"
-          >
-            <div className="w-11 h-11 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-amber-100 transition-colors">
-              <FileText className="w-5 h-5 text-amber-500" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-slate-900 mb-1 text-sm">Conditions d'utilisation</h3>
-              <p className="text-sm text-slate-500">Consultez nos CGU et nos conditions de service.</p>
-            </div>
-          </Link>
-
-          <Link
-            to="/confidentialite"
-            style={cardStyle}
-            className="p-5 flex items-start gap-4 hover:border-[#007AFF]/40 transition-colors group"
-          >
-            <div className="w-11 h-11 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-100 transition-colors">
-              <Shield className="w-5 h-5 text-emerald-500" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-slate-900 mb-1 text-sm">Protection des données</h3>
-              <p className="text-sm text-slate-500">Découvrez comment nous protégeons vos données personnelles.</p>
-            </div>
-          </Link>
-        </div>
-
-        <div
-          className="rounded-2xl p-8 text-center"
-          style={{ background: '#007AFF' }}
+    <Layout showFooter={false}>
+      <div className="min-h-screen" style={{ background: M.bg, fontFamily: M.body }}>
+        {/* Hero */}
+        <section
+          className="py-20 px-4 text-center"
+          style={{ background: M.night }}
         >
-          <h2 className="text-lg font-bold text-white mb-2">Besoin d'aide urgente ?</h2>
-          <p className="text-white/75 text-sm mb-5">Notre équipe support est disponible du lundi au vendredi de 9h à 18h.</p>
-          <Link
-            to="/contact"
-            className="inline-flex items-center gap-2 bg-white text-[#007AFF] font-semibold px-5 py-2.5 rounded-xl hover:bg-slate-50 transition-colors text-sm"
-          >
-            Contacter le support
-          </Link>
-        </div>
-      </main>
+          <div className="max-w-3xl mx-auto">
+            <h1
+              style={{
+                fontFamily: M.display,
+                fontWeight: 700,
+                fontStyle: 'italic',
+                fontSize: '52px',
+                color: '#ffffff',
+                lineHeight: 1.15,
+                marginBottom: '16px',
+              }}
+            >
+              Centre d'aide
+            </h1>
+            <p
+              style={{
+                fontFamily: M.body,
+                fontSize: '16px',
+                color: 'rgba(255,255,255,0.7)',
+                lineHeight: 1.6,
+              }}
+            >
+              Besoin d'assistance ? Trouvez rapidement l'aide dont vous avez besoin.
+            </p>
+          </div>
+        </section>
 
-      <Footer />
-    </div>
+        {/* Content */}
+        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="grid md:grid-cols-2 gap-4 mb-10">
+            {SUPPORT_LINKS.map((item) => {
+              const Icon = item.icon
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className="flex items-start gap-4 group transition-shadow"
+                  style={{
+                    background: M.surface,
+                    border: `1px solid ${M.border}`,
+                    borderRadius: '12px',
+                    padding: '24px',
+                    textDecoration: 'none',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)'
+                    e.currentTarget.style.borderColor = '#c8c4bc'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)'
+                    e.currentTarget.style.borderColor = M.border
+                  }}
+                >
+                  <div
+                    className="flex-shrink-0 flex items-center justify-center"
+                    style={{
+                      width: '44px',
+                      height: '44px',
+                      background: item.iconBg,
+                      borderRadius: '10px',
+                    }}
+                  >
+                    <Icon style={{ width: '20px', height: '20px', color: item.iconColor }} />
+                  </div>
+                  <div>
+                    <h3
+                      style={{
+                        fontFamily: M.body,
+                        fontWeight: 600,
+                        fontSize: '15px',
+                        color: M.ink,
+                        marginBottom: '4px',
+                      }}
+                    >
+                      {item.title}
+                    </h3>
+                    <p
+                      style={{
+                        fontFamily: M.body,
+                        fontSize: '14px',
+                        color: M.inkMid,
+                        lineHeight: 1.6,
+                        margin: 0,
+                      }}
+                    >
+                      {item.description}
+                    </p>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+
+          {/* Urgent help banner */}
+          <div
+            className="text-center py-12 px-8"
+            style={{
+              background: M.night,
+              borderRadius: '12px',
+            }}
+          >
+            <h2
+              style={{
+                fontFamily: M.display,
+                fontWeight: 700,
+                fontStyle: 'italic',
+                fontSize: '32px',
+                color: '#ffffff',
+                marginBottom: '10px',
+              }}
+            >
+              Besoin d'aide urgente ?
+            </h2>
+            <p
+              style={{
+                fontFamily: M.body,
+                fontSize: '15px',
+                color: 'rgba(255,255,255,0.7)',
+                marginBottom: '24px',
+                lineHeight: 1.6,
+              }}
+            >
+              Notre équipe support est disponible du lundi au vendredi de 9h à 18h.
+            </p>
+            <Link
+              to="/contact"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: '#ffffff',
+                color: M.night,
+                fontFamily: M.body,
+                fontWeight: 600,
+                fontSize: '14px',
+                padding: '10px 24px',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                transition: 'opacity 0.15s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.88')}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+            >
+              Contacter le support
+            </Link>
+          </div>
+        </main>
+
+        <Footer />
+      </div>
+    </Layout>
   )
 }

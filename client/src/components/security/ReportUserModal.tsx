@@ -87,16 +87,16 @@ export function ReportUserModal({ targetId, targetName, isOpen, onClose }: Props
                 }}>
                   <CheckCircle2 style={{ width: 32, height: 32, color: '#10b981' }} />
                 </div>
-                <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', margin: '0 0 12px' }}>
+                <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#0d0c0a', margin: '0 0 12px' }}>
                   Signalement enregistré
                 </h2>
-                <p style={{ color: '#475569', fontSize: '14px', lineHeight: 1.6, margin: '0 0 24px' }}>
+                <p style={{ color: '#5a5754', fontSize: '14px', lineHeight: 1.6, margin: '0 0 24px' }}>
                   Notre équipe va examiner ce signalement dans les 48h. Merci de contribuer à la sécurité de la plateforme.
                 </p>
                 <button
                   onClick={handleClose}
                   style={{
-                    background: '#0f172a', color: '#ffffff',
+                    background: '#0d0c0a', color: '#ffffff',
                     border: 'none', borderRadius: '12px',
                     padding: '12px 32px', fontWeight: 600, fontSize: '14px',
                     cursor: 'pointer',
@@ -118,10 +118,10 @@ export function ReportUserModal({ targetId, targetName, isOpen, onClose }: Props
                       <AlertTriangle style={{ width: 20, height: 20, color: '#dc2626' }} />
                     </div>
                     <div>
-                      <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                      <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0d0c0a', margin: 0 }}>
                         Signaler un utilisateur
                       </h2>
-                      <p style={{ fontSize: '13px', color: '#94a3b8', margin: '2px 0 0' }}>
+                      <p style={{ fontSize: '13px', color: '#9e9b96', margin: '2px 0 0' }}>
                         {targetName}
                       </p>
                     </div>
@@ -129,7 +129,7 @@ export function ReportUserModal({ targetId, targetName, isOpen, onClose }: Props
                   <button
                     onClick={handleClose}
                     style={{
-                      background: '#f8fafc', border: '1px solid #e2e8f0',
+                      background: '#fafaf8', border: '1px solid #e2e8f0',
                       borderRadius: '8px', padding: '6px', cursor: 'pointer', lineHeight: 0,
                     }}
                   >
@@ -138,7 +138,7 @@ export function ReportUserModal({ targetId, targetName, isOpen, onClose }: Props
                 </div>
 
                 <div style={{ marginBottom: '16px' }}>
-                  <p style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a', margin: '0 0 8px' }}>
+                  <p style={{ fontSize: '13px', fontWeight: 600, color: '#0d0c0a', margin: '0 0 8px' }}>
                     Motif du signalement <span style={{ color: '#ef4444' }}>*</span>
                   </p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -148,8 +148,8 @@ export function ReportUserModal({ targetId, targetName, isOpen, onClose }: Props
                         style={{
                           display: 'flex', alignItems: 'center', gap: '10px',
                           padding: '10px 14px', borderRadius: '10px', cursor: 'pointer',
-                          border: `1px solid ${reason === r.value ? '#fca5a5' : '#e2e8f0'}`,
-                          background: reason === r.value ? '#fef2f2' : '#f8fafc',
+                          border: `1px solid ${reason === r.value ? '#fca5a5' : '#e4e1db'}`,
+                          background: reason === r.value ? '#fef2f2' : '#fafaf8',
                           transition: 'all 0.12s',
                         }}
                       >
@@ -161,14 +161,14 @@ export function ReportUserModal({ targetId, targetName, isOpen, onClose }: Props
                           onChange={() => setReason(r.value)}
                           style={{ accentColor: '#dc2626' }}
                         />
-                        <span style={{ fontSize: '13px', color: '#0f172a' }}>{r.label}</span>
+                        <span style={{ fontSize: '13px', color: '#0d0c0a' }}>{r.label}</span>
                       </label>
                     ))}
                   </div>
                 </div>
 
                 <div style={{ marginBottom: '20px' }}>
-                  <p style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a', margin: '0 0 6px' }}>
+                  <p style={{ fontSize: '13px', fontWeight: 600, color: '#0d0c0a', margin: '0 0 6px' }}>
                     Précisions (optionnel)
                   </p>
                   <textarea
@@ -181,7 +181,7 @@ export function ReportUserModal({ targetId, targetName, isOpen, onClose }: Props
                       width: '100%', boxSizing: 'border-box',
                       padding: '10px 12px', borderRadius: '10px',
                       border: '1px solid #e2e8f0', resize: 'none',
-                      fontSize: '13px', color: '#0f172a', background: '#ffffff',
+                      fontSize: '13px', color: '#0d0c0a', background: '#ffffff',
                       outline: 'none', fontFamily: 'inherit',
                     }}
                   />
@@ -202,8 +202,8 @@ export function ReportUserModal({ targetId, targetName, isOpen, onClose }: Props
                     onClick={handleClose}
                     style={{
                       flex: 1, padding: '12px', borderRadius: '12px',
-                      border: '1px solid #e2e8f0', background: '#f8fafc',
-                      color: '#475569', fontWeight: 600, fontSize: '14px', cursor: 'pointer',
+                      border: '1px solid #e2e8f0', background: '#fafaf8',
+                      color: '#5a5754', fontWeight: 600, fontSize: '14px', cursor: 'pointer',
                     }}
                   >
                     Annuler

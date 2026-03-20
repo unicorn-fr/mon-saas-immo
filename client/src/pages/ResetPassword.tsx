@@ -1,7 +1,27 @@
 import { useState, FormEvent } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
-import { Home, Lock, CheckCircle, XCircle } from 'lucide-react'
+import { Lock, CheckCircle, XCircle } from 'lucide-react'
 import { authService } from '../services/auth.service'
+import { BailioLogo } from '../components/BailioLogo'
+
+const M = {
+  bg: '#fafaf8',
+  surface: '#ffffff',
+  ink: '#0d0c0a',
+  inkMid: '#5a5754',
+  inkFaint: '#9e9b96',
+  night: '#1a1a2e',
+  border: '#e4e1db',
+  inputBg: '#f8f7f4',
+  danger: '#9b1c1c',
+  dangerBg: '#fef2f2',
+  dangerBorder: '#fca5a5',
+  success: '#1b5e3b',
+  successBg: '#edf7f2',
+  successBorder: '#9fd4ba',
+  display: "'Cormorant Garamond', Georgia, serif",
+  body: "'DM Sans', system-ui, sans-serif",
+}
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams()
@@ -29,10 +49,10 @@ export default function ResetPassword() {
 
   const getStrengthColor = () => {
     const pct = getStrengthPercent()
-    if (pct <= 25) return 'bg-red-500'
-    if (pct <= 50) return 'bg-orange-500'
-    if (pct <= 75) return 'bg-amber-500'
-    return 'bg-emerald-500'
+    if (pct <= 25) return '#ef4444'
+    if (pct <= 50) return '#f97316'
+    if (pct <= 75) return '#eab308'
+    return '#22c55e'
   }
 
   const handleSubmit = async (e: FormEvent) => {
@@ -71,37 +91,62 @@ export default function ResetPassword() {
     }
   }
 
-  const inputWithIconClass = "w-full bg-white border border-[#d2d2d7] rounded-xl pl-10 pr-4 py-2.5 text-[#1d1d1f] placeholder-[#86868b] focus:outline-none focus:border-[#007AFF] focus:ring-2 focus:ring-[rgba(0,122,255,0.12)] transition-all text-sm"
-
   const LogoHeader = () => (
     <div className="text-center mb-8">
-      <Link to="/" className="inline-flex items-center gap-3 hover:opacity-80 transition-opacity">
-        <div className="w-9 h-9 bg-[#007AFF] rounded-xl flex items-center justify-center shadow-sm">
-          <Home className="w-5 h-5 text-white" />
-        </div>
-        <span className="text-xl font-bold text-[#1d1d1f]" style={{ fontFamily: "'Plus Jakarta Sans', Inter, system-ui" }}>FOYER</span>
+      <Link to="/" className="inline-flex items-center gap-2.5 hover:opacity-80 transition-opacity" style={{ textDecoration: 'none' }}>
+        <BailioLogo size={34} />
+        <span style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: '26px', color: M.night, letterSpacing: '-0.02em', lineHeight: 1 }}>
+          Bailio
+        </span>
       </Link>
     </div>
   )
 
+  const inputStyle: React.CSSProperties = {
+    background: M.inputBg,
+    border: `1px solid ${M.border}`,
+    borderRadius: '8px',
+    fontFamily: M.body,
+    fontSize: '13px',
+    color: M.ink,
+  }
+
   if (!token) {
     return (
-      <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center p-4">
+      <div
+        className="min-h-screen flex items-center justify-center p-4"
+        style={{ background: M.bg, fontFamily: M.body }}
+      >
         <div className="w-full max-w-md">
           <LogoHeader />
-          <div className="bg-white rounded-2xl p-8 shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-[#d2d2d7] text-center">
-            <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
-              <XCircle className="w-9 h-9 text-red-500" />
+          <div
+            className="p-8 text-center"
+            style={{
+              background: M.surface,
+              border: `1px solid ${M.border}`,
+              borderRadius: '16px',
+              boxShadow: '0 4px 24px rgba(13,12,10,0.08)',
+            }}
+          >
+            <div
+              className="w-16 h-16 flex items-center justify-center mx-auto mb-6"
+              style={{ background: M.dangerBg, border: `1px solid ${M.dangerBorder}`, borderRadius: '12px' }}
+            >
+              <XCircle className="w-8 h-8" style={{ color: M.danger }} />
             </div>
-            <h2 className="text-xl font-bold text-[#1d1d1f] mb-2" style={{ fontFamily: "'Plus Jakarta Sans', Inter, system-ui" }}>
+            <h2
+              className="mb-3"
+              style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: '26px', color: M.ink }}
+            >
               Lien invalide
             </h2>
-            <p className="text-[#515154] text-sm mb-6">
+            <p className="mb-6" style={{ fontFamily: M.body, fontSize: '14px', color: M.inkMid }}>
               Ce lien de réinitialisation est invalide ou a expiré.
             </p>
             <Link
               to="/forgot-password"
-              className="block w-full bg-[#007AFF] text-white hover:bg-[#0066d6] rounded-xl font-semibold py-2.5 text-center transition-colors"
+              className="block w-full text-center py-2.5 transition-opacity hover:opacity-90"
+              style={{ background: M.night, color: '#ffffff', borderRadius: '8px', fontFamily: M.body, fontSize: '14px', fontWeight: 500 }}
             >
               Demander un nouveau lien
             </Link>
@@ -112,41 +157,66 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center p-4">
+    <div
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{ background: M.bg, fontFamily: M.body }}
+    >
       <div className="w-full max-w-md">
         <LogoHeader />
 
-        <div className="bg-white rounded-2xl p-8 shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-[#d2d2d7]">
+        <div
+          className="p-8"
+          style={{
+            background: M.surface,
+            border: `1px solid ${M.border}`,
+            borderRadius: '16px',
+            boxShadow: '0 4px 24px rgba(13,12,10,0.08)',
+          }}
+        >
           {status === 'success' ? (
             <div className="text-center">
-              <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
-                <CheckCircle className="w-9 h-9 text-emerald-500" />
+              <div
+                className="w-16 h-16 flex items-center justify-center mx-auto mb-6"
+                style={{ background: M.successBg, border: `1px solid ${M.successBorder}`, borderRadius: '12px' }}
+              >
+                <CheckCircle className="w-8 h-8" style={{ color: M.success }} />
               </div>
-              <h2 className="text-xl font-bold text-[#1d1d1f] mb-2" style={{ fontFamily: "'Plus Jakarta Sans', Inter, system-ui" }}>
+              <h2
+                className="mb-3"
+                style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: '26px', color: M.ink }}
+              >
                 Mot de passe réinitialisé !
               </h2>
-              <p className="text-[#515154] text-sm mb-6">
+              <p className="mb-6" style={{ fontFamily: M.body, fontSize: '14px', color: M.inkMid, lineHeight: '1.6' }}>
                 Votre mot de passe a été modifié avec succès. Vous pouvez maintenant vous connecter.
               </p>
               <Link
                 to="/login"
-                className="block w-full bg-[#007AFF] text-white hover:bg-[#0066d6] rounded-xl font-semibold py-2.5 text-center transition-colors"
+                className="block w-full text-center py-2.5 transition-opacity hover:opacity-90"
+                style={{ background: M.night, color: '#ffffff', borderRadius: '8px', fontFamily: M.body, fontSize: '14px', fontWeight: 500 }}
               >
                 Se connecter
               </Link>
             </div>
           ) : status === 'error' ? (
             <div className="text-center">
-              <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
-                <XCircle className="w-9 h-9 text-red-500" />
+              <div
+                className="w-16 h-16 flex items-center justify-center mx-auto mb-6"
+                style={{ background: M.dangerBg, border: `1px solid ${M.dangerBorder}`, borderRadius: '12px' }}
+              >
+                <XCircle className="w-8 h-8" style={{ color: M.danger }} />
               </div>
-              <h2 className="text-xl font-bold text-[#1d1d1f] mb-2" style={{ fontFamily: "'Plus Jakarta Sans', Inter, system-ui" }}>
+              <h2
+                className="mb-3"
+                style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: '26px', color: M.ink }}
+              >
                 Erreur
               </h2>
-              <p className="text-[#515154] text-sm mb-6">{error}</p>
+              <p className="mb-6" style={{ fontFamily: M.body, fontSize: '14px', color: M.inkMid }}>{error}</p>
               <Link
                 to="/forgot-password"
-                className="block w-full bg-[#007AFF] text-white hover:bg-[#0066d6] rounded-xl font-semibold py-2.5 text-center transition-colors"
+                className="block w-full text-center py-2.5 transition-opacity hover:opacity-90"
+                style={{ background: M.night, color: '#ffffff', borderRadius: '8px', fontFamily: M.body, fontSize: '14px', fontWeight: 500 }}
               >
                 Demander un nouveau lien
               </Link>
@@ -154,83 +224,116 @@ export default function ResetPassword() {
           ) : (
             <>
               <div className="mb-6">
-                <h1 className="text-2xl font-bold text-[#1d1d1f]" style={{ fontFamily: "'Plus Jakarta Sans', Inter, system-ui" }}>
+                <h1
+                  className="mb-2"
+                  style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: '32px', color: M.ink, lineHeight: '1.1' }}
+                >
                   Nouveau mot de passe
                 </h1>
-                <p className="text-[#515154] text-sm mt-1">
+                <p style={{ fontFamily: M.body, fontSize: '14px', color: M.inkMid }}>
                   Choisissez votre nouveau mot de passe.
                 </p>
               </div>
 
               {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
-                  <p className="text-sm text-red-800">{error}</p>
+                <div
+                  className="mb-4 p-3"
+                  style={{ background: M.dangerBg, border: `1px solid ${M.dangerBorder}`, borderRadius: '8px' }}
+                >
+                  <p style={{ fontFamily: M.body, fontSize: '13px', color: M.danger }}>{error}</p>
                 </div>
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-[#1d1d1f] mb-1.5">
+                  <label
+                    className="block mb-1.5"
+                    style={{ fontFamily: M.body, fontSize: '13px', fontWeight: 500, color: M.ink }}
+                  >
                     Nouveau mot de passe
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868b]" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: M.inkFaint }} />
                     <input
                       type="password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      className={inputWithIconClass}
                       placeholder="••••••••"
                       disabled={isLoading}
                       required
+                      className="w-full pl-10 pr-4 py-2.5 outline-none transition-all"
+                      style={inputStyle}
+                      onFocus={(e) => { e.currentTarget.style.borderColor = M.night; e.currentTarget.style.boxShadow = `0 0 0 3px rgba(26,26,46,0.08)` }}
+                      onBlur={(e) => { e.currentTarget.style.borderColor = M.border; e.currentTarget.style.boxShadow = 'none' }}
                     />
                   </div>
 
                   {newPassword && (
                     <div className="mt-2">
-                      <div className="h-1.5 bg-[#f0f0f2] rounded-full overflow-hidden">
+                      <div
+                        className="h-1 rounded-full overflow-hidden"
+                        style={{ background: M.border }}
+                      >
                         <div
-                          className={`h-full transition-all duration-300 ${getStrengthColor()}`}
-                          style={{ width: `${getStrengthPercent()}%` }}
+                          className="h-full transition-all duration-300"
+                          style={{ width: `${getStrengthPercent()}%`, background: getStrengthColor() }}
                         />
                       </div>
                     </div>
                   )}
 
-                  <div className="mt-2 grid grid-cols-2 gap-1">
+                  <div className="mt-2.5 flex flex-wrap gap-1.5">
                     {passwordRequirements.map((req, i) => (
-                      <div key={i} className="flex items-center gap-1.5">
+                      <span
+                        key={i}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full"
+                        style={{
+                          fontFamily: M.body,
+                          fontSize: '11px',
+                          fontWeight: 500,
+                          background: req.met ? M.successBg : '#f4f2ee',
+                          color: req.met ? M.success : M.inkFaint,
+                          border: `1px solid ${req.met ? M.successBorder : M.border}`,
+                          transition: 'all 0.2s',
+                        }}
+                      >
                         {req.met ? (
-                          <CheckCircle className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                          <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                            <polyline points="10 3 5 9 2 6" stroke={M.success} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
                         ) : (
-                          <div className="w-3.5 h-3.5 rounded-full border-2 border-[#b0b0b8] flex-shrink-0" />
+                          <span style={{ width: 10, height: 10, display: 'inline-block', borderRadius: '50%', border: `1.5px solid ${M.inkFaint}` }} />
                         )}
-                        <span className={`text-xs ${req.met ? 'text-emerald-600' : 'text-[#86868b]'}`}>
-                          {req.text}
-                        </span>
-                      </div>
+                        {req.text}
+                      </span>
                     ))}
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-[#1d1d1f] mb-1.5">
+                  <label
+                    className="block mb-1.5"
+                    style={{ fontFamily: M.body, fontSize: '13px', fontWeight: 500, color: M.ink }}
+                  >
                     Confirmer le mot de passe
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868b]" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: M.inkFaint }} />
                     <input
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className={inputWithIconClass}
                       placeholder="••••••••"
                       disabled={isLoading}
                       required
+                      className="w-full pl-10 pr-4 py-2.5 outline-none transition-all"
+                      style={inputStyle}
+                      onFocus={(e) => { e.currentTarget.style.borderColor = M.night; e.currentTarget.style.boxShadow = `0 0 0 3px rgba(26,26,46,0.08)` }}
+                      onBlur={(e) => { e.currentTarget.style.borderColor = M.border; e.currentTarget.style.boxShadow = 'none' }}
                     />
                   </div>
                   {confirmPassword && newPassword !== confirmPassword && (
-                    <p className="text-xs text-red-500 mt-1">
+                    <p className="mt-1" style={{ fontFamily: M.body, fontSize: '12px', color: M.danger }}>
                       Les mots de passe ne correspondent pas
                     </p>
                   )}
@@ -238,8 +341,18 @@ export default function ResetPassword() {
 
                 <button
                   type="submit"
-                  className="w-full bg-[#007AFF] text-white hover:bg-[#0066d6] rounded-xl font-semibold py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isLoading || !isPasswordStrong || newPassword !== confirmPassword}
+                  className="w-full py-2.5 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    background: M.night,
+                    color: '#ffffff',
+                    borderRadius: '8px',
+                    fontFamily: M.body,
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    border: 'none',
+                    cursor: (isLoading || !isPasswordStrong || newPassword !== confirmPassword) ? 'not-allowed' : 'pointer',
+                  }}
                 >
                   {isLoading ? (
                     <span className="flex items-center justify-center gap-2">

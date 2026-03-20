@@ -1,15 +1,30 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Home as HomeIcon, ArrowLeft, ChevronDown } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
+import { Layout } from '../../components/layout/Layout'
 import Footer from '../../components/layout/Footer'
+
+const M = {
+  bg: '#fafaf8',
+  surface: '#ffffff',
+  muted: '#f4f2ee',
+  ink: '#0d0c0a',
+  inkMid: '#5a5754',
+  inkFaint: '#9e9b96',
+  night: '#1a1a2e',
+  caramel: '#c4976a',
+  border: '#e4e1db',
+  display: "'Cormorant Garamond', Georgia, serif",
+  body: "'DM Sans', system-ui, sans-serif",
+}
 
 const FAQ_ITEMS = [
   {
     category: 'Général',
     questions: [
       {
-        q: 'Qu\'est-ce qu\'ImmoParticuliers ?',
-        a: 'ImmoParticuliers est une plateforme de mise en relation directe entre propriétaires et locataires. Elle permet de publier des annonces, rechercher des biens, constituer des dossiers de location et signer des baux électroniquement, le tout sans frais d\'agence.',
+        q: 'Qu\'est-ce qu\'Bailio ?',
+        a: 'Bailio est une plateforme de mise en relation directe entre propriétaires et locataires. Elle permet de publier des annonces, rechercher des biens, constituer des dossiers de location et signer des baux électroniquement, le tout sans frais d\'agence.',
       },
       {
         q: 'L\'inscription est-elle gratuite ?',
@@ -70,13 +85,6 @@ const FAQ_ITEMS = [
   },
 ]
 
-const cardStyle = {
-  background: '#ffffff',
-  border: '1px solid #d2d2d7',
-  borderRadius: '1rem',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)',
-}
-
 export default function FAQ() {
   const [openItems, setOpenItems] = useState<Set<string>>(new Set())
 
@@ -90,72 +98,178 @@ export default function FAQ() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#f5f5f7' }}>
-      <header className="bg-white border-b border-[#d2d2d7]" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-            <div className="w-8 h-8 bg-[#007AFF] rounded-xl flex items-center justify-center">
-              <HomeIcon className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-lg font-bold text-slate-900 hidden sm:block">ImmoParticuliers</span>
-          </Link>
-          <Link to="/" className="flex items-center gap-2 text-sm text-slate-500 hover:text-[#007AFF] transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-            Retour à l'accueil
-          </Link>
-        </div>
-      </header>
+    <Layout showFooter={false}>
+      <div className="min-h-screen" style={{ background: M.bg, fontFamily: M.body }}>
+        {/* Hero */}
+        <section
+          className="py-20 px-4 text-center"
+          style={{ background: M.night }}
+        >
+          <div className="max-w-3xl mx-auto">
+            <h1
+              style={{
+                fontFamily: M.display,
+                fontWeight: 700,
+                fontStyle: 'italic',
+                fontSize: '52px',
+                color: '#ffffff',
+                lineHeight: 1.15,
+                marginBottom: '16px',
+              }}
+            >
+              Foire aux questions
+            </h1>
+            <p
+              style={{
+                fontFamily: M.body,
+                fontSize: '16px',
+                color: 'rgba(255,255,255,0.7)',
+                lineHeight: 1.6,
+              }}
+            >
+              Retrouvez les réponses aux questions les plus fréquentes
+            </p>
+          </div>
+        </section>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-extrabold text-slate-900 mb-3">Foire aux questions</h1>
-          <p className="text-slate-500">Retrouvez les réponses aux questions les plus fréquentes</p>
-        </div>
+        {/* Content */}
+        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="space-y-12">
+            {FAQ_ITEMS.map((category) => (
+              <div key={category.category}>
+                {/* Category pill */}
+                <div className="mb-5">
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      background: M.muted,
+                      color: M.inkFaint,
+                      fontFamily: M.body,
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase' as const,
+                      padding: '4px 12px',
+                      borderRadius: '100px',
+                    }}
+                  >
+                    {category.category}
+                  </span>
+                </div>
 
-        <div className="space-y-8">
-          {FAQ_ITEMS.map((category) => (
-            <div key={category.category}>
-              <h2 className="text-sm font-bold text-[#007AFF] uppercase tracking-wider mb-4">{category.category}</h2>
-              <div className="space-y-2">
-                {category.questions.map((item) => {
-                  const key = `${category.category}-${item.q}`
-                  const isOpen = openItems.has(key)
-                  return (
-                    <div key={key} style={cardStyle} className="overflow-hidden">
-                      <button
-                        onClick={() => toggleItem(key)}
-                        className="w-full flex items-center justify-between p-5 text-left hover:bg-slate-50 transition-colors"
+                <div className="space-y-2">
+                  {category.questions.map((item) => {
+                    const key = `${category.category}-${item.q}`
+                    const isOpen = openItems.has(key)
+                    return (
+                      <div
+                        key={key}
+                        style={{
+                          background: M.surface,
+                          border: `1px solid ${M.border}`,
+                          borderRadius: '12px',
+                          overflow: 'hidden',
+                          borderLeft: isOpen ? `3px solid ${M.night}` : `1px solid ${M.border}`,
+                          transition: 'border 0.15s ease',
+                        }}
                       >
-                        <span className="font-semibold text-slate-900 pr-4 text-sm">{item.q}</span>
-                        <ChevronDown
-                          className={`w-5 h-5 text-slate-400 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                        />
-                      </button>
-                      {isOpen && (
-                        <div className="px-5 pb-5 border-t border-[#d2d2d7]">
-                          <p className="text-slate-600 text-sm leading-relaxed pt-4">{item.a}</p>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
+                        <button
+                          onClick={() => toggleItem(key)}
+                          className="w-full flex items-center justify-between text-left transition-colors"
+                          style={{
+                            padding: '18px 20px',
+                            background: 'transparent',
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontFamily: M.body,
+                              fontWeight: 600,
+                              fontSize: '15px',
+                              color: M.ink,
+                              paddingRight: '16px',
+                            }}
+                          >
+                            {item.q}
+                          </span>
+                          <ChevronDown
+                            className={`flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                            style={{ width: '18px', height: '18px', color: M.inkFaint }}
+                          />
+                        </button>
+                        {isOpen && (
+                          <div
+                            style={{
+                              borderTop: `1px solid ${M.border}`,
+                              padding: '16px 20px 20px',
+                            }}
+                          >
+                            <p
+                              style={{
+                                fontFamily: M.body,
+                                fontSize: '14px',
+                                color: M.inkMid,
+                                lineHeight: 1.7,
+                                margin: 0,
+                              }}
+                            >
+                              {item.a}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        <div style={cardStyle} className="text-center mt-10 p-8">
-          <p className="text-slate-600 mb-4 text-sm">Vous n'avez pas trouvé la réponse à votre question ?</p>
-          <Link
-            to="/contact"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#007AFF] text-white font-semibold text-sm hover:bg-[#0066d6] transition-colors"
+          {/* CTA bottom */}
+          <div
+            className="text-center mt-14 py-10 px-8"
+            style={{
+              background: M.surface,
+              border: `1px solid ${M.border}`,
+              borderRadius: '12px',
+            }}
           >
-            Contactez-nous
-          </Link>
-        </div>
-      </main>
+            <p
+              style={{
+                fontFamily: M.body,
+                fontSize: '15px',
+                color: M.inkMid,
+                marginBottom: '20px',
+              }}
+            >
+              Vous n'avez pas trouvé la réponse à votre question ?
+            </p>
+            <Link
+              to="/contact"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: M.night,
+                color: '#ffffff',
+                fontFamily: M.body,
+                fontWeight: 600,
+                fontSize: '14px',
+                padding: '10px 24px',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                transition: 'opacity 0.15s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.85')}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+            >
+              Contactez-nous
+            </Link>
+          </div>
+        </main>
 
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </Layout>
   )
 }

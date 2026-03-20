@@ -161,7 +161,7 @@ function WizardUploadSlot({
             ? 'border-emerald-300 bg-emerald-50 cursor-pointer'
             : isUploading
             ? 'border-blue-200 bg-blue-50/40 cursor-wait'
-            : 'border-dashed border-[#d2d2d7] hover:border-[#007AFF] hover:bg-[#e8f0fe]/30 cursor-pointer'
+            : 'border-dashed border-[#e4e1db] hover:border-[#1b5e3b] hover:bg-[#edf7f2]/30 cursor-pointer'
         }`}
       >
         <input
@@ -206,7 +206,7 @@ function WizardUploadSlot({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); inputRef.current?.click() }}
-            className="text-[11px] font-medium text-[#007AFF] hover:underline flex-shrink-0 px-2 py-1"
+            className="text-[11px] font-medium text-[#1b5e3b] hover:underline flex-shrink-0 px-2 py-1"
           >
             Remplacer
           </button>
@@ -336,7 +336,7 @@ export function DossierWizard({
                 <div
                   className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-200"
                   style={{
-                    backgroundColor: i < step ? '#10b981' : i === step ? '#007AFF' : '#f5f5f7',
+                    backgroundColor: i < step ? '#10b981' : i === step ? '#1b5e3b' : '#f5f5f7',
                     color:           i < step || i === step ? '#ffffff' : '#86868b',
                   }}
                 >
@@ -396,7 +396,7 @@ export function DossierWizard({
                             border: '1px solid #d2d2d7',
                             color: formData[field.key] ? '#1d1d1f' : '#86868b',
                           }}
-                          onFocus={(e) => { e.currentTarget.style.border = '1px solid #007AFF'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,122,255,0.12)' }}
+                          onFocus={(e) => { e.currentTarget.style.border = '1px solid #1b5e3b'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(27,94,59,0.12)' }}
                           onBlur={(e)  => { e.currentTarget.style.border = '1px solid #d2d2d7'; e.currentTarget.style.boxShadow = '' }}
                         >
                           <option value="">Sélectionner…</option>
@@ -410,7 +410,7 @@ export function DossierWizard({
                           placeholder={field.placeholder}
                           className="w-full px-4 py-3 rounded-xl border text-sm bg-white transition-all placeholder-[#86868b]"
                           style={{ border: '1px solid #d2d2d7', color: '#1d1d1f' }}
-                          onFocus={(e) => { e.currentTarget.style.border = '1px solid #007AFF'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,122,255,0.12)' }}
+                          onFocus={(e) => { e.currentTarget.style.border = '1px solid #1b5e3b'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(27,94,59,0.12)' }}
                           onBlur={(e)  => { e.currentTarget.style.border = '1px solid #d2d2d7'; e.currentTarget.style.boxShadow = '' }}
                         />
                       )}
@@ -436,7 +436,7 @@ export function DossierWizard({
                   className="flex items-start gap-2.5 px-4 py-3 rounded-2xl"
                   style={{ backgroundColor: '#f5f5f7', border: '1px solid #d2d2d7' }}
                 >
-                  <Lock className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: '#007AFF' }} />
+                  <Lock className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: '#1b5e3b' }} />
                   <p className="text-[11px] leading-relaxed" style={{ color: '#515154' }}>{current.note}</p>
                 </div>
               )}
@@ -472,9 +472,9 @@ export function DossierWizard({
               onClick={goNext}
               disabled={!canProceed() || anyUploading || savingProfile}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-40"
-              style={{ backgroundColor: '#007AFF' }}
+              style={{ backgroundColor: '#1b5e3b' }}
               onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#0066d6' }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#007AFF' }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#1b5e3b' }}
             >
               {(savingProfile || anyUploading) && <Loader2 className="w-4 h-4 animate-spin" />}
               {isLast ? 'Terminer' : 'Suivant'}

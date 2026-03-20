@@ -3,6 +3,18 @@ import { Check, X, Zap, Building2, Crown, ArrowRight, HelpCircle } from 'lucide-
 import { Layout } from '../components/layout/Layout'
 import { useReveal } from '../hooks/useReveal'
 
+// ─── Maison tokens ────────────────────────────────────────────────────────────
+
+const M = {
+  bg: '#fafaf8', surface: '#ffffff', muted: '#f4f2ee',
+  ink: '#0d0c0a', inkMid: '#5a5754', inkFaint: '#9e9b96',
+  night: '#1a1a2e', caramel: '#c4976a', caramelLight: '#fdf5ec',
+  tenant: '#1b5e3b', tenantLight: '#edf7f2',
+  border: '#e4e1db',
+  display: "'Cormorant Garamond', Georgia, serif",
+  body: "'DM Sans', system-ui, sans-serif",
+}
+
 // ─── Plan data ────────────────────────────────────────────────────────────────
 
 interface Plan {
@@ -123,22 +135,38 @@ function PlanCard({ plan, delay }: { plan: Plan; delay: number }) {
   return (
     <div
       ref={ref as React.RefObject<HTMLDivElement>}
-      className={`relative flex flex-col rounded-2xl border transition-all duration-500 ${
-        visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
-      }`}
+      className="relative flex flex-col transition-all duration-500"
       style={{
         transitionDelay: `${delay}ms`,
-        backgroundColor: '#ffffff',
-        borderColor: plan.highlighted ? '#007AFF' : '#d2d2d7',
+        opacity: visible ? 1 : 0,
+        transform: visible
+          ? plan.highlighted ? 'translateY(0) scale(1.02)' : 'translateY(0)'
+          : 'translateY(24px)',
+        backgroundColor: M.surface,
+        border: plan.highlighted ? `2px solid ${M.night}` : `1px solid ${M.border}`,
+        borderRadius: '12px',
         boxShadow: plan.highlighted
-          ? '0 0 0 2px rgba(0,122,255,0.12), 0 8px 32px rgba(0,122,255,0.12)'
-          : '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)',
-        transform: plan.highlighted ? 'scale(1.02)' : undefined,
+          ? '0 8px 40px rgba(26,26,46,0.14), 0 2px 8px rgba(26,26,46,0.08)'
+          : '0 1px 4px rgba(13,12,10,0.05)',
+        fontFamily: M.body,
       }}
     >
       {plan.badge && (
         <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-          <span className="bg-[#007AFF] text-white text-xs font-bold px-4 py-1 rounded-full shadow-sm whitespace-nowrap">
+          <span
+            style={{
+              backgroundColor: M.night,
+              color: '#ffffff',
+              fontFamily: M.body,
+              fontSize: '11px',
+              fontWeight: 600,
+              letterSpacing: '0.04em',
+              padding: '4px 14px',
+              borderRadius: '100px',
+              whiteSpace: 'nowrap',
+              display: 'inline-block',
+            }}
+          >
             {plan.badge}
           </span>
         </div>
@@ -146,63 +174,109 @@ function PlanCard({ plan, delay }: { plan: Plan; delay: number }) {
 
       <div className="p-7 flex-1 flex flex-col">
         {/* Plan header */}
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-3 mb-5">
           <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ backgroundColor: plan.highlighted ? '#e8f0fe' : '#f5f5f7' }}
+            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{
+              backgroundColor: plan.highlighted ? M.night : M.muted,
+            }}
           >
             <Icon
               className="w-5 h-5"
-              style={{ color: plan.highlighted ? '#007AFF' : plan.id === 'enterprise' ? '#d97706' : '#86868b' }}
+              style={{
+                color: plan.highlighted ? '#ffffff' : plan.id === 'enterprise' ? M.caramel : M.inkFaint,
+              }}
             />
           </div>
-          <h3 className="font-bold text-lg text-[#1d1d1f]">{plan.name}</h3>
+          <h3
+            style={{
+              fontFamily: M.display,
+              fontStyle: 'italic',
+              fontSize: '22px',
+              fontWeight: 700,
+              color: M.ink,
+            }}
+          >
+            {plan.name}
+          </h3>
         </div>
 
         {/* Price */}
         <div className="mb-4">
           <div className="flex items-baseline gap-1">
-            <span className="text-4xl font-extrabold tracking-tight text-[#1d1d1f]">{plan.price}</span>
+            <span
+              style={{
+                fontFamily: M.display,
+                fontSize: '56px',
+                fontWeight: 600,
+                color: M.ink,
+                lineHeight: 1,
+              }}
+            >
+              {plan.price}
+            </span>
           </div>
-          <p className="text-sm mt-0.5 text-[#86868b]">{plan.priceNote}</p>
+          <p style={{ fontFamily: M.body, fontSize: '14px', color: M.inkFaint, marginTop: '4px' }}>
+            {plan.priceNote}
+          </p>
         </div>
 
-        <p className="text-sm mb-6 leading-relaxed text-[#515154]">{plan.tagline}</p>
+        <p
+          style={{
+            fontFamily: M.body,
+            fontSize: '14px',
+            color: M.inkMid,
+            lineHeight: 1.6,
+            marginBottom: '24px',
+          }}
+        >
+          {plan.tagline}
+        </p>
 
         {/* CTA */}
         <Link
           to={plan.ctaLink}
-          className={`w-full text-center py-2.5 px-4 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 mb-7`}
-          style={
-            plan.highlighted
-              ? { backgroundColor: '#007AFF', color: '#ffffff' }
-              : { backgroundColor: '#f5f5f7', color: '#515154', border: '1px solid #d2d2d7' }
-          }
-          onMouseEnter={e => {
-            if (plan.highlighted) e.currentTarget.style.backgroundColor = '#0066d6'
-            else e.currentTarget.style.backgroundColor = '#f0f0f2'
-          }}
-          onMouseLeave={e => {
-            if (plan.highlighted) e.currentTarget.style.backgroundColor = '#007AFF'
-            else e.currentTarget.style.backgroundColor = '#f5f5f7'
+          className="w-full text-center flex items-center justify-center gap-2 transition-opacity hover:opacity-80"
+          style={{
+            fontFamily: M.body,
+            fontSize: '14px',
+            fontWeight: 600,
+            padding: '11px 20px',
+            borderRadius: '8px',
+            marginBottom: '28px',
+            ...(plan.highlighted
+              ? { backgroundColor: M.night, color: '#ffffff', border: 'none' }
+              : { backgroundColor: 'transparent', color: M.inkMid, border: `1px solid ${M.border}` }),
           }}
         >
           {plan.cta}
           <ArrowRight className="w-4 h-4" />
         </Link>
 
+        {/* Separator */}
+        <div style={{ height: '1px', backgroundColor: M.border, marginBottom: '20px' }} />
+
         {/* Features */}
         <ul className="space-y-3 flex-1">
           {plan.features.map((f) => (
-            <li key={f.label} className="flex items-start gap-2.5 text-sm">
-              {f.included
-                ? <Check className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
-                : <X className="w-4 h-4 text-[#d2d2d7] flex-shrink-0 mt-0.5" />
-              }
-              <span style={{ color: f.included ? '#1d1d1f' : '#86868b' }}>
+            <li key={f.label} className="flex items-start gap-2.5">
+              {f.included ? (
+                <Check
+                  className="w-4 h-4 flex-shrink-0 mt-0.5"
+                  style={{ color: M.tenant }}
+                />
+              ) : (
+                <X
+                  className="w-4 h-4 flex-shrink-0 mt-0.5"
+                  style={{ color: M.border }}
+                />
+              )}
+              <span style={{ fontFamily: M.body, fontSize: '14px', color: f.included ? M.ink : M.inkFaint }}>
                 {f.label}
                 {f.note && (
-                  <span className="block text-xs mt-0.5 text-[#86868b]">{f.note}</span>
+                  <span style={{ display: 'block', fontSize: '12px', color: M.inkFaint, marginTop: '1px' }}>
+                    {f.note}
+                  </span>
                 )}
               </span>
             </li>
@@ -221,26 +295,61 @@ export default function Pricing() {
 
   return (
     <Layout>
-      <div style={{ backgroundColor: '#f5f5f7', fontFamily: "'Plus Jakarta Sans', Inter, system-ui, sans-serif" }}>
+      <div style={{ backgroundColor: M.bg, fontFamily: M.body }}>
 
         {/* Hero */}
         <section
-          ref={heroReveal.ref as React.RefObject<HTMLElement>}
-          className={`pt-16 pb-12 text-center px-4 transition-all duration-700 ${
-            heroReveal.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-          }`}
+          style={{ backgroundColor: M.night, padding: '80px 16px 72px' }}
+          className="text-center"
         >
-          <p className="text-xs font-bold uppercase tracking-widest text-[#007AFF] mb-3">Tarifs</p>
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-[#1d1d1f]">
-            Simple. Transparent. Sans surprise.
-          </h1>
-          <p className="text-lg max-w-2xl mx-auto text-[#515154]">
-            Que vous soyez propriétaire d'un studio ou gestionnaire d'un parc locatif, il existe une formule taillée pour vous — et une période d'essai pour en être certain.
-          </p>
+          <div
+            ref={heroReveal.ref as React.RefObject<HTMLDivElement>}
+            className="transition-all duration-700"
+            style={{ opacity: heroReveal.visible ? 1 : 0, transform: heroReveal.visible ? 'translateY(0)' : 'translateY(16px)' }}
+          >
+            <p
+              style={{
+                fontFamily: M.body,
+                fontSize: '10px',
+                fontWeight: 600,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                color: M.caramel,
+                marginBottom: '16px',
+              }}
+            >
+              Tarifs
+            </p>
+            <h1
+              style={{
+                fontFamily: M.display,
+                fontStyle: 'italic',
+                fontSize: 'clamp(38px, 5vw, 52px)',
+                fontWeight: 600,
+                color: '#ffffff',
+                marginBottom: '18px',
+                lineHeight: 1.15,
+              }}
+            >
+              Simple. Transparent. Sans surprise.
+            </h1>
+            <p
+              style={{
+                fontFamily: M.body,
+                fontSize: '16px',
+                color: 'rgba(255,255,255,0.65)',
+                maxWidth: '560px',
+                margin: '0 auto',
+                lineHeight: 1.65,
+              }}
+            >
+              Que vous soyez propriétaire d'un studio ou gestionnaire d'un parc locatif, il existe une formule taillée pour vous — et une période d'essai pour en être certain.
+            </p>
+          </div>
         </section>
 
         {/* Plans grid */}
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '64px', paddingBottom: '80px' }}>
           <div className="grid md:grid-cols-3 gap-6 items-start">
             {PLANS.map((plan, i) => (
               <PlanCard key={plan.id} plan={plan} delay={i * 120} />
@@ -248,9 +357,15 @@ export default function Pricing() {
           </div>
 
           {/* Enterprise note */}
-          <p className="text-center text-sm mt-8 text-[#86868b]">
+          <p
+            className="text-center"
+            style={{ fontFamily: M.body, fontSize: '14px', color: M.inkFaint, marginTop: '32px' }}
+          >
             Vous gérez plus de 50 biens ?{' '}
-            <Link to="/contact" className="text-[#007AFF] hover:underline font-medium">
+            <Link
+              to="/contact"
+              style={{ color: M.night, textDecoration: 'underline', fontWeight: 500 }}
+            >
               Demandez un devis sur mesure
             </Link>.
           </p>
@@ -259,23 +374,67 @@ export default function Pricing() {
         {/* FAQ */}
         <section
           ref={faqReveal.ref as React.RefObject<HTMLElement>}
-          className={`max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 transition-all duration-700 ${
-            faqReveal.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-          }`}
+          className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-700"
+          style={{
+            paddingBottom: '80px',
+            opacity: faqReveal.visible ? 1 : 0,
+            transform: faqReveal.visible ? 'translateY(0)' : 'translateY(16px)',
+          }}
         >
-          <div className="flex items-center gap-2 mb-6">
-            <HelpCircle className="w-5 h-5 text-[#007AFF]" />
-            <h2 className="text-xl font-bold text-[#1d1d1f]">Questions fréquentes</h2>
+          {/* Section header */}
+          <div className="flex items-center gap-3 mb-8">
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                backgroundColor: M.caramelLight,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <HelpCircle className="w-4 h-4" style={{ color: M.caramel }} />
+            </div>
+            <h2
+              style={{
+                fontFamily: M.display,
+                fontStyle: 'italic',
+                fontSize: '26px',
+                fontWeight: 700,
+                color: M.ink,
+              }}
+            >
+              Questions fréquentes
+            </h2>
           </div>
+
           <div className="space-y-4">
             {FAQ.map((item) => (
               <div
                 key={item.q}
-                className="rounded-2xl border border-[#d2d2d7] p-5 bg-white"
-                style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+                style={{
+                  backgroundColor: M.surface,
+                  border: `1px solid ${M.border}`,
+                  borderRadius: '12px',
+                  padding: '20px 24px',
+                }}
               >
-                <p className="font-semibold text-sm mb-2 text-[#1d1d1f]">{item.q}</p>
-                <p className="text-sm leading-relaxed text-[#515154]">{item.a}</p>
+                <p
+                  style={{
+                    fontFamily: M.body,
+                    fontSize: '15px',
+                    fontWeight: 600,
+                    color: M.ink,
+                    marginBottom: '8px',
+                  }}
+                >
+                  {item.q}
+                </p>
+                <p style={{ fontFamily: M.body, fontSize: '14px', color: M.inkMid, lineHeight: 1.7 }}>
+                  {item.a}
+                </p>
               </div>
             ))}
           </div>

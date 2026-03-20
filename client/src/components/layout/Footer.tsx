@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { BailioLogo } from '../BailioLogo'
 
 const fontBody    = "'DM Sans', system-ui, sans-serif"
 const night       = '#1a1a2e'
@@ -50,8 +51,9 @@ export default function Footer() {
           <div>
             <Link
               to="/"
-              style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'baseline', gap: 2, marginBottom: 16 }}
+              style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 16 }}
             >
+              <BailioLogo size={28} variant="onDark" />
               <span style={{ fontFamily: fontBody, fontWeight: 700, fontSize: 18, color: '#f5f4f0', letterSpacing: '-0.02em' }}>
                 Bailio
               </span>

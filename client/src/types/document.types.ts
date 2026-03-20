@@ -35,6 +35,7 @@ export interface ContractDocument {
   fileSize: number
   mimeType: string
   rejectionReason?: string
+  fromDossier?: boolean
   createdAt: string
   updatedAt: string
   uploader?: {

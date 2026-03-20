@@ -90,16 +90,16 @@ export default function Notifications() {
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h1 className="text-2xl font-bold text-[#1d1d1f] mb-1 flex items-center gap-3" style={{ fontFamily: "'Plus Jakarta Sans', Inter, system-ui" }}>
+                <h1 className="text-2xl font-bold text-[#0d0c0a] mb-1 flex items-center gap-3" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
                   <div className="w-10 h-10 bg-[#e8f0fe] rounded-xl flex items-center justify-center">
-                    <Bell className="w-5 h-5 text-[#007AFF]" />
+                    <Bell className="w-5 h-5 text-[#1a1a2e]" />
                   </div>
                   Notifications
                 </h1>
                 <p className="text-[#515154] text-sm pl-[52px]">
                   {notificationsTotal} notification{notificationsTotal > 1 ? 's' : ''}
                   {unreadCount > 0 && (
-                    <span className="ml-2 text-[#007AFF] font-semibold">
+                    <span className="ml-2 text-[#1a1a2e] font-semibold">
                       · {unreadCount} non lue{unreadCount > 1 ? 's' : ''}
                     </span>
                   )}
@@ -113,7 +113,7 @@ export default function Notifications() {
                     <button
                       onClick={handleMarkAllAsRead}
                       disabled={actionLoading === 'mark-all'}
-                      className="px-4 py-2 text-sm font-semibold text-[#007AFF] hover:bg-[#e8f0fe] rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2"
+                      className="px-4 py-2 text-sm font-semibold text-[#1a1a2e] hover:bg-[#eaf0fb] rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2"
                     >
                       {actionLoading === 'mark-all' ? (
                         <Loader className="w-4 h-4 animate-spin" />
@@ -145,8 +145,8 @@ export default function Notifications() {
                 onClick={() => setFilterMode('all')}
                 className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
                   filterMode === 'all'
-                    ? 'bg-[#007AFF] text-white shadow-sm'
-                    : 'text-[#515154] hover:text-[#1d1d1f] hover:bg-[#f5f5f7]'
+                    ? 'bg-[#1a1a2e] text-white shadow-sm'
+                    : 'text-[#515154] hover:text-[#0d0c0a] hover:bg-[#f5f5f7]'
                 }`}
               >
                 Toutes
@@ -155,15 +155,15 @@ export default function Notifications() {
                 onClick={() => setFilterMode('unread')}
                 className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${
                   filterMode === 'unread'
-                    ? 'bg-[#007AFF] text-white shadow-sm'
-                    : 'text-[#515154] hover:text-[#1d1d1f] hover:bg-[#f5f5f7]'
+                    ? 'bg-[#1a1a2e] text-white shadow-sm'
+                    : 'text-[#515154] hover:text-[#0d0c0a] hover:bg-[#f5f5f7]'
                 }`}
               >
                 Non lues
                 {unreadCount > 0 && (
                   <span
                     className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full ${
-                      filterMode === 'unread' ? 'bg-white text-[#007AFF]' : 'bg-[#007AFF] text-white'
+                      filterMode === 'unread' ? 'bg-white text-[#1a1a2e]' : 'bg-[#1a1a2e] text-white'
                     }`}
                   >
                     {unreadCount}
@@ -176,14 +176,14 @@ export default function Notifications() {
           {/* Content */}
           {isLoading && notifications.length === 0 ? (
             <div className="flex items-center justify-center py-16">
-              <Loader className="w-7 h-7 text-[#007AFF] animate-spin" />
+              <Loader className="w-7 h-7 text-[#1a1a2e] animate-spin" />
             </div>
           ) : notifications.length === 0 ? (
             <div className="bg-white rounded-2xl border border-[#d2d2d7] shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_16px_rgba(0,0,0,0.05)] p-12 text-center">
               <div className="w-14 h-14 bg-[#f5f5f7] border border-[#d2d2d7] rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Bell className="w-7 h-7 text-[#86868b]" />
               </div>
-              <h3 className="text-lg font-bold text-[#1d1d1f] mb-2" style={{ fontFamily: "'Plus Jakarta Sans', Inter, system-ui" }}>
+              <h3 className="text-lg font-bold text-[#0d0c0a] mb-2" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
                 {filterMode === 'unread' ? 'Aucune notification non lue' : 'Aucune notification'}
               </h3>
               <p className="text-sm text-[#515154]">
@@ -220,12 +220,12 @@ export default function Notifications() {
                       {/* Content */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between mb-1.5">
-                          <h4 className={`text-sm font-semibold ${!notification.isRead ? 'text-[#1d1d1f]' : 'text-[#515154]'}`}>
+                          <h4 className={`text-sm font-semibold ${!notification.isRead ? 'text-[#0d0c0a]' : 'text-[#515154]'}`}>
                             {notification.title}
                           </h4>
                           <div className="flex items-center gap-2 flex-shrink-0 ml-4">
                             {!notification.isRead && (
-                              <div className="w-2 h-2 bg-[#007AFF] rounded-full" title="Non lu" />
+                              <div className="w-2 h-2 bg-[#1a1a2e] rounded-full" title="Non lu" />
                             )}
                             <button
                               onClick={(e) => handleDelete(notification.id, e)}

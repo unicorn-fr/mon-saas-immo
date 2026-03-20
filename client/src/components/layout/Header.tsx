@@ -11,6 +11,7 @@ import {
 import { useAuth } from '../../hooks/useAuth'
 import { useSidebarStore } from '../../store/sidebarStore'
 import { useState, useEffect } from 'react'
+import { BailioLogo } from '../BailioLogo'
 
 const NIGHT = '#1a1a2e'
 const BORDER = '#e4e1db'
@@ -170,10 +171,11 @@ export const Header = () => {
         <div className="flex items-center justify-between h-16">
 
           {/* Logo */}
-          <Link to="/" className="hover:opacity-80 transition-opacity flex-shrink-0">
+          <Link to="/" className="hover:opacity-80 transition-opacity flex-shrink-0 flex items-center gap-2">
+            <BailioLogo size={30} />
             <span style={{
               fontFamily: 'var(--font-display)',
-              fontSize: '28px',
+              fontSize: '26px',
               fontWeight: 700,
               fontStyle: 'italic',
               color: NIGHT,

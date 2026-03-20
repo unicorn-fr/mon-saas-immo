@@ -13,10 +13,10 @@ import { applicationService } from '../../services/application.service'
 import { scoreColor } from '../../utils/matchingEngine'
 import type { Application, ApplicationStatus } from '../../types/application.types'
 import { Layout } from '../../components/layout/Layout'
+import { DossierReviewModal } from '../../components/document/DossierReviewModal'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { TenantDossierModal } from '../../components/dossier/TenantDossierModal'
 
 const SERVER_BASE =
   (import.meta.env.VITE_API_URL as string | undefined)?.replace('/api/v1', '') ?? 'http://localhost:3000'
@@ -106,13 +106,14 @@ const STATUS_STYLE: Record<ApplicationStatus, React.CSSProperties> = {
 function ApplicationCard({
   app,
   onDecision,
+  onOpenDossier,
 }: {
   app: Application
   onDecision: (id: string, status: 'APPROVED' | 'REJECTED') => Promise<void>
+  onOpenDossier: (tenantId: string, tenantName: string) => void
 }) {
   const [expanded, setExpanded] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [showDossier, setShowDossier] = useState(false)
   const tenant = app.tenant!
 
   async function decide(status: 'APPROVED' | 'REJECTED') {
@@ -183,7 +184,7 @@ function ApplicationCard({
 
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <button
-            onClick={() => setShowDossier(true)}
+            onClick={() => onOpenDossier(tenant.id, `${tenant.firstName ?? ''} ${tenant.lastName ?? ''}`.trim())}
             className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold transition-colors"
             style={{
               background: M.ownerLight,
@@ -245,14 +246,6 @@ function ApplicationCard({
           </button>
         </div>
       </div>
-
-      {showDossier && (
-        <TenantDossierModal
-          tenantId={tenant.id}
-          tenantName={`${tenant.firstName ?? ''} ${tenant.lastName ?? ''}`.trim()}
-          onClose={() => setShowDossier(false)}
-        />
-      )}
 
       {/* Expanded details */}
       <AnimatePresence>
@@ -361,10 +354,12 @@ function PropertyGroup({
   property,
   apps,
   onDecision,
+  onOpenDossier,
 }: {
   property: PropertyInfo
   apps: Application[]
   onDecision: (id: string, status: 'APPROVED' | 'REJECTED') => Promise<void>
+  onOpenDossier: (tenantId: string, tenantName: string) => void
 }) {
   const [open, setOpen] = useState(true)
   const pending  = apps.filter((a) => a.status === 'PENDING').length
@@ -472,7 +467,7 @@ function PropertyGroup({
               style={{ borderTop: `1px solid ${M.border}`, background: M.muted }}
             >
               {sorted.map((app) => (
-                <ApplicationCard key={app.id} app={app} onDecision={onDecision} />
+                <ApplicationCard key={app.id} app={app} onDecision={onDecision} onOpenDossier={onOpenDossier} />
               ))}
             </div>
           </motion.div>
@@ -490,6 +485,7 @@ export default function ApplicationManagement() {
   const [applications, setApplications] = useState<Application[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<Filter>('ALL')
+  const [dossierModal, setDossierModal] = useState<{ tenantId: string; tenantName: string } | null>(null)
 
   async function load() {
     setLoading(true)
@@ -552,6 +548,13 @@ export default function ApplicationManagement() {
 
   return (
     <Layout>
+      {dossierModal && (
+        <DossierReviewModal
+          tenantId={dossierModal.tenantId}
+          tenantName={dossierModal.tenantName}
+          onClose={() => setDossierModal(null)}
+        />
+      )}
       <div
         className="min-h-screen p-6 lg:p-8"
         style={{ background: M.bg, fontFamily: "'DM Sans', system-ui, sans-serif" }}
@@ -727,7 +730,7 @@ export default function ApplicationManagement() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
                   >
-                    <PropertyGroup property={property} apps={apps} onDecision={handleDecision} />
+                    <PropertyGroup property={property} apps={apps} onDecision={handleDecision} onOpenDossier={(id, name) => setDossierModal({ tenantId: id, tenantName: name })} />
                   </motion.div>
                 ))}
               </AnimatePresence>

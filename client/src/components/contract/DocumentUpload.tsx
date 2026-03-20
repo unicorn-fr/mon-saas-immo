@@ -7,6 +7,20 @@ import {
   getFileIcon,
 } from '../../utils/fileUtils'
 
+const M = {
+  ink: '#0d0c0a',
+  inkMid: '#5a5754',
+  inkFaint: '#9e9b96',
+  tenant: '#1b5e3b',
+  tenantLight: '#edf7f2',
+  tenantBorder: '#9fd4ba',
+  border: '#e4e1db',
+  surface: '#ffffff',
+  warningBg: '#fdf5ec',
+  warningBorder: '#f3c99a',
+  warning: '#92400e',
+}
+
 export interface UploadedFile {
   id?: string
   fileName: string
@@ -32,6 +46,7 @@ export default function DocumentUpload({
 }: DocumentUploadProps) {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [isProcessing, setIsProcessing] = useState(false)
+  const [isHoveringZone, setIsHoveringZone] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileSelect = async (files: FileList | null) => {
@@ -109,7 +124,13 @@ export default function DocumentUpload({
       {/* Upload Zone */}
       <div
         onClick={() => fileInputRef.current?.click()}
-        className="border-2 border-dashed border-primary-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-500 hover:bg-primary-50 transition-all"
+        onMouseEnter={() => setIsHoveringZone(true)}
+        onMouseLeave={() => setIsHoveringZone(false)}
+        className="border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all"
+        style={{
+          borderColor: isHoveringZone ? M.tenantBorder : M.border,
+          background: isHoveringZone ? M.tenantLight : 'transparent',
+        }}
       >
         <input
           ref={fileInputRef}
@@ -124,17 +145,17 @@ export default function DocumentUpload({
         <div className="flex flex-col items-center gap-3">
           {isProcessing ? (
             <>
-              <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-              <p className="text-sm text-slate-600 dark:text-slate-400">Traitement des fichiers...</p>
+              <Loader2 className="w-8 h-8 animate-spin" style={{ color: M.tenant }} />
+              <p className="text-sm" style={{ color: M.inkMid }}>Traitement des fichiers...</p>
             </>
           ) : (
             <>
-              <Upload className="w-8 h-8 text-blue-500" />
+              <Upload className="w-8 h-8" style={{ color: M.tenant }} />
               <div>
-                <p className="font-medium text-slate-900">
+                <p className="font-medium" style={{ color: M.ink }}>
                   Cliquez pour ajouter des fichiers
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs mt-1" style={{ color: M.inkFaint }}>
                   Maximum 5 KB par fichier · Formats: PDF, JPG, PNG, WebP, DOC, DOCX
                 </p>
               </div>
@@ -144,11 +165,17 @@ export default function DocumentUpload({
       </div>
 
       {/* Size Info Bar */}
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2">
-        <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-        <div className="text-sm text-amber-800">
+      <div
+        className="rounded-xl p-3 flex items-start gap-2"
+        style={{
+          background: M.warningBg,
+          border: `1px solid ${M.warningBorder}`,
+        }}
+      >
+        <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: M.warning }} />
+        <div className="text-sm" style={{ color: M.warning }}>
           <p className="font-medium">Limite de taille: 5 KB</p>
-          <p className="text-xs text-amber-700 mt-1">
+          <p className="text-xs mt-1">
             Les images seront automatiquement compressées. Les fichiers trop volumineux seront rejetés.
           </p>
         </div>
@@ -157,7 +184,7 @@ export default function DocumentUpload({
       {/* Uploaded Files List */}
       {uploadedFiles.length > 0 && (
         <div className="space-y-2">
-          <h4 className="text-sm font-semibold text-slate-900">
+          <h4 className="text-sm font-semibold" style={{ color: M.ink }}>
             Fichiers ajoutés ({uploadedFiles.length}/{maxFiles})
           </h4>
 
@@ -165,19 +192,20 @@ export default function DocumentUpload({
             {uploadedFiles.map((file) => (
               <div
                 key={file.fileName}
-                className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
+                className="flex items-center gap-3 p-3 rounded-xl border transition-colors"
+                style={
                   file.status === 'ERROR'
-                    ? 'bg-red-50 border-red-200'
-                    : 'bg-success-50 border-success-100'
-                }`}
+                    ? { background: '#fef2f2', borderColor: '#fca5a5' }
+                    : { background: M.tenantLight, borderColor: M.tenantBorder }
+                }
               >
                 <span className="text-lg">{getFileIcon(file.mimeType)}</span>
 
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900 truncate">
+                  <p className="text-sm font-medium truncate" style={{ color: M.ink }}>
                     {file.fileName}
                   </p>
-                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                  <p className="text-xs" style={{ color: M.inkMid }}>
                     {formatFileSize(file.fileSize)}
                   </p>
                   {file.error && (
@@ -189,7 +217,7 @@ export default function DocumentUpload({
                   {file.status === 'ERROR' ? (
                     <AlertCircle className="w-5 h-5 text-red-500" />
                   ) : (
-                    <CheckCircle className="w-5 h-5 text-success-500" />
+                    <CheckCircle className="w-5 h-5" style={{ color: M.tenant }} />
                   )}
 
                   <button
@@ -205,7 +233,7 @@ export default function DocumentUpload({
           </div>
 
           {uploadedFiles.filter((f) => f.status !== 'ERROR').length === 0 && (
-            <p className="text-xs text-slate-500 italic">
+            <p className="text-xs italic" style={{ color: M.inkFaint }}>
               Veuillez corriger les erreurs ci-dessus
             </p>
           )}
@@ -214,7 +242,7 @@ export default function DocumentUpload({
 
       {/* Summary */}
       {uploadedFiles.length > 0 && (
-        <div className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-2">
+        <div className="text-xs flex items-center gap-2" style={{ color: M.inkMid }}>
           <FileText className="w-4 h-4" />
           <span>
             {uploadedFiles.filter((f) => f.status !== 'ERROR').length} fichier(s)

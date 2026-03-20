@@ -17,6 +17,8 @@ import {
   X,
   SendHorizonal,
   Clock,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 import { useProperties } from '../../hooks/useProperties'
 import { useAuth } from '../../hooks/useAuth'
@@ -31,6 +33,32 @@ import { applicationService } from '../../services/application.service'
 import { dossierService } from '../../services/dossierService'
 import type { Application } from '../../types/application.types'
 import { DEFAULT_CRITERIA } from '../../types/application.types'
+
+const M = {
+  bg: '#fafaf8',
+  surface: '#ffffff',
+  muted: '#f4f2ee',
+  inputBg: '#f8f7f4',
+  ink: '#0d0c0a',
+  inkMid: '#5a5754',
+  inkFaint: '#9e9b96',
+  night: '#1a1a2e',
+  caramel: '#c4976a',
+  caramelLight: '#fdf5ec',
+  tenant: '#1b5e3b',
+  tenantLight: '#edf7f2',
+  tenantBorder: '#9fd4ba',
+  owner: '#1a3270',
+  ownerLight: '#eaf0fb',
+  border: '#e4e1db',
+  borderMid: '#ccc9c3',
+  danger: '#9b1c1c',
+  dangerBg: '#fef2f2',
+  warning: '#92400e',
+  warningBg: '#fdf5ec',
+  display: "'Cormorant Garamond', Georgia, serif",
+  body: "'DM Sans', system-ui, sans-serif",
+}
 
 export default function PropertyDetailsPublic() {
   const { id } = useParams<{ id: string }>()
@@ -49,7 +77,7 @@ export default function PropertyDetailsPublic() {
 
   useEffect(() => {
     if (id) {
-      fetchPropertyById(id, true) // true = public view, will increment views
+      fetchPropertyById(id, true)
     }
   }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -59,7 +87,6 @@ export default function PropertyDetailsPublic() {
     }
   }, [isAuthenticated, loadFavorites])
 
-  // Load tenant's existing application + doc categories for pre-qual
   useEffect(() => {
     if (!isAuthenticated || !id || user?.role !== 'TENANT') return
     Promise.all([
@@ -90,7 +117,6 @@ export default function PropertyDetailsPublic() {
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href)
     setShowShareMenu(false)
-    // Could show a toast notification here
   }
 
   const handleFavoriteToggle = async () => {
@@ -109,8 +135,14 @@ export default function PropertyDetailsPublic() {
   if (isLoading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center min-h-screen" style={{ background: '#f5f5f7' }}>
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#007AFF]"></div>
+        <div
+          className="flex items-center justify-center min-h-screen"
+          style={{ background: M.bg, fontFamily: M.body }}
+        >
+          <div
+            className="animate-spin rounded-full h-10 w-10"
+            style={{ borderBottom: `2px solid ${M.tenant}` }}
+          />
         </div>
       </Layout>
     )
@@ -119,13 +151,28 @@ export default function PropertyDetailsPublic() {
   if (!currentProperty) {
     return (
       <Layout>
-        <div className="min-h-screen flex items-center justify-center" style={{ background: '#f5f5f7' }}>
+        <div
+          className="min-h-screen flex items-center justify-center"
+          style={{ background: M.bg, fontFamily: M.body }}
+        >
           <div className="text-center">
-            <div className="w-16 h-16 bg-[#e8f0fe] rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <HomeIcon className="w-8 h-8 text-[#007AFF]" />
+            <div
+              className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+              style={{ background: M.ownerLight }}
+            >
+              <HomeIcon className="w-8 h-8" style={{ color: M.owner }} />
             </div>
-            <h2 className="text-xl font-semibold text-slate-900 mb-2">Propriété introuvable</h2>
-            <Link to="/search" className="text-[#007AFF] hover:text-[#0066d6] text-sm font-medium">
+            <h2
+              className="text-xl font-semibold mb-2"
+              style={{ color: M.ink, fontFamily: M.body }}
+            >
+              Propriété introuvable
+            </h2>
+            <Link
+              to="/search"
+              className="text-sm font-medium"
+              style={{ color: M.tenant }}
+            >
               Retour à la recherche
             </Link>
           </div>
@@ -138,22 +185,36 @@ export default function PropertyDetailsPublic() {
   const propertyType = PROPERTY_TYPES.find((t) => t.value === property.type)
   const images = property.images.length > 0 ? property.images : ['/placeholder-property.jpg']
 
-  const cardStyle = {
-    background: '#ffffff',
-    border: '1px solid #d2d2d7',
-    borderRadius: '1rem',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)',
+  const cardStyle: React.CSSProperties = {
+    background: M.surface,
+    border: `1px solid ${M.border}`,
+    borderRadius: '12px',
+    boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
+  }
+
+  const sectionLabel: React.CSSProperties = {
+    fontFamily: M.body,
+    fontSize: '11px',
+    fontWeight: 600,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: M.inkFaint,
+    marginBottom: '12px',
   }
 
   return (
     <Layout>
-      <div style={{ background: '#f5f5f7' }} className="min-h-screen">
+      <div style={{ background: M.bg, fontFamily: M.body }} className="min-h-screen">
+
         {/* Error Message */}
         {error && (
           <div className="container mx-auto px-4 pt-4">
-            <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-700">{error}</p>
+            <div
+              className="p-4 flex items-start gap-3 rounded-xl"
+              style={{ background: M.dangerBg, border: `1px solid ${M.danger}30` }}
+            >
+              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: M.danger }} />
+              <p className="text-sm" style={{ color: M.danger }}>{error}</p>
             </div>
           </div>
         )}
@@ -161,11 +222,13 @@ export default function PropertyDetailsPublic() {
         {/* Content */}
         <div className="container mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
             {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-5">
+
               {/* Image Gallery */}
-              <div style={cardStyle} className="overflow-hidden">
-                <div className="relative aspect-video bg-slate-100">
+              <div style={{ ...cardStyle, overflow: 'hidden' }}>
+                <div className="relative" style={{ aspectRatio: '16/9', background: M.muted }}>
                   <img
                     src={images[selectedImage]}
                     alt={`${property.title} - Image ${selectedImage + 1}`}
@@ -174,25 +237,57 @@ export default function PropertyDetailsPublic() {
                       e.currentTarget.src = '/placeholder-property.jpg'
                     }}
                   />
-                  <div className="absolute bottom-4 right-4 bg-black/60 text-white text-xs px-3 py-1 rounded-lg font-medium">
+
+                  {/* Prev / Next arrows */}
+                  {images.length > 1 && (
+                    <>
+                      <button
+                        onClick={() => setSelectedImage((prev) => (prev - 1 + images.length) % images.length)}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full transition-colors"
+                        style={{ background: M.surface, border: `1px solid ${M.border}` }}
+                      >
+                        <ChevronLeft className="w-4 h-4" style={{ color: M.ink }} />
+                      </button>
+                      <button
+                        onClick={() => setSelectedImage((prev) => (prev + 1) % images.length)}
+                        className="absolute right-14 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full transition-colors"
+                        style={{ background: M.surface, border: `1px solid ${M.border}` }}
+                      >
+                        <ChevronRight className="w-4 h-4" style={{ color: M.ink }} />
+                      </button>
+                    </>
+                  )}
+
+                  {/* Image counter pill */}
+                  <div
+                    className="absolute bottom-3 right-3 text-white text-xs px-3 py-1 rounded-full font-medium"
+                    style={{ background: 'rgba(13,12,10,0.60)', fontFamily: M.body }}
+                  >
                     {selectedImage + 1} / {images.length}
                   </div>
 
                   {/* Action Buttons Overlay */}
-                  <div className="absolute top-4 right-4 flex gap-2">
+                  <div className="absolute top-3 right-3 flex gap-2">
                     <div className="relative">
                       <button
                         onClick={handleShare}
-                        className="w-9 h-9 bg-white rounded-xl shadow-md hover:bg-slate-50 transition-colors flex items-center justify-center"
+                        className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
+                        style={{ background: M.surface, border: `1px solid ${M.border}` }}
                       >
-                        <Share2 className="w-4 h-4 text-slate-600" />
+                        <Share2 className="w-4 h-4" style={{ color: M.inkMid }} />
                       </button>
 
                       {showShareMenu && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-[#d2d2d7] p-2 z-10">
+                        <div
+                          className="absolute right-0 mt-2 w-48 p-2 z-10 rounded-xl"
+                          style={{ background: M.surface, border: `1px solid ${M.border}`, boxShadow: '0 4px 16px rgba(13,12,10,0.10)' }}
+                        >
                           <button
                             onClick={handleCopyLink}
-                            className="w-full text-left px-3 py-2 hover:bg-slate-50 rounded-lg text-sm text-slate-700"
+                            className="w-full text-left px-3 py-2 rounded-lg text-sm transition-colors"
+                            style={{ color: M.inkMid }}
+                            onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
+                            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                           >
                             Copier le lien
                           </button>
@@ -202,29 +297,37 @@ export default function PropertyDetailsPublic() {
 
                     <button
                       onClick={handleFavoriteToggle}
-                      className="w-9 h-9 bg-white rounded-xl shadow-md hover:bg-slate-50 transition-colors flex items-center justify-center"
+                      className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
+                      style={{ background: M.surface, border: `1px solid ${M.border}` }}
                       title={isFavorite(id || '') ? 'Retirer des favoris' : 'Ajouter aux favoris'}
                     >
                       <Heart
-                        className={`w-4 h-4 transition-colors ${
-                          isFavorite(id || '') ? 'fill-red-500 text-red-500' : 'text-slate-600'
-                        }`}
+                        className="w-4 h-4 transition-colors"
+                        style={{
+                          color: isFavorite(id || '') ? '#e53e3e' : M.inkMid,
+                          fill: isFavorite(id || '') ? '#e53e3e' : 'none',
+                        }}
                       />
                     </button>
                   </div>
                 </div>
 
+                {/* Thumbnails */}
                 {images.length > 1 && (
                   <div className="p-4 grid grid-cols-6 gap-2">
                     {images.map((img, index) => (
                       <button
                         key={index}
                         onClick={() => setSelectedImage(index)}
-                        className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                          selectedImage === index
-                            ? 'border-[#007AFF] ring-2 ring-[#007AFF]/20'
-                            : 'border-[#d2d2d7] hover:border-slate-300'
-                        }`}
+                        className="aspect-square overflow-hidden transition-all"
+                        style={{
+                          borderRadius: '8px',
+                          border: selectedImage === index
+                            ? `2px solid ${M.night}`
+                            : `1px solid ${M.border}`,
+                          outline: selectedImage === index ? `3px solid ${M.night}20` : 'none',
+                          outlineOffset: '1px',
+                        }}
                       >
                         <img
                           src={img}
@@ -240,146 +343,243 @@ export default function PropertyDetailsPublic() {
                 )}
               </div>
 
-              {/* Title & Type */}
+              {/* Title, Type & Price */}
               <div style={cardStyle} className="p-6">
                 <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h1 className="text-2xl font-extrabold text-slate-900 mb-2">{property.title}</h1>
-                    <div className="flex items-center gap-3 text-slate-500 text-sm">
-                      <span className="px-2.5 py-0.5 bg-[#e8f0fe] text-[#007AFF] rounded-full text-xs font-semibold">{propertyType?.label}</span>
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5" />
+                  <div className="flex-1">
+                    {/* Property type badge */}
+                    <span
+                      className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold mb-3"
+                      style={{
+                        background: M.ownerLight,
+                        color: M.owner,
+                        fontFamily: M.body,
+                      }}
+                    >
+                      {propertyType?.label}
+                    </span>
+
+                    {/* Title */}
+                    <h1
+                      className="mb-2"
+                      style={{
+                        fontFamily: M.body,
+                        fontSize: '20px',
+                        fontWeight: 600,
+                        color: M.ink,
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      {property.title}
+                    </h1>
+
+                    {/* Location */}
+                    <div className="flex items-center gap-1.5" style={{ color: M.inkFaint }}>
+                      <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                      <span style={{ fontFamily: M.body, fontSize: '13px' }}>
                         {property.city}, {property.postalCode}
-                      </div>
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="text-3xl font-extrabold text-[#007AFF]">
-                  {property.price}€
-                  <span className="text-base text-slate-500 font-normal ml-1">/mois</span>
+                {/* Price */}
+                <div className="flex items-baseline gap-2 mt-2">
+                  <span
+                    style={{
+                      fontFamily: M.display,
+                      fontSize: '36px',
+                      fontWeight: 700,
+                      color: M.ink,
+                      lineHeight: 1,
+                    }}
+                  >
+                    {property.price}€
+                  </span>
+                  <span style={{ fontFamily: M.body, fontSize: '14px', color: M.inkFaint }}>
+                    /mois
+                  </span>
+                </div>
+
+                {/* Feature pills */}
+                <div className="flex flex-wrap gap-2 mt-4">
+                  <span
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-full"
+                    style={{ background: M.muted, color: M.inkMid, fontFamily: M.body, fontSize: '13px' }}
+                  >
+                    <Bed className="w-3.5 h-3.5" />
+                    {property.bedrooms} chambre{property.bedrooms > 1 ? 's' : ''}
+                  </span>
+                  <span
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-full"
+                    style={{ background: M.muted, color: M.inkMid, fontFamily: M.body, fontSize: '13px' }}
+                  >
+                    <Bath className="w-3.5 h-3.5" />
+                    {property.bathrooms} sdb
+                  </span>
+                  <span
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-full"
+                    style={{ background: M.muted, color: M.inkMid, fontFamily: M.body, fontSize: '13px' }}
+                  >
+                    <Square className="w-3.5 h-3.5" />
+                    {property.surface} m²
+                  </span>
+                  {property.furnished && (
+                    <span
+                      className="flex items-center gap-1.5 px-3 py-1 rounded-full"
+                      style={{ background: M.tenantLight, color: M.tenant, fontFamily: M.body, fontSize: '13px', border: `1px solid ${M.tenantBorder}` }}
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      Meublé
+                    </span>
+                  )}
                 </div>
               </div>
 
               {/* Description */}
               <div style={cardStyle} className="p-6">
-                <h2 className="text-lg font-bold text-slate-900 mb-4">Description</h2>
-                <p className="text-slate-600 whitespace-pre-line leading-relaxed text-sm">
+                <p style={sectionLabel}>Description</p>
+                <div style={{ borderTop: `1px solid ${M.border}`, marginBottom: '16px' }} />
+                <p
+                  className="whitespace-pre-line"
+                  style={{
+                    fontFamily: M.body,
+                    fontSize: '15px',
+                    color: M.inkMid,
+                    lineHeight: 1.7,
+                  }}
+                >
                   {property.description}
                 </p>
               </div>
 
               {/* Characteristics */}
               <div style={cardStyle} className="p-6">
-                <h2 className="text-lg font-bold text-slate-900 mb-4">Caractéristiques</h2>
+                <p style={sectionLabel}>Caractéristiques</p>
+                <div style={{ borderTop: `1px solid ${M.border}`, marginBottom: '20px' }} />
+
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#e8f0fe] rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Bed className="w-5 h-5 text-[#007AFF]" />
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ background: M.muted }}
+                    >
+                      <Bed className="w-5 h-5" style={{ color: M.inkMid }} />
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500">Chambres</p>
-                      <p className="font-semibold text-slate-900">{property.bedrooms}</p>
+                      <p style={{ fontFamily: M.body, fontSize: '12px', color: M.inkFaint }}>Chambres</p>
+                      <p style={{ fontFamily: M.body, fontWeight: 600, color: M.ink }}>{property.bedrooms}</p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#e8f0fe] rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Bath className="w-5 h-5 text-[#007AFF]" />
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ background: M.muted }}
+                    >
+                      <Bath className="w-5 h-5" style={{ color: M.inkMid }} />
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500">Salles de bain</p>
-                      <p className="font-semibold text-slate-900">{property.bathrooms}</p>
+                      <p style={{ fontFamily: M.body, fontSize: '12px', color: M.inkFaint }}>Salles de bain</p>
+                      <p style={{ fontFamily: M.body, fontWeight: 600, color: M.ink }}>{property.bathrooms}</p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#e8f0fe] rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Square className="w-5 h-5 text-[#007AFF]" />
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ background: M.muted }}
+                    >
+                      <Square className="w-5 h-5" style={{ color: M.inkMid }} />
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500">Surface</p>
-                      <p className="font-semibold text-slate-900">{property.surface}m²</p>
+                      <p style={{ fontFamily: M.body, fontSize: '12px', color: M.inkFaint }}>Surface</p>
+                      <p style={{ fontFamily: M.body, fontWeight: 600, color: M.ink }}>{property.surface} m²</p>
                     </div>
                   </div>
 
                   {property.floor !== null && property.floor !== undefined && (
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-[#e8f0fe] rounded-xl flex items-center justify-center flex-shrink-0">
-                        <HomeIcon className="w-5 h-5 text-[#007AFF]" />
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                        style={{ background: M.muted }}
+                      >
+                        <HomeIcon className="w-5 h-5" style={{ color: M.inkMid }} />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-500">Étage</p>
-                        <p className="font-semibold text-slate-900">{property.floor}</p>
+                        <p style={{ fontFamily: M.body, fontSize: '12px', color: M.inkFaint }}>Étage</p>
+                        <p style={{ fontFamily: M.body, fontWeight: 600, color: M.ink }}>{property.floor}</p>
                       </div>
                     </div>
                   )}
 
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#e8f0fe] rounded-xl flex items-center justify-center flex-shrink-0">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ background: M.muted }}
+                    >
                       {property.furnished ? (
-                        <Check className="w-5 h-5 text-[#007AFF]" />
+                        <Check className="w-5 h-5" style={{ color: M.tenant }} />
                       ) : (
-                        <X className="w-5 h-5 text-slate-400" />
+                        <X className="w-5 h-5" style={{ color: M.inkFaint }} />
                       )}
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500">Meublé</p>
-                      <p className="font-semibold text-slate-900">{property.furnished ? 'Oui' : 'Non'}</p>
+                      <p style={{ fontFamily: M.body, fontSize: '12px', color: M.inkFaint }}>Meublé</p>
+                      <p style={{ fontFamily: M.body, fontWeight: 600, color: M.ink }}>
+                        {property.furnished ? 'Oui' : 'Non'}
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 {/* Features */}
-                <div className="mt-6 pt-5 border-t border-[#d2d2d7]">
-                  <h3 className="font-semibold text-slate-900 mb-3 text-sm">Équipements</h3>
+                <div
+                  className="mt-6 pt-5"
+                  style={{ borderTop: `1px solid ${M.border}` }}
+                >
+                  <p style={sectionLabel}>Équipements</p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className="flex items-center gap-2">
-                      {property.hasParking ? (
-                        <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                      ) : (
-                        <XCircle className="w-4 h-4 text-slate-300 flex-shrink-0" />
-                      )}
-                      <span className="text-sm text-slate-600">Parking</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {property.hasBalcony ? (
-                        <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                      ) : (
-                        <XCircle className="w-4 h-4 text-slate-300 flex-shrink-0" />
-                      )}
-                      <span className="text-sm text-slate-600">Balcon</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {property.hasElevator ? (
-                        <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                      ) : (
-                        <XCircle className="w-4 h-4 text-slate-300 flex-shrink-0" />
-                      )}
-                      <span className="text-sm text-slate-600">Ascenseur</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {property.hasGarden ? (
-                        <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                      ) : (
-                        <XCircle className="w-4 h-4 text-slate-300 flex-shrink-0" />
-                      )}
-                      <span className="text-sm text-slate-600">Jardin</span>
-                    </div>
+                    {[
+                      { flag: property.hasParking, label: 'Parking' },
+                      { flag: property.hasBalcony, label: 'Balcon' },
+                      { flag: property.hasElevator, label: 'Ascenseur' },
+                      { flag: property.hasGarden, label: 'Jardin' },
+                    ].map(({ flag, label }) => (
+                      <div key={label} className="flex items-center gap-2">
+                        {flag ? (
+                          <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: M.tenant }} />
+                        ) : (
+                          <XCircle className="w-4 h-4 flex-shrink-0" style={{ color: M.borderMid }} />
+                        )}
+                        <span style={{ fontFamily: M.body, fontSize: '14px', color: flag ? M.inkMid : M.inkFaint }}>
+                          {label}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
                 {/* Amenities */}
                 {property.amenities && property.amenities.length > 0 && (
-                  <div className="mt-5 pt-5 border-t border-[#d2d2d7]">
-                    <h3 className="font-semibold text-slate-900 mb-3 text-sm">Autres équipements</h3>
+                  <div
+                    className="mt-5 pt-5"
+                    style={{ borderTop: `1px solid ${M.border}` }}
+                  >
+                    <p style={sectionLabel}>Autres équipements</p>
                     <div className="flex flex-wrap gap-2">
                       {property.amenities.map((amenity) => {
                         const amenityConfig = AMENITIES.find((a) => a.value === amenity)
                         return amenityConfig ? (
                           <span
                             key={amenity}
-                            className="px-3 py-1 bg-[#f5f5f7] border border-[#d2d2d7] text-slate-600 rounded-full text-xs font-medium"
+                            className="px-3 py-1 rounded-full text-xs font-medium"
+                            style={{
+                              background: M.muted,
+                              border: `1px solid ${M.border}`,
+                              color: M.inkMid,
+                              fontFamily: M.body,
+                            }}
                           >
                             {amenityConfig.label}
                           </span>
@@ -390,9 +590,41 @@ export default function PropertyDetailsPublic() {
                 )}
               </div>
 
+              {/* Trust section */}
+              <div
+                className="p-5 rounded-xl"
+                style={{
+                  background: M.tenantLight,
+                  borderLeft: `3px solid ${M.tenantBorder}`,
+                  border: `1px solid ${M.tenantBorder}`,
+                  borderLeftWidth: '3px',
+                }}
+              >
+                <p
+                  className="mb-3"
+                  style={{ fontFamily: M.body, fontSize: '13px', fontWeight: 600, color: M.tenant }}
+                >
+                  Bon à savoir
+                </p>
+                <ul className="space-y-2">
+                  {[
+                    'Contact direct avec le propriétaire',
+                    'Aucun frais d\'agence',
+                    'Visite possible rapidement',
+                    'Réponse rapide garantie',
+                  ].map((item) => (
+                    <li key={item} className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: M.tenant }} />
+                      <span style={{ fontFamily: M.body, fontSize: '14px', color: M.inkMid }}>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
               {/* Location */}
               <div style={cardStyle} className="p-6">
-                <h2 className="text-lg font-bold text-slate-900 mb-4">Localisation</h2>
+                <p style={sectionLabel}>Localisation</p>
+                <div style={{ borderTop: `1px solid ${M.border}`, marginBottom: '16px' }} />
                 <PropertyMap
                   address={property.address}
                   city={property.city}
@@ -405,30 +637,75 @@ export default function PropertyDetailsPublic() {
 
             {/* Sidebar */}
             <div className="space-y-4">
-              {/* Contact Card */}
-              <div style={{ ...cardStyle, position: 'sticky', top: '96px' }} className="p-6">
-                <h2 className="text-base font-bold text-slate-900 mb-4">Intéressé par ce bien ?</h2>
 
-                <div className="space-y-3 mb-5">
+              {/* Sticky Contact / CTA Card */}
+              <div style={{ ...cardStyle, position: 'sticky', top: '96px' }} className="p-6">
+
+                {/* Price header */}
+                <div className="mb-5">
+                  <div className="flex items-baseline gap-1.5">
+                    <span
+                      style={{
+                        fontFamily: M.display,
+                        fontSize: '32px',
+                        fontWeight: 700,
+                        color: M.ink,
+                        lineHeight: 1,
+                      }}
+                    >
+                      {property.price}€
+                    </span>
+                    <span style={{ fontFamily: M.body, fontSize: '13px', color: M.inkFaint }}>/mois</span>
+                  </div>
+                  {property.charges && property.charges > 0 && (
+                    <p style={{ fontFamily: M.body, fontSize: '12px', color: M.inkFaint, marginTop: '4px' }}>
+                      + {property.charges}€ charges
+                    </p>
+                  )}
+                </div>
+
+                {/* Financial breakdown */}
+                <div
+                  className="rounded-lg p-4 mb-5 space-y-2"
+                  style={{ background: M.muted }}
+                >
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-600">Loyer mensuel</span>
-                    <span className="text-xl font-extrabold text-[#007AFF]">{property.price}€</span>
+                    <span style={{ fontFamily: M.body, fontSize: '13px', color: M.inkMid }}>Loyer mensuel</span>
+                    <span style={{ fontFamily: M.body, fontSize: '14px', fontWeight: 600, color: M.ink }}>
+                      {property.price}€
+                    </span>
                   </div>
                   {property.charges && property.charges > 0 && (
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-600">Charges</span>
-                      <span className="font-semibold text-slate-900">{property.charges}€</span>
+                      <span style={{ fontFamily: M.body, fontSize: '13px', color: M.inkMid }}>Charges</span>
+                      <span style={{ fontFamily: M.body, fontSize: '14px', fontWeight: 600, color: M.ink }}>
+                        {property.charges}€
+                      </span>
                     </div>
                   )}
                   {property.deposit && property.deposit > 0 && (
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-600">Dépôt de garantie</span>
-                      <span className="font-semibold text-slate-900">{property.deposit}€</span>
+                      <span style={{ fontFamily: M.body, fontSize: '13px', color: M.inkMid }}>Dépôt de garantie</span>
+                      <span style={{ fontFamily: M.body, fontSize: '14px', fontWeight: 600, color: M.ink }}>
+                        {property.deposit}€
+                      </span>
                     </div>
                   )}
-                  <div className="pt-3 border-t border-[#d2d2d7] flex items-center justify-between">
-                    <span className="font-semibold text-slate-900 text-sm">Total mensuel</span>
-                    <span className="text-xl font-extrabold text-slate-900">
+                  <div
+                    className="pt-2 flex items-center justify-between"
+                    style={{ borderTop: `1px solid ${M.border}` }}
+                  >
+                    <span style={{ fontFamily: M.body, fontSize: '13px', fontWeight: 600, color: M.ink }}>
+                      Total mensuel
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: M.display,
+                        fontSize: '20px',
+                        fontWeight: 700,
+                        color: M.ink,
+                      }}
+                    >
                       {property.price + (property.charges || 0)}€
                     </span>
                   </div>
@@ -438,7 +715,17 @@ export default function PropertyDetailsPublic() {
                 {!isAuthenticated ? (
                   <button
                     onClick={() => navigate('/login')}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#007AFF] text-white font-semibold text-sm hover:bg-[#0066d6] transition-colors mb-3"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 mb-3 transition-opacity hover:opacity-90"
+                    style={{
+                      background: M.tenant,
+                      color: '#ffffff',
+                      fontFamily: M.body,
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      borderRadius: '8px',
+                      border: 'none',
+                      cursor: 'pointer',
+                    }}
                   >
                     <SendHorizonal className="w-4 h-4" />
                     Postuler à cette annonce
@@ -448,24 +735,60 @@ export default function PropertyDetailsPublic() {
                     {myApplication?.status === 'APPROVED' ? (
                       <button
                         onClick={() => setShowBookingModal(true)}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#007AFF] text-white font-semibold text-sm hover:bg-[#0066d6] transition-colors mb-3"
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 mb-3 transition-opacity hover:opacity-90"
+                        style={{
+                          background: M.tenant,
+                          color: '#ffffff',
+                          fontFamily: M.body,
+                          fontSize: '14px',
+                          fontWeight: 600,
+                          borderRadius: '8px',
+                          border: 'none',
+                          cursor: 'pointer',
+                        }}
                       >
                         <Calendar className="w-4 h-4" />
                         Réserver une visite
                       </button>
                     ) : myApplication?.status === 'PENDING' ? (
-                      <div className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-sm font-medium py-3 mb-3">
+                      <div
+                        className="w-full flex items-center justify-center gap-2 rounded-lg py-3 mb-3 text-sm font-medium"
+                        style={{
+                          background: M.warningBg,
+                          border: `1px solid #f6d860`,
+                          color: M.warning,
+                          fontFamily: M.body,
+                        }}
+                      >
                         <Clock className="w-4 h-4" />
                         Candidature en cours d'examen
                       </div>
                     ) : myApplication?.status === 'REJECTED' ? (
-                      <div className="w-full rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium p-3 mb-3 text-center">
+                      <div
+                        className="w-full rounded-lg py-3 mb-3 text-sm font-medium text-center"
+                        style={{
+                          background: M.dangerBg,
+                          border: `1px solid ${M.danger}30`,
+                          color: M.danger,
+                          fontFamily: M.body,
+                        }}
+                      >
                         Candidature non retenue
                       </div>
                     ) : (
                       <button
                         onClick={() => setShowPreQualModal(true)}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#007AFF] text-white font-semibold text-sm hover:bg-[#0066d6] transition-colors mb-3"
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 mb-3 transition-opacity hover:opacity-90"
+                        style={{
+                          background: M.tenant,
+                          color: '#ffffff',
+                          fontFamily: M.body,
+                          fontSize: '14px',
+                          fontWeight: 600,
+                          borderRadius: '8px',
+                          border: 'none',
+                          cursor: 'pointer',
+                        }}
                       >
                         <SendHorizonal className="w-4 h-4" />
                         Postuler à cette annonce
@@ -473,52 +796,48 @@ export default function PropertyDetailsPublic() {
                     )}
                   </>
                 ) : user?.role === 'OWNER' ? (
-                  <div className="w-full text-center text-xs text-slate-500 py-2 mb-3">
+                  <div
+                    className="w-full text-center text-xs py-2 mb-3"
+                    style={{ color: M.inkFaint, fontFamily: M.body }}
+                  >
                     Votre annonce — candidatures via le tableau de bord
                   </div>
                 ) : null}
 
+                {/* Secondary: contact button */}
                 <button
                   onClick={() => setShowContactModal(true)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white border border-[#d2d2d7] text-slate-700 font-semibold text-sm hover:bg-slate-50 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 transition-colors"
+                  style={{
+                    background: M.surface,
+                    border: `1px solid ${M.border}`,
+                    color: M.ink,
+                    fontFamily: M.body,
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = M.surface)}
                 >
-                  <MessageSquare className="w-4 h-4" />
+                  <MessageSquare className="w-4 h-4" style={{ color: M.inkMid }} />
                   Contacter le propriétaire
                 </button>
 
-                <p className="text-xs text-slate-400 text-center mt-3">
+                <p
+                  className="text-center mt-3"
+                  style={{ fontFamily: M.body, fontSize: '12px', color: M.inkFaint }}
+                >
                   Réponse généralement sous 24h
                 </p>
               </div>
 
-              {/* Info Card */}
-              <div style={{ background: '#e8f0fe', border: '1px solid #aacfff', borderRadius: '1rem' }} className="p-5">
-                <h3 className="font-semibold text-slate-900 mb-3 text-sm">Bon a savoir</h3>
-                <ul className="text-sm text-slate-600 space-y-2">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-[#007AFF] flex-shrink-0" />
-                    Contact direct avec le proprietaire
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-[#007AFF] flex-shrink-0" />
-                    Aucun frais d'agence
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-[#007AFF] flex-shrink-0" />
-                    Visite possible rapidement
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-[#007AFF] flex-shrink-0" />
-                    Reponse rapide garantie
-                  </li>
-                </ul>
-              </div>
-
               {/* Published Date */}
               <div style={cardStyle} className="p-4">
-                <div className="flex items-center gap-2 text-xs text-slate-500">
+                <div className="flex items-center gap-2" style={{ color: M.inkFaint }}>
                   <Calendar className="w-4 h-4" />
-                  <span>
+                  <span style={{ fontFamily: M.body, fontSize: '12px' }}>
                     Publié le {new Date(property.createdAt).toLocaleDateString('fr-FR')}
                   </span>
                 </div>
@@ -534,6 +853,7 @@ export default function PropertyDetailsPublic() {
           propertyId={property.id}
           propertyTitle={property.title}
           ownerName={property.owner?.firstName + ' ' + property.owner?.lastName}
+          ownerId={property.ownerId}
         />
 
         {/* Booking Modal */}
@@ -557,10 +877,23 @@ export default function PropertyDetailsPublic() {
             criteria={property.selectionCriteria ?? DEFAULT_CRITERIA}
             tenantProfileMeta={(user?.profileMeta as Record<string, unknown>) ?? null}
             tenantDocCategories={docCategories}
+            ownerId={property.ownerId}
             onClose={() => setShowPreQualModal(false)}
             onSuccess={() => {
               setShowPreQualModal(false)
-              setMyApplication({ id: '', propertyId: property.id, tenantId: user?.id ?? '', status: 'PENDING', score: 0, matchDetails: null, coverLetter: null, hasGuarantor: false, guarantorType: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() })
+              setMyApplication({
+                id: '',
+                propertyId: property.id,
+                tenantId: user?.id ?? '',
+                status: 'PENDING',
+                score: 0,
+                matchDetails: null,
+                coverLetter: null,
+                hasGuarantor: false,
+                guarantorType: null,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              })
             }}
           />
         )}

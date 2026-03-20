@@ -6,6 +6,7 @@ import { UserRole } from '../types/auth.types'
 import GoogleSignInButton from '../components/auth/GoogleSignInButton'
 import { Turnstile } from '@marsidev/react-turnstile'
 import { celebrateBig } from '../utils/celebrate'
+import { BailioLogo } from '../components/BailioLogo'
 
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined
 
@@ -175,8 +176,9 @@ export default function Register() {
         }}
       >
         {/* Logo */}
-        <Link to="/" style={{ textDecoration: 'none', display: 'inline-block' }}>
-          <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 600, fontSize: '22px', color: '#1a1a2e', letterSpacing: '-0.01em' }}>
+        <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+          <BailioLogo size={30} />
+          <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '22px', color: '#1a1a2e', letterSpacing: '-0.02em', lineHeight: 1 }}>
             Bailio
           </span>
         </Link>
@@ -244,8 +246,9 @@ export default function Register() {
         <div style={{ width: '100%', maxWidth: '380px', padding: '72px 32px 48px' }}>
           {/* Mobile logo */}
           <div className="flex md:hidden" style={{ justifyContent: 'center', marginBottom: '32px' }}>
-            <Link to="/" style={{ textDecoration: 'none' }}>
-              <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 600, fontSize: '24px', color: '#1a1a2e' }}>
+            <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+              <BailioLogo size={34} />
+              <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '26px', color: '#1a1a2e', letterSpacing: '-0.02em', lineHeight: 1 }}>
                 Bailio
               </span>
             </Link>

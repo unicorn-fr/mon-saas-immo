@@ -1,21 +1,20 @@
 /**
- * StatusBadge — Light Premium
- * Variants: success · warning · danger · info · default · pending · active
+ * StatusBadge — Maison Design System
  */
 
 type Variant = 'success' | 'warning' | 'danger' | 'info' | 'default' | 'pending' | 'active' | 'draft' | 'signed' | 'completed'
 
 const VARIANTS: Record<Variant, { bg: string; border: string; color: string; dot: string; label?: string }> = {
-  success:   { bg: '#ecfdf5', border: '#a7f3d0', color: '#059669', dot: '#10b981' },
-  warning:   { bg: '#fffbeb', border: '#fde68a', color: '#d97706', dot: '#f59e0b' },
-  danger:    { bg: '#fef2f2', border: '#fecaca', color: '#dc2626', dot: '#ef4444' },
-  info:      { bg: '#eff6ff', border: '#bfdbfe', color: '#2563eb', dot: '#3b82f6' },
-  default:   { bg: '#f5f5f7', border: '#d2d2d7', color: '#515154', dot: '#86868b' },
-  pending:   { bg: '#fffbeb', border: '#fde68a', color: '#d97706', dot: '#f59e0b', label: 'En attente' },
-  active:    { bg: '#ecfdf5', border: '#a7f3d0', color: '#059669', dot: '#10b981', label: 'Actif' },
-  draft:     { bg: '#f5f5f7', border: '#d2d2d7', color: '#515154', dot: '#86868b', label: 'Brouillon' },
-  signed:    { bg: '#eff6ff', border: '#bfdbfe', color: '#2563eb', dot: '#3b82f6', label: 'Signé' },
-  completed: { bg: '#ecfdf5', border: '#a7f3d0', color: '#059669', dot: '#10b981', label: 'Complété' },
+  success:   { bg: '#edf7f2', border: '#9fd4ba', color: '#1b5e3b', dot: '#1b5e3b' },
+  warning:   { bg: '#fdf5ec', border: '#f3c99a', color: '#92400e', dot: '#c4976a' },
+  danger:    { bg: '#fef2f2', border: '#fca5a5', color: '#9b1c1c', dot: '#9b1c1c' },
+  info:      { bg: '#eaf0fb', border: '#b8ccf0', color: '#1a3270', dot: '#1a3270' },
+  default:   { bg: '#f4f2ee', border: '#e4e1db', color: '#5a5754', dot: '#9e9b96' },
+  pending:   { bg: '#fdf5ec', border: '#f3c99a', color: '#92400e', dot: '#c4976a', label: 'En attente' },
+  active:    { bg: '#edf7f2', border: '#9fd4ba', color: '#1b5e3b', dot: '#1b5e3b', label: 'Actif' },
+  draft:     { bg: '#f4f2ee', border: '#e4e1db', color: '#5a5754', dot: '#9e9b96', label: 'Brouillon' },
+  signed:    { bg: '#eaf0fb', border: '#b8ccf0', color: '#1a3270', dot: '#1a3270', label: 'Signé' },
+  completed: { bg: '#edf7f2', border: '#9fd4ba', color: '#1b5e3b', dot: '#1b5e3b', label: 'Complété' },
 }
 
 interface StatusBadgeProps {
@@ -38,6 +37,7 @@ export function StatusBadge({ variant = 'default', label, dot = true, size = 'md
         color: v.color,
         fontSize: size === 'sm' ? 10 : 11,
         padding: size === 'sm' ? '2px 7px' : '3px 9px',
+        fontFamily: "'DM Sans', system-ui, sans-serif",
       }}
     >
       {dot && (

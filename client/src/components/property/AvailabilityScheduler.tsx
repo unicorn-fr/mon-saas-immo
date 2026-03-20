@@ -18,6 +18,23 @@ import {
   VISIT_DURATIONS,
 } from '../../types/property.types'
 
+const M = {
+  ink: '#0d0c0a',
+  inkMid: '#5a5754',
+  inkFaint: '#9e9b96',
+  night: '#1a1a2e',
+  owner: '#1a3270',
+  ownerLight: '#eaf0fb',
+  ownerBorder: '#b8ccf0',
+  tenant: '#1b5e3b',
+  tenantLight: '#edf7f2',
+  tenantBorder: '#9fd4ba',
+  border: '#e4e1db',
+  borderMid: '#ccc9c3',
+  muted: '#f4f2ee',
+  surface: '#ffffff',
+}
+
 interface AvailabilitySchedulerProps {
   recurringSlots: VisitAvailabilitySlot[]
   dateOverrides: VisitDateOverride[]
@@ -215,26 +232,32 @@ export function AvailabilityScheduler({
         className="w-full flex items-center justify-between text-left"
       >
         <div>
-          <h2 className="text-lg font-semibold">Disponibilites de visite</h2>
-          <p className="text-sm text-slate-500 mt-1">
+          <h2 className="text-lg font-semibold" style={{ color: M.ink }}>Disponibilites de visite</h2>
+          <p className="text-sm mt-1" style={{ color: M.inkFaint }}>
             {totalConfig === 0
               ? 'Par defaut : tous les jours de 9h a 18h'
               : `${dateOverrides.length} date(s) specifique(s), ${recurringSlots.length} creneau(x) recurrent(s)`}
           </p>
         </div>
         {isOpen ? (
-          <ChevronUp className="w-5 h-5 text-slate-400" />
+          <ChevronUp className="w-5 h-5" style={{ color: M.inkFaint }} />
         ) : (
-          <ChevronDown className="w-5 h-5 text-slate-400" />
+          <ChevronDown className="w-5 h-5" style={{ color: M.inkFaint }} />
         )}
       </button>
 
       {isOpen && (
         <div className="mt-6">
           {/* Info banner */}
-          <div className="bg-primary-50 border border-primary-200 rounded-xl p-3 mb-4 flex gap-2">
-            <Info className="w-4 h-4 text-primary-600 flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-primary-700">
+          <div
+            className="rounded-xl p-3 mb-4 flex gap-2"
+            style={{
+              background: M.ownerLight,
+              border: `1px solid ${M.ownerBorder}`,
+            }}
+          >
+            <Info className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: M.owner }} />
+            <p className="text-xs" style={{ color: M.owner }}>
               Configurez vos disponibilites pour les visites. Sans configuration, les locataires
               pourront reserver tous les jours de 9h a 18h.
             </p>
@@ -242,7 +265,7 @@ export function AvailabilityScheduler({
 
           {/* Visit Duration Selector */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: M.inkMid }}>
               <Clock className="w-4 h-4 inline mr-1.5" />
               Duree des visites
             </label>
@@ -252,11 +275,21 @@ export function AvailabilityScheduler({
                   key={d.value}
                   type="button"
                   onClick={() => onDurationChange(d.value)}
-                  className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
+                  className="px-3 py-1.5 rounded-xl text-sm font-medium transition-all"
+                  style={
                     visitDuration === d.value
-                      ? 'bg-primary-600 text-white ring-2 ring-primary-200'
-                      : 'bg-white text-slate-700 dark:text-slate-300 border border-slate-300 hover:border-primary-400'
-                  }`}
+                      ? {
+                          background: M.night,
+                          color: M.surface,
+                          outline: `2px solid ${M.ownerBorder}`,
+                          outlineOffset: '2px',
+                        }
+                      : {
+                          background: M.surface,
+                          color: M.inkMid,
+                          border: `1px solid ${M.border}`,
+                        }
+                  }
                 >
                   {d.label}
                 </button>
@@ -265,15 +298,19 @@ export function AvailabilityScheduler({
           </div>
 
           {/* Tabs */}
-          <div className="flex border-b border-slate-200 mb-4">
+          <div
+            className="flex mb-4"
+            style={{ borderBottom: `1px solid ${M.border}` }}
+          >
             <button
               type="button"
               onClick={() => setActiveTab('dates')}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              className="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+              style={
                 activeTab === 'dates'
-                  ? 'border-primary-600 text-primary-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-300'
-              }`}
+                  ? { borderColor: M.owner, color: M.owner }
+                  : { borderColor: 'transparent', color: M.inkFaint }
+              }
             >
               <Calendar className="w-4 h-4 inline mr-1.5" />
               Dates specifiques
@@ -281,11 +318,12 @@ export function AvailabilityScheduler({
             <button
               type="button"
               onClick={() => setActiveTab('recurring')}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              className="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+              style={
                 activeTab === 'recurring'
-                  ? 'border-primary-600 text-primary-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-300'
-              }`}
+                  ? { borderColor: M.owner, color: M.owner }
+                  : { borderColor: 'transparent', color: M.inkFaint }
+              }
             >
               <Clock className="w-4 h-4 inline mr-1.5" />
               Recurrent hebdomadaire
@@ -296,32 +334,39 @@ export function AvailabilityScheduler({
           {activeTab === 'dates' && (
             <div className="space-y-4">
               {/* Calendar */}
-              <div className="border border-slate-200 rounded-xl p-3">
+              <div
+                className="rounded-xl p-3"
+                style={{ border: `1px solid ${M.border}` }}
+              >
                 {/* Calendar header */}
                 <div className="flex items-center justify-between mb-3">
                   <button
                     type="button"
                     onClick={prevMonth}
-                    className="p-1 hover:bg-slate-100 rounded"
+                    className="p-1 rounded"
+                    onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                   >
-                    <ChevronLeft className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                    <ChevronLeft className="w-5 h-5" style={{ color: M.inkMid }} />
                   </button>
-                  <h4 className="text-sm font-semibold text-slate-800">
+                  <h4 className="text-sm font-semibold" style={{ color: M.ink }}>
                     {MONTH_NAMES[calendarMonth]} {calendarYear}
                   </h4>
                   <button
                     type="button"
                     onClick={nextMonth}
-                    className="p-1 hover:bg-slate-100 rounded"
+                    className="p-1 rounded"
+                    onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                   >
-                    <ChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                    <ChevronRight className="w-5 h-5" style={{ color: M.inkMid }} />
                   </button>
                 </div>
 
                 {/* Day headers */}
                 <div className="grid grid-cols-7 gap-1 mb-1">
                   {DAY_HEADERS.map((d) => (
-                    <div key={d} className="text-center text-xs font-medium text-slate-400 py-1">
+                    <div key={d} className="text-center text-xs font-medium py-1" style={{ color: M.inkFaint }}>
                       {d}
                     </div>
                   ))}
@@ -342,25 +387,44 @@ export function AvailabilityScheduler({
                     const isAvailable = override?.type === 'EXTRA'
                     const isBlocked = override?.type === 'BLOCKED'
 
-                    let cellClass = 'h-9 w-full rounded-md text-sm font-medium transition-all '
+                    let cellStyle: React.CSSProperties = {}
 
                     if (isPast) {
-                      cellClass += 'text-slate-300 cursor-not-allowed'
+                      cellStyle = { color: M.inkFaint, cursor: 'not-allowed' }
                     } else if (isBlocked) {
-                      cellClass +=
-                        'bg-red-100 text-red-700 border-2 border-red-300 cursor-pointer hover:bg-red-200'
+                      cellStyle = {
+                        background: '#fee2e2',
+                        color: '#b91c1c',
+                        border: '2px solid #fca5a5',
+                        cursor: 'pointer',
+                      }
                     } else if (isAvailable) {
-                      cellClass +=
-                        'bg-success-100 text-success-700 border-2 border-success-100 cursor-pointer hover:bg-success-100'
+                      cellStyle = {
+                        background: M.tenantLight,
+                        color: M.tenant,
+                        border: `2px solid ${M.tenantBorder}`,
+                        cursor: 'pointer',
+                      }
                     } else if (isSelected) {
-                      cellClass +=
-                        'bg-primary-100 text-primary-700 border-2 border-primary-400 cursor-pointer'
+                      cellStyle = {
+                        background: M.ownerLight,
+                        color: M.owner,
+                        border: `2px solid ${M.ownerBorder}`,
+                        cursor: 'pointer',
+                      }
                     } else if (isToday) {
-                      cellClass +=
-                        'bg-slate-100 text-slate-900 border border-slate-300 cursor-pointer hover:bg-primary-50'
+                      cellStyle = {
+                        background: M.muted,
+                        color: M.ink,
+                        border: `1px solid ${M.border}`,
+                        cursor: 'pointer',
+                      }
                     } else {
-                      cellClass +=
-                        'text-slate-700 dark:text-slate-300 hover:bg-primary-50 cursor-pointer border border-transparent'
+                      cellStyle = {
+                        color: M.inkMid,
+                        border: '1px solid transparent',
+                        cursor: 'pointer',
+                      }
                     }
 
                     return (
@@ -369,7 +433,8 @@ export function AvailabilityScheduler({
                         type="button"
                         onClick={() => !isPast && handleDateClick(date)}
                         disabled={isPast}
-                        className={cellClass}
+                        className="h-9 w-full rounded-md text-sm font-medium transition-all"
+                        style={cellStyle}
                       >
                         {date.getDate()}
                       </button>
@@ -378,17 +443,26 @@ export function AvailabilityScheduler({
                 </div>
 
                 {/* Legend */}
-                <div className="flex flex-wrap gap-3 mt-3 pt-3 border-t border-slate-100">
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                    <div className="w-3 h-3 rounded bg-success-100 border border-success-100" />
+                <div
+                  className="flex flex-wrap gap-3 mt-3 pt-3"
+                  style={{ borderTop: `1px solid ${M.border}` }}
+                >
+                  <div className="flex items-center gap-1.5 text-xs" style={{ color: M.inkFaint }}>
+                    <div
+                      className="w-3 h-3 rounded"
+                      style={{ background: M.tenantLight, border: `1px solid ${M.tenantBorder}` }}
+                    />
                     Disponible
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                  <div className="flex items-center gap-1.5 text-xs" style={{ color: M.inkFaint }}>
                     <div className="w-3 h-3 rounded bg-red-100 border border-red-300" />
                     Bloque
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                    <div className="w-3 h-3 rounded bg-primary-100 border border-primary-400" />
+                  <div className="flex items-center gap-1.5 text-xs" style={{ color: M.inkFaint }}>
+                    <div
+                      className="w-3 h-3 rounded"
+                      style={{ background: M.ownerLight, border: `1px solid ${M.ownerBorder}` }}
+                    />
                     Selectionne
                   </div>
                 </div>
@@ -396,14 +470,20 @@ export function AvailabilityScheduler({
 
               {/* Selected date configuration */}
               {selectedDate && (
-                <div className="bg-slate-50/50 border border-slate-200 rounded-xl p-4">
-                  <p className="text-sm font-semibold text-slate-800 mb-3">
+                <div
+                  className="rounded-xl p-4"
+                  style={{
+                    background: M.muted,
+                    border: `1px solid ${M.border}`,
+                  }}
+                >
+                  <p className="text-sm font-semibold mb-3" style={{ color: M.ink }}>
                     {formatDateFR(selectedDate)} - Configurer la disponibilite
                   </p>
 
                   <div className="flex flex-wrap items-end gap-3">
                     <div>
-                      <label className="block text-xs text-slate-500 mb-1">De</label>
+                      <label className="block text-xs mb-1" style={{ color: M.inkFaint }}>De</label>
                       <select
                         value={newStart}
                         onChange={(e) => setNewStart(e.target.value)}
@@ -416,7 +496,7 @@ export function AvailabilityScheduler({
                     </div>
 
                     <div>
-                      <label className="block text-xs text-slate-500 mb-1">A</label>
+                      <label className="block text-xs mb-1" style={{ color: M.inkFaint }}>A</label>
                       <select
                         value={newEnd}
                         onChange={(e) => setNewEnd(e.target.value)}
@@ -461,7 +541,7 @@ export function AvailabilityScheduler({
               {/* List of configured dates */}
               {dateOverrides.length > 0 && (
                 <div>
-                  <h4 className="text-xs font-semibold text-slate-500 uppercase mb-2">
+                  <h4 className="text-xs font-semibold uppercase mb-2" style={{ color: M.inkFaint }}>
                     Dates configurees ({dateOverrides.length})
                   </h4>
                   <div className="space-y-1.5 max-h-48 overflow-y-auto">
@@ -472,11 +552,12 @@ export function AvailabilityScheduler({
                         return (
                           <div
                             key={key}
-                            className={`flex items-center justify-between rounded-xl px-3 py-2 border text-sm ${
+                            className="flex items-center justify-between rounded-xl px-3 py-2 border text-sm"
+                            style={
                               override.type === 'BLOCKED'
-                                ? 'bg-red-50 border-red-200 text-red-800'
-                                : 'bg-success-50 border-success-100 text-success-700'
-                            }`}
+                                ? { background: '#fef2f2', borderColor: '#fca5a5', color: '#9b1c1c' }
+                                : { background: M.tenantLight, borderColor: M.tenantBorder, color: M.tenant }
+                            }
                           >
                             <span>
                               <strong>{formatDateFR(key)}</strong>
@@ -504,7 +585,7 @@ export function AvailabilityScheduler({
           {/* === TAB: Creneaux recurrents === */}
           {activeTab === 'recurring' && (
             <div className="space-y-4">
-              <p className="text-xs text-slate-500">
+              <p className="text-xs" style={{ color: M.inkFaint }}>
                 Les creneaux recurrents s'appliquent chaque semaine. Les dates specifiques sont
                 prioritaires.
               </p>
@@ -515,9 +596,13 @@ export function AvailabilityScheduler({
                   {recurringSlots.map((slot, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between bg-primary-50 border border-primary-200 rounded-xl px-3 py-2"
+                      className="flex items-center justify-between rounded-xl px-3 py-2"
+                      style={{
+                        background: M.ownerLight,
+                        border: `1px solid ${M.ownerBorder}`,
+                      }}
                     >
-                      <span className="text-sm text-blue-800">
+                      <span className="text-sm" style={{ color: M.owner }}>
                         <strong>{getDayLabel(slot.dayOfWeek)}</strong> de {slot.startTime} a{' '}
                         {slot.endTime}
                       </span>
@@ -536,7 +621,7 @@ export function AvailabilityScheduler({
               {/* Add recurring slot form */}
               <div className="flex flex-wrap items-end gap-2">
                 <div>
-                  <label className="block text-xs text-slate-500 mb-1">Jour</label>
+                  <label className="block text-xs mb-1" style={{ color: M.inkFaint }}>Jour</label>
                   <select
                     value={newSlotDay}
                     onChange={(e) => setNewSlotDay(parseInt(e.target.value))}
@@ -551,7 +636,7 @@ export function AvailabilityScheduler({
                 </div>
 
                 <div>
-                  <label className="block text-xs text-slate-500 mb-1">De</label>
+                  <label className="block text-xs mb-1" style={{ color: M.inkFaint }}>De</label>
                   <select
                     value={newSlotStart}
                     onChange={(e) => setNewSlotStart(e.target.value)}
@@ -564,7 +649,7 @@ export function AvailabilityScheduler({
                 </div>
 
                 <div>
-                  <label className="block text-xs text-slate-500 mb-1">A</label>
+                  <label className="block text-xs mb-1" style={{ color: M.inkFaint }}>A</label>
                   <select
                     value={newSlotEnd}
                     onChange={(e) => setNewSlotEnd(e.target.value)}

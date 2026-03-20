@@ -17,7 +17,6 @@ import {
   Lock,
   AlertTriangle,
   Loader2,
-  Link as LinkIcon,
   Trash2,
   FileText,
   ShieldCheck,
@@ -30,36 +29,84 @@ import {
   Hash,
 } from 'lucide-react'
 
+// ─── Maison Design Tokens ─────────────────────────────────────────────────────
+
+const M = {
+  bg: '#fafaf8',
+  surface: '#ffffff',
+  muted: '#f4f2ee',
+  inputBg: '#f8f7f4',
+  ink: '#0d0c0a',
+  inkMid: '#5a5754',
+  inkFaint: '#9e9b96',
+  night: '#1a1a2e',
+  caramel: '#c4976a',
+  caramelLight: '#fdf5ec',
+  owner: '#1a3270',
+  ownerLight: '#eaf0fb',
+  tenant: '#1b5e3b',
+  tenantLight: '#edf7f2',
+  border: '#e4e1db',
+  borderMid: '#ccc9c3',
+  danger: '#9b1c1c',
+  dangerBg: '#fef2f2',
+  display: "'Cormorant Garamond', Georgia, serif",
+  body: "'DM Sans', system-ui, sans-serif",
+}
+
 // ─── Shared style constants ───────────────────────────────────────────────────
 
 const cardStyle: React.CSSProperties = {
-  background: '#ffffff',
-  border: '1px solid #d2d2d7',
-  borderRadius: '1rem',
+  background: M.surface,
+  border: `1px solid ${M.border}`,
+  borderRadius: '12px',
   padding: '1.5rem',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)',
+  boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
 }
 
 const inputStyle: React.CSSProperties = {
-  background: '#ffffff',
-  border: '1px solid #d2d2d7',
-  borderRadius: '0.75rem',
+  background: M.inputBg,
+  border: `1px solid ${M.border}`,
+  borderRadius: '8px',
   padding: '0.625rem 1rem',
-  color: '#1d1d1f',
+  color: M.ink,
   fontSize: '0.875rem',
   outline: 'none',
   width: '100%',
-  fontFamily: '"Plus Jakarta Sans", Inter, system-ui',
+  fontFamily: M.body,
   transition: 'border-color 0.15s, box-shadow 0.15s',
 }
 
 function onFocusInput(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
-  e.currentTarget.style.borderColor = '#007AFF'
-  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,122,255,0.12)'
+  e.currentTarget.style.borderColor = M.night
+  e.currentTarget.style.boxShadow = `0 0 0 3px rgba(26,26,46,0.10)`
 }
 function onBlurInput(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
-  e.currentTarget.style.borderColor = '#d2d2d7'
+  e.currentTarget.style.borderColor = M.border
   e.currentTarget.style.boxShadow = 'none'
+}
+
+// ─── SectionHeader ────────────────────────────────────────────────────────────
+
+function SectionHeader({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-3 mb-5">
+      <span
+        style={{
+          fontFamily: M.body,
+          fontSize: '11px',
+          fontWeight: 600,
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          color: M.inkFaint,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {label}
+      </span>
+      <div style={{ flex: 1, height: '1px', background: M.border }} />
+    </div>
+  )
 }
 
 // ─── ReadonlyField ────────────────────────────────────────────────────────────
@@ -67,11 +114,15 @@ function onBlurInput(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>
 function ReadonlyField({ icon, value }: { icon: React.ReactNode; value: React.ReactNode }) {
   return (
     <div
-      className="flex items-center gap-3 px-4 py-3 rounded-xl"
-      style={{ background: '#f5f5f7', border: '1px solid #d2d2d7' }}
+      className="flex items-center gap-3 px-4 py-3"
+      style={{
+        background: M.muted,
+        border: `1px solid ${M.border}`,
+        borderRadius: '8px',
+      }}
     >
-      <span style={{ color: '#86868b' }}>{icon}</span>
-      <span className="text-sm" style={{ color: '#1d1d1f' }}>{value}</span>
+      <span style={{ color: M.inkFaint }}>{icon}</span>
+      <span className="text-sm" style={{ color: M.ink, fontFamily: M.body }}>{value}</span>
     </div>
   )
 }
@@ -152,12 +203,24 @@ export default function Profile() {
     }
   }
 
-  const getRoleColor = (role: string) => {
+  const getAvatarColors = (role: string) => {
     switch (role) {
-      case 'OWNER':  return { bg: '#e8f0fe', border: '#aacfff', color: '#0066d6' }
-      case 'TENANT': return { bg: '#ecfdf5', border: '#a7f3d0', color: '#059669' }
-      case 'ADMIN':  return { bg: '#fef2f2', border: '#fecaca', color: '#dc2626' }
-      default:       return { bg: '#f5f5f7', border: '#d2d2d7', color: '#64748b' }
+      case 'OWNER':  return { bg: M.ownerLight, color: M.owner }
+      case 'TENANT': return { bg: M.tenantLight, color: M.tenant }
+      default:       return { bg: M.muted, color: M.inkMid }
+    }
+  }
+
+  const getRoleBadgeStyle = (role: string): React.CSSProperties => {
+    switch (role) {
+      case 'OWNER':
+        return { background: M.ownerLight, border: `1px solid #b8ccf0`, color: M.owner }
+      case 'TENANT':
+        return { background: M.tenantLight, border: `1px solid #a8d5bb`, color: M.tenant }
+      case 'ADMIN':
+        return { background: M.dangerBg, border: `1px solid #f5c6c6`, color: M.danger }
+      default:
+        return { background: M.muted, border: `1px solid ${M.border}`, color: M.inkMid }
     }
   }
 
@@ -222,36 +285,45 @@ export default function Profile() {
     }
   }
 
-  const roleColors = getRoleColor(user?.role || '')
+  const avatarColors = getAvatarColors(user?.role || '')
   const initials = `${user?.firstName?.[0] || ''}${user?.lastName?.[0] || ''}`.toUpperCase()
 
   return (
     <Layout>
       <div
         className="min-h-screen p-6 lg:p-8"
-        style={{ background: '#f5f5f7', fontFamily: '"Plus Jakarta Sans", Inter, system-ui' }}
+        style={{ background: M.bg, fontFamily: M.body }}
       >
         <div className="max-w-4xl mx-auto">
+
           {/* Email verification banner */}
           {user && !user.emailVerified && (
             <div
-              className="mb-6 p-4 rounded-xl flex items-start gap-3"
-              style={{ background: '#fffbeb', border: '1px solid #fde68a' }}
+              className="mb-6 p-4 flex items-start gap-3"
+              style={{
+                background: '#fffbeb',
+                border: '1px solid #fde68a',
+                borderRadius: '12px',
+              }}
             >
               <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#d97706' }} />
               <div className="flex-1">
-                <p className="text-sm font-semibold" style={{ color: '#d97706' }}>
+                <p className="text-sm font-semibold" style={{ color: '#d97706', fontFamily: M.body }}>
                   Votre adresse email n'est pas vérifiée
                 </p>
-                <p className="text-sm mt-0.5" style={{ color: '#78350f' }}>
+                <p className="text-sm mt-0.5" style={{ color: '#78350f', fontFamily: M.body }}>
                   Vérifiez votre email pour accéder à toutes les fonctionnalités.
                 </p>
               </div>
               <button
                 onClick={handleResendVerification}
                 disabled={isResendingVerification}
-                className="rounded-xl font-semibold px-3 py-1.5 text-xs text-white flex-shrink-0 disabled:opacity-50 transition-colors"
-                style={{ background: '#d97706' }}
+                className="font-semibold px-3 py-1.5 text-xs text-white flex-shrink-0 disabled:opacity-50 transition-colors"
+                style={{
+                  background: '#d97706',
+                  borderRadius: '8px',
+                  fontFamily: M.body,
+                }}
                 onMouseEnter={(e) => (e.currentTarget.style.background = '#b45309')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = '#d97706')}
               >
@@ -264,11 +336,36 @@ export default function Profile() {
             </div>
           )}
 
-          {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold" style={{ color: '#1d1d1f' }}>Mon Profil</h1>
-            <p className="text-sm mt-1" style={{ color: '#515154' }}>
-              Gérez vos informations personnelles et vos paramètres
+          {/* Page Header */}
+          <div className="mb-8">
+            <p
+              style={{
+                fontFamily: M.body,
+                fontSize: '10px',
+                fontWeight: 600,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                color: M.inkFaint,
+                marginBottom: '6px',
+              }}
+            >
+              Compte
+            </p>
+            <h1
+              style={{
+                fontFamily: M.display,
+                fontWeight: 700,
+                fontStyle: 'italic',
+                fontSize: '40px',
+                color: M.ink,
+                lineHeight: 1.1,
+                marginBottom: '6px',
+              }}
+            >
+              Mon profil
+            </h1>
+            <p style={{ fontFamily: M.body, fontSize: '14px', color: M.inkMid }}>
+              Gérez vos informations personnelles et vos paramètres de sécurité
             </p>
           </div>
 
@@ -276,39 +373,64 @@ export default function Profile() {
             {/* ── Left: Profile summary card ── */}
             <div className="lg:col-span-1">
               <div style={cardStyle}>
+
+                {/* Avatar + identity */}
                 <div className="text-center">
-                  {/* Avatar */}
                   <div className="relative inline-block mb-4">
                     {user?.avatar ? (
                       <img
                         src={user.avatar}
                         alt="Avatar"
-                        className="w-20 h-20 rounded-full object-cover"
-                        style={{ border: '3px solid #d2d2d7' }}
+                        className="w-24 h-24 rounded-full object-cover"
+                        style={{ border: `3px solid ${M.border}` }}
                       />
                     ) : (
                       <div
-                        className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold select-none"
+                        className="w-24 h-24 rounded-full flex items-center justify-center select-none"
                         style={{
-                          background: '#e8f0fe',
-                          border: '3px solid #aacfff',
-                          color: '#007AFF',
+                          background: avatarColors.bg,
+                          border: `3px solid ${M.border}`,
+                          color: avatarColors.color,
+                          fontFamily: M.display,
+                          fontWeight: 700,
+                          fontSize: '32px',
+                          fontStyle: 'italic',
                         }}
                       >
-                        {initials || <User className="w-9 h-9" />}
+                        {initials || <User className="w-10 h-10" />}
                       </div>
                     )}
                   </div>
 
-                  <h2 className="text-lg font-bold" style={{ color: '#1d1d1f' }}>
+                  <h2
+                    style={{
+                      fontFamily: M.display,
+                      fontWeight: 700,
+                      fontSize: '22px',
+                      color: M.ink,
+                      lineHeight: 1.2,
+                    }}
+                  >
                     {user?.firstName} {user?.lastName}
                   </h2>
-                  <p className="text-sm mt-1" style={{ color: '#86868b' }}>{user?.email}</p>
+                  <p
+                    className="text-sm mt-1"
+                    style={{ fontFamily: M.body, color: M.inkMid }}
+                  >
+                    {user?.email}
+                  </p>
 
                   {/* Role badge */}
                   <div
-                    className="inline-flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full text-xs font-bold"
-                    style={{ background: roleColors.bg, border: `1px solid ${roleColors.border}`, color: roleColors.color }}
+                    className="inline-flex items-center gap-1.5 mt-3 px-3 py-1"
+                    style={{
+                      ...getRoleBadgeStyle(user?.role || ''),
+                      borderRadius: '20px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      fontFamily: M.body,
+                      letterSpacing: '0.04em',
+                    }}
                   >
                     <Shield className="w-3.5 h-3.5" />
                     {getRoleName(user?.role || '')}
@@ -316,33 +438,31 @@ export default function Profile() {
                 </div>
 
                 {/* Verification status */}
-                <div className="mt-6 pt-5" style={{ borderTop: '1px solid #d2d2d7' }}>
-                  <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#86868b' }}>
-                    Vérifications
-                  </p>
-                  <div className="space-y-2.5">
+                <div className="mt-6 pt-5" style={{ borderTop: `1px solid ${M.border}` }}>
+                  <SectionHeader label="Vérifications" />
+                  <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm" style={{ color: '#515154' }}>Email vérifié</span>
+                      <span className="text-sm" style={{ color: M.inkMid, fontFamily: M.body }}>Email vérifié</span>
                       {user?.emailVerified ? (
-                        <CheckCircle className="w-4 h-4" style={{ color: '#059669' }} />
+                        <CheckCircle className="w-4 h-4" style={{ color: '#15803d' }} />
                       ) : (
-                        <XCircle className="w-4 h-4" style={{ color: '#dc2626' }} />
+                        <XCircle className="w-4 h-4" style={{ color: M.danger }} />
                       )}
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm" style={{ color: '#515154' }}>Téléphone vérifié</span>
+                      <span className="text-sm" style={{ color: M.inkMid, fontFamily: M.body }}>Téléphone vérifié</span>
                       {user?.phoneVerified ? (
-                        <CheckCircle className="w-4 h-4" style={{ color: '#059669' }} />
+                        <CheckCircle className="w-4 h-4" style={{ color: '#15803d' }} />
                       ) : (
-                        <XCircle className="w-4 h-4" style={{ color: '#dc2626' }} />
+                        <XCircle className="w-4 h-4" style={{ color: M.danger }} />
                       )}
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm" style={{ color: '#515154' }}>Authentification 2FA</span>
+                      <span className="text-sm" style={{ color: M.inkMid, fontFamily: M.body }}>Authentification 2FA</span>
                       {totpEnabled ? (
-                        <CheckCircle className="w-4 h-4" style={{ color: '#059669' }} />
+                        <CheckCircle className="w-4 h-4" style={{ color: '#15803d' }} />
                       ) : (
-                        <XCircle className="w-4 h-4" style={{ color: '#dc2626' }} />
+                        <XCircle className="w-4 h-4" style={{ color: M.danger }} />
                       )}
                     </div>
                   </div>
@@ -353,10 +473,16 @@ export default function Profile() {
                     <button
                       onClick={handleResendVerification}
                       disabled={isResendingVerification}
-                      className="w-full rounded-xl font-semibold px-4 py-2.5 text-sm border transition-colors disabled:opacity-50"
-                      style={{ background: '#ffffff', border: '1px solid #d2d2d7', color: '#515154' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f7')}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = '#ffffff')}
+                      className="w-full font-semibold px-4 py-2.5 text-sm transition-colors disabled:opacity-50"
+                      style={{
+                        background: M.surface,
+                        border: `1px solid ${M.border}`,
+                        color: M.inkMid,
+                        borderRadius: '8px',
+                        fontFamily: M.body,
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = M.surface)}
                     >
                       {isResendingVerification ? (
                         <span className="flex items-center justify-center gap-2">
@@ -366,7 +492,7 @@ export default function Profile() {
                         'Vérifier mon email'
                       )}
                     </button>
-                    <p className="text-xs text-center mt-2" style={{ color: '#86868b' }}>
+                    <p className="text-xs text-center mt-2" style={{ color: M.inkFaint, fontFamily: M.body }}>
                       La vérification augmente la confiance des autres utilisateurs
                     </p>
                   </div>
@@ -376,38 +502,43 @@ export default function Profile() {
 
             {/* ── Right column ── */}
             <div className="lg:col-span-2 space-y-6">
+
               {/* ── Section: Informations personnelles ── */}
               <div style={cardStyle}>
                 <div className="flex items-center justify-between mb-5">
-                  <div className="flex items-center gap-2.5">
-                    <div
-                      className="w-9 h-9 rounded-xl flex items-center justify-center"
-                      style={{ background: '#e8f0fe' }}
-                    >
-                      <User className="w-4 h-4" style={{ color: '#007AFF' }} />
-                    </div>
-                    <h3 className="text-base font-bold" style={{ color: '#1d1d1f' }}>
-                      Informations personnelles
-                    </h3>
-                  </div>
+                  <SectionHeader label="Informations personnelles" />
                   {!isEditing ? (
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="inline-flex items-center gap-2 rounded-xl font-semibold px-3 py-2 text-sm border transition-colors"
-                      style={{ background: '#ffffff', border: '1px solid #d2d2d7', color: '#515154' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f7')}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = '#ffffff')}
+                      className="inline-flex items-center gap-2 font-semibold px-3 py-2 text-sm transition-colors"
+                      style={{
+                        background: M.surface,
+                        border: `1px solid ${M.border}`,
+                        color: M.inkMid,
+                        borderRadius: '8px',
+                        fontFamily: M.body,
+                        flexShrink: 0,
+                        marginTop: '-20px',
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = M.surface)}
                     >
                       <Edit2 className="w-4 h-4" />
                       Modifier
                     </button>
                   ) : (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2" style={{ marginTop: '-20px' }}>
                       <button
                         onClick={handleCancel}
                         disabled={isSaving}
-                        className="inline-flex items-center gap-1.5 rounded-xl font-semibold px-3 py-2 text-sm border transition-colors disabled:opacity-50"
-                        style={{ background: '#ffffff', border: '1px solid #d2d2d7', color: '#515154' }}
+                        className="inline-flex items-center gap-1.5 font-semibold px-3 py-2 text-sm transition-colors disabled:opacity-50"
+                        style={{
+                          background: M.surface,
+                          border: `1px solid ${M.border}`,
+                          color: M.inkMid,
+                          borderRadius: '8px',
+                          fontFamily: M.body,
+                        }}
                       >
                         <XIcon className="w-4 h-4" />
                         Annuler
@@ -415,10 +546,14 @@ export default function Profile() {
                       <button
                         onClick={handleSave}
                         disabled={isSaving}
-                        className="inline-flex items-center gap-1.5 rounded-xl font-semibold px-3 py-2 text-sm text-white transition-colors disabled:opacity-50"
-                        style={{ background: '#007AFF' }}
-                        onMouseEnter={(e) => !isSaving && (e.currentTarget.style.background = '#0066d6')}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = '#007AFF')}
+                        className="inline-flex items-center gap-1.5 font-semibold px-3 py-2 text-sm text-white transition-colors disabled:opacity-50"
+                        style={{
+                          background: M.night,
+                          borderRadius: '8px',
+                          fontFamily: M.body,
+                        }}
+                        onMouseEnter={(e) => !isSaving && (e.currentTarget.style.background = '#2d2d4e')}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = M.night)}
                       >
                         {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         Enregistrer
@@ -431,7 +566,10 @@ export default function Profile() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Prénom */}
                     <div>
-                      <label className="block text-sm font-semibold mb-1.5" style={{ color: '#515154' }}>
+                      <label
+                        className="block text-sm font-semibold mb-1.5"
+                        style={{ color: M.inkMid, fontFamily: M.body }}
+                      >
                         Prénom
                       </label>
                       {isEditing ? (
@@ -451,7 +589,10 @@ export default function Profile() {
                     </div>
                     {/* Nom */}
                     <div>
-                      <label className="block text-sm font-semibold mb-1.5" style={{ color: '#515154' }}>
+                      <label
+                        className="block text-sm font-semibold mb-1.5"
+                        style={{ color: M.inkMid, fontFamily: M.body }}
+                      >
                         Nom
                       </label>
                       {isEditing ? (
@@ -473,27 +614,37 @@ export default function Profile() {
 
                   {/* Email (read-only) */}
                   <div>
-                    <label className="block text-sm font-semibold mb-1.5" style={{ color: '#515154' }}>
+                    <label
+                      className="block text-sm font-semibold mb-1.5"
+                      style={{ color: M.inkMid, fontFamily: M.body }}
+                    >
                       Email
                     </label>
                     <div
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl"
-                      style={{ background: '#f5f5f7', border: '1px solid #d2d2d7' }}
+                      className="flex items-center gap-3 px-4 py-3"
+                      style={{
+                        background: M.muted,
+                        border: `1px solid ${M.border}`,
+                        borderRadius: '8px',
+                      }}
                     >
-                      <Mail className="w-4 h-4 flex-shrink-0" style={{ color: '#86868b' }} />
-                      <span className="text-sm flex-1" style={{ color: '#1d1d1f' }}>{user?.email}</span>
+                      <Mail className="w-4 h-4 flex-shrink-0" style={{ color: M.inkFaint }} />
+                      <span className="text-sm flex-1" style={{ color: M.ink, fontFamily: M.body }}>{user?.email}</span>
                       {user?.emailVerified && (
-                        <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: '#059669' }} />
+                        <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: '#15803d' }} />
                       )}
                     </div>
-                    <p className="text-xs mt-1" style={{ color: '#86868b' }}>
+                    <p className="text-xs mt-1" style={{ color: M.inkFaint, fontFamily: M.body }}>
                       L'email ne peut pas être modifié
                     </p>
                   </div>
 
                   {/* Téléphone */}
                   <div>
-                    <label className="block text-sm font-semibold mb-1.5" style={{ color: '#515154' }}>
+                    <label
+                      className="block text-sm font-semibold mb-1.5"
+                      style={{ color: M.inkMid, fontFamily: M.body }}
+                    >
                       Téléphone
                     </label>
                     {isEditing ? (
@@ -510,15 +661,19 @@ export default function Profile() {
                       />
                     ) : (
                       <div
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl"
-                        style={{ background: '#f5f5f7', border: '1px solid #d2d2d7' }}
+                        className="flex items-center gap-3 px-4 py-3"
+                        style={{
+                          background: M.muted,
+                          border: `1px solid ${M.border}`,
+                          borderRadius: '8px',
+                        }}
                       >
-                        <Phone className="w-4 h-4 flex-shrink-0" style={{ color: '#86868b' }} />
-                        <span className="text-sm flex-1" style={{ color: '#1d1d1f' }}>
+                        <Phone className="w-4 h-4 flex-shrink-0" style={{ color: M.inkFaint }} />
+                        <span className="text-sm flex-1" style={{ color: M.ink, fontFamily: M.body }}>
                           {user?.phone || 'Non renseigné'}
                         </span>
                         {user?.phoneVerified && (
-                          <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: '#059669' }} />
+                          <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: '#15803d' }} />
                         )}
                       </div>
                     )}
@@ -526,7 +681,10 @@ export default function Profile() {
 
                   {/* Bio */}
                   <div>
-                    <label className="block text-sm font-semibold mb-1.5" style={{ color: '#515154' }}>
+                    <label
+                      className="block text-sm font-semibold mb-1.5"
+                      style={{ color: M.inkMid, fontFamily: M.body }}
+                    >
                       Bio
                     </label>
                     {isEditing ? (
@@ -552,13 +710,19 @@ export default function Profile() {
                   {/* Role + Membre depuis */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold mb-1.5" style={{ color: '#515154' }}>
+                      <label
+                        className="block text-sm font-semibold mb-1.5"
+                        style={{ color: M.inkMid, fontFamily: M.body }}
+                      >
                         Type de compte
                       </label>
                       <ReadonlyField icon={<Shield className="w-4 h-4" />} value={getRoleName(user?.role || '')} />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold mb-1.5" style={{ color: '#515154' }}>
+                      <label
+                        className="block text-sm font-semibold mb-1.5"
+                        style={{ color: M.inkMid, fontFamily: M.body }}
+                      >
                         Membre depuis
                       </label>
                       <ReadonlyField
@@ -579,65 +743,113 @@ export default function Profile() {
               {/* ── Section: Mes données extraites (TENANT only) ── */}
               {user?.role === 'TENANT' && (
                 <div style={cardStyle}>
-                  <div className="flex items-center gap-2.5 mb-1">
+                  <SectionHeader label="Données extraites par l'IA" />
+
+                  <div className="flex items-center gap-2.5 mb-2">
                     <div
-                      className="w-9 h-9 rounded-xl flex items-center justify-center"
-                      style={{ background: '#e8f0fe' }}
+                      className="w-9 h-9 flex items-center justify-center"
+                      style={{
+                        background: M.tenantLight,
+                        border: `1px solid #a8d5bb`,
+                        borderRadius: '10px',
+                      }}
                     >
-                      <CreditCard className="w-4 h-4" style={{ color: '#007AFF' }} />
+                      <CreditCard className="w-4 h-4" style={{ color: M.tenant }} />
                     </div>
-                    <h3 className="text-base font-bold" style={{ color: '#1d1d1f' }}>
-                      Mes données extraites
-                    </h3>
+                    <p className="text-xs" style={{ color: M.inkFaint, fontFamily: M.body }}>
+                      Classifiées automatiquement depuis vos documents scannés
+                    </p>
                   </div>
-                  <p className="text-xs mb-6 ml-11" style={{ color: '#86868b' }}>
-                    Classifiées automatiquement par l'IA depuis vos documents scannés
-                  </p>
 
                   {/* Identité */}
                   {(user.birthDate || user.birthCity || user.nationality || user.documentNumber || user.documentExpiry || user.nationalNumber) && (
-                    <div className="mb-5">
+                    <div className="mt-4 mb-5">
                       <div className="flex items-center gap-2 mb-3">
-                        <div className="w-2 h-2 rounded-full" style={{ background: '#007AFF' }} />
-                        <span className="text-xs font-bold uppercase tracking-wide" style={{ color: '#007AFF' }}>
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: M.tenant }} />
+                        <span
+                          style={{
+                            fontFamily: M.body,
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            letterSpacing: '0.06em',
+                            textTransform: 'uppercase',
+                            color: M.tenant,
+                          }}
+                        >
                           Identité
                         </span>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {user.birthDate && (
-                          <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: '#e8f0fe', border: '1px solid #aacfff' }}>
-                            <Calendar className="w-4 h-4 flex-shrink-0" style={{ color: '#007AFF' }} />
-                            <div><p className="text-xs font-semibold" style={{ color: '#007AFF' }}>Date de naissance</p><p className="text-sm" style={{ color: '#1d1d1f' }}>{user.birthDate}</p></div>
+                          <div
+                            className="flex items-center gap-2 p-3"
+                            style={{ background: M.tenantLight, border: `1px solid #a8d5bb`, borderRadius: '8px' }}
+                          >
+                            <Calendar className="w-4 h-4 flex-shrink-0" style={{ color: M.tenant }} />
+                            <div>
+                              <p className="text-xs font-semibold" style={{ color: M.tenant, fontFamily: M.body }}>Date de naissance</p>
+                              <p className="text-sm" style={{ color: M.ink, fontFamily: M.body }}>{user.birthDate}</p>
+                            </div>
                           </div>
                         )}
                         {user.birthCity && (
-                          <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: '#e8f0fe', border: '1px solid #aacfff' }}>
-                            <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: '#007AFF' }} />
-                            <div><p className="text-xs font-semibold" style={{ color: '#007AFF' }}>Lieu de naissance</p><p className="text-sm" style={{ color: '#1d1d1f' }}>{user.birthCity}</p></div>
+                          <div
+                            className="flex items-center gap-2 p-3"
+                            style={{ background: M.tenantLight, border: `1px solid #a8d5bb`, borderRadius: '8px' }}
+                          >
+                            <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: M.tenant }} />
+                            <div>
+                              <p className="text-xs font-semibold" style={{ color: M.tenant, fontFamily: M.body }}>Lieu de naissance</p>
+                              <p className="text-sm" style={{ color: M.ink, fontFamily: M.body }}>{user.birthCity}</p>
+                            </div>
                           </div>
                         )}
                         {user.nationality && (
-                          <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: '#e8f0fe', border: '1px solid #aacfff' }}>
-                            <Globe className="w-4 h-4 flex-shrink-0" style={{ color: '#007AFF' }} />
-                            <div><p className="text-xs font-semibold" style={{ color: '#007AFF' }}>Nationalité</p><p className="text-sm" style={{ color: '#1d1d1f' }}>{user.nationality}</p></div>
+                          <div
+                            className="flex items-center gap-2 p-3"
+                            style={{ background: M.tenantLight, border: `1px solid #a8d5bb`, borderRadius: '8px' }}
+                          >
+                            <Globe className="w-4 h-4 flex-shrink-0" style={{ color: M.tenant }} />
+                            <div>
+                              <p className="text-xs font-semibold" style={{ color: M.tenant, fontFamily: M.body }}>Nationalité</p>
+                              <p className="text-sm" style={{ color: M.ink, fontFamily: M.body }}>{user.nationality}</p>
+                            </div>
                           </div>
                         )}
                         {user.documentNumber && (
-                          <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: '#e8f0fe', border: '1px solid #aacfff' }}>
-                            <Hash className="w-4 h-4 flex-shrink-0" style={{ color: '#007AFF' }} />
-                            <div><p className="text-xs font-semibold" style={{ color: '#007AFF' }}>N° de pièce d'identité</p><p className="text-sm font-mono" style={{ color: '#1d1d1f' }}>{user.documentNumber}</p></div>
+                          <div
+                            className="flex items-center gap-2 p-3"
+                            style={{ background: M.tenantLight, border: `1px solid #a8d5bb`, borderRadius: '8px' }}
+                          >
+                            <Hash className="w-4 h-4 flex-shrink-0" style={{ color: M.tenant }} />
+                            <div>
+                              <p className="text-xs font-semibold" style={{ color: M.tenant, fontFamily: M.body }}>N° de pièce d'identité</p>
+                              <p className="text-sm font-mono" style={{ color: M.ink }}>{user.documentNumber}</p>
+                            </div>
                           </div>
                         )}
                         {user.documentExpiry && (
-                          <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: '#e8f0fe', border: '1px solid #aacfff' }}>
-                            <Calendar className="w-4 h-4 flex-shrink-0" style={{ color: '#007AFF' }} />
-                            <div><p className="text-xs font-semibold" style={{ color: '#007AFF' }}>Validité du document</p><p className="text-sm" style={{ color: '#1d1d1f' }}>{user.documentExpiry}</p></div>
+                          <div
+                            className="flex items-center gap-2 p-3"
+                            style={{ background: M.tenantLight, border: `1px solid #a8d5bb`, borderRadius: '8px' }}
+                          >
+                            <Calendar className="w-4 h-4 flex-shrink-0" style={{ color: M.tenant }} />
+                            <div>
+                              <p className="text-xs font-semibold" style={{ color: M.tenant, fontFamily: M.body }}>Validité du document</p>
+                              <p className="text-sm" style={{ color: M.ink, fontFamily: M.body }}>{user.documentExpiry}</p>
+                            </div>
                           </div>
                         )}
                         {user.nationalNumber && (
-                          <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: '#e8f0fe', border: '1px solid #aacfff' }}>
-                            <Shield className="w-4 h-4 flex-shrink-0" style={{ color: '#007AFF' }} />
-                            <div><p className="text-xs font-semibold" style={{ color: '#007AFF' }}>N° sécurité sociale</p><p className="text-sm font-mono" style={{ color: '#1d1d1f' }}>{user.nationalNumber}</p></div>
+                          <div
+                            className="flex items-center gap-2 p-3"
+                            style={{ background: M.tenantLight, border: `1px solid #a8d5bb`, borderRadius: '8px' }}
+                          >
+                            <Shield className="w-4 h-4 flex-shrink-0" style={{ color: M.tenant }} />
+                            <div>
+                              <p className="text-xs font-semibold" style={{ color: M.tenant, fontFamily: M.body }}>N° sécurité sociale</p>
+                              <p className="text-sm font-mono" style={{ color: M.ink }}>{user.nationalNumber}</p>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -649,15 +861,15 @@ export default function Profile() {
                     .filter(([family]) => family !== 'IDENTITE')
                     .map(([family, meta]) => {
                       const SECTION_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; dot: string }> = {
-                        BULLETIN:        { label: 'Revenus — Bulletins de salaire', color: '#0066d6', bg: '#e8f0fe', border: '#aacfff', dot: '#007AFF' },
-                        REVENUS_FISCAUX: { label: 'Revenus fiscaux',               color: '#059669', bg: '#ecfdf5', border: '#a7f3d0', dot: '#10b981' },
-                        DOMICILE:        { label: 'Domicile',                       color: '#d97706', bg: '#fffbeb', border: '#fde68a', dot: '#f59e0b' },
-                        GARANTIE:        { label: 'Garanties (Visale / Caution)',   color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe', dot: '#3b82f6' },
-                        BANCAIRE:        { label: 'Compte bancaire',                color: '#515154', bg: '#f5f5f7', border: '#d2d2d7', dot: '#86868b' },
-                        EMPLOI:          { label: 'Emploi',                         color: '#ea580c', bg: '#fff7ed', border: '#fed7aa', dot: '#f97316' },
-                        LOGEMENT:        { label: 'Logement',                       color: '#0d9488', bg: '#f0fdfa', border: '#99f6e4', dot: '#14b8a6' },
+                        BULLETIN:        { label: 'Revenus — Bulletins de salaire', color: M.owner,   bg: M.ownerLight,  border: '#b8ccf0', dot: M.owner },
+                        REVENUS_FISCAUX: { label: 'Revenus fiscaux',               color: M.tenant,  bg: M.tenantLight, border: '#a8d5bb', dot: M.tenant },
+                        DOMICILE:        { label: 'Domicile',                       color: '#92400e', bg: '#fffbeb',     border: '#fde68a', dot: M.caramel },
+                        GARANTIE:        { label: 'Garanties (Visale / Caution)',   color: M.owner,   bg: M.ownerLight,  border: '#b8ccf0', dot: M.owner },
+                        BANCAIRE:        { label: 'Compte bancaire',                color: M.inkMid,  bg: M.muted,       border: M.border,  dot: M.inkFaint },
+                        EMPLOI:          { label: 'Emploi',                         color: '#9a3412', bg: '#fff7ed',     border: '#fed7aa', dot: '#f97316' },
+                        LOGEMENT:        { label: 'Logement',                       color: '#0f766e', bg: '#f0fdfa',     border: '#99f6e4', dot: '#14b8a6' },
                       }
-                      const cfg = SECTION_CONFIG[family] ?? { label: family, color: '#515154', bg: '#f5f5f7', border: '#d2d2d7', dot: '#86868b' }
+                      const cfg = SECTION_CONFIG[family] ?? { label: family, color: M.inkMid, bg: M.muted, border: M.border, dot: M.inkFaint }
                       const FIELD_LABELS: Record<string, string> = {
                         employerName: 'Employeur', netSalary: 'Salaire net', grossSalary: 'Salaire brut',
                         bulletinPeriod: 'Période', contractType: 'Type de contrat', siret: 'SIRET',
@@ -675,25 +887,34 @@ export default function Profile() {
                       return (
                         <div key={family} className="mb-5">
                           <div className="flex items-center gap-2 mb-3">
-                            <div className="w-2 h-2 rounded-full" style={{ background: cfg.dot }} />
-                            <span className="text-xs font-bold uppercase tracking-wide" style={{ color: cfg.color }}>
+                            <div className="w-1.5 h-1.5 rounded-full" style={{ background: cfg.dot }} />
+                            <span
+                              style={{
+                                fontFamily: M.body,
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                letterSpacing: '0.06em',
+                                textTransform: 'uppercase',
+                                color: cfg.color,
+                              }}
+                            >
                               {cfg.label}
                             </span>
                             {meta._docType ? (
-                              <span className="text-xs ml-auto" style={{ color: '#86868b' }}>{String(meta._docType)}</span>
+                              <span className="text-xs ml-auto" style={{ color: M.inkFaint, fontFamily: M.body }}>{String(meta._docType)}</span>
                             ) : null}
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {displayFields.map(([key, value]) => (
                               <div
                                 key={key}
-                                className="flex items-center gap-2 p-3 rounded-xl"
-                                style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}
+                                className="flex items-center gap-2 p-3"
+                                style={{ background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: '8px' }}
                               >
                                 <FileText className="w-4 h-4 flex-shrink-0" style={{ color: cfg.dot }} />
                                 <div>
-                                  <p className="text-xs font-semibold" style={{ color: cfg.color }}>{FIELD_LABELS[key]}</p>
-                                  <p className="text-sm" style={{ color: '#1d1d1f' }}>
+                                  <p className="text-xs font-semibold" style={{ color: cfg.color, fontFamily: M.body }}>{FIELD_LABELS[key]}</p>
+                                  <p className="text-sm" style={{ color: M.ink, fontFamily: M.body }}>
                                     {typeof value === 'number'
                                       ? `${value.toLocaleString('fr-FR')} ${['netSalary','grossSalary','cafAmount','areAmount','pensionAmount','visaleAmount','loanAmount'].includes(key) ? '€' : ''}`
                                       : String(value)}
@@ -710,23 +931,36 @@ export default function Profile() {
                   {/* Empty state */}
                   {!user.birthDate && !user.birthCity && !user.nationality && !user.documentNumber &&
                     !user.nationalNumber && (!user.profileMeta || Object.keys(user.profileMeta).length === 0) && (
-                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <div className="flex flex-col items-center justify-center py-10 text-center">
                       <div
-                        className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
-                        style={{ background: '#f5f5f7', border: '1px solid #d2d2d7' }}
+                        className="w-12 h-12 flex items-center justify-center mb-4"
+                        style={{
+                          background: M.muted,
+                          border: `1px solid ${M.border}`,
+                          borderRadius: '12px',
+                        }}
                       >
-                        <CreditCard className="w-6 h-6" style={{ color: '#86868b' }} />
+                        <CreditCard className="w-6 h-6" style={{ color: M.inkFaint }} />
                       </div>
-                      <p className="text-sm font-semibold" style={{ color: '#515154' }}>
-                        Aucune donnée extraite pour le moment
+                      <p
+                        style={{
+                          fontFamily: M.display,
+                          fontWeight: 700,
+                          fontStyle: 'italic',
+                          fontSize: '18px',
+                          color: M.ink,
+                          marginBottom: '6px',
+                        }}
+                      >
+                        Aucune donnée extraite
                       </p>
-                      <p className="text-xs mt-1 max-w-xs" style={{ color: '#86868b' }}>
+                      <p className="text-xs max-w-xs" style={{ color: M.inkFaint, fontFamily: M.body, lineHeight: 1.6 }}>
                         Déposez vos documents dans le dossier locataire — l'IA extraira et classifiera automatiquement vos données.
                       </p>
                     </div>
                   )}
 
-                  <p className="text-xs mt-4 flex items-center gap-1.5" style={{ color: '#86868b' }}>
+                  <p className="text-xs mt-4 flex items-center gap-1.5" style={{ color: M.inkFaint, fontFamily: M.body }}>
                     <Shield className="w-3.5 h-3.5" />
                     Données chiffrées et sécurisées — utilisées uniquement pour valider votre dossier locataire.
                   </p>
@@ -735,45 +969,47 @@ export default function Profile() {
 
               {/* ── Section: Sécurité ── */}
               <div style={cardStyle}>
-                <div className="flex items-center gap-2.5 mb-5">
-                  <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center"
-                    style={{ background: '#e8f0fe' }}
-                  >
-                    <Lock className="w-4 h-4" style={{ color: '#007AFF' }} />
-                  </div>
-                  <h3 className="text-base font-bold" style={{ color: '#1d1d1f' }}>Sécurité</h3>
-                </div>
+                <SectionHeader label="Sécurité" />
                 <div className="space-y-3">
                   {hasPassword && (
                     <button
                       onClick={() => setShowPasswordModal(true)}
-                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-semibold transition-colors text-left"
-                      style={{ background: '#ffffff', border: '1px solid #d2d2d7', color: '#515154' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f7')}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = '#ffffff')}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold transition-colors text-left"
+                      style={{
+                        background: M.surface,
+                        border: `1px solid ${M.border}`,
+                        color: M.inkMid,
+                        borderRadius: '8px',
+                        fontFamily: M.body,
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = M.surface)}
                     >
-                      <Lock className="w-4 h-4" style={{ color: '#86868b' }} />
+                      <Lock className="w-4 h-4" style={{ color: M.inkFaint }} />
                       Changer le mot de passe
                     </button>
                   )}
 
                   {/* 2FA / TOTP */}
                   <div
-                    className="flex items-center justify-between px-4 py-3 rounded-xl"
-                    style={{ background: '#f5f5f7', border: '1px solid #d2d2d7' }}
+                    className="flex items-center justify-between px-4 py-3"
+                    style={{
+                      background: M.muted,
+                      border: `1px solid ${M.border}`,
+                      borderRadius: '8px',
+                    }}
                   >
                     <div className="flex items-center gap-3">
                       {totpEnabled ? (
-                        <ShieldCheck className="w-5 h-5" style={{ color: '#059669' }} />
+                        <ShieldCheck className="w-5 h-5" style={{ color: '#15803d' }} />
                       ) : (
-                        <ShieldOff className="w-5 h-5" style={{ color: '#86868b' }} />
+                        <ShieldOff className="w-5 h-5" style={{ color: M.inkFaint }} />
                       )}
                       <div>
-                        <p className="text-sm font-semibold" style={{ color: '#1d1d1f' }}>
+                        <p className="text-sm font-semibold" style={{ color: M.ink, fontFamily: M.body }}>
                           Authentification à deux facteurs
                         </p>
-                        <p className="text-xs" style={{ color: '#86868b' }}>
+                        <p className="text-xs" style={{ color: M.inkFaint, fontFamily: M.body }}>
                           {totpEnabled === null
                             ? 'Chargement…'
                             : totpEnabled
@@ -783,14 +1019,14 @@ export default function Profile() {
                       </div>
                     </div>
                     {totpEnabled === null ? (
-                      <Loader2 className="w-4 h-4 animate-spin" style={{ color: '#86868b' }} />
+                      <Loader2 className="w-4 h-4 animate-spin" style={{ color: M.inkFaint }} />
                     ) : totpEnabled ? (
                       <button
                         onClick={() => { setTotpCode(''); setTotpModal('disable') }}
                         className="text-sm font-semibold transition-colors"
-                        style={{ color: '#dc2626' }}
-                        onMouseEnter={(e) => (e.currentTarget.style.color = '#b91c1c')}
-                        onMouseLeave={(e) => (e.currentTarget.style.color = '#dc2626')}
+                        style={{ color: M.danger, fontFamily: M.body }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = '#7f1d1d')}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = M.danger)}
                       >
                         Désactiver
                       </button>
@@ -799,9 +1035,9 @@ export default function Profile() {
                         onClick={openTotpSetup}
                         disabled={totpLoading}
                         className="text-sm font-semibold transition-colors disabled:opacity-50"
-                        style={{ color: '#007AFF' }}
-                        onMouseEnter={(e) => !totpLoading && (e.currentTarget.style.color = '#0066d6')}
-                        onMouseLeave={(e) => (e.currentTarget.style.color = '#007AFF')}
+                        style={{ color: M.night, fontFamily: M.body }}
+                        onMouseEnter={(e) => !totpLoading && (e.currentTarget.style.color = M.caramel)}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = M.night)}
                       >
                         {totpLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Activer'}
                       </button>
@@ -812,18 +1048,14 @@ export default function Profile() {
 
               {/* ── Section: Comptes liés ── */}
               <div style={cardStyle}>
-                <div className="flex items-center gap-2.5 mb-5">
-                  <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center"
-                    style={{ background: '#e8f0fe' }}
-                  >
-                    <LinkIcon className="w-4 h-4" style={{ color: '#007AFF' }} />
-                  </div>
-                  <h3 className="text-base font-bold" style={{ color: '#1d1d1f' }}>Comptes liés</h3>
-                </div>
+                <SectionHeader label="Comptes liés" />
                 <div
-                  className="flex items-center justify-between p-4 rounded-xl"
-                  style={{ background: '#f5f5f7', border: '1px solid #d2d2d7' }}
+                  className="flex items-center justify-between p-4"
+                  style={{
+                    background: M.muted,
+                    border: `1px solid ${M.border}`,
+                    borderRadius: '8px',
+                  }}
                 >
                   <div className="flex items-center gap-3">
                     <svg className="w-6 h-6" viewBox="0 0 24 24">
@@ -833,15 +1065,21 @@ export default function Profile() {
                       <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                     </svg>
                     <div>
-                      <p className="font-semibold text-sm" style={{ color: '#1d1d1f' }}>Google</p>
-                      <p className="text-xs" style={{ color: '#86868b' }}>
+                      <p className="font-semibold text-sm" style={{ color: M.ink, fontFamily: M.body }}>Google</p>
+                      <p className="text-xs" style={{ color: M.inkFaint, fontFamily: M.body }}>
                         Connectez-vous avec votre compte Google
                       </p>
                     </div>
                   </div>
                   <span
-                    className="text-xs font-semibold px-2.5 py-1 rounded-full"
-                    style={{ background: '#f5f5f7', border: '1px solid #d2d2d7', color: '#86868b' }}
+                    className="text-xs font-semibold px-2.5 py-1"
+                    style={{
+                      background: M.surface,
+                      border: `1px solid ${M.border}`,
+                      color: M.inkFaint,
+                      borderRadius: '20px',
+                      fontFamily: M.body,
+                    }}
                   >
                     {import.meta.env.VITE_GOOGLE_CLIENT_ID ? 'Disponible' : 'Non configuré'}
                   </span>
@@ -852,33 +1090,63 @@ export default function Profile() {
               <div
                 style={{
                   ...cardStyle,
-                  border: '1px solid #fecaca',
+                  border: `1px solid #f5c6c6`,
+                  background: M.dangerBg,
                 }}
               >
-                <div className="flex items-center gap-2.5 mb-4">
+                <div className="flex items-center gap-2.5 mb-1">
                   <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center"
-                    style={{ background: '#fef2f2' }}
+                    className="w-9 h-9 flex items-center justify-center"
+                    style={{
+                      background: '#fee2e2',
+                      border: `1px solid #f5c6c6`,
+                      borderRadius: '10px',
+                    }}
                   >
-                    <AlertTriangle className="w-4 h-4" style={{ color: '#dc2626' }} />
+                    <AlertTriangle className="w-4 h-4" style={{ color: M.danger }} />
                   </div>
-                  <h3 className="text-base font-bold" style={{ color: '#dc2626' }}>Zone de danger</h3>
+                  <h3
+                    style={{
+                      fontFamily: M.body,
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      letterSpacing: '0.06em',
+                      textTransform: 'uppercase',
+                      color: M.danger,
+                    }}
+                  >
+                    Zone de danger
+                  </h3>
                 </div>
-                <p className="text-sm mb-4" style={{ color: '#515154' }}>
+                <div style={{ height: '1px', background: '#f5c6c6', margin: '12px 0 16px' }} />
+                <p className="text-sm mb-4" style={{ color: M.inkMid, fontFamily: M.body }}>
                   Une fois votre compte supprimé, toutes vos données seront définitivement perdues.
                   Cette action est irréversible.
                 </p>
                 <button
                   onClick={() => setShowDeleteDialog(true)}
-                  className="inline-flex items-center gap-2 rounded-xl font-semibold px-4 py-2.5 text-sm text-white transition-colors"
-                  style={{ background: '#dc2626' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = '#b91c1c')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = '#dc2626')}
+                  className="inline-flex items-center gap-2 font-semibold px-4 py-2.5 text-sm transition-colors"
+                  style={{
+                    background: M.dangerBg,
+                    border: `1px solid #f5c6c6`,
+                    color: M.danger,
+                    borderRadius: '8px',
+                    fontFamily: M.body,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#fee2e2'
+                    e.currentTarget.style.borderColor = '#f5c6c6'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = M.dangerBg
+                    e.currentTarget.style.borderColor = '#f5c6c6'
+                  }}
                 >
                   <Trash2 className="w-4 h-4" />
                   Supprimer mon compte
                 </button>
               </div>
+
             </div>
           </div>
         </div>
@@ -895,31 +1163,49 @@ export default function Profile() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setTotpModal(null)} />
           <div
-            className="relative w-full max-w-md mx-4 p-6 rounded-2xl"
-            style={{ background: '#ffffff', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}
+            className="relative w-full max-w-md mx-4 p-6"
+            style={{
+              background: M.surface,
+              borderRadius: '16px',
+              border: `1px solid ${M.border}`,
+              boxShadow: '0 20px 60px rgba(13,12,10,0.15)',
+            }}
           >
             <button
               onClick={() => setTotpModal(null)}
-              className="absolute top-4 right-4 p-1.5 rounded-xl transition-colors"
-              style={{ color: '#86868b' }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f7')}
+              className="absolute top-4 right-4 p-1.5 transition-colors"
+              style={{ color: M.inkFaint, borderRadius: '8px' }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
               onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
             >
               <XIcon className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#e8f0fe' }}>
-                <QrCode className="w-5 h-5" style={{ color: '#007AFF' }} />
+              <div
+                className="w-10 h-10 flex items-center justify-center"
+                style={{ background: M.ownerLight, border: `1px solid #b8ccf0`, borderRadius: '10px' }}
+              >
+                <QrCode className="w-5 h-5" style={{ color: M.owner }} />
               </div>
               <div>
-                <h3 className="text-lg font-bold" style={{ color: '#1d1d1f' }}>Activer la 2FA</h3>
-                <p className="text-xs" style={{ color: '#86868b' }}>Google Authenticator ou Authy</p>
+                <h3
+                  style={{
+                    fontFamily: M.display,
+                    fontWeight: 700,
+                    fontStyle: 'italic',
+                    fontSize: '20px',
+                    color: M.ink,
+                  }}
+                >
+                  Activer la 2FA
+                </h3>
+                <p className="text-xs" style={{ color: M.inkFaint, fontFamily: M.body }}>Google Authenticator ou Authy</p>
               </div>
             </div>
 
             {totpStep === 'qr' && (
               <>
-                <p className="text-sm mb-4" style={{ color: '#515154' }}>
+                <p className="text-sm mb-4" style={{ color: M.inkMid, fontFamily: M.body }}>
                   Scannez ce QR code avec votre application d'authentification, puis cliquez sur Suivant.
                 </p>
                 {totpQr && (
@@ -927,26 +1213,32 @@ export default function Profile() {
                     <img
                       src={totpQr}
                       alt="QR Code 2FA"
-                      className="w-48 h-48 rounded-xl"
-                      style={{ border: '1px solid #d2d2d7' }}
+                      className="w-48 h-48"
+                      style={{ border: `1px solid ${M.border}`, borderRadius: '10px' }}
                     />
                   </div>
                 )}
                 <details className="mb-4 cursor-pointer">
-                  <summary className="text-xs" style={{ color: '#86868b' }}>Saisie manuelle</summary>
+                  <summary className="text-xs" style={{ color: M.inkFaint, fontFamily: M.body }}>Saisie manuelle</summary>
                   <code
-                    className="mt-2 block break-all text-xs p-2 rounded-xl"
-                    style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d2d2d7' }}
+                    className="mt-2 block break-all text-xs p-2"
+                    style={{
+                      background: M.muted,
+                      color: M.ink,
+                      border: `1px solid ${M.border}`,
+                      borderRadius: '8px',
+                      fontFamily: 'monospace',
+                    }}
                   >
                     {totpSecret}
                   </code>
                 </details>
                 <button
                   onClick={() => setTotpStep('verify')}
-                  className="w-full rounded-xl font-semibold px-4 py-2.5 text-sm text-white"
-                  style={{ background: '#007AFF' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = '#0066d6')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = '#007AFF')}
+                  className="w-full font-semibold px-4 py-2.5 text-sm text-white"
+                  style={{ background: M.night, borderRadius: '8px', fontFamily: M.body }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = '#2d2d4e')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = M.night)}
                 >
                   Suivant
                 </button>
@@ -955,7 +1247,7 @@ export default function Profile() {
 
             {totpStep === 'verify' && (
               <>
-                <p className="text-sm mb-4" style={{ color: '#515154' }}>
+                <p className="text-sm mb-4" style={{ color: M.inkMid, fontFamily: M.body }}>
                   Saisissez le code à 6 chiffres affiché dans votre application pour confirmer l'activation.
                 </p>
                 <input
@@ -965,7 +1257,13 @@ export default function Profile() {
                   placeholder="000000"
                   value={totpCode}
                   onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
-                  style={{ ...inputStyle, textAlign: 'center', fontSize: '1.5rem', letterSpacing: '0.2em', marginBottom: '1rem' }}
+                  style={{
+                    ...inputStyle,
+                    textAlign: 'center',
+                    fontSize: '1.5rem',
+                    letterSpacing: '0.2em',
+                    marginBottom: '1rem',
+                  }}
                   onFocus={onFocusInput}
                   onBlur={onBlurInput}
                   autoFocus
@@ -973,20 +1271,26 @@ export default function Profile() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => setTotpStep('qr')}
-                    className="flex-1 rounded-xl font-semibold px-4 py-2.5 text-sm border transition-colors"
-                    style={{ background: '#ffffff', border: '1px solid #d2d2d7', color: '#515154' }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f7')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = '#ffffff')}
+                    className="flex-1 font-semibold px-4 py-2.5 text-sm transition-colors"
+                    style={{
+                      background: M.surface,
+                      border: `1px solid ${M.border}`,
+                      color: M.inkMid,
+                      borderRadius: '8px',
+                      fontFamily: M.body,
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = M.surface)}
                   >
                     Retour
                   </button>
                   <button
                     onClick={handleTotpEnable}
                     disabled={totpLoading || totpCode.length !== 6}
-                    className="flex-1 rounded-xl font-semibold px-4 py-2.5 text-sm text-white disabled:opacity-50 flex items-center justify-center gap-2"
-                    style={{ background: '#007AFF' }}
-                    onMouseEnter={(e) => !totpLoading && (e.currentTarget.style.background = '#0066d6')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = '#007AFF')}
+                    className="flex-1 font-semibold px-4 py-2.5 text-sm text-white disabled:opacity-50 flex items-center justify-center gap-2"
+                    style={{ background: M.night, borderRadius: '8px', fontFamily: M.body }}
+                    onMouseEnter={(e) => !totpLoading && (e.currentTarget.style.background = '#2d2d4e')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = M.night)}
                   >
                     {totpLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmer'}
                   </button>
@@ -1002,25 +1306,43 @@ export default function Profile() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setTotpModal(null)} />
           <div
-            className="relative w-full max-w-md mx-4 p-6 rounded-2xl"
-            style={{ background: '#ffffff', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}
+            className="relative w-full max-w-md mx-4 p-6"
+            style={{
+              background: M.surface,
+              borderRadius: '16px',
+              border: `1px solid ${M.border}`,
+              boxShadow: '0 20px 60px rgba(13,12,10,0.15)',
+            }}
           >
             <button
               onClick={() => setTotpModal(null)}
-              className="absolute top-4 right-4 p-1.5 rounded-xl transition-colors"
-              style={{ color: '#86868b' }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f7')}
+              className="absolute top-4 right-4 p-1.5 transition-colors"
+              style={{ color: M.inkFaint, borderRadius: '8px' }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
               onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
             >
               <XIcon className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#fef2f2' }}>
-                <ShieldOff className="w-5 h-5" style={{ color: '#dc2626' }} />
+              <div
+                className="w-10 h-10 flex items-center justify-center"
+                style={{ background: M.dangerBg, border: `1px solid #f5c6c6`, borderRadius: '10px' }}
+              >
+                <ShieldOff className="w-5 h-5" style={{ color: M.danger }} />
               </div>
-              <h3 className="text-lg font-bold" style={{ color: '#1d1d1f' }}>Désactiver la 2FA</h3>
+              <h3
+                style={{
+                  fontFamily: M.display,
+                  fontWeight: 700,
+                  fontStyle: 'italic',
+                  fontSize: '20px',
+                  color: M.ink,
+                }}
+              >
+                Désactiver la 2FA
+              </h3>
             </div>
-            <p className="text-sm mb-4" style={{ color: '#515154' }}>
+            <p className="text-sm mb-4" style={{ color: M.inkMid, fontFamily: M.body }}>
               Saisissez le code actuel de votre application pour confirmer la désactivation.
             </p>
             <input
@@ -1030,7 +1352,13 @@ export default function Profile() {
               placeholder="000000"
               value={totpCode}
               onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
-              style={{ ...inputStyle, textAlign: 'center', fontSize: '1.5rem', letterSpacing: '0.2em', marginBottom: '1rem' }}
+              style={{
+                ...inputStyle,
+                textAlign: 'center',
+                fontSize: '1.5rem',
+                letterSpacing: '0.2em',
+                marginBottom: '1rem',
+              }}
               onFocus={onFocusInput}
               onBlur={onBlurInput}
               autoFocus
@@ -1038,20 +1366,26 @@ export default function Profile() {
             <div className="flex gap-3">
               <button
                 onClick={() => setTotpModal(null)}
-                className="flex-1 rounded-xl font-semibold px-4 py-2.5 text-sm border transition-colors"
-                style={{ background: '#ffffff', border: '1px solid #d2d2d7', color: '#515154' }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f7')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = '#ffffff')}
+                className="flex-1 font-semibold px-4 py-2.5 text-sm transition-colors"
+                style={{
+                  background: M.surface,
+                  border: `1px solid ${M.border}`,
+                  color: M.inkMid,
+                  borderRadius: '8px',
+                  fontFamily: M.body,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
+                onMouseLeave={(e) => (e.currentTarget.style.background = M.surface)}
               >
                 Annuler
               </button>
               <button
                 onClick={handleTotpDisable}
                 disabled={totpLoading || totpCode.length !== 6}
-                className="flex-1 rounded-xl font-semibold px-4 py-2.5 text-sm text-white disabled:opacity-50 flex items-center justify-center gap-2"
-                style={{ background: '#dc2626' }}
-                onMouseEnter={(e) => !totpLoading && (e.currentTarget.style.background = '#b91c1c')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = '#dc2626')}
+                className="flex-1 font-semibold px-4 py-2.5 text-sm text-white disabled:opacity-50 flex items-center justify-center gap-2"
+                style={{ background: M.danger, borderRadius: '8px', fontFamily: M.body }}
+                onMouseEnter={(e) => !totpLoading && (e.currentTarget.style.background = '#7f1d1d')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = M.danger)}
               >
                 {totpLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Désactiver'}
               </button>
@@ -1068,23 +1402,42 @@ export default function Profile() {
             onClick={() => { setShowDeleteDialog(false); setDeleteConfirmText('') }}
           />
           <div
-            className="relative w-full max-w-md mx-4 p-6 rounded-2xl"
-            style={{ background: '#ffffff', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}
+            className="relative w-full max-w-md mx-4 p-6"
+            style={{
+              background: M.surface,
+              borderRadius: '16px',
+              border: `1px solid ${M.border}`,
+              boxShadow: '0 20px 60px rgba(13,12,10,0.15)',
+            }}
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#fef2f2' }}>
-                <AlertTriangle className="w-5 h-5" style={{ color: '#dc2626' }} />
+              <div
+                className="w-10 h-10 flex items-center justify-center"
+                style={{ background: M.dangerBg, border: `1px solid #f5c6c6`, borderRadius: '10px' }}
+              >
+                <AlertTriangle className="w-5 h-5" style={{ color: M.danger }} />
               </div>
-              <h3 className="text-lg font-bold" style={{ color: '#1d1d1f' }}>
+              <h3
+                style={{
+                  fontFamily: M.display,
+                  fontWeight: 700,
+                  fontStyle: 'italic',
+                  fontSize: '20px',
+                  color: M.ink,
+                }}
+              >
                 Supprimer votre compte ?
               </h3>
             </div>
-            <p className="text-sm mb-4" style={{ color: '#515154' }}>
+            <p className="text-sm mb-4" style={{ color: M.inkMid, fontFamily: M.body }}>
               Cette action est <strong>irréversible</strong>. Toutes vos données, propriétés,
               contrats et messages seront supprimés définitivement.
             </p>
             <div className="mb-4">
-              <label className="block text-sm font-semibold mb-1.5" style={{ color: '#515154' }}>
+              <label
+                className="block text-sm font-semibold mb-1.5"
+                style={{ color: M.inkMid, fontFamily: M.body }}
+              >
                 Tapez <strong>SUPPRIMER</strong> pour confirmer
               </label>
               <input
@@ -1100,10 +1453,16 @@ export default function Profile() {
             <div className="flex gap-3">
               <button
                 onClick={() => { setShowDeleteDialog(false); setDeleteConfirmText('') }}
-                className="flex-1 rounded-xl font-semibold px-4 py-2.5 text-sm border transition-colors"
-                style={{ background: '#ffffff', border: '1px solid #d2d2d7', color: '#515154' }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f7')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = '#ffffff')}
+                className="flex-1 font-semibold px-4 py-2.5 text-sm transition-colors"
+                style={{
+                  background: M.surface,
+                  border: `1px solid ${M.border}`,
+                  color: M.inkMid,
+                  borderRadius: '8px',
+                  fontFamily: M.body,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
+                onMouseLeave={(e) => (e.currentTarget.style.background = M.surface)}
               >
                 Annuler
               </button>
@@ -1114,10 +1473,10 @@ export default function Profile() {
                   setShowDeleteDialog(false)
                   setDeleteConfirmText('')
                 }}
-                className="flex-1 rounded-xl font-semibold px-4 py-2.5 text-sm text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ background: '#dc2626' }}
-                onMouseEnter={(e) => deleteConfirmText === 'SUPPRIMER' && (e.currentTarget.style.background = '#b91c1c')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = '#dc2626')}
+                className="flex-1 font-semibold px-4 py-2.5 text-sm text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ background: M.danger, borderRadius: '8px', fontFamily: M.body }}
+                onMouseEnter={(e) => deleteConfirmText === 'SUPPRIMER' && (e.currentTarget.style.background = '#7f1d1d')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = M.danger)}
               >
                 Supprimer définitivement
               </button>

@@ -150,7 +150,7 @@ function CardContent({
       {(entry.temporalLabel || entry.identityLabel) && (
         <div className="px-3 pb-1 flex flex-wrap gap-1">
           {entry.temporalLabel && (
-            <span className="text-[10px] bg-[#e8f0fe] text-[#007AFF] px-1.5 py-0.5 rounded-full font-medium">
+            <span className="text-[10px] bg-[#eaf0fb] text-[#1a3270] px-1.5 py-0.5 rounded-full font-medium">
               {entry.temporalLabel}
             </span>
           )}

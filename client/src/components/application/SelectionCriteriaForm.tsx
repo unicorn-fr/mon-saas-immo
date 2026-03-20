@@ -76,7 +76,7 @@ export function SelectionCriteriaForm({ criteria, onChange }: Props) {
             onChange={(e) => update({ minSalaryRatio: parseFloat(e.target.value) })}
             className="w-48 accent-violet-600"
           />
-          <span className="text-sm font-semibold text-[#007AFF] w-14">
+          <span className="text-sm font-semibold text-[#1a1a2e] w-14">
             {criteria.minSalaryRatio ?? 3}× le loyer
           </span>
         </div>
@@ -169,7 +169,7 @@ export function SelectionCriteriaForm({ criteria, onChange }: Props) {
                 onClick={() => toggleContractType(ct)}
                 className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
                   active
-                    ? 'border-[#007AFF] bg-[#d0e6ff] text-[#007AFF]'
+                    ? 'border-[#1a1a2e] bg-[#eaf0fb] text-[#1a1a2e]'
                     : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                 }`}
               >
@@ -191,8 +191,8 @@ export function SelectionCriteriaForm({ criteria, onChange }: Props) {
           />
           <span>
             <span className="text-sm font-semibold text-[#0055b3]">Mode Auto-Pilot</span>
-            <span className="ml-1.5 text-xs font-medium rounded-full bg-[#aacfff] text-[#007AFF] px-2 py-0.5">Bêta</span>
-            <p className="text-xs text-[#007AFF] mt-0.5">
+            <span className="ml-1.5 text-xs font-medium rounded-full bg-[#b8ccf0] text-[#1a1a2e] px-2 py-0.5">Bêta</span>
+            <p className="text-xs text-[#1a1a2e] mt-0.5">
               Approuve automatiquement toute candidature atteignant le score minimal ({criteria.minScore ?? 70}/100)
               sans action de votre part. Le créneau de visite est immédiatement débloqué.
             </p>

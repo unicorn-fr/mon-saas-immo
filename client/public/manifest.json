@@ -1,6 +1,6 @@
 {
-  "name": "ImmoParticuliers - Gestion Locative",
-  "short_name": "ImmoParticuliers",
+  "name": "Bailio - Gestion Locative",
+  "short_name": "Bailio",
   "description": "Plateforme de gestion locative entre particuliers. Publiez vos annonces, gérez vos visites et communiquez directement avec les locataires.",
   "start_url": "/",
   "display": "standalone",

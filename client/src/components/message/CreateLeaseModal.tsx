@@ -4,6 +4,34 @@ import { X, CheckCircle, Info, Loader, Home, MapPin } from 'lucide-react'
 import { usePropertyStore } from '../../store/propertyStore'
 import { useContractStore } from '../../store/contractStore'
 
+const M = {
+  ink: '#0d0c0a',
+  inkMid: '#5a5754',
+  inkFaint: '#9e9b96',
+  night: '#1a1a2e',
+  owner: '#1a3270',
+  ownerLight: '#eaf0fb',
+  ownerBorder: '#b8ccf0',
+  tenant: '#1b5e3b',
+  tenantLight: '#edf7f2',
+  border: '#e4e1db',
+  muted: '#f4f2ee',
+  inputBg: '#f8f7f4',
+  surface: '#ffffff',
+}
+
+const inputStyle = (hasError?: boolean) => ({
+  width: '100%',
+  padding: '10px 16px',
+  border: `1px solid ${hasError ? '#fca5a5' : M.border}`,
+  borderRadius: '12px',
+  background: M.inputBg,
+  color: M.ink,
+  fontSize: '14px',
+  fontFamily: "'DM Sans', system-ui, sans-serif",
+  outline: 'none',
+})
+
 interface CreateLeaseModalProps {
   isOpen: boolean
   onClose: () => void
@@ -36,11 +64,9 @@ export const CreateLeaseModal = ({
 
   const availableProperties = myProperties.filter((p) => p.status === 'AVAILABLE')
 
-  // Fetch properties on open
   useEffect(() => {
     if (isOpen) {
       fetchMyProperties({ page: 1, limit: 100 })
-      // Reset form
       setSelectedPropertyId('')
       setStartDate('')
       setEndDate('')
@@ -53,7 +79,6 @@ export const CreateLeaseModal = ({
     }
   }, [isOpen, fetchMyProperties])
 
-  // Pre-fill when property is selected
   useEffect(() => {
     if (!selectedPropertyId) return
     const property = availableProperties.find((p) => p.id === selectedPropertyId)
@@ -68,30 +93,19 @@ export const CreateLeaseModal = ({
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {}
-
-    if (!selectedPropertyId) {
-      newErrors.property = 'Veuillez selectionner une propriete'
-    }
-    if (!startDate) {
-      newErrors.startDate = 'La date de debut est requise'
-    }
-    if (!endDate) {
-      newErrors.endDate = 'La date de fin est requise'
-    }
-    if (startDate && endDate && new Date(endDate) <= new Date(startDate)) {
+    if (!selectedPropertyId) newErrors.property = 'Veuillez selectionner une propriete'
+    if (!startDate) newErrors.startDate = 'La date de debut est requise'
+    if (!endDate) newErrors.endDate = 'La date de fin est requise'
+    if (startDate && endDate && new Date(endDate) <= new Date(startDate))
       newErrors.endDate = 'La date de fin doit etre posterieure a la date de debut'
-    }
-    if (!monthlyRent || monthlyRent <= 0) {
+    if (!monthlyRent || monthlyRent <= 0)
       newErrors.monthlyRent = 'Le loyer doit etre superieur a 0'
-    }
-
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
   const handleSubmit = async () => {
     if (!validate()) return
-
     setIsSubmitting(true)
     try {
       const contract = await createContract({
@@ -104,7 +118,6 @@ export const CreateLeaseModal = ({
         deposit: deposit ? Number(deposit) : undefined,
         terms: terms || undefined,
       })
-
       if (contract) {
         setSuccess(contract.id)
         setTimeout(() => {
@@ -122,40 +135,48 @@ export const CreateLeaseModal = ({
 
   if (!isOpen) return null
 
-  // Success view
   if (success) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
-          <div className="w-16 h-16 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="w-8 h-8 text-success-600" />
+        <div className="rounded-2xl max-w-md w-full p-8 text-center"
+          style={{ background: M.surface, boxShadow: '0 8px 40px rgba(13,12,10,0.15)' }}>
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+            style={{ background: M.tenantLight }}>
+            <CheckCircle className="w-8 h-8" style={{ color: M.tenant }} />
           </div>
-          <h3 className="text-xl font-bold text-slate-900 mb-2">Contrat cree avec succes</h3>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
-            Redirection vers le contrat...
-          </p>
+          <h3 className="text-xl font-bold mb-2" style={{ color: M.ink }}>Contrat cree avec succes</h3>
+          <p className="text-sm" style={{ color: M.inkMid }}>Redirection vers le contrat...</p>
         </div>
       </div>
     )
   }
 
+  const labelStyle = { display: 'block', fontSize: '13px', fontWeight: 500, color: M.inkMid, marginBottom: '6px', fontFamily: "'DM Sans', system-ui, sans-serif" }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
       <div
-        className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col"
+        className="rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col"
+        style={{ background: M.surface, boxShadow: '0 8px 40px rgba(13,12,10,0.15)' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b shrink-0">
+        <div className="flex items-center justify-between p-6 border-b shrink-0"
+          style={{ borderColor: M.border }}>
           <div>
-            <h2 className="text-xl font-bold text-slate-900">Mettre en location</h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+            <h2 className="text-xl font-bold" style={{ color: M.ink, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+              Mettre en location
+            </h2>
+            <p className="text-sm mt-1" style={{ color: M.inkMid }}>
               Creer un bail pour {tenantName}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="w-10 h-10 rounded-xl hover:bg-slate-100 flex items-center justify-center transition-colors"
+            className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
+            style={{ color: M.inkFaint }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
             disabled={isSubmitting}
           >
             <X className="w-5 h-5" />
@@ -166,25 +187,23 @@ export const CreateLeaseModal = ({
         <div className="p-6 space-y-6 overflow-y-auto flex-1">
           {/* Property Select */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Propriete <span className="text-red-500">*</span>
+            <label style={labelStyle}>
+              Propriete <span style={{ color: '#9b1c1c' }}>*</span>
             </label>
             {isLoadingProperties ? (
-              <div className="flex items-center gap-2 text-sm text-slate-500">
+              <div className="flex items-center gap-2 text-sm" style={{ color: M.inkFaint }}>
                 <Loader className="w-4 h-4 animate-spin" />
                 Chargement des proprietes...
               </div>
             ) : availableProperties.length === 0 ? (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm" style={{ color: M.inkFaint }}>
                 Aucune propriete disponible. Vos biens doivent avoir le statut "Disponible".
               </p>
             ) : (
               <select
                 value={selectedPropertyId}
                 onChange={(e) => setSelectedPropertyId(e.target.value)}
-                className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
-                  errors.property ? 'border-red-300' : 'border-slate-300'
-                }`}
+                style={inputStyle(!!errors.property)}
               >
                 <option value="">Selectionner une propriete</option>
                 {availableProperties.map((p) => (
@@ -195,13 +214,14 @@ export const CreateLeaseModal = ({
               </select>
             )}
             {errors.property && (
-              <p className="text-sm text-red-500 mt-1">{errors.property}</p>
+              <p className="text-sm mt-1" style={{ color: '#9b1c1c' }}>{errors.property}</p>
             )}
           </div>
 
           {/* Property Info Card */}
           {selectedProperty && (
-            <div className="bg-slate-50/50 rounded-xl p-4 flex items-start gap-4">
+            <div className="rounded-xl p-4 flex items-start gap-4"
+              style={{ background: M.muted, border: `1px solid ${M.border}` }}>
               {selectedProperty.images?.[0] ? (
                 <img
                   src={selectedProperty.images[0]}
@@ -209,17 +229,18 @@ export const CreateLeaseModal = ({
                   className="w-20 h-20 rounded-xl object-cover shrink-0"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-xl bg-slate-200 flex items-center justify-center shrink-0">
-                  <Home className="w-8 h-8 text-slate-400" />
+                <div className="w-20 h-20 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: M.border }}>
+                  <Home className="w-8 h-8" style={{ color: M.inkFaint }} />
                 </div>
               )}
               <div className="min-w-0">
-                <h4 className="font-semibold text-slate-900 truncate">{selectedProperty.title}</h4>
-                <p className="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-1 mt-0.5">
+                <h4 className="font-semibold truncate" style={{ color: M.ink }}>{selectedProperty.title}</h4>
+                <p className="text-sm flex items-center gap-1 mt-0.5" style={{ color: M.inkMid }}>
                   <MapPin className="w-3.5 h-3.5 shrink-0" />
                   {selectedProperty.address}, {selectedProperty.postalCode} {selectedProperty.city}
                 </p>
-                <div className="flex gap-3 mt-1 text-xs text-slate-500">
+                <div className="flex gap-3 mt-1 text-xs" style={{ color: M.inkFaint }}>
                   {selectedProperty.surface && <span>{selectedProperty.surface} m²</span>}
                   {selectedProperty.bedrooms != null && <span>{selectedProperty.bedrooms} ch.</span>}
                 </div>
@@ -230,35 +251,31 @@ export const CreateLeaseModal = ({
           {/* Dates */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Date de debut <span className="text-red-500">*</span>
+              <label style={labelStyle}>
+                Date de debut <span style={{ color: '#9b1c1c' }}>*</span>
               </label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
-                  errors.startDate ? 'border-red-300' : 'border-slate-300'
-                }`}
+                style={inputStyle(!!errors.startDate)}
               />
               {errors.startDate && (
-                <p className="text-sm text-red-500 mt-1">{errors.startDate}</p>
+                <p className="text-sm mt-1" style={{ color: '#9b1c1c' }}>{errors.startDate}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Date de fin <span className="text-red-500">*</span>
+              <label style={labelStyle}>
+                Date de fin <span style={{ color: '#9b1c1c' }}>*</span>
               </label>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
-                  errors.endDate ? 'border-red-300' : 'border-slate-300'
-                }`}
+                style={inputStyle(!!errors.endDate)}
               />
               {errors.endDate && (
-                <p className="text-sm text-red-500 mt-1">{errors.endDate}</p>
+                <p className="text-sm mt-1" style={{ color: '#9b1c1c' }}>{errors.endDate}</p>
               )}
             </div>
           </div>
@@ -266,8 +283,8 @@ export const CreateLeaseModal = ({
           {/* Financial Fields */}
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Loyer mensuel (EUR) <span className="text-red-500">*</span>
+              <label style={labelStyle}>
+                Loyer mensuel (EUR) <span style={{ color: '#9b1c1c' }}>*</span>
               </label>
               <input
                 type="number"
@@ -276,18 +293,14 @@ export const CreateLeaseModal = ({
                 value={monthlyRent}
                 onChange={(e) => setMonthlyRent(e.target.value ? Number(e.target.value) : '')}
                 placeholder="0.00"
-                className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
-                  errors.monthlyRent ? 'border-red-300' : 'border-slate-300'
-                }`}
+                style={inputStyle(!!errors.monthlyRent)}
               />
               {errors.monthlyRent && (
-                <p className="text-sm text-red-500 mt-1">{errors.monthlyRent}</p>
+                <p className="text-sm mt-1" style={{ color: '#9b1c1c' }}>{errors.monthlyRent}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Charges (EUR)
-              </label>
+              <label style={labelStyle}>Charges (EUR)</label>
               <input
                 type="number"
                 min="0"
@@ -295,13 +308,11 @@ export const CreateLeaseModal = ({
                 value={charges}
                 onChange={(e) => setCharges(e.target.value ? Number(e.target.value) : '')}
                 placeholder="0.00"
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                style={inputStyle()}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Depot de garantie (EUR)
-              </label>
+              <label style={labelStyle}>Depot de garantie (EUR)</label>
               <input
                 type="number"
                 min="0"
@@ -309,36 +320,35 @@ export const CreateLeaseModal = ({
                 value={deposit}
                 onChange={(e) => setDeposit(e.target.value ? Number(e.target.value) : '')}
                 placeholder="0.00"
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                style={inputStyle()}
               />
             </div>
           </div>
 
           {/* Terms */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Conditions particulieres
-            </label>
+            <label style={labelStyle}>Conditions particulieres</label>
             <textarea
               value={terms}
               onChange={(e) => setTerms(e.target.value)}
               rows={3}
               placeholder="Conditions specifiques du bail..."
-              className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
+              style={{ ...inputStyle(), resize: 'none' }}
             />
           </div>
 
           {/* Info Banner */}
-          <div className="bg-primary-50 border border-primary-200 rounded-xl p-4 flex gap-3">
-            <Info className="w-5 h-5 text-primary-600 shrink-0 mt-0.5" />
-            <p className="text-sm text-primary-700">
+          <div className="rounded-xl p-4 flex gap-3"
+            style={{ background: M.ownerLight, border: `1px solid ${M.ownerBorder}` }}>
+            <Info className="w-5 h-5 shrink-0 mt-0.5" style={{ color: M.owner }} />
+            <p className="text-sm" style={{ color: M.owner }}>
               Le contrat sera cree en brouillon. Les deux parties devront le signer pour qu'il soit active.
             </p>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 p-6 border-t shrink-0">
+        <div className="flex gap-3 p-6 border-t shrink-0" style={{ borderColor: M.border }}>
           <button
             type="button"
             onClick={onClose}

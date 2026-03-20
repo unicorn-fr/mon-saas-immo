@@ -10,7 +10,6 @@ import { PDFDownloadLink } from '@react-pdf/renderer'
 import { ContractPDF } from '../../components/contract/ContractPDF'
 import { Layout } from '../../components/layout/Layout'
 import {
-  FileText,
   ArrowLeft,
   ArrowRight,
   Save,
@@ -26,6 +25,19 @@ import {
   ChevronUp,
   X,
 } from 'lucide-react'
+
+const M = {
+  bg: '#fafaf8', surface: '#ffffff', muted: '#f4f2ee', inputBg: '#f8f7f4',
+  ink: '#0d0c0a', inkMid: '#5a5754', inkFaint: '#9e9b96',
+  night: '#1a1a2e', caramel: '#c4976a', caramelLight: '#fdf5ec',
+  owner: '#1a3270', ownerLight: '#eaf0fb', ownerBorder: '#b8ccf0',
+  tenant: '#1b5e3b', tenantLight: '#edf7f2', tenantBorder: '#9fd4ba',
+  border: '#e4e1db', borderMid: '#ccc9c3',
+  danger: '#9b1c1c', dangerBg: '#fef2f2',
+  warning: '#92400e', warningBg: '#fdf5ec',
+  display: "'Cormorant Garamond', Georgia, serif",
+  body: "'DM Sans', system-ui, sans-serif",
+}
 
 type WizardStep = 1 | 2 | 3
 
@@ -207,36 +219,91 @@ export default function CreateContract() {
 
   const stepLabels = ['Propriété', 'Conditions', 'Clauses']
 
-  const inputClass = (hasError?: boolean) =>
-    `w-full bg-white border rounded-xl px-3 py-2.5 text-sm text-[#1d1d1f] outline-none transition-all placeholder:text-[#86868b] ${
-      hasError
-        ? 'border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100'
-        : 'border-[#d2d2d7] focus:border-[#3b82f6] focus:ring-2 focus:ring-[rgba(59,130,246,0.12)]'
-    }`
+  // Maison style helpers
+  const inputStyle = (hasError?: boolean): React.CSSProperties => ({
+    width: '100%',
+    background: M.inputBg,
+    border: `1px solid ${hasError ? '#fca5a5' : M.border}`,
+    borderRadius: 8,
+    padding: '10px 12px',
+    fontSize: 13,
+    color: M.ink,
+    outline: 'none',
+    fontFamily: M.body,
+    boxSizing: 'border-box',
+  })
 
-  const labelClass = 'block text-sm font-medium text-[#515154] mb-1.5'
+  const labelStyle: React.CSSProperties = {
+    display: 'block',
+    fontSize: 11,
+    fontWeight: 600,
+    color: M.inkMid,
+    marginBottom: 6,
+    fontFamily: M.body,
+  }
+
+  const cardStyle: React.CSSProperties = {
+    background: M.surface,
+    border: `1px solid ${M.border}`,
+    borderRadius: 12,
+    boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
+    padding: '28px',
+    fontFamily: M.body,
+  }
+
+  const btnPrimary: React.CSSProperties = {
+    display: 'inline-flex', alignItems: 'center', gap: 7,
+    padding: '10px 20px', borderRadius: 8,
+    background: M.night, color: '#ffffff',
+    fontFamily: M.body, fontWeight: 500, fontSize: 13,
+    border: 'none', cursor: 'pointer',
+  }
+
+  const btnGhost: React.CSSProperties = {
+    display: 'inline-flex', alignItems: 'center', gap: 7,
+    padding: '10px 20px', borderRadius: 8,
+    background: M.surface, color: M.inkMid,
+    fontFamily: M.body, fontWeight: 500, fontSize: 13,
+    border: `1px solid ${M.border}`, cursor: 'pointer',
+  }
 
   return (
     <Layout>
-      <div className="min-h-screen bg-[#f5f5f7]">
+      <div style={{ minHeight: '100vh', background: M.bg, fontFamily: M.body }}>
+
         {/* Header */}
-        <div className="bg-white border-b border-[#d2d2d7]">
+        <div style={{ background: M.surface, borderBottom: `1px solid ${M.border}` }}>
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate('/contracts')}
-                className="p-2 bg-white border border-[#d2d2d7] rounded-xl text-[#515154] hover:bg-[#f5f5f7] transition-colors"
+                style={{
+                  padding: 8, background: M.surface,
+                  border: `1px solid ${M.border}`, borderRadius: 8,
+                  color: M.inkMid, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
+                onMouseLeave={e => (e.currentTarget.style.background = M.surface)}
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft style={{ width: 18, height: 18 }} />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-[#1d1d1f] flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-[#eff6ff] flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-[#3b82f6]" />
-                  </div>
+                <p style={{
+                  fontFamily: M.body, fontSize: 10, textTransform: 'uppercase',
+                  letterSpacing: '0.12em', color: M.inkFaint, marginBottom: 4,
+                }}>
+                  Gestion locative
+                </p>
+                <h1 style={{
+                  fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
+                  fontSize: 32, color: M.ink, lineHeight: 1.1, margin: 0,
+                }}>
                   Nouveau Contrat
                 </h1>
-                <p className="text-[#86868b] mt-0.5 text-sm">Générateur de bail — Loi ALUR</p>
+                <p style={{ fontSize: 13, color: M.inkMid, marginTop: 2 }}>
+                  Générateur de bail — Loi ALUR
+                </p>
               </div>
             </div>
           </div>
@@ -246,7 +313,7 @@ export default function CreateContract() {
           <div className="max-w-4xl mx-auto">
 
             {/* Step Indicator */}
-            <div className="flex items-center justify-center mb-8">
+            <div className="flex items-center justify-center" style={{ marginBottom: 32 }}>
               {stepLabels.map((label, i) => {
                 const stepNum = (i + 1) as WizardStep
                 const isActive = step === stepNum
@@ -254,23 +321,29 @@ export default function CreateContract() {
                 return (
                   <div key={label} className="flex items-center">
                     <div className="flex flex-col items-center">
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                          isActive
-                            ? 'bg-[#3b82f6] text-white ring-4 ring-[rgba(59,130,246,0.15)]'
-                            : isCompleted
-                            ? 'bg-emerald-500 text-white'
-                            : 'bg-[#f0f0f2] text-[#86868b]'
-                        }`}
-                      >
-                        {isCompleted ? <Check className="w-5 h-5" /> : stepNum}
+                      <div style={{
+                        width: 40, height: 40, borderRadius: '50%',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 13, fontWeight: 700, fontFamily: M.body,
+                        background: isActive ? M.night : isCompleted ? M.tenant : M.muted,
+                        color: isActive || isCompleted ? '#ffffff' : M.inkFaint,
+                        boxShadow: isActive ? `0 0 0 4px rgba(26,26,46,0.12)` : 'none',
+                        transition: 'all 0.2s',
+                      }}>
+                        {isCompleted ? <Check style={{ width: 18, height: 18 }} /> : stepNum}
                       </div>
-                      <span className={`text-xs mt-1.5 font-medium ${isActive ? 'text-[#3b82f6]' : isCompleted ? 'text-emerald-600' : 'text-[#86868b]'}`}>
+                      <span style={{
+                        fontSize: 11, marginTop: 6, fontWeight: 500, fontFamily: M.body,
+                        color: isActive ? M.night : isCompleted ? M.tenant : M.inkFaint,
+                      }}>
                         {label}
                       </span>
                     </div>
                     {i < stepLabels.length - 1 && (
-                      <div className={`w-16 h-0.5 mx-2 -mt-5 ${step > stepNum ? 'bg-emerald-400' : 'bg-[#d2d2d7]'}`} />
+                      <div style={{
+                        width: 64, height: 2, marginLeft: 6, marginRight: 6, marginTop: -20,
+                        background: step > stepNum ? M.tenant : M.border,
+                      }} />
                     )}
                   </div>
                 )
@@ -279,20 +352,23 @@ export default function CreateContract() {
 
             {/* Step 1: Property & Tenant */}
             {step === 1 && (
-              <div className="bg-white rounded-2xl border border-[#d2d2d7] p-6" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)' }}>
-                <h2 className="text-xl font-semibold text-[#1d1d1f] mb-6">
-                  Étape 1 : Informations de base
+              <div style={cardStyle}>
+                <h2 style={{
+                  fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
+                  fontSize: 24, color: M.ink, marginBottom: 24,
+                }}>
+                  Étape 1 — Informations de base
                 </h2>
 
                 {/* Property Selection */}
-                <div className="mb-6">
-                  <label className={labelClass}>
-                    Propriété <span className="text-red-500">*</span>
+                <div style={{ marginBottom: 24 }}>
+                  <label style={labelStyle}>
+                    Propriété <span style={{ color: M.danger }}>*</span>
                   </label>
                   <select
                     value={propertyId}
                     onChange={(e) => setPropertyId(e.target.value)}
-                    className={inputClass(!!errors.propertyId)}
+                    style={inputStyle(!!errors.propertyId)}
                   >
                     <option value="">Sélectionnez une propriété</option>
                     {availableProperties.map((p) => (
@@ -301,89 +377,131 @@ export default function CreateContract() {
                       </option>
                     ))}
                   </select>
-                  {errors.propertyId && <p className="text-xs text-red-500 mt-1">{errors.propertyId}</p>}
+                  {errors.propertyId && (
+                    <p style={{ fontSize: 11, color: M.danger, marginTop: 4 }}>{errors.propertyId}</p>
+                  )}
                 </div>
 
                 {/* Property Preview */}
                 {selectedProperty && (
-                  <div className="bg-[#eff6ff] border border-[#bfdbfe] rounded-xl p-4 flex items-start gap-4 mb-6">
+                  <div style={{
+                    background: M.ownerLight, border: `1px solid ${M.ownerBorder}`,
+                    borderRadius: 10, padding: 16,
+                    display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 24,
+                  }}>
                     {selectedProperty.images?.[0] ? (
                       <img
                         src={selectedProperty.images[0]}
                         alt={selectedProperty.title}
-                        className="w-24 h-24 rounded-xl object-cover shrink-0"
+                        style={{ width: 96, height: 96, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }}
                       />
                     ) : (
-                      <div className="w-24 h-24 rounded-xl bg-[#bfdbfe] flex items-center justify-center shrink-0">
-                        <HomeIcon className="w-8 h-8 text-[#3b82f6]" />
+                      <div style={{
+                        width: 96, height: 96, borderRadius: 8, flexShrink: 0,
+                        background: M.ownerBorder, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <HomeIcon style={{ width: 28, height: 28, color: M.owner }} />
                       </div>
                     )}
                     <div>
-                      <h3 className="font-semibold text-[#1d1d1f]">{selectedProperty.title}</h3>
-                      <p className="text-sm text-[#515154] flex items-center gap-1 mt-1">
-                        <MapPin className="w-3.5 h-3.5 text-[#3b82f6]" />
+                      <h3 style={{ fontWeight: 600, fontSize: 14, color: M.ink }}>{selectedProperty.title}</h3>
+                      <p className="flex items-center" style={{ fontSize: 12, color: M.inkMid, marginTop: 4, gap: 4 }}>
+                        <MapPin style={{ width: 12, height: 12, color: M.owner }} />
                         {selectedProperty.address}, {selectedProperty.postalCode} {selectedProperty.city}
                       </p>
-                      <div className="flex gap-4 mt-2 text-xs text-[#86868b]">
+                      <div className="flex gap-4" style={{ marginTop: 8, fontSize: 11, color: M.inkFaint }}>
                         {selectedProperty.surface && <span>{selectedProperty.surface} m²</span>}
                         {selectedProperty.bedrooms != null && <span>{selectedProperty.bedrooms} ch.</span>}
-                        <span className="text-[#3b82f6] font-semibold">{selectedProperty.price} €/mois</span>
+                        <span style={{ color: M.caramel, fontWeight: 600 }}>{selectedProperty.price} €/mois</span>
                       </div>
                     </div>
                   </div>
                 )}
 
                 {/* Tenant Email */}
-                <div className="mb-6">
-                  <label className={labelClass}>
-                    Locataire <span className="text-red-500">*</span>
+                <div style={{ marginBottom: 24 }}>
+                  <label style={labelStyle}>
+                    Locataire <span style={{ color: M.danger }}>*</span>
                   </label>
 
                   {/* Contact sélectionné */}
                   {selectedContact ? (
-                    <div className="flex items-center gap-3 p-3 rounded-xl border border-[#bfdbfe] bg-[#eff6ff] mb-3">
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      padding: '10px 14px', borderRadius: 8, marginBottom: 12,
+                      border: `1px solid ${M.tenantBorder}`, background: M.tenantLight,
+                    }}>
                       {selectedContact.avatar ? (
                         <img src={selectedContact.avatar} alt={selectedContact.name}
-                          className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                          style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-[#bfdbfe] flex items-center justify-center flex-shrink-0">
-                          <User className="w-5 h-5 text-[#3b82f6]" />
+                        <div style={{
+                          width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                          background: M.tenantBorder, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          <User style={{ width: 16, height: 16, color: M.tenant }} />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm text-[#1d1d1f]">{selectedContact.name}</p>
-                        <p className="text-xs text-[#86868b]">{selectedContact.email}</p>
+                        <p style={{ fontWeight: 600, fontSize: 13, color: M.ink }}>{selectedContact.name}</p>
+                        <p style={{ fontSize: 11, color: M.inkFaint }}>{selectedContact.email}</p>
                       </div>
                       <button
                         type="button"
                         onClick={() => { setSelectedContact(null); setTenantEmail('') }}
-                        className="p-1 rounded-lg hover:bg-[#bfdbfe] transition-colors"
+                        style={{
+                          padding: 4, background: 'none', border: 'none',
+                          cursor: 'pointer', color: M.inkFaint, borderRadius: 4,
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.background = M.tenantBorder)}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                       >
-                        <X className="w-4 h-4 text-[#86868b]" />
+                        <X style={{ width: 14, height: 14 }} />
                       </button>
                     </div>
                   ) : null}
 
                   {/* Picker contacts messagerie */}
                   {messagingContacts.length > 0 && !selectedContact && (
-                    <div className="mb-3">
+                    <div style={{ marginBottom: 12 }}>
                       <button
                         type="button"
                         onClick={() => setShowContactPicker((v) => !v)}
-                        className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl border border-[#d2d2d7] bg-white text-sm font-medium text-[#515154] hover:bg-[#f5f5f7] transition-colors"
+                        style={{
+                          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          padding: '10px 14px', borderRadius: 8,
+                          border: `1px solid ${M.border}`, background: M.surface,
+                          fontSize: 13, fontWeight: 500, color: M.inkMid,
+                          cursor: 'pointer', fontFamily: M.body,
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
+                        onMouseLeave={e => (e.currentTarget.style.background = M.surface)}
                       >
                         <span className="flex items-center gap-2">
-                          <MessageSquare className="w-4 h-4 text-[#3b82f6]" />
+                          <MessageSquare style={{ width: 14, height: 14, color: M.owner }} />
                           Choisir depuis mes contacts messagerie
-                          <span className="px-1.5 py-0.5 rounded-full text-xs font-semibold bg-[#eff6ff] text-[#3b82f6]">
+                          <span style={{
+                            fontSize: 10, fontWeight: 700, fontFamily: M.body,
+                            background: M.ownerLight, color: M.owner,
+                            border: `1px solid ${M.ownerBorder}`, borderRadius: 20,
+                            padding: '1px 7px',
+                          }}>
                             {messagingContacts.length}
                           </span>
                         </span>
-                        {showContactPicker ? <ChevronUp className="w-4 h-4 text-[#86868b]" /> : <ChevronDown className="w-4 h-4 text-[#86868b]" />}
+                        {showContactPicker
+                          ? <ChevronUp style={{ width: 14, height: 14, color: M.inkFaint }} />
+                          : <ChevronDown style={{ width: 14, height: 14, color: M.inkFaint }} />
+                        }
                       </button>
 
                       {showContactPicker && (
-                        <div className="mt-1 rounded-xl border border-[#d2d2d7] overflow-hidden bg-white shadow-sm">
+                        <div style={{
+                          marginTop: 4, borderRadius: 8,
+                          border: `1px solid ${M.border}`,
+                          overflow: 'hidden', background: M.surface,
+                          boxShadow: '0 4px 16px rgba(13,12,10,0.08)',
+                        }}>
                           {messagingContacts.map((contact) => (
                             <button
                               key={contact.id}
@@ -394,19 +512,30 @@ export default function CreateContract() {
                                 setShowContactPicker(false)
                                 setErrors((e) => ({ ...e, tenantEmail: '' }))
                               }}
-                              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#f5f5f7] transition-colors border-b border-[#f0f0f2] last:border-b-0"
+                              style={{
+                                width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                                padding: '10px 14px', textAlign: 'left',
+                                background: 'none', border: 'none',
+                                borderBottom: `1px solid ${M.border}`,
+                                cursor: 'pointer', fontFamily: M.body,
+                              }}
+                              onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
+                              onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                             >
                               {contact.avatar ? (
                                 <img src={contact.avatar} alt={contact.name}
-                                  className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+                                  style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
                               ) : (
-                                <div className="w-9 h-9 rounded-full bg-[#eff6ff] flex items-center justify-center flex-shrink-0">
-                                  <User className="w-4 h-4 text-[#3b82f6]" />
+                                <div style={{
+                                  width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+                                  background: M.ownerLight, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                }}>
+                                  <User style={{ width: 14, height: 14, color: M.owner }} />
                                 </div>
                               )}
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium text-sm text-[#1d1d1f]">{contact.name}</p>
-                                <p className="text-xs truncate text-[#86868b]">{contact.email}</p>
+                                <p style={{ fontWeight: 500, fontSize: 13, color: M.ink }}>{contact.name}</p>
+                                <p style={{ fontSize: 11, color: M.inkFaint }} className="truncate">{contact.email}</p>
                               </div>
                             </button>
                           ))}
@@ -417,10 +546,10 @@ export default function CreateContract() {
 
                   {/* Séparateur */}
                   {messagingContacts.length > 0 && !selectedContact && (
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="flex-1 h-px bg-[#d2d2d7]" />
-                      <span className="text-xs text-[#86868b]">ou saisir manuellement</span>
-                      <div className="flex-1 h-px bg-[#d2d2d7]" />
+                    <div className="flex items-center gap-3" style={{ marginBottom: 12 }}>
+                      <div style={{ flex: 1, height: 1, background: M.border }} />
+                      <span style={{ fontSize: 11, color: M.inkFaint }}>ou saisir manuellement</span>
+                      <div style={{ flex: 1, height: 1, background: M.border }} />
                     </div>
                   )}
 
@@ -432,59 +561,68 @@ export default function CreateContract() {
                         value={tenantEmail}
                         onChange={(e) => setTenantEmail(e.target.value)}
                         placeholder="locataire@example.com"
-                        className={inputClass(!!errors.tenantEmail)}
+                        style={inputStyle(!!errors.tenantEmail)}
                       />
-                      <p className="text-xs text-[#86868b] mt-1">
+                      <p style={{ fontSize: 11, color: M.inkFaint, marginTop: 4 }}>
                         Le locataire doit avoir un compte avec cet email sur la plateforme
                       </p>
                     </>
                   )}
 
-                  {errors.tenantEmail && <p className="text-xs text-red-500 mt-1">{errors.tenantEmail}</p>}
+                  {errors.tenantEmail && (
+                    <p style={{ fontSize: 11, color: M.danger, marginTop: 4 }}>{errors.tenantEmail}</p>
+                  )}
                 </div>
               </div>
             )}
 
             {/* Step 2: Juridical Fields */}
             {step === 2 && (
-              <div className="bg-white rounded-2xl border border-[#d2d2d7] p-6" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)' }}>
-                <h2 className="text-xl font-semibold text-[#1d1d1f] mb-6">
-                  Étape 2 : Conditions juridiques
+              <div style={cardStyle}>
+                <h2 style={{
+                  fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
+                  fontSize: 24, color: M.ink, marginBottom: 24,
+                }}>
+                  Étape 2 — Conditions juridiques
                 </h2>
 
                 {/* Dates */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={{ marginBottom: 24 }}>
                   <div>
-                    <label className={labelClass}>
-                      Date de prise d'effet <span className="text-red-500">*</span>
+                    <label style={labelStyle}>
+                      Date de prise d'effet <span style={{ color: M.danger }}>*</span>
                     </label>
                     <input
                       type="date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className={inputClass(!!errors.startDate)}
+                      style={inputStyle(!!errors.startDate)}
                     />
-                    {errors.startDate && <p className="text-xs text-red-500 mt-1">{errors.startDate}</p>}
+                    {errors.startDate && (
+                      <p style={{ fontSize: 11, color: M.danger, marginTop: 4 }}>{errors.startDate}</p>
+                    )}
                   </div>
                   <div>
-                    <label className={labelClass}>
-                      Date de fin du bail <span className="text-red-500">*</span>
+                    <label style={labelStyle}>
+                      Date de fin du bail <span style={{ color: M.danger }}>*</span>
                     </label>
                     <input
                       type="date"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
-                      className={inputClass(!!errors.endDate)}
+                      style={inputStyle(!!errors.endDate)}
                     />
-                    {errors.endDate && <p className="text-xs text-red-500 mt-1">{errors.endDate}</p>}
+                    {errors.endDate && (
+                      <p style={{ fontSize: 11, color: M.danger, marginTop: 4 }}>{errors.endDate}</p>
+                    )}
                   </div>
                 </div>
 
                 {/* Financial */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6" style={{ marginBottom: 24 }}>
                   <div>
-                    <label className={labelClass}>
-                      Loyer mensuel (€) <span className="text-red-500">*</span>
+                    <label style={labelStyle}>
+                      Loyer mensuel (€) <span style={{ color: M.danger }}>*</span>
                     </label>
                     <input
                       type="number"
@@ -492,42 +630,44 @@ export default function CreateContract() {
                       value={monthlyRent}
                       onChange={(e) => setMonthlyRent(e.target.value)}
                       placeholder="800"
-                      className={inputClass(!!errors.monthlyRent)}
+                      style={inputStyle(!!errors.monthlyRent)}
                     />
-                    {errors.monthlyRent && <p className="text-xs text-red-500 mt-1">{errors.monthlyRent}</p>}
+                    {errors.monthlyRent && (
+                      <p style={{ fontSize: 11, color: M.danger, marginTop: 4 }}>{errors.monthlyRent}</p>
+                    )}
                   </div>
                   <div>
-                    <label className={labelClass}>Charges (€)</label>
+                    <label style={labelStyle}>Charges (€)</label>
                     <input
                       type="number"
                       step="0.01"
                       value={charges}
                       onChange={(e) => setCharges(e.target.value)}
                       placeholder="50"
-                      className={inputClass()}
+                      style={inputStyle()}
                     />
                   </div>
                   <div>
-                    <label className={labelClass}>Dépôt de garantie (€)</label>
+                    <label style={labelStyle}>Dépôt de garantie (€)</label>
                     <input
                       type="number"
                       step="0.01"
                       value={deposit}
                       onChange={(e) => setDeposit(e.target.value)}
                       placeholder="800"
-                      className={inputClass()}
+                      style={inputStyle()}
                     />
                   </div>
                 </div>
 
                 {/* Payment Method */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={{ marginBottom: 24 }}>
                   <div>
-                    <label className={labelClass}>Modalité de paiement</label>
+                    <label style={labelStyle}>Modalité de paiement</label>
                     <select
                       value={paymentMethod}
                       onChange={(e) => setPaymentMethod(e.target.value)}
-                      className={inputClass()}
+                      style={inputStyle()}
                     >
                       <option value="virement">Virement bancaire</option>
                       <option value="prelevement">Prélèvement automatique</option>
@@ -536,11 +676,11 @@ export default function CreateContract() {
                     </select>
                   </div>
                   <div>
-                    <label className={labelClass}>Jour de paiement</label>
+                    <label style={labelStyle}>Jour de paiement</label>
                     <select
                       value={paymentDay}
                       onChange={(e) => setPaymentDay(e.target.value)}
-                      className={inputClass()}
+                      style={inputStyle()}
                     >
                       {[1, 5, 10, 15].map((d) => (
                         <option key={d} value={d.toString()}>
@@ -553,13 +693,16 @@ export default function CreateContract() {
 
                 {/* Total Preview */}
                 {monthlyRent && (
-                  <div className="bg-[#eff6ff] rounded-xl p-4 border border-[#bfdbfe]">
-                    <p className="text-sm text-[#3b82f6]">
-                      <span className="font-semibold text-[#1d1d1f]">Total mensuel : </span>
-                      <span className="font-bold">
+                  <div style={{
+                    background: M.caramelLight, border: `1px solid ${M.caramel}`,
+                    borderRadius: 8, padding: '12px 16px',
+                  }}>
+                    <p style={{ fontSize: 13, color: M.inkMid }}>
+                      <span style={{ fontWeight: 600, color: M.ink }}>Total mensuel : </span>
+                      <span style={{ fontWeight: 700, color: M.caramel, fontSize: 15 }}>
                         {(parseFloat(monthlyRent || '0') + parseFloat(charges || '0')).toFixed(2)} €
                       </span>
-                      <span className="text-[#515154]">
+                      <span style={{ color: M.inkMid }}>
                         {' '}(loyer {monthlyRent} €{charges ? ` + charges ${charges} €` : ''})
                       </span>
                     </p>
@@ -570,49 +713,64 @@ export default function CreateContract() {
 
             {/* Step 3: Clauses */}
             {step === 3 && (
-              <div className="bg-white rounded-2xl border border-[#d2d2d7] p-6" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)' }}>
-                <h2 className="text-xl font-semibold text-[#1d1d1f] mb-2">
-                  Étape 3 : Clauses du contrat
+              <div style={cardStyle}>
+                <h2 style={{
+                  fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
+                  fontSize: 24, color: M.ink, marginBottom: 8,
+                }}>
+                  Étape 3 — Clauses du contrat
                 </h2>
-                <p className="text-sm text-[#86868b] mb-6">
+                <p style={{ fontSize: 13, color: M.inkFaint, marginBottom: 24 }}>
                   Les clauses standard de la Loi ALUR sont activées par défaut. Vous pouvez les désactiver ou ajouter des clauses personnalisées.
                 </p>
 
                 {/* Standard Clauses */}
-                <div className="space-y-3 mb-8">
+                <div className="space-y-3" style={{ marginBottom: 32 }}>
                   {clauses.map((clause) => (
                     <div
                       key={clause.id}
-                      className={`border rounded-xl p-4 transition-all ${
-                        clause.enabled
-                          ? 'border-[#bfdbfe] bg-[#f8faff]'
-                          : 'border-[#d2d2d7] bg-[#f5f5f7] opacity-60'
-                      }`}
+                      style={{
+                        border: `1px solid ${clause.enabled ? M.tenantBorder : M.border}`,
+                        borderRadius: 8, padding: '14px 16px',
+                        background: clause.enabled ? M.tenantLight : M.muted,
+                        opacity: clause.enabled ? 1 : 0.6,
+                        transition: 'all 0.15s',
+                      }}
                     >
                       <div className="flex items-start gap-3">
                         <input
                           type="checkbox"
                           checked={clause.enabled}
                           onChange={() => toggleClause(clause.id)}
-                          className="mt-1 h-4 w-4 text-[#3b82f6] rounded border-[#d2d2d7] focus:ring-[rgba(59,130,246,0.2)]"
+                          style={{ marginTop: 3 }}
                         />
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <h4 className="font-medium text-[#1d1d1f]">{clause.title}</h4>
+                            <h4 style={{ fontWeight: 600, fontSize: 13, color: M.ink }}>{clause.title}</h4>
                             {clause.isCustom && (
-                              <span className="text-xs bg-[#eff6ff] text-[#3b82f6] border border-[#bfdbfe] px-2 py-0.5 rounded-full">
+                              <span style={{
+                                fontSize: 10, fontWeight: 600, fontFamily: M.body,
+                                background: M.caramelLight, color: M.caramel,
+                                border: `1px solid ${M.caramel}`, borderRadius: 20,
+                                padding: '2px 8px',
+                              }}>
                                 Personnalisée
                               </span>
                             )}
                           </div>
-                          <p className="text-sm text-[#515154] mt-1">{clause.description}</p>
+                          <p style={{ fontSize: 12, color: M.inkMid, marginTop: 4 }}>{clause.description}</p>
                         </div>
                         {clause.isCustom && (
                           <button
                             onClick={() => removeCustomClause(clause.id)}
-                            className="p-1 text-[#86868b] hover:text-red-500 transition-colors"
+                            style={{
+                              padding: 4, background: 'none', border: 'none',
+                              cursor: 'pointer', color: M.inkFaint,
+                            }}
+                            onMouseEnter={e => (e.currentTarget.style.color = M.danger)}
+                            onMouseLeave={e => (e.currentTarget.style.color = M.inkFaint)}
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 style={{ width: 14, height: 14 }} />
                           </button>
                         )}
                       </div>
@@ -621,9 +779,15 @@ export default function CreateContract() {
                 </div>
 
                 {/* Add Custom Clause */}
-                <div className="border-2 border-dashed border-[#d2d2d7] rounded-xl p-4 mb-6">
-                  <h4 className="font-medium text-[#1d1d1f] mb-3 flex items-center gap-2">
-                    <Plus className="w-4 h-4 text-[#3b82f6]" />
+                <div style={{
+                  border: `2px dashed ${M.border}`, borderRadius: 10,
+                  padding: '16px', marginBottom: 24,
+                }}>
+                  <h4 style={{
+                    fontWeight: 600, fontSize: 13, color: M.ink, marginBottom: 12,
+                    display: 'flex', alignItems: 'center', gap: 8,
+                  }}>
+                    <Plus style={{ width: 14, height: 14, color: M.owner }} />
                     Ajouter une clause personnalisée
                   </h4>
                   <div className="space-y-3">
@@ -632,40 +796,43 @@ export default function CreateContract() {
                       value={customClauseTitle}
                       onChange={(e) => setCustomClauseTitle(e.target.value)}
                       placeholder="Titre de la clause"
-                      className={inputClass()}
+                      style={inputStyle()}
                     />
                     <textarea
                       value={customClauseDesc}
                       onChange={(e) => setCustomClauseDesc(e.target.value)}
                       placeholder="Description de la clause..."
-                      className={`${inputClass()} min-h-[80px] resize-none`}
+                      style={{ ...inputStyle(), minHeight: 80, resize: 'none' }}
                       rows={3}
                     />
                     <button
                       type="button"
                       onClick={addCustomClause}
                       disabled={!customClauseTitle.trim() || !customClauseDesc.trim()}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-[#d2d2d7] text-[#515154] rounded-xl text-sm font-medium hover:bg-[#f5f5f7] disabled:opacity-40 transition-colors"
+                      style={{
+                        ...btnGhost, padding: '8px 16px', fontSize: 12,
+                        opacity: !customClauseTitle.trim() || !customClauseDesc.trim() ? 0.4 : 1,
+                      }}
                     >
-                      <Plus className="w-4 h-4" />
+                      <Plus style={{ width: 13, height: 13 }} />
                       Ajouter
                     </button>
                   </div>
                 </div>
 
                 {/* Additional Terms */}
-                <div className="mb-6">
-                  <label className={labelClass}>Conditions particulières (texte libre)</label>
+                <div style={{ marginBottom: 24 }}>
+                  <label style={labelStyle}>Conditions particulières (texte libre)</label>
                   <textarea
                     value={terms}
                     onChange={(e) => setTerms(e.target.value)}
                     placeholder="Conditions supplémentaires spécifiques à ce bail..."
-                    className={`${inputClass()} min-h-[100px] resize-none`}
+                    style={{ ...inputStyle(), minHeight: 100, resize: 'none' }}
                     rows={4}
                   />
-                  <div className="mt-2">
-                    <p className="text-xs text-[#86868b] mb-2">Exemples de conditions particulières :</p>
-                    <div className="flex flex-wrap gap-1.5">
+                  <div style={{ marginTop: 10 }}>
+                    <p style={{ fontSize: 11, color: M.inkFaint, marginBottom: 8 }}>Exemples de conditions particulières :</p>
+                    <div className="flex flex-wrap gap-2">
                       {[
                         "Le locataire s'engage à souscrire un contrat d'entretien annuel de la chaudière.",
                         'Les animaux domestiques sont autorisés sous réserve qu\'ils ne causent aucun trouble de voisinage ni dégradation.',
@@ -678,9 +845,24 @@ export default function CreateContract() {
                           key={example}
                           type="button"
                           onClick={() => setTerms(prev => prev ? `${prev}\n${example}` : example)}
-                          className="text-xs px-2.5 py-1 rounded-full bg-[#f0f0f2] text-[#515154] hover:bg-[#eff6ff] hover:text-[#3b82f6] transition-colors"
+                          style={{
+                            fontSize: 11, padding: '4px 10px', borderRadius: 20,
+                            background: M.muted, color: M.inkMid,
+                            border: `1px solid ${M.border}`, cursor: 'pointer',
+                            fontFamily: M.body,
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.background = M.caramelLight
+                            e.currentTarget.style.color = M.caramel
+                            e.currentTarget.style.borderColor = M.caramel
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.background = M.muted
+                            e.currentTarget.style.color = M.inkMid
+                            e.currentTarget.style.borderColor = M.border
+                          }}
                         >
-                          + {example.slice(0, 50)}...
+                          + {example.slice(0, 50)}…
                         </button>
                       ))}
                     </div>
@@ -698,13 +880,13 @@ export default function CreateContract() {
                         <button
                           type="button"
                           disabled={loading}
-                          className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-[#d2d2d7] text-[#515154] rounded-xl text-sm font-semibold hover:bg-[#f5f5f7] disabled:opacity-50 transition-colors"
+                          style={{ ...btnGhost, opacity: loading ? 0.5 : 1 }}
                         >
                           {loading ? (
                             'Génération...'
                           ) : (
                             <>
-                              <Eye className="w-4 h-4" />
+                              <Eye style={{ width: 14, height: 14 }} />
                               Prévisualiser le PDF
                             </>
                           )}
@@ -717,13 +899,15 @@ export default function CreateContract() {
             )}
 
             {/* Navigation Buttons */}
-            <div className="flex items-center justify-between mt-6">
+            <div className="flex items-center justify-between" style={{ marginTop: 24 }}>
               <button
                 type="button"
                 onClick={step === 1 ? () => navigate('/contracts') : goPrev}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-[#d2d2d7] text-[#515154] rounded-xl text-sm font-semibold hover:bg-[#f5f5f7] transition-colors"
+                style={btnGhost}
+                onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
+                onMouseLeave={e => (e.currentTarget.style.background = M.surface)}
               >
-                <ArrowLeft className="w-4 h-4" />
+                <ArrowLeft style={{ width: 15, height: 15 }} />
                 {step === 1 ? 'Annuler' : 'Précédent'}
               </button>
 
@@ -731,26 +915,32 @@ export default function CreateContract() {
                 <button
                   type="button"
                   onClick={goNext}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#3b82f6] text-white rounded-xl text-sm font-semibold hover:bg-[#2563eb] transition-colors"
+                  style={btnPrimary}
+                  onMouseEnter={e => (e.currentTarget.style.opacity = '0.88')}
+                  onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
                 >
                   Suivant
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight style={{ width: 15, height: 15 }} />
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={handleSubmit}
                   disabled={isLoading}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#3b82f6] text-white rounded-xl text-sm font-semibold hover:bg-[#2563eb] disabled:opacity-50 transition-colors"
+                  style={{ ...btnPrimary, opacity: isLoading ? 0.5 : 1 }}
                 >
                   {isLoading ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <div style={{
+                        width: 14, height: 14, borderRadius: '50%',
+                        border: '2px solid rgba(255,255,255,0.3)',
+                        borderTopColor: '#ffffff',
+                      }} className="animate-spin" />
                       Création...
                     </>
                   ) : (
                     <>
-                      <Save className="w-4 h-4" />
+                      <Save style={{ width: 15, height: 15 }} />
                       Créer le contrat
                     </>
                   )}

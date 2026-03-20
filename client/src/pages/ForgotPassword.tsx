@@ -1,7 +1,28 @@
 import { useState, FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { Home, Mail, ArrowLeft, CheckCircle } from 'lucide-react'
+import { Mail, ArrowLeft } from 'lucide-react'
 import { authService } from '../services/auth.service'
+import { BailioLogo } from '../components/BailioLogo'
+
+const M = {
+  bg: '#fafaf8',
+  surface: '#ffffff',
+  ink: '#0d0c0a',
+  inkMid: '#5a5754',
+  inkFaint: '#9e9b96',
+  night: '#1a1a2e',
+  caramel: '#c4976a',
+  border: '#e4e1db',
+  inputBg: '#f8f7f4',
+  danger: '#9b1c1c',
+  dangerBg: '#fef2f2',
+  dangerBorder: '#fca5a5',
+  success: '#1b5e3b',
+  successBg: '#edf7f2',
+  successBorder: '#9fd4ba',
+  display: "'Cormorant Garamond', Georgia, serif",
+  body: "'DM Sans', system-ui, sans-serif",
+}
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('')
@@ -35,36 +56,64 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center p-4">
+    <div
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{ background: M.bg, fontFamily: M.body }}
+    >
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="w-9 h-9 bg-[#007AFF] rounded-xl flex items-center justify-center shadow-sm">
-              <Home className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-[#1d1d1f]" style={{ fontFamily: "'Plus Jakarta Sans', Inter, system-ui" }}>FOYER</span>
+          <Link to="/" className="inline-flex items-center gap-2.5 hover:opacity-80 transition-opacity" style={{ textDecoration: 'none' }}>
+            <BailioLogo size={34} />
+            <span style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: '26px', color: M.night, letterSpacing: '-0.02em', lineHeight: 1 }}>
+              Bailio
+            </span>
           </Link>
         </div>
 
-        <div className="bg-white rounded-2xl p-8 shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-[#d2d2d7]">
+        <div
+          className="p-8"
+          style={{
+            background: M.surface,
+            border: `1px solid ${M.border}`,
+            borderRadius: '16px',
+            boxShadow: '0 4px 24px rgba(13,12,10,0.08)',
+          }}
+        >
           {isSent ? (
             <div className="text-center">
-              <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
-                <CheckCircle className="w-9 h-9 text-emerald-500" />
+              <div
+                className="w-16 h-16 flex items-center justify-center mx-auto mb-6"
+                style={{ background: M.successBg, border: `1px solid ${M.successBorder}`, borderRadius: '12px' }}
+              >
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={M.success} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
               </div>
-              <h2 className="text-xl font-bold text-[#1d1d1f] mb-2" style={{ fontFamily: "'Plus Jakarta Sans', Inter, system-ui" }}>
+              <h2
+                className="mb-3"
+                style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: '26px', color: M.ink }}
+              >
                 Email envoyé !
               </h2>
-              <p className="text-[#515154] text-sm mb-2">
-                Si un compte existe avec l'adresse <span className="font-semibold text-[#1d1d1f]">{email}</span>, vous recevrez un lien de réinitialisation.
+              <p className="mb-2" style={{ fontFamily: M.body, fontSize: '14px', color: M.inkMid, lineHeight: '1.6' }}>
+                Si un compte existe avec l'adresse{' '}
+                <span style={{ fontWeight: 600, color: M.ink }}>{email}</span>, vous recevrez un lien de réinitialisation.
               </p>
-              <p className="text-xs text-[#86868b] mb-6">
+              <p className="mb-6" style={{ fontFamily: M.body, fontSize: '13px', color: M.inkFaint }}>
                 Pensez à vérifier vos spams si vous ne recevez rien.
               </p>
               <Link
                 to="/login"
-                className="block w-full bg-[#007AFF] text-white hover:bg-[#0066d6] rounded-xl font-semibold py-2.5 text-center transition-colors"
+                className="block w-full text-center py-2.5 transition-opacity hover:opacity-90"
+                style={{
+                  background: M.night,
+                  color: '#ffffff',
+                  borderRadius: '8px',
+                  fontFamily: M.body,
+                  fontSize: '14px',
+                  fontWeight: 500,
+                }}
               >
                 Retour à la connexion
               </Link>
@@ -72,27 +121,40 @@ export default function ForgotPassword() {
           ) : (
             <>
               <div className="mb-6">
-                <h1 className="text-2xl font-bold text-[#1d1d1f]" style={{ fontFamily: "'Plus Jakarta Sans', Inter, system-ui" }}>
+                <h1
+                  className="mb-2"
+                  style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: '32px', color: M.ink, lineHeight: '1.1' }}
+                >
                   Mot de passe oublié ?
                 </h1>
-                <p className="text-[#515154] text-sm mt-1">
+                <p style={{ fontFamily: M.body, fontSize: '14px', color: M.inkMid, lineHeight: '1.6' }}>
                   Entrez votre email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
                 </p>
               </div>
 
               {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
-                  <p className="text-sm text-red-800">{error}</p>
+                <div
+                  className="mb-4 p-3"
+                  style={{ background: M.dangerBg, border: `1px solid ${M.dangerBorder}`, borderRadius: '8px' }}
+                >
+                  <p style={{ fontFamily: M.body, fontSize: '13px', color: M.danger }}>{error}</p>
                 </div>
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label htmlFor="email" className="block text-sm font-semibold text-[#1d1d1f] mb-1.5">
+                  <label
+                    htmlFor="email"
+                    className="block mb-1.5"
+                    style={{ fontFamily: M.body, fontSize: '13px', fontWeight: 500, color: M.ink }}
+                  >
                     Adresse email
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868b]" />
+                    <Mail
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
+                      style={{ color: M.inkFaint }}
+                    />
                     <input
                       id="email"
                       type="email"
@@ -102,17 +164,37 @@ export default function ForgotPassword() {
                         if (error) setError('')
                       }}
                       placeholder="votre@email.com"
-                      className="w-full bg-white border border-[#d2d2d7] rounded-xl pl-10 pr-4 py-2.5 text-[#1d1d1f] placeholder-[#86868b] focus:outline-none focus:border-[#007AFF] focus:ring-2 focus:ring-[rgba(0,122,255,0.12)] transition-all text-sm"
                       disabled={isLoading}
                       required
+                      className="w-full pl-10 pr-4 py-2.5 outline-none transition-all"
+                      style={{
+                        background: M.inputBg,
+                        border: `1px solid ${M.border}`,
+                        borderRadius: '8px',
+                        fontFamily: M.body,
+                        fontSize: '13px',
+                        color: M.ink,
+                      }}
+                      onFocus={(e) => { e.currentTarget.style.borderColor = M.night; e.currentTarget.style.boxShadow = `0 0 0 3px rgba(26,26,46,0.08)` }}
+                      onBlur={(e) => { e.currentTarget.style.borderColor = M.border; e.currentTarget.style.boxShadow = 'none' }}
                     />
                   </div>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full bg-[#007AFF] text-white hover:bg-[#0066d6] rounded-xl font-semibold py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isLoading}
+                  className="w-full py-2.5 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    background: M.night,
+                    color: '#ffffff',
+                    borderRadius: '8px',
+                    fontFamily: M.body,
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    border: 'none',
+                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                  }}
                 >
                   {isLoading ? (
                     <span className="flex items-center justify-center gap-2">
@@ -133,7 +215,8 @@ export default function ForgotPassword() {
           <div className="mt-6 text-center">
             <Link
               to="/login"
-              className="inline-flex items-center gap-2 text-sm text-[#515154] hover:text-[#1d1d1f] transition-colors"
+              className="inline-flex items-center gap-2 transition-colors hover:opacity-80"
+              style={{ fontFamily: M.body, fontSize: '13px', color: M.inkMid }}
             >
               <ArrowLeft className="w-4 h-4" />
               Retour à la connexion

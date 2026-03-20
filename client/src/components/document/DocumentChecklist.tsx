@@ -17,6 +17,26 @@ import {
   Shield,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { WatermarkedViewer } from './WatermarkedViewer'
+import { celebrateSmall } from '../../utils/celebrate'
+
+const M = {
+  ink: '#0d0c0a',
+  inkMid: '#5a5754',
+  inkFaint: '#9e9b96',
+  owner: '#1a3270',
+  ownerLight: '#eaf0fb',
+  ownerBorder: '#b8ccf0',
+  tenant: '#1b5e3b',
+  tenantLight: '#edf7f2',
+  tenantBorder: '#9fd4ba',
+  border: '#e4e1db',
+  borderMid: '#ccc9c3',
+  muted: '#f4f2ee',
+  surface: '#ffffff',
+  caramelBg: '#fdf5ec',
+  caramel: '#92400e',
+}
 
 interface CustomChecklistItem {
   category: string
@@ -30,14 +50,27 @@ interface DocumentChecklistProps {
   isOwner: boolean // current user is the contract owner
   requiredCategories?: string[] // if provided, only show these standard categories
   customItems?: CustomChecklistItem[] // extra uploadable items added by owner
+  contractRef?: string   // pour le filigrane
+  tenantName?: string    // pour le filigrane
+  tenantHasSigned?: boolean // accès owner aux docs locataire uniquement après signature
 }
 
-export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCategories, customItems }: DocumentChecklistProps) => {
+export const DocumentChecklist = ({
+  contractId, userRole, isOwner, requiredCategories, customItems,
+  contractRef = '', tenantName = 'Locataire', tenantHasSigned = false,
+}: DocumentChecklistProps) => {
   const { documents, isLoading, fetchDocuments, uploadDocument, deleteDocument, updateDocumentStatus } = useDocumentStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploadingCategory, setUploadingCategory] = useState<string | null>(null)
   const [rejectReason, setRejectReason] = useState('')
   const [rejectingDocId, setRejectingDocId] = useState<string | null>(null)
+  const [viewerDoc, setViewerDoc] = useState<ContractDocument | null>(null)
+  const [viewedDocIds, setViewedDocIds] = useState<Set<string>>(new Set())
+
+  const openViewer = (doc: ContractDocument) => {
+    setViewerDoc(doc)
+    setViewedDocIds(prev => new Set([...prev, doc.id]))
+  }
 
   useEffect(() => {
     fetchDocuments(contractId)
@@ -129,7 +162,8 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
   const handleValidate = async (docId: string) => {
     try {
       await updateDocumentStatus(docId, 'VALIDATED')
-      toast.success('Document valide')
+      toast.success('Document validé ✓')
+      celebrateSmall()
     } catch (error: any) {
       const message = error?.message || 'Erreur lors de la validation'
       toast.error(message)
@@ -152,12 +186,12 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
   }
 
   const statusIcon = (doc: ContractDocument | undefined) => {
-    if (!doc) return <Clock className="w-5 h-5 text-slate-300" />
+    if (!doc) return <Clock className="w-5 h-5" style={{ color: M.inkFaint }} />
     switch (doc.status) {
-      case 'UPLOADED': return <Clock className="w-5 h-5 text-blue-500" />
-      case 'VALIDATED': return <CheckCircle className="w-5 h-5 text-success-500" />
+      case 'UPLOADED': return <Clock className="w-5 h-5" style={{ color: M.owner }} />
+      case 'VALIDATED': return <CheckCircle className="w-5 h-5" style={{ color: M.tenant }} />
       case 'REJECTED': return <XCircle className="w-5 h-5 text-red-500" />
-      default: return <Clock className="w-5 h-5 text-slate-400" />
+      default: return <Clock className="w-5 h-5" style={{ color: M.inkFaint }} />
     }
   }
 
@@ -190,26 +224,40 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
 
       {/* Read-only indicator when owner views tenant docs */}
       {isOwner && userRole === 'TENANT' && (
-        <div className="flex items-center gap-2 p-3 bg-primary-50 border border-primary-200 rounded-xl text-sm text-primary-700">
-          <Eye className="w-4 h-4 shrink-0" />
-          <span>Mode lecture seule — Vous pouvez consulter et verifier les documents du locataire.</span>
+        <div
+          className="flex items-center gap-2 p-3 rounded-xl text-sm"
+          style={{
+            background: tenantHasSigned ? M.ownerLight : M.surface,
+            border: `1px solid ${tenantHasSigned ? M.ownerBorder : M.border}`,
+            color: tenantHasSigned ? M.owner : M.inkMid,
+          }}
+        >
+          <Shield className="w-4 h-4 shrink-0" />
+          <span>
+            {tenantHasSigned
+              ? 'Documents accessibles avec filigrane de protection — Le locataire a signé le contrat.'
+              : 'Les pièces justificatives seront accessibles après la signature du locataire.'}
+          </span>
         </div>
       )}
 
       {/* Progress bar */}
-      <div className="bg-white rounded-xl border p-4">
+      <div className="rounded-xl border p-4" style={{ background: M.surface, borderColor: M.border }}>
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-semibold text-slate-900">
+          <h3 className="text-sm font-semibold" style={{ color: M.ink }}>
             {userRole === 'OWNER' ? 'Documents proprietaire' : 'Documents locataire'}
           </h3>
-          <span className="text-sm text-slate-500">
+          <span className="text-sm" style={{ color: M.inkFaint }}>
             {completedCount}/{checklist.length} fournis
           </span>
         </div>
-        <div className="w-full bg-slate-200 rounded-full h-2">
+        <div className="w-full rounded-full h-2" style={{ background: M.border }}>
           <div
-            className="bg-primary-600 h-2 rounded-full transition-all"
-            style={{ width: `${(completedCount / checklist.length) * 100}%` }}
+            className="h-2 rounded-full transition-all"
+            style={{
+              width: `${(completedCount / checklist.length) * 100}%`,
+              background: M.tenant,
+            }}
           />
         </div>
       </div>
@@ -221,9 +269,12 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
           return (
             <div
               key={item.category}
-              className={`bg-white rounded-xl border p-4 ${
-                doc?.status === 'REJECTED' ? 'border-red-200 bg-red-50' : ''
-              }`}
+              className="rounded-xl border p-4"
+              style={
+                doc?.status === 'REJECTED'
+                  ? { background: '#fef2f2', borderColor: '#fca5a5' }
+                  : { background: M.surface, borderColor: M.border }
+              }
             >
               <div className="flex items-start gap-3">
                 {/* Status icon */}
@@ -232,28 +283,46 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-medium text-slate-900">
+                    <p className="text-sm font-medium" style={{ color: M.ink }}>
                       {item.label}
                     </p>
+                    {doc?.fromDossier && doc.status !== 'REJECTED' && (
+                      <span
+                        className="text-xs font-medium px-1.5 py-0.5 rounded"
+                        style={{ background: M.tenantLight, color: M.tenant, border: `1px solid ${M.tenantBorder}` }}
+                      >
+                        Importé du dossier
+                      </span>
+                    )}
                     {item.category.startsWith('CUSTOM_') && (
-                      <span className="text-xs bg-purple-100 text-purple-700 font-medium px-1.5 py-0.5 rounded">Demande perso.</span>
+                      <span
+                        className="text-xs font-medium px-1.5 py-0.5 rounded"
+                        style={{ background: M.caramelBg, color: M.caramel }}
+                      >
+                        Demande perso.
+                      </span>
                     )}
                     {item.required && (
                       <span className="text-xs text-red-500 font-medium">Obligatoire</span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-500 mt-0.5">{item.description}</p>
+                  <p className="text-xs mt-0.5" style={{ color: M.inkFaint }}>{item.description}</p>
 
                   {/* Document info */}
                   {doc && (
                     <div className="mt-2 flex items-center gap-2 text-xs">
-                      <FileText className="w-3.5 h-3.5 text-slate-400" />
-                      <span className="text-slate-600 dark:text-slate-400 truncate">{doc.fileName}</span>
-                      <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
-                        doc.status === 'VALIDATED' ? 'bg-success-100 text-success-700' :
-                        doc.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
-                        'bg-primary-100 text-primary-700'
-                      }`}>
+                      <FileText className="w-3.5 h-3.5" style={{ color: M.inkFaint }} />
+                      <span className="truncate" style={{ color: M.inkMid }}>{doc.fileName}</span>
+                      <span
+                        className="px-1.5 py-0.5 rounded text-xs font-medium"
+                        style={
+                          doc.status === 'VALIDATED'
+                            ? { background: M.tenantLight, color: M.tenant }
+                            : doc.status === 'REJECTED'
+                            ? { background: '#fef2f2', color: '#9b1c1c' }
+                            : { background: M.ownerLight, color: M.owner }
+                        }
+                      >
                         {statusLabel(doc)}
                       </span>
                     </div>
@@ -277,7 +346,16 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
                     <button
                       onClick={() => handleFileSelect(item.category)}
                       disabled={isLoading}
-                      className="p-2 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-primary-600 transition-colors"
+                      className="p-2 rounded-xl transition-colors"
+                      style={{ color: M.inkMid }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = M.tenantLight
+                        e.currentTarget.style.color = M.tenant
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent'
+                        e.currentTarget.style.color = M.inkMid
+                      }}
                       title="Telecharger"
                     >
                       <Upload className="w-4 h-4" />
@@ -286,15 +364,53 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
 
                   {/* View button */}
                   {doc && (
-                    <a
-                      href={doc.fileUrl.startsWith('http') ? doc.fileUrl : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}${doc.fileUrl}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-primary-600 transition-colors"
-                      title="Voir"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </a>
+                    isOwner && item.role === 'TENANT' ? (
+                      // Propriétaire : accès avec filigrane uniquement si locataire a signé
+                      tenantHasSigned ? (
+                        <button
+                          onClick={() => openViewer(doc)}
+                          className="p-2 rounded-xl transition-colors"
+                          style={{ color: viewedDocIds.has(doc.id) ? M.owner : M.inkMid }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = M.ownerLight
+                            e.currentTarget.style.color = M.owner
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'transparent'
+                            e.currentTarget.style.color = viewedDocIds.has(doc.id) ? M.owner : M.inkMid
+                          }}
+                          title={viewedDocIds.has(doc.id) ? 'Consulter à nouveau' : 'Consulter avec filigrane (requis avant validation)'}
+                        >
+                          <Shield className="w-4 h-4" />
+                        </button>
+                      ) : (
+                        <span
+                          title="Disponible après signature du locataire"
+                          style={{ padding: 8, color: M.inkFaint, cursor: 'default', display: 'flex', alignItems: 'center' }}
+                        >
+                          <Eye className="w-4 h-4 opacity-30" />
+                        </span>
+                      )
+                    ) : (
+                      <a
+                        href={doc.fileUrl.startsWith('http') ? doc.fileUrl : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}${doc.fileUrl}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 rounded-xl transition-colors"
+                        style={{ color: M.inkMid }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = M.tenantLight
+                          e.currentTarget.style.color = M.tenant
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent'
+                          e.currentTarget.style.color = M.inkMid
+                        }}
+                        title="Voir"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </a>
+                    )
                   )}
 
                   {/* Delete button: only the uploader's role can delete (owner can't delete tenant docs) */}
@@ -303,27 +419,64 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
                   ) && (
                     <button
                       onClick={() => handleDelete(doc.id)}
-                      className="p-2 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-red-600 transition-colors"
+                      className="p-2 rounded-xl transition-colors"
+                      style={{ color: M.inkMid }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#fef2f2'
+                        e.currentTarget.style.color = '#dc2626'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent'
+                        e.currentTarget.style.color = M.inkMid
+                      }}
                       title="Supprimer"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   )}
 
-                  {/* Validate / Reject buttons (owner only, for tenant docs) */}
-                  {isOwner && doc && doc.status === 'UPLOADED' && item.role === 'TENANT' && (
+                  {/* Validate / Reject buttons (owner only, for tenant docs, only after viewing) */}
+                  {isOwner && doc && doc.status === 'UPLOADED' && item.role === 'TENANT' && tenantHasSigned && (
                     <>
                       <button
-                        onClick={() => handleValidate(doc.id)}
-                        className="p-2 rounded-xl hover:bg-success-50 text-slate-500 hover:text-success-600 transition-colors"
-                        title="Valider"
+                        onClick={() => viewedDocIds.has(doc.id) && handleValidate(doc.id)}
+                        disabled={!viewedDocIds.has(doc.id)}
+                        className="p-2 rounded-xl transition-colors"
+                        style={{
+                          color: viewedDocIds.has(doc.id) ? M.tenant : M.inkFaint,
+                          cursor: viewedDocIds.has(doc.id) ? 'pointer' : 'not-allowed',
+                          opacity: viewedDocIds.has(doc.id) ? 1 : 0.4,
+                        }}
+                        onMouseEnter={(e) => {
+                          if (viewedDocIds.has(doc.id)) e.currentTarget.style.background = M.tenantLight
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent'
+                        }}
+                        title={viewedDocIds.has(doc.id) ? 'Valider ce document' : 'Consultez le document avant de pouvoir le valider'}
                       >
-                        <Shield className="w-4 h-4" />
+                        <CheckCircle className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => setRejectingDocId(doc.id)}
-                        className="p-2 rounded-xl hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors"
-                        title="Refuser"
+                        onClick={() => viewedDocIds.has(doc.id) && setRejectingDocId(doc.id)}
+                        disabled={!viewedDocIds.has(doc.id)}
+                        className="p-2 rounded-xl transition-colors"
+                        style={{
+                          color: M.inkMid,
+                          cursor: viewedDocIds.has(doc.id) ? 'pointer' : 'not-allowed',
+                          opacity: viewedDocIds.has(doc.id) ? 1 : 0.4,
+                        }}
+                        onMouseEnter={(e) => {
+                          if (viewedDocIds.has(doc.id)) {
+                            e.currentTarget.style.background = '#fef2f2'
+                            e.currentTarget.style.color = '#dc2626'
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent'
+                          e.currentTarget.style.color = M.inkMid
+                        }}
+                        title={viewedDocIds.has(doc.id) ? 'Refuser' : 'Consultez le document avant de pouvoir le refuser'}
                       >
                         <XCircle className="w-4 h-4" />
                       </button>
@@ -336,16 +489,47 @@ export const DocumentChecklist = ({ contractId, userRole, isOwner, requiredCateg
         })}
       </div>
 
+      {/* Watermarked viewer modal */}
+      {viewerDoc && (
+        <WatermarkedViewer
+          fileUrl={viewerDoc.fileUrl}
+          fileName={viewerDoc.fileName}
+          contractRef={contractRef}
+          tenantName={tenantName}
+          onClose={() => setViewerDoc(null)}
+          actions={isOwner && viewerDoc.status === 'UPLOADED' ? {
+            onValidate: async () => {
+              try {
+                await updateDocumentStatus(viewerDoc.id, 'VALIDATED')
+                toast.success('Document validé')
+              } catch {
+                toast.error('Erreur lors de la validation')
+              }
+            },
+            onReject: async (reason: string) => {
+              try {
+                await updateDocumentStatus(viewerDoc.id, 'REJECTED', reason)
+                toast.success('Document refusé')
+              } catch {
+                toast.error('Erreur lors du refus')
+              }
+            },
+            docLabel: viewerDoc.fileName,
+          } : undefined}
+        />
+      )}
+
       {/* Reject modal */}
       {rejectingDocId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-            <h3 className="text-lg font-bold text-slate-900 mb-4">Refuser le document</h3>
+          <div className="rounded-2xl shadow-2xl max-w-md w-full p-6" style={{ background: M.surface }}>
+            <h3 className="text-lg font-bold mb-4" style={{ color: M.ink }}>Refuser le document</h3>
             <textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               placeholder="Motif du refus (obligatoire)..."
-              className="w-full border rounded-xl p-3 text-sm mb-4 h-24 resize-none"
+              className="w-full rounded-xl p-3 text-sm mb-4 h-24 resize-none"
+              style={{ border: `1px solid ${M.border}`, outline: 'none', color: M.ink }}
             />
             <div className="flex gap-3 justify-end">
               <button

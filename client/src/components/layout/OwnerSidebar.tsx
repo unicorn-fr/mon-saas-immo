@@ -13,6 +13,7 @@ import { useMessages } from '../../hooks/useMessages'
 import { useAuth } from '../../hooks/useAuth'
 import { applicationService } from '../../services/application.service'
 import { useNavigate } from 'react-router-dom'
+import { BailioLogo } from '../BailioLogo'
 
 const S = {
   bg:          '#ffffff',
@@ -110,18 +111,21 @@ export function OwnerSidebar() {
       {/* Logo */}
       <div className="px-5 pt-5 pb-4 flex-shrink-0">
         <Link to="/" onClick={closeMobile} className="hover:opacity-75 transition-opacity block">
-          <span style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: '28px',
-            fontWeight: 700,
-            fontStyle: 'italic',
-            color: S.owner,
-            letterSpacing: '-0.02em',
-            lineHeight: 1,
-          }}>
-            Bailio
-          </span>
-          <p className="text-[10px] mt-1" style={{ color: S.inkFaint, fontFamily: 'var(--font-body)' }}>Espace propriétaire</p>
+          <div className="flex items-center gap-2 mb-1">
+            <BailioLogo size={28} />
+            <span style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: '24px',
+              fontWeight: 700,
+              fontStyle: 'italic',
+              color: S.owner,
+              letterSpacing: '-0.02em',
+              lineHeight: 1,
+            }}>
+              Bailio
+            </span>
+          </div>
+          <p className="text-[10px]" style={{ color: S.inkFaint, fontFamily: 'var(--font-body)' }}>Espace propriétaire</p>
         </Link>
       </div>
 

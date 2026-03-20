@@ -51,7 +51,7 @@ function fusionLabel(fusion: MultiSignalResult['signals']['fusion'], bonus: numb
   switch (fusion) {
     case 'certain':          return { text: 'Certifié (token MRZ / officiel)',  color: '#10b981' }
     case 'consensus':        return { text: `Consensus · +${bonus} pts`,        color: '#3b82f6' }
-    case 'text_dominant':    return { text: 'Texte dominant',                    color: '#007AFF' }
+    case 'text_dominant':    return { text: 'Texte dominant',                    color: '#1a1a2e' }
     case 'filename_override':return { text: 'Fichier override (texte < 40%)',    color: '#f59e0b' }
     case 'unknown':          return { text: 'Non reconnu',                       color: '#86868b' }
   }

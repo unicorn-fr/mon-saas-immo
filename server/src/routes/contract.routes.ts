@@ -92,17 +92,15 @@ router.delete(
   contractController.deleteDocument.bind(contractController)
 )
 
-// PUT /api/v1/contracts/:id/documents/:docId/validate - Validate document (admin only)
+// PUT /api/v1/contracts/:id/documents/:docId/validate - Validate document (owner or admin)
 router.put(
   '/:id/documents/:docId/validate',
-  authorize('ADMIN'),
   contractController.validateDocument.bind(contractController)
 )
 
-// PUT /api/v1/contracts/:id/documents/:docId/reject - Reject document (admin only)
+// PUT /api/v1/contracts/:id/documents/:docId/reject - Reject document (owner or admin)
 router.put(
   '/:id/documents/:docId/reject',
-  authorize('ADMIN'),
   contractController.rejectDocument.bind(contractController)
 )
 
