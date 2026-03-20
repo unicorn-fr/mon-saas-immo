@@ -124,13 +124,34 @@ class DossierService {
     if (!requester || requester.role !== 'OWNER') throw new Error('Accès refusé')
     if (requester.isBanned) throw new Error('Compte suspendu — accès refusé')
 
-    // ── CRITICAL: verify tenant granted access to this specific owner ──────
+    // ── Vérification d'accès : share OU candidature active OU contrat actif ──
     const share = await prisma.dossierShare.findUnique({
       where: { tenantId_ownerId: { tenantId, ownerId: requesterId } },
     })
 
-    if (!share || share.revokedAt || share.expiresAt < new Date()) {
-      throw new Error('SHARE_REQUIRED: Le locataire n\'a pas partagé son dossier avec vous')
+    const shareValid = share && !share.revokedAt && share.expiresAt >= new Date()
+
+    if (!shareValid) {
+      // Fallback 1 : candidature active du locataire sur un bien du propriétaire
+      const activeApp = await prisma.application.findFirst({
+        where: {
+          tenantId,
+          status: { not: 'WITHDRAWN' },
+          property: { ownerId: requesterId },
+        },
+      })
+      // Fallback 2 : contrat (y compris brouillon) entre les deux parties
+      const activeContract = !activeApp && await prisma.contract.findFirst({
+        where: {
+          tenantId,
+          ownerId: requesterId,
+          status: { in: ['DRAFT', 'SENT', 'SIGNED_TENANT', 'SIGNED_OWNER', 'COMPLETED', 'ACTIVE'] },
+        },
+      })
+
+      if (!activeApp && !activeContract) {
+        throw new Error('SHARE_REQUIRED: Le locataire n\'a pas partagé son dossier avec vous')
+      }
     }
 
     // Fetch tenant basic info + documents

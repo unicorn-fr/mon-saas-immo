@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { ConversationList } from '../components/message/ConversationList'
 import { ChatWindow } from '../components/message/ChatWindow'
 import { CreateLeaseModal } from '../components/message/CreateLeaseModal'
+import { ContractActivityFeed } from '../components/message/ContractActivityFeed'
 import { Conversation } from '../types/message.types'
-import { MessageSquare, FolderOpen, Home } from 'lucide-react'
+import { MessageSquare, FolderOpen, Home, FileText } from 'lucide-react'
 import { Layout } from '../components/layout/Layout'
 import { useAuth } from '../hooks/useAuth'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 const M = {
   ink:      '#0d0c0a',
@@ -26,6 +27,8 @@ const M = {
 export default function Messages() {
   const { user, isOwner } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const openWithUserId: string | undefined = (location.state as any)?.openWithUserId
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
   const [isMobileView, setIsMobileView] = useState(false)
   const [showLeaseModal, setShowLeaseModal] = useState(false)
@@ -69,6 +72,7 @@ export default function Messages() {
           <ConversationList
             selectedConversationId={selectedConversation?.id || null}
             onConversationSelect={handleConversationSelect}
+            autoSelectUserId={openWithUserId}
           />
         </div>
 
@@ -78,7 +82,43 @@ export default function Messages() {
           style={{ background: '#fafaf8' }}
         >
           {selectedConversation ? (
-            <ChatWindow conversation={selectedConversation} onBack={handleBack} />
+            <div className="flex flex-col h-full overflow-hidden">
+              {/* Owner CTA bar — visible on all screen sizes */}
+              {isOwner && otherUserId && (
+                <div
+                  className="flex items-center justify-between flex-shrink-0 xl:hidden"
+                  style={{
+                    padding: '8px 16px',
+                    background: M.surface,
+                    borderBottom: `1px solid ${M.border}`,
+                  }}
+                >
+                  <p style={{ fontSize: 12, color: M.inkFaint, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+                    Vous discutez avec{' '}
+                    <span style={{ color: M.ink, fontWeight: 500 }}>
+                      {otherUser?.firstName} {otherUser?.lastName}
+                    </span>
+                  </p>
+                  <button
+                    onClick={() => setShowLeaseModal(true)}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      padding: '6px 12px', borderRadius: 7,
+                      background: M.night, color: '#ffffff',
+                      fontFamily: "'DM Sans', system-ui, sans-serif",
+                      fontWeight: 500, fontSize: 12,
+                      border: 'none', cursor: 'pointer',
+                    }}
+                  >
+                    <FileText style={{ width: 12, height: 12 }} />
+                    Créer un contrat
+                  </button>
+                </div>
+              )}
+              <div className="flex-1 overflow-hidden">
+                <ChatWindow conversation={selectedConversation} onBack={handleBack} />
+              </div>
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center w-full h-full gap-5">
               <div
@@ -181,14 +221,14 @@ export default function Messages() {
               </div>
             </div>
 
-            {/* Info section */}
-            <div className="p-4 flex-1">
-              <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: M.inkFaint, marginBottom: 10 }}>
-                À propos
+            {/* Activité contrat */}
+            <div className="p-4 flex-1 overflow-y-auto">
+              <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: M.inkFaint, marginBottom: 12 }}>
+                Suivi du contrat
               </p>
-              <p style={{ fontSize: 12, color: M.inkMid, lineHeight: 1.6 }}>
-                Cette conversation est privée et sécurisée. Vos échanges restent confidentiels.
-              </p>
+              {otherUserId && (
+                <ContractActivityFeed otherUserId={otherUserId} />
+              )}
             </div>
 
             {/* Footer */}

@@ -6,6 +6,7 @@ import { ContractClause } from '../../types/contract.types'
 import { SignaturePad } from '../../components/contract/SignaturePad'
 import { ContractPDF } from '../../components/contract/ContractPDF'
 import { DocumentChecklist } from '../../components/document/DocumentChecklist'
+import { DossierReviewModal } from '../../components/document/DossierReviewModal'
 import { Layout } from '../../components/layout/Layout'
 import { PDFDownloadLink } from '@react-pdf/renderer'
 import {
@@ -38,9 +39,24 @@ import {
   OWNER_DOCUMENT_CHECKLIST,
   TENANT_DOCUMENT_CHECKLIST,
 } from '../../types/document.types'
+import { useDocumentStore } from '../../store/documentStore'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import toast from 'react-hot-toast'
+import { celebrateBig, celebrateSmall } from '../../utils/celebrate'
+
+const M = {
+  bg: '#fafaf8', surface: '#ffffff', muted: '#f4f2ee', inputBg: '#f8f7f4',
+  ink: '#0d0c0a', inkMid: '#5a5754', inkFaint: '#9e9b96',
+  night: '#1a1a2e', caramel: '#c4976a', caramelLight: '#fdf5ec',
+  owner: '#1a3270', ownerLight: '#eaf0fb', ownerBorder: '#b8ccf0',
+  tenant: '#1b5e3b', tenantLight: '#edf7f2', tenantBorder: '#9fd4ba',
+  border: '#e4e1db', borderMid: '#ccc9c3',
+  danger: '#9b1c1c', dangerBg: '#fef2f2',
+  warning: '#92400e', warningBg: '#fdf5ec',
+  display: "'Cormorant Garamond', Georgia, serif",
+  body: "'DM Sans', system-ui, sans-serif",
+}
 
 // Progress stepper configuration
 const CONTRACT_STEPS = [
@@ -84,9 +100,18 @@ export default function ContractDetails() {
     cancelContract,
   } = useContractStore()
 
+  const { documents, fetchDocuments } = useDocumentStore()
+
   const [confirmModal, setConfirmModal] = useState<ConfirmModalType>(null)
   const [showSignature, setShowSignature] = useState(false)
   const [showSendModal, setShowSendModal] = useState(false)
+  const [showPreSendChecklist, setShowPreSendChecklist] = useState(false)
+  const [showDossierModal, setShowDossierModal] = useState(false)
+  const [showPreSignChecklist, setShowPreSignChecklist] = useState(false)
+  // Owner pre-send checklist: well info + clauses + dossier checked
+  const [preSendChecks, setPreSendChecks] = useState({ property: false, clauses: false, dossier: false, docs: false })
+  // Tenant pre-sign checklist: property info + clauses + amounts
+  const [preSignChecks, setPreSignChecks] = useState({ property: false, clauses: false, amounts: false })
   const [requiredDocs, setRequiredDocs] = useState<Set<string>>(new Set())
   const [customDocRequests, setCustomDocRequests] = useState<{ title: string; description: string }[]>([])
   const [newCustomDoc, setNewCustomDoc] = useState({ title: '', description: '' })
@@ -99,8 +124,9 @@ export default function ContractDetails() {
   useEffect(() => {
     if (id) {
       fetchContractById(id).then(() => setInitialLoaded(true))
+      fetchDocuments(id)
     }
-  }, [id, fetchContractById])
+  }, [id, fetchContractById, fetchDocuments])
 
   // Load requiredDocs and customDocRequests from contract content once loaded
   useEffect(() => {
@@ -123,10 +149,20 @@ export default function ContractDetails() {
   if (!initialLoaded || (!contract && isLoading)) {
     return (
       <Layout>
-        <div className="flex items-center justify-center min-h-screen bg-[#f5f5f7]">
+        <div
+          className="flex items-center justify-center min-h-screen"
+          style={{ background: M.bg, fontFamily: M.body }}
+        >
           <div className="flex flex-col items-center gap-3">
-            <div className="w-10 h-10 border-2 border-[#3b82f6] border-t-transparent rounded-full animate-spin" />
-            <p className="text-sm text-[#515154]">Chargement du contrat…</p>
+            <div
+              style={{
+                width: 36, height: 36, borderRadius: '50%',
+                border: `2px solid ${M.border}`,
+                borderTopColor: M.night,
+              }}
+              className="animate-spin"
+            />
+            <p style={{ fontSize: 13, color: M.inkFaint }}>Chargement du contrat…</p>
           </div>
         </div>
       </Layout>
@@ -136,14 +172,26 @@ export default function ContractDetails() {
   if (!contract) {
     return (
       <Layout>
-        <div className="flex flex-col items-center justify-center min-h-screen bg-[#f5f5f7] gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-[#f0f0f2] flex items-center justify-center">
-            <AlertCircle className="w-8 h-8 text-[#86868b]" />
+        <div
+          className="flex flex-col items-center justify-center min-h-screen gap-4"
+          style={{ background: M.bg, fontFamily: M.body }}
+        >
+          <div style={{
+            width: 64, height: 64, borderRadius: '50%',
+            background: M.muted, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <AlertCircle style={{ width: 28, height: 28, color: M.inkFaint }} />
           </div>
-          <p className="text-[#515154] font-medium">Contrat introuvable</p>
+          <p style={{ fontSize: 14, color: M.inkMid, fontWeight: 500 }}>Contrat introuvable</p>
           <button
             onClick={() => navigate('/contracts')}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#3b82f6] text-white rounded-xl text-sm font-semibold hover:bg-[#2563eb] transition-colors"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '10px 20px', borderRadius: 8,
+              background: M.night, color: '#ffffff',
+              fontFamily: M.body, fontWeight: 500, fontSize: 13,
+              border: 'none', cursor: 'pointer',
+            }}
           >
             Retour aux contrats
           </button>
@@ -156,7 +204,17 @@ export default function ContractDetails() {
   const isTenant = user?.id === contract.tenantId
   const hasSigned = isOwner ? !!contract.signedByOwner : !!contract.signedByTenant
   const otherPartySigned = isOwner ? !!contract.signedByTenant : !!contract.signedByOwner
-  const ownerCanSign = isOwner && ['DRAFT', 'SENT', 'SIGNED_TENANT'].includes(contract.status) && !hasSigned
+  // ── Gate de validation documents ─────────────────────────────────────────
+  // Le propriétaire doit avoir validé tous les documents du locataire avant de signer
+  // Compte les docs non-rejetés qui ne sont pas encore VALIDATED
+  const unvalidatedTenantDocs = documents.filter(
+    (d) => d.status === 'UPLOADED' && d.fromDossier !== true
+  )
+  const allTenantDocsValidated = unvalidatedTenantDocs.length === 0
+
+  const ownerCanSign = isOwner && contract.status === 'SIGNED_TENANT' && !hasSigned
+  // Le propriétaire peut signer uniquement si tous les docs locataire sont validés
+  const ownerSignBlocked = ownerCanSign && !allTenantDocsValidated
   const tenantCanSign = isTenant && ['SENT', 'SIGNED_OWNER'].includes(contract.status) && !hasSigned
   const canSign = ownerCanSign || tenantCanSign
   const canSend = isOwner && contract.status === 'DRAFT'
@@ -201,6 +259,8 @@ export default function ContractDetails() {
       })
       await sendContract(contract.id)
       setShowSendModal(false)
+      setShowPreSendChecklist(false)
+      celebrateSmall()
     } finally {
       setActionLoading(false)
     }
@@ -251,6 +311,11 @@ export default function ContractDetails() {
       const result = await signContract(contract.id, signatureBase64)
       if (result) {
         setShowSignature(false)
+        if (result.status === 'COMPLETED' || result.status === 'ACTIVE') {
+          celebrateBig()
+        } else {
+          celebrateSmall()
+        }
       }
     } finally {
       setActionLoading(false)
@@ -307,54 +372,167 @@ export default function ContractDetails() {
   const requiredDocuments: string[] | undefined = contractContent.requiredDocuments
   const currentStepIndex = getStepIndex(contract.status)
 
-  const statusConfig: Record<string, { bg: string; text: string; border: string; label: string; icon: typeof CheckCircle }> = {
-    DRAFT:        { bg: 'bg-amber-50',   text: 'text-amber-700',   border: 'border-amber-200',  label: 'Brouillon',                    icon: Circle },
-    SENT:         { bg: 'bg-blue-50',    text: 'text-blue-700',    border: 'border-blue-200',   label: 'Envoyé au locataire',           icon: Send },
-    SIGNED_OWNER: { bg: 'bg-[#e8f0fe]',  text: 'text-[#0055b3]',  border: 'border-[#aacfff]', label: 'Signé par le propriétaire',     icon: PenTool },
-    SIGNED_TENANT:{ bg: 'bg-[#e8f0fe]',  text: 'text-[#0055b3]',  border: 'border-[#aacfff]', label: 'Signé par le locataire',        icon: PenTool },
-    COMPLETED:    { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200',label: 'Signé par les deux parties',    icon: CheckCircle },
-    ACTIVE:       { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200',label: 'Actif',                         icon: CheckCircle },
-    EXPIRED:      { bg: 'bg-slate-100',  text: 'text-slate-600',   border: 'border-slate-200',  label: 'Expiré',                        icon: Clock },
-    TERMINATED:   { bg: 'bg-red-50',     text: 'text-red-700',     border: 'border-red-200',    label: 'Résilié',                       icon: Ban },
-    CANCELLED:    { bg: 'bg-slate-100',  text: 'text-slate-600',   border: 'border-slate-200',  label: 'Annulé',                        icon: XCircle },
+  // Maison status config
+  const statusConfig: Record<string, { bg: string; color: string; border: string; label: string; icon: typeof CheckCircle }> = {
+    DRAFT:         { bg: M.muted,       color: M.inkMid,  border: M.borderMid,   label: 'Brouillon',                   icon: Circle },
+    SENT:          { bg: M.warningBg,   color: M.warning, border: M.caramel,     label: 'Envoyé au locataire',          icon: Send },
+    SIGNED_OWNER:  { bg: M.ownerLight,  color: M.owner,   border: M.ownerBorder, label: 'Signé par le propriétaire',   icon: PenTool },
+    SIGNED_TENANT: { bg: M.ownerLight,  color: M.owner,   border: M.ownerBorder, label: 'Signé par le locataire',      icon: PenTool },
+    COMPLETED:     { bg: M.tenantLight, color: M.tenant,  border: M.tenantBorder,label: 'Signé par les deux parties',  icon: CheckCircle },
+    ACTIVE:        { bg: M.tenantLight, color: M.tenant,  border: M.tenantBorder,label: 'Actif',                       icon: CheckCircle },
+    EXPIRED:       { bg: M.muted,       color: M.inkFaint,border: M.border,      label: 'Expiré',                      icon: Clock },
+    TERMINATED:    { bg: M.dangerBg,    color: M.danger,  border: '#fca5a5',     label: 'Résilié',                     icon: Ban },
+    CANCELLED:     { bg: M.muted,       color: M.inkFaint,border: M.border,      label: 'Annulé',                      icon: XCircle },
   }
 
   const status = statusConfig[contract.status] || statusConfig.DRAFT
   const StatusIcon = status.icon
 
-  const cardClass = 'bg-white rounded-2xl border border-[#d2d2d7] p-6 mb-6'
-  const cardStyle = { boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)' }
-  const inputClass = 'w-full bg-white border border-[#d2d2d7] rounded-xl px-3 py-2.5 text-sm text-[#1d1d1f] outline-none transition-all placeholder:text-[#86868b] focus:border-[#3b82f6] focus:ring-2 focus:ring-[rgba(59,130,246,0.12)]'
-  const labelClass = 'block text-xs font-medium text-[#86868b] mb-1 uppercase tracking-wide'
+  const cardStyle: React.CSSProperties = {
+    background: M.surface,
+    border: `1px solid ${M.border}`,
+    borderRadius: 12,
+    boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
+    padding: '24px',
+    marginBottom: 24,
+    fontFamily: M.body,
+  }
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    background: M.inputBg,
+    border: `1px solid ${M.border}`,
+    borderRadius: 8,
+    padding: '10px 12px',
+    fontSize: 13,
+    color: M.ink,
+    outline: 'none',
+    fontFamily: M.body,
+  }
+
+  const labelStyle: React.CSSProperties = {
+    display: 'block',
+    fontSize: 10,
+    fontWeight: 600,
+    color: M.inkFaint,
+    textTransform: 'uppercase',
+    letterSpacing: '0.1em',
+    marginBottom: 4,
+    fontFamily: M.body,
+  }
+
+  const btnPrimary: React.CSSProperties = {
+    display: 'inline-flex', alignItems: 'center', gap: 7,
+    padding: '10px 18px', borderRadius: 8,
+    background: M.night, color: '#ffffff',
+    fontFamily: M.body, fontWeight: 500, fontSize: 13,
+    border: 'none', cursor: 'pointer',
+  }
+
+  const btnGhost: React.CSSProperties = {
+    display: 'inline-flex', alignItems: 'center', gap: 7,
+    padding: '10px 18px', borderRadius: 8,
+    background: M.surface, color: M.inkMid,
+    fontFamily: M.body, fontWeight: 500, fontSize: 13,
+    border: `1px solid ${M.border}`, cursor: 'pointer',
+  }
+
+  const btnDanger: React.CSSProperties = {
+    display: 'inline-flex', alignItems: 'center', gap: 7,
+    padding: '10px 18px', borderRadius: 8,
+    background: M.dangerBg, color: M.danger,
+    fontFamily: M.body, fontWeight: 500, fontSize: 13,
+    border: `1px solid #fca5a5`, cursor: 'pointer',
+  }
 
   return (
     <Layout>
-      <div className="min-h-screen bg-[#f5f5f7]">
+      <div style={{ minHeight: '100vh', background: M.bg, fontFamily: M.body }}>
         {/* Header */}
-        <div className="bg-white border-b border-[#d2d2d7]">
+        <div style={{ background: M.surface, borderBottom: `1px solid ${M.border}` }}>
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => navigate('/contracts')}
-                  className="p-2 bg-white border border-[#d2d2d7] rounded-xl text-[#515154] hover:bg-[#f5f5f7] transition-colors"
+                  style={{
+                    padding: 8, background: M.surface,
+                    border: `1px solid ${M.border}`, borderRadius: 8,
+                    color: M.inkMid, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
+                  onMouseLeave={e => (e.currentTarget.style.background = M.surface)}
                 >
-                  <ArrowLeft className="w-5 h-5" />
+                  <ArrowLeft style={{ width: 18, height: 18 }} />
                 </button>
                 <div>
-                  <h1 className="text-2xl font-bold text-[#1d1d1f] flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-[#eff6ff] flex items-center justify-center">
-                      <FileText className="w-5 h-5 text-[#3b82f6]" />
-                    </div>
+                  <p style={{
+                    fontFamily: M.body, fontSize: 10, textTransform: 'uppercase',
+                    letterSpacing: '0.12em', color: M.inkFaint, marginBottom: 4,
+                  }}>
+                    Gestion locative
+                  </p>
+                  <h1 style={{
+                    fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
+                    fontSize: 32, color: M.ink, lineHeight: 1.1, margin: 0,
+                  }}>
                     Contrat de Location
                   </h1>
-                  <p className="text-[#86868b] mt-0.5 text-sm">{contract.property?.title}</p>
+                  <p style={{ fontSize: 13, color: M.inkMid, marginTop: 2 }}>
+                    {contract.property?.title}
+                  </p>
                 </div>
               </div>
-              <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border ${status.bg} ${status.text} ${status.border}`}>
-                <StatusIcon className="w-4 h-4" />
-                {status.label}
-              </span>
+              <div className="flex items-center gap-3">
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '6px 14px', borderRadius: 20,
+                  background: status.bg, color: status.color,
+                  border: `1px solid ${status.border}`,
+                  fontFamily: M.body, fontWeight: 600, fontSize: 12,
+                }}>
+                  <StatusIcon style={{ width: 13, height: 13 }} />
+                  {status.label}
+                </span>
+                <PDFDownloadLink
+                  document={<ContractPDF contract={contract} clauses={clauses.filter((c) => c.enabled)} />}
+                  fileName={`contrat-${contract.property?.title?.replace(/\s+/g, '-').toLowerCase() || 'location'}.pdf`}
+                >
+                  {({ loading: pdfLoading }) => (
+                    <button
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                        padding: '7px 14px', borderRadius: 8,
+                        background: M.caramel, color: '#ffffff',
+                        fontFamily: M.body, fontWeight: 600, fontSize: 12,
+                        border: 'none', cursor: pdfLoading ? 'wait' : 'pointer',
+                        opacity: pdfLoading ? 0.7 : 1,
+                      }}
+                      disabled={pdfLoading}
+                    >
+                      <Download style={{ width: 13, height: 13 }} />
+                      {pdfLoading ? 'Génération…' : 'PDF'}
+                    </button>
+                  )}
+                </PDFDownloadLink>
+                {contract.status !== 'DRAFT' && (
+                  <Link
+                    to={`/contracts/${contract.id}/edl`}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      padding: '7px 14px', borderRadius: 8,
+                      background: M.muted, color: M.inkMid,
+                      border: `1px solid ${M.border}`,
+                      fontFamily: M.body, fontWeight: 500, fontSize: 12,
+                      textDecoration: 'none',
+                    }}
+                  >
+                    <ClipboardCheck style={{ width: 13, height: 13 }} />
+                    État des lieux
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -364,7 +542,7 @@ export default function ContractDetails() {
 
             {/* Progress Stepper */}
             {!isTerminal && (
-              <div className={`${cardClass}`} style={cardStyle}>
+              <div style={cardStyle}>
                 <div className="flex items-center justify-between">
                   {CONTRACT_STEPS.map((step, index) => {
                     const StepIcon = step.icon
@@ -382,38 +560,35 @@ export default function ContractDetails() {
                     return (
                       <div key={step.status} className="flex items-center flex-1">
                         <div className="flex flex-col items-center flex-1">
-                          <div
-                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                              isCompleted
-                                ? 'bg-emerald-500 text-white'
-                                : isCurrent
-                                ? 'bg-[#3b82f6] text-white ring-4 ring-[rgba(59,130,246,0.15)]'
-                                : 'bg-[#f0f0f2] text-[#86868b]'
-                            }`}
-                          >
+                          <div style={{
+                            width: 40, height: 40, borderRadius: '50%',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            background: isCompleted ? M.tenant : isCurrent ? M.night : M.muted,
+                            color: isCompleted || isCurrent ? '#ffffff' : M.inkFaint,
+                            boxShadow: isCurrent ? `0 0 0 4px rgba(26,26,46,0.12)` : 'none',
+                            transition: 'all 0.2s',
+                          }}>
                             {isCompleted ? (
-                              <Check className="w-5 h-5" />
+                              <Check style={{ width: 18, height: 18 }} />
                             ) : (
-                              <StepIcon className="w-5 h-5" />
+                              <StepIcon style={{ width: 18, height: 18 }} />
                             )}
                           </div>
-                          <span
-                            className={`text-xs font-medium mt-2 ${
-                              isCompleted ? 'text-emerald-600' : isCurrent ? 'text-[#3b82f6]' : 'text-[#86868b]'
-                            }`}
-                          >
+                          <span style={{
+                            fontSize: 11, fontWeight: 500, marginTop: 6,
+                            color: isCompleted ? M.tenant : isCurrent ? M.night : M.inkFaint,
+                          }}>
                             {step.label}
                           </span>
                           {signatureDetail && (
-                            <span className="text-xs text-amber-600 mt-0.5">{signatureDetail}</span>
+                            <span style={{ fontSize: 10, color: M.caramel, marginTop: 2 }}>{signatureDetail}</span>
                           )}
                         </div>
                         {index < CONTRACT_STEPS.length - 1 && (
-                          <div
-                            className={`h-0.5 flex-1 mx-2 -mt-6 ${
-                              isCompleted ? 'bg-emerald-400' : isUpcoming ? 'bg-[#d2d2d7]' : 'bg-[#bfdbfe]'
-                            }`}
-                          />
+                          <div style={{
+                            height: 2, flex: 1, marginLeft: 4, marginRight: 4, marginTop: -24,
+                            background: isCompleted ? M.tenant : isUpcoming ? M.border : M.ownerBorder,
+                          }} />
                         )}
                       </div>
                     )
@@ -422,17 +597,21 @@ export default function ContractDetails() {
               </div>
             )}
 
-            {/* Terminal status banner */}
+            {/* Terminal status banners */}
             {contract.status === 'CANCELLED' && (
-              <div className="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-3">
-                <XCircle className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" />
+              <div style={{
+                marginBottom: 24, padding: '14px 16px',
+                background: M.muted, border: `1px solid ${M.border}`,
+                borderRadius: 10, display: 'flex', alignItems: 'flex-start', gap: 12,
+              }}>
+                <XCircle style={{ width: 18, height: 18, color: M.inkFaint, flexShrink: 0, marginTop: 1 }} />
                 <div>
-                  <p className="font-medium text-[#1d1d1f]">Contrat annulé</p>
+                  <p style={{ fontWeight: 600, fontSize: 14, color: M.ink }}>Contrat annulé</p>
                   {cancellation?.reason && (
-                    <p className="text-sm text-[#515154] mt-1">Motif : {cancellation.reason}</p>
+                    <p style={{ fontSize: 13, color: M.inkMid, marginTop: 4 }}>Motif : {cancellation.reason}</p>
                   )}
                   {cancellation?.cancelledAt && (
-                    <p className="text-xs text-[#86868b] mt-1">
+                    <p style={{ fontSize: 11, color: M.inkFaint, marginTop: 4 }}>
                       Annulé le {format(new Date(cancellation.cancelledAt), 'dd MMM yyyy HH:mm', { locale: fr })}
                     </p>
                   )}
@@ -441,22 +620,32 @@ export default function ContractDetails() {
             )}
 
             {contract.status === 'TERMINATED' && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
-                <Ban className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+              <div style={{
+                marginBottom: 24, padding: '14px 16px',
+                background: M.dangerBg, border: `1px solid #fca5a5`,
+                borderRadius: 10, display: 'flex', alignItems: 'flex-start', gap: 12,
+              }}>
+                <Ban style={{ width: 18, height: 18, color: M.danger, flexShrink: 0, marginTop: 1 }} />
                 <div>
-                  <p className="font-medium text-red-800">Contrat résilié</p>
-                  <p className="text-sm text-red-600 mt-1">Ce contrat a été résilié. Le bien est de nouveau disponible.</p>
+                  <p style={{ fontWeight: 600, fontSize: 14, color: M.danger }}>Contrat résilié</p>
+                  <p style={{ fontSize: 13, color: M.danger, opacity: 0.8, marginTop: 4 }}>
+                    Ce contrat a été résilié. Le bien est de nouveau disponible.
+                  </p>
                 </div>
               </div>
             )}
 
             {/* Status Alerts */}
             {contract.status === 'SENT' && isTenant && (
-              <div className="mb-6 p-4 bg-[#eff6ff] border border-[#bfdbfe] rounded-xl flex items-start gap-3">
-                <Info className="w-5 h-5 text-[#3b82f6] shrink-0 mt-0.5" />
+              <div style={{
+                marginBottom: 24, padding: '14px 16px',
+                background: M.ownerLight, border: `1px solid ${M.ownerBorder}`,
+                borderRadius: 10, display: 'flex', alignItems: 'flex-start', gap: 12,
+              }}>
+                <Info style={{ width: 18, height: 18, color: M.owner, flexShrink: 0, marginTop: 1 }} />
                 <div>
-                  <p className="font-medium text-[#1d1d1f]">Contrat en attente de votre signature</p>
-                  <p className="text-sm text-[#3b82f6] mt-1">
+                  <p style={{ fontWeight: 600, fontSize: 14, color: M.ink }}>Contrat en attente de votre signature</p>
+                  <p style={{ fontSize: 13, color: M.owner, marginTop: 4 }}>
                     Le propriétaire vous a envoyé ce contrat. Lisez-le attentivement puis signez-le ci-dessous.
                   </p>
                 </div>
@@ -464,11 +653,15 @@ export default function ContractDetails() {
             )}
 
             {isTenant && !canSign && !['COMPLETED', 'CANCELLED', 'TERMINATED', 'ACTIVE'].includes(contract.status) && (
-              <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+              <div style={{
+                marginBottom: 24, padding: '14px 16px',
+                background: M.warningBg, border: `1px solid ${M.caramel}`,
+                borderRadius: 10, display: 'flex', alignItems: 'flex-start', gap: 12,
+              }}>
+                <AlertCircle style={{ width: 18, height: 18, color: M.warning, flexShrink: 0, marginTop: 1 }} />
                 <div>
-                  <p className="font-medium text-amber-800">Impossible de signer pour le moment</p>
-                  <p className="text-sm text-amber-700 mt-1">
+                  <p style={{ fontWeight: 600, fontSize: 14, color: M.warning }}>Impossible de signer pour le moment</p>
+                  <p style={{ fontSize: 13, color: M.warning, opacity: 0.85, marginTop: 4 }}>
                     {hasSigned
                       ? 'Vous avez déjà signé ce contrat.'
                       : contract.status === 'DRAFT'
@@ -479,12 +672,51 @@ export default function ContractDetails() {
               </div>
             )}
 
-            {contract.status === 'COMPLETED' && isOwner && (
-              <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+            {/* Gate validation : propriétaire doit valider les docs avant de signer */}
+            {ownerSignBlocked && (
+              <div style={{
+                marginBottom: 24, padding: '14px 16px',
+                background: '#fdf5ec', border: `1px solid #f3c99a`,
+                borderRadius: 10, display: 'flex', alignItems: 'flex-start', gap: 12,
+              }}>
+                <ClipboardCheck style={{ width: 18, height: 18, color: M.warning, flexShrink: 0, marginTop: 1 }} />
                 <div>
-                  <p className="font-medium text-emerald-700">Les deux parties ont signé</p>
-                  <p className="text-sm text-emerald-600 mt-1">
+                  <p style={{ fontWeight: 600, fontSize: 14, color: M.warning }}>Validation des documents requise</p>
+                  <p style={{ fontSize: 13, color: M.warning, opacity: 0.85, marginTop: 4 }}>
+                    {unvalidatedTenantDocs.length} document{unvalidatedTenantDocs.length > 1 ? 's' : ''} en attente de validation.
+                    Consultez et validez chaque pièce justificative dans la section « Dossier documents » ci-dessous avant de signer.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Owner waiting for tenant to sign */}
+            {isOwner && ['SENT', 'SIGNED_OWNER'].includes(contract.status) && !hasSigned && (
+              <div style={{
+                marginBottom: 24, padding: '14px 16px',
+                background: M.warningBg, border: `1px solid ${M.caramel}`,
+                borderRadius: 10, display: 'flex', alignItems: 'flex-start', gap: 12,
+              }}>
+                <Clock style={{ width: 18, height: 18, color: M.warning, flexShrink: 0, marginTop: 1 }} />
+                <div>
+                  <p style={{ fontWeight: 600, fontSize: 14, color: M.warning }}>En attente de la signature du locataire</p>
+                  <p style={{ fontSize: 13, color: M.warning, opacity: 0.85, marginTop: 4 }}>
+                    Le locataire doit signer en premier. Vous pourrez apposer votre signature une fois qu'il aura signé.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {contract.status === 'COMPLETED' && isOwner && (
+              <div style={{
+                marginBottom: 24, padding: '14px 16px',
+                background: M.tenantLight, border: `1px solid ${M.tenantBorder}`,
+                borderRadius: 10, display: 'flex', alignItems: 'flex-start', gap: 12,
+              }}>
+                <CheckCircle style={{ width: 18, height: 18, color: M.tenant, flexShrink: 0, marginTop: 1 }} />
+                <div>
+                  <p style={{ fontWeight: 600, fontSize: 14, color: M.tenant }}>Les deux parties ont signé</p>
+                  <p style={{ fontSize: 13, color: M.tenant, opacity: 0.85, marginTop: 4 }}>
                     Vous pouvez maintenant activer le contrat. Le bien sera marqué comme occupé.
                   </p>
                 </div>
@@ -492,9 +724,13 @@ export default function ContractDetails() {
             )}
 
             {hasSigned && !otherPartySigned && !isTerminal && (
-              <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
-                <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                <p className="text-sm text-amber-700">
+              <div style={{
+                marginBottom: 24, padding: '14px 16px',
+                background: M.warningBg, border: `1px solid ${M.caramel}`,
+                borderRadius: 10, display: 'flex', alignItems: 'center', gap: 12,
+              }}>
+                <AlertCircle style={{ width: 16, height: 16, color: M.warning, flexShrink: 0 }} />
+                <p style={{ fontSize: 13, color: M.warning }}>
                   Vous avez signé ce contrat. En attente de la signature de l'autre partie.
                 </p>
               </div>
@@ -502,26 +738,40 @@ export default function ContractDetails() {
 
             {/* Action Buttons Bar */}
             {!isTerminal && (canSend || canSign || canActivate || canTerminate || canDelete || canCancel) && (
-              <div className={`${cardClass}`} style={cardStyle}>
+              <div style={cardStyle}>
                 <div className="flex flex-wrap gap-3">
                   {canSend && (
                     <button
-                      onClick={() => setShowSendModal(true)}
+                      onClick={() => { setPreSendChecks({ property: false, clauses: false, dossier: false, docs: false }); setShowPreSendChecklist(true) }}
                       disabled={actionLoading}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#3b82f6] text-white rounded-xl text-sm font-semibold hover:bg-[#2563eb] disabled:opacity-50 transition-colors"
+                      style={{ ...btnPrimary, opacity: actionLoading ? 0.5 : 1 }}
                     >
-                      <Send className="w-4 h-4" />
+                      <Send style={{ width: 15, height: 15 }} />
                       Envoyer au locataire
                     </button>
                   )}
 
                   {canSign && (
                     <button
-                      onClick={() => setShowSignature(true)}
-                      disabled={actionLoading}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#3b82f6] text-white rounded-xl text-sm font-semibold hover:bg-[#2563eb] disabled:opacity-50 transition-colors"
+                      onClick={() => {
+                        if (ownerSignBlocked) return
+                        if (isTenant) {
+                          // Tenant: mandatory pre-sign checklist
+                          setPreSignChecks({ property: false, clauses: false, amounts: false })
+                          setShowPreSignChecklist(true)
+                        } else {
+                          setShowSignature(true)
+                        }
+                      }}
+                      disabled={actionLoading || ownerSignBlocked}
+                      title={ownerSignBlocked ? 'Validez tous les documents du locataire avant de signer' : undefined}
+                      style={{
+                        ...btnPrimary,
+                        opacity: actionLoading || ownerSignBlocked ? 0.5 : 1,
+                        cursor: ownerSignBlocked ? 'not-allowed' : 'pointer',
+                      }}
                     >
-                      <PenTool className="w-4 h-4" />
+                      <PenTool style={{ width: 15, height: 15 }} />
                       Signer le contrat
                     </button>
                   )}
@@ -530,9 +780,13 @@ export default function ContractDetails() {
                     <button
                       onClick={handleActivate}
                       disabled={actionLoading}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                      style={{
+                        ...btnPrimary,
+                        background: M.tenant,
+                        opacity: actionLoading ? 0.5 : 1,
+                      }}
                     >
-                      <CheckCircle className="w-4 h-4" />
+                      <CheckCircle style={{ width: 15, height: 15 }} />
                       Activer le contrat
                     </button>
                   )}
@@ -541,9 +795,9 @@ export default function ContractDetails() {
                     <button
                       onClick={() => setConfirmModal('cancel')}
                       disabled={actionLoading}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-[#d2d2d7] text-[#515154] rounded-xl text-sm font-semibold hover:bg-[#f5f5f7] disabled:opacity-50 transition-colors"
+                      style={{ ...btnGhost, opacity: actionLoading ? 0.5 : 1 }}
                     >
-                      <XCircle className="w-4 h-4" />
+                      <XCircle style={{ width: 15, height: 15 }} />
                       Annuler le contrat
                     </button>
                   )}
@@ -552,9 +806,9 @@ export default function ContractDetails() {
                     <button
                       onClick={() => setConfirmModal('terminate')}
                       disabled={actionLoading}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors"
+                      style={{ ...btnDanger, opacity: actionLoading ? 0.5 : 1 }}
                     >
-                      <Ban className="w-4 h-4" />
+                      <Ban style={{ width: 15, height: 15 }} />
                       Résilier
                     </button>
                   )}
@@ -563,9 +817,9 @@ export default function ContractDetails() {
                     <button
                       onClick={() => setConfirmModal('delete')}
                       disabled={actionLoading}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors"
+                      style={{ ...btnDanger, opacity: actionLoading ? 0.5 : 1 }}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 style={{ width: 15, height: 15 }} />
                       Supprimer
                     </button>
                   )}
@@ -574,24 +828,31 @@ export default function ContractDetails() {
             )}
 
             {/* Property Info */}
-            <div className={cardClass} style={cardStyle}>
-              <h2 className="text-lg font-semibold text-[#1d1d1f] mb-4">Propriété</h2>
+            <div style={cardStyle}>
+              <h2 style={{
+                fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
+                fontSize: 20, color: M.ink, marginBottom: 16,
+              }}>
+                Propriété
+              </h2>
               <div className="flex gap-4">
                 {contract.property?.images?.[0] && (
                   <img
                     src={contract.property.images[0]}
                     alt={contract.property.title}
-                    className="w-28 h-28 rounded-xl object-cover shrink-0"
+                    style={{ width: 112, height: 112, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }}
                   />
                 )}
                 <div className="flex-1">
-                  <h3 className="font-semibold text-[#1d1d1f] mb-2">{contract.property?.title}</h3>
-                  <div className="flex items-center text-sm text-[#515154] mb-2">
-                    <HomeIcon className="w-4 h-4 mr-2 text-[#86868b]" />
+                  <h3 style={{ fontWeight: 600, fontSize: 15, color: M.ink, marginBottom: 6 }}>
+                    {contract.property?.title}
+                  </h3>
+                  <div className="flex items-center" style={{ fontSize: 13, color: M.inkMid, gap: 6, marginBottom: 6 }}>
+                    <HomeIcon style={{ width: 14, height: 14, color: M.inkFaint }} />
                     {contract.property?.address}, {contract.property?.city} {contract.property?.postalCode}
                   </div>
                   {contract.property?.bedrooms != null && (
-                    <p className="text-sm text-[#86868b]">
+                    <p style={{ fontSize: 12, color: M.inkFaint }}>
                       {contract.property.bedrooms} chambres — {contract.property.bathrooms} SDB — {contract.property.surface} m²
                     </p>
                   )}
@@ -602,115 +863,152 @@ export default function ContractDetails() {
             {/* Parties */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               {/* Owner */}
-              <div className="bg-white rounded-2xl border border-[#d2d2d7] p-5" style={cardStyle}>
-                <h3 className="font-semibold text-[#1d1d1f] mb-3 flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-[#eff6ff] flex items-center justify-center">
-                    <User className="w-3.5 h-3.5 text-[#3b82f6]" />
+              <div style={{
+                background: M.surface,
+                border: `1px solid ${M.border}`,
+                borderRadius: 12,
+                borderLeft: `3px solid ${contract.signedByOwner ? M.tenant : M.border}`,
+                boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
+                padding: '20px',
+              }}>
+                <h3 style={{ fontWeight: 600, fontSize: 13, color: M.ink, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 6,
+                    background: M.ownerLight, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <User style={{ width: 14, height: 14, color: M.owner }} />
                   </div>
                   Propriétaire
                 </h3>
-                <p className="font-medium text-[#1d1d1f]">{contract.owner?.firstName} {contract.owner?.lastName}</p>
-                <p className="text-sm text-[#86868b] mt-0.5">{contract.owner?.email}</p>
-                {contract.owner?.phone && <p className="text-sm text-[#86868b]">{contract.owner.phone}</p>}
+                <p style={{ fontWeight: 600, fontSize: 14, color: M.ink }}>
+                  {contract.owner?.firstName} {contract.owner?.lastName}
+                </p>
+                <p style={{ fontSize: 12, color: M.inkFaint, marginTop: 2 }}>{contract.owner?.email}</p>
+                {contract.owner?.phone && <p style={{ fontSize: 12, color: M.inkFaint }}>{contract.owner.phone}</p>}
 
-                {contract.signedByOwner ? (
-                  <div className="mt-3 pt-3 border-t border-[#f0f0f2]">
-                    <div className="flex items-center text-sm text-emerald-600 mb-2">
-                      <CheckCircle className="w-4 h-4 mr-1.5" />
-                      Signé le {format(new Date(contract.signedByOwner), 'dd MMM yyyy HH:mm', { locale: fr })}
-                    </div>
-                    {contract.ownerSignature && (
-                      <img src={contract.ownerSignature} alt="Signature propriétaire" className="h-14 border border-[#d2d2d7] rounded-lg p-1 bg-white" />
-                    )}
-                    {signatureMetadata?.owner && (
-                      <div className="mt-2 flex items-center gap-1 text-xs text-[#86868b]">
-                        <ShieldCheck className="w-3 h-3 text-emerald-500" />
-                        Signature électronique certifiée
+                <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${M.border}` }}>
+                  {contract.signedByOwner ? (
+                    <>
+                      <div className="flex items-center" style={{ fontSize: 12, color: M.tenant, gap: 6, marginBottom: 8 }}>
+                        <CheckCircle style={{ width: 13, height: 13 }} />
+                        Signé le {format(new Date(contract.signedByOwner), 'dd MMM yyyy HH:mm', { locale: fr })}
                       </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="mt-3 flex items-center text-sm text-amber-600 pt-3 border-t border-[#f0f0f2]">
-                    <Clock className="w-4 h-4 mr-1.5" />
-                    En attente de signature
-                  </div>
-                )}
+                      {contract.ownerSignature && (
+                        <img src={contract.ownerSignature} alt="Signature propriétaire"
+                          style={{ height: 56, border: `1px solid ${M.border}`, borderRadius: 6, padding: 4, background: M.surface }} />
+                      )}
+                      {signatureMetadata?.owner && (
+                        <div className="flex items-center" style={{ marginTop: 8, gap: 4, fontSize: 11, color: M.inkFaint }}>
+                          <ShieldCheck style={{ width: 12, height: 12, color: M.tenant }} />
+                          Signature électronique certifiée
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="flex items-center" style={{ fontSize: 12, color: M.caramel, gap: 6 }}>
+                      <Clock style={{ width: 13, height: 13 }} />
+                      En attente de signature
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Tenant */}
-              <div className="bg-white rounded-2xl border border-[#d2d2d7] p-5" style={cardStyle}>
-                <h3 className="font-semibold text-[#1d1d1f] mb-3 flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-[#eff6ff] flex items-center justify-center">
-                    <User className="w-3.5 h-3.5 text-[#3b82f6]" />
+              <div style={{
+                background: M.surface,
+                border: `1px solid ${M.border}`,
+                borderRadius: 12,
+                borderLeft: `3px solid ${contract.signedByTenant ? M.tenant : M.border}`,
+                boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
+                padding: '20px',
+              }}>
+                <h3 style={{ fontWeight: 600, fontSize: 13, color: M.ink, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 6,
+                    background: M.tenantLight, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <User style={{ width: 14, height: 14, color: M.tenant }} />
                   </div>
                   Locataire
                 </h3>
-                <p className="font-medium text-[#1d1d1f]">{contract.tenant?.firstName} {contract.tenant?.lastName}</p>
-                <p className="text-sm text-[#86868b] mt-0.5">{contract.tenant?.email}</p>
-                {contract.tenant?.phone && <p className="text-sm text-[#86868b]">{contract.tenant.phone}</p>}
+                <p style={{ fontWeight: 600, fontSize: 14, color: M.ink }}>
+                  {contract.tenant?.firstName} {contract.tenant?.lastName}
+                </p>
+                <p style={{ fontSize: 12, color: M.inkFaint, marginTop: 2 }}>{contract.tenant?.email}</p>
+                {contract.tenant?.phone && <p style={{ fontSize: 12, color: M.inkFaint }}>{contract.tenant.phone}</p>}
 
-                {contract.signedByTenant ? (
-                  <div className="mt-3 pt-3 border-t border-[#f0f0f2]">
-                    <div className="flex items-center text-sm text-emerald-600 mb-2">
-                      <CheckCircle className="w-4 h-4 mr-1.5" />
-                      Signé le {format(new Date(contract.signedByTenant), 'dd MMM yyyy HH:mm', { locale: fr })}
-                    </div>
-                    {contract.tenantSignature && (
-                      <img src={contract.tenantSignature} alt="Signature locataire" className="h-14 border border-[#d2d2d7] rounded-lg p-1 bg-white" />
-                    )}
-                    {signatureMetadata?.tenant && (
-                      <div className="mt-2 flex items-center gap-1 text-xs text-[#86868b]">
-                        <ShieldCheck className="w-3 h-3 text-emerald-500" />
-                        Signature électronique certifiée
+                <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${M.border}` }}>
+                  {contract.signedByTenant ? (
+                    <>
+                      <div className="flex items-center" style={{ fontSize: 12, color: M.tenant, gap: 6, marginBottom: 8 }}>
+                        <CheckCircle style={{ width: 13, height: 13 }} />
+                        Signé le {format(new Date(contract.signedByTenant), 'dd MMM yyyy HH:mm', { locale: fr })}
                       </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="mt-3 flex items-center text-sm text-amber-600 pt-3 border-t border-[#f0f0f2]">
-                    <Clock className="w-4 h-4 mr-1.5" />
-                    En attente de signature
-                  </div>
-                )}
+                      {contract.tenantSignature && (
+                        <img src={contract.tenantSignature} alt="Signature locataire"
+                          style={{ height: 56, border: `1px solid ${M.border}`, borderRadius: 6, padding: 4, background: M.surface }} />
+                      )}
+                      {signatureMetadata?.tenant && (
+                        <div className="flex items-center" style={{ marginTop: 8, gap: 4, fontSize: 11, color: M.inkFaint }}>
+                          <ShieldCheck style={{ width: 12, height: 12, color: M.tenant }} />
+                          Signature électronique certifiée
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="flex items-center" style={{ fontSize: 12, color: M.caramel, gap: 6 }}>
+                      <Clock style={{ width: 13, height: 13 }} />
+                      En attente de signature
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
             {/* Contract Details */}
-            <div className={cardClass} style={cardStyle}>
-              <h2 className="text-lg font-semibold text-[#1d1d1f] mb-5">Détails du contrat</h2>
+            <div style={cardStyle}>
+              <h2 style={{
+                fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
+                fontSize: 20, color: M.ink, marginBottom: 20,
+              }}>
+                Détails du contrat
+              </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
-                  <p className={labelClass}>Période</p>
-                  <div className="flex items-center text-[#1d1d1f] font-medium">
-                    <Calendar className="w-4 h-4 mr-2 text-[#86868b]" />
+                  <p style={labelStyle}>Période</p>
+                  <div className="flex items-center" style={{ fontWeight: 600, fontSize: 14, color: M.ink, gap: 8 }}>
+                    <Calendar style={{ width: 15, height: 15, color: M.inkFaint }} />
                     {format(new Date(contract.startDate), 'dd MMM yyyy', { locale: fr })} —{' '}
                     {format(new Date(contract.endDate), 'dd MMM yyyy', { locale: fr })}
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-[#f5f5f7] rounded-xl p-4">
-                  <p className={labelClass}>Loyer mensuel</p>
-                  <div className="flex items-center text-xl font-bold text-[#3b82f6]">
-                    <Euro className="w-5 h-5 mr-1" />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div style={{ background: M.muted, borderRadius: 8, padding: '14px 16px' }}>
+                  <p style={labelStyle}>Loyer mensuel</p>
+                  <div className="flex items-center" style={{ fontSize: 22, fontWeight: 700, color: M.caramel, gap: 4 }}>
+                    <Euro style={{ width: 18, height: 18 }} />
                     {contract.monthlyRent} €
                   </div>
                 </div>
+
                 {contract.charges != null && (
-                  <div className="bg-[#f5f5f7] rounded-xl p-4">
-                    <p className={labelClass}>Charges</p>
-                    <div className="flex items-center text-xl font-bold text-[#1d1d1f]">
-                      <Euro className="w-5 h-5 mr-1 text-[#86868b]" />
+                  <div style={{ background: M.muted, borderRadius: 8, padding: '14px 16px' }}>
+                    <p style={labelStyle}>Charges</p>
+                    <div className="flex items-center" style={{ fontSize: 22, fontWeight: 700, color: M.ink, gap: 4 }}>
+                      <Euro style={{ width: 18, height: 18, color: M.inkFaint }} />
                       {contract.charges} €
                     </div>
                   </div>
                 )}
+
                 {contract.deposit != null && (
-                  <div className="bg-[#f5f5f7] rounded-xl p-4">
-                    <p className={labelClass}>Dépôt de garantie</p>
-                    <div className="flex items-center text-xl font-bold text-[#1d1d1f]">
-                      <Euro className="w-5 h-5 mr-1 text-[#86868b]" />
+                  <div style={{ background: M.muted, borderRadius: 8, padding: '14px 16px' }}>
+                    <p style={labelStyle}>Dépôt de garantie</p>
+                    <div className="flex items-center" style={{ fontSize: 22, fontWeight: 700, color: M.ink, gap: 4 }}>
+                      <Euro style={{ width: 18, height: 18, color: M.inkFaint }} />
                       {contract.deposit} €
                     </div>
                   </div>
@@ -718,38 +1016,120 @@ export default function ContractDetails() {
               </div>
 
               {contract.terms && (
-                <div className="mt-6 pt-6 border-t border-[#f0f0f2]">
-                  <p className={labelClass}>Conditions particulières</p>
-                  <p className="text-sm text-[#515154] whitespace-pre-wrap mt-1">{contract.terms}</p>
+                <div style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${M.border}` }}>
+                  <p style={labelStyle}>Conditions particulières</p>
+                  <p style={{ fontSize: 13, color: M.inkMid, whiteSpace: 'pre-wrap', marginTop: 6 }}>{contract.terms}</p>
                 </div>
               )}
             </div>
 
             {/* Clauses */}
             {clauses.length > 0 && (
-              <div className={cardClass} style={cardStyle}>
-                <h2 className="text-lg font-semibold text-[#1d1d1f] mb-4">Clauses du contrat</h2>
+              <div style={cardStyle}>
+                <h2 style={{
+                  fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
+                  fontSize: 20, color: M.ink, marginBottom: 16,
+                }}>
+                  Clauses du contrat
+                </h2>
                 <div className="space-y-3">
                   {clauses.filter((c) => c.enabled).map((clause, index) => (
-                    <div key={clause.id} className="border border-[#d2d2d7] rounded-xl p-3">
-                      <h4 className="font-medium text-[#1d1d1f] text-sm">
+                    <div key={clause.id} style={{
+                      border: `1px solid ${M.border}`, borderRadius: 8, padding: '12px 14px',
+                    }}>
+                      <h4 style={{ fontWeight: 600, fontSize: 13, color: M.ink, display: 'flex', alignItems: 'center', gap: 8 }}>
                         {index + 1}. {clause.title}
                         {clause.isCustom && (
-                          <span className="ml-2 text-xs bg-[#eff6ff] text-[#3b82f6] border border-[#bfdbfe] px-2 py-0.5 rounded-full">
+                          <span style={{
+                            fontSize: 10, fontWeight: 600, fontFamily: M.body,
+                            background: M.caramelLight, color: M.caramel,
+                            border: `1px solid ${M.caramel}`, borderRadius: 20,
+                            padding: '2px 8px',
+                          }}>
                             Personnalisée
                           </span>
                         )}
                       </h4>
-                      <p className="text-sm text-[#515154] mt-1">{clause.description}</p>
+                      <p style={{ fontSize: 12, color: M.inkMid, marginTop: 4 }}>{clause.description}</p>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* PDF & EDL */}
-            <div className={cardClass} style={cardStyle}>
-              <h3 className="font-semibold text-[#1d1d1f] mb-4">Documents</h3>
+            {/* Résumé financier — affiché pour le locataire uniquement */}
+            {isTenant && contract.status !== 'DRAFT' && (() => {
+              const rent    = contract.monthlyRent ?? 0
+              const charges = contract.charges ?? 0
+              const total   = rent + charges
+              const deposit = contract.deposit ?? 0
+              const months  = contract.startDate && contract.endDate
+                ? Math.round((new Date(contract.endDate).getTime() - new Date(contract.startDate).getTime()) / (30.44 * 86400000))
+                : null
+              const annuel  = total * 12
+              const fmtEUR  = (n: number) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n)
+              const fmtEURc = (n: number) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n)
+
+              return (
+                <div style={{
+                  ...cardStyle,
+                  background: M.night,
+                  border: `1px solid rgba(255,255,255,0.08)`,
+                }}>
+                  <h2 style={{
+                    fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
+                    fontSize: 20, color: '#ffffff', marginBottom: 16,
+                    display: 'flex', alignItems: 'center', gap: 10,
+                  }}>
+                    <Euro style={{ width: 18, height: 18, color: M.caramel }} />
+                    Votre engagement financier
+                  </h2>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+                    gap: 1,
+                    background: 'rgba(255,255,255,0.06)',
+                    borderRadius: 10,
+                    overflow: 'hidden',
+                    border: '1px solid rgba(255,255,255,0.07)',
+                    marginBottom: 14,
+                  }}>
+                    {[
+                      { label: 'Loyer HC / mois', val: fmtEURc(rent) },
+                      { label: 'Charges / mois', val: charges > 0 ? fmtEURc(charges) : '—' },
+                      { label: 'Total / mois', val: fmtEUR(total), accent: true },
+                      { label: 'Total / an', val: fmtEUR(annuel) },
+                      ...(deposit > 0 ? [{ label: 'Dépôt de garantie', val: fmtEUR(deposit) }] : []),
+                      ...(months ? [{ label: `Durée du bail`, val: `${months} mois` }] : []),
+                      ...(months ? [{ label: `Total sur la durée`, val: fmtEUR(total * months) }] : []),
+                    ].map((item, i) => (
+                      <div key={i} style={{ padding: '12px 16px', background: item.accent ? 'rgba(196,151,106,0.15)' : 'transparent' }}>
+                        <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', margin: '0 0 4px', letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>
+                          {item.label}
+                        </p>
+                        <p style={{ fontSize: 16, fontWeight: 700, color: item.accent ? M.caramel : '#ffffff', margin: 0 }}>
+                          {item.val}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', margin: 0, fontStyle: 'italic' }}>
+                    Loyer révisable chaque année à la date anniversaire selon l'Indice de Référence des Loyers (IRL – INSEE)
+                  </p>
+                </div>
+              )
+            })()}
+
+            {/* PDF & EDL — mis en avant */}
+            <div style={{ ...cardStyle, background: M.night, border: '1px solid rgba(255,255,255,0.08)' }}>
+              <h2 style={{
+                fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
+                fontSize: 20, color: '#ffffff', marginBottom: 16,
+                display: 'flex', alignItems: 'center', gap: 10,
+              }}>
+                <FileText style={{ width: 18, height: 18, color: M.caramel }} />
+                Documents du contrat
+              </h2>
               <div className="flex flex-wrap gap-3">
                 <PDFDownloadLink
                   document={
@@ -762,17 +1142,18 @@ export default function ContractDetails() {
                 >
                   {({ loading }) => (
                     <button
-                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-[#d2d2d7] text-[#515154] rounded-xl text-sm font-semibold hover:bg-[#f5f5f7] disabled:opacity-50 transition-colors"
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 8,
+                        padding: '11px 20px', borderRadius: 9,
+                        background: M.caramel, color: '#ffffff',
+                        fontFamily: M.body, fontWeight: 600, fontSize: 13,
+                        border: 'none', cursor: 'pointer',
+                        opacity: loading ? 0.6 : 1,
+                      }}
                       disabled={loading}
                     >
-                      {loading ? (
-                        'Génération du PDF...'
-                      ) : (
-                        <>
-                          <Download className="w-4 h-4" />
-                          Télécharger le contrat PDF
-                        </>
-                      )}
+                      <Download style={{ width: 15, height: 15 }} />
+                      {loading ? 'Génération…' : 'Télécharger le contrat PDF'}
                     </button>
                   )}
                 </PDFDownloadLink>
@@ -780,41 +1161,106 @@ export default function ContractDetails() {
                 {contract.status !== 'DRAFT' && (
                   <Link
                     to={`/contracts/${contract.id}/edl`}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-[#d2d2d7] text-[#515154] rounded-xl text-sm font-semibold hover:bg-[#f5f5f7] transition-colors"
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 8,
+                      padding: '11px 20px', borderRadius: 9,
+                      background: 'rgba(255,255,255,0.10)',
+                      border: '1px solid rgba(255,255,255,0.16)',
+                      color: '#ffffff',
+                      fontFamily: M.body, fontWeight: 500, fontSize: 13,
+                      textDecoration: 'none',
+                    }}
                   >
-                    <ClipboardCheck className="w-4 h-4" />
+                    <ClipboardCheck style={{ width: 15, height: 15 }} />
                     État des lieux
                   </Link>
                 )}
               </div>
+              {contract.status === 'DRAFT' && isOwner && (
+                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 10, fontStyle: 'italic' }}>
+                  L'état des lieux sera disponible une fois le contrat envoyé au locataire.
+                </p>
+              )}
             </div>
+
+            {/* Dossier locataire — accès rapide pour le propriétaire */}
+            {isOwner && contract.tenant && (
+              <div style={{
+                ...cardStyle,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                gap: 16, flexWrap: 'wrap',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+                    background: M.ownerLight,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <ShieldCheck style={{ width: 20, height: 20, color: M.owner }} />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: M.ink, margin: 0, fontFamily: M.body }}>
+                      Dossier de {contract.tenant.firstName} {contract.tenant.lastName}
+                    </p>
+                    <p style={{ fontSize: 12, color: M.inkFaint, margin: '2px 0 0', fontFamily: M.body }}>
+                      Consultez les pièces justificatives · Documents filigrainés et sécurisés
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDossierModal(true)}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 8,
+                    padding: '10px 18px', borderRadius: 8,
+                    background: M.owner, color: '#ffffff',
+                    fontFamily: M.body, fontWeight: 600, fontSize: 13,
+                    border: 'none', cursor: 'pointer', flexShrink: 0,
+                  }}
+                >
+                  <FolderOpen style={{ width: 15, height: 15 }} />
+                  Consulter le dossier
+                </button>
+              </div>
+            )}
 
             {/* Document Requirements Section - DRAFT mode */}
             {contract.status === 'DRAFT' && isOwner && (
-              <div className={cardClass} style={cardStyle}>
-                <h2 className="text-lg font-semibold text-[#1d1d1f] mb-1.5 flex items-center gap-2">
-                  <FolderOpen className="w-5 h-5 text-[#3b82f6]" />
+              <div style={cardStyle}>
+                <h2 style={{
+                  fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
+                  fontSize: 20, color: M.ink, marginBottom: 6,
+                  display: 'flex', alignItems: 'center', gap: 10,
+                }}>
+                  <FolderOpen style={{ width: 20, height: 20, color: M.owner }} />
                   Dossier de location — Documents requis
                 </h2>
-                <p className="text-sm text-[#86868b] mb-5">
+                <p style={{ fontSize: 13, color: M.inkMid, marginBottom: 20 }}>
                   Sélectionnez les documents que le locataire devra fournir avant la signature du contrat.
                 </p>
 
                 {/* Owner documents (DDT) */}
-                <div className="mb-5">
-                  <h4 className="text-sm font-semibold text-[#1d1d1f] mb-2.5">Documents propriétaire (DDT)</h4>
+                <div style={{ marginBottom: 20 }}>
+                  <h4 style={{ fontSize: 12, fontWeight: 700, color: M.ink, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    Documents propriétaire (DDT)
+                  </h4>
                   <div className="space-y-1">
                     {OWNER_DOCUMENT_CHECKLIST.map((item) => (
-                      <label key={item.category} className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-[#f5f5f7] cursor-pointer transition-colors">
+                      <label key={item.category} style={{
+                        display: 'flex', alignItems: 'flex-start', gap: 12,
+                        padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
+                      }}
+                        onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                      >
                         <input
                           type="checkbox"
                           checked={requiredDocs.has(item.category)}
                           onChange={() => toggleRequiredDoc(item.category)}
-                          className="mt-0.5 rounded border-[#d2d2d7] text-[#3b82f6] focus:ring-[rgba(59,130,246,0.2)]"
+                          style={{ marginTop: 2 }}
                         />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-[#1d1d1f]">{item.label}</p>
-                          <p className="text-xs text-[#86868b]">{item.description}</p>
+                          <p style={{ fontSize: 13, fontWeight: 500, color: M.ink }}>{item.label}</p>
+                          <p style={{ fontSize: 11, color: M.inkFaint }}>{item.description}</p>
                         </div>
                       </label>
                     ))}
@@ -822,20 +1268,28 @@ export default function ContractDetails() {
                 </div>
 
                 {/* Tenant documents */}
-                <div className="mb-5">
-                  <h4 className="text-sm font-semibold text-[#1d1d1f] mb-2.5">Documents locataire</h4>
+                <div style={{ marginBottom: 20 }}>
+                  <h4 style={{ fontSize: 12, fontWeight: 700, color: M.ink, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    Documents locataire
+                  </h4>
                   <div className="space-y-1">
                     {TENANT_DOCUMENT_CHECKLIST.map((item) => (
-                      <label key={item.category} className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-[#f5f5f7] cursor-pointer transition-colors">
+                      <label key={item.category} style={{
+                        display: 'flex', alignItems: 'flex-start', gap: 12,
+                        padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
+                      }}
+                        onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                      >
                         <input
                           type="checkbox"
                           checked={requiredDocs.has(item.category)}
                           onChange={() => toggleRequiredDoc(item.category)}
-                          className="mt-0.5 rounded border-[#d2d2d7] text-[#3b82f6] focus:ring-[rgba(59,130,246,0.2)]"
+                          style={{ marginTop: 2 }}
                         />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-[#1d1d1f]">{item.label}</p>
-                          <p className="text-xs text-[#86868b]">{item.description}</p>
+                          <p style={{ fontSize: 13, fontWeight: 500, color: M.ink }}>{item.label}</p>
+                          <p style={{ fontSize: 11, color: M.inkFaint }}>{item.description}</p>
                         </div>
                       </label>
                     ))}
@@ -843,35 +1297,49 @@ export default function ContractDetails() {
                 </div>
 
                 {/* Custom document requests */}
-                <div className="mb-5">
-                  <div className="flex items-center justify-between mb-2.5">
-                    <h4 className="text-sm font-semibold text-[#1d1d1f]">Demandes personnalisées</h4>
+                <div style={{ marginBottom: 20 }}>
+                  <div className="flex items-center justify-between" style={{ marginBottom: 10 }}>
+                    <h4 style={{ fontSize: 12, fontWeight: 700, color: M.ink, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      Demandes personnalisées
+                    </h4>
                     <button
                       type="button"
                       onClick={() => setShowCustomDocForm(true)}
-                      className="text-sm text-[#3b82f6] hover:text-[#2563eb] flex items-center gap-1 font-medium transition-colors"
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 4,
+                        fontSize: 12, fontWeight: 500, color: M.owner,
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        fontFamily: M.body,
+                      }}
                     >
-                      <Plus className="w-4 h-4" />
+                      <Plus style={{ width: 14, height: 14 }} />
                       Ajouter
                     </button>
                   </div>
 
                   {customDocRequests.length > 0 && (
-                    <div className="space-y-2 mb-3">
+                    <div className="space-y-2" style={{ marginBottom: 12 }}>
                       {customDocRequests.map((doc, index) => (
-                        <div key={index} className="flex items-start gap-3 p-3 bg-[#eff6ff] border border-[#bfdbfe] rounded-xl">
-                          <FileText className="w-4 h-4 text-[#3b82f6] mt-0.5 shrink-0" />
+                        <div key={index} style={{
+                          display: 'flex', alignItems: 'flex-start', gap: 12,
+                          padding: '10px 12px',
+                          background: M.ownerLight, border: `1px solid ${M.ownerBorder}`,
+                          borderRadius: 8,
+                        }}>
+                          <FileText style={{ width: 14, height: 14, color: M.owner, marginTop: 2, flexShrink: 0 }} />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-[#1d1d1f]">{doc.title}</p>
+                            <p style={{ fontSize: 13, fontWeight: 500, color: M.ink }}>{doc.title}</p>
                             {doc.description && (
-                              <p className="text-xs text-[#86868b] mt-0.5">{doc.description}</p>
+                              <p style={{ fontSize: 11, color: M.inkFaint, marginTop: 2 }}>{doc.description}</p>
                             )}
                           </div>
                           <button
                             onClick={() => handleRemoveCustomDoc(index)}
-                            className="p-1 rounded text-[#86868b] hover:text-red-500 transition-colors"
+                            style={{ padding: 4, background: 'none', border: 'none', cursor: 'pointer', color: M.inkFaint }}
+                            onMouseEnter={e => (e.currentTarget.style.color = M.danger)}
+                            onMouseLeave={e => (e.currentTarget.style.color = M.inkFaint)}
                           >
-                            <X className="w-4 h-4" />
+                            <X style={{ width: 14, height: 14 }} />
                           </button>
                         </div>
                       ))}
@@ -879,32 +1347,35 @@ export default function ContractDetails() {
                   )}
 
                   {showCustomDocForm && (
-                    <div className="p-4 bg-[#f5f5f7] border border-[#d2d2d7] rounded-xl space-y-2.5">
+                    <div style={{
+                      padding: '14px', background: M.muted,
+                      border: `1px solid ${M.border}`, borderRadius: 8,
+                    }} className="space-y-2">
                       <input
                         type="text"
                         value={newCustomDoc.title}
                         onChange={(e) => setNewCustomDoc(prev => ({ ...prev, title: e.target.value }))}
                         placeholder="Titre du document (ex : Garantie Visale)"
-                        className={inputClass}
+                        style={inputStyle}
                       />
                       <input
                         type="text"
                         value={newCustomDoc.description}
                         onChange={(e) => setNewCustomDoc(prev => ({ ...prev, description: e.target.value }))}
                         placeholder="Description (facultatif)"
-                        className={inputClass}
+                        style={inputStyle}
                       />
                       <div className="flex gap-2 justify-end">
                         <button
                           onClick={() => { setShowCustomDocForm(false); setNewCustomDoc({ title: '', description: '' }) }}
-                          className="px-3 py-1.5 bg-white border border-[#d2d2d7] text-[#515154] rounded-xl text-xs font-semibold hover:bg-[#f5f5f7] transition-colors"
+                          style={{ ...btnGhost, padding: '6px 14px', fontSize: 12 }}
                         >
                           Annuler
                         </button>
                         <button
                           onClick={handleAddCustomDoc}
                           disabled={!newCustomDoc.title.trim()}
-                          className="px-3 py-1.5 bg-[#3b82f6] text-white rounded-xl text-xs font-semibold hover:bg-[#2563eb] disabled:opacity-50 transition-colors"
+                          style={{ ...btnPrimary, padding: '6px 14px', fontSize: 12, opacity: !newCustomDoc.title.trim() ? 0.5 : 1 }}
                         >
                           Ajouter
                         </button>
@@ -913,22 +1384,26 @@ export default function ContractDetails() {
                   )}
 
                   {customDocRequests.length === 0 && !showCustomDocForm && (
-                    <p className="text-xs text-[#86868b] italic">Aucune demande personnalisée</p>
+                    <p style={{ fontSize: 12, color: M.inkFaint, fontStyle: 'italic' }}>Aucune demande personnalisée</p>
                   )}
                 </div>
 
-                <div className="text-xs text-[#86868b] mb-4 p-3 bg-[#f5f5f7] border border-[#d2d2d7] rounded-xl">
+                <div style={{
+                  fontSize: 11, color: M.inkFaint, marginBottom: 16,
+                  padding: '10px 14px',
+                  background: M.muted, border: `1px solid ${M.border}`, borderRadius: 8,
+                }}>
                   Format accepté : PDF uniquement — Taille max : 5 Mo par document
                 </div>
 
                 <button
                   onClick={handleSaveDocRequirements}
                   disabled={actionLoading}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-[#d2d2d7] text-[#515154] rounded-xl text-sm font-semibold hover:bg-[#f5f5f7] disabled:opacity-50 transition-colors"
+                  style={{ ...btnGhost, opacity: actionLoading ? 0.5 : 1 }}
                 >
                   {docsSaved ? (
                     <>
-                      <Check className="w-4 h-4 text-emerald-500" />
+                      <Check style={{ width: 14, height: 14, color: M.tenant }} />
                       Enregistré
                     </>
                   ) : (
@@ -940,22 +1415,29 @@ export default function ContractDetails() {
 
             {/* Documents - Dossier de location (after DRAFT) */}
             {contract.status !== 'DRAFT' && (
-              <div className={cardClass} style={cardStyle}>
-                <h2 className="text-lg font-semibold text-[#1d1d1f] mb-1.5 flex items-center gap-2">
-                  <FolderOpen className="w-5 h-5 text-[#3b82f6]" />
+              <div style={cardStyle}>
+                <h2 style={{
+                  fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
+                  fontSize: 20, color: M.ink, marginBottom: 6,
+                  display: 'flex', alignItems: 'center', gap: 10,
+                }}>
+                  <FolderOpen style={{ width: 20, height: 20, color: M.owner }} />
                   Dossier de location
                 </h2>
-                <p className="text-sm text-[#86868b] mb-5">
+                <p style={{ fontSize: 13, color: M.inkMid, marginBottom: 20 }}>
                   Téléchargez les documents obligatoires pour constituer le dossier complet.
                 </p>
 
                 {isOwner && (
-                  <div className="mb-6">
+                  <div style={{ marginBottom: 24 }}>
                     <DocumentChecklist
                       contractId={contract.id}
                       userRole="OWNER"
                       isOwner={true}
                       requiredCategories={requiredDocuments}
+                      contractRef={contract.id.substring(0, 8).toUpperCase()}
+                      tenantName={`${contract.tenant?.firstName ?? ''} ${contract.tenant?.lastName ?? ''}`}
+                      tenantHasSigned={!!contract.signedByTenant}
                     />
                   </div>
                 )}
@@ -976,6 +1458,9 @@ export default function ContractDetails() {
                       isOwner={isOwner}
                       requiredCategories={tenantRequired}
                       customItems={customDocItems}
+                      contractRef={contract.id.substring(0, 8).toUpperCase()}
+                      tenantName={`${contract.tenant?.firstName ?? ''} ${contract.tenant?.lastName ?? ''}`}
+                      tenantHasSigned={!!contract.signedByTenant}
                     />
                   )
                 })()}
@@ -994,27 +1479,46 @@ export default function ContractDetails() {
 
         {/* Send Confirmation Modal */}
         {showSendModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-[#d2d2d7]">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-[#1d1d1f]">Envoyer le contrat</h3>
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 50,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 16, background: 'rgba(13,12,10,0.45)',
+          }}>
+            <div style={{
+              background: M.surface,
+              border: `1px solid ${M.border}`,
+              borderRadius: 14,
+              boxShadow: '0 8px 40px rgba(13,12,10,0.18)',
+              maxWidth: 460, width: '100%', padding: 24,
+              fontFamily: M.body,
+            }}>
+              <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
+                <h3 style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: M.ink }}>
+                  Envoyer le contrat
+                </h3>
                 <button
                   onClick={() => setShowSendModal(false)}
-                  className="p-1.5 rounded-xl hover:bg-[#f0f0f2] transition-colors"
+                  style={{ padding: 6, background: 'none', border: 'none', cursor: 'pointer', color: M.inkFaint, borderRadius: 6 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                 >
-                  <X className="w-5 h-5 text-[#86868b]" />
+                  <X style={{ width: 18, height: 18 }} />
                 </button>
               </div>
 
-              <p className="text-sm text-[#515154] mb-4">
+              <p style={{ fontSize: 13, color: M.inkMid, marginBottom: 16 }}>
                 Le contrat sera envoyé au locataire avec la liste des {requiredDocs.size} document(s) requis
                 {customDocRequests.length > 0 ? ` et ${customDocRequests.length} demande(s) personnalisée(s)` : ''}.
               </p>
 
               {requiredDocs.size === 0 && (
-                <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
-                  <p className="text-sm text-amber-700">
+                <div style={{
+                  marginBottom: 16, padding: '10px 14px',
+                  background: M.warningBg, border: `1px solid ${M.caramel}`,
+                  borderRadius: 8, display: 'flex', alignItems: 'center', gap: 10,
+                }}>
+                  <AlertCircle style={{ width: 15, height: 15, color: M.warning, flexShrink: 0 }} />
+                  <p style={{ fontSize: 12, color: M.warning }}>
                     Veuillez d'abord sélectionner les documents requis dans la section "Dossier de location" ci-dessus.
                   </p>
                 </div>
@@ -1024,19 +1528,26 @@ export default function ContractDetails() {
                 <button
                   onClick={() => setShowSendModal(false)}
                   disabled={actionLoading}
-                  className="px-4 py-2.5 bg-white border border-[#d2d2d7] text-[#515154] rounded-xl text-sm font-semibold hover:bg-[#f5f5f7] disabled:opacity-50 transition-colors"
+                  style={{ ...btnGhost, opacity: actionLoading ? 0.5 : 1 }}
                 >
                   Annuler
                 </button>
                 <button
                   onClick={handleSend}
                   disabled={actionLoading || requiredDocs.size === 0}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#3b82f6] text-white rounded-xl text-sm font-semibold hover:bg-[#2563eb] disabled:opacity-50 transition-colors"
+                  style={{
+                    ...btnPrimary,
+                    opacity: actionLoading || requiredDocs.size === 0 ? 0.5 : 1,
+                  }}
                 >
                   {actionLoading ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <div style={{
+                      width: 14, height: 14, borderRadius: '50%',
+                      border: '2px solid rgba(255,255,255,0.3)',
+                      borderTopColor: '#ffffff',
+                    }} className="animate-spin" />
                   ) : (
-                    <Send className="w-4 h-4" />
+                    <Send style={{ width: 14, height: 14 }} />
                   )}
                   Confirmer l'envoi
                 </button>
@@ -1047,45 +1558,62 @@ export default function ContractDetails() {
 
         {/* Confirmation Modal */}
         {confirmModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-[#d2d2d7]">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-[#1d1d1f]">
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 50,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 16, background: 'rgba(13,12,10,0.45)',
+          }}>
+            <div style={{
+              background: M.surface,
+              border: `1px solid ${M.border}`,
+              borderRadius: 14,
+              boxShadow: '0 8px 40px rgba(13,12,10,0.18)',
+              maxWidth: 460, width: '100%', padding: 24,
+              fontFamily: M.body,
+            }}>
+              <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
+                <h3 style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: M.ink }}>
                   {confirmModal === 'delete' && 'Supprimer le contrat'}
                   {confirmModal === 'terminate' && 'Résilier le contrat'}
                   {confirmModal === 'cancel' && 'Annuler le contrat'}
                 </h3>
                 <button
                   onClick={() => { setConfirmModal(null); setCancelReason('') }}
-                  className="p-1.5 rounded-xl hover:bg-[#f0f0f2] transition-colors"
+                  style={{ padding: 6, background: 'none', border: 'none', cursor: 'pointer', color: M.inkFaint, borderRadius: 6 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                 >
-                  <X className="w-5 h-5 text-[#86868b]" />
+                  <X style={{ width: 18, height: 18 }} />
                 </button>
               </div>
 
-              <div className={`p-3 rounded-xl mb-4 flex items-start gap-2 ${
-                confirmModal === 'cancel' ? 'bg-amber-50 border border-amber-200' : 'bg-red-50 border border-red-200'
-              }`}>
-                <AlertTriangle className={`w-5 h-5 shrink-0 mt-0.5 ${
-                  confirmModal === 'cancel' ? 'text-amber-500' : 'text-red-500'
-                }`} />
-                <div className="text-sm">
+              <div style={{
+                padding: '12px 14px', borderRadius: 8, marginBottom: 16,
+                display: 'flex', alignItems: 'flex-start', gap: 10,
+                background: confirmModal === 'cancel' ? M.warningBg : M.dangerBg,
+                border: `1px solid ${confirmModal === 'cancel' ? M.caramel : '#fca5a5'}`,
+              }}>
+                <AlertTriangle style={{
+                  width: 18, height: 18, flexShrink: 0, marginTop: 1,
+                  color: confirmModal === 'cancel' ? M.warning : M.danger,
+                }} />
+                <div style={{ fontSize: 13 }}>
                   {confirmModal === 'delete' && (
-                    <p className="text-red-700">
+                    <p style={{ color: M.danger }}>
                       Cette action est irréversible. Le contrat brouillon sera définitivement supprimé.
                     </p>
                   )}
                   {confirmModal === 'terminate' && (
-                    <p className="text-red-700">
+                    <p style={{ color: M.danger }}>
                       La résiliation mettra fin au contrat actif. Le bien sera remis en disponible.
                     </p>
                   )}
                   {confirmModal === 'cancel' && (
                     <>
-                      <p className="text-amber-800 font-medium">
+                      <p style={{ color: M.warning, fontWeight: 600 }}>
                         Attention : cette action annulera le contrat en cours de signature.
                       </p>
-                      <p className="text-amber-700 mt-1">
+                      <p style={{ color: M.warning, marginTop: 4 }}>
                         {contract.signedByOwner || contract.signedByTenant
                           ? 'Une ou plusieurs signatures ont déjà été apposées. Elles seront invalidées.'
                           : "Le locataire sera notifié de l'annulation."}
@@ -1096,15 +1624,17 @@ export default function ContractDetails() {
               </div>
 
               {confirmModal === 'cancel' && (
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-[#1d1d1f] mb-1.5">
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ ...labelStyle, marginBottom: 6 }}>
                     Motif de l'annulation (obligatoire)
                   </label>
                   <textarea
                     value={cancelReason}
                     onChange={(e) => setCancelReason(e.target.value)}
                     placeholder="Ex : Erreur dans les conditions, changement de locataire..."
-                    className="w-full bg-white border border-[#d2d2d7] rounded-xl p-3 text-sm text-[#1d1d1f] h-24 resize-none outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[rgba(59,130,246,0.12)] placeholder:text-[#86868b]"
+                    style={{
+                      ...inputStyle, height: 96, resize: 'none',
+                    }}
                   />
                 </div>
               )}
@@ -1113,7 +1643,7 @@ export default function ContractDetails() {
                 <button
                   onClick={() => { setConfirmModal(null); setCancelReason('') }}
                   disabled={actionLoading}
-                  className="px-4 py-2.5 bg-white border border-[#d2d2d7] text-[#515154] rounded-xl text-sm font-semibold hover:bg-[#f5f5f7] disabled:opacity-50 transition-colors"
+                  style={{ ...btnGhost, opacity: actionLoading ? 0.5 : 1 }}
                 >
                   Retour
                 </button>
@@ -1124,17 +1654,25 @@ export default function ContractDetails() {
                     handleCancel
                   }
                   disabled={actionLoading || (confirmModal === 'cancel' && !cancelReason.trim())}
-                  className={`inline-flex items-center gap-2 px-4 py-2.5 text-white rounded-xl text-sm font-semibold disabled:opacity-50 transition-colors ${
-                    confirmModal === 'cancel' ? 'bg-amber-500 hover:bg-amber-600' : 'bg-red-600 hover:bg-red-700'
-                  }`}
+                  style={{
+                    ...btnDanger,
+                    background: confirmModal === 'cancel' ? M.warningBg : M.dangerBg,
+                    color: confirmModal === 'cancel' ? M.warning : M.danger,
+                    border: `1px solid ${confirmModal === 'cancel' ? M.caramel : '#fca5a5'}`,
+                    opacity: actionLoading || (confirmModal === 'cancel' && !cancelReason.trim()) ? 0.5 : 1,
+                  }}
                 >
                   {actionLoading ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <div style={{
+                      width: 14, height: 14, borderRadius: '50%',
+                      border: `2px solid rgba(0,0,0,0.2)`,
+                      borderTopColor: confirmModal === 'cancel' ? M.warning : M.danger,
+                    }} className="animate-spin" />
                   ) : (
                     <>
-                      {confirmModal === 'delete' && <Trash2 className="w-4 h-4" />}
-                      {confirmModal === 'terminate' && <Ban className="w-4 h-4" />}
-                      {confirmModal === 'cancel' && <XCircle className="w-4 h-4" />}
+                      {confirmModal === 'delete' && <Trash2 style={{ width: 14, height: 14 }} />}
+                      {confirmModal === 'terminate' && <Ban style={{ width: 14, height: 14 }} />}
+                      {confirmModal === 'cancel' && <XCircle style={{ width: 14, height: 14 }} />}
                     </>
                   )}
                   {confirmModal === 'delete' && 'Supprimer définitivement'}
@@ -1145,7 +1683,192 @@ export default function ContractDetails() {
             </div>
           </div>
         )}
+
+        {/* ── Propriétaire : checklist pré-envoi ───────────────────────────────── */}
+        {showPreSendChecklist && (
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 50,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 16, background: 'rgba(13,12,10,0.45)',
+          }}>
+            <div style={{
+              background: M.surface, border: `1px solid ${M.border}`,
+              borderRadius: 14, boxShadow: '0 8px 40px rgba(13,12,10,0.18)',
+              maxWidth: 480, width: '100%', padding: 28, fontFamily: M.body,
+            }}>
+              <div className="flex items-center gap-3" style={{ marginBottom: 20 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: M.ownerLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <ClipboardCheck style={{ width: 20, height: 20, color: M.owner }} />
+                </div>
+                <div>
+                  <h3 style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: M.ink, margin: 0 }}>
+                    Avant d'envoyer
+                  </h3>
+                  <p style={{ fontSize: 12, color: M.inkFaint, margin: 0 }}>Confirmez chaque point avant l'envoi au locataire</p>
+                </div>
+              </div>
+
+              <div className="space-y-3" style={{ marginBottom: 24 }}>
+                {/* Item dossier — spécial avec bouton d'ouverture */}
+                {[
+                  { key: 'property' as const, label: "J'ai vérifié les informations du bien (adresse, surface, type)", sub: `${contract.property?.address}, ${contract.property?.city}`, action: null },
+                  { key: 'clauses' as const, label: "J'ai relu et validé toutes les clauses du contrat", sub: `${clauses.filter(c => c.enabled).length} clause(s) activée(s)`, action: null },
+                  { key: 'dossier' as const, label: "J'ai consulté le dossier du locataire et vérifié son identité", sub: `${contract.tenant?.firstName} ${contract.tenant?.lastName}`, action: 'dossier' },
+                  { key: 'docs' as const, label: "J'ai configuré les documents requis et éventuelles demandes personnalisées", sub: `${requiredDocs.size} document(s) requis sélectionné(s)`, action: null },
+                ].map(({ key, label, sub, action }) => (
+                  <div key={key} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                    <div
+                      onClick={() => setPreSendChecks(prev => ({ ...prev, [key]: !prev[key] }))}
+                      style={{
+                        width: 20, height: 20, borderRadius: 5, flexShrink: 0, marginTop: 2,
+                        border: `2px solid ${preSendChecks[key] ? M.owner : M.border}`,
+                        background: preSendChecks[key] ? M.owner : M.surface,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer', transition: 'all 0.15s',
+                      }}
+                    >
+                      {preSendChecks[key] && <Check style={{ width: 12, height: 12, color: '#ffffff' }} />}
+                    </div>
+                    <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => setPreSendChecks(prev => ({ ...prev, [key]: !prev[key] }))}>
+                      <p style={{ fontSize: 13, fontWeight: 500, color: M.ink, margin: 0 }}>{label}</p>
+                      <p style={{ fontSize: 11, color: M.inkFaint, margin: '2px 0 0' }}>{sub}</p>
+                    </div>
+                    {action === 'dossier' && (
+                      <button
+                        onClick={() => {
+                          setShowDossierModal(true)
+                          setPreSendChecks(prev => ({ ...prev, dossier: true }))
+                        }}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 6,
+                          padding: '5px 12px', borderRadius: 6, flexShrink: 0,
+                          background: M.ownerLight, color: M.owner,
+                          border: `1px solid ${M.ownerBorder}`,
+                          fontFamily: M.body, fontWeight: 600, fontSize: 11,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <FolderOpen style={{ width: 12, height: 12 }} />
+                        Ouvrir →
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowPreSendChecklist(false)}
+                  style={{ ...btnGhost }}
+                  onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
+                  onMouseLeave={e => (e.currentTarget.style.background = M.surface)}
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={() => { setShowPreSendChecklist(false); setShowSendModal(true) }}
+                  disabled={!Object.values(preSendChecks).every(Boolean)}
+                  style={{
+                    ...btnPrimary,
+                    opacity: Object.values(preSendChecks).every(Boolean) ? 1 : 0.4,
+                    cursor: Object.values(preSendChecks).every(Boolean) ? 'pointer' : 'not-allowed',
+                  }}
+                >
+                  <Send style={{ width: 14, height: 14 }} />
+                  Continuer vers l'envoi
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Locataire : checklist pré-signature ──────────────────────────────── */}
+        {showPreSignChecklist && (
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 50,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 16, background: 'rgba(13,12,10,0.45)',
+          }}>
+            <div style={{
+              background: M.surface, border: `1px solid ${M.border}`,
+              borderRadius: 14, boxShadow: '0 8px 40px rgba(13,12,10,0.18)',
+              maxWidth: 460, width: '100%', padding: 28, fontFamily: M.body,
+            }}>
+              <div className="flex items-center gap-3" style={{ marginBottom: 20 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: M.tenantLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <ShieldCheck style={{ width: 20, height: 20, color: M.tenant }} />
+                </div>
+                <div>
+                  <h3 style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: M.ink, margin: 0 }}>
+                    Avant de signer
+                  </h3>
+                  <p style={{ fontSize: 12, color: M.inkFaint, margin: 0 }}>Confirmez avoir vérifié chaque point. La signature est définitive.</p>
+                </div>
+              </div>
+
+              <div className="space-y-3" style={{ marginBottom: 24 }}>
+                {[
+                  { key: 'property' as const, label: "J'ai vérifié les informations du logement", sub: `${contract.property?.address}, ${contract.property?.city} — ${contract.property?.surface} m²` },
+                  { key: 'clauses' as const, label: "J'ai lu et j'accepte toutes les clauses du contrat", sub: `${clauses.filter(c => c.enabled).length} clause(s) applicable(s)` },
+                  { key: 'amounts' as const, label: "J'ai vérifié les montants financiers", sub: `Loyer ${contract.monthlyRent} €/mois${contract.charges ? ` + ${contract.charges} € charges` : ''}${contract.deposit ? ` — Dépôt ${contract.deposit} €` : ''}` },
+                ].map(({ key, label, sub }) => (
+                  <label key={key} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer' }}>
+                    <div
+                      onClick={() => setPreSignChecks(prev => ({ ...prev, [key]: !prev[key] }))}
+                      style={{
+                        width: 20, height: 20, borderRadius: 5, flexShrink: 0, marginTop: 2,
+                        border: `2px solid ${preSignChecks[key] ? M.tenant : M.border}`,
+                        background: preSignChecks[key] ? M.tenant : M.surface,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer', transition: 'all 0.15s',
+                      }}
+                    >
+                      {preSignChecks[key] && <Check style={{ width: 12, height: 12, color: '#ffffff' }} />}
+                    </div>
+                    <div onClick={() => setPreSignChecks(prev => ({ ...prev, [key]: !prev[key] }))}>
+                      <p style={{ fontSize: 13, fontWeight: 500, color: M.ink, margin: 0 }}>{label}</p>
+                      <p style={{ fontSize: 11, color: M.inkFaint, margin: '2px 0 0' }}>{sub}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowPreSignChecklist(false)}
+                  style={{ ...btnGhost }}
+                  onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
+                  onMouseLeave={e => (e.currentTarget.style.background = M.surface)}
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={() => { setShowPreSignChecklist(false); setShowSignature(true) }}
+                  disabled={!Object.values(preSignChecks).every(Boolean)}
+                  style={{
+                    ...btnPrimary,
+                    background: M.tenant,
+                    opacity: Object.values(preSignChecks).every(Boolean) ? 1 : 0.4,
+                    cursor: Object.values(preSignChecks).every(Boolean) ? 'pointer' : 'not-allowed',
+                  }}
+                >
+                  <PenTool style={{ width: 14, height: 14 }} />
+                  Signer le contrat
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* ── Modal dossier locataire ──────────────────────────────────────────── */}
+      {showDossierModal && contract.tenant && (
+        <DossierReviewModal
+          tenantId={contract.tenantId}
+          tenantName={`${contract.tenant.firstName ?? ''} ${contract.tenant.lastName ?? ''}`}
+          onClose={() => setShowDossierModal(false)}
+        />
+      )}
     </Layout>
   )
 }

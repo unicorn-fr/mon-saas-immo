@@ -1,5 +1,6 @@
 import { PrismaClient, ContractStatus, Contract } from '@prisma/client'
 import { createHash } from 'crypto'
+import { messageService } from './message.service.js'
 
 const prisma = new PrismaClient()
 
@@ -301,6 +302,54 @@ class ContractService {
       include: contractIncludes,
     })
 
+    // Auto-import tenant dossier documents into contract checklist
+    const dossierCategoryMap: Record<string, string> = {
+      IDENTITE:       'IDENTITE_LOCATAIRE',
+      EMPLOI:         'CONTRAT_TRAVAIL',
+      SITUATION_PRO:  'CONTRAT_TRAVAIL',
+      REVENUS:        'DERNIER_BULLETIN',
+      DOMICILE:       'JUSTIFICATIF_DOMICILE',
+      HISTORIQUE:     'JUSTIFICATIF_DOMICILE',
+    }
+
+    const tenantDocs = await prisma.tenantDocument.findMany({
+      where: { userId: contract.tenantId, status: { not: 'REJECTED' } },
+      orderBy: { createdAt: 'desc' },
+    })
+
+    // Keep only most recent per dossier category
+    const seenDossierCategories = new Set<string>()
+    const docsToImport = tenantDocs.filter((doc) => {
+      if (seenDossierCategories.has(doc.category)) return false
+      seenDossierCategories.add(doc.category)
+      return true
+    })
+
+    const existingContractDocs = await prisma.contractDocument.findMany({
+      where: { contractId, fromDossier: true },
+    })
+    const existingFromDossierCategories = new Set(existingContractDocs.map((d) => d.category))
+
+    for (const doc of docsToImport) {
+      const contractCategory = dossierCategoryMap[doc.category]
+      if (!contractCategory) continue
+      if (existingFromDossierCategories.has(contractCategory)) continue
+
+      await prisma.contractDocument.create({
+        data: {
+          contractId,
+          uploadedById: contract.tenantId,
+          category: contractCategory,
+          status: 'UPLOADED',
+          fileName: doc.fileName,
+          fileUrl: doc.fileUrl,
+          fileSize: doc.fileSize,
+          mimeType: doc.mimeType,
+          fromDossier: true,
+        },
+      })
+    }
+
     // Create notification for tenant
     await prisma.notification.create({
       data: {
@@ -358,10 +407,13 @@ class ContractService {
     const existingSignatureMetadata = existingContent.signatureMetadata || {}
 
     if (isOwner) {
-      // Owner can sign: DRAFT, SENT, SIGNED_TENANT
-      const ownerAllowedStatuses: ContractStatus[] = [ContractStatus.DRAFT, ContractStatus.SENT, ContractStatus.SIGNED_TENANT]
-      if (!ownerAllowedStatuses.includes(contract.status as ContractStatus)) {
-        throw new Error('This contract cannot be signed in its current status')
+      // Owner can only sign after tenant has signed
+      if (contract.status !== ContractStatus.SIGNED_TENANT) {
+        const waitStatuses: string[] = [ContractStatus.SENT, ContractStatus.DRAFT, ContractStatus.SIGNED_OWNER]
+        if (waitStatuses.includes(contract.status)) {
+          throw new Error('Le locataire doit signer en premier avant que vous puissiez apposer votre signature.')
+        }
+        throw new Error('Ce contrat ne peut pas être signé dans son état actuel.')
       }
       if (contract.signedByOwner) {
         throw new Error('You have already signed this contract')
@@ -646,10 +698,10 @@ class ContractService {
       throw new Error('Unauthorized to upload document for this contract')
     }
 
-    // Validate file size (5 KB max)
-    const MAX_FILE_SIZE = 5 * 1024 // 5 KB in bytes
+    // Validate file size (5 MB max)
+    const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB in bytes
     if (fileData.fileSize > MAX_FILE_SIZE) {
-      throw new Error(`File size exceeds maximum of 5 KB. Size: ${(fileData.fileSize / 1024).toFixed(2)} KB`)
+      throw new Error(`File size exceeds maximum of 5 MB. Size: ${(fileData.fileSize / 1024 / 1024).toFixed(2)} MB`)
     }
 
     // Create document record
@@ -704,15 +756,20 @@ class ContractService {
   }
 
   /**
-   * Validate document (admin only)
+   * Validate document (owner or admin)
    */
-  async validateDocument(contractId: string, documentId: string) {
+  async validateDocument(contractId: string, documentId: string, userId?: string) {
     const document = await prisma.contractDocument.findUnique({
       where: { id: documentId },
+      include: { contract: { select: { ownerId: true, tenantId: true } } },
     })
 
     if (!document || document.contractId !== contractId) {
       throw new Error('Document not found')
+    }
+
+    if (userId && document.contract.ownerId !== userId) {
+      throw new Error('Unauthorized: Only the contract owner can validate documents')
     }
 
     const updated = await prisma.contractDocument.update({
@@ -729,19 +786,25 @@ class ContractService {
   }
 
   /**
-   * Reject document (admin only)
+   * Reject document (owner or admin)
    */
   async rejectDocument(
     contractId: string,
     documentId: string,
-    rejectionReason: string
+    rejectionReason: string,
+    userId?: string
   ) {
     const document = await prisma.contractDocument.findUnique({
       where: { id: documentId },
+      include: { contract: { select: { ownerId: true, tenantId: true } } },
     })
 
     if (!document || document.contractId !== contractId) {
       throw new Error('Document not found')
+    }
+
+    if (userId && document.contract.ownerId !== userId) {
+      throw new Error('Unauthorized: Only the contract owner can reject documents')
     }
 
     const updated = await prisma.contractDocument.update({

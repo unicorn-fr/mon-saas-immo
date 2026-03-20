@@ -21,6 +21,17 @@ import {
 } from 'lucide-react'
 import { SearchMap } from '../../components/property/SearchMap'
 
+const M = {
+  bg: '#fafaf8', surface: '#ffffff', muted: '#f4f2ee', inputBg: '#f8f7f4',
+  ink: '#0d0c0a', inkMid: '#5a5754', inkFaint: '#9e9b96',
+  tenant: '#1b5e3b', tenantLight: '#edf7f2', tenantBorder: '#9fd4ba',
+  border: '#e4e1db', borderMid: '#ccc9c3',
+  danger: '#9b1c1c', dangerBg: '#fef2f2',
+  warning: '#92400e', warningBg: '#fdf5ec',
+  display: "'Cormorant Garamond', Georgia, serif",
+  body: "'DM Sans', system-ui, sans-serif",
+}
+
 export default function SearchProperties() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { isAuthenticated } = useAuth()
@@ -111,36 +122,70 @@ export default function SearchProperties() {
 
   return (
     <Layout>
-      <div style={{ background: '#f5f5f7' }} className="min-h-screen">
-        {/* Search Bar Section */}
-        <div className="bg-white border-b border-[#d2d2d7]" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+      <div style={{ background: M.bg, fontFamily: M.body }} className="min-h-screen">
+
+        {/* Search Bar */}
+        <div style={{ background: M.surface, borderBottom: `1px solid ${M.border}`, boxShadow: '0 1px 2px rgba(13,12,10,0.04)' }}>
           <div className="container mx-auto px-4 py-4">
             <form onSubmit={handleSearch} className="flex gap-3">
               <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Search
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
+                  style={{ color: M.inkFaint }}
+                />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Rechercher par ville, adresse, code postal..."
-                  className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-[#d2d2d7] bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#007AFF]/30 focus:border-[#007AFF] transition-colors"
+                  placeholder="Rechercher par ville, adresse, code postal…"
+                  style={{
+                    background: M.inputBg,
+                    border: `1px solid ${M.border}`,
+                    borderRadius: 8,
+                    color: M.ink,
+                    fontFamily: M.body,
+                    fontSize: 14,
+                    outline: 'none',
+                  }}
+                  className="w-full pl-9 pr-9 py-2.5 transition-colors"
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = M.tenant
+                    e.currentTarget.style.boxShadow = `0 0 0 3px ${M.tenantLight}`
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = M.border
+                    e.currentTarget.style.boxShadow = 'none'
+                  }}
                 />
                 {searchQuery && (
                   <button
                     type="button"
-                    onClick={() => {
-                      setSearchQuery('')
-                      setSearchParams({})
-                    }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    onClick={() => { setSearchQuery(''); setSearchParams({}) }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+                    style={{ color: M.inkFaint }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = M.inkMid }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = M.inkFaint }}
                   >
-                    <X className="w-5 h-5" />
+                    <X className="w-4 h-4" />
                   </button>
                 )}
               </div>
               <button
                 type="submit"
-                className="px-5 py-2.5 rounded-xl bg-[#007AFF] text-white font-semibold text-sm hover:bg-[#0066d6] transition-colors"
+                style={{
+                  background: M.tenant,
+                  color: '#fff',
+                  borderRadius: 8,
+                  fontFamily: M.body,
+                  fontWeight: 600,
+                  fontSize: 14,
+                  border: 'none',
+                  padding: '0 20px',
+                  cursor: 'pointer',
+                  transition: 'opacity 0.15s',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.88' }}
+                onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
               >
                 Rechercher
               </button>
@@ -151,40 +196,55 @@ export default function SearchProperties() {
         {/* Content */}
         <div className="container mx-auto px-4 py-6">
           <div className="flex gap-6">
+
             {/* Filters Sidebar */}
             <div
-              className={`${
-                showFilters ? 'w-80' : 'w-0'
-              } transition-all duration-300 overflow-hidden flex-shrink-0`}
+              className={`${showFilters ? 'w-80' : 'w-0'} transition-all duration-300 overflow-hidden flex-shrink-0`}
             >
-              <SearchFilters
-                filters={filters}
-                onFiltersChange={handleFiltersChange}
-                onReset={handleResetFilters}
-              />
+              <div style={{
+                background: M.surface,
+                border: `1px solid ${M.border}`,
+                borderRadius: 12,
+                boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
+              }}>
+                <SearchFilters
+                  filters={filters}
+                  onFiltersChange={handleFiltersChange}
+                  onReset={handleResetFilters}
+                />
+              </div>
             </div>
 
             {/* Main Content */}
             <div className="flex-1 min-w-0">
+
               {/* Toolbar */}
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setShowFilters(!showFilters)}
-                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
-                      showFilters
-                        ? 'bg-[#007AFF] text-white hover:bg-[#0066d6]'
-                        : 'bg-white text-slate-700 border border-[#d2d2d7] hover:bg-slate-50'
-                    }`}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold transition-colors"
+                    style={{
+                      borderRadius: 8,
+                      border: `1px solid ${showFilters ? M.tenant : M.border}`,
+                      background: showFilters ? M.tenant : M.surface,
+                      color: showFilters ? '#fff' : M.inkMid,
+                      fontFamily: M.body,
+                      cursor: 'pointer',
+                    }}
                   >
                     <SlidersHorizontal className="w-4 h-4" />
                     Filtres
                     {hasActiveFilters && (
-                      <span className="ml-1 w-2 h-2 bg-white rounded-full opacity-90"></span>
+                      <span style={{
+                        width: 6, height: 6, borderRadius: '50%',
+                        background: showFilters ? '#fff' : M.tenant,
+                        display: 'inline-block', marginLeft: 2,
+                      }} />
                     )}
                   </button>
-                  <p className="text-slate-600 text-sm">
-                    <span className="font-semibold text-slate-900">{propertiesTotal}</span>{' '}
+                  <p style={{ color: M.inkMid, fontSize: 14, fontFamily: M.body }}>
+                    <span style={{ fontWeight: 600, color: M.ink }}>{propertiesTotal}</span>{' '}
                     {propertiesTotal > 1 ? 'biens trouvés' : 'bien trouvé'}
                   </p>
                 </div>
@@ -199,7 +259,17 @@ export default function SearchProperties() {
                       setSortOrder(newSortOrder as any)
                       setCurrentPage(1)
                     }}
-                    className="px-3 py-2 rounded-xl border border-[#d2d2d7] bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#007AFF]/30 focus:border-[#007AFF]"
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: 8,
+                      border: `1px solid ${M.border}`,
+                      background: M.inputBg,
+                      color: M.inkMid,
+                      fontFamily: M.body,
+                      fontSize: 14,
+                      outline: 'none',
+                      cursor: 'pointer',
+                    }}
                   >
                     <option value="createdAt-desc">Plus récent</option>
                     <option value="createdAt-asc">Plus ancien</option>
@@ -209,75 +279,84 @@ export default function SearchProperties() {
                   </select>
 
                   {/* View Mode */}
-                  <div className="flex border border-[#d2d2d7] rounded-xl overflow-hidden bg-white">
-                    <button
-                      onClick={() => setViewMode('grid')}
-                      className={`p-2 transition-colors ${
-                        viewMode === 'grid'
-                          ? 'bg-[#007AFF] text-white'
-                          : 'text-slate-500 hover:bg-slate-50'
-                      }`}
-                      title="Vue grille"
-                    >
-                      <Grid3x3 className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => setViewMode('list')}
-                      className={`p-2 transition-colors border-l border-[#d2d2d7] ${
-                        viewMode === 'list'
-                          ? 'bg-[#007AFF] text-white'
-                          : 'text-slate-500 hover:bg-slate-50'
-                      }`}
-                      title="Vue liste"
-                    >
-                      <List className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => setViewMode('map')}
-                      className={`p-2 transition-colors border-l border-[#d2d2d7] ${
-                        viewMode === 'map'
-                          ? 'bg-[#007AFF] text-white'
-                          : 'text-slate-500 hover:bg-slate-50'
-                      }`}
-                      title="Vue carte"
-                    >
-                      <MapIcon className="w-5 h-5" />
-                    </button>
+                  <div style={{ display: 'flex', border: `1px solid ${M.border}`, borderRadius: 8, overflow: 'hidden', background: M.surface }}>
+                    {[
+                      { mode: 'grid', Icon: Grid3x3, title: 'Vue grille' },
+                      { mode: 'list', Icon: List, title: 'Vue liste' },
+                      { mode: 'map', Icon: MapIcon, title: 'Vue carte' },
+                    ].map(({ mode, Icon, title }, idx) => (
+                      <button
+                        key={mode}
+                        onClick={() => setViewMode(mode as any)}
+                        title={title}
+                        style={{
+                          padding: '8px 10px',
+                          background: viewMode === mode ? M.tenant : 'transparent',
+                          color: viewMode === mode ? '#fff' : M.inkFaint,
+                          border: 'none',
+                          borderLeft: idx > 0 ? `1px solid ${M.border}` : 'none',
+                          cursor: 'pointer',
+                          transition: 'background 0.15s',
+                        }}
+                      >
+                        <Icon className="w-4 h-4" />
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
 
               {/* Error */}
               {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-red-700">{error}</p>
+                <div className="mb-6 flex items-start gap-3 p-4" style={{
+                  background: M.dangerBg,
+                  border: `1px solid #fca5a5`,
+                  borderRadius: 12,
+                }}>
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: M.danger }} />
+                  <p style={{ color: M.danger, fontSize: 14, fontFamily: M.body }}>{error}</p>
                 </div>
               )}
 
               {/* Loading */}
               {isLoading && (
                 <div className="flex justify-center items-center py-20">
-                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#007AFF]"></div>
+                  <div
+                    className="animate-spin rounded-full h-10 w-10"
+                    style={{ border: `3px solid ${M.border}`, borderTopColor: M.tenant }}
+                  />
                 </div>
               )}
 
               {/* Empty State */}
               {!isLoading && properties.length === 0 && (
                 <div className="text-center py-20">
-                  <div className="w-16 h-16 bg-[#e8f0fe] rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <HomeIcon className="w-8 h-8 text-[#007AFF]" />
+                  <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4" style={{
+                    background: M.tenantLight,
+                    borderRadius: 16,
+                  }}>
+                    <HomeIcon className="w-8 h-8" style={{ color: M.tenant }} />
                   </div>
-                  <h2 className="text-xl font-semibold text-slate-900 mb-2">
+                  <h2 style={{ fontFamily: M.display, fontWeight: 700, fontStyle: 'italic', fontSize: 28, color: M.ink }} className="mb-2">
                     Aucun bien trouvé
                   </h2>
-                  <p className="text-slate-500 mb-6 text-sm">
+                  <p style={{ color: M.inkFaint, fontSize: 14, fontFamily: M.body }} className="mb-6">
                     Essayez de modifier vos critères de recherche
                   </p>
                   {hasActiveFilters && (
                     <button
                       onClick={handleResetFilters}
-                      className="px-5 py-2.5 rounded-xl bg-[#007AFF] text-white font-semibold text-sm hover:bg-[#0066d6] transition-colors"
+                      style={{
+                        background: M.tenant,
+                        color: '#fff',
+                        borderRadius: 8,
+                        fontFamily: M.body,
+                        fontWeight: 600,
+                        fontSize: 14,
+                        border: 'none',
+                        padding: '10px 20px',
+                        cursor: 'pointer',
+                      }}
                     >
                       Réinitialiser les filtres
                     </button>
@@ -285,11 +364,14 @@ export default function SearchProperties() {
                 </div>
               )}
 
-              {/* Properties Grid/List/Map */}
+              {/* Properties Grid / List / Map */}
               {!isLoading && properties.length > 0 && (
                 <>
                   {viewMode === 'map' ? (
-                    <div className="h-[calc(100vh-280px)] rounded-2xl overflow-hidden border border-[#d2d2d7]">
+                    <div className="h-[calc(100vh-280px)] overflow-hidden" style={{
+                      borderRadius: 12,
+                      border: `1px solid ${M.border}`,
+                    }}>
                       <SearchMap
                         properties={properties}
                         selectedPropertyId={selectedPropertyId}
@@ -298,13 +380,10 @@ export default function SearchProperties() {
                     </div>
                   ) : (
                     <>
-                      <div
-                        className={
-                          viewMode === 'grid'
-                            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
-                            : 'space-y-4'
-                        }
-                      >
+                      <div className={viewMode === 'grid'
+                        ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+                        : 'space-y-4'
+                      }>
                         {properties.map((property) => (
                           <PropertyCard
                             key={property.id}
@@ -320,7 +399,18 @@ export default function SearchProperties() {
                           <button
                             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                             disabled={currentPage === 1}
-                            className="p-2 rounded-xl border border-[#d2d2d7] bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            style={{
+                              padding: '8px',
+                              borderRadius: 8,
+                              border: `1px solid ${M.border}`,
+                              background: M.surface,
+                              color: M.inkMid,
+                              cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                              opacity: currentPage === 1 ? 0.4 : 1,
+                              transition: 'background 0.15s',
+                            }}
+                            onMouseEnter={(e) => { if (currentPage !== 1) e.currentTarget.style.background = M.muted }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = M.surface }}
                           >
                             <ChevronLeft className="w-5 h-5" />
                           </button>
@@ -337,16 +427,23 @@ export default function SearchProperties() {
                               } else {
                                 pageNum = currentPage - 2 + i
                               }
-
+                              const isActive = currentPage === pageNum
                               return (
                                 <button
                                   key={pageNum}
                                   onClick={() => setCurrentPage(pageNum)}
-                                  className={`w-10 h-10 rounded-xl text-sm font-semibold transition-colors ${
-                                    currentPage === pageNum
-                                      ? 'bg-[#007AFF] text-white'
-                                      : 'bg-white text-slate-600 border border-[#d2d2d7] hover:bg-slate-50'
-                                  }`}
+                                  style={{
+                                    width: 40, height: 40,
+                                    borderRadius: 8,
+                                    fontSize: 14,
+                                    fontWeight: 600,
+                                    fontFamily: M.body,
+                                    border: `1px solid ${isActive ? M.tenant : M.border}`,
+                                    background: isActive ? M.tenant : M.surface,
+                                    color: isActive ? '#fff' : M.inkMid,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s',
+                                  }}
                                 >
                                   {pageNum}
                                 </button>
@@ -357,7 +454,18 @@ export default function SearchProperties() {
                           <button
                             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                             disabled={currentPage === totalPages}
-                            className="p-2 rounded-xl border border-[#d2d2d7] bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            style={{
+                              padding: '8px',
+                              borderRadius: 8,
+                              border: `1px solid ${M.border}`,
+                              background: M.surface,
+                              color: M.inkMid,
+                              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                              opacity: currentPage === totalPages ? 0.4 : 1,
+                              transition: 'background 0.15s',
+                            }}
+                            onMouseEnter={(e) => { if (currentPage !== totalPages) e.currentTarget.style.background = M.muted }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = M.surface }}
                           >
                             <ChevronRight className="w-5 h-5" />
                           </button>
@@ -367,6 +475,7 @@ export default function SearchProperties() {
                   )}
                 </>
               )}
+
             </div>
           </div>
         </div>

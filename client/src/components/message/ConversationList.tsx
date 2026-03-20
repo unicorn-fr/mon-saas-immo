@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Search, Loader, User as UserIcon } from 'lucide-react'
 import { useMessages } from '../../hooks/useMessages'
 import { useAuth } from '../../hooks/useAuth'
@@ -6,23 +6,50 @@ import { Conversation } from '../../types/message.types'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
+const M = {
+  ink: '#0d0c0a',
+  inkMid: '#5a5754',
+  inkFaint: '#9e9b96',
+  night: '#1a1a2e',
+  muted: '#f4f2ee',
+  border: '#e4e1db',
+  surface: '#ffffff',
+  inputBg: '#f8f7f4',
+}
+
 interface ConversationListProps {
   selectedConversationId: string | null
   onConversationSelect: (conversation: Conversation) => void
+  autoSelectUserId?: string
 }
 
 export const ConversationList = ({
   selectedConversationId,
   onConversationSelect,
+  autoSelectUserId,
 }: ConversationListProps) => {
   const { user } = useAuth()
   const { conversations, isLoading, fetchConversations, pollConversations, fetchUnreadCount } =
     useMessages()
+  const [search, setSearch] = useState('')
+  const [autoSelected, setAutoSelected] = useState(false)
 
   useEffect(() => {
     fetchConversations()
     fetchUnreadCount()
   }, [fetchConversations, fetchUnreadCount])
+
+  // Auto-select conversation with target user when conversations load
+  useEffect(() => {
+    if (!autoSelectUserId || autoSelected || conversations.length === 0 || !user) return
+    const target = conversations.find(
+      (c) => c.user1Id === autoSelectUserId || c.user2Id === autoSelectUserId
+    )
+    if (target) {
+      setAutoSelected(true)
+      onConversationSelect(target)
+    }
+  }, [conversations, autoSelectUserId, autoSelected, user, onConversationSelect])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -40,6 +67,13 @@ export const ConversationList = ({
       ? conversation.unreadCountUser1
       : conversation.unreadCountUser2
 
+  const filteredConversations = search.trim()
+    ? conversations.filter((c) => {
+        const other = getOtherUser(c)
+        return `${other.firstName} ${other.lastName}`.toLowerCase().includes(search.toLowerCase())
+      })
+    : conversations
+
   const formatTime = (dateString: string | null) => {
     if (!dateString) return ''
     const date = new Date(dateString)
@@ -52,7 +86,7 @@ export const ConversationList = ({
   if (isLoading && conversations.length === 0) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader className="w-5 h-5 animate-spin" style={{ color: 'var(--text-tertiary)' }} />
+        <Loader className="w-5 h-5 animate-spin" style={{ color: M.inkFaint }} />
       </div>
     )
   }
@@ -60,37 +94,40 @@ export const ConversationList = ({
   return (
     <div className="flex flex-col h-full">
 
-      {/* ── Barre de recherche ─────────────────────────────── */}
+      {/* Barre de recherche */}
       <div className="px-3 pt-4 pb-2">
         <div className="relative">
           <Search
             className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5"
-            style={{ color: 'var(--text-tertiary)' }}
+            style={{ color: M.inkFaint }}
           />
           <input
             type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             placeholder="Rechercher..."
-            className="w-full pl-9 pr-3 py-[7px] text-[13px] rounded-[10px] focus:outline-none focus:ring-2 focus:ring-violet-500/25 transition-all"
+            className="w-full pl-9 pr-3 py-[7px] text-[13px] rounded-[10px] focus:outline-none transition-all"
             style={{
-              backgroundColor: 'var(--surface-subtle)',
-              border: '1px solid var(--border)',
-              color: 'var(--text-primary)',
+              background: M.inputBg,
+              border: `1px solid ${M.border}`,
+              color: M.ink,
+              fontFamily: "'DM Sans', system-ui, sans-serif",
             }}
           />
         </div>
       </div>
 
-      {/* ── Liste ─────────────────────────────────────────── */}
+      {/* Liste */}
       <div className="flex-1 overflow-y-auto">
-        {conversations.length === 0 ? (
+        {filteredConversations.length === 0 ? (
           <div className="flex items-center justify-center h-full px-6">
-            <p className="text-[13px] text-center" style={{ color: 'var(--text-tertiary)' }}>
-              Aucune conversation pour le moment.
+            <p className="text-[13px] text-center" style={{ color: M.inkFaint }}>
+              {search.trim() ? 'Aucun résultat.' : 'Aucune conversation pour le moment.'}
             </p>
           </div>
         ) : (
           <div className="px-2 py-1 flex flex-col gap-0.5">
-            {conversations.map((conversation) => {
+            {filteredConversations.map((conversation) => {
               const otherUser = getOtherUser(conversation)
               const unread = getUnreadCount(conversation)
               const isSelected = conversation.id === selectedConversationId
@@ -101,14 +138,12 @@ export const ConversationList = ({
                   key={conversation.id}
                   onClick={() => onConversationSelect(conversation)}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-[10px] transition-all text-left"
-                  style={{
-                    backgroundColor: isSelected ? 'var(--surface-subtle)' : 'transparent',
-                  }}
+                  style={{ background: isSelected ? M.muted : 'transparent' }}
                   onMouseEnter={(e) => {
-                    if (!isSelected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--surface-subtle)'
+                    if (!isSelected) (e.currentTarget as HTMLButtonElement).style.background = M.muted
                   }}
                   onMouseLeave={(e) => {
-                    if (!isSelected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+                    if (!isSelected) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'
                   }}
                 >
                   {/* Avatar */}
@@ -121,8 +156,8 @@ export const ConversationList = ({
                       />
                     ) : (
                       <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold text-white"
-                        style={{ background: 'linear-gradient(135deg, #7c3aed, #3b82f6)' }}
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold"
+                        style={{ background: M.night, color: M.surface }}
                       >
                         {initials || <UserIcon className="w-4 h-4" />}
                       </div>
@@ -130,9 +165,9 @@ export const ConversationList = ({
                     {unread > 0 && (
                       <div
                         className="absolute -top-0.5 -right-0.5 w-[18px] h-[18px] rounded-full flex items-center justify-center"
-                        style={{ backgroundColor: '#7c3aed' }}
+                        style={{ background: M.night }}
                       >
-                        <span className="text-[10px] font-bold text-white leading-none">
+                        <span className="text-[10px] font-bold leading-none" style={{ color: M.surface }}>
                           {unread > 9 ? '9+' : unread}
                         </span>
                       </div>
@@ -145,17 +180,15 @@ export const ConversationList = ({
                       <span
                         className="text-[13.5px] truncate"
                         style={{
-                          color: 'var(--text-primary)',
+                          color: M.ink,
                           fontWeight: unread > 0 ? 600 : 500,
+                          fontFamily: "'DM Sans', system-ui, sans-serif",
                         }}
                       >
                         {otherUser.firstName} {otherUser.lastName}
                       </span>
                       {conversation.lastMessageAt && (
-                        <span
-                          className="text-[11px] flex-shrink-0 ml-2"
-                          style={{ color: 'var(--text-tertiary)' }}
-                        >
+                        <span className="text-[11px] flex-shrink-0 ml-2" style={{ color: M.inkFaint }}>
                           {formatTime(conversation.lastMessageAt)}
                         </span>
                       )}
@@ -164,7 +197,7 @@ export const ConversationList = ({
                       <p
                         className="text-[12px] truncate"
                         style={{
-                          color: unread > 0 ? 'var(--text-secondary)' : 'var(--text-tertiary)',
+                          color: unread > 0 ? M.inkMid : M.inkFaint,
                           fontWeight: unread > 0 ? 500 : 400,
                         }}
                       >
