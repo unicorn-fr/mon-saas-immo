@@ -153,13 +153,14 @@ export function WatermarkedViewer({
         }}
         onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
       >
-        <div style={{
+        <div
+          className="w-full max-w-[1100px]"
+          style={{
           background: M.surface,
           border: `1px solid ${M.border}`,
           borderRadius: 14,
           boxShadow: '0 12px 48px rgba(13,12,10,0.28)',
-          width: '100%', maxWidth: 1100,
-          height: '94vh',
+          height: '94dvh',
           display: 'flex', flexDirection: 'column',
           overflow: 'hidden',
         }}>

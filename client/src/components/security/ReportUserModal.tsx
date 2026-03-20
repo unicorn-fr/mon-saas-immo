@@ -129,11 +129,11 @@ export function ReportUserModal({ targetId, targetName, isOpen, onClose }: Props
                   <button
                     onClick={handleClose}
                     style={{
-                      background: '#fafaf8', border: '1px solid #e2e8f0',
+                      background: '#fafaf8', border: '1px solid #e4e1db',
                       borderRadius: '8px', padding: '6px', cursor: 'pointer', lineHeight: 0,
                     }}
                   >
-                    <X style={{ width: 16, height: 16, color: '#64748b' }} />
+                    <X style={{ width: 16, height: 16, color: '#9e9b96' }} />
                   </button>
                 </div>
 
@@ -180,8 +180,8 @@ export function ReportUserModal({ targetId, targetName, isOpen, onClose }: Props
                     style={{
                       width: '100%', boxSizing: 'border-box',
                       padding: '10px 12px', borderRadius: '10px',
-                      border: '1px solid #e2e8f0', resize: 'none',
-                      fontSize: '13px', color: '#0d0c0a', background: '#ffffff',
+                      border: '1px solid #e4e1db', resize: 'none',
+                      fontSize: '13px', color: '#0d0c0a', background: '#f8f7f4',
                       outline: 'none', fontFamily: 'inherit',
                     }}
                   />
@@ -202,7 +202,7 @@ export function ReportUserModal({ targetId, targetName, isOpen, onClose }: Props
                     onClick={handleClose}
                     style={{
                       flex: 1, padding: '12px', borderRadius: '12px',
-                      border: '1px solid #e2e8f0', background: '#fafaf8',
+                      border: '1px solid #e4e1db', background: '#fafaf8',
                       color: '#5a5754', fontWeight: 600, fontSize: '14px', cursor: 'pointer',
                     }}
                   >

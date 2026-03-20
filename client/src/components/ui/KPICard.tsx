@@ -67,7 +67,7 @@ export function KPICard({
       }}
     >
       <div className="flex items-start justify-between mb-3">
-        <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">{label}</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: '#9e9b96' }}>{label}</p>
         {Icon && (
           <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ background: `${thread}18`, color: thread }}>
@@ -90,7 +90,7 @@ export function KPICard({
             {trend >= 0 ? '+' : ''}{trend}%
           </span>
           {trendLabel && (
-            <span className="text-[11px] text-slate-400 ml-0.5">{trendLabel}</span>
+            <span className="text-[11px] ml-0.5" style={{ color: '#9e9b96' }}>{trendLabel}</span>
           )}
         </div>
       )}

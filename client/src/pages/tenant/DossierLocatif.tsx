@@ -733,7 +733,7 @@ function ScanningView({ entry }: { entry: FileEntry }) {
         />
         <motion.div
           style={{ position: 'absolute', inset: '0 auto 0 0', width: 64, borderRadius: 20, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)' }}
-          animate={{ x: ['-64px', '500px'] }}
+          animate={{ x: ['-64px', '110vw'] }}
           transition={{ duration: 1.6, repeat: Infinity, ease: 'linear' }}
         />
       </div>
@@ -837,7 +837,7 @@ function ResultView({
               ? 'Choisir la catégorie correcte :'
               : 'Dans quelle catégorie classer ce document ?'}
           </p>
-          <div className="grid grid-cols-3 gap-1.5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
             {families.map((f) => {
               const isSelected = selectedFamily === f
               return (
@@ -1769,7 +1769,7 @@ export default function DossierLocatif() {
 
         {/* ── PageHeader ─────────────────────────────────────────────────── */}
         <div className="rounded-3xl p-5 sm:p-6 border"
-          style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
+          style={{ backgroundColor: '#ffffff', borderColor: '#e4e1db' }}>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             {/* Score gauge */}
             <div className="flex-shrink-0">
@@ -1783,7 +1783,7 @@ export default function DossierLocatif() {
                   Mon Dossier Locataire
                 </h1>
                 {user?.firstName && (
-                  <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
+                  <span className="text-sm" style={{ color: '#9e9b96' }}>
                     — {user.firstName} {user.lastName}
                   </span>
                 )}
@@ -1857,7 +1857,7 @@ export default function DossierLocatif() {
               <p className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
                 {draggingGlobal ? 'Relâchez pour analyser' : 'Déposez vos documents ici'}
               </p>
-              <p className="text-sm mb-4" style={{ color: 'var(--text-tertiary)' }}>
+              <p className="text-sm mb-4" style={{ color: '#9e9b96' }}>
                 ≥ 90 % de confiance → confirmation simple · &lt; 90 % → vous choisissez la catégorie
               </p>
               <div className="flex justify-center gap-2 flex-wrap">
@@ -1867,7 +1867,7 @@ export default function DossierLocatif() {
                   { icon: Lock,   text: '100% local' },
                 ].map(({ icon: I, text }) => (
                   <span key={text} className="flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg"
-                    style={{ backgroundColor: 'var(--surface-card)', border: '1px solid var(--border)', color: 'var(--text-tertiary)' }}>
+                    style={{ backgroundColor: '#ffffff', border: '1px solid #e4e1db', color: '#9e9b96' }}>
                     <I className="w-3 h-3" /> {text}
                   </span>
                 ))}
@@ -1906,13 +1906,13 @@ export default function DossierLocatif() {
           {/* ── SidePanel (1/3) ───────────────────────────────────────────── */}
           <div className="lg:col-span-1">
             <div className="sticky top-6 rounded-3xl p-5 border space-y-4"
-              style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)' }}>
+              style={{ backgroundColor: '#ffffff', borderColor: '#e4e1db' }}>
 
               <AnimatePresence mode="wait">
                 {activeScanEntry ? (
                   <motion.div key="scanning" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                     <p className="text-xs font-bold uppercase tracking-wide mb-3 flex items-center gap-2"
-                      style={{ color: 'var(--text-tertiary)' }}>
+                      style={{ color: '#9e9b96' }}>
                       <Cpu className="w-3.5 h-3.5 text-blue-500 animate-pulse" /> Analyse IA
                     </p>
                     <LiveScanConsole entry={activeScanEntry} onDismiss={() => setActiveScanId(null)} />
@@ -1920,7 +1920,7 @@ export default function DossierLocatif() {
                 ) : (
                   <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                     <p className="text-xs font-bold uppercase tracking-wide mb-3"
-                      style={{ color: 'var(--text-tertiary)' }}>Vue d'ensemble</p>
+                      style={{ color: '#9e9b96' }}>Vue d'ensemble</p>
                     <IdleSidePanel
                       score={score}
                       documents={documents}
@@ -2145,7 +2145,7 @@ function ProfileComposer({
         </div>
         <div>
           <h3 className="font-semibold text-base" style={{ color: 'var(--text-primary)' }}>Composer mon dossier final</h3>
-          <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+          <p className="text-xs" style={{ color: '#9e9b96' }}>
             L'IA analyse tous vos documents et extrait vos informations personnelles.
           </p>
         </div>
@@ -2185,7 +2185,7 @@ function ProfileComposer({
 
           {/* Identité */}
           <div>
-            <p className="text-xs font-bold uppercase tracking-wide mb-3 flex items-center gap-1.5" style={{ color: 'var(--text-tertiary)' }}>
+            <p className="text-xs font-bold uppercase tracking-wide mb-3 flex items-center gap-1.5" style={{ color: '#9e9b96' }}>
               <User className="w-3.5 h-3.5" /> Identité
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -2202,7 +2202,7 @@ function ProfileComposer({
 
           {/* Coordonnées */}
           <div>
-            <p className="text-xs font-bold uppercase tracking-wide mb-3 flex items-center gap-1.5" style={{ color: 'var(--text-tertiary)' }}>
+            <p className="text-xs font-bold uppercase tracking-wide mb-3 flex items-center gap-1.5" style={{ color: '#9e9b96' }}>
               <Home className="w-3.5 h-3.5" /> Coordonnées
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -2212,7 +2212,7 @@ function ProfileComposer({
 
           {/* Situation professionnelle */}
           <div>
-            <p className="text-xs font-bold uppercase tracking-wide mb-3 flex items-center gap-1.5" style={{ color: 'var(--text-tertiary)' }}>
+            <p className="text-xs font-bold uppercase tracking-wide mb-3 flex items-center gap-1.5" style={{ color: '#9e9b96' }}>
               <Briefcase className="w-3.5 h-3.5" /> Situation professionnelle
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -2285,7 +2285,7 @@ function CategorySection({
   const totalRequired = cat.slots.filter((s) => s.required).length
 
   return (
-    <div className="rounded-2xl border overflow-hidden" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--surface-card)' }}>
+    <div className="rounded-2xl border overflow-hidden" style={{ borderColor: '#e4e1db', backgroundColor: '#ffffff' }}>
       {/* Category header */}
       <button
         onClick={() => setOpen((v) => !v)}
@@ -2310,11 +2310,11 @@ function CategorySection({
               <ShieldCheck className="w-3 h-3" /> Complet
             </span>
           ) : doneCount > 0 ? (
-            <span className="text-[10px] bg-white/70 text-slate-500 px-2 py-0.5 rounded-full font-medium">
+            <span className="text-[10px] bg-white/70 px-2 py-0.5 rounded-full font-medium" style={{ color: '#9e9b96' }}>
               {doneCount}/{totalRequired} requis
             </span>
           ) : (
-            <span className="text-[10px] bg-white/50 text-slate-400 px-2 py-0.5 rounded-full">Vide</span>
+            <span className="text-[10px] bg-white/50 px-2 py-0.5 rounded-full" style={{ color: '#9e9b96' }}>Vide</span>
           )}
           {open ? <ChevronUp className="w-4 h-4 opacity-60" /> : <ChevronDown className="w-4 h-4 opacity-60" />}
         </div>

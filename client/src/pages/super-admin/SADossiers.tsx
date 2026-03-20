@@ -88,7 +88,7 @@ export default function SADossiers() {
     : (data?.documents ?? [])
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="px-4 sm:px-6 py-6 space-y-5">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-2">

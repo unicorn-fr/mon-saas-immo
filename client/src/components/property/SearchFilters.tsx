@@ -34,11 +34,12 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
   return (
     <div className="card sticky top-4">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-slate-900">Filtres</h2>
+        <h2 className="text-lg font-semibold" style={{ color: '#0d0c0a' }}>Filtres</h2>
         {hasActiveFilters && (
           <button
             onClick={onReset}
-            className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+            className="text-sm font-medium"
+            style={{ color: '#1a1a2e' }}
           >
             Réinitialiser
           </button>
@@ -48,7 +49,7 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
       <div className="space-y-6">
         {/* Property Type */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+          <label className="block text-sm font-medium mb-2" style={{ color: '#5a5754' }}>
             Type de bien
           </label>
           <select
@@ -67,10 +68,10 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
 
         {/* Price Range */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+          <label className="block text-sm font-medium mb-2" style={{ color: '#5a5754' }}>
             Prix (€/mois)
           </label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <input
               type="number"
               placeholder="Min"
@@ -96,10 +97,10 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
 
         {/* Surface Area */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+          <label className="block text-sm font-medium mb-2" style={{ color: '#5a5754' }}>
             Surface (m²)
           </label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <input
               type="number"
               placeholder="Min"
@@ -125,17 +126,18 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
 
         {/* Bedrooms */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Chambres</label>
+          <label className="block text-sm font-medium mb-2" style={{ color: '#5a5754' }}>Chambres</label>
           <div className="grid grid-cols-5 gap-2">
             {[1, 2, 3, 4, 5].map((num) => (
               <button
                 key={num}
                 onClick={() => handleChange('bedrooms', filters.bedrooms === num ? undefined : num)}
-                className={`py-2 px-3 rounded-xl border text-sm font-medium transition-colors ${
+                className="py-2 px-3 rounded-xl border text-sm font-medium transition-colors"
+                style={
                   filters.bedrooms === num
-                    ? 'bg-primary-600 text-white border-primary-600'
-                    : 'bg-white text-slate-700 dark:text-slate-300 border-slate-300 hover:border-primary-400'
-                }`}
+                    ? { background: '#1a1a2e', color: '#ffffff', borderColor: '#1a1a2e' }
+                    : { background: '#ffffff', color: '#5a5754', borderColor: '#e4e1db' }
+                }
               >
                 {num === 5 ? '5+' : num}
               </button>
@@ -145,7 +147,7 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
 
         {/* Bathrooms */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+          <label className="block text-sm font-medium mb-2" style={{ color: '#5a5754' }}>
             Salles de bain
           </label>
           <div className="grid grid-cols-4 gap-2">
@@ -155,11 +157,12 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
                 onClick={() =>
                   handleChange('bathrooms', filters.bathrooms === num ? undefined : num)
                 }
-                className={`py-2 px-3 rounded-xl border text-sm font-medium transition-colors ${
+                className="py-2 px-3 rounded-xl border text-sm font-medium transition-colors"
+                style={
                   filters.bathrooms === num
-                    ? 'bg-primary-600 text-white border-primary-600'
-                    : 'bg-white text-slate-700 dark:text-slate-300 border-slate-300 hover:border-primary-400'
-                }`}
+                    ? { background: '#1a1a2e', color: '#ffffff', borderColor: '#1a1a2e' }
+                    : { background: '#ffffff', color: '#5a5754', borderColor: '#e4e1db' }
+                }
               >
                 {num === 4 ? '4+' : num}
               </button>
@@ -171,7 +174,8 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
         <div>
           <button
             onClick={() => setShowFeatures(!showFeatures)}
-            className="flex items-center justify-between w-full text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+            className="flex items-center justify-between w-full text-sm font-medium mb-2"
+            style={{ color: '#5a5754' }}
           >
             <span>Caractéristiques</span>
             {showFeatures ? (
@@ -189,7 +193,7 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
                   onChange={(e) => handleChange('furnished', e.target.checked || undefined)}
                   className="mr-2"
                 />
-                <span className="text-sm text-slate-700 dark:text-slate-300">Meublé</span>
+                <span className="text-sm" style={{ color: '#5a5754' }}>Meublé</span>
               </label>
               <label className="flex items-center cursor-pointer">
                 <input
@@ -198,7 +202,7 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
                   onChange={(e) => handleChange('hasParking', e.target.checked || undefined)}
                   className="mr-2"
                 />
-                <span className="text-sm text-slate-700 dark:text-slate-300">Parking</span>
+                <span className="text-sm" style={{ color: '#5a5754' }}>Parking</span>
               </label>
               <label className="flex items-center cursor-pointer">
                 <input
@@ -207,7 +211,7 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
                   onChange={(e) => handleChange('hasBalcony', e.target.checked || undefined)}
                   className="mr-2"
                 />
-                <span className="text-sm text-slate-700 dark:text-slate-300">Balcon</span>
+                <span className="text-sm" style={{ color: '#5a5754' }}>Balcon</span>
               </label>
               <label className="flex items-center cursor-pointer">
                 <input
@@ -216,7 +220,7 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
                   onChange={(e) => handleChange('hasElevator', e.target.checked || undefined)}
                   className="mr-2"
                 />
-                <span className="text-sm text-slate-700 dark:text-slate-300">Ascenseur</span>
+                <span className="text-sm" style={{ color: '#5a5754' }}>Ascenseur</span>
               </label>
               <label className="flex items-center cursor-pointer">
                 <input
@@ -225,7 +229,7 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
                   onChange={(e) => handleChange('hasGarden', e.target.checked || undefined)}
                   className="mr-2"
                 />
-                <span className="text-sm text-slate-700 dark:text-slate-300">Jardin</span>
+                <span className="text-sm" style={{ color: '#5a5754' }}>Jardin</span>
               </label>
             </div>
           )}
@@ -235,12 +239,16 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
         <div>
           <button
             onClick={() => setShowAmenities(!showAmenities)}
-            className="flex items-center justify-between w-full text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+            className="flex items-center justify-between w-full text-sm font-medium mb-2"
+            style={{ color: '#5a5754' }}
           >
             <span>
               Équipements
               {filters.amenities && filters.amenities.length > 0 && (
-                <span className="ml-2 text-xs bg-primary-600 text-white px-2 py-0.5 rounded-full">
+                <span
+                  className="ml-2 text-xs px-2 py-0.5 rounded-full"
+                  style={{ background: '#1a1a2e', color: '#ffffff' }}
+                >
                   {filters.amenities.length}
                 </span>
               )}
@@ -261,7 +269,7 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
                     onChange={() => handleAmenityToggle(amenity.value)}
                     className="mr-2"
                   />
-                  <span className="text-sm text-slate-700 dark:text-slate-300">{amenity.label}</span>
+                  <span className="text-sm" style={{ color: '#5a5754' }}>{amenity.label}</span>
                 </label>
               ))}
             </div>

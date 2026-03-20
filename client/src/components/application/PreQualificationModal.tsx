@@ -38,7 +38,10 @@ function DetailRow({ detail }: { detail: MatchDetail }) {
     pass:    'text-emerald-600 bg-emerald-50 border-emerald-200',
     partial: 'text-amber-600   bg-amber-50   border-amber-200',
     fail:    'text-red-600     bg-red-50     border-red-200',
-    na:      'text-slate-500   bg-slate-50   border-slate-200',
+    na:      '',
+  }
+  const naStyle = {
+    color: '#9e9b96', background: '#f4f2ee', borderColor: '#e4e1db',
   }
   const icons = {
     pass:    <CheckCircle2 className="w-4 h-4" />,
@@ -47,7 +50,10 @@ function DetailRow({ detail }: { detail: MatchDetail }) {
     na:      <span className="w-4 h-4 inline-flex items-center justify-center text-xs font-bold">?</span>,
   }
   return (
-    <div className={`flex items-start gap-3 rounded-xl border p-3 ${colors[detail.status]}`}>
+    <div
+      className={`flex items-start gap-3 rounded-xl border p-3 ${colors[detail.status]}`}
+      style={detail.status === 'na' ? naStyle : undefined}
+    >
       <div className="mt-0.5 flex-shrink-0">{icons[detail.status]}</div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
@@ -69,7 +75,7 @@ function ScoreRing({ score }: { score: number }) {
   return (
     <div className="relative inline-flex items-center justify-center w-24 h-24">
       <svg className="w-24 h-24 -rotate-90" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r={radius} strokeWidth="8" className="stroke-slate-100 fill-none" />
+        <circle cx="50" cy="50" r={radius} strokeWidth="8" fill="none" stroke="#e4e1db" />
         <circle
           cx="50" cy="50" r={radius} strokeWidth="8" className="fill-none transition-all duration-700"
           style={{
@@ -137,7 +143,7 @@ export function PreQualificationModal({
         key="overlay"
         variants={OVERLAY}
         initial="hidden" animate="visible" exit="exit"
-        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/50"
         onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
       >
         <motion.div
@@ -146,20 +152,23 @@ export function PreQualificationModal({
           initial="hidden" animate="visible" exit="exit"
           transition={{ type: 'spring', damping: 28, stiffness: 320 }}
           className="relative w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden"
-          style={{ background: 'var(--bg-primary)' }}
+          style={{ background: '#ffffff' }}
         >
           {/* Header */}
-          <div className="flex items-start justify-between p-5 border-b" style={{ borderColor: 'var(--border-primary)' }}>
+          <div className="flex items-start justify-between p-5 border-b" style={{ borderColor: '#e4e1db' }}>
             <div>
-              <h2 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
+              <h2 className="text-base font-semibold" style={{ color: '#0d0c0a' }}>
                 Postuler · {propertyTitle}
               </h2>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+              <p className="text-xs mt-0.5" style={{ color: '#9e9b96' }}>
                 Loyer {propertyPrice} €/mois · Score minimum requis : {minScore}/100
               </p>
             </div>
-            <button onClick={onClose} className="ml-4 p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
-              <X className="w-4 h-4 text-slate-500" />
+            <button onClick={onClose} className="ml-4 p-1.5 rounded-lg transition-colors" style={{ background: 'transparent' }}
+              onMouseEnter={e => (e.currentTarget.style.background = '#f4f2ee')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+            >
+              <X className="w-4 h-4" style={{ color: '#9e9b96' }} />
             </button>
           </div>
 
@@ -171,7 +180,7 @@ export function PreQualificationModal({
                 <div className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${verdict.bg} ${verdict.color} ${verdict.border} border mb-1.5`}>
                   {verdict.label}
                 </div>
-                <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                <p className="text-xs" style={{ color: '#5a5754' }}>
                   {match.verdict === 'ELIGIBLE' && 'Votre dossier remplit les critères du propriétaire.'}
                   {match.verdict === 'PARTIAL'   && 'Dossier incomplet — vous pouvez tout de même postuler.'}
                   {match.verdict === 'INELIGIBLE' && 'Votre dossier ne satisfait pas les critères minimaux.'}
@@ -182,7 +191,7 @@ export function PreQualificationModal({
             {/* Check phase */}
             {phase === 'check' && (
               <div className="p-5 space-y-3">
-                <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-tertiary)' }}>
+                <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#9e9b96' }}>
                   Détail du score
                 </p>
                 {Object.values(match.details).map((d) => (
@@ -190,8 +199,8 @@ export function PreQualificationModal({
                 ))}
 
                 {/* Guarantor toggle (impacts score live) */}
-                <div className="rounded-xl border p-3 mt-1" style={{ borderColor: 'var(--border-primary)', background: 'var(--bg-secondary)' }}>
-                  <label className="flex items-center gap-2 cursor-pointer text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                <div className="rounded-xl border p-3 mt-1" style={{ borderColor: '#e4e1db', background: '#f4f2ee' }}>
+                  <label className="flex items-center gap-2 cursor-pointer text-sm font-medium" style={{ color: '#0d0c0a' }}>
                     <input
                       type="checkbox"
                       checked={hasGuarantor}
@@ -206,8 +215,8 @@ export function PreQualificationModal({
                       <select
                         value={guarantorType}
                         onChange={(e) => setGuarantorType(e.target.value)}
-                        className="w-full rounded-lg border px-2.5 py-1.5 text-sm outline-none focus:ring-2 focus:ring-violet-500"
-                        style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+                        className="w-full rounded-lg border px-2.5 py-1.5 text-sm outline-none"
+                        style={{ background: '#f8f7f4', borderColor: '#e4e1db', color: '#0d0c0a' }}
                       >
                         <option value="">— Type de garant —</option>
                         {GUARANTOR_TYPES.map(({ value, label }) => (
@@ -235,7 +244,7 @@ export function PreQualificationModal({
                   <button
                     onClick={onClose}
                     className="rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors hover:opacity-70"
-                    style={{ borderColor: 'var(--border-primary)', color: 'var(--text-secondary)' }}
+                    style={{ borderColor: '#e4e1db', color: '#5a5754' }}
                   >
                     Annuler
                   </button>
@@ -254,18 +263,18 @@ export function PreQualificationModal({
                 </button>
 
                 <div>
-                  <label className="flex items-center gap-1.5 text-sm font-medium mb-1.5" style={{ color: 'var(--text-primary)' }}>
+                  <label className="flex items-center gap-1.5 text-sm font-medium mb-1.5" style={{ color: '#0d0c0a' }}>
                     <FileText className="w-3.5 h-3.5" />
                     Lettre de motivation
-                    <span className="text-xs font-normal text-slate-400">(optionnel)</span>
+                    <span className="text-xs font-normal" style={{ color: '#9e9b96' }}>(optionnel)</span>
                   </label>
                   <textarea
                     rows={4}
                     value={coverLetter}
                     onChange={(e) => setCoverLetter(e.target.value)}
                     placeholder="Présentez-vous brièvement et expliquez votre projet de location..."
-                    className="w-full rounded-xl border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-500 resize-none"
-                    style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+                    className="w-full rounded-xl border px-3 py-2.5 text-sm outline-none resize-none"
+                    style={{ background: '#f8f7f4', borderColor: '#e4e1db', color: '#0d0c0a' }}
                   />
                 </div>
 
@@ -284,13 +293,13 @@ export function PreQualificationModal({
                     onClick={onClose}
                     disabled={phase === 'submitting'}
                     className="rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors hover:opacity-70 disabled:opacity-50"
-                    style={{ borderColor: 'var(--border-primary)', color: 'var(--text-secondary)' }}
+                    style={{ borderColor: '#e4e1db', color: '#5a5754' }}
                   >
                     Annuler
                   </button>
                 </div>
 
-                <p className="text-xs text-center" style={{ color: 'var(--text-tertiary)' }}>
+                <p className="text-xs text-center" style={{ color: '#9e9b96' }}>
                   Score estimé : <span className={`font-semibold ${scoreColor(match.score)}`}>{match.score}/100</span>
                   {!canApply && ' — le score final est calculé côté serveur.'}
                 </p>

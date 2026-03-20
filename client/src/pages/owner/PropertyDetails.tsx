@@ -356,7 +356,6 @@ export default function PropertyDetails() {
                       background: 'rgba(13,12,10,0.55)',
                       borderRadius: 20,
                       fontFamily: "'DM Sans', system-ui, sans-serif",
-                      backdropFilter: 'blur(4px)',
                     }}
                   >
                     {selectedImage + 1} / {images.length}

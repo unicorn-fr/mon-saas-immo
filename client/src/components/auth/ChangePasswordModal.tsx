@@ -98,14 +98,17 @@ export default function ChangePasswordModal({
       <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
       <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-slate-900">
+          <h3 className="text-xl font-bold" style={{ color: '#0d0c0a' }}>
             Changer le mot de passe
           </h3>
           <button
             onClick={handleClose}
-            className="p-1 rounded-xl hover:bg-slate-100 transition-colors"
+            className="p-1 rounded-xl transition-colors"
+            style={{ color: '#9e9b96' }}
+            onMouseEnter={e => (e.currentTarget.style.background = '#f4f2ee')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
-            <X className="w-5 h-5 text-slate-500" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -118,11 +121,11 @@ export default function ChangePasswordModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Current Password */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: '#0d0c0a' }}>
               Mot de passe actuel
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: '#9e9b96' }} />
               <input
                 type={showCurrent ? 'text' : 'password'}
                 value={currentPassword}
@@ -133,7 +136,8 @@ export default function ChangePasswordModal({
               <button
                 type="button"
                 onClick={() => setShowCurrent(!showCurrent)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-400"
+                className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+                style={{ color: '#9e9b96' }}
               >
                 {showCurrent ? (
                   <EyeOff className="w-5 h-5" />
@@ -146,11 +150,11 @@ export default function ChangePasswordModal({
 
           {/* New Password */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: '#0d0c0a' }}>
               Nouveau mot de passe
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: '#9e9b96' }} />
               <input
                 type={showNew ? 'text' : 'password'}
                 value={newPassword}
@@ -161,7 +165,8 @@ export default function ChangePasswordModal({
               <button
                 type="button"
                 onClick={() => setShowNew(!showNew)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-400"
+                className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+                style={{ color: '#9e9b96' }}
               >
                 {showNew ? (
                   <EyeOff className="w-5 h-5" />
@@ -174,7 +179,7 @@ export default function ChangePasswordModal({
             {/* Strength Bar */}
             {newPassword && (
               <div className="mt-2">
-                <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#e4e1db' }}>
                   <div
                     className={`h-full transition-all duration-300 ${getStrengthColor()}`}
                     style={{ width: `${getStrengthPercent()}%` }}
@@ -190,12 +195,11 @@ export default function ChangePasswordModal({
                   {req.met ? (
                     <CheckCircle className="w-3.5 h-3.5 text-success-500" />
                   ) : (
-                    <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300" />
+                    <div className="w-3.5 h-3.5 rounded-full border-2" style={{ borderColor: '#ccc9c3' }} />
                   )}
                   <span
-                    className={`text-xs ${
-                      req.met ? 'text-success-600' : 'text-slate-500'
-                    }`}
+                    className="text-xs"
+                    style={{ color: req.met ? '#1b5e3b' : '#9e9b96' }}
                   >
                     {req.text}
                   </span>
@@ -206,11 +210,11 @@ export default function ChangePasswordModal({
 
           {/* Confirm Password */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: '#0d0c0a' }}>
               Confirmer le nouveau mot de passe
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: '#9e9b96' }} />
               <input
                 type="password"
                 value={confirmPassword}

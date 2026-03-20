@@ -101,8 +101,8 @@ export const SearchMap = ({
                 ? `<img src="${property.images[0]}" alt="${property.title}" class="w-full h-32 object-cover rounded-xl mb-2" />`
                 : ''
             }
-            <h4 class="font-semibold text-slate-900 mb-1 line-clamp-1">${property.title}</h4>
-            <p class="text-sm text-slate-600 dark:text-slate-400 mb-2 flex items-center gap-1">
+            <h4 class="font-semibold mb-1 line-clamp-1" style="color:#0d0c0a">${property.title}</h4>
+            <p class="text-sm mb-2 flex items-center gap-1" style="color:#5a5754">
               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -156,10 +156,10 @@ export const SearchMap = ({
 
   if (propertiesWithCoords.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center bg-slate-100">
+      <div className="w-full flex items-center justify-center" style={{ height: 'clamp(300px, 50dvh, 500px)', background: '#f4f2ee' }}>
         <div className="text-center">
-          <MapPin className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-          <p className="text-slate-600 dark:text-slate-400">
+          <MapPin className="w-16 h-16 mx-auto mb-4" style={{ color: '#ccc9c3' }} />
+          <p style={{ color: '#5a5754' }}>
             Aucune propriété avec coordonnées GPS disponible
           </p>
         </div>
@@ -168,17 +168,17 @@ export const SearchMap = ({
   }
 
   return (
-    <div className="relative h-full">
+    <div className="relative w-full" style={{ height: 'clamp(300px, 50dvh, 500px)' }}>
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
-          <Loader className="w-8 h-8 text-primary-600 animate-spin" />
+          <Loader className="w-8 h-8 animate-spin" style={{ color: '#1a1a2e' }} />
         </div>
       )}
-      <div ref={mapRef} className="h-full w-full" />
+      <div ref={mapRef} className="w-full" style={{ height: 'clamp(300px, 50dvh, 500px)' }} />
 
       {/* Info overlay */}
       <div className="absolute top-4 left-4 bg-white rounded-xl shadow-lg p-3 z-[1000]">
-        <p className="text-sm font-medium text-slate-900">
+        <p className="text-sm font-medium" style={{ color: '#0d0c0a' }}>
           {propertiesWithCoords.length} bien{propertiesWithCoords.length > 1 ? 's' : ''} sur la
           carte
         </p>

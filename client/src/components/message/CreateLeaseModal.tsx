@@ -161,7 +161,7 @@ export const CreateLeaseModal = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b shrink-0"
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b shrink-0"
           style={{ borderColor: M.border }}>
           <div>
             <h2 className="text-xl font-bold" style={{ color: M.ink, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
@@ -184,7 +184,7 @@ export const CreateLeaseModal = ({
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-6 overflow-y-auto flex-1">
+        <div className="p-4 sm:p-6 space-y-6 overflow-y-auto flex-1">
           {/* Property Select */}
           <div>
             <label style={labelStyle}>
@@ -249,7 +249,7 @@ export const CreateLeaseModal = ({
           )}
 
           {/* Dates */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label style={labelStyle}>
                 Date de debut <span style={{ color: '#9b1c1c' }}>*</span>
@@ -281,7 +281,7 @@ export const CreateLeaseModal = ({
           </div>
 
           {/* Financial Fields */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label style={labelStyle}>
                 Loyer mensuel (EUR) <span style={{ color: '#9b1c1c' }}>*</span>
@@ -348,7 +348,7 @@ export const CreateLeaseModal = ({
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 p-6 border-t shrink-0" style={{ borderColor: M.border }}>
+        <div className="flex gap-3 p-4 sm:p-6 border-t shrink-0" style={{ borderColor: M.border }}>
           <button
             type="button"
             onClick={onClose}

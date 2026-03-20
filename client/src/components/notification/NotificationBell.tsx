@@ -73,7 +73,10 @@ export const NotificationBell = () => {
       {/* Bell Icon */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
+        className="relative p-2 rounded-xl transition-colors"
+        style={{ color: '#5a5754' }}
+        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#f4f2ee'; (e.currentTarget as HTMLButtonElement).style.color = '#0d0c0a' }}
+        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#5a5754' }}
         aria-label="Notifications"
       >
         <Bell className="w-6 h-6" />
@@ -86,13 +89,14 @@ export const NotificationBell = () => {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-xl border border-slate-200 z-50 max-h-[32rem] flex flex-col">
+        <div className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-xl z-50 max-h-[32rem] flex flex-col" style={{ border: '1px solid #e4e1db' }}>
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b">
-            <h3 className="font-semibold text-slate-900">Notifications</h3>
+          <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: '#e4e1db' }}>
+            <h3 className="font-semibold" style={{ color: '#0d0c0a' }}>Notifications</h3>
             <button
               onClick={() => navigate('/notifications')}
-              className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+              className="text-sm font-medium"
+              style={{ color: '#1a1a2e' }}
             >
               Voir tout
             </button>
@@ -102,8 +106,8 @@ export const NotificationBell = () => {
           <div className="flex-1 overflow-y-auto">
             {notifications.length === 0 ? (
               <div className="p-8 text-center">
-                <Bell className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-600 dark:text-slate-400">Aucune notification</p>
+                <Bell className="w-12 h-12 mx-auto mb-3" style={{ color: '#ccc9c3' }} />
+                <p style={{ color: '#5a5754' }}>Aucune notification</p>
               </div>
             ) : (
               notifications.slice(0, 10).map((notification) => {
@@ -112,10 +116,11 @@ export const NotificationBell = () => {
                   <button
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
-                    className={`
-                      w-full p-4 flex items-start gap-3 hover:bg-slate-50/50 transition-colors border-b last:border-b-0 text-left
-                      ${!notification.isRead ? 'bg-primary-50/30' : ''}
-                    `}
+                    className="w-full p-4 flex items-start gap-3 transition-colors border-b last:border-b-0 text-left"
+                    style={{
+                      background: !notification.isRead ? '#eaf0fb' : 'transparent',
+                      borderColor: '#e4e1db',
+                    }}
                   >
                     {/* Icon */}
                     <div
@@ -127,19 +132,20 @@ export const NotificationBell = () => {
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between mb-1">
-                        <h4 className={`text-sm font-semibold truncate ${
-                          !notification.isRead ? 'text-slate-900' : 'text-slate-700 dark:text-slate-300'
-                        }`}>
+                        <h4
+                          className="text-sm font-semibold truncate"
+                          style={{ color: !notification.isRead ? '#0d0c0a' : '#5a5754' }}
+                        >
                           {notification.title}
                         </h4>
                         {!notification.isRead && (
-                          <div className="w-2 h-2 bg-primary-600 rounded-full flex-shrink-0 ml-2 mt-1" />
+                          <div className="w-2 h-2 rounded-full flex-shrink-0 ml-2 mt-1" style={{ background: '#1a1a2e' }} />
                         )}
                       </div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mb-1">
+                      <p className="text-sm line-clamp-2 mb-1" style={{ color: '#5a5754' }}>
                         {notification.message}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs" style={{ color: '#9e9b96' }}>
                         {formatDistanceToNow(new Date(notification.createdAt), {
                           addSuffix: true,
                           locale: fr,
@@ -150,7 +156,10 @@ export const NotificationBell = () => {
                     {/* Delete Button */}
                     <button
                       onClick={(e) => handleDelete(notification.id, e)}
-                      className="p-1 text-slate-400 hover:text-red-600 transition-colors flex-shrink-0"
+                      className="p-1 transition-colors flex-shrink-0"
+                      style={{ color: '#9e9b96' }}
+                      onMouseEnter={e => (e.currentTarget.style.color = '#9b1c1c')}
+                      onMouseLeave={e => (e.currentTarget.style.color = '#9e9b96')}
                       title="Supprimer"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -163,13 +172,16 @@ export const NotificationBell = () => {
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className="p-3 border-t bg-slate-50/50">
+            <div className="p-3 border-t" style={{ borderColor: '#e4e1db', background: '#fafaf8' }}>
               <button
                 onClick={() => {
                   navigate('/notifications')
                   setIsOpen(false)
                 }}
-                className="w-full px-4 py-2 text-sm font-medium text-primary-600 hover:bg-primary-50 rounded-xl transition-colors"
+                className="w-full px-4 py-2 text-sm font-medium rounded-xl transition-colors"
+                style={{ color: '#1a1a2e' }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#f4f2ee')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
                 Voir toutes les notifications
               </button>

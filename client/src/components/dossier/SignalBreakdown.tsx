@@ -20,9 +20,9 @@ function SignalBar({ signal, label, icon }: { signal: SignalDetail | null; label
     return (
       <div className="flex items-center gap-2 opacity-40">
         <span className="text-[10px] w-3">{icon}</span>
-        <span className="text-[10px] text-[var(--text-tertiary)] w-14 flex-shrink-0">{label}</span>
-        <div className="flex-1 h-1.5 rounded-full bg-[var(--border)]" />
-        <span className="text-[10px] text-[var(--text-tertiary)] w-6 text-right">—</span>
+        <span className="text-[10px] text-[#9e9b96] w-14 flex-shrink-0">{label}</span>
+        <div className="flex-1 h-1.5 rounded-full bg-[#e4e1db]" />
+        <span className="text-[10px] text-[#9e9b96] w-6 text-right">—</span>
       </div>
     )
   }
@@ -34,15 +34,15 @@ function SignalBar({ signal, label, icon }: { signal: SignalDetail | null; label
   return (
     <div className="flex items-center gap-2">
       <span className="text-[10px] w-3">{icon}</span>
-      <span className="text-[10px] text-[var(--text-secondary)] w-14 flex-shrink-0 font-medium">{label}</span>
-      <div className="flex-1 h-1.5 rounded-full bg-[var(--border)]">
+      <span className="text-[10px] text-[#5a5754] w-14 flex-shrink-0 font-medium">{label}</span>
+      <div className="flex-1 h-1.5 rounded-full bg-[#e4e1db]">
         <div
           className="h-full rounded-full transition-all duration-500"
           style={{ width: `${pct}%`, backgroundColor: color }}
         />
       </div>
       <span className="text-[10px] font-bold w-6 text-right" style={{ color }}>{pct}%</span>
-      <span className="text-[10px] text-[var(--text-tertiary)] truncate max-w-[72px]">{family}</span>
+      <span className="text-[10px] text-[#9e9b96] truncate max-w-[72px]">{family}</span>
     </div>
   )
 }
@@ -71,8 +71,8 @@ export function SignalBreakdown({ signals, compact = false }: SignalBreakdownPro
   }
 
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 space-y-2">
-      <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wide mb-1">
+    <div className="rounded-xl border p-3 space-y-2" style={{ borderColor: '#e4e1db', background: '#f4f2ee' }}>
+      <p className="text-[10px] font-bold text-[#9e9b96] uppercase tracking-wide mb-1">
         Analyse IA — 3 signaux
       </p>
 
@@ -80,7 +80,7 @@ export function SignalBreakdown({ signals, compact = false }: SignalBreakdownPro
       <SignalBar signal={signals.filename}  label="Fichier" icon="📄" />
       <SignalBar signal={signals.structure} label="Format"  icon="📐" />
 
-      <div className="pt-1 border-t border-[var(--border)] flex items-center gap-1.5">
+      <div className="pt-1 border-t flex items-center gap-1.5" style={{ borderColor: '#e4e1db' }}>
         <span className="text-[10px]">→</span>
         <span className="text-[10px] font-semibold" style={{ color }}>{fusion}</span>
       </div>

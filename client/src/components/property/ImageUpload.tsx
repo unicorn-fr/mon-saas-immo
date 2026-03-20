@@ -113,10 +113,13 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
         onDragOver={handleDrag}
         onDrop={handleDrop}
         className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
+          isUploadingImages ? 'opacity-50 pointer-events-none' : ''
+        }`}
+        style={
           dragActive
-            ? 'border-primary-500 bg-primary-50'
-            : 'border-slate-300 hover:border-slate-400'
-        } ${isUploadingImages ? 'opacity-50 pointer-events-none' : ''}`}
+            ? { borderColor: '#1a1a2e', background: '#eaf0fb' }
+            : { borderColor: '#ccc9c3' }
+        }
       >
         <input
           type="file"
@@ -134,31 +137,40 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
             images.length >= maxImages ? 'cursor-not-allowed opacity-50' : ''
           }`}
         >
-          <Upload className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-          <p className="text-lg font-medium text-slate-900 mb-2">
+          <Upload className="w-12 h-12 mx-auto mb-3" style={{ color: '#9e9b96' }} />
+          <p className="text-lg font-medium mb-2" style={{ color: '#0d0c0a' }}>
             {isUploadingImages
               ? 'Upload en cours...'
               : 'Glissez vos images ici ou cliquez pour sélectionner'}
           </p>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
+          <p className="text-sm" style={{ color: '#5a5754' }}>
             PNG, JPG, WebP jusqu'à 5MB • Maximum {maxImages} images
           </p>
-          <p className="text-sm text-slate-500 mt-2">
+          <p className="text-sm mt-2" style={{ color: '#9e9b96' }}>
             {images.length}/{maxImages} images uploadées
           </p>
         </label>
 
         {isUploadingImages && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 rounded-xl">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          <div
+            className="absolute inset-0 flex items-center justify-center rounded-xl"
+            style={{ background: 'rgba(255,255,255,0.75)' }}
+          >
+            <div
+              className="animate-spin rounded-full h-12 w-12 border-b-2"
+              style={{ borderColor: '#1a1a2e' }}
+            ></div>
           </div>
         )}
       </div>
 
       {/* Error */}
       {error && (
-        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl">
-          <p className="text-sm text-red-800">{error}</p>
+        <div
+          className="mt-3 p-3 rounded-xl"
+          style={{ background: '#fef2f2', border: '1px solid #fca5a5' }}
+        >
+          <p className="text-sm" style={{ color: '#9b1c1c' }}>{error}</p>
         </div>
       )}
 
@@ -168,7 +180,8 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
           {images.map((url, index) => (
             <div
               key={index}
-              className="relative group aspect-square bg-slate-100 rounded-xl overflow-hidden"
+              className="relative group aspect-square rounded-xl overflow-hidden"
+              style={{ background: '#f4f2ee' }}
             >
               <img
                 src={url}
@@ -184,7 +197,8 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
                 {/* Remove button */}
                 <button
                   onClick={() => removeImage(index)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity bg-red-600 text-white p-2 rounded-full hover:bg-red-700"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-2 rounded-full"
+                  style={{ background: '#9b1c1c', color: '#ffffff' }}
                   title="Supprimer"
                 >
                   <X className="w-5 h-5" />
@@ -194,7 +208,8 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
                 {index > 0 && (
                   <button
                     onClick={() => moveImage(index, index - 1)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity bg-white text-slate-900 p-2 rounded-full hover:bg-slate-100"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-2 rounded-full"
+                    style={{ background: '#ffffff', color: '#0d0c0a' }}
                     title="Déplacer à gauche"
                   >
                     ←
@@ -205,7 +220,8 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
                 {index < images.length - 1 && (
                   <button
                     onClick={() => moveImage(index, index + 1)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity bg-white text-slate-900 p-2 rounded-full hover:bg-slate-100"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-2 rounded-full"
+                    style={{ background: '#ffffff', color: '#0d0c0a' }}
                     title="Déplacer à droite"
                   >
                     →
@@ -215,13 +231,19 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
 
               {/* Main image badge */}
               {index === 0 && (
-                <div className="absolute top-2 left-2 bg-primary-600 text-white text-xs px-2 py-1 rounded">
+                <div
+                  className="absolute top-2 left-2 text-xs px-2 py-1 rounded"
+                  style={{ background: '#1a1a2e', color: '#ffffff' }}
+                >
                   Image principale
                 </div>
               )}
 
               {/* Number badge */}
-              <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+              <div
+                className="absolute bottom-2 right-2 text-xs px-2 py-1 rounded"
+                style={{ background: 'rgba(0,0,0,0.7)', color: '#ffffff' }}
+              >
                 {index + 1}
               </div>
             </div>
@@ -231,7 +253,7 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
 
       {/* Help text */}
       {images.length > 0 && (
-        <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
+        <p className="mt-3 text-sm" style={{ color: '#5a5754' }}>
           <ImageIcon className="w-4 h-4 inline mr-1" />
           La première image sera utilisée comme image principale. Glissez pour réorganiser.
         </p>

@@ -271,7 +271,7 @@ export default function EditProperty() {
 
   return (
     <Layout>
-      <div className="min-h-screen p-6 lg:p-8" style={{ background: M.bg, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+      <div className="min-h-screen px-4 sm:px-6 lg:px-8 py-6 lg:py-8" style={{ background: M.bg, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
         <div className="max-w-4xl mx-auto">
 
           {/* ── Back link + Header ── */}
@@ -501,7 +501,7 @@ export default function EditProperty() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                 {[
                   { name: 'furnished',  checked: formData.furnished  || false, label: 'Meublé' },
                   { name: 'hasParking',  checked: formData.hasParking  || false, label: 'Parking' },

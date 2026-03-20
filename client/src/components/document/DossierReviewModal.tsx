@@ -246,13 +246,13 @@ export function DossierReviewModal({ tenantId, tenantName, onClose }: DossierRev
         onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
       >
         {/* Conteneur A4 portrait-like */}
-        <div style={{
+        <div
+          className="w-full max-w-[820px]"
+          style={{
           background: M.bg,
           border: `1px solid ${M.border}`,
           borderRadius: 16,
           boxShadow: '0 16px 56px rgba(13,12,10,0.3)',
-          width: '100%',
-          maxWidth: 820,
           maxHeight: '94vh',
           display: 'flex', flexDirection: 'column',
           overflow: 'hidden',
@@ -336,7 +336,7 @@ export function DossierReviewModal({ tenantId, tenantName, onClose }: DossierRev
               </div>
 
             ) : profile ? (
-              <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 20 }}>
+              <div className="grid grid-cols-1 md:grid-cols-[220px_1fr]" style={{ gap: 20 }}>
 
                 {/* Colonne gauche — Profil */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

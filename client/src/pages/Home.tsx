@@ -164,10 +164,7 @@ export default function Home() {
         @media (max-width: 768px) {
           .hide-mobile { display: none !important; }
           .show-mobile { display: flex !important; }
-          .hero-grid   { flex-direction: column !important; }
-          .hero-left   { width: 100% !important; text-align: center !important; align-items: center !important; }
-          .hero-right  { width: 100% !important; min-height: 260px !important; }
-          .hero-h1     { font-size: 44px !important; }
+          .hero-right  { min-height: 260px !important; }
           .stats-grid  { grid-template-columns: repeat(2, 1fr) !important; }
           .feat-grid   { grid-template-columns: 1fr !important; }
           .steps-grid  { grid-template-columns: 1fr !important; }
@@ -192,15 +189,14 @@ export default function Home() {
           HERO
       ══════════════════════════════════════════════════════════════ */}
       <section style={{ minHeight: '92vh', backgroundColor: T.bgBase, display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '80px 24px 80px', width: '100%' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 w-full">
           <div
-            className="hero-grid"
-            style={{ display: 'flex', gap: 48, alignItems: 'center' }}
+            className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12"
           >
             {/* Left column */}
             <div
-              className="hero-left"
-              style={{ flex: '0 0 55%', maxWidth: '55%', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 0 }}
+              className="w-full lg:w-[55%] flex flex-col items-start"
+              style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 0 }}
             >
               {/* Overline */}
               <p style={{
@@ -222,7 +218,7 @@ export default function Home() {
                   fontFamily: T.fontDisplay,
                   fontStyle: 'italic',
                   fontWeight: 700,
-                  fontSize: 72,
+                  fontSize: 'clamp(38px, 6vw, 68px)',
                   lineHeight: 1.1,
                   color: T.ink,
                   letterSpacing: '-0.02em',
@@ -364,8 +360,8 @@ export default function Home() {
 
             {/* Right column — architectural SVG illustration */}
             <div
-              className="hero-right"
-              style={{ flex: '0 0 45%', maxWidth: '45%', minHeight: 440, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              className="w-full lg:w-[45%] hero-right"
+              style={{ minHeight: 440, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
               <svg
                 viewBox="0 0 520 480"

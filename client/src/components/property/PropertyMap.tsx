@@ -108,13 +108,13 @@ export const PropertyMap = ({
   // If no coordinates, show a message to use geocoding service
   if (!latitude || !longitude) {
     return (
-      <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex flex-col items-center justify-center p-6 text-center">
-        <MapPin className="w-12 h-12 text-slate-400 mb-3" />
-        <p className="text-slate-700 dark:text-slate-300 font-medium mb-2">Localisation</p>
-        <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md">
+      <div className="rounded-xl flex flex-col items-center justify-center p-6 text-center" style={{ background: '#f4f2ee', aspectRatio: '16/9' }}>
+        <MapPin className="w-12 h-12 mb-3" style={{ color: '#9e9b96' }} />
+        <p className="font-medium mb-2" style={{ color: '#0d0c0a' }}>Localisation</p>
+        <p className="text-sm max-w-md" style={{ color: '#5a5754' }}>
           {address}, {city} {postalCode}
         </p>
-        <p className="text-xs text-slate-500 mt-4">
+        <p className="text-xs mt-4" style={{ color: '#9e9b96' }}>
           Carte interactive disponible prochainement
         </p>
       </div>
@@ -123,8 +123,8 @@ export const PropertyMap = ({
 
   return (
     <div className="relative">
-      <div ref={mapRef} className="aspect-video rounded-xl shadow-md" />
-      <div className="mt-3 flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+      <div ref={mapRef} className="rounded-xl shadow-md" style={{ height: 'clamp(300px, 50dvh, 500px)', width: '100%' }} />
+      <div className="mt-3 flex items-center gap-2 text-sm" style={{ color: '#5a5754' }}>
         <MapPin className="w-4 h-4" />
         <span>
           {address}, {city} {postalCode}

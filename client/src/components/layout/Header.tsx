@@ -161,7 +161,6 @@ export const Header = () => {
   const publicHeaderStyle: React.CSSProperties = {
     background: scrolled ? 'rgba(255,255,255,0.97)' : 'transparent',
     borderBottom: scrolled ? `1px solid ${BORDER}` : '1px solid transparent',
-    backdropFilter: scrolled ? 'blur(12px)' : 'none',
     transition: 'background 0.25s ease, border-color 0.25s ease',
   }
 

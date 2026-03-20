@@ -249,17 +249,17 @@ export const BookingModal = ({
 
                 {/* Error Message */}
                 {submitError && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex gap-3">
-                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                    <p className="text-sm text-red-800">{submitError}</p>
+                  <div className="rounded-xl p-4 flex gap-3" style={{ background: '#fef2f2', border: '1px solid #fca5a5' }}>
+                    <AlertCircle className="w-5 h-5 flex-shrink-0" style={{ color: '#9b1c1c' }} />
+                    <p className="text-sm" style={{ color: '#9b1c1c' }}>{submitError}</p>
                   </div>
                 )}
 
                 {/* API Error */}
                 {error && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex gap-3">
-                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                    <p className="text-sm text-red-800">{error}</p>
+                  <div className="rounded-xl p-4 flex gap-3" style={{ background: '#fef2f2', border: '1px solid #fca5a5' }}>
+                    <AlertCircle className="w-5 h-5 flex-shrink-0" style={{ color: '#9b1c1c' }} />
+                    <p className="text-sm" style={{ color: '#9b1c1c' }}>{error}</p>
                   </div>
                 )}
               </form>

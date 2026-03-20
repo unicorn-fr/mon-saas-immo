@@ -36,13 +36,11 @@ const NAV = [
 
 export default function Footer() {
   return (
-    <footer style={{ backgroundColor: night, padding: '64px 24px 0' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+    <footer style={{ backgroundColor: night }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         <div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12"
           style={{
-            display: 'grid',
-            gridTemplateColumns: '2fr 1fr 1fr 1fr',
-            gap: 40,
             paddingBottom: 48,
             borderBottom: '1px solid rgba(255,255,255,0.08)',
           }}

@@ -68,7 +68,7 @@ export const Calendar = ({
     if (hasConfirmed) return 'bg-success-500'
     if (hasPending) return 'bg-warning-500'
     if (hasCancelled) return 'bg-red-500'
-    return 'bg-slate-400'
+    return 'bg-[#9e9b96]'
   }
 
   const handlePreviousMonth = () => {
@@ -86,10 +86,10 @@ export const Calendar = ({
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+    <div className="bg-white rounded-xl shadow-sm p-6" style={{ border: '1px solid #e4e1db' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+        <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: '#0d0c0a' }}>
           <CalendarIcon className="w-5 h-5 text-primary-600" />
           {format(currentMonth, 'MMMM yyyy', { locale: fr })}
         </h3>
@@ -97,17 +97,23 @@ export const Calendar = ({
         <div className="flex items-center gap-2">
           <button
             onClick={handlePreviousMonth}
-            className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+            className="p-2 rounded-xl transition-colors"
+            style={{ color: '#5a5754' }}
+            onMouseEnter={e => (e.currentTarget.style.background = '#f4f2ee')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
             aria-label="Mois précédent"
           >
-            <ChevronLeft className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+            <ChevronLeft className="w-5 h-5" />
           </button>
           <button
             onClick={handleNextMonth}
-            className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+            className="p-2 rounded-xl transition-colors"
+            style={{ color: '#5a5754' }}
+            onMouseEnter={e => (e.currentTarget.style.background = '#f4f2ee')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
             aria-label="Mois suivant"
           >
-            <ChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+            <ChevronRight className="w-5 h-5" />
           </button>
         </div>
       </div>
@@ -117,7 +123,8 @@ export const Calendar = ({
         {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((day) => (
           <div
             key={day}
-            className="text-center text-xs font-semibold text-slate-600 dark:text-slate-400 py-2"
+            className="text-center text-xs font-semibold py-2"
+            style={{ color: '#5a5754' }}
           >
             {day}
           </div>
@@ -139,6 +146,14 @@ export const Calendar = ({
           const isSelectable = isDateSelectable(date)
           const indicator = getDateIndicator(date)
 
+          const dayColor = isSelected
+            ? undefined
+            : isCurrentDay
+            ? undefined
+            : isSameMonth(date, currentMonth)
+            ? isSelectable ? '#0d0c0a' : '#9e9b96'
+            : '#ccc9c3'
+
           return (
             <button
               key={date.toISOString()}
@@ -148,17 +163,18 @@ export const Calendar = ({
                 aspect-square p-2 rounded-xl text-sm font-medium transition-all relative
                 ${
                   isSelected
-                    ? 'bg-primary-600 text-white ring-2 ring-primary-200'
+                    ? 'bg-[#1a1a2e] text-white'
                     : isCurrentDay
-                    ? 'bg-primary-50 text-primary-700 border border-primary-300'
-                    : isSameMonth(date, currentMonth)
-                    ? isSelectable
-                      ? 'text-slate-900 hover:bg-slate-100'
-                      : 'text-slate-400 cursor-not-allowed'
-                    : 'text-slate-300'
+                    ? 'border'
+                    : ''
                 }
                 ${!isSelectable || !onDateSelect ? 'cursor-default' : 'cursor-pointer'}
               `}
+              style={{
+                color: isSelected ? '#ffffff' : isCurrentDay ? '#1a1a2e' : dayColor,
+                background: isCurrentDay && !isSelected ? '#eaf0fb' : undefined,
+                borderColor: isCurrentDay && !isSelected ? '#b8ccf0' : undefined,
+              }}
             >
               <span className="block">{format(date, 'd')}</span>
 
@@ -184,7 +200,7 @@ export const Calendar = ({
       </div>
 
       {/* Legend */}
-      <div className="mt-6 pt-4 border-t flex flex-wrap items-center gap-4 text-xs text-slate-600 dark:text-slate-400">
+      <div className="mt-6 pt-4 border-t flex flex-wrap items-center gap-4 text-xs" style={{ color: '#5a5754' }}>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 bg-success-500 rounded-full"></div>
           <span>Confirmée</span>

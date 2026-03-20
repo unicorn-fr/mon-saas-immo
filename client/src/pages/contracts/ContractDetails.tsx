@@ -450,7 +450,7 @@ export default function ContractDetails() {
       <div style={{ minHeight: '100vh', background: M.bg, fontFamily: M.body }}>
         {/* Header */}
         <div style={{ background: M.surface, borderBottom: `1px solid ${M.border}` }}>
-          <div className="container mx-auto px-4 py-6">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <button
@@ -537,7 +537,7 @@ export default function ContractDetails() {
           </div>
         </div>
 
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="max-w-4xl mx-auto">
 
             {/* Progress Stepper */}

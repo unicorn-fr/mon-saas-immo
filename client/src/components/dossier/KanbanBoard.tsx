@@ -107,7 +107,7 @@ function CardContent({
     entry.hasHighRisk ? 'border-red-200' :
     entry.hasMediumRisk ? 'border-amber-200' :
     entry.phase === 'done' ? 'border-emerald-200' :
-    'border-[var(--border)]'
+    'border-[#e4e1db]'
 
   const confidencePct = Math.min(100, Math.round(entry.confidence))
   const confColor =
@@ -120,17 +120,17 @@ function CardContent({
       layout
       initial={isDragging ? undefined : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`rounded-xl border bg-[var(--surface-card)] cursor-grab active:cursor-grabbing select-none ${riskColor} ${isDragging ? 'shadow-2xl scale-105' : 'shadow-sm'}`}
+      className={`rounded-xl border bg-white cursor-grab active:cursor-grabbing select-none ${riskColor} ${isDragging ? 'shadow-2xl scale-105' : 'shadow-sm'}`}
       style={{ transition: isDragging ? 'none' : undefined }}
     >
       {/* Drag handle + file info */}
       <div className="flex items-center gap-2 px-3 pt-3 pb-2" {...dragProps}>
-        <GripVertical className="w-3.5 h-3.5 flex-shrink-0 text-[var(--text-tertiary)]" />
+        <GripVertical className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#9e9b96' }} />
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold truncate text-[var(--text-primary)]">
+          <p className="text-xs font-semibold truncate" style={{ color: '#0d0c0a' }}>
             {entry.file.name}
           </p>
-          <p className="text-[10px] text-[var(--text-tertiary)]">
+          <p className="text-[10px]" style={{ color: '#9e9b96' }}>
             {(entry.file.size / 1024).toFixed(0)} Ko
             {entry.file.type.includes('pdf') ? ' · PDF' : ' · Image'}
           </p>
@@ -200,10 +200,11 @@ function CardContent({
 
       {/* Live scan logs toggle */}
       {entry.scanLogs.length > 0 && (
-        <div className="border-t border-[var(--border)] px-3 py-1.5">
+        <div className="border-t px-3 py-1.5" style={{ borderColor: '#e4e1db' }}>
           <button
             onClick={(e) => { e.stopPropagation(); setLogsOpen((v) => !v) }}
-            className="text-[10px] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] flex items-center gap-1"
+            className="text-[10px] flex items-center gap-1"
+            style={{ color: '#9e9b96' }}
             onPointerDown={(e) => e.stopPropagation()}  // don't trigger drag
           >
             <FileText className="w-2.5 h-2.5" />
@@ -219,12 +220,20 @@ function CardContent({
               >
                 <div className="font-mono text-[9px] mt-1 space-y-0.5 max-h-24 overflow-y-auto pr-1">
                   {entry.scanLogs.map((log, i) => (
-                    <p key={i} className={
-                      log.startsWith('[OK]')   ? 'text-emerald-600' :
-                      log.startsWith('[WARN]') ? 'text-amber-600'   :
-                      log.startsWith('[ERR]')  ? 'text-red-600'     :
-                      'text-[var(--text-tertiary)]'
-                    }>
+                    <p
+                      key={i}
+                      className={
+                        log.startsWith('[OK]')   ? 'text-emerald-600' :
+                        log.startsWith('[WARN]') ? 'text-amber-600'   :
+                        log.startsWith('[ERR]')  ? 'text-red-600'     :
+                        ''
+                      }
+                      style={
+                        !log.startsWith('[OK]') && !log.startsWith('[WARN]') && !log.startsWith('[ERR]')
+                          ? { color: '#9e9b96' }
+                          : undefined
+                      }
+                    >
                       {log}
                     </p>
                   ))}
@@ -261,8 +270,7 @@ function DroppableColumn({
           : 'border-transparent'
       }`}
       style={{
-        backgroundColor: isOver ? undefined : 'var(--surface-subtle)',
-        ...(isOver ? { backgroundColor: `var(--surface-card)` } : {}),
+        backgroundColor: isOver ? '#ffffff' : '#f4f2ee',
       }}
     >
       {/* Column header */}

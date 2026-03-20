@@ -25,30 +25,30 @@ const STATUS_CONFIG: Record<
   PENDING: {
     label: 'En attente',
     icon: AlertCircle,
-    color: 'text-warning-700',
-    bgColor: 'bg-warning-50',
-    borderColor: 'border-warning-100',
+    color: '#92400e',
+    bgColor: '#fdf5ec',
+    borderColor: '#f3c99a',
   },
   CONFIRMED: {
     label: 'Confirmée',
     icon: CheckCircle,
-    color: 'text-success-700',
-    bgColor: 'bg-success-50',
-    borderColor: 'border-success-100',
+    color: '#1b5e3b',
+    bgColor: '#edf7f2',
+    borderColor: '#9fd4ba',
   },
   CANCELLED: {
     label: 'Annulée',
     icon: XCircle,
-    color: 'text-red-700',
-    bgColor: 'bg-red-50',
-    borderColor: 'border-red-200',
+    color: '#9b1c1c',
+    bgColor: '#fef2f2',
+    borderColor: '#fca5a5',
   },
   COMPLETED: {
     label: 'Terminée',
     icon: CheckCircle,
-    color: 'text-slate-700 dark:text-slate-300',
-    bgColor: 'bg-slate-50/50',
-    borderColor: 'border-slate-200',
+    color: '#5a5754',
+    bgColor: '#f4f2ee',
+    borderColor: '#e4e1db',
   },
 }
 
@@ -74,10 +74,8 @@ export const BookingCard = ({
 
   return (
     <div
-      className={`
-        bg-white border rounded-xl overflow-hidden transition-all hover:shadow-md
-        ${statusConfig.borderColor}
-      `}
+      className="bg-white border rounded-xl overflow-hidden transition-all hover:shadow-md"
+      style={{ borderColor: statusConfig.borderColor }}
     >
       <div className="p-6">
         <div className="flex items-start justify-between mb-4">
@@ -85,11 +83,12 @@ export const BookingCard = ({
           <div className="flex-1">
             <h3
               onClick={() => navigate(`/property/${booking.property.id}`)}
-              className="text-lg font-bold text-slate-900 hover:text-primary-600 cursor-pointer transition-colors"
+              className="text-lg font-bold cursor-pointer transition-colors"
+              style={{ color: '#0d0c0a' }}
             >
               {booking.property.title}
             </h3>
-            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mt-1">
+            <div className="flex items-center gap-2 text-sm mt-1" style={{ color: '#5a5754' }}>
               <MapPin className="w-4 h-4" />
               <span>
                 {booking.property.city}
@@ -99,10 +98,12 @@ export const BookingCard = ({
 
           {/* Status Badge */}
           <div
-            className={`
-              flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium
-              ${statusConfig.bgColor} ${statusConfig.color} ${statusConfig.borderColor} border
-            `}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border"
+            style={{
+              background: statusConfig.bgColor,
+              color: statusConfig.color,
+              borderColor: statusConfig.borderColor,
+            }}
           >
             <StatusIcon className="w-4 h-4" />
             {statusConfig.label}
@@ -112,36 +113,45 @@ export const BookingCard = ({
         {/* Visit Details */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center flex-shrink-0">
-              <Calendar className="w-5 h-5 text-primary-600" />
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: '#eaf0fb' }}
+            >
+              <Calendar className="w-5 h-5" style={{ color: '#1a3270' }} />
             </div>
             <div>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mb-0.5">Date de visite</p>
-              <p className="font-semibold text-slate-900">{formattedDateShort}</p>
+              <p className="text-xs mb-0.5" style={{ color: '#5a5754' }}>Date de visite</p>
+              <p className="font-semibold" style={{ color: '#0d0c0a' }}>{formattedDateShort}</p>
             </div>
           </div>
 
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center flex-shrink-0">
-              <Clock className="w-5 h-5 text-primary-600" />
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: '#eaf0fb' }}
+            >
+              <Clock className="w-5 h-5" style={{ color: '#1a3270' }} />
             </div>
             <div>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mb-0.5">Horaire</p>
-              <p className="font-semibold text-slate-900">
+              <p className="text-xs mb-0.5" style={{ color: '#5a5754' }}>Horaire</p>
+              <p className="font-semibold" style={{ color: '#0d0c0a' }}>
                 {booking.visitTime} ({booking.duration} min)
               </p>
             </div>
           </div>
 
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center flex-shrink-0">
-              <User className="w-5 h-5 text-primary-600" />
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: '#eaf0fb' }}
+            >
+              <User className="w-5 h-5" style={{ color: '#1a3270' }} />
             </div>
             <div>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mb-0.5">
+              <p className="text-xs mb-0.5" style={{ color: '#5a5754' }}>
                 {viewMode === 'owner' ? 'Visiteur' : 'Propriétaire'}
               </p>
-              <p className="font-semibold text-slate-900">
+              <p className="font-semibold" style={{ color: '#0d0c0a' }}>
                 {viewMode === 'owner'
                   ? `${booking.tenant.firstName} ${booking.tenant.lastName}`
                   : booking.property.owner
@@ -154,12 +164,12 @@ export const BookingCard = ({
 
         {/* Notes */}
         {booking.tenantNotes && (
-          <div className="bg-slate-50/50 rounded-xl p-4 mb-4">
+          <div className="rounded-xl p-4 mb-4" style={{ background: '#f4f2ee' }}>
             <div className="flex items-start gap-2">
-              <MessageSquare className="w-4 h-4 text-slate-600 dark:text-slate-400 mt-0.5 flex-shrink-0" />
+              <MessageSquare className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#5a5754' }} />
               <div>
-                <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Notes</p>
-                <p className="text-sm text-slate-900">{booking.tenantNotes}</p>
+                <p className="text-xs mb-1" style={{ color: '#5a5754' }}>Notes</p>
+                <p className="text-sm" style={{ color: '#0d0c0a' }}>{booking.tenantNotes}</p>
               </div>
             </div>
           </div>
@@ -167,13 +177,13 @@ export const BookingCard = ({
 
         {/* Cancellation Reason */}
         {booking.status === 'CANCELLED' && booking.cancellationReason && (
-          <div className="bg-red-50 rounded-xl p-4 mb-4">
+          <div className="rounded-xl p-4 mb-4" style={{ background: '#fef2f2', border: '1px solid #fca5a5' }}>
             <div className="flex items-start gap-2">
-              <XCircle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+              <XCircle className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#9b1c1c' }} />
               <div>
-                <p className="text-xs text-red-600 mb-1">Raison de l'annulation</p>
-                <p className="text-sm text-red-900">{booking.cancellationReason}</p>
-                <p className="text-xs text-red-600 mt-1">
+                <p className="text-xs mb-1" style={{ color: '#9b1c1c' }}>Raison de l'annulation</p>
+                <p className="text-sm" style={{ color: '#9b1c1c' }}>{booking.cancellationReason}</p>
+                <p className="text-xs mt-1" style={{ color: '#9b1c1c' }}>
                   Annulée le {format(new Date(booking.cancelledAt!), 'Pp', { locale: fr })}
                 </p>
               </div>
@@ -183,12 +193,13 @@ export const BookingCard = ({
 
         {/* Actions */}
         {(canConfirm || canCancel) && (
-          <div className="flex items-center gap-3 pt-4 border-t">
+          <div className="flex items-center gap-3 pt-4 border-t" style={{ borderColor: '#e4e1db' }}>
             {canConfirm && onConfirm && (
               <button
                 onClick={() => onConfirm(booking.id)}
                 disabled={isLoading}
-                className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                style={{ background: '#1a1a2e', color: '#ffffff' }}
               >
                 {isLoading ? (
                   <>
@@ -208,7 +219,8 @@ export const BookingCard = ({
               <button
                 onClick={() => onCancel(booking.id)}
                 disabled={isLoading}
-                className="flex-1 px-4 py-2 bg-white text-red-600 border border-red-300 rounded-xl hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                style={{ background: '#ffffff', color: '#9b1c1c', border: '1px solid #fca5a5' }}
               >
                 <XCircle className="w-4 h-4" />
                 Annuler
@@ -218,7 +230,10 @@ export const BookingCard = ({
         )}
 
         {/* Booking Info Footer */}
-        <div className="flex items-center justify-between pt-4 mt-4 border-t text-xs text-slate-500">
+        <div
+          className="flex items-center justify-between pt-4 mt-4 border-t text-xs"
+          style={{ borderColor: '#e4e1db', color: '#9e9b96' }}
+        >
           <span>Réservation #{booking.id.slice(0, 8)}</span>
           <span>Créée le {format(new Date(booking.createdAt), 'Pp', { locale: fr })}</span>
         </div>

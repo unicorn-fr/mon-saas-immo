@@ -156,7 +156,7 @@ export default function Dashboard() {
   return (
     <Layout>
       <div style={{ background: T.bgBase, minHeight: '100vh', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 40px' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-8">
 
           {/* ── Page header ─────────────────────────────────────────────── */}
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 32 }}>
@@ -236,11 +236,8 @@ export default function Dashboard() {
           )}
 
           {/* ── KPI row ─────────────────────────────────────────────────── */}
-          <div style={{
-            display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: 16, marginBottom: 32,
-          }}
-            className="lg-grid-4"
+          <div style={{ marginBottom: 32 }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6"
           >
             {/* We render four KPI cards inline */}
             {[
@@ -318,10 +315,10 @@ export default function Dashboard() {
           </div>
 
           {/* ── Main grid ───────────────────────────────────────────────── */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 24 }} className="lg-grid-3col">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 lg:gap-8">
 
             {/* Left column (2/3) */}
-            <div style={{ gridColumn: 'span 2' }} className="lg-col-span-2">
+            <div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
                 {/* ── Mes biens ─────────────────────────────────────────── */}
@@ -588,7 +585,7 @@ export default function Dashboard() {
             </div>
 
             {/* ── Right sidebar (1/3) ──────────────────────────────────── */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div className="hidden lg:flex" style={{ flexDirection: 'column', gap: 16 }}>
 
               {/* Quick actions */}
               <div style={{ ...cardBase, padding: 20 }}>
@@ -740,14 +737,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Responsive grid helpers (Tailwind-independent) */}
-      <style>{`
-        @media (min-width: 1024px) {
-          .lg-grid-4 { grid-template-columns: repeat(4, 1fr) !important; }
-          .lg-grid-3col { grid-template-columns: 1fr 1fr 1fr !important; }
-          .lg-col-span-2 { grid-column: span 2 !important; }
-        }
-      `}</style>
     </Layout>
   )
 }

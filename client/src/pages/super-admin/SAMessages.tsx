@@ -51,7 +51,7 @@ export default function SAMessages() {
   if (activeConv) {
     const msgs: any[] = messages?.messages ?? []
     return (
-      <div className="p-6 space-y-4 h-full flex flex-col">
+      <div className="px-4 sm:px-6 py-6 space-y-4 h-full flex flex-col">
         <div className="flex items-center gap-3">
           <button onClick={() => { setActiveConv(null); setMessages(null) }}
             className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-all">
@@ -110,7 +110,7 @@ export default function SAMessages() {
   }
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="px-4 sm:px-6 py-6 space-y-5">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-2">

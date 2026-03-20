@@ -22,8 +22,8 @@ interface Tip {
 function Tooltip({ text }: Tip) {
   return (
     <span className="group relative inline-flex ml-1.5">
-      <Info className="w-3.5 h-3.5 text-slate-400 cursor-help" />
-      <span className="pointer-events-none absolute left-5 top-0 z-20 w-64 rounded-lg bg-slate-900 px-3 py-2 text-xs text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100">
+      <Info className="w-3.5 h-3.5 cursor-help" style={{ color: '#9e9b96' }} />
+      <span className="pointer-events-none absolute left-5 top-0 z-20 w-64 rounded-lg px-3 py-2 text-xs text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100" style={{ background: '#1a1a2e' }}>
         {text}
       </span>
     </span>
@@ -62,7 +62,7 @@ export function SelectionCriteriaForm({ criteria, onChange }: Props) {
     <div className="space-y-6">
       {/* Salary ratio */}
       <div>
-        <label className="flex items-center text-sm font-medium text-slate-700 mb-1">
+        <label className="flex items-center text-sm font-medium text-[#5a5754] mb-1">
           Ratio de solvabilité minimal
           <Tooltip text="Standard agence : 3× le loyer. Ex : loyer 900 € → revenu net ≥ 2 700 €/mois. Abaissez à 2,5× si vous acceptez des garants." />
         </label>
@@ -80,7 +80,7 @@ export function SelectionCriteriaForm({ criteria, onChange }: Props) {
             {criteria.minSalaryRatio ?? 3}× le loyer
           </span>
         </div>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-[#9e9b96]">
           Score minimal requis pour soumettre une candidature :&nbsp;
           <span className="font-medium">{criteria.minScore ?? 70}/100</span>
           &nbsp;—&nbsp;
@@ -98,11 +98,11 @@ export function SelectionCriteriaForm({ criteria, onChange }: Props) {
 
       {/* Guarantor */}
       <div>
-        <label className="flex items-center text-sm font-medium text-slate-700 mb-2">
+        <label className="flex items-center text-sm font-medium text-[#5a5754] mb-2">
           Garant
           <Tooltip text="Exiger un garant renforce votre protection contre les impayés. Visale (Action Logement) est gratuit pour le bailleur et couvre jusqu'à 36 mois de loyers." />
         </label>
-        <label className="flex items-center gap-2 text-sm text-slate-600 mb-2 cursor-pointer">
+        <label className="flex items-center gap-2 text-sm text-[#5a5754] mb-2 cursor-pointer">
           <input
             type="checkbox"
             checked={criteria.requiredGuarantor ?? false}
@@ -113,12 +113,12 @@ export function SelectionCriteriaForm({ criteria, onChange }: Props) {
         </label>
         {criteria.requiredGuarantor && (
           <div className="ml-6 space-y-1.5">
-            <p className="text-xs text-slate-500 mb-1">Types de garant acceptés :</p>
+            <p className="text-xs text-[#9e9b96] mb-1">Types de garant acceptés :</p>
             {[
               { value: 'physique', label: 'Garant physique (personne réelle)' },
               { value: 'visale',   label: 'Visale — Action Logement' },
             ].map(({ value, label }) => (
-              <label key={value} className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+              <label key={value} className="flex items-center gap-2 text-sm text-[#5a5754] cursor-pointer">
                 <input
                   type="checkbox"
                   checked={(criteria.acceptedGuarantorTypes ?? []).includes(value)}
@@ -134,13 +134,13 @@ export function SelectionCriteriaForm({ criteria, onChange }: Props) {
 
       {/* Required docs */}
       <div>
-        <label className="flex items-center text-sm font-medium text-slate-700 mb-2">
+        <label className="flex items-center text-sm font-medium text-[#5a5754] mb-2">
           Documents obligatoires
           <Tooltip text="Cochez les catégories de pièces que le locataire doit avoir uploadées dans son dossier pour pouvoir postuler." />
         </label>
         <div className="grid grid-cols-2 gap-1.5">
           {DOC_CATEGORIES.map(({ value, label }) => (
-            <label key={value} className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+            <label key={value} className="flex items-center gap-2 text-sm text-[#5a5754] cursor-pointer">
               <input
                 type="checkbox"
                 checked={(criteria.requiredDocCategories ?? []).includes(value)}
@@ -155,7 +155,7 @@ export function SelectionCriteriaForm({ criteria, onChange }: Props) {
 
       {/* Preferred contract types */}
       <div>
-        <label className="flex items-center text-sm font-medium text-slate-700 mb-2">
+        <label className="flex items-center text-sm font-medium text-[#5a5754] mb-2">
           Situations professionnelles prioritaires
           <Tooltip text="Les dossiers correspondant à ces types de contrat obtiennent un bonus de score. Les autres ne sont pas bloqués." />
         </label>
@@ -170,7 +170,7 @@ export function SelectionCriteriaForm({ criteria, onChange }: Props) {
                 className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
                   active
                     ? 'border-[#1a1a2e] bg-[#eaf0fb] text-[#1a1a2e]'
-                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                    : 'border-[#e4e1db] bg-white text-[#5a5754] hover:border-[#ccc9c3]'
                 }`}
               >
                 {ct}

@@ -61,7 +61,7 @@ export default function SADashboard() {
   if (!stats) return null
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="px-4 sm:px-6 py-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -75,7 +75,7 @@ export default function SADashboard() {
       </div>
 
       {/* Stat grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard icon={Users} label="Utilisateurs" value={stats.users.total}
           sub={`+${stats.users.newLast7} cette semaine`} />
         <StatCard icon={Home} label="Biens" value={stats.properties.total}

@@ -144,7 +144,7 @@ export default function SAUserDetail() {
 
   if (!user) {
     return (
-      <div className="p-6 text-center text-slate-500">
+      <div className="px-4 sm:px-6 py-6 text-center text-slate-500">
         <p>Utilisateur introuvable.</p>
         <button onClick={() => navigate('/super-admin/users')} className="mt-3 text-[#00b4d8] text-sm hover:underline">
           Retour
@@ -161,7 +161,7 @@ export default function SAUserDetail() {
   const roleColor = ROLE_COLORS[user.role] ?? '#94a3b8'
 
   return (
-    <div className="p-6 space-y-5 pb-12">
+    <div className="px-4 sm:px-6 py-6 space-y-5 pb-12">
       {/* Header */}
       <div className="flex items-center gap-4">
         <button onClick={() => navigate('/super-admin/users')}

@@ -242,7 +242,7 @@ export function TenantDossierModal({ tenantId, tenantName, onClose }: TenantDoss
                   <p className="text-[11px] font-semibold uppercase tracking-wide mb-3" style={{ color: '#9e9b96' }}>
                     Informations personnelles
                   </p>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[13px]">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-[13px]">
                     {profile.phone && (
                       <div className="flex items-center gap-1.5" style={{ color: '#5a5754' }}>
                         <Phone className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#9e9b96' }} />

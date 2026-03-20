@@ -311,7 +311,7 @@ export function DossierWizard({
   return (
     <div
       className="fixed inset-0 z-[80] flex items-center justify-center p-4 sm:p-6"
-      style={{ backgroundColor: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)' }}
+      style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
       onClick={onClose}
     >
       <motion.div
