@@ -13,14 +13,13 @@ import {
   Bed,
   Maximize2,
   Euro,
-  Menu,
-  X,
   Check,
 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useReveal } from '../hooks/useReveal'
 import { propertyService } from '../services/property.service'
 import { Property } from '../types/property.types'
+import { Header } from '../components/layout/Header'
 
 // ─── Design tokens ───────────────────────────────────────────────────────────
 const T = {
@@ -123,18 +122,9 @@ export default function Home() {
   const ctaReveal      = useReveal()
 
   const [searchQuery, setSearchQuery]         = useState('')
-  const [mobileMenuOpen, setMobileMenuOpen]   = useState(false)
   const [featuredProperties, setFeaturedProperties] = useState<Property[]>([])
   const [loadingProperties, setLoadingProperties]   = useState(true)
   const [activeTab, setActiveTab]             = useState<'owner' | 'tenant'>('owner')
-  const [scrolled, setScrolled]               = useState(false)
-
-  // Scroll listener for sticky nav
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 48)
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
 
   // Featured properties
   useEffect(() => {
@@ -166,135 +156,7 @@ export default function Home() {
   return (
     <div style={{ backgroundColor: T.bgBase, fontFamily: T.fontBody, color: T.ink, minHeight: '100vh' }}>
 
-      {/* ══════════════════════════════════════════════════════════════
-          NAV
-      ══════════════════════════════════════════════════════════════ */}
-      <header
-        style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 50,
-          transition: 'background 0.25s, box-shadow 0.25s, border-color 0.25s',
-          backgroundColor: scrolled ? T.bgSurface : 'transparent',
-          borderBottom: scrolled ? `1px solid ${T.border}` : '1px solid transparent',
-          boxShadow: scrolled ? T.shadow : 'none',
-        }}
-      >
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
-
-          {/* Logo */}
-          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'baseline', gap: 2 }}>
-            <span style={{ fontFamily: T.fontBody, fontWeight: 700, fontSize: 19, color: T.night, letterSpacing: '-0.02em' }}>
-              Bailio
-            </span>
-          </Link>
-
-          {/* Desktop nav links */}
-          <nav style={{ display: 'flex', gap: 32, alignItems: 'center' }} className="hide-mobile">
-            {[
-              { to: '/',           label: 'Accueil' },
-              { to: '/search',     label: 'Annonces' },
-              { to: '/pricing',    label: 'Tarifs' },
-            ].map(link => (
-              <Link
-                key={link.to}
-                to={link.to}
-                style={{ fontFamily: T.fontBody, fontWeight: 500, fontSize: 13, color: T.inkMid, textDecoration: 'none', letterSpacing: '0.01em' }}
-                onMouseEnter={e => (e.currentTarget.style.color = T.ink)}
-                onMouseLeave={e => (e.currentTarget.style.color = T.inkMid)}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-
-          {/* Desktop CTAs */}
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }} className="hide-mobile">
-            <Link
-              to="/login"
-              style={{
-                fontFamily: T.fontBody,
-                fontWeight: 500,
-                fontSize: 13,
-                color: T.night,
-                border: `1px solid ${T.night}`,
-                borderRadius: 8,
-                padding: '7px 18px',
-                textDecoration: 'none',
-                transition: 'background 0.15s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = `${T.night}0d` }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
-            >
-              Connexion
-            </Link>
-            <Link
-              to="/register"
-              style={{
-                fontFamily: T.fontBody,
-                fontWeight: 600,
-                fontSize: 13,
-                color: '#ffffff',
-                backgroundColor: T.night,
-                borderRadius: 8,
-                padding: '7px 18px',
-                textDecoration: 'none',
-                transition: 'opacity 0.15s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.opacity = '0.85' }}
-              onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
-            >
-              S'inscrire
-            </Link>
-          </div>
-
-          {/* Mobile hamburger */}
-          <button
-            onClick={() => setMobileMenuOpen(v => !v)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.ink, padding: 4, display: 'none' }}
-            className="show-mobile"
-            aria-label="Menu"
-          >
-            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
-        </div>
-
-        {/* Mobile menu */}
-        {mobileMenuOpen && (
-          <div style={{ backgroundColor: T.bgSurface, borderTop: `1px solid ${T.border}`, padding: '12px 24px 20px' }}>
-            {[
-              { to: '/',            label: 'Accueil' },
-              { to: '/search',      label: 'Annonces' },
-              { to: '/pricing',     label: 'Tarifs' },
-            ].map(link => (
-              <Link
-                key={link.to}
-                to={link.to}
-                onClick={() => setMobileMenuOpen(false)}
-                style={{ display: 'block', padding: '10px 0', fontWeight: 500, fontSize: 15, color: T.inkMid, textDecoration: 'none', borderBottom: `1px solid ${T.border}` }}
-              >
-                {link.label}
-              </Link>
-            ))}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
-              <Link
-                to="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                style={{ textAlign: 'center', padding: '10px 0', border: `1px solid ${T.night}`, borderRadius: 8, fontSize: 14, fontWeight: 500, color: T.night, textDecoration: 'none' }}
-              >
-                Connexion
-              </Link>
-              <Link
-                to="/register"
-                onClick={() => setMobileMenuOpen(false)}
-                style={{ textAlign: 'center', padding: '10px 0', backgroundColor: T.night, borderRadius: 8, fontSize: 14, fontWeight: 600, color: '#fff', textDecoration: 'none' }}
-              >
-                S'inscrire
-              </Link>
-            </div>
-          </div>
-        )}
-      </header>
+      <Header />
 
       {/* Responsive CSS helpers */}
       <style>{`
