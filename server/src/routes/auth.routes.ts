@@ -2,7 +2,6 @@ import { Router } from 'express'
 import { authController } from '../controllers/auth.controller.js'
 import { authenticate } from '../middlewares/auth.middleware.js'
 import * as totpController from '../controllers/totp.controller.js'
-import { verifyTurnstile } from '../middlewares/turnstile.middleware.js'
 import { loginRateLimiter, emailRateLimiter } from '../middlewares/security.middleware.js'
 
 const router = Router()
@@ -11,8 +10,8 @@ const router = Router()
  * Public routes
  */
 
-// POST /api/v1/auth/register - Register new user (+ Turnstile anti-bot)
-router.post('/register', verifyTurnstile, authController.register.bind(authController))
+// POST /api/v1/auth/register
+router.post('/register', authController.register.bind(authController))
 
 // POST /api/v1/auth/login - Login user (brute-force protected: 10 attempts / 15 min)
 router.post('/login', loginRateLimiter, authController.login.bind(authController))
@@ -38,6 +37,13 @@ router.post('/reset-password', authController.resetPassword.bind(authController)
 
 // POST /api/v1/auth/google - Google OAuth login
 router.post('/google', authController.googleAuth.bind(authController))
+
+// POST /api/v1/auth/resend-verification-public - Renvoyer le lien (sans être connecté)
+router.post(
+  '/resend-verification-public',
+  emailRateLimiter,
+  authController.resendVerificationPublic.bind(authController)
+)
 
 /**
  * Protected routes (require authentication)
@@ -73,6 +79,13 @@ router.post(
   '/logout-all',
   authenticate,
   authController.logoutAll.bind(authController)
+)
+
+// POST /api/v1/auth/verify-phone - Vérification téléphone via Firebase OTP
+router.post(
+  '/verify-phone',
+  authenticate,
+  authController.verifyPhone.bind(authController)
 )
 
 /**

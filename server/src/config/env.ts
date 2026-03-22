@@ -39,6 +39,9 @@ const envSchema = z.object({
   LOG_LEVEL: z.string().default('info'),
 
   TURNSTILE_SECRET_KEY: z.string().optional(),
+
+  // Firebase Admin (JSON stringifié de la clé de service)
+  FIREBASE_SERVICE_ACCOUNT: z.string().optional(),
 })
 
 // Parse and validate environment variables
@@ -89,4 +92,6 @@ export const env = {
   LOG_LEVEL: parsedEnv.data.LOG_LEVEL,
 
   TURNSTILE_SECRET_KEY: parsedEnv.data.TURNSTILE_SECRET_KEY,
+
+  FIREBASE_SERVICE_ACCOUNT: parsedEnv.data.FIREBASE_SERVICE_ACCOUNT,
 }

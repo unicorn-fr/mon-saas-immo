@@ -6,6 +6,7 @@ import { UserRole } from '@prisma/client'
 import { isTotpEnabled } from '../services/totp.service.js'
 import { prisma } from '../config/database.js'
 import { comparePassword } from '../utils/password.util.js'
+import { verifyFirebasePhoneToken } from '../utils/firebase.util.js'
 
 class AuthController {
   /**
@@ -537,6 +538,68 @@ class AuthController {
           success: false,
           message: error.message,
         })
+      }
+      next(error)
+    }
+  }
+  /**
+   * POST /api/v1/auth/resend-verification-public
+   * Renvoyer le lien de vérification sans être connecté (après tentative de login bloquée)
+   */
+  async resendVerificationPublic(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { email } = req.body
+      if (!email) {
+        return res.status(400).json({ success: false, message: 'Email requis' })
+      }
+      await authService.resendVerificationByEmail(email.toLowerCase().trim())
+      return res.status(200).json({
+        success: true,
+        message: 'Si ce compte existe et n\'est pas encore vérifié, un email a été envoyé.',
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  /**
+   * POST /api/v1/auth/verify-phone
+   * Vérifie un numéro de téléphone via Firebase Phone Auth.
+   * Le client envoie l'ID token Firebase après avoir validé l'OTP SMS.
+   */
+  async verifyPhone(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.id
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' })
+      }
+
+      const { firebaseIdToken } = req.body
+      if (!firebaseIdToken) {
+        return res.status(400).json({
+          success: false,
+          message: 'firebaseIdToken est requis',
+        })
+      }
+
+      const { phoneNumber } = await verifyFirebasePhoneToken(firebaseIdToken)
+
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          phone: phoneNumber,
+          phoneVerified: true,
+        },
+      })
+
+      return res.status(200).json({
+        success: true,
+        message: 'Numéro de téléphone vérifié avec succès',
+        data: { phoneNumber },
+      })
+    } catch (error) {
+      if (error instanceof Error) {
+        return res.status(400).json({ success: false, message: error.message })
       }
       next(error)
     }

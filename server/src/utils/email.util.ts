@@ -8,17 +8,16 @@ interface SendEmailOptions {
 }
 
 /**
- * Send an email using SMTP if configured, otherwise log to console
+ * Send email via Brevo SMTP (or any configured SMTP).
+ * Falls back to console log in development when SMTP is not configured.
  */
 export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
   const { to, subject, html } = options
 
-  // If SMTP is not configured, log to console and return
   if (!env.SMTP.HOST || !env.SMTP.USER || !env.SMTP.PASS) {
     console.log('========== EMAIL (SMTP non configure) ==========')
     console.log(`To: ${to}`)
     console.log(`Subject: ${subject}`)
-    console.log(`Body: ${html}`)
     console.log('================================================')
     return true
   }

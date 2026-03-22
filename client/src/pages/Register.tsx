@@ -1,14 +1,12 @@
-import { useState, FormEvent } from 'react'
+import { useState, FormEvent, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AlertCircle, CheckCircle } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { UserRole } from '../types/auth.types'
 import GoogleSignInButton from '../components/auth/GoogleSignInButton'
-import { Turnstile } from '@marsidev/react-turnstile'
 import { celebrateBig } from '../utils/celebrate'
 import { BailioLogo } from '../components/BailioLogo'
-
-const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined
+import toast from 'react-hot-toast'
 
 /* ─── Inline styles for the "Maison" design system ─────────────────────── */
 const fontDisplay: React.CSSProperties = { fontFamily: "'Cormorant Garamond', Georgia, serif" }
@@ -27,6 +25,28 @@ const inputStyle: React.CSSProperties = {
   transition: 'border-color 0.15s, box-shadow 0.15s',
   boxSizing: 'border-box',
 }
+
+/* ─── Country codes ─────────────────────────────────────────────────────── */
+const COUNTRY_CODES = [
+  { code: '+33', flag: '🇫🇷', name: 'France' },
+  { code: '+32', flag: '🇧🇪', name: 'Belgique' },
+  { code: '+41', flag: '🇨🇭', name: 'Suisse' },
+  { code: '+352', flag: '🇱🇺', name: 'Luxembourg' },
+  { code: '+49', flag: '🇩🇪', name: 'Allemagne' },
+  { code: '+39', flag: '🇮🇹', name: 'Italie' },
+  { code: '+34', flag: '🇪🇸', name: 'Espagne' },
+  { code: '+351', flag: '🇵🇹', name: 'Portugal' },
+  { code: '+44', flag: '🇬🇧', name: 'Royaume-Uni' },
+  { code: '+1', flag: '🇺🇸', name: 'États-Unis / Canada' },
+  { code: '+212', flag: '🇲🇦', name: 'Maroc' },
+  { code: '+213', flag: '🇩🇿', name: 'Algérie' },
+  { code: '+216', flag: '🇹🇳', name: 'Tunisie' },
+  { code: '+221', flag: '🇸🇳', name: 'Sénégal' },
+  { code: '+225', flag: '🇨🇮', name: "Côte d'Ivoire" },
+  { code: '+237', flag: '🇨🇲', name: 'Cameroun' },
+  { code: '+243', flag: '🇨🇩', name: 'Congo (RDC)' },
+  { code: '+261', flag: '🇲🇬', name: 'Madagascar' },
+]
 
 /* ─── Benefits for left panel ────────────────────────────────────────────── */
 const benefits = [
@@ -48,12 +68,14 @@ export default function Register() {
     email: '',
     password: '',
     confirmPassword: '',
-    phone: '',
+    phoneNumber: '',
     terms: false,
   })
+  const [countryCode, setCountryCode] = useState('+33')
+  const [registeredEmail, setRegisteredEmail] = useState('')
   const [error, setError] = useState('')
   const [, setPasswordErrors] = useState<string[]>([])
-  const [turnstileToken, setTurnstileToken] = useState<string>('')
+  const phoneInputRef = useRef<HTMLInputElement>(null)
 
   // Focus states
   const [focused, setFocused] = useState<Record<string, boolean>>({})
@@ -108,23 +130,26 @@ export default function Register() {
     }
 
     try {
+      const fullPhone = formData.phoneNumber
+        ? `${countryCode}${formData.phoneNumber.replace(/^0/, '')}`
+        : undefined
+
       await register({
         email: formData.email,
         password: formData.password,
         firstName: formData.firstName,
         lastName: formData.lastName,
         role: userType,
-        phone: formData.phone || undefined,
-        ...(turnstileToken ? { 'cf-turnstile-response': turnstileToken } : {}),
+        phone: fullPhone,
       })
 
       celebrateBig()
-      const redirectPath = userType === 'OWNER' ? '/dashboard/owner' : '/dashboard/tenant'
-      navigate(redirectPath, { replace: true })
+      setRegisteredEmail(formData.email)
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Échec de l\'inscription. Veuillez réessayer.'
-      )
+      const msg = err instanceof Error ? err.message : 'Échec de l\'inscription. Veuillez réessayer.'
+      setError(msg)
+      toast.error(msg, { duration: 5000 })
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     }
   }
 
@@ -160,6 +185,62 @@ export default function Register() {
     { text: 'Minuscule', met: /[a-z]/.test(formData.password) },
     { text: 'Chiffre', met: /[0-9]/.test(formData.password) },
   ]
+
+  // ── Email verification pending screen ──────────────────────────────────
+  if (registeredEmail) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafaf8', padding: '24px', ...fontBody }}>
+        <div style={{ maxWidth: '460px', width: '100%', textAlign: 'center' }}>
+          {/* Icon */}
+          <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#fdf5ec', border: '1px solid #f3c99a', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 28px' }}>
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+              <path d="M4 8h24v16a2 2 0 01-2 2H6a2 2 0 01-2-2V8z" stroke="#c4976a" strokeWidth="1.8" fill="none" strokeLinejoin="round" />
+              <path d="M4 8l12 10L28 8" stroke="#c4976a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+
+          <div style={{ fontSize: '10px', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#9e9b96', marginBottom: '12px' }}>
+            Vérification requise
+          </div>
+          <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '34px', color: '#0d0c0a', margin: '0 0 14px', lineHeight: 1.2 }}>
+            Confirmez votre email
+          </h1>
+          <p style={{ fontSize: '15px', color: '#5a5754', lineHeight: 1.7, margin: '0 0 8px' }}>
+            Un email de vérification a été envoyé à
+          </p>
+          <p style={{ fontSize: '15px', fontWeight: 600, color: '#1a1a2e', margin: '0 0 28px', wordBreak: 'break-all' }}>
+            {registeredEmail}
+          </p>
+          <p style={{ fontSize: '13px', color: '#9e9b96', lineHeight: 1.6, margin: '0 0 32px' }}>
+            Cliquez sur le lien dans l'email pour activer votre compte.<br />
+            Vérifiez aussi vos spams si vous ne le trouvez pas.
+          </p>
+
+          <button
+            onClick={() => navigate('/login')}
+            style={{
+              background: '#1a1a2e', color: '#fff', border: 'none',
+              borderRadius: '8px', padding: '13px 32px',
+              ...fontBody, fontWeight: 600, fontSize: '14px',
+              cursor: 'pointer', marginBottom: '16px', width: '100%',
+            }}
+          >
+            Aller à la connexion
+          </button>
+
+          <p style={{ fontSize: '13px', color: '#9e9b96' }}>
+            Email non reçu ?{' '}
+            <button
+              onClick={() => setRegisteredEmail('')}
+              style={{ background: 'none', border: 'none', color: '#c4976a', fontWeight: 500, cursor: 'pointer', textDecoration: 'underline', fontSize: '13px' }}
+            >
+              Corriger l'adresse
+            </button>
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', ...fontBody }}>
@@ -355,19 +436,62 @@ export default function Register() {
 
             {/* Phone */}
             <div>
-              <label htmlFor="phone" style={{ ...fontBody, fontWeight: 500, fontSize: '13px', color: '#0d0c0a', display: 'block', marginBottom: '6px' }}>
+              <label style={{ ...fontBody, fontWeight: 500, fontSize: '13px', color: '#0d0c0a', display: 'block', marginBottom: '6px' }}>
                 Téléphone{' '}
                 <span style={{ fontWeight: 400, color: '#9e9b96' }}>(optionnel)</span>
               </label>
-              <input
-                id="phone" name="phone" type="tel" placeholder="+33 6 12 34 56 78"
-                value={formData.phone}
-                onChange={handleChange}
-                onFocus={() => handleFocus('phone')}
-                onBlur={() => handleBlur('phone')}
-                disabled={isLoading}
-                style={focusedInputStyle('phone')}
-              />
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {/* Country code selector */}
+                <div style={{ position: 'relative', flexShrink: 0 }}>
+                  <select
+                    value={countryCode}
+                    onChange={e => setCountryCode(e.target.value)}
+                    disabled={isLoading}
+                    style={{
+                      appearance: 'none',
+                      background: '#f8f7f4',
+                      border: '1px solid #e4e1db',
+                      borderRadius: '8px',
+                      padding: '12px 32px 12px 12px',
+                      fontSize: '14px',
+                      color: '#0d0c0a',
+                      outline: 'none',
+                      cursor: 'pointer',
+                      fontFamily: "'DM Sans', system-ui, sans-serif",
+                      minWidth: '90px',
+                    }}
+                  >
+                    {COUNTRY_CODES.map(c => (
+                      <option key={c.code + c.name} value={c.code}>
+                        {c.flag} {c.code}
+                      </option>
+                    ))}
+                  </select>
+                  <svg
+                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#9e9b96' }}
+                    width="12" height="12" viewBox="0 0 12 12" fill="none"
+                  >
+                    <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                {/* Number input */}
+                <input
+                  ref={phoneInputRef}
+                  id="phoneNumber" name="phoneNumber" type="tel"
+                  placeholder="6 12 34 56 78"
+                  value={formData.phoneNumber}
+                  onChange={handleChange}
+                  onFocus={() => handleFocus('phoneNumber')}
+                  onBlur={() => handleBlur('phoneNumber')}
+                  disabled={isLoading}
+                  style={{ ...focusedInputStyle('phoneNumber'), flex: 1 }}
+                />
+              </div>
+              <p style={{ ...fontBody, fontSize: '11px', color: '#9e9b96', marginTop: '5px' }}>
+                {formData.phoneNumber
+                  ? `Numéro complet : ${countryCode}${formData.phoneNumber.replace(/^0/, '')}`
+                  : 'Ex : 6 12 34 56 78 (sans le 0)'}
+              </p>
             </div>
 
             {/* Password */}
@@ -456,18 +580,6 @@ export default function Register() {
                 </a>
               </label>
             </div>
-
-            {/* Turnstile anti-bot */}
-            {TURNSTILE_SITE_KEY && (
-              <div style={{ display: 'flex', justifyContent: 'center' }}>
-                <Turnstile
-                  siteKey={TURNSTILE_SITE_KEY}
-                  onSuccess={(token) => setTurnstileToken(token)}
-                  onError={() => setTurnstileToken('')}
-                  onExpire={() => setTurnstileToken('')}
-                />
-              </div>
-            )}
 
             {/* Submit */}
             <button

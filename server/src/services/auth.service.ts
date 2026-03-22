@@ -11,6 +11,11 @@ import { validateEmail } from '../utils/validation.util.js'
 import { validatePasswordStrength } from '../utils/password.util.js'
 import { generateSecureToken } from '../utils/token.util.js'
 import { sendEmail } from '../utils/email.util.js'
+import {
+  emailVerificationTemplate,
+  passwordResetTemplate,
+  welcomeTemplate,
+} from '../utils/emailTemplates.js'
 import { env } from '../config/env.js'
 
 export interface RegisterInput {
@@ -136,17 +141,8 @@ class AuthService {
       })
 
       const verifyUrl = `${env.FRONTEND_URL}/verify-email?token=${verificationToken}`
-      await sendEmail({
-        to: user.email,
-        subject: 'Verifiez votre adresse email - ImmoParticuliers',
-        html: `
-          <h2>Bienvenue sur ImmoParticuliers !</h2>
-          <p>Cliquez sur le lien ci-dessous pour verifier votre adresse email :</p>
-          <p><a href="${verifyUrl}" style="display:inline-block;padding:12px 24px;background:#00BCD4;color:#fff;text-decoration:none;border-radius:8px;">Verifier mon email</a></p>
-          <p>Ce lien expire dans 24 heures.</p>
-          <p>Si vous n'avez pas cree de compte, ignorez cet email.</p>
-        `,
-      })
+      const tpl = emailVerificationTemplate({ firstName: user.firstName, verifyUrl })
+      await sendEmail({ to: user.email, ...tpl })
     }
 
     return {
@@ -192,6 +188,11 @@ class AuthService {
 
     if (!isPasswordValid) {
       throw new Error('Invalid email or password')
+    }
+
+    // Block login if email not verified
+    if (!user.emailVerified) {
+      throw new Error('EMAIL_NOT_VERIFIED')
     }
 
     // Update last login
@@ -347,6 +348,36 @@ class AuthService {
 
     // Delete used token
     await prisma.verificationToken.delete({ where: { id: verificationToken.id } })
+
+    // Send welcome email
+    const tpl = welcomeTemplate({
+      firstName: verificationToken.user.firstName,
+      loginUrl: `${env.FRONTEND_URL}/login`,
+    })
+    await sendEmail({ to: verificationToken.user.email, ...tpl })
+  }
+
+  /**
+   * Resend verification email by email address (public — user not authenticated yet)
+   */
+  async resendVerificationByEmail(email: string): Promise<void> {
+    const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } })
+    // Silent return if user not found or already verified (prevent enumeration)
+    if (!user || user.emailVerified) return
+
+    await prisma.verificationToken.deleteMany({ where: { userId: user.id, type: 'EMAIL_VERIFY' } })
+
+    const token = generateSecureToken()
+    const expiresAt = new Date()
+    expiresAt.setHours(expiresAt.getHours() + 24)
+
+    await prisma.verificationToken.create({
+      data: { token, userId: user.id, type: 'EMAIL_VERIFY', expiresAt },
+    })
+
+    const verifyUrl = `${env.FRONTEND_URL}/verify-email?token=${token}`
+    const tpl = emailVerificationTemplate({ firstName: user.firstName, verifyUrl })
+    await sendEmail({ to: user.email, ...tpl })
   }
 
   /**
@@ -383,16 +414,8 @@ class AuthService {
     })
 
     const verifyUrl = `${env.FRONTEND_URL}/verify-email?token=${token}`
-    await sendEmail({
-      to: user.email,
-      subject: 'Verifiez votre adresse email - ImmoParticuliers',
-      html: `
-        <h2>Verification de votre email</h2>
-        <p>Cliquez sur le lien ci-dessous pour verifier votre adresse email :</p>
-        <p><a href="${verifyUrl}" style="display:inline-block;padding:12px 24px;background:#00BCD4;color:#fff;text-decoration:none;border-radius:8px;">Verifier mon email</a></p>
-        <p>Ce lien expire dans 24 heures.</p>
-      `,
-    })
+    const tpl = emailVerificationTemplate({ firstName: user.firstName, verifyUrl })
+    await sendEmail({ to: user.email, ...tpl })
   }
 
   /**
@@ -428,18 +451,8 @@ class AuthService {
     })
 
     const resetUrl = `${env.FRONTEND_URL}/reset-password?token=${token}`
-    await sendEmail({
-      to: user.email,
-      subject: 'Reinitialisation de votre mot de passe - ImmoParticuliers',
-      html: `
-        <h2>Reinitialisation du mot de passe</h2>
-        <p>Vous avez demande la reinitialisation de votre mot de passe.</p>
-        <p>Cliquez sur le lien ci-dessous pour choisir un nouveau mot de passe :</p>
-        <p><a href="${resetUrl}" style="display:inline-block;padding:12px 24px;background:#00BCD4;color:#fff;text-decoration:none;border-radius:8px;">Reinitialiser mon mot de passe</a></p>
-        <p>Ce lien expire dans 1 heure.</p>
-        <p>Si vous n'avez pas fait cette demande, ignorez cet email.</p>
-      `,
-    })
+    const tpl = passwordResetTemplate({ firstName: user.firstName, resetUrl })
+    await sendEmail({ to: user.email, ...tpl })
   }
 
   /**

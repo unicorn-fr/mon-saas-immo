@@ -1,11 +1,13 @@
 import { useState, FormEvent } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { AlertCircle, Shield } from 'lucide-react'
+import { AlertCircle, Shield, Mail } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { authService, TotpRequiredError } from '../services/auth.service'
 import { setApiTokens } from '../services/api.service'
+import api from '../services/api'
 import GoogleSignInButton from '../components/auth/GoogleSignInButton'
 import { BailioLogo } from '../components/BailioLogo'
+import toast from 'react-hot-toast'
 
 /* ─── Inline styles for the "Maison" design system ─────────────────────── */
 const fontDisplay: React.CSSProperties = { fontFamily: "'Cormorant Garamond', Georgia, serif" }
@@ -134,6 +136,11 @@ export default function Login() {
   const [passwordFocused, setPasswordFocused] = useState(false)
   const [totpFocused, setTotpFocused] = useState(false)
 
+  // Email non vérifié
+  const [emailNotVerified, setEmailNotVerified] = useState(false)
+  const [resendLoading, setResendLoading] = useState(false)
+  const [resendDone, setResendDone] = useState(false)
+
   const redirectByRole = (role: string) => {
     const from = (location.state as { from?: string })?.from
     if (from) {
@@ -169,7 +176,26 @@ export default function Login() {
         setTotpUserId(err.userId)
         return
       }
+      const msg = err instanceof Error ? err.message : ''
+      if (msg === 'EMAIL_NOT_VERIFIED') {
+        setEmailNotVerified(true)
+        setResendDone(false)
+        return
+      }
       setError('Identifiants incorrects. Veuillez réessayer.')
+    }
+  }
+
+  const handleResendVerification = async () => {
+    setResendLoading(true)
+    try {
+      await api.post('/auth/resend-verification-public', { email: formData.email })
+      setResendDone(true)
+      toast.success('Email de vérification envoyé !')
+    } catch {
+      toast.error('Erreur lors de l\'envoi. Réessayez.')
+    } finally {
+      setResendLoading(false)
     }
   }
 
@@ -206,6 +232,62 @@ export default function Login() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
     if (error) setError('')
+  }
+
+  // ── Email non vérifié ──────────────────────────────────────────────────────
+  if (emailNotVerified) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#fafaf8', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', ...fontBody }}>
+        <div style={{ width: '100%', maxWidth: '420px', textAlign: 'center' }}>
+          <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#fdf5ec', border: '1px solid #f3c99a', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 28px' }}>
+            <Mail style={{ width: '30px', height: '30px', color: '#c4976a' }} />
+          </div>
+          <div style={{ fontSize: '10px', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#9e9b96', marginBottom: '10px' }}>
+            Vérification requise
+          </div>
+          <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '32px', color: '#0d0c0a', margin: '0 0 14px', lineHeight: 1.2 }}>
+            Email non vérifié
+          </h1>
+          <p style={{ fontSize: '15px', color: '#5a5754', lineHeight: 1.7, margin: '0 0 6px' }}>
+            Votre compte existe mais votre adresse email
+          </p>
+          <p style={{ fontSize: '15px', fontWeight: 600, color: '#1a1a2e', margin: '0 0 24px', wordBreak: 'break-all' }}>
+            {formData.email}
+          </p>
+          <p style={{ fontSize: '13px', color: '#9e9b96', lineHeight: 1.6, margin: '0 0 28px' }}>
+            n'a pas encore été confirmée. Vérifiez votre boîte mail (et vos spams) ou renvoyez un nouveau lien.
+          </p>
+
+          {resendDone ? (
+            <div style={{ background: '#edf7f2', border: '1px solid #9fd4ba', borderRadius: '10px', padding: '16px', marginBottom: '20px', fontSize: '14px', color: '#1b5e3b', fontWeight: 500 }}>
+              Email envoyé ! Vérifiez votre boîte mail.
+            </div>
+          ) : (
+            <button
+              onClick={handleResendVerification}
+              disabled={resendLoading}
+              style={{
+                width: '100%', padding: '13px',
+                background: resendLoading ? '#5a5754' : '#1a1a2e',
+                color: '#fff', border: 'none', borderRadius: '8px',
+                fontSize: '14px', fontWeight: 600,
+                cursor: resendLoading ? 'not-allowed' : 'pointer',
+                marginBottom: '12px',
+              }}
+            >
+              {resendLoading ? 'Envoi en cours…' : 'Renvoyer le lien de vérification'}
+            </button>
+          )}
+
+          <button
+            onClick={() => { setEmailNotVerified(false); setResendDone(false) }}
+            style={{ background: 'none', border: 'none', fontSize: '13px', color: '#c4976a', cursor: 'pointer', textDecoration: 'underline' }}
+          >
+            ← Retour à la connexion
+          </button>
+        </div>
+      </div>
+    )
   }
 
   // ── TOTP verification step ─────────────────────────────────────────────────
