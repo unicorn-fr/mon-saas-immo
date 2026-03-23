@@ -543,6 +543,52 @@ class AuthController {
     }
   }
   /**
+   * POST /api/v1/auth/magic-link — envoie un magic link par email
+   */
+  async sendMagicLink(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { email } = req.body
+      if (!email) return res.status(400).json({ success: false, message: 'Email requis' })
+
+      const { isNewUser } = await authService.sendMagicLink(email.toLowerCase().trim())
+
+      return res.status(200).json({
+        success: true,
+        message: 'Lien de connexion envoyé',
+        data: { isNewUser },
+      })
+    } catch (error) {
+      if (error instanceof Error) {
+        return res.status(400).json({ success: false, message: error.message })
+      }
+      next(error)
+    }
+  }
+
+  /**
+   * POST /api/v1/auth/magic-link/verify — vérifie le token et connecte l'utilisateur
+   */
+  async verifyMagicLink(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { token } = req.body
+      if (!token) return res.status(400).json({ success: false, message: 'Token requis' })
+
+      const result = await authService.verifyMagicLink(token)
+
+      return res.status(200).json({
+        success: true,
+        message: 'Connexion réussie',
+        data: result,
+      })
+    } catch (error) {
+      if (error instanceof Error) {
+        return res.status(400).json({ success: false, message: error.message })
+      }
+      next(error)
+    }
+  }
+
+  /**
    * POST /api/v1/auth/resend-verification-public
    * Renvoyer le lien de vérification sans être connecté (après tentative de login bloquée)
    */

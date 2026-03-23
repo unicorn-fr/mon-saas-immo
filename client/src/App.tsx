@@ -14,6 +14,7 @@ import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import VerifyEmail from './pages/VerifyEmail'
+import VerifyMagicLink from './pages/VerifyMagicLink'
 import NotFound from './pages/NotFound'
 
 // Public Pages
@@ -176,6 +177,7 @@ function AppRoutes() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/auth/verify" element={<VerifyMagicLink />} />
 
       {/* Legal & Info Pages */}
       <Route path="/mentions-legales" element={<MentionsLegales />} />

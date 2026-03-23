@@ -131,3 +131,26 @@ export const welcomeTemplate = (params: { firstName: string; loginUrl: string })
     </div>
   `),
 })
+
+export const magicLinkTemplate = (params: { magicUrl: string; expiresMinutes?: number }) => ({
+  subject: 'Votre lien de connexion — ImmoParticuliers',
+  html: BASE(`
+    <div class="overline">Connexion sécurisée</div>
+    <div class="title">Votre lien de connexion</div>
+    <p class="text">
+      Cliquez sur le bouton ci-dessous pour vous connecter instantanément à votre espace ImmoParticuliers. Aucun mot de passe requis.
+    </p>
+    <div style="text-align:center;">
+      <a href="${params.magicUrl}" class="btn">Se connecter maintenant</a>
+    </div>
+    <hr class="divider" />
+    <p class="text" style="font-size:12px;">
+      Ou copiez ce lien dans votre navigateur :<br/>
+      <a href="${params.magicUrl}" class="link">${params.magicUrl}</a>
+    </p>
+    <div class="warning">
+      Ce lien expire dans <strong>${params.expiresMinutes ?? 15} minutes</strong> et ne peut être utilisé qu'<strong>une seule fois</strong>.<br/>
+      Si vous n'avez pas demandé ce lien, ignorez cet email.
+    </div>
+  `),
+})

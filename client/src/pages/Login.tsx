@@ -1,6 +1,6 @@
 import { useState, FormEvent } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { AlertCircle, Shield, Mail } from 'lucide-react'
+import { AlertCircle, Shield, ArrowRight, Mail } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { authService, TotpRequiredError } from '../services/auth.service'
 import { setApiTokens } from '../services/api.service'
@@ -9,132 +9,175 @@ import GoogleSignInButton from '../components/auth/GoogleSignInButton'
 import { BailioLogo } from '../components/BailioLogo'
 import toast from 'react-hot-toast'
 
-/* ─── Inline styles for the "Maison" design system ─────────────────────── */
+/* ─── Tokens ─────────────────────────────────────────────────────────────── */
+const font: React.CSSProperties = { fontFamily: "'DM Sans', system-ui, sans-serif" }
 const fontDisplay: React.CSSProperties = { fontFamily: "'Cormorant Garamond', Georgia, serif" }
-const fontBody: React.CSSProperties = { fontFamily: "'DM Sans', system-ui, sans-serif" }
 
-const inputStyle: React.CSSProperties = {
+const inputBase: React.CSSProperties = {
   width: '100%',
   background: '#f8f7f4',
   border: '1px solid #e4e1db',
-  borderRadius: '8px',
-  padding: '12px 16px',
-  fontSize: '14px',
+  borderRadius: '10px',
+  padding: '14px 16px',
+  fontSize: '15px',
   color: '#0d0c0a',
   outline: 'none',
-  ...fontBody,
+  fontFamily: "'DM Sans', system-ui, sans-serif",
   transition: 'border-color 0.15s, box-shadow 0.15s',
+  boxSizing: 'border-box',
 }
 
-/* ─── Parisian rooftop SVG ───────────────────────────────────────────────── */
-function ParisianSkyline() {
+function inputStyle(focused: boolean): React.CSSProperties {
+  return {
+    ...inputBase,
+    borderColor: focused ? '#1a1a2e' : '#e4e1db',
+    boxShadow: focused ? '0 0 0 3px rgba(26,26,46,0.08)' : 'none',
+  }
+}
+
+/* ─── Apple button ───────────────────────────────────────────────────────── */
+function AppleButton({ onClick }: { onClick: () => void }) {
   return (
-    <svg
-      viewBox="0 0 320 160"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      style={{ width: '100%', maxWidth: '280px', opacity: 0.7 }}
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        gap: '10px', padding: '12px 16px',
+        background: '#0d0c0a', color: '#ffffff', border: 'none',
+        borderRadius: '10px', cursor: 'pointer',
+        fontSize: '14px', fontWeight: 600,
+        fontFamily: "'DM Sans', system-ui, sans-serif",
+        transition: 'background 0.15s',
+      }}
+      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#2a2a2a' }}
+      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = '#0d0c0a' }}
     >
-      {/* Ground line */}
-      <line x1="0" y1="150" x2="320" y2="150" stroke="white" strokeWidth="1" strokeOpacity="0.4" />
-
-      {/* Building 1 — narrow tower left */}
-      <rect x="10" y="90" width="22" height="60" stroke="white" strokeWidth="1" fill="none" strokeOpacity="0.6" />
-      <polygon points="10,90 21,70 32,90" stroke="white" strokeWidth="1" fill="none" strokeOpacity="0.6" />
-      <rect x="16" y="108" width="5" height="8" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.5" />
-      <rect x="24" y="108" width="5" height="8" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.5" />
-
-      {/* Building 2 — wide Haussmann */}
-      <rect x="38" y="72" width="52" height="78" stroke="white" strokeWidth="1" fill="none" strokeOpacity="0.6" />
-      {/* Mansard roof */}
-      <polygon points="38,72 64,50 90,72" stroke="white" strokeWidth="1" fill="none" strokeOpacity="0.6" />
-      {/* Dormer windows */}
-      <rect x="50" y="56" width="8" height="10" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.5" />
-      <rect x="66" y="56" width="8" height="10" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.5" />
-      {/* Floor windows */}
-      <rect x="46" y="82" width="8" height="10" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.4" />
-      <rect x="60" y="82" width="8" height="10" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.4" />
-      <rect x="74" y="82" width="8" height="10" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.4" />
-      <rect x="46" y="100" width="8" height="10" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.4" />
-      <rect x="60" y="100" width="8" height="10" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.4" />
-      <rect x="74" y="100" width="8" height="10" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.4" />
-
-      {/* Building 3 — slim tall */}
-      <rect x="96" y="60" width="28" height="90" stroke="white" strokeWidth="1" fill="none" strokeOpacity="0.6" />
-      <polygon points="96,60 110,40 124,60" stroke="white" strokeWidth="1" fill="none" strokeOpacity="0.6" />
-      {/* Chimney */}
-      <rect x="107" y="32" width="5" height="12" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.5" />
-      <rect x="101" y="74" width="6" height="8" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.4" />
-      <rect x="113" y="74" width="6" height="8" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.4" />
-      <rect x="101" y="92" width="6" height="8" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.4" />
-      <rect x="113" y="92" width="6" height="8" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.4" />
-
-      {/* Building 4 — wide center piece */}
-      <rect x="130" y="65" width="60" height="85" stroke="white" strokeWidth="1" fill="none" strokeOpacity="0.7" />
-      <polygon points="130,65 160,42 190,65" stroke="white" strokeWidth="1" fill="none" strokeOpacity="0.7" />
-      {/* Attic dormer */}
-      <rect x="153" y="48" width="14" height="12" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.5" />
-      <line x1="160" y1="42" x2="160" y2="48" stroke="white" strokeWidth="0.6" strokeOpacity="0.4" />
-      {/* Windows 3 rows */}
-      <rect x="138" y="76" width="9" height="11" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.4" />
-      <rect x="155" y="76" width="9" height="11" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.4" />
-      <rect x="172" y="76" width="9" height="11" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.4" />
-      <rect x="138" y="96" width="9" height="11" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.4" />
-      <rect x="155" y="96" width="9" height="11" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.4" />
-      <rect x="172" y="96" width="9" height="11" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.4" />
-      {/* Arched door */}
-      <rect x="152" y="124" width="16" height="26" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.5" />
-      <path d="M152,124 Q160,114 168,124" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.5" />
-
-      {/* Building 5 — right side medium */}
-      <rect x="196" y="80" width="42" height="70" stroke="white" strokeWidth="1" fill="none" strokeOpacity="0.6" />
-      <polygon points="196,80 217,62 238,80" stroke="white" strokeWidth="1" fill="none" strokeOpacity="0.6" />
-      <rect x="202" y="90" width="7" height="9" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.4" />
-      <rect x="215" y="90" width="7" height="9" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.4" />
-      <rect x="228" y="90" width="7" height="9" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.4" />
-      <rect x="202" y="108" width="7" height="9" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.4" />
-      <rect x="215" y="108" width="7" height="9" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.4" />
-      <rect x="228" y="108" width="7" height="9" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.4" />
-
-      {/* Building 6 — far right narrow */}
-      <rect x="245" y="95" width="25" height="55" stroke="white" strokeWidth="1" fill="none" strokeOpacity="0.55" />
-      <polygon points="245,95 257,78 270,95" stroke="white" strokeWidth="1" fill="none" strokeOpacity="0.55" />
-      <rect x="250" y="105" width="6" height="8" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.4" />
-      <rect x="261" y="105" width="6" height="8" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.4" />
-
-      {/* Building 7 — rightmost short */}
-      <rect x="276" y="110" width="38" height="40" stroke="white" strokeWidth="1" fill="none" strokeOpacity="0.5" />
-      <polygon points="276,110 295,96 314,110" stroke="white" strokeWidth="1" fill="none" strokeOpacity="0.5" />
-      <rect x="283" y="120" width="7" height="9" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.35" />
-      <rect x="299" y="120" width="7" height="9" stroke="white" strokeWidth="0.8" fill="none" strokeOpacity="0.35" />
-
-      {/* Eiffel tower silhouette — subtle, far right bg */}
-      <line x1="295" y1="30" x2="295" y2="96" stroke="white" strokeWidth="0.6" strokeOpacity="0.2" />
-      <line x1="284" y1="96" x2="306" y2="96" stroke="white" strokeWidth="0.6" strokeOpacity="0.2" />
-      <line x1="284" y1="96" x2="295" y2="30" stroke="white" strokeWidth="0.6" strokeOpacity="0.15" />
-      <line x1="306" y1="96" x2="295" y2="30" stroke="white" strokeWidth="0.6" strokeOpacity="0.15" />
-      <line x1="288" y1="75" x2="302" y2="75" stroke="white" strokeWidth="0.5" strokeOpacity="0.2" />
-    </svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+      </svg>
+      Continuer avec Apple
+    </button>
   )
 }
 
+/* ─── Separator ──────────────────────────────────────────────────────────── */
+function Sep() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ flex: 1, height: '1px', background: '#e4e1db' }} />
+      <span style={{ ...font, fontSize: '12px', color: '#9e9b96' }}>ou</span>
+      <div style={{ flex: 1, height: '1px', background: '#e4e1db' }} />
+    </div>
+  )
+}
+
+/* ─── TOTP screen ────────────────────────────────────────────────────────── */
+function TotpScreen({
+  userId, onBack, onSuccess,
+}: { userId: string; onBack: () => void; onSuccess: (role: string) => void }) {
+  const { setUser, setTokens } = useAuth()
+  const [code, setCode] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [focused, setFocused] = useState(false)
+
+  const verify = async () => {
+    if (!/^\d{6}$/.test(code)) { setError('Code à 6 chiffres requis'); return }
+    setLoading(true); setError('')
+    try {
+      const result = await authService.totpVerify(userId, code)
+      setApiTokens(result.accessToken, result.refreshToken)
+      setTokens(result.accessToken, result.refreshToken)
+      setUser(result.user)
+      onSuccess(result.user.role)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Code incorrect')
+    } finally { setLoading(false) }
+  }
+
+  return (
+    <div style={{ minHeight: '100dvh', background: '#fafaf8', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', ...font }}>
+      <div style={{
+        background: '#ffffff', border: '1px solid #e4e1db', borderRadius: '16px',
+        padding: '48px 40px', maxWidth: '400px', width: '100%',
+        boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <div style={{ width: '56px', height: '56px', background: '#fdf5ec', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', border: '1px solid rgba(196,151,106,0.3)' }}>
+            <Shield style={{ width: '24px', height: '24px', color: '#c4976a' }} />
+          </div>
+          <h2 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '28px', color: '#0d0c0a', margin: '0 0 8px' }}>
+            Vérification 2FA
+          </h2>
+          <p style={{ fontSize: '14px', color: '#5a5754', lineHeight: 1.5, margin: 0 }}>
+            Saisissez le code à 6 chiffres de votre application.
+          </p>
+        </div>
+
+        {error && (
+          <div style={{ marginBottom: '16px', padding: '11px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', display: 'flex', gap: '8px' }}>
+            <AlertCircle style={{ width: '15px', height: '15px', color: '#dc2626', flexShrink: 0, marginTop: '1px' }} />
+            <p style={{ fontSize: '13px', color: '#991b1b', margin: 0 }}>{error}</p>
+          </div>
+        )}
+
+        <input
+          type="text" inputMode="numeric" maxLength={6} placeholder="000 000"
+          value={code}
+          onChange={e => { setCode(e.target.value.replace(/\D/g, '')); if (error) setError('') }}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          onKeyDown={e => e.key === 'Enter' && verify()}
+          style={{ ...inputStyle(focused), textAlign: 'center', fontSize: '28px', letterSpacing: '0.3em', marginBottom: '16px' }}
+          autoFocus
+        />
+
+        <button
+          onClick={verify}
+          disabled={loading || code.length !== 6}
+          style={{
+            width: '100%', padding: '13px', marginBottom: '12px',
+            background: (loading || code.length !== 6) ? '#9ca3af' : '#1a1a2e',
+            color: '#fff', border: 'none', borderRadius: '10px',
+            fontSize: '14px', fontWeight: 600,
+            cursor: (loading || code.length !== 6) ? 'not-allowed' : 'pointer',
+            fontFamily: 'inherit',
+          }}
+        >
+          {loading ? 'Vérification…' : 'Confirmer'}
+        </button>
+
+        <button
+          onClick={onBack}
+          style={{ ...font, fontSize: '13px', color: '#9e9b96', background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'center', padding: '4px 0' }}
+        >
+          ← Retour
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Page principale — 3 écrans
+   1. welcome      → Landing: Google / Apple / "Se connecter avec un email"
+   2. email_login  → Formulaire email + mot de passe
+   3. totp         → Vérification 2FA
+═══════════════════════════════════════════════════════════════════════════ */
 export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { login, googleLogin, isLoading, setUser, setTokens } = useAuth()
+  const { login, googleLogin, isLoading } = useAuth()
 
-  const [formData, setFormData] = useState({ email: '', password: '' })
+  type Screen = 'welcome' | 'email_login' | 'totp'
+  const [screen, setScreen] = useState<Screen>('welcome')
+
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [focusedField, setFocusedField] = useState('')
   const [error, setError] = useState('')
-
-  // TOTP step
-  const [totpRequired, setTotpRequired] = useState(false)
   const [totpUserId, setTotpUserId] = useState('')
-  const [totpCode, setTotpCode] = useState('')
-  const [totpLoading, setTotpLoading] = useState(false)
-
-  const [emailFocused, setEmailFocused] = useState(false)
-  const [passwordFocused, setPasswordFocused] = useState(false)
-  const [totpFocused, setTotpFocused] = useState(false)
 
   // Email non vérifié
   const [emailNotVerified, setEmailNotVerified] = useState(false)
@@ -143,379 +186,335 @@ export default function Login() {
 
   const redirectByRole = (role: string) => {
     const from = (location.state as { from?: string })?.from
-    if (from) {
-      navigate(from, { replace: true })
-    } else if (role === 'SUPER_ADMIN') {
-      navigate('/super-admin', { replace: true })
-    } else if (role === 'OWNER') {
-      navigate('/dashboard/owner', { replace: true })
-    } else if (role === 'TENANT') {
-      navigate('/dashboard/tenant', { replace: true })
-    } else if (role === 'ADMIN') {
-      navigate('/admin', { replace: true })
-    } else {
-      navigate('/', { replace: true })
+    if (from) return navigate(from, { replace: true })
+    const paths: Record<string, string> = {
+      SUPER_ADMIN: '/super-admin', OWNER: '/dashboard/owner',
+      TENANT: '/dashboard/tenant', ADMIN: '/admin',
     }
+    navigate(paths[role] ?? '/', { replace: true })
   }
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handlePasswordLogin = async (e: FormEvent) => {
     e.preventDefault()
-    setError('')
-
-    if (!formData.email || !formData.password) {
-      setError('Veuillez remplir tous les champs')
-      return
-    }
-
+    if (!email || !password) { setError('Remplissez tous les champs'); return }
+    setError(''); setEmailNotVerified(false)
     try {
-      const userData = await login(formData)
+      const userData = await login({ email, password })
       redirectByRole(userData.role)
     } catch (err) {
       if (err instanceof TotpRequiredError) {
-        setTotpRequired(true)
-        setTotpUserId(err.userId)
-        return
+        setTotpUserId(err.userId); setScreen('totp'); return
       }
       const msg = err instanceof Error ? err.message : ''
-      if (msg === 'EMAIL_NOT_VERIFIED') {
-        setEmailNotVerified(true)
-        setResendDone(false)
-        return
-      }
-      setError('Identifiants incorrects. Veuillez réessayer.')
+      if (msg === 'EMAIL_NOT_VERIFIED') { setEmailNotVerified(true); return }
+      setError('Identifiants incorrects. Vérifiez votre email et mot de passe.')
     }
   }
 
-  const handleResendVerification = async () => {
+  const handleResendVerif = async () => {
     setResendLoading(true)
     try {
-      await api.post('/auth/resend-verification-public', { email: formData.email })
+      await api.post('/auth/resend-verification-public', { email })
       setResendDone(true)
       toast.success('Email de vérification envoyé !')
-    } catch {
-      toast.error('Erreur lors de l\'envoi. Réessayez.')
-    } finally {
-      setResendLoading(false)
-    }
+    } catch { toast.error('Erreur lors de l\'envoi.') }
+    finally { setResendLoading(false) }
   }
 
-  const handleTotpVerify = async () => {
-    if (!/^\d{6}$/.test(totpCode)) {
-      setError('Code à 6 chiffres requis')
-      return
-    }
-    setError('')
-    setTotpLoading(true)
-    try {
-      const result = await authService.totpVerify(totpUserId, totpCode)
-      setApiTokens(result.accessToken, result.refreshToken)
-      setTokens(result.accessToken, result.refreshToken)
-      setUser(result.user)
-      redirectByRole(result.user.role)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Code incorrect')
-    } finally {
-      setTotpLoading(false)
-    }
-  }
-
-  const handleGoogleSuccess = async (idToken: string) => {
+  const handleGoogle = async (idToken: string) => {
     setError('')
     try {
       const userData = await googleLogin(idToken)
       redirectByRole(userData.role)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Échec de la connexion Google')
+      setError(err instanceof Error ? err.message : 'Échec connexion Google')
     }
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
-    if (error) setError('')
+  const handleApple = () => toast('Connexion Apple bientôt disponible', { icon: '🍎' })
+
+  const handleMagicLink = async () => {
+    if (!email.trim()) { setError('Entrez votre adresse email'); return }
+    try {
+      await api.post('/auth/magic-link', { email: email.trim() })
+      toast.success('Lien de connexion envoyé à ' + email)
+    } catch {
+      toast.error('Erreur lors de l\'envoi.')
+    }
   }
 
-  // ── Email non vérifié ──────────────────────────────────────────────────────
-  if (emailNotVerified) {
+  /* ── TOTP ────────────────────────────────────────────────────────────── */
+  if (screen === 'totp') {
     return (
-      <div style={{ minHeight: '100vh', background: '#fafaf8', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', ...fontBody }}>
-        <div style={{ width: '100%', maxWidth: '420px', textAlign: 'center' }}>
-          <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#fdf5ec', border: '1px solid #f3c99a', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 28px' }}>
-            <Mail style={{ width: '30px', height: '30px', color: '#c4976a' }} />
-          </div>
-          <div style={{ fontSize: '10px', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#9e9b96', marginBottom: '10px' }}>
-            Vérification requise
-          </div>
-          <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '32px', color: '#0d0c0a', margin: '0 0 14px', lineHeight: 1.2 }}>
-            Email non vérifié
-          </h1>
-          <p style={{ fontSize: '15px', color: '#5a5754', lineHeight: 1.7, margin: '0 0 6px' }}>
-            Votre compte existe mais votre adresse email
-          </p>
-          <p style={{ fontSize: '15px', fontWeight: 600, color: '#1a1a2e', margin: '0 0 24px', wordBreak: 'break-all' }}>
-            {formData.email}
-          </p>
-          <p style={{ fontSize: '13px', color: '#9e9b96', lineHeight: 1.6, margin: '0 0 28px' }}>
-            n'a pas encore été confirmée. Vérifiez votre boîte mail (et vos spams) ou renvoyez un nouveau lien.
-          </p>
-
-          {resendDone ? (
-            <div style={{ background: '#edf7f2', border: '1px solid #9fd4ba', borderRadius: '10px', padding: '16px', marginBottom: '20px', fontSize: '14px', color: '#1b5e3b', fontWeight: 500 }}>
-              Email envoyé ! Vérifiez votre boîte mail.
-            </div>
-          ) : (
-            <button
-              onClick={handleResendVerification}
-              disabled={resendLoading}
-              style={{
-                width: '100%', padding: '13px',
-                background: resendLoading ? '#5a5754' : '#1a1a2e',
-                color: '#fff', border: 'none', borderRadius: '8px',
-                fontSize: '14px', fontWeight: 600,
-                cursor: resendLoading ? 'not-allowed' : 'pointer',
-                marginBottom: '12px',
-              }}
-            >
-              {resendLoading ? 'Envoi en cours…' : 'Renvoyer le lien de vérification'}
-            </button>
-          )}
-
-          <button
-            onClick={() => { setEmailNotVerified(false); setResendDone(false) }}
-            style={{ background: 'none', border: 'none', fontSize: '13px', color: '#c4976a', cursor: 'pointer', textDecoration: 'underline' }}
-          >
-            ← Retour à la connexion
-          </button>
-        </div>
-      </div>
+      <TotpScreen
+        userId={totpUserId}
+        onBack={() => setScreen('email_login')}
+        onSuccess={redirectByRole}
+      />
     )
   }
 
-  // ── TOTP verification step ─────────────────────────────────────────────────
-  if (totpRequired) {
+  /* ── Écran d'accueil ──────────────────────────────────────────────────
+     Landing connexion : split panel gauche (#1a1a2e) + droite auth
+  ─────────────────────────────────────────────────────────────────────── */
+  if (screen === 'welcome') {
     return (
-      <div
-        style={{ minHeight: '100vh', background: '#fafaf8', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', ...fontBody }}
-      >
-        <div style={{ width: '100%', maxWidth: '400px' }}>
-          {/* Logo */}
-          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-            <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-              <BailioLogo size={36} />
-              <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '28px', color: '#1a1a2e', letterSpacing: '-0.02em', lineHeight: 1 }}>
-                Bailio
-              </span>
-            </Link>
+      <div style={{ minHeight: '100dvh', display: 'flex', ...font }}>
+
+        {/* ── Panneau gauche ──────────────────────────────────────────── */}
+        <div
+          className="hidden md:flex"
+          style={{ width: '44%', background: '#1a1a2e', flexDirection: 'column', padding: '40px 48px', position: 'relative', overflow: 'hidden' }}
+        >
+          <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <BailioLogo size={28} variant="onDark" />
+            <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '20px', color: '#ffffff', letterSpacing: '-0.02em' }}>
+              Bailio
+            </span>
+          </Link>
+
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '32px' }}>
+            <blockquote style={{ margin: 0 }}>
+              <p style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 400, fontSize: '28px', color: 'rgba(255,255,255,0.92)', lineHeight: 1.4, margin: '0 0 20px', maxWidth: '320px' }}>
+                "La location entre particuliers, en toute confiance."
+              </p>
+            </blockquote>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {['Zéro frais d\'agence', 'Contrats électroniques ALUR', 'Dossier locataire intelligent', 'Messagerie directe'].map(b => (
+                <div key={b} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: 'rgba(196,151,106,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                      <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="#c4976a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.65)' }}>{b}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div style={{ background: '#ffffff', borderRadius: '12px', padding: '40px', border: '1px solid #e4e1db', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '28px' }}>
-              <div style={{ width: '56px', height: '56px', background: '#fdf5ec', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', border: '1px solid rgba(196,151,106,0.3)' }}>
-                <Shield style={{ width: '26px', height: '26px', color: '#c4976a' }} />
-              </div>
-              <h2 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '32px', color: '#0d0c0a', textAlign: 'center', margin: '0 0 8px 0' }}>
-                Vérification 2FA
-              </h2>
-              <p style={{ ...fontBody, fontSize: '14px', color: '#5a5754', textAlign: 'center', margin: 0, lineHeight: 1.55 }}>
-                Ouvrez Google Authenticator ou Authy et saisissez le code à 6 chiffres.
+          <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', margin: 0 }}>
+            2 500+ propriétaires · 15 000+ locataires
+          </p>
+        </div>
+
+        {/* ── Panneau droit ───────────────────────────────────────────── */}
+        <div
+          style={{ background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}
+          className="w-full md:w-[56%]"
+        >
+          <div style={{ position: 'absolute', top: '24px', left: '28px' }}>
+            <Link to="/" style={{ fontSize: '13px', color: '#9e9b96', textDecoration: 'none' }}
+              onMouseEnter={e => (e.currentTarget.style.color = '#5a5754')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#9e9b96')}
+            >← Accueil</Link>
+          </div>
+
+          <div style={{ width: '100%', maxWidth: '380px', padding: '64px 32px 48px' }}>
+
+            {/* Mobile logo */}
+            <div className="flex md:hidden" style={{ justifyContent: 'center', marginBottom: '28px' }}>
+              <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <BailioLogo size={30} />
+                <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '22px', color: '#1a1a2e', letterSpacing: '-0.02em' }}>Bailio</span>
+              </Link>
+            </div>
+
+            <div style={{ marginBottom: '28px' }}>
+              <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '36px', color: '#0d0c0a', margin: '0 0 6px', lineHeight: 1.1 }}>
+                Bienvenue
+              </h1>
+              <p style={{ fontSize: '14px', color: '#5a5754', margin: 0 }}>
+                Connectez-vous pour accéder à votre espace.
               </p>
             </div>
 
-            {error && (
-              <div style={{ marginBottom: '16px', padding: '12px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                <AlertCircle style={{ width: '16px', height: '16px', color: '#dc2626', flexShrink: 0, marginTop: '1px' }} />
-                <p style={{ ...fontBody, fontSize: '13px', color: '#991b1b', margin: 0 }}>{error}</p>
+            {/* Social */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+              <div style={{ border: '1px solid #e4e1db', borderRadius: '10px', overflow: 'hidden' }}>
+                <GoogleSignInButton onSuccess={handleGoogle} onError={setError} text="signin_with" />
               </div>
-            )}
+              <AppleButton onClick={handleApple} />
+            </div>
 
-            <input
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              placeholder="000 000"
-              value={totpCode}
-              onChange={(e) => { setTotpCode(e.target.value.replace(/\D/g, '')); if (error) setError('') }}
-              onFocus={() => setTotpFocused(true)}
-              onBlur={() => setTotpFocused(false)}
-              style={{
-                ...inputStyle,
-                textAlign: 'center',
-                fontSize: '28px',
-                letterSpacing: '0.25em',
-                marginBottom: '16px',
-                borderColor: totpFocused ? '#1a1a2e' : '#e4e1db',
-                boxShadow: totpFocused ? '0 0 0 3px rgba(26,26,46,0.08)' : 'none',
-              }}
-              autoFocus
-            />
+            <div style={{ marginBottom: '20px' }}><Sep /></div>
 
+            {/* Email CTA */}
             <button
-              onClick={handleTotpVerify}
-              disabled={totpLoading || totpCode.length !== 6}
+              type="button"
+              onClick={() => setScreen('email_login')}
               style={{
-                width: '100%',
-                background: totpLoading || totpCode.length !== 6 ? '#9ca3af' : '#1a1a2e',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '13px 0',
-                ...fontBody,
-                fontWeight: 600,
-                fontSize: '14px',
-                cursor: totpLoading || totpCode.length !== 6 ? 'not-allowed' : 'pointer',
-                marginBottom: '12px',
-                transition: 'background 0.15s',
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                padding: '13px 16px', background: '#ffffff', color: '#0d0c0a',
+                border: '1px solid #ccc9c3', borderRadius: '10px',
+                fontSize: '14px', fontWeight: 500,
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+                cursor: 'pointer', transition: 'border-color 0.15s, background 0.15s',
               }}
+              onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = '#f4f2ee'; b.style.borderColor = '#9e9b96' }}
+              onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = '#ffffff'; b.style.borderColor = '#ccc9c3' }}
             >
-              {totpLoading ? 'Vérification…' : 'Confirmer'}
+              <Mail style={{ width: '16px', height: '16px', color: '#5a5754', flexShrink: 0 }} />
+              Se connecter avec un email
+              <ArrowRight style={{ width: '14px', height: '14px', color: '#9e9b96', marginLeft: 'auto' }} />
             </button>
 
-            <button
-              onClick={() => { setTotpRequired(false); setTotpCode(''); setError('') }}
-              style={{ ...fontBody, fontSize: '13px', color: '#9e9b96', background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'center', padding: '4px 0' }}
-            >
-              ← Retour à la connexion
-            </button>
+            <p style={{ textAlign: 'center', fontSize: '13px', color: '#9e9b96', marginTop: '28px', marginBottom: 0 }}>
+              Pas encore de compte ?{' '}
+              <Link to="/register" style={{ color: '#1a1a2e', fontWeight: 600, textDecoration: 'none' }}
+                onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+                onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
+              >
+                Créer un compte →
+              </Link>
+            </p>
           </div>
         </div>
       </div>
     )
   }
 
-  // ── Normal login form ──────────────────────────────────────────────────────
+  /* ── Formulaire de connexion email ────────────────────────────────────
+     email_login : Google · Apple · email + password
+  ─────────────────────────────────────────────────────────────────────── */
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', ...fontBody }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', ...font }}>
 
-      {/* ── Left panel ── */}
+      {/* ── Panneau gauche (desktop) ───────────────────────────────────── */}
       <div
         className="hidden md:flex"
-        style={{
-          width: '50%',
-          background: '#1a1a2e',
-          flexDirection: 'column',
-          padding: '40px 48px',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
+        style={{ width: '44%', background: '#1a1a2e', flexDirection: 'column', padding: '40px 48px', position: 'relative', overflow: 'hidden' }}
       >
         {/* Logo */}
         <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-          <BailioLogo size={30} variant="onDark" />
-          <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '22px', color: '#ffffff', letterSpacing: '-0.02em', lineHeight: 1 }}>
+          <BailioLogo size={28} variant="onDark" />
+          <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '20px', color: '#ffffff', letterSpacing: '-0.02em' }}>
             Bailio
           </span>
         </Link>
 
-        {/* Center content */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: '28px' }}>
-          <ParisianSkyline />
+        {/* Center */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '32px' }}>
+          <blockquote style={{ margin: 0 }}>
+            <p style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 400, fontSize: '28px', color: 'rgba(255,255,255,0.92)', lineHeight: 1.4, margin: '0 0 20px', maxWidth: '320px' }}>
+              "La location entre particuliers, en toute confiance."
+            </p>
+          </blockquote>
 
-          <div>
-            <p style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 400, fontSize: '28px', color: 'rgba(255,255,255,0.92)', lineHeight: 1.35, margin: '0 0 12px 0', maxWidth: '320px' }}>
-              "L'immobilier entre particuliers, en toute confiance."
-            </p>
-            <p style={{ ...fontBody, fontWeight: 400, fontSize: '14px', color: 'rgba(255,255,255,0.55)', margin: 0 }}>
-              2 500+ propriétaires · 15 000+ locataires
-            </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {['Zéro frais d\'agence', 'Contrats électroniques ALUR', 'Dossier locataire intelligent', 'Messagerie directe'].map(b => (
+              <div key={b} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: 'rgba(196,151,106,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                    <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="#c4976a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.65)' }}>{b}</span>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Bottom */}
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ ...fontBody, fontSize: '13px', color: 'rgba(255,255,255,0.5)', margin: 0 }}>
-            Pas encore inscrit ?{' '}
-            <Link to="/register" style={{ color: 'rgba(255,255,255,0.8)', textDecoration: 'underline', textUnderlineOffset: '2px' }}>
-              Créer un compte
-            </Link>
-          </p>
-        </div>
+        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', margin: 0 }}>
+          2 500+ propriétaires · 15 000+ locataires
+        </p>
       </div>
 
-      {/* ── Right panel ── */}
+      {/* ── Panneau droit ─────────────────────────────────────────────── */}
       <div
-        style={{
-          width: '100%',
-          background: '#ffffff',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative',
-        }}
-        className="md:w-1/2"
+        style={{ background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflowY: 'auto' }}
+        className="w-full md:w-[56%]"
       >
-        {/* Back link */}
-        <div style={{ position: 'absolute', top: '28px', left: '32px' }}>
-          <Link
-            to="/"
-            style={{ ...fontBody, fontSize: '13px', color: '#9e9b96', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#5a5754')}
-            onMouseLeave={e => (e.currentTarget.style.color = '#9e9b96')}
-          >
-            ← Accueil
-          </Link>
-        </div>
+        {/* Back button */}
+        <button
+          onClick={() => { setScreen('welcome'); setError(''); setEmailNotVerified(false) }}
+          style={{ position: 'absolute', top: '24px', left: '28px', background: 'none', border: 'none', fontSize: '13px', color: '#9e9b96', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'inherit' }}
+          onMouseEnter={e => (e.currentTarget.style.color = '#5a5754')}
+          onMouseLeave={e => (e.currentTarget.style.color = '#9e9b96')}
+        >
+          ← Retour
+        </button>
 
-        <div style={{ width: '100%', maxWidth: '380px', padding: '48px 32px' }}>
+        <div style={{ width: '100%', maxWidth: '380px', padding: '72px 32px 48px' }}>
+
           {/* Mobile logo */}
-          <div className="flex md:hidden" style={{ justifyContent: 'center', marginBottom: '36px' }}>
-            <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-              <BailioLogo size={34} />
-              <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '26px', color: '#1a1a2e', letterSpacing: '-0.02em', lineHeight: 1 }}>
-                Bailio
-              </span>
+          <div className="flex md:hidden" style={{ justifyContent: 'center', marginBottom: '28px' }}>
+            <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <BailioLogo size={30} />
+              <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '22px', color: '#1a1a2e', letterSpacing: '-0.02em' }}>Bailio</span>
             </Link>
           </div>
 
           {/* Heading */}
           <div style={{ marginBottom: '28px' }}>
-            <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '42px', color: '#0d0c0a', margin: '0 0 8px 0', letterSpacing: '-0.01em', lineHeight: 1.1 }}>
-              Bon retour
+            <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '36px', color: '#0d0c0a', margin: '0 0 6px', lineHeight: 1.1 }}>
+              Connexion par email
             </h1>
-            <p style={{ ...fontBody, fontWeight: 400, fontSize: '15px', color: '#5a5754', margin: 0 }}>
-              Connectez-vous à votre espace personnel.
+            <p style={{ fontSize: '14px', color: '#5a5754', margin: 0 }}>
+              Utilisez votre adresse email et votre mot de passe.
             </p>
           </div>
 
+          {/* Social (rappel) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
+            <div style={{ border: '1px solid #e4e1db', borderRadius: '10px', overflow: 'hidden' }}>
+              <GoogleSignInButton onSuccess={handleGoogle} onError={setError} text="signin_with" />
+            </div>
+            <AppleButton onClick={handleApple} />
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <Sep />
+          </div>
+
+          {/* Error banner */}
           {error && (
-            <div style={{ marginBottom: '20px', padding: '12px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-              <AlertCircle style={{ width: '16px', height: '16px', color: '#dc2626', flexShrink: 0, marginTop: '1px' }} />
-              <p style={{ ...fontBody, fontSize: '13px', color: '#991b1b', margin: 0 }}>{error}</p>
+            <div style={{ marginBottom: '16px', padding: '11px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', display: 'flex', gap: '8px' }}>
+              <AlertCircle style={{ width: '15px', height: '15px', color: '#dc2626', flexShrink: 0, marginTop: '2px' }} />
+              <p style={{ fontSize: '13px', color: '#991b1b', margin: 0 }}>{error}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-            {/* Email */}
+          {/* Email not verified banner */}
+          {emailNotVerified && (
+            <div style={{ marginBottom: '16px', padding: '14px 16px', background: '#fdf5ec', border: '1px solid #f3c99a', borderRadius: '8px' }}>
+              <p style={{ fontSize: '13px', color: '#92400e', margin: '0 0 10px', fontWeight: 500 }}>
+                Email non vérifié. Vérifiez votre boîte mail.
+              </p>
+              {resendDone ? (
+                <p style={{ fontSize: '12px', color: '#1b5e3b', fontWeight: 500, margin: 0 }}>Email envoyé !</p>
+              ) : (
+                <button onClick={handleResendVerif} disabled={resendLoading}
+                  style={{ fontSize: '12px', color: '#92400e', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline', fontFamily: 'inherit' }}>
+                  {resendLoading ? 'Envoi…' : 'Renvoyer le lien de vérification'}
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handlePasswordLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div>
-              <label htmlFor="email" style={{ ...fontBody, fontWeight: 500, fontSize: '13px', color: '#0d0c0a', display: 'block', marginBottom: '6px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 500, color: '#0d0c0a', display: 'block', marginBottom: '6px' }}>
                 Adresse email
               </label>
               <input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="votre@email.com"
-                value={formData.email}
-                onChange={handleChange}
-                onFocus={() => setEmailFocused(true)}
-                onBlur={() => setEmailFocused(false)}
-                required
-                disabled={isLoading}
-                style={{
-                  ...inputStyle,
-                  borderColor: emailFocused ? '#1a1a2e' : '#e4e1db',
-                  boxShadow: emailFocused ? '0 0 0 3px rgba(26,26,46,0.08)' : 'none',
-                }}
+                type="email" placeholder="votre@email.com"
+                value={email}
+                onChange={e => { setEmail(e.target.value); if (error) setError(''); setEmailNotVerified(false) }}
+                onFocus={() => setFocusedField('email')}
+                onBlur={() => setFocusedField('')}
+                required disabled={isLoading}
+                style={inputStyle(focusedField === 'email')}
+                autoComplete="email"
               />
             </div>
 
-            {/* Password */}
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                <label htmlFor="password" style={{ ...fontBody, fontWeight: 500, fontSize: '13px', color: '#0d0c0a' }}>
-                  Mot de passe
-                </label>
-                <Link
-                  to="/forgot-password"
-                  style={{ ...fontBody, fontSize: '13px', color: '#c4976a', textDecoration: 'none' }}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <label style={{ fontSize: '13px', fontWeight: 500, color: '#0d0c0a' }}>Mot de passe</label>
+                <Link to="/forgot-password"
+                  style={{ fontSize: '13px', color: '#c4976a', textDecoration: 'none' }}
                   onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
                   onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
                 >
@@ -523,104 +522,66 @@ export default function Login() {
                 </Link>
               </div>
               <input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={handleChange}
-                onFocus={() => setPasswordFocused(true)}
-                onBlur={() => setPasswordFocused(false)}
-                required
-                disabled={isLoading}
-                style={{
-                  ...inputStyle,
-                  borderColor: passwordFocused ? '#1a1a2e' : '#e4e1db',
-                  boxShadow: passwordFocused ? '0 0 0 3px rgba(26,26,46,0.08)' : 'none',
-                }}
+                type="password" placeholder="••••••••"
+                value={password}
+                onChange={e => { setPassword(e.target.value); if (error) setError('') }}
+                onFocus={() => setFocusedField('password')}
+                onBlur={() => setFocusedField('')}
+                required disabled={isLoading}
+                style={inputStyle(focusedField === 'password')}
+                autoComplete="current-password"
               />
             </div>
 
-            {/* Submit */}
             <button
-              type="submit"
-              disabled={isLoading}
+              type="submit" disabled={isLoading}
               style={{
-                width: '100%',
+                width: '100%', padding: '14px', marginTop: '4px',
                 background: isLoading ? '#4a4a6a' : '#1a1a2e',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '14px 0',
-                ...fontBody,
-                fontWeight: 600,
-                fontSize: '14px',
+                color: '#fff', border: 'none', borderRadius: '10px',
+                fontSize: '14px', fontWeight: 600,
                 cursor: isLoading ? 'not-allowed' : 'pointer',
-                marginTop: '4px',
-                transition: 'background 0.15s',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
+                fontFamily: 'inherit', transition: 'background 0.15s',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
               }}
               onMouseEnter={e => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.background = '#2a2a4a' }}
               onMouseLeave={e => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.background = '#1a1a2e' }}
             >
               {isLoading ? (
                 <>
-                  <svg className="animate-spin" style={{ width: '16px', height: '16px' }} viewBox="0 0 24 24">
+                  <svg className="animate-spin" style={{ width: '15px', height: '15px' }} viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Connexion en cours…
+                  Connexion…
                 </>
-              ) : (
-                'Se connecter'
-              )}
+              ) : 'Se connecter'}
             </button>
           </form>
 
-          {/* Separator */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '22px 0' }}>
-            <div style={{ flex: 1, height: '1px', background: '#e4e1db' }} />
-            <span style={{ ...fontBody, fontSize: '12px', color: '#9e9b96' }}>ou</span>
-            <div style={{ flex: 1, height: '1px', background: '#e4e1db' }} />
-          </div>
+          {/* Magic link fallback */}
+          {email.trim() && (
+            <p style={{ textAlign: 'center', fontSize: '12px', color: '#9e9b96', marginTop: '14px', marginBottom: 0 }}>
+              Mot de passe oublié ?{' '}
+              <button
+                onClick={handleMagicLink}
+                style={{ background: 'none', border: 'none', color: '#c4976a', fontWeight: 500, cursor: 'pointer', fontSize: '12px', textDecoration: 'underline', fontFamily: 'inherit' }}
+              >
+                Recevoir un lien de connexion
+              </button>
+            </p>
+          )}
 
-          {/* Google */}
-          <div style={{ border: '1px solid #e4e1db', borderRadius: '8px', overflow: 'hidden' }}>
-            <GoogleSignInButton
-              onSuccess={handleGoogleSuccess}
-              onError={(err) => setError(err)}
-              text="signin_with"
-            />
-          </div>
-
-          {/* Register link */}
-          <p style={{ ...fontBody, textAlign: 'center', fontSize: '14px', color: '#5a5754', marginTop: '24px', marginBottom: '0' }}>
+          {/* Create account */}
+          <p style={{ textAlign: 'center', fontSize: '13px', color: '#9e9b96', marginTop: '24px', marginBottom: 0 }}>
             Pas encore de compte ?{' '}
-            <Link
-              to="/register"
-              style={{ color: '#0d0c0a', fontWeight: 500, textDecoration: 'underline', textDecorationColor: '#c4976a', textUnderlineOffset: '2px' }}
+            <Link to="/register" style={{ color: '#1a1a2e', fontWeight: 600, textDecoration: 'none' }}
+              onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+              onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
             >
-              S'inscrire gratuitement
+              Créer un compte
             </Link>
           </p>
-
-          {/* Demo credentials */}
-          <div style={{ marginTop: '24px', padding: '16px', background: '#fdf5ec', border: '1px solid rgba(196,151,106,0.3)', borderRadius: '8px' }}>
-            <p style={{ ...fontBody, fontWeight: 600, fontSize: '11px', color: '#c4976a', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px 0' }}>
-              Comptes de démonstration
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <p style={{ ...fontBody, fontSize: '12px', color: '#5a5754', margin: 0 }}>
-                <span style={{ fontWeight: 500, color: '#0d0c0a' }}>Propriétaire :</span> owner@example.com / owner123
-              </p>
-              <p style={{ ...fontBody, fontSize: '12px', color: '#5a5754', margin: 0 }}>
-                <span style={{ fontWeight: 500, color: '#0d0c0a' }}>Locataire :</span> tenant@example.com / tenant123
-              </p>
-            </div>
-          </div>
         </div>
       </div>
     </div>

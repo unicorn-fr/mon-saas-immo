@@ -38,6 +38,12 @@ router.post('/reset-password', authController.resetPassword.bind(authController)
 // POST /api/v1/auth/google - Google OAuth login
 router.post('/google', authController.googleAuth.bind(authController))
 
+// POST /api/v1/auth/magic-link — envoie un magic link (5 tentatives / heure)
+router.post('/magic-link', emailRateLimiter, authController.sendMagicLink.bind(authController))
+
+// POST /api/v1/auth/magic-link/verify — vérifie le token magic link
+router.post('/magic-link/verify', authController.verifyMagicLink.bind(authController))
+
 // POST /api/v1/auth/resend-verification-public - Renvoyer le lien (sans être connecté)
 router.post(
   '/resend-verification-public',

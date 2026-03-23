@@ -15,6 +15,7 @@ import {
   emailVerificationTemplate,
   passwordResetTemplate,
   welcomeTemplate,
+  magicLinkTemplate,
 } from '../utils/emailTemplates.js'
 import { env } from '../config/env.js'
 
@@ -738,6 +739,102 @@ class AuthService {
     })
 
     return user
+  }
+
+  /**
+   * Envoie un magic link par email.
+   * Crée le compte si l'email est inconnu (nouveau utilisateur).
+   * Lien valide 15 minutes, usage unique.
+   */
+  async sendMagicLink(email: string): Promise<{ isNewUser: boolean }> {
+    if (!validateEmail(email)) throw new Error('Format email invalide')
+
+    // Trouver ou créer l'utilisateur
+    let user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } })
+    const isNewUser = !user
+
+    if (!user) {
+      // Nouveau compte — firstName déduit de l'email, complété au premier login
+      const emailPrefix = email.split('@')[0].replace(/[^a-zA-ZÀ-ÿ]/g, ' ').trim() || 'Utilisateur'
+      user = await prisma.user.create({
+        data: {
+          email: email.toLowerCase(),
+          firstName: emailPrefix,
+          lastName: '',
+          role: 'TENANT',
+          emailVerified: false,
+        },
+      })
+    }
+
+    // Supprimer les tokens magic link précédents
+    await prisma.verificationToken.deleteMany({
+      where: { userId: user.id, type: 'MAGIC_LINK' },
+    })
+
+    // Générer le token — expiration 15 min
+    const token = generateSecureToken()
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000)
+
+    await prisma.verificationToken.create({
+      data: { token, userId: user.id, type: 'MAGIC_LINK', expiresAt },
+    })
+
+    const magicUrl = `${env.FRONTEND_URL}/auth/verify?token=${token}`
+    const tpl = magicLinkTemplate({ magicUrl, expiresMinutes: 15 })
+    await sendEmail({ to: user.email, ...tpl })
+
+    return { isNewUser }
+  }
+
+  /**
+   * Vérifie le token magic link et retourne les tokens JWT.
+   * Marque l'email comme vérifié, invalide le token.
+   */
+  async verifyMagicLink(token: string): Promise<AuthResponse> {
+    const record = await prisma.verificationToken.findUnique({
+      where: { token },
+      include: { user: true },
+    })
+
+    if (!record || record.type !== 'MAGIC_LINK') {
+      throw new Error('Lien invalide ou déjà utilisé')
+    }
+
+    if (record.expiresAt < new Date()) {
+      await prisma.verificationToken.delete({ where: { id: record.id } })
+      throw new Error('Lien expiré. Demandez-en un nouveau.')
+    }
+
+    // Activer le compte et mettre à jour lastLoginAt
+    const user = await prisma.user.update({
+      where: { id: record.userId },
+      data: {
+        emailVerified: true,
+        emailVerifiedAt: record.user.emailVerifiedAt ?? new Date(),
+        lastLoginAt: new Date(),
+      },
+      select: {
+        id: true, email: true, firstName: true, lastName: true,
+        role: true, avatar: true, emailVerified: true,
+      },
+    })
+
+    // Consommer le token (usage unique)
+    await prisma.verificationToken.delete({ where: { id: record.id } })
+
+    // Générer les tokens JWT
+    const jwtPayload: JwtPayload = { userId: user.id, email: user.email, role: user.role }
+    const accessToken = generateAccessToken(jwtPayload)
+    const refreshToken = generateRefreshToken(jwtPayload)
+
+    const expiresAt = new Date()
+    expiresAt.setDate(expiresAt.getDate() + 7)
+    await prisma.refreshToken.create({
+      data: { token: refreshToken, userId: user.id, expiresAt },
+    })
+
+    return { user, accessToken, refreshToken }
   }
 }
 

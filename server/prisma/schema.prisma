@@ -69,6 +69,7 @@ enum ApplicationStatus {
 enum TokenType {
   EMAIL_VERIFY
   PASSWORD_RESET
+  MAGIC_LINK
 }
 
 // ============================================
