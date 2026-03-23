@@ -557,8 +557,9 @@ class AuthService {
         audience: env.GOOGLE_CLIENT_ID,
       })
       payload = ticket.getPayload()
-    } catch {
-      throw new Error('Invalid Google token')
+    } catch (e) {
+      const detail = e instanceof Error ? e.message : String(e)
+      throw new Error(`Invalid Google token: ${detail}`)
     }
 
     if (!payload || !payload.email) {
