@@ -34,28 +34,6 @@ function inp(focused: boolean): React.CSSProperties {
   }
 }
 
-/* ─── Country codes ─────────────────────────────────────────────────────── */
-const COUNTRY_CODES = [
-  { code: '+33', flag: '🇫🇷', name: 'France' },
-  { code: '+32', flag: '🇧🇪', name: 'Belgique' },
-  { code: '+41', flag: '🇨🇭', name: 'Suisse' },
-  { code: '+352', flag: '🇱🇺', name: 'Luxembourg' },
-  { code: '+49', flag: '🇩🇪', name: 'Allemagne' },
-  { code: '+39', flag: '🇮🇹', name: 'Italie' },
-  { code: '+34', flag: '🇪🇸', name: 'Espagne' },
-  { code: '+351', flag: '🇵🇹', name: 'Portugal' },
-  { code: '+44', flag: '🇬🇧', name: 'Royaume-Uni' },
-  { code: '+1', flag: '🇺🇸', name: 'États-Unis / Canada' },
-  { code: '+212', flag: '🇲🇦', name: 'Maroc' },
-  { code: '+213', flag: '🇩🇿', name: 'Algérie' },
-  { code: '+216', flag: '🇹🇳', name: 'Tunisie' },
-  { code: '+221', flag: '🇸🇳', name: 'Sénégal' },
-  { code: '+225', flag: '🇨🇮', name: "Côte d'Ivoire" },
-  { code: '+237', flag: '🇨🇲', name: 'Cameroun' },
-  { code: '+243', flag: '🇨🇩', name: 'Congo (RDC)' },
-  { code: '+261', flag: '🇲🇬', name: 'Madagascar' },
-]
-
 /* ─── Apple button ───────────────────────────────────────────────────────── */
 function AppleButton({ onClick }: { onClick: () => void }) {
   return (
