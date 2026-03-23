@@ -127,7 +127,7 @@ export default function Register() {
       await register({
         email: formData.email, password: formData.password,
         firstName: formData.email.split('@')[0],
-        lastName: '',
+        lastName: ' ',
         role: userType,
       })
       celebrateBig()

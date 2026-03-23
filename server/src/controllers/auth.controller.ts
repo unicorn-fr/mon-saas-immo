@@ -18,11 +18,11 @@ class AuthController {
       const { email, password, firstName, lastName, role, phone } = req.body
 
       // Validation
-      if (!email || !password || !firstName || !lastName || !role) {
+      if (!email || !password || !firstName || !role) {
         return res.status(400).json({
           success: false,
           message: 'Missing required fields',
-          errors: ['email, password, firstName, lastName, and role are required'],
+          errors: ['email, password, firstName, and role are required'],
         })
       }
 
