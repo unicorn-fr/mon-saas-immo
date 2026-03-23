@@ -2,7 +2,6 @@ import { useState, FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AlertCircle, CheckCircle, ArrowRight, UserPlus } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
-import { UserRole } from '../types/auth.types'
 import GoogleSignInButton from '../components/auth/GoogleSignInButton'
 import { celebrateBig } from '../utils/celebrate'
 import { BailioLogo } from '../components/BailioLogo'
@@ -84,7 +83,6 @@ export default function Register() {
   type Screen = 'welcome' | 'form' | 'email_sent'
   const [screen, setScreen] = useState<Screen>('welcome')
 
-  const [userType] = useState<UserRole>('TENANT')
   const [formData, setFormData] = useState({
     email: '', password: '', confirmPassword: '',
   })
