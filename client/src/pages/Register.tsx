@@ -124,11 +124,13 @@ export default function Register() {
       setError('Les mots de passe ne correspondent pas'); return
     }
     try {
+      const prefix = formData.email.split('@')[0] || 'utilisateur'
       await register({
-        email: formData.email, password: formData.password,
-        firstName: formData.email.split('@')[0],
-        lastName: ' ',
-        role: userType,
+        email: formData.email,
+        password: formData.password,
+        firstName: prefix,
+        lastName: prefix,
+        role: 'TENANT',
       })
       celebrateBig()
       setRegisteredEmail(formData.email)
