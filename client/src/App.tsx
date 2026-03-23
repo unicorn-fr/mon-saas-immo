@@ -15,6 +15,7 @@ import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import VerifyEmail from './pages/VerifyEmail'
 import VerifyMagicLink from './pages/VerifyMagicLink'
+import SelectRole from './pages/SelectRole'
 import NotFound from './pages/NotFound'
 
 // Public Pages
@@ -215,6 +216,11 @@ function AppRoutes() {
         <Route path="/dossier" element={<DossierLocatif />} />
         <Route path="/dossier/partages" element={<DossierShareManager />} />
         <Route path="/privacy" element={<PrivacyCenter />} />
+      </Route>
+
+      {/* Role selection after OAuth */}
+      <Route element={<ProtectedRoute />}>
+        <Route path="/select-role" element={<SelectRole />} />
       </Route>
 
       {/* Protected Routes - All authenticated users */}

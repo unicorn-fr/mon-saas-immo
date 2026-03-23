@@ -144,8 +144,12 @@ export default function Register() {
   const handleGoogleSuccess = async (idToken: string) => {
     setError('')
     try {
-      const userData = await googleLogin(idToken)
-      navigate(userData.role === 'OWNER' ? '/dashboard/owner' : '/dashboard/tenant', { replace: true })
+      const { user, isNewUser } = await googleLogin(idToken)
+      if (isNewUser) {
+        navigate('/select-role', { replace: true })
+      } else {
+        navigate(user.role === 'OWNER' ? '/dashboard/owner' : '/dashboard/tenant', { replace: true })
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Échec de la connexion Google')
     }

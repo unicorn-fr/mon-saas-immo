@@ -28,6 +28,7 @@ export interface AuthResponse {
   user: User
   accessToken: string
   refreshToken: string
+  isNewUser?: boolean
 }
 
 export interface LoginCredentials {

@@ -224,8 +224,12 @@ export default function Login() {
   const handleGoogle = async (idToken: string) => {
     setError('')
     try {
-      const userData = await googleLogin(idToken)
-      redirectByRole(userData.role)
+      const { user, isNewUser } = await googleLogin(idToken)
+      if (isNewUser) {
+        navigate('/select-role', { replace: true })
+      } else {
+        redirectByRole(user.role)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Échec connexion Google')
     }

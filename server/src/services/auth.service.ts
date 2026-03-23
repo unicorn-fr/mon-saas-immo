@@ -541,7 +541,7 @@ class AuthService {
   /**
    * Google OAuth authentication
    */
-  async googleAuth(idToken: string): Promise<AuthResponse> {
+  async googleAuth(idToken: string): Promise<AuthResponse & { isNewUser: boolean }> {
     if (!env.GOOGLE_CLIENT_ID) {
       throw new Error('Google OAuth is not configured')
     }
@@ -568,6 +568,7 @@ class AuthService {
     const { email, sub: googleId, given_name, family_name, picture } = payload
 
     // Check if user exists with this googleId
+    let isNewUser = false
     let user = await prisma.user.findUnique({
       where: { googleId },
       select: {
@@ -609,6 +610,7 @@ class AuthService {
         })
       } else {
         // Create new user
+        isNewUser = true
         user = await prisma.user.create({
           data: {
             email: email.toLowerCase(),
@@ -665,6 +667,7 @@ class AuthService {
       user,
       accessToken,
       refreshToken,
+      isNewUser,
     }
   }
 
@@ -674,7 +677,7 @@ class AuthService {
   async updateProfile(
     userId: string,
     data: {
-      firstName?: string; lastName?: string; phone?: string; bio?: string
+      firstName?: string; lastName?: string; phone?: string; bio?: string; role?: string
       // Identity document fields
       birthDate?: string; birthCity?: string; nationality?: string
       nationalNumber?: string; documentNumber?: string; documentExpiry?: string
@@ -705,6 +708,7 @@ class AuthService {
         ...(data.nationalNumber !== undefined && { nationalNumber: data.nationalNumber || null }),
         ...(data.documentNumber !== undefined && { documentNumber: data.documentNumber || null }),
         ...(data.documentExpiry !== undefined && { documentExpiry: data.documentExpiry || null }),
+        ...(data.role           !== undefined && { role: data.role as UserRole }),
         ...(mergedMeta          !== undefined && { profileMeta:    mergedMeta as Prisma.InputJsonValue }),
       },
       select: {
