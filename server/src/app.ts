@@ -62,10 +62,23 @@ app.use(
   })
 )
 
-// CORS - restrict to allowed origin in production
+// CORS — support comma-separated list of origins (e.g. "https://bailio.vercel.app,http://localhost:5173")
+const allowedOrigins = env.CORS_ORIGIN
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean)
+
 app.use(
   cors({
-    origin: env.IS_PRODUCTION ? env.CORS_ORIGIN : true,
+    origin: env.IS_PRODUCTION
+      ? (origin, callback) => {
+          if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true)
+          } else {
+            callback(new Error(`CORS: origin ${origin} not allowed`))
+          }
+        }
+      : true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
