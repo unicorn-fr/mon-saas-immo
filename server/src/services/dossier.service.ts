@@ -350,6 +350,39 @@ class DossierService {
     return !!(share && !share.revokedAt && share.expiresAt > new Date())
   }
 
+  /**
+   * Unified access check for document viewing.
+   * Returns true if the requester (owner) is allowed to view documents of `tenantId`.
+   * Uses the same logic as getTenantDossier to stay in sync.
+   * Throws with a 403-compatible message if access is denied.
+   */
+  async assertDocumentAccess(tenantId: string, requesterId: string): Promise<void> {
+    const share = await prisma.dossierShare.findUnique({
+      where: { tenantId_ownerId: { tenantId, ownerId: requesterId } },
+    })
+    if (share && !share.revokedAt && share.expiresAt >= new Date()) return
+
+    const activeApp = await prisma.application.findFirst({
+      where: {
+        tenantId,
+        status: { not: 'WITHDRAWN' },
+        property: { ownerId: requesterId },
+      },
+    })
+    if (activeApp) return
+
+    const activeContract = await prisma.contract.findFirst({
+      where: {
+        tenantId,
+        ownerId: requesterId,
+        status: { in: ['DRAFT', 'SENT', 'SIGNED_TENANT', 'SIGNED_OWNER', 'COMPLETED', 'ACTIVE'] },
+      },
+    })
+    if (activeContract) return
+
+    throw new Error('Accès non autorisé — le locataire ne vous a pas partagé son dossier')
+  }
+
   // ── FRAUD REPORTING ───────────────────────────────────────────────────────
 
   async reportUser(reporterId: string, targetId: string, reason: string, details?: string) {

@@ -56,9 +56,13 @@ async function main() {
   })
   console.log('✅ Tenant created:', tenant.email)
 
-  // Create Sample Properties
-  const property1 = await prisma.property.create({
-    data: {
+  // Create Sample Properties (stable IDs so upsert works on re-seed)
+  const PROP1_ID = 'seed-property-001'
+  const property1 = await prisma.property.upsert({
+    where: { id: PROP1_ID },
+    update: {},
+    create: {
+      id: PROP1_ID,
       ownerId: owner.id,
       title: 'Appartement T3 lumineux - Centre ville',
       description: 'Magnifique appartement de 65m² situé au cœur du centre-ville. Entièrement rénové, il dispose de 2 chambres spacieuses, un salon lumineux avec balcon, une cuisine équipée moderne et une salle de bain avec douche italienne. Proche de toutes commodités (transports, commerces, écoles).',
@@ -90,8 +94,12 @@ async function main() {
   })
   console.log('✅ Property 1 created:', property1.title)
 
-  const property2 = await prisma.property.create({
-    data: {
+  const PROP2_ID = 'seed-property-002'
+  const property2 = await prisma.property.upsert({
+    where: { id: PROP2_ID },
+    update: {},
+    create: {
+      id: PROP2_ID,
       ownerId: owner.id,
       title: 'Studio cosy - Quartier étudiant',
       description: 'Charmant studio de 25m² idéalement situé dans le quartier étudiant. Parfait pour un étudiant ou jeune actif. Cuisine équipée, salle d\'eau, nombreux rangements. À 5min à pied du métro et des universités.',
@@ -123,8 +131,12 @@ async function main() {
   })
   console.log('✅ Property 2 created:', property2.title)
 
-  const property3 = await prisma.property.create({
-    data: {
+  const PROP3_ID = 'seed-property-003'
+  const property3 = await prisma.property.upsert({
+    where: { id: PROP3_ID },
+    update: {},
+    create: {
+      id: PROP3_ID,
       ownerId: owner.id,
       title: 'Maison avec jardin - Banlieue',
       description: 'Belle maison individuelle de 120m² avec jardin de 300m². Comprend 4 chambres, 2 salles de bain, un grand salon-séjour, une cuisine équipée et un garage. Quartier calme et familial, proche des écoles et commerces.',
@@ -153,6 +165,32 @@ async function main() {
     },
   })
   console.log('✅ Property 3 created:', property3.title)
+
+  // Demo Application — tenant applies to property1 (allows owner to view tenant dossier)
+  await prisma.application.upsert({
+    where: { propertyId_tenantId: { propertyId: PROP1_ID, tenantId: tenant.id } },
+    update: {},
+    create: {
+      propertyId: PROP1_ID,
+      tenantId: tenant.id,
+      status: 'PENDING',
+      message: 'Candidature de démonstration',
+    },
+  })
+  console.log('✅ Demo application created: tenant → property1')
+
+  // Demo DossierShare — tenant explicitly shares dossier with owner (expires in 1 year)
+  await prisma.dossierShare.upsert({
+    where: { tenantId_ownerId: { tenantId: tenant.id, ownerId: owner.id } },
+    update: { expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), revokedAt: null },
+    create: {
+      tenantId: tenant.id,
+      ownerId: owner.id,
+      propertyId: PROP1_ID,
+      expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+    },
+  })
+  console.log('✅ Demo DossierShare created: tenant → owner (1 year)')
 
   console.log('\n🎉 Seeding completed successfully!')
   console.log('\n📝 Test Accounts:')

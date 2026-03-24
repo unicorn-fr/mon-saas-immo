@@ -39,7 +39,8 @@ export const apiClient: AxiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  // 30s : Render free tier cold starts can take 30-50s
+  timeout: 30000,
 })
 
 /**

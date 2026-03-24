@@ -191,25 +191,7 @@ class DossierController {
       if (!doc) return res.status(404).json({ success: false, message: 'Document introuvable' })
 
       // Verify access: active DossierShare OR active application OR active contract
-      const hasShare    = await dossierService.hasActiveShare(doc.userId, requesterId)
-      const hasAppAccess = !hasShare && await _prisma.application.findFirst({
-        where: {
-          tenantId: doc.userId,
-          status: { not: 'WITHDRAWN' },
-          property: { ownerId: requesterId },
-        },
-      })
-      const hasContractAccess = !hasShare && !hasAppAccess && await _prisma.contract.findFirst({
-        where: {
-          tenantId: doc.userId,
-          ownerId: requesterId,
-          status: { in: ['DRAFT', 'SENT', 'SIGNED_TENANT', 'SIGNED_OWNER', 'COMPLETED', 'ACTIVE'] },
-        },
-      })
-
-      if (!hasShare && !hasAppAccess && !hasContractAccess) {
-        return res.status(403).json({ success: false, message: 'Accès non autorisé — le locataire ne vous a pas partagé son dossier' })
-      }
+      await dossierService.assertDocumentAccess(doc.userId, requesterId)
 
       const requester = await _prisma.user.findUnique({
         where: { id: requesterId },

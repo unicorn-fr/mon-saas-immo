@@ -12,7 +12,7 @@
  */
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { X, Shield, Lock, Loader2, CheckCircle, XCircle, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
-import { getApiTokens } from '../../services/api.service'
+import { apiClient } from '../../services/api.service'
 
 const M = {
   owner:   '#1a3270',
@@ -63,31 +63,42 @@ export function WatermarkedViewer({
 
     const load = async () => {
       try {
-        const apiUrl  = (import.meta.env.VITE_API_URL as string) || 'http://localhost:5000/api/v1'
-        const apiBase = apiUrl.replace(/\/api\/v\d+\/?$/, '')
         // Routing :
-        //   http(s)://…     → fetch direct (URL absolue externe)
-        //   /api/…          → endpoint authentifié du backend (ex: /api/v1/dossier/docs/:id/view)
-        //   /uploads/…      → fichier statique → proxy sécurisé (auth requise)
-        const fullUrl = fileUrl.startsWith('http')
-          ? fileUrl
-          : fileUrl.startsWith('/api/')
-            ? `${apiBase}${fileUrl}`
-            : `${apiUrl}/documents/proxy?path=${encodeURIComponent(fileUrl)}`
+        //   http(s)://…  → URL absolue externe, fetch direct
+        //   /api/…       → endpoint backend authentifié (ex: /api/v1/dossier/docs/:id/view)
+        //                  On extrait le chemin relatif pour apiClient (baseURL = /api/v1)
+        //   /uploads/…   → fichier statique via proxy sécurisé
+        // Utilise apiClient (Axios) pour bénéficier du refresh token automatique
+        let response: { data: Blob; headers: Record<string, string> }
 
-        const { accessToken } = getApiTokens()
-        const res = await fetch(fullUrl, {
-          headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
-        })
+        if (fileUrl.startsWith('http')) {
+          const res = await fetch(fileUrl)
+          if (!res.ok) throw new Error(`Erreur ${res.status}`)
+          const blob = await res.blob()
+          response = { data: blob, headers: { 'content-type': res.headers.get('content-type') || '' } }
+        } else {
+          // Pour /api/… et /uploads/… : on passe par apiClient
+          // /api/v1/dossier/docs/:id/view → chemin relatif = /dossier/docs/:id/view
+          const relativePath = fileUrl.startsWith('/api/v1/')
+            ? fileUrl.slice('/api/v1'.length)
+            : fileUrl.startsWith('/api/')
+              ? fileUrl.replace(/^\/api\/v\d+/, '')
+              : `/documents/proxy?path=${encodeURIComponent(fileUrl)}`
 
-        if (!res.ok) throw new Error(`Erreur ${res.status}`)
+          const axiosRes = await apiClient.get<Blob>(relativePath, {
+            responseType: 'blob',
+            timeout: 30000,
+          })
+          response = { data: axiosRes.data, headers: { 'content-type': axiosRes.headers['content-type'] || '' } }
+        }
 
-        const blob = await res.blob()
-        setMimeType(blob.type || res.headers.get('content-type') || '')
+        const blob = response.data
+        setMimeType((blob as Blob).type || response.headers['content-type'] || '')
         objectUrl = URL.createObjectURL(blob)
         setBlobUrl(objectUrl)
-      } catch (e: any) {
-        setError(e?.message || 'Impossible de charger le document')
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : 'Impossible de charger le document'
+        setError(msg)
       } finally {
         setLoading(false)
       }

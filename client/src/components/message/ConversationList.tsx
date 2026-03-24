@@ -52,10 +52,11 @@ export const ConversationList = ({
   }, [conversations, autoSelectUserId, autoSelected, user, onConversationSelect])
 
   useEffect(() => {
+    // 60s — avoid hammering Render (old 10s = same as timeout, causes cascading failures)
     const interval = setInterval(() => {
       pollConversations()
       fetchUnreadCount()
-    }, 10000)
+    }, 60000)
     return () => clearInterval(interval)
   }, [pollConversations, fetchUnreadCount])
 

@@ -10,7 +10,7 @@
  */
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { X, FileText, Loader2, AlertCircle, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
-import { getApiTokens } from '../../services/api.service'
+import { apiClient } from '../../services/api.service'
 
 const M = {
   surface:   '#ffffff',
@@ -47,24 +47,31 @@ export function DocumentViewerModal({ fileUrl, fileName, onClose }: DocumentView
 
     const load = async () => {
       try {
-        const apiUrl  = (import.meta.env.VITE_API_URL as string) || 'http://localhost:5000/api/v1'
-        const apiBase = apiUrl.replace(/\/api\/v\d+\/?$/, '')
+        let blob: Blob
+        let contentType = ''
 
-        const fullUrl = fileUrl.startsWith('http')
-          ? fileUrl
-          : fileUrl.startsWith('/api/')
-            ? `${apiBase}${fileUrl}`
-            : `${apiUrl}/documents/proxy?path=${encodeURIComponent(fileUrl)}`
+        if (fileUrl.startsWith('http')) {
+          const res = await fetch(fileUrl)
+          if (!res.ok) throw new Error(`Erreur ${res.status} — fichier non disponible`)
+          blob = await res.blob()
+          contentType = res.headers.get('content-type') || ''
+        } else {
+          // Use apiClient (Axios) so the token refresh interceptor fires automatically
+          const relativePath = fileUrl.startsWith('/api/v1/')
+            ? fileUrl.slice('/api/v1'.length)
+            : fileUrl.startsWith('/api/')
+              ? fileUrl.replace(/^\/api\/v\d+/, '')
+              : `/documents/proxy?path=${encodeURIComponent(fileUrl)}`
 
-        const { accessToken } = getApiTokens()
-        const res = await fetch(fullUrl, {
-          headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
-        })
+          const axiosRes = await apiClient.get<Blob>(relativePath, {
+            responseType: 'blob',
+            timeout: 30000,
+          })
+          blob = axiosRes.data
+          contentType = axiosRes.headers['content-type'] || ''
+        }
 
-        if (!res.ok) throw new Error(`Erreur ${res.status} — fichier non disponible`)
-
-        const blob = await res.blob()
-        setMimeType(blob.type || res.headers.get('content-type') || '')
+        setMimeType(blob.type || contentType)
         objectUrl = URL.createObjectURL(blob)
         setBlobUrl(objectUrl)
         // Animation d'apparition légèrement décalée

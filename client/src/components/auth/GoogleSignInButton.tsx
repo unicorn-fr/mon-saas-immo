@@ -47,23 +47,31 @@ export default function GoogleSignInButton({
   const buttonRef = useRef<HTMLDivElement>(null)
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
   const [gsiReady, setGsiReady] = useState(false)
+  const initializedRef = useRef(false)
 
-  const handleCredentialResponse = useCallback(
-    (response: { credential: string }) => {
-      if (response.credential) {
-        onSuccess(response.credential)
-      } else {
-        onError?.('No credential received from Google')
-      }
-    },
-    [onSuccess, onError]
-  )
+  // Keep latest callbacks in refs so the stable handler always calls the current version
+  const onSuccessRef = useRef(onSuccess)
+  const onErrorRef = useRef(onError)
+  useEffect(() => { onSuccessRef.current = onSuccess }, [onSuccess])
+  useEffect(() => { onErrorRef.current = onError }, [onError])
+
+  // Stable callback — never changes reference, so initialize() is only called once
+  const handleCredentialResponse = useCallback((response: { credential: string }) => {
+    if (response.credential) {
+      onSuccessRef.current(response.credential)
+    } else {
+      onErrorRef.current?.('No credential received from Google')
+    }
+  }, [])
 
   useEffect(() => {
     if (!clientId) return
 
     const initializeGoogle = () => {
       if (!window.google || !buttonRef.current) return
+      if (initializedRef.current) return // guard: only initialize once
+
+      initializedRef.current = true
 
       window.google.accounts.id.initialize({
         client_id: clientId,
