@@ -50,6 +50,7 @@ import { SignalBreakdown }                from '../../components/dossier/SignalB
 import { updateDocProgress } from '../../utils/progressState'
 import { celebrateBig } from '../../utils/celebrate'
 import toast from 'react-hot-toast'
+import { DocumentViewerModal } from '../../components/document/DocumentViewerModal'
 
 const SERVER_BASE =
   (import.meta.env.VITE_API_URL as string | undefined)?.replace('/api/v1', '') ??
@@ -205,17 +206,17 @@ interface FileEntry {
 // ─── DocumentRow ──────────────────────────────────────────────────────────────
 
 function DocumentRow({
-  slot, category, doc, scanEntry, serverBase,
-  onUploadSlot, onDelete, onOpenWhy,
+  slot, category, doc, scanEntry,
+  onUploadSlot, onDelete, onOpenWhy, onView,
 }: {
   slot: SlotSpec
   category: string
   doc: TenantDocument | undefined
   scanEntry: FileEntry | undefined
-  serverBase: string
   onUploadSlot: (docType: string, category: string, file: File) => void
   onDelete: (id: string) => void
   onOpenWhy: (slot: SlotSpec) => void
+  onView: (doc: TenantDocument) => void
 }) {
   const inputRef   = useRef<HTMLInputElement>(null)
   const [isFileDragOver, setIsFileDragOver] = useState(false)
@@ -445,13 +446,14 @@ function DocumentRow({
         </button>
         {isDone && doc && (
           <>
-            <a href={`${serverBase}${doc.fileUrl}`} target="_blank" rel="noopener noreferrer"
-              style={{ padding: 6, borderRadius: 8, color: M.inkFaint, transition: 'background 0.15s', display: 'flex', alignItems: 'center' }}
+            <button
+              onClick={() => onView(doc)}
+              style={{ padding: 6, borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', color: M.inkFaint, transition: 'background 0.15s', display: 'flex', alignItems: 'center' }}
               title="Voir le document"
-              onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = M.muted }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = 'none' }}>
+              onMouseEnter={(e) => { e.currentTarget.style.background = M.muted }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'none' }}>
               <Eye className="w-3.5 h-3.5" />
-            </a>
+            </button>
             <button onClick={() => onDelete(doc.id)}
               style={{ padding: 6, borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', color: M.danger, transition: 'background 0.15s' }}
               title="Supprimer"
@@ -1174,6 +1176,7 @@ export default function DossierLocatif() {
   const [crossDocWarnings, setCrossDocWarnings]  = useState<string[]>([])
   const [activeScanId,     setActiveScanId]      = useState<string | null>(null)
   const [whySlot,          setWhySlot]           = useState<SlotSpec | null>(null)
+  const [viewerDoc,        setViewerDoc]         = useState<TenantDocument | null>(null)
   const [pendingDuplicate, setPendingDuplicate]  = useState<{
     id: string; file: File; assignedDocType: string; familyLabel: string; existingDocId?: string
   } | null>(null)
@@ -1896,7 +1899,7 @@ export default function DossierLocatif() {
                   onUploadSlot={(docType, _category, file) => handleFiles([file], docType)}
                   onDelete={handleDelete}
                   onOpenWhy={setWhySlot}
-                  serverBase={SERVER_BASE}
+                  onView={setViewerDoc}
                 />
               )
             })}
@@ -1981,6 +1984,14 @@ export default function DossierLocatif() {
           )
         })()}
         {whySlot && <WhyModal slot={whySlot} onClose={() => setWhySlot(null)} />}
+
+        {viewerDoc && (
+          <DocumentViewerModal
+            fileUrl={viewerDoc.fileUrl}
+            fileName={viewerDoc.fileName}
+            onClose={() => setViewerDoc(null)}
+          />
+        )}
 
         {/* Dossier Wizard */}
         {wizardOpen && (
@@ -2267,7 +2278,7 @@ function ProfileComposer({
 
 function CategorySection({
   cat, CatIcon, doneCount, allDone, hasIssue,
-  documents, entries, onUploadSlot, onDelete, onOpenWhy, serverBase,
+  documents, entries, onUploadSlot, onDelete, onOpenWhy, onView,
 }: {
   cat: DocCategory
   CatIcon: React.ElementType
@@ -2279,7 +2290,7 @@ function CategorySection({
   onUploadSlot: (docType: string, category: string, file: File) => void
   onDelete: (id: string) => void
   onOpenWhy: (slot: SlotSpec) => void
-  serverBase: string
+  onView: (doc: TenantDocument) => void
 }) {
   const [open, setOpen] = useState(true)
   const totalRequired = cat.slots.filter((s) => s.required).length
@@ -2341,10 +2352,10 @@ function CategorySection({
                     category={cat.id}
                     doc={doc}
                     scanEntry={scanEntry}
-                    serverBase={serverBase}
                     onUploadSlot={onUploadSlot}
                     onDelete={onDelete}
                     onOpenWhy={onOpenWhy}
+                    onView={onView}
                   />
                 )
               })}
