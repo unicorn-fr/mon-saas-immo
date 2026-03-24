@@ -62,13 +62,16 @@ class DossierController {
         return res.status(400).json({ success: false, message: 'Le fichier ne doit pas depasser 5 Mo' })
       }
 
+      console.log(`[uploadDocument] userId=${userId} category=${category} docType=${docType} size=${req.file.size} mime=${req.file.mimetype}`)
+
       let fileUrl: string
       try {
         fileUrl = await saveFile(req.file.buffer, req.file.originalname, req.file.mimetype)
+        console.log(`[uploadDocument] saveFile OK → ${fileUrl.slice(0, 60)}`)
       } catch (uploadErr) {
         const msg = uploadErr instanceof Error ? uploadErr.message : String(uploadErr)
         console.error('[uploadDocument] saveFile failed:', msg)
-        return res.status(500).json({ success: false, message: `Échec de l'upload du fichier: ${msg}` })
+        return res.status(500).json({ success: false, message: `Échec de l'upload: ${msg}` })
       }
 
       const doc = await dossierService.createDocument({

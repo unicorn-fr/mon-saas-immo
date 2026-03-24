@@ -55,10 +55,9 @@ export const errorHandler = (
     message = 'Token expired'
   }
 
-  // Log error in development
-  if (env.IS_DEVELOPMENT) {
-    console.error('❌ Error:', err)
-  }
+  // Log error always (visible in Render logs)
+  console.error(`❌ [${statusCode}] ${req.method} ${req.path} — ${err.name}: ${err.message}`)
+  if (env.IS_DEVELOPMENT) console.error(err.stack)
 
   // Send error response
   res.status(statusCode).json({

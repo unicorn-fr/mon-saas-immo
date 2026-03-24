@@ -40,6 +40,9 @@ function configure(): void {
 /** Returns true if Cloudinary credentials are available */
 export function isCloudinaryEnabled(): boolean {
   configure()
+  if (!_configured) {
+    console.warn('[Cloudinary] NOT configured — falling back to local disk (files will be lost on server restart)')
+  }
   return _configured
 }
 
