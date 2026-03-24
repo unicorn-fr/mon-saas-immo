@@ -576,6 +576,21 @@ export default function Login() {
             </p>
           )}
 
+          {/* Demo credentials */}
+          <div style={{ marginTop: '24px', padding: '14px 16px', background: '#fdf5ec', border: '1px solid rgba(196,151,106,0.3)', borderRadius: '8px' }}>
+            <p style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontWeight: 600, fontSize: '11px', color: '#c4976a', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px 0' }}>
+              Comptes de démonstration
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <p style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: '12px', color: '#5a5754', margin: 0 }}>
+                <span style={{ fontWeight: 500, color: '#0d0c0a' }}>Propriétaire :</span> owner@example.com / owner123
+              </p>
+              <p style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: '12px', color: '#5a5754', margin: 0 }}>
+                <span style={{ fontWeight: 500, color: '#0d0c0a' }}>Locataire :</span> tenant@example.com / tenant123
+              </p>
+            </div>
+          </div>
+
           {/* Create account */}
           <p style={{ textAlign: 'center', fontSize: '13px', color: '#9e9b96', marginTop: '24px', marginBottom: 0 }}>
             Pas encore de compte ?{' '}
