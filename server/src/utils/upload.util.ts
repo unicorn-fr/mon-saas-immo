@@ -53,18 +53,7 @@ export const saveFile = async (buffer: Buffer, originalname: string, mimeType = 
   const { isCloudinaryEnabled, uploadToCloudinary } = await import('./cloudinary.util.js')
 
   if (isCloudinaryEnabled()) {
-    // Compress images locally before sending to Cloudinary
-    let uploadBuffer = buffer
-    const isImage = mimeType.startsWith('image/') || /\.(jpe?g|png|webp)$/i.test(originalname)
-    if (isImage) {
-      try {
-        uploadBuffer = await sharp(buffer)
-          .resize(1600, undefined, { withoutEnlargement: true })
-          .jpeg({ quality: 75 })
-          .toBuffer()
-      } catch { /* if sharp fails, upload original */ }
-    }
-    return uploadToCloudinary(uploadBuffer, originalname, mimeType)
+    return uploadToCloudinary(buffer, originalname, mimeType)
   }
 
   // Fallback: local disk (dev / no Cloudinary configured)
