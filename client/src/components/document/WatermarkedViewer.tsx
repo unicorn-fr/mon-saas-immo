@@ -63,9 +63,11 @@ export function WatermarkedViewer({
 
     const load = async () => {
       try {
+        // Utilise le proxy sécurisé pour les fichiers /uploads (auth requise côté serveur)
+        const apiUrl = import.meta.env.VITE_API_URL as string || 'http://localhost:5000/api/v1'
         const fullUrl = fileUrl.startsWith('http')
           ? fileUrl
-          : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}${fileUrl}`
+          : `${apiUrl}/documents/proxy?path=${encodeURIComponent(fileUrl)}`
 
         const { accessToken } = getApiTokens()
         const res = await fetch(fullUrl, {

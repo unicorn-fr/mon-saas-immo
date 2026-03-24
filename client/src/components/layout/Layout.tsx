@@ -4,6 +4,8 @@ import Footer from './Footer'
 import { OwnerSidebar } from './OwnerSidebar'
 import { TenantSidebar } from './TenantSidebar'
 import { useAuth } from '../../hooks/useAuth'
+import { OnboardingModal, useOnboarding } from '../onboarding/OnboardingModal'
+import { BugReportButton } from '../BugReportButton'
 
 interface LayoutProps {
   children: ReactNode
@@ -20,6 +22,10 @@ export const Layout = ({ children, showHeader = true, showFooter }: LayoutProps)
     (user?.role === 'OWNER' || user?.role === 'TENANT')
 
   const dataRole = user?.role === 'OWNER' ? 'owner' : user?.role === 'TENANT' ? 'tenant' : undefined
+
+  const { show: showOnboarding, dismiss: dismissOnboarding } = useOnboarding(
+    hasSidebar ? user?.id : undefined
+  )
 
   // ── Layout sans sidebar (pages publiques, admin) ──────────────────────────
   if (!hasSidebar) {
@@ -55,6 +61,18 @@ export const Layout = ({ children, showHeader = true, showFooter }: LayoutProps)
           {children}
         </main>
       </div>
+
+      {/* Onboarding — premier accès */}
+      {showOnboarding && user && (user.role === 'OWNER' || user.role === 'TENANT') && (
+        <OnboardingModal
+          userId={user.id}
+          role={user.role as 'OWNER' | 'TENANT'}
+          onClose={dismissOnboarding}
+        />
+      )}
+
+      {/* Bouton rapport de bug */}
+      <BugReportButton />
     </div>
   )
 }

@@ -23,6 +23,7 @@ import superAdminRoutes from './routes/superAdmin.routes.js'
 import marketRoutes from './routes/market.routes.js'
 import applicationRoutes from './routes/application.routes.js'
 import privacyRoutes from './routes/privacy.routes.js'
+import bugsRoutes from './routes/bugs.routes.js'
 // import userRoutes from './routes/user.routes.js'
 
 import { startCleanupCron } from './services/cleanup.service.js'
@@ -157,6 +158,7 @@ app.use(`${API_PREFIX}/super-admin`, superAdminRoutes)
 app.use(`${API_PREFIX}/market`, marketRoutes)
 app.use(`${API_PREFIX}/applications`, applicationRoutes)
 app.use(`${API_PREFIX}/privacy`, privacyRoutes)
+app.use(`${API_PREFIX}/bugs`, bugsRoutes)
 // app.use(`${API_PREFIX}/users`, userRoutes)
 
 // Start background cron jobs
