@@ -87,7 +87,7 @@ class UploadController {
         })
       }
 
-      const filePath = saveFile(req.file.buffer, req.file.originalname)
+      const filePath = await saveFile(req.file.buffer, req.file.originalname, req.file.mimetype)
 
       return res.status(200).json({
         success: true,

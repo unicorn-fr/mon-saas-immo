@@ -801,7 +801,7 @@ class PropertyController {
         return res.status(400).json({ success: false, message: 'Type de document invalide' })
       }
 
-      const fileUrl = saveFile(req.file.buffer, req.file.originalname)
+      const fileUrl = await saveFile(req.file.buffer, req.file.originalname, req.file.mimetype)
 
       const property = await propertyService.updateProperty(id, userId, {
         [type]: fileUrl,

@@ -42,6 +42,12 @@ const envSchema = z.object({
 
   // Firebase Admin (JSON stringifié de la clé de service)
   FIREBASE_SERVICE_ACCOUNT: z.string().optional(),
+
+  // Cloudinary — stockage persistant des fichiers (optionnel, fallback disque local)
+  CLOUDINARY_URL: z.string().optional(),
+  CLOUDINARY_CLOUD_NAME: z.string().optional(),
+  CLOUDINARY_API_KEY: z.string().optional(),
+  CLOUDINARY_API_SECRET: z.string().optional(),
 })
 
 // Parse and validate environment variables

@@ -47,37 +47,41 @@ export function DocumentViewerModal({ fileUrl, fileName, onClose }: DocumentView
 
     const load = async () => {
       try {
-        let blob: Blob
-        let contentType = ''
+        // All paths go through apiClient (Axios) so the token refresh fires automatically.
+        // Routing:
+        //   /api/v1/…  → strip prefix, call apiClient directly
+        //   /api/…     → strip versioned prefix
+        //   https://…  → proxy via /documents/proxy so auth header is sent
+        //   /uploads/… → proxy via /documents/proxy
+        const relativePath = fileUrl.startsWith('/api/v1/')
+          ? fileUrl.slice('/api/v1'.length)
+          : fileUrl.startsWith('/api/')
+            ? fileUrl.replace(/^\/api\/v\d+/, '')
+            : `/documents/proxy?path=${encodeURIComponent(fileUrl)}`
 
-        if (fileUrl.startsWith('http')) {
-          const res = await fetch(fileUrl)
-          if (!res.ok) throw new Error(`Erreur ${res.status} — fichier non disponible`)
-          blob = await res.blob()
-          contentType = res.headers.get('content-type') || ''
-        } else {
-          // Use apiClient (Axios) so the token refresh interceptor fires automatically
-          const relativePath = fileUrl.startsWith('/api/v1/')
-            ? fileUrl.slice('/api/v1'.length)
-            : fileUrl.startsWith('/api/')
-              ? fileUrl.replace(/^\/api\/v\d+/, '')
-              : `/documents/proxy?path=${encodeURIComponent(fileUrl)}`
+        const axiosRes = await apiClient.get<Blob>(relativePath, {
+          responseType: 'blob',
+          timeout: 30000,
+        })
+        const blob = axiosRes.data
+        const contentType = axiosRes.headers['content-type'] || ''
 
-          const axiosRes = await apiClient.get<Blob>(relativePath, {
-            responseType: 'blob',
-            timeout: 30000,
-          })
-          blob = axiosRes.data
-          contentType = axiosRes.headers['content-type'] || ''
-        }
-
-        setMimeType(blob.type || contentType)
+        setMimeType((blob as Blob).type || contentType)
         objectUrl = URL.createObjectURL(blob)
         setBlobUrl(objectUrl)
-        // Animation d'apparition légèrement décalée
         setTimeout(() => setRevealed(true), 80)
       } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : 'Impossible de charger le document')
+        let msg = 'Impossible de charger le document'
+        if (e instanceof Error) {
+          if (e.message.includes('404') || e.message.includes('introuvable')) {
+            msg = 'Fichier introuvable — le serveur a peut-être redémarré. Veuillez réuploader ce document.'
+          } else if (e.message.includes('403') || e.message.includes('401')) {
+            msg = 'Accès refusé — votre session a peut-être expiré. Reconnectez-vous.'
+          } else {
+            msg = e.message
+          }
+        }
+        setError(msg)
       } finally {
         setLoading(false)
       }

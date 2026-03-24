@@ -40,7 +40,7 @@ class DocumentController {
         })
       }
 
-      const fileUrl = saveFile(req.file.buffer, req.file.originalname)
+      const fileUrl = await saveFile(req.file.buffer, req.file.originalname, req.file.mimetype)
 
       const document = await documentService.createDocument({
         contractId,

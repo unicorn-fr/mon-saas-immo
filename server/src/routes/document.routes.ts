@@ -12,16 +12,35 @@ const router = Router()
 router.use(authenticate)
 
 // GET /api/v1/documents/proxy?path=/uploads/... — serve file securely (requires auth)
-router.get('/proxy', (req, res) => {
+router.get('/proxy', async (req, res) => {
   const filePath = req.query.path as string
-  if (!filePath || !filePath.startsWith('/uploads/')) {
-    return res.status(400).json({ success: false, message: 'Invalid path' })
+  if (!filePath) return res.status(400).json({ success: false, message: 'Chemin manquant' })
+
+  // Cloudinary / remote URL stored in DB → fetch and proxy
+  if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+    try {
+      const fetchRes = await fetch(filePath)
+      if (!fetchRes.ok) return res.status(fetchRes.status).json({ success: false, message: 'Fichier inaccessible' })
+      const buffer = Buffer.from(await fetchRes.arrayBuffer())
+      const ct = fetchRes.headers.get('content-type') || 'application/octet-stream'
+      res.setHeader('Content-Type', ct)
+      res.setHeader('Cache-Control', 'private, max-age=300')
+      res.setHeader('X-Content-Type-Options', 'nosniff')
+      return res.send(buffer)
+    } catch {
+      return res.status(502).json({ success: false, message: 'Impossible de récupérer le fichier distant' })
+    }
   }
+
+  if (!filePath.startsWith('/uploads/')) {
+    return res.status(400).json({ success: false, message: 'Chemin invalide' })
+  }
+
   // Prevent path traversal
   const safeName = path.basename(filePath)
   const absolutePath = path.join(path.resolve(env.UPLOAD_DIR), safeName)
   if (!fs.existsSync(absolutePath)) {
-    return res.status(404).json({ success: false, message: 'File not found' })
+    return res.status(404).json({ success: false, message: 'Fichier introuvable — le serveur a peut-être redémarré. Veuillez réuploader le document.' })
   }
   const ext = path.extname(safeName).toLowerCase()
   const mime =

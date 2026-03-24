@@ -46,16 +46,32 @@ export const uploadFile = multer({
 })
 
 /**
- * Save uploaded file to disk (no image processing)
+ * Save uploaded file — Cloudinary if configured, local disk as fallback.
+ * Images are compressed with sharp (max 1600px, 75% quality) before upload.
  */
-export const saveFile = (buffer: Buffer, originalname: string): string => {
-  const ext = path.extname(originalname) || ''
+export const saveFile = async (buffer: Buffer, originalname: string, mimeType = ''): Promise<string> => {
+  const { isCloudinaryEnabled, uploadToCloudinary } = await import('./cloudinary.util.js')
+
+  if (isCloudinaryEnabled()) {
+    // Compress images locally before sending to Cloudinary
+    let uploadBuffer = buffer
+    const isImage = mimeType.startsWith('image/') || /\.(jpe?g|png|webp)$/i.test(originalname)
+    if (isImage) {
+      try {
+        uploadBuffer = await sharp(buffer)
+          .resize(1600, undefined, { withoutEnlargement: true })
+          .jpeg({ quality: 75 })
+          .toBuffer()
+      } catch { /* if sharp fails, upload original */ }
+    }
+    return uploadToCloudinary(uploadBuffer, originalname, mimeType)
+  }
+
+  // Fallback: local disk (dev / no Cloudinary configured)
   const safeName = originalname.replace(/\s/g, '-').replace(/[^a-zA-Z0-9._-]/g, '')
   const outputFilename = `${Date.now()}-${safeName}`
   const outputPath = path.join(uploadDir, outputFilename)
-
   fs.writeFileSync(outputPath, buffer)
-
   return `/uploads/${outputFilename}`
 }
 

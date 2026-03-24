@@ -97,7 +97,18 @@ export function WatermarkedViewer({
         objectUrl = URL.createObjectURL(blob)
         setBlobUrl(objectUrl)
       } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : 'Impossible de charger le document'
+        let msg = 'Impossible de charger le document'
+        if (e instanceof Error) {
+          if (e.message.includes('403') || e.message.includes('autorisé') || e.message.includes('partagé')) {
+            msg = 'Accès refusé — le locataire doit partager son dossier avec vous.'
+          } else if (e.message.includes('404') || e.message.includes('introuvable')) {
+            msg = 'Fichier introuvable — le serveur a peut-être redémarré. Demandez au locataire de réuploader ce document.'
+          } else if (e.message.includes('401') || e.message.includes('session')) {
+            msg = 'Session expirée — veuillez vous reconnecter.'
+          } else {
+            msg = e.message
+          }
+        }
         setError(msg)
       } finally {
         setLoading(false)

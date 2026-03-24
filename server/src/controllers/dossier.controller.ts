@@ -62,7 +62,7 @@ class DossierController {
         return res.status(400).json({ success: false, message: 'Le fichier ne doit pas depasser 5 Mo' })
       }
 
-      const fileUrl = saveFile(req.file.buffer, req.file.originalname)
+      const fileUrl = await saveFile(req.file.buffer, req.file.originalname, req.file.mimetype)
 
       const doc = await dossierService.createDocument({
         userId,

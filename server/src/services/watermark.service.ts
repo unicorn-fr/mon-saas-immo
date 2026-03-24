@@ -27,19 +27,25 @@ export async function serveWatermarkedDocument(
   mimeType: string,
   opts: WatermarkOptions,
 ): Promise<{ buffer: Buffer; contentType: string }> {
-  // Chemin absolu depuis l'URL relative "/uploads/…"
-  const uploadDir = process.env.UPLOAD_DIR ?? path.join(process.cwd(), 'uploads')
-  const relativePath = fileUrl.startsWith('/uploads/')
-    ? fileUrl.slice('/uploads/'.length)
-    : fileUrl
+  let rawBuffer: Buffer
 
-  // Protection path traversal
-  const filePath = path.resolve(uploadDir, relativePath)
-  if (!filePath.startsWith(path.resolve(uploadDir))) {
-    throw new Error('Chemin de fichier invalide')
+  if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
+    // Remote file (Cloudinary or other CDN) — fetch directly
+    const { fetchRemoteBuffer } = await import('../utils/cloudinary.util.js')
+    rawBuffer = await fetchRemoteBuffer(fileUrl)
+  } else {
+    // Local file on disk "/uploads/…"
+    const uploadDir = process.env.UPLOAD_DIR ?? path.join(process.cwd(), 'uploads')
+    const relativePath = fileUrl.startsWith('/uploads/')
+      ? fileUrl.slice('/uploads/'.length)
+      : fileUrl
+    // Protection path traversal
+    const filePath = path.resolve(uploadDir, relativePath)
+    if (!filePath.startsWith(path.resolve(uploadDir))) {
+      throw new Error('Chemin de fichier invalide')
+    }
+    rawBuffer = await fs.readFile(filePath)
   }
-
-  const rawBuffer = await fs.readFile(filePath)
 
   if (mimeType === 'application/pdf') {
     const watermarked = await applyPdfWatermark(rawBuffer, opts)
