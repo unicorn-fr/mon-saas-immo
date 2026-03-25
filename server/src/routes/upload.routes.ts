@@ -12,9 +12,11 @@ function handleMulterError(err: unknown, req: Request, res: Response, next: Next
     const msg = err.code === 'LIMIT_FILE_SIZE'
       ? 'Fichier trop volumineux (max 10 Mo)'
       : `Erreur d'upload: ${err.message}`
+    console.error('[handleMulterError] MulterError:', err.code, err.message)
     return res.status(400).json({ success: false, message: msg })
   }
   if (err instanceof Error) {
+    console.error('[handleMulterError] Error:', err.message)
     return res.status(400).json({ success: false, message: err.message })
   }
   next(err)

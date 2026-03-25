@@ -41,15 +41,21 @@ class UploadController {
    */
   async uploadMultipleImages(req: Request, res: Response, next: NextFunction) {
     try {
-      console.log(`[uploadMultipleImages] req.files count=${Array.isArray(req.files) ? req.files.length : 'NOT_ARRAY'} user=${req.user?.id}`)
+      const filesCount = Array.isArray(req.files) ? req.files.length : 'NOT_ARRAY'
+      console.log(`[uploadMultipleImages] files=${filesCount} user=${req.user?.id} contentType=${req.headers['content-type']?.slice(0, 60)}`)
 
       if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
-        console.warn('[uploadMultipleImages] no files received — req.files:', req.files)
+        console.warn('[uploadMultipleImages] no files — body keys:', Object.keys(req.body || {}))
         return res.status(400).json({
           success: false,
           message: 'Aucun fichier reçu',
         })
       }
+
+      // Log received MIME types (was previously filtered by multer fileFilter — removed to debug)
+      req.files.forEach((f, i) => {
+        console.log(`[uploadMultipleImages] file[${i}] name=${f.originalname} mime=${f.mimetype} size=${f.size}`)
+      })
 
       const imagePaths = await processMultipleImages(req.files)
 

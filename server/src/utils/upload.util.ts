@@ -13,25 +13,10 @@ if (!fs.existsSync(uploadDir)) {
 // Configure multer storage
 const storage = multer.memoryStorage()
 
-// File filter for images only
-const imageFileFilter = (
-  req: Express.Request,
-  file: Express.Multer.File,
-  cb: multer.FileFilterCallback
-) => {
-  const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-
-  if (allowedMimeTypes.includes(file.mimetype)) {
-    cb(null, true)
-  } else {
-    cb(new Error('Only image files (JPEG, PNG, WebP) are allowed'))
-  }
-}
-
-// Multer upload middleware (images only) — 10MB limit
+// Multer upload middleware (images) — 10MB limit, no fileFilter
+// MIME validation is handled in the controller where we can log the actual type
 export const upload = multer({
   storage,
-  fileFilter: imageFileFilter,
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB
   },
