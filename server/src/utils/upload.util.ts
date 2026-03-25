@@ -107,6 +107,10 @@ export const processImage = async (
     watermark = true,
   } = options
 
+  // Isolate sharp — only image processing in try/catch, not storage
+  let finalBuffer = buffer
+  let finalName = `${Date.now()}-${filename.replace(/\s/g, '-').replace(/[^a-zA-Z0-9._-]/g, '')}`
+
   try {
     let pipeline = sharp(buffer).resize(width, height, {
       fit: 'inside',
@@ -121,16 +125,14 @@ export const processImage = async (
       pipeline = pipeline.composite([{ input: wm, gravity: 'southeast', blend: 'over' }])
     }
 
-    const processedBuffer = await pipeline.jpeg({ quality }).toBuffer()
-    const outputFilename = `${Date.now()}-${filename.replace(/\s/g, '-').replace(/\.[^.]+$/, '.jpg')}`
-    return saveFile(processedBuffer, outputFilename, 'image/jpeg')
+    finalBuffer = await pipeline.jpeg({ quality }).toBuffer()
+    finalName = `${Date.now()}-${filename.replace(/\s/g, '-').replace(/\.[^.]+$/, '.jpg')}`
   } catch (err) {
-    // sharp failed (binary mismatch, libvips unavailable) — save raw buffer directly
-    console.error('[processImage] sharp processing failed, saving raw file:', err)
-    const safeName = filename.replace(/\s/g, '-').replace(/[^a-zA-Z0-9._-]/g, '')
-    const outputFilename = `${Date.now()}-${safeName}`
-    return saveFile(buffer, outputFilename, 'image/jpeg')
+    // sharp failed (binary mismatch / libvips unavailable) — fall back to raw buffer
+    console.error('[processImage] sharp processing failed, using raw buffer:', err)
   }
+
+  return saveFile(finalBuffer, finalName, 'image/jpeg')
 }
 
 /**
