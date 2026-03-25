@@ -136,19 +136,24 @@ export const processImage = async (
 }
 
 /**
- * Process multiple images
+ * Save multiple images — uses saveFile directly (same path as dossier upload).
+ * Sharp processing is intentionally skipped here to avoid native binary issues
+ * on cloud environments (Render). processImage() is still available for single-image
+ * routes that can afford the extra processing.
  */
 export const processMultipleImages = async (
   files: Express.Multer.File[]
 ): Promise<string[]> => {
-  const processedImages: string[] = []
-
+  const urls: string[] = []
   for (const file of files) {
-    const imagePath = await processImage(file.buffer, file.originalname)
-    processedImages.push(imagePath)
+    const safeName = file.originalname.replace(/\s/g, '-').replace(/[^a-zA-Z0-9._-]/g, '')
+    const outputFilename = `${Date.now()}-${safeName}`
+    console.log(`[processMultipleImages] saving ${outputFilename} (${file.size} bytes, ${file.mimetype})`)
+    const url = await saveFile(file.buffer, outputFilename, file.mimetype)
+    console.log(`[processMultipleImages] saved → ${url.slice(0, 80)}`)
+    urls.push(url)
   }
-
-  return processedImages
+  return urls
 }
 
 /**

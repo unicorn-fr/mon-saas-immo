@@ -41,30 +41,34 @@ class UploadController {
    */
   async uploadMultipleImages(req: Request, res: Response, next: NextFunction) {
     try {
+      console.log(`[uploadMultipleImages] req.files count=${Array.isArray(req.files) ? req.files.length : 'NOT_ARRAY'} user=${req.user?.id}`)
+
       if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+        console.warn('[uploadMultipleImages] no files received — req.files:', req.files)
         return res.status(400).json({
           success: false,
-          message: 'No files uploaded',
+          message: 'Aucun fichier reçu',
         })
       }
 
       const imagePaths = await processMultipleImages(req.files)
 
+      console.log(`[uploadMultipleImages] success — ${imagePaths.length} URLs:`, imagePaths)
+
       return res.status(200).json({
         success: true,
-        message: `${imagePaths.length} images uploaded successfully`,
+        message: `${imagePaths.length} images uploadées`,
         data: {
           urls: imagePaths,
         },
       })
     } catch (error) {
-      if (error instanceof Error) {
-        return res.status(400).json({
-          success: false,
-          message: error.message,
-        })
-      }
-      next(error)
+      const msg = error instanceof Error ? error.message : String(error)
+      console.error('[uploadMultipleImages] error:', msg)
+      return res.status(500).json({
+        success: false,
+        message: `Échec de l'upload: ${msg}`,
+      })
     }
   }
   /**
