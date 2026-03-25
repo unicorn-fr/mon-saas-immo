@@ -1,5 +1,5 @@
 export type PropertyType = 'APARTMENT' | 'HOUSE' | 'STUDIO' | 'DUPLEX' | 'LOFT'
-export type PropertyStatus = 'AVAILABLE' | 'OCCUPIED' | 'RESERVED' | 'DRAFT'
+export type PropertyStatus = 'AVAILABLE' | 'OCCUPIED' | 'RESERVED' | 'DRAFT' | 'PENDING_REVIEW'
 export type DateOverrideType = 'BLOCKED' | 'EXTRA'
 
 export interface VisitAvailabilitySlot {
@@ -85,6 +85,7 @@ export interface Property {
   // Owner Verification Documents
   ownerIdDocument?: string | null
   propertyProofDocument?: string | null
+  reviewNote?: string | null
 
   // Statistics
   views: number
@@ -232,6 +233,7 @@ export const PROPERTY_TYPES: { value: PropertyType; label: string }[] = [
 
 export const PROPERTY_STATUS: { value: PropertyStatus; label: string; color: string; description?: string }[] = [
   { value: 'AVAILABLE', label: 'En recherche de locataire', color: 'green', description: 'Votre bien est visible sur le site et ouvert aux candidatures' },
+  { value: 'PENDING_REVIEW', label: 'En cours de vérification', color: 'amber', description: 'Votre bien est en attente de validation par notre équipe' },
   { value: 'OCCUPIED', label: 'En location', color: 'blue', description: 'Votre bien est actuellement loue et masque du site' },
   { value: 'DRAFT', label: 'Pas sur le marche', color: 'gray', description: 'Votre bien est masque du site et non disponible' },
 ]

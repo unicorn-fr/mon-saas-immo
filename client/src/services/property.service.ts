@@ -170,6 +170,49 @@ class PropertyService {
   }
 
   /**
+   * Get properties pending admin review
+   */
+  async getPendingReviewProperties(): Promise<Property[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<{ properties: Property[] }>>(
+        '/properties/admin/pending-review'
+      )
+      return response.data.data.properties
+    } catch (error) {
+      throw new Error(handleApiError(error))
+    }
+  }
+
+  /**
+   * Approve a property (Admin only)
+   */
+  async approveProperty(id: string): Promise<Property> {
+    try {
+      const response = await apiClient.patch<ApiResponse<{ property: Property }>>(
+        `/properties/${id}/approve`
+      )
+      return response.data.data.property
+    } catch (error) {
+      throw new Error(handleApiError(error))
+    }
+  }
+
+  /**
+   * Reject a property (Admin only)
+   */
+  async rejectProperty(id: string, reviewNote: string): Promise<Property> {
+    try {
+      const response = await apiClient.patch<ApiResponse<{ property: Property }>>(
+        `/properties/${id}/reject`,
+        { reviewNote }
+      )
+      return response.data.data.property
+    } catch (error) {
+      throw new Error(handleApiError(error))
+    }
+  }
+
+  /**
    * Mark property as occupied (Owner only)
    */
   async markAsOccupied(id: string): Promise<Property> {
@@ -286,12 +329,7 @@ class PropertyService {
 
       const response = await apiClient.post<ApiResponse<{ urls: string[] }>>(
         '/upload/images',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
+        formData
       )
       return response.data.data.urls
     } catch (error) {

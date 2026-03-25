@@ -29,10 +29,11 @@ enum PropertyType {
 }
 
 enum PropertyStatus {
-  AVAILABLE   // Disponible
-  OCCUPIED    // Occupé
-  RESERVED    // Réservé
-  DRAFT       // Brouillon
+  AVAILABLE       // Disponible — approuvé par admin, visible aux locataires
+  OCCUPIED        // Occupé — en location active
+  RESERVED        // Réservé
+  DRAFT           // Brouillon — non soumis
+  PENDING_REVIEW  // En attente de vérification par un administrateur
 }
 
 enum BookingStatus {
@@ -225,6 +226,9 @@ model Property {
   // Owner Verification Documents (required to publish)
   ownerIdDocument       String?  // URL to owner ID document (CNI/Passport)
   propertyProofDocument String?  // URL to property proof (titre de propriete/taxe fonciere)
+
+  // Admin review
+  reviewNote            String?  // Admin note (rejection reason or approval comment)
 
   // Selection Criteria (JSON) — owner's pre-qualification requirements
   // { minSalaryRatio, requiredGuarantor, acceptedGuarantorTypes, requiredDocCategories,

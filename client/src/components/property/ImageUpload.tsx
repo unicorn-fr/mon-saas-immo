@@ -1,7 +1,198 @@
-import { useState, useCallback } from 'react'
-import { Upload, X, Image as ImageIcon } from 'lucide-react'
+import { useState, useCallback, useRef, useEffect } from 'react'
+import { Upload, X, Image as ImageIcon, ZoomIn, ZoomOut, RotateCcw, Check } from 'lucide-react'
 import { useProperties } from '../../hooks/useProperties'
 
+// ── Maison tokens ──────────────────────────────────────────────────────────────
+const M = {
+  ink: '#0d0c0a',
+  inkMid: '#5a5754',
+  inkFaint: '#9e9b96',
+  border: '#e4e1db',
+  borderMid: '#ccc9c3',
+  muted: '#f4f2ee',
+  surface: '#ffffff',
+  night: '#1a1a2e',
+  danger: '#9b1c1c',
+  dangerBg: '#fef2f2',
+  success: '#1b5e3b',
+  successBg: '#edf7f2',
+}
+
+// Minimum dimensions that trigger the crop modal
+const MIN_WIDTH = 800
+const MIN_HEIGHT = 600
+const CROP_ASPECT = 4 / 3 // output aspect ratio
+
+// ── ImageCropModal ─────────────────────────────────────────────────────────────
+interface CropModalProps {
+  file: File
+  onConfirm: (croppedFile: File) => void
+  onCancel: () => void
+}
+
+function ImageCropModal({ file, onConfirm, onCancel }: CropModalProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [imgEl, setImgEl] = useState<HTMLImageElement | null>(null)
+  const [zoom, setZoom] = useState(1)
+  const [offset, setOffset] = useState({ x: 0, y: 0 })
+  const [dragging, setDragging] = useState(false)
+  const dragStart = useRef({ mx: 0, my: 0, ox: 0, oy: 0 })
+
+  // Output canvas size (displayed crop frame)
+  const FRAME_W = 480
+  const FRAME_H = Math.round(FRAME_W / CROP_ASPECT)
+
+  // Load image
+  useEffect(() => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      setImgEl(img)
+      // Fit image into frame by default
+      const scale = Math.max(FRAME_W / img.width, FRAME_H / img.height)
+      setZoom(scale)
+      setOffset({ x: 0, y: 0 })
+    }
+    img.src = url
+    return () => URL.revokeObjectURL(url)
+  }, [file])
+
+  // Draw on canvas
+  useEffect(() => {
+    if (!imgEl || !canvasRef.current) return
+    const ctx = canvasRef.current.getContext('2d')
+    if (!ctx) return
+    ctx.clearRect(0, 0, FRAME_W, FRAME_H)
+    const w = imgEl.width * zoom
+    const h = imgEl.height * zoom
+    const x = (FRAME_W - w) / 2 + offset.x
+    const y = (FRAME_H - h) / 2 + offset.y
+    ctx.drawImage(imgEl, x, y, w, h)
+  }, [imgEl, zoom, offset])
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setDragging(true)
+    dragStart.current = { mx: e.clientX, my: e.clientY, ox: offset.x, oy: offset.y }
+  }
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!dragging) return
+    setOffset({
+      x: dragStart.current.ox + (e.clientX - dragStart.current.mx),
+      y: dragStart.current.oy + (e.clientY - dragStart.current.my),
+    })
+  }
+  const handleMouseUp = () => setDragging(false)
+
+  const handleReset = () => {
+    if (!imgEl) return
+    const scale = Math.max(FRAME_W / imgEl.width, FRAME_H / imgEl.height)
+    setZoom(scale)
+    setOffset({ x: 0, y: 0 })
+  }
+
+  const handleConfirm = () => {
+    if (!canvasRef.current) return
+    canvasRef.current.toBlob((blob) => {
+      if (!blob) return
+      const croppedFile = new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' })
+      onConfirm(croppedFile)
+    }, 'image/jpeg', 0.9)
+  }
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70">
+      <div
+        className="rounded-2xl max-w-xl w-full"
+        style={{ background: M.surface, boxShadow: '0 8px 32px rgba(13,12,10,0.16)' }}
+      >
+        {/* Header */}
+        <div className="p-5 border-b" style={{ borderColor: M.border }}>
+          <h3 className="text-base font-semibold" style={{ color: M.ink }}>Recadrer l'image</h3>
+          <p className="text-sm mt-0.5" style={{ color: M.inkMid }}>
+            L'image est trop petite — recadrez-la pour un rendu optimal (ratio 4:3)
+          </p>
+        </div>
+
+        {/* Canvas crop area */}
+        <div className="p-5">
+          <div
+            className="relative overflow-hidden rounded-xl mx-auto"
+            style={{ width: FRAME_W, height: FRAME_H, background: '#111', cursor: dragging ? 'grabbing' : 'grab', maxWidth: '100%' }}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+          >
+            <canvas
+              ref={canvasRef}
+              width={FRAME_W}
+              height={FRAME_H}
+              style={{ display: 'block', width: '100%', height: '100%' }}
+            />
+            {/* crop guide overlay */}
+            <div className="absolute inset-0 pointer-events-none" style={{ border: '2px solid rgba(255,255,255,0.5)', borderRadius: 10 }} />
+          </div>
+
+          {/* Zoom controls */}
+          <div className="flex items-center gap-3 mt-4">
+            <button
+              onClick={() => setZoom((z) => Math.max(z - 0.1, 0.2))}
+              className="p-2 rounded-lg border transition-colors"
+              style={{ borderColor: M.border, color: M.inkMid }}
+            >
+              <ZoomOut className="w-4 h-4" />
+            </button>
+            <input
+              type="range"
+              min={20}
+              max={400}
+              value={Math.round(zoom * 100)}
+              onChange={(e) => setZoom(parseInt(e.target.value) / 100)}
+              className="flex-1 accent-[#1a1a2e]"
+            />
+            <button
+              onClick={() => setZoom((z) => Math.min(z + 0.1, 4))}
+              className="p-2 rounded-lg border transition-colors"
+              style={{ borderColor: M.border, color: M.inkMid }}
+            >
+              <ZoomIn className="w-4 h-4" />
+            </button>
+            <button
+              onClick={handleReset}
+              className="p-2 rounded-lg border transition-colors ml-1"
+              style={{ borderColor: M.border, color: M.inkMid }}
+              title="Réinitialiser"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+          </div>
+          <p className="text-xs text-center mt-2" style={{ color: M.inkFaint }}>
+            Glissez pour repositionner · zoom {Math.round(zoom * 100)}%
+          </p>
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-3 p-5 pt-0">
+          <button
+            onClick={onCancel}
+            className="btn btn-secondary flex-1"
+          >
+            Annuler
+          </button>
+          <button
+            onClick={handleConfirm}
+            className="btn btn-primary flex-1 flex items-center justify-center gap-2"
+          >
+            <Check className="w-4 h-4" />
+            Confirmer le recadrage
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── ImageUpload ────────────────────────────────────────────────────────────────
 interface ImageUploadProps {
   images: string[]
   onImagesChange: (images: string[]) => void
@@ -12,100 +203,138 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
   const { uploadImages, isUploadingImages } = useProperties()
   const [dragActive, setDragActive] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Queue of files awaiting crop confirmation
+  const [cropQueue, setCropQueue] = useState<File[]>([])
+  // Files already approved (cropped or passed dimension check)
+  const pendingUpload = useRef<File[]>([])
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true)
-    } else if (e.type === 'dragleave') {
-      setDragActive(false)
-    }
+    if (e.type === 'dragenter' || e.type === 'dragover') setDragActive(true)
+    else if (e.type === 'dragleave') setDragActive(false)
   }, [])
 
-  const validateFiles = (files: File[]): { valid: File[]; errors: string[] } => {
-    const valid: File[] = []
-    const errors: string[] = []
-
-    // Check total number
-    if (images.length + files.length > maxImages) {
-      errors.push(`Maximum ${maxImages} images autorisées`)
-      return { valid, errors }
-    }
-
-    files.forEach((file) => {
-      // Check file type
-      if (!file.type.startsWith('image/')) {
-        errors.push(`${file.name} n'est pas une image`)
-        return
+  const checkDimensions = (file: File): Promise<boolean> =>
+    new Promise((resolve) => {
+      const url = URL.createObjectURL(file)
+      const img = new Image()
+      img.onload = () => {
+        URL.revokeObjectURL(url)
+        resolve(img.width >= MIN_WIDTH && img.height >= MIN_HEIGHT)
       }
-
-      // Check file size (5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        errors.push(`${file.name} est trop volumineux (max 5MB)`)
-        return
-      }
-
-      valid.push(file)
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(false) }
+      img.src = url
     })
 
-    return { valid, errors }
-  }
-
-  const handleFiles = async (files: FileList | null) => {
-    if (!files || files.length === 0) return
-
-    setError(null)
-    const fileArray = Array.from(files)
-
-    const { valid, errors } = validateFiles(fileArray)
-
-    if (errors.length > 0) {
-      setError(errors.join(', '))
-      return
-    }
-
-    if (valid.length === 0) return
-
+  const doUpload = async (files: File[]) => {
+    if (files.length === 0) return
     try {
-      const urls = await uploadImages(valid)
+      const urls = await uploadImages(files)
       onImagesChange([...images, ...urls])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors de l\'upload')
     }
   }
 
-  const handleDrop = useCallback(
-    async (e: React.DragEvent) => {
-      e.preventDefault()
-      e.stopPropagation()
-      setDragActive(false)
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return
+    setError(null)
 
-      const { files } = e.dataTransfer
-      await handleFiles(files)
-    },
-    [images] // eslint-disable-line react-hooks/exhaustive-deps
-  )
+    const fileArray = Array.from(files)
+
+    // Number check
+    if (images.length + fileArray.length > maxImages) {
+      setError(`Maximum ${maxImages} images autorisées`)
+      return
+    }
+
+    // Type + size filter
+    const invalid: string[] = []
+    const valid: File[] = []
+    for (const f of fileArray) {
+      if (!f.type.startsWith('image/')) { invalid.push(`${f.name} n'est pas une image`); continue }
+      if (f.size > 10 * 1024 * 1024) { invalid.push(`${f.name} dépasse 10 Mo`); continue }
+      valid.push(f)
+    }
+    if (invalid.length > 0) { setError(invalid.join(' · ')); return }
+    if (valid.length === 0) return
+
+    // Dimension check — images below threshold go to crop queue
+    const toUpload: File[] = []
+    const toCrop: File[] = []
+    for (const f of valid) {
+      const ok = await checkDimensions(f)
+      if (ok) toUpload.push(f)
+      else toCrop.push(f)
+    }
+
+    pendingUpload.current = toUpload
+    if (toCrop.length > 0) {
+      setCropQueue(toCrop)
+    } else {
+      await doUpload(toUpload)
+      pendingUpload.current = []
+    }
+  }
+
+  // Called when user confirms crop for cropQueue[0]
+  const handleCropConfirm = async (croppedFile: File) => {
+    pendingUpload.current = [...pendingUpload.current, croppedFile]
+    const remaining = cropQueue.slice(1)
+    setCropQueue(remaining)
+    if (remaining.length === 0) {
+      await doUpload(pendingUpload.current)
+      pendingUpload.current = []
+    }
+  }
+
+  const handleCropCancel = () => {
+    // Skip this image, move to next
+    const remaining = cropQueue.slice(1)
+    setCropQueue(remaining)
+    if (remaining.length === 0 && pendingUpload.current.length > 0) {
+      doUpload(pendingUpload.current)
+      pendingUpload.current = []
+    }
+  }
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+    await handleFiles(e.dataTransfer.files)
+  }, [images]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault()
     await handleFiles(e.target.files)
+    // reset so same file can be re-selected
+    e.target.value = ''
   }
 
   const removeImage = (index: number) => {
-    const newImages = images.filter((_, i) => i !== index)
-    onImagesChange(newImages)
+    onImagesChange(images.filter((_, i) => i !== index))
   }
 
   const moveImage = (fromIndex: number, toIndex: number) => {
-    const newImages = [...images]
-    const [removed] = newImages.splice(fromIndex, 1)
-    newImages.splice(toIndex, 0, removed)
-    onImagesChange(newImages)
+    const next = [...images]
+    const [removed] = next.splice(fromIndex, 1)
+    next.splice(toIndex, 0, removed)
+    onImagesChange(next)
   }
 
   return (
     <div>
+      {/* Crop Modal */}
+      {cropQueue.length > 0 && (
+        <ImageCropModal
+          file={cropQueue[0]}
+          onConfirm={handleCropConfirm}
+          onCancel={handleCropCancel}
+        />
+      )}
+
       {/* Upload Area */}
       <div
         onDragEnter={handleDrag}
@@ -115,11 +344,7 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
         className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
           isUploadingImages ? 'opacity-50 pointer-events-none' : ''
         }`}
-        style={
-          dragActive
-            ? { borderColor: '#1a1a2e', background: '#eaf0fb' }
-            : { borderColor: '#ccc9c3' }
-        }
+        style={dragActive ? { borderColor: M.night, background: '#eaf0fb' } : { borderColor: M.borderMid }}
       >
         <input
           type="file"
@@ -130,120 +355,85 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
           disabled={isUploadingImages || images.length >= maxImages}
           className="hidden"
         />
-
         <label
           htmlFor="image-upload"
-          className={`cursor-pointer ${
-            images.length >= maxImages ? 'cursor-not-allowed opacity-50' : ''
-          }`}
+          className={`cursor-pointer block ${images.length >= maxImages ? 'cursor-not-allowed opacity-50' : ''}`}
         >
-          <Upload className="w-12 h-12 mx-auto mb-3" style={{ color: '#9e9b96' }} />
-          <p className="text-lg font-medium mb-2" style={{ color: '#0d0c0a' }}>
-            {isUploadingImages
-              ? 'Upload en cours...'
-              : 'Glissez vos images ici ou cliquez pour sélectionner'}
+          <Upload className="w-12 h-12 mx-auto mb-3" style={{ color: M.inkFaint }} />
+          <p className="text-base font-medium mb-1" style={{ color: M.ink }}>
+            {isUploadingImages ? 'Upload en cours…' : 'Glissez vos images ici ou cliquez pour sélectionner'}
           </p>
-          <p className="text-sm" style={{ color: '#5a5754' }}>
-            PNG, JPG, WebP jusqu'à 5MB • Maximum {maxImages} images
+          <p className="text-sm" style={{ color: M.inkMid }}>
+            JPG, PNG, WebP — max 10 Mo · {images.length}/{maxImages} images
           </p>
-          <p className="text-sm mt-2" style={{ color: '#9e9b96' }}>
-            {images.length}/{maxImages} images uploadées
+          <p className="text-xs mt-1" style={{ color: M.inkFaint }}>
+            Dimensions recommandées : 1200 × 900 px minimum
           </p>
         </label>
 
         {isUploadingImages && (
-          <div
-            className="absolute inset-0 flex items-center justify-center rounded-xl"
-            style={{ background: 'rgba(255,255,255,0.75)' }}
-          >
-            <div
-              className="animate-spin rounded-full h-12 w-12 border-b-2"
-              style={{ borderColor: '#1a1a2e' }}
-            ></div>
+          <div className="absolute inset-0 flex items-center justify-center rounded-xl" style={{ background: 'rgba(255,255,255,0.8)' }}>
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: M.night }} />
           </div>
         )}
       </div>
 
       {/* Error */}
       {error && (
-        <div
-          className="mt-3 p-3 rounded-xl"
-          style={{ background: '#fef2f2', border: '1px solid #fca5a5' }}
-        >
-          <p className="text-sm" style={{ color: '#9b1c1c' }}>{error}</p>
+        <div className="mt-3 p-3 rounded-xl" style={{ background: M.dangerBg, border: '1px solid #fca5a5' }}>
+          <p className="text-sm" style={{ color: M.danger }}>{error}</p>
         </div>
       )}
 
       {/* Preview Grid */}
       {images.length > 0 && (
-        <div className="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="mt-5 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {images.map((url, index) => (
             <div
               key={index}
-              className="relative group aspect-square rounded-xl overflow-hidden"
-              style={{ background: '#f4f2ee' }}
+              className="relative group aspect-[4/3] rounded-xl overflow-hidden"
+              style={{ background: M.muted }}
             >
               <img
                 src={url}
-                alt={`Upload ${index + 1}`}
+                alt={`Photo ${index + 1}`}
                 className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = '/placeholder-image.jpg'
-                }}
+                onError={(e) => { e.currentTarget.style.display = 'none' }}
               />
 
-              {/* Overlay */}
-              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center gap-2">
-                {/* Remove button */}
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center gap-1.5">
                 <button
                   onClick={() => removeImage(index)}
                   className="opacity-0 group-hover:opacity-100 transition-opacity p-2 rounded-full"
-                  style={{ background: '#9b1c1c', color: '#ffffff' }}
+                  style={{ background: M.danger, color: '#fff' }}
                   title="Supprimer"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
-
-                {/* Move left */}
                 {index > 0 && (
                   <button
                     onClick={() => moveImage(index, index - 1)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-2 rounded-full"
-                    style={{ background: '#ffffff', color: '#0d0c0a' }}
-                    title="Déplacer à gauche"
-                  >
-                    ←
-                  </button>
+                    className="opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1.5 rounded-full text-xs font-medium"
+                    style={{ background: '#fff', color: M.ink }}
+                    title="Vers la gauche"
+                  >←</button>
                 )}
-
-                {/* Move right */}
                 {index < images.length - 1 && (
                   <button
                     onClick={() => moveImage(index, index + 1)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-2 rounded-full"
-                    style={{ background: '#ffffff', color: '#0d0c0a' }}
-                    title="Déplacer à droite"
-                  >
-                    →
-                  </button>
+                    className="opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1.5 rounded-full text-xs font-medium"
+                    style={{ background: '#fff', color: M.ink }}
+                    title="Vers la droite"
+                  >→</button>
                 )}
               </div>
 
-              {/* Main image badge */}
               {index === 0 && (
-                <div
-                  className="absolute top-2 left-2 text-xs px-2 py-1 rounded"
-                  style={{ background: '#1a1a2e', color: '#ffffff' }}
-                >
-                  Image principale
+                <div className="absolute top-2 left-2 text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: M.night, color: '#fff' }}>
+                  Principale
                 </div>
               )}
-
-              {/* Number badge */}
-              <div
-                className="absolute bottom-2 right-2 text-xs px-2 py-1 rounded"
-                style={{ background: 'rgba(0,0,0,0.7)', color: '#ffffff' }}
-              >
+              <div className="absolute bottom-2 right-2 text-xs px-1.5 py-0.5 rounded" style={{ background: 'rgba(0,0,0,0.6)', color: '#fff' }}>
                 {index + 1}
               </div>
             </div>
@@ -251,11 +441,10 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
         </div>
       )}
 
-      {/* Help text */}
       {images.length > 0 && (
-        <p className="mt-3 text-sm" style={{ color: '#5a5754' }}>
+        <p className="mt-3 text-sm" style={{ color: M.inkMid }}>
           <ImageIcon className="w-4 h-4 inline mr-1" />
-          La première image sera utilisée comme image principale. Glissez pour réorganiser.
+          La première image est l'image principale. Utilisez les flèches pour réorganiser.
         </p>
       )}
     </div>

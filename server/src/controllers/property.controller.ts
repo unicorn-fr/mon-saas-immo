@@ -772,6 +772,57 @@ class PropertyController {
     }
   }
   /**
+   * GET /api/v1/properties/admin/pending-review
+   * Get all properties pending admin review
+   */
+  async getPendingReviewProperties(req: Request, res: Response, next: NextFunction) {
+    try {
+      const properties = await propertyService.getPendingReviewProperties()
+      return res.status(200).json({ success: true, data: { properties } })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  /**
+   * PATCH /api/v1/properties/:id/approve
+   * Approve a property (admin)
+   */
+  async approveProperty(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params
+      const property = await propertyService.approveProperty(id)
+      return res.status(200).json({ success: true, message: 'Bien approuvé et publié', data: { property } })
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Property not found') {
+        return res.status(404).json({ success: false, message: 'Property not found' })
+      }
+      next(error)
+    }
+  }
+
+  /**
+   * PATCH /api/v1/properties/:id/reject
+   * Reject a property (admin)
+   */
+  async rejectProperty(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params
+      const { reviewNote } = req.body
+      if (!reviewNote) {
+        return res.status(400).json({ success: false, message: 'Une note de refus est requise' })
+      }
+      const property = await propertyService.rejectProperty(id, reviewNote)
+      return res.status(200).json({ success: true, message: 'Bien refusé', data: { property } })
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Property not found') {
+        return res.status(404).json({ success: false, message: 'Property not found' })
+      }
+      next(error)
+    }
+  }
+
+  /**
    * POST /api/v1/properties/:id/verification-document
    * Upload owner verification document (ID or property proof)
    */

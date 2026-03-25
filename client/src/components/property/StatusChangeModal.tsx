@@ -36,6 +36,12 @@ const colorSets = {
     badgeBg: M.ownerLight,
     badgeText: M.owner,
   },
+  amber: {
+    selectedBorder: '#f3c99a',
+    selectedBg: '#fdf5ec',
+    badgeBg: '#fdf5ec',
+    badgeText: '#a0622a',
+  },
   gray: {
     selectedBorder: M.borderMid,
     selectedBg: M.muted,
@@ -152,7 +158,7 @@ export const StatusChangeModal = ({
           <>
             {/* Status Options */}
             <div className="p-6 space-y-3">
-              {PROPERTY_STATUS.map((statusOption) => {
+              {PROPERTY_STATUS.filter((s) => s.value !== 'PENDING_REVIEW').map((statusOption) => {
                 const isSelected = selectedStatus === statusOption.value
                 const isCurrent = currentStatus === statusOption.value
                 const colors = colorSets[statusOption.color as keyof typeof colorSets] || colorSets.gray

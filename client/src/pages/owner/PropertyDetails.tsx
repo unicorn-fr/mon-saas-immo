@@ -101,14 +101,10 @@ export default function PropertyDetails() {
 
   const handlePublish = async () => {
     if (!currentProperty) return
-    if (!currentProperty.ownerIdDocument || !currentProperty.propertyProofDocument) {
-      toast.error('Vous devez fournir les documents de verification avant de publier le bien.')
-      return
-    }
     setIsPublishing(true)
     try {
       await publishProperty(currentProperty.id)
-      toast.success('Bien publié avec succès')
+      toast.success('Bien publié avec succès !')
     } catch (err: any) {
       toast.error(err?.message || 'Erreur lors de la publication')
     } finally {
@@ -204,10 +200,12 @@ export default function PropertyDetails() {
 
   // Status pill styles — Maison palette
   const statusPillStyles: Record<string, React.CSSProperties> = {
-    green:  { background: M.successBg, color: M.success },
-    red:    { background: M.dangerBg,  color: M.danger  },
-    yellow: { background: M.warningBg, color: M.warning },
-    gray:   { background: M.muted,     color: M.inkMid  },
+    green:  { background: M.successBg,   color: M.success },
+    red:    { background: M.dangerBg,    color: M.danger  },
+    yellow: { background: M.warningBg,   color: M.warning },
+    amber:  { background: M.caramelLight, color: '#a0622a' },
+    blue:   { background: M.ownerLight,  color: M.owner   },
+    gray:   { background: M.muted,       color: M.inkMid  },
   }
 
   const getStatusBadge = () => {
@@ -279,7 +277,7 @@ export default function PropertyDetails() {
                     {isPublishing ? 'Publication...' : (
                       <>
                         <CheckCircle className="w-4 h-4" />
-                        Publier
+                        Publier le bien
                       </>
                     )}
                   </button>

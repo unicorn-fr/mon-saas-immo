@@ -66,6 +66,7 @@ import SAMessages from './pages/super-admin/SAMessages'
 import SAAuditLogs from './pages/super-admin/SAAuditLogs'
 import SAContracts from './pages/super-admin/SAContracts'
 import SAUserDetail from './pages/super-admin/SAUserDetail'
+import SAProperties from './pages/super-admin/SAProperties'
 
 // Legal Pages
 import MentionsLegales from './pages/legal/MentionsLegales'
@@ -255,6 +256,7 @@ function AppRoutes() {
           <Route path="contracts" element={<SAContracts />} />
           <Route path="messages" element={<SAMessages />} />
           <Route path="database" element={<SADatabase />} />
+          <Route path="properties" element={<SAProperties />} />
           <Route path="audit" element={<SAAuditLogs />} />
         </Route>
       </Route>

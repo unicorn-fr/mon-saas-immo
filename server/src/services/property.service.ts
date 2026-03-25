@@ -505,64 +505,91 @@ class PropertyService {
   }
 
   /**
-   * Change property status (AVAILABLE, OCCUPIED, DRAFT)
+   * Change property status (owner can set OCCUPIED, DRAFT or AVAILABLE)
    */
   async changePropertyStatus(id: string, ownerId: string, newStatus: PropertyStatus) {
-    const allowedStatuses: PropertyStatus[] = [PropertyStatus.AVAILABLE, PropertyStatus.OCCUPIED, PropertyStatus.DRAFT]
-    if (!allowedStatuses.includes(newStatus as PropertyStatus)) {
-      throw new Error('Invalid status. Allowed: AVAILABLE, OCCUPIED, DRAFT')
+    const ownerAllowedStatuses: PropertyStatus[] = [PropertyStatus.AVAILABLE, PropertyStatus.OCCUPIED, PropertyStatus.DRAFT]
+    if (!ownerAllowedStatuses.includes(newStatus as PropertyStatus)) {
+      throw new Error('Statut invalide.')
     }
 
-    const property = await prisma.property.findUnique({
-      where: { id },
-    })
+    const property = await prisma.property.findUnique({ where: { id } })
 
-    if (!property) {
-      throw new Error('Property not found')
-    }
-
-    if (property.ownerId !== ownerId) {
-      throw new Error('Unauthorized: You do not own this property')
-    }
-
-    const updateData: { status: PropertyStatus; publishedAt?: Date } = { status: newStatus }
-
-    if (newStatus === PropertyStatus.AVAILABLE && !property.publishedAt) {
-      updateData.publishedAt = new Date()
-    }
+    if (!property) throw new Error('Property not found')
+    if (property.ownerId !== ownerId) throw new Error('Unauthorized: You do not own this property')
 
     const updatedProperty = await prisma.property.update({
       where: { id },
-      data: updateData,
+      data: { status: newStatus },
     })
 
     return updatedProperty
   }
 
   /**
-   * Publish property (change status from DRAFT to AVAILABLE)
-   * Requires owner verification documents (ID + property proof)
+   * Publish property directly (DRAFT → AVAILABLE)
    */
   async publishProperty(id: string, ownerId: string) {
     const property = await prisma.property.findUnique({ where: { id } })
 
-    if (!property) {
-      throw new Error('Property not found')
+    if (!property) throw new Error('Property not found')
+    if (property.ownerId !== ownerId) throw new Error('Unauthorized: You do not own this property')
+
+    if (property.status !== PropertyStatus.DRAFT) {
+      throw new Error('Seul un bien en brouillon peut être publié.')
     }
 
-    if (property.ownerId !== ownerId) {
-      throw new Error('Unauthorized: You do not own this property')
-    }
+    return prisma.property.update({
+      where: { id },
+      data: { status: PropertyStatus.AVAILABLE, publishedAt: new Date() },
+    })
+  }
 
-    if (!property.ownerIdDocument) {
-      throw new Error('Vous devez fournir une piece d\'identite en cours de validite avant de publier le bien.')
+  /**
+   * Admin approves a property (PENDING_REVIEW → AVAILABLE)
+   */
+  async approveProperty(id: string) {
+    const property = await prisma.property.findUnique({ where: { id } })
+    if (!property) throw new Error('Property not found')
+    if (property.status !== PropertyStatus.PENDING_REVIEW) {
+      throw new Error('Seul un bien en attente de vérification peut être approuvé.')
     }
+    return prisma.property.update({
+      where: { id },
+      data: {
+        status: PropertyStatus.AVAILABLE,
+        publishedAt: property.publishedAt ?? new Date(),
+        reviewNote: null,
+      },
+    })
+  }
 
-    if (!property.propertyProofDocument) {
-      throw new Error('Vous devez fournir une preuve de propriete (titre de propriete ou taxe fonciere) avant de publier le bien.')
+  /**
+   * Admin rejects a property (PENDING_REVIEW → DRAFT with reviewNote)
+   */
+  async rejectProperty(id: string, reviewNote: string) {
+    const property = await prisma.property.findUnique({ where: { id } })
+    if (!property) throw new Error('Property not found')
+    if (property.status !== PropertyStatus.PENDING_REVIEW) {
+      throw new Error('Seul un bien en attente de vérification peut être refusé.')
     }
+    return prisma.property.update({
+      where: { id },
+      data: { status: PropertyStatus.DRAFT, reviewNote },
+    })
+  }
 
-    return this.changePropertyStatus(id, ownerId, PropertyStatus.AVAILABLE)
+  /**
+   * List properties pending admin review
+   */
+  async getPendingReviewProperties() {
+    return prisma.property.findMany({
+      where: { status: PropertyStatus.PENDING_REVIEW },
+      include: {
+        owner: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
+      },
+      orderBy: { updatedAt: 'asc' }, // oldest first
+    })
   }
 
   /**

@@ -43,6 +43,10 @@ const envSchema = z.object({
   // Firebase Admin (JSON stringifié de la clé de service)
   FIREBASE_SERVICE_ACCOUNT: z.string().optional(),
 
+  // Public URL of this server (used to build absolute file URLs when Cloudinary is not configured)
+  // Example: https://mon-saas-immo.onrender.com
+  SERVER_URL: z.string().optional(),
+
   // Cloudinary — stockage persistant des fichiers (optionnel, fallback disque local)
   CLOUDINARY_URL: z.string().optional(),
   CLOUDINARY_CLOUD_NAME: z.string().optional(),
@@ -100,4 +104,6 @@ export const env = {
   TURNSTILE_SECRET_KEY: parsedEnv.data.TURNSTILE_SECRET_KEY,
 
   FIREBASE_SERVICE_ACCOUNT: parsedEnv.data.FIREBASE_SERVICE_ACCOUNT,
+
+  SERVER_URL: parsedEnv.data.SERVER_URL || '',
 }

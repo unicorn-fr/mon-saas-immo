@@ -28,12 +28,12 @@ const imageFileFilter = (
   }
 }
 
-// Multer upload middleware (images only)
+// Multer upload middleware (images only) — 10MB limit
 export const upload = multer({
   storage,
   fileFilter: imageFileFilter,
   limits: {
-    fileSize: env.MAX_FILE_SIZE, // 5MB default
+    fileSize: 10 * 1024 * 1024, // 10MB
   },
 })
 
@@ -61,7 +61,9 @@ export const saveFile = async (buffer: Buffer, originalname: string, mimeType = 
   const outputFilename = `${Date.now()}-${safeName}`
   const outputPath = path.join(uploadDir, outputFilename)
   fs.writeFileSync(outputPath, buffer)
-  return `/uploads/${outputFilename}`
+  // If SERVER_URL is set, return an absolute URL so cross-origin clients can load the image
+  const base = env.SERVER_URL ? env.SERVER_URL.replace(/\/$/, '') : ''
+  return `${base}/uploads/${outputFilename}`
 }
 
 /**
@@ -85,7 +87,8 @@ const buildWatermark = (imgWidth: number): Buffer => {
 }
 
 /**
- * Process and save uploaded image (watermark applied automatically)
+ * Process and save uploaded image (watermark applied automatically).
+ * Routes to Cloudinary when configured, local disk as fallback.
  */
 export const processImage = async (
   buffer: Buffer,
@@ -104,9 +107,6 @@ export const processImage = async (
     watermark = true,
   } = options
 
-  const outputFilename = `${Date.now()}-${filename.replace(/\s/g, '-')}`
-  const outputPath = path.join(uploadDir, outputFilename)
-
   let pipeline = sharp(buffer).resize(width, height, {
     fit: 'inside',
     withoutEnlargement: true,
@@ -120,9 +120,10 @@ export const processImage = async (
     pipeline = pipeline.composite([{ input: wm, gravity: 'southeast', blend: 'over' }])
   }
 
-  await pipeline.jpeg({ quality }).toFile(outputPath)
-
-  return `/uploads/${outputFilename}`
+  // Process to buffer, then delegate storage (Cloudinary or local disk)
+  const processedBuffer = await pipeline.jpeg({ quality }).toBuffer()
+  const outputFilename = `${Date.now()}-${filename.replace(/\s/g, '-').replace(/\.[^.]+$/, '.jpg')}`
+  return saveFile(processedBuffer, outputFilename, 'image/jpeg')
 }
 
 /**
@@ -148,17 +149,12 @@ export const createThumbnail = async (
   buffer: Buffer,
   filename: string
 ): Promise<string> => {
-  const outputFilename = `thumb-${Date.now()}-${filename.replace(/\s/g, '-')}`
-  const outputPath = path.join(uploadDir, outputFilename)
-
-  await sharp(buffer)
-    .resize(300, 200, {
-      fit: 'cover',
-    })
+  const processedBuffer = await sharp(buffer)
+    .resize(300, 200, { fit: 'cover' })
     .jpeg({ quality: 70 })
-    .toFile(outputPath)
-
-  return `/uploads/${outputFilename}`
+    .toBuffer()
+  const outputFilename = `thumb-${Date.now()}-${filename.replace(/\s/g, '-').replace(/\.[^.]+$/, '.jpg')}`
+  return saveFile(processedBuffer, outputFilename, 'image/jpeg')
 }
 
 /**

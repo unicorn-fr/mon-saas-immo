@@ -99,6 +99,34 @@ router.post(
 )
 
 /**
+ * Admin routes
+ */
+
+// GET /api/v1/properties/admin/pending-review - Get properties pending review
+router.get(
+  '/admin/pending-review',
+  authenticate,
+  authorize('ADMIN', 'SUPER_ADMIN'),
+  propertyController.getPendingReviewProperties.bind(propertyController)
+)
+
+// PATCH /api/v1/properties/:id/approve - Approve property
+router.patch(
+  '/:id/approve',
+  authenticate,
+  authorize('ADMIN', 'SUPER_ADMIN'),
+  propertyController.approveProperty.bind(propertyController)
+)
+
+// PATCH /api/v1/properties/:id/reject - Reject property
+router.patch(
+  '/:id/reject',
+  authenticate,
+  authorize('ADMIN', 'SUPER_ADMIN'),
+  propertyController.rejectProperty.bind(propertyController)
+)
+
+/**
  * Public routes - Optional authentication
  */
 
