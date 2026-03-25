@@ -610,6 +610,40 @@ function StepNav({
   )
 }
 
+// ── FormField — must live outside the page component to keep stable identity ──
+// Defining a component inside another component causes React to remount it on
+// every render (new function reference = new type), which drops focus mid-typing.
+function FormField({
+  value, onChange, label, type = 'text', placeholder = '', required = false,
+}: {
+  value: string
+  onChange: (val: string) => void
+  label: string
+  type?: string
+  placeholder?: string
+  required?: boolean
+}) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+      <label style={{ fontSize: 12, fontWeight: 600, fontFamily: M.body, color: M.inkMid }}>
+        {label}
+        {required && <span style={{ color: M.caramel, marginLeft: 3 }}>*</span>}
+      </label>
+      <input
+        type={type}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        style={{
+          padding: '9px 12px', borderRadius: 8, border: `1px solid ${M.border}`,
+          background: M.inputBg, fontSize: 13, fontFamily: M.body, color: M.ink,
+          outline: 'none',
+        }}
+      />
+    </div>
+  )
+}
+
 // ── Main page ──────────────────────────────────────────────────────────────────
 export default function DossierLocatif() {
   const { user, updateProfile } = useAuth()
@@ -719,31 +753,6 @@ export default function DossierLocatif() {
     (n, c) => n + c.slots.filter(s => documents.find(d => d.docType === s.docType)).length, 0,
   )
   const pct = totalDocs ? Math.round((filledDocs / totalDocs) * 100) : 0
-
-  // ── Input helper ───────────────────────────────────────────────────────────
-  const Field = ({
-    id, label, type = 'text', placeholder = '', required = false,
-  }: {
-    id: keyof typeof form; label: string; type?: string; placeholder?: string; required?: boolean
-  }) => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-      <label style={{ fontSize: 12, fontWeight: 600, fontFamily: M.body, color: M.inkMid }}>
-        {label}
-        {required && <span style={{ color: M.caramel, marginLeft: 3 }}>*</span>}
-      </label>
-      <input
-        type={type}
-        value={form[id]}
-        onChange={e => setForm(p => ({ ...p, [id]: e.target.value }))}
-        placeholder={placeholder}
-        style={{
-          padding: '9px 12px', borderRadius: 8, border: `1px solid ${M.border}`,
-          background: M.inputBg, fontSize: 13, fontFamily: M.body, color: M.ink,
-          outline: 'none',
-        }}
-      />
-    </div>
-  )
 
   // ── Card wrapper ───────────────────────────────────────────────────────────
   const stepCard = (children: React.ReactNode) => (
@@ -942,8 +951,14 @@ export default function DossierLocatif() {
 
               {/* Priority: Prénom + Nom */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ marginBottom: 20 }}>
-                <Field id="firstName"   label="Prénom"          placeholder="Marie"    required />
-                <Field id="lastName"    label="Nom de famille"  placeholder="Martin"   required />
+                <FormField
+                  label="Prénom" value={form.firstName} required placeholder="Marie"
+                  onChange={v => setForm(p => ({ ...p, firstName: v }))}
+                />
+                <FormField
+                  label="Nom de famille" value={form.lastName} required placeholder="Martin"
+                  onChange={v => setForm(p => ({ ...p, lastName: v }))}
+                />
               </div>
 
               {/* Divider */}
@@ -953,9 +968,18 @@ export default function DossierLocatif() {
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Field id="birthDate"   label="Date de naissance"  type="date" />
-                <Field id="birthCity"   label="Ville de naissance" placeholder="Paris" />
-                <Field id="nationality" label="Nationalité"        placeholder="Française" />
+                <FormField
+                  label="Date de naissance" type="date" value={form.birthDate}
+                  onChange={v => setForm(p => ({ ...p, birthDate: v }))}
+                />
+                <FormField
+                  label="Ville de naissance" placeholder="Paris" value={form.birthCity}
+                  onChange={v => setForm(p => ({ ...p, birthCity: v }))}
+                />
+                <FormField
+                  label="Nationalité" placeholder="Française" value={form.nationality}
+                  onChange={v => setForm(p => ({ ...p, nationality: v }))}
+                />
               </div>
 
               {formError && (
