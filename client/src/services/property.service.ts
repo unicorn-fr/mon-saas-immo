@@ -329,7 +329,8 @@ class PropertyService {
 
       const response = await apiClient.post<ApiResponse<{ urls: string[] }>>(
         '/upload/images',
-        formData
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
       )
       return response.data.data.urls
     } catch (error) {
