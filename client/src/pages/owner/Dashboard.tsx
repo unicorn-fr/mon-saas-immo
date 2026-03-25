@@ -4,16 +4,18 @@ import { useProperties } from '../../hooks/useProperties'
 import { useContractStore } from '../../store/contractStore'
 import { useMessages } from '../../hooks/useMessages'
 import { useAuth } from '../../hooks/useAuth'
+import { bookingService } from '../../services/booking.service'
 import { applicationService } from '../../services/application.service'
 import { Layout } from '../../components/layout/Layout'
 import {
   Home, Plus, Eye, MessageSquare, TrendingUp,
   Euro, ArrowRight, MapPin, FileText, PenLine,
   AlertTriangle, CalendarCheck, Users,
-  ClipboardList, Zap, Banknote, ArrowUpRight,
+  ClipboardList, Zap, Banknote, ArrowUpRight, Clock,
 } from 'lucide-react'
 import type { Application } from '../../types/application.types'
-import { format } from 'date-fns'
+import type { Booking } from '../../types/booking.types'
+import { format, isAfter, parseISO } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
@@ -49,6 +51,7 @@ export default function Dashboard() {
   const { contracts, statistics: contractStats, fetchContracts, fetchStatistics: fetchContractStatistics } = useContractStore()
   const { unreadCount, fetchUnreadCount } = useMessages()
   const [pendingApps, setPendingApps] = useState<Application[]>([])
+  const [upcomingVisits, setUpcomingVisits] = useState<Booking[]>([])
 
   useEffect(() => {
     fetchMyStatistics()
@@ -59,6 +62,16 @@ export default function Dashboard() {
     applicationService.list().then((apps) => {
       setPendingApps(apps.filter((a) => a.status === 'PENDING'))
     }).catch(() => {})
+    // Load upcoming confirmed visits
+    const today = new Date().toISOString().split('T')[0]
+    bookingService.getBookings({ status: 'CONFIRMED', dateFrom: today }, { page: 1, limit: 10 })
+      .then(res => {
+        const sorted = res.bookings
+          .filter(b => isAfter(parseISO(b.visitDate), new Date(new Date().setHours(0,0,0,0))))
+          .sort((a, b) => a.visitDate.localeCompare(b.visitDate) || a.visitTime.localeCompare(b.visitTime))
+        setUpcomingVisits(sorted.slice(0, 5))
+      })
+      .catch(() => {})
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const activeContracts   = contracts.filter((c) => c.status === 'ACTIVE')
@@ -406,6 +419,106 @@ export default function Dashboard() {
                       <Plus size={13} /> Ajouter un bien
                     </Link>
                   </div>
+                </div>
+
+                {/* ── Visites à venir ───────────────────────────────────── */}
+                <div style={cardBase}>
+                  <div style={{ padding: '16px 20px', borderBottom: `1px solid ${T.border}` }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.inkFaint }}>
+                          Visites à venir
+                        </span>
+                        {upcomingVisits.length > 0 && (
+                          <span style={{
+                            fontSize: 11, fontWeight: 700, color: '#ffffff',
+                            background: T.owner, borderRadius: 20, padding: '1px 8px',
+                          }}>{upcomingVisits.length}</span>
+                        )}
+                      </div>
+                      <Link to="/bookings/manage" style={{
+                        display: 'flex', alignItems: 'center', gap: 4,
+                        fontSize: 12, fontWeight: 500, color: T.owner, textDecoration: 'none',
+                      }}>
+                        Tout voir <ArrowRight size={12} />
+                      </Link>
+                    </div>
+                    <div style={{ borderTop: `1px solid ${T.border}` }} />
+                  </div>
+
+                  {upcomingVisits.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '36px 24px' }}>
+                      <div style={{
+                        width: 40, height: 40, borderRadius: 12, background: T.bgMuted,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px',
+                      }}>
+                        <CalendarCheck size={18} style={{ color: T.inkFaint }} />
+                      </div>
+                      <p style={{ fontSize: 13, color: T.inkMid }}>Aucune visite confirmée à venir</p>
+                    </div>
+                  ) : (
+                    <div>
+                      {upcomingVisits.map((visit, idx) => {
+                        const isLast = idx === upcomingVisits.length - 1
+                        const visitDateObj = parseISO(visit.visitDate)
+                        const isToday = format(visitDateObj, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
+                        return (
+                          <div key={visit.id} style={{
+                            display: 'flex', alignItems: 'center', gap: 14,
+                            padding: '12px 20px',
+                            borderBottom: isLast ? 'none' : `1px solid ${T.border}`,
+                          }}>
+                            {/* Date badge */}
+                            <div style={{
+                              width: 44, flexShrink: 0, textAlign: 'center',
+                              background: isToday ? T.ownerLight : T.bgMuted,
+                              border: `1px solid ${isToday ? T.ownerBorder : T.border}`,
+                              borderRadius: 10, padding: '6px 4px',
+                            }}>
+                              <p style={{ fontSize: 18, fontWeight: 700, lineHeight: 1, color: isToday ? T.owner : T.ink, fontFamily: "'Cormorant Garamond', serif", margin: 0 }}>
+                                {format(visitDateObj, 'd')}
+                              </p>
+                              <p style={{ fontSize: 10, fontWeight: 600, color: isToday ? T.owner : T.inkFaint, textTransform: 'uppercase', margin: 0 }}>
+                                {format(visitDateObj, 'MMM', { locale: fr })}
+                              </p>
+                            </div>
+
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              {/* Tenant — clickable */}
+                              <button
+                                onClick={() => navigate(`/owner/tenants/${visit.tenantId}`)}
+                                style={{
+                                  background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+                                  fontSize: 14, fontWeight: 600, color: T.owner, textAlign: 'left',
+                                  marginBottom: 2, display: 'block', maxWidth: '100%',
+                                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {visit.tenant.firstName} {visit.tenant.lastName}
+                              </button>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: T.inkMid, flexWrap: 'wrap' }}>
+                                <MapPin size={11} style={{ flexShrink: 0 }} />
+                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  {visit.property.title}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, flexShrink: 0 }}>
+                              <span style={{
+                                display: 'flex', alignItems: 'center', gap: 4,
+                                fontSize: 13, fontWeight: 700, color: T.ink,
+                              }}>
+                                <Clock size={12} style={{ color: T.inkFaint }} />
+                                {visit.visitTime}
+                              </span>
+                              <span style={{ fontSize: 11, color: T.inkFaint }}>{visit.duration} min</span>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* ── Candidatures en attente ────────────────────────────── */}

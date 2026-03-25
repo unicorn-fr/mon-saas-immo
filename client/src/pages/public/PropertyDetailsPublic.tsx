@@ -25,7 +25,6 @@ import { useAuth } from '../../hooks/useAuth'
 import { useFavoriteStore } from '../../store/favoriteStore'
 import { ContactModal } from '../../components/property/ContactModal'
 import { PropertyMap } from '../../components/property/PropertyMap'
-import { BookingModal } from '../../components/booking/BookingModal'
 import { PreQualificationModal } from '../../components/application/PreQualificationModal'
 import { PROPERTY_TYPES, AMENITIES } from '../../types/property.types'
 import { Layout } from '../../components/layout/Layout'
@@ -69,7 +68,6 @@ export default function PropertyDetailsPublic() {
 
   const [selectedImage, setSelectedImage] = useState(0)
   const [showContactModal, setShowContactModal] = useState(false)
-  const [showBookingModal, setShowBookingModal] = useState(false)
   const [showShareMenu, setShowShareMenu] = useState(false)
   const [showPreQualModal, setShowPreQualModal] = useState(false)
   const [myApplication, setMyApplication] = useState<Application | null | undefined>(undefined)
@@ -734,7 +732,7 @@ export default function PropertyDetailsPublic() {
                   <>
                     {myApplication?.status === 'APPROVED' ? (
                       <button
-                        onClick={() => setShowBookingModal(true)}
+                        onClick={() => navigate('/messages', { state: { openWithUserId: property.ownerId } })}
                         className="w-full flex items-center justify-center gap-2 px-4 py-3 mb-3 transition-opacity hover:opacity-90"
                         style={{
                           background: M.tenant,
@@ -748,7 +746,7 @@ export default function PropertyDetailsPublic() {
                         }}
                       >
                         <Calendar className="w-4 h-4" />
-                        Réserver une visite
+                        Contacter pour une visite
                       </button>
                     ) : myApplication?.status === 'PENDING' ? (
                       <div
@@ -854,18 +852,6 @@ export default function PropertyDetailsPublic() {
           propertyTitle={property.title}
           ownerName={property.owner?.firstName + ' ' + property.owner?.lastName}
           ownerId={property.ownerId}
-        />
-
-        {/* Booking Modal */}
-        <BookingModal
-          isOpen={showBookingModal}
-          onClose={() => setShowBookingModal(false)}
-          propertyId={property.id}
-          propertyTitle={property.title}
-          visitDuration={property.visitDuration || 30}
-          onSuccess={() => {
-            navigate('/my-bookings')
-          }}
         />
 
         {/* Pre-Qualification Modal */}

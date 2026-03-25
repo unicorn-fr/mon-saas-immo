@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, User as UserIcon, Loader, Home, FolderOpen, ShieldCheck, X } from 'lucide-react'
+import { ArrowLeft, User as UserIcon, Loader, Home, FolderOpen, ShieldCheck, X, CalendarCheck } from 'lucide-react'
 import { MessageBubble } from './MessageBubble'
 import { MessageInput } from './MessageInput'
 import { CreateLeaseModal } from './CreateLeaseModal'
+import { ProposeRdvModal, type RdvProposal, type RdvSlot } from './ProposeRdvModal'
 import { useMessages } from '../../hooks/useMessages'
 import { useAuth } from '../../hooks/useAuth'
 import { shareApi } from '../../services/dossierService'
+import { bookingService } from '../../services/booking.service'
 import { Conversation } from '../../types/message.types'
+import toast from 'react-hot-toast'
 
 const POLL_INTERVAL = 5000
 
@@ -20,6 +23,7 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
   const { user, isOwner } = useAuth()
   const navigate = useNavigate()
   const [showLeaseModal, setShowLeaseModal] = useState(false)
+  const [showRdvModal, setShowRdvModal] = useState(false)
   const [showSharePrompt, setShowSharePrompt] = useState(false)
   const [isSharing, setIsSharing] = useState(false)
   const {
@@ -121,6 +125,52 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
     }
   }
 
+  const handleSendRdvProposal = async (proposal: RdvProposal) => {
+    if (!conversation?.id) return
+    isNearBottomRef.current = true
+    await sendMessage({
+      conversationId: conversation.id,
+      receiverId: otherUserId,
+      content: JSON.stringify(proposal),
+    })
+  }
+
+  const handleRdvSlotSelect = async (slot: RdvSlot, propertyId: string, duration: number) => {
+    if (!conversation?.id) return
+    try {
+      const booking = await bookingService.createBooking({
+        propertyId,
+        visitDate: slot.date,
+        visitTime: slot.time,
+        duration,
+      })
+      // Find property title from the RDV proposal message
+      const proposalMsg = messages.find(m => {
+        try { const p = JSON.parse(m.content); return p.__rdv === 'proposal' && p.propertyId === propertyId } catch { return false }
+      })
+      const propertyTitle = proposalMsg ? JSON.parse(proposalMsg.content).propertyTitle : propertyId
+
+      isNearBottomRef.current = true
+      await sendMessage({
+        conversationId: conversation.id,
+        receiverId: otherUserId,
+        content: JSON.stringify({
+          __rdv: 'confirmed',
+          propertyId,
+          propertyTitle,
+          date: slot.date,
+          time: slot.time,
+          duration,
+          bookingId: booking.id,
+        }),
+      })
+      toast.success('Visite confirmée ! Rendez-vous ajouté à votre calendrier.')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Erreur lors de la réservation')
+      throw err
+    }
+  }
+
   const handleDeleteMessage = async (messageId: string) => {
     if (window.confirm('Etes-vous sur de vouloir supprimer ce message ?')) {
       try {
@@ -198,6 +248,16 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
               <span className="hidden sm:inline">Voir le dossier</span>
             </button>
             <button
+              onClick={() => setShowRdvModal(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold transition-colors"
+              style={{ background: '#edf7f2', border: '1px solid #9fd4ba', color: '#1b5e3b' }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#d4eedf')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = '#edf7f2')}
+            >
+              <CalendarCheck className="w-4 h-4" />
+              <span className="hidden sm:inline">Proposer un RDV</span>
+            </button>
+            <button
               onClick={() => setShowLeaseModal(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl transition-opacity text-sm font-medium hover:opacity-90"
               style={{ background: '#1a1a2e', color: '#ffffff' }}
@@ -259,6 +319,7 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
                       isOwn={isOwn}
                       showAvatar={showAvatar}
                       onDelete={isOwn ? handleDeleteMessage : undefined}
+                      onRdvSlotSelect={!isOwner ? handleRdvSlotSelect : undefined}
                     />
                   )
                 })}
@@ -273,13 +334,20 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
       <MessageInput onSend={handleSendMessage} isSending={isSending} />
 
       {isOwner && (
-        <CreateLeaseModal
-          isOpen={showLeaseModal}
-          onClose={() => setShowLeaseModal(false)}
-          tenantId={otherUserId}
-          tenantName={`${otherUser.firstName} ${otherUser.lastName}`}
-          onSuccess={(contractId) => navigate(`/contracts/${contractId}`)}
-        />
+        <>
+          <CreateLeaseModal
+            isOpen={showLeaseModal}
+            onClose={() => setShowLeaseModal(false)}
+            tenantId={otherUserId}
+            tenantName={`${otherUser.firstName} ${otherUser.lastName}`}
+            onSuccess={(contractId) => navigate(`/contracts/${contractId}`)}
+          />
+          <ProposeRdvModal
+            isOpen={showRdvModal}
+            onClose={() => setShowRdvModal(false)}
+            onSubmit={handleSendRdvProposal}
+          />
+        </>
       )}
 
       {/* Share dossier prompt — tenant side, first message only */}

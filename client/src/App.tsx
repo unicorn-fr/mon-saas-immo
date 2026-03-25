@@ -25,7 +25,7 @@ import PropertyDetailsPublic from './pages/public/PropertyDetailsPublic'
 // Owner Pages
 import Dashboard from './pages/owner/Dashboard'
 import MyProperties from './pages/owner/MyProperties'
-import CreateProperty from './pages/owner/CreateProperty'
+import CreatePropertyWizard from './pages/owner/CreatePropertyWizard'
 import EditProperty from './pages/owner/EditProperty'
 import PropertyDetails from './pages/owner/PropertyDetails'
 import BookingManagement from './pages/owner/BookingManagement'
@@ -199,7 +199,7 @@ function AppRoutes() {
       <Route element={<ProtectedRoute allowedRoles={['OWNER', 'ADMIN']} />}>
         <Route path="/dashboard/owner" element={<Dashboard />} />
         <Route path="/properties/owner/me" element={<MyProperties />} />
-        <Route path="/properties/new" element={<CreateProperty />} />
+        <Route path="/properties/new" element={<CreatePropertyWizard />} />
         <Route path="/properties/:id/edit" element={<EditProperty />} />
         <Route path="/properties/:id" element={<PropertyDetails />} />
         <Route path="/bookings/manage" element={<BookingManagement />} />
