@@ -174,7 +174,7 @@ async function main() {
       propertyId: PROP1_ID,
       tenantId: tenant.id,
       status: 'PENDING',
-      message: 'Candidature de démonstration',
+      coverLetter: 'Candidature de démonstration',
     },
   })
   console.log('✅ Demo application created: tenant → property1')
