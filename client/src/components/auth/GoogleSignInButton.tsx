@@ -39,6 +39,9 @@ const LABEL_MAP = {
   continue_with: 'Continuer avec Google',
 }
 
+// Module-level guard — ensure initialize() is called exactly once across all instances
+let _gsiInitialized = false
+
 export default function GoogleSignInButton({
   onSuccess,
   onError,
@@ -47,7 +50,6 @@ export default function GoogleSignInButton({
   const buttonRef = useRef<HTMLDivElement>(null)
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
   const [gsiReady, setGsiReady] = useState(false)
-  const initializedRef = useRef(false)
 
   // Keep latest callbacks in refs so the stable handler always calls the current version
   const onSuccessRef = useRef(onSuccess)
@@ -65,18 +67,18 @@ export default function GoogleSignInButton({
   }, [])
 
   useEffect(() => {
-    if (!clientId) return
+    if (!clientId || !buttonRef.current) return
 
     const initializeGoogle = () => {
       if (!window.google || !buttonRef.current) return
-      if (initializedRef.current) return // guard: only initialize once
 
-      initializedRef.current = true
-
-      window.google.accounts.id.initialize({
-        client_id: clientId,
-        callback: handleCredentialResponse,
-      })
+      if (!_gsiInitialized) {
+        _gsiInitialized = true
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleCredentialResponse,
+        })
+      }
 
       window.google.accounts.id.renderButton(buttonRef.current, {
         theme: 'outline',

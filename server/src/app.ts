@@ -47,7 +47,7 @@ app.use(
         fontSrc: ["'self'", 'https:', 'data:'],
         objectSrc: ["'none'"],
         mediaSrc: ["'self'"],
-        frameSrc: ["'none'"],
+        frameSrc: ["'self'", 'https://accounts.google.com'],
         upgradeInsecureRequests: [],
       },
     },
