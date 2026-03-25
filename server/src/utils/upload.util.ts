@@ -107,23 +107,30 @@ export const processImage = async (
     watermark = true,
   } = options
 
-  let pipeline = sharp(buffer).resize(width, height, {
-    fit: 'inside',
-    withoutEnlargement: true,
-  })
+  try {
+    let pipeline = sharp(buffer).resize(width, height, {
+      fit: 'inside',
+      withoutEnlargement: true,
+    })
 
-  if (watermark) {
-    const meta = await sharp(buffer)
-      .resize(width, height, { fit: 'inside', withoutEnlargement: true })
-      .metadata()
-    const wm = buildWatermark(meta.width || width)
-    pipeline = pipeline.composite([{ input: wm, gravity: 'southeast', blend: 'over' }])
+    if (watermark) {
+      const meta = await sharp(buffer)
+        .resize(width, height, { fit: 'inside', withoutEnlargement: true })
+        .metadata()
+      const wm = buildWatermark(meta.width || width)
+      pipeline = pipeline.composite([{ input: wm, gravity: 'southeast', blend: 'over' }])
+    }
+
+    const processedBuffer = await pipeline.jpeg({ quality }).toBuffer()
+    const outputFilename = `${Date.now()}-${filename.replace(/\s/g, '-').replace(/\.[^.]+$/, '.jpg')}`
+    return saveFile(processedBuffer, outputFilename, 'image/jpeg')
+  } catch (err) {
+    // sharp failed (binary mismatch, libvips unavailable) — save raw buffer directly
+    console.error('[processImage] sharp processing failed, saving raw file:', err)
+    const safeName = filename.replace(/\s/g, '-').replace(/[^a-zA-Z0-9._-]/g, '')
+    const outputFilename = `${Date.now()}-${safeName}`
+    return saveFile(buffer, outputFilename, 'image/jpeg')
   }
-
-  // Process to buffer, then delegate storage (Cloudinary or local disk)
-  const processedBuffer = await pipeline.jpeg({ quality }).toBuffer()
-  const outputFilename = `${Date.now()}-${filename.replace(/\s/g, '-').replace(/\.[^.]+$/, '.jpg')}`
-  return saveFile(processedBuffer, outputFilename, 'image/jpeg')
 }
 
 /**
