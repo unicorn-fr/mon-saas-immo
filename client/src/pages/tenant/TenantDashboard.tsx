@@ -1,10 +1,10 @@
 import { useEffect, useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  Calendar, Heart, MessageSquare, Search, Home, Clock, MapPin,
+  Calendar, MessageSquare, Search, Home, Clock, MapPin,
   CheckCircle, FileText, PenTool, FolderOpen, SendHorizonal,
   ChevronRight, ArrowRight, Loader2, Star, CreditCard, Briefcase, Banknote,
-  Building2, Key, TrendingUp,
+  Building2, Key, TrendingUp, ExternalLink,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useBookings } from '../../hooks/useBookings'
@@ -914,9 +914,10 @@ export default function TenantDashboard() {
                     <div>
                       {activeApps.slice(0, 4).map((app, idx) => {
                         const isLast = idx === Math.min(activeApps.length, 4) - 1
+                        const thumb = app.property?.images?.[0]
                         return (
                           <div key={app.id} style={{
-                            display: 'flex', alignItems: 'center', gap: 16,
+                            display: 'flex', alignItems: 'center', gap: 14,
                             padding: '12px 20px',
                             borderBottom: isLast ? 'none' : `1px solid ${T.border}`,
                             transition: 'background 0.15s',
@@ -924,33 +925,75 @@ export default function TenantDashboard() {
                             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = T.bgMuted }}
                             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
                           >
+                            {/* Thumbnail */}
+                            {thumb ? (
+                              <img src={thumb} alt={app.property?.title}
+                                style={{ width: 52, height: 52, borderRadius: 9, objectFit: 'cover', flexShrink: 0, border: `1px solid ${T.border}` }}
+                              />
+                            ) : (
+                              <div style={{
+                                width: 52, height: 52, borderRadius: 9, flexShrink: 0,
+                                background: T.bgMuted, border: `1px solid ${T.border}`,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              }}>
+                                <Home size={18} style={{ color: T.inkFaint }} />
+                              </div>
+                            )}
+
+                            {/* Info */}
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <p style={{ fontSize: 14, fontWeight: 600, color: T.ink, margin: '0 0 3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              <p style={{ fontSize: 14, fontWeight: 600, color: T.ink, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {app.property?.title}
                               </p>
-                              <p style={{ fontSize: 12, color: T.inkMid, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {app.property?.city} · {app.property?.price} €/mois · Score {app.score}/100
+                              <p style={{ fontSize: 12, color: T.inkMid, margin: '0 0 6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                <MapPin size={10} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} />
+                                {app.property?.city} · {app.property?.price} €/mois
                               </p>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                              <span style={{
-                                fontSize: 11, fontWeight: 600,
-                                padding: '3px 12px', borderRadius: 20,
-                                ...(STATUS_STYLE[app.status] || {}),
-                              }}>
-                                {STATUS_LABEL[app.status] || app.status}
-                              </span>
-                              {app.status === 'APPROVED' && (
+                              {/* Quick actions */}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                {app.property?.ownerId && (
+                                  <button
+                                    onClick={() => navigate('/messages', { state: { openWithUserId: app.property?.ownerId } })}
+                                    style={{
+                                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                                      padding: '4px 10px', borderRadius: 6, border: `1px solid ${T.border}`,
+                                      background: T.bgSurface, color: T.inkMid,
+                                      fontSize: 11, fontWeight: 500, cursor: 'pointer',
+                                    }}
+                                  >
+                                    <MessageSquare size={11} /> Contacter
+                                  </button>
+                                )}
                                 <Link to={`/property/${app.property?.id}`} style={{
-                                  display: 'inline-flex', alignItems: 'center',
-                                  padding: '5px 12px', borderRadius: 8,
-                                  background: T.tenant, color: '#ffffff',
-                                  fontSize: 12, fontWeight: 600, textDecoration: 'none',
+                                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                                  padding: '4px 10px', borderRadius: 6, border: `1px solid ${T.border}`,
+                                  background: T.bgSurface, color: T.inkMid,
+                                  fontSize: 11, fontWeight: 500, textDecoration: 'none',
                                 }}>
-                                  Réserver
+                                  <ExternalLink size={11} /> Voir le bien
                                 </Link>
-                              )}
+                                {app.status === 'APPROVED' && (
+                                  <Link to={`/property/${app.property?.id}`} style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                                    padding: '4px 10px', borderRadius: 6, border: 'none',
+                                    background: T.tenant, color: '#ffffff',
+                                    fontSize: 11, fontWeight: 600, textDecoration: 'none',
+                                  }}>
+                                    Réserver
+                                  </Link>
+                                )}
+                              </div>
                             </div>
+
+                            {/* Status badge */}
+                            <span style={{
+                              fontSize: 11, fontWeight: 600, flexShrink: 0,
+                              padding: '3px 12px', borderRadius: 20,
+                              alignSelf: 'flex-start', marginTop: 2,
+                              ...(STATUS_STYLE[app.status] || {}),
+                            }}>
+                              {STATUS_LABEL[app.status] || app.status}
+                            </span>
                           </div>
                         )
                       })}
@@ -1060,107 +1103,6 @@ export default function TenantDashboard() {
 
             {/* ── Right sidebar (1/3) ──────────────────────────────────── */}
             <div className="hidden lg:flex" style={{ flexDirection: 'column', gap: 16 }}>
-
-              {/* Journey checklist */}
-              <div style={{ ...cardBase, padding: 20 }}>
-                <p style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase',
-                  color: T.inkFaint, marginBottom: 16,
-                }}>
-                  <Star size={13} style={{ color: T.caramel }} /> Votre parcours
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  {[
-                    {
-                      done: dossierPercent === 100,
-                      label: 'Dossier complet',
-                      sub: `${dossierPercent}% complété`,
-                      link: '/dossier',
-                    },
-                    {
-                      done: applications.length > 0,
-                      label: 'Postuler à une annonce',
-                      sub: applications.length > 0 ? `${applications.length} candidature${applications.length > 1 ? 's' : ''}` : "Aucune pour l'instant",
-                      link: '/search',
-                    },
-                    {
-                      done: upcomingBookings.length > 0,
-                      label: 'Réserver une visite',
-                      sub: upcomingBookings.length > 0 ? `${upcomingBookings.length} visite${upcomingBookings.length > 1 ? 's' : ''} à venir` : 'Aucune programmée',
-                      link: '/search',
-                    },
-                    {
-                      done: false,
-                      label: 'Obtenir un bail actif',
-                      sub: 'En attente',
-                      link: '/contracts',
-                    },
-                  ].map(({ done, label, sub, link }) => (
-                    <Link key={label} to={link} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, textDecoration: 'none' }}>
-                      <div style={{
-                        flexShrink: 0, marginTop: 2, width: 20, height: 20, borderRadius: '50%',
-                        border: `2px solid ${done ? T.tenant : T.borderMid}`,
-                        background: done ? T.tenant : 'transparent',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        {done && <CheckCircle size={12} style={{ color: '#ffffff' }} />}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{
-                          fontSize: 13, fontWeight: 600, margin: '0 0 2px',
-                          color: done ? T.inkFaint : T.ink,
-                          textDecoration: done ? 'line-through' : 'none',
-                        }}>
-                          {label}
-                        </p>
-                        <p style={{ fontSize: 11, color: T.inkFaint, margin: 0 }}>{sub}</p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-              {/* Quick links */}
-              <div style={{ ...cardBase, padding: 20 }}>
-                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.inkFaint, marginBottom: 16 }}>
-                  Accès rapides
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                  {[
-                    { to: '/my-bookings',     icon: <Calendar size={16} />,       label: 'Mes visites',   badge: upcomingBookings.length },
-                    { to: '/my-applications', icon: <SendHorizonal size={16} />,  label: 'Candidatures',  badge: pendingApps.length },
-                    { to: '/dossier',         icon: <FolderOpen size={16} />,     label: 'Mon dossier',   badge: 0 },
-                    { to: '/messages',        icon: <MessageSquare size={16} />,  label: 'Messages',      badge: unreadCount },
-                    { to: '/favorites',       icon: <Heart size={16} />,          label: 'Favoris',       badge: 0 },
-                    { to: '/contracts',       icon: <FileText size={16} />,       label: 'Contrats',      badge: pendingSignatureContracts.length },
-                  ].map(({ to, icon, label, badge }, idx, arr) => (
-                    <Link key={to} to={to} style={{
-                      display: 'flex', alignItems: 'center', gap: 10,
-                      padding: '10px 0',
-                      borderBottom: idx < arr.length - 1 ? `1px solid ${T.border}` : 'none',
-                      textDecoration: 'none', color: T.ink,
-                      transition: 'color 0.15s',
-                    }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = T.tenant }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = T.ink }}
-                    >
-                      <span style={{ color: 'inherit', display: 'flex', flexShrink: 0 }}>{icon}</span>
-                      <span style={{ flex: 1, fontSize: 13, fontWeight: 500 }}>{label}</span>
-                      {badge > 0 ? (
-                        <span style={{
-                          fontSize: 11, fontWeight: 700, color: '#ffffff',
-                          background: T.tenant, borderRadius: 20, padding: '1px 7px', flexShrink: 0,
-                        }}>
-                          {badge}
-                        </span>
-                      ) : (
-                        <ChevronRight size={14} style={{ color: T.inkFaint, flexShrink: 0 }} />
-                      )}
-                    </Link>
-                  ))}
-                </div>
-              </div>
 
               {/* Search CTA */}
               <div style={{

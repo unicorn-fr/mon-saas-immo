@@ -57,6 +57,7 @@ export interface Application {
     address?: string
     images?: string[]
     selectionCriteria?: SelectionCriteria
+    ownerId?: string
   }
 }
 

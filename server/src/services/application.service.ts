@@ -251,7 +251,7 @@ class ApplicationService {
       where,
       include: {
         tenant: { select: { id: true, firstName: true, lastName: true, email: true, phone: true, profileMeta: true } },
-        property: { select: { id: true, title: true, price: true, city: true, address: true, images: true, selectionCriteria: true } },
+        property: { select: { id: true, title: true, price: true, city: true, address: true, images: true, selectionCriteria: true, ownerId: true } },
       },
       orderBy: [{ score: 'desc' }, { createdAt: 'desc' }],
     })
