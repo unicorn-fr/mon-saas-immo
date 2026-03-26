@@ -8,7 +8,7 @@ import { bookingService } from '../../services/booking.service'
 import { applicationService } from '../../services/application.service'
 import { Layout } from '../../components/layout/Layout'
 import {
-  Home, Plus, Eye, MessageSquare, TrendingUp,
+  Home, Plus, Eye, TrendingUp,
   Euro, ArrowRight, MapPin, FileText, PenLine,
   AlertTriangle, CalendarCheck, Users,
   ClipboardList, Zap, Banknote, ArrowUpRight, Clock,
@@ -49,7 +49,7 @@ export default function Dashboard() {
   const { user } = useAuth()
   const { statistics, myProperties, fetchMyStatistics, fetchMyProperties, isLoading } = useProperties()
   const { contracts, statistics: contractStats, fetchContracts, fetchStatistics: fetchContractStatistics } = useContractStore()
-  const { unreadCount, fetchUnreadCount } = useMessages()
+  const { fetchUnreadCount } = useMessages()
   const [pendingApps, setPendingApps] = useState<Application[]>([])
   const [upcomingVisits, setUpcomingVisits] = useState<Booking[]>([])
 
@@ -700,45 +700,42 @@ export default function Dashboard() {
             {/* ── Right sidebar (1/3) ──────────────────────────────────── */}
             <div className="hidden lg:flex" style={{ flexDirection: 'column', gap: 16 }}>
 
-              {/* Quick actions */}
+              {/* Activity — prominent KPI grid */}
               <div style={{ ...cardBase, padding: 20 }}>
                 <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.inkFaint, marginBottom: 16 }}>
-                  Actions rapides
+                  Activité
                 </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                <div className="grid grid-cols-2 gap-3">
                   {[
-                    { label: 'Ajouter un bien',   icon: <Plus size={18} />,          to: '/properties/new' },
-                    { label: 'Nouveau contrat',    icon: <FileText size={18} />,      to: '/contracts/new' },
-                    { label: 'Gérer les visites',  icon: <CalendarCheck size={18} />, to: '/bookings/manage' },
-                    {
-                      label: 'Messages',
-                      icon: <MessageSquare size={18} />,
-                      to: '/messages',
-                      badge: unreadCount > 0 ? unreadCount : undefined,
-                    },
-                  ].map(({ label, icon, to, badge }, idx, arr) => (
-                    <Link key={label} to={to} style={{
-                      display: 'flex', alignItems: 'center', gap: 12,
-                      padding: '10px 0',
-                      borderBottom: idx < arr.length - 1 ? `1px solid ${T.border}` : 'none',
-                      textDecoration: 'none', color: T.ink, transition: 'color 0.15s',
-                    }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = T.owner }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = T.ink }}
-                    >
-                      <span style={{ color: 'inherit', flexShrink: 0, display: 'flex' }}>{icon}</span>
-                      <span style={{ flex: 1, fontSize: 13, fontWeight: 500 }}>{label}</span>
-                      {badge !== undefined ? (
-                        <span style={{
-                          fontSize: 11, fontWeight: 700, color: '#ffffff',
-                          background: T.owner, borderRadius: 20, padding: '1px 7px', flexShrink: 0,
-                        }}>
-                          {badge}
-                        </span>
-                      ) : (
-                        <ArrowRight size={14} style={{ color: T.inkFaint, flexShrink: 0 }} />
-                      )}
-                    </Link>
+                    { label: 'Vues annonces',   value: statistics?.totalViews   || 0, icon: <Eye size={13} /> },
+                    { label: 'Contacts reçus',  value: statistics?.totalContacts || 0, icon: <Users size={13} /> },
+                    { label: 'Contrats actifs', value: contractStats?.active    || 0, icon: <FileText size={13} /> },
+                    { label: 'En signature',    value: pendingSignatures,              icon: <PenLine size={13} /> },
+                  ].map(({ label, value, icon }) => (
+                    <div key={label} style={{
+                      padding: '14px 12px',
+                      background: T.bgMuted,
+                      borderRadius: 12,
+                      border: `1px solid ${T.border}`,
+                    }}>
+                      <div style={{
+                        width: 24, height: 24, borderRadius: 7, marginBottom: 10,
+                        background: T.ownerLight, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: T.owner,
+                      }}>
+                        {icon}
+                      </div>
+                      <p style={{
+                        fontFamily: "'Cormorant Garamond', Georgia, serif",
+                        fontSize: 40, fontWeight: 700, color: T.ink,
+                        lineHeight: 1, margin: '0 0 5px',
+                      }}>
+                        {value}
+                      </p>
+                      <p style={{ fontSize: 11, color: T.inkMid, margin: 0, lineHeight: 1.4 }}>
+                        {label}
+                      </p>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -811,38 +808,6 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Activity card */}
-              <div style={{ ...cardBase, padding: 20 }}>
-                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.inkFaint, marginBottom: 16 }}>
-                  Activité
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {[
-                    ...(statistics ? [
-                      { label: 'Vues annonces',  value: statistics.totalViews || 0,    icon: <Eye size={14} /> },
-                      { label: 'Contacts reçus', value: statistics.totalContacts || 0, icon: <Users size={14} /> },
-                    ] : []),
-                    ...(contractStats ? [
-                      { label: 'Contrats actifs',  value: contractStats.active || 0, icon: <FileText size={14} /> },
-                      { label: 'En signature',     value: pendingSignatures,          icon: <PenLine size={14} /> },
-                    ] : []),
-                  ].map(({ label, value, icon }) => (
-                    <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{
-                          width: 26, height: 26, borderRadius: 7,
-                          background: T.ownerLight, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          color: T.owner, flexShrink: 0,
-                        }}>
-                          {icon}
-                        </div>
-                        <span style={{ fontSize: 12, color: T.inkMid }}>{label}</span>
-                      </div>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: T.ink }}>{value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
 
             </div>
           </div>
