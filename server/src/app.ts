@@ -48,30 +48,30 @@ app.use(
   })
 )
 
-// CORS — origins from env + hardcoded production fallbacks
-const allowedOrigins = [
-  ...env.CORS_ORIGIN.split(',').map((o) => o.trim()).filter(Boolean),
+// CORS — raw middleware before everything, handles preflight directly
+const allowedOrigins = new Set([
   'https://bailio.fr',
   'https://www.bailio.fr',
-]
+  'http://localhost:5173',
+  'http://localhost:3000',
+  ...env.CORS_ORIGIN.split(',').map((o) => o.trim()).filter(Boolean),
+])
 
-const corsOptions: cors.CorsOptions = {
-  origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl, server-to-server)
-    if (!origin) return callback(null, true)
-    if (allowedOrigins.includes(origin)) return callback(null, true)
-    console.warn(`[CORS] Blocked origin: ${origin}`)
-    callback(null, false)
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  optionsSuccessStatus: 204,
-}
-
-// Handle OPTIONS preflight for all routes first
-app.options('*', cors(corsOptions))
-app.use(cors(corsOptions))
+app.use((req, res, next) => {
+  const origin = req.headers.origin as string | undefined
+  if (origin && allowedOrigins.has(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin)
+    res.setHeader('Vary', 'Origin')
+  }
+  res.setHeader('Access-Control-Allow-Credentials', 'true')
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+  if (req.method === 'OPTIONS') {
+    res.status(204).end()
+    return
+  }
+  next()
+})
 
 // Trust proxy (required for rate-limit behind Render/Vercel reverse proxy)
 if (env.IS_PRODUCTION) {
