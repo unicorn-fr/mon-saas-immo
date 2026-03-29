@@ -3,6 +3,7 @@ import { authController } from '../controllers/auth.controller.js'
 import { authenticate } from '../middlewares/auth.middleware.js'
 import * as totpController from '../controllers/totp.controller.js'
 import { loginRateLimiter, emailRateLimiter } from '../middlewares/security.middleware.js'
+import { requireOpenRegistrations } from '../middlewares/launchMode.middleware.js'
 
 const router = Router()
 
@@ -10,8 +11,8 @@ const router = Router()
  * Public routes
  */
 
-// POST /api/v1/auth/register
-router.post('/register', authController.register.bind(authController))
+// POST /api/v1/auth/register — bloqué en mode waitlist
+router.post('/register', requireOpenRegistrations, authController.register.bind(authController))
 
 // POST /api/v1/auth/login - Login user (brute-force protected: 10 attempts / 15 min)
 router.post('/login', loginRateLimiter, authController.login.bind(authController))
@@ -35,8 +36,8 @@ router.post('/verify-email', authController.verifyEmail.bind(authController))
 // POST /api/v1/auth/reset-password - Reset password with token
 router.post('/reset-password', authController.resetPassword.bind(authController))
 
-// POST /api/v1/auth/google - Google OAuth login
-router.post('/google', authController.googleAuth.bind(authController))
+// POST /api/v1/auth/google - Google OAuth login (bloqué en mode waitlist pour les nouveaux comptes)
+router.post('/google', requireOpenRegistrations, authController.googleAuth.bind(authController))
 
 // POST /api/v1/auth/magic-link — envoie un magic link (5 tentatives / heure)
 router.post('/magic-link', emailRateLimiter, authController.sendMagicLink.bind(authController))

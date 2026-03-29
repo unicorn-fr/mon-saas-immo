@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 import { useEffect } from 'react'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
+import { LaunchGuard } from './components/auth/LaunchGuard'
 import { useAuth } from './hooks/useAuth'
 import { useThemeStore } from './store/themeStore'
 import { ScrollToTop } from './components/ScrollToTop'
@@ -172,9 +173,14 @@ function AppRoutes() {
         path="/login"
         element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
       />
+      {/* /register — bloqué en mode waitlist (LaunchGuard redirige vers /) */}
       <Route
         path="/register"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <Register />}
+        element={
+          isAuthenticated
+            ? <Navigate to="/" replace />
+            : <LaunchGuard><Register /></LaunchGuard>
+        }
       />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
@@ -219,9 +225,12 @@ function AppRoutes() {
         <Route path="/privacy" element={<PrivacyCenter />} />
       </Route>
 
-      {/* Role selection after OAuth */}
+      {/* Role selection after OAuth — bloqué en mode waitlist */}
       <Route element={<ProtectedRoute />}>
-        <Route path="/select-role" element={<SelectRole />} />
+        <Route
+          path="/select-role"
+          element={<LaunchGuard><SelectRole /></LaunchGuard>}
+        />
       </Route>
 
       {/* Protected Routes - All authenticated users */}
