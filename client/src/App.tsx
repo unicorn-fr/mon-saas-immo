@@ -10,6 +10,7 @@ import { ScrollToTop } from './components/ScrollToTop'
 
 // Pages
 import Home from './pages/Home'
+import WaitlistPage from './pages/WaitlistPage'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
@@ -164,7 +165,12 @@ function AppRoutes() {
     <ScrollToTop />
     <Routes>
       {/* Public Routes */}
-      <Route path="/" element={<Home />} />
+      <Route
+        path="/"
+        element={
+          import.meta.env.VITE_LAUNCH_MODE === 'waitlist' ? <WaitlistPage /> : <Home />
+        }
+      />
       <Route path="/search" element={<SearchProperties />} />
       <Route path="/property/:id" element={<PropertyDetailsPublic />} />
 

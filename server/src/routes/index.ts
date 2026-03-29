@@ -31,6 +31,7 @@ import bugsRoutes from './bugs.routes.js'
 import stripeRoutes from './stripe.routes.js'
 import paymentRoutes from './payment.routes.js'
 import dashboardRoutes from './dashboard.routes.js'
+import waitlistRoutes from './waitlist.routes.js'
 
 /**
  * Register all application routes on the Express app.
@@ -44,6 +45,7 @@ import dashboardRoutes from './dashboard.routes.js'
  */
 export function registerRoutes(app: Application, prefix: string): void {
   // ── Public / mixed ──────────────────────────────────────────────────────
+  app.use(`${prefix}/waitlist`, waitlistRoutes)
   app.use(`${prefix}/auth`, authRoutes)
   app.use(`${prefix}/properties`, propertyRoutes)
   app.use(`${prefix}/market`, marketRoutes)
