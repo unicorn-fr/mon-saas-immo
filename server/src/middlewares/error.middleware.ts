@@ -40,10 +40,25 @@ export const errorHandler = (
     }))
   }
 
-  // Prisma Errors
+  // Prisma Errors — differentiated by error code
   else if (err.name === 'PrismaClientKnownRequestError') {
-    statusCode = 400
-    message = 'Database Error'
+    const prismaErr = err as { code?: string }
+    if (prismaErr.code === 'P2002') {
+      // Unique constraint violation
+      statusCode = 409
+      message = 'Cette ressource existe déjà.'
+    } else if (prismaErr.code === 'P2025') {
+      // Record not found
+      statusCode = 404
+      message = 'Ressource introuvable.'
+    } else if (prismaErr.code === 'P2003') {
+      // Foreign key constraint violation
+      statusCode = 409
+      message = 'Référence vers une ressource inexistante.'
+    } else {
+      statusCode = 400
+      message = 'Erreur de base de données.'
+    }
   }
 
   // JWT Errors
@@ -56,7 +71,7 @@ export const errorHandler = (
   }
 
   // Log error always (visible in Render logs)
-  console.error(`❌ [${statusCode}] ${req.method} ${req.path} — ${err.name}: ${err.message}`)
+  console.error(`[error] [${statusCode}] ${req.method} ${req.path} - ${err.name}: ${err.message}`)
   if (env.IS_DEVELOPMENT) console.error(err.stack)
 
   // Send error response

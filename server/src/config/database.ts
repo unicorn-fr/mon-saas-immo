@@ -26,5 +26,5 @@ if (env.IS_DEVELOPMENT) {
  */
 export const disconnectDatabase = async (): Promise<void> => {
   await prisma.$disconnect()
-  console.log('📦 Database disconnected')
+  console.log('[db] Database disconnected')
 }

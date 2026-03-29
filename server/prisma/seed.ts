@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt'
 const prisma = new PrismaClient()
 
 async function main() {
-  console.log('🌱 Seeding database...')
+  console.log('[seed] Seeding database...')
 
   // Create Admin User
   const adminPassword = await bcrypt.hash('admin123', 10)
@@ -20,7 +20,7 @@ async function main() {
       emailVerified: true,
     },
   })
-  console.log('✅ Admin created:', admin.email)
+  console.log('[seed] Admin created:', admin.email)
 
   // Create Owner User
   const ownerPassword = await bcrypt.hash('owner123', 10)
@@ -37,7 +37,7 @@ async function main() {
       emailVerified: true,
     },
   })
-  console.log('✅ Owner created:', owner.email)
+  console.log('[seed] Owner created:', owner.email)
 
   // Create Tenant User
   const tenantPassword = await bcrypt.hash('tenant123', 10)
@@ -54,7 +54,7 @@ async function main() {
       emailVerified: true,
     },
   })
-  console.log('✅ Tenant created:', tenant.email)
+  console.log('[seed] Tenant created:', tenant.email)
 
   // Create Sample Properties (stable IDs so upsert works on re-seed)
   const PROP1_ID = 'seed-property-001'
@@ -92,7 +92,7 @@ async function main() {
       publishedAt: new Date(),
     },
   })
-  console.log('✅ Property 1 created:', property1.title)
+  console.log('[seed] Property 1 created:', property1.title)
 
   const PROP2_ID = 'seed-property-002'
   const property2 = await prisma.property.upsert({
@@ -129,7 +129,7 @@ async function main() {
       publishedAt: new Date(),
     },
   })
-  console.log('✅ Property 2 created:', property2.title)
+  console.log('[seed] Property 2 created:', property2.title)
 
   const PROP3_ID = 'seed-property-003'
   const property3 = await prisma.property.upsert({
@@ -164,7 +164,7 @@ async function main() {
       publishedAt: new Date(),
     },
   })
-  console.log('✅ Property 3 created:', property3.title)
+  console.log('[seed] Property 3 created:', property3.title)
 
   // Demo Application — tenant applies to property1 (allows owner to view tenant dossier)
   await prisma.application.upsert({
@@ -177,7 +177,7 @@ async function main() {
       coverLetter: 'Candidature de démonstration',
     },
   })
-  console.log('✅ Demo application created: tenant → property1')
+  console.log('[seed] Demo application created: tenant -> property1')
 
   // Demo DossierShare — tenant explicitly shares dossier with owner (expires in 1 year)
   await prisma.dossierShare.upsert({
@@ -190,10 +190,10 @@ async function main() {
       expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
     },
   })
-  console.log('✅ Demo DossierShare created: tenant → owner (1 year)')
+  console.log('[seed] Demo DossierShare created: tenant -> owner (1 year)')
 
-  console.log('\n🎉 Seeding completed successfully!')
-  console.log('\n📝 Test Accounts:')
+  console.log('\n[seed] Seeding completed successfully!')
+  console.log('\n[seed] Test Accounts:')
   console.log('Admin: admin@immoparticuliers.fr / admin123')
   console.log('Owner: owner@example.com / owner123')
   console.log('Tenant: tenant@example.com / tenant123')
@@ -201,7 +201,7 @@ async function main() {
 
 main()
   .catch((e) => {
-    console.error('❌ Seeding error:', e)
+    console.error('[seed] Error:', e)
     process.exit(1)
   })
   .finally(async () => {

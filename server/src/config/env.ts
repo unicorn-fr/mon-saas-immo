@@ -52,13 +52,21 @@ const envSchema = z.object({
   CLOUDINARY_CLOUD_NAME: z.string().optional(),
   CLOUDINARY_API_KEY: z.string().optional(),
   CLOUDINARY_API_SECRET: z.string().optional(),
+
+  // Stripe — abonnements et paiements
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  STRIPE_PRO_MONTHLY_PRICE_ID: z.string().optional(),
+  STRIPE_PRO_ANNUAL_PRICE_ID: z.string().optional(),
+  STRIPE_EXPERT_MONTHLY_PRICE_ID: z.string().optional(),
+  STRIPE_EXPERT_ANNUAL_PRICE_ID: z.string().optional(),
 })
 
 // Parse and validate environment variables
 const parsedEnv = envSchema.safeParse(process.env)
 
 if (!parsedEnv.success) {
-  console.error('❌ Invalid environment variables:', parsedEnv.error.flatten().fieldErrors)
+  console.error('[env] Invalid environment variables:', parsedEnv.error.flatten().fieldErrors)
   process.exit(1)
 }
 
@@ -106,4 +114,11 @@ export const env = {
   FIREBASE_SERVICE_ACCOUNT: parsedEnv.data.FIREBASE_SERVICE_ACCOUNT,
 
   SERVER_URL: parsedEnv.data.SERVER_URL || '',
+
+  STRIPE_SECRET_KEY: parsedEnv.data.STRIPE_SECRET_KEY || '',
+  STRIPE_WEBHOOK_SECRET: parsedEnv.data.STRIPE_WEBHOOK_SECRET || '',
+  STRIPE_PRO_MONTHLY_PRICE_ID: parsedEnv.data.STRIPE_PRO_MONTHLY_PRICE_ID || '',
+  STRIPE_PRO_ANNUAL_PRICE_ID: parsedEnv.data.STRIPE_PRO_ANNUAL_PRICE_ID || '',
+  STRIPE_EXPERT_MONTHLY_PRICE_ID: parsedEnv.data.STRIPE_EXPERT_MONTHLY_PRICE_ID || '',
+  STRIPE_EXPERT_ANNUAL_PRICE_ID: parsedEnv.data.STRIPE_EXPERT_ANNUAL_PRICE_ID || '',
 }

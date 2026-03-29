@@ -74,7 +74,46 @@ class DossierService {
       })
     }
 
-    return prisma.tenantDocument.create({ data: { ...data, expiresAt } })
+    const doc = await prisma.tenantDocument.create({ data: { ...data, expiresAt } })
+    await this.recalculateTenantScore(data.userId)
+    return doc
+  }
+
+  /**
+   * Recalcule et persiste le score dossier du locataire (0-100).
+   * Appelé après chaque upload de document.
+   */
+  async recalculateTenantScore(userId: string): Promise<number> {
+    const documents = await prisma.tenantDocument.findMany({
+      where: { userId },
+      select: { category: true, status: true },
+    })
+
+    const weights: Record<string, number> = {
+      IDENTITE:     25,
+      EMPLOI:       20,
+      REVENUS:      30,
+      DOMICILE:     15,
+      GARANTIES:    10,
+    }
+
+    const validatedCategories = new Set(
+      documents
+        .filter((d) => d.status === 'VALIDATED' || d.status === 'UPLOADED')
+        .map((d) => d.category)
+    )
+
+    let score = 0
+    for (const [category, weight] of Object.entries(weights)) {
+      if (validatedCategories.has(category)) score += weight
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { tenantScore: score, tenantScoreAt: new Date() },
+    })
+
+    return score
   }
 
   async reassignDocument(id: string, userId: string, category: string, docType: string) {
@@ -206,7 +245,7 @@ class DossierService {
       const now = new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris' })
       await sendEmail({
         to: tenantEmail,
-        subject: '🔒 Votre dossier locataire a été consulté',
+        subject: 'Votre dossier locataire a été consulté',
         html: `
           <div style="font-family:sans-serif;max-width:560px;margin:auto">
             <h2 style="color:#0f172a">Accès à votre dossier</h2>
