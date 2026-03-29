@@ -32,7 +32,7 @@ const STATUS_STYLE: Record<ApplicationStatus, React.CSSProperties> = {
 }
 
 const SERVER_BASE =
-  (import.meta.env.VITE_API_URL as string | undefined)?.replace('/api/v1', '') ?? 'http://localhost:3000'
+  (import.meta.env.VITE_API_URL as string | undefined)?.replace('/api/v1', '') ?? 'http://localhost:5000'
 
 function ScoreBar({ score }: { score: number }) {
   return (

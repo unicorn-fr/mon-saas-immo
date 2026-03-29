@@ -75,14 +75,12 @@ export const SearchMap = ({
         const icon = L.divIcon({
           className: 'custom-marker',
           html: `
-            <div class="${
+            <div style="${
               isSelected
-                ? 'bg-primary-600 ring-4 ring-primary-200'
-                : 'bg-white border-2 border-primary-600'
-            } rounded-full w-10 h-10 flex items-center justify-center shadow-lg cursor-pointer transform transition-all hover:scale-110">
-              <span class="${
-                isSelected ? 'text-white' : 'text-primary-600'
-              } font-bold text-sm">${property.price}€</span>
+                ? 'background:#1b5e3b;outline:4px solid #9fd4ba;'
+                : 'background:#ffffff;border:2px solid #1b5e3b;'
+            }border-radius:9999px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(13,12,10,0.18);cursor:pointer;transform:scale(1);transition:transform 0.15s;">
+              <span style="color:${isSelected ? '#ffffff' : '#1b5e3b'};font-weight:700;font-size:12px;">${property.price}€</span>
             </div>
           `,
           iconSize: [40, 40],
@@ -110,10 +108,10 @@ export const SearchMap = ({
               ${property.city}
             </p>
             <div class="flex items-center justify-between">
-              <p class="text-lg font-bold text-primary-600">${property.price}€/mois</p>
-              <button 
-                onclick="window.location.href='/property/${property.id}'" 
-                class="text-xs px-3 py-1 bg-primary-600 text-white rounded-xl hover:bg-primary-700"
+              <p style="font-size:16px;font-weight:700;color:#1b5e3b;margin:0;">${property.price}€/mois</p>
+              <button
+                onclick="window.location.href='/property/${property.id}'"
+                style="font-size:11px;padding:4px 12px;background:#1b5e3b;color:#ffffff;border:none;border-radius:8px;cursor:pointer;"
               >
                 Voir
               </button>

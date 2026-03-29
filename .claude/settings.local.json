@@ -86,7 +86,19 @@
       "Bash(npm show @typescript-eslint/parser@8.57.0 peerDependencies)",
       "Bash(npm show serialize-javascript@latest version)",
       "Bash(npm show workbox-build@latest version)",
-      "Bash(npm ls serialize-javascript)"
+      "Bash(npm ls serialize-javascript)",
+      "Bash(xargs sed -i '' 's/ImmoParticuliers/Bailio/g')",
+      "Bash(xargs sed -i '' 's/immoparticuliers\\\\.fr/bailio.fr/g')",
+      "Bash(gh run list --limit 3)",
+      "Bash(pip3 install playwright -q)",
+      "Bash(head -5 grep \"VITE_API\" /Users/enzo/Desktop/Projets/Applications_Web/En_Cours/plateforme-gestion-locative/client/.env*)",
+      "Bash(/tmp/test_public.py:*)",
+      "Bash(DATABASE_URL=\"postgresql://neondb_owner:npg_xcVQtC0oTvE6@ep-young-sky-an6urtxv-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require\" npx prisma db push)",
+      "Bash(DATABASE_URL=\"postgresql://neondb_owner:npg_xcVQtC0oTvE6@ep-young-sky-an6urtxv-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require\" npx prisma db seed)",
+      "Bash(npx prisma:*)",
+      "Bash(chmod +x /Users/enzo/Desktop/Projets/Applications_Web/En_Cours/plateforme-gestion-locative/test-connectivity.sh)",
+      "Bash(find /Users/enzo/Desktop/Projets/Applications_Web/En_Cours/plateforme-gestion-locative/server/src -type f \\\\\\(-name *.ts -o -name *.js \\\\\\))",
+      "Bash(xargs LC_ALL=C grep -lPn [^x00-x7F])"
     ]
   }
 }

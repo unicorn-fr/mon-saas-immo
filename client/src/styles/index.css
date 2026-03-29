@@ -228,11 +228,56 @@
   .border-glow { border: 1px solid var(--border); }
 }
 
+/* ── Mobile Reset — critique pour iOS Safari / Android Chrome ─────────────── */
+@layer base {
+  /* Évite le scroll horizontal global (layout overflow) */
+  html, body {
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Évite le zoom automatique d'iOS sur les inputs (doit être ≥ 16px) */
+  @media (max-width: 767px) {
+    input, textarea, select {
+      font-size: 16px !important;
+    }
+    /* .input override mobile */
+    .input {
+      font-size: 16px !important;
+    }
+  }
+
+  /* Désactiver le callout iOS sur les éléments interactifs */
+  button, a {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+  }
+
+  /* Texte sélectionnable normalement */
+  p, h1, h2, h3, h4, h5, h6, span, label, li {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+}
+
 /* ── Utilities ────────────────────────────────────────────────────────────── */
 @layer utilities {
+  /* Safe area pour les encoches / Dynamic Island */
+  .safe-top    { padding-top: env(safe-area-inset-top); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .safe-left   { padding-left: env(safe-area-inset-left); }
+  .safe-right  { padding-right: env(safe-area-inset-right); }
+  .pb-safe     { padding-bottom: max(env(safe-area-inset-bottom), 0px); }
+  .mb-safe     { margin-bottom: env(safe-area-inset-bottom); }
+
+  /* Scroll iOS fluide */
+  .scroll-touch { -webkit-overflow-scrolling: touch; overflow-y: auto; }
+
   .text-balance    { text-wrap: balance; }
   .font-heading    { font-family: var(--font-display); }
   .font-body       { font-family: var(--font-body); }
+  .scrollbar-none  { -ms-overflow-style: none; scrollbar-width: none; }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
   .scrollbar-hide  { -ms-overflow-style: none; scrollbar-width: none; }
   .scrollbar-hide::-webkit-scrollbar { display: none; }
 

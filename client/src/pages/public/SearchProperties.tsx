@@ -368,7 +368,7 @@ export default function SearchProperties() {
               {!isLoading && properties.length > 0 && (
                 <>
                   {viewMode === 'map' ? (
-                    <div className="h-[calc(100vh-280px)] overflow-hidden" style={{
+                    <div className="h-[50dvh] sm:h-[calc(100vh-280px)] overflow-hidden" style={{
                       borderRadius: 12,
                       border: `1px solid ${M.border}`,
                     }}>

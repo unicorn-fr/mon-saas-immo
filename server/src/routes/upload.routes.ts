@@ -38,7 +38,7 @@ router.post(
 // POST /api/v1/upload/images - Upload multiple images (max 10)
 router.post(
   '/images',
-  (req, _res, next) => {
+  (req: Request, _res: Response, next: NextFunction) => {
     console.log(`[upload/images] incoming — content-type: ${req.headers['content-type']?.slice(0, 80)} user: ${(req as any).user?.id ?? 'not-authed-yet'}`)
     next()
   },

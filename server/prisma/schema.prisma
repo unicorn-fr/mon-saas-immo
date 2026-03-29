@@ -108,6 +108,10 @@ model User {
   phoneVerified     Boolean   @default(false)
   phoneVerifiedAt   DateTime?
 
+  // Dossier locataire — score calculé à chaque upload de document
+  tenantScore       Int?      // score global du dossier (0-100)
+  tenantScoreAt     DateTime? // dernière mise à jour du score
+
   // Trust & Anti-Fraud
   trustScore        Int       @default(50)   // 0-100 : calculé dynamiquement
   isVerifiedOwner   Boolean   @default(false) // Vérifié manuellement par admin (badge premium)
@@ -143,6 +147,7 @@ model User {
   dossierSharesReceived DossierShare[]        @relation("ShareReceivedBy")
   fraudReportsFiled     FraudReport[]         @relation("FraudReporter")
   fraudReportsReceived  FraudReport[]         @relation("FraudTarget")
+  subscription          Subscription?
 
   @@index([email])
   @@index([role])
@@ -258,6 +263,9 @@ model Property {
   @@index([type])
   @@index([price])
   @@index([createdAt])
+  @@index([ownerId, status])     // Dashboard propriétaire
+  @@index([city, status])        // Recherche par ville
+  @@index([status, createdAt])   // Listing public trié
   @@map("properties")
 }
 
@@ -358,6 +366,7 @@ model Message {
   @@index([receiverId])
   @@index([isRead])
   @@index([createdAt])
+  @@index([conversationId, createdAt])  // Chargement conversation
   @@map("messages")
 }
 
@@ -407,6 +416,7 @@ model Contract {
 
   // Relations
   documents   ContractDocument[]
+  payments    Payment[]
 
   @@index([propertyId])
   @@index([tenantId])
@@ -624,6 +634,9 @@ model Application {
   @@index([tenantId])
   @@index([status])
   @@index([score])
+  @@index([propertyId, status])  // CRM candidatures
+  @@index([tenantId, status])    // Dashboard locataire
+  @@index([createdAt])           // Tri par date
   @@map("applications")
 }
 
@@ -711,4 +724,79 @@ model AuditLog {
   @@index([createdAt])
   @@index([severity])
   @@map("audit_logs")
+}
+
+// ============================================
+// ABONNEMENTS STRIPE
+// ============================================
+
+enum PlanType {
+  FREE
+  PRO
+  EXPERT
+}
+
+enum BillingCycle {
+  MONTHLY
+  ANNUAL
+}
+
+enum SubStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  UNPAID
+}
+
+model Subscription {
+  id                   String       @id @default(cuid())
+  userId               String       @unique
+  user                 User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId     String       @unique
+  stripeSubscriptionId String?      @unique
+  plan                 PlanType     @default(FREE)
+  billingCycle         BillingCycle @default(MONTHLY)
+  status               SubStatus    @default(ACTIVE)
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean      @default(false)
+  trialEndsAt          DateTime?
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  @@index([stripeCustomerId])
+  @@map("subscriptions")
+}
+
+// ============================================
+// PAIEMENTS DE LOYER + QUITTANCES
+// ============================================
+
+enum PaymentStatus {
+  PENDING   // loyer attendu, non payé
+  PAID      // payé, quittance générée
+  LATE      // en retard (dueDate dépassée)
+  WAIVED    // exonéré
+}
+
+model Payment {
+  id                  String        @id @default(cuid())
+  contractId          String
+  contract            Contract      @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  amount              Float         // loyer en euros
+  charges             Float         @default(0)
+  dueDate             DateTime      // date d'échéance
+  paidDate            DateTime?     // null = non payé
+  status              PaymentStatus @default(PENDING)
+  month               Int           // 1-12
+  year                Int
+  receiptCloudinaryId String?       // public_id Cloudinary du PDF quittance
+  notes               String?       @db.Text
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  @@unique([contractId, month, year])
+  @@index([contractId, status])
+  @@index([dueDate, status])
+  @@map("payments")
 }

@@ -55,3 +55,17 @@ client/dist/
 client/.cache/
 **/sw.js
 **/workbox-*.js
+
+# Fichiers de session / état temporaire (générés par les outils)
+engine_audit.json
+engine_status.json
+onboarding_logic_state.json
+onboarding_master_state.json
+system_evolution.json
+visit_flow_state.json
+progress.txt
+tests.json
+
+# Railway / Vercel local cache
+.railway/
+.vercel/

@@ -1,5 +1,6 @@
 import { Conversation, Message } from '@prisma/client'
 import { prisma } from '../config/database.js'
+import { sseManager } from '../lib/sseManager.js'
 
 interface CreateConversationInput {
   user1Id: string
@@ -211,6 +212,15 @@ class MessageService {
           },
         },
       },
+    })
+
+    // Notifier le destinataire en temps réel via SSE
+    sseManager.send(actualReceiverId, 'new_message', {
+      id: message.id,
+      conversationId: message.conversationId,
+      senderId: message.senderId,
+      content: message.content,
+      createdAt: message.createdAt,
     })
 
     // Update conversation metadata

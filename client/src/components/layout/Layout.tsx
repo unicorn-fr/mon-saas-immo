@@ -3,6 +3,7 @@ import { Header } from './Header'
 import Footer from './Footer'
 import { OwnerSidebar } from './OwnerSidebar'
 import { TenantSidebar } from './TenantSidebar'
+import { MobileBottomNav } from './MobileBottomNav'
 import { useAuth } from '../../hooks/useAuth'
 import { OnboardingModal, useOnboarding } from '../onboarding/OnboardingModal'
 import { BugReportButton } from '../BugReportButton'
@@ -57,10 +58,15 @@ export const Layout = ({ children, showHeader = true, showFooter }: LayoutProps)
       {/* Colonne droite */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {showHeader && <Header />}
-        <main id="main-content" className="flex-1 overflow-y-auto">
+        <main id="main-content" className="flex-1 overflow-y-auto pb-16 md:pb-0">
           {children}
         </main>
       </div>
+
+      {/* Bottom nav iOS-style — mobile uniquement */}
+      {(user?.role === 'OWNER' || user?.role === 'TENANT') && (
+        <MobileBottomNav role={user.role as 'OWNER' | 'TENANT'} />
+      )}
 
       {/* Onboarding — premier accès */}
       {showOnboarding && user && (user.role === 'OWNER' || user.role === 'TENANT') && (

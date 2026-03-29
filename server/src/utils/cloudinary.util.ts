@@ -108,6 +108,59 @@ export async function deleteFromCloudinary(secureUrl: string): Promise<void> {
 }
 
 /**
+ * Generate a signed URL for a private Cloudinary asset.
+ * Expires after 1 hour.
+ */
+export function generateSignedUrl(publicId: string): string {
+  configure()
+  return cloudinary.url(publicId, {
+    type: 'authenticated',
+    sign_url: true,
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+    secure: true,
+  })
+}
+
+/**
+ * Upload a Buffer to Cloudinary with custom options.
+ * Returns the public_id.
+ */
+export async function uploadBufferToCloudinary(
+  buffer: Buffer,
+  originalname: string,
+  opts: {
+    folder?: string
+    resource_type?: 'raw' | 'image' | 'video' | 'auto'
+    type?: 'upload' | 'private' | 'authenticated'
+    format?: string
+  } = {}
+): Promise<string> {
+  configure()
+  if (!_configured) throw new Error('Cloudinary non configuré')
+
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: opts.folder ?? 'bailio',
+        resource_type: opts.resource_type ?? 'auto',
+        type: opts.type ?? 'upload',
+        format: opts.format,
+        use_filename: false,
+        unique_filename: true,
+        overwrite: false,
+      },
+      (err, result) => {
+        if (err) return reject(new Error(`Upload échoué: ${err.message}`))
+        if (!result?.public_id) return reject(new Error('Cloudinary n\'a pas retourné de public_id'))
+        console.log('[Cloudinary] uploadBuffer OK:', result.public_id)
+        resolve(result.public_id)
+      }
+    )
+    stream.end(buffer)
+  })
+}
+
+/**
  * Fetch a file from a remote URL and return its Buffer.
  * Used by watermark.service when fileUrl is a Cloudinary URL.
  */

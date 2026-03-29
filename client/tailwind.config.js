@@ -7,6 +7,9 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      screens: {
+        'xs': '375px', // iPhone SE et petits Android
+      },
       colors: {
         // ── Primary : Blue-500 / Navy (Bleu ardoise institutionnel) ──
         primary: {

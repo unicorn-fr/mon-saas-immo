@@ -192,7 +192,7 @@ export default function TenantDashboard() {
                 </p>
               </div>
 
-              <div style={{ padding: '24px 28px' }}>
+              <div className="p-4 sm:p-7">
 
                 {/* Propriété + adresse */}
                 <div style={{ marginBottom: 24 }}>
@@ -212,16 +212,16 @@ export default function TenantDashboard() {
                 </div>
 
                 {/* KPI row */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: 1,
-                  background: 'rgba(255,255,255,0.06)',
-                  borderRadius: 12,
-                  overflow: 'hidden',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  marginBottom: 24,
-                }}>
+                <div
+                  className="grid grid-cols-1 xs:grid-cols-3"
+                  style={{
+                    gap: 1,
+                    background: 'rgba(255,255,255,0.06)',
+                    borderRadius: 12,
+                    overflow: 'hidden',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    marginBottom: 24,
+                  }}>
                   {/* Prochain paiement */}
                   <div style={{ padding: '18px 20px' }}>
                     <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 5 }}>

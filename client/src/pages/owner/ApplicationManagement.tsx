@@ -19,7 +19,7 @@ import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
 const SERVER_BASE =
-  (import.meta.env.VITE_API_URL as string | undefined)?.replace('/api/v1', '') ?? 'http://localhost:3000'
+  (import.meta.env.VITE_API_URL as string | undefined)?.replace('/api/v1', '') ?? 'http://localhost:5000'
 
 // ─── Maison tokens ────────────────────────────────────────────────────────────
 
@@ -556,7 +556,7 @@ export default function ApplicationManagement() {
         />
       )}
       <div
-        className="min-h-screen p-6 lg:p-8"
+        className="min-h-screen px-4 py-6 sm:px-6 lg:px-8 lg:py-8"
         style={{ background: M.bg, fontFamily: "'DM Sans', system-ui, sans-serif" }}
       >
         <div className="max-w-4xl mx-auto">
@@ -605,7 +605,7 @@ export default function ApplicationManagement() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="grid grid-cols-1 xs:grid-cols-3 gap-3 mb-6">
             {[
               {
                 label: 'En attente',

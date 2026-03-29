@@ -737,7 +737,7 @@ class AuthService {
         role: true, avatar: true, phone: true, bio: true,
         emailVerified: true, phoneVerified: true,
         birthDate: true, birthCity: true, nationality: true,
-        nationalNumber: true, documentNumber: true, documentExpiry: true,
+        documentExpiry: true,
         profileMeta: true,
         createdAt: true, updatedAt: true,
       },

@@ -1,0 +1,26 @@
+# BAILIO — JOURNAL RESPONSIVE MOBILE
+# Démarré le : 2026-03-28
+
+## COMPOSANTS TRAITÉS
+[ ] Navigation / Sidebar
+[ ] Dashboard Propriétaire
+[ ] Dashboard Locataire
+[ ] Recherche de biens + Carte
+[ ] Candidatures Kanban
+[ ] Messagerie
+[ ] Dossier locatif
+[ ] Contrats & Signature
+[ ] État des lieux
+[ ] Formulaires (connexion, inscription, création bien)
+[ ] Page Pricing
+[ ] Super Admin
+
+## BREAKPOINTS CIBLES
+- xs : 0–375px (iPhone SE, petits Android)
+- sm : 376–640px (iPhone 14, Galaxy S)
+- md : 641–768px (iPad mini, tablettes)
+- lg : 769–1024px (iPad, tablettes larges)
+- xl : 1025px+ (Desktop)
+
+## RÈGLES APPLIQUÉES
+(remplir au fur et à mesure)

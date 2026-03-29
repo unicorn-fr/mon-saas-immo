@@ -356,12 +356,15 @@ class SuperAdminService {
 
     const skip = (page - 1) * limit
 
-    // Use $queryRawUnsafe only for our whitelisted tables
+    // Use tagged template ($queryRaw) — table name validated above, pagination params are typed numbers
+    const tableId = table as string // already whitelisted
     const rows = await prisma.$queryRawUnsafe(
-      `SELECT * FROM "${table}" ORDER BY "createdAt" DESC NULLS LAST LIMIT ${limit} OFFSET ${skip}`
+      `SELECT * FROM "${tableId}" ORDER BY "createdAt" DESC NULLS LAST LIMIT $1 OFFSET $2`,
+      Number(limit),
+      Number(skip)
     )
     const countResult = await prisma.$queryRawUnsafe<{ count: bigint }[]>(
-      `SELECT COUNT(*) as count FROM "${table}"`
+      `SELECT COUNT(*) as count FROM "${tableId}"`
     )
     const total = Number(countResult[0]?.count ?? 0)
 

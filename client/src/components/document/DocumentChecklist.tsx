@@ -393,7 +393,7 @@ export const DocumentChecklist = ({
                       )
                     ) : (
                       <a
-                        href={doc.fileUrl.startsWith('http') ? doc.fileUrl : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}${doc.fileUrl}`}
+                        href={doc.fileUrl.startsWith('http') ? doc.fileUrl : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}${doc.fileUrl}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-2 rounded-xl transition-colors"

@@ -12,7 +12,8 @@ import { bookingService } from '../../services/booking.service'
 import { Conversation } from '../../types/message.types'
 import toast from 'react-hot-toast'
 
-const POLL_INTERVAL = 5000
+// SSE replaces polling — kept for fallback reference only
+// const POLL_INTERVAL = 5000
 
 interface ChatWindowProps {
   conversation: Conversation
@@ -65,12 +66,35 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
     }
   }, [conversation?.id, fetchMessages])
 
+  // SSE — connexion temps réel (remplace le polling 5s)
   useEffect(() => {
     if (!conversation?.id) return
-    const interval = setInterval(() => {
-      pollMessages(conversation.id)
-    }, POLL_INTERVAL)
-    return () => clearInterval(interval)
+
+    const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? ''
+    const eventSource = new EventSource(`${API_URL}/messages/stream`, {
+      withCredentials: true,
+    })
+
+    eventSource.addEventListener('new_message', (e: MessageEvent) => {
+      const newMsg = JSON.parse(e.data as string) as {
+        conversationId: string
+        id: string
+        senderId: string
+        content: string
+        createdAt: string
+      }
+      if (newMsg.conversationId === conversation.id) {
+        // Déclenche un re-fetch léger pour récupérer le message complet
+        pollMessages(conversation.id)
+      }
+    })
+
+    eventSource.onerror = () => {
+      // La reconnexion automatique est gérée par le navigateur (EventSource)
+      console.warn('[SSE] Connexion perdue, reconnexion automatique...')
+    }
+
+    return () => eventSource.close()
   }, [conversation?.id, pollMessages])
 
   useEffect(() => {

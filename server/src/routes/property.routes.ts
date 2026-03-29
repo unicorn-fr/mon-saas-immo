@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { propertyController } from '../controllers/property.controller.js'
 import { authenticate, authorize, optionalAuthenticate } from '../middlewares/auth.middleware.js'
+import { checkPropertyLimit } from '../middlewares/planGate.middleware.js'
 import { uploadFile } from '../utils/upload.util.js'
 
 const router = Router()
@@ -25,11 +26,12 @@ router.get('/:id', propertyController.getPropertyById.bind(propertyController))
  * Protected routes - Owner only
  */
 
-// POST /api/v1/properties - Create property
+// POST /api/v1/properties - Create property (limité par plan)
 router.post(
   '/',
   authenticate,
   authorize('OWNER'),
+  checkPropertyLimit,
   propertyController.createProperty.bind(propertyController)
 )
 

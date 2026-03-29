@@ -172,7 +172,7 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-8">
 
           {/* ── Page header ─────────────────────────────────────────────── */}
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 32 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 32 }}>
             <div>
               <p style={{ fontSize: 13, color: T.inkFaint, fontWeight: 400, marginBottom: 4, textTransform: 'capitalize' }}>
                 {todayLabel}
@@ -180,7 +180,7 @@ export default function Dashboard() {
               <h1 style={{
                 fontFamily: "'Cormorant Garamond', Georgia, serif",
                 fontWeight: 700, fontStyle: 'italic',
-                fontSize: 52, color: T.ink, lineHeight: 1.05, margin: 0,
+                fontSize: 'clamp(32px, 6vw, 52px)', color: T.ink, lineHeight: 1.05, margin: 0,
               }}>
                 Bonjour, {user?.firstName}
               </h1>

@@ -90,7 +90,7 @@ export const Calendar = ({
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: '#0d0c0a' }}>
-          <CalendarIcon className="w-5 h-5 text-primary-600" />
+          <CalendarIcon className="w-5 h-5" style={{ color: '#1b5e3b' }} />
           {format(currentMonth, 'MMMM yyyy', { locale: fr })}
         </h3>
 
@@ -214,7 +214,7 @@ export const Calendar = ({
           <span>Annulée</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-primary-50 border border-primary-300 rounded"></div>
+          <div className="w-3 h-3 rounded" style={{ background: '#eaf0fb', border: '1px solid #b8ccf0' }}></div>
           <span>Aujourd'hui</span>
         </div>
       </div>
