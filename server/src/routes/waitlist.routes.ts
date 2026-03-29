@@ -1,15 +1,19 @@
 import { Router } from 'express'
-import { waitlistController } from '../controllers/waitlist.controller.js'
+import { waitlistController, requireNotifySecret } from '../controllers/waitlist.controller.js'
 
 const router = Router()
 
-// POST /api/v1/waitlist/join — public
+// ── Public ────────────────────────────────────────────────────────────────────
 router.post('/join', waitlistController.join)
-
-// GET /api/v1/waitlist/count — public
 router.get('/count', waitlistController.count)
 
-// POST /api/v1/waitlist/notify-all — protected (Authorization: Bearer <NOTIFY_SECRET>)
-router.post('/notify-all', waitlistController.notifyAll)
+// ── Admin (Bearer: NOTIFY_SECRET) ─────────────────────────────────────────────
+router.use('/admin', requireNotifySecret)
+router.get('/admin/stats',        waitlistController.stats)
+router.get('/admin/list',         waitlistController.list)
+router.get('/admin/export',       waitlistController.exportCsv)
+router.post('/admin/add',         waitlistController.addManual)
+router.delete('/admin/:id',       waitlistController.deleteEntry)
+router.post('/notify-all',        requireNotifySecret, waitlistController.notifyAll)
 
 export default router

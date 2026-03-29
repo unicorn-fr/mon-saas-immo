@@ -57,6 +57,7 @@ import EtatDesLieux from './pages/contracts/EtatDesLieux'
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard'
 import UsersManagement from './pages/admin/UsersManagement'
+import WaitlistAdmin from './pages/admin/WaitlistAdmin'
 
 // Super Admin Pages — Cerveau Central
 import SuperAdminLayout from './pages/super-admin/SuperAdminLayout'
@@ -253,6 +254,9 @@ function AppRoutes() {
       <Route element={<ProtectedRoute allowedRoles={['OWNER', 'ADMIN']} />}>
         <Route path="/contracts/new" element={<CreateContract />} />
       </Route>
+
+      {/* Waitlist admin — public route, protégé par ?secret= côté composant */}
+      <Route path="/admin/waitlist" element={<WaitlistAdmin />} />
 
       {/* Protected Routes - Admin Dashboard */}
       <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN']} />}>
