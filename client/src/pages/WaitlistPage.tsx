@@ -167,7 +167,7 @@ export default function WaitlistPage() {
         </svg>
       ),
       title: 'Zéro commission',
-      desc: 'Aucun intermédiaire. Aucun honoraire d'agence.',
+      desc: "Aucun intermédiaire. Aucun honoraire d'agence.",
     },
   ]
 
