@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Plateforme de gestion locative entre particuliers",
   "scripts": {
-    "start": "npm run start --prefix server",
-    "build": "npm install --prefix server && npm run build --prefix server",
+    "start": "node server/dist/server.js",
+    "build": "npm install --prefix server && npm run build --prefix server && cd server && npx prisma db push --accept-data-loss",
     "railway:start": "npm run railway:start --prefix server",
     "dev": "(cd server && npm run dev) & (cd client && npm run dev)",
     "dev:server": "cd server && npm run dev",
