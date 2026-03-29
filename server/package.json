@@ -10,13 +10,13 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "prisma generate && tsc",
-    "start": "prisma db push --accept-data-loss && prisma db seed && node dist/server.js",
+    "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "prisma:seed": "tsx prisma/seed.ts",
-    "railway:start": "npx prisma migrate deploy && npm run build && npm start",
+    "railway:start": "npx prisma migrate deploy && node dist/server.js",
     "lint": "eslint . --ext .ts",
     "type-check": "tsc --noEmit"
   },
