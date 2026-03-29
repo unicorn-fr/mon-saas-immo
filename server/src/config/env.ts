@@ -60,6 +60,10 @@ const envSchema = z.object({
   STRIPE_PRO_ANNUAL_PRICE_ID: z.string().optional(),
   STRIPE_EXPERT_MONTHLY_PRICE_ID: z.string().optional(),
   STRIPE_EXPERT_ANNUAL_PRICE_ID: z.string().optional(),
+
+  // Waitlist
+  NOTIFY_SECRET: z.string().optional(),
+  LAUNCH_DATE: z.string().optional(),
 })
 
 // Parse and validate environment variables
@@ -121,4 +125,7 @@ export const env = {
   STRIPE_PRO_ANNUAL_PRICE_ID: parsedEnv.data.STRIPE_PRO_ANNUAL_PRICE_ID || '',
   STRIPE_EXPERT_MONTHLY_PRICE_ID: parsedEnv.data.STRIPE_EXPERT_MONTHLY_PRICE_ID || '',
   STRIPE_EXPERT_ANNUAL_PRICE_ID: parsedEnv.data.STRIPE_EXPERT_ANNUAL_PRICE_ID || '',
+
+  NOTIFY_SECRET: parsedEnv.data.NOTIFY_SECRET || '',
+  LAUNCH_DATE: parsedEnv.data.LAUNCH_DATE || '2026-06-01T00:00:00Z',
 }
