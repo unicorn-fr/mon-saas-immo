@@ -48,28 +48,30 @@ app.use(
   })
 )
 
-// CORS — support comma-separated list of origins (e.g. "https://bailio.vercel.app,http://localhost:5173")
-const allowedOrigins = env.CORS_ORIGIN
-  .split(',')
-  .map((o) => o.trim())
-  .filter(Boolean)
+// CORS — origins from env + hardcoded production fallbacks
+const allowedOrigins = [
+  ...env.CORS_ORIGIN.split(',').map((o) => o.trim()).filter(Boolean),
+  'https://bailio.fr',
+  'https://www.bailio.fr',
+]
 
-app.use(
-  cors({
-    origin: env.IS_PRODUCTION
-      ? (origin, callback) => {
-          if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true)
-          } else {
-            callback(new Error(`CORS: origin ${origin} not allowed`))
-          }
-        }
-      : true,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  })
-)
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, server-to-server)
+    if (!origin) return callback(null, true)
+    if (allowedOrigins.includes(origin)) return callback(null, true)
+    console.warn(`[CORS] Blocked origin: ${origin}`)
+    callback(null, false)
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 204,
+}
+
+// Handle OPTIONS preflight for all routes first
+app.options('*', cors(corsOptions))
+app.use(cors(corsOptions))
 
 // Trust proxy (required for rate-limit behind Render/Vercel reverse proxy)
 if (env.IS_PRODUCTION) {
