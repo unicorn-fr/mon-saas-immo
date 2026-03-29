@@ -70,62 +70,106 @@ const envSchema = z.object({
 const parsedEnv = envSchema.safeParse(process.env)
 
 if (!parsedEnv.success) {
-  console.error('[env] Invalid environment variables:', parsedEnv.error.flatten().fieldErrors)
-  process.exit(1)
+  console.error('[env] ⚠️  Invalid/missing environment variables:')
+  console.error(JSON.stringify(parsedEnv.error.flatten().fieldErrors, null, 2))
+  console.warn('[env] Starting with partial configuration — check Railway Variables tab')
+  // Do NOT process.exit(1) — let the server bind so /health responds and Railway shows real logs
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const data: any = parsedEnv.success ? parsedEnv.data : {
+  NODE_ENV: process.env.NODE_ENV || 'production',
+  PORT: process.env.PORT || '5000',
+  API_VERSION: process.env.API_VERSION || 'v1',
+  DATABASE_URL: process.env.DATABASE_URL || '',
+  REDIS_URL: process.env.REDIS_URL,
+  JWT_SECRET: process.env.JWT_SECRET || '',
+  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '15m',
+  REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET || '',
+  REFRESH_TOKEN_EXPIRES_IN: process.env.REFRESH_TOKEN_EXPIRES_IN || '7d',
+  CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
+  MAX_FILE_SIZE: process.env.MAX_FILE_SIZE || '5242880',
+  UPLOAD_DIR: process.env.UPLOAD_DIR || './uploads',
+  SMTP_HOST: process.env.SMTP_HOST,
+  SMTP_PORT: process.env.SMTP_PORT,
+  SMTP_USER: process.env.SMTP_USER,
+  SMTP_PASS: process.env.SMTP_PASS,
+  EMAIL_FROM: process.env.EMAIL_FROM,
+  RATE_LIMIT_WINDOW_MS: process.env.RATE_LIMIT_WINDOW_MS || '900000',
+  RATE_LIMIT_MAX_REQUESTS: process.env.RATE_LIMIT_MAX_REQUESTS || '100',
+  LOG_LEVEL: process.env.LOG_LEVEL || 'info',
+  TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY,
+  FIREBASE_SERVICE_ACCOUNT: process.env.FIREBASE_SERVICE_ACCOUNT,
+  SERVER_URL: process.env.SERVER_URL,
+  CLOUDINARY_URL: process.env.CLOUDINARY_URL,
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
+  STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+  STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+  STRIPE_PRO_MONTHLY_PRICE_ID: process.env.STRIPE_PRO_MONTHLY_PRICE_ID,
+  STRIPE_PRO_ANNUAL_PRICE_ID: process.env.STRIPE_PRO_ANNUAL_PRICE_ID,
+  STRIPE_EXPERT_MONTHLY_PRICE_ID: process.env.STRIPE_EXPERT_MONTHLY_PRICE_ID,
+  STRIPE_EXPERT_ANNUAL_PRICE_ID: process.env.STRIPE_EXPERT_ANNUAL_PRICE_ID,
+  NOTIFY_SECRET: process.env.NOTIFY_SECRET,
+  LAUNCH_DATE: process.env.LAUNCH_DATE,
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
 }
 
 export const env = {
-  NODE_ENV: parsedEnv.data.NODE_ENV,
-  PORT: parseInt(parsedEnv.data.PORT, 10),
-  API_VERSION: parsedEnv.data.API_VERSION,
-  IS_PRODUCTION: parsedEnv.data.NODE_ENV === 'production',
-  IS_DEVELOPMENT: parsedEnv.data.NODE_ENV === 'development',
+  NODE_ENV: data.NODE_ENV,
+  PORT: parseInt(data.PORT, 10),
+  API_VERSION: data.API_VERSION,
+  IS_PRODUCTION: data.NODE_ENV === 'production',
+  IS_DEVELOPMENT: data.NODE_ENV === 'development',
 
-  DATABASE_URL: parsedEnv.data.DATABASE_URL,
-  REDIS_URL: parsedEnv.data.REDIS_URL,
+  DATABASE_URL: data.DATABASE_URL,
+  REDIS_URL: data.REDIS_URL,
 
-  JWT_SECRET: parsedEnv.data.JWT_SECRET,
-  JWT_ACCESS_EXPIRATION: parsedEnv.data.JWT_EXPIRES_IN,
-  JWT_REFRESH_SECRET: parsedEnv.data.REFRESH_TOKEN_SECRET,
-  JWT_REFRESH_EXPIRATION: parsedEnv.data.REFRESH_TOKEN_EXPIRES_IN,
+  JWT_SECRET: data.JWT_SECRET,
+  JWT_ACCESS_EXPIRATION: data.JWT_EXPIRES_IN,
+  JWT_REFRESH_SECRET: data.REFRESH_TOKEN_SECRET,
+  JWT_REFRESH_EXPIRATION: data.REFRESH_TOKEN_EXPIRES_IN,
 
-  CORS_ORIGIN: parsedEnv.data.CORS_ORIGIN,
-  FRONTEND_URL: parsedEnv.data.FRONTEND_URL,
+  CORS_ORIGIN: data.CORS_ORIGIN,
+  FRONTEND_URL: data.FRONTEND_URL,
 
-  GOOGLE_CLIENT_ID: parsedEnv.data.GOOGLE_CLIENT_ID,
-  GOOGLE_CLIENT_SECRET: parsedEnv.data.GOOGLE_CLIENT_SECRET,
+  GOOGLE_CLIENT_ID: data.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: data.GOOGLE_CLIENT_SECRET,
 
-  MAX_FILE_SIZE: parseInt(parsedEnv.data.MAX_FILE_SIZE, 10),
-  UPLOAD_DIR: parsedEnv.data.UPLOAD_DIR,
+  MAX_FILE_SIZE: parseInt(data.MAX_FILE_SIZE, 10),
+  UPLOAD_DIR: data.UPLOAD_DIR,
 
   SMTP: {
-    HOST: parsedEnv.data.SMTP_HOST,
-    PORT: parsedEnv.data.SMTP_PORT ? parseInt(parsedEnv.data.SMTP_PORT, 10) : undefined,
-    USER: parsedEnv.data.SMTP_USER,
-    PASS: parsedEnv.data.SMTP_PASS,
+    HOST: data.SMTP_HOST,
+    PORT: data.SMTP_PORT ? parseInt(data.SMTP_PORT, 10) : undefined,
+    USER: data.SMTP_USER,
+    PASS: data.SMTP_PASS,
   },
-  EMAIL_FROM: parsedEnv.data.EMAIL_FROM || 'noreply@immoparticuliers.fr',
+  EMAIL_FROM: data.EMAIL_FROM || 'noreply@immoparticuliers.fr',
 
   RATE_LIMIT: {
-    WINDOW_MS: parseInt(parsedEnv.data.RATE_LIMIT_WINDOW_MS, 10),
-    MAX_REQUESTS: parseInt(parsedEnv.data.RATE_LIMIT_MAX_REQUESTS, 10),
+    WINDOW_MS: parseInt(data.RATE_LIMIT_WINDOW_MS, 10),
+    MAX_REQUESTS: parseInt(data.RATE_LIMIT_MAX_REQUESTS, 10),
   },
 
-  LOG_LEVEL: parsedEnv.data.LOG_LEVEL,
+  LOG_LEVEL: data.LOG_LEVEL,
 
-  TURNSTILE_SECRET_KEY: parsedEnv.data.TURNSTILE_SECRET_KEY,
+  TURNSTILE_SECRET_KEY: data.TURNSTILE_SECRET_KEY,
 
-  FIREBASE_SERVICE_ACCOUNT: parsedEnv.data.FIREBASE_SERVICE_ACCOUNT,
+  FIREBASE_SERVICE_ACCOUNT: data.FIREBASE_SERVICE_ACCOUNT,
 
-  SERVER_URL: parsedEnv.data.SERVER_URL || '',
+  SERVER_URL: data.SERVER_URL || '',
 
-  STRIPE_SECRET_KEY: parsedEnv.data.STRIPE_SECRET_KEY || '',
-  STRIPE_WEBHOOK_SECRET: parsedEnv.data.STRIPE_WEBHOOK_SECRET || '',
-  STRIPE_PRO_MONTHLY_PRICE_ID: parsedEnv.data.STRIPE_PRO_MONTHLY_PRICE_ID || '',
-  STRIPE_PRO_ANNUAL_PRICE_ID: parsedEnv.data.STRIPE_PRO_ANNUAL_PRICE_ID || '',
-  STRIPE_EXPERT_MONTHLY_PRICE_ID: parsedEnv.data.STRIPE_EXPERT_MONTHLY_PRICE_ID || '',
-  STRIPE_EXPERT_ANNUAL_PRICE_ID: parsedEnv.data.STRIPE_EXPERT_ANNUAL_PRICE_ID || '',
+  STRIPE_SECRET_KEY: data.STRIPE_SECRET_KEY || '',
+  STRIPE_WEBHOOK_SECRET: data.STRIPE_WEBHOOK_SECRET || '',
+  STRIPE_PRO_MONTHLY_PRICE_ID: data.STRIPE_PRO_MONTHLY_PRICE_ID || '',
+  STRIPE_PRO_ANNUAL_PRICE_ID: data.STRIPE_PRO_ANNUAL_PRICE_ID || '',
+  STRIPE_EXPERT_MONTHLY_PRICE_ID: data.STRIPE_EXPERT_MONTHLY_PRICE_ID || '',
+  STRIPE_EXPERT_ANNUAL_PRICE_ID: data.STRIPE_EXPERT_ANNUAL_PRICE_ID || '',
 
-  NOTIFY_SECRET: parsedEnv.data.NOTIFY_SECRET || '',
-  LAUNCH_DATE: parsedEnv.data.LAUNCH_DATE || '2026-06-01T00:00:00Z',
+  NOTIFY_SECRET: data.NOTIFY_SECRET || '',
+  LAUNCH_DATE: data.LAUNCH_DATE || '2026-06-01T00:00:00Z',
 }

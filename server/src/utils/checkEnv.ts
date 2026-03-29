@@ -45,13 +45,8 @@ export function checkRequiredEnvVars() {
   if (missing.length > 0) {
     console.error('\n[env] Missing required environment variables:')
     console.error(missing.join('\n'))
-    console.error('\nConfigurer ces variables avant de démarrer en production.\n')
-
-    if (process.env.NODE_ENV === 'production') {
-      process.exit(1)
-    } else {
-      console.warn('[env] Development mode - starting anyway\n')
-    }
+    console.error('\nConfigurer ces variables dans Railway → Variables tab.\n')
+    console.warn('[env] Starting anyway — some features may fail\n')
   } else {
     console.log('[env] Required environment variables OK')
   }

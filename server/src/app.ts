@@ -15,16 +15,24 @@ import { startCleanupCron } from './services/cleanup.service.js'
 const app: Application = express()
 
 // ============================================
+// /health — FIRST, before ALL middleware
+// Must respond even if DB/Redis/env are broken
+// ============================================
+app.get('/health', (_req: Request, res: Response) => {
+  res.status(200).json({ status: 'ok', ts: Date.now() })
+})
+
+// ============================================
 // MIDDLEWARES
 // ============================================
 
-// CORS — MUST be first, before helmet, to handle preflight OPTIONS correctly
+// CORS — MUST be before helmet, to handle preflight OPTIONS correctly
 const allowedOrigins = new Set([
   'https://bailio.fr',
   'https://www.bailio.fr',
   'http://localhost:5173',
   'http://localhost:3000',
-  ...env.CORS_ORIGIN.split(',').map((o) => o.trim()).filter(Boolean),
+  ...env.CORS_ORIGIN.split(',').map((o: string) => o.trim()).filter(Boolean),
 ])
 
 app.use((req, res, next) => {
@@ -119,16 +127,6 @@ app.use('/api', limiter)
 // ============================================
 // ROUTES
 // ============================================
-
-// Health check
-app.get('/health', (req: Request, res: Response) => {
-  res.json({
-    success: true,
-    message: 'Server is running',
-    timestamp: new Date().toISOString(),
-    environment: env.NODE_ENV,
-  })
-})
 
 // API routes — see server/src/routes/index.ts for full registry
 const API_PREFIX = `/api/${env.API_VERSION}`
