@@ -4,7 +4,7 @@
   "description": "Plateforme de gestion locative entre particuliers",
   "scripts": {
     "start": "npm run start --prefix server",
-    "build": "npm run build --prefix server",
+    "build": "npm install --prefix server && npm run build --prefix server",
     "railway:start": "npm run railway:start --prefix server",
     "dev": "(cd server && npm run dev) & (cd client && npm run dev)",
     "dev:server": "cd server && npm run dev",
