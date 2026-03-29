@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["nodejs_20"]
+
+[phases.install]
+cmds = ["npm ci --prefix server"]
+
+[phases.build]
+cmds = ["npm run build --prefix server"]
+
+[start]
+cmd = "npm run railway:start --prefix server"
