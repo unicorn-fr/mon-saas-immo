@@ -98,7 +98,9 @@
       "Bash(npx prisma:*)",
       "Bash(chmod +x /Users/enzo/Desktop/Projets/Applications_Web/En_Cours/plateforme-gestion-locative/test-connectivity.sh)",
       "Bash(find /Users/enzo/Desktop/Projets/Applications_Web/En_Cours/plateforme-gestion-locative/server/src -type f \\\\\\(-name *.ts -o -name *.js \\\\\\))",
-      "Bash(xargs LC_ALL=C grep -lPn [^x00-x7F])"
+      "Bash(xargs LC_ALL=C grep -lPn [^x00-x7F])",
+      "Bash(./node_modules/.bin/prisma --version)",
+      "Bash(./node_modules/.bin/tsc --version)"
     ]
   }
 }
