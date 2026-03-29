@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "description": "Plateforme de gestion locative entre particuliers",
   "scripts": {
-    "start": "echo '🚀 Lancement de l\\'application...' && echo '\n📦 Backend: http://localhost:5000' && echo '🌐 Frontend: http://localhost:5173\n' && (cd server && npm run dev) & (cd client && npm run dev)",
+    "start": "npm start --prefix server",
+    "dev": "(cd server && npm run dev) & (cd client && npm run dev)",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "build": "npm run build --prefix server && npm run build --prefix client",
     "install:all": "npm install && cd server && npm install && cd ../client && npm install",
     "db:reset": "cd server && npx prisma migrate reset --force && npx tsx prisma/seed.ts",
     "db:seed": "cd server && npx tsx prisma/seed.ts"
