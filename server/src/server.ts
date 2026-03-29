@@ -32,14 +32,14 @@ cron.schedule('0 8 1 * *', async () => {
   )
 })
 
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, '0.0.0.0', () => {
   console.log('='.repeat(50))
   console.log('Server started successfully!')
   console.log('='.repeat(50))
   console.log(`Environment: ${env.NODE_ENV}`)
-  console.log(`Server running on: http://localhost:${PORT}`)
-  console.log(`API available at: http://localhost:${PORT}/api/${env.API_VERSION}`)
-  console.log(`Health check: http://localhost:${PORT}/health`)
+  console.log(`Server running on: http://0.0.0.0:${PORT}`)
+  console.log(`API available at: http://0.0.0.0:${PORT}/api/${env.API_VERSION}`)
+  console.log(`Health check: http://0.0.0.0:${PORT}/health`)
   console.log('='.repeat(50))
 })
 
