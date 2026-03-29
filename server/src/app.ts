@@ -1,5 +1,4 @@
 import express, { Application, Request, Response } from 'express'
-import cors from 'cors'
 import helmet from 'helmet'
 import morgan from 'morgan'
 import { rateLimit } from 'express-rate-limit'
@@ -18,6 +17,31 @@ const app: Application = express()
 // ============================================
 // MIDDLEWARES
 // ============================================
+
+// CORS — MUST be first, before helmet, to handle preflight OPTIONS correctly
+const allowedOrigins = new Set([
+  'https://bailio.fr',
+  'https://www.bailio.fr',
+  'http://localhost:5173',
+  'http://localhost:3000',
+  ...env.CORS_ORIGIN.split(',').map((o) => o.trim()).filter(Boolean),
+])
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin as string | undefined
+  if (origin && allowedOrigins.has(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin)
+    res.setHeader('Vary', 'Origin')
+  }
+  res.setHeader('Access-Control-Allow-Credentials', 'true')
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+  if (req.method === 'OPTIONS') {
+    res.status(204).end()
+    return
+  }
+  next()
+})
 
 // Security headers — hardened CSP
 app.use(
@@ -47,31 +71,6 @@ app.use(
     xssFilter: true,
   })
 )
-
-// CORS — raw middleware before everything, handles preflight directly
-const allowedOrigins = new Set([
-  'https://bailio.fr',
-  'https://www.bailio.fr',
-  'http://localhost:5173',
-  'http://localhost:3000',
-  ...env.CORS_ORIGIN.split(',').map((o) => o.trim()).filter(Boolean),
-])
-
-app.use((req, res, next) => {
-  const origin = req.headers.origin as string | undefined
-  if (origin && allowedOrigins.has(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin)
-    res.setHeader('Vary', 'Origin')
-  }
-  res.setHeader('Access-Control-Allow-Credentials', 'true')
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-  if (req.method === 'OPTIONS') {
-    res.status(204).end()
-    return
-  }
-  next()
-})
 
 // Trust proxy (required for rate-limit behind Render/Vercel reverse proxy)
 if (env.IS_PRODUCTION) {
