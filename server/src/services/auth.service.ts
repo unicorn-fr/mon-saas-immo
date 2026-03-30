@@ -120,8 +120,9 @@ class AuthService {
       },
     })
 
-    // Send verification email (or auto-verify if Resend not configured)
-    if (!env.RESEND_API_KEY) {
+    // Send verification email (or auto-verify if no email provider configured)
+    const emailConfigured = !!(env.SMTP_HOST || env.RESEND_API_KEY)
+    if (!emailConfigured) {
       await prisma.user.update({
         where: { id: user.id },
         data: { emailVerified: true, emailVerifiedAt: new Date() },
