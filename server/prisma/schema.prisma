@@ -809,6 +809,7 @@ model Payment {
 model WaitlistEntry {
   id            String    @id @default(cuid())
   email         String    @unique
+  firstName     String?
   position      Int
   isEarlyAccess Boolean   @default(false)
   notifiedAt    DateTime?

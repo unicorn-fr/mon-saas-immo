@@ -16,7 +16,7 @@ export const waitlistService = {
    * - Sets isEarlyAccess = position <= 150
    * - Sends confirmation email (non-blocking)
    */
-  async join(email: string): Promise<{
+  async join(email: string, firstName?: string): Promise<{
     position: number
     isEarlyAccess: boolean
     alreadyRegistered: boolean
@@ -31,14 +31,18 @@ export const waitlistService = {
     const isEarlyAccess = position <= 150
 
     const entry = await prisma.waitlistEntry.create({
-      data: { email, position, isEarlyAccess },
+      data: { email, firstName: firstName?.trim() || null, position, isEarlyAccess },
     })
 
-    // Non-blocking confirmation email
-    const { subject, html } = buildWaitlistConfirmationEmail(email, position, isEarlyAccess, LAUNCH_DATE)
-    sendEmail({ to: email, subject, html }).catch((err) => {
-      console.error('[waitlist] confirmation email failed:', err)
-    })
+    // Non-blocking confirmation email — fully isolated, never throws
+    ;(async () => {
+      try {
+        const { subject, html } = buildWaitlistConfirmationEmail(email, firstName?.trim() || null, position, isEarlyAccess, LAUNCH_DATE)
+        await sendEmail({ to: email, subject, html })
+      } catch (err) {
+        console.error('[waitlist] confirmation email failed:', err)
+      }
+    })()
 
     return { position: entry.position, isEarlyAccess, alreadyRegistered: false }
   },

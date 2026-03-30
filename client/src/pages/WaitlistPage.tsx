@@ -78,6 +78,7 @@ type State =
   | { kind: 'error'; message: string }
 
 export default function WaitlistPage() {
+  const [firstName, setFirstName] = useState('')
   const [email, setEmail] = useState('')
   const [state, setState] = useState<State>({ kind: 'idle' })
   const [totalCount, setTotalCount] = useState<number | null>(null)
@@ -103,7 +104,7 @@ export default function WaitlistPage() {
       const res = await fetch(`${API_BASE}/waitlist/join`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({ email: email.trim(), firstName: firstName.trim() || undefined }),
       })
       const data = await res.json()
 
@@ -401,6 +402,26 @@ export default function WaitlistPage() {
               onSubmit={handleSubmit}
               style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 460, margin: '0 auto' }}
             >
+              <input
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="Votre prénom"
+                disabled={state.kind === 'loading'}
+                style={{
+                  width: '100%',
+                  padding: '13px 16px',
+                  background: '#f8f7f4',
+                  border: '1px solid #e4e1db',
+                  borderRadius: 8,
+                  fontSize: 14,
+                  color: '#0d0c0a',
+                  outline: 'none',
+                  fontFamily: "'DM Sans', system-ui, sans-serif",
+                  opacity: state.kind === 'loading' ? 0.6 : 1,
+                  boxSizing: 'border-box' as const,
+                }}
+              />
               <div style={{ display: 'flex', gap: 10 }}>
                 <input
                   ref={inputRef}

@@ -6,6 +6,7 @@ import crypto from 'crypto'
  */
 export function buildWaitlistConfirmationEmail(
   email: string,
+  firstName: string | null,
   position: number,
   isEarlyAccess: boolean,
   launchDate: Date,
@@ -65,7 +66,7 @@ export function buildWaitlistConfirmationEmail(
         </h1>
 
         <p style="margin:0 0 16px;font-size:15px;color:#5a5754;line-height:1.7;">
-          Bonjour,
+          ${firstName ? `Bonjour ${firstName},` : 'Bonjour,'}
         </p>
         <p style="margin:0 0 16px;font-size:15px;color:#5a5754;line-height:1.7;">
           Vous êtes officiellement sur la liste d'attente Bailio.

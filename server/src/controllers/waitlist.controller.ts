@@ -19,7 +19,7 @@ export function requireNotifySecret(req: Request, res: Response, next: NextFunct
 export const waitlistController = {
   async join(req: Request, res: Response): Promise<void> {
     try {
-      const { email } = req.body
+      const { email, firstName } = req.body
       if (!email || typeof email !== 'string') {
         res.status(400).json({ success: false, message: 'Email requis' })
         return
@@ -29,7 +29,10 @@ export const waitlistController = {
         res.status(400).json({ success: false, message: 'Email invalide' })
         return
       }
-      const result = await waitlistService.join(email.trim().toLowerCase())
+      const result = await waitlistService.join(
+        email.trim().toLowerCase(),
+        typeof firstName === 'string' ? firstName : undefined,
+      )
       res.status(result.alreadyRegistered ? 200 : 201).json({
         success: true,
         data: {
