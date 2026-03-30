@@ -4,6 +4,8 @@ import { env } from '../config/env.js'
 
 // ─── CRÉER OU RÉCUPÉRER UN CUSTOMER STRIPE ──────────────────────────────────
 export async function getOrCreateStripeCustomer(userId: string): Promise<string> {
+  if (!stripe) throw new Error('Stripe non configuré — STRIPE_SECRET_KEY manquante')
+
   const existing = await prisma.subscription.findUnique({
     where: { userId },
     select: { stripeCustomerId: true },
@@ -37,7 +39,7 @@ export async function createCheckoutSession(
 ) {
   const customerId = await getOrCreateStripeCustomer(userId)
 
-  const session = await stripe.checkout.sessions.create({
+  const session = await stripe!.checkout.sessions.create({
     customer: customerId,
     mode: 'subscription',
     line_items: [{ price: priceId, quantity: 1 }],
@@ -59,7 +61,7 @@ export async function createCheckoutSession(
 export async function createPortalSession(userId: string, returnUrl: string) {
   const customerId = await getOrCreateStripeCustomer(userId)
 
-  const session = await stripe.billingPortal.sessions.create({
+  const session = await stripe!.billingPortal.sessions.create({
     customer: customerId,
     return_url: returnUrl,
   })
@@ -69,6 +71,7 @@ export async function createPortalSession(userId: string, returnUrl: string) {
 
 // ─── SYNCHRONISER ABONNEMENT DEPUIS STRIPE ───────────────────────────────────
 export async function syncSubscriptionFromStripe(stripeSubId: string) {
+  if (!stripe) throw new Error('Stripe non configuré')
   const sub = await stripe.subscriptions.retrieve(stripeSubId, {
     expand: ['items.data.price'],
   })

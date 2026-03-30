@@ -59,6 +59,8 @@ export default router
 // ─── WEBHOOK HANDLER (raw body — à monter AVANT express.json dans app.ts) ────
 
 export async function stripeWebhookHandler(req: Request, res: Response) {
+  if (!stripe) return res.status(503).json({ error: 'Stripe non configuré' })
+
   const sig = req.headers['stripe-signature']
   if (!sig) return res.status(400).send('Signature manquante')
 
