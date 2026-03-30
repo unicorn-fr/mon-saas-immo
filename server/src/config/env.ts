@@ -27,10 +27,7 @@ const envSchema = z.object({
   MAX_FILE_SIZE: z.string().default('5242880'),
   UPLOAD_DIR: z.string().default('./uploads'),
 
-  SMTP_HOST: z.string().optional(),
-  SMTP_PORT: z.string().optional(),
-  SMTP_USER: z.string().optional(),
-  SMTP_PASS: z.string().optional(),
+  RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().optional(),
 
   RATE_LIMIT_WINDOW_MS: z.string().default('900000'),
@@ -91,10 +88,7 @@ const data: any = parsedEnv.success ? parsedEnv.data : {
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
   MAX_FILE_SIZE: process.env.MAX_FILE_SIZE || '5242880',
   UPLOAD_DIR: process.env.UPLOAD_DIR || './uploads',
-  SMTP_HOST: process.env.SMTP_HOST,
-  SMTP_PORT: process.env.SMTP_PORT,
-  SMTP_USER: process.env.SMTP_USER,
-  SMTP_PASS: process.env.SMTP_PASS,
+  RESEND_API_KEY: process.env.RESEND_API_KEY,
   EMAIL_FROM: process.env.EMAIL_FROM,
   RATE_LIMIT_WINDOW_MS: process.env.RATE_LIMIT_WINDOW_MS || '900000',
   RATE_LIMIT_MAX_REQUESTS: process.env.RATE_LIMIT_MAX_REQUESTS || '100',
@@ -142,13 +136,8 @@ export const env = {
   MAX_FILE_SIZE: parseInt(data.MAX_FILE_SIZE, 10),
   UPLOAD_DIR: data.UPLOAD_DIR,
 
-  SMTP: {
-    HOST: data.SMTP_HOST,
-    PORT: data.SMTP_PORT ? parseInt(data.SMTP_PORT, 10) : undefined,
-    USER: data.SMTP_USER,
-    PASS: data.SMTP_PASS,
-  },
-  EMAIL_FROM: data.EMAIL_FROM || 'noreply@immoparticuliers.fr',
+  RESEND_API_KEY: data.RESEND_API_KEY || '',
+  EMAIL_FROM: data.EMAIL_FROM || 'contact@bailio.fr',
 
   RATE_LIMIT: {
     WINDOW_MS: parseInt(data.RATE_LIMIT_WINDOW_MS, 10),

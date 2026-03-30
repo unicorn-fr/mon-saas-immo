@@ -10,11 +10,10 @@ export function checkRequiredEnvVars() {
     DATABASE_URL: 'URL de connexion PostgreSQL',
     JWT_SECRET:   'Clé secrète JWT (min 32 caractères)',
     FRONTEND_URL: 'URL du frontend (ex: https://bailio.fr)',
-    SMTP_HOST:    'Hôte SMTP pour les emails',
-    EMAIL_FROM:   'Adresse email expéditeur',
   }
 
   const optional: Record<string, string> = {
+    RESEND_API_KEY:                 'Resend — emails transactionnels (fallback log console)',
     CLOUDINARY_CLOUD_NAME:          'Cloudinary — uploads en production (fallback disque local)',
     CLOUDINARY_API_KEY:             'Cloudinary — uploads en production',
     CLOUDINARY_API_SECRET:          'Cloudinary — uploads en production',

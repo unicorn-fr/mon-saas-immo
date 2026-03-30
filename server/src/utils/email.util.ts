@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer'
+import { Resend } from 'resend'
 import { env } from '../config/env.js'
 
 interface SendEmailOptions {
@@ -8,41 +8,38 @@ interface SendEmailOptions {
 }
 
 /**
- * Send email via Brevo SMTP (or any configured SMTP).
- * Falls back to console log in development when SMTP is not configured.
+ * Send email via Resend.
+ * Falls back to console log in development when RESEND_API_KEY is not configured.
  */
 export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
   const { to, subject, html } = options
 
-  if (!env.SMTP.HOST || !env.SMTP.USER || !env.SMTP.PASS) {
-    console.log('========== EMAIL (SMTP non configure) ==========')
+  if (!env.RESEND_API_KEY) {
+    console.log('========== EMAIL (Resend non configuré) ==========')
     console.log(`To: ${to}`)
     console.log(`Subject: ${subject}`)
-    console.log('================================================')
+    console.log('==================================================')
     return true
   }
 
   try {
-    const transporter = nodemailer.createTransport({
-      host: env.SMTP.HOST,
-      port: env.SMTP.PORT || 587,
-      secure: env.SMTP.PORT === 465,
-      auth: {
-        user: env.SMTP.USER,
-        pass: env.SMTP.PASS,
-      },
-    })
+    const resend = new Resend(env.RESEND_API_KEY)
 
-    await transporter.sendMail({
-      from: `"ImmoParticuliers" <${env.EMAIL_FROM}>`,
+    const { error } = await resend.emails.send({
+      from: `Bailio <${env.EMAIL_FROM}>`,
       to,
       subject,
       html,
     })
 
+    if (error) {
+      console.error('[Resend] Failed to send email:', error)
+      return false
+    }
+
     return true
   } catch (error) {
-    console.error('Failed to send email:', error)
+    console.error('[Resend] Unexpected error:', error)
     return false
   }
 }
