@@ -31,27 +31,27 @@ const WINDOWS = [
 // City skyline buildings (desktop background)
 // Each: left%, width%, height(px), windowOpacity
 const BUILDINGS: [number, number, number, number][] = [
-  [0,   5.5, 118, 0.14],
-  [4.5, 3.5, 210, 0.38],
-  [7.5, 6.5,  88, 0.09],
-  [13,  4,   265, 0.46],
-  [16.5,7,   138, 0.20],
-  [23,  3.5, 182, 0.32],
-  [26,  5.5,  96, 0.07],
-  [31,  8,   155, 0.24],
-  [38,  4,   234, 0.42],
-  [41.5,6.5, 106, 0.11],
-  [47,  3.5, 288, 0.52],
-  [50,  5.5, 128, 0.17],
-  [55,  7.5,  84, 0.06],
-  [62,  4.5, 198, 0.36],
-  [66,  6,   148, 0.22],
-  [71.5,3.5, 242, 0.44],
-  [74.5,6,   108, 0.14],
-  [80,  7.5,  78, 0.05],
-  [87,  4.5, 174, 0.30],
-  [91,  5.5, 132, 0.19],
-  [96,  5,   196, 0.37],
+  [0,   5.5, 224, 0.14],
+  [4.5, 3.5, 398, 0.38],
+  [7.5, 6.5, 167, 0.09],
+  [13,  4,   503, 0.46],
+  [16.5,7,   262, 0.20],
+  [23,  3.5, 346, 0.32],
+  [26,  5.5, 182, 0.07],
+  [31,  8,   294, 0.24],
+  [38,  4,   444, 0.42],
+  [41.5,6.5, 201, 0.11],
+  [47,  3.5, 547, 0.52],
+  [50,  5.5, 243, 0.17],
+  [55,  7.5, 159, 0.06],
+  [62,  4.5, 376, 0.36],
+  [66,  6,   281, 0.22],
+  [71.5,3.5, 459, 0.44],
+  [74.5,6,   205, 0.14],
+  [80,  7.5, 148, 0.05],
+  [87,  4.5, 330, 0.30],
+  [91,  5.5, 251, 0.19],
+  [96,  5,   372, 0.37],
 ]
 
 const CONF_COLORS = ['#c4976a', '#fdf5ec', '#f3c99a', '#1a1a2e', '#5a5754', '#e4e1db', '#9e9b96']
@@ -230,6 +230,8 @@ html { scroll-behavior: smooth; }
 .city-skyline { display:none; }
 @media (min-width: 900px) {
   .city-skyline { display:block; }
+  /* Edge windows replaced by cityscape on desktop */
+  .edge-wins { display:none; }
 }
 `
 
@@ -421,7 +423,8 @@ export default function WaitlistPage() {
           } as React.CSSProperties} />
         ))}
 
-        {/* ── Tiny windows on distant buildings (edges) ── */}
+        {/* ── Tiny windows on distant buildings (edges, mobile only) ── */}
+        <div className="edge-wins" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
         {WINDOWS.map((w, i) => (
           <div key={i} style={{
             position: 'absolute', top: `${w.top}%`, left: `${w.left}%`,
@@ -433,9 +436,10 @@ export default function WaitlistPage() {
             pointerEvents: 'none',
           }} />
         ))}
+        </div>
 
         {/* ── City skyline — desktop background ── */}
-        <div className="city-skyline" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '65%', pointerEvents: 'none', zIndex: 1 }}>
+        <div className="city-skyline" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '90%', pointerEvents: 'none', zIndex: 1 }}>
           {BUILDINGS.map(([l, w, h, wo], i) => {
             const winOp = wo
             const roofH = 8 + (i % 3) * 6
