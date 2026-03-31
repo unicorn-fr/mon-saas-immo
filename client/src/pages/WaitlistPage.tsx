@@ -170,20 +170,21 @@ function BuildingCanvas() {
 
   useEffect(() => {
     const canvas = canvasRef.current; if (!canvas) return
-    const ctx = canvas.getContext('2d')!
+    const el = canvas
+    const ctx = el.getContext('2d')!
     let W = 0, H = 0
 
     function resize() {
       const dpr = window.devicePixelRatio || 1
-      W = canvas.clientWidth; H = canvas.clientHeight
-      canvas.width = W * dpr; canvas.height = H * dpr
+      W = el.clientWidth; H = el.clientHeight
+      el.width = W * dpr; el.height = H * dpr
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       ptsRef.current = buildTargets(W, H)
     }
 
     resize()
     const ro = new ResizeObserver(resize)
-    ro.observe(canvas)
+    ro.observe(el)
 
     function draw() {
       ctx.clearRect(0, 0, W, H)
