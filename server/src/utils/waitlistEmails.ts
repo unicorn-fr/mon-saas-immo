@@ -7,7 +7,7 @@ import crypto from 'crypto'
 export function buildWaitlistConfirmationEmail(
   email: string,
   firstName: string | null,
-  position: number,
+  _position: number,
   isEarlyAccess: boolean,
   launchDate: Date,
 ): { subject: string; html: string } {
@@ -17,26 +17,26 @@ export function buildWaitlistConfirmationEmail(
     year: 'numeric',
   }).format(launchDate)
 
-  const subject = 'Vous êtes sur la liste. Voici ce qui vous attend.'
+  const subject = isEarlyAccess
+    ? '🏠 Vous avez l\'accès anticipé Bailio — 1 mois offert vous attend.'
+    : '🏠 Votre inscription à Bailio est confirmée.'
 
   const earlyAccessBlock = isEarlyAccess
     ? `
-    <div style="background:#fdf5ec;border:1px solid #f3c99a;border-radius:10px;padding:20px 24px;margin:24px 0;">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-        <div style="width:8px;height:8px;border-radius:50%;background:#c4976a;flex-shrink:0;"></div>
-        <p style="margin:0;font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#92400e;">Accès anticipé garanti</p>
+    <div style="background:#fdf5ec;border:1px solid #f3c99a;border-radius:12px;padding:22px 24px;margin:24px 0;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c4976a" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <p style="margin:0;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#92400e;">Accès anticipé · Early Access</p>
       </div>
-      <p style="margin:0;font-size:14px;color:#5a5754;line-height:1.6;">
-        Vous faites partie des <strong style="color:#0d0c0a;">150 premiers</strong> — vous recevrez <strong style="color:#0d0c0a;">2 mois de plan Pro offerts</strong> dès le lancement. Aucune action requise de votre part.
+      <p style="margin:0;font-size:14px;color:#5a5754;line-height:1.65;">
+        Vous faites partie des <strong style="color:#0d0c0a;">150 premiers inscrits</strong> — vous bénéficierez d'<strong style="color:#0d0c0a;">1 mois offert</strong> sur le plan Pro dès le lancement de Bailio. Aucune action requise de votre part.
       </p>
     </div>`
-    : ''
-
-  const positionBlock = `
-    <div style="background:#f4f2ee;border-radius:10px;padding:20px;text-align:center;margin:24px 0;border:1px solid #e4e1db;">
-      <p style="margin:0 0 6px;font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#9e9b96;">Votre position</p>
-      <p style="margin:0;font-family:Georgia,serif;font-size:42px;font-weight:700;font-style:italic;color:#0d0c0a;line-height:1;">#${position}</p>
-      ${isEarlyAccess ? '<p style="margin:6px 0 0;font-size:12px;color:#c4976a;font-weight:600;">Accès anticipé inclus</p>' : ''}
+    : `
+    <div style="background:#f4f2ee;border:1px solid #e4e1db;border-radius:12px;padding:18px 24px;margin:24px 0;">
+      <p style="margin:0;font-size:14px;color:#5a5754;line-height:1.65;">
+        Vous serez notifié en avant-première dès que Bailio ouvre ses portes. Restez à l'écoute.
+      </p>
     </div>`
 
   const html = `<!DOCTYPE html>
@@ -44,48 +44,48 @@ export function buildWaitlistConfirmationEmail(
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bailio — Vous êtes sur la liste</title>
+  <title>Bailio — Inscription confirmée</title>
 </head>
 <body style="margin:0;padding:0;background:#fafaf8;font-family:'DM Sans',Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased;">
   <div style="max-width:560px;margin:40px auto;padding:0 16px;">
     <div style="background:#ffffff;border:1px solid #e4e1db;border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(13,12,10,0.04),0 4px 12px rgba(13,12,10,0.06);">
 
       <!-- Header -->
-      <div style="background:#1a1a2e;padding:28px 40px;display:flex;align-items:center;gap:10px;">
-        <div style="width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,0.1);display:inline-flex;align-items:center;justify-content:center;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fafaf8" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+      <div style="background:#1a1a2e;padding:28px 36px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
+          <div style="width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,0.1);display:inline-flex;align-items:center;justify-content:center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fafaf8" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <span style="color:#ffffff;font-size:18px;font-weight:700;letter-spacing:-0.01em;font-family:Georgia,serif;font-style:italic;">Bailio</span>
+          <span style="color:rgba(255,255,255,0.35);font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding-left:8px;border-left:1px solid rgba(255,255,255,0.15);margin-left:2px;">Immobilier</span>
         </div>
-        <span style="color:#ffffff;font-size:18px;font-weight:600;letter-spacing:-0.01em;font-family:Georgia,serif;font-style:italic;">Bailio</span>
+        <h1 style="margin:0;font-family:Georgia,serif;font-size:26px;font-weight:700;font-style:italic;color:#ffffff;line-height:1.2;">
+          ${firstName ? `Bienvenue, ${firstName} !` : 'Vous êtes sur la liste !'}
+        </h1>
+        <p style="margin:8px 0 0;font-size:13px;color:rgba(255,255,255,0.5);">Inscription à la liste d'attente confirmée.</p>
       </div>
 
       <!-- Body -->
-      <div style="padding:36px 40px;">
-        <p style="margin:0 0 8px;font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#9e9b96;">Liste d'attente</p>
-        <h1 style="margin:0 0 20px;font-family:Georgia,serif;font-size:28px;font-weight:700;font-style:italic;color:#0d0c0a;line-height:1.2;">
-          Votre place est réservée.
-        </h1>
-
+      <div style="padding:32px 36px;">
         <p style="margin:0 0 16px;font-size:15px;color:#5a5754;line-height:1.7;">
           ${firstName ? `Bonjour ${firstName},` : 'Bonjour,'}
         </p>
-        <p style="margin:0 0 16px;font-size:15px;color:#5a5754;line-height:1.7;">
-          Vous êtes officiellement sur la liste d'attente Bailio.
+        <p style="margin:0 0 6px;font-size:15px;color:#5a5754;line-height:1.7;">
+          Votre place sur la liste d'attente <strong style="color:#0d0c0a;">Bailio</strong> est bien enregistrée.
+        </p>
+        <p style="margin:0 0 4px;font-size:14px;color:#5a5754;line-height:1.7;">
+          Bailio, c'est la plateforme de location immobilière <strong style="color:#0d0c0a;">sans agence, sans commission</strong> — conçue pour les propriétaires et les locataires qui méritent mieux.
         </p>
 
         ${earlyAccessBlock}
-        ${positionBlock}
 
-        <p style="margin:0 0 8px;font-size:14px;color:#5a5754;line-height:1.7;">
-          Bailio, c'est la plateforme que les propriétaires et locataires méritaient d'avoir. Sans agence. Sans intermédiaire. Avec les bons outils.
-        </p>
-
-        <!-- Features list -->
-        <div style="margin:28px 0;border-top:1px solid #e4e1db;padding-top:24px;">
-          <p style="margin:0 0 14px;font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#9e9b96;">Ce qui vous attend au lancement</p>
+        <!-- Features -->
+        <div style="margin:28px 0;border-top:1px solid #e4e1db;padding-top:22px;">
+          <p style="margin:0 0 14px;font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#9e9b96;">Ce qui vous attend au lancement</p>
           ${[
-            ['Vérification IA des dossiers locatifs', 'Analyse automatique des pièces justificatives en quelques secondes.'],
+            ['Dossiers vérifiés par IA', 'Analyse automatique des justificatifs en quelques secondes.'],
             ['Signature électronique légale (eIDAS)', 'Bail, état des lieux — signés en ligne, valeur juridique garantie.'],
-            ['Gestion complète du bail', 'Depuis une seule interface — quittances, paiements, historique.'],
+            ['Paiements & quittances automatiques', 'Depuis une seule interface — historique complet, zéro commission.'],
             ['Messagerie sécurisée', 'Canal dédié propriétaire ↔ locataire, traçable et archivé.'],
           ]
             .map(
@@ -101,24 +101,34 @@ export function buildWaitlistConfirmationEmail(
             .join('')}
         </div>
 
-        <div style="background:#f4f2ee;border-radius:8px;padding:14px 18px;margin:24px 0;display:flex;align-items:center;gap:12px;">
+        <!-- Launch date -->
+        <div style="background:#f4f2ee;border-radius:8px;padding:14px 18px;margin:0 0 24px;display:flex;align-items:center;gap:12px;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9e9b96" stroke-width="2" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
           <p style="margin:0;font-size:13px;color:#5a5754;">
-            Lancement estimé : <strong style="color:#0d0c0a;">${launchDateFr}</strong>
+            Lancement prévu : <strong style="color:#0d0c0a;">${launchDateFr}</strong>
           </p>
         </div>
 
         <p style="margin:0;font-size:14px;color:#5a5754;line-height:1.7;">
-          On vous prévient dès que c'est là.
+          On vous prévient dès que c'est là. À très bientôt.
         </p>
-        <p style="margin:20px 0 0;font-size:14px;color:#5a5754;line-height:1.7;">
+        <p style="margin:18px 0 0;font-size:14px;color:#5a5754;line-height:1.7;">
           L'équipe Bailio<br/>
           <a href="https://bailio.fr" style="color:#c4976a;text-decoration:none;font-weight:500;">bailio.fr</a>
         </p>
+
+        <!-- Social -->
+        <div style="margin-top:24px;padding-top:20px;border-top:1px solid #e4e1db;display:flex;gap:10px;align-items:center;">
+          <a href="https://instagram.com/bailio.fr" style="color:#9e9b96;text-decoration:none;font-size:12px;">Instagram</a>
+          <span style="color:#e4e1db;">·</span>
+          <a href="https://twitter.com/bailiofr" style="color:#9e9b96;text-decoration:none;font-size:12px;">Twitter / X</a>
+          <span style="color:#e4e1db;">·</span>
+          <a href="https://linkedin.com/company/bailio" style="color:#9e9b96;text-decoration:none;font-size:12px;">LinkedIn</a>
+        </div>
       </div>
 
       <!-- Footer -->
-      <div style="padding:20px 40px;background:#f4f2ee;border-top:1px solid #e4e1db;">
+      <div style="padding:18px 36px;background:#f4f2ee;border-top:1px solid #e4e1db;">
         <p style="margin:0;font-size:11px;color:#9e9b96;line-height:1.6;">
           Vous recevez cet email car vous vous êtes inscrit sur la liste d'attente Bailio avec l'adresse <strong>${email}</strong>.
           Si vous n'êtes pas à l'origine de cette inscription, ignorez simplement ce message.
