@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'
-const LAUNCH_DATE = new Date('2026-09-01T00:00:00Z')
+const LAUNCH_DATE = new Date('2026-06-04T00:00:00Z')
 
 // ─── Static deterministic data ────────────────────────────────────────────────
 
@@ -26,6 +26,32 @@ const WINDOWS = [
     top: 8 + i * 9.5, left: i % 2 === 0 ? 93.5 : 96.5,
     lit: i % 3 !== 2, delay: (i * 0.9 + 0.5) % 4,
   })),
+]
+
+// City skyline buildings (desktop background)
+// Each: left%, width%, height(px), windowOpacity
+const BUILDINGS: [number, number, number, number][] = [
+  [0,   5.5, 118, 0.14],
+  [4.5, 3.5, 210, 0.38],
+  [7.5, 6.5,  88, 0.09],
+  [13,  4,   265, 0.46],
+  [16.5,7,   138, 0.20],
+  [23,  3.5, 182, 0.32],
+  [26,  5.5,  96, 0.07],
+  [31,  8,   155, 0.24],
+  [38,  4,   234, 0.42],
+  [41.5,6.5, 106, 0.11],
+  [47,  3.5, 288, 0.52],
+  [50,  5.5, 128, 0.17],
+  [55,  7.5,  84, 0.06],
+  [62,  4.5, 198, 0.36],
+  [66,  6,   148, 0.22],
+  [71.5,3.5, 242, 0.44],
+  [74.5,6,   108, 0.14],
+  [80,  7.5,  78, 0.05],
+  [87,  4.5, 174, 0.30],
+  [91,  5.5, 132, 0.19],
+  [96,  5,   196, 0.37],
 ]
 
 const CONF_COLORS = ['#c4976a', '#fdf5ec', '#f3c99a', '#1a1a2e', '#5a5754', '#e4e1db', '#9e9b96']
@@ -199,6 +225,12 @@ html { scroll-behavior: smooth; }
   transition:color .2s, background .2s, border-color .2s;
 }
 .soc-btn:hover { color:#c4976a; background:rgba(196,151,106,0.1); border-color:rgba(196,151,106,0.3); }
+
+/* Cityscape: desktop only */
+.city-skyline { display:none; }
+@media (min-width: 900px) {
+  .city-skyline { display:block; }
+}
 `
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
@@ -289,7 +321,7 @@ export default function WaitlistPage() {
   const [isEarlyAccess, setIsEarlyAccess] = useState(false)
   const [alreadyRegistered, setAlreadyRegistered] = useState(false)
   const [confetti, setConfetti] = useState(false)
-  const [totalCount, setTotalCount] = useState(0)
+  const [, setTotalCount] = useState(0)
   const [scrolled, setScrolled] = useState(false)
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
   const cd = useCountdown(LAUNCH_DATE)
@@ -355,11 +387,10 @@ export default function WaitlistPage() {
         transition: 'background .4s, border-color .4s',
       }}>
         <BailioMark size={30} />
-        {totalCount > 0 && (
-          <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: 'rgba(255,255,255,.5)', background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.09)', borderRadius: 20, padding: '4px 13px', animation: 'fIn .5s ease' }}>
-            <span style={{ color: '#c4976a', fontWeight: 600 }}>{totalCount.toLocaleString('fr-FR')}</span> inscrits
-          </div>
-        )}
+        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,.35)', display: 'flex', alignItems: 'center', gap: 7 }}>
+          <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#c4976a', boxShadow: '0 0 5px rgba(196,151,106,.8)' }} />
+          Liste d'attente ouverte
+        </div>
       </nav>
 
       {/* ══════════════════════════════════════════════════════════════════
@@ -402,6 +433,35 @@ export default function WaitlistPage() {
             pointerEvents: 'none',
           }} />
         ))}
+
+        {/* ── City skyline — desktop background ── */}
+        <div className="city-skyline" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '65%', pointerEvents: 'none', zIndex: 1 }}>
+          {BUILDINGS.map(([l, w, h, wo], i) => {
+            const winOp = wo
+            const roofH = 8 + (i % 3) * 6
+            return (
+              <div key={i} style={{ position: 'absolute', bottom: 0, left: `${l}%`, width: `${w}%`, height: h, background: '#0a0d1a', borderTop: `1px solid rgba(255,255,255,0.08)` }}>
+                {/* Window grid */}
+                <div style={{
+                  position: 'absolute', inset: '12px 6px 0',
+                  backgroundImage: `
+                    repeating-linear-gradient(0deg, transparent 0, transparent 13px, rgba(196,151,106,${winOp}) 13px, rgba(196,151,106,${winOp}) 14px),
+                    repeating-linear-gradient(90deg, transparent 0, transparent 16px, rgba(196,151,106,${winOp}) 16px, rgba(196,151,106,${winOp}) 17px)
+                  `,
+                }} />
+                {/* Roof detail */}
+                <div style={{ position: 'absolute', top: -roofH, left: i % 4 === 0 ? '15%' : '25%', width: i % 4 === 0 ? '70%' : '50%', height: roofH, background: '#080b16', borderTop: '1px solid rgba(255,255,255,0.07)' }} />
+                {/* Rooftop element (water tank / antenna) on some */}
+                {i % 3 === 0 && <div style={{ position: 'absolute', top: -(roofH + 14), left: '55%', width: 4, height: 14, background: 'rgba(255,255,255,0.08)', borderRadius: '2px 2px 0 0' }} />}
+                {i % 5 === 0 && <div style={{ position: 'absolute', top: -(roofH + 20), left: '30%', width: 10, height: 20, background: '#080b16', borderRadius: '3px 3px 0 0', border: '1px solid rgba(255,255,255,0.07)', borderBottom: 'none' }} />}
+              </div>
+            )
+          })}
+          {/* Ground/street line */}
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: 'rgba(196,151,106,0.12)' }} />
+          {/* Fog gradient to hide building bottoms */}
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '40%', background: 'linear-gradient(to top, #0d1020 0%, transparent 100%)' }} />
+        </div>
 
         {/* ── Perspective floor grid (parquet / cobblestone) ── */}
         <div style={{
@@ -609,47 +669,103 @@ export default function WaitlistPage() {
         </div>
       </section>
 
-      {/* ── PULL QUOTE ───────────────────────────────────────────────── */}
-      <section style={{ background: '#f4f2ee', padding: 'clamp(48px,8vw,80px) clamp(16px,5vw,64px)', textAlign: 'center' }}>
-        <div className="bail-reveal" style={{ maxWidth: 640, margin: '0 auto' }}>
-          <div style={{ width: 36, height: 2, background: '#c4976a', margin: '0 auto 24px' }} />
-          <blockquote style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 600, fontSize: 'clamp(18px,3vw,28px)', color: '#0d0c0a', lineHeight: 1.55, margin: '0 0 20px' }}>
-            "Pour la première fois, j'ai loué mon appartement sans agence. Le bail était signé en moins d'une heure, tout depuis mon téléphone."
-          </blockquote>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#e4e1db', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 15, color: '#9e9b96' }}>S</span>
-            </div>
-            <div style={{ textAlign: 'left' }}>
-              <div style={{ fontFamily: "'DM Sans',sans-serif", fontWeight: 600, fontSize: 13, color: '#0d0c0a' }}>Sophie M.</div>
-              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: '#9e9b96' }}>Propriétaire · Paris 11e</div>
+      {/* ── LA PROMESSE ──────────────────────────────────────────────── */}
+      <section style={{ background: '#f4f2ee', padding: 'clamp(48px,8vw,80px) clamp(16px,5vw,64px)' }}>
+        <div style={{ maxWidth: 960, margin: '0 auto' }}>
+          <div className="bail-reveal" style={{ textAlign: 'center', marginBottom: 'clamp(36px,5vw,56px)' }}>
+            <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#9e9b96', margin: '0 0 14px' }}>La promesse Bailio</p>
+            <h2 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(26px,4vw,44px)', color: '#0d0c0a', margin: 0 }}>
+              La location telle qu'elle devrait être.
+            </h2>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 2 }}>
+            {[
+              { n: '01', title: 'Zéro intermédiaire', body: 'Pas d\'agence, pas de frais cachés. Propriétaire et locataire se trouvent directement, en toute transparence.' },
+              { n: '02', title: 'Tout est légal', body: 'Chaque étape — dossier, bail, paiement — respecte le cadre juridique français et européen. Aucun risque.' },
+              { n: '03', title: 'Depuis votre téléphone', body: 'Publiez, sélectionnez, signez et encaissez sans jamais ouvrir un ordinateur. Bailio est mobile-first.' },
+            ].map((item, i) => (
+              <div key={i} className={`bail-reveal bail-d${i + 1}`} style={{ background: i === 1 ? '#1a1a2e' : '#ffffff', border: '1px solid #e4e1db', padding: 'clamp(24px,4vw,36px)', borderRadius: i === 1 ? 0 : 0 }}>
+                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9.5, fontWeight: 700, letterSpacing: '0.16em', color: i === 1 ? 'rgba(196,151,106,.7)' : '#c4976a', marginBottom: 18 }}>{item.n}</div>
+                <h3 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(20px,2.5vw,26px)', color: i === 1 ? '#ffffff' : '#0d0c0a', margin: '0 0 12px', lineHeight: 1.2 }}>{item.title}</h3>
+                <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, color: i === 1 ? 'rgba(255,255,255,.55)' : '#5a5754', lineHeight: 1.72, margin: 0 }}>{item.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── SOCIAL SECTION ───────────────────────────────────────────── */}
+      <section style={{ background: '#fafaf8', padding: 'clamp(40px,6vw,64px) clamp(16px,5vw,64px)', borderTop: '1px solid #e4e1db' }}>
+        <div style={{ maxWidth: 800, margin: '0 auto', textAlign: 'center' }}>
+          <div className="bail-reveal">
+            <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#9e9b96', margin: '0 0 10px' }}>Suivez l'aventure</p>
+            <h2 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3.5vw,36px)', color: '#0d0c0a', margin: '0 0 32px' }}>
+              Restez au courant du lancement.
+            </h2>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center' }}>
+              {[
+                {
+                  href: 'https://instagram.com/bailio.fr',
+                  label: 'Instagram',
+                  handle: '@bailio.fr',
+                  desc: 'Coulisses du lancement',
+                  color: '#e1306c',
+                  icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" strokeWidth="0"/></svg>,
+                },
+                {
+                  href: 'https://twitter.com/bailiofr',
+                  label: 'Twitter / X',
+                  handle: '@bailiofr',
+                  desc: 'Actualités produit',
+                  color: '#ffffff',
+                  icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.261 5.638 5.903-5.638zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>,
+                },
+                {
+                  href: 'https://linkedin.com/company/bailio',
+                  label: 'LinkedIn',
+                  handle: 'Bailio',
+                  desc: 'Vision & immobilier',
+                  color: '#0a66c2',
+                  icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>,
+                },
+              ].map((s, i) => (
+                <a key={i} href={s.href} target="_blank" rel="noopener noreferrer" className={`bail-reveal bail-d${i + 1}`} style={{
+                  display: 'flex', alignItems: 'center', gap: 14,
+                  background: '#ffffff', border: '1px solid #e4e1db',
+                  borderRadius: 12, padding: '16px 22px',
+                  textDecoration: 'none',
+                  boxShadow: '0 1px 2px rgba(13,12,10,.04), 0 4px 12px rgba(13,12,10,.05)',
+                  transition: 'transform .2s, box-shadow .2s',
+                  minWidth: 200,
+                }}
+                  onMouseEnter={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.transform = 'translateY(-2px)'; el.style.boxShadow = '0 4px 20px rgba(13,12,10,.1)' }}
+                  onMouseLeave={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.transform = ''; el.style.boxShadow = '0 1px 2px rgba(13,12,10,.04), 0 4px 12px rgba(13,12,10,.05)' }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: '#1a1a2e', display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.color, flexShrink: 0 }}>
+                    {s.icon}
+                  </div>
+                  <div style={{ textAlign: 'left' }}>
+                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontWeight: 600, fontSize: 13, color: '#0d0c0a', lineHeight: 1.2 }}>{s.handle}</div>
+                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11.5, color: '#9e9b96', marginTop: 2 }}>{s.desc}</div>
+                  </div>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e4e1db" strokeWidth="2" style={{ marginLeft: 'auto' }}><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+                </a>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
       {/* ── FOOTER ───────────────────────────────────────────────────── */}
-      <footer style={{ background: '#1a1a2e', padding: 'clamp(28px,5vw,44px) clamp(16px,5vw,48px)' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+      <footer style={{ background: '#1a1a2e', padding: 'clamp(22px,4vw,36px) clamp(16px,5vw,48px)' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 14 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
             <BailioMark size={28} />
             <div>
-              <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 17, color: '#ffffff' }}>Bailio</div>
-              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: 'rgba(255,255,255,.28)', letterSpacing: '0.05em' }}>Plateforme immobilière · 2026</div>
+              <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 16, color: '#ffffff' }}>Bailio</div>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: 'rgba(255,255,255,.25)', letterSpacing: '0.05em' }}>Plateforme immobilière · 2026</div>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <a href="https://instagram.com/bailio.fr" target="_blank" rel="noopener noreferrer" className="soc-btn" aria-label="Instagram">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" strokeWidth="0"/></svg>
-            </a>
-            <a href="https://twitter.com/bailiofr" target="_blank" rel="noopener noreferrer" className="soc-btn" aria-label="Twitter / X">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.261 5.638 5.903-5.638zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-            </a>
-            <a href="https://linkedin.com/company/bailio" target="_blank" rel="noopener noreferrer" className="soc-btn" aria-label="LinkedIn">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
-            </a>
-          </div>
-          <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: 'rgba(255,255,255,.18)', margin: 0, width: '100%', paddingTop: 14, borderTop: '1px solid rgba(255,255,255,.06)' }}>
+          <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: 'rgba(255,255,255,.2)', margin: 0 }}>
             © 2026 Bailio. Tous droits réservés.
           </p>
         </div>
