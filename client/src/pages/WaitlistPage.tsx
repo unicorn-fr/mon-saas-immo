@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'
 const LAUNCH_DATE = new Date('2026-09-01T00:00:00Z')
@@ -23,6 +23,71 @@ function useCountdown(target: Date) {
     return () => clearInterval(id)
   }, [target])
   return t
+}
+
+// ─── Confetti ────────────────────────────────────────────────────────────────
+
+const COLORS = ['#c4976a', '#1a1a2e', '#ffffff', '#f3c99a', '#1b5e3b', '#1a3270', '#fdf5ec', '#e4c090']
+const SHAPES = ['square', 'circle', 'rect'] as const
+
+interface Particle {
+  id: number
+  x: number      // % from left
+  size: number   // px
+  color: string
+  shape: typeof SHAPES[number]
+  dur: number    // animation duration ms
+  delay: number  // ms
+  rotate: number // initial deg
+  drift: number  // horizontal drift px
+}
+
+function makeParticles(n: number): Particle[] {
+  return Array.from({ length: n }, (_, i) => ({
+    id: i,
+    x: Math.random() * 100,
+    size: 6 + Math.random() * 8,
+    color: COLORS[Math.floor(Math.random() * COLORS.length)],
+    shape: SHAPES[Math.floor(Math.random() * SHAPES.length)],
+    dur: 1800 + Math.random() * 1400,
+    delay: Math.random() * 600,
+    rotate: Math.random() * 360,
+    drift: (Math.random() - 0.5) * 120,
+  }))
+}
+
+function Confetti({ active }: { active: boolean }) {
+  const [particles] = useState<Particle[]>(() => makeParticles(80))
+
+  if (!active) return null
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 9999, overflow: 'hidden' }}>
+      {particles.map(p => {
+        const w = p.shape === 'rect' ? p.size * 2.2 : p.size
+        const h = p.shape === 'rect' ? p.size * 0.5 : p.size
+        const radius = p.shape === 'circle' ? '50%' : p.shape === 'square' ? '2px' : '1px'
+        return (
+          <div
+            key={p.id}
+            style={{
+              position: 'absolute',
+              top: -20,
+              left: `${p.x}%`,
+              width: w,
+              height: h,
+              background: p.color,
+              borderRadius: radius,
+              opacity: 0,
+              animation: `confettiFall ${p.dur}ms ease-in ${p.delay}ms forwards`,
+              '--drift': `${p.drift}px`,
+              '--rot': `${p.rotate + 720}deg`,
+            } as React.CSSProperties}
+          />
+        )
+      })}
+    </div>
+  )
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -84,6 +149,8 @@ export default function WaitlistPage() {
   const [email, setEmail] = useState('')
   const [state, setState] = useState<State>({ kind: 'idle' })
   const [totalCount, setTotalCount] = useState<number | null>(null)
+  const [showConfetti, setShowConfetti] = useState(false)
+  const confettiTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { days, hours, minutes, seconds } = useCountdown(LAUNCH_DATE)
 
   useEffect(() => {
@@ -91,6 +158,10 @@ export default function WaitlistPage() {
       .then(r => r.json())
       .then(d => { if (d.success) setTotalCount(d.data.total) })
       .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    return () => { if (confettiTimer.current) clearTimeout(confettiTimer.current) }
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -114,7 +185,11 @@ export default function WaitlistPage() {
         alreadyRegistered: data.data.alreadyRegistered,
         firstName: firstName.trim(),
       })
-      if (!data.data.alreadyRegistered) setTotalCount(c => (c !== null ? c + 1 : 1))
+      if (!data.data.alreadyRegistered) {
+        setTotalCount(c => (c !== null ? c + 1 : 1))
+        setShowConfetti(true)
+        confettiTimer.current = setTimeout(() => setShowConfetti(false), 4000)
+      }
     } catch {
       setState({ kind: 'error', message: 'Impossible de rejoindre la liste. Réessayez.' })
     }
@@ -145,6 +220,7 @@ export default function WaitlistPage() {
 
   return (
     <>
+      <Confetti active={showConfetti} />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=DM+Sans:wght@400;500;600&display=swap');
 
@@ -175,6 +251,11 @@ export default function WaitlistPage() {
         @keyframes blink {
           0%, 100% { opacity: 1; }
           50%       { opacity: 0.3; }
+        }
+        @keyframes confettiFall {
+          0%   { opacity: 1; transform: translateY(0)       translateX(0)           rotate(0deg); }
+          80%  { opacity: 1; }
+          100% { opacity: 0; transform: translateY(100vh)   translateX(var(--drift)) rotate(var(--rot)); }
         }
 
         .wl-input {
