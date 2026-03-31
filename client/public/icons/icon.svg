@@ -1,6 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="100" fill="#1a1a2e"/>
-  <path d="M256 130L130 220V390H210V295H302V390H382V220L256 130Z" fill="#fafaf8"/>
-  <rect x="223" y="295" width="66" height="95" rx="8" fill="#c4976a"/>
-  <rect x="305" y="160" width="32" height="62" rx="6" fill="#c4976a"/>
+  <rect width="512" height="512" rx="112" fill="#1a1a2e"/>
+  <text
+    x="256" y="340"
+    text-anchor="middle"
+    font-family="Georgia, serif"
+    font-style="italic"
+    font-weight="700"
+    font-size="300"
+    fill="#ffffff"
+  >B</text>
+  <rect x="164" y="390" width="184" height="13" rx="6.5" fill="#c4976a"/>
 </svg>

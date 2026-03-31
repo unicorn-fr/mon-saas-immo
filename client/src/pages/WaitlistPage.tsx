@@ -101,15 +101,24 @@ type State =
 // ─── Logo mark ────────────────────────────────────────────────────────────────
 
 function BailioMark({ size = 40 }: { size?: number }) {
+  const r = Math.round(size * 0.22)
   return (
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-      <rect width="40" height="40" rx="10" fill="#1a1a2e" />
-      {/* House body */}
-      <path d="M20 11L10 18.5V30H16.5V23.5H23.5V30H30V18.5L20 11Z" fill="#fafaf8" />
-      {/* Door */}
-      <rect x="17.5" y="23.5" width="5" height="6.5" rx="1" fill="#c4976a" />
-      {/* Chimney accent */}
-      <rect x="24" y="13" width="2.5" height="5" rx="0.5" fill="#c4976a" />
+    <svg width={size} height={size} viewBox="0 0 100 100" fill="none">
+      <rect width="100" height="100" rx={r * (100 / size)} fill="#1a1a2e" />
+      {/* Italic B — traced from Cormorant Garamond */}
+      <text
+        x="50" y="68"
+        textAnchor="middle"
+        fontFamily="'Cormorant Garamond', Georgia, serif"
+        fontStyle="italic"
+        fontWeight="700"
+        fontSize="62"
+        fill="#ffffff"
+      >
+        B
+      </text>
+      {/* Caramel underline */}
+      <rect x="32" y="78" width="36" height="2.5" rx="1.25" fill="#c4976a" />
     </svg>
   )
 }
