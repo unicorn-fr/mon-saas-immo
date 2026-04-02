@@ -3,58 +3,9 @@ import React, { useState, useEffect } from 'react'
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'
 const LAUNCH_DATE = new Date('2026-06-04T00:00:00Z')
 
-// ─── Static deterministic data ────────────────────────────────────────────────
+// ─── Static data ──────────────────────────────────────────────────────────────
 
-const STARS = Array.from({ length: 48 }, (_, i) => ({
-  id: i,
-  top: ((i * 41 + 13) % 78) + 3,
-  left: ((i * 67 + 9) % 94) + 3,
-  size: i % 6 === 0 ? 2 : 1,
-  dur: 2.2 + (i % 6) * 0.6,
-  delay: (i * 0.31) % 4,
-}))
-
-// Tiny lit windows on distant buildings at edges
-const WINDOWS = [
-  // Left wall
-  ...[0,1,2,3,4,5,6,7].map(i => ({
-    top: 10 + i * 9, left: i % 2 === 0 ? 1.5 : 4.5,
-    lit: i % 3 !== 1, delay: (i * 0.7) % 4,
-  })),
-  // Right wall
-  ...[0,1,2,3,4,5,6,7].map(i => ({
-    top: 8 + i * 9.5, left: i % 2 === 0 ? 93.5 : 96.5,
-    lit: i % 3 !== 2, delay: (i * 0.9 + 0.5) % 4,
-  })),
-]
-
-// City skyline buildings (desktop background)
-// Each: left%, width%, height(px), windowOpacity
-const BUILDINGS: [number, number, number, number][] = [
-  [0,   5.5, 300, 0.14],
-  [4.5, 3.5, 538, 0.38],
-  [7.5, 6.5, 226, 0.09],
-  [13,  4,   680, 0.46],
-  [16.5,7,   354, 0.20],
-  [23,  3.5, 468, 0.32],
-  [26,  5.5, 246, 0.07],
-  [31,  8,   397, 0.24],
-  [38,  4,   600, 0.42],
-  [41.5,6.5, 272, 0.11],
-  [47,  3.5, 738, 0.52],
-  [50,  5.5, 328, 0.17],
-  [55,  7.5, 215, 0.06],
-  [62,  4.5, 508, 0.36],
-  [66,  6,   380, 0.22],
-  [71.5,3.5, 620, 0.44],
-  [74.5,6,   277, 0.14],
-  [80,  7.5, 200, 0.05],
-  [87,  4.5, 446, 0.30],
-  [91,  5.5, 340, 0.19],
-  [96,  5,   502, 0.37],
-]
-
-const CONF_COLORS = ['#c4976a', '#fdf5ec', '#f3c99a', '#1a1a2e', '#5a5754', '#e4e1db', '#9e9b96']
+const CONF_COLORS = ['#1a3270', '#c4976a', '#1b5e3b', '#e4e1db', '#9e9b96', '#fdf5ec']
 const PARTICLES = Array.from({ length: 90 }, (_, i) => ({
   id: i,
   x: (i / 90) * 100 + Math.sin(i * 1.5) * 4,
@@ -67,26 +18,65 @@ const PARTICLES = Array.from({ length: 90 }, (_, i) => ({
   drift: Math.sin(i * 0.7) * 80,
 }))
 
+// Floating glass orbs — background atmosphere
+const ORBS = [
+  { size: 340, top: '-8%',  left: '-6%',  color: 'rgba(196,151,106,0.18)', dur: 9,   delay: 0 },
+  { size: 260, top: '60%',  left: '-4%',  color: 'rgba(27,94,59,0.12)',    dur: 11,  delay: 2 },
+  { size: 420, top: '-12%', left: '65%',  color: 'rgba(26,50,112,0.10)',   dur: 8,   delay: 1 },
+  { size: 180, top: '70%',  left: '80%',  color: 'rgba(196,151,106,0.14)', dur: 10,  delay: 3 },
+  { size: 300, top: '40%',  left: '40%',  color: 'rgba(27,94,59,0.06)',    dur: 13,  delay: 0.5 },
+]
+
+// Desktop building silhouettes — outline style on light bg
+// [left%, width%, height(px), strokeOpacity]
+const BUILDINGS: [number, number, number, number][] = [
+  [0,   5.5, 300, 0.07],
+  [4.5, 3.5, 538, 0.05],
+  [7.5, 6.5, 226, 0.06],
+  [13,  4,   680, 0.05],
+  [16.5,7,   354, 0.07],
+  [23,  3.5, 468, 0.05],
+  [26,  5.5, 246, 0.06],
+  [31,  8,   397, 0.07],
+  [38,  4,   600, 0.05],
+  [41.5,6.5, 272, 0.06],
+  [47,  3.5, 738, 0.04],
+  [50,  5.5, 328, 0.06],
+  [55,  7.5, 215, 0.07],
+  [62,  4.5, 508, 0.05],
+  [66,  6,   380, 0.06],
+  [71.5,3.5, 620, 0.05],
+  [74.5,6,   277, 0.07],
+  [80,  7.5, 200, 0.06],
+  [87,  4.5, 446, 0.05],
+  [91,  5.5, 340, 0.06],
+  [96,  5,   502, 0.05],
+]
+
 const FEATURES = [
   {
     title: 'Dossiers vérifiés par IA',
     desc: 'Analyse automatique des justificatifs en quelques secondes. Score de solvabilité instantané.',
-    icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c4976a" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>,
+    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1b5e3b" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>,
+    accent: '#1b5e3b', accentBg: 'rgba(27,94,59,0.06)',
   },
   {
     title: 'Signature eIDAS',
     desc: 'Bail et état des lieux signés en ligne, valeur juridique garantie par la réglementation européenne.',
-    icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c4976a" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>,
+    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a3270" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>,
+    accent: '#1a3270', accentBg: 'rgba(26,50,112,0.06)',
   },
   {
     title: 'Paiements automatiques',
     desc: 'Loyers encaissés chaque mois, quittances générées et envoyées sans intervention.',
-    icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c4976a" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>,
+    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c4976a" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>,
+    accent: '#c4976a', accentBg: 'rgba(196,151,106,0.08)',
   },
   {
     title: 'Messagerie sécurisée',
     desc: 'Canal dédié propriétaire–locataire, traçable et archivé. Chaque échange est horodaté.',
-    icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c4976a" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1b5e3b" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+    accent: '#1b5e3b', accentBg: 'rgba(27,94,59,0.06)',
   },
 ]
 
@@ -98,7 +88,7 @@ const CSS = `
 html { scroll-behavior: smooth; }
 
 @keyframes wUp {
-  from { opacity:0; transform:translateY(22px); }
+  from { opacity:0; transform:translateY(20px); }
   to   { opacity:1; transform:translateY(0); }
 }
 @keyframes fIn {
@@ -118,43 +108,31 @@ html { scroll-behavior: smooth; }
   to   { stroke-dashoffset:0; }
 }
 @keyframes popIn {
-  0%   { opacity:0; transform:scale(0.82) translateY(12px); }
+  0%   { opacity:0; transform:scale(0.82) translateY(10px); }
   65%  { transform:scale(1.04); }
   100% { opacity:1; transform:scale(1) translateY(0); }
 }
 @keyframes slideUp {
-  from { opacity:0; transform:translateY(28px); }
+  from { opacity:0; transform:translateY(24px); }
   to   { opacity:1; transform:translateY(0); }
 }
-@keyframes lampGlow {
-  0%,100% { opacity:var(--lop,0.18); transform:translate(-50%,-50%) scale(1); }
-  50%     { opacity:calc(var(--lop,0.18)*1.5); transform:translate(-50%,-50%) scale(1.08); }
-}
-@keyframes winFlicker {
-  0%,80%,100% { opacity:1; }
-  83%          { opacity:0.5; }
-  88%          { opacity:0.85; }
-}
-@keyframes starBlink {
-  0%,100% { opacity:0.12; }
-  50%     { opacity:0.75; }
+@keyframes orbDrift {
+  0%,100% { transform:translate(0,0) scale(1); }
+  33%     { transform:translate(18px,-14px) scale(1.06); }
+  66%     { transform:translate(-12px,16px) scale(0.94); }
 }
 @keyframes arrowPulse {
   0%,100% { transform:translateX(0); }
   50%     { transform:translateX(5px); }
 }
-@keyframes floorScroll {
-  from { background-position: 0 0; }
-  to   { background-position: 0 80px; }
-}
-@keyframes borderPulse {
-  0%,100% { border-color:rgba(255,255,255,0.1); }
-  50%     { border-color:rgba(196,151,106,0.22); }
+@keyframes borderShimmer {
+  0%,100% { border-color:rgba(255,255,255,0.75); }
+  50%     { border-color:rgba(255,255,255,0.95); }
 }
 
 /* Scroll reveal */
 .bail-reveal {
-  opacity:0; transform:translateY(30px);
+  opacity:0; transform:translateY(28px);
   transition:opacity .7s ease, transform .7s ease;
 }
 .bail-reveal.vis { opacity:1; transform:translateY(0); }
@@ -163,75 +141,93 @@ html { scroll-behavior: smooth; }
 .bail-d3 { transition-delay:.36s!important; }
 .bail-d4 { transition-delay:.5s!important; }
 
-/* Glass card */
-.glass {
-  background: rgba(8,12,28,0.62);
-  backdrop-filter: blur(32px) saturate(1.6);
-  -webkit-backdrop-filter: blur(32px) saturate(1.6);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-top: 1px solid rgba(255,255,255,0.2);
-  border-radius: 22px;
+/* Light glassmorphism card */
+.glass-card {
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(40px) saturate(1.8);
+  -webkit-backdrop-filter: blur(40px) saturate(1.8);
+  border: 1px solid rgba(255,255,255,0.85);
+  border-top: 1px solid rgba(255,255,255,0.98);
+  border-radius: 24px;
   box-shadow:
-    0 40px 100px rgba(0,0,0,0.7),
-    0 1px 0 rgba(255,255,255,0.1) inset,
-    0 0 0 1px rgba(196,151,106,0.05);
-  animation: borderPulse 6s ease-in-out infinite;
+    0 8px 48px rgba(26,50,112,0.08),
+    0 2px 16px rgba(26,50,112,0.04),
+    0 1px 0 rgba(255,255,255,0.9) inset;
+  animation: borderShimmer 6s ease-in-out infinite;
 }
 
-/* Underline inputs */
+/* Underline inputs — light */
 .bail-inp {
-  background:transparent; border:none;
-  border-bottom:1.5px solid rgba(255,255,255,0.16);
-  outline:none; width:100%;
-  padding:10px 0 8px;
-  font-family:'DM Sans',sans-serif; font-size:15px; color:#fff;
-  transition:border-color .3s; -webkit-appearance:none;
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid rgba(26,50,112,0.18);
+  outline: none;
+  width: 100%;
+  padding: 10px 0 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  color: #1a3270;
+  transition: border-color .3s;
+  -webkit-appearance: none;
 }
-.bail-inp::placeholder { color:rgba(255,255,255,0.25); }
-.bail-inp:focus { border-bottom-color:rgba(196,151,106,0.75); }
+.bail-inp::placeholder { color: rgba(26,50,112,0.28); }
+.bail-inp:focus { border-bottom-color: rgba(196,151,106,0.8); }
 
-.bail-grp { position:relative; margin-bottom:20px; }
+.bail-grp { position: relative; margin-bottom: 20px; }
 .bail-lbl {
-  display:block; font-family:'DM Sans',sans-serif;
-  font-size:9px; font-weight:600; letter-spacing:0.15em;
-  text-transform:uppercase; color:rgba(255,255,255,0.28); margin-bottom:2px;
+  display: block;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9.5px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: rgba(26,50,112,0.38); margin-bottom: 2px;
 }
 .bail-bar {
-  position:absolute; bottom:0; left:0; right:0; height:1.5px;
-  background:#c4976a; transform:scaleX(0); transform-origin:left;
-  transition:transform .35s ease;
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 1.5px; background: #c4976a;
+  transform: scaleX(0); transform-origin: left;
+  transition: transform .35s ease;
 }
-.bail-grp:focus-within .bail-bar { transform:scaleX(1); }
+.bail-grp:focus-within .bail-bar { transform: scaleX(1); }
 
-/* CTA button */
+/* CTA */
 .bail-cta {
-  width:100%; padding:14px 24px;
-  background:#c4976a; color:#fff; border:none; border-radius:8px;
-  font-family:'DM Sans',sans-serif; font-size:14px; font-weight:600;
-  cursor:pointer; display:flex; align-items:center; justify-content:center;
-  gap:10px; letter-spacing:0.01em;
-  transition:background .25s, box-shadow .25s, opacity .25s;
-  box-shadow:0 4px 24px rgba(196,151,106,0.42);
+  width: 100%; padding: 14px 24px;
+  background: #1a3270; color: #fff;
+  border: none; border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer; display: flex;
+  align-items: center; justify-content: center;
+  gap: 10px; letter-spacing: .01em;
+  transition: background .25s, box-shadow .25s, opacity .25s;
+  box-shadow: 0 4px 24px rgba(26,50,112,0.28);
 }
-.bail-cta:hover:not(:disabled) { background:#b8855a; box-shadow:0 6px 34px rgba(196,151,106,0.55); }
-.bail-cta:disabled { opacity:0.38; cursor:default; box-shadow:none; }
+.bail-cta:hover:not(:disabled) { background: #142560; box-shadow: 0 6px 32px rgba(26,50,112,0.38); }
+.bail-cta:disabled { opacity: 0.38; cursor: default; box-shadow: none; }
 
-/* Social */
-.soc-btn {
-  width:36px; height:36px; border-radius:8px;
-  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
-  display:flex; align-items:center; justify-content:center;
-  color:rgba(255,255,255,0.45); text-decoration:none;
-  transition:color .2s, background .2s, border-color .2s;
+/* Social cards */
+.soc-card {
+  display: flex; align-items: center; gap: 14px;
+  background: rgba(255,255,255,0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.9);
+  border-radius: 14px; padding: 16px 22px;
+  text-decoration: none;
+  box-shadow: 0 2px 16px rgba(26,50,112,0.07);
+  transition: transform .2s ease, box-shadow .2s ease;
+  min-width: 200px; flex: 1 1 200px;
 }
-.soc-btn:hover { color:#c4976a; background:rgba(196,151,106,0.1); border-color:rgba(196,151,106,0.3); }
+.soc-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(26,50,112,0.12);
+}
 
-/* Cityscape: desktop only */
-.city-skyline { display:none; }
+/* City skyline desktop */
+.city-skyline { display: none; }
 @media (min-width: 900px) {
-  .city-skyline { display:block; }
-  /* Edge windows replaced by cityscape on desktop */
-  .edge-wins { display:none; }
+  .city-skyline { display: block; }
+  .edge-wins { display: none; }
 }
 `
 
@@ -248,7 +244,7 @@ function useCountdown(target: Date) {
   return t
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+// ─── Components ───────────────────────────────────────────────────────────────
 function Confetti({ active }: { active: boolean }) {
   if (!active) return null
   return (
@@ -260,23 +256,22 @@ function Confetti({ active }: { active: boolean }) {
   )
 }
 
-function BailioMark({ size = 32 }: { size?: number }) {
+// Logo wordmark: "Bailio." — italic serif navy + caramel dot
+function BailioWordmark({ fontSize = 22 }: { fontSize?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100" fill="none">
-      <rect width="100" height="100" rx="20" fill="#1a1a2e" />
-      <text x="50" y="70" textAnchor="middle" fontFamily="'Cormorant Garamond',Georgia,serif" fontStyle="italic" fontWeight="700" fontSize="64" fill="#ffffff">B</text>
-      <rect x="30" y="80" width="40" height="3" rx="1.5" fill="#c4976a" />
-    </svg>
+    <span style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize, color: '#1a3270', letterSpacing: '-0.01em', lineHeight: 1 }}>
+      Bailio<span style={{ color: '#c4976a' }}>.</span>
+    </span>
   )
 }
 
 function CDUnit({ value, label }: { value: number; label: string }) {
   return (
     <div style={{ textAlign: 'center', minWidth: 36 }}>
-      <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3.5vw,32px)', color: '#ffffff', lineHeight: 1 }}>
+      <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3.5vw,32px)', color: '#1a3270', lineHeight: 1 }}>
         {String(value).padStart(2, '0')}
       </div>
-      <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 8.5, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,.32)', marginTop: 3 }}>{label}</div>
+      <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 8.5, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(26,50,112,0.35)', marginTop: 3 }}>{label}</div>
     </div>
   )
 }
@@ -285,27 +280,27 @@ function SuccessBlock({ isEarlyAccess, alreadyRegistered, firstName }: { isEarly
   return (
     <div style={{ animation: 'slideUp .5s ease forwards' }}>
       <svg width="52" height="52" viewBox="0 0 52 52" fill="none" style={{ marginBottom: 14 }}>
-        <circle cx="26" cy="26" r="24" stroke="#c4976a" strokeWidth="2.5" strokeDasharray="283" strokeDashoffset="283"
+        <circle cx="26" cy="26" r="24" stroke="#1b5e3b" strokeWidth="2.5" strokeDasharray="283" strokeDashoffset="283"
           style={{ animation: 'drawCircle .8s ease .1s forwards' }} />
-        <polyline points="14,27 21,34 38,18" stroke="#c4976a" strokeWidth="3"
+        <polyline points="14,27 21,34 38,18" stroke="#1b5e3b" strokeWidth="3"
           strokeLinecap="round" strokeLinejoin="round" strokeDasharray="60" strokeDashoffset="60"
           style={{ animation: 'drawCheck .45s ease .9s forwards' }} />
       </svg>
-      <h2 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3.5vw,34px)', color: '#ffffff', margin: '0 0 10px', lineHeight: 1.2 }}>
+      <h2 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3.5vw,34px)', color: '#1a3270', margin: '0 0 10px', lineHeight: 1.2 }}>
         {alreadyRegistered ? 'Déjà inscrit !' : firstName ? `Bienvenue, ${firstName} !` : 'Vous êtes sur la liste !'}
       </h2>
-      <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, color: 'rgba(255,255,255,.48)', lineHeight: 1.75, margin: '0 0 18px' }}>
+      <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, color: 'rgba(26,50,112,0.5)', lineHeight: 1.75, margin: '0 0 18px' }}>
         {alreadyRegistered
           ? 'Cette adresse est déjà enregistrée. Vous serez parmi les premiers prévenus.'
           : "Inscription confirmée. Un email de bienvenue vient d'être envoyé."}
       </p>
       {isEarlyAccess && !alreadyRegistered && (
-        <div style={{ animation: 'popIn .5s cubic-bezier(.34,1.56,.64,1) 1.4s both', background: 'rgba(253,245,236,0.08)', border: '1px solid rgba(243,201,154,0.35)', borderRadius: 10, padding: '13px 16px', display: 'flex', alignItems: 'flex-start', gap: 11 }}>
-          <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#c4976a', flexShrink: 0, marginTop: 3, boxShadow: '0 0 8px rgba(196,151,106,.8)' }} />
+        <div style={{ animation: 'popIn .5s cubic-bezier(.34,1.56,.64,1) 1.4s both', background: 'rgba(196,151,106,0.08)', border: '1px solid rgba(196,151,106,0.3)', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#c4976a', flexShrink: 0, marginTop: 3, boxShadow: '0 0 8px rgba(196,151,106,.5)' }} />
           <div>
-            <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9.5, fontWeight: 700, letterSpacing: '0.13em', textTransform: 'uppercase', color: '#f3c99a', marginBottom: 3 }}>Early Access · 150 premiers</div>
-            <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: 'rgba(255,255,255,.65)', lineHeight: 1.55 }}>
-              <strong style={{ color: '#ffffff' }}>1 mois offert</strong> sur le plan Pro au lancement. Aucune action requise.
+            <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9.5, fontWeight: 700, letterSpacing: '0.13em', textTransform: 'uppercase', color: '#c4976a', marginBottom: 3 }}>Early Access · 150 premiers</div>
+            <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: '#5a5754', lineHeight: 1.55 }}>
+              <strong style={{ color: '#1a3270' }}>1 mois offert</strong> sur le plan Pro au lancement. Aucune action requise.
             </div>
           </div>
         </div>
@@ -344,7 +339,7 @@ export default function WaitlistPage() {
   useEffect(() => {
     const io = new IntersectionObserver(
       entries => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('vis'); io.unobserve(e.target) } }),
-      { threshold: 0.12 }
+      { threshold: 0.1 }
     )
     document.querySelectorAll('.bail-reveal').forEach(el => io.observe(el))
     return () => io.disconnect()
@@ -384,181 +379,131 @@ export default function WaitlistPage() {
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200,
         height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 clamp(16px,5vw,48px)',
-        background: scrolled ? 'rgba(10,14,28,0.9)' : 'transparent',
-        borderBottom: scrolled ? '1px solid rgba(196,151,106,.2)' : '1px solid transparent',
+        background: scrolled ? 'rgba(250,250,248,0.88)' : 'transparent',
+        backdropFilter: scrolled ? 'blur(20px)' : 'none',
+        WebkitBackdropFilter: scrolled ? 'blur(20px)' : 'none',
+        borderBottom: scrolled ? '1px solid rgba(26,50,112,0.08)' : '1px solid transparent',
         transition: 'background .4s, border-color .4s',
       }}>
-        <BailioMark size={30} />
-        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,.35)', display: 'flex', alignItems: 'center', gap: 7 }}>
-          <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#c4976a', boxShadow: '0 0 5px rgba(196,151,106,.8)' }} />
-          Liste d'attente ouverte
+        <BailioWordmark fontSize={20} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#1b5e3b', boxShadow: '0 0 5px rgba(27,94,59,.6)' }} />
+          <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(26,50,112,0.45)' }}>
+            Liste d'attente ouverte
+          </span>
         </div>
       </nav>
 
       {/* ══════════════════════════════════════════════════════════════════
-          HERO — full atmosphere
+          HERO — light, airy, glassmorphisme
       ═══════════════════════════════════════════════════════════════════ */}
-      <section style={{ minHeight: '100svh', background: '#0d1020', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(72px,10vw,100px) clamp(16px,4vw,40px) 48px' }}>
+      <section style={{ minHeight: '100svh', background: '#fafaf8', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(72px,10vw,100px) clamp(16px,4vw,40px) 48px' }}>
 
-        {/* ── Stars ── */}
-        {STARS.map(s => (
-          <div key={s.id} style={{ position: 'absolute', top: `${s.top}%`, left: `${s.left}%`, width: s.size, height: s.size, borderRadius: '50%', background: '#fff', animation: `starBlink ${s.dur}s ease-in-out ${s.delay}s infinite`, pointerEvents: 'none' }} />
-        ))}
-
-        {/* ── Ambient light pools (street lamps / interior glow) ── */}
-        {[
-          { top: '12%', left: '18%', size: 420, op: 0.12, dur: 4 },
-          { top: '70%', left: '10%', size: 300, op: 0.09, dur: 5 },
-          { top: '20%', left: '78%', size: 380, op: 0.11, dur: 3.5 },
-          { top: '75%', left: '82%', size: 260, op: 0.08, dur: 4.8 },
-          { top: '50%', left: '50%', size: 700, op: 0.04, dur: 6 },
-        ].map((l, i) => (
+        {/* ── Ambient color orbs ── */}
+        {ORBS.map((o, i) => (
           <div key={i} style={{
-            position: 'absolute', top: l.top, left: l.left, pointerEvents: 'none',
-            width: l.size, height: l.size,
-            background: `radial-gradient(circle, rgba(196,151,106,${l.op}) 0%, transparent 65%)`,
-            transform: 'translate(-50%,-50%)',
-            animation: `lampGlow ${l.dur}s ease-in-out ${i * 0.7}s infinite`,
-            '--lop': l.op,
-          } as React.CSSProperties} />
-        ))}
-
-        {/* ── Tiny windows on distant buildings (edges, mobile only) ── */}
-        <div className="edge-wins" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-        {WINDOWS.map((w, i) => (
-          <div key={i} style={{
-            position: 'absolute', top: `${w.top}%`, left: `${w.left}%`,
-            width: 14, height: 20,
-            background: w.lit ? 'rgba(196,151,106,0.55)' : 'rgba(255,255,255,0.06)',
-            borderRadius: 1,
-            boxShadow: w.lit ? '0 0 8px 2px rgba(196,151,106,0.25)' : 'none',
-            animation: w.lit ? `winFlicker ${3.5 + w.delay}s ease-in-out ${w.delay}s infinite` : 'none',
+            position: 'absolute', top: o.top, left: o.left,
+            width: o.size, height: o.size,
+            borderRadius: '50%',
+            background: o.color,
+            filter: 'blur(80px)',
+            animation: `orbDrift ${o.dur}s ease-in-out ${o.delay}s infinite`,
             pointerEvents: 'none',
+            zIndex: 0,
           }} />
         ))}
-        </div>
 
-        {/* ── City skyline — desktop background ── */}
+        {/* ── Desktop building silhouettes (outline) ── */}
         <div className="city-skyline" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '90%', pointerEvents: 'none', zIndex: 1 }}>
-          {BUILDINGS.map(([l, w, h, wo], i) => {
-            const winOp = wo
-            const roofH = 8 + (i % 3) * 6
+          {BUILDINGS.map(([l, w, h, op], i) => {
+            const roofH = 8 + (i % 3) * 5
             return (
-              <div key={i} style={{ position: 'absolute', bottom: 0, left: `${l}%`, width: `${w}%`, height: h, background: '#0a0d1a', borderTop: `1px solid rgba(255,255,255,0.08)` }}>
-                {/* Window grid */}
+              <div key={i} style={{
+                position: 'absolute', bottom: 0, left: `${l}%`, width: `${w}%`, height: h,
+                background: 'transparent',
+                border: `1px solid rgba(26,50,112,${op})`,
+                borderBottom: 'none',
+              }}>
+                {/* Window grid — very subtle */}
                 <div style={{
                   position: 'absolute', inset: '12px 6px 0',
                   backgroundImage: `
-                    repeating-linear-gradient(0deg, transparent 0, transparent 13px, rgba(196,151,106,${winOp}) 13px, rgba(196,151,106,${winOp}) 14px),
-                    repeating-linear-gradient(90deg, transparent 0, transparent 16px, rgba(196,151,106,${winOp}) 16px, rgba(196,151,106,${winOp}) 17px)
+                    repeating-linear-gradient(0deg, transparent 0, transparent 13px, rgba(26,50,112,${op * 0.6}) 13px, rgba(26,50,112,${op * 0.6}) 14px),
+                    repeating-linear-gradient(90deg, transparent 0, transparent 16px, rgba(26,50,112,${op * 0.6}) 16px, rgba(26,50,112,${op * 0.6}) 17px)
                   `,
                 }} />
-                {/* Roof detail */}
-                <div style={{ position: 'absolute', top: -roofH, left: i % 4 === 0 ? '15%' : '25%', width: i % 4 === 0 ? '70%' : '50%', height: roofH, background: '#080b16', borderTop: '1px solid rgba(255,255,255,0.07)' }} />
-                {/* Rooftop element (water tank / antenna) on some */}
-                {i % 3 === 0 && <div style={{ position: 'absolute', top: -(roofH + 14), left: '55%', width: 4, height: 14, background: 'rgba(255,255,255,0.08)', borderRadius: '2px 2px 0 0' }} />}
-                {i % 5 === 0 && <div style={{ position: 'absolute', top: -(roofH + 20), left: '30%', width: 10, height: 20, background: '#080b16', borderRadius: '3px 3px 0 0', border: '1px solid rgba(255,255,255,0.07)', borderBottom: 'none' }} />}
+                {/* Roof */}
+                <div style={{ position: 'absolute', top: -roofH, left: i % 4 === 0 ? '15%' : '25%', width: i % 4 === 0 ? '70%' : '50%', height: roofH, border: `1px solid rgba(26,50,112,${op})`, borderBottom: 'none', background: 'transparent' }} />
               </div>
             )
           })}
-          {/* Ground/street line */}
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: 'rgba(196,151,106,0.12)' }} />
-          {/* Fog gradient to hide building bottoms */}
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '40%', background: 'linear-gradient(to top, #0d1020 0%, transparent 100%)' }} />
+          {/* Ground line */}
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 1, background: 'rgba(26,50,112,0.08)' }} />
+          {/* Fade at bottom */}
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '35%', background: 'linear-gradient(to top, #fafaf8 0%, transparent 100%)' }} />
         </div>
 
-        {/* ── Perspective floor grid (parquet / cobblestone) ── */}
-        <div style={{
-          position: 'absolute', bottom: 0, left: '-30%', right: '-30%', height: '28%',
-          backgroundImage: `
-            linear-gradient(rgba(196,151,106,0.07) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(196,151,106,0.07) 1px, transparent 1px)
-          `,
-          backgroundSize: '64px 64px',
-          transform: 'perspective(380px) rotateX(52deg)',
-          transformOrigin: 'bottom center',
-          pointerEvents: 'none',
-          maskImage: 'linear-gradient(to top, rgba(0,0,0,.6) 0%, transparent 100%)',
-          WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,.6) 0%, transparent 100%)',
-        }} />
-
-        {/* ── Architectural lines (ceiling / wainscoting) ── */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'rgba(196,151,106,0.08)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', top: 60, left: 0, right: 0, height: 1, background: 'rgba(255,255,255,0.04)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: '28%', left: 0, right: 0, height: 1, background: 'rgba(196,151,106,0.1)', pointerEvents: 'none' }} />
-
-        {/* ── Giant ghost "Bailio" watermark ── */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          pointerEvents: 'none', zIndex: 1,
-          overflow: 'hidden',
-        }}>
+        {/* ── Giant ghost "Bailio." watermark ── */}
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 2, overflow: 'hidden' }}>
           <span style={{
             fontFamily: "'Cormorant Garamond',Georgia,serif",
             fontStyle: 'italic', fontWeight: 700,
-            fontSize: 'clamp(120px, 22vw, 260px)',
+            fontSize: 'clamp(130px,20vw,280px)',
             color: 'transparent',
-            WebkitTextStroke: '1px rgba(255,255,255,0.05)',
-            lineHeight: 1,
-            userSelect: 'none',
-            letterSpacing: '-0.02em',
-            whiteSpace: 'nowrap',
-          }}>Bailio</span>
+            WebkitTextStroke: '1px rgba(26,50,112,0.05)',
+            lineHeight: 1, userSelect: 'none',
+            letterSpacing: '-0.02em', whiteSpace: 'nowrap',
+          }}>Bailio.</span>
         </div>
 
-        {/* ── Central glass card ── */}
-        <div className="glass" style={{
+        {/* ── Glass form card ── */}
+        <div className="glass-card" style={{
           position: 'relative', zIndex: 10,
-          width: '100%', maxWidth: 480,
-          padding: 'clamp(28px,5vw,44px) clamp(24px,5vw,40px)',
-          animation: 'fIn .9s ease .2s both',
+          width: '100%', maxWidth: 500,
+          padding: 'clamp(28px,5vw,48px) clamp(24px,5vw,44px)',
+          animation: 'fIn .9s ease .1s both',
         }}>
-          {/* Card header */}
+          {/* Card top */}
           <div style={{ marginBottom: 28 }}>
-            {/* Bailio logo + label */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 22 }}>
-              <BailioMark size={30} />
-              <div>
-                <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 17, color: '#ffffff', lineHeight: 1 }}>Bailio</div>
-                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,.35)', marginTop: 1 }}>Plateforme immobilière</div>
-              </div>
-              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#c4976a', boxShadow: '0 0 6px rgba(196,151,106,.8)' }} />
-                <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 600, color: '#c4976a', letterSpacing: '0.06em' }}>Liste d'attente</span>
+            {/* Logo + badge */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+              <BailioWordmark fontSize={26} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,94,59,0.07)', border: '1px solid rgba(27,94,59,0.15)', borderRadius: 20, padding: '4px 12px' }}>
+                <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#1b5e3b', boxShadow: '0 0 4px rgba(27,94,59,.7)' }} />
+                <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#1b5e3b' }}>Liste d'attente</span>
               </div>
             </div>
 
-            {/* Main headline */}
-            <h1 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(28px,4.5vw,42px)', color: '#ffffff', lineHeight: 1.1, margin: '0 0 8px' }}>
+            {/* Headline */}
+            <h1 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(30px,4.5vw,46px)', color: '#1a3270', lineHeight: 1.08, margin: '0 0 4px' }}>
               {['La', 'location'].map((w, i) => (
-                <span key={i} style={{ display: 'inline-block', marginRight: '0.22em', opacity: 0, animation: `wUp .55s cubic-bezier(.22,1,.36,1) ${0.4 + i * 0.12}s forwards` }}>{w}</span>
+                <span key={i} style={{ display: 'inline-block', marginRight: '0.22em', opacity: 0, animation: `wUp .55s cubic-bezier(.22,1,.36,1) ${0.35 + i * 0.12}s forwards` }}>{w}</span>
               ))}
               <br />
               {['sans', 'agence.'].map((w, i) => (
-                <span key={i} style={{ display: 'inline-block', marginRight: '0.22em', color: '#c4976a', opacity: 0, animation: `wUp .55s cubic-bezier(.22,1,.36,1) ${0.66 + i * 0.12}s forwards` }}>{w}</span>
+                <span key={i} style={{ display: 'inline-block', marginRight: '0.22em', color: '#c4976a', opacity: 0, animation: `wUp .55s cubic-bezier(.22,1,.36,1) ${0.60 + i * 0.12}s forwards` }}>{w}</span>
               ))}
             </h1>
-            <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: 'rgba(255,255,255,.4)', lineHeight: 1.7, margin: '0 0 22px', opacity: 0, animation: 'fIn .7s ease 1.1s forwards' }}>
-              Dossiers IA · Signature eIDAS · Paiements automatiques. Rejoignez les premiers à découvrir Bailio.
+            <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, color: 'rgba(26,50,112,0.5)', lineHeight: 1.72, margin: '12px 0 0', opacity: 0, animation: 'fIn .7s ease 1.0s forwards' }}>
+              Dossiers IA · Bail eIDAS · Paiements automatiques. La première plateforme de location 100% sans agence.
             </p>
 
-            {/* Countdown strip */}
-            <div style={{ display: 'flex', gap: 'clamp(10px,3vw,20px)', padding: '14px 0', borderTop: '1px solid rgba(255,255,255,.07)', borderBottom: '1px solid rgba(255,255,255,.07)', marginBottom: 24, opacity: 0, animation: 'fIn .7s ease 1.3s forwards' }}>
-              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: '0.13em', textTransform: 'uppercase', color: 'rgba(255,255,255,.28)', alignSelf: 'center', flexShrink: 0 }}>Lancement</div>
-              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,.06)', alignSelf: 'center' }} />
+            {/* Countdown */}
+            <div style={{ display: 'flex', gap: 'clamp(10px,3vw,20px)', padding: '16px 0', marginTop: 18, borderTop: '1px solid rgba(26,50,112,0.07)', borderBottom: '1px solid rgba(26,50,112,0.07)', opacity: 0, animation: 'fIn .7s ease 1.2s forwards' }}>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(26,50,112,0.3)', alignSelf: 'center', flexShrink: 0 }}>Lancement</div>
+              <div style={{ flex: 1, height: 1, background: 'rgba(26,50,112,0.06)', alignSelf: 'center' }} />
               <CDUnit value={cd.days} label="Jours" />
-              <div style={{ width: 1, background: 'rgba(255,255,255,.08)', alignSelf: 'stretch' }} />
+              <div style={{ width: 1, background: 'rgba(26,50,112,0.08)', alignSelf: 'stretch' }} />
               <CDUnit value={cd.hours} label="Heures" />
-              <div style={{ width: 1, background: 'rgba(255,255,255,.08)', alignSelf: 'stretch' }} />
+              <div style={{ width: 1, background: 'rgba(26,50,112,0.08)', alignSelf: 'stretch' }} />
               <CDUnit value={cd.minutes} label="Min" />
-              <div style={{ width: 1, background: 'rgba(255,255,255,.08)', alignSelf: 'stretch' }} />
+              <div style={{ width: 1, background: 'rgba(26,50,112,0.08)', alignSelf: 'stretch' }} />
               <CDUnit value={cd.seconds} label="Sec" />
             </div>
           </div>
 
-          {/* Form or Success */}
-          <div style={{ opacity: 0, animation: 'fIn .7s ease 1.5s forwards' }}>
+          {/* Form / Success */}
+          <div style={{ opacity: 0, animation: 'fIn .7s ease 1.4s forwards' }}>
             {!success ? (
               <form onSubmit={submit}>
                 <div className="bail-grp">
@@ -571,16 +516,13 @@ export default function WaitlistPage() {
                   <input className="bail-inp" type="email" placeholder="thomas@exemple.fr" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
                   <div className="bail-bar" />
                 </div>
-                <button type="submit" disabled={loading || !emailValid} className="bail-cta">
+                <button type="submit" disabled={loading || !emailValid} className="bail-cta" style={{ opacity: !emailValid && !loading ? 0.42 : 1 }}>
                   {loading
                     ? <span style={{ letterSpacing: '0.4em', fontSize: 18 }}>···</span>
-                    : <>
-                        Rejoindre la liste
-                        <span style={{ display: 'inline-block', animation: emailValid ? 'arrowPulse 1.4s ease-in-out infinite' : 'none' }}>→</span>
-                      </>
+                    : <>Rejoindre la liste <span style={{ display: 'inline-block', animation: emailValid ? 'arrowPulse 1.4s ease-in-out infinite' : 'none' }}>→</span></>
                   }
                 </button>
-                <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10.5, color: 'rgba(255,255,255,.2)', margin: '10px 0 0', textAlign: 'center' }}>
+                <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10.5, color: 'rgba(26,50,112,0.28)', margin: '10px 0 0', textAlign: 'center' }}>
                   Gratuit · Aucune carte · Désabonnement en un clic
                 </p>
               </form>
@@ -589,43 +531,43 @@ export default function WaitlistPage() {
             )}
           </div>
 
-          {/* Card footer stats */}
-          <div style={{ display: 'flex', gap: 0, marginTop: 24, paddingTop: 20, borderTop: '1px solid rgba(255,255,255,.06)' }}>
+          {/* Card footer — mini stats */}
+          <div style={{ display: 'flex', marginTop: 24, paddingTop: 18, borderTop: '1px solid rgba(26,50,112,0.06)' }}>
             {[{ val: '0 €', label: 'Commission' }, { val: '< 2 min', label: 'Dossier' }, { val: 'eIDAS', label: '100% légal' }].map((s, i) => (
-              <div key={i} style={{ flex: 1, textAlign: 'center', borderRight: i < 2 ? '1px solid rgba(255,255,255,.06)' : 'none' }}>
-                <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 16, color: '#ffffff', lineHeight: 1 }}>{s.val}</div>
-                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9.5, color: 'rgba(255,255,255,.3)', marginTop: 3, letterSpacing: '0.05em' }}>{s.label}</div>
+              <div key={i} style={{ flex: 1, textAlign: 'center', borderRight: i < 2 ? '1px solid rgba(26,50,112,0.06)' : 'none' }}>
+                <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 15, color: '#1a3270', lineHeight: 1 }}>{s.val}</div>
+                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9.5, color: 'rgba(26,50,112,0.35)', marginTop: 3, letterSpacing: '0.04em' }}>{s.label}</div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* ── Bottom fade ── */}
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 120, background: 'linear-gradient(to top, #fafaf8 0%, transparent 100%)', pointerEvents: 'none', zIndex: 5 }} />
+        {/* Bottom fade to next section */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 100, background: 'linear-gradient(to top, #ffffff 0%, transparent 100%)', pointerEvents: 'none', zIndex: 5 }} />
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════
-          BELOW FOLD — light editorial sections
+          SCROLL SECTIONS — clean, editorial
       ═══════════════════════════════════════════════════════════════════ */}
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────── */}
-      <section style={{ background: '#fafaf8', padding: 'clamp(56px,9vw,104px) clamp(16px,5vw,64px)' }}>
+      <section style={{ background: '#ffffff', padding: 'clamp(56px,9vw,104px) clamp(16px,5vw,64px)' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div className="bail-reveal" style={{ textAlign: 'center', marginBottom: 'clamp(40px,6vw,68px)' }}>
             <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#9e9b96', margin: '0 0 14px' }}>Comment ça marche</p>
-            <h2 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(28px,4.5vw,48px)', color: '#0d0c0a', margin: 0 }}>Simple. Rapide. Légal.</h2>
+            <h2 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(28px,4.5vw,48px)', color: '#1a3270', margin: 0 }}>Simple. Rapide. Légal.</h2>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'clamp(32px,5vw,52px)' }}>
             {[
-              { n: '1', title: 'Publiez votre bien', desc: 'Annonce professionnelle en 5 minutes. Photos, description, loyer — tout depuis votre téléphone.' },
-              { n: '2', title: 'Sélectionnez', desc: 'Dossiers vérifiés par IA, scoring automatique, bail eIDAS signé en ligne. Zéro paperasse.' },
+              { n: '1', title: 'Publiez votre bien', desc: 'Annonce professionnelle en 5 minutes. Photos, description, loyer — depuis votre téléphone.' },
+              { n: '2', title: 'Sélectionnez', desc: 'Dossiers vérifiés par IA, scoring automatique, bail eIDAS en ligne. Zéro paperasse.' },
               { n: '3', title: 'Gérez sereinement', desc: "Loyers encaissés, quittances générées, messagerie archivée. Bailio s'occupe du reste." },
             ].map((step, i) => (
               <div key={i} className={`bail-reveal bail-d${i + 1}`} style={{ position: 'relative' }}>
-                <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(80px,12vw,116px)', color: '#f4f2ee', lineHeight: 1, position: 'absolute', top: -18, left: -6, zIndex: 0, userSelect: 'none' }}>{step.n}</div>
+                <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(80px,12vw,116px)', color: 'rgba(26,50,112,0.05)', lineHeight: 1, position: 'absolute', top: -18, left: -6, zIndex: 0, userSelect: 'none' }}>{step.n}</div>
                 <div style={{ position: 'relative', zIndex: 1, paddingTop: 40 }}>
                   <div style={{ width: 24, height: 2, background: '#c4976a', marginBottom: 14 }} />
-                  <h3 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontWeight: 600, fontSize: 21, color: '#0d0c0a', margin: '0 0 9px', lineHeight: 1.3 }}>{step.title}</h3>
+                  <h3 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontWeight: 600, fontSize: 21, color: '#1a3270', margin: '0 0 9px', lineHeight: 1.3 }}>{step.title}</h3>
                   <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, color: '#5a5754', lineHeight: 1.72, margin: 0 }}>{step.desc}</p>
                 </div>
               </div>
@@ -635,12 +577,12 @@ export default function WaitlistPage() {
       </section>
 
       {/* ── FEATURES ─────────────────────────────────────────────────── */}
-      <section style={{ background: '#f4f2ee', padding: 'clamp(44px,7vw,68px) clamp(16px,5vw,64px)' }}>
+      <section style={{ background: '#fafaf8', padding: 'clamp(44px,7vw,68px) clamp(16px,5vw,64px)' }}>
         <div style={{ maxWidth: 960, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
           {FEATURES.map((f, i) => (
-            <div key={i} className={`bail-reveal bail-d${i % 4 + 1}`} style={{ background: '#ffffff', border: '1px solid #e4e1db', borderRadius: 12, padding: '20px 18px', boxShadow: '0 1px 2px rgba(13,12,10,.04), 0 4px 12px rgba(13,12,10,.05)' }}>
-              <div style={{ width: 32, height: 32, borderRadius: 7, background: '#fdf5ec', border: '1px solid #f3c99a', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>{f.icon}</div>
-              <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontWeight: 600, fontSize: 16, color: '#0d0c0a', marginBottom: 5, lineHeight: 1.3 }}>{f.title}</div>
+            <div key={i} className={`bail-reveal bail-d${i % 4 + 1}`} style={{ background: '#ffffff', border: '1px solid #e4e1db', borderRadius: 14, padding: '22px 20px', boxShadow: '0 1px 2px rgba(26,50,112,.03), 0 4px 12px rgba(26,50,112,.04)' }}>
+              <div style={{ width: 34, height: 34, borderRadius: 9, background: f.accentBg, border: `1px solid ${f.accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 13 }}>{f.icon}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontWeight: 600, fontSize: 16, color: '#1a3270', marginBottom: 5, lineHeight: 1.3 }}>{f.title}</div>
               <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12.5, color: '#9e9b96', lineHeight: 1.6 }}>{f.desc}</div>
             </div>
           ))}
@@ -648,11 +590,13 @@ export default function WaitlistPage() {
       </section>
 
       {/* ── AUDIENCE CARDS ───────────────────────────────────────────── */}
-      <section style={{ background: '#fafaf8', padding: 'clamp(48px,8vw,80px) clamp(16px,5vw,64px)' }}>
+      <section style={{ background: '#ffffff', padding: 'clamp(48px,8vw,80px) clamp(16px,5vw,64px)' }}>
         <div style={{ maxWidth: 920, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 18 }}>
-          <div className="bail-reveal" style={{ background: '#1a1a2e', borderRadius: 16, padding: 'clamp(28px,4vw,40px)' }}>
+          {/* Propriétaires — navy */}
+          <div className="bail-reveal" style={{ background: '#1a3270', borderRadius: 18, padding: 'clamp(28px,4vw,40px)', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: -40, right: -40, width: 180, height: 180, borderRadius: '50%', background: 'rgba(196,151,106,0.12)', filter: 'blur(40px)', pointerEvents: 'none' }} />
             <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9.5, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#c4976a', marginBottom: 5 }}>Propriétaires</div>
-            <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: '#ffffff', marginBottom: 22, lineHeight: 1.2 }}>Vous gérez votre bien</div>
+            <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 23, color: '#ffffff', marginBottom: 22, lineHeight: 1.2 }}>Vous gérez votre bien</div>
             {['Publiez sans agence ni commission', 'Dossiers locataires vérifiés par IA', 'Bail signé électroniquement (eIDAS)', 'Loyers encaissés automatiquement', 'Interface mobile, zéro paperasse'].map((it, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                 <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#c4976a', flexShrink: 0 }} />
@@ -660,12 +604,14 @@ export default function WaitlistPage() {
               </div>
             ))}
           </div>
-          <div className="bail-reveal bail-d1" style={{ background: '#ffffff', borderRadius: 16, padding: 'clamp(28px,4vw,40px)', border: '1px solid #e4e1db', boxShadow: '0 1px 2px rgba(13,12,10,.04), 0 4px 12px rgba(13,12,10,.06)' }}>
-            <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9.5, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#9e9b96', marginBottom: 5 }}>Locataires</div>
-            <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: '#0d0c0a', marginBottom: 22, lineHeight: 1.2 }}>Vous cherchez un logement</div>
+          {/* Locataires — green tint */}
+          <div className="bail-reveal bail-d1" style={{ background: 'rgba(27,94,59,0.04)', borderRadius: 18, padding: 'clamp(28px,4vw,40px)', border: '1px solid rgba(27,94,59,0.12)', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: -40, right: -40, width: 180, height: 180, borderRadius: '50%', background: 'rgba(27,94,59,0.08)', filter: 'blur(40px)', pointerEvents: 'none' }} />
+            <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9.5, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#1b5e3b', marginBottom: 5 }}>Locataires</div>
+            <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 23, color: '#1a3270', marginBottom: 22, lineHeight: 1.2 }}>Vous cherchez un logement</div>
             {['Dossier constitué en moins de 2 min', 'Zéro commission à votre charge', 'Justificatifs vérifiés, signature sécurisée', 'Quittances automatiques chaque mois', 'Messagerie directe avec le propriétaire'].map((it, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#c4976a', flexShrink: 0 }} />
+                <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#1b5e3b', flexShrink: 0 }} />
                 <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: '#5a5754' }}>{it}</span>
               </div>
             ))}
@@ -674,84 +620,49 @@ export default function WaitlistPage() {
       </section>
 
       {/* ── LA PROMESSE ──────────────────────────────────────────────── */}
-      <section style={{ background: '#f4f2ee', padding: 'clamp(48px,8vw,80px) clamp(16px,5vw,64px)' }}>
+      <section style={{ background: '#fafaf8', padding: 'clamp(48px,8vw,80px) clamp(16px,5vw,64px)' }}>
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
           <div className="bail-reveal" style={{ textAlign: 'center', marginBottom: 'clamp(36px,5vw,56px)' }}>
             <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#9e9b96', margin: '0 0 14px' }}>La promesse Bailio</p>
-            <h2 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(26px,4vw,44px)', color: '#0d0c0a', margin: 0 }}>
-              La location telle qu'elle devrait être.
-            </h2>
+            <h2 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(26px,4vw,44px)', color: '#1a3270', margin: 0 }}>La location telle qu'elle devrait être.</h2>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 2 }}>
             {[
-              { n: '01', title: 'Zéro intermédiaire', body: 'Pas d\'agence, pas de frais cachés. Propriétaire et locataire se trouvent directement, en toute transparence.' },
-              { n: '02', title: 'Tout est légal', body: 'Chaque étape — dossier, bail, paiement — respecte le cadre juridique français et européen. Aucun risque.' },
-              { n: '03', title: 'Depuis votre téléphone', body: 'Publiez, sélectionnez, signez et encaissez sans jamais ouvrir un ordinateur. Bailio est mobile-first.' },
+              { n: '01', title: 'Zéro intermédiaire', body: 'Pas d\'agence, pas de frais cachés. Propriétaire et locataire se trouvent directement, en toute transparence.', dark: false },
+              { n: '02', title: 'Tout est légal', body: 'Chaque étape — dossier, bail, paiement — respecte le cadre juridique français et européen. Aucun risque.', dark: true },
+              { n: '03', title: 'Depuis votre téléphone', body: 'Publiez, sélectionnez, signez et encaissez sans jamais ouvrir un ordinateur. Bailio est mobile-first.', dark: false },
             ].map((item, i) => (
-              <div key={i} className={`bail-reveal bail-d${i + 1}`} style={{ background: i === 1 ? '#1a1a2e' : '#ffffff', border: '1px solid #e4e1db', padding: 'clamp(24px,4vw,36px)', borderRadius: i === 1 ? 0 : 0 }}>
-                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9.5, fontWeight: 700, letterSpacing: '0.16em', color: i === 1 ? 'rgba(196,151,106,.7)' : '#c4976a', marginBottom: 18 }}>{item.n}</div>
-                <h3 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(20px,2.5vw,26px)', color: i === 1 ? '#ffffff' : '#0d0c0a', margin: '0 0 12px', lineHeight: 1.2 }}>{item.title}</h3>
-                <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, color: i === 1 ? 'rgba(255,255,255,.55)' : '#5a5754', lineHeight: 1.72, margin: 0 }}>{item.body}</p>
+              <div key={i} className={`bail-reveal bail-d${i + 1}`} style={{ background: item.dark ? '#1a3270' : '#ffffff', border: '1px solid', borderColor: item.dark ? '#1a3270' : '#e4e1db', padding: 'clamp(24px,4vw,36px)', borderRadius: i === 1 ? 0 : 0 }}>
+                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9.5, fontWeight: 700, letterSpacing: '0.16em', color: item.dark ? 'rgba(196,151,106,.7)' : '#c4976a', marginBottom: 18 }}>{item.n}</div>
+                <h3 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(20px,2.5vw,26px)', color: item.dark ? '#ffffff' : '#1a3270', margin: '0 0 12px', lineHeight: 1.2 }}>{item.title}</h3>
+                <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, color: item.dark ? 'rgba(255,255,255,.55)' : '#5a5754', lineHeight: 1.72, margin: 0 }}>{item.body}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── SOCIAL SECTION ───────────────────────────────────────────── */}
-      <section style={{ background: '#fafaf8', padding: 'clamp(40px,6vw,64px) clamp(16px,5vw,64px)', borderTop: '1px solid #e4e1db' }}>
+      {/* ── SOCIAL ───────────────────────────────────────────────────── */}
+      <section style={{ background: '#ffffff', padding: 'clamp(40px,6vw,64px) clamp(16px,5vw,64px)', borderTop: '1px solid #e4e1db' }}>
         <div style={{ maxWidth: 800, margin: '0 auto', textAlign: 'center' }}>
           <div className="bail-reveal">
             <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#9e9b96', margin: '0 0 10px' }}>Suivez l'aventure</p>
-            <h2 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3.5vw,36px)', color: '#0d0c0a', margin: '0 0 32px' }}>
-              Restez au courant du lancement.
-            </h2>
+            <h2 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3.5vw,36px)', color: '#1a3270', margin: '0 0 32px' }}>Restez au courant du lancement.</h2>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center' }}>
               {[
-                {
-                  href: 'https://instagram.com/bailio.fr',
-                  label: 'Instagram',
-                  handle: '@bailio.fr',
-                  desc: 'Coulisses du lancement',
-                  color: '#e1306c',
-                  icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" strokeWidth="0"/></svg>,
-                },
-                {
-                  href: 'https://twitter.com/bailiofr',
-                  label: 'Twitter / X',
-                  handle: '@bailiofr',
-                  desc: 'Actualités produit',
-                  color: '#ffffff',
-                  icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.261 5.638 5.903-5.638zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>,
-                },
-                {
-                  href: 'https://linkedin.com/company/bailio',
-                  label: 'LinkedIn',
-                  handle: 'Bailio',
-                  desc: 'Vision & immobilier',
-                  color: '#0a66c2',
-                  icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>,
-                },
+                { href: 'https://instagram.com/bailio.fr', handle: '@bailio.fr', desc: 'Coulisses du lancement', color: '#e1306c', bg: 'rgba(225,48,108,0.08)', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" strokeWidth="0"/></svg> },
+                { href: 'https://twitter.com/bailiofr', handle: '@bailiofr', desc: 'Actualités produit', color: '#1a3270', bg: 'rgba(26,50,112,0.08)', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.261 5.638 5.903-5.638zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> },
+                { href: 'https://linkedin.com/company/bailio', handle: 'Bailio', desc: 'Vision & immobilier', color: '#0a66c2', bg: 'rgba(10,102,194,0.08)', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> },
               ].map((s, i) => (
-                <a key={i} href={s.href} target="_blank" rel="noopener noreferrer" className={`bail-reveal bail-d${i + 1}`} style={{
-                  display: 'flex', alignItems: 'center', gap: 14,
-                  background: '#ffffff', border: '1px solid #e4e1db',
-                  borderRadius: 12, padding: '16px 22px',
-                  textDecoration: 'none',
-                  boxShadow: '0 1px 2px rgba(13,12,10,.04), 0 4px 12px rgba(13,12,10,.05)',
-                  transition: 'transform .2s, box-shadow .2s',
-                  minWidth: 200,
-                }}
-                  onMouseEnter={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.transform = 'translateY(-2px)'; el.style.boxShadow = '0 4px 20px rgba(13,12,10,.1)' }}
-                  onMouseLeave={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.transform = ''; el.style.boxShadow = '0 1px 2px rgba(13,12,10,.04), 0 4px 12px rgba(13,12,10,.05)' }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 10, background: '#1a1a2e', display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.color, flexShrink: 0 }}>
-                    {s.icon}
-                  </div>
+                <a key={i} href={s.href} target="_blank" rel="noopener noreferrer" className={`soc-card bail-reveal bail-d${i + 1}`}
+                  onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.transform = 'translateY(-3px)'; el.style.boxShadow = '0 8px 32px rgba(26,50,112,0.12)' }}
+                  onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform = ''; el.style.boxShadow = '0 2px 16px rgba(26,50,112,0.07)' }}>
+                  <div style={{ width: 42, height: 42, borderRadius: 11, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.color, flexShrink: 0 }}>{s.icon}</div>
                   <div style={{ textAlign: 'left' }}>
-                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontWeight: 600, fontSize: 13, color: '#0d0c0a', lineHeight: 1.2 }}>{s.handle}</div>
+                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontWeight: 600, fontSize: 13, color: '#1a3270', lineHeight: 1.2 }}>{s.handle}</div>
                     <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11.5, color: '#9e9b96', marginTop: 2 }}>{s.desc}</div>
                   </div>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e4e1db" strokeWidth="2" style={{ marginLeft: 'auto' }}><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d4d1cb" strokeWidth="2" style={{ marginLeft: 'auto', flexShrink: 0 }}><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
                 </a>
               ))}
             </div>
@@ -760,16 +671,10 @@ export default function WaitlistPage() {
       </section>
 
       {/* ── FOOTER ───────────────────────────────────────────────────── */}
-      <footer style={{ background: '#1a1a2e', padding: 'clamp(22px,4vw,36px) clamp(16px,5vw,48px)' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 14 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-            <BailioMark size={28} />
-            <div>
-              <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 16, color: '#ffffff' }}>Bailio</div>
-              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: 'rgba(255,255,255,.25)', letterSpacing: '0.05em' }}>Plateforme immobilière · 2026</div>
-            </div>
-          </div>
-          <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: 'rgba(255,255,255,.2)', margin: 0 }}>
+      <footer style={{ background: '#fafaf8', borderTop: '1px solid #e4e1db', padding: 'clamp(20px,4vw,32px) clamp(16px,5vw,48px)' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <BailioWordmark fontSize={18} />
+          <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: 'rgba(26,50,112,0.25)', margin: 0 }}>
             © 2026 Bailio. Tous droits réservés.
           </p>
         </div>
