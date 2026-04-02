@@ -18,39 +18,46 @@ const PARTICLES = Array.from({ length: 90 }, (_, i) => ({
   drift: Math.sin(i * 0.7) * 80,
 }))
 
-// Floating glass orbs — background atmosphere
+// Ambient color orbs
 const ORBS = [
-  { size: 340, top: '-8%',  left: '-6%',  color: 'rgba(196,151,106,0.18)', dur: 9,   delay: 0 },
-  { size: 260, top: '60%',  left: '-4%',  color: 'rgba(27,94,59,0.12)',    dur: 11,  delay: 2 },
-  { size: 420, top: '-12%', left: '65%',  color: 'rgba(26,50,112,0.10)',   dur: 8,   delay: 1 },
-  { size: 180, top: '70%',  left: '80%',  color: 'rgba(196,151,106,0.14)', dur: 10,  delay: 3 },
-  { size: 300, top: '40%',  left: '40%',  color: 'rgba(27,94,59,0.06)',    dur: 13,  delay: 0.5 },
+  { size: 340, top: '-8%',  left: '-6%',  color: 'rgba(196,151,106,0.22)', dur: 9,   delay: 0 },
+  { size: 260, top: '60%',  left: '-4%',  color: 'rgba(27,94,59,0.14)',    dur: 11,  delay: 2 },
+  { size: 420, top: '-12%', left: '65%',  color: 'rgba(26,50,112,0.12)',   dur: 8,   delay: 1 },
+  { size: 180, top: '70%',  left: '80%',  color: 'rgba(196,151,106,0.16)', dur: 10,  delay: 3 },
+  { size: 300, top: '40%',  left: '40%',  color: 'rgba(27,94,59,0.07)',    dur: 13,  delay: 0.5 },
 ]
 
-// Desktop building silhouettes — outline style on light bg
-// [left%, width%, height(px), strokeOpacity]
-const BUILDINGS: [number, number, number, number][] = [
-  [0,   5.5, 300, 0.07],
-  [4.5, 3.5, 538, 0.05],
-  [7.5, 6.5, 226, 0.06],
-  [13,  4,   680, 0.05],
-  [16.5,7,   354, 0.07],
-  [23,  3.5, 468, 0.05],
-  [26,  5.5, 246, 0.06],
-  [31,  8,   397, 0.07],
-  [38,  4,   600, 0.05],
-  [41.5,6.5, 272, 0.06],
-  [47,  3.5, 738, 0.04],
-  [50,  5.5, 328, 0.06],
-  [55,  7.5, 215, 0.07],
-  [62,  4.5, 508, 0.05],
-  [66,  6,   380, 0.06],
-  [71.5,3.5, 620, 0.05],
-  [74.5,6,   277, 0.07],
-  [80,  7.5, 200, 0.06],
-  [87,  4.5, 446, 0.05],
-  [91,  5.5, 340, 0.06],
-  [96,  5,   502, 0.05],
+// Ruelle Montpellier — window data [xPct, yPct, lit, shuttersClosed, flicker]
+type Win = [number, number, boolean, boolean, boolean]
+
+const LEFT_WINS: Win[] = [
+  [12, 7,  false, true,  false],
+  [42, 7,  true,  false, true ],
+  [68, 7,  false, false, false],
+  [12, 21, true,  false, false],
+  [42, 21, false, true,  false],
+  [68, 21, true,  false, false],
+  [12, 36, false, false, false],
+  [42, 36, true,  false, true ],
+  [68, 36, false, true,  false],
+  [12, 51, true,  false, false],
+  [42, 51, false, false, false],
+  [68, 51, true,  false, false],
+]
+
+const RIGHT_WINS: Win[] = [
+  [12, 9,  true,  false, false],
+  [42, 9,  false, true,  false],
+  [68, 9,  true,  false, true ],
+  [12, 23, false, true,  false],
+  [42, 23, true,  false, false],
+  [68, 23, false, false, false],
+  [12, 38, true,  false, true ],
+  [42, 38, false, true,  false],
+  [68, 38, true,  false, false],
+  [12, 53, false, false, false],
+  [42, 53, true,  false, false],
+  [68, 53, false, true,  false],
 ]
 
 const FEATURES = [
@@ -130,6 +137,32 @@ html { scroll-behavior: smooth; }
   50%     { border-color:rgba(255,255,255,0.95); }
 }
 
+/* Ruelle animations */
+@keyframes lampGlow {
+  0%,100% {
+    box-shadow: 0 0 10px 5px rgba(255,205,110,0.5), 0 0 38px 18px rgba(255,195,90,0.18);
+    opacity: 0.9;
+  }
+  50% {
+    box-shadow: 0 0 18px 10px rgba(255,215,130,0.68), 0 0 60px 28px rgba(255,205,110,0.26);
+    opacity: 1;
+  }
+}
+@keyframes groundGlow {
+  0%,100% { opacity: 0.22; transform: translateX(-50%) scaleX(1); }
+  50%     { opacity: 0.35; transform: translateX(-50%) scaleX(1.15); }
+}
+@keyframes winFlicker {
+  0%,100% { opacity: 0.72; }
+  25%     { opacity: 0.88; }
+  60%     { opacity: 0.62; }
+  80%     { opacity: 0.80; }
+}
+@keyframes curtainSway {
+  0%,100% { transform: skewX(0deg); }
+  50%     { transform: skewX(1.8deg); }
+}
+
 /* Scroll reveal */
 .bail-reveal {
   opacity:0; transform:translateY(28px);
@@ -143,15 +176,15 @@ html { scroll-behavior: smooth; }
 
 /* Light glassmorphism card */
 .glass-card {
-  background: rgba(255,255,255,0.72);
+  background: rgba(255,255,255,0.78);
   backdrop-filter: blur(40px) saturate(1.8);
   -webkit-backdrop-filter: blur(40px) saturate(1.8);
   border: 1px solid rgba(255,255,255,0.85);
   border-top: 1px solid rgba(255,255,255,0.98);
   border-radius: 24px;
   box-shadow:
-    0 8px 48px rgba(26,50,112,0.08),
-    0 2px 16px rgba(26,50,112,0.04),
+    0 8px 48px rgba(26,50,112,0.10),
+    0 2px 16px rgba(26,50,112,0.05),
     0 1px 0 rgba(255,255,255,0.9) inset;
   animation: borderShimmer 6s ease-in-out infinite;
 }
@@ -222,13 +255,6 @@ html { scroll-behavior: smooth; }
   transform: translateY(-3px);
   box-shadow: 0 8px 32px rgba(26,50,112,0.12);
 }
-
-/* City skyline desktop */
-.city-skyline { display: none; }
-@media (min-width: 900px) {
-  .city-skyline { display: block; }
-  .edge-wins { display: none; }
-}
 `
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
@@ -256,7 +282,6 @@ function Confetti({ active }: { active: boolean }) {
   )
 }
 
-// Logo wordmark: "Bailio." — italic serif navy + caramel dot
 function BailioWordmark({ fontSize = 22 }: { fontSize?: number }) {
   return (
     <span style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize, color: '#1a3270', letterSpacing: '-0.01em', lineHeight: 1 }}>
@@ -305,6 +330,331 @@ function SuccessBlock({ isEarlyAccess, alreadyRegistered, firstName }: { isEarly
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// ─── Ruelle Montpellier — CSS art background scene ────────────────────────────
+function RuelleMontpellier() {
+  const buildingW = 'clamp(110px, 27vw, 330px)'
+
+  // Render one window cell at xPct%/yPct% of building, with shutters or open+lit
+  function WindowEl({ xf, yf, lit, shut, flicker, delay }: { xf: number; yf: number; lit: boolean; shut: boolean; flicker: boolean; delay: number }) {
+    return (
+      <div style={{
+        position: 'absolute',
+        left: `${xf}%`,
+        top: `${yf}%`,
+        width: '18%',
+        height: 0,
+        paddingBottom: '26%',
+        border: `1.5px solid rgba(90,65,30,0.5)`,
+        background: lit ? 'rgba(252,222,138,0.82)' : 'rgba(130,108,72,0.18)',
+        overflow: 'hidden',
+        animation: flicker ? `winFlicker ${3 + delay * 0.6}s ease-in-out ${delay * 0.8}s infinite` : 'none',
+      }}>
+        {/* Shutters */}
+        {shut && <>
+          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: '50%', height: '100%', background: 'rgba(38,72,54,0.92)', borderRight: '0.5px solid rgba(22,50,35,0.4)' }} />
+          <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: '50%', height: '100%', background: 'rgba(38,72,54,0.92)' }} />
+          {/* Shutter slats */}
+          {[20, 40, 60, 80].map(p => (
+            <div key={p} style={{ position: 'absolute', top: `${p}%`, left: 0, right: 0, height: 1, background: 'rgba(22,50,35,0.3)' }} />
+          ))}
+        </>}
+        {/* Window cross divider */}
+        {!shut && <>
+          <div style={{ position: 'absolute', left: 0, right: 0, top: '52%', height: 1, background: 'rgba(90,65,30,0.22)' }} />
+          <div style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: 1, background: 'rgba(90,65,30,0.22)' }} />
+          {/* Curtain hint on lit windows */}
+          {lit && <div style={{
+            position: 'absolute', top: 0, right: 0, bottom: 0, width: '22%',
+            background: 'rgba(255,240,200,0.5)',
+            animation: `curtainSway 5s ease-in-out ${delay}s infinite`,
+          }} />}
+        </>}
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1, overflow: 'hidden' }}>
+
+      {/* ── Warm sky gradient ── */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, height: '55%',
+        background: 'linear-gradient(180deg, rgba(242,228,205,0.6) 0%, rgba(248,238,220,0.3) 60%, transparent 100%)',
+      }} />
+
+      {/* ═══════════════════════════════════════
+          LEFT BUILDING — immeuble Haussmann
+      ═══════════════════════════════════════ */}
+      <div style={{
+        position: 'absolute', left: 0, top: 0, bottom: 0,
+        width: buildingW,
+        background: 'linear-gradient(105deg, #cfc0a0 0%, #ddd0b5 50%, #e6d9c2 100%)',
+        opacity: 0.82,
+      }}>
+        {/* Stone texture — mortar lines */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: `
+            repeating-linear-gradient(180deg, transparent 0, transparent 28px, rgba(150,125,82,0.25) 28px, rgba(150,125,82,0.25) 29.5px),
+            repeating-linear-gradient(90deg, transparent 0, transparent 38px, rgba(150,125,82,0.16) 38px, rgba(150,125,82,0.16) 39.5px)
+          `,
+        }} />
+
+        {/* Windows */}
+        {LEFT_WINS.map(([xf, yf, lit, shut, flicker], idx) => (
+          <WindowEl key={idx} xf={xf} yf={yf} lit={lit} shut={shut} flicker={flicker} delay={idx * 0.7} />
+        ))}
+
+        {/* Balcony 2nd floor — ferronnerie */}
+        <div style={{
+          position: 'absolute', left: '8%', right: '12%', top: '28%',
+          height: 22,
+          borderTop: '2.5px solid rgba(32,20,6,0.65)',
+          borderLeft: '2px solid rgba(32,20,6,0.55)',
+          borderRight: '2px solid rgba(32,20,6,0.55)',
+        }}>
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} style={{ position: 'absolute', top: 0, bottom: 0, left: `${(i + 0.5) * 10}%`, width: 1.5, background: 'rgba(32,20,6,0.5)' }}>
+              {/* Decorative knob */}
+              <div style={{ position: 'absolute', top: '30%', left: '50%', transform: 'translateX(-50%)', width: 3, height: 3, borderRadius: '50%', background: 'rgba(32,20,6,0.55)' }} />
+            </div>
+          ))}
+        </div>
+
+        {/* Balcony 3rd floor */}
+        <div style={{
+          position: 'absolute', left: '30%', right: '8%', top: '43%',
+          height: 18,
+          borderTop: '2px solid rgba(32,20,6,0.55)',
+          borderLeft: '1.5px solid rgba(32,20,6,0.45)',
+          borderRight: '1.5px solid rgba(32,20,6,0.45)',
+        }}>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} style={{ position: 'absolute', top: 0, bottom: 0, left: `${(i + 0.5) * 12.5}%`, width: 1.5, background: 'rgba(32,20,6,0.42)' }} />
+          ))}
+        </div>
+
+        {/* Arched doorway bottom */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: '22%',
+          width: '24%', height: '10%',
+          background: 'rgba(65,45,18,0.38)',
+          borderRadius: '50% 50% 0 0 / 80% 80% 0 0',
+          border: '1.5px solid rgba(90,65,30,0.5)',
+          borderBottom: 'none',
+        }}>
+          <div style={{ position: 'absolute', inset: '5px 6px 0', background: 'rgba(50,32,10,0.55)', borderRadius: '50% 50% 0 0 / 80% 80% 0 0' }} />
+        </div>
+
+        {/* Rooftop overhang */}
+        <div style={{
+          position: 'absolute', top: 0, left: '-2%', right: '-2%',
+          height: '2%', minHeight: 8,
+          background: 'rgba(115,90,55,0.5)',
+          borderBottom: '2px solid rgba(90,65,30,0.4)',
+        }} />
+
+        {/* Right edge fade into alley */}
+        <div style={{
+          position: 'absolute', top: 0, bottom: 0, right: 0, width: '20%',
+          background: 'linear-gradient(90deg, transparent, rgba(248,242,230,0.7))',
+        }} />
+      </div>
+
+      {/* ═══════════════════════════════════════
+          RIGHT BUILDING — façade plus ancienne
+      ═══════════════════════════════════════ */}
+      <div style={{
+        position: 'absolute', right: 0, top: 0, bottom: 0,
+        width: buildingW,
+        background: 'linear-gradient(255deg, #c8b898 0%, #d5c8a8 50%, #dfd2b5 100%)',
+        opacity: 0.78,
+      }}>
+        {/* Stone texture */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: `
+            repeating-linear-gradient(180deg, transparent 0, transparent 30px, rgba(138,112,72,0.22) 30px, rgba(138,112,72,0.22) 31.5px),
+            repeating-linear-gradient(90deg, transparent 0, transparent 42px, rgba(138,112,72,0.14) 42px, rgba(138,112,72,0.14) 43.5px)
+          `,
+        }} />
+
+        {/* Windows */}
+        {RIGHT_WINS.map(([xf, yf, lit, shut, flicker], idx) => (
+          <WindowEl key={idx} xf={xf} yf={yf} lit={lit} shut={shut} flicker={flicker} delay={idx * 0.5 + 1.2} />
+        ))}
+
+        {/* Balcony 2nd floor */}
+        <div style={{
+          position: 'absolute', left: '10%', right: '8%', top: '32%',
+          height: 20,
+          borderTop: '2.5px solid rgba(28,18,5,0.6)',
+          borderLeft: '2px solid rgba(28,18,5,0.5)',
+          borderRight: '2px solid rgba(28,18,5,0.5)',
+        }}>
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} style={{ position: 'absolute', top: 0, bottom: 0, left: `${(i + 0.5) * 10}%`, width: 1.5, background: 'rgba(28,18,5,0.46)' }} />
+          ))}
+        </div>
+
+        {/* Balcony 4th floor */}
+        <div style={{
+          position: 'absolute', left: '8%', right: '32%', top: '46%',
+          height: 18,
+          borderTop: '2px solid rgba(28,18,5,0.55)',
+          borderLeft: '1.5px solid rgba(28,18,5,0.44)',
+          borderRight: '1.5px solid rgba(28,18,5,0.44)',
+        }}>
+          {Array.from({ length: 7 }).map((_, i) => (
+            <div key={i} style={{ position: 'absolute', top: 0, bottom: 0, left: `${(i + 0.5) * (100 / 7)}%`, width: 1.5, background: 'rgba(28,18,5,0.4)' }} />
+          ))}
+        </div>
+
+        {/* Arched doorway — stone arch */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)',
+          width: '30%', height: '11%',
+          border: '2px solid rgba(80,58,25,0.5)',
+          borderBottom: 'none',
+          borderRadius: '50% 50% 0 0 / 80% 80% 0 0',
+        }}>
+          <div style={{ position: 'absolute', inset: '5px 8px 0', background: 'rgba(48,30,8,0.55)', borderRadius: '50% 50% 0 0 / 80% 80% 0 0' }} />
+          {/* Keystone */}
+          <div style={{ position: 'absolute', top: -8, left: '50%', transform: 'translateX(-50%)', width: 14, height: 10, background: 'rgba(200,178,138,0.8)', border: '1px solid rgba(80,58,25,0.4)' }} />
+        </div>
+
+        {/* Rooftop */}
+        <div style={{
+          position: 'absolute', top: 0, left: '-2%', right: '-2%',
+          height: '2%', minHeight: 9,
+          background: 'rgba(108,84,48,0.48)',
+          borderBottom: '2px solid rgba(80,58,25,0.38)',
+        }} />
+
+        {/* Left edge fade into alley */}
+        <div style={{
+          position: 'absolute', top: 0, bottom: 0, left: 0, width: '20%',
+          background: 'linear-gradient(270deg, transparent, rgba(248,242,228,0.7))',
+        }} />
+      </div>
+
+      {/* ═══════════════════════════════════════
+          COBBLESTONE STREET — perspective
+      ═══════════════════════════════════════ */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0,
+        height: '16%',
+        background: '#b8a882',
+        backgroundImage: `
+          repeating-linear-gradient(
+            180deg,
+            transparent 0, transparent 14px,
+            rgba(130,108,72,0.38) 14px, rgba(130,108,72,0.38) 15.5px
+          ),
+          repeating-linear-gradient(
+            90deg,
+            transparent 0, transparent 22px,
+            rgba(130,108,72,0.28) 22px, rgba(130,108,72,0.28) 23.5px
+          )
+        `,
+        opacity: 0.62,
+      }}>
+        {/* Perspective top fade */}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(255,248,235,0.65) 0%, transparent 55%)' }} />
+        {/* Alley center groove */}
+        <div style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '22%', background: 'rgba(148,124,82,0.22)', borderLeft: '1px solid rgba(130,108,72,0.2)', borderRight: '1px solid rgba(130,108,72,0.2)' }} />
+      </div>
+
+      {/* ═══════════════════════════════════════
+          STREET LAMP — lampadaire ancien
+      ═══════════════════════════════════════ */}
+      <div style={{
+        position: 'absolute',
+        bottom: '16%',
+        left: buildingW,
+        zIndex: 3,
+        transform: 'translateX(clamp(8px, 2vw, 24px))',
+      }}>
+        {/* Base pedestal */}
+        <div style={{ position: 'absolute', bottom: -4, left: '50%', transform: 'translateX(-50%)', width: 12, height: 8, background: 'rgba(42,28,8,0.7)', borderRadius: '2px 2px 0 0' }} />
+        {/* Vertical post */}
+        <div style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 4, height: 130, background: 'linear-gradient(180deg, rgba(42,28,8,0.75), rgba(58,40,12,0.65))', borderRadius: '2px 2px 0 0' }} />
+        {/* Curve arm */}
+        <div style={{ position: 'absolute', bottom: 108, left: '50%', width: 42, height: 4, background: 'rgba(42,28,8,0.68)', borderRadius: '0 4px 4px 0', transformOrigin: 'left center' }} />
+        {/* Lamp head */}
+        <div style={{
+          position: 'absolute',
+          bottom: 120, left: 'calc(50% + 34px)',
+          width: 18, height: 26,
+          background: 'rgba(52,36,10,0.72)',
+          borderRadius: '5px 5px 8px 8px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          {/* Glass panel */}
+          <div style={{ position: 'absolute', inset: 2, background: 'rgba(255,235,180,0.2)', borderRadius: '3px 3px 5px 5px' }} />
+          {/* Light bulb glow */}
+          <div style={{
+            width: 9, height: 9, borderRadius: '50%',
+            background: 'rgba(255,225,140,0.95)',
+            animation: 'lampGlow 3s ease-in-out infinite',
+            boxShadow: '0 0 12px 6px rgba(255,205,110,0.5)',
+            position: 'relative', zIndex: 1,
+          }} />
+        </div>
+        {/* Ground halo */}
+        <div style={{
+          position: 'absolute',
+          bottom: -12, left: 'calc(50% + 43px)',
+          width: 70, height: 14,
+          background: 'rgba(255,210,120,0.18)',
+          borderRadius: '50%',
+          filter: 'blur(8px)',
+          animation: 'groundGlow 3s ease-in-out infinite',
+        }} />
+      </div>
+
+      {/* ═══════════════════════════════════════
+          FAR END — arch at vanishing point
+      ═══════════════════════════════════════ */}
+      <div style={{
+        position: 'absolute',
+        top: '14%',
+        left: '50%', transform: 'translateX(-50%)',
+        width: 'clamp(44px, 7vw, 80px)',
+        zIndex: 2,
+      }}>
+        {/* Arch stone frame */}
+        <div style={{
+          position: 'relative',
+          paddingBottom: '140%',
+          border: '2px solid rgba(170,148,108,0.45)',
+          borderBottom: 'none',
+          borderRadius: '50% 50% 0 0 / 55% 55% 0 0',
+          background: 'rgba(242,232,212,0.55)',
+        }}>
+          {/* Sky through arch */}
+          <div style={{
+            position: 'absolute', inset: '6px 7px 0',
+            background: 'rgba(245,235,215,0.7)',
+            borderRadius: '50% 50% 0 0 / 55% 55% 0 0',
+          }} />
+          {/* Keystone */}
+          <div style={{ position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)', width: 16, height: 12, background: 'rgba(210,188,148,0.75)', border: '1.5px solid rgba(170,148,108,0.45)' }} />
+        </div>
+        {/* Arch sides */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '20%', background: 'rgba(225,212,188,0.55)', border: '2px solid rgba(170,148,108,0.4)', borderTop: 'none' }} />
+      </div>
+
+      {/* Bottom fade to white — smooth transition to card section */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0, height: '32%',
+        background: 'linear-gradient(to top, #fafaf8 0%, transparent 100%)',
+        zIndex: 4,
+      }} />
     </div>
   )
 }
@@ -395,7 +745,7 @@ export default function WaitlistPage() {
       </nav>
 
       {/* ══════════════════════════════════════════════════════════════════
-          HERO — light, airy, glassmorphisme
+          HERO — ruelle montpelliéraine en arrière-plan
       ═══════════════════════════════════════════════════════════════════ */}
       <section style={{ minHeight: '100svh', background: '#fafaf8', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(72px,10vw,100px) clamp(16px,4vw,40px) 48px' }}>
 
@@ -413,44 +763,17 @@ export default function WaitlistPage() {
           }} />
         ))}
 
-        {/* ── Desktop building silhouettes (outline) ── */}
-        <div className="city-skyline" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '90%', pointerEvents: 'none', zIndex: 1 }}>
-          {BUILDINGS.map(([l, w, h, op], i) => {
-            const roofH = 8 + (i % 3) * 5
-            return (
-              <div key={i} style={{
-                position: 'absolute', bottom: 0, left: `${l}%`, width: `${w}%`, height: h,
-                background: 'transparent',
-                border: `1px solid rgba(26,50,112,${op})`,
-                borderBottom: 'none',
-              }}>
-                {/* Window grid — very subtle */}
-                <div style={{
-                  position: 'absolute', inset: '12px 6px 0',
-                  backgroundImage: `
-                    repeating-linear-gradient(0deg, transparent 0, transparent 13px, rgba(26,50,112,${op * 0.6}) 13px, rgba(26,50,112,${op * 0.6}) 14px),
-                    repeating-linear-gradient(90deg, transparent 0, transparent 16px, rgba(26,50,112,${op * 0.6}) 16px, rgba(26,50,112,${op * 0.6}) 17px)
-                  `,
-                }} />
-                {/* Roof */}
-                <div style={{ position: 'absolute', top: -roofH, left: i % 4 === 0 ? '15%' : '25%', width: i % 4 === 0 ? '70%' : '50%', height: roofH, border: `1px solid rgba(26,50,112,${op})`, borderBottom: 'none', background: 'transparent' }} />
-              </div>
-            )
-          })}
-          {/* Ground line */}
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 1, background: 'rgba(26,50,112,0.08)' }} />
-          {/* Fade at bottom */}
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '35%', background: 'linear-gradient(to top, #fafaf8 0%, transparent 100%)' }} />
-        </div>
+        {/* ── Ruelle Montpellier CSS art scene ── */}
+        <RuelleMontpellier />
 
-        {/* ── Giant ghost "Bailio." watermark ── */}
+        {/* ── Ghost watermark ── */}
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 2, overflow: 'hidden' }}>
           <span style={{
             fontFamily: "'Cormorant Garamond',Georgia,serif",
             fontStyle: 'italic', fontWeight: 700,
             fontSize: 'clamp(130px,20vw,280px)',
             color: 'transparent',
-            WebkitTextStroke: '1px rgba(26,50,112,0.05)',
+            WebkitTextStroke: '1px rgba(26,50,112,0.04)',
             lineHeight: 1, userSelect: 'none',
             letterSpacing: '-0.02em', whiteSpace: 'nowrap',
           }}>Bailio.</span>
@@ -465,7 +788,6 @@ export default function WaitlistPage() {
         }}>
           {/* Card top */}
           <div style={{ marginBottom: 28 }}>
-            {/* Logo + badge */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
               <BailioWordmark fontSize={26} />
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,94,59,0.07)', border: '1px solid rgba(27,94,59,0.15)', borderRadius: 20, padding: '4px 12px' }}>
@@ -474,7 +796,6 @@ export default function WaitlistPage() {
               </div>
             </div>
 
-            {/* Headline */}
             <h1 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(30px,4.5vw,46px)', color: '#1a3270', lineHeight: 1.08, margin: '0 0 4px' }}>
               {['La', 'location'].map((w, i) => (
                 <span key={i} style={{ display: 'inline-block', marginRight: '0.22em', opacity: 0, animation: `wUp .55s cubic-bezier(.22,1,.36,1) ${0.35 + i * 0.12}s forwards` }}>{w}</span>
@@ -592,7 +913,6 @@ export default function WaitlistPage() {
       {/* ── AUDIENCE CARDS ───────────────────────────────────────────── */}
       <section style={{ background: '#ffffff', padding: 'clamp(48px,8vw,80px) clamp(16px,5vw,64px)' }}>
         <div style={{ maxWidth: 920, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 18 }}>
-          {/* Propriétaires — navy */}
           <div className="bail-reveal" style={{ background: '#1a3270', borderRadius: 18, padding: 'clamp(28px,4vw,40px)', position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', top: -40, right: -40, width: 180, height: 180, borderRadius: '50%', background: 'rgba(196,151,106,0.12)', filter: 'blur(40px)', pointerEvents: 'none' }} />
             <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9.5, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#c4976a', marginBottom: 5 }}>Propriétaires</div>
@@ -604,7 +924,6 @@ export default function WaitlistPage() {
               </div>
             ))}
           </div>
-          {/* Locataires — green tint */}
           <div className="bail-reveal bail-d1" style={{ background: 'rgba(27,94,59,0.04)', borderRadius: 18, padding: 'clamp(28px,4vw,40px)', border: '1px solid rgba(27,94,59,0.12)', position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', top: -40, right: -40, width: 180, height: 180, borderRadius: '50%', background: 'rgba(27,94,59,0.08)', filter: 'blur(40px)', pointerEvents: 'none' }} />
             <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9.5, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#1b5e3b', marginBottom: 5 }}>Locataires</div>
@@ -630,9 +949,9 @@ export default function WaitlistPage() {
             {[
               { n: '01', title: 'Zéro intermédiaire', body: 'Pas d\'agence, pas de frais cachés. Propriétaire et locataire se trouvent directement, en toute transparence.', dark: false },
               { n: '02', title: 'Tout est légal', body: 'Chaque étape — dossier, bail, paiement — respecte le cadre juridique français et européen. Aucun risque.', dark: true },
-              { n: '03', title: 'Depuis votre téléphone', body: 'Publiez, sélectionnez, signez et encaissez sans jamais ouvrir un ordinateur. Bailio est mobile-first.', dark: false },
+              { n: '03', title: 'Depuis votre téléphone', body: "Publiez, sélectionnez, signez et encaissez sans jamais ouvrir un ordinateur. Bailio est mobile-first.", dark: false },
             ].map((item, i) => (
-              <div key={i} className={`bail-reveal bail-d${i + 1}`} style={{ background: item.dark ? '#1a3270' : '#ffffff', border: '1px solid', borderColor: item.dark ? '#1a3270' : '#e4e1db', padding: 'clamp(24px,4vw,36px)', borderRadius: i === 1 ? 0 : 0 }}>
+              <div key={i} className={`bail-reveal bail-d${i + 1}`} style={{ background: item.dark ? '#1a3270' : '#ffffff', border: '1px solid', borderColor: item.dark ? '#1a3270' : '#e4e1db', padding: 'clamp(24px,4vw,36px)' }}>
                 <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9.5, fontWeight: 700, letterSpacing: '0.16em', color: item.dark ? 'rgba(196,151,106,.7)' : '#c4976a', marginBottom: 18 }}>{item.n}</div>
                 <h3 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(20px,2.5vw,26px)', color: item.dark ? '#ffffff' : '#1a3270', margin: '0 0 12px', lineHeight: 1.2 }}>{item.title}</h3>
                 <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, color: item.dark ? 'rgba(255,255,255,.55)' : '#5a5754', lineHeight: 1.72, margin: 0 }}>{item.body}</p>
