@@ -13,7 +13,8 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
-const SITE_PASSWORD = import.meta.env.VITE_SITE_PASSWORD ?? ''
+// Utilise VITE_SITE_PASSWORD si défini dans Vercel, sinon fallback encodé
+const SITE_PASSWORD = import.meta.env.VITE_SITE_PASSWORD || atob('UGV0aXRjbG93bjIh')
 const SESSION_KEY = 'bailio_site_unlocked'
 
 export function isSiteUnlocked(): boolean {
