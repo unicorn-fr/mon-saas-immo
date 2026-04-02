@@ -1,9 +1,10 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { LaunchGuard } from './components/auth/LaunchGuard'
+import { SiteGate, isSiteUnlocked } from './components/auth/SiteGate'
 import { useAuth } from './hooks/useAuth'
 import { useThemeStore } from './store/themeStore'
 import { ScrollToTop } from './components/ScrollToTop'
@@ -152,6 +153,15 @@ function App() {
 
 function AppRoutes() {
   const { isAuthenticated, isLoading } = useAuth()
+  const location = useLocation()
+  const [unlocked, setUnlocked] = useState(() => isSiteUnlocked())
+
+  // ── Verrou complet en mode waitlist ──────────────────────────────────────
+  // Toutes les routes sauf "/" sont bloquées par un mot de passe.
+  const isWaitlistMode = import.meta.env.VITE_LAUNCH_MODE === 'waitlist'
+  if (isWaitlistMode && location.pathname !== '/' && !unlocked) {
+    return <SiteGate onUnlock={() => setUnlocked(true)} />
+  }
 
   if (isLoading) {
     return (
