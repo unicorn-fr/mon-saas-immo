@@ -107,19 +107,25 @@ if (env.IS_DEVELOPMENT) {
 }
 
 // Rate limiting
+// Polling endpoints are excluded globally — they are called every few seconds
+// by authenticated clients and would instantly saturate any reasonable limit.
+const POLLING_PATHS = [
+  '/messages/unread-count',
+  '/messages/conversations',
+  '/notifications',
+]
+
 const limiter = rateLimit({
   windowMs: env.RATE_LIMIT.WINDOW_MS,
-  max: env.IS_DEVELOPMENT ? 10000 : env.RATE_LIMIT.MAX_REQUESTS,
+  // 500 req / window for production — enough for intensive authenticated usage
+  max: env.IS_DEVELOPMENT ? 10000 : Math.max(env.RATE_LIMIT.MAX_REQUESTS, 500),
   message: { message: 'Too many requests from this IP, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => {
-    // Skip rate limiting for high-frequency polling endpoints in development
-    if (env.IS_DEVELOPMENT) {
-      const pollingPaths = ['/api/messages', '/api/notifications']
-      return pollingPaths.some((p) => req.path.startsWith(p))
-    }
-    return false
+    // Always skip polling endpoints — they are authenticated and high-frequency
+    const apiPath = req.path.replace(/^\/v\d+/, '') // strip /v1 prefix
+    return POLLING_PATHS.some((p) => apiPath.endsWith(p) || apiPath.includes(p))
   },
 })
 app.use('/api', limiter)

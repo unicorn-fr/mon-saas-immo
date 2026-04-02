@@ -35,7 +35,7 @@ const envSchema = z.object({
   EMAIL_FROM: z.string().optional(),
 
   RATE_LIMIT_WINDOW_MS: z.string().default('900000'),
-  RATE_LIMIT_MAX_REQUESTS: z.string().default('100'),
+  RATE_LIMIT_MAX_REQUESTS: z.string().default('500'),
 
   LOG_LEVEL: z.string().default('info'),
 
@@ -99,7 +99,7 @@ const data: any = parsedEnv.success ? parsedEnv.data : {
   SMTP_PASS: process.env.SMTP_PASS,
   EMAIL_FROM: process.env.EMAIL_FROM,
   RATE_LIMIT_WINDOW_MS: process.env.RATE_LIMIT_WINDOW_MS || '900000',
-  RATE_LIMIT_MAX_REQUESTS: process.env.RATE_LIMIT_MAX_REQUESTS || '100',
+  RATE_LIMIT_MAX_REQUESTS: process.env.RATE_LIMIT_MAX_REQUESTS || '500',
   LOG_LEVEL: process.env.LOG_LEVEL || 'info',
   TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY,
   FIREBASE_SERVICE_ACCOUNT: process.env.FIREBASE_SERVICE_ACCOUNT,
