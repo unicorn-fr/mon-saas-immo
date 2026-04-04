@@ -80,21 +80,30 @@ app.use(
   })
 )
 
-// Trust proxy (required for rate-limit behind Render/Vercel reverse proxy)
-if (env.IS_PRODUCTION) {
-  app.set('trust proxy', 1)
-}
+// Trust proxy (required for rate-limit behind Railway/Render/Vercel reverse proxy)
+app.set('trust proxy', 1)
+
+// Request timeout — abort long-running requests before Railway's 30s hard kill
+// Uploads get a longer timeout (60s), everything else is capped at 25s.
+app.use((req, res, next) => {
+  const isUpload = req.path.includes('/upload') || req.path.includes('/dossier')
+  const timeoutMs = isUpload ? 60_000 : 25_000
+  res.setTimeout(timeoutMs, () => {
+    res.status(503).json({ success: false, message: 'Request timeout — please retry.' })
+  })
+  next()
+})
 
 // ── WEBHOOK STRIPE (raw body — DOIT être AVANT express.json) ────────────────
 app.post(
-  `/api/${process.env.API_VERSION ?? 'v1'}/stripe/webhook`,
+  `/api/${env.API_VERSION}/stripe/webhook`,
   express.raw({ type: 'application/json' }),
   stripeWebhookHandler
 )
 
-// Body parsing
+// Body parsing — 10mb for JSON (PDF content), 20mb for file uploads
 app.use(express.json({ limit: '10mb' }))
-app.use(express.urlencoded({ extended: true, limit: '10mb' }))
+app.use(express.urlencoded({ extended: true, limit: '20mb' }))
 
 // Global input sanitization (null bytes, control chars, injection patterns)
 app.use(sanitizeInput)

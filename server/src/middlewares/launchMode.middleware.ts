@@ -9,13 +9,7 @@
  *   - Email du body dans ADMIN_EMAILS (liste comma-separated)
  */
 import { Request, Response, NextFunction } from 'express'
-
-const LAUNCH_MODE   = process.env.LAUNCH_MODE   ?? 'live'
-const ADMIN_SECRET  = process.env.ADMIN_SECRET  ?? ''
-const ADMIN_EMAILS  = (process.env.ADMIN_EMAILS ?? '')
-  .split(',')
-  .map((e) => e.trim().toLowerCase())
-  .filter(Boolean)
+import { env } from '../config/env.js'
 
 export function requireOpenRegistrations(
   req: Request,
@@ -23,19 +17,19 @@ export function requireOpenRegistrations(
   next: NextFunction
 ) {
   // Mode live → tout le monde peut s'inscrire
-  if (LAUNCH_MODE !== 'waitlist') {
+  if (env.LAUNCH_MODE !== 'waitlist') {
     return next()
   }
 
   // Bypass par secret header
   const headerSecret = req.headers['x-admin-secret'] as string | undefined
-  if (ADMIN_SECRET && headerSecret === ADMIN_SECRET) {
+  if (env.ADMIN_SECRET && headerSecret === env.ADMIN_SECRET) {
     return next()
   }
 
   // Bypass par email whitelist
   const bodyEmail = (req.body?.email as string | undefined)?.toLowerCase()
-  if (bodyEmail && ADMIN_EMAILS.includes(bodyEmail)) {
+  if (bodyEmail && env.ADMIN_EMAILS.includes(bodyEmail)) {
     return next()
   }
 

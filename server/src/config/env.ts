@@ -65,6 +65,11 @@ const envSchema = z.object({
   // Waitlist
   NOTIFY_SECRET: z.string().optional(),
   LAUNCH_DATE: z.string().optional(),
+
+  // Launch mode — controls registration gating
+  LAUNCH_MODE: z.enum(['waitlist', 'live']).default('live'),
+  ADMIN_SECRET: z.string().optional(),
+  ADMIN_EMAILS: z.string().optional(),
 })
 
 // Parse and validate environment variables
@@ -116,6 +121,9 @@ const data: any = parsedEnv.success ? parsedEnv.data : {
   STRIPE_EXPERT_ANNUAL_PRICE_ID: process.env.STRIPE_EXPERT_ANNUAL_PRICE_ID,
   NOTIFY_SECRET: process.env.NOTIFY_SECRET,
   LAUNCH_DATE: process.env.LAUNCH_DATE,
+  LAUNCH_MODE: (process.env.LAUNCH_MODE as 'waitlist' | 'live') || 'live',
+  ADMIN_SECRET: process.env.ADMIN_SECRET,
+  ADMIN_EMAILS: process.env.ADMIN_EMAILS,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
 }
@@ -173,4 +181,11 @@ export const env = {
 
   NOTIFY_SECRET: data.NOTIFY_SECRET || '',
   LAUNCH_DATE: data.LAUNCH_DATE || '2026-06-01T00:00:00Z',
+
+  LAUNCH_MODE: (data.LAUNCH_MODE || 'live') as 'waitlist' | 'live',
+  ADMIN_SECRET: data.ADMIN_SECRET || '',
+  ADMIN_EMAILS: (data.ADMIN_EMAILS || '')
+    .split(',')
+    .map((e: string) => e.trim().toLowerCase())
+    .filter(Boolean) as string[],
 }

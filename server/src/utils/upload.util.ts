@@ -13,21 +13,52 @@ if (!fs.existsSync(uploadDir)) {
 // Configure multer storage
 const storage = multer.memoryStorage()
 
-// Multer upload middleware (images) — 10MB limit, no fileFilter
-// MIME validation is handled in the controller where we can log the actual type
+// Allowed MIME types for image uploads
+const ALLOWED_IMAGE_TYPES = new Set([
+  'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif',
+  'image/svg+xml', 'image/heic', 'image/heif',
+])
+
+// Allowed MIME types for generic file uploads (dossier, contracts, documents)
+const ALLOWED_FILE_TYPES = new Set([
+  'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif',
+  'application/pdf',
+])
+
+// FileFilter for image-only routes
+const imageFileFilter: multer.Options['fileFilter'] = (_req, file, cb) => {
+  if (ALLOWED_IMAGE_TYPES.has(file.mimetype)) {
+    cb(null, true)
+  } else {
+    cb(new Error(`Type de fichier non autorisé: ${file.mimetype}. Formats acceptés: JPEG, PNG, WebP, GIF, SVG`))
+  }
+}
+
+// FileFilter for document routes (images + PDF)
+const documentFileFilter: multer.Options['fileFilter'] = (_req, file, cb) => {
+  if (ALLOWED_FILE_TYPES.has(file.mimetype)) {
+    cb(null, true)
+  } else {
+    cb(new Error(`Type de fichier non autorisé: ${file.mimetype}. Formats acceptés: PDF, JPEG, PNG, WebP`))
+  }
+}
+
+// Multer upload middleware (images only) — 10MB limit
 export const upload = multer({
   storage,
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB
   },
+  fileFilter: imageFileFilter,
 })
 
-// Multer upload middleware for generic files (any type, 5MB max)
+// Multer upload middleware for generic files (images + PDF, 5MB max)
 export const uploadFile = multer({
   storage,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB
   },
+  fileFilter: documentFileFilter,
 })
 
 /**
