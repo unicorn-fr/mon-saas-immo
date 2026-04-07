@@ -473,22 +473,27 @@ export default function WaitlistPage() {
         padding: 'clamp(80px,12vw,108px) clamp(16px,5vw,40px) clamp(48px,6vw,72px)',
       }}>
 
-        {/* 3D puffy logo — real image, immense background */}
+        {/* 3D puffy logo — zoomed so B at left edge, dot at right edge */}
+        {/* Image has ~8% white padding left/right around the badge.
+            Badge width ≈ 84% of image. To fill 100vw: image must be 100/0.84 ≈ 119vw
+            Left offset: -8% × 119vw ≈ -9.5vw → use -9vw */}
         <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+          position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden',
         }}>
           <img
             src="/bailio-3d.png"
             alt=""
             aria-hidden="true"
             style={{
-              width: 'clamp(440px, 80vw, 900px)',
-              opacity: 0.28,
-              filter: 'blur(0.5px) saturate(1.05)',
+              position: 'absolute',
+              width: '119vw',
+              left: '-9vw',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              opacity: 0.26,
+              filter: 'saturate(1.05)',
               userSelect: 'none',
               pointerEvents: 'none',
-              transform: 'rotate(-3deg) translateY(-2%)',
             }}
           />
         </div>
