@@ -472,7 +472,7 @@ export default function WaitlistPage() {
         padding: 'clamp(80px,12vw,108px) clamp(16px,5vw,40px) clamp(48px,6vw,72px)',
       }}>
 
-        {/* Ghost watermark — editorial depth */}
+        {/* 3D puffy logo — large background visual */}
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
@@ -480,12 +480,31 @@ export default function WaitlistPage() {
           <span style={{
             fontFamily: 'var(--font-display)',
             fontStyle: 'italic', fontWeight: 700,
-            fontSize: 'clamp(120px,22vw,300px)',
-            color: 'transparent',
-            WebkitTextStroke: '1px rgba(13,12,10,0.030)',
+            fontSize: 'clamp(110px,20vw,280px)',
+            color: '#d9e4f5',
             lineHeight: 1, userSelect: 'none',
             letterSpacing: '-0.02em', whiteSpace: 'nowrap',
-          }}>Bailio.</span>
+            textShadow: [
+              '0 1px 0 #b8ccf0',
+              '0 2px 0 #a8bcdf',
+              '0 3px 0 #98acce',
+              '0 4px 0 #88a0bf',
+              '0 5px 0 #7890ae',
+              '0 6px 0 #6880a0',
+              '0 7px 3px rgba(26,50,112,0.22)',
+              '0 12px 18px rgba(26,50,112,0.14)',
+              '0 22px 36px rgba(26,50,112,0.09)',
+            ].join(', '),
+            filter: 'saturate(0.6) brightness(1.08)',
+          }}>Bailio<span style={{ color: '#e8c496', textShadow: [
+            '0 1px 0 #d4a870',
+            '0 2px 0 #c4986a',
+            '0 3px 0 #b08850',
+            '0 4px 0 #9a7840',
+            '0 5px 0 #886830',
+            '0 6px 3px rgba(196,151,106,0.22)',
+            '0 12px 18px rgba(196,151,106,0.12)',
+          ].join(', ') }}>.</span></span>
         </div>
 
         {/* Center content column */}
@@ -514,39 +533,28 @@ export default function WaitlistPage() {
             </div>
           </div>
 
-          {/* H1 — benefit ultra-clair */}
+          {/* H1 — ultra-clair, 3 secondes */}
           <h1 style={{
             fontFamily: 'var(--font-display)',
             fontStyle: 'italic', fontWeight: 700,
-            fontSize: 'clamp(32px,6vw,52px)', lineHeight: 1.06,
+            fontSize: 'clamp(26px,5vw,44px)', lineHeight: 1.10,
             margin: '0 0 14px', textAlign: 'center',
+            color: 'var(--c-ink)',
+            opacity: 0, animation: 'wUp .55s cubic-bezier(.22,1,.36,1) .22s forwards',
           }}>
-            {['La', 'location'].map((w, i) => (
-              <span key={i} style={{
-                display: 'inline-block', marginRight: '0.20em',
-                color: 'var(--c-ink)', opacity: 0,
-                animation: `wUp .52s cubic-bezier(.22,1,.36,1) ${0.22 + i * 0.09}s forwards`,
-              }}>{w}</span>
-            ))}
-            <br />
-            {['sans', 'agence.'].map((w, i) => (
-              <span key={i} style={{
-                display: 'inline-block', marginRight: '0.20em',
-                color: 'var(--c-accent)', opacity: 0,
-                animation: `wUp .52s cubic-bezier(.22,1,.36,1) ${0.42 + i * 0.09}s forwards`,
-              }}>{w}</span>
-            ))}
+            La première plateforme de gestion locative{' '}
+            <span style={{ color: 'var(--c-accent)' }}>100&nbsp;% sans agence.</span>
           </h1>
 
-          {/* Subtitle — 2 lignes max */}
+          {/* Subtitle */}
           <p style={{
-            fontFamily: 'var(--font-body)', fontSize: 15,
-            color: 'var(--c-ink-mid)', lineHeight: 1.65,
+            fontFamily: 'var(--font-body)', fontSize: 13,
+            color: 'var(--c-ink-faint)', lineHeight: 1.5,
             margin: '0 0 18px', textAlign: 'center',
-            opacity: 0, animation: 'fIn .6s ease .72s forwards',
+            letterSpacing: '0.04em',
+            opacity: 0, animation: 'fIn .6s ease .50s forwards',
           }}>
-            La première plateforme de gestion locative 100&nbsp;% sans agence.<br />
-            Dossiers IA · Bail eIDAS · Paiements automatiques.
+            Dossiers IA · Bail eIDAS · Paiements automatiques
           </p>
 
           {/* Social proof count */}
@@ -745,6 +753,107 @@ export default function WaitlistPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════
+          MOT DU FONDATEUR
+      ══════════════════════════════════════════════════════════════════ */}
+      <section style={{
+        background: 'var(--c-surface)',
+        borderTop: '1px solid var(--c-border)',
+        padding: 'clamp(48px,7vw,80px) clamp(16px,5vw,64px)',
+      }}>
+        <div style={{ maxWidth: 680, margin: '0 auto' }}>
+          <div className="bail-reveal">
+            <p style={{
+              fontFamily: 'var(--font-body)', fontSize: 10.5, fontWeight: 700,
+              letterSpacing: '0.14em', textTransform: 'uppercase',
+              color: 'var(--c-accent)', margin: '0 0 28px',
+            }}>Mot du fondateur</p>
+
+            {/* Photo + quote layout */}
+            <div style={{ display: 'flex', gap: 'clamp(20px,4vw,40px)', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+
+              {/* Avatar initiales */}
+              <div style={{ flexShrink: 0 }}>
+                <div style={{
+                  width: 64, height: 64, borderRadius: '50%',
+                  background: 'var(--c-primary-light)',
+                  border: '2px solid var(--c-primary-border)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <span style={{
+                    fontFamily: 'var(--font-display)', fontStyle: 'italic',
+                    fontWeight: 700, fontSize: 22, color: 'var(--c-primary)',
+                  }}>E</span>
+                </div>
+                <div style={{
+                  marginTop: 8, textAlign: 'center',
+                  fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 600,
+                  color: 'var(--c-ink)',
+                }}>Enzo</div>
+                <div style={{
+                  textAlign: 'center',
+                  fontFamily: 'var(--font-body)', fontSize: 10,
+                  color: 'var(--c-ink-faint)',
+                }}>Fondateur</div>
+              </div>
+
+              {/* Texte — voix authentique */}
+              <div style={{ flex: '1 1 280px' }}>
+                <div style={{
+                  fontFamily: 'var(--font-display)',
+                  fontStyle: 'italic', fontWeight: 600,
+                  fontSize: 'clamp(16px,2.5vw,20px)',
+                  color: 'var(--c-ink)', lineHeight: 1.45,
+                  marginBottom: 18,
+                }}>
+                  "J'ai lancé Bailio à 20 ans depuis ma chambre d'étudiant."
+                </div>
+                <p style={{
+                  fontFamily: 'var(--font-body)', fontSize: 14,
+                  color: 'var(--c-ink-mid)', lineHeight: 1.80,
+                  margin: '0 0 14px',
+                }}>
+                  Au départ c'est simple : mes parents galèrent à louer leur appartement. Des dossiers
+                  perdus, une agence qui prend 15&nbsp;%, des emails sans réponse pendant des semaines.
+                  Je me suis dit — il <em>doit</em> exister un meilleur moyen.
+                </p>
+                <p style={{
+                  fontFamily: 'var(--font-body)', fontSize: 14,
+                  color: 'var(--c-ink-mid)', lineHeight: 1.80,
+                  margin: '0 0 14px',
+                }}>
+                  Alors j'ai construit Bailio. Pas une startup qui veut tout révolutionner —
+                  juste un outil honnête qui fait le travail à votre place : vérifier les dossiers,
+                  générer le bail, encaisser les loyers. Tout ça, sans agence, sans frais cachés,
+                  depuis votre téléphone.
+                </p>
+                <p style={{
+                  fontFamily: 'var(--font-body)', fontSize: 14,
+                  color: 'var(--c-ink)', lineHeight: 1.80,
+                  margin: 0, fontWeight: 500,
+                }}>
+                  Si vous êtes ici, c'est que vous cherchez exactement ça. Bienvenue.
+                </p>
+
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 10, marginTop: 22,
+                  paddingTop: 18, borderTop: '1px solid var(--c-border)',
+                }}>
+                  <span style={{
+                    fontFamily: 'var(--font-display)', fontStyle: 'italic',
+                    fontWeight: 600, fontSize: 15, color: 'var(--c-primary)',
+                  }}>Enzo,</span>
+                  <span style={{
+                    fontFamily: 'var(--font-body)', fontSize: 12,
+                    color: 'var(--c-ink-faint)',
+                  }}>fondateur de Bailio · 20 ans · École de commerce</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
