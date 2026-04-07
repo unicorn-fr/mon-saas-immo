@@ -757,7 +757,7 @@ export default function WaitlistPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(159,212,186,0.10)', border: '1px solid rgba(159,212,186,0.22)', borderRadius: 20, padding: '5px 12px' }}>
               <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#9fd4ba', boxShadow: '0 0 5px rgba(159,212,186,.8)' }} />
               <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9.5, fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(159,212,186,0.85)' }}>
-                {totalCount > 0 ? `${totalCount.toLocaleString('fr-FR')} inscrits` : 'Liste d'attente'}
+                {totalCount > 0 ? `${totalCount.toLocaleString('fr-FR')} inscrits` : "Liste d'attente"}
               </span>
             </div>
           </div>
