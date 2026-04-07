@@ -105,14 +105,15 @@ html { scroll-behavior: smooth; }
 .bail-d3 { transition-delay: .30s !important; }
 .bail-d4 { transition-delay: .44s !important; }
 
-/* ── Glass card — light surface ────────────────────────────────────────────── */
+/* ── Glass card — glassmorphism transparent ─────────────────────────────────── */
 .glass-card {
-  background: rgba(255, 255, 255, 0.80);
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
-  border: 1px solid rgba(228, 225, 219, 0.90);
+  background: rgba(255, 255, 255, 0.52);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.70);
+  border-top: 1px solid rgba(255, 255, 255, 0.90);
   border-radius: 20px;
-  box-shadow: var(--shadow-glass);
+  box-shadow: 0 8px 40px rgba(26,50,112,0.10), 0 2px 8px rgba(26,50,112,0.05), inset 0 1px 0 rgba(255,255,255,0.80);
 }
 
 /* ── Feature cards ─────────────────────────────────────────────────────────── */
@@ -472,39 +473,24 @@ export default function WaitlistPage() {
         padding: 'clamp(80px,12vw,108px) clamp(16px,5vw,40px) clamp(48px,6vw,72px)',
       }}>
 
-        {/* 3D puffy logo — large background visual */}
+        {/* 3D puffy logo — real image, immense background */}
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
         }}>
-          <span style={{
-            fontFamily: 'var(--font-display)',
-            fontStyle: 'italic', fontWeight: 700,
-            fontSize: 'clamp(110px,20vw,280px)',
-            color: '#d9e4f5',
-            lineHeight: 1, userSelect: 'none',
-            letterSpacing: '-0.02em', whiteSpace: 'nowrap',
-            textShadow: [
-              '0 1px 0 #b8ccf0',
-              '0 2px 0 #a8bcdf',
-              '0 3px 0 #98acce',
-              '0 4px 0 #88a0bf',
-              '0 5px 0 #7890ae',
-              '0 6px 0 #6880a0',
-              '0 7px 3px rgba(26,50,112,0.22)',
-              '0 12px 18px rgba(26,50,112,0.14)',
-              '0 22px 36px rgba(26,50,112,0.09)',
-            ].join(', '),
-            filter: 'saturate(0.6) brightness(1.08)',
-          }}>Bailio<span style={{ color: '#e8c496', textShadow: [
-            '0 1px 0 #d4a870',
-            '0 2px 0 #c4986a',
-            '0 3px 0 #b08850',
-            '0 4px 0 #9a7840',
-            '0 5px 0 #886830',
-            '0 6px 3px rgba(196,151,106,0.22)',
-            '0 12px 18px rgba(196,151,106,0.12)',
-          ].join(', ') }}>.</span></span>
+          <img
+            src="/bailio-3d.png"
+            alt=""
+            aria-hidden="true"
+            style={{
+              width: 'clamp(440px, 80vw, 900px)',
+              opacity: 0.28,
+              filter: 'blur(0.5px) saturate(1.05)',
+              userSelect: 'none',
+              pointerEvents: 'none',
+              transform: 'rotate(-3deg) translateY(-2%)',
+            }}
+          />
         </div>
 
         {/* Center content column */}
