@@ -752,28 +752,55 @@ export default function ContractDetails() {
                   )}
 
                   {canSign && (
-                    <button
-                      onClick={() => {
-                        if (ownerSignBlocked) return
-                        if (isTenant) {
-                          // Tenant: mandatory pre-sign checklist
-                          setPreSignChecks({ property: false, clauses: false, amounts: false })
-                          setShowPreSignChecklist(true)
-                        } else {
-                          setShowSignature(true)
-                        }
-                      }}
-                      disabled={actionLoading || ownerSignBlocked}
-                      title={ownerSignBlocked ? 'Validez tous les documents du locataire avant de signer' : undefined}
-                      style={{
-                        ...btnPrimary,
-                        opacity: actionLoading || ownerSignBlocked ? 0.5 : 1,
-                        cursor: ownerSignBlocked ? 'not-allowed' : 'pointer',
-                      }}
-                    >
-                      <PenTool style={{ width: 15, height: 15 }} />
-                      Signer le contrat
-                    </button>
+                    <>
+                      <button
+                        onClick={() => {
+                          if (ownerSignBlocked) return
+                          if (isTenant) {
+                            setPreSignChecks({ property: false, clauses: false, amounts: false })
+                            setShowPreSignChecklist(true)
+                          } else {
+                            setShowSignature(true)
+                          }
+                        }}
+                        disabled={actionLoading || ownerSignBlocked}
+                        title={ownerSignBlocked ? 'Validez tous les documents du locataire avant de signer' : undefined}
+                        style={{
+                          ...btnPrimary,
+                          opacity: actionLoading || ownerSignBlocked ? 0.5 : 1,
+                          cursor: ownerSignBlocked ? 'not-allowed' : 'pointer',
+                        }}
+                      >
+                        <PenTool style={{ width: 15, height: 15 }} />
+                        Signer le contrat
+                      </button>
+
+                      {/* YouSign stub — signature électronique certifiée eIDAS */}
+                      <button
+                        onClick={() => toast('Intégration YouSign bientôt disponible — utilisez la signature intégrée ci-dessus en attendant.', { icon: '🔏' })}
+                        disabled={actionLoading || ownerSignBlocked}
+                        title="Signature certifiée eIDAS via YouSign — bientôt disponible"
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 7,
+                          padding: '10px 18px', borderRadius: 8,
+                          background: M.surface, color: M.inkMid,
+                          border: `1px solid ${M.border}`, cursor: 'pointer',
+                          fontFamily: M.body, fontWeight: 500, fontSize: 13,
+                          opacity: actionLoading || ownerSignBlocked ? 0.4 : 1,
+                        }}
+                      >
+                        <ShieldCheck style={{ width: 15, height: 15, color: M.caramel }} />
+                        YouSign
+                        <span style={{
+                          fontSize: 10, fontWeight: 700,
+                          background: M.caramelLight, color: M.caramel,
+                          border: `1px solid #e8c99a`, borderRadius: 4,
+                          padding: '1px 5px', letterSpacing: '0.04em',
+                        }}>
+                          BIENTÔT
+                        </span>
+                      </button>
+                    </>
                   )}
 
                   {canActivate && (

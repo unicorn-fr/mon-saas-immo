@@ -29,6 +29,8 @@ import {
   Eye,
   Trash2,
   Lock,
+  Camera,
+  Image,
 } from 'lucide-react'
 import { PDFDownloadLink } from '@react-pdf/renderer'
 import toast from 'react-hot-toast'
@@ -61,7 +63,10 @@ export default function EtatDesLieux() {
   const [expandedRooms, setExpandedRooms] = useState<Set<string>>(new Set(['entree']))
   const [saving, setSaving] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
+  const galleryInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -239,6 +244,35 @@ export default function EtatDesLieux() {
     }
   }
 
+  const handlePhotoCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !contract) return
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Seules les images sont acceptées')
+      if (e.target) e.target.value = ''
+      return
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('L\'image ne doit pas dépasser 10 Mo')
+      if (e.target) e.target.value = ''
+      return
+    }
+
+    setUploadingPhoto(true)
+    try {
+      const photoCategory = edlType === 'ENTREE' ? 'EDL_ENTREE' : 'EDL_SORTIE'
+      await uploadDocument(contract.id, photoCategory, file)
+      toast.success('Photo ajoutée à l\'EDL')
+    } catch {
+      toast.error('Erreur lors de l\'upload de la photo')
+    } finally {
+      setUploadingPhoto(false)
+      if (e.target) e.target.value = ''
+    }
+  }
+
   // Build blank EDL for PDF
   const blankEdl = contract ? prefillEDLFromContract(edlType, contract) : createEmptyEDL(edlType)
 
@@ -286,9 +320,9 @@ export default function EtatDesLieux() {
 
         {/* Header */}
         <div style={{ background: M.surface, borderBottom: `1px solid ${M.border}` }}>
-          <div className="container mx-auto px-4 py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+          <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
                 <button
                   onClick={() => navigate(`/contracts/${id}`)}
                   style={{
@@ -311,7 +345,7 @@ export default function EtatDesLieux() {
                   </p>
                   <h1 style={{
                     fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
-                    fontSize: 32, color: M.ink, lineHeight: 1.1, margin: 0,
+                    fontSize: 'clamp(22px, 5vw, 32px)', color: M.ink, lineHeight: 1.1, margin: 0,
                     display: 'flex', alignItems: 'center', gap: 10,
                   }}>
                     <ClipboardCheck style={{ width: 26, height: 26, color: M.owner }} />
@@ -358,8 +392,8 @@ export default function EtatDesLieux() {
           </div>
         </div>
 
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto space-y-5">
+        <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8">
+          <div className="max-w-4xl mx-auto space-y-4 sm:space-y-5">
 
             {/* Lock banner */}
             {isLocked && (
@@ -394,7 +428,7 @@ export default function EtatDesLieux() {
                 Documents EDL
               </h3>
 
-              <div className="flex flex-wrap gap-3" style={{ marginBottom: 16 }}>
+              <div className="flex flex-wrap gap-2 sm:gap-3" style={{ marginBottom: 16 }}>
                 {/* Download blank PDF */}
                 <PDFDownloadLink
                   document={<EDLPDF edl={blankEdl} blank={true} />}
@@ -403,7 +437,7 @@ export default function EtatDesLieux() {
                   {({ loading }) => (
                     <button style={{ ...btnGhost, opacity: loading ? 0.5 : 1 }} disabled={loading}>
                       <Download style={{ width: 14, height: 14 }} />
-                      {loading ? 'Génération...' : 'PDF vierge (à remplir)'}
+                      {loading ? 'Génération...' : 'PDF vierge'}
                     </button>
                   )}
                 </PDFDownloadLink>
@@ -421,7 +455,7 @@ export default function EtatDesLieux() {
                   )}
                 </PDFDownloadLink>
 
-                {/* Upload scanned EDL */}
+                {/* Upload scanned EDL (PDF) */}
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -435,7 +469,51 @@ export default function EtatDesLieux() {
                   style={{ ...btnGhost, opacity: uploading ? 0.5 : 1 }}
                 >
                   <Upload style={{ width: 14, height: 14 }} />
-                  {uploading ? 'Téléchargement...' : 'Télécharger un EDL scanné'}
+                  {uploading ? 'Envoi...' : 'EDL scanné (PDF)'}
+                </button>
+
+                {/* ── Mobile photo capture — appareil photo natif ── */}
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={handlePhotoCapture}
+                />
+                <button
+                  onClick={() => cameraInputRef.current?.click()}
+                  disabled={uploadingPhoto}
+                  style={{
+                    ...btnGhost,
+                    opacity: uploadingPhoto ? 0.5 : 1,
+                    color: M.tenant,
+                    borderColor: M.tenantBorder,
+                    background: M.tenantLight,
+                  }}
+                  title="Prendre une photo avec l'appareil photo (mobile)"
+                >
+                  <Camera style={{ width: 14, height: 14 }} />
+                  {uploadingPhoto ? 'Envoi...' : 'Photo (mobile)'}
+                </button>
+
+                {/* Galerie photos */}
+                <input
+                  ref={galleryInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handlePhotoCapture}
+                />
+                <button
+                  onClick={() => galleryInputRef.current?.click()}
+                  disabled={uploadingPhoto}
+                  style={{ ...btnGhost, opacity: uploadingPhoto ? 0.5 : 1 }}
+                  title="Sélectionner des photos depuis la galerie"
+                >
+                  <Image style={{ width: 14, height: 14 }} />
+                  Galerie
                 </button>
               </div>
 
@@ -542,41 +620,41 @@ export default function EtatDesLieux() {
                         <div
                           key={element.id}
                           style={{
-                            padding: '14px 20px',
+                            padding: '12px 16px',
                             borderBottom: idx < room.elements.length - 1 ? `1px solid ${M.border}` : 'none',
                           }}
                         >
-                          <div className="flex items-start gap-4">
-                            <div className="flex-1">
-                              <p style={{ fontSize: 13, fontWeight: 500, color: M.ink, marginBottom: 8 }}>
-                                {element.label}
-                              </p>
-                              {/* Etat selector */}
-                              <div className="flex flex-wrap gap-2">
-                                {etatOptions.map((etat) => (
-                                  <button
-                                    key={etat}
-                                    onClick={() => updateElement(room.id, element.id, 'etat', etat)}
-                                    style={{
-                                      padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600,
-                                      fontFamily: M.body, cursor: 'pointer', border: 'none',
-                                      background: element.etat === etat ? undefined : M.muted,
-                                      color: element.etat === etat ? undefined : M.inkFaint,
-                                    }}
-                                    className={element.etat === etat ? ETAT_COLORS[etat] : ''}
-                                  >
-                                    {ETAT_LABELS[etat]}
-                                  </button>
-                                ))}
-                              </div>
+                          {/* Mobile-first: stack label+etat / observation */}
+                          <div className="flex flex-col gap-2">
+                            <p style={{ fontSize: 13, fontWeight: 500, color: M.ink }}>
+                              {element.label}
+                            </p>
+                            {/* État selector — pill buttons, large tap targets on mobile */}
+                            <div className="flex flex-wrap gap-1.5">
+                              {etatOptions.map((etat) => (
+                                <button
+                                  key={etat}
+                                  onClick={() => updateElement(room.id, element.id, 'etat', etat)}
+                                  style={{
+                                    padding: '6px 12px', borderRadius: 6, fontSize: 12, fontWeight: 600,
+                                    fontFamily: M.body, cursor: 'pointer', border: 'none',
+                                    minHeight: 36,
+                                    background: element.etat === etat ? undefined : M.muted,
+                                    color: element.etat === etat ? undefined : M.inkFaint,
+                                  }}
+                                  className={element.etat === etat ? ETAT_COLORS[etat] : ''}
+                                >
+                                  {ETAT_LABELS[etat]}
+                                </button>
+                              ))}
                             </div>
-                            {/* Observation */}
+                            {/* Observation — full width */}
                             <input
                               type="text"
-                              placeholder="Observation..."
+                              placeholder="Observation (optionnel)..."
                               value={element.observation}
                               onChange={(e) => updateElement(room.id, element.id, 'observation', e.target.value)}
-                              style={{ ...inputStyle, width: 192 }}
+                              style={{ ...inputStyle, width: '100%' }}
                             />
                           </div>
                         </div>
@@ -599,7 +677,7 @@ export default function EtatDesLieux() {
               </h3>
               <div className="space-y-4">
                 {edl.compteurs.map((compteur, index) => (
-                  <div key={compteur.type} className="grid grid-cols-3 gap-4 items-center">
+                  <div key={compteur.type} className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
                     <label style={{ fontSize: 13, fontWeight: 500, color: M.ink }}>{compteur.label}</label>
                     <input
                       type="text"
@@ -632,7 +710,7 @@ export default function EtatDesLieux() {
               </h3>
               <div className="space-y-3">
                 {edl.cles.map((cle, index) => (
-                  <div key={cle.type} className="grid grid-cols-3 gap-4 items-center">
+                  <div key={cle.type} className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
                     <label style={{ fontSize: 13, fontWeight: 500, color: M.ink }}>{cle.type}</label>
                     <input
                       type="number"
@@ -677,7 +755,7 @@ export default function EtatDesLieux() {
             </fieldset>
 
             {/* Save button */}
-            <div className="flex justify-end gap-3" style={{ paddingBottom: 32 }}>
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3" style={{ paddingBottom: 32 }}>
               <button
                 onClick={() => navigate(`/contracts/${id}`)}
                 style={btnGhost}
