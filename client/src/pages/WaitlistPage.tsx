@@ -107,11 +107,11 @@ html { scroll-behavior: smooth; }
 
 /* ── Glass card — glassmorphism transparent ─────────────────────────────────── */
 .glass-card {
-  background: rgba(255, 255, 255, 0.52);
+  background: rgba(255, 255, 255, 0.28);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.70);
-  border-top: 1px solid rgba(255, 255, 255, 0.90);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-top: 1px solid rgba(255, 255, 255, 0.60);
   border-radius: 20px;
   box-shadow: 0 8px 40px rgba(26,50,112,0.10), 0 2px 8px rgba(26,50,112,0.05), inset 0 1px 0 rgba(255,255,255,0.80);
 }
@@ -474,7 +474,7 @@ export default function WaitlistPage() {
         <div style={{
           position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
           backgroundImage: 'url(/bailio-3d.png)',
-          backgroundSize: '100%',
+          backgroundSize: '90%',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
           mixBlendMode: 'multiply',
