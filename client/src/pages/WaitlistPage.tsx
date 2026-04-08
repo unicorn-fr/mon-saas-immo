@@ -474,7 +474,7 @@ export default function WaitlistPage() {
         <div style={{
           position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
           backgroundImage: 'url(/bailio-3d.png)',
-          backgroundSize: '200%',
+          backgroundSize: '100%',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
           mixBlendMode: 'multiply',
