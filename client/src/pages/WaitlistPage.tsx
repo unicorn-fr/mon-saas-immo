@@ -428,6 +428,19 @@ export default function WaitlistPage() {
       <style>{CSS}</style>
       <Confetti active={confetti} />
 
+      {/* ── Background image — fixed, true full-bleed cover ── */}
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 0,
+        pointerEvents: 'none',
+        backgroundImage: 'url(/bailio-3d.png)',
+        backgroundSize: '200%',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        mixBlendMode: 'multiply',
+        opacity: 0.9,
+        filter: 'saturate(1.3) contrast(1.05)',
+      }} />
+
       {/* ══════════════════════════════════════════════════════════════════
           NAV
       ══════════════════════════════════════════════════════════════════ */}
@@ -467,31 +480,12 @@ export default function WaitlistPage() {
           'radial-gradient(ellipse at 80% -5%, rgba(26,50,112,0.06) 0%, transparent 50%)',
           'radial-gradient(ellipse at -5% 95%, rgba(196,151,106,0.07) 0%, transparent 50%)',
         ].join(', '),
-        position: 'relative', overflow: 'hidden',
+        position: 'relative', zIndex: 1, overflow: 'visible',
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
         padding: 'clamp(80px,12vw,108px) clamp(16px,5vw,40px) clamp(48px,6vw,72px)',
       }}>
 
-        {/* 3D puffy logo — vivid colors, mix-blend-mode:multiply removes white bg */}
-        <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <img
-            src="/bailio-3d.png"
-            alt=""
-            aria-hidden="true"
-            style={{
-              width: 'clamp(520px, 90vw, 1100px)',
-              opacity: 0.82,
-              mixBlendMode: 'multiply',
-              filter: 'saturate(1.3) contrast(1.05)',
-              userSelect: 'none',
-              pointerEvents: 'none',
-            }}
-          />
-        </div>
 
         {/* Center content column */}
         <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 500 }}>
