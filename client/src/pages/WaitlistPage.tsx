@@ -670,18 +670,24 @@ export default function WaitlistPage() {
             bottom: 60, left: 20,
           }} />
 
-          <img
-            src="/bailio-3d.png"
-            alt="Bailio logo 3D"
-            style={{
-              width: '90%',
-              maxWidth: 520,
-              position: 'relative', zIndex: 1,
-              animation: 'float 6s ease-in-out infinite',
-              filter: 'drop-shadow(0 24px 48px rgba(26,50,112,0.12))',
+          {/* Grande wordmark décorative */}
+          <div style={{
+            position: 'relative', zIndex: 1,
+            textAlign: 'center',
+            animation: 'float 6s ease-in-out infinite',
+          }}>
+            <span style={{
+              fontFamily: 'var(--font-display)',
+              fontStyle: 'italic', fontWeight: 700,
+              fontSize: 'clamp(80px, 12vw, 160px)',
+              color: 'var(--c-primary)',
+              opacity: 0.08,
+              letterSpacing: '-0.03em',
+              lineHeight: 1,
               userSelect: 'none',
-            }}
-          />
+              display: 'block',
+            }}>Bailio.</span>
+          </div>
 
           {/* Badge en bas droite */}
           <div style={{
