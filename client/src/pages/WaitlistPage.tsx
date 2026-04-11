@@ -313,6 +313,30 @@ function CDUnit({ value, label }: { value: number; label: string }) {
   )
 }
 
+function WaveDivider({ from, to, flip = false }: { from: string; to: string; flip?: boolean }) {
+  return (
+    <div
+      aria-hidden="true"
+      style={{ position: 'relative', height: 56, background: from, overflow: 'hidden', flexShrink: 0 }}
+    >
+      <svg
+        viewBox="0 0 1440 56"
+        preserveAspectRatio="none"
+        style={{
+          position: 'absolute', bottom: 0, left: 0,
+          width: '100%', height: '100%', display: 'block',
+          transform: flip ? 'scaleX(-1)' : 'none',
+        }}
+      >
+        <path
+          d="M0,28 C240,56 480,0 720,28 C960,56 1200,0 1440,28 L1440,56 L0,56 Z"
+          fill={to}
+        />
+      </svg>
+    </div>
+  )
+}
+
 function SuccessBlock({
   isEarlyAccess, alreadyRegistered, firstName,
 }: { isEarlyAccess: boolean; alreadyRegistered: boolean; firstName: string }) {
@@ -506,7 +530,7 @@ export default function WaitlistPage() {
           <h1 style={{
             fontFamily: 'var(--font-display)',
             fontStyle: 'italic', fontWeight: 700,
-            fontSize: 'clamp(30px,4.5vw,54px)', lineHeight: 1.08,
+            fontSize: 'clamp(40px,7vw,82px)', lineHeight: 1.04,
             margin: '0 0 16px', color: 'var(--c-ink)',
             opacity: 0, animation: 'wUp .55s cubic-bezier(.22,1,.36,1) .20s forwards',
           }}>
@@ -667,6 +691,8 @@ export default function WaitlistPage() {
         </div>
       </section>
 
+      <WaveDivider from="#fafaf8" to="#1a1a2e" />
+
       {/* ══════════════════════════════════════════════════════════════════
           STATS STRIP
       ══════════════════════════════════════════════════════════════════ */}
@@ -711,6 +737,8 @@ export default function WaitlistPage() {
         </div>
       </section>
 
+      <WaveDivider from="#1a1a2e" to="#fafaf8" flip />
+
       {/* ══════════════════════════════════════════════════════════════════
           POUR QUI — 2 colonnes
       ══════════════════════════════════════════════════════════════════ */}
@@ -739,20 +767,20 @@ export default function WaitlistPage() {
             gap: 16,
           }}>
             {/* Propriétaires */}
-            <div className="bail-reveal feat-card" style={{ borderTop: '3px solid var(--c-primary)' }}>
+            <div className="bail-reveal feat-card" style={{ borderTop: '3px solid var(--c-accent)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 22 }}>
                 <div style={{
                   width: 44, height: 44, borderRadius: 12,
-                  background: 'var(--c-primary-light)',
+                  background: 'var(--c-accent-light)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}>
-                  <Key size={20} color="var(--c-primary)" strokeWidth={1.8} />
+                  <Key size={20} color="var(--c-accent)" strokeWidth={1.8} />
                 </div>
                 <div>
                   <div style={{
                     fontFamily: 'var(--font-body)', fontSize: 10, fontWeight: 700,
                     letterSpacing: '0.12em', textTransform: 'uppercase',
-                    color: 'var(--c-primary)', marginBottom: 2,
+                    color: 'var(--c-accent)', marginBottom: 2,
                   }}>Propriétaires</div>
                   <div style={{
                     fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 600,
@@ -768,27 +796,27 @@ export default function WaitlistPage() {
                 'Tout depuis ton téléphone. Zéro paperasse.',
               ].map((it, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
-                  <CheckCircle size={14} color="var(--c-primary)" strokeWidth={2} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <CheckCircle size={14} color="var(--c-accent)" strokeWidth={2} style={{ flexShrink: 0, marginTop: 2 }} />
                   <span style={{ fontFamily: 'var(--font-body)', fontSize: 13.5, color: 'var(--c-ink-mid)', lineHeight: 1.5 }}>{it}</span>
                 </div>
               ))}
             </div>
 
             {/* Locataires */}
-            <div className="bail-reveal bail-d1 feat-card" style={{ borderTop: '3px solid var(--c-green)' }}>
+            <div className="bail-reveal bail-d1 feat-card" style={{ borderTop: '3px solid var(--c-accent)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 22 }}>
                 <div style={{
                   width: 44, height: 44, borderRadius: 12,
-                  background: 'var(--c-green-light)',
+                  background: 'var(--c-accent-light)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}>
-                  <Home size={20} color="var(--c-green)" strokeWidth={1.8} />
+                  <Home size={20} color="var(--c-accent)" strokeWidth={1.8} />
                 </div>
                 <div>
                   <div style={{
                     fontFamily: 'var(--font-body)', fontSize: 10, fontWeight: 700,
                     letterSpacing: '0.12em', textTransform: 'uppercase',
-                    color: 'var(--c-green)', marginBottom: 2,
+                    color: 'var(--c-accent)', marginBottom: 2,
                   }}>Locataires</div>
                   <div style={{
                     fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 600,
@@ -798,13 +826,13 @@ export default function WaitlistPage() {
               </div>
               {[
                 'Dossier prêt en 2 min chrono.',
-                'Tu ne paies rien. Zéro frais d\'agence.',
+                "Tu ne paies rien. Zéro frais d'agence.",
                 'Tes docs sont vérifiés. Ta signature est sécurisée.',
                 'Ta quittance arrive toute seule, chaque mois.',
-                'Tu parles directement avec le proprio. Pas d\'intermédiaire.',
+                "Tu parles directement avec le proprio. Pas d'intermédiaire.",
               ].map((it, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
-                  <CheckCircle size={14} color="var(--c-green)" strokeWidth={2} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <CheckCircle size={14} color="var(--c-accent)" strokeWidth={2} style={{ flexShrink: 0, marginTop: 2 }} />
                   <span style={{ fontFamily: 'var(--font-body)', fontSize: 13.5, color: 'var(--c-ink-mid)', lineHeight: 1.5 }}>{it}</span>
                 </div>
               ))}
@@ -813,13 +841,13 @@ export default function WaitlistPage() {
         </div>
       </section>
 
+      <WaveDivider from="#fafaf8" to="#f4f2ee" />
+
       {/* ══════════════════════════════════════════════════════════════════
           FEATURES — 3 cards
       ══════════════════════════════════════════════════════════════════ */}
       <section style={{
         background: 'var(--c-muted)',
-        borderTop: '1px solid var(--c-border)',
-        borderBottom: '1px solid var(--c-border)',
         padding: 'clamp(48px,7vw,80px) clamp(16px,5vw,64px)',
       }}>
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
@@ -846,7 +874,7 @@ export default function WaitlistPage() {
               {
                 Icon: FileText, title: 'Dossier vérifié en quelques secondes',
                 desc: "On analyse tes justificatifs automatiquement. Score de solvabilité immédiat. Fini les liasses de papiers à éplucher.",
-                color: 'var(--c-primary)', bg: 'var(--c-primary-light)',
+                color: 'var(--c-accent)', bg: 'var(--c-accent-light)',
               },
               {
                 Icon: PenTool, title: 'Bail signé en ligne, valide légalement',
@@ -856,7 +884,7 @@ export default function WaitlistPage() {
               {
                 Icon: CreditCard, title: 'Tes loyers arrivent tout seuls',
                 desc: "Chaque mois, le loyer tombe. La quittance part. Tu n'as rien à faire.",
-                color: 'var(--c-green)', bg: 'var(--c-green-light)',
+                color: 'var(--c-accent)', bg: 'var(--c-accent-light)',
               },
             ].map(({ Icon, title, desc, color, bg }, i) => (
               <div key={i} className={`feat-card bail-reveal bail-d${i + 1}`}>
@@ -881,16 +909,21 @@ export default function WaitlistPage() {
         </div>
       </section>
 
+      <WaveDivider from="#f4f2ee" to="#fafaf8" flip />
+
       <HowItWorksSection />
 
+      <WaveDivider from="#fafaf8" to="#ffffff" />
+
       <FounderSection />
+
+      <WaveDivider from="#ffffff" to="#fafaf8" flip />
 
       {/* ══════════════════════════════════════════════════════════════════
           SOCIAL
       ══════════════════════════════════════════════════════════════════ */}
       <section style={{
         background: 'var(--c-bg)',
-        borderTop: '1px solid var(--c-border)',
         padding: 'clamp(40px,6vw,64px) clamp(16px,5vw,64px)',
       }}>
         <div style={{ maxWidth: 860, margin: '0 auto', textAlign: 'center' }}>
@@ -944,6 +977,8 @@ export default function WaitlistPage() {
           </div>
         </div>
       </section>
+
+      <WaveDivider from="#fafaf8" to="#1a1a2e" />
 
       {/* ══════════════════════════════════════════════════════════════════
           FOOTER

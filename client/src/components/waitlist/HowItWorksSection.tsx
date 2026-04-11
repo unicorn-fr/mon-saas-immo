@@ -39,16 +39,16 @@ const STEPS: Record<Tab, StepData[]> = {
 }
 
 const TAB_COLOR: Record<Tab, string> = {
-  proprietaires: 'var(--c-primary)',
-  locataires:    'var(--c-green)',
+  proprietaires: 'var(--c-accent)',
+  locataires:    'var(--c-accent)',
 }
 const TAB_LIGHT: Record<Tab, string> = {
-  proprietaires: 'var(--c-primary-light)',
-  locataires:    'var(--c-green-light)',
+  proprietaires: 'var(--c-accent-light)',
+  locataires:    'var(--c-accent-light)',
 }
 const TAB_BORDER: Record<Tab, string> = {
-  proprietaires: 'var(--c-primary-border)',
-  locataires:    'var(--c-green-border)',
+  proprietaires: 'rgba(196,151,106,0.40)',
+  locataires:    'rgba(196,151,106,0.40)',
 }
 
 export default function HowItWorksSection() {
@@ -80,7 +80,6 @@ export default function HowItWorksSection() {
       ref={sectionRef}
       style={{
         background: 'var(--c-bg)',
-        borderTop: '1px solid var(--c-border)',
         padding: 'clamp(56px,9vw,96px) clamp(16px,5vw,64px)',
         opacity:   inView ? 1 : 0,
         transform: inView ? 'none' : 'translateY(24px)',
