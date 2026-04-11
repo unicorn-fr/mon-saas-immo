@@ -180,6 +180,10 @@ html, body { margin: 0; padding: 0; scroll-behavior: smooth; }
   box-shadow: 0 6px 28px rgba(196,151,106,0.45);
 }
 .bail-cta:disabled { opacity: .4; cursor: default; }
+
+@media (min-width: 768px) {
+  .hero-h1 { white-space: nowrap; font-size: clamp(44px, 5vw, 68px) !important; }
+}
 .bail-cta .arrow {
   display: inline-flex;
   transition: transform .2s ease;
@@ -744,7 +748,7 @@ export default function WaitlistPage() {
         </div>
 
         {/* Contenu centré */}
-        <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 520, textAlign: 'center' }}>
+        <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 900, textAlign: 'center' }}>
 
           {/* Badge */}
           <div style={{
@@ -771,7 +775,9 @@ export default function WaitlistPage() {
             fontSize: 'clamp(34px,9vw,102px)', lineHeight: 1.03,
             margin: '0 0 16px', color: '#ffffff',
             opacity: 0, animation: 'wUp .55s cubic-bezier(.22,1,.36,1) .20s forwards',
-          }}>
+          } as React.CSSProperties}
+          className="hero-h1"
+          >
             La clé de ta{' '}
             <span style={{ color: 'var(--c-accent)' }}>prochaine location.</span>
           </h1>
@@ -813,6 +819,7 @@ export default function WaitlistPage() {
             boxShadow: '0 4px 32px rgba(0,0,0,0.25)',
             padding: 'clamp(20px,3vw,28px)',
             textAlign: 'left',
+            maxWidth: 520, margin: '0 auto',
             opacity: 0, animation: 'fIn .7s ease .80s forwards',
           }}>
             {/* Countdown */}
