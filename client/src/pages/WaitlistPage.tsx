@@ -428,289 +428,214 @@ export default function WaitlistPage() {
       <Confetti active={confetti} />
 
       {/* ══════════════════════════════════════════════════════════════════
-          HERO — Split layout: gauche sombre (formulaire) / droite image
+          HERO — centré, "Bailio." en fond animé
       ══════════════════════════════════════════════════════════════════ */}
       <section style={{
         minHeight: '100svh',
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        position: 'relative',
+        background: 'var(--c-night)',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        padding: 'clamp(80px,10vw,120px) clamp(16px,5vw,40px) clamp(48px,6vw,72px)',
+        position: 'relative', overflow: 'hidden',
       }}>
-        {/* ── Colonne GAUCHE — nuit, formulaire ── */}
-        <div style={{
-          background: 'var(--c-night)',
-          display: 'flex', flexDirection: 'column',
-          padding: 'clamp(24px,5vw,48px)',
-          position: 'relative', overflow: 'hidden',
-        }}>
-          {/* Cercle décoratif */}
-          <div className="shape-circle" style={{
-            width: 340, height: 340,
-            background: 'rgba(196,151,106,0.06)',
-            bottom: -80, left: -100,
-          }} />
-          <div className="shape-circle" style={{
-            width: 180, height: 180,
-            background: 'rgba(26,50,112,0.18)',
-            top: 60, right: -60,
-          }} />
+        {/* "Bailio." — fond animé géant */}
+        <span style={{
+          position: 'absolute',
+          fontFamily: 'var(--font-display)',
+          fontStyle: 'italic', fontWeight: 700,
+          fontSize: 'clamp(120px, 20vw, 280px)',
+          color: 'rgba(255,255,255,0.04)',
+          letterSpacing: '-0.03em',
+          lineHeight: 1,
+          userSelect: 'none',
+          pointerEvents: 'none',
+          whiteSpace: 'nowrap',
+          animation: 'float 7s ease-in-out infinite',
+          zIndex: 0,
+        }}>Bailio.</span>
 
-          {/* Logo */}
-          <div style={{ marginBottom: 'clamp(40px,7vw,72px)', position: 'relative', zIndex: 1 }}>
-            <BailioWordmark fontSize={24} light />
+        {/* Cercles décoratifs */}
+        <div className="shape-circle" style={{ width: 400, height: 400, background: 'rgba(196,151,106,0.05)', bottom: -80, left: -120, zIndex: 0 }} />
+        <div className="shape-circle" style={{ width: 220, height: 220, background: 'rgba(26,50,112,0.20)', top: 40, right: -60, zIndex: 0 }} />
+
+        {/* Nav logo */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 58, display: 'flex', alignItems: 'center', padding: '0 clamp(16px,5vw,48px)', zIndex: 10 }}>
+          <BailioWordmark fontSize={24} light />
+        </div>
+
+        {/* Contenu centré */}
+        <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 520, textAlign: 'center' }}>
+
+          {/* Badge */}
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 7,
+            background: 'rgba(196,151,106,0.14)',
+            border: '1px solid rgba(196,151,106,0.28)',
+            borderRadius: 20, padding: '5px 12px',
+            marginBottom: 20,
+            opacity: 0, animation: 'wUp .5s ease .1s forwards',
+          }}>
+            <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--c-accent)' }} />
+            <span style={{
+              fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 600,
+              letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--c-accent)',
+            }}>
+              Bientôt disponible · Lancement 2026
+            </span>
           </div>
 
-          {/* Contenu principal */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', zIndex: 1 }}>
+          {/* H1 */}
+          <h1 style={{
+            fontFamily: 'var(--font-display)',
+            fontStyle: 'italic', fontWeight: 700,
+            fontSize: 'clamp(30px,4.5vw,54px)', lineHeight: 1.08,
+            margin: '0 0 16px', color: '#ffffff',
+            opacity: 0, animation: 'wUp .55s cubic-bezier(.22,1,.36,1) .20s forwards',
+          }}>
+            Gérez votre location{' '}
+            <span style={{ color: 'var(--c-accent)' }}>sans agence.</span>
+          </h1>
 
-            {/* Badge */}
+          {/* Subtitle */}
+          <p style={{
+            fontFamily: 'var(--font-body)', fontSize: 15,
+            color: 'rgba(255,255,255,0.50)', lineHeight: 1.6,
+            margin: '0 0 28px',
+            opacity: 0, animation: 'fIn .6s ease .45s forwards',
+          }}>
+            Dossiers IA · Bail eIDAS · Paiements automatiques
+          </p>
+
+          {/* Social proof */}
+          {totalCount > 0 && (
             <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 7,
-              background: 'rgba(196,151,106,0.14)',
-              border: '1px solid rgba(196,151,106,0.28)',
-              borderRadius: 20, padding: '5px 12px',
-              marginBottom: 20, alignSelf: 'flex-start',
-              opacity: 0, animation: 'wUp .5s ease .1s forwards',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 24,
+              opacity: 0, animation: 'fIn .5s ease .65s forwards',
             }}>
-              <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--c-accent)' }} />
-              <span style={{
-                fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 600,
-                letterSpacing: '0.08em', textTransform: 'uppercase',
-                color: 'var(--c-accent)',
-              }}>
-                Bientôt disponible · Lancement 2026
+              <div style={{ display: 'flex' }}>
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} style={{
+                    width: 24, height: 24, borderRadius: '50%',
+                    background: `hsl(${210 + i * 30}, 50%, 55%)`,
+                    border: '2px solid var(--c-night)',
+                    marginLeft: i > 0 ? -8 : 0,
+                  }} />
+                ))}
+              </div>
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.50)' }}>
+                <strong style={{ color: '#ffffff' }}>{totalCount.toLocaleString('fr-FR')}</strong> personnes inscrites
               </span>
             </div>
+          )}
 
-            {/* H1 */}
-            <h1 style={{
-              fontFamily: 'var(--font-display)',
-              fontStyle: 'italic', fontWeight: 700,
-              fontSize: 'clamp(28px,3.5vw,48px)', lineHeight: 1.08,
-              margin: '0 0 16px', color: '#ffffff',
-              opacity: 0, animation: 'wUp .55s cubic-bezier(.22,1,.36,1) .20s forwards',
-            }}>
-              Gérez votre location{' '}
-              <span style={{ color: 'var(--c-accent)' }}>sans agence.</span>
-            </h1>
-
-            {/* Subtitle */}
-            <p style={{
-              fontFamily: 'var(--font-body)', fontSize: 15,
-              color: 'rgba(255,255,255,0.55)', lineHeight: 1.6,
-              margin: '0 0 28px',
-              opacity: 0, animation: 'fIn .6s ease .45s forwards',
-            }}>
-              Dossiers IA · Bail eIDAS · Paiements automatiques
-            </p>
-
-            {/* Social proof */}
-            {totalCount > 0 && (
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24,
-                opacity: 0, animation: 'fIn .5s ease .65s forwards',
-              }}>
-                <div style={{ display: 'flex' }}>
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} style={{
-                      width: 24, height: 24, borderRadius: '50%',
-                      background: `hsl(${210 + i * 30}, 50%, 55%)`,
-                      border: '2px solid var(--c-night)',
-                      marginLeft: i > 0 ? -8 : 0,
-                    }} />
-                  ))}
-                </div>
-                <span style={{
-                  fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500,
-                  color: 'rgba(255,255,255,0.55)',
-                }}>
-                  <strong style={{ color: '#ffffff' }}>{totalCount.toLocaleString('fr-FR')}</strong> personnes inscrites
-                </span>
-              </div>
-            )}
-
-            {/* ── Formulaire ── */}
-            <div style={{
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.10)',
-              borderRadius: 14,
-              padding: 'clamp(20px,3vw,28px)',
-              opacity: 0, animation: 'fIn .7s ease .80s forwards',
-            }}>
-              {/* Countdown */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-                <span style={{
-                  fontFamily: 'var(--font-body)', fontSize: 10, fontWeight: 600,
-                  letterSpacing: '0.09em', textTransform: 'uppercase',
-                  color: 'rgba(255,255,255,0.30)', flexShrink: 0,
-                }}>Lancement dans</span>
-                <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
-                <div style={{ display: 'flex', gap: 5 }}>
-                  <CDUnit value={cd.days} label="Jours" />
-                  <CDUnit value={cd.hours} label="H" />
-                  <CDUnit value={cd.minutes} label="Min" />
-                  <CDUnit value={cd.seconds} label="Sec" />
-                </div>
-              </div>
-
-              <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', marginBottom: 20 }} />
-
-              {!success ? (
-                <form onSubmit={submit}>
-                  <div className="bail-grp">
-                    <label className="bail-lbl">Prénom (optionnel)</label>
-                    <input
-                      className="bail-inp" type="text" placeholder="Thomas"
-                      value={firstName} onChange={e => setFirstName(e.target.value)}
-                      autoComplete="given-name"
-                    />
-                  </div>
-                  <div className="bail-grp">
-                    <label className="bail-lbl">Adresse email *</label>
-                    <input
-                      className="bail-inp" type="email" placeholder="thomas@exemple.fr"
-                      value={email} onChange={e => setEmail(e.target.value)}
-                      required autoComplete="email"
-                    />
-                  </div>
-
-                  {/* User type */}
-                  <div style={{ marginBottom: 4 }}>
-                    <label className="bail-lbl">Je suis</label>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      {[
-                        { val: 'owner', label: 'Propriétaire', color: '#b8ccf0', bg: 'rgba(26,50,112,0.30)', border: 'rgba(184,204,240,0.40)' },
-                        { val: 'tenant', label: 'Locataire', color: '#9fd4ba', bg: 'rgba(27,94,59,0.30)', border: 'rgba(159,212,186,0.40)' },
-                      ].map(({ val, label, color, bg, border }) => {
-                        const active = userType === val
-                        return (
-                          <button
-                            key={val} type="button"
-                            onClick={() => setUserType(userType === val as 'owner' | 'tenant' ? '' : val as 'owner' | 'tenant')}
-                            style={{
-                              flex: 1, padding: '9px 12px', borderRadius: 8,
-                              fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500,
-                              cursor: 'pointer', transition: 'all .18s',
-                              background: active ? bg : 'rgba(255,255,255,0.06)',
-                              border: `1.5px solid ${active ? border : 'rgba(255,255,255,0.12)'}`,
-                              color: active ? color : 'rgba(255,255,255,0.45)',
-                            }}
-                          >
-                            {label}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading || !emailValid}
-                    className="bail-cta"
-                  >
-                    {loading
-                      ? <span style={{ letterSpacing: '0.35em', fontSize: 18 }}>···</span>
-                      : (
-                        <>
-                          <span>Rejoindre la liste</span>
-                          <span style={{
-                            display: 'inline-flex',
-                            animation: emailValid ? 'arrowPulse 1.4s ease-in-out infinite' : 'none',
-                          }}>
-                            <ArrowRight size={16} />
-                          </span>
-                        </>
-                      )
-                    }
-                  </button>
-                  <p style={{
-                    fontFamily: 'var(--font-body)', fontSize: 11,
-                    color: 'rgba(255,255,255,0.25)',
-                    margin: '10px 0 0', textAlign: 'center',
-                  }}>
-                    Gratuit · Aucune carte requise · Désabonnement en un clic
-                  </p>
-                </form>
-              ) : (
-                <SuccessBlock
-                  isEarlyAccess={isEarlyAccess}
-                  alreadyRegistered={alreadyRegistered}
-                  firstName={firstName}
-                />
-              )}
-            </div>
-          </div>
-
-          {/* Footer bas gauche */}
+          {/* Formulaire */}
           <div style={{
-            marginTop: 'clamp(24px,4vw,40px)',
-            fontFamily: 'var(--font-body)', fontSize: 11,
-            color: 'rgba(255,255,255,0.18)', position: 'relative', zIndex: 1,
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.10)',
+            borderRadius: 14,
+            padding: 'clamp(20px,3vw,28px)',
+            textAlign: 'left',
+            opacity: 0, animation: 'fIn .7s ease .80s forwards',
           }}>
-            © {new Date().getFullYear()} Bailio · Conforme RGPD
+            {/* Countdown */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+              <span style={{
+                fontFamily: 'var(--font-body)', fontSize: 10, fontWeight: 600,
+                letterSpacing: '0.09em', textTransform: 'uppercase',
+                color: 'rgba(255,255,255,0.30)', flexShrink: 0,
+              }}>Lancement dans</span>
+              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
+              <div style={{ display: 'flex', gap: 5 }}>
+                <CDUnit value={cd.days} label="Jours" />
+                <CDUnit value={cd.hours} label="H" />
+                <CDUnit value={cd.minutes} label="Min" />
+                <CDUnit value={cd.seconds} label="Sec" />
+              </div>
+            </div>
+
+            <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', marginBottom: 20 }} />
+
+            {!success ? (
+              <form onSubmit={submit}>
+                <div className="bail-grp">
+                  <label className="bail-lbl">Prénom (optionnel)</label>
+                  <input
+                    className="bail-inp" type="text" placeholder="Thomas"
+                    value={firstName} onChange={e => setFirstName(e.target.value)}
+                    autoComplete="given-name"
+                  />
+                </div>
+                <div className="bail-grp">
+                  <label className="bail-lbl">Adresse email *</label>
+                  <input
+                    className="bail-inp" type="email" placeholder="thomas@exemple.fr"
+                    value={email} onChange={e => setEmail(e.target.value)}
+                    required autoComplete="email"
+                  />
+                </div>
+
+                <div style={{ marginBottom: 4 }}>
+                  <label className="bail-lbl">Je suis</label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {[
+                      { val: 'owner', label: 'Propriétaire', color: '#b8ccf0', bg: 'rgba(26,50,112,0.30)', border: 'rgba(184,204,240,0.40)' },
+                      { val: 'tenant', label: 'Locataire', color: '#9fd4ba', bg: 'rgba(27,94,59,0.30)', border: 'rgba(159,212,186,0.40)' },
+                    ].map(({ val, label, color, bg, border }) => {
+                      const active = userType === val
+                      return (
+                        <button
+                          key={val} type="button"
+                          onClick={() => setUserType(userType === val as 'owner' | 'tenant' ? '' : val as 'owner' | 'tenant')}
+                          style={{
+                            flex: 1, padding: '9px 12px', borderRadius: 8,
+                            fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500,
+                            cursor: 'pointer', transition: 'all .18s',
+                            background: active ? bg : 'rgba(255,255,255,0.06)',
+                            border: `1.5px solid ${active ? border : 'rgba(255,255,255,0.12)'}`,
+                            color: active ? color : 'rgba(255,255,255,0.45)',
+                          }}
+                        >
+                          {label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                <button type="submit" disabled={loading || !emailValid} className="bail-cta">
+                  {loading
+                    ? <span style={{ letterSpacing: '0.35em', fontSize: 18 }}>···</span>
+                    : (
+                      <>
+                        <span>Rejoindre la liste</span>
+                        <span style={{ display: 'inline-flex', animation: emailValid ? 'arrowPulse 1.4s ease-in-out infinite' : 'none' }}>
+                          <ArrowRight size={16} />
+                        </span>
+                      </>
+                    )
+                  }
+                </button>
+                <p style={{
+                  fontFamily: 'var(--font-body)', fontSize: 11,
+                  color: 'rgba(255,255,255,0.25)',
+                  margin: '10px 0 0', textAlign: 'center',
+                }}>
+                  Gratuit · Aucune carte requise · Désabonnement en un clic
+                </p>
+              </form>
+            ) : (
+              <SuccessBlock isEarlyAccess={isEarlyAccess} alreadyRegistered={alreadyRegistered} firstName={firstName} />
+            )}
           </div>
         </div>
 
-        {/* ── Colonne DROITE — image 3D ── */}
+        {/* Footer bas */}
         <div style={{
-          background: 'var(--c-bg)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          position: 'relative', overflow: 'hidden',
-          minHeight: 'clamp(300px,50vw,100svh)',
+          position: 'absolute', bottom: 20, left: 0, right: 0, textAlign: 'center',
+          fontFamily: 'var(--font-body)', fontSize: 11,
+          color: 'rgba(255,255,255,0.15)', zIndex: 1,
         }}>
-          {/* Cercles décoratifs */}
-          <div className="shape-circle" style={{
-            width: 500, height: 500,
-            background: 'rgba(196,151,106,0.06)',
-            top: -100, right: -150,
-          }} />
-          <div className="shape-circle" style={{
-            width: 200, height: 200,
-            background: 'rgba(26,50,112,0.05)',
-            bottom: 60, left: 20,
-          }} />
-
-          {/* Grande wordmark décorative */}
-          <div style={{
-            position: 'relative', zIndex: 1,
-            textAlign: 'center',
-            animation: 'float 6s ease-in-out infinite',
-          }}>
-            <span style={{
-              fontFamily: 'var(--font-display)',
-              fontStyle: 'italic', fontWeight: 700,
-              fontSize: 'clamp(80px, 12vw, 160px)',
-              color: 'var(--c-primary)',
-              opacity: 0.08,
-              letterSpacing: '-0.03em',
-              lineHeight: 1,
-              userSelect: 'none',
-              display: 'block',
-            }}>Bailio.</span>
-          </div>
-
-          {/* Badge en bas droite */}
-          <div style={{
-            position: 'absolute', bottom: 32, right: 32,
-            background: '#ffffff',
-            border: '1px solid var(--c-border)',
-            borderRadius: 12, padding: '12px 16px',
-            boxShadow: '0 4px 20px rgba(13,12,10,0.08)',
-            display: 'flex', alignItems: 'center', gap: 10,
-          }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: 10,
-              background: 'var(--c-green-light)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <Shield size={16} color="var(--c-green)" strokeWidth={2} />
-            </div>
-            <div>
-              <div style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 13, color: 'var(--c-ink)' }}>0 € de commission</div>
-              <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--c-ink-faint)' }}>Pour le propriétaire</div>
-            </div>
-          </div>
+          © {new Date().getFullYear()} Bailio · Conforme RGPD
         </div>
       </section>
 
