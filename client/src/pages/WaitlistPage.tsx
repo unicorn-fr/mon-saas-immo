@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import {
   Key, FileText, PenTool, CreditCard,
-  CheckCircle, Shield, Zap, Home, Euro, ArrowRight,
+  CheckCircle, Home, Euro, ArrowRight,
 } from 'lucide-react'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'
@@ -107,20 +107,20 @@ html, body { margin: 0; padding: 0; scroll-behavior: smooth; }
 
 /* ── Form inputs ───────────────────────────────────────────────────────────── */
 .bail-inp {
-  background: rgba(255,255,255,0.10);
-  border: 1.5px solid rgba(255,255,255,0.20);
+  background: var(--c-muted);
+  border: 1.5px solid var(--c-border);
   border-radius: 8px;
   outline: none;
   width: 100%;
   padding: 11px 14px;
   font-family: var(--font-body);
   font-size: 14px;
-  color: #ffffff;
+  color: var(--c-ink);
   transition: border-color .2s, background .2s;
   -webkit-appearance: none;
 }
-.bail-inp::placeholder { color: rgba(255,255,255,0.35); }
-.bail-inp:focus { border-color: var(--c-accent); background: rgba(255,255,255,0.16); }
+.bail-inp::placeholder { color: var(--c-ink-faint); }
+.bail-inp:focus { border-color: var(--c-accent); background: #fff; }
 .bail-lbl {
   display: block;
   font-family: var(--font-body);
@@ -128,7 +128,7 @@ html, body { margin: 0; padding: 0; scroll-behavior: smooth; }
   font-weight: 600;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.50);
+  color: var(--c-ink-mid);
   margin-bottom: 6px;
 }
 .bail-grp { margin-bottom: 14px; }
@@ -196,8 +196,8 @@ html, body { margin: 0; padding: 0; scroll-behavior: smooth; }
 
 /* ── Countdown unit ────────────────────────────────────────────────────────── */
 .cd-unit {
-  background: rgba(255,255,255,0.10);
-  border: 1px solid rgba(255,255,255,0.16);
+  background: var(--c-muted);
+  border: 1px solid var(--c-border);
   border-radius: 8px;
   padding: 6px 10px;
   text-align: center;
@@ -209,8 +209,8 @@ html, body { margin: 0; padding: 0; scroll-behavior: smooth; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.14);
+  background: var(--c-muted);
+  border: 1px solid var(--c-border);
   border-radius: 20px;
   padding: 5px 12px;
 }
@@ -285,7 +285,7 @@ function CDUnit({ value, label }: { value: number; label: string }) {
         fontFamily: 'var(--font-body)',
         fontWeight: 700,
         fontSize: 'clamp(14px,2vw,18px)',
-        color: '#ffffff', lineHeight: 1,
+        color: 'var(--c-ink)', lineHeight: 1,
       }}>
         {String(value).padStart(2, '0')}
       </div>
@@ -293,7 +293,7 @@ function CDUnit({ value, label }: { value: number; label: string }) {
         fontFamily: 'var(--font-body)',
         fontSize: 8, fontWeight: 600,
         letterSpacing: '0.10em', textTransform: 'uppercase',
-        color: 'rgba(255,255,255,0.40)', marginTop: 3,
+        color: 'var(--c-ink-faint)', marginTop: 3,
       }}>
         {label}
       </div>
@@ -317,25 +317,25 @@ function SuccessBlock({
       </svg>
       <h2 style={{
         fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 700,
-        fontSize: 'clamp(20px,3vw,26px)', color: '#ffffff',
+        fontSize: 'clamp(20px,3vw,26px)', color: 'var(--c-ink)',
         margin: '0 0 8px', lineHeight: 1.2,
       }}>
         {alreadyRegistered
           ? 'Déjà inscrit !'
-          : firstName ? `Bienvenue, ${firstName} !` : 'Vous êtes sur la liste !'}
+          : firstName ? `Bienvenue, ${firstName} !` : 'Tu es sur la liste !'}
       </h2>
       <p style={{
         fontFamily: 'var(--font-body)', fontSize: 14,
-        color: 'rgba(255,255,255,0.65)', lineHeight: 1.72, margin: '0 0 16px',
+        color: 'var(--c-ink-mid)', lineHeight: 1.72, margin: '0 0 16px',
       }}>
         {alreadyRegistered
-          ? 'Cette adresse est déjà enregistrée. Vous serez parmi les premiers prévenus.'
+          ? 'Cette adresse est déjà enregistrée. Tu seras parmi les premiers prévenus.'
           : "Inscription confirmée. Un email de bienvenue vient d'être envoyé."}
       </p>
       {isEarlyAccess && !alreadyRegistered && (
         <div style={{
           animation: 'popIn .5s cubic-bezier(.34,1.56,.64,1) 1.4s both',
-          background: 'rgba(196,151,106,0.15)',
+          background: 'var(--c-accent-light)',
           border: '1px solid rgba(196,151,106,0.35)',
           borderRadius: 10, padding: '12px 16px',
           display: 'flex', alignItems: 'flex-start', gap: 10, textAlign: 'left',
@@ -352,8 +352,8 @@ function SuccessBlock({
             }}>
               Early Access · 150 premiers
             </div>
-            <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>
-              <strong style={{ color: '#ffffff' }}>1 mois offert</strong> sur le plan Pro au lancement.
+            <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--c-ink-mid)', lineHeight: 1.5 }}>
+              <strong style={{ color: 'var(--c-ink)' }}>1 mois offert</strong> sur le plan Pro au lancement.
             </div>
           </div>
         </div>
@@ -432,7 +432,7 @@ export default function WaitlistPage() {
       ══════════════════════════════════════════════════════════════════ */}
       <section style={{
         minHeight: '100svh',
-        background: 'var(--c-night)',
+        background: 'var(--c-bg)',
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
         padding: 'clamp(80px,10vw,120px) clamp(16px,5vw,40px) clamp(48px,6vw,72px)',
@@ -444,7 +444,7 @@ export default function WaitlistPage() {
           fontFamily: 'var(--font-display)',
           fontStyle: 'italic', fontWeight: 700,
           fontSize: 'clamp(120px, 20vw, 280px)',
-          color: 'rgba(255,255,255,0.04)',
+          color: 'rgba(13,12,10,0.04)',
           letterSpacing: '-0.03em',
           lineHeight: 1,
           userSelect: 'none',
@@ -455,12 +455,12 @@ export default function WaitlistPage() {
         }}>Bailio.</span>
 
         {/* Cercles décoratifs */}
-        <div className="shape-circle" style={{ width: 400, height: 400, background: 'rgba(196,151,106,0.05)', bottom: -80, left: -120, zIndex: 0 }} />
-        <div className="shape-circle" style={{ width: 220, height: 220, background: 'rgba(26,50,112,0.20)', top: 40, right: -60, zIndex: 0 }} />
+        <div className="shape-circle" style={{ width: 400, height: 400, background: 'rgba(196,151,106,0.07)', bottom: -80, left: -120, zIndex: 0 }} />
+        <div className="shape-circle" style={{ width: 220, height: 220, background: 'rgba(26,50,112,0.05)', top: 40, right: -60, zIndex: 0 }} />
 
         {/* Nav logo */}
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 58, display: 'flex', alignItems: 'center', padding: '0 clamp(16px,5vw,48px)', zIndex: 10 }}>
-          <BailioWordmark fontSize={24} light />
+          <BailioWordmark fontSize={24} />
         </div>
 
         {/* Contenu centré */}
@@ -489,7 +489,7 @@ export default function WaitlistPage() {
             fontFamily: 'var(--font-display)',
             fontStyle: 'italic', fontWeight: 700,
             fontSize: 'clamp(30px,4.5vw,54px)', lineHeight: 1.08,
-            margin: '0 0 16px', color: '#ffffff',
+            margin: '0 0 16px', color: 'var(--c-ink)',
             opacity: 0, animation: 'wUp .55s cubic-bezier(.22,1,.36,1) .20s forwards',
           }}>
             La clé de ta{' '}
@@ -499,7 +499,7 @@ export default function WaitlistPage() {
           {/* Subtitle */}
           <p style={{
             fontFamily: 'var(--font-body)', fontSize: 15,
-            color: 'rgba(255,255,255,0.50)', lineHeight: 1.6,
+            color: 'var(--c-ink-mid)', lineHeight: 1.6,
             margin: '0 0 28px',
             opacity: 0, animation: 'fIn .6s ease .45s forwards',
           }}>
@@ -517,22 +517,23 @@ export default function WaitlistPage() {
                   <div key={i} style={{
                     width: 24, height: 24, borderRadius: '50%',
                     background: `hsl(${210 + i * 30}, 50%, 55%)`,
-                    border: '2px solid var(--c-night)',
+                    border: '2px solid var(--c-bg)',
                     marginLeft: i > 0 ? -8 : 0,
                   }} />
                 ))}
               </div>
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.50)' }}>
-                <strong style={{ color: '#ffffff' }}>{totalCount.toLocaleString('fr-FR')}</strong> personnes inscrites
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, color: 'var(--c-ink-mid)' }}>
+                <strong style={{ color: 'var(--c-ink)' }}>{totalCount.toLocaleString('fr-FR')}</strong> personnes inscrites
               </span>
             </div>
           )}
 
           {/* Formulaire */}
           <div style={{
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.10)',
+            background: '#ffffff',
+            border: '1px solid var(--c-border)',
             borderRadius: 14,
+            boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 16px rgba(13,12,10,0.07)',
             padding: 'clamp(20px,3vw,28px)',
             textAlign: 'left',
             opacity: 0, animation: 'fIn .7s ease .80s forwards',
@@ -542,9 +543,9 @@ export default function WaitlistPage() {
               <span style={{
                 fontFamily: 'var(--font-body)', fontSize: 10, fontWeight: 600,
                 letterSpacing: '0.09em', textTransform: 'uppercase',
-                color: 'rgba(255,255,255,0.30)', flexShrink: 0,
+                color: 'var(--c-ink-faint)', flexShrink: 0,
               }}>Lancement dans</span>
-              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
+              <div style={{ flex: 1, height: 1, background: 'var(--c-border)' }} />
               <div style={{ display: 'flex', gap: 5 }}>
                 <CDUnit value={cd.days} label="Jours" />
                 <CDUnit value={cd.hours} label="H" />
@@ -553,7 +554,7 @@ export default function WaitlistPage() {
               </div>
             </div>
 
-            <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', marginBottom: 20 }} />
+            <div style={{ height: 1, background: 'var(--c-border)', marginBottom: 20 }} />
 
             {!success ? (
               <form onSubmit={submit}>
@@ -578,8 +579,8 @@ export default function WaitlistPage() {
                   <label className="bail-lbl">Tu es</label>
                   <div style={{ display: 'flex', gap: 8 }}>
                     {[
-                      { val: 'owner', label: 'Propriétaire', color: '#b8ccf0', bg: 'rgba(26,50,112,0.30)', border: 'rgba(184,204,240,0.40)' },
-                      { val: 'tenant', label: 'Locataire', color: '#9fd4ba', bg: 'rgba(27,94,59,0.30)', border: 'rgba(159,212,186,0.40)' },
+                      { val: 'owner', label: 'Propriétaire', color: 'var(--c-primary)', bg: 'var(--c-primary-light)', border: 'var(--c-primary-border)' },
+                      { val: 'tenant', label: 'Locataire', color: 'var(--c-green)', bg: 'var(--c-green-light)', border: 'var(--c-green-border)' },
                     ].map(({ val, label, color, bg, border }) => {
                       const active = userType === val
                       return (
@@ -590,9 +591,9 @@ export default function WaitlistPage() {
                             flex: 1, padding: '9px 12px', borderRadius: 8,
                             fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500,
                             cursor: 'pointer', transition: 'all .18s',
-                            background: active ? bg : 'rgba(255,255,255,0.06)',
-                            border: `1.5px solid ${active ? border : 'rgba(255,255,255,0.12)'}`,
-                            color: active ? color : 'rgba(255,255,255,0.45)',
+                            background: active ? bg : 'var(--c-muted)',
+                            border: `1.5px solid ${active ? border : 'var(--c-border)'}`,
+                            color: active ? color : 'var(--c-ink-mid)',
                           }}
                         >
                           {label}
@@ -617,7 +618,7 @@ export default function WaitlistPage() {
                 </button>
                 <p style={{
                   fontFamily: 'var(--font-body)', fontSize: 11,
-                  color: 'rgba(255,255,255,0.25)',
+                  color: 'var(--c-ink-faint)',
                   margin: '10px 0 0', textAlign: 'center',
                 }}>
                   Gratuit. Sans engagement. Tu te désinscrits quand tu veux.
@@ -633,7 +634,7 @@ export default function WaitlistPage() {
         <div style={{
           position: 'absolute', bottom: 20, left: 0, right: 0, textAlign: 'center',
           fontFamily: 'var(--font-body)', fontSize: 11,
-          color: 'rgba(255,255,255,0.15)', zIndex: 1,
+          color: 'var(--c-ink-faint)', zIndex: 1,
         }}>
           © {new Date().getFullYear()} Bailio · Conforme RGPD
         </div>
@@ -654,8 +655,8 @@ export default function WaitlistPage() {
           }}>
             {[
               { Icon: Euro, stat: '0 €', label: 'de commission agence', color: 'var(--c-accent)' },
-              { Icon: Zap, stat: '< 2 min', label: 'pour monter ton dossier', color: 'var(--c-accent)' },
-              { Icon: Shield, stat: 'eIDAS', label: 'bail valide légalement', color: 'var(--c-accent)' },
+              { Icon: Home, stat: '100%', label: 'en ligne, sans rendez-vous', color: 'var(--c-accent)' },
+              { Icon: PenTool, stat: 'Signé', label: 'en ligne, valeur légale', color: 'var(--c-accent)' },
             ].map(({ Icon, stat, label, color }, i) => (
               <div
                 key={i}
