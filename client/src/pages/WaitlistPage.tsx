@@ -94,6 +94,21 @@ html, body { margin: 0; padding: 0; scroll-behavior: smooth; }
   0%, 100% { transform: translateY(0px); }
   50%       { transform: translateY(-12px); }
 }
+@keyframes cloudDrift1 {
+  0%   { transform: translateX(0px) translateY(0px); }
+  50%  { transform: translateX(18px) translateY(-6px); }
+  100% { transform: translateX(0px) translateY(0px); }
+}
+@keyframes cloudDrift2 {
+  0%   { transform: translateX(0px) translateY(0px); }
+  50%  { transform: translateX(-22px) translateY(-8px); }
+  100% { transform: translateX(0px) translateY(0px); }
+}
+@keyframes cloudDrift3 {
+  0%   { transform: translateX(0px) translateY(0px); }
+  50%  { transform: translateX(14px) translateY(-4px); }
+  100% { transform: translateX(0px) translateY(0px); }
+}
 @keyframes pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50%       { opacity: 0.45; transform: scale(0.80); }
@@ -480,25 +495,248 @@ export default function WaitlistPage() {
         padding: 'clamp(80px,10vw,120px) clamp(16px,5vw,40px) clamp(48px,6vw,72px)',
         position: 'relative', overflow: 'hidden',
       }}>
-        {/* "Bailio." — fond animé géant */}
-        <span style={{
-          position: 'absolute',
-          fontFamily: 'var(--font-display)',
-          fontStyle: 'italic', fontWeight: 700,
-          fontSize: 'clamp(120px, 20vw, 280px)',
-          color: 'rgba(255,255,255,0.045)',
-          letterSpacing: '-0.03em',
-          lineHeight: 1,
-          userSelect: 'none',
-          pointerEvents: 'none',
-          whiteSpace: 'nowrap',
-          animation: 'float 7s ease-in-out infinite',
-          zIndex: 0,
-        }}>Bailio.</span>
+        {/* ── Skyline + nuages ── */}
+        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
 
-        {/* Cercles décoratifs */}
-        <div className="shape-circle" style={{ width: 500, height: 500, background: 'rgba(196,151,106,0.08)', bottom: -120, left: -160, zIndex: 0 }} />
-        <div className="shape-circle" style={{ width: 280, height: 280, background: 'rgba(196,151,106,0.05)', top: 20, right: -80, zIndex: 0 }} />
+          {/* Nuage 1 — grand, centre-gauche */}
+          <svg viewBox="0 0 340 100" style={{ position: 'absolute', top: '8%', left: '5%', width: 'clamp(180px,28vw,340px)', opacity: 0.10, animation: 'cloudDrift1 11s ease-in-out infinite' }}>
+            <ellipse cx="170" cy="70" rx="160" ry="38" fill="white"/>
+            <ellipse cx="100" cy="55" rx="80" ry="50" fill="white"/>
+            <ellipse cx="210" cy="48" rx="90" ry="52" fill="white"/>
+            <ellipse cx="290" cy="65" rx="60" ry="36" fill="white"/>
+          </svg>
+
+          {/* Nuage 2 — petit, haut droite */}
+          <svg viewBox="0 0 220 70" style={{ position: 'absolute', top: '6%', right: '8%', width: 'clamp(110px,18vw,220px)', opacity: 0.07, animation: 'cloudDrift2 15s ease-in-out infinite' }}>
+            <ellipse cx="110" cy="50" rx="100" ry="28" fill="white"/>
+            <ellipse cx="60" cy="38" rx="54" ry="36" fill="white"/>
+            <ellipse cx="150" cy="34" rx="58" ry="38" fill="white"/>
+          </svg>
+
+          {/* Nuage 3 — moyen, centre */}
+          <svg viewBox="0 0 280 85" style={{ position: 'absolute', top: '20%', left: '38%', width: 'clamp(140px,22vw,280px)', opacity: 0.06, animation: 'cloudDrift3 18s ease-in-out infinite' }}>
+            <ellipse cx="140" cy="60" rx="130" ry="32" fill="white"/>
+            <ellipse cx="80" cy="46" rx="66" ry="44" fill="white"/>
+            <ellipse cx="190" cy="40" rx="72" ry="46" fill="white"/>
+          </svg>
+
+          {/* Nuage 4 — petit, gauche basse */}
+          <svg viewBox="0 0 180 58" style={{ position: 'absolute', top: '32%', left: '2%', width: 'clamp(90px,14vw,180px)', opacity: 0.05, animation: 'cloudDrift2 13s ease-in-out 2s infinite' }}>
+            <ellipse cx="90" cy="40" rx="82" ry="24" fill="white"/>
+            <ellipse cx="50" cy="30" rx="44" ry="30" fill="white"/>
+            <ellipse cx="130" cy="28" rx="48" ry="32" fill="white"/>
+          </svg>
+
+          {/* Skyline — bâtiments en bas */}
+          <svg
+            viewBox="0 0 1440 220"
+            preserveAspectRatio="xMidYMax slice"
+            style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 'clamp(100px,18vw,220px)' }}
+          >
+            {/* Bâtiment 1 */}
+            <rect x="0"   y="140" width="80"  height="80"  fill="rgba(255,255,255,0.04)"/>
+            <rect x="10"  y="110" width="60"  height="30"  fill="rgba(255,255,255,0.04)"/>
+            <rect x="20"  y="90"  width="40"  height="20"  fill="rgba(255,255,255,0.04)"/>
+            {/* fenêtres */}
+            <rect x="15"  y="145" width="8" height="10" fill="rgba(196,151,106,0.20)"/>
+            <rect x="30"  y="145" width="8" height="10" fill="rgba(196,151,106,0.15)"/>
+            <rect x="50"  y="145" width="8" height="10" fill="rgba(196,151,106,0.20)"/>
+            <rect x="15"  y="165" width="8" height="10" fill="rgba(196,151,106,0.10)"/>
+            <rect x="50"  y="165" width="8" height="10" fill="rgba(196,151,106,0.15)"/>
+
+            {/* Bâtiment 2 — tour */}
+            <rect x="90"  y="60"  width="70"  height="160" fill="rgba(255,255,255,0.05)"/>
+            <rect x="100" y="40"  width="50"  height="20"  fill="rgba(255,255,255,0.05)"/>
+            <rect x="118" y="20"  width="14"  height="20"  fill="rgba(255,255,255,0.05)"/>
+            <rect x="98"  y="70"  width="10" height="12" fill="rgba(196,151,106,0.18)"/>
+            <rect x="115" y="70"  width="10" height="12" fill="rgba(196,151,106,0.12)"/>
+            <rect x="132" y="70"  width="10" height="12" fill="rgba(196,151,106,0.18)"/>
+            <rect x="98"  y="95"  width="10" height="12" fill="rgba(196,151,106,0.10)"/>
+            <rect x="132" y="95"  width="10" height="12" fill="rgba(196,151,106,0.18)"/>
+            <rect x="98"  y="120" width="10" height="12" fill="rgba(196,151,106,0.15)"/>
+            <rect x="115" y="120" width="10" height="12" fill="rgba(196,151,106,0.10)"/>
+            <rect x="132" y="120" width="10" height="12" fill="rgba(196,151,106,0.15)"/>
+            <rect x="98"  y="145" width="10" height="12" fill="rgba(196,151,106,0.12)"/>
+            <rect x="132" y="145" width="10" height="12" fill="rgba(196,151,106,0.10)"/>
+
+            {/* Bâtiment 3 */}
+            <rect x="170" y="120" width="90"  height="100" fill="rgba(255,255,255,0.03)"/>
+            <rect x="180" y="100" width="70"  height="20"  fill="rgba(255,255,255,0.03)"/>
+            <rect x="178" y="128" width="12" height="14" fill="rgba(196,151,106,0.14)"/>
+            <rect x="198" y="128" width="12" height="14" fill="rgba(196,151,106,0.10)"/>
+            <rect x="220" y="128" width="12" height="14" fill="rgba(196,151,106,0.18)"/>
+            <rect x="240" y="128" width="12" height="14" fill="rgba(196,151,106,0.12)"/>
+            <rect x="178" y="153" width="12" height="14" fill="rgba(196,151,106,0.10)"/>
+            <rect x="220" y="153" width="12" height="14" fill="rgba(196,151,106,0.14)"/>
+            <rect x="240" y="153" width="12" height="14" fill="rgba(196,151,106,0.10)"/>
+
+            {/* Bâtiment 4 — tour centrale */}
+            <rect x="270" y="30"  width="100" height="190" fill="rgba(255,255,255,0.06)"/>
+            <rect x="280" y="10"  width="80"  height="20"  fill="rgba(255,255,255,0.06)"/>
+            <rect x="315" y="0"   width="10"  height="10"  fill="rgba(255,255,255,0.06)"/>
+            <rect x="278" y="42"  width="12" height="14" fill="rgba(196,151,106,0.20)"/>
+            <rect x="298" y="42"  width="12" height="14" fill="rgba(196,151,106,0.14)"/>
+            <rect x="318" y="42"  width="12" height="14" fill="rgba(196,151,106,0.20)"/>
+            <rect x="338" y="42"  width="12" height="14" fill="rgba(196,151,106,0.14)"/>
+            <rect x="278" y="68"  width="12" height="14" fill="rgba(196,151,106,0.12)"/>
+            <rect x="318" y="68"  width="12" height="14" fill="rgba(196,151,106,0.18)"/>
+            <rect x="338" y="68"  width="12" height="14" fill="rgba(196,151,106,0.10)"/>
+            <rect x="278" y="94"  width="12" height="14" fill="rgba(196,151,106,0.16)"/>
+            <rect x="298" y="94"  width="12" height="14" fill="rgba(196,151,106,0.10)"/>
+            <rect x="338" y="94"  width="12" height="14" fill="rgba(196,151,106,0.16)"/>
+            <rect x="278" y="120" width="12" height="14" fill="rgba(196,151,106,0.10)"/>
+            <rect x="318" y="120" width="12" height="14" fill="rgba(196,151,106,0.14)"/>
+            <rect x="278" y="146" width="12" height="14" fill="rgba(196,151,106,0.12)"/>
+            <rect x="298" y="146" width="12" height="14" fill="rgba(196,151,106,0.16)"/>
+            <rect x="338" y="146" width="12" height="14" fill="rgba(196,151,106,0.10)"/>
+
+            {/* Bâtiment 5 */}
+            <rect x="380" y="90"  width="80"  height="130" fill="rgba(255,255,255,0.04)"/>
+            <rect x="390" y="75"  width="60"  height="15"  fill="rgba(255,255,255,0.04)"/>
+            <rect x="388" y="98"  width="10" height="12" fill="rgba(196,151,106,0.16)"/>
+            <rect x="406" y="98"  width="10" height="12" fill="rgba(196,151,106,0.10)"/>
+            <rect x="424" y="98"  width="10" height="12" fill="rgba(196,151,106,0.16)"/>
+            <rect x="442" y="98"  width="10" height="12" fill="rgba(196,151,106,0.12)"/>
+            <rect x="388" y="120" width="10" height="12" fill="rgba(196,151,106,0.10)"/>
+            <rect x="424" y="120" width="10" height="12" fill="rgba(196,151,106,0.14)"/>
+            <rect x="388" y="142" width="10" height="12" fill="rgba(196,151,106,0.12)"/>
+            <rect x="442" y="142" width="10" height="12" fill="rgba(196,151,106,0.16)"/>
+
+            {/* Bâtiment 6 — immeuble haussmannien bas */}
+            <rect x="470" y="150" width="110" height="70"  fill="rgba(255,255,255,0.03)"/>
+            <rect x="480" y="135" width="90"  height="15"  fill="rgba(255,255,255,0.03)"/>
+            <rect x="478" y="158" width="12" height="12" fill="rgba(196,151,106,0.14)"/>
+            <rect x="498" y="158" width="12" height="12" fill="rgba(196,151,106,0.10)"/>
+            <rect x="520" y="158" width="12" height="12" fill="rgba(196,151,106,0.14)"/>
+            <rect x="544" y="158" width="12" height="12" fill="rgba(196,151,106,0.10)"/>
+            <rect x="563" y="158" width="12" height="12" fill="rgba(196,151,106,0.14)"/>
+            <rect x="498" y="178" width="12" height="12" fill="rgba(196,151,106,0.10)"/>
+            <rect x="544" y="178" width="12" height="12" fill="rgba(196,151,106,0.12)"/>
+
+            {/* Bâtiment 7 — tour droite */}
+            <rect x="590" y="50"  width="90"  height="170" fill="rgba(255,255,255,0.055)"/>
+            <rect x="600" y="30"  width="70"  height="20"  fill="rgba(255,255,255,0.055)"/>
+            <rect x="628" y="15"  width="14"  height="15"  fill="rgba(255,255,255,0.055)"/>
+            <rect x="598" y="60"  width="11" height="13" fill="rgba(196,151,106,0.20)"/>
+            <rect x="617" y="60"  width="11" height="13" fill="rgba(196,151,106,0.14)"/>
+            <rect x="636" y="60"  width="11" height="13" fill="rgba(196,151,106,0.20)"/>
+            <rect x="655" y="60"  width="11" height="13" fill="rgba(196,151,106,0.14)"/>
+            <rect x="598" y="86"  width="11" height="13" fill="rgba(196,151,106,0.12)"/>
+            <rect x="636" y="86"  width="11" height="13" fill="rgba(196,151,106,0.18)"/>
+            <rect x="655" y="86"  width="11" height="13" fill="rgba(196,151,106,0.12)"/>
+            <rect x="598" y="112" width="11" height="13" fill="rgba(196,151,106,0.16)"/>
+            <rect x="617" y="112" width="11" height="13" fill="rgba(196,151,106,0.10)"/>
+            <rect x="655" y="112" width="11" height="13" fill="rgba(196,151,106,0.16)"/>
+            <rect x="598" y="138" width="11" height="13" fill="rgba(196,151,106,0.10)"/>
+            <rect x="636" y="138" width="11" height="13" fill="rgba(196,151,106,0.14)"/>
+            <rect x="617" y="164" width="11" height="13" fill="rgba(196,151,106,0.12)"/>
+            <rect x="655" y="164" width="11" height="13" fill="rgba(196,151,106,0.10)"/>
+
+            {/* Bâtiment 8 */}
+            <rect x="690" y="110" width="75"  height="110" fill="rgba(255,255,255,0.03)"/>
+            <rect x="700" y="95"  width="55"  height="15"  fill="rgba(255,255,255,0.03)"/>
+            <rect x="698" y="118" width="10" height="12" fill="rgba(196,151,106,0.14)"/>
+            <rect x="716" y="118" width="10" height="12" fill="rgba(196,151,106,0.10)"/>
+            <rect x="734" y="118" width="10" height="12" fill="rgba(196,151,106,0.14)"/>
+            <rect x="752" y="118" width="10" height="12" fill="rgba(196,151,106,0.10)"/>
+            <rect x="698" y="140" width="10" height="12" fill="rgba(196,151,106,0.10)"/>
+            <rect x="734" y="140" width="10" height="12" fill="rgba(196,151,106,0.14)"/>
+            <rect x="698" y="162" width="10" height="12" fill="rgba(196,151,106,0.12)"/>
+            <rect x="752" y="162" width="10" height="12" fill="rgba(196,151,106,0.10)"/>
+
+            {/* Bâtiment 9 — grande tour droite */}
+            <rect x="775" y="20"  width="110" height="200" fill="rgba(255,255,255,0.06)"/>
+            <rect x="785" y="5"   width="90"  height="15"  fill="rgba(255,255,255,0.06)"/>
+            <rect x="824" y="0"   width="12"  height="5"   fill="rgba(255,255,255,0.06)"/>
+            <rect x="783" y="30"  width="13" height="15" fill="rgba(196,151,106,0.18)"/>
+            <rect x="804" y="30"  width="13" height="15" fill="rgba(196,151,106,0.12)"/>
+            <rect x="825" y="30"  width="13" height="15" fill="rgba(196,151,106,0.18)"/>
+            <rect x="846" y="30"  width="13" height="15" fill="rgba(196,151,106,0.12)"/>
+            <rect x="866" y="30"  width="13" height="15" fill="rgba(196,151,106,0.18)"/>
+            <rect x="783" y="58"  width="13" height="15" fill="rgba(196,151,106,0.12)"/>
+            <rect x="825" y="58"  width="13" height="15" fill="rgba(196,151,106,0.16)"/>
+            <rect x="866" y="58"  width="13" height="15" fill="rgba(196,151,106,0.12)"/>
+            <rect x="804" y="86"  width="13" height="15" fill="rgba(196,151,106,0.14)"/>
+            <rect x="846" y="86"  width="13" height="15" fill="rgba(196,151,106,0.10)"/>
+            <rect x="783" y="114" width="13" height="15" fill="rgba(196,151,106,0.12)"/>
+            <rect x="825" y="114" width="13" height="15" fill="rgba(196,151,106,0.16)"/>
+            <rect x="866" y="114" width="13" height="15" fill="rgba(196,151,106,0.10)"/>
+            <rect x="804" y="142" width="13" height="15" fill="rgba(196,151,106,0.14)"/>
+            <rect x="846" y="142" width="13" height="15" fill="rgba(196,151,106,0.12)"/>
+            <rect x="783" y="170" width="13" height="15" fill="rgba(196,151,106,0.10)"/>
+            <rect x="825" y="170" width="13" height="15" fill="rgba(196,151,106,0.14)"/>
+
+            {/* Bâtiment 10 */}
+            <rect x="895" y="130" width="85"  height="90"  fill="rgba(255,255,255,0.03)"/>
+            <rect x="905" y="115" width="65"  height="15"  fill="rgba(255,255,255,0.03)"/>
+            <rect x="903" y="138" width="11" height="12" fill="rgba(196,151,106,0.14)"/>
+            <rect x="922" y="138" width="11" height="12" fill="rgba(196,151,106,0.10)"/>
+            <rect x="941" y="138" width="11" height="12" fill="rgba(196,151,106,0.14)"/>
+            <rect x="960" y="138" width="11" height="12" fill="rgba(196,151,106,0.10)"/>
+            <rect x="903" y="160" width="11" height="12" fill="rgba(196,151,106,0.10)"/>
+            <rect x="941" y="160" width="11" height="12" fill="rgba(196,151,106,0.14)"/>
+
+            {/* Bâtiment 11 — tour lointaine */}
+            <rect x="990" y="70"  width="80"  height="150" fill="rgba(255,255,255,0.04)"/>
+            <rect x="1000" y="55" width="60"  height="15"  fill="rgba(255,255,255,0.04)"/>
+            <rect x="1022" y="40" width="16"  height="15"  fill="rgba(255,255,255,0.04)"/>
+            <rect x="998" y="80"  width="11" height="13" fill="rgba(196,151,106,0.16)"/>
+            <rect x="1018" y="80" width="11" height="13" fill="rgba(196,151,106,0.10)"/>
+            <rect x="1038" y="80" width="11" height="13" fill="rgba(196,151,106,0.16)"/>
+            <rect x="1057" y="80" width="11" height="13" fill="rgba(196,151,106,0.10)"/>
+            <rect x="998" y="106" width="11" height="13" fill="rgba(196,151,106,0.12)"/>
+            <rect x="1038" y="106" width="11" height="13" fill="rgba(196,151,106,0.16)"/>
+            <rect x="998" y="132" width="11" height="13" fill="rgba(196,151,106,0.14)"/>
+            <rect x="1018" y="132" width="11" height="13" fill="rgba(196,151,106,0.10)"/>
+            <rect x="1057" y="132" width="11" height="13" fill="rgba(196,151,106,0.14)"/>
+            <rect x="1038" y="158" width="11" height="13" fill="rgba(196,151,106,0.12)"/>
+
+            {/* Bâtiment 12 */}
+            <rect x="1080" y="100" width="95"  height="120" fill="rgba(255,255,255,0.035)"/>
+            <rect x="1090" y="85"  width="75"  height="15"  fill="rgba(255,255,255,0.035)"/>
+            <rect x="1088" y="108" width="12" height="13" fill="rgba(196,151,106,0.14)"/>
+            <rect x="1108" y="108" width="12" height="13" fill="rgba(196,151,106,0.10)"/>
+            <rect x="1128" y="108" width="12" height="13" fill="rgba(196,151,106,0.14)"/>
+            <rect x="1150" y="108" width="12" height="13" fill="rgba(196,151,106,0.10)"/>
+            <rect x="1088" y="130" width="12" height="13" fill="rgba(196,151,106,0.10)"/>
+            <rect x="1128" y="130" width="12" height="13" fill="rgba(196,151,106,0.14)"/>
+            <rect x="1088" y="152" width="12" height="13" fill="rgba(196,151,106,0.12)"/>
+            <rect x="1150" y="152" width="12" height="13" fill="rgba(196,151,106,0.10)"/>
+
+            {/* Bâtiment 13 — fin, tour droite */}
+            <rect x="1185" y="40"  width="100" height="180" fill="rgba(255,255,255,0.05)"/>
+            <rect x="1195" y="22"  width="80"  height="18"  fill="rgba(255,255,255,0.05)"/>
+            <rect x="1229" y="8"   width="12"  height="14"  fill="rgba(255,255,255,0.05)"/>
+            <rect x="1193" y="52"  width="12" height="14" fill="rgba(196,151,106,0.18)"/>
+            <rect x="1213" y="52"  width="12" height="14" fill="rgba(196,151,106,0.12)"/>
+            <rect x="1233" y="52"  width="12" height="14" fill="rgba(196,151,106,0.18)"/>
+            <rect x="1255" y="52"  width="12" height="14" fill="rgba(196,151,106,0.12)"/>
+            <rect x="1274" y="52"  width="12" height="14" fill="rgba(196,151,106,0.18)"/>
+            <rect x="1193" y="78"  width="12" height="14" fill="rgba(196,151,106,0.10)"/>
+            <rect x="1233" y="78"  width="12" height="14" fill="rgba(196,151,106,0.16)"/>
+            <rect x="1274" y="78"  width="12" height="14" fill="rgba(196,151,106,0.10)"/>
+            <rect x="1213" y="104" width="12" height="14" fill="rgba(196,151,106,0.14)"/>
+            <rect x="1255" y="104" width="12" height="14" fill="rgba(196,151,106,0.10)"/>
+            <rect x="1193" y="130" width="12" height="14" fill="rgba(196,151,106,0.12)"/>
+            <rect x="1233" y="130" width="12" height="14" fill="rgba(196,151,106,0.16)"/>
+            <rect x="1274" y="130" width="12" height="14" fill="rgba(196,151,106,0.12)"/>
+            <rect x="1213" y="156" width="12" height="14" fill="rgba(196,151,106,0.10)"/>
+            <rect x="1255" y="156" width="12" height="14" fill="rgba(196,151,106,0.14)"/>
+
+            {/* Bâtiment 14 — bout droit */}
+            <rect x="1295" y="140" width="75"  height="80"  fill="rgba(255,255,255,0.03)"/>
+            <rect x="1305" y="125" width="55"  height="15"  fill="rgba(255,255,255,0.03)"/>
+            <rect x="1303" y="148" width="10" height="12" fill="rgba(196,151,106,0.14)"/>
+            <rect x="1321" y="148" width="10" height="12" fill="rgba(196,151,106,0.10)"/>
+            <rect x="1341" y="148" width="10" height="12" fill="rgba(196,151,106,0.14)"/>
+            <rect x="1358" y="148" width="10" height="12" fill="rgba(196,151,106,0.10)"/>
+            <rect x="1321" y="168" width="10" height="12" fill="rgba(196,151,106,0.12)"/>
+            <rect x="1358" y="168" width="10" height="12" fill="rgba(196,151,106,0.10)"/>
+
+            {/* Sol */}
+            <rect x="0" y="218" width="1440" height="2" fill="rgba(255,255,255,0.04)"/>
+          </svg>
+        </div>
 
         {/* Nav logo */}
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 58, display: 'flex', alignItems: 'center', padding: '0 clamp(16px,5vw,48px)', zIndex: 10 }}>
