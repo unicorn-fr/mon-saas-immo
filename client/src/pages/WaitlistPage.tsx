@@ -480,7 +480,7 @@ export default function WaitlistPage() {
               fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 600,
               letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--c-accent)',
             }}>
-              Bientôt disponible · Lancement 2026
+              Accès anticipé · Lancement 2026
             </span>
           </div>
 
@@ -492,8 +492,8 @@ export default function WaitlistPage() {
             margin: '0 0 16px', color: '#ffffff',
             opacity: 0, animation: 'wUp .55s cubic-bezier(.22,1,.36,1) .20s forwards',
           }}>
-            Gérez votre location{' '}
-            <span style={{ color: 'var(--c-accent)' }}>sans agence.</span>
+            La clé de ta{' '}
+            <span style={{ color: 'var(--c-accent)' }}>prochaine location.</span>
           </h1>
 
           {/* Subtitle */}
@@ -503,7 +503,7 @@ export default function WaitlistPage() {
             margin: '0 0 28px',
             opacity: 0, animation: 'fIn .6s ease .45s forwards',
           }}>
-            Dossiers IA · Bail eIDAS · Paiements automatiques
+            Dossier en 2 min. Bail signé en ligne.<br />Loyers encaissés automatiquement. Zéro agence.
           </p>
 
           {/* Social proof */}
@@ -558,7 +558,7 @@ export default function WaitlistPage() {
             {!success ? (
               <form onSubmit={submit}>
                 <div className="bail-grp">
-                  <label className="bail-lbl">Prénom (optionnel)</label>
+                  <label className="bail-lbl">Ton prénom (optionnel)</label>
                   <input
                     className="bail-inp" type="text" placeholder="Thomas"
                     value={firstName} onChange={e => setFirstName(e.target.value)}
@@ -566,7 +566,7 @@ export default function WaitlistPage() {
                   />
                 </div>
                 <div className="bail-grp">
-                  <label className="bail-lbl">Adresse email *</label>
+                  <label className="bail-lbl">Ton email *</label>
                   <input
                     className="bail-inp" type="email" placeholder="thomas@exemple.fr"
                     value={email} onChange={e => setEmail(e.target.value)}
@@ -575,7 +575,7 @@ export default function WaitlistPage() {
                 </div>
 
                 <div style={{ marginBottom: 4 }}>
-                  <label className="bail-lbl">Je suis</label>
+                  <label className="bail-lbl">Tu es</label>
                   <div style={{ display: 'flex', gap: 8 }}>
                     {[
                       { val: 'owner', label: 'Propriétaire', color: '#b8ccf0', bg: 'rgba(26,50,112,0.30)', border: 'rgba(184,204,240,0.40)' },
@@ -607,7 +607,7 @@ export default function WaitlistPage() {
                     ? <span style={{ letterSpacing: '0.35em', fontSize: 18 }}>···</span>
                     : (
                       <>
-                        <span>Rejoindre la liste</span>
+                        <span>Rejoindre la liste d'attente</span>
                         <span style={{ display: 'inline-flex', animation: emailValid ? 'arrowPulse 1.4s ease-in-out infinite' : 'none' }}>
                           <ArrowRight size={16} />
                         </span>
@@ -620,7 +620,7 @@ export default function WaitlistPage() {
                   color: 'rgba(255,255,255,0.25)',
                   margin: '10px 0 0', textAlign: 'center',
                 }}>
-                  Gratuit · Aucune carte requise · Désabonnement en un clic
+                  Gratuit. Sans engagement. Tu te désinscrits quand tu veux.
                 </p>
               </form>
             ) : (
@@ -653,9 +653,9 @@ export default function WaitlistPage() {
             gap: 'clamp(20px,4vw,48px)',
           }}>
             {[
-              { Icon: Euro, stat: '0 €', label: 'Commission propriétaire', color: 'var(--c-accent)' },
-              { Icon: Zap, stat: '< 2 min', label: 'Pour créer un dossier', color: 'var(--c-accent)' },
-              { Icon: Shield, stat: 'eIDAS', label: 'Valeur juridique garantie', color: 'var(--c-accent)' },
+              { Icon: Euro, stat: '0 €', label: 'de commission agence', color: 'var(--c-accent)' },
+              { Icon: Zap, stat: '< 2 min', label: 'pour monter ton dossier', color: 'var(--c-accent)' },
+              { Icon: Shield, stat: 'eIDAS', label: 'bail valide légalement', color: 'var(--c-accent)' },
             ].map(({ Icon, stat, label, color }, i) => (
               <div
                 key={i}
@@ -701,7 +701,7 @@ export default function WaitlistPage() {
               fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 700,
               fontSize: 'clamp(28px,4.5vw,44px)', color: 'var(--c-ink)', margin: 0,
             }}>
-              Une plateforme, deux bénéficiaires.
+              Que tu loues ou que tu gères, c'est fait pour toi.
             </h2>
           </div>
 
@@ -729,15 +729,15 @@ export default function WaitlistPage() {
                   <div style={{
                     fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 600,
                     fontSize: 18, color: 'var(--c-ink)', lineHeight: 1.2,
-                  }}>Gérez sans intermédiaire</div>
+                  }}>Gère tout, sans intermédiaire.</div>
                 </div>
               </div>
               {[
-                'Publiez sans agence ni commission',
-                'Dossiers locataires vérifiés par IA',
-                'Bail signé électroniquement (eIDAS)',
-                'Loyers encaissés automatiquement',
-                'Interface mobile, zéro paperasse',
+                'Publie ton annonce. Garde tes loyers.',
+                'On vérifie les dossiers pour toi, en quelques secondes.',
+                'Bail signé en ligne. Valeur légale garantie.',
+                'Tes loyers tombent chaque mois. Automatiquement.',
+                'Tout depuis ton téléphone. Zéro paperasse.',
               ].map((it, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
                   <CheckCircle size={14} color="var(--c-primary)" strokeWidth={2} style={{ flexShrink: 0, marginTop: 2 }} />
@@ -765,15 +765,15 @@ export default function WaitlistPage() {
                   <div style={{
                     fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 600,
                     fontSize: 18, color: 'var(--c-ink)', lineHeight: 1.2,
-                  }}>Trouvez et restez serein</div>
+                  }}>Trouve, postule, signe. Sans stress.</div>
                 </div>
               </div>
               {[
-                'Dossier constitué en moins de 2 min',
-                'Zéro commission à votre charge',
-                'Justificatifs vérifiés, signature sécurisée',
-                'Quittances automatiques chaque mois',
-                'Messagerie directe avec le propriétaire',
+                'Dossier prêt en 2 min chrono.',
+                'Tu ne paies rien. Zéro frais d\'agence.',
+                'Tes docs sont vérifiés. Ta signature est sécurisée.',
+                'Ta quittance arrive toute seule, chaque mois.',
+                'Tu parles directement avec le proprio. Pas d\'intermédiaire.',
               ].map((it, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
                   <CheckCircle size={14} color="var(--c-green)" strokeWidth={2} style={{ flexShrink: 0, marginTop: 2 }} />
@@ -805,7 +805,7 @@ export default function WaitlistPage() {
               fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 700,
               fontSize: 'clamp(26px,4vw,40px)', color: 'var(--c-ink)', margin: 0,
             }}>
-              Tout ce dont vous avez besoin.
+              Ce qu'on fait pour toi.
             </h2>
           </div>
 
@@ -816,18 +816,18 @@ export default function WaitlistPage() {
           }}>
             {[
               {
-                Icon: FileText, title: 'Dossiers vérifiés par IA',
-                desc: "Analyse automatique des justificatifs. Score de solvabilité instantané, zéro manipulation manuelle.",
+                Icon: FileText, title: 'Dossier vérifié en quelques secondes',
+                desc: "On analyse tes justificatifs automatiquement. Score de solvabilité immédiat. Fini les liasses de papiers à éplucher.",
                 color: 'var(--c-primary)', bg: 'var(--c-primary-light)',
               },
               {
-                Icon: PenTool, title: 'Signature eIDAS',
-                desc: "Bail et état des lieux signés en ligne. Valeur juridique garantie par la réglementation européenne.",
+                Icon: PenTool, title: 'Bail signé en ligne, valide légalement',
+                desc: "Le bail et l'état des lieux se signent directement depuis Bailio. Conforme au règlement eIDAS — même valeur qu'un original papier.",
                 color: 'var(--c-accent)', bg: 'var(--c-accent-light)',
               },
               {
-                Icon: CreditCard, title: 'Paiements automatiques',
-                desc: "Loyers encaissés chaque mois, quittances générées et envoyées sans la moindre intervention.",
+                Icon: CreditCard, title: 'Tes loyers arrivent tout seuls',
+                desc: "Chaque mois, le loyer tombe. La quittance part. Tu n'as rien à faire.",
                 color: 'var(--c-green)', bg: 'var(--c-green-light)',
               },
             ].map(({ Icon, title, desc, color, bg }, i) => (
@@ -866,7 +866,7 @@ export default function WaitlistPage() {
               fontFamily: 'var(--font-body)', fontSize: 10.5, fontWeight: 700,
               letterSpacing: '0.14em', textTransform: 'uppercase',
               color: 'var(--c-accent)', margin: '0 0 28px',
-            }}>Mot du fondateur</p>
+            }}>Pourquoi j'ai lancé Bailio</p>
 
             <div style={{ display: 'flex', gap: 'clamp(20px,4vw,40px)', alignItems: 'flex-start', flexWrap: 'wrap' }}>
               <div style={{ flexShrink: 0 }}>
@@ -886,27 +886,24 @@ export default function WaitlistPage() {
               </div>
 
               <div style={{ flex: '1 1 280px' }}>
-                <div style={{
-                  fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 600,
-                  fontSize: 'clamp(16px,2.5vw,20px)', color: 'var(--c-ink)', lineHeight: 1.45, marginBottom: 18,
-                }}>
-                  "J'ai lancé Bailio à 20 ans depuis ma chambre d'étudiant."
-                </div>
                 <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--c-ink-mid)', lineHeight: 1.80, margin: '0 0 14px' }}>
-                  Au départ c'est simple : mes parents galèrent à louer leur appartement. Des dossiers
-                  perdus, une agence qui prend 15&nbsp;%, des emails sans réponse pendant des semaines.
-                  Je me suis dit — il <em>doit</em> exister un meilleur moyen.
+                  J'ai lancé Bailio à 20 ans depuis ma chambre d'étudiant. Pas par ambition démesurée — par frustration.
                 </p>
                 <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--c-ink-mid)', lineHeight: 1.80, margin: '0 0 14px' }}>
-                  Alors j'ai construit Bailio. Pas une startup qui veut tout révolutionner —
-                  juste un outil honnête qui fait le travail à votre place.
+                  Mes parents galèrent à louer leur appartement. Des dossiers perdus. Une agence qui prend 15&nbsp;%. Des emails sans réponse pendant des semaines. Et de l'autre côté, des locataires qui passent des mois à chercher sans jamais savoir pourquoi leur dossier est refusé.
+                </p>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--c-ink-mid)', lineHeight: 1.80, margin: '0 0 14px' }}>
+                  J'ai regardé ce marché et je me suis dit : tout ça peut être mieux. Pas révolutionné — juste mieux. Plus honnête. Plus rapide. Moins cher pour tout le monde.
+                </p>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--c-ink-mid)', lineHeight: 1.80, margin: '0 0 14px' }}>
+                  Alors j'ai construit Bailio. Un outil qui fait le travail à ta place — sans te facturer le travail d'une agence.
                 </p>
                 <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--c-ink)', lineHeight: 1.80, margin: 0, fontWeight: 500 }}>
-                  Si vous êtes ici, c'est que vous cherchez exactement ça. Bienvenue.
+                  Si tu es là, c'est que tu cherches exactement ça. Bienvenue.
                 </p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 22, paddingTop: 18, borderTop: '1px solid var(--c-border)' }}>
-                  <span style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 600, fontSize: 15, color: 'var(--c-primary)' }}>Enzo,</span>
-                  <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--c-ink-faint)' }}>fondateur de Bailio · 20 ans · École de commerce</span>
+                  <span style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 600, fontSize: 15, color: 'var(--c-primary)' }}>Enzo —</span>
+                  <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--c-ink-faint)' }}>20 ans, fondateur de Bailio, école de commerce</span>
                 </div>
               </div>
             </div>
@@ -928,12 +925,12 @@ export default function WaitlistPage() {
               fontFamily: 'var(--font-body)', fontSize: 10.5, fontWeight: 700,
               letterSpacing: '0.14em', textTransform: 'uppercase',
               color: 'var(--c-accent)', margin: '0 0 10px',
-            }}>Suivez l'aventure</p>
+            }}>Réseaux</p>
             <h2 style={{
               fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 700,
               fontSize: 'clamp(22px,3.5vw,34px)', color: 'var(--c-ink)', margin: 0,
             }}>
-              Restez au courant du lancement.
+              Suis l'aventure en direct.
             </h2>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'center' }}>
@@ -1002,7 +999,7 @@ export default function WaitlistPage() {
             ))}
           </div>
           <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'rgba(255,252,245,0.20)' }}>
-            © {new Date().getFullYear()} Bailio · Tous droits réservés
+            © {new Date().getFullYear()} Bailio.fr — Fait avec passion depuis une chambre d'étudiant.
           </div>
         </div>
       </footer>
