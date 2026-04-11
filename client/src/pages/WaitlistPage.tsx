@@ -530,7 +530,7 @@ export default function WaitlistPage() {
           <h1 style={{
             fontFamily: 'var(--font-display)',
             fontStyle: 'italic', fontWeight: 700,
-            fontSize: 'clamp(40px,7vw,82px)', lineHeight: 1.04,
+            fontSize: 'clamp(34px,9vw,102px)', lineHeight: 1.03,
             margin: '0 0 16px', color: 'var(--c-ink)',
             opacity: 0, animation: 'wUp .55s cubic-bezier(.22,1,.36,1) .20s forwards',
           }}>
