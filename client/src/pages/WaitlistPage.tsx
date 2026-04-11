@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import {
   Key, FileText, PenTool, CreditCard,
-  CheckCircle, Home, Euro, ArrowRight,
+  CheckCircle, Shield, Home, Euro, ArrowRight,
 } from 'lucide-react'
+import HowItWorksSection from '../components/waitlist/HowItWorksSection'
+import FounderSection from '../components/waitlist/FounderSection'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'
 const LAUNCH_DATE = new Date('2026-06-04T00:00:00Z')
@@ -92,6 +94,10 @@ html, body { margin: 0; padding: 0; scroll-behavior: smooth; }
   0%, 100% { transform: translateY(0px); }
   50%       { transform: translateY(-12px); }
 }
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.45; transform: scale(0.80); }
+}
 
 /* ── Scroll reveal ─────────────────────────────────────────────────────────── */
 .bail-reveal {
@@ -159,6 +165,12 @@ html, body { margin: 0; padding: 0; scroll-behavior: smooth; }
   box-shadow: 0 6px 28px rgba(196,151,106,0.45);
 }
 .bail-cta:disabled { opacity: .4; cursor: default; }
+.bail-cta .arrow {
+  display: inline-flex;
+  transition: transform .2s ease;
+}
+.bail-cta:hover:not(:disabled) .arrow { transform: translateX(4px); }
+.pulse-dot { animation: pulse 2s ease-in-out infinite; }
 
 /* ── Feature cards ─────────────────────────────────────────────────────────── */
 .feat-card {
@@ -322,7 +334,7 @@ function SuccessBlock({
       }}>
         {alreadyRegistered
           ? 'Déjà inscrit !'
-          : firstName ? `Bienvenue, ${firstName} !` : 'Tu es sur la liste !'}
+          : firstName ? `C'est bon, ${firstName} !` : 'Tu es sur la liste !'}
       </h2>
       <p style={{
         fontFamily: 'var(--font-body)', fontSize: 14,
@@ -330,7 +342,7 @@ function SuccessBlock({
       }}>
         {alreadyRegistered
           ? 'Cette adresse est déjà enregistrée. Tu seras parmi les premiers prévenus.'
-          : "Inscription confirmée. Un email de bienvenue vient d'être envoyé."}
+          : "C'est bon, tu es sur la liste. On te prévient en premier dès que Bailio est prêt."}
       </p>
       {isEarlyAccess && !alreadyRegistered && (
         <div style={{
@@ -371,6 +383,7 @@ export default function WaitlistPage() {
   const [success, setSuccess] = useState(false)
   const [isEarlyAccess, setIsEarlyAccess] = useState(false)
   const [alreadyRegistered, setAlreadyRegistered] = useState(false)
+  const [emailError, setEmailError] = useState('')
   const [confetti, setConfetti] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
@@ -396,7 +409,12 @@ export default function WaitlistPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (!emailValid || loading) return
+    if (!emailValid) {
+      setEmailError('Vérifie que ton adresse email est correcte.')
+      return
+    }
+    setEmailError('')
+    if (loading) return
     setLoading(true)
     try {
       const res = await fetch(`${API_BASE}/waitlist/join`, {
@@ -503,30 +521,28 @@ export default function WaitlistPage() {
             margin: '0 0 28px',
             opacity: 0, animation: 'fIn .6s ease .45s forwards',
           }}>
-            Dossier en 2 min. Bail signé en ligne.<br />Loyers encaissés automatiquement. Zéro agence.
+            Publie ton annonce. Sélectionne ton locataire. Signe le bail.<br />Le tout en ligne, sans agence, sans commission.
           </p>
 
-          {/* Social proof */}
-          {totalCount > 0 && (
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 24,
-              opacity: 0, animation: 'fIn .5s ease .65s forwards',
-            }}>
-              <div style={{ display: 'flex' }}>
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} style={{
-                    width: 24, height: 24, borderRadius: '50%',
-                    background: `hsl(${210 + i * 30}, 50%, 55%)`,
-                    border: '2px solid var(--c-bg)',
-                    marginLeft: i > 0 ? -8 : 0,
-                  }} />
-                ))}
-              </div>
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, color: 'var(--c-ink-mid)' }}>
-                <strong style={{ color: 'var(--c-ink)' }}>{totalCount.toLocaleString('fr-FR')}</strong> personnes inscrites
-              </span>
-            </div>
-          )}
+          {/* Social proof — pill avec pulse dot */}
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            background: 'var(--c-surface)', border: '1px solid var(--c-border)',
+            borderRadius: 999, padding: '6px 14px',
+            marginBottom: 24,
+            boxShadow: '0 1px 2px rgba(13,12,10,0.04)',
+            opacity: 0, animation: 'fIn .5s ease .65s forwards',
+          }}>
+            <span
+              className="pulse-dot"
+              style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', flexShrink: 0 }}
+            />
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, color: 'var(--c-ink-mid)' }}>
+              <strong style={{ color: 'var(--c-ink)' }}>
+                {(totalCount || 3).toLocaleString('fr-FR')}
+              </strong>{' '}personnes déjà inscrites
+            </span>
+          </div>
 
           {/* Formulaire */}
           <div style={{
@@ -567,12 +583,23 @@ export default function WaitlistPage() {
                   />
                 </div>
                 <div className="bail-grp">
-                  <label className="bail-lbl">Ton email *</label>
+                  <label className="bail-lbl" htmlFor="waitlist-email">Ton email *</label>
                   <input
-                    className="bail-inp" type="email" placeholder="thomas@exemple.fr"
-                    value={email} onChange={e => setEmail(e.target.value)}
+                    id="waitlist-email"
+                    className="bail-inp" type="email" placeholder="ton@email.com"
+                    value={email}
+                    onChange={e => { setEmail(e.target.value); if (emailError) setEmailError('') }}
+                    onBlur={() => { if (email && !emailValid) setEmailError('Vérifie que ton adresse email est correcte.') }}
                     required autoComplete="email"
+                    aria-label="Adresse email"
+                    aria-describedby={emailError ? 'email-error' : undefined}
+                    aria-invalid={!!emailError}
                   />
+                  {emailError && (
+                    <p id="email-error" style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: '#9b1c1c', margin: '5px 0 0' }}>
+                      {emailError}
+                    </p>
+                  )}
                 </div>
 
                 <div style={{ marginBottom: 4 }}>
@@ -603,13 +630,13 @@ export default function WaitlistPage() {
                   </div>
                 </div>
 
-                <button type="submit" disabled={loading || !emailValid} className="bail-cta">
+                <button type="submit" disabled={loading} className="bail-cta">
                   {loading
                     ? <span style={{ letterSpacing: '0.35em', fontSize: 18 }}>···</span>
                     : (
                       <>
                         <span>Rejoindre la liste d'attente</span>
-                        <span style={{ display: 'inline-flex', animation: emailValid ? 'arrowPulse 1.4s ease-in-out infinite' : 'none' }}>
+                        <span className="arrow">
                           <ArrowRight size={16} />
                         </span>
                       </>
@@ -654,9 +681,9 @@ export default function WaitlistPage() {
             gap: 'clamp(20px,4vw,48px)',
           }}>
             {[
-              { Icon: Euro, stat: '0 €', label: 'de commission agence', color: 'var(--c-accent)' },
-              { Icon: Home, stat: '100%', label: 'en ligne, sans rendez-vous', color: 'var(--c-accent)' },
-              { Icon: PenTool, stat: 'Signé', label: 'en ligne, valeur légale', color: 'var(--c-accent)' },
+              { Icon: Euro,   stat: '0 €',   label: 'de commission agence', color: 'var(--c-accent)' },
+              { Icon: Home,   stat: '100%',  label: 'en ligne, sans rendez-vous', color: 'var(--c-accent)' },
+              { Icon: Shield, stat: 'eIDAS', label: 'valeur légale européenne', color: 'var(--c-accent)' },
             ].map(({ Icon, stat, label, color }, i) => (
               <div
                 key={i}
@@ -854,63 +881,9 @@ export default function WaitlistPage() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════════════════
-          MOT DU FONDATEUR
-      ══════════════════════════════════════════════════════════════════ */}
-      <section style={{
-        background: 'var(--c-surface)',
-        padding: 'clamp(48px,7vw,80px) clamp(16px,5vw,64px)',
-      }}>
-        <div style={{ maxWidth: 700, margin: '0 auto' }}>
-          <div className="bail-reveal">
-            <p style={{
-              fontFamily: 'var(--font-body)', fontSize: 10.5, fontWeight: 700,
-              letterSpacing: '0.14em', textTransform: 'uppercase',
-              color: 'var(--c-accent)', margin: '0 0 28px',
-            }}>Pourquoi j'ai lancé Bailio</p>
+      <HowItWorksSection />
 
-            <div style={{ display: 'flex', gap: 'clamp(20px,4vw,40px)', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-              <div style={{ flexShrink: 0 }}>
-                <div style={{
-                  width: 64, height: 64, borderRadius: '50%',
-                  background: 'var(--c-primary-light)',
-                  border: '2px solid var(--c-primary-border)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <span style={{
-                    fontFamily: 'var(--font-display)', fontStyle: 'italic',
-                    fontWeight: 700, fontSize: 22, color: 'var(--c-primary)',
-                  }}>E</span>
-                </div>
-                <div style={{ marginTop: 8, textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 600, color: 'var(--c-ink)' }}>Enzo</div>
-                <div style={{ textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--c-ink-faint)' }}>Fondateur</div>
-              </div>
-
-              <div style={{ flex: '1 1 280px' }}>
-                <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--c-ink-mid)', lineHeight: 1.80, margin: '0 0 14px' }}>
-                  J'ai lancé Bailio à 20 ans depuis ma chambre d'étudiant. Pas par ambition démesurée — par frustration.
-                </p>
-                <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--c-ink-mid)', lineHeight: 1.80, margin: '0 0 14px' }}>
-                  Mes parents galèrent à louer leur appartement. Des dossiers perdus. Une agence qui prend 15&nbsp;%. Des emails sans réponse pendant des semaines. Et de l'autre côté, des locataires qui passent des mois à chercher sans jamais savoir pourquoi leur dossier est refusé.
-                </p>
-                <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--c-ink-mid)', lineHeight: 1.80, margin: '0 0 14px' }}>
-                  J'ai regardé ce marché et je me suis dit : tout ça peut être mieux. Pas révolutionné — juste mieux. Plus honnête. Plus rapide. Moins cher pour tout le monde.
-                </p>
-                <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--c-ink-mid)', lineHeight: 1.80, margin: '0 0 14px' }}>
-                  Alors j'ai construit Bailio. Un outil qui fait le travail à ta place — sans te facturer le travail d'une agence.
-                </p>
-                <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--c-ink)', lineHeight: 1.80, margin: 0, fontWeight: 500 }}>
-                  Si tu es là, c'est que tu cherches exactement ça. Bienvenue.
-                </p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 22, paddingTop: 18, borderTop: '1px solid var(--c-border)' }}>
-                  <span style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 600, fontSize: 15, color: 'var(--c-primary)' }}>Enzo —</span>
-                  <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--c-ink-faint)' }}>20 ans, fondateur de Bailio, école de commerce</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <FounderSection />
 
       {/* ══════════════════════════════════════════════════════════════════
           SOCIAL
