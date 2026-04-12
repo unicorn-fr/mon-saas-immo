@@ -17,7 +17,7 @@ import {
 import { useAuth } from '../../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
 import { Layout } from '../../components/layout/Layout'
-import { privacyApi, DossierAccessLog } from '../../services/dossierService'
+import { privacyApi, DossierAccessLog } from '../../services/dossier.service'
 import toast from 'react-hot-toast'
 
 // ── Maison design tokens ──────────────────────────────────────────────────────

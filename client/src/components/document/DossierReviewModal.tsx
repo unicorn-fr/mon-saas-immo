@@ -16,7 +16,7 @@ import {
   CalendarDays, MapPin, Globe, Mail, Phone, ShieldOff,
   ChevronDown, ChevronRight, Lock,
 } from 'lucide-react'
-import { dossierService, TenantDossierProfile, TenantDocument } from '../../services/dossierService'
+import { dossierService, TenantDossierProfile, TenantDocument } from '../../services/dossier.service'
 import { WatermarkedViewer } from './WatermarkedViewer'
 
 // ── Maison tokens ──────────────────────────────────────────────────────────────

@@ -12,7 +12,7 @@ import {
   Loader2, FileText, Users, Send,
 } from 'lucide-react'
 import { applicationService } from '../../services/application.service'
-import { shareApi } from '../../services/dossierService'
+import { shareApi } from '../../services/dossier.service'
 import { computeClientScore, extractTenantSnapshot, scoreColor } from '../../utils/matchingEngine'
 import type { SelectionCriteria, MatchResult, MatchDetail } from '../../types/application.types'
 import { VERDICT_CONFIG, GUARANTOR_TYPES } from '../../types/application.types'

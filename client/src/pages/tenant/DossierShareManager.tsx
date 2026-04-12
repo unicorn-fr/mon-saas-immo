@@ -13,7 +13,7 @@ import {
 import { Layout } from '../../components/layout/Layout'
 import { TrustBadge } from '../../components/security/TrustBadge'
 import { ReportUserModal } from '../../components/security/ReportUserModal'
-import { shareApi, type DossierShare } from '../../services/dossierService'
+import { shareApi, type DossierShare } from '../../services/dossier.service'
 import { useMessages } from '../../hooks/useMessages'
 import { useAuth } from '../../hooks/useAuth'
 import toast from 'react-hot-toast'

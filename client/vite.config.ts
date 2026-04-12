@@ -106,7 +106,7 @@ export default defineConfig({
           'form-vendor': ['react-hook-form', 'zod', '@hookform/resolvers'],
           'map-vendor': ['leaflet', 'react-leaflet'],
           'pdf-vendor': ['pdfjs-dist'],
-          'ocr-vendor': ['tesseract.js', 'jsqr', 'jszip']
+          'ocr-vendor': ['tesseract.js', 'jsqr']
         }
       }
     }

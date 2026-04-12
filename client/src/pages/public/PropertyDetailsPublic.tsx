@@ -29,7 +29,7 @@ import { PreQualificationModal } from '../../components/application/PreQualifica
 import { PROPERTY_TYPES, AMENITIES } from '../../types/property.types'
 import { Layout } from '../../components/layout/Layout'
 import { applicationService } from '../../services/application.service'
-import { dossierService } from '../../services/dossierService'
+import { dossierService } from '../../services/dossier.service'
 import type { Application } from '../../types/application.types'
 import { DEFAULT_CRITERIA } from '../../types/application.types'
 

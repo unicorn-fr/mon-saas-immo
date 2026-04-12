@@ -6,7 +6,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { AlertTriangle, X, Loader2, CheckCircle2 } from 'lucide-react'
-import { shareApi } from '../../services/dossierService'
+import { shareApi } from '../../services/dossier.service'
 import toast from 'react-hot-toast'
 
 const REASONS = [

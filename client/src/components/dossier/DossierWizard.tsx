@@ -8,7 +8,7 @@ import {
   X, ChevronRight, ChevronLeft, Upload, CheckCircle,
   User, Briefcase, TrendingUp, Home, Shield, Loader2, Check, Lock,
 } from 'lucide-react'
-import { dossierService, TenantDocument } from '../../services/dossierService'
+import { dossierService, TenantDocument } from '../../services/dossier.service'
 import toast from 'react-hot-toast'
 
 // ── Types ──────────────────────────────────────────────────────────────────────

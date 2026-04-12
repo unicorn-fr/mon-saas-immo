@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth'
 import { firebaseAuth } from '../../config/firebase'
-import api from '../../services/api'
+import { apiClient as api } from '../../services/api.service'
 import toast from 'react-hot-toast'
 
 interface PhoneVerificationProps {

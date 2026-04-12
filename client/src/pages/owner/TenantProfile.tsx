@@ -11,8 +11,8 @@ import {
   Mail, ShieldOff, Phone,
 } from 'lucide-react'
 import { Layout } from '../../components/layout/Layout'
-import { dossierService, TenantDossierProfile, TenantDocument } from '../../services/dossierService'
-import api from '../../services/api'
+import { dossierService, TenantDossierProfile, TenantDocument } from '../../services/dossier.service'
+import { apiClient as api } from '../../services/api.service'
 import toast from 'react-hot-toast'
 
 // ── Maison tokens ─────────────────────────────────────────────────────────────

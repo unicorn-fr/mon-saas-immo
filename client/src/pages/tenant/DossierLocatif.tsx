@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import { Layout } from '../../components/layout/Layout'
 import { useAuth } from '../../hooks/useAuth'
-import { dossierService, TenantDocument } from '../../services/dossierService'
+import { dossierService, TenantDocument } from '../../services/dossier.service'
 import { DocumentViewerModal } from '../../components/document/DocumentViewerModal'
 import toast from 'react-hot-toast'
 

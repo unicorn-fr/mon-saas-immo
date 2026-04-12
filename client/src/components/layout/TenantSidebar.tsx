@@ -12,7 +12,7 @@ import { useSidebarStore } from '../../store/sidebarStore'
 import { useMessages } from '../../hooks/useMessages'
 import { useAuth } from '../../hooks/useAuth'
 import { applicationService } from '../../services/application.service'
-import { dossierService } from '../../services/dossierService'
+import { dossierService } from '../../services/dossier.service'
 import { useNavigate } from 'react-router-dom'
 import { BailioLogo } from '../BailioLogo'
 

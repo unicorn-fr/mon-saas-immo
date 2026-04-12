@@ -11,6 +11,13 @@ export default {
         'xs': '375px', // iPhone SE et petits Android
       },
       colors: {
+        // ── Maison design system ──────────────────────────────────────
+        caramel:      'var(--c-accent)',
+        'caramel-light': 'var(--c-accent-light)',
+        night:        'var(--c-night)',
+        ink:          'var(--c-ink)',
+        'ink-mid':    'var(--c-ink-mid)',
+        'ink-faint':  'var(--c-ink-faint)',
         // ── Primary : Blue-500 / Navy (Bleu ardoise institutionnel) ──
         primary: {
           50:  '#eff6ff',

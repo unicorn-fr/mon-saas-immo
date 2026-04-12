@@ -3,7 +3,7 @@ import { X, Send, Mail, User, MessageSquare, AlertCircle, CheckCircle, ShieldChe
 import { useAuth } from '../../hooks/useAuth'
 import { Link, useNavigate } from 'react-router-dom'
 import { propertyService } from '../../services/property.service'
-import { shareApi } from '../../services/dossierService'
+import { shareApi } from '../../services/dossier.service'
 
 const M = {
   ink: '#0d0c0a',

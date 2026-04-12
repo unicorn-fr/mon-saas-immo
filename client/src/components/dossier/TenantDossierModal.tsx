@@ -9,8 +9,8 @@ import {
   X, User, Briefcase, FileText, Home, Shield, Loader2,
   ExternalLink, CalendarDays, MapPin, Globe, Phone, Mail, ShieldOff,
 } from 'lucide-react'
-import { dossierService, TenantDossierProfile, TenantDocument } from '../../services/dossierService'
-import api from '../../services/api'
+import { dossierService, TenantDossierProfile, TenantDocument } from '../../services/dossier.service'
+import { apiClient as api } from '../../services/api.service'
 import toast from 'react-hot-toast'
 
 // ── Category config ─────────────────────────────────────────────────────────
