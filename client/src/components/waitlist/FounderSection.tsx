@@ -43,27 +43,34 @@ export default function FounderSection({ photo }: FounderSectionProps) {
           flexWrap: 'wrap',
         }}>
           {/* Avatar */}
-          <div style={{ flexShrink: 0 }}>
+          <div style={{ flexShrink: 0, textAlign: 'center' }}>
             {photo ? (
-              <img
-                src={photo}
-                alt="Enzo, fondateur de Bailio"
-                style={{
-                  width: 64, height: 64, borderRadius: '50%',
-                  objectFit: 'cover',
-                  border: '2px solid var(--c-primary-border)',
-                }}
-              />
+              <div style={{
+                width: 96, height: 96, borderRadius: '50%',
+                overflow: 'hidden',
+                border: '2px solid var(--c-border)',
+                boxShadow: '0 2px 12px rgba(13,12,10,0.10)',
+              }}>
+                <img
+                  src={photo}
+                  alt="Enzo, fondateur de Bailio"
+                  style={{
+                    width: '100%', height: '100%',
+                    objectFit: 'cover',
+                    objectPosition: 'center 15%',
+                  }}
+                />
+              </div>
             ) : (
               <div style={{
-                width: 64, height: 64, borderRadius: '50%',
+                width: 96, height: 96, borderRadius: '50%',
                 background: 'var(--c-primary-light)',
                 border: '2px solid var(--c-primary-border)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
                 <span style={{
                   fontFamily: 'var(--font-display)', fontStyle: 'italic',
-                  fontWeight: 700, fontSize: 22, color: 'var(--c-primary)',
+                  fontWeight: 700, fontSize: 32, color: 'var(--c-primary)',
                 }}>E</span>
               </div>
             )}
