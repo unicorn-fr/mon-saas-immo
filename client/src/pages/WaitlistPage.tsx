@@ -140,7 +140,7 @@ html, body { margin: 0; padding: 0; scroll-behavior: smooth; }
   transition: border-color .2s, background .2s;
   -webkit-appearance: none;
 }
-.bail-inp::placeholder { color: rgba(255,255,255,0.30); }
+.bail-inp::placeholder { color: rgba(255,255,255,0.45); }
 .bail-inp:focus { border-color: var(--c-accent); background: rgba(255,255,255,0.13); }
 .bail-lbl {
   display: block;
@@ -149,7 +149,7 @@ html, body { margin: 0; padding: 0; scroll-behavior: smooth; }
   font-weight: 600;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.50);
+  color: rgba(255,255,255,0.85);
   margin-bottom: 6px;
 }
 .bail-grp { margin-bottom: 14px; }
@@ -324,7 +324,7 @@ function CDUnit({ value, label }: { value: number; label: string }) {
         fontFamily: 'var(--font-body)',
         fontSize: 8, fontWeight: 600,
         letterSpacing: '0.10em', textTransform: 'uppercase',
-        color: 'rgba(255,255,255,0.40)', marginTop: 3,
+        color: 'rgba(255,255,255,0.65)', marginTop: 3,
       }}>
         {label}
       </div>
@@ -428,16 +428,8 @@ export default function WaitlistPage() {
   const [alreadyRegistered, setAlreadyRegistered] = useState(false)
   const [emailError, setEmailError] = useState('')
   const [confetti, setConfetti] = useState(false)
-  const [totalCount, setTotalCount] = useState(0)
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
   const cd = useCountdown(LAUNCH_DATE)
-
-  useEffect(() => {
-    fetch(`${API_BASE}/waitlist/count`)
-      .then(r => r.json())
-      .then(d => { if (d.success) setTotalCount(d.data.total) })
-      .catch(() => {})
-  }, [])
 
   useEffect(() => {
     const io = new IntersectionObserver(
@@ -475,7 +467,6 @@ export default function WaitlistPage() {
         setAlreadyRegistered(d.data.alreadyRegistered)
         setSuccess(true)
         if (!d.data.alreadyRegistered) {
-          setTotalCount(c => c + 1)
           setConfetti(true)
           setTimeout(() => setConfetti(false), 4500)
         }
@@ -792,24 +783,6 @@ export default function WaitlistPage() {
             Publie ton annonce. Sélectionne ton locataire. Signe le bail.<br />Le tout en ligne, sans agence, sans commission.
           </p>
 
-          {/* Social proof — pill avec pulse dot */}
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)',
-            borderRadius: 999, padding: '6px 14px',
-            marginBottom: 24,
-            opacity: 0, animation: 'fIn .5s ease .65s forwards',
-          }}>
-            <span
-              className="pulse-dot"
-              style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', flexShrink: 0 }}
-            />
-            <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.60)' }}>
-              <strong style={{ color: '#ffffff' }}>
-                {(totalCount || 3).toLocaleString('fr-FR')}
-              </strong>{' '}personnes déjà inscrites
-            </span>
-          </div>
 
           {/* Formulaire */}
           <div style={{
@@ -827,7 +800,7 @@ export default function WaitlistPage() {
               <span style={{
                 fontFamily: 'var(--font-body)', fontSize: 10, fontWeight: 600,
                 letterSpacing: '0.09em', textTransform: 'uppercase',
-                color: 'rgba(255,255,255,0.35)', flexShrink: 0,
+                color: 'rgba(255,255,255,0.75)', flexShrink: 0,
               }}>Lancement dans</span>
               <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.10)' }} />
               <div style={{ display: 'flex', gap: 5 }}>
@@ -888,7 +861,7 @@ export default function WaitlistPage() {
                             cursor: 'pointer', transition: 'all .18s',
                             background: active ? 'rgba(196,151,106,0.22)' : 'rgba(255,255,255,0.06)',
                             border: `1.5px solid ${active ? 'rgba(196,151,106,0.45)' : 'rgba(255,255,255,0.12)'}`,
-                            color: active ? 'var(--c-accent)' : 'rgba(255,255,255,0.45)',
+                            color: active ? 'var(--c-accent)' : 'rgba(255,255,255,0.80)',
                           }}
                         >
                           {label}
@@ -913,7 +886,7 @@ export default function WaitlistPage() {
                 </button>
                 <p style={{
                   fontFamily: 'var(--font-body)', fontSize: 11,
-                  color: 'rgba(255,255,255,0.28)',
+                  color: 'rgba(255,255,255,0.55)',
                   margin: '10px 0 0', textAlign: 'center',
                 }}>
                   Gratuit. Sans engagement. Tu te désinscrits quand tu veux.
