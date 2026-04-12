@@ -252,6 +252,20 @@ html, body { margin: 0; padding: 0; scroll-behavior: smooth; }
   border-radius: 50%;
   pointer-events: none;
 }
+
+/* ── FAQ accordion ──────────────────────────────────────────────────────── */
+.faq-item { border-bottom: 1px solid var(--c-border); }
+.faq-item:first-child { border-top: 1px solid var(--c-border); }
+.faq-btn {
+  width: 100%; background: none; border: none;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding: 20px 0; cursor: pointer; text-align: left;
+}
+.faq-btn:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; border-radius: 4px; }
+.faq-chevron { flex-shrink: 0; transition: transform .25s ease; color: var(--c-ink-faint); }
+.faq-chevron.open { transform: rotate(180deg); }
+.faq-body { overflow: hidden; max-height: 0; transition: max-height .3s ease, padding .3s ease; }
+.faq-body.open { max-height: 300px; padding-bottom: 18px; }
 `
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
@@ -428,8 +442,33 @@ export default function WaitlistPage() {
   const [alreadyRegistered, setAlreadyRegistered] = useState(false)
   const [emailError, setEmailError] = useState('')
   const [confetti, setConfetti] = useState(false)
+  const [signupCount, setSignupCount] = useState<number | null>(null)
+  const [openFaq, setOpenFaq] = useState<number | null>(null)
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
   const cd = useCountdown(LAUNCH_DATE)
+
+  const FAQ_ITEMS = [
+    {
+      q: "C'est vraiment gratuit de s'inscrire ?",
+      a: "Oui, l'inscription sur la liste d'attente est 100 % gratuite et sans engagement. Bailio sera payant au lancement, avec un modèle tarifaire simple qu'on communiquera avant d'ouvrir — pas de surprise.",
+    },
+    {
+      q: "Un bail signé en ligne, c'est légalement valide ?",
+      a: "Oui. On utilise la signature électronique eIDAS, le standard européen. Elle a exactement la même valeur légale qu'un document signé à la main — et c'est beaucoup plus sécurisé.",
+    },
+    {
+      q: "Je n'ai qu'un seul appartement, c'est fait pour moi ?",
+      a: "Complètement. Bailio est conçu aussi bien pour le propriétaire d'un seul bien que pour celui qui en gère dix. Pas besoin d'être un investisseur expérimenté.",
+    },
+    {
+      q: "Quand est-ce que la plateforme ouvre ?",
+      a: "On vise le lancement en 2026. Les personnes sur la liste d'attente seront les premières à y avoir accès, et les 150 premiers inscrits bénéficient d'un mois offert sur le plan Pro.",
+    },
+    {
+      q: "Et si j'ai des questions pendant l'utilisation ?",
+      a: "On est là. Bailio intègre une messagerie directe et un support réactif. Tu ne seras jamais seul face à un problème — c'est justement l'une des raisons pour lesquelles on a construit ça.",
+    },
+  ]
 
   useEffect(() => {
     const io = new IntersectionObserver(
@@ -440,6 +479,17 @@ export default function WaitlistPage() {
     )
     document.querySelectorAll('.bail-reveal').forEach(el => io.observe(el))
     return () => io.disconnect()
+  }, [])
+
+  useEffect(() => {
+    fetch(`${API_BASE}/waitlist/count`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.success && typeof d.data?.count === 'number') {
+          setSignupCount(d.data.count)
+        }
+      })
+      .catch(() => {})
   }, [])
 
   async function submit(e: React.FormEvent) {
@@ -467,6 +517,7 @@ export default function WaitlistPage() {
         setAlreadyRegistered(d.data.alreadyRegistered)
         setSuccess(true)
         if (!d.data.alreadyRegistered) {
+          setSignupCount(prev => prev !== null ? prev + 1 : null)
           setConfetti(true)
           setTimeout(() => setConfetti(false), 4500)
         }
@@ -482,7 +533,7 @@ export default function WaitlistPage() {
       {/* ══════════════════════════════════════════════════════════════════
           HERO — centré, "Bailio." en fond animé
       ══════════════════════════════════════════════════════════════════ */}
-      <section style={{
+      <section id="hero-section" style={{
         minHeight: '100svh',
         background: 'var(--c-night)',
         display: 'flex', flexDirection: 'column',
@@ -783,6 +834,26 @@ export default function WaitlistPage() {
             Publie ton annonce. Sélectionne ton locataire. Signe le bail.<br />Le tout en ligne, sans agence, sans commission.
           </p>
 
+          {/* Badge inscrits */}
+          {signupCount !== null && signupCount > 0 && (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              background: 'rgba(255,255,255,0.07)',
+              border: '1px solid rgba(255,255,255,0.13)',
+              borderRadius: 20, padding: '6px 14px',
+              marginBottom: 16,
+              opacity: 0, animation: 'fIn .5s ease .65s forwards',
+            }}>
+              <div className="pulse-dot" style={{
+                width: 7, height: 7, borderRadius: '50%',
+                background: '#4ade80', flexShrink: 0,
+              }} />
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'rgba(255,255,255,0.70)' }}>
+                <strong style={{ color: '#ffffff', fontWeight: 600 }}>{signupCount.toLocaleString('fr-FR')}</strong>
+                {' '}personnes déjà sur la liste
+              </span>
+            </div>
+          )}
 
           {/* Formulaire */}
           <div style={{
@@ -1135,6 +1206,78 @@ export default function WaitlistPage() {
       <WaveDivider from="#ffffff" to="#fafaf8" flip />
 
       {/* ══════════════════════════════════════════════════════════════════
+          FAQ
+      ══════════════════════════════════════════════════════════════════ */}
+      <section style={{
+        background: 'var(--c-bg)',
+        padding: 'clamp(48px,7vw,80px) clamp(16px,5vw,64px)',
+      }}>
+        <div style={{ maxWidth: 720, margin: '0 auto' }}>
+          <div className="bail-reveal" style={{ textAlign: 'center', marginBottom: 'clamp(32px,5vw,48px)' }}>
+            <p style={{
+              fontFamily: 'var(--font-body)', fontSize: 10.5, fontWeight: 700,
+              letterSpacing: '0.14em', textTransform: 'uppercase',
+              color: 'var(--c-accent)', margin: '0 0 12px',
+            }}>Questions fréquentes</p>
+            <h2 style={{
+              fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 700,
+              fontSize: 'clamp(26px,4vw,38px)', color: 'var(--c-ink)', margin: 0,
+            }}>
+              Tu as des questions, on a les réponses.
+            </h2>
+          </div>
+
+          <div className="bail-reveal bail-d1" role="list">
+            {FAQ_ITEMS.map((item, i) => {
+              const isOpen = openFaq === i
+              return (
+                <div key={i} className="faq-item" role="listitem">
+                  <button
+                    className="faq-btn"
+                    aria-expanded={isOpen}
+                    aria-controls={`faq-body-${i}`}
+                    id={`faq-btn-${i}`}
+                    onClick={() => setOpenFaq(isOpen ? null : i)}
+                  >
+                    <span style={{
+                      fontFamily: 'var(--font-body)', fontWeight: 600,
+                      fontSize: 'clamp(14px,1.8vw,16px)', color: 'var(--c-ink)', lineHeight: 1.4,
+                    }}>
+                      {item.q}
+                    </span>
+                    <svg
+                      className={`faq-chevron${isOpen ? ' open' : ''}`}
+                      width="18" height="18" viewBox="0 0 24 24"
+                      fill="none" stroke="currentColor" strokeWidth="2"
+                      strokeLinecap="round" strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </button>
+                  <div
+                    id={`faq-body-${i}`}
+                    role="region"
+                    aria-labelledby={`faq-btn-${i}`}
+                    className={`faq-body${isOpen ? ' open' : ''}`}
+                  >
+                    <p style={{
+                      fontFamily: 'var(--font-body)', fontSize: 14,
+                      color: 'var(--c-ink-mid)', lineHeight: 1.72, margin: 0,
+                    }}>
+                      {item.a}
+                    </p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      <WaveDivider from="var(--c-bg)" to="var(--c-bg)" />
+
+      {/* ══════════════════════════════════════════════════════════════════
           SOCIAL
       ══════════════════════════════════════════════════════════════════ */}
       <section style={{
@@ -1189,6 +1332,65 @@ export default function WaitlistPage() {
                 </div>
               </a>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════
+          CTA BAS — pour les scrolleurs
+      ══════════════════════════════════════════════════════════════════ */}
+      <section style={{
+        background: 'var(--c-bg)',
+        padding: 'clamp(56px,8vw,88px) clamp(16px,5vw,64px)',
+        textAlign: 'center',
+      }}>
+        <div style={{ maxWidth: 560, margin: '0 auto' }}>
+          <div className="bail-reveal">
+            <p style={{
+              fontFamily: 'var(--font-body)', fontSize: 10.5, fontWeight: 700,
+              letterSpacing: '0.14em', textTransform: 'uppercase',
+              color: 'var(--c-accent)', margin: '0 0 14px',
+            }}>Rejoindre Bailio</p>
+            <h2 style={{
+              fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 700,
+              fontSize: 'clamp(24px,4vw,38px)', color: 'var(--c-ink)',
+              margin: '0 0 14px', lineHeight: 1.2,
+            }}>
+              Tu cherches exactement ça.<br />On est là.
+            </h2>
+            <p style={{
+              fontFamily: 'var(--font-body)', fontSize: 14,
+              color: 'var(--c-ink-mid)', lineHeight: 1.6, margin: '0 0 28px',
+            }}>
+              Rejoins la liste d'attente. Gratuit, sans engagement,{' '}
+              tu te désinscris quand tu veux.
+            </p>
+            <a
+              href="#hero-section"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                background: 'var(--c-accent)', color: '#ffffff',
+                fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 15,
+                border: 'none', borderRadius: 8,
+                padding: '14px 28px', cursor: 'pointer', textDecoration: 'none',
+                boxShadow: '0 4px 20px rgba(196,151,106,0.30)',
+                transition: 'background .2s, box-shadow .2s',
+              }}
+              onMouseEnter={e => {
+                ;(e.currentTarget as HTMLAnchorElement).style.background = 'var(--c-accent-hover)'
+                ;(e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 6px 28px rgba(196,151,106,0.45)'
+              }}
+              onMouseLeave={e => {
+                ;(e.currentTarget as HTMLAnchorElement).style.background = 'var(--c-accent)'
+                ;(e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 4px 20px rgba(196,151,106,0.30)'
+              }}
+            >
+              Rejoindre la liste d'attente
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </a>
           </div>
         </div>
       </section>
