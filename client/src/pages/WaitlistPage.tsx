@@ -1130,7 +1130,7 @@ export default function WaitlistPage() {
 
       <WaveDivider from="#fafaf8" to="#ffffff" />
 
-      <FounderSection photo="/enzo.jpg" />
+      <FounderSection photo="/enzo.jpeg" />
 
       <WaveDivider from="#ffffff" to="#fafaf8" flip />
 
