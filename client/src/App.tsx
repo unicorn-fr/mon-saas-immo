@@ -152,7 +152,7 @@ function App() {
 }
 
 function AppRoutes() {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading, user } = useAuth()
   const location = useLocation()
   const [unlocked, setUnlocked] = useState(() => isSiteUnlocked())
 
@@ -188,7 +188,14 @@ function AppRoutes() {
       {/* Auth Routes - Redirect to home if already authenticated */}
       <Route
         path="/login"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
+        element={isAuthenticated
+          ? <Navigate to={
+              user?.role === 'OWNER' ? '/dashboard/owner'
+              : user?.role === 'TENANT' ? '/dashboard/tenant'
+              : user?.role === 'SUPER_ADMIN' ? '/super-admin'
+              : '/'
+            } replace />
+          : <Login />}
       />
       {/* /register — bloqué en mode waitlist (LaunchGuard redirige vers /) */}
       <Route
