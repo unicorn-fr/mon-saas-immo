@@ -368,3 +368,66 @@
 
 /* ── Print ────────────────────────────────────────────────────────────────── */
 @media print { .no-print { display: none !important; } }
+
+/* ── Accessibilité clavier ─────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid #c4976a;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ── Animations micro-interactions ────────────────────────────────────────── */
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(16px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Skeleton ─────────────────────────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, #f4f2ee 25%, #e4e1db 50%, #f4f2ee 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+/* ── Toast ────────────────────────────────────────────────────────────────── */
+.toast-glass {
+  animation: slideUp 0.25s ease;
+}
+
+/* ── Touch targets minimum (WCAG 2.5.5) ──────────────────────────────────── */
+button, a, [role="button"] {
+  min-width: 44px;
+  min-height: 44px;
+}
+/* Exception : petits boutons décoratifs inline */
+.btn-inline {
+  min-width: unset;
+  min-height: unset;
+}
+
+/* ── Overflow horizontal global ───────────────────────────────────────────── */
+body {
+  overflow-x: hidden;
+}
+
+/* ── Glass surfaces (utilitaires CSS) ────────────────────────────────────── */
+.glass-surface {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 8px 32px rgba(13, 12, 10, 0.10), inset 0 1px 0 rgba(255,255,255,0.60);
+}

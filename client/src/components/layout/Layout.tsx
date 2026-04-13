@@ -43,7 +43,14 @@ export const Layout = ({ children, showHeader = true, showFooter }: LayoutProps)
 
   // ── Layout SaaS — Sidebar fixe + colonne principale ────────────────────────
   return (
-    <div className="h-screen flex overflow-hidden" data-role={dataRole} style={{ background: 'var(--bg-base)', fontFamily: 'var(--font-body)' }}>
+    <div className="h-screen flex overflow-hidden" data-role={dataRole} style={{
+      background: 'var(--bg-base)',
+      backgroundImage: `
+        radial-gradient(ellipse at 20% 20%, rgba(196,151,106,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 80%, rgba(26,50,112,0.05) 0%, transparent 60%)
+      `,
+      fontFamily: 'var(--font-body)',
+    }}>
       {/* Skip to content */}
       <a href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-lg focus:text-white focus:font-semibold focus:text-sm"

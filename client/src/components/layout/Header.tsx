@@ -29,10 +29,14 @@ export const Header = () => {
   const threadColor = user?.role === 'OWNER' ? ownerColor : tenantColor
 
   useEffect(() => {
-    if (hasSidebar) return
-    const onScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
+    const threshold = hasSidebar ? 8 : 20
+    const onScroll = () => setScrolled(window.scrollY > threshold)
+    // For dashboard, listen on the main scroll container
+    const target = hasSidebar
+      ? (document.getElementById('main-content') ?? window)
+      : window
+    target.addEventListener('scroll', onScroll, { passive: true })
+    return () => target.removeEventListener('scroll', onScroll)
   }, [hasSidebar])
 
   const handleLogout = () => {
@@ -51,11 +55,21 @@ export const Header = () => {
 
   const initials = `${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}`.toUpperCase() || '?'
 
-  // ── DASHBOARD TOPBAR — compact inline pill (non-fixed, dans le flux) ─────────
+  // ── DASHBOARD TOPBAR — sticky avec verre au scroll ───────────────────────
   if (hasSidebar) {
     return (
-      <header className="flex-shrink-0 z-40 flex items-center justify-end px-4 py-2.5 gap-2"
-        style={{ background: 'transparent' }}>
+      <header
+        className="flex-shrink-0 z-40 flex items-center justify-end px-4 py-2.5 gap-2"
+        style={{
+          position: 'sticky',
+          top: 0,
+          transition: 'background 0.25s ease, box-shadow 0.25s ease, backdrop-filter 0.25s ease',
+          background: scrolled ? BAI.glassLight : 'transparent',
+          backdropFilter: scrolled ? BAI.glassBlur : 'none',
+          WebkitBackdropFilter: scrolled ? BAI.glassBlur : 'none',
+          borderBottom: scrolled ? `1px solid ${BAI.glassBorder}` : '1px solid transparent',
+          boxShadow: scrolled ? BAI.glassShadow : 'none',
+        }}>
 
         {/* Mobile hamburger */}
         <button onClick={toggleSidebar}
@@ -153,9 +167,12 @@ export const Header = () => {
 
   // ── PUBLIC HEADER ──────────────────────────────────────────────────────────
   const publicHeaderStyle: React.CSSProperties = {
-    background: scrolled ? 'rgba(255,255,255,0.97)' : 'transparent',
-    borderBottom: scrolled ? `1px solid ${BAI.border}` : '1px solid transparent',
-    transition: 'background 0.25s ease, border-color 0.25s ease',
+    background: scrolled ? BAI.glassLight : 'transparent',
+    backdropFilter: scrolled ? BAI.glassBlur : 'none',
+    WebkitBackdropFilter: scrolled ? BAI.glassBlur : 'none',
+    borderBottom: scrolled ? `1px solid ${BAI.glassBorder}` : '1px solid transparent',
+    boxShadow: scrolled ? BAI.glassShadow : 'none',
+    transition: 'background 0.25s ease, border-color 0.25s ease, backdrop-filter 0.25s ease, box-shadow 0.25s ease',
   }
 
   return (

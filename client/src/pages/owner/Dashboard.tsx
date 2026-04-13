@@ -16,15 +16,13 @@ import {
 import type { Application } from '../../types/application.types'
 import type { Booking } from '../../types/booking.types'
 import { format, isAfter, parseISO } from 'date-fns'
-import { BAI } from '../../constants/bailio-tokens'
+import { BAI, glassStyle } from '../../constants/bailio-tokens'
 import { fr } from 'date-fns/locale'
 
 
 const cardBase: React.CSSProperties = {
-  background:   BAI.bgSurface,
-  border:       `1px solid ${BAI.border}`,
+  ...glassStyle('light', 'light'),
   borderRadius: 16,
-  boxShadow:    BAI.shadowMd,
 }
 
 export default function Dashboard() {
@@ -265,23 +263,29 @@ export default function Dashboard() {
               const inner = (
                 <div style={{
                   ...cardBase,
-                  borderTop: `3px solid ${BAI.owner}`,
                   padding: 20,
                   display: 'flex', flexDirection: 'column', height: '100%',
                   boxSizing: 'border-box', cursor: kpi.to ? 'pointer' : 'default',
                   transition: 'box-shadow 0.2s, transform 0.2s',
+                  position: 'relative', overflow: 'hidden',
                 }}
                   onMouseEnter={(e) => {
                     if (kpi.to) {
-                      (e.currentTarget as HTMLElement).style.boxShadow = BAI.shadowLg;
                       (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'
+                      ;(e.currentTarget as HTMLElement).style.boxShadow = '0 12px 40px rgba(13,12,10,0.13), inset 0 1px 0 rgba(255,255,255,0.70)'
                     }
                   }}
                   onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.boxShadow = BAI.shadowMd;
                     (e.currentTarget as HTMLElement).style.transform = 'none'
+                    ;(e.currentTarget as HTMLElement).style.boxShadow = BAI.glassShadow
                   }}
                 >
+                  {/* Accent bar */}
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+                    background: `linear-gradient(90deg, ${BAI.owner}, ${BAI.ownerBorder})`,
+                    borderRadius: '16px 16px 0 0',
+                  }} />
                   <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.inkFaint, marginBottom: 12 }}>
                     {kpi.label}
                   </p>
