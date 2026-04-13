@@ -1,6 +1,6 @@
 /**
- * TenantSidebar — Maison Design System
- * bg white · accent #1b5e3b (forest green) · DM Sans
+ * TenantSidebar — Bailio Design System
+ * Night theme · accent BAI.tenant · DM Sans
  */
 import { useEffect, useState } from 'react'
 import { NavLink, Link, useLocation } from 'react-router-dom'
@@ -14,33 +14,20 @@ import { useAuth } from '../../hooks/useAuth'
 import { applicationService } from '../../services/application.service'
 import { dossierService } from '../../services/dossier.service'
 import { useNavigate } from 'react-router-dom'
-import { BailioLogo } from '../BailioLogo'
+import { BAI } from '../../constants/bailio-tokens'
 
 const REQUIRED_CATEGORIES = ['IDENTITE', 'EMPLOI', 'REVENUS', 'DOMICILE'] as const
-
-const S = {
-  bg:           '#ffffff',
-  border:       '#e4e1db',
-  tenant:       '#1b5e3b',
-  tenantLight:  '#edf7f2',
-  tenantBorder: '#9fd4ba',
-  caramel:      '#c4976a',
-  ink:          '#0d0c0a',
-  inkMid:       '#5a5754',
-  inkFaint:     '#9e9b96',
-  bgMuted:      '#f4f2ee',
-}
 
 function SectionLabel({ label }: { label: string }) {
   return (
     <p className="px-4 pt-5 pb-1 select-none"
       style={{
-        fontFamily: 'var(--font-body)',
+        fontFamily: BAI.fontBody,
         fontSize: '10px',
         fontWeight: 500,
         letterSpacing: '0.14em',
         textTransform: 'uppercase' as const,
-        color: S.inkFaint,
+        color: 'rgba(255,255,255,0.35)',
       }}>
       {label}
     </p>
@@ -61,28 +48,28 @@ function NavItem({
       className="mx-3 flex items-center gap-3 px-3 py-[7px] rounded-lg transition-all duration-100"
       aria-current={active ? 'page' : undefined}
       style={active ? {
-        background: S.tenantLight,
-        color: S.tenant,
+        background: 'rgba(27,94,59,0.20)',
+        color: BAI.tenant,
         fontWeight: 600,
-        borderLeft: `2px solid ${S.tenant}`,
+        borderLeft: `3px solid ${BAI.tenant}`,
         paddingLeft: 10,
-        fontFamily: 'var(--font-body)',
+        fontFamily: BAI.fontBody,
         fontSize: '13px',
       } : {
-        color: S.inkMid,
+        color: 'rgba(255,255,255,0.70)',
         fontWeight: 400,
-        borderLeft: '2px solid transparent',
+        borderLeft: '3px solid transparent',
         paddingLeft: 10,
-        fontFamily: 'var(--font-body)',
+        fontFamily: BAI.fontBody,
         fontSize: '13px',
       }}
-      onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = S.bgMuted }}
+      onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = BAI.nightHover }}
       onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = '' }}>
       <Icon className="w-4 h-4 flex-shrink-0" />
       <span className="flex-1 truncate">{label}</span>
       {badge !== undefined && badge > 0 && (
         <span className="text-[10px] font-semibold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1"
-          style={{ background: S.caramel, color: '#ffffff' }}>
+          style={{ background: BAI.caramel, color: '#ffffff' }}>
           {badge > 99 ? '99+' : badge}
         </span>
       )}
@@ -117,35 +104,34 @@ export function TenantSidebar() {
   const handleLogout = () => { logout(); navigate('/') }
 
   const dossierColor =
-    dossierPercent >= 80 ? S.tenant
-    : dossierPercent >= 50 ? '#92400e'
-    : '#9b1c1c'
+    dossierPercent >= 80 ? BAI.tenantBorder
+    : dossierPercent >= 50 ? BAI.caramel
+    : '#ef4444'
 
   const Content = () => (
-    <div className="flex flex-col h-full" style={{ fontFamily: 'var(--font-body)' }}>
+    <div className="flex flex-col h-full" style={{ fontFamily: BAI.fontBody }}>
 
       {/* Logo */}
       <div className="px-5 pt-5 pb-4 flex-shrink-0">
         <Link to="/" onClick={closeMobile} className="hover:opacity-75 transition-opacity block">
           <div className="flex items-center gap-2 mb-1">
-            <BailioLogo size={28} />
             <span style={{
-              fontFamily: 'var(--font-display)',
+              fontFamily: BAI.fontDisplay,
               fontSize: '24px',
               fontWeight: 700,
               fontStyle: 'italic',
-              color: S.tenant,
+              color: BAI.caramel,
               letterSpacing: '-0.02em',
               lineHeight: 1,
             }}>
-              Bailio
+              bailio
             </span>
           </div>
-          <p className="text-[10px]" style={{ color: S.inkFaint, fontFamily: 'var(--font-body)' }}>Espace locataire</p>
+          <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: BAI.fontBody }}>Espace locataire</p>
         </Link>
       </div>
 
-      <div className="mx-4 mb-1" style={{ height: 1, background: S.border }} />
+      <div className="mx-4 mb-1" style={{ height: 1, background: BAI.nightBorder }} />
 
       {/* Navigation */}
       <nav role="navigation" aria-label="Navigation principale" className="flex-1 overflow-y-auto py-1.5 scrollbar-thin">
@@ -174,43 +160,43 @@ export function TenantSidebar() {
 
       {/* Dossier progress */}
       {dossierPercent < 100 && (
-        <div className="mx-4 mb-3 px-3 py-2.5 rounded-lg" style={{ background: S.bgMuted, border: `1px solid ${S.border}` }}>
+        <div className="mx-4 mb-3 px-3 py-2.5 rounded-lg" style={{ background: BAI.nightHover, border: `1px solid ${BAI.nightBorder}` }}>
           <div className="flex items-center justify-between mb-1.5">
-            <span style={{ color: S.inkFaint, fontSize: '10px', fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase' as const }}>Dossier complété</span>
-            <span style={{ color: dossierColor, fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-display)' }}>{dossierPercent}%</span>
+            <span style={{ color: 'rgba(255,255,255,0.40)', fontSize: '10px', fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase' as const }}>Dossier complété</span>
+            <span style={{ color: dossierColor, fontSize: '11px', fontWeight: 600, fontFamily: BAI.fontDisplay }}>{dossierPercent}%</span>
           </div>
-          <div className="w-full h-[3px] rounded-full overflow-hidden" style={{ background: '#e4e1db' }}>
+          <div className="w-full h-[3px] rounded-full overflow-hidden" style={{ background: BAI.nightBorder }}>
             <div className="h-full rounded-full transition-all duration-700"
               style={{ width: `${dossierPercent}%`, backgroundColor: dossierColor }} />
           </div>
         </div>
       )}
 
-      <div className="mx-4 mt-1" style={{ height: 1, background: S.border }} />
+      <div className="mx-4 mt-1" style={{ height: 1, background: BAI.nightBorder }} />
 
       {/* Profil */}
       <div className="p-4 flex-shrink-0">
         <div className="flex items-center gap-2.5 mb-3">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold flex-shrink-0"
-            style={{ background: S.tenantLight, color: S.tenant }}>
+            style={{ background: BAI.tenantLight, color: BAI.tenant }}>
             {initials}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[12px] font-semibold truncate leading-tight" style={{ color: S.ink }}>
+            <p className="text-[12px] font-semibold truncate leading-tight" style={{ color: 'rgba(255,255,255,0.90)' }}>
               {user?.firstName} {user?.lastName}
             </p>
-            <p className="text-[10px] leading-tight" style={{ color: S.inkFaint }}>Locataire</p>
+            <p className="text-[10px] leading-tight" style={{ color: 'rgba(255,255,255,0.40)' }}>Locataire</p>
           </div>
-          <button onClick={closeMobile} className="md:hidden p-1 rounded-md" style={{ color: S.inkFaint }} aria-label="Fermer">
+          <button onClick={closeMobile} className="md:hidden p-1 rounded-md" style={{ color: 'rgba(255,255,255,0.40)' }} aria-label="Fermer">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <button onClick={handleLogout}
           className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] transition-all"
-          style={{ color: S.inkFaint }}
+          style={{ color: 'rgba(255,255,255,0.50)' }}
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#fef2f2'; (e.currentTarget as HTMLElement).style.color = '#9b1c1c' }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = S.inkFaint }}>
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.50)' }}>
           <LogOut className="w-3.5 h-3.5" />
           <span>Déconnexion</span>
         </button>
@@ -219,8 +205,8 @@ export function TenantSidebar() {
   )
 
   const sidebarStyle = {
-    background: S.bg,
-    borderRight: `1px solid ${S.border}`,
+    background: BAI.night,
+    borderRight: `1px solid ${BAI.nightBorder}`,
   }
 
   return (

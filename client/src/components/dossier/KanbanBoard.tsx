@@ -30,6 +30,7 @@ import {
 import { useState } from 'react'
 import type { DocFamily } from '../../utils/DocumentIntelligence'
 import { FAMILY_LABELS, FAMILY_COLORS } from '../../utils/DocumentIntelligence'
+import { BAI } from '../../constants/bailio-tokens'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -103,11 +104,11 @@ function CardContent({
 } & React.HTMLAttributes<HTMLDivElement>) {
   const [logsOpen, setLogsOpen] = useState(false)
 
-  const riskColor =
-    entry.hasHighRisk ? 'border-red-200' :
-    entry.hasMediumRisk ? 'border-amber-200' :
-    entry.phase === 'done' ? 'border-emerald-200' :
-    'border-[#e4e1db]'
+  const riskBorder =
+    entry.hasHighRisk ? BAI.errorLight :
+    entry.hasMediumRisk ? BAI.caramelBorder :
+    entry.phase === 'done' ? BAI.tenantBorder :
+    BAI.border
 
   const confidencePct = Math.min(100, Math.round(entry.confidence))
   const confColor =
@@ -120,8 +121,12 @@ function CardContent({
       layout
       initial={isDragging ? undefined : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`rounded-xl border bg-white cursor-grab active:cursor-grabbing select-none ${riskColor} ${isDragging ? 'shadow-2xl scale-105' : 'shadow-sm'}`}
-      style={{ transition: isDragging ? 'none' : undefined }}
+      className={`rounded-xl cursor-grab active:cursor-grabbing select-none ${isDragging ? 'shadow-2xl scale-105' : 'shadow-sm'}`}
+      style={{
+        transition: isDragging ? 'none' : undefined,
+        background: BAI.bgSurface,
+        border: `1px solid ${riskBorder}`,
+      }}
     >
       {/* Drag handle + file info */}
       <div className="flex items-center gap-2 px-3 pt-3 pb-2" {...dragProps}>
@@ -155,9 +160,11 @@ function CardContent({
             </span>
           )}
           {entry.identityLabel && (
-            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-              entry.mrzFound ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-600'
-            }`}>
+            <span style={{
+              fontSize: 10, padding: '2px 6px', borderRadius: 999, fontWeight: 500,
+              background: entry.mrzFound ? BAI.successLight : BAI.ownerLight,
+              color: entry.mrzFound ? BAI.success : BAI.owner,
+            }}>
               {entry.identityLabel}
             </span>
           )}
@@ -167,32 +174,32 @@ function CardContent({
       {/* Risk / QR / OCR badges */}
       <div className="px-3 pb-2 flex items-center gap-1.5 flex-wrap">
         {entry.hasHighRisk && (
-          <span className="inline-flex items-center gap-0.5 text-[10px] text-red-600 bg-red-50 px-1.5 py-0.5 rounded-full">
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 10, padding: '2px 6px', borderRadius: 999, background: BAI.errorLight, color: BAI.error }}>
             <ShieldAlert className="w-2.5 h-2.5" /> Suspect
           </span>
         )}
         {entry.hasMediumRisk && !entry.hasHighRisk && (
-          <span className="inline-flex items-center gap-0.5 text-[10px] text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full">
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 10, padding: '2px 6px', borderRadius: 999, background: BAI.warningLight, color: BAI.warning }}>
             <AlertTriangle className="w-2.5 h-2.5" /> À vérifier
           </span>
         )}
         {!entry.hasHighRisk && !entry.hasMediumRisk && entry.phase === 'done' && (
-          <span className="inline-flex items-center gap-0.5 text-[10px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 10, padding: '2px 6px', borderRadius: 999, background: BAI.successLight, color: BAI.success }}>
             <ShieldCheck className="w-2.5 h-2.5" /> OK
           </span>
         )}
         {entry.hasQrCode && (
-          <span className="inline-flex items-center gap-0.5 text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full">
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 10, padding: '2px 6px', borderRadius: 999, background: BAI.ownerLight, color: BAI.owner }}>
             <QrCode className="w-2.5 h-2.5" /> QR
           </span>
         )}
         {entry.ocrUsed && (
-          <span className="inline-flex items-center gap-0.5 text-[10px] text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded-full">
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 10, padding: '2px 6px', borderRadius: 999, background: '#f5f3ff', color: '#7c3aed' }}>
             <Cpu className="w-2.5 h-2.5" /> OCR
           </span>
         )}
         {entry.phase === 'error' && (
-          <span className="inline-flex items-center gap-0.5 text-[10px] text-red-600 bg-red-50 px-1.5 py-0.5 rounded-full">
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 10, padding: '2px 6px', borderRadius: 999, background: BAI.errorLight, color: BAI.error }}>
             <FileX className="w-2.5 h-2.5" /> Erreur
           </span>
         )}
@@ -222,17 +229,12 @@ function CardContent({
                   {entry.scanLogs.map((log, i) => (
                     <p
                       key={i}
-                      className={
-                        log.startsWith('[OK]')   ? 'text-emerald-600' :
-                        log.startsWith('[WARN]') ? 'text-amber-600'   :
-                        log.startsWith('[ERR]')  ? 'text-red-600'     :
-                        ''
-                      }
-                      style={
-                        !log.startsWith('[OK]') && !log.startsWith('[WARN]') && !log.startsWith('[ERR]')
-                          ? { color: '#9e9b96' }
-                          : undefined
-                      }
+                      style={{
+                        color: log.startsWith('[OK]')   ? BAI.success :
+                               log.startsWith('[WARN]') ? BAI.warning :
+                               log.startsWith('[ERR]')  ? BAI.error :
+                               BAI.inkFaint,
+                      }}
                     >
                       {log}
                     </p>
@@ -266,7 +268,7 @@ function DroppableColumn({
       ref={setNodeRef}
       className={`rounded-2xl border-2 transition-colors duration-150 min-h-[120px] flex flex-col ${
         isOver
-          ? `border-dashed ${colors.border.replace('border', 'border-2')} bg-opacity-30`
+          ? `border-dashed ${colors.border.replace('border', 'border-2')}`
           : 'border-transparent'
       }`}
       style={{

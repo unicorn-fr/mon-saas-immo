@@ -17,38 +17,17 @@ import { DossierReviewModal } from '../../components/document/DossierReviewModal
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import { BAI } from '../../constants/bailio-tokens'
 
 const SERVER_BASE =
   (import.meta.env.VITE_API_URL as string | undefined)?.replace('/api/v1', '') ?? 'http://localhost:5000'
 
 // ─── Maison tokens ────────────────────────────────────────────────────────────
 
-const M = {
-  bg:           '#fafaf8',
-  surface:      '#ffffff',
-  muted:        '#f4f2ee',
-  inputBg:      '#f8f7f4',
-  ink:          '#0d0c0a',
-  inkMid:       '#5a5754',
-  inkFaint:     '#9e9b96',
-  caramel:      '#c4976a',
-  caramelLight: '#fdf5ec',
-  owner:        '#1a3270',
-  ownerLight:   '#eaf0fb',
-  ownerBorder:  '#b8ccf0',
-  border:       '#e4e1db',
-  borderMid:    '#ccc9c3',
-  danger:       '#9b1c1c',
-  dangerBg:     '#fef2f2',
-  warning:      '#92400e',
-  warningBg:    '#fdf5ec',
-  success:      '#1b5e3b',
-  successBg:    '#edf7f2',
-}
 
 const cardStyle: React.CSSProperties = {
-  background: M.surface,
-  border: `1px solid ${M.border}`,
+  background: BAI.bgSurface,
+  border: `1px solid ${BAI.border}`,
   borderRadius: 12,
   boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
 }
@@ -56,12 +35,12 @@ const cardStyle: React.CSSProperties = {
 // ─── Score badge ─────────────────────────────────────────────────────────────
 
 function ScoreBadge({ score }: { score: number }) {
-  const strokeColor = score >= 70 ? M.success : score >= 40 ? M.caramel : M.danger
+  const strokeColor = score >= 70 ? BAI.success : score >= 40 ? BAI.caramel : BAI.error
   return (
     <div className="flex flex-col items-center gap-0.5 flex-shrink-0">
       <div className="relative w-10 h-10">
         <svg className="w-10 h-10 -rotate-90" viewBox="0 0 40 40">
-          <circle cx="20" cy="20" r="16" strokeWidth="4" fill="none" stroke={M.border} />
+          <circle cx="20" cy="20" r="16" strokeWidth="4" fill="none" stroke={BAI.border} />
           <circle
             cx="20" cy="20" r="16" strokeWidth="4" fill="none"
             style={{
@@ -80,7 +59,7 @@ function ScoreBadge({ score }: { score: number }) {
           {score}
         </span>
       </div>
-      <span style={{ fontSize: 10, color: M.inkFaint, fontFamily: "'DM Sans', system-ui, sans-serif" }}>/100</span>
+      <span style={{ fontSize: 10, color: BAI.inkFaint, fontFamily: "'DM Sans', system-ui, sans-serif" }}>/100</span>
     </div>
   )
 }
@@ -95,10 +74,10 @@ const STATUS_LABEL: Record<ApplicationStatus, string> = {
 }
 
 const STATUS_STYLE: Record<ApplicationStatus, React.CSSProperties> = {
-  PENDING:   { background: M.warningBg, border: `1px solid #e8c98b`, color: M.warning },
-  APPROVED:  { background: M.ownerLight, border: `1px solid ${M.ownerBorder}`, color: M.owner },
-  REJECTED:  { background: M.dangerBg, border: `1px solid #f5c6c6`, color: M.danger },
-  WITHDRAWN: { background: M.muted, border: `1px solid ${M.border}`, color: M.inkFaint },
+  PENDING:   { background: BAI.warningLight, border: `1px solid #e8c98b`, color: BAI.warning },
+  APPROVED:  { background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, color: BAI.owner },
+  REJECTED:  { background: BAI.errorLight, border: `1px solid #f5c6c6`, color: BAI.error },
+  WITHDRAWN: { background: BAI.bgMuted, border: `1px solid ${BAI.border}`, color: BAI.inkFaint },
 }
 
 // ─── Single application card ──────────────────────────────────────────────────
@@ -141,8 +120,8 @@ function ApplicationCard({
         <div
           className="flex items-center justify-center flex-shrink-0 rounded-full w-9 h-9 text-sm font-bold"
           style={{
-            background: M.ownerLight,
-            color: M.owner,
+            background: BAI.ownerLight,
+            color: BAI.owner,
             fontFamily: "'DM Sans', system-ui, sans-serif",
           }}
         >
@@ -155,7 +134,7 @@ function ApplicationCard({
           <div className="flex items-center gap-2 flex-wrap">
             <span
               className="font-semibold text-sm"
-              style={{ color: M.ink, fontFamily: "'DM Sans', system-ui, sans-serif" }}
+              style={{ color: BAI.ink, fontFamily: "'DM Sans', system-ui, sans-serif" }}
             >
               {tenant.firstName} {tenant.lastName}
             </span>
@@ -168,7 +147,7 @@ function ApplicationCard({
             {app.hasGuarantor && (
               <span
                 className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center"
-                style={{ background: M.ownerLight, border: `1px solid ${M.ownerBorder}`, color: M.owner }}
+                style={{ background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, color: BAI.owner }}
               >
                 Garant {app.guarantorType}
               </span>
@@ -176,7 +155,7 @@ function ApplicationCard({
           </div>
           <div
             className="text-xs mt-0.5"
-            style={{ color: M.inkFaint, fontFamily: "'DM Sans', system-ui, sans-serif" }}
+            style={{ color: BAI.inkFaint, fontFamily: "'DM Sans', system-ui, sans-serif" }}
           >
             {tenant.email} · {format(new Date(app.createdAt), 'd MMM yyyy', { locale: fr })}
           </div>
@@ -187,14 +166,14 @@ function ApplicationCard({
             onClick={() => onOpenDossier(tenant.id, `${tenant.firstName ?? ''} ${tenant.lastName ?? ''}`.trim())}
             className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold transition-colors"
             style={{
-              background: M.ownerLight,
-              border: `1px solid ${M.ownerBorder}`,
-              color: M.owner,
+              background: BAI.ownerLight,
+              border: `1px solid ${BAI.ownerBorder}`,
+              color: BAI.owner,
               borderRadius: 8,
               fontFamily: "'DM Sans', system-ui, sans-serif",
             }}
             onMouseEnter={(e) => (e.currentTarget.style.background = '#d8e8fa')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = M.ownerLight)}
+            onMouseLeave={(e) => (e.currentTarget.style.background = BAI.ownerLight)}
           >
             <FolderOpen className="w-3 h-3" />
             Dossier
@@ -206,12 +185,12 @@ function ApplicationCard({
                 disabled={loading}
                 className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-50"
                 style={{
-                  background: M.owner,
+                  background: BAI.owner,
                   borderRadius: 8,
                   fontFamily: "'DM Sans', system-ui, sans-serif",
                 }}
                 onMouseEnter={(e) => !loading && (e.currentTarget.style.background = '#142860')}
-                onMouseLeave={(e) => !loading && (e.currentTarget.style.background = M.owner)}
+                onMouseLeave={(e) => !loading && (e.currentTarget.style.background = BAI.owner)}
               >
                 {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
                 Approuver
@@ -221,14 +200,14 @@ function ApplicationCard({
                 disabled={loading}
                 className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50"
                 style={{
-                  background: M.dangerBg,
+                  background: BAI.errorLight,
                   border: `1px solid #f5c6c6`,
-                  color: M.danger,
+                  color: BAI.error,
                   borderRadius: 8,
                   fontFamily: "'DM Sans', system-ui, sans-serif",
                 }}
                 onMouseEnter={(e) => !loading && (e.currentTarget.style.background = '#fde8e8')}
-                onMouseLeave={(e) => !loading && (e.currentTarget.style.background = M.dangerBg)}
+                onMouseLeave={(e) => !loading && (e.currentTarget.style.background = BAI.errorLight)}
               >
                 <XCircle className="w-3 h-3" />
                 Refuser
@@ -238,8 +217,8 @@ function ApplicationCard({
           <button
             onClick={() => setExpanded(!expanded)}
             className="p-1.5 transition-colors"
-            style={{ color: M.inkFaint, borderRadius: 8 }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
+            style={{ color: BAI.inkFaint, borderRadius: 8 }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = BAI.bgMuted)}
             onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
           >
             {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -255,9 +234,9 @@ function ApplicationCard({
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
-            style={{ borderTop: `1px solid ${M.border}` }}
+            style={{ borderTop: `1px solid ${BAI.border}` }}
           >
-            <div className="p-4 space-y-3" style={{ background: M.muted }}>
+            <div className="p-4 space-y-3" style={{ background: BAI.bgMuted }}>
               {details.length > 0 && (
                 <div>
                   <p
@@ -265,7 +244,7 @@ function ApplicationCard({
                     style={{
                       fontSize: 11,
                       fontWeight: 600,
-                      color: M.inkFaint,
+                      color: BAI.inkFaint,
                       fontFamily: "'DM Sans', system-ui, sans-serif",
                       letterSpacing: '0.06em',
                     }}
@@ -278,10 +257,10 @@ function ApplicationCard({
                         key={d.label}
                         className="rounded-xl p-2.5 text-xs"
                         style={
-                          d.status === 'pass'    ? { background: M.successBg, border: `1px solid #a8d5bc`, color: M.success } :
-                          d.status === 'partial' ? { background: M.warningBg, border: `1px solid #e8c98b`, color: M.warning } :
-                          d.status === 'fail'    ? { background: M.dangerBg,  border: `1px solid #f5c6c6`, color: M.danger  } :
-                                                   { background: M.muted,     border: `1px solid ${M.border}`, color: M.inkMid }
+                          d.status === 'pass'    ? { background: BAI.successLight, border: `1px solid #a8d5bc`, color: BAI.success } :
+                          d.status === 'partial' ? { background: BAI.warningLight, border: `1px solid #e8c98b`, color: BAI.warning } :
+                          d.status === 'fail'    ? { background: BAI.errorLight,  border: `1px solid #f5c6c6`, color: BAI.error  } :
+                                                   { background: BAI.bgMuted,     border: `1px solid ${BAI.border}`, color: BAI.inkMid }
                         }
                       >
                         <div className="flex justify-between mb-0.5">
@@ -302,7 +281,7 @@ function ApplicationCard({
                     style={{
                       fontSize: 11,
                       fontWeight: 600,
-                      color: M.inkFaint,
+                      color: BAI.inkFaint,
                       fontFamily: "'DM Sans', system-ui, sans-serif",
                       letterSpacing: '0.06em',
                     }}
@@ -312,9 +291,9 @@ function ApplicationCard({
                   <p
                     className="text-sm rounded-xl p-3"
                     style={{
-                      background: M.surface,
-                      border: `1px solid ${M.border}`,
-                      color: M.inkMid,
+                      background: BAI.bgSurface,
+                      border: `1px solid ${BAI.border}`,
+                      color: BAI.inkMid,
                       fontFamily: "'DM Sans', system-ui, sans-serif",
                     }}
                   >
@@ -326,7 +305,7 @@ function ApplicationCard({
               {app.status === 'APPROVED' && (
                 <div
                   className="flex items-center gap-2 rounded-xl p-3 text-sm"
-                  style={{ background: M.successBg, border: `1px solid #a8d5bc`, color: M.success }}
+                  style={{ background: BAI.successLight, border: `1px solid #a8d5bc`, color: BAI.success }}
                 >
                   <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
                   Ce candidat peut maintenant réserver un créneau de visite.
@@ -382,41 +361,41 @@ function PropertyGroup({
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center gap-4 p-4 text-left transition-opacity hover:opacity-90"
-        style={{ background: M.surface }}
+        style={{ background: BAI.bgSurface }}
       >
         {imgSrc ? (
           <img
             src={imgSrc}
             alt={property.title}
             className="w-14 h-14 rounded-xl object-cover flex-shrink-0"
-            style={{ border: `1px solid ${M.border}` }}
+            style={{ border: `1px solid ${BAI.border}` }}
           />
         ) : (
           <div
             className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: M.ownerLight }}
+            style={{ background: BAI.ownerLight }}
           >
-            <Building2 className="w-6 h-6" style={{ color: M.owner }} />
+            <Building2 className="w-6 h-6" style={{ color: BAI.owner }} />
           </div>
         )}
 
         <div className="flex-1 min-w-0 text-left">
           <h3
             className="font-semibold text-sm truncate"
-            style={{ color: M.ink, fontFamily: "'DM Sans', system-ui, sans-serif" }}
+            style={{ color: BAI.ink, fontFamily: "'DM Sans', system-ui, sans-serif" }}
           >
             {property.title}
           </h3>
           <div className="flex items-center gap-3 mt-0.5 flex-wrap">
             <span
               className="text-xs flex items-center gap-1"
-              style={{ color: M.inkFaint, fontFamily: "'DM Sans', system-ui, sans-serif" }}
+              style={{ color: BAI.inkFaint, fontFamily: "'DM Sans', system-ui, sans-serif" }}
             >
               <MapPin className="w-3 h-3" />{property.city}
             </span>
             <span
               className="text-xs flex items-center gap-1"
-              style={{ color: M.inkFaint, fontFamily: "'DM Sans', system-ui, sans-serif" }}
+              style={{ color: BAI.inkFaint, fontFamily: "'DM Sans', system-ui, sans-serif" }}
             >
               <Euro className="w-3 h-3" />{property.price} €/mois
             </span>
@@ -427,7 +406,7 @@ function PropertyGroup({
           {pending > 0 && (
             <span
               className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center"
-              style={{ background: M.warningBg, border: `1px solid #e8c98b`, color: M.warning }}
+              style={{ background: BAI.warningLight, border: `1px solid #e8c98b`, color: BAI.warning }}
             >
               {pending} en attente
             </span>
@@ -435,20 +414,20 @@ function PropertyGroup({
           {approved > 0 && (
             <span
               className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center"
-              style={{ background: M.successBg, border: `1px solid #a8d5bc`, color: M.success }}
+              style={{ background: BAI.successLight, border: `1px solid #a8d5bc`, color: BAI.success }}
             >
               {approved} approuvé{approved > 1 ? 's' : ''}
             </span>
           )}
           <span
             className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center"
-            style={{ background: M.muted, border: `1px solid ${M.border}`, color: M.inkMid }}
+            style={{ background: BAI.bgMuted, border: `1px solid ${BAI.border}`, color: BAI.inkMid }}
           >
             {apps.length} dossier{apps.length > 1 ? 's' : ''}
           </span>
           {open
-            ? <ChevronUp className="w-4 h-4 ml-1 flex-shrink-0" style={{ color: M.inkFaint }} />
-            : <ChevronRight className="w-4 h-4 ml-1 flex-shrink-0" style={{ color: M.inkFaint }} />
+            ? <ChevronUp className="w-4 h-4 ml-1 flex-shrink-0" style={{ color: BAI.inkFaint }} />
+            : <ChevronRight className="w-4 h-4 ml-1 flex-shrink-0" style={{ color: BAI.inkFaint }} />
           }
         </div>
       </button>
@@ -464,7 +443,7 @@ function PropertyGroup({
           >
             <div
               className="p-3 space-y-2"
-              style={{ borderTop: `1px solid ${M.border}`, background: M.muted }}
+              style={{ borderTop: `1px solid ${BAI.border}`, background: BAI.bgMuted }}
             >
               {sorted.map((app) => (
                 <ApplicationCard key={app.id} app={app} onDecision={onDecision} onOpenDossier={onOpenDossier} />
@@ -557,7 +536,7 @@ export default function ApplicationManagement() {
       )}
       <div
         className="min-h-screen px-4 py-6 sm:px-6 lg:px-8 lg:py-8"
-        style={{ background: M.bg, fontFamily: "'DM Sans', system-ui, sans-serif" }}
+        style={{ background: BAI.bgBase, fontFamily: "'DM Sans', system-ui, sans-serif" }}
       >
         <div className="max-w-4xl mx-auto">
 
@@ -566,7 +545,7 @@ export default function ApplicationManagement() {
             <div>
               <p
                 className="uppercase tracking-widest mb-1"
-                style={{ fontSize: 10, color: M.inkFaint, letterSpacing: '0.12em' }}
+                style={{ fontSize: 10, color: BAI.inkFaint, letterSpacing: '0.12em' }}
               >
                 Propriétaire
               </p>
@@ -576,14 +555,14 @@ export default function ApplicationManagement() {
                   fontWeight: 700,
                   fontStyle: 'italic',
                   fontSize: 40,
-                  color: M.ink,
+                  color: BAI.ink,
                   lineHeight: 1.1,
                   margin: 0,
                 }}
               >
                 Candidatures
               </h1>
-              <p className="mt-1.5" style={{ fontSize: 14, color: M.inkMid }}>
+              <p className="mt-1.5" style={{ fontSize: 14, color: BAI.inkMid }}>
                 {counts.total} dossier{counts.total !== 1 ? 's' : ''} · {counts.pending} en attente
                 {groups.length > 0 && ` · ${groups.length} annonce${groups.length > 1 ? 's' : ''}`}
               </p>
@@ -592,13 +571,13 @@ export default function ApplicationManagement() {
               onClick={load}
               className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold transition-colors"
               style={{
-                background: M.surface,
-                border: `1px solid ${M.border}`,
-                color: M.inkMid,
+                background: BAI.bgSurface,
+                border: `1px solid ${BAI.border}`,
+                color: BAI.inkMid,
                 borderRadius: 8,
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = M.surface)}
+              onMouseEnter={(e) => (e.currentTarget.style.background = BAI.bgMuted)}
+              onMouseLeave={(e) => (e.currentTarget.style.background = BAI.bgSurface)}
             >
               <RotateCcw className="w-3.5 h-3.5" /> Actualiser
             </button>
@@ -611,25 +590,25 @@ export default function ApplicationManagement() {
                 label: 'En attente',
                 value: counts.pending,
                 icon: <Clock className="w-5 h-5" />,
-                bg: M.warningBg,
+                bg: BAI.warningLight,
                 border: '#e8c98b',
-                color: M.warning,
+                color: BAI.warning,
               },
               {
                 label: 'Approuvées',
                 value: counts.approved,
                 icon: <CheckCircle2 className="w-5 h-5" />,
-                bg: M.successBg,
+                bg: BAI.successLight,
                 border: '#a8d5bc',
-                color: M.success,
+                color: BAI.success,
               },
               {
                 label: 'Refusées',
                 value: counts.rejected,
                 icon: <XCircle className="w-5 h-5" />,
-                bg: M.dangerBg,
+                bg: BAI.errorLight,
                 border: '#f5c6c6',
-                color: M.danger,
+                color: BAI.error,
               },
             ].map(({ label, value, icon, bg, border, color }) => (
               <div
@@ -646,11 +625,11 @@ export default function ApplicationManagement() {
                 <div>
                   <div
                     className="text-xl font-bold"
-                    style={{ color: M.ink, fontFamily: "'DM Sans', system-ui, sans-serif" }}
+                    style={{ color: BAI.ink, fontFamily: "'DM Sans', system-ui, sans-serif" }}
                   >
                     {value}
                   </div>
-                  <div style={{ fontSize: 12, color: M.inkFaint }}>{label}</div>
+                  <div style={{ fontSize: 12, color: BAI.inkFaint }}>{label}</div>
                 </div>
               </div>
             ))}
@@ -659,7 +638,7 @@ export default function ApplicationManagement() {
           {/* Filter tab bar */}
           <div
             className="flex mb-5"
-            style={{ borderBottom: `1px solid ${M.border}` }}
+            style={{ borderBottom: `1px solid ${BAI.border}` }}
           >
             {FILTERS.map(({ key, label, count }) => {
               const active = filter === key
@@ -669,8 +648,8 @@ export default function ApplicationManagement() {
                   onClick={() => setFilter(key)}
                   className="px-4 py-2.5 text-sm font-semibold transition-all"
                   style={{
-                    color: active ? M.owner : M.inkMid,
-                    borderBottom: active ? `2px solid ${M.owner}` : '2px solid transparent',
+                    color: active ? BAI.owner : BAI.inkMid,
+                    borderBottom: active ? `2px solid ${BAI.owner}` : '2px solid transparent',
                     background: 'transparent',
                     fontFamily: "'DM Sans', system-ui, sans-serif",
                     marginBottom: -1,
@@ -688,8 +667,8 @@ export default function ApplicationManagement() {
               className="flex items-center justify-center py-16 gap-2"
               style={{ ...cardStyle }}
             >
-              <Loader2 className="w-5 h-5 animate-spin" style={{ color: M.owner }} />
-              <span style={{ fontSize: 14, color: M.inkFaint }}>Chargement…</span>
+              <Loader2 className="w-5 h-5 animate-spin" style={{ color: BAI.owner }} />
+              <span style={{ fontSize: 14, color: BAI.inkFaint }}>Chargement…</span>
             </div>
           ) : groups.length === 0 ? (
             <div
@@ -698,22 +677,22 @@ export default function ApplicationManagement() {
             >
               <div
                 className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
-                style={{ background: M.ownerLight }}
+                style={{ background: BAI.ownerLight }}
               >
-                <Users className="w-7 h-7" style={{ color: M.owner }} />
+                <Users className="w-7 h-7" style={{ color: BAI.owner }} />
               </div>
               <p
                 style={{
                   fontFamily: "'Cormorant Garamond', Georgia, serif",
                   fontStyle: 'italic',
                   fontSize: 22,
-                  color: M.ink,
+                  color: BAI.ink,
                   marginBottom: 6,
                 }}
               >
                 {filter === 'ALL' ? 'Aucune candidature' : 'Aucun résultat'}
               </p>
-              <p style={{ fontSize: 13, color: M.inkMid }}>
+              <p style={{ fontSize: 13, color: BAI.inkMid }}>
                 {filter === 'ALL'
                   ? "Publiez vos annonces pour recevoir des dossiers."
                   : 'Aucune candidature dans cette catégorie.'}

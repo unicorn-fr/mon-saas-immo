@@ -26,35 +26,14 @@ import { propertyService } from '../../services/property.service'
 import { PROPERTY_TYPES, PROPERTY_STATUS, AMENITIES } from '../../types/property.types'
 import { Layout } from '../../components/layout/Layout'
 import toast from 'react-hot-toast'
+import { BAI } from '../../constants/bailio-tokens'
 
 // ─── Maison tokens ────────────────────────────────────────────────────────────
 
-const M = {
-  bg:           '#fafaf8',
-  surface:      '#ffffff',
-  muted:        '#f4f2ee',
-  inputBg:      '#f8f7f4',
-  ink:          '#0d0c0a',
-  inkMid:       '#5a5754',
-  inkFaint:     '#9e9b96',
-  caramel:      '#c4976a',
-  caramelLight: '#fdf5ec',
-  owner:        '#1a3270',
-  ownerLight:   '#eaf0fb',
-  ownerBorder:  '#b8ccf0',
-  border:       '#e4e1db',
-  borderMid:    '#ccc9c3',
-  danger:       '#9b1c1c',
-  dangerBg:     '#fef2f2',
-  warning:      '#92400e',
-  warningBg:    '#fdf5ec',
-  success:      '#1b5e3b',
-  successBg:    '#edf7f2',
-}
 
 const cardStyle: React.CSSProperties = {
-  background: M.surface,
-  border: `1px solid ${M.border}`,
+  background: BAI.bgSurface,
+  border: `1px solid ${BAI.border}`,
   borderRadius: 12,
   boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
   padding: 24,
@@ -150,11 +129,11 @@ export default function PropertyDetails() {
       <Layout>
         <div
           className="flex items-center justify-center min-h-screen"
-          style={{ background: M.bg }}
+          style={{ background: BAI.bgBase }}
         >
           <div
             className="animate-spin rounded-full h-10 w-10 border-b-2"
-            style={{ borderColor: M.owner }}
+            style={{ borderColor: BAI.owner }}
           />
         </div>
       </Layout>
@@ -167,7 +146,7 @@ export default function PropertyDetails() {
       <Layout>
         <div
           className="min-h-screen flex items-center justify-center"
-          style={{ background: M.bg, fontFamily: "'DM Sans', system-ui, sans-serif" }}
+          style={{ background: BAI.bgBase, fontFamily: "'DM Sans', system-ui, sans-serif" }}
         >
           <div className="text-center">
             <h2
@@ -175,7 +154,7 @@ export default function PropertyDetails() {
               style={{
                 fontFamily: "'Cormorant Garamond', Georgia, serif",
                 fontStyle: 'italic',
-                color: M.ink,
+                color: BAI.ink,
               }}
             >
               Propriété introuvable
@@ -183,7 +162,7 @@ export default function PropertyDetails() {
             <Link
               to="/properties/owner/me"
               className="text-sm font-medium hover:opacity-70"
-              style={{ color: M.owner }}
+              style={{ color: BAI.owner }}
             >
               Retour à mes propriétés
             </Link>
@@ -200,12 +179,12 @@ export default function PropertyDetails() {
 
   // Status pill styles — Maison palette
   const statusPillStyles: Record<string, React.CSSProperties> = {
-    green:  { background: M.successBg,   color: M.success },
-    red:    { background: M.dangerBg,    color: M.danger  },
-    yellow: { background: M.warningBg,   color: M.warning },
-    amber:  { background: M.caramelLight, color: '#a0622a' },
-    blue:   { background: M.ownerLight,  color: M.owner   },
-    gray:   { background: M.muted,       color: M.inkMid  },
+    green:  { background: BAI.successLight,   color: BAI.success },
+    red:    { background: BAI.errorLight,    color: BAI.error  },
+    yellow: { background: BAI.warningLight,   color: BAI.warning },
+    amber:  { background: BAI.caramelLight, color: '#a0622a' },
+    blue:   { background: BAI.ownerLight,  color: BAI.owner   },
+    gray:   { background: BAI.bgMuted,       color: BAI.inkMid  },
   }
 
   const getStatusBadge = () => {
@@ -225,15 +204,15 @@ export default function PropertyDetails() {
     <Layout>
       <div
         className="min-h-screen"
-        style={{ background: M.bg, fontFamily: "'DM Sans', system-ui, sans-serif" }}
+        style={{ background: BAI.bgBase, fontFamily: "'DM Sans', system-ui, sans-serif" }}
       >
         {/* Top nav bar */}
-        <div style={{ background: M.surface, borderBottom: `1px solid ${M.border}` }}>
+        <div style={{ background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}` }}>
           <div className="container mx-auto px-4 py-4">
             <Link
               to="/properties/owner/me"
               className="inline-flex items-center gap-1.5 text-sm font-medium mb-3 hover:opacity-70 transition-opacity"
-              style={{ color: M.inkMid }}
+              style={{ color: BAI.inkMid }}
             >
               <ArrowLeft className="w-4 h-4" />
               Retour à mes propriétés
@@ -247,7 +226,7 @@ export default function PropertyDetails() {
                     fontWeight: 700,
                     fontStyle: 'italic',
                     fontSize: 32,
-                    color: M.ink,
+                    color: BAI.ink,
                     lineHeight: 1.15,
                   }}
                 >
@@ -255,14 +234,14 @@ export default function PropertyDetails() {
                 </h1>
                 <div className="flex items-center gap-3">
                   {getStatusBadge()}
-                  <span style={{ fontSize: 13, color: M.inkMid }}>{propertyType?.label}</span>
+                  <span style={{ fontSize: 13, color: BAI.inkMid }}>{propertyType?.label}</span>
                 </div>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => navigate(`/properties/${property.id}/edit`)}
                   className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white transition-all hover:-translate-y-px"
-                  style={{ background: M.owner, borderRadius: 8 }}
+                  style={{ background: BAI.owner, borderRadius: 8 }}
                 >
                   <Edit className="w-4 h-4" />
                   Modifier
@@ -272,7 +251,7 @@ export default function PropertyDetails() {
                     onClick={handlePublish}
                     disabled={isPublishing}
                     className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white transition-all hover:-translate-y-px disabled:opacity-50"
-                    style={{ background: M.success, borderRadius: 8 }}
+                    style={{ background: BAI.success, borderRadius: 8 }}
                   >
                     {isPublishing ? 'Publication...' : (
                       <>
@@ -287,9 +266,9 @@ export default function PropertyDetails() {
                   disabled={isDeleting}
                   className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold transition-all hover:-translate-y-px disabled:opacity-50"
                   style={{
-                    background: M.dangerBg,
+                    background: BAI.errorLight,
                     border: `1px solid #f5c6c6`,
-                    color: M.danger,
+                    color: BAI.error,
                     borderRadius: 8,
                   }}
                 >
@@ -311,12 +290,12 @@ export default function PropertyDetails() {
             <div
               className="p-4 flex items-start gap-3"
               style={{
-                background: M.dangerBg,
+                background: BAI.errorLight,
                 border: `1px solid #f5c6c6`,
                 borderRadius: 10,
               }}
             >
-              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: M.danger }} />
+              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: BAI.error }} />
               <p className="text-sm" style={{ color: '#7f1d1d' }}>{error}</p>
             </div>
           </div>
@@ -340,7 +319,7 @@ export default function PropertyDetails() {
               >
                 <div
                   className="relative aspect-video"
-                  style={{ background: M.muted }}
+                  style={{ background: BAI.bgMuted }}
                 >
                   <img
                     src={images[selectedImage]}
@@ -368,10 +347,10 @@ export default function PropertyDetails() {
                         className="aspect-square rounded-xl overflow-hidden transition-all"
                         style={{
                           border: selectedImage === index
-                            ? `2px solid ${M.owner}`
-                            : `2px solid ${M.border}`,
+                            ? `2px solid ${BAI.owner}`
+                            : `2px solid ${BAI.border}`,
                           boxShadow: selectedImage === index
-                            ? `0 0 0 2px ${M.ownerLight}`
+                            ? `0 0 0 2px ${BAI.ownerLight}`
                             : 'none',
                         }}
                       >
@@ -391,13 +370,13 @@ export default function PropertyDetails() {
               <div style={cardStyle}>
                 <p
                   className="uppercase tracking-widest mb-3"
-                  style={{ fontSize: 11, color: M.inkFaint, letterSpacing: '0.08em' }}
+                  style={{ fontSize: 11, color: BAI.inkFaint, letterSpacing: '0.08em' }}
                 >
                   Description
                 </p>
                 <p
                   className="whitespace-pre-line leading-relaxed"
-                  style={{ color: M.inkMid, fontSize: 14 }}
+                  style={{ color: BAI.inkMid, fontSize: 14 }}
                 >
                   {property.description}
                 </p>
@@ -407,22 +386,22 @@ export default function PropertyDetails() {
               <div style={cardStyle}>
                 <p
                   className="uppercase tracking-widest mb-4"
-                  style={{ fontSize: 11, color: M.inkFaint, letterSpacing: '0.08em' }}
+                  style={{ fontSize: 11, color: BAI.inkFaint, letterSpacing: '0.08em' }}
                 >
                   Caractéristiques
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {[
-                    { icon: <Bed className="w-5 h-5" style={{ color: M.owner }} />,    label: 'Chambres',      value: property.bedrooms },
-                    { icon: <Bath className="w-5 h-5" style={{ color: M.owner }} />,   label: 'Salles de bain', value: property.bathrooms },
-                    { icon: <Square className="w-5 h-5" style={{ color: M.owner }} />, label: 'Surface',       value: `${property.surface}m²` },
+                    { icon: <Bed className="w-5 h-5" style={{ color: BAI.owner }} />,    label: 'Chambres',      value: property.bedrooms },
+                    { icon: <Bath className="w-5 h-5" style={{ color: BAI.owner }} />,   label: 'Salles de bain', value: property.bathrooms },
+                    { icon: <Square className="w-5 h-5" style={{ color: BAI.owner }} />, label: 'Surface',       value: `${property.surface}m²` },
                     ...(property.floor !== null && property.floor !== undefined
-                      ? [{ icon: <Home className="w-5 h-5" style={{ color: M.owner }} />, label: 'Étage', value: property.floor }]
+                      ? [{ icon: <Home className="w-5 h-5" style={{ color: BAI.owner }} />, label: 'Étage', value: property.floor }]
                       : []),
                     {
                       icon: property.furnished
-                        ? <Check className="w-5 h-5" style={{ color: M.owner }} />
-                        : <X className="w-5 h-5" style={{ color: M.inkFaint }} />,
+                        ? <Check className="w-5 h-5" style={{ color: BAI.owner }} />
+                        : <X className="w-5 h-5" style={{ color: BAI.inkFaint }} />,
                       label: 'Meublé',
                       value: property.furnished ? 'Oui' : 'Non',
                     },
@@ -430,23 +409,23 @@ export default function PropertyDetails() {
                     <div key={label} className="flex items-center gap-3">
                       <div
                         className="w-10 h-10 rounded-xl flex items-center justify-center"
-                        style={{ background: M.ownerLight }}
+                        style={{ background: BAI.ownerLight }}
                       >
                         {icon}
                       </div>
                       <div>
-                        <p style={{ fontSize: 12, color: M.inkFaint }}>{label}</p>
-                        <p className="font-semibold" style={{ color: M.ink, fontSize: 14 }}>{value}</p>
+                        <p style={{ fontSize: 12, color: BAI.inkFaint }}>{label}</p>
+                        <p className="font-semibold" style={{ color: BAI.ink, fontSize: 14 }}>{value}</p>
                       </div>
                     </div>
                   ))}
                 </div>
 
                 {/* Features */}
-                <div className="mt-6 pt-6" style={{ borderTop: `1px solid ${M.border}` }}>
+                <div className="mt-6 pt-6" style={{ borderTop: `1px solid ${BAI.border}` }}>
                   <p
                     className="uppercase tracking-widest mb-3"
-                    style={{ fontSize: 11, color: M.inkFaint, letterSpacing: '0.08em' }}
+                    style={{ fontSize: 11, color: BAI.inkFaint, letterSpacing: '0.08em' }}
                   >
                     Équipements
                   </p>
@@ -459,10 +438,10 @@ export default function PropertyDetails() {
                     ].map(({ label, value }) => (
                       <div key={label} className="flex items-center gap-2">
                         {value
-                          ? <CheckCircle className="w-5 h-5 flex-shrink-0" style={{ color: M.success }} />
-                          : <XCircle    className="w-5 h-5 flex-shrink-0" style={{ color: M.borderMid }} />
+                          ? <CheckCircle className="w-5 h-5 flex-shrink-0" style={{ color: BAI.success }} />
+                          : <XCircle    className="w-5 h-5 flex-shrink-0" style={{ color: BAI.borderStrong }} />
                         }
-                        <span style={{ fontSize: 13, color: value ? M.ink : M.inkFaint }}>{label}</span>
+                        <span style={{ fontSize: 13, color: value ? BAI.ink : BAI.inkFaint }}>{label}</span>
                       </div>
                     ))}
                   </div>
@@ -470,10 +449,10 @@ export default function PropertyDetails() {
 
                 {/* Amenities */}
                 {property.amenities && property.amenities.length > 0 && (
-                  <div className="mt-6 pt-6" style={{ borderTop: `1px solid ${M.border}` }}>
+                  <div className="mt-6 pt-6" style={{ borderTop: `1px solid ${BAI.border}` }}>
                     <p
                       className="uppercase tracking-widest mb-3"
-                      style={{ fontSize: 11, color: M.inkFaint, letterSpacing: '0.08em' }}
+                      style={{ fontSize: 11, color: BAI.inkFaint, letterSpacing: '0.08em' }}
                     >
                       Autres équipements
                     </p>
@@ -485,9 +464,9 @@ export default function PropertyDetails() {
                             key={amenity}
                             className="px-3 py-1 rounded-full text-sm"
                             style={{
-                              background: M.muted,
-                              border: `1px solid ${M.border}`,
-                              color: M.inkMid,
+                              background: BAI.bgMuted,
+                              border: `1px solid ${BAI.border}`,
+                              color: BAI.inkMid,
                               fontSize: 12,
                             }}
                           >
@@ -504,21 +483,21 @@ export default function PropertyDetails() {
               <div style={cardStyle}>
                 <p
                   className="uppercase tracking-widest mb-4"
-                  style={{ fontSize: 11, color: M.inkFaint, letterSpacing: '0.08em' }}
+                  style={{ fontSize: 11, color: BAI.inkFaint, letterSpacing: '0.08em' }}
                 >
                   Localisation
                 </p>
                 <div className="flex items-start gap-3">
                   <div
                     className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: M.ownerLight }}
+                    style={{ background: BAI.ownerLight }}
                   >
-                    <MapPin className="w-5 h-5" style={{ color: M.owner }} />
+                    <MapPin className="w-5 h-5" style={{ color: BAI.owner }} />
                   </div>
                   <div>
-                    <p className="font-medium" style={{ color: M.ink }}>{property.address}</p>
-                    <p style={{ color: M.inkMid }}>{property.city}, {property.postalCode}</p>
-                    <p style={{ color: M.inkMid }}>{property.country}</p>
+                    <p className="font-medium" style={{ color: BAI.ink }}>{property.address}</p>
+                    <p style={{ color: BAI.inkMid }}>{property.city}, {property.postalCode}</p>
+                    <p style={{ color: BAI.inkMid }}>{property.country}</p>
                   </div>
                 </div>
               </div>
@@ -531,19 +510,19 @@ export default function PropertyDetails() {
               <div style={cardStyle}>
                 <p
                   className="uppercase tracking-widest mb-4"
-                  style={{ fontSize: 11, color: M.inkFaint, letterSpacing: '0.08em' }}
+                  style={{ fontSize: 11, color: BAI.inkFaint, letterSpacing: '0.08em' }}
                 >
                   Informations financières
                 </p>
                 <div className="space-y-3">
                   <div>
-                    <p style={{ fontSize: 12, color: M.inkFaint }}>Loyer mensuel</p>
+                    <p style={{ fontSize: 12, color: BAI.inkFaint }}>Loyer mensuel</p>
                     <p
                       style={{
                         fontFamily: "'Cormorant Garamond', Georgia, serif",
                         fontWeight: 700,
                         fontSize: 36,
-                        color: M.owner,
+                        color: BAI.owner,
                         lineHeight: 1.1,
                       }}
                     >
@@ -552,10 +531,10 @@ export default function PropertyDetails() {
                   </div>
                   {property.charges && property.charges > 0 && (
                     <div>
-                      <p style={{ fontSize: 12, color: M.inkFaint }}>Charges</p>
+                      <p style={{ fontSize: 12, color: BAI.inkFaint }}>Charges</p>
                       <p
                         className="text-lg font-semibold"
-                        style={{ color: M.ink }}
+                        style={{ color: BAI.ink }}
                       >
                         {property.charges} €
                       </p>
@@ -563,20 +542,20 @@ export default function PropertyDetails() {
                   )}
                   {property.deposit && property.deposit > 0 && (
                     <div>
-                      <p style={{ fontSize: 12, color: M.inkFaint }}>Dépôt de garantie</p>
+                      <p style={{ fontSize: 12, color: BAI.inkFaint }}>Dépôt de garantie</p>
                       <p
                         className="text-lg font-semibold"
-                        style={{ color: M.ink }}
+                        style={{ color: BAI.ink }}
                       >
                         {property.deposit} €
                       </p>
                     </div>
                   )}
-                  <div className="pt-3" style={{ borderTop: `1px solid ${M.border}` }}>
-                    <p style={{ fontSize: 12, color: M.inkFaint }}>Total mensuel</p>
+                  <div className="pt-3" style={{ borderTop: `1px solid ${BAI.border}` }}>
+                    <p style={{ fontSize: 12, color: BAI.inkFaint }}>Total mensuel</p>
                     <p
                       className="text-xl font-bold"
-                      style={{ color: M.ink }}
+                      style={{ color: BAI.ink }}
                     >
                       {property.price + (property.charges || 0)} €
                     </p>
@@ -588,29 +567,29 @@ export default function PropertyDetails() {
               <div style={cardStyle}>
                 <p
                   className="uppercase tracking-widest mb-4"
-                  style={{ fontSize: 11, color: M.inkFaint, letterSpacing: '0.08em' }}
+                  style={{ fontSize: 11, color: BAI.inkFaint, letterSpacing: '0.08em' }}
                 >
                   Statistiques
                 </p>
                 <div className="space-y-3">
                   {[
-                    { icon: <Eye className="w-4 h-4" style={{ color: M.owner }} />,          label: 'Vues',     value: property.views },
-                    { icon: <MessageSquare className="w-4 h-4" style={{ color: M.owner }} />, label: 'Contacts', value: property.contactCount },
+                    { icon: <Eye className="w-4 h-4" style={{ color: BAI.owner }} />,          label: 'Vues',     value: property.views },
+                    { icon: <MessageSquare className="w-4 h-4" style={{ color: BAI.owner }} />, label: 'Contacts', value: property.contactCount },
                   ].map(({ icon, label, value }) => (
                     <div key={label} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div
                           className="w-8 h-8 rounded-lg flex items-center justify-center"
-                          style={{ background: M.ownerLight }}
+                          style={{ background: BAI.ownerLight }}
                         >
                           {icon}
                         </div>
-                        <span style={{ fontSize: 13, color: M.inkMid }}>{label}</span>
+                        <span style={{ fontSize: 13, color: BAI.inkMid }}>{label}</span>
                       </div>
-                      <span className="font-semibold" style={{ color: M.ink }}>{value}</span>
+                      <span className="font-semibold" style={{ color: BAI.ink }}>{value}</span>
                     </div>
                   ))}
-                  <div className="pt-3 space-y-2" style={{ borderTop: `1px solid ${M.border}` }}>
+                  <div className="pt-3 space-y-2" style={{ borderTop: `1px solid ${BAI.border}` }}>
                     {[
                       { label: 'Créé le',      value: new Date(property.createdAt).toLocaleDateString('fr-FR') },
                       { label: 'Mis à jour le', value: new Date(property.updatedAt).toLocaleDateString('fr-FR') },
@@ -619,13 +598,13 @@ export default function PropertyDetails() {
                         <div className="flex items-center gap-2">
                           <div
                             className="w-8 h-8 rounded-lg flex items-center justify-center"
-                            style={{ background: M.ownerLight }}
+                            style={{ background: BAI.ownerLight }}
                           >
-                            <Calendar className="w-4 h-4" style={{ color: M.owner }} />
+                            <Calendar className="w-4 h-4" style={{ color: BAI.owner }} />
                           </div>
-                          <span style={{ fontSize: 13, color: M.inkMid }}>{label}</span>
+                          <span style={{ fontSize: 13, color: BAI.inkMid }}>{label}</span>
                         </div>
-                        <span style={{ fontSize: 13, color: M.inkFaint }}>{value}</span>
+                        <span style={{ fontSize: 13, color: BAI.inkFaint }}>{value}</span>
                       </div>
                     ))}
                   </div>
@@ -638,18 +617,18 @@ export default function PropertyDetails() {
                   <div className="flex items-center gap-2 mb-3">
                     <div
                       className="w-9 h-9 rounded-xl flex items-center justify-center"
-                      style={{ background: M.ownerLight }}
+                      style={{ background: BAI.ownerLight }}
                     >
-                      <Shield className="w-5 h-5" style={{ color: M.owner }} />
+                      <Shield className="w-5 h-5" style={{ color: BAI.owner }} />
                     </div>
                     <p
                       className="text-sm font-semibold"
-                      style={{ color: M.ink }}
+                      style={{ color: BAI.ink }}
                     >
                       Vérification du propriétaire
                     </p>
                   </div>
-                  <p className="text-sm mb-4" style={{ color: M.inkMid }}>
+                  <p className="text-sm mb-4" style={{ color: BAI.inkMid }}>
                     Documents obligatoires avant la mise en ligne du bien (anti-arnaque).
                   </p>
 
@@ -681,8 +660,8 @@ export default function PropertyDetails() {
                       key={doc.key}
                       className="p-3 mb-3"
                       style={{
-                        background: doc.hasDoc ? M.successBg : M.muted,
-                        border: `1px solid ${doc.hasDoc ? '#a8d5bc' : M.border}`,
+                        background: doc.hasDoc ? BAI.successLight : BAI.bgMuted,
+                        border: `1px solid ${doc.hasDoc ? '#a8d5bc' : BAI.border}`,
                         borderRadius: 10,
                       }}
                     >
@@ -698,25 +677,25 @@ export default function PropertyDetails() {
                           <div className="flex items-center gap-2 flex-wrap">
                             <p
                               className="text-sm font-medium"
-                              style={{ color: M.ink }}
+                              style={{ color: BAI.ink }}
                             >
                               {doc.title}
                             </p>
-                            <Lock className="w-3 h-3" style={{ color: M.inkFaint }} />
+                            <Lock className="w-3 h-3" style={{ color: BAI.inkFaint }} />
                             <span
                               className="text-xs font-semibold"
-                              style={{ color: M.danger }}
+                              style={{ color: BAI.error }}
                             >
                               Obligatoire
                             </span>
                           </div>
-                          <p className="text-xs mt-0.5" style={{ color: M.inkFaint }}>{doc.desc}</p>
+                          <p className="text-xs mt-0.5" style={{ color: BAI.inkFaint }}>{doc.desc}</p>
                           {doc.hasDoc ? (
                             <div className="mt-2 flex items-center gap-2">
-                              <CheckCircle className="w-4 h-4" style={{ color: M.success }} />
+                              <CheckCircle className="w-4 h-4" style={{ color: BAI.success }} />
                               <span
                                 className="text-xs font-medium"
-                                style={{ color: M.success }}
+                                style={{ color: BAI.success }}
                               >
                                 Document fourni
                               </span>
@@ -729,7 +708,7 @@ export default function PropertyDetails() {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-xs font-medium ml-2 hover:opacity-70"
-                                style={{ color: M.owner }}
+                                style={{ color: BAI.owner }}
                               >
                                 Voir
                               </a>
@@ -739,7 +718,7 @@ export default function PropertyDetails() {
                               onClick={() => handleDocUpload(doc.key)}
                               disabled={uploadingDoc === doc.key}
                               className="mt-2 text-xs flex items-center gap-1 font-medium hover:opacity-70"
-                              style={{ color: M.owner }}
+                              style={{ color: BAI.owner }}
                             >
                               <Upload className="w-3.5 h-3.5" />
                               {uploadingDoc === doc.key ? 'Envoi en cours...' : 'Télécharger le document'}
@@ -753,10 +732,10 @@ export default function PropertyDetails() {
                   <div
                     className="text-xs p-2"
                     style={{
-                      background: M.muted,
-                      border: `1px solid ${M.border}`,
+                      background: BAI.bgMuted,
+                      border: `1px solid ${BAI.border}`,
                       borderRadius: 8,
-                      color: M.inkFaint,
+                      color: BAI.inkFaint,
                     }}
                   >
                     Format : PDF uniquement — Taille max : 5 Mo
@@ -768,7 +747,7 @@ export default function PropertyDetails() {
               <div style={cardStyle}>
                 <p
                   className="uppercase tracking-widest mb-4"
-                  style={{ fontSize: 11, color: M.inkFaint, letterSpacing: '0.08em' }}
+                  style={{ fontSize: 11, color: BAI.inkFaint, letterSpacing: '0.08em' }}
                 >
                   Actions rapides
                 </p>
@@ -776,7 +755,7 @@ export default function PropertyDetails() {
                   <button
                     onClick={() => navigate(`/properties/${property.id}/edit`)}
                     className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white transition-all hover:-translate-y-px"
-                    style={{ background: M.owner, borderRadius: 8 }}
+                    style={{ background: BAI.owner, borderRadius: 8 }}
                   >
                     <Edit className="w-4 h-4" />
                     Modifier le bien
@@ -786,7 +765,7 @@ export default function PropertyDetails() {
                       onClick={handlePublish}
                       disabled={isPublishing}
                       className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white transition-all hover:-translate-y-px disabled:opacity-50"
-                      style={{ background: M.success, borderRadius: 8 }}
+                      style={{ background: BAI.success, borderRadius: 8 }}
                     >
                       {isPublishing ? 'Publication...' : (
                         <>
@@ -801,9 +780,9 @@ export default function PropertyDetails() {
                     disabled={isDeleting}
                     className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold transition-all hover:-translate-y-px disabled:opacity-50"
                     style={{
-                      background: M.dangerBg,
+                      background: BAI.errorLight,
                       border: `1px solid #f5c6c6`,
-                      color: M.danger,
+                      color: BAI.error,
                       borderRadius: 8,
                     }}
                   >

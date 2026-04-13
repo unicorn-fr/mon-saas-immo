@@ -10,30 +10,9 @@ import { useAuth } from '../../hooks/useAuth'
 import { dossierService, TenantDocument } from '../../services/dossier.service'
 import { DocumentViewerModal } from '../../components/document/DocumentViewerModal'
 import toast from 'react-hot-toast'
+import { BAI } from '../../constants/bailio-tokens'
 
 // ── Design tokens ──────────────────────────────────────────────────────────────
-const M = {
-  bg:           '#fafaf8',
-  surface:      '#ffffff',
-  muted:        '#f4f2ee',
-  inputBg:      '#f8f7f4',
-  ink:          '#0d0c0a',
-  inkMid:       '#5a5754',
-  inkFaint:     '#9e9b96',
-  tenant:       '#1b5e3b',
-  tenantLight:  '#edf7f2',
-  tenantBorder: '#9fd4ba',
-  border:       '#e4e1db',
-  borderMid:    '#ccc9c3',
-  caramel:      '#c4976a',
-  caramelLight: '#fdf5ec',
-  danger:       '#9b1c1c',
-  dangerBg:     '#fef2f2',
-  display:      "'Cormorant Garamond', Georgia, serif",
-  body:         "'DM Sans', system-ui, sans-serif",
-  shadow:       '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
-  shadowMd:     '0 4px 8px rgba(13,12,10,0.07), 0 12px 28px rgba(13,12,10,0.09)',
-}
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface Slot {
@@ -216,11 +195,11 @@ function HelpTooltip({ content }: { content: string }) {
         aria-describedby={open ? tooltipId : undefined}
         onClick={() => setOpen(o => !o)}
         style={{
-          width: 20, height: 20, borderRadius: '50%', border: `1px solid ${M.borderMid}`,
-          background: open ? M.muted : M.surface,
+          width: 20, height: 20, borderRadius: '50%', border: `1px solid ${BAI.borderStrong}`,
+          background: open ? BAI.bgMuted : BAI.bgSurface,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer', padding: 0, flexShrink: 0,
-          color: open ? M.inkMid : M.inkFaint,
+          color: open ? BAI.inkMid : BAI.inkFaint,
           transition: 'background 0.15s, color 0.15s',
         }}
       >
@@ -234,8 +213,8 @@ function HelpTooltip({ content }: { content: string }) {
             position: 'absolute', bottom: 'calc(100% + 8px)', left: '50%',
             transform: 'translateX(-50%)',
             width: 260, padding: '10px 12px', borderRadius: 10,
-            background: M.ink, color: '#ffffff',
-            fontSize: 12, fontFamily: M.body, lineHeight: 1.55,
+            background: BAI.ink, color: '#ffffff',
+            fontSize: 12, fontFamily: BAI.fontBody, lineHeight: 1.55,
             boxShadow: '0 8px 24px rgba(13,12,10,0.25)',
             zIndex: 100,
             pointerEvents: 'none',
@@ -248,7 +227,7 @@ function HelpTooltip({ content }: { content: string }) {
             width: 10, height: 6,
             borderLeft: '5px solid transparent',
             borderRight: '5px solid transparent',
-            borderTop: `6px solid ${M.ink}`,
+            borderTop: `6px solid ${BAI.ink}`,
           }} />
         </div>
       )}
@@ -286,35 +265,35 @@ function DocSlot({
     <div style={{
       display: 'flex', alignItems: 'center', gap: 10,
       padding: '10px 14px',
-      border: `1px solid ${doc ? M.tenantBorder : M.border}`,
+      border: `1px solid ${doc ? BAI.tenantBorder : BAI.border}`,
       borderRadius: 10,
-      background: doc ? M.tenantLight : M.surface,
+      background: doc ? BAI.tenantLight : BAI.bgSurface,
       transition: 'background 0.15s, border-color 0.15s',
     }}>
       {/* Status dot */}
       {doc
-        ? <CheckCircle2 style={{ width: 15, height: 15, color: M.tenant, flexShrink: 0 }} />
+        ? <CheckCircle2 style={{ width: 15, height: 15, color: BAI.tenant, flexShrink: 0 }} />
         : <div style={{
             width: 15, height: 15, borderRadius: '50%', flexShrink: 0,
-            border: `2px solid ${slot.required ? M.caramel : M.borderMid}`,
+            border: `2px solid ${slot.required ? BAI.caramel : BAI.borderStrong}`,
           }} />
       }
 
       {/* Label */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{
-          fontSize: 13, fontFamily: M.body, margin: 0,
-          color: doc ? M.tenant : M.ink,
+          fontSize: 13, fontFamily: BAI.fontBody, margin: 0,
+          color: doc ? BAI.tenant : BAI.ink,
           fontWeight: doc ? 600 : slot.required ? 500 : 400,
         }}>
           {slot.label}
           {slot.required && !doc && (
-            <span style={{ marginLeft: 5, fontSize: 10, color: M.caramel, fontWeight: 500 }}>requis</span>
+            <span style={{ marginLeft: 5, fontSize: 10, color: BAI.caramel, fontWeight: 500 }}>requis</span>
           )}
         </p>
         {doc && (
           <p style={{
-            fontSize: 11, color: M.inkFaint, fontFamily: M.body,
+            fontSize: 11, color: BAI.inkFaint, fontFamily: BAI.fontBody,
             margin: '1px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 240,
           }}>
             {doc.fileName}
@@ -331,9 +310,9 @@ function DocSlot({
           <button
             onClick={() => onView(doc)}
             style={{
-              padding: '4px 10px', borderRadius: 7, border: `1px solid ${M.tenantBorder}`,
-              background: M.surface, color: M.tenant,
-              fontSize: 12, fontFamily: M.body, cursor: 'pointer',
+              padding: '4px 10px', borderRadius: 7, border: `1px solid ${BAI.tenantBorder}`,
+              background: BAI.bgSurface, color: BAI.tenant,
+              fontSize: 12, fontFamily: BAI.fontBody, cursor: 'pointer',
               display: 'flex', alignItems: 'center', gap: 4,
             }}
           >
@@ -342,8 +321,8 @@ function DocSlot({
           <button
             onClick={handleDelete} disabled={deleting}
             style={{
-              padding: '4px 8px', borderRadius: 7, border: `1px solid ${M.border}`,
-              background: M.surface, color: deleting ? M.inkFaint : M.danger,
+              padding: '4px 8px', borderRadius: 7, border: `1px solid ${BAI.border}`,
+              background: BAI.bgSurface, color: deleting ? BAI.inkFaint : '#9b1c1c',
               fontSize: 12, cursor: deleting ? 'default' : 'pointer',
               display: 'flex', alignItems: 'center',
             }}
@@ -368,10 +347,10 @@ function DocSlot({
           <button
             onClick={() => inputRef.current?.click()} disabled={uploading}
             style={{
-              padding: '4px 12px', borderRadius: 7, border: `1px solid ${M.borderMid}`,
-              background: uploading ? M.muted : M.surface,
-              color: uploading ? M.inkFaint : M.inkMid,
-              fontSize: 12, fontFamily: M.body, cursor: uploading ? 'default' : 'pointer',
+              padding: '4px 12px', borderRadius: 7, border: `1px solid ${BAI.borderStrong}`,
+              background: uploading ? BAI.bgMuted : BAI.bgSurface,
+              color: uploading ? BAI.inkFaint : BAI.inkMid,
+              fontSize: 12, fontFamily: BAI.fontBody, cursor: uploading ? 'default' : 'pointer',
               display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0,
             }}
           >
@@ -405,8 +384,8 @@ function CategoryAccordion({
 
   return (
     <div style={{
-      border: `1px solid ${M.border}`, borderRadius: 12,
-      overflow: 'hidden', background: M.surface, boxShadow: M.shadow,
+      border: `1px solid ${BAI.border}`, borderRadius: 12,
+      overflow: 'hidden', background: BAI.bgSurface, boxShadow: BAI.shadowMd,
     }}>
       <button
         onClick={() => setOpen(o => !o)}
@@ -418,16 +397,16 @@ function CategoryAccordion({
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
             width: 34, height: 34, borderRadius: 9,
-            background: hasDocs ? M.tenantLight : M.muted,
+            background: hasDocs ? BAI.tenantLight : BAI.bgMuted,
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
-            <CatIcon style={{ width: 16, height: 16, color: hasDocs ? M.tenant : M.inkFaint }} />
+            <CatIcon style={{ width: 16, height: 16, color: hasDocs ? BAI.tenant : BAI.inkFaint }} />
           </div>
           <div style={{ textAlign: 'left' }}>
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 600, fontFamily: M.body, color: M.ink }}>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 600, fontFamily: BAI.fontBody, color: BAI.ink }}>
               {cat.label}
             </p>
-            <p style={{ margin: 0, fontSize: 11, fontFamily: M.body, color: M.inkFaint, marginTop: 1 }}>
+            <p style={{ margin: 0, fontSize: 11, fontFamily: BAI.fontBody, color: BAI.inkFaint, marginTop: 1 }}>
               {filled}/{total} document{total > 1 ? 's' : ''} · {cat.hint}
             </p>
           </div>
@@ -435,23 +414,23 @@ function CategoryAccordion({
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {allDone && (
             <span style={{
-              fontSize: 11, fontFamily: M.body, color: M.tenant, fontWeight: 600,
-              background: M.tenantLight, border: `1px solid ${M.tenantBorder}`,
+              fontSize: 11, fontFamily: BAI.fontBody, color: BAI.tenant, fontWeight: 600,
+              background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`,
               borderRadius: 20, padding: '2px 8px',
             }}>
               Complet
             </span>
           )}
           {open
-            ? <ChevronUp style={{ width: 16, height: 16, color: M.inkFaint }} />
-            : <ChevronDown style={{ width: 16, height: 16, color: M.inkFaint }} />
+            ? <ChevronUp style={{ width: 16, height: 16, color: BAI.inkFaint }} />
+            : <ChevronDown style={{ width: 16, height: 16, color: BAI.inkFaint }} />
           }
         </div>
       </button>
       {open && (
         <div style={{
           padding: '0 14px 14px', display: 'flex', flexDirection: 'column', gap: 8,
-          borderTop: `1px solid ${M.border}`,
+          borderTop: `1px solid ${BAI.border}`,
         }}>
           <div style={{ height: 8 }} />
           {cat.slots.map(slot => (
@@ -478,10 +457,10 @@ function StepperHeader({ current }: { current: number }) {
     <div style={{ marginBottom: 32 }}>
       {/* Mobile: compact label */}
       <div className="sm:hidden" style={{ marginBottom: 12 }}>
-        <p style={{ fontSize: 12, color: M.inkFaint, fontFamily: M.body, margin: '0 0 2px' }}>
+        <p style={{ fontSize: 12, color: BAI.inkFaint, fontFamily: BAI.fontBody, margin: '0 0 2px' }}>
           Étape {current + 1} sur {TOTAL_STEPS}
         </p>
-        <p style={{ fontSize: 15, fontWeight: 700, fontFamily: M.body, color: M.ink, margin: 0 }}>
+        <p style={{ fontSize: 15, fontWeight: 700, fontFamily: BAI.fontBody, color: BAI.ink, margin: 0 }}>
           {STEPS[current]?.label ?? 'Récapitulatif'}
         </p>
       </div>
@@ -497,20 +476,20 @@ function StepperHeader({ current }: { current: number }) {
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
                 <div style={{
                   width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
-                  background: done ? M.tenant : active ? M.tenantLight : M.muted,
-                  border: `2px solid ${done ? M.tenant : active ? M.tenant : M.border}`,
+                  background: done ? BAI.tenant : active ? BAI.tenantLight : BAI.bgMuted,
+                  border: `2px solid ${done ? BAI.tenant : active ? BAI.tenant : BAI.border}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   transition: 'all 0.25s',
                 }}>
                   {done
                     ? <CheckCircle2 style={{ width: 16, height: 16, color: '#ffffff' }} />
-                    : <StepIcon style={{ width: 14, height: 14, color: active ? M.tenant : M.inkFaint }} />
+                    : <StepIcon style={{ width: 14, height: 14, color: active ? BAI.tenant : BAI.inkFaint }} />
                   }
                 </div>
                 <span style={{
-                  fontSize: 10, fontFamily: M.body,
+                  fontSize: 10, fontFamily: BAI.fontBody,
                   fontWeight: active ? 700 : 500,
-                  color: active ? M.tenant : done ? M.inkMid : M.inkFaint,
+                  color: active ? BAI.tenant : done ? BAI.inkMid : BAI.inkFaint,
                   whiteSpace: 'nowrap', textAlign: 'center',
                 }}>
                   {step.label}
@@ -520,7 +499,7 @@ function StepperHeader({ current }: { current: number }) {
                 <div style={{
                   flex: 1, height: 2, margin: '0 6px',
                   marginBottom: 24,
-                  background: i < current ? M.tenant : M.border,
+                  background: i < current ? BAI.tenant : BAI.border,
                   transition: 'background 0.3s',
                 }} />
               )}
@@ -530,9 +509,9 @@ function StepperHeader({ current }: { current: number }) {
       </div>
 
       {/* Progress bar */}
-      <div style={{ height: 4, borderRadius: 99, background: M.border }}>
+      <div style={{ height: 4, borderRadius: 99, background: BAI.border }}>
         <div style={{
-          height: '100%', borderRadius: 99, background: M.tenant,
+          height: '100%', borderRadius: 99, background: BAI.tenant,
           width: `${pct}%`, transition: 'width 0.4s cubic-bezier(0.4,0,0.2,1)',
         }} />
       </div>
@@ -555,7 +534,7 @@ function StepNav({
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      marginTop: 28, paddingTop: 20, borderTop: `1px solid ${M.border}`,
+      marginTop: 28, paddingTop: 20, borderTop: `1px solid ${BAI.border}`,
       flexWrap: 'wrap', gap: 10,
     }}>
       <button
@@ -563,9 +542,9 @@ function StepNav({
         style={{
           display: 'flex', alignItems: 'center', gap: 6,
           padding: '10px 18px', borderRadius: 9,
-          border: `1px solid ${M.border}`, background: M.surface,
-          color: isFirst ? M.inkFaint : M.inkMid,
-          fontSize: 13, fontFamily: M.body, fontWeight: 500,
+          border: `1px solid ${BAI.border}`, background: BAI.bgSurface,
+          color: isFirst ? BAI.inkFaint : BAI.inkMid,
+          fontSize: 13, fontFamily: BAI.fontBody, fontWeight: 500,
           cursor: isFirst ? 'default' : 'pointer',
         }}
       >
@@ -580,7 +559,7 @@ function StepNav({
             style={{
               padding: '10px 16px', borderRadius: 9,
               border: 'none', background: 'none',
-              color: M.inkFaint, fontSize: 13, fontFamily: M.body,
+              color: BAI.inkFaint, fontSize: 13, fontFamily: BAI.fontBody,
               cursor: 'pointer',
             }}
           >
@@ -593,9 +572,9 @@ function StepNav({
             display: 'flex', alignItems: 'center', gap: 7,
             padding: '10px 22px', borderRadius: 9,
             border: 'none',
-            background: saving ? M.inkFaint : M.tenant,
+            background: saving ? BAI.inkFaint : BAI.tenant,
             color: '#ffffff',
-            fontSize: 13, fontFamily: M.body, fontWeight: 700,
+            fontSize: 13, fontFamily: BAI.fontBody, fontWeight: 700,
             cursor: saving ? 'default' : 'pointer',
             transition: 'background 0.15s',
           }}
@@ -625,9 +604,9 @@ function FormField({
 }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-      <label style={{ fontSize: 12, fontWeight: 600, fontFamily: M.body, color: M.inkMid }}>
+      <label style={{ fontSize: 12, fontWeight: 600, fontFamily: BAI.fontBody, color: BAI.inkMid }}>
         {label}
-        {required && <span style={{ color: M.caramel, marginLeft: 3 }}>*</span>}
+        {required && <span style={{ color: BAI.caramel, marginLeft: 3 }}>*</span>}
       </label>
       <input
         type={type}
@@ -635,8 +614,8 @@ function FormField({
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
         style={{
-          padding: '9px 12px', borderRadius: 8, border: `1px solid ${M.border}`,
-          background: M.inputBg, fontSize: 13, fontFamily: M.body, color: M.ink,
+          padding: '9px 12px', borderRadius: 8, border: `1px solid ${BAI.border}`,
+          background: BAI.bgInput, fontSize: 13, fontFamily: BAI.fontBody, color: BAI.ink,
           outline: 'none',
         }}
       />
@@ -757,9 +736,9 @@ export default function DossierLocatif() {
   // ── Card wrapper ───────────────────────────────────────────────────────────
   const stepCard = (children: React.ReactNode) => (
     <div style={{
-      background: M.surface, border: `1px solid ${M.border}`,
+      background: BAI.bgSurface, border: `1px solid ${BAI.border}`,
       borderRadius: 16, padding: '28px 28px 24px',
-      boxShadow: M.shadowMd,
+      boxShadow: BAI.shadowLg,
     }}>
       {children}
     </div>
@@ -769,19 +748,19 @@ export default function DossierLocatif() {
   if (showOverview) {
     return (
       <Layout>
-        <div style={{ minHeight: '100vh', background: M.bg, padding: '32px 0 64px', fontFamily: M.body }}>
+        <div style={{ minHeight: '100vh', background: BAI.bgBase, padding: '32px 0 64px', fontFamily: BAI.fontBody }}>
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
             {/* Header */}
             <div style={{ marginBottom: 32, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
               <div>
-                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: M.tenant, margin: '0 0 6px' }}>
+                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.tenant, margin: '0 0 6px' }}>
                   Locataire
                 </p>
-                <h1 style={{ fontFamily: M.display, fontWeight: 700, fontStyle: 'italic', fontSize: 'clamp(30px,5vw,42px)', color: M.ink, margin: '0 0 6px', lineHeight: 1.1 }}>
+                <h1 style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontStyle: 'italic', fontSize: 'clamp(30px,5vw,42px)', color: BAI.ink, margin: '0 0 6px', lineHeight: 1.1 }}>
                   Mon Dossier Locatif
                 </h1>
-                <p style={{ fontSize: 13, color: M.inkFaint, margin: 0 }}>
+                <p style={{ fontSize: 13, color: BAI.inkFaint, margin: 0 }}>
                   {filledDocs}/{totalDocs} documents · {pct}% complété
                 </p>
               </div>
@@ -790,8 +769,8 @@ export default function DossierLocatif() {
                 style={{
                   display: 'flex', alignItems: 'center', gap: 6,
                   padding: '9px 18px', borderRadius: 9,
-                  border: `1px solid ${M.border}`, background: M.surface,
-                  color: M.inkMid, fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                  border: `1px solid ${BAI.border}`, background: BAI.bgSurface,
+                  color: BAI.inkMid, fontSize: 13, fontWeight: 500, cursor: 'pointer',
                 }}
               >
                 Reprendre le guide
@@ -801,31 +780,31 @@ export default function DossierLocatif() {
             {/* Progress bar */}
             {!loadingDocs && (
               <div style={{ marginBottom: 28 }}>
-                <div style={{ height: 5, borderRadius: 99, background: M.border }}>
-                  <div style={{ height: '100%', borderRadius: 99, background: M.tenant, width: `${pct}%`, transition: 'width 0.4s ease' }} />
+                <div style={{ height: 5, borderRadius: 99, background: BAI.border }}>
+                  <div style={{ height: '100%', borderRadius: 99, background: BAI.tenant, width: `${pct}%`, transition: 'width 0.4s ease' }} />
                 </div>
               </div>
             )}
 
             {/* Profile summary */}
             <div style={{
-              background: M.surface, border: `1px solid ${M.tenantBorder}`,
+              background: BAI.bgSurface, border: `1px solid ${BAI.tenantBorder}`,
               borderRadius: 12, padding: '18px 20px',
-              boxShadow: M.shadow, marginBottom: 24,
+              boxShadow: BAI.shadowMd, marginBottom: 24,
               display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{
                   width: 40, height: 40, borderRadius: 10,
-                  background: M.tenantLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  background: BAI.tenantLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}>
-                  <User style={{ width: 18, height: 18, color: M.tenant }} />
+                  <User style={{ width: 18, height: 18, color: BAI.tenant }} />
                 </div>
                 <div>
-                  <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: M.ink }}>
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: BAI.ink }}>
                     {user?.firstName} {user?.lastName}
                   </p>
-                  <p style={{ margin: 0, fontSize: 12, color: M.inkFaint, marginTop: 2 }}>
+                  <p style={{ margin: 0, fontSize: 12, color: BAI.inkFaint, marginTop: 2 }}>
                     {user?.birthDate ? `Né·e le ${new Date(user.birthDate).toLocaleDateString('fr-FR')}` : ''}
                     {user?.birthCity ? ` · ${user.birthCity}` : ''}
                     {user?.nationality ? ` · ${user.nationality}` : ''}
@@ -834,7 +813,7 @@ export default function DossierLocatif() {
               </div>
               <a href="/settings" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 5,
-                fontSize: 12, color: M.tenant, textDecoration: 'none', fontWeight: 500, flexShrink: 0,
+                fontSize: 12, color: BAI.tenant, textDecoration: 'none', fontWeight: 500, flexShrink: 0,
               }}>
                 Modifier <ArrowRight style={{ width: 13, height: 13 }} />
               </a>
@@ -843,8 +822,8 @@ export default function DossierLocatif() {
             {/* Documents grid */}
             {loadingDocs ? (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 48, gap: 10 }}>
-                <Loader2 style={{ width: 22, height: 22, color: M.tenant }} className="animate-spin" />
-                <span style={{ fontSize: 13, color: M.inkFaint }}>Chargement…</span>
+                <Loader2 style={{ width: 22, height: 22, color: BAI.tenant }} className="animate-spin" />
+                <span style={{ fontSize: 13, color: BAI.inkFaint }}>Chargement…</span>
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -863,12 +842,12 @@ export default function DossierLocatif() {
 
             {/* Tips */}
             <div style={{
-              background: M.surface, border: `1px solid ${M.border}`,
-              borderRadius: 14, padding: '24px', boxShadow: M.shadow, marginTop: 28,
+              background: BAI.bgSurface, border: `1px solid ${BAI.border}`,
+              borderRadius: 14, padding: '24px', boxShadow: BAI.shadowMd, marginTop: 28,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-                <BookOpen style={{ width: 18, height: 18, color: M.caramel }} />
-                <h2 style={{ margin: 0, fontFamily: M.display, fontStyle: 'italic', fontSize: 22, fontWeight: 700, color: M.ink }}>
+                <BookOpen style={{ width: 18, height: 18, color: BAI.caramel }} />
+                <h2 style={{ margin: 0, fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 22, fontWeight: 700, color: BAI.ink }}>
                   Constituer un dossier solide
                 </h2>
               </div>
@@ -876,12 +855,12 @@ export default function DossierLocatif() {
                 {TIPS.map(tip => {
                   const TipIcon = tip.icon
                   return (
-                    <div key={tip.title} style={{ padding: '14px 16px', borderRadius: 10, background: M.muted, border: `1px solid ${M.border}` }}>
+                    <div key={tip.title} style={{ padding: '14px 16px', borderRadius: 10, background: BAI.bgMuted, border: `1px solid ${BAI.border}` }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                        <TipIcon style={{ width: 13, height: 13, color: M.caramel, flexShrink: 0 }} />
-                        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, fontFamily: M.body, color: M.ink }}>{tip.title}</p>
+                        <TipIcon style={{ width: 13, height: 13, color: BAI.caramel, flexShrink: 0 }} />
+                        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, fontFamily: BAI.fontBody, color: BAI.ink }}>{tip.title}</p>
                       </div>
-                      <p style={{ margin: 0, fontSize: 12, color: M.inkMid, lineHeight: 1.6 }}>{tip.body}</p>
+                      <p style={{ margin: 0, fontSize: 12, color: BAI.inkMid, lineHeight: 1.6 }}>{tip.body}</p>
                     </div>
                   )
                 })}
@@ -907,16 +886,16 @@ export default function DossierLocatif() {
 
   return (
     <Layout>
-      <div style={{ minHeight: '100vh', background: M.bg, padding: '32px 0 64px', fontFamily: M.body }}>
+      <div style={{ minHeight: '100vh', background: BAI.bgBase, padding: '32px 0 64px', fontFamily: BAI.fontBody }}>
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
 
           {/* Page header */}
           <div style={{ marginBottom: 28 }}>
-            <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: M.tenant, margin: '0 0 6px' }}>
+            <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.tenant, margin: '0 0 6px' }}>
               Locataire
             </p>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-              <h1 style={{ fontFamily: M.display, fontWeight: 700, fontStyle: 'italic', fontSize: 'clamp(28px,5vw,40px)', color: M.ink, margin: 0, lineHeight: 1.1 }}>
+              <h1 style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontStyle: 'italic', fontSize: 'clamp(28px,5vw,40px)', color: BAI.ink, margin: 0, lineHeight: 1.1 }}>
                 Mon Dossier Locatif
               </h1>
               <button
@@ -924,8 +903,8 @@ export default function DossierLocatif() {
                 style={{
                   display: 'flex', alignItems: 'center', gap: 6,
                   padding: '8px 14px', borderRadius: 8,
-                  border: `1px solid ${M.border}`, background: M.surface,
-                  color: M.inkMid, fontSize: 12, fontWeight: 500, cursor: 'pointer',
+                  border: `1px solid ${BAI.border}`, background: BAI.bgSurface,
+                  color: BAI.inkMid, fontSize: 12, fontWeight: 500, cursor: 'pointer',
                 }}
               >
                 <LayoutGrid style={{ width: 13, height: 13 }} />
@@ -941,10 +920,10 @@ export default function DossierLocatif() {
           {currentStep === 0 && stepCard(
             <>
               <div style={{ marginBottom: 22 }}>
-                <h2 style={{ margin: '0 0 4px', fontFamily: M.display, fontStyle: 'italic', fontSize: 26, fontWeight: 700, color: M.ink }}>
+                <h2 style={{ margin: '0 0 4px', fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 26, fontWeight: 700, color: BAI.ink }}>
                   Qui êtes-vous ?
                 </h2>
-                <p style={{ margin: 0, fontSize: 13, color: M.inkFaint }}>
+                <p style={{ margin: 0, fontSize: 13, color: BAI.inkFaint }}>
                   Commençons par vos informations personnelles. Ces données ne vous seront demandées qu'une fois.
                 </p>
               </div>
@@ -962,8 +941,8 @@ export default function DossierLocatif() {
               </div>
 
               {/* Divider */}
-              <div style={{ height: 1, background: M.border, margin: '4px 0 20px' }} />
-              <p style={{ fontSize: 12, color: M.inkFaint, margin: '0 0 16px', fontStyle: 'italic' }}>
+              <div style={{ height: 1, background: BAI.border, margin: '4px 0 20px' }} />
+              <p style={{ fontSize: 12, color: BAI.inkFaint, margin: '0 0 16px', fontStyle: 'italic' }}>
                 Informations complémentaires (recommandées pour un dossier complet)
               </p>
 
@@ -983,7 +962,7 @@ export default function DossierLocatif() {
               </div>
 
               {formError && (
-                <p style={{ marginTop: 12, fontSize: 12, color: M.danger }}>{formError}</p>
+                <p style={{ marginTop: 12, fontSize: 12, color: '#9b1c1c' }}>{formError}</p>
               )}
 
               <StepNav
@@ -1006,17 +985,17 @@ export default function DossierLocatif() {
                 {CatIcon && (
                   <div style={{
                     width: 44, height: 44, borderRadius: 12,
-                    background: M.tenantLight,
+                    background: BAI.tenantLight,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
-                    <CatIcon style={{ width: 20, height: 20, color: M.tenant }} />
+                    <CatIcon style={{ width: 20, height: 20, color: BAI.tenant }} />
                   </div>
                 )}
                 <div>
-                  <h2 style={{ margin: '0 0 4px', fontFamily: M.display, fontStyle: 'italic', fontSize: 26, fontWeight: 700, color: M.ink }}>
+                  <h2 style={{ margin: '0 0 4px', fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 26, fontWeight: 700, color: BAI.ink }}>
                     {currentCat.label}
                   </h2>
-                  <p style={{ margin: 0, fontSize: 13, color: M.inkFaint }}>
+                  <p style={{ margin: 0, fontSize: 13, color: BAI.inkFaint }}>
                     {currentCat.hint}
                   </p>
                 </div>
@@ -1024,8 +1003,8 @@ export default function DossierLocatif() {
 
               {loadingDocs ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, gap: 10 }}>
-                  <Loader2 style={{ width: 20, height: 20, color: M.tenant }} className="animate-spin" />
-                  <span style={{ fontSize: 13, color: M.inkFaint }}>Chargement…</span>
+                  <Loader2 style={{ width: 20, height: 20, color: BAI.tenant }} className="animate-spin" />
+                  <span style={{ fontSize: 13, color: BAI.inkFaint }}>Chargement…</span>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -1046,8 +1025,8 @@ export default function DossierLocatif() {
               {currentCat.id === 'GARANTIES' && (
                 <div style={{
                   marginTop: 16, padding: '10px 14px', borderRadius: 9,
-                  background: M.caramelLight, border: `1px solid #e8c9a0`,
-                  fontSize: 12, color: M.caramel, fontWeight: 500,
+                  background: BAI.caramelLight, border: `1px solid #e8c9a0`,
+                  fontSize: 12, color: BAI.caramel, fontWeight: 500,
                 }}>
                   Cette étape est optionnelle. Un garant est conseillé si vos revenus mensuels sont inférieurs à 3× le montant du loyer.
                 </div>
@@ -1064,7 +1043,7 @@ export default function DossierLocatif() {
           )}
 
           {/* Footer hint */}
-          <p style={{ marginTop: 20, textAlign: 'center', fontSize: 12, color: M.inkFaint }}>
+          <p style={{ marginTop: 20, textAlign: 'center', fontSize: 12, color: BAI.inkFaint }}>
             Vous pouvez revenir à tout moment compléter ou modifier votre dossier.
           </p>
         </div>

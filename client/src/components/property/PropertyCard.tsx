@@ -3,24 +3,8 @@ import { Property } from '../../types/property.types'
 import { MapPin, Bed, Bath, Square, Heart, Eye } from 'lucide-react'
 import { useFavoriteStore } from '../../store/favoriteStore'
 import { useAuth } from '../../hooks/useAuth'
+import { BAI } from '../../constants/bailio-tokens'
 
-const M = {
-  bg:          '#fafaf8',
-  surface:     '#ffffff',
-  muted:       '#f4f2ee',
-  ink:         '#0d0c0a',
-  inkMid:      '#5a5754',
-  inkFaint:    '#9e9b96',
-  tenant:      '#1b5e3b',
-  tenantLight: '#edf7f2',
-  tenantBorder:'#9fd4ba',
-  caramel:     '#c4976a',
-  caramelLight:'#fdf5ec',
-  border:      '#e4e1db',
-  borderMid:   '#ccc9c3',
-  body:        "'DM Sans', system-ui, sans-serif",
-  display:     "'Cormorant Garamond', Georgia, serif",
-}
 
 interface PropertyCardProps {
   property: Property
@@ -63,15 +47,15 @@ export const PropertyCard = ({
         onClick={handleClick}
         style={{
           display: 'flex', gap: 12, padding: 12, borderRadius: 10, cursor: 'pointer',
-          background: M.surface, border: `1px solid ${M.border}`,
+          background: BAI.bgSurface, border: `1px solid ${BAI.border}`,
           transition: 'border-color 0.15s, box-shadow 0.15s',
         }}
         onMouseEnter={e => {
-          e.currentTarget.style.borderColor = M.tenantBorder
+          e.currentTarget.style.borderColor = BAI.tenantBorder
           e.currentTarget.style.boxShadow = '0 2px 8px rgba(27,94,59,0.08)'
         }}
         onMouseLeave={e => {
-          e.currentTarget.style.borderColor = M.border
+          e.currentTarget.style.borderColor = BAI.border
           e.currentTarget.style.boxShadow = 'none'
         }}
       >
@@ -83,18 +67,18 @@ export const PropertyCard = ({
         />
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{
-            fontSize: 13, fontWeight: 600, color: M.ink, margin: '0 0 2px',
-            fontFamily: M.body, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            fontSize: 13, fontWeight: 600, color: BAI.ink, margin: '0 0 2px',
+            fontFamily: BAI.fontBody, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
             {property.title}
           </p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: M.inkFaint, marginBottom: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: BAI.inkFaint, marginBottom: 6 }}>
             <MapPin style={{ width: 11, height: 11, flexShrink: 0 }} />
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {property.city}, {property.postalCode}
             </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 11, color: M.inkFaint }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 11, color: BAI.inkFaint }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
               <Bed style={{ width: 11, height: 11 }} />{property.bedrooms}
             </span>
@@ -104,7 +88,7 @@ export const PropertyCard = ({
             <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
               <Square style={{ width: 11, height: 11 }} />{property.surface}m²
             </span>
-            <span style={{ marginLeft: 'auto', fontWeight: 700, color: M.tenant, fontFamily: M.body }}>
+            <span style={{ marginLeft: 'auto', fontWeight: 700, color: BAI.tenant, fontFamily: BAI.fontBody }}>
               {property.price}€/mois
             </span>
           </div>
@@ -118,22 +102,22 @@ export const PropertyCard = ({
     <div
       onClick={handleClick}
       style={{
-        background: M.surface,
-        border: `1px solid ${M.border}`,
+        background: BAI.bgSurface,
+        border: `1px solid ${BAI.border}`,
         borderRadius: 12,
         boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
         cursor: 'pointer',
         overflow: 'hidden',
         transition: 'border-color 0.15s, box-shadow 0.15s, transform 0.15s',
-        fontFamily: M.body,
+        fontFamily: BAI.fontBody,
       }}
       onMouseEnter={e => {
-        e.currentTarget.style.borderColor = M.tenantBorder
+        e.currentTarget.style.borderColor = BAI.tenantBorder
         e.currentTarget.style.boxShadow = '0 4px 20px rgba(27,94,59,0.1)'
         e.currentTarget.style.transform = 'translateY(-2px)'
       }}
       onMouseLeave={e => {
-        e.currentTarget.style.borderColor = M.border
+        e.currentTarget.style.borderColor = BAI.border
         e.currentTarget.style.boxShadow = '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)'
         e.currentTarget.style.transform = 'translateY(0)'
       }}
@@ -158,7 +142,7 @@ export const PropertyCard = ({
               position: 'absolute', top: 10, right: 10,
               width: 34, height: 34, borderRadius: '50%',
               background: 'rgba(255,255,255,0.92)',
-              border: `1px solid ${M.border}`,
+              border: `1px solid ${BAI.border}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer',
               transition: 'transform 0.15s',
@@ -170,7 +154,7 @@ export const PropertyCard = ({
               style={{
                 width: 15, height: 15,
                 fill: isFavorite(property.id) ? '#9b1c1c' : 'none',
-                color: isFavorite(property.id) ? '#9b1c1c' : M.inkFaint,
+                color: isFavorite(property.id) ? '#9b1c1c' : BAI.inkFaint,
               }}
             />
           </button>
@@ -180,13 +164,13 @@ export const PropertyCard = ({
         <div style={{
           position: 'absolute', bottom: 10, left: 10,
           background: 'rgba(255,255,255,0.96)',
-          border: `1px solid ${M.border}`,
+          border: `1px solid ${BAI.border}`,
           borderRadius: 8, padding: '4px 10px',
         }}>
-          <span style={{ fontFamily: M.display, fontWeight: 700, fontSize: 17, color: M.ink }}>
+          <span style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontSize: 17, color: BAI.ink }}>
             {property.price}€
           </span>
-          <span style={{ fontSize: 11, color: M.inkFaint, marginLeft: 3 }}>/mois</span>
+          <span style={{ fontSize: 11, color: BAI.inkFaint, marginLeft: 3 }}>/mois</span>
         </div>
 
         {/* Photo count */}
@@ -195,7 +179,7 @@ export const PropertyCard = ({
             position: 'absolute', bottom: 10, right: 10,
             background: 'rgba(13,12,10,0.55)',
             color: '#ffffff', fontSize: 10, fontWeight: 600,
-            padding: '3px 8px', borderRadius: 6, fontFamily: M.body,
+            padding: '3px 8px', borderRadius: 6, fontFamily: BAI.fontBody,
           }}>
             {property.images.length} photos
           </div>
@@ -205,15 +189,15 @@ export const PropertyCard = ({
       {/* Content */}
       <div style={{ padding: '14px 16px' }}>
         <h3 style={{
-          fontSize: 14, fontWeight: 600, color: M.ink,
-          margin: '0 0 4px', fontFamily: M.body,
+          fontSize: 14, fontWeight: 600, color: BAI.ink,
+          margin: '0 0 4px', fontFamily: BAI.fontBody,
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
           {property.title}
         </h3>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: M.inkMid, marginBottom: 12 }}>
-          <MapPin style={{ width: 13, height: 13, flexShrink: 0, color: M.inkFaint }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: BAI.inkMid, marginBottom: 12 }}>
+          <MapPin style={{ width: 13, height: 13, flexShrink: 0, color: BAI.inkFaint }} />
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {property.address}, {property.city}
           </span>
@@ -222,18 +206,18 @@ export const PropertyCard = ({
         {/* Stats */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: 16,
-          fontSize: 12, color: M.inkMid,
+          fontSize: 12, color: BAI.inkMid,
           paddingBottom: 12, marginBottom: 12,
-          borderBottom: `1px solid ${M.border}`,
+          borderBottom: `1px solid ${BAI.border}`,
         }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <Bed style={{ width: 13, height: 13, color: M.inkFaint }} />{property.bedrooms} ch.
+            <Bed style={{ width: 13, height: 13, color: BAI.inkFaint }} />{property.bedrooms} ch.
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <Bath style={{ width: 13, height: 13, color: M.inkFaint }} />{property.bathrooms} sdb.
+            <Bath style={{ width: 13, height: 13, color: BAI.inkFaint }} />{property.bathrooms} sdb.
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <Square style={{ width: 13, height: 13, color: M.inkFaint }} />{property.surface}m²
+            <Square style={{ width: 13, height: 13, color: BAI.inkFaint }} />{property.surface}m²
           </span>
         </div>
 
@@ -242,7 +226,7 @@ export const PropertyCard = ({
           {property.furnished && (
             <span style={{
               fontSize: 11, fontWeight: 500, padding: '3px 9px', borderRadius: 20,
-              background: M.tenantLight, color: M.tenant, border: `1px solid ${M.tenantBorder}`,
+              background: BAI.tenantLight, color: BAI.tenant, border: `1px solid ${BAI.tenantBorder}`,
             }}>
               Meublé
             </span>
@@ -250,7 +234,7 @@ export const PropertyCard = ({
           {property.hasParking && (
             <span style={{
               fontSize: 11, fontWeight: 500, padding: '3px 9px', borderRadius: 20,
-              background: M.muted, color: M.inkMid, border: `1px solid ${M.border}`,
+              background: BAI.bgMuted, color: BAI.inkMid, border: `1px solid ${BAI.border}`,
             }}>
               Parking
             </span>
@@ -258,7 +242,7 @@ export const PropertyCard = ({
           {property.hasBalcony && (
             <span style={{
               fontSize: 11, fontWeight: 500, padding: '3px 9px', borderRadius: 20,
-              background: M.muted, color: M.inkMid, border: `1px solid ${M.border}`,
+              background: BAI.bgMuted, color: BAI.inkMid, border: `1px solid ${BAI.border}`,
             }}>
               Balcon
             </span>
@@ -266,7 +250,7 @@ export const PropertyCard = ({
           {property.hasElevator && (
             <span style={{
               fontSize: 11, fontWeight: 500, padding: '3px 9px', borderRadius: 20,
-              background: M.muted, color: M.inkMid, border: `1px solid ${M.border}`,
+              background: BAI.bgMuted, color: BAI.inkMid, border: `1px solid ${BAI.border}`,
             }}>
               Ascenseur
             </span>
@@ -275,7 +259,7 @@ export const PropertyCard = ({
 
         {/* Description or stats */}
         {showStats ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: M.inkFaint }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: BAI.inkFaint }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
               <Eye style={{ width: 12, height: 12 }} />{property.views} vues
             </span>
@@ -284,7 +268,7 @@ export const PropertyCard = ({
           </div>
         ) : (
           <p style={{
-            fontSize: 12, color: M.inkMid, margin: 0, lineHeight: 1.6,
+            fontSize: 12, color: BAI.inkMid, margin: 0, lineHeight: 1.6,
             display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
           }}>
             {property.description}

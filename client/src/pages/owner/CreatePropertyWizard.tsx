@@ -11,26 +11,9 @@ import { Layout } from '../../components/layout/Layout'
 import { celebrateBig } from '../../utils/celebrate'
 import type { CreatePropertyInput, PropertyType } from '../../types/property.types'
 import { AMENITIES } from '../../types/property.types'
+import { BAI } from '../../constants/bailio-tokens'
 
 // ─── Maison tokens ────────────────────────────────────────────────────────────
-const M = {
-  bg:          '#fafaf8',
-  surface:     '#ffffff',
-  muted:       '#f4f2ee',
-  inputBg:     '#f8f7f4',
-  ink:         '#0d0c0a',
-  inkMid:      '#5a5754',
-  inkFaint:    '#9e9b96',
-  owner:       '#1a3270',
-  ownerLight:  '#eaf0fb',
-  ownerBorder: '#b8ccf0',
-  border:      '#e4e1db',
-  borderMid:   '#ccc9c3',
-  caramel:     '#c4976a',
-  caramelLight:'#fdf5ec',
-  danger:      '#9b1c1c',
-  dangerBg:    '#fef2f2',
-}
 
 const DRAFT_KEY = 'create_property_wizard_v1'
 
@@ -122,29 +105,29 @@ function Counter({
   return (
     <div style={{
       display: 'inline-flex', alignItems: 'center',
-      border: `1px solid ${M.border}`, borderRadius: 8, overflow: 'hidden',
+      border: `1px solid ${BAI.border}`, borderRadius: 8, overflow: 'hidden',
     }}>
       <button
         type="button"
         onClick={() => onChange(Math.max(min, value - 1))}
         disabled={value <= min}
         style={{
-          background: M.muted, border: 'none', cursor: value <= min ? 'not-allowed' : 'pointer',
-          padding: '6px 14px', fontSize: 18, color: value <= min ? M.inkFaint : M.ink, lineHeight: 1,
+          background: BAI.bgMuted, border: 'none', cursor: value <= min ? 'not-allowed' : 'pointer',
+          padding: '6px 14px', fontSize: 18, color: value <= min ? BAI.inkFaint : BAI.ink, lineHeight: 1,
         }}
       >−</button>
       <span style={{
         padding: '6px 18px', minWidth: 40, textAlign: 'center',
         fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: 15, fontWeight: 600,
-        color: M.ink, background: M.surface,
+        color: BAI.ink, background: BAI.bgSurface,
       }}>{value}</span>
       <button
         type="button"
         onClick={() => onChange(Math.min(max, value + 1))}
         disabled={value >= max}
         style={{
-          background: M.muted, border: 'none', cursor: value >= max ? 'not-allowed' : 'pointer',
-          padding: '6px 14px', fontSize: 18, color: value >= max ? M.inkFaint : M.ink, lineHeight: 1,
+          background: BAI.bgMuted, border: 'none', cursor: value >= max ? 'not-allowed' : 'pointer',
+          padding: '6px 14px', fontSize: 18, color: value >= max ? BAI.inkFaint : BAI.ink, lineHeight: 1,
         }}
       >+</button>
     </div>
@@ -156,7 +139,7 @@ function DpeGauge({
 }: { label: string; selected: DpeClass | ''; onSelect: (c: DpeClass) => void }) {
   return (
     <div>
-      <p style={{ fontSize: 13, fontWeight: 600, color: M.inkMid, marginBottom: 10 }}>{label}</p>
+      <p style={{ fontSize: 13, fontWeight: 600, color: BAI.inkMid, marginBottom: 10 }}>{label}</p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {DPE_CLASSES.map((cls, i) => {
           const isSelected = selected === cls
@@ -175,13 +158,13 @@ function DpeGauge({
                 padding: '4px 10px', borderRadius: 4,
                 fontFamily: 'DM Sans, system-ui', fontSize: 13, fontWeight: 700,
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                border: `3px solid ${isSelected ? M.ink : 'transparent'}`,
+                border: `3px solid ${isSelected ? BAI.ink : 'transparent'}`,
                 transition: 'border-color 0.15s',
               }}>
                 <span>{cls}</span>
                 <span style={{ fontSize: 10, fontWeight: 400, opacity: 0.85 }}>{DPE_MAX_KWH[cls]}</span>
               </div>
-              {isSelected && <Check size={14} color={M.owner} strokeWidth={3} />}
+              {isSelected && <Check size={14} color={BAI.owner} strokeWidth={3} />}
             </button>
           )
         })}
@@ -351,31 +334,31 @@ export default function CreatePropertyWizard() {
   // ─── Styles ──────────────────────────────────────────────────────────────────
 
   const inputStyle: React.CSSProperties = {
-    background: M.inputBg, border: `1px solid ${M.border}`, borderRadius: 8,
+    background: '#f8f7f4', border: `1px solid ${BAI.border}`, borderRadius: 8,
     padding: '0.625rem 1rem', fontFamily: 'DM Sans, system-ui, sans-serif',
-    fontSize: 15, color: M.ink, outline: 'none', width: '100%', boxSizing: 'border-box',
+    fontSize: 15, color: BAI.ink, outline: 'none', width: '100%', boxSizing: 'border-box',
   }
 
   const labelStyle: React.CSSProperties = {
-    fontSize: 13, fontWeight: 500, color: M.inkMid, display: 'block', marginBottom: 6,
+    fontSize: 13, fontWeight: 500, color: BAI.inkMid, display: 'block', marginBottom: 6,
   }
 
   const progress = (step / (STEPS.length - 1)) * 100
 
   return (
     <Layout>
-      <div style={{ background: M.bg, minHeight: '100vh', paddingBottom: 80 }}>
+      <div style={{ background: BAI.bgBase, minHeight: '100vh', paddingBottom: 80 }}>
         <div style={{ maxWidth: 700, margin: '0 auto', padding: '0 1rem' }}>
 
           {/* Page header */}
           <div style={{ paddingTop: 40, paddingBottom: 28, textAlign: 'center' }}>
             <p style={{
               fontFamily: 'DM Sans', fontSize: 11, fontWeight: 700,
-              letterSpacing: '0.12em', textTransform: 'uppercase', color: M.caramel, marginBottom: 8,
+              letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, marginBottom: 8,
             }}>Publier un bien</p>
             <h1 style={{
               fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 36,
-              fontWeight: 700, fontStyle: 'italic', color: M.ink, margin: 0,
+              fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: 0,
             }}>{STEPS[step].title}</h1>
           </div>
 
@@ -394,22 +377,22 @@ export default function CreatePropertyWizard() {
                 >
                   <div style={{
                     width: 28, height: 28, borderRadius: '50%',
-                    background: i <= step ? M.owner : M.muted,
-                    border: `2px solid ${i <= step ? M.owner : M.border}`,
+                    background: i <= step ? BAI.owner : BAI.bgMuted,
+                    border: `2px solid ${i <= step ? BAI.owner : BAI.border}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     transition: 'all 0.2s',
                   }}>
                     {i < step
                       ? <Check size={13} color="#fff" strokeWidth={3} />
-                      : <span style={{ fontSize: 11, fontWeight: 700, color: i === step ? '#fff' : M.inkFaint }}>{i + 1}</span>
+                      : <span style={{ fontSize: 11, fontWeight: 700, color: i === step ? '#fff' : BAI.inkFaint }}>{i + 1}</span>
                     }
                   </div>
                 </button>
               ))}
             </div>
-            <div style={{ height: 4, background: M.border, borderRadius: 2 }}>
+            <div style={{ height: 4, background: BAI.border, borderRadius: 2 }}>
               <div style={{
-                height: '100%', background: M.owner, borderRadius: 2,
+                height: '100%', background: BAI.owner, borderRadius: 2,
                 width: `${progress}%`, transition: 'width 0.3s ease',
               }} />
             </div>
@@ -417,7 +400,7 @@ export default function CreatePropertyWizard() {
               {STEPS.map((s, i) => (
                 <span key={i} style={{
                   fontSize: 10, fontWeight: 500,
-                  color: i === step ? M.owner : i < step ? M.inkMid : M.inkFaint,
+                  color: i === step ? BAI.owner : i < step ? BAI.inkMid : BAI.inkFaint,
                 }}>{s.label}</span>
               ))}
             </div>
@@ -425,7 +408,7 @@ export default function CreatePropertyWizard() {
 
           {/* Step card */}
           <div style={{
-            background: M.surface, border: `1px solid ${M.border}`, borderRadius: 16,
+            background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16,
             padding: '2rem', boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
           }}>
 
@@ -445,25 +428,25 @@ export default function CreatePropertyWizard() {
                         style={{
                           display: 'flex', flexDirection: 'column', alignItems: 'center',
                           justifyContent: 'center', gap: 6, padding: '1rem 0.5rem',
-                          background: sel ? M.ownerLight : M.surface,
-                          border: `2px solid ${sel ? M.owner : M.border}`,
+                          background: sel ? BAI.ownerLight : BAI.bgSurface,
+                          border: `2px solid ${sel ? BAI.owner : BAI.border}`,
                           borderRadius: 12, cursor: 'pointer', transition: 'all 0.15s',
                         }}
                       >
-                        <span style={{ color: sel ? M.owner : M.inkMid }}>{card.icon}</span>
+                        <span style={{ color: sel ? BAI.owner : BAI.inkMid }}>{card.icon}</span>
                         <span style={{
-                          fontSize: 12, fontWeight: 600, color: sel ? M.owner : M.ink,
+                          fontSize: 12, fontWeight: 600, color: sel ? BAI.owner : BAI.ink,
                           textAlign: 'center', fontFamily: 'DM Sans, system-ui',
                         }}>{card.label}</span>
-                        <span style={{ fontSize: 10, color: M.inkFaint, textAlign: 'center' }}>{card.desc}</span>
+                        <span style={{ fontSize: 10, color: BAI.inkFaint, textAlign: 'center' }}>{card.desc}</span>
                       </button>
                     )
                   })}
                 </div>
                 {errors.propertyType && (
-                  <p style={{ color: M.danger, fontSize: 13, marginBottom: 16 }}>{errors.propertyType}</p>
+                  <p style={{ color: BAI.error, fontSize: 13, marginBottom: 16 }}>{errors.propertyType}</p>
                 )}
-                <div style={{ borderTop: `1px solid ${M.border}`, paddingTop: 20 }}>
+                <div style={{ borderTop: `1px solid ${BAI.border}`, paddingTop: 20 }}>
                   <p style={{ ...labelStyle, marginBottom: 12 }}>Type de location</p>
                   <div style={{ display: 'flex', gap: 10 }}>
                     {[{ v: false, l: 'Vide' }, { v: true, l: 'Meublé' }].map(({ v, l }) => (
@@ -473,11 +456,11 @@ export default function CreatePropertyWizard() {
                         onClick={() => update({ furnished: v })}
                         style={{
                           flex: 1, padding: '0.75rem',
-                          border: `2px solid ${state.furnished === v ? M.owner : M.border}`,
-                          background: state.furnished === v ? M.ownerLight : M.surface,
+                          border: `2px solid ${state.furnished === v ? BAI.owner : BAI.border}`,
+                          background: state.furnished === v ? BAI.ownerLight : BAI.bgSurface,
                           borderRadius: 10, cursor: 'pointer', fontFamily: 'DM Sans',
                           fontSize: 14, fontWeight: 600,
-                          color: state.furnished === v ? M.owner : M.inkMid,
+                          color: state.furnished === v ? BAI.owner : BAI.inkMid,
                           transition: 'all 0.15s',
                         }}
                       >{l}</button>
@@ -500,14 +483,14 @@ export default function CreatePropertyWizard() {
                       style={{ ...inputStyle, paddingLeft: 40 }}
                     />
                     {banLoading
-                      ? <Loader2 size={16} style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: M.inkFaint }} />
-                      : <MapPin size={16} style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: M.inkFaint }} />
+                      ? <Loader2 size={16} style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: BAI.inkFaint }} />
+                      : <MapPin size={16} style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: BAI.inkFaint }} />
                     }
                   </div>
                   {banResults.length > 0 && (
                     <div style={{
                       position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50,
-                      background: M.surface, border: `1px solid ${M.border}`, borderRadius: 10,
+                      background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 10,
                       boxShadow: '0 4px 20px rgba(13,12,10,0.12)', marginTop: 4, overflow: 'hidden',
                     }}>
                       {banResults.map((feat, i) => (
@@ -519,30 +502,30 @@ export default function CreatePropertyWizard() {
                             display: 'flex', alignItems: 'center', gap: 8, width: '100%',
                             textAlign: 'left', padding: '10px 14px',
                             background: 'none', border: 'none', cursor: 'pointer',
-                            fontFamily: 'DM Sans', fontSize: 14, color: M.ink,
-                            borderBottom: i < banResults.length - 1 ? `1px solid ${M.border}` : 'none',
+                            fontFamily: 'DM Sans', fontSize: 14, color: BAI.ink,
+                            borderBottom: i < banResults.length - 1 ? `1px solid ${BAI.border}` : 'none',
                           }}
-                          onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
+                          onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
                           onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                         >
-                          <MapPin size={13} style={{ color: M.inkFaint, flexShrink: 0 }} />
+                          <MapPin size={13} style={{ color: BAI.inkFaint, flexShrink: 0 }} />
                           {feat.properties.label}
                         </button>
                       ))}
                     </div>
                   )}
-                  {errors.address && <p style={{ color: M.danger, fontSize: 13, marginTop: 4 }}>{errors.address}</p>}
+                  {errors.address && <p style={{ color: BAI.error, fontSize: 13, marginTop: 4 }}>{errors.address}</p>}
                 </div>
 
                 {state.address && (
                   <div style={{
-                    background: M.ownerLight, border: `1px solid ${M.ownerBorder}`,
+                    background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`,
                     borderRadius: 10, padding: '12px 14px',
                   }}>
-                    <p style={{ fontSize: 12, fontWeight: 700, color: M.owner, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Adresse sélectionnée</p>
-                    <p style={{ fontSize: 14, color: M.ink, margin: 0 }}>{state.address}</p>
+                    <p style={{ fontSize: 12, fontWeight: 700, color: BAI.owner, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Adresse sélectionnée</p>
+                    <p style={{ fontSize: 14, color: BAI.ink, margin: 0 }}>{state.address}</p>
                     {state.latitude && (
-                      <p style={{ fontSize: 12, color: M.inkFaint, marginTop: 4 }}>
+                      <p style={{ fontSize: 12, color: BAI.inkFaint, marginTop: 4 }}>
                         GPS : {state.latitude.toFixed(5)}, {state.longitude?.toFixed(5)}
                       </p>
                     )}
@@ -557,7 +540,7 @@ export default function CreatePropertyWizard() {
                       onChange={e => update({ city: e.target.value })}
                       style={inputStyle} placeholder="Paris"
                     />
-                    {errors.city && <p style={{ color: M.danger, fontSize: 13, marginTop: 4 }}>{errors.city}</p>}
+                    {errors.city && <p style={{ color: BAI.error, fontSize: 13, marginTop: 4 }}>{errors.city}</p>}
                   </div>
                   <div>
                     <label style={labelStyle}>Code postal *</label>
@@ -566,7 +549,7 @@ export default function CreatePropertyWizard() {
                       onChange={e => update({ postalCode: e.target.value })}
                       style={inputStyle} placeholder="75001"
                     />
-                    {errors.postalCode && <p style={{ color: M.danger, fontSize: 13, marginTop: 4 }}>{errors.postalCode}</p>}
+                    {errors.postalCode && <p style={{ color: BAI.error, fontSize: 13, marginTop: 4 }}>{errors.postalCode}</p>}
                   </div>
                 </div>
               </div>
@@ -583,7 +566,7 @@ export default function CreatePropertyWizard() {
                     onChange={e => update({ surface: e.target.value })}
                     style={{ ...inputStyle, maxWidth: 160 }} placeholder="45"
                   />
-                  {errors.surface && <p style={{ color: M.danger, fontSize: 13, marginTop: 4 }}>{errors.surface}</p>}
+                  {errors.surface && <p style={{ color: BAI.error, fontSize: 13, marginTop: 4 }}>{errors.surface}</p>}
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 20 }}>
@@ -636,10 +619,10 @@ export default function CreatePropertyWizard() {
                           onClick={() => toggleFeature(k)}
                           style={{
                             padding: '6px 14px', borderRadius: 20,
-                            border: `1.5px solid ${active ? M.owner : M.border}`,
-                            background: active ? M.ownerLight : M.surface,
+                            border: `1.5px solid ${active ? BAI.owner : BAI.border}`,
+                            background: active ? BAI.ownerLight : BAI.bgSurface,
                             cursor: 'pointer', fontSize: 13, fontWeight: 500,
-                            color: active ? M.owner : M.inkMid, transition: 'all 0.15s',
+                            color: active ? BAI.owner : BAI.inkMid, transition: 'all 0.15s',
                           }}
                         >{active ? '✓ ' : ''}{l}</button>
                       )
@@ -659,10 +642,10 @@ export default function CreatePropertyWizard() {
                           onClick={() => toggleAmenity(am.value)}
                           style={{
                             padding: '7px 10px', borderRadius: 8,
-                            border: `1.5px solid ${active ? M.owner : M.border}`,
-                            background: active ? M.ownerLight : M.surface,
+                            border: `1.5px solid ${active ? BAI.owner : BAI.border}`,
+                            background: active ? BAI.ownerLight : BAI.bgSurface,
                             cursor: 'pointer', fontSize: 12, fontWeight: 500,
-                            color: active ? M.owner : M.inkMid,
+                            color: active ? BAI.owner : BAI.inkMid,
                             textAlign: 'left', transition: 'all 0.15s',
                           }}
                         >{active ? '✓ ' : ''}{am.label}</button>
@@ -676,7 +659,7 @@ export default function CreatePropertyWizard() {
             {/* ── Step 3: DPE ──────────────────────────────────────────────── */}
             {step === 3 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-                <p style={{ fontSize: 14, color: M.inkMid, lineHeight: 1.6, margin: 0 }}>
+                <p style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.6, margin: 0 }}>
                   Le DPE est obligatoire depuis 2021 pour tout logement mis en location. Il évalue la consommation d'énergie et l'impact climatique du bien.
                 </p>
 
@@ -720,10 +703,10 @@ export default function CreatePropertyWizard() {
                 </div>
 
                 <div style={{
-                  background: M.caramelLight, border: '1px solid #f3c99a',
+                  background: BAI.caramelLight, border: '1px solid #f3c99a',
                   borderRadius: 10, padding: '12px 14px', display: 'flex', gap: 10,
                 }}>
-                  <Info size={16} style={{ color: M.caramel, flexShrink: 0, marginTop: 1 }} />
+                  <Info size={16} style={{ color: BAI.caramel, flexShrink: 0, marginTop: 1 }} />
                   <p style={{ fontSize: 13, color: '#92400e', margin: 0, lineHeight: 1.5 }}>
                     Cette étape est optionnelle à ce stade. Vous pourrez renseigner ces informations après publication dans les détails du bien.
                   </p>
@@ -745,7 +728,7 @@ export default function CreatePropertyWizard() {
                     }}
                     style={{ ...inputStyle, maxWidth: 200 }} placeholder="900"
                   />
-                  {errors.price && <p style={{ color: M.danger, fontSize: 13, marginTop: 4 }}>{errors.price}</p>}
+                  {errors.price && <p style={{ color: BAI.error, fontSize: 13, marginTop: 4 }}>{errors.price}</p>}
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
@@ -761,7 +744,7 @@ export default function CreatePropertyWizard() {
                   <div>
                     <label style={labelStyle}>
                       Dépôt de garantie (€)
-                      {state.price && <span style={{ color: M.inkFaint, fontWeight: 400, marginLeft: 6, fontSize: 12 }}>= {Number(state.price) * 2} € (2 mois)</span>}
+                      {state.price && <span style={{ color: BAI.inkFaint, fontWeight: 400, marginLeft: 6, fontSize: 12 }}>= {Number(state.price) * 2} € (2 mois)</span>}
                     </label>
                     <input
                       type="number" min="0"
@@ -798,23 +781,23 @@ export default function CreatePropertyWizard() {
 
                 {state.price && Number(state.price) > 0 && (
                   <div style={{
-                    background: M.ownerLight, border: `1px solid ${M.ownerBorder}`,
+                    background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`,
                     borderRadius: 10, padding: '14px 16px',
                   }}>
                     <p style={{
-                      fontSize: 11, fontWeight: 700, color: M.owner, marginBottom: 12,
+                      fontSize: 11, fontWeight: 700, color: BAI.owner, marginBottom: 12,
                       textTransform: 'uppercase', letterSpacing: '0.08em',
                     }}>Récapitulatif financier</p>
                     <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap' }}>
                       <div>
-                        <p style={{ fontSize: 12, color: M.inkMid, marginBottom: 2 }}>Loyer charges comprises</p>
-                        <p style={{ fontSize: 22, fontWeight: 700, color: M.ink }}>
+                        <p style={{ fontSize: 12, color: BAI.inkMid, marginBottom: 2 }}>Loyer charges comprises</p>
+                        <p style={{ fontSize: 22, fontWeight: 700, color: BAI.ink }}>
                           {(Number(state.price) + Number(state.charges || 0)).toLocaleString('fr-FR')} €/mois
                         </p>
                       </div>
                       <div>
-                        <p style={{ fontSize: 12, color: M.inkMid, marginBottom: 2 }}>1er versement total</p>
-                        <p style={{ fontSize: 22, fontWeight: 700, color: M.ink }}>
+                        <p style={{ fontSize: 12, color: BAI.inkMid, marginBottom: 2 }}>1er versement total</p>
+                        <p style={{ fontSize: 22, fontWeight: 700, color: BAI.ink }}>
                           {(Number(state.price) + Number(state.charges || 0) + Number(state.deposit || 0)).toLocaleString('fr-FR')} €
                         </p>
                       </div>
@@ -829,7 +812,7 @@ export default function CreatePropertyWizard() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 <div>
                   <label style={labelStyle}>Photos du bien</label>
-                  <p style={{ fontSize: 13, color: M.inkFaint, marginBottom: 12, marginTop: 0 }}>
+                  <p style={{ fontSize: 13, color: BAI.inkFaint, marginBottom: 12, marginTop: 0 }}>
                     Ajoutez jusqu'à 10 photos. Les bonnes photos multiplient les contacts par 3.
                   </p>
                   <ImageUpload
@@ -842,7 +825,7 @@ export default function CreatePropertyWizard() {
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
                     <label style={labelStyle}>Description *</label>
-                    <span style={{ fontSize: 12, color: state.description.length > 1800 ? M.danger : M.inkFaint }}>
+                    <span style={{ fontSize: 12, color: state.description.length > 1800 ? BAI.error : BAI.inkFaint }}>
                       {state.description.length}/2000
                     </span>
                   </div>
@@ -854,12 +837,12 @@ export default function CreatePropertyWizard() {
                     placeholder="Décrivez le bien : luminosité, orientations, environnement, transports, état général, travaux récents…"
                     style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }}
                   />
-                  {errors.description && <p style={{ color: M.danger, fontSize: 13, marginTop: 4 }}>{errors.description}</p>}
+                  {errors.description && <p style={{ color: BAI.error, fontSize: 13, marginTop: 4 }}>{errors.description}</p>}
                 </div>
 
                 {errors.general && (
-                  <div style={{ background: M.dangerBg, border: '1px solid #fca5a5', borderRadius: 10, padding: '12px 14px' }}>
-                    <p style={{ fontSize: 14, color: M.danger, margin: 0 }}>{errors.general}</p>
+                  <div style={{ background: BAI.errorLight, border: '1px solid #fca5a5', borderRadius: 10, padding: '12px 14px' }}>
+                    <p style={{ fontSize: 14, color: BAI.error, margin: 0 }}>{errors.general}</p>
                   </div>
                 )}
               </div>
@@ -873,22 +856,22 @@ export default function CreatePropertyWizard() {
               onClick={step > 0 ? back : () => navigate(-1)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 6, padding: '0.75rem 1.25rem',
-                background: M.surface, border: `1px solid ${M.border}`, borderRadius: 10,
-                fontFamily: 'DM Sans', fontSize: 14, fontWeight: 500, color: M.inkMid, cursor: 'pointer',
+                background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 10,
+                fontFamily: 'DM Sans', fontSize: 14, fontWeight: 500, color: BAI.inkMid, cursor: 'pointer',
               }}
             >
               <ChevronLeft size={16} /> {step > 0 ? 'Retour' : 'Annuler'}
             </button>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ fontSize: 12, color: M.inkFaint }}>Brouillon sauvegardé</span>
+              <span style={{ fontSize: 12, color: BAI.inkFaint }}>Brouillon sauvegardé</span>
               {step < STEPS.length - 1 ? (
                 <button
                   type="button"
                   onClick={next}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 6, padding: '0.75rem 1.5rem',
-                    background: M.owner, border: 'none', borderRadius: 10,
+                    background: BAI.owner, border: 'none', borderRadius: 10,
                     fontFamily: 'DM Sans', fontSize: 14, fontWeight: 600, color: '#fff', cursor: 'pointer',
                   }}
                 >
@@ -901,7 +884,7 @@ export default function CreatePropertyWizard() {
                   disabled={isLoading}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 8, padding: '0.75rem 1.75rem',
-                    background: isLoading ? M.borderMid : M.owner, border: 'none', borderRadius: 10,
+                    background: isLoading ? BAI.borderStrong : BAI.owner, border: 'none', borderRadius: 10,
                     fontFamily: 'DM Sans', fontSize: 14, fontWeight: 600, color: '#fff',
                     cursor: isLoading ? 'not-allowed' : 'pointer',
                   }}

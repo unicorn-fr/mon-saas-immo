@@ -16,47 +16,26 @@ import { CancelBookingModal } from '../../components/booking/CancelBookingModal'
 import { Calendar } from '../../components/booking/Calendar'
 import { BookingStatus } from '../../types/booking.types'
 import { Layout } from '../../components/layout/Layout'
+import { BAI } from '../../constants/bailio-tokens'
 
 type ViewMode = 'list' | 'calendar'
 
 // ─── Maison tokens ────────────────────────────────────────────────────────────
 
-const M = {
-  bg:           '#fafaf8',
-  surface:      '#ffffff',
-  muted:        '#f4f2ee',
-  inputBg:      '#f8f7f4',
-  ink:          '#0d0c0a',
-  inkMid:       '#5a5754',
-  inkFaint:     '#9e9b96',
-  caramel:      '#c4976a',
-  caramelLight: '#fdf5ec',
-  owner:        '#1a3270',
-  ownerLight:   '#eaf0fb',
-  ownerBorder:  '#b8ccf0',
-  border:       '#e4e1db',
-  borderMid:    '#ccc9c3',
-  danger:       '#9b1c1c',
-  dangerBg:     '#fef2f2',
-  warning:      '#92400e',
-  warningBg:    '#fdf5ec',
-  success:      '#1b5e3b',
-  successBg:    '#edf7f2',
-}
 
 const cardStyle: React.CSSProperties = {
-  background: M.surface,
-  border: `1px solid ${M.border}`,
+  background: BAI.bgSurface,
+  border: `1px solid ${BAI.border}`,
   borderRadius: 12,
   boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
 }
 
 const inputStyle: React.CSSProperties = {
-  background: M.inputBg,
-  border: `1px solid ${M.border}`,
+  background: BAI.bgInput,
+  border: `1px solid ${BAI.border}`,
   borderRadius: 8,
   padding: '0.625rem 1rem',
-  color: M.ink,
+  color: BAI.ink,
   fontSize: '0.875rem',
   outline: 'none',
   width: '100%',
@@ -143,41 +122,41 @@ export const BookingManagement = () => {
       label: 'Total',
       value: statistics.total,
       icon: <CalendarIcon className="w-5 h-5" />,
-      bg: M.ownerLight,
-      border: M.ownerBorder,
-      color: M.owner,
+      bg: BAI.ownerLight,
+      border: BAI.ownerBorder,
+      color: BAI.owner,
     },
     {
       label: 'En attente',
       value: statistics.pending,
       icon: <Clock className="w-5 h-5" />,
-      bg: M.warningBg,
+      bg: BAI.warningLight,
       border: '#e8c98b',
-      color: M.warning,
+      color: BAI.warning,
     },
     {
       label: 'Confirmées',
       value: statistics.confirmed,
       icon: <CheckCircle className="w-5 h-5" />,
-      bg: M.successBg,
+      bg: BAI.successLight,
       border: '#a8d5bc',
-      color: M.success,
+      color: BAI.success,
     },
     {
       label: 'Annulées',
       value: statistics.cancelled,
       icon: <XCircle className="w-5 h-5" />,
-      bg: M.dangerBg,
+      bg: BAI.errorLight,
       border: '#f5c6c6',
-      color: M.danger,
+      color: BAI.error,
     },
     {
       label: 'Terminées',
       value: statistics.completed,
       icon: <TrendingUp className="w-5 h-5" />,
-      bg: M.muted,
-      border: M.border,
-      color: M.inkMid,
+      bg: BAI.bgMuted,
+      border: BAI.border,
+      color: BAI.inkMid,
     },
   ] : []
 
@@ -185,7 +164,7 @@ export const BookingManagement = () => {
     <Layout>
       <div
         className="min-h-screen p-6 lg:p-8"
-        style={{ background: M.bg, fontFamily: "'DM Sans', system-ui, sans-serif" }}
+        style={{ background: BAI.bgBase, fontFamily: "'DM Sans', system-ui, sans-serif" }}
       >
         <div className="max-w-7xl mx-auto">
 
@@ -193,7 +172,7 @@ export const BookingManagement = () => {
           <div className="mb-8">
             <p
               className="uppercase tracking-widest mb-1"
-              style={{ fontSize: 10, color: M.inkFaint, letterSpacing: '0.12em' }}
+              style={{ fontSize: 10, color: BAI.inkFaint, letterSpacing: '0.12em' }}
             >
               Propriétaire
             </p>
@@ -203,14 +182,14 @@ export const BookingManagement = () => {
                 fontWeight: 700,
                 fontStyle: 'italic',
                 fontSize: 40,
-                color: M.ink,
+                color: BAI.ink,
                 lineHeight: 1.1,
                 margin: 0,
               }}
             >
               Visites
             </h1>
-            <p className="mt-1.5" style={{ fontSize: 14, color: M.inkMid }}>
+            <p className="mt-1.5" style={{ fontSize: 14, color: BAI.inkMid }}>
               Gérez les demandes de visite de vos propriétés
             </p>
           </div>
@@ -231,10 +210,10 @@ export const BookingManagement = () => {
                     {icon}
                   </div>
                   <div>
-                    <p style={{ fontSize: 12, color: M.inkFaint, marginBottom: 2 }}>{label}</p>
+                    <p style={{ fontSize: 12, color: BAI.inkFaint, marginBottom: 2 }}>{label}</p>
                     <p
                       className="text-2xl font-bold"
-                      style={{ color: M.ink, fontFamily: "'DM Sans', system-ui, sans-serif" }}
+                      style={{ color: BAI.ink, fontFamily: "'DM Sans', system-ui, sans-serif" }}
                     >
                       {value}
                     </p>
@@ -254,7 +233,7 @@ export const BookingManagement = () => {
               <div className="relative">
                 <Search
                   className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
-                  style={{ color: M.inkFaint }}
+                  style={{ color: BAI.inkFaint }}
                 />
                 <input
                   type="text"
@@ -263,11 +242,11 @@ export const BookingManagement = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   style={{ ...inputStyle, paddingLeft: '2.25rem' }}
                   onFocus={(e) => {
-                    e.currentTarget.style.borderColor = M.owner
-                    e.currentTarget.style.boxShadow = `0 0 0 3px ${M.ownerLight}`
+                    e.currentTarget.style.borderColor = BAI.owner
+                    e.currentTarget.style.boxShadow = `0 0 0 3px ${BAI.ownerLight}`
                   }}
                   onBlur={(e) => {
-                    e.currentTarget.style.borderColor = M.border
+                    e.currentTarget.style.borderColor = BAI.border
                     e.currentTarget.style.boxShadow = 'none'
                   }}
                 />
@@ -279,11 +258,11 @@ export const BookingManagement = () => {
                 onChange={(e) => setSelectedProperty(e.target.value)}
                 style={inputStyle}
                 onFocus={(e) => {
-                  e.currentTarget.style.borderColor = M.owner
-                  e.currentTarget.style.boxShadow = `0 0 0 3px ${M.ownerLight}`
+                  e.currentTarget.style.borderColor = BAI.owner
+                  e.currentTarget.style.boxShadow = `0 0 0 3px ${BAI.ownerLight}`
                 }}
                 onBlur={(e) => {
-                  e.currentTarget.style.borderColor = M.border
+                  e.currentTarget.style.borderColor = BAI.border
                   e.currentTarget.style.boxShadow = 'none'
                 }}
               >
@@ -301,11 +280,11 @@ export const BookingManagement = () => {
                 onChange={(e) => setSelectedStatus(e.target.value as BookingStatus | 'all')}
                 style={inputStyle}
                 onFocus={(e) => {
-                  e.currentTarget.style.borderColor = M.owner
-                  e.currentTarget.style.boxShadow = `0 0 0 3px ${M.ownerLight}`
+                  e.currentTarget.style.borderColor = BAI.owner
+                  e.currentTarget.style.boxShadow = `0 0 0 3px ${BAI.ownerLight}`
                 }}
                 onBlur={(e) => {
-                  e.currentTarget.style.borderColor = M.border
+                  e.currentTarget.style.borderColor = BAI.border
                   e.currentTarget.style.boxShadow = 'none'
                 }}
               >
@@ -319,7 +298,7 @@ export const BookingManagement = () => {
               {/* View Toggle */}
               <div
                 className="flex items-center gap-1 p-1"
-                style={{ background: M.muted, border: `1px solid ${M.border}`, borderRadius: 10 }}
+                style={{ background: BAI.bgMuted, border: `1px solid ${BAI.border}`, borderRadius: 10 }}
               >
                 <button
                   onClick={() => setViewMode('list')}
@@ -327,12 +306,12 @@ export const BookingManagement = () => {
                   style={
                     viewMode === 'list'
                       ? {
-                          background: M.surface,
-                          color: M.owner,
+                          background: BAI.bgSurface,
+                          color: BAI.owner,
                           borderRadius: 8,
                           boxShadow: '0 1px 3px rgba(13,12,10,0.08)',
                         }
-                      : { background: 'transparent', color: M.inkMid, borderRadius: 8 }
+                      : { background: 'transparent', color: BAI.inkMid, borderRadius: 8 }
                   }
                 >
                   Liste
@@ -343,12 +322,12 @@ export const BookingManagement = () => {
                   style={
                     viewMode === 'calendar'
                       ? {
-                          background: M.surface,
-                          color: M.owner,
+                          background: BAI.bgSurface,
+                          color: BAI.owner,
                           borderRadius: 8,
                           boxShadow: '0 1px 3px rgba(13,12,10,0.08)',
                         }
-                      : { background: 'transparent', color: M.inkMid, borderRadius: 8 }
+                      : { background: 'transparent', color: BAI.inkMid, borderRadius: 8 }
                   }
                 >
                   Calendrier
@@ -362,14 +341,14 @@ export const BookingManagement = () => {
             <div
               className="p-4 mb-6 flex items-start gap-3"
               style={{
-                background: M.dangerBg,
+                background: BAI.errorLight,
                 border: `1px solid #f5c6c6`,
                 borderRadius: 10,
               }}
             >
-              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: M.danger }} />
+              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: BAI.error }} />
               <div>
-                <p className="font-semibold text-sm" style={{ color: M.danger }}>Erreur</p>
+                <p className="font-semibold text-sm" style={{ color: BAI.error }}>Erreur</p>
                 <p className="text-sm" style={{ color: '#7f1d1d' }}>{error}</p>
               </div>
             </div>
@@ -381,7 +360,7 @@ export const BookingManagement = () => {
               className="flex items-center justify-center py-16"
               style={cardStyle}
             >
-              <Loader className="w-7 h-7 animate-spin" style={{ color: M.owner }} />
+              <Loader className="w-7 h-7 animate-spin" style={{ color: BAI.owner }} />
             </div>
           ) : viewMode === 'calendar' ? (
             <Calendar
@@ -399,22 +378,22 @@ export const BookingManagement = () => {
                 >
                   <div
                     className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-                    style={{ background: M.ownerLight }}
+                    style={{ background: BAI.ownerLight }}
                   >
-                    <CalendarIcon className="w-8 h-8" style={{ color: M.owner }} />
+                    <CalendarIcon className="w-8 h-8" style={{ color: BAI.owner }} />
                   </div>
                   <h3
                     style={{
                       fontFamily: "'Cormorant Garamond', Georgia, serif",
                       fontStyle: 'italic',
                       fontSize: 22,
-                      color: M.ink,
+                      color: BAI.ink,
                       marginBottom: 8,
                     }}
                   >
                     Aucune visite
                   </h3>
-                  <p style={{ fontSize: 13, color: M.inkMid }}>
+                  <p style={{ fontSize: 13, color: BAI.inkMid }}>
                     {searchQuery || selectedProperty !== 'all' || selectedStatus !== 'all'
                       ? 'Aucune réservation ne correspond à vos filtres.'
                       : "Vous n'avez pas encore reçu de demandes de visite."}
@@ -439,7 +418,7 @@ export const BookingManagement = () => {
           {filteredBookings.length > 0 && viewMode === 'list' && (
             <div
               className="mt-6 text-center text-sm"
-              style={{ color: M.inkFaint }}
+              style={{ color: BAI.inkFaint }}
             >
               Affichage de {filteredBookings.length} sur {bookingsTotal} réservation
               {bookingsTotal > 1 ? 's' : ''}

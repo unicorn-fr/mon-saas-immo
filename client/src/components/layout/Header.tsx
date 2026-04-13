@@ -12,13 +12,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useSidebarStore } from '../../store/sidebarStore'
 import { useState, useEffect } from 'react'
 import { BailioLogo } from '../BailioLogo'
-
-const NIGHT = '#1a1a2e'
-const BORDER = '#e4e1db'
-const INK = '#0d0c0a'
-const INK_MID = '#5a5754'
-const INK_FAINT = '#9e9b96'
-const BG_MUTED = '#f4f2ee'
+import { BAI } from '../../constants/bailio-tokens'
 
 export const Header = () => {
   const { isAuthenticated, user, logout } = useAuth()
@@ -66,7 +60,7 @@ export const Header = () => {
         {/* Mobile hamburger */}
         <button onClick={toggleSidebar}
           className="md:hidden mr-auto flex items-center justify-center w-9 h-9 rounded-xl transition-colors"
-          style={{ background: '#ffffff', border: `1px solid ${BORDER}`, boxShadow: '0 1px 2px rgba(13,12,10,0.06), 0 4px 12px rgba(13,12,10,0.08)', color: INK_FAINT }}
+          style={{ background: '#ffffff', border: `1px solid ${BAI.border}`, boxShadow: '0 1px 2px rgba(13,12,10,0.06), 0 4px 12px rgba(13,12,10,0.08)', color: BAI.inkFaint }}
           aria-label="Menu">
           <Menu className="w-4 h-4" />
         </button>
@@ -83,29 +77,29 @@ export const Header = () => {
 
         {/* Pill : Bell + Profile */}
         <div className="flex items-center gap-0.5 px-1.5 py-1.5 rounded-2xl"
-          style={{ background: '#ffffff', border: `1px solid ${BORDER}`, boxShadow: '0 1px 2px rgba(13,12,10,0.06), 0 4px 12px rgba(13,12,10,0.08)' }}>
+          style={{ background: '#ffffff', border: `1px solid ${BAI.border}`, boxShadow: '0 1px 2px rgba(13,12,10,0.06), 0 4px 12px rgba(13,12,10,0.08)' }}>
 
           <Link to="/notifications"
             className="p-1.5 rounded-lg transition-colors"
-            style={{ color: INK_FAINT }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BG_MUTED; (e.currentTarget as HTMLElement).style.color = INK_MID }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = INK_FAINT }}>
+            style={{ color: BAI.inkFaint }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted; (e.currentTarget as HTMLElement).style.color = BAI.inkMid }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = BAI.inkFaint }}>
             <Bell className="w-4 h-4" />
           </Link>
 
-          <div className="w-px h-4 mx-0.5" style={{ background: BORDER }} />
+          <div className="w-px h-4 mx-0.5" style={{ background: BAI.border }} />
 
           <div className="relative">
             <button onClick={() => setShowUserMenu(!showUserMenu)}
               className="flex items-center gap-1.5 px-1.5 py-1 rounded-lg transition-all"
-              style={{ background: showUserMenu ? BG_MUTED : 'transparent' }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BG_MUTED }}
+              style={{ background: showUserMenu ? BAI.bgMuted : 'transparent' }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
               onMouseLeave={(e) => { if (!showUserMenu) (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
               <div className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
                 style={{ background: threadColor }}>
                 {initials}
               </div>
-              <span className="text-[12px] font-medium hidden sm:block pr-0.5" style={{ color: INK, fontFamily: 'var(--font-body)' }}>
+              <span className="text-[12px] font-medium hidden sm:block pr-0.5" style={{ color: BAI.ink, fontFamily: 'var(--font-body)' }}>
                 {user?.firstName}
               </span>
             </button>
@@ -114,12 +108,12 @@ export const Header = () => {
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
                 <div className="absolute right-0 mt-2 w-56 rounded-xl py-2 z-20"
-                  style={{ background: '#ffffff', border: `1px solid ${BORDER}`, boxShadow: '0 20px 60px rgba(13,12,10,0.12), 0 4px 16px rgba(13,12,10,0.06)' }}>
-                  <div className="px-4 py-3" style={{ borderBottom: `1px solid ${BORDER}` }}>
-                    <p className="text-[13px] font-semibold" style={{ color: INK, fontFamily: 'var(--font-body)' }}>
+                  style={{ background: '#ffffff', border: `1px solid ${BAI.border}`, boxShadow: '0 20px 60px rgba(13,12,10,0.12), 0 4px 16px rgba(13,12,10,0.06)' }}>
+                  <div className="px-4 py-3" style={{ borderBottom: `1px solid ${BAI.border}` }}>
+                    <p className="text-[13px] font-semibold" style={{ color: BAI.ink, fontFamily: 'var(--font-body)' }}>
                       {user?.firstName} {user?.lastName}
                     </p>
-                    <p className="text-[11px] truncate mt-0.5" style={{ color: INK_MID }}>{user?.email}</p>
+                    <p className="text-[11px] truncate mt-0.5" style={{ color: BAI.inkMid }}>{user?.email}</p>
                     <span className="inline-block mt-1.5 text-[10px] px-2 py-0.5 rounded-full font-semibold"
                       style={{ background: `${threadColor}18`, color: threadColor }}>
                       {user?.role === 'OWNER' ? 'Propriétaire' : user?.role === 'TENANT' ? 'Locataire' : user?.role}
@@ -132,14 +126,14 @@ export const Header = () => {
                   ].map(({ to, icon, label }) => (
                     <Link key={to} to={to}
                       className="flex items-center gap-3 px-4 py-2 text-[13px] transition-colors"
-                      style={{ color: INK_MID, fontFamily: 'var(--font-body)' }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BG_MUTED }}
+                      style={{ color: BAI.inkMid, fontFamily: 'var(--font-body)' }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
                       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
                       onClick={() => setShowUserMenu(false)}>
-                      <span style={{ color: INK_FAINT }}>{icon}</span> {label}
+                      <span style={{ color: BAI.inkFaint }}>{icon}</span> {label}
                     </Link>
                   ))}
-                  <div className="mt-1 pt-1" style={{ borderTop: `1px solid ${BORDER}` }}>
+                  <div className="mt-1 pt-1" style={{ borderTop: `1px solid ${BAI.border}` }}>
                     <button onClick={handleLogout}
                       className="flex items-center gap-3 px-4 py-2 text-[13px] w-full transition-colors"
                       style={{ color: '#9b1c1c', fontFamily: 'var(--font-body)' }}
@@ -160,7 +154,7 @@ export const Header = () => {
   // ── PUBLIC HEADER ──────────────────────────────────────────────────────────
   const publicHeaderStyle: React.CSSProperties = {
     background: scrolled ? 'rgba(255,255,255,0.97)' : 'transparent',
-    borderBottom: scrolled ? `1px solid ${BORDER}` : '1px solid transparent',
+    borderBottom: scrolled ? `1px solid ${BAI.border}` : '1px solid transparent',
     transition: 'background 0.25s ease, border-color 0.25s ease',
   }
 
@@ -177,7 +171,7 @@ export const Header = () => {
               fontSize: '26px',
               fontWeight: 700,
               fontStyle: 'italic',
-              color: NIGHT,
+              color: BAI.night,
               letterSpacing: '-0.02em',
               lineHeight: 1,
             }}>
@@ -195,9 +189,9 @@ export const Header = () => {
               ].map(({ to, label, icon }) => (
                 <Link key={to} to={to}
                   className="text-[13px] font-medium flex items-center gap-1.5 transition-colors group"
-                  style={{ color: INK_MID, fontFamily: 'var(--font-body)' }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = NIGHT }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = INK_MID }}>
+                  style={{ color: BAI.inkMid, fontFamily: 'var(--font-body)' }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = BAI.night }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = BAI.inkMid }}>
                   {icon}{label}
                 </Link>
               ))}
@@ -219,8 +213,8 @@ export const Header = () => {
               <>
                 <Link to="/notifications"
                   className="p-2 rounded-lg transition-colors"
-                  style={{ color: INK_FAINT }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BG_MUTED }}
+                  style={{ color: BAI.inkFaint }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
                   <Bell className="w-[18px] h-[18px]" />
                 </Link>
@@ -228,14 +222,14 @@ export const Header = () => {
                 <div className="relative">
                   <button onClick={() => setShowUserMenu(!showUserMenu)}
                     className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-lg transition-all"
-                    style={{ border: `1px solid ${BORDER}`, background: showUserMenu ? BG_MUTED : 'transparent' }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BG_MUTED }}
+                    style={{ border: `1px solid ${BAI.border}`, background: showUserMenu ? BAI.bgMuted : 'transparent' }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
                     onMouseLeave={(e) => { if (!showUserMenu) (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
                     <div className="w-7 h-7 rounded-md flex items-center justify-center text-[11px] font-bold text-white"
                       style={{ background: threadColor }}>
                       {initials}
                     </div>
-                    <span className="text-sm font-medium hidden sm:block" style={{ color: INK, fontFamily: 'var(--font-body)' }}>
+                    <span className="text-sm font-medium hidden sm:block" style={{ color: BAI.ink, fontFamily: 'var(--font-body)' }}>
                       {user?.firstName}
                     </span>
                   </button>
@@ -244,10 +238,10 @@ export const Header = () => {
                     <>
                       <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
                       <div className="absolute right-0 mt-2 w-56 rounded-xl py-2 z-20"
-                        style={{ background: '#ffffff', border: `1px solid ${BORDER}`, boxShadow: '0 20px 60px rgba(13,12,10,0.12), 0 4px 16px rgba(13,12,10,0.06)' }}>
-                        <div className="px-4 py-3" style={{ borderBottom: `1px solid ${BORDER}` }}>
-                          <p className="text-[13px] font-semibold" style={{ color: INK }}>{user?.firstName} {user?.lastName}</p>
-                          <p className="text-[11px] truncate mt-0.5" style={{ color: INK_MID }}>{user?.email}</p>
+                        style={{ background: '#ffffff', border: `1px solid ${BAI.border}`, boxShadow: '0 20px 60px rgba(13,12,10,0.12), 0 4px 16px rgba(13,12,10,0.06)' }}>
+                        <div className="px-4 py-3" style={{ borderBottom: `1px solid ${BAI.border}` }}>
+                          <p className="text-[13px] font-semibold" style={{ color: BAI.ink }}>{user?.firstName} {user?.lastName}</p>
+                          <p className="text-[11px] truncate mt-0.5" style={{ color: BAI.inkMid }}>{user?.email}</p>
                           <span className="inline-block mt-1.5 text-[10px] px-2 py-0.5 rounded-full font-semibold"
                             style={{ background: `${threadColor}18`, color: threadColor }}>
                             {user?.role === 'OWNER' ? 'Propriétaire' : user?.role === 'TENANT' ? 'Locataire' : user?.role}
@@ -260,14 +254,14 @@ export const Header = () => {
                         ].map(({ to, icon, label }) => (
                           <Link key={to} to={to}
                             className="flex items-center gap-3 px-4 py-2 text-[13px] transition-colors"
-                            style={{ color: INK_MID }}
-                            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BG_MUTED }}
+                            style={{ color: BAI.inkMid }}
+                            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
                             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
                             onClick={() => setShowUserMenu(false)}>
-                            <span style={{ color: INK_FAINT }}>{icon}</span> {label}
+                            <span style={{ color: BAI.inkFaint }}>{icon}</span> {label}
                           </Link>
                         ))}
-                        <div className="mt-1 pt-1" style={{ borderTop: `1px solid ${BORDER}` }}>
+                        <div className="mt-1 pt-1" style={{ borderTop: `1px solid ${BAI.border}` }}>
                           <button onClick={handleLogout}
                             className="flex items-center gap-3 px-4 py-2 text-[13px] w-full transition-colors"
                             style={{ color: '#9b1c1c' }}
@@ -286,8 +280,8 @@ export const Header = () => {
                 {/* Mobile burger */}
                 <button onClick={() => setShowMobilePublicMenu(!showMobilePublicMenu)}
                   className="md:hidden p-2 rounded-lg transition-colors"
-                  style={{ color: INK_MID }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BG_MUTED }}
+                  style={{ color: BAI.inkMid }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
                   {showMobilePublicMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                 </button>
@@ -296,16 +290,16 @@ export const Header = () => {
                 <div className="hidden md:flex items-center gap-2">
                   <Link to="/login"
                     className="px-4 py-2 text-[13px] font-medium rounded-lg transition-all"
-                    style={{ color: NIGHT, border: `1px solid ${NIGHT}`, fontFamily: 'var(--font-body)' }}
+                    style={{ color: BAI.night, border: `1px solid ${BAI.night}`, fontFamily: 'var(--font-body)' }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#edf0f8' }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
                     Connexion
                   </Link>
                   <Link to="/register"
                     className="px-4 py-2 text-[13px] font-semibold rounded-lg text-white transition-all"
-                    style={{ background: NIGHT, fontFamily: 'var(--font-body)' }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#2a2a4a' }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = NIGHT }}>
+                    style={{ background: BAI.night, fontFamily: 'var(--font-body)' }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.nightHover }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.night }}>
                     S'inscrire
                   </Link>
                 </div>
@@ -316,7 +310,7 @@ export const Header = () => {
 
         {/* Menu mobile public */}
         {!isAuthenticated && showMobilePublicMenu && (
-          <div className="md:hidden py-3 space-y-0.5" style={{ borderTop: `1px solid ${BORDER}` }}>
+          <div className="md:hidden py-3 space-y-0.5" style={{ borderTop: `1px solid ${BAI.border}` }}>
             {[
               { to: '/', label: 'Accueil' },
               { to: '/search', label: 'Annonces' },
@@ -324,8 +318,8 @@ export const Header = () => {
             ].map(({ to, label }) => (
               <Link key={to} to={to}
                 className="block px-4 py-2.5 rounded-lg text-[13px] font-medium transition-colors"
-                style={{ color: INK_MID, fontFamily: 'var(--font-body)' }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BG_MUTED }}
+                style={{ color: BAI.inkMid, fontFamily: 'var(--font-body)' }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
                 onClick={() => setShowMobilePublicMenu(false)}>
                 {label}
@@ -334,13 +328,13 @@ export const Header = () => {
             <div className="flex flex-col gap-2 pt-3 px-2">
               <Link to="/login"
                 className="text-center py-2.5 text-[13px] font-medium rounded-lg transition-all"
-                style={{ color: NIGHT, border: `1px solid ${NIGHT}` }}
+                style={{ color: BAI.night, border: `1px solid ${BAI.night}` }}
                 onClick={() => setShowMobilePublicMenu(false)}>
                 Connexion
               </Link>
               <Link to="/register"
                 className="text-center py-2.5 text-[13px] font-semibold rounded-lg text-white"
-                style={{ background: NIGHT }}
+                style={{ background: BAI.night }}
                 onClick={() => setShowMobilePublicMenu(false)}>
                 S'inscrire
               </Link>

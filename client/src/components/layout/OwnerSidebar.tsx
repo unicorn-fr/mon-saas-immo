@@ -1,6 +1,6 @@
 /**
- * OwnerSidebar — Maison Design System
- * bg white · accent #1a3270 (deep navy) · DM Sans
+ * OwnerSidebar — Bailio Design System
+ * Thème night · fond #1a1a2e · accent caramel #c4976a · DM Sans
  */
 import { useEffect, useState } from 'react'
 import { NavLink, Link, useLocation } from 'react-router-dom'
@@ -13,32 +13,19 @@ import { useMessages } from '../../hooks/useMessages'
 import { useAuth } from '../../hooks/useAuth'
 import { applicationService } from '../../services/application.service'
 import { useNavigate } from 'react-router-dom'
-import { BailioLogo } from '../BailioLogo'
-
-const S = {
-  bg:          '#ffffff',
-  border:      '#e4e1db',
-  owner:       '#1a3270',
-  ownerLight:  '#eaf0fb',
-  ownerBorder: '#b8ccf0',
-  caramel:     '#c4976a',
-  ink:         '#0d0c0a',
-  inkMid:      '#5a5754',
-  inkFaint:    '#9e9b96',
-  bgMuted:     '#f4f2ee',
-}
+import { BAI } from '../../constants/bailio-tokens'
 
 function SectionLabel({ label }: { label: string }) {
   return (
-    <p className="px-4 pt-5 pb-1 select-none"
-      style={{
-        fontFamily: 'var(--font-body)',
-        fontSize: '10px',
-        fontWeight: 500,
-        letterSpacing: '0.14em',
-        textTransform: 'uppercase',
-        color: S.inkFaint,
-      }}>
+    <p style={{
+      fontFamily: BAI.fontBody,
+      fontSize: '9px',
+      fontWeight: 700,
+      letterSpacing: '0.12em',
+      textTransform: 'uppercase',
+      color: 'rgba(255,255,255,0.35)',
+      margin: '16px 16px 4px',
+    }}>
       {label}
     </p>
   )
@@ -55,31 +42,50 @@ function NavItem({
 
   return (
     <NavLink to={to} end={end} onClick={onClick}
-      className="mx-3 flex items-center gap-3 px-3 py-[7px] rounded-lg transition-all duration-100"
+      className="mx-2 flex items-center gap-2.5"
       aria-current={active ? 'page' : undefined}
       style={active ? {
-        background: S.ownerLight,
-        color: S.owner,
-        fontWeight: 600,
-        borderLeft: `2px solid ${S.owner}`,
-        paddingLeft: 10,
-        fontFamily: 'var(--font-body)',
-        fontSize: '13px',
+        display: 'flex', alignItems: 'center', gap: 10,
+        padding: '9px 16px', borderRadius: BAI.radius,
+        color: '#ffffff',
+        fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600,
+        background: 'rgba(196,151,106,0.15)',
+        borderLeft: `3px solid ${BAI.caramel}`,
+        paddingLeft: 13,
+        cursor: 'pointer', transition: BAI.transition,
+        textDecoration: 'none',
       } : {
-        color: S.inkMid,
-        fontWeight: 400,
-        borderLeft: '2px solid transparent',
-        paddingLeft: 10,
-        fontFamily: 'var(--font-body)',
-        fontSize: '13px',
+        display: 'flex', alignItems: 'center', gap: 10,
+        padding: '9px 16px', borderRadius: BAI.radius,
+        color: 'rgba(255,255,255,0.70)',
+        fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 400,
+        cursor: 'pointer', transition: BAI.transition,
+        textDecoration: 'none',
+        borderLeft: '3px solid transparent',
+        paddingLeft: 13,
       }}
-      onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = S.bgMuted }}
-      onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = '' }}>
+      onMouseEnter={(e) => {
+        if (!active) {
+          (e.currentTarget as HTMLElement).style.background = BAI.nightHover
+          ;(e.currentTarget as HTMLElement).style.color = '#ffffff'
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!active) {
+          ;(e.currentTarget as HTMLElement).style.background = 'none'
+          ;(e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.70)'
+        }
+      }}>
       <Icon className="w-4 h-4 flex-shrink-0" />
       <span className="flex-1 truncate">{label}</span>
       {badge !== undefined && badge > 0 && (
-        <span className="text-[10px] font-semibold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1"
-          style={{ background: S.caramel, color: '#ffffff' }}>
+        <span style={{
+          fontSize: 10, fontWeight: 700,
+          background: BAI.caramel, color: '#ffffff',
+          borderRadius: 20, minWidth: 18, height: 18,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '0 4px',
+        }}>
           {badge > 99 ? '99+' : badge}
         </span>
       )}
@@ -106,33 +112,37 @@ export function OwnerSidebar() {
   const handleLogout = () => { logout(); navigate('/') }
 
   const Content = () => (
-    <div className="flex flex-col h-full" style={{ fontFamily: 'var(--font-body)' }}>
+    <div className="flex flex-col h-full" style={{ fontFamily: BAI.fontBody }}>
 
-      {/* Logo */}
-      <div className="px-5 pt-5 pb-4 flex-shrink-0">
-        <Link to="/" onClick={closeMobile} className="hover:opacity-75 transition-opacity block">
-          <div className="flex items-center gap-2 mb-1">
-            <BailioLogo size={28} />
-            <span style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: '24px',
-              fontWeight: 700,
-              fontStyle: 'italic',
-              color: S.owner,
-              letterSpacing: '-0.02em',
-              lineHeight: 1,
-            }}>
-              Bailio
-            </span>
-          </div>
-          <p className="text-[10px]" style={{ color: S.inkFaint, fontFamily: 'var(--font-body)' }}>Espace propriétaire</p>
+      {/* Wordmark */}
+      <div style={{
+        padding: '20px 20px 16px',
+        borderBottom: `1px solid ${BAI.nightBorder}`,
+        marginBottom: 8,
+        flexShrink: 0,
+      }}>
+        <Link to="/" onClick={closeMobile} className="hover:opacity-75 transition-opacity block" style={{ textDecoration: 'none' }}>
+          <span style={{
+            fontFamily: BAI.fontDisplay,
+            fontStyle: 'italic',
+            fontWeight: 700,
+            fontSize: 22,
+            color: BAI.caramel,
+            letterSpacing: '-0.01em',
+            userSelect: 'none',
+            lineHeight: 1,
+            display: 'block',
+          }}>
+            bailio
+          </span>
+          <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', fontFamily: BAI.fontBody, margin: '4px 0 0' }}>
+            Espace propriétaire
+          </p>
         </Link>
       </div>
 
-      <div className="mx-4 mb-1" style={{ height: 1, background: S.border }} />
-
       {/* Navigation */}
-      <nav role="navigation" aria-label="Navigation principale" className="flex-1 overflow-y-auto py-1.5 scrollbar-thin">
+      <nav role="navigation" aria-label="Navigation principale" className="flex-1 overflow-y-auto py-1 scrollbar-thin">
         <SectionLabel label="Vue d'ensemble" />
         <NavItem to="/dashboard/owner" icon={LayoutDashboard} label="Tableau de bord" end onClick={closeMobile} />
 
@@ -151,31 +161,50 @@ export function OwnerSidebar() {
         <NavItem to="/messages" icon={MessageSquare} label="Messages" badge={unreadCount} onClick={closeMobile} />
       </nav>
 
-      <div className="mx-4 mt-1" style={{ height: 1, background: S.border }} />
+      {/* Divider */}
+      <div style={{ height: 1, background: BAI.nightBorder, margin: '0 16px' }} />
 
-      {/* Profil */}
-      <div className="p-4 flex-shrink-0">
-        <div className="flex items-center gap-2.5 mb-3">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold flex-shrink-0"
-            style={{ background: S.ownerLight, color: S.owner }}>
-            {initials}
+      {/* Zone utilisateur */}
+      <div style={{
+        borderTop: `1px solid ${BAI.nightBorder}`,
+        padding: '12px 16px',
+        flexShrink: 0,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: '50%',
+            background: BAI.caramelLight,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13, color: BAI.caramel,
+            flexShrink: 0,
+          }}>
+            {initials || '?'}
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[12px] font-semibold truncate leading-tight" style={{ color: S.ink }}>
+          <div style={{ overflow: 'hidden', flex: 1 }}>
+            <p style={{
+              fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600,
+              color: '#ffffff', margin: 0,
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
               {user?.firstName} {user?.lastName}
             </p>
-            <p className="text-[10px] leading-tight" style={{ color: S.inkFaint }}>Propriétaire</p>
+            <p style={{
+              fontFamily: BAI.fontBody, fontSize: 11,
+              color: 'rgba(255,255,255,0.45)', margin: 0,
+            }}>
+              Propriétaire
+            </p>
           </div>
-          <button onClick={closeMobile} className="md:hidden p-1 rounded-md" style={{ color: S.inkFaint }} aria-label="Fermer">
+          <button onClick={closeMobile} className="md:hidden p-1 rounded-md" style={{ color: 'rgba(255,255,255,0.45)', background: 'none', border: 'none', cursor: 'pointer' }} aria-label="Fermer">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <button onClick={handleLogout}
           className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] transition-all"
-          style={{ color: S.inkFaint }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#fef2f2'; (e.currentTarget as HTMLElement).style.color = '#9b1c1c' }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = S.inkFaint }}>
+          style={{ color: 'rgba(255,255,255,0.45)', fontFamily: BAI.fontBody, background: 'none', border: 'none', cursor: 'pointer', width: '100%' }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(155,28,28,0.2)'; (e.currentTarget as HTMLElement).style.color = '#fca5a5' }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.45)' }}>
           <LogOut className="w-3.5 h-3.5" />
           <span>Déconnexion</span>
         </button>
@@ -184,8 +213,8 @@ export function OwnerSidebar() {
   )
 
   const sidebarStyle = {
-    background: S.bg,
-    borderRight: `1px solid ${S.border}`,
+    background: BAI.night,
+    borderRight: `1px solid ${BAI.nightBorder}`,
   }
 
   return (
@@ -196,9 +225,9 @@ export function OwnerSidebar() {
 
       {mobileOpen && (
         <>
-          <div className="fixed inset-0 bg-black/20 z-40 md:hidden" onClick={closeMobile} />
+          <div className="fixed inset-0 bg-black/30 z-40 md:hidden" onClick={closeMobile} />
           <aside className="fixed left-0 top-0 bottom-0 z-50 flex flex-col md:hidden"
-            style={{ ...sidebarStyle, width: 256, boxShadow: '4px 0 24px rgba(13,12,10,0.12)' }}>
+            style={{ ...sidebarStyle, width: 256, boxShadow: '4px 0 32px rgba(0,0,0,0.25)' }}>
             <Content />
           </aside>
         </>

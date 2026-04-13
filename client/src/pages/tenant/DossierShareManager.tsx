@@ -17,26 +17,9 @@ import { shareApi, type DossierShare } from '../../services/dossier.service'
 import { useMessages } from '../../hooks/useMessages'
 import { useAuth } from '../../hooks/useAuth'
 import toast from 'react-hot-toast'
+import { BAI } from '../../constants/bailio-tokens'
 
 // ── Design tokens ──────────────────────────────────────────────────────────────
-const T = {
-  bg:           '#fafaf8',
-  surface:      '#ffffff',
-  muted:        '#f4f2ee',
-  ink:          '#0d0c0a',
-  inkMid:       '#5a5754',
-  inkFaint:     '#9e9b96',
-  tenant:       '#1b5e3b',
-  tenantLight:  '#edf7f2',
-  tenantBorder: '#9fd4ba',
-  caramel:      '#c4976a',
-  caramelLight: '#fdf5ec',
-  night:        '#1a1a2e',
-  border:       '#e4e1db',
-  borderMid:    '#ccc9c3',
-  display:      "'Cormorant Garamond', Georgia, serif",
-  body:         "'DM Sans', system-ui, sans-serif",
-}
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -90,24 +73,24 @@ function GrantShareForm({ onGranted }: { onGranted: () => void }) {
 
   return (
     <div style={{
-      background: T.surface,
+      background: BAI.bgSurface,
       borderRadius: '16px',
       padding: '24px',
-      border: `1px solid ${T.border}`,
+      border: `1px solid ${BAI.border}`,
       boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 16px rgba(13,12,10,0.05)',
     }}>
       <div style={{ marginBottom: '20px' }}>
-        <h2 style={{ fontFamily: T.display, fontSize: '24px', fontWeight: 600, fontStyle: 'italic', color: T.ink, margin: '0 0 4px' }}>
+        <h2 style={{ fontFamily: BAI.fontDisplay, fontSize: '24px', fontWeight: 600, fontStyle: 'italic', color: BAI.ink, margin: '0 0 4px' }}>
           Partager mon dossier
         </h2>
-        <p style={{ fontFamily: T.body, fontSize: '13px', color: T.inkMid, margin: 0 }}>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: '13px', color: BAI.inkMid, margin: 0 }}>
           Sélectionnez le propriétaire parmi vos contacts
         </p>
       </div>
 
       {/* Search input */}
       <div style={{ position: 'relative' as const, marginBottom: '12px' }}>
-        <Search style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)', width: 14, height: 14, color: T.inkFaint }} />
+        <Search style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)', width: 14, height: 14, color: BAI.inkFaint }} />
         <input
           type="text"
           value={search}
@@ -118,10 +101,10 @@ function GrantShareForm({ onGranted }: { onGranted: () => void }) {
             boxSizing: 'border-box' as const,
             paddingLeft: '36px', paddingRight: '12px',
             paddingTop: '10px', paddingBottom: '10px',
-            border: `1px solid ${T.border}`,
+            border: `1px solid ${BAI.border}`,
             borderRadius: '10px',
-            fontSize: '13px', fontFamily: T.body,
-            color: T.ink, background: T.muted,
+            fontSize: '13px', fontFamily: BAI.fontBody,
+            color: BAI.ink, background: BAI.bgMuted,
             outline: 'none',
           }}
         />
@@ -129,14 +112,14 @@ function GrantShareForm({ onGranted }: { onGranted: () => void }) {
 
       {/* Contact list */}
       {conversations.length === 0 ? (
-        <div style={{ padding: '20px', textAlign: 'center' as const, borderRadius: '10px', border: `1.5px dashed ${T.border}` }}>
-          <p style={{ fontFamily: T.body, fontSize: '13px', color: T.inkFaint, margin: 0 }}>
+        <div style={{ padding: '20px', textAlign: 'center' as const, borderRadius: '10px', border: `1.5px dashed ${BAI.border}` }}>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: '13px', color: BAI.inkFaint, margin: 0 }}>
             Aucun contact — envoyez d'abord un message à un propriétaire
           </p>
         </div>
       ) : contacts.length === 0 ? (
         <div style={{ padding: '16px', textAlign: 'center' as const }}>
-          <p style={{ fontFamily: T.body, fontSize: '13px', color: T.inkFaint, margin: 0 }}>Aucun résultat</p>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: '13px', color: BAI.inkFaint, margin: 0 }}>Aucun résultat</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '6px', maxHeight: '200px', overflowY: 'auto' as const, marginBottom: '14px' }}>
@@ -151,8 +134,8 @@ function GrantShareForm({ onGranted }: { onGranted: () => void }) {
                   display: 'flex', alignItems: 'center', gap: '10px',
                   padding: '10px 12px',
                   borderRadius: '10px',
-                  border: `1px solid ${isSelected ? T.tenantBorder : T.border}`,
-                  background: isSelected ? T.tenantLight : T.muted,
+                  border: `1px solid ${isSelected ? BAI.tenantBorder : BAI.border}`,
+                  background: isSelected ? BAI.tenantLight : BAI.bgMuted,
                   cursor: 'pointer',
                   textAlign: 'left' as const,
                   transition: 'all 0.15s',
@@ -161,10 +144,10 @@ function GrantShareForm({ onGranted }: { onGranted: () => void }) {
                 {/* Avatar */}
                 <div style={{
                   width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
-                  background: isSelected ? T.tenantBorder : '#e4e1db',
+                  background: isSelected ? BAI.tenantBorder : '#e4e1db',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontFamily: T.body, fontSize: '12px', fontWeight: 600,
-                  color: isSelected ? T.tenant : T.inkMid,
+                  fontFamily: BAI.fontBody, fontSize: '12px', fontWeight: 600,
+                  color: isSelected ? BAI.tenant : BAI.inkMid,
                   overflow: 'hidden',
                 }}>
                   {contact.avatar
@@ -173,12 +156,12 @@ function GrantShareForm({ onGranted }: { onGranted: () => void }) {
                   }
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontFamily: T.body, fontSize: '13px', fontWeight: 600, color: T.ink, margin: 0 }}>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: '13px', fontWeight: 600, color: BAI.ink, margin: 0 }}>
                     {contact.firstName} {contact.lastName}
                   </p>
                 </div>
                 {isSelected && (
-                  <ShieldCheck style={{ width: 15, height: 15, color: T.tenant, flexShrink: 0 }} />
+                  <ShieldCheck style={{ width: 15, height: 15, color: BAI.tenant, flexShrink: 0 }} />
                 )}
               </button>
             )
@@ -192,9 +175,9 @@ function GrantShareForm({ onGranted }: { onGranted: () => void }) {
           value={days}
           onChange={(e) => setDays(Number(e.target.value))}
           style={{
-            padding: '10px 12px', border: `1px solid ${T.border}`,
-            borderRadius: '10px', fontSize: '13px', fontFamily: T.body,
-            color: T.inkMid, background: T.muted, outline: 'none', cursor: 'pointer',
+            padding: '10px 12px', border: `1px solid ${BAI.border}`,
+            borderRadius: '10px', fontSize: '13px', fontFamily: BAI.fontBody,
+            color: BAI.inkMid, background: BAI.bgMuted, outline: 'none', cursor: 'pointer',
           }}
         >
           <option value={3}>3 jours</option>
@@ -208,14 +191,14 @@ function GrantShareForm({ onGranted }: { onGranted: () => void }) {
           disabled={loading || !selected}
           style={{
             flex: 1, padding: '10px 20px', borderRadius: '10px', border: 'none',
-            background: !selected || loading ? T.inkFaint : T.tenant,
-            color: '#ffffff', fontWeight: 600, fontSize: '13px', fontFamily: T.body,
+            background: !selected || loading ? BAI.inkFaint : BAI.tenant,
+            color: '#ffffff', fontWeight: 600, fontSize: '13px', fontFamily: BAI.fontBody,
             cursor: !selected || loading ? 'not-allowed' : 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
             transition: 'background 0.15s',
           }}
           onMouseEnter={(e) => { if (selected && !loading) (e.currentTarget as HTMLElement).style.background = '#144a2e' }}
-          onMouseLeave={(e) => { if (selected && !loading) (e.currentTarget as HTMLElement).style.background = T.tenant }}
+          onMouseLeave={(e) => { if (selected && !loading) (e.currentTarget as HTMLElement).style.background = BAI.tenant }}
         >
           {loading
             ? <Loader2 style={{ width: 14, height: 14, animation: 'spin 1s linear infinite' }} />
@@ -225,7 +208,7 @@ function GrantShareForm({ onGranted }: { onGranted: () => void }) {
         </button>
       </div>
 
-      <p style={{ marginTop: '12px', fontFamily: T.body, fontSize: '11px', color: T.inkFaint, lineHeight: 1.6 }}>
+      <p style={{ marginTop: '12px', fontFamily: BAI.fontBody, fontSize: '11px', color: BAI.inkFaint, lineHeight: 1.6 }}>
         Votre dossier sera accessible uniquement pendant la durée choisie.
         Vous pouvez révoquer l'accès à tout moment. Tous les documents sont filigranés.
       </p>
@@ -249,17 +232,17 @@ function ShareCard({
 
   const statusConfig = {
     active: {
-      bg: T.tenantLight,
-      border: T.tenantBorder,
-      text: T.tenant,
-      dot: T.tenant,
+      bg: BAI.tenantLight,
+      border: BAI.tenantBorder,
+      text: BAI.tenant,
+      dot: BAI.tenant,
       label: `Actif — ${days} jour${days > 1 ? 's' : ''} restant${days > 1 ? 's' : ''}`,
     },
     expired: {
-      bg: T.muted,
-      border: T.border,
-      text: T.inkFaint,
-      dot: T.borderMid,
+      bg: BAI.bgMuted,
+      border: BAI.border,
+      text: BAI.inkFaint,
+      dot: BAI.borderStrong,
       label: 'Expiré',
     },
     revoked: {
@@ -280,9 +263,9 @@ function ShareCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -6 }}
       style={{
-        background: T.surface,
+        background: BAI.bgSurface,
         borderRadius: '14px',
-        border: `1px solid ${status === 'active' ? T.border : '#f0ede8'}`,
+        border: `1px solid ${status === 'active' ? BAI.border : '#f0ede8'}`,
         padding: '16px 18px',
         opacity: status === 'active' ? 1 : 0.6,
       }}
@@ -294,14 +277,14 @@ function ShareCard({
           height: 44,
           borderRadius: '10px',
           flexShrink: 0,
-          background: T.muted,
+          background: BAI.bgMuted,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontFamily: T.display,
+          fontFamily: BAI.fontDisplay,
           fontSize: '17px',
           fontWeight: 600,
-          color: T.inkMid,
+          color: BAI.inkMid,
           overflow: 'hidden',
         }}>
           {share.owner.avatar
@@ -313,7 +296,7 @@ function ShareCard({
         {/* Info */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' as const, marginBottom: '2px' }}>
-            <span style={{ fontFamily: T.body, fontWeight: 600, fontSize: '14px', color: T.ink }}>
+            <span style={{ fontFamily: BAI.fontBody, fontWeight: 600, fontSize: '14px', color: BAI.ink }}>
               {share.owner.firstName} {share.owner.lastName}
             </span>
             <TrustBadge
@@ -322,7 +305,7 @@ function ShareCard({
               size="sm"
             />
           </div>
-          <p style={{ fontFamily: T.body, fontSize: '12px', color: T.inkFaint, margin: '0 0 6px' }}>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: '12px', color: BAI.inkFaint, margin: '0 0 6px' }}>
             {share.owner.email}
           </p>
           {/* Status pill */}
@@ -335,7 +318,7 @@ function ShareCard({
             background: statusConfig.bg,
             border: `1px solid ${statusConfig.border}`,
             color: statusConfig.text,
-            fontFamily: T.body,
+            fontFamily: BAI.fontBody,
             fontSize: '11px',
             fontWeight: 600,
           }}>
@@ -353,9 +336,9 @@ function ShareCard({
               style={{
                 padding: '7px',
                 borderRadius: '8px',
-                border: `1px solid ${T.border}`,
-                background: T.muted,
-                color: T.inkFaint,
+                border: `1px solid ${BAI.border}`,
+                background: BAI.bgMuted,
+                color: BAI.inkFaint,
                 cursor: 'pointer',
                 lineHeight: 0,
                 transition: 'all 0.15s',
@@ -366,9 +349,9 @@ function ShareCard({
                 ;(e.currentTarget as HTMLElement).style.color = '#9b1c1c'
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.background = T.muted
-                ;(e.currentTarget as HTMLElement).style.borderColor = T.border
-                ;(e.currentTarget as HTMLElement).style.color = T.inkFaint
+                (e.currentTarget as HTMLElement).style.background = BAI.bgMuted
+                ;(e.currentTarget as HTMLElement).style.borderColor = BAI.border
+                ;(e.currentTarget as HTMLElement).style.color = BAI.inkFaint
               }}
             >
               <AlertTriangle style={{ width: 14, height: 14 }} />
@@ -379,25 +362,25 @@ function ShareCard({
               style={{
                 padding: '7px 12px',
                 borderRadius: '8px',
-                border: `1px solid ${T.border}`,
-                background: T.muted,
-                color: T.inkMid,
+                border: `1px solid ${BAI.border}`,
+                background: BAI.bgMuted,
+                color: BAI.inkMid,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '5px',
-                fontFamily: T.body,
+                fontFamily: BAI.fontBody,
                 fontSize: '12px',
                 fontWeight: 600,
                 transition: 'all 0.15s',
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.background = T.surface
-                ;(e.currentTarget as HTMLElement).style.borderColor = T.borderMid
+                (e.currentTarget as HTMLElement).style.background = BAI.bgSurface
+                ;(e.currentTarget as HTMLElement).style.borderColor = BAI.borderStrong
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.background = T.muted
-                ;(e.currentTarget as HTMLElement).style.borderColor = T.border
+                (e.currentTarget as HTMLElement).style.background = BAI.bgMuted
+                ;(e.currentTarget as HTMLElement).style.borderColor = BAI.border
               }}
             >
               <ShieldOff style={{ width: 13, height: 13 }} />
@@ -413,10 +396,10 @@ function ShareCard({
         gap: '16px',
         marginTop: '12px',
         paddingTop: '12px',
-        borderTop: `1px solid ${T.muted}`,
-        fontFamily: T.body,
+        borderTop: `1px solid ${BAI.bgMuted}`,
+        fontFamily: BAI.fontBody,
         fontSize: '11px',
-        color: T.inkFaint,
+        color: BAI.inkFaint,
       }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <Clock style={{ width: 11, height: 11 }} />
@@ -442,12 +425,12 @@ function SectionHeading({ children, count, dot }: {
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
       {dot && <span style={{ width: 8, height: 8, borderRadius: '50%', background: dot, flexShrink: 0 }} />}
       <span style={{
-        fontFamily: T.body,
+        fontFamily: BAI.fontBody,
         fontSize: '11px',
         fontWeight: 500,
         letterSpacing: '0.12em',
         textTransform: 'uppercase' as const,
-        color: T.inkFaint,
+        color: BAI.inkFaint,
       }}>
         {children}
       </span>
@@ -455,9 +438,9 @@ function SectionHeading({ children, count, dot }: {
         <span style={{
           padding: '1px 8px',
           borderRadius: '999px',
-          background: T.tenantLight,
-          color: T.tenant,
-          fontFamily: T.body,
+          background: BAI.tenantLight,
+          color: BAI.tenant,
+          fontFamily: BAI.fontBody,
           fontSize: '11px',
           fontWeight: 600,
         }}>
@@ -513,44 +496,44 @@ export default function DossierShareManager() {
         maxWidth: 720,
         margin: '0 auto',
         padding: '40px 20px',
-        fontFamily: T.body,
+        fontFamily: BAI.fontBody,
       }}>
 
         {/* Page header */}
         <div style={{ marginBottom: '32px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-            <Shield style={{ width: 20, height: 20, color: T.tenant }} />
+            <Shield style={{ width: 20, height: 20, color: BAI.tenant }} />
             <span style={{
-              fontFamily: T.body,
+              fontFamily: BAI.fontBody,
               fontSize: '11px',
               fontWeight: 500,
               letterSpacing: '0.14em',
               textTransform: 'uppercase' as const,
-              color: T.caramel,
+              color: BAI.caramel,
             }}>
               Sécurité
             </span>
           </div>
           <h1 style={{
-            fontFamily: T.display,
+            fontFamily: BAI.fontDisplay,
             fontSize: '40px',
             fontWeight: 600,
             fontStyle: 'italic',
-            color: T.ink,
+            color: BAI.ink,
             margin: '0 0 8px',
             lineHeight: 1.15,
           }}>
             Contrôle d'accès
           </h1>
-          <p style={{ fontFamily: T.body, fontSize: '15px', color: T.inkMid, margin: 0, maxWidth: 500 }}>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: '15px', color: BAI.inkMid, margin: 0, maxWidth: 500 }}>
             Vous choisissez exactement qui peut consulter vos documents, pour combien de temps.
           </p>
         </div>
 
         {/* Security info banner */}
         <div style={{
-          background: T.tenantLight,
-          borderLeft: `3px solid ${T.tenant}`,
+          background: BAI.tenantLight,
+          borderLeft: `3px solid ${BAI.tenant}`,
           borderRadius: '0 12px 12px 0',
           padding: '14px 16px',
           marginBottom: '28px',
@@ -558,12 +541,12 @@ export default function DossierShareManager() {
           alignItems: 'flex-start',
           gap: '10px',
         }}>
-          <ShieldCheck style={{ width: 17, height: 17, color: T.tenant, flexShrink: 0, marginTop: 1 }} />
+          <ShieldCheck style={{ width: 17, height: 17, color: BAI.tenant, flexShrink: 0, marginTop: 1 }} />
           <div>
-            <p style={{ fontFamily: T.body, fontWeight: 600, fontSize: '13px', color: T.tenant, margin: '0 0 3px' }}>
+            <p style={{ fontFamily: BAI.fontBody, fontWeight: 600, fontSize: '13px', color: BAI.tenant, margin: '0 0 3px' }}>
               Vos documents sont protégés
             </p>
-            <p style={{ fontFamily: T.body, fontSize: '12px', color: '#2d6a4a', margin: 0, lineHeight: 1.55 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: '12px', color: '#2d6a4a', margin: 0, lineHeight: 1.55 }}>
               Chaque image est <strong>filigranée</strong> avec le nom et la date d'accès du propriétaire.
               Vous recevez un <strong>email d'alerte</strong> à chaque consultation.
             </p>
@@ -571,7 +554,7 @@ export default function DossierShareManager() {
         </div>
 
         {/* Thin rule */}
-        <div style={{ height: 1, background: T.border, marginBottom: '28px' }} />
+        <div style={{ height: 1, background: BAI.border, marginBottom: '28px' }} />
 
         {/* Grant form */}
         <div style={{ marginBottom: '36px' }}>
@@ -579,16 +562,16 @@ export default function DossierShareManager() {
         </div>
 
         {/* Thin rule */}
-        <div style={{ height: 1, background: T.border, marginBottom: '28px' }} />
+        <div style={{ height: 1, background: BAI.border, marginBottom: '28px' }} />
 
         {/* Active shares */}
         <section style={{ marginBottom: '32px' }}>
-          <SectionHeading dot={T.tenant} count={activeShares.length}>
+          <SectionHeading dot={BAI.tenant} count={activeShares.length}>
             Accès actifs
           </SectionHeading>
 
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '40px', color: T.inkFaint }}>
+            <div style={{ textAlign: 'center', padding: '40px', color: BAI.inkFaint }}>
               <Loader2 style={{ width: 24, height: 24, margin: '0 auto', animation: 'spin 1s linear infinite' }} />
             </div>
           ) : activeShares.length === 0 ? (
@@ -596,10 +579,10 @@ export default function DossierShareManager() {
               padding: '32px',
               textAlign: 'center' as const,
               borderRadius: '14px',
-              border: `1.5px dashed ${T.border}`,
+              border: `1.5px dashed ${BAI.border}`,
             }}>
-              <User style={{ width: 28, height: 28, margin: '0 auto 10px', color: T.inkFaint, opacity: 0.5 }} />
-              <p style={{ fontFamily: T.body, fontSize: '14px', color: T.inkFaint, margin: 0 }}>
+              <User style={{ width: 28, height: 28, margin: '0 auto 10px', color: BAI.inkFaint, opacity: 0.5 }} />
+              <p style={{ fontFamily: BAI.fontBody, fontSize: '14px', color: BAI.inkFaint, margin: 0 }}>
                 Aucun propriétaire n'a accès à votre dossier actuellement
               </p>
             </div>

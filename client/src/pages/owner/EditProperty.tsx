@@ -12,30 +12,15 @@ import {
 } from '../../types/property.types'
 import { DEFAULT_CRITERIA, type SelectionCriteria } from '../../types/application.types'
 import { Layout } from '../../components/layout/Layout'
+import { BAI } from '../../constants/bailio-tokens'
 
 // ─── Maison tokens ────────────────────────────────────────────────────────────
-const M = {
-  bg:          '#fafaf8',
-  surface:     '#ffffff',
-  muted:       '#f4f2ee',
-  inputBg:     '#f8f7f4',
-  ink:         '#0d0c0a',
-  inkMid:      '#5a5754',
-  inkFaint:    '#9e9b96',
-  owner:       '#1a3270',
-  ownerLight:  '#eaf0fb',
-  ownerBorder: '#b8ccf0',
-  border:      '#e4e1db',
-  borderMid:   '#ccc9c3',
-  danger:      '#9b1c1c',
-  dangerBg:    '#fef2f2',
-}
 
 // ─── Shared style constants ───────────────────────────────────────────────────
 
 const cardStyle: React.CSSProperties = {
-  background: M.surface,
-  border: `1px solid ${M.border}`,
+  background: BAI.bgSurface,
+  border: `1px solid ${BAI.border}`,
   borderRadius: 12,
   padding: '1.5rem',
   boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
@@ -43,11 +28,11 @@ const cardStyle: React.CSSProperties = {
 }
 
 const inputStyle: React.CSSProperties = {
-  background: M.inputBg,
-  border: `1px solid ${M.border}`,
+  background: '#f8f7f4',
+  border: `1px solid ${BAI.border}`,
   borderRadius: 8,
   padding: '0.625rem 1rem',
-  color: M.ink,
+  color: BAI.ink,
   fontSize: 13,
   outline: 'none',
   width: '100%',
@@ -59,23 +44,23 @@ const labelStyle: React.CSSProperties = {
   display: 'block',
   fontSize: 12,
   fontWeight: 500,
-  color: M.inkMid,
+  color: BAI.inkMid,
   marginBottom: '0.375rem',
   fontFamily: "'DM Sans', system-ui, sans-serif",
 }
 
 function onFocusInput(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
-  e.currentTarget.style.borderColor = M.owner
-  e.currentTarget.style.boxShadow = `0 0 0 3px ${M.ownerLight}`
+  e.currentTarget.style.borderColor = BAI.owner
+  e.currentTarget.style.boxShadow = `0 0 0 3px ${BAI.ownerLight}`
 }
 function onBlurInput(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
-  e.currentTarget.style.borderColor = M.border
+  e.currentTarget.style.borderColor = BAI.border
   e.currentTarget.style.boxShadow = 'none'
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mb-5 pb-3" style={{ borderBottom: `1px solid ${M.border}` }}>
+    <div className="mb-5 pb-3" style={{ borderBottom: `1px solid ${BAI.border}` }}>
       <p
         style={{
           fontFamily: "'DM Sans', system-ui, sans-serif",
@@ -83,7 +68,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
           fontWeight: 500,
           letterSpacing: '0.12em',
           textTransform: 'uppercase' as const,
-          color: M.inkFaint,
+          color: BAI.inkFaint,
         }}
       >
         {children}
@@ -221,10 +206,10 @@ export default function EditProperty() {
   if (isLoading && !isInitialized) {
     return (
       <Layout>
-        <div className="min-h-screen flex items-center justify-center" style={{ background: M.bg }}>
+        <div className="min-h-screen flex items-center justify-center" style={{ background: BAI.bgBase }}>
           <div
             className="animate-spin rounded-full"
-            style={{ width: 40, height: 40, borderWidth: 2, borderStyle: 'solid', borderColor: M.border, borderTopColor: M.owner }}
+            style={{ width: 40, height: 40, borderWidth: 2, borderStyle: 'solid', borderColor: BAI.border, borderTopColor: BAI.owner }}
           />
         </div>
       </Layout>
@@ -235,7 +220,7 @@ export default function EditProperty() {
   if (!currentProperty) {
     return (
       <Layout>
-        <div className="min-h-screen flex items-center justify-center" style={{ background: M.bg }}>
+        <div className="min-h-screen flex items-center justify-center" style={{ background: BAI.bgBase }}>
           <div className="text-center">
             <h2
               style={{
@@ -243,7 +228,7 @@ export default function EditProperty() {
                 fontSize: 22,
                 fontStyle: 'italic',
                 fontWeight: 600,
-                color: M.ink,
+                color: BAI.ink,
                 marginBottom: 12,
               }}
             >
@@ -255,11 +240,11 @@ export default function EditProperty() {
                 fontFamily: "'DM Sans', system-ui, sans-serif",
                 fontSize: 13,
                 fontWeight: 500,
-                color: M.owner,
+                color: BAI.owner,
                 textDecoration: 'none',
               }}
               onMouseEnter={(e) => (e.currentTarget.style.color = '#142860')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = M.owner)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = BAI.owner)}
             >
               Retour à mes propriétés
             </Link>
@@ -271,7 +256,7 @@ export default function EditProperty() {
 
   return (
     <Layout>
-      <div className="min-h-screen px-4 sm:px-6 lg:px-8 py-6 lg:py-8" style={{ background: M.bg, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+      <div className="min-h-screen px-4 sm:px-6 lg:px-8 py-6 lg:py-8" style={{ background: BAI.bgBase, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
         <div className="max-w-4xl mx-auto">
 
           {/* ── Back link + Header ── */}
@@ -283,11 +268,11 @@ export default function EditProperty() {
                 fontFamily: "'DM Sans', system-ui, sans-serif",
                 fontSize: 13,
                 fontWeight: 500,
-                color: M.owner,
+                color: BAI.owner,
                 textDecoration: 'none',
               }}
               onMouseEnter={(e) => (e.currentTarget.style.color = '#142860')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = M.owner)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = BAI.owner)}
             >
               <ArrowLeft style={{ width: 15, height: 15 }} />
               Retour à mes propriétés
@@ -301,7 +286,7 @@ export default function EditProperty() {
                 fontWeight: 500,
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
-                color: M.inkFaint,
+                color: BAI.inkFaint,
                 marginBottom: 6,
               }}
             >
@@ -314,7 +299,7 @@ export default function EditProperty() {
                 fontSize: 40,
                 fontWeight: 700,
                 fontStyle: 'italic',
-                color: M.ink,
+                color: BAI.ink,
                 lineHeight: 1.1,
                 marginBottom: 6,
               }}
@@ -326,7 +311,7 @@ export default function EditProperty() {
               style={{
                 fontFamily: "'DM Sans', system-ui, sans-serif",
                 fontSize: 14,
-                color: M.inkMid,
+                color: BAI.inkMid,
               }}
             >
               {currentProperty.title}
@@ -338,10 +323,10 @@ export default function EditProperty() {
             {displayError && (
               <div
                 className="mb-6 p-4 flex items-start gap-3"
-                style={{ background: M.dangerBg, border: `1px solid ${M.danger}44`, borderRadius: 12 }}
+                style={{ background: BAI.errorLight, border: `1px solid ${BAI.error}44`, borderRadius: 12 }}
               >
-                <AlertCircle style={{ width: 18, height: 18, color: M.danger, flexShrink: 0, marginTop: 2 }} />
-                <p style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 13, color: M.danger }}>{displayError}</p>
+                <AlertCircle style={{ width: 18, height: 18, color: BAI.error, flexShrink: 0, marginTop: 2 }} />
+                <p style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 13, color: BAI.error }}>{displayError}</p>
               </div>
             )}
 
@@ -513,10 +498,10 @@ export default function EditProperty() {
                     key={name}
                     className="flex items-center gap-2 cursor-pointer px-3 py-2 transition-all select-none"
                     style={{
-                      background: checked ? M.ownerLight : M.muted,
-                      border: `1px solid ${checked ? M.ownerBorder : M.border}`,
+                      background: checked ? BAI.ownerLight : BAI.bgMuted,
+                      border: `1px solid ${checked ? BAI.ownerBorder : BAI.border}`,
                       borderRadius: 8,
-                      color: checked ? M.owner : M.inkMid,
+                      color: checked ? BAI.owner : BAI.inkMid,
                       fontWeight: checked ? 600 : 400,
                       fontFamily: "'DM Sans', system-ui, sans-serif",
                       fontSize: 13,
@@ -524,7 +509,7 @@ export default function EditProperty() {
                   >
                     <span
                       className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0"
-                      style={{ background: checked ? M.owner : M.borderMid, transition: 'background 0.15s' }}
+                      style={{ background: checked ? BAI.owner : BAI.borderStrong, transition: 'background 0.15s' }}
                     >
                       {checked && (
                         <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 10">
@@ -600,10 +585,10 @@ export default function EditProperty() {
                       key={amenity.value}
                       className="flex items-center gap-2 cursor-pointer px-3 py-2 transition-all select-none"
                       style={{
-                        background: checked ? M.ownerLight : M.muted,
-                        border: `1px solid ${checked ? M.ownerBorder : M.border}`,
+                        background: checked ? BAI.ownerLight : BAI.bgMuted,
+                        border: `1px solid ${checked ? BAI.ownerBorder : BAI.border}`,
                         borderRadius: 8,
-                        color: checked ? M.owner : M.inkMid,
+                        color: checked ? BAI.owner : BAI.inkMid,
                         fontWeight: checked ? 600 : 400,
                         fontFamily: "'DM Sans', system-ui, sans-serif",
                         fontSize: 13,
@@ -611,7 +596,7 @@ export default function EditProperty() {
                     >
                       <span
                         className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0"
-                        style={{ background: checked ? M.owner : M.borderMid, transition: 'background 0.15s' }}
+                        style={{ background: checked ? BAI.owner : BAI.borderStrong, transition: 'background 0.15s' }}
                       >
                         {checked && (
                           <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 10">
@@ -644,7 +629,7 @@ export default function EditProperty() {
             {/* ── Section: Critères de sélection ── */}
             <div style={cardStyle}>
               <div className="flex items-center gap-2 mb-1">
-                <Filter style={{ width: 15, height: 15, color: M.owner }} />
+                <Filter style={{ width: 15, height: 15, color: BAI.owner }} />
                 <p
                   style={{
                     fontFamily: "'DM Sans', system-ui, sans-serif",
@@ -652,16 +637,16 @@ export default function EditProperty() {
                     fontWeight: 500,
                     letterSpacing: '0.12em',
                     textTransform: 'uppercase',
-                    color: M.inkFaint,
+                    color: BAI.inkFaint,
                   }}
                 >
                   Critères de sélection
                 </p>
               </div>
-              <p className="mb-5" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 13, color: M.inkMid }}>
+              <p className="mb-5" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 13, color: BAI.inkMid }}>
                 Définissez les prérequis que les candidats doivent remplir pour postuler.
               </p>
-              <div style={{ borderTop: `1px solid ${M.border}`, paddingTop: '1rem' }}>
+              <div style={{ borderTop: `1px solid ${BAI.border}`, paddingTop: '1rem' }}>
                 <SelectionCriteriaForm criteria={criteria} onChange={setCriteria} />
               </div>
             </div>
@@ -690,18 +675,18 @@ export default function EditProperty() {
                 disabled={isLoading}
                 className="flex-1 flex items-center justify-center px-4 py-2.5 disabled:opacity-50"
                 style={{
-                  background: M.surface,
-                  border: `1px solid ${M.border}`,
+                  background: BAI.bgSurface,
+                  border: `1px solid ${BAI.border}`,
                   borderRadius: 8,
                   fontFamily: "'DM Sans', system-ui, sans-serif",
                   fontSize: 13,
                   fontWeight: 500,
-                  color: M.inkMid,
+                  color: BAI.inkMid,
                   cursor: 'pointer',
                   transition: 'background 0.15s',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
-                onMouseLeave={(e) => (e.currentTarget.style.background = M.surface)}
+                onMouseEnter={(e) => (e.currentTarget.style.background = BAI.bgMuted)}
+                onMouseLeave={(e) => (e.currentTarget.style.background = BAI.bgSurface)}
               >
                 Annuler
               </button>
@@ -710,7 +695,7 @@ export default function EditProperty() {
                 disabled={isLoading}
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 disabled:opacity-50"
                 style={{
-                  background: M.owner,
+                  background: BAI.owner,
                   border: 'none',
                   borderRadius: 8,
                   fontFamily: "'DM Sans', system-ui, sans-serif",
@@ -721,7 +706,7 @@ export default function EditProperty() {
                   transition: 'background 0.15s',
                 }}
                 onMouseEnter={(e) => !isLoading && (e.currentTarget.style.background = '#142860')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = M.owner)}
+                onMouseLeave={(e) => (e.currentTarget.style.background = BAI.owner)}
               >
                 {isLoading ? (
                   <>

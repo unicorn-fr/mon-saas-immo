@@ -19,19 +19,9 @@ import { useNavigate } from 'react-router-dom'
 import { Layout } from '../../components/layout/Layout'
 import { privacyApi, DossierAccessLog } from '../../services/dossier.service'
 import toast from 'react-hot-toast'
+import { BAI } from '../../constants/bailio-tokens'
 
 // ── Maison design tokens ──────────────────────────────────────────────────────
-const M = {
-  bg: '#fafaf8', surface: '#ffffff', muted: '#f4f2ee', inputBg: '#f8f7f4',
-  ink: '#0d0c0a', inkMid: '#5a5754', inkFaint: '#9e9b96',
-  tenant: '#1b5e3b', tenantLight: '#edf7f2', tenantBorder: '#9fd4ba',
-  border: '#e4e1db', borderMid: '#ccc9c3',
-  danger: '#9b1c1c', dangerBg: '#fef2f2',
-  warning: '#92400e', warningBg: '#fdf5ec',
-  display: "'Cormorant Garamond', Georgia, serif",
-  body: "'DM Sans', system-ui, sans-serif",
-  cardShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
-}
 
 // ── Section card wrapper ──────────────────────────────────────────────────────
 function SectionCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -39,10 +29,10 @@ function SectionCard({ children, className = '' }: { children: React.ReactNode; 
     <div
       className={`overflow-hidden ${className}`}
       style={{
-        background: M.surface,
-        border: `1px solid ${M.border}`,
+        background: BAI.bgSurface,
+        border: `1px solid ${BAI.border}`,
         borderRadius: 12,
-        boxShadow: M.cardShadow,
+        boxShadow: BAI.shadowMd,
       }}
     >
       {children}
@@ -62,29 +52,29 @@ function AccessLogRow({ log, index }: { log: DossierAccessLog; index: number }) 
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.04 }}
       className="flex items-center gap-3 px-5 py-3.5 border-b last:border-0"
-      style={{ borderColor: M.border }}
+      style={{ borderColor: BAI.border }}
     >
       {/* Avatar initials */}
       <div
         className="w-9 h-9 flex items-center justify-center text-[12px] font-bold text-white flex-shrink-0"
-        style={{ background: M.tenant, borderRadius: 10 }}
+        style={{ background: BAI.tenant, borderRadius: 10 }}
       >
         {(log.viewerName || log.viewerEmail)[0]?.toUpperCase() ?? '?'}
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-semibold truncate" style={{ color: M.ink, fontFamily: M.body }}>
+        <p className="text-[13px] font-semibold truncate" style={{ color: BAI.ink, fontFamily: BAI.fontBody }}>
           {log.viewerName || 'Propriétaire'}
         </p>
-        <p className="text-[11px] truncate" style={{ color: M.inkFaint, fontFamily: M.body }}>
+        <p className="text-[11px] truncate" style={{ color: BAI.inkFaint, fontFamily: BAI.fontBody }}>
           {log.viewerEmail}
-          {log.propertyTitle && <span style={{ color: M.inkMid }}> · {log.propertyTitle}</span>}
+          {log.propertyTitle && <span style={{ color: BAI.inkMid }}> · {log.propertyTitle}</span>}
         </p>
       </div>
 
       <div className="text-right flex-shrink-0">
-        <p className="text-[12px] font-medium" style={{ color: M.inkMid, fontFamily: M.body }}>{dateStr}</p>
-        <p className="text-[11px]" style={{ color: M.inkFaint, fontFamily: M.body }}>{timeStr}</p>
+        <p className="text-[12px] font-medium" style={{ color: BAI.inkMid, fontFamily: BAI.fontBody }}>{dateStr}</p>
+        <p className="text-[11px]" style={{ color: BAI.inkFaint, fontFamily: BAI.fontBody }}>{timeStr}</p>
       </div>
     </motion.div>
   )
@@ -110,24 +100,24 @@ function DeleteAccountModal({ onClose, onConfirm, loading }: {
     >
       <motion.div
         className="w-full max-w-md overflow-hidden"
-        style={{ background: M.surface, boxShadow: '0 20px 60px rgba(13,12,10,0.18)', borderRadius: 16 }}
+        style={{ background: BAI.bgSurface, boxShadow: '0 20px 60px rgba(13,12,10,0.18)', borderRadius: 16 }}
         initial={{ scale: 0.96, y: 16 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.96, y: 16 }}
         transition={{ type: 'spring', stiffness: 300, damping: 28 }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b" style={{ borderColor: M.border }}>
+        <div className="flex items-center justify-between px-6 py-5 border-b" style={{ borderColor: BAI.border }}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 flex items-center justify-center flex-shrink-0"
-              style={{ background: M.dangerBg, borderRadius: 10 }}>
-              <Trash2 className="w-5 h-5" style={{ color: M.danger }} />
+              style={{ background: BAI.errorLight, borderRadius: 10 }}>
+              <Trash2 className="w-5 h-5" style={{ color: '#9b1c1c' }} />
             </div>
             <div>
-              <p className="font-bold text-[15px]" style={{ color: M.ink, fontFamily: M.body }}>
+              <p className="font-bold text-[15px]" style={{ color: BAI.ink, fontFamily: BAI.fontBody }}>
                 Supprimer mon compte
               </p>
-              <p className="text-[12px]" style={{ color: M.inkFaint, fontFamily: M.body }}>
+              <p className="text-[12px]" style={{ color: BAI.inkFaint, fontFamily: BAI.fontBody }}>
                 Étape {step}/2 — Irréversible
               </p>
             </div>
@@ -135,8 +125,8 @@ function DeleteAccountModal({ onClose, onConfirm, loading }: {
           <button
             onClick={onClose}
             className="p-1.5 transition-colors"
-            style={{ color: M.inkFaint, borderRadius: 8 }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = M.muted }}
+            style={{ color: BAI.inkFaint, borderRadius: 8 }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = BAI.bgMuted }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
           >
             <X className="w-5 h-5" />
@@ -147,14 +137,14 @@ function DeleteAccountModal({ onClose, onConfirm, loading }: {
           {step === 1 ? (
             <>
               <div className="p-4 space-y-2"
-                style={{ background: M.dangerBg, border: `1px solid #fca5a5`, borderRadius: 10 }}>
-                <p className="text-[13px] font-semibold" style={{ color: M.danger, fontFamily: M.body }}>
+                style={{ background: BAI.errorLight, border: `1px solid #fca5a5`, borderRadius: 10 }}>
+                <p className="text-[13px] font-semibold" style={{ color: '#9b1c1c', fontFamily: BAI.fontBody }}>
                   Vous êtes sur le point de supprimer définitivement votre compte.
                 </p>
-                <p className="text-[12px]" style={{ color: '#b91c1c', fontFamily: M.body }}>
+                <p className="text-[12px]" style={{ color: '#b91c1c', fontFamily: BAI.fontBody }}>
                   Cette action supprimera immédiatement et de façon permanente :
                 </p>
-                <ul className="text-[12px] space-y-1 mt-1" style={{ color: '#b91c1c', fontFamily: M.body }}>
+                <ul className="text-[12px] space-y-1 mt-1" style={{ color: '#b91c1c', fontFamily: BAI.fontBody }}>
                   {['Votre profil et informations personnelles',
                     'Tous vos documents déposés',
                     'Votre historique de candidatures',
@@ -168,9 +158,9 @@ function DeleteAccountModal({ onClose, onConfirm, loading }: {
                 </ul>
               </div>
               <div className="p-3 flex items-start gap-2"
-                style={{ background: M.warningBg, border: `1px solid #fde68a`, borderRadius: 10 }}>
+                style={{ background: BAI.warningLight, border: `1px solid #fde68a`, borderRadius: 10 }}>
                 <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#d97706' }} />
-                <p className="text-[12px]" style={{ color: M.warning, fontFamily: M.body }}>
+                <p className="text-[12px]" style={{ color: BAI.warning, fontFamily: BAI.fontBody }}>
                   Conformément à l'article 17 du RGPD, certaines données peuvent être conservées
                   jusqu'à 3 ans pour répondre à des obligations légales (litiges en cours, obligations fiscales).
                 </p>
@@ -180,18 +170,18 @@ function DeleteAccountModal({ onClose, onConfirm, loading }: {
                   onClick={onClose}
                   className="flex-1 py-2.5 text-[13px] font-medium transition-colors"
                   style={{
-                    background: M.muted, border: `1px solid ${M.border}`, color: M.inkMid,
-                    borderRadius: 8, cursor: 'pointer', fontFamily: M.body,
+                    background: BAI.bgMuted, border: `1px solid ${BAI.border}`, color: BAI.inkMid,
+                    borderRadius: 8, cursor: 'pointer', fontFamily: BAI.fontBody,
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = M.borderMid }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = M.muted }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = BAI.borderStrong }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = BAI.bgMuted }}
                 >
                   Annuler
                 </button>
                 <button
                   onClick={() => setStep(2)}
                   className="flex-1 py-2.5 text-[13px] font-semibold text-white transition-colors"
-                  style={{ background: M.danger, borderRadius: 8, cursor: 'pointer', border: 'none', fontFamily: M.body }}
+                  style={{ background: '#9b1c1c', borderRadius: 8, cursor: 'pointer', border: 'none', fontFamily: BAI.fontBody }}
                   onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.88' }}
                   onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
                 >
@@ -201,9 +191,9 @@ function DeleteAccountModal({ onClose, onConfirm, loading }: {
             </>
           ) : (
             <>
-              <p className="text-[13px]" style={{ color: M.inkMid, fontFamily: M.body }}>
+              <p className="text-[13px]" style={{ color: BAI.inkMid, fontFamily: BAI.fontBody }}>
                 Pour confirmer, saisissez votre adresse e-mail :
-                <span className="font-semibold" style={{ color: M.ink }}> {user?.email}</span>
+                <span className="font-semibold" style={{ color: BAI.ink }}> {user?.email}</span>
               </p>
               <input
                 type="email"
@@ -212,23 +202,23 @@ function DeleteAccountModal({ onClose, onConfirm, loading }: {
                 placeholder="Votre adresse e-mail"
                 className="w-full px-4 py-2.5 text-[13px] outline-none transition-all"
                 style={{
-                  background: M.inputBg,
-                  border: `1px solid ${inputEmail && !emailMatch ? '#fca5a5' : M.border}`,
+                  background: BAI.bgInput,
+                  border: `1px solid ${inputEmail && !emailMatch ? '#fca5a5' : BAI.border}`,
                   borderRadius: 8,
-                  color: M.ink,
-                  fontFamily: M.body,
+                  color: BAI.ink,
+                  fontFamily: BAI.fontBody,
                 }}
                 onFocus={(e) => {
-                  e.currentTarget.style.borderColor = emailMatch ? M.tenant : '#fca5a5'
-                  e.currentTarget.style.boxShadow = `0 0 0 3px ${emailMatch ? M.tenantLight : M.dangerBg}`
+                  e.currentTarget.style.borderColor = emailMatch ? BAI.tenant : '#fca5a5'
+                  e.currentTarget.style.boxShadow = `0 0 0 3px ${emailMatch ? BAI.tenantLight : BAI.errorLight}`
                 }}
                 onBlur={(e) => {
-                  e.currentTarget.style.borderColor = M.border
+                  e.currentTarget.style.borderColor = BAI.border
                   e.currentTarget.style.boxShadow = 'none'
                 }}
               />
               {inputEmail && !emailMatch && (
-                <p className="text-[11px]" style={{ color: M.danger, fontFamily: M.body }}>
+                <p className="text-[11px]" style={{ color: '#9b1c1c', fontFamily: BAI.fontBody }}>
                   L'adresse ne correspond pas.
                 </p>
               )}
@@ -237,11 +227,11 @@ function DeleteAccountModal({ onClose, onConfirm, loading }: {
                   onClick={() => setStep(1)}
                   className="flex-1 py-2.5 text-[13px] font-medium transition-colors"
                   style={{
-                    background: M.muted, border: `1px solid ${M.border}`, color: M.inkMid,
-                    borderRadius: 8, cursor: 'pointer', fontFamily: M.body,
+                    background: BAI.bgMuted, border: `1px solid ${BAI.border}`, color: BAI.inkMid,
+                    borderRadius: 8, cursor: 'pointer', fontFamily: BAI.fontBody,
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = M.borderMid }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = M.muted }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = BAI.borderStrong }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = BAI.bgMuted }}
                 >
                   Retour
                 </button>
@@ -249,7 +239,7 @@ function DeleteAccountModal({ onClose, onConfirm, loading }: {
                   onClick={() => onConfirm(inputEmail)}
                   disabled={!emailMatch || loading}
                   className="flex-1 py-2.5 text-[13px] font-semibold text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                  style={{ background: M.danger, borderRadius: 8, cursor: 'pointer', border: 'none', fontFamily: M.body }}
+                  style={{ background: '#9b1c1c', borderRadius: 8, cursor: 'pointer', border: 'none', fontFamily: BAI.fontBody }}
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                   Supprimer définitivement
@@ -312,31 +302,31 @@ export default function PrivacyCenter() {
 
   return (
     <Layout>
-      <div className="min-h-screen" style={{ background: M.bg, fontFamily: M.body }}>
+      <div className="min-h-screen" style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}>
         <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
 
           {/* Page header */}
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
             <p style={{
-              fontFamily: M.body, fontSize: 10, fontWeight: 600,
-              letterSpacing: '0.1em', textTransform: 'uppercase', color: M.inkFaint,
+              fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 600,
+              letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkFaint,
               marginBottom: 6,
             }}>
               RGPD &amp; Confidentialité
             </p>
             <div className="flex items-center gap-3 mb-1">
               <div className="w-11 h-11 flex items-center justify-center flex-shrink-0"
-                style={{ background: M.tenantLight, borderRadius: 12, border: `1px solid ${M.tenantBorder}` }}>
-                <ShieldCheck className="w-5 h-5" style={{ color: M.tenant }} />
+                style={{ background: BAI.tenantLight, borderRadius: 12, border: `1px solid ${BAI.tenantBorder}` }}>
+                <ShieldCheck className="w-5 h-5" style={{ color: BAI.tenant }} />
               </div>
               <div>
                 <h1 style={{
-                  fontFamily: M.display, fontWeight: 700, fontStyle: 'italic',
-                  fontSize: 36, color: M.ink, lineHeight: 1.1,
+                  fontFamily: BAI.fontDisplay, fontWeight: 700, fontStyle: 'italic',
+                  fontSize: 36, color: BAI.ink, lineHeight: 1.1,
                 }}>
                   Mes données &amp; RGPD
                 </h1>
-                <p style={{ color: M.inkMid, fontSize: 14, fontFamily: M.body }}>
+                <p style={{ color: BAI.inkMid, fontSize: 14, fontFamily: BAI.fontBody }}>
                   Contrôlez vos données personnelles — droits d'accès, portabilité et effacement
                 </p>
               </div>
@@ -348,19 +338,19 @@ export default function PrivacyCenter() {
             initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
             className="p-5"
             style={{
-              background: M.tenantLight,
-              borderLeft: `3px solid ${M.tenant}`,
+              background: BAI.tenantLight,
+              borderLeft: `3px solid ${BAI.tenant}`,
               borderRadius: '0 12px 12px 0',
-              border: `1px solid ${M.tenantBorder}`,
+              border: `1px solid ${BAI.tenantBorder}`,
               borderLeftWidth: 3,
-              borderLeftColor: M.tenant,
+              borderLeftColor: BAI.tenant,
             }}
           >
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
-                { icon: Lock,        color: M.tenant,    label: 'Chiffrement TLS',   desc: 'Toutes vos données sont chiffrées en transit et au repos.' },
+                { icon: Lock,        color: BAI.tenant,    label: 'Chiffrement TLS',   desc: 'Toutes vos données sont chiffrées en transit et au repos.' },
                 { icon: Clock,       color: '#2e7d32',   label: 'Suppression auto',  desc: 'Vos documents sont supprimés automatiquement à l\'échéance.' },
-                { icon: ShieldCheck, color: M.inkMid,    label: 'Conformité RGPD',   desc: 'Droit d\'accès, rectification, portabilité et effacement.' },
+                { icon: ShieldCheck, color: BAI.inkMid,    label: 'Conformité RGPD',   desc: 'Droit d\'accès, rectification, portabilité et effacement.' },
               ].map(({ icon: Icon, color, label, desc }) => (
                 <div key={label} className="flex items-start gap-3">
                   <div className="w-8 h-8 flex items-center justify-center flex-shrink-0"
@@ -368,8 +358,8 @@ export default function PrivacyCenter() {
                     <Icon className="w-4 h-4" style={{ color }} />
                   </div>
                   <div>
-                    <p className="text-[12px] font-semibold" style={{ color: M.ink, fontFamily: M.body }}>{label}</p>
-                    <p className="text-[11px] leading-snug" style={{ color: M.inkMid, fontFamily: M.body }}>{desc}</p>
+                    <p className="text-[12px] font-semibold" style={{ color: BAI.ink, fontFamily: BAI.fontBody }}>{label}</p>
+                    <p className="text-[11px] leading-snug" style={{ color: BAI.inkMid, fontFamily: BAI.fontBody }}>{desc}</p>
                   </div>
                 </div>
               ))}
@@ -381,20 +371,20 @@ export default function PrivacyCenter() {
             <SectionCard>
               <div className="flex items-start gap-4 p-5">
                 <div className="w-11 h-11 flex items-center justify-center flex-shrink-0"
-                  style={{ background: M.tenantLight, borderRadius: 12 }}>
-                  <Download className="w-5 h-5" style={{ color: M.tenant }} />
+                  style={{ background: BAI.tenantLight, borderRadius: 12 }}>
+                  <Download className="w-5 h-5" style={{ color: BAI.tenant }} />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between gap-4 flex-wrap">
                     <div>
-                      <h2 className="text-[15px] font-bold" style={{ color: M.ink, fontFamily: M.body }}>
+                      <h2 className="text-[15px] font-bold" style={{ color: BAI.ink, fontFamily: BAI.fontBody }}>
                         Télécharger mes données
                       </h2>
-                      <p className="text-[12px] mt-0.5" style={{ color: M.inkMid, fontFamily: M.body }}>
+                      <p className="text-[12px] mt-0.5" style={{ color: BAI.inkMid, fontFamily: BAI.fontBody }}>
                         Recevez un fichier JSON contenant toutes vos données personnelles (profil, documents, candidatures, contrats…)
                       </p>
                       <span className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium"
-                        style={{ background: M.tenantLight, color: M.tenant, borderRadius: 20, border: `1px solid ${M.tenantBorder}` }}>
+                        style={{ background: BAI.tenantLight, color: BAI.tenant, borderRadius: 20, border: `1px solid ${BAI.tenantBorder}` }}>
                         <FileText className="w-3 h-3" />
                         Art. 20 RGPD — Droit à la portabilité
                       </span>
@@ -403,7 +393,7 @@ export default function PrivacyCenter() {
                       onClick={handleExport}
                       disabled={exporting}
                       className="flex items-center gap-2 px-4 py-2.5 text-[13px] font-semibold text-white transition-all disabled:opacity-60 flex-shrink-0"
-                      style={{ background: M.tenant, borderRadius: 8, border: 'none', cursor: 'pointer', fontFamily: M.body }}
+                      style={{ background: BAI.tenant, borderRadius: 8, border: 'none', cursor: 'pointer', fontFamily: BAI.fontBody }}
                       onMouseEnter={(e) => { if (!exporting) e.currentTarget.style.opacity = '0.88' }}
                       onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
                     >
@@ -421,24 +411,24 @@ export default function PrivacyCenter() {
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.11 }}>
             <SectionCard>
               {/* Header */}
-              <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: M.border }}>
+              <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: BAI.border }}>
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 flex items-center justify-center"
-                    style={{ background: M.muted, borderRadius: 10 }}>
-                    <Eye className="w-4 h-4" style={{ color: M.inkMid }} />
+                    style={{ background: BAI.bgMuted, borderRadius: 10 }}>
+                    <Eye className="w-4 h-4" style={{ color: BAI.inkMid }} />
                   </div>
                   <div>
-                    <h2 className="text-[15px] font-bold" style={{ color: M.ink, fontFamily: M.body }}>
+                    <h2 className="text-[15px] font-bold" style={{ color: BAI.ink, fontFamily: BAI.fontBody }}>
                       Journal d'accès à mon dossier
                     </h2>
-                    <p className="text-[12px]" style={{ color: M.inkFaint, fontFamily: M.body }}>
+                    <p className="text-[12px]" style={{ color: BAI.inkFaint, fontFamily: BAI.fontBody }}>
                       Propriétaires ayant consulté votre dossier locatif
                     </p>
                   </div>
                 </div>
                 {accessLogs.length > 0 && (
                   <span className="text-[11px] font-bold px-2 py-0.5"
-                    style={{ background: M.muted, color: M.inkMid, borderRadius: 20, border: `1px solid ${M.border}` }}>
+                    style={{ background: BAI.bgMuted, color: BAI.inkMid, borderRadius: 20, border: `1px solid ${BAI.border}` }}>
                     {accessLogs.length}
                   </span>
                 )}
@@ -447,19 +437,19 @@ export default function PrivacyCenter() {
               {/* Body */}
               {logsLoading ? (
                 <div className="flex items-center justify-center py-12 gap-2">
-                  <Loader2 className="w-5 h-5 animate-spin" style={{ color: M.inkFaint }} />
-                  <span className="text-[13px]" style={{ color: M.inkFaint, fontFamily: M.body }}>Chargement…</span>
+                  <Loader2 className="w-5 h-5 animate-spin" style={{ color: BAI.inkFaint }} />
+                  <span className="text-[13px]" style={{ color: BAI.inkFaint, fontFamily: BAI.fontBody }}>Chargement…</span>
                 </div>
               ) : accessLogs.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 px-6 text-center gap-3">
                   <div className="w-12 h-12 flex items-center justify-center"
-                    style={{ background: M.muted, borderRadius: 12 }}>
-                    <Eye className="w-6 h-6" style={{ color: M.inkFaint }} />
+                    style={{ background: BAI.bgMuted, borderRadius: 12 }}>
+                    <Eye className="w-6 h-6" style={{ color: BAI.inkFaint }} />
                   </div>
-                  <p className="text-[14px] font-semibold" style={{ color: M.inkMid, fontFamily: M.body }}>
+                  <p className="text-[14px] font-semibold" style={{ color: BAI.inkMid, fontFamily: BAI.fontBody }}>
                     Aucune consultation
                   </p>
-                  <p className="text-[12px] max-w-xs leading-relaxed" style={{ color: M.inkFaint, fontFamily: M.body }}>
+                  <p className="text-[12px] max-w-xs leading-relaxed" style={{ color: BAI.inkFaint, fontFamily: BAI.fontBody }}>
                     Votre dossier n'a pas encore été consulté par un propriétaire. Chaque accès sera enregistré ici.
                   </p>
                 </div>
@@ -469,11 +459,11 @@ export default function PrivacyCenter() {
                     <AccessLogRow key={log.id} log={log} index={i} />
                   ))}
                   {accessLogs.length > 5 && (
-                    <div className="px-5 py-3 border-t" style={{ borderColor: M.border }}>
+                    <div className="px-5 py-3 border-t" style={{ borderColor: BAI.border }}>
                       <button
                         onClick={() => setShowAllLogs(!showAllLogs)}
                         className="text-[12px] font-medium flex items-center gap-1 transition-colors"
-                        style={{ color: M.tenant, background: 'none', border: 'none', cursor: 'pointer', fontFamily: M.body }}
+                        style={{ color: BAI.tenant, background: 'none', border: 'none', cursor: 'pointer', fontFamily: BAI.fontBody }}
                         onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.75' }}
                         onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
                       >
@@ -487,9 +477,9 @@ export default function PrivacyCenter() {
 
               {/* Footer info */}
               <div className="px-5 py-3 border-t flex items-start gap-2"
-                style={{ borderColor: M.border, background: M.muted }}>
-                <Lock className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: M.inkFaint }} />
-                <p className="text-[11px] leading-relaxed" style={{ color: M.inkFaint, fontFamily: M.body }}>
+                style={{ borderColor: BAI.border, background: BAI.bgMuted }}>
+                <Lock className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: BAI.inkFaint }} />
+                <p className="text-[11px] leading-relaxed" style={{ color: BAI.inkFaint, fontFamily: BAI.fontBody }}>
                   Seuls les propriétaires ayant reçu une candidature de votre part peuvent accéder à votre dossier.
                   Chaque accès est tracé et conservé 12 mois.
                 </p>
@@ -500,15 +490,15 @@ export default function PrivacyCenter() {
           {/* Section: Informations du compte */}
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }}>
             <SectionCard>
-              <div className="px-5 py-4 border-b" style={{ borderColor: M.border }}>
+              <div className="px-5 py-4 border-b" style={{ borderColor: BAI.border }}>
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 flex items-center justify-center"
-                    style={{ background: M.muted, borderRadius: 10 }}>
-                    <User className="w-4 h-4" style={{ color: M.inkMid }} />
+                    style={{ background: BAI.bgMuted, borderRadius: 10 }}>
+                    <User className="w-4 h-4" style={{ color: BAI.inkMid }} />
                   </div>
                   <div>
-                    <h2 className="text-[15px] font-bold" style={{ color: M.ink, fontFamily: M.body }}>Mon compte</h2>
-                    <p className="text-[12px]" style={{ color: M.inkFaint, fontFamily: M.body }}>Informations enregistrées</p>
+                    <h2 className="text-[15px] font-bold" style={{ color: BAI.ink, fontFamily: BAI.fontBody }}>Mon compte</h2>
+                    <p className="text-[12px]" style={{ color: BAI.inkFaint, fontFamily: BAI.fontBody }}>Informations enregistrées</p>
                   </div>
                 </div>
               </div>
@@ -519,9 +509,9 @@ export default function PrivacyCenter() {
                   { icon: CheckCircle2, label: 'E-mail vérifié', value: user?.emailVerified ? 'Oui ✓' : 'Non — vérification requise' },
                 ].map(({ icon: Icon, label, value }) => (
                   <div key={label} className="flex items-center gap-3">
-                    <Icon className="w-4 h-4 flex-shrink-0" style={{ color: M.inkFaint }} />
-                    <span className="text-[12px] flex-shrink-0 w-36" style={{ color: M.inkMid, fontFamily: M.body }}>{label}</span>
-                    <span className="text-[13px] font-medium truncate" style={{ color: M.ink, fontFamily: M.body }}>{value}</span>
+                    <Icon className="w-4 h-4 flex-shrink-0" style={{ color: BAI.inkFaint }} />
+                    <span className="text-[12px] flex-shrink-0 w-36" style={{ color: BAI.inkMid, fontFamily: BAI.fontBody }}>{label}</span>
+                    <span className="text-[13px] font-medium truncate" style={{ color: BAI.ink, fontFamily: BAI.fontBody }}>{value}</span>
                   </div>
                 ))}
               </div>
@@ -529,7 +519,7 @@ export default function PrivacyCenter() {
                 <button
                   onClick={() => navigate('/profile')}
                   className="text-[12px] font-medium flex items-center gap-1 transition-opacity"
-                  style={{ color: M.tenant, background: 'none', border: 'none', cursor: 'pointer', fontFamily: M.body }}
+                  style={{ color: BAI.tenant, background: 'none', border: 'none', cursor: 'pointer', fontFamily: BAI.fontBody }}
                   onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.75' }}
                   onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
                 >
@@ -543,9 +533,9 @@ export default function PrivacyCenter() {
           {/* Section: Droits RGPD */}
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.17 }}>
             <SectionCard>
-              <div className="px-5 py-4 border-b" style={{ borderColor: M.border }}>
-                <h2 className="text-[15px] font-bold" style={{ color: M.ink, fontFamily: M.body }}>Vos droits RGPD</h2>
-                <p className="text-[12px]" style={{ color: M.inkFaint, fontFamily: M.body }}>
+              <div className="px-5 py-4 border-b" style={{ borderColor: BAI.border }}>
+                <h2 className="text-[15px] font-bold" style={{ color: BAI.ink, fontFamily: BAI.fontBody }}>Vos droits RGPD</h2>
+                <p className="text-[12px]" style={{ color: BAI.inkFaint, fontFamily: BAI.fontBody }}>
                   Conformément au Règlement (UE) 2016/679
                 </p>
               </div>
@@ -557,15 +547,15 @@ export default function PrivacyCenter() {
                   { art: 'Art. 20', label: 'Droit à la portabilité', desc: 'Téléchargez l\'intégralité de vos données en JSON.' },
                 ].map(({ art, label, desc }) => (
                   <div key={art} className="p-3 space-y-1"
-                    style={{ background: M.muted, border: `1px solid ${M.border}`, borderRadius: 10 }}>
+                    style={{ background: BAI.bgMuted, border: `1px solid ${BAI.border}`, borderRadius: 10 }}>
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-bold px-1.5 py-0.5"
-                        style={{ background: M.tenantLight, color: M.tenant, borderRadius: 20 }}>
+                        style={{ background: BAI.tenantLight, color: BAI.tenant, borderRadius: 20 }}>
                         {art}
                       </span>
-                      <span className="text-[12px] font-semibold" style={{ color: M.ink, fontFamily: M.body }}>{label}</span>
+                      <span className="text-[12px] font-semibold" style={{ color: BAI.ink, fontFamily: BAI.fontBody }}>{label}</span>
                     </div>
-                    <p className="text-[11px] leading-snug" style={{ color: M.inkMid, fontFamily: M.body }}>{desc}</p>
+                    <p className="text-[11px] leading-snug" style={{ color: BAI.inkMid, fontFamily: BAI.fontBody }}>{desc}</p>
                   </div>
                 ))}
               </div>
@@ -573,7 +563,7 @@ export default function PrivacyCenter() {
                 <a
                   href="mailto:dpo@bailio.fr"
                   className="text-[12px] font-medium flex items-center gap-1.5 transition-opacity"
-                  style={{ color: M.tenant, fontFamily: M.body, textDecoration: 'none' }}
+                  style={{ color: BAI.tenant, fontFamily: BAI.fontBody, textDecoration: 'none' }}
                   onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.75' }}
                   onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
                 >
@@ -588,26 +578,26 @@ export default function PrivacyCenter() {
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
             <SectionCard>
               <div className="px-5 py-4 border-b flex items-center gap-2"
-                style={{ borderColor: '#fca5a5', background: M.dangerBg }}>
-                <AlertTriangle className="w-4 h-4" style={{ color: M.danger }} />
-                <h2 className="text-[14px] font-bold" style={{ color: M.danger, fontFamily: M.body }}>Zone de danger</h2>
+                style={{ borderColor: '#fca5a5', background: BAI.errorLight }}>
+                <AlertTriangle className="w-4 h-4" style={{ color: '#9b1c1c' }} />
+                <h2 className="text-[14px] font-bold" style={{ color: '#9b1c1c', fontFamily: BAI.fontBody }}>Zone de danger</h2>
               </div>
               <div className="flex items-start justify-between gap-4 p-5 flex-wrap">
                 <div className="flex items-start gap-3 flex-1">
                   <div className="w-10 h-10 flex items-center justify-center flex-shrink-0"
-                    style={{ background: M.dangerBg, borderRadius: 10 }}>
-                    <Trash2 className="w-5 h-5" style={{ color: M.danger }} />
+                    style={{ background: BAI.errorLight, borderRadius: 10 }}>
+                    <Trash2 className="w-5 h-5" style={{ color: '#9b1c1c' }} />
                   </div>
                   <div>
-                    <h3 className="text-[14px] font-bold" style={{ color: M.ink, fontFamily: M.body }}>
+                    <h3 className="text-[14px] font-bold" style={{ color: BAI.ink, fontFamily: BAI.fontBody }}>
                       Supprimer mon compte
                     </h3>
-                    <p className="text-[12px] mt-0.5" style={{ color: M.inkMid, fontFamily: M.body }}>
+                    <p className="text-[12px] mt-0.5" style={{ color: BAI.inkMid, fontFamily: BAI.fontBody }}>
                       Supprime définitivement votre compte et toutes vos données personnelles.
                       Cette action est <strong>irréversible</strong>.
                     </p>
                     <span className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 text-[11px]"
-                      style={{ background: M.dangerBg, color: M.danger, border: `1px solid #fca5a5`, borderRadius: 20 }}>
+                      style={{ background: BAI.errorLight, color: '#9b1c1c', border: `1px solid #fca5a5`, borderRadius: 20 }}>
                       <FileText className="w-3 h-3" />
                       Art. 17 RGPD — Droit à l'effacement
                     </span>
@@ -617,11 +607,11 @@ export default function PrivacyCenter() {
                   onClick={() => setShowDelete(true)}
                   className="flex items-center gap-2 px-4 py-2.5 text-[13px] font-semibold transition-all flex-shrink-0"
                   style={{
-                    background: M.dangerBg, border: `1px solid #fca5a5`, color: M.danger,
-                    borderRadius: 8, cursor: 'pointer', fontFamily: M.body,
+                    background: BAI.errorLight, border: `1px solid #fca5a5`, color: '#9b1c1c',
+                    borderRadius: 8, cursor: 'pointer', fontFamily: BAI.fontBody,
                   }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = '#fee2e2' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = M.dangerBg }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = BAI.errorLight }}
                 >
                   <Trash2 className="w-4 h-4" />
                   Supprimer mon compte
