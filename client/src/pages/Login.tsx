@@ -1,9 +1,8 @@
 import { useState, FormEvent } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { AlertCircle, Shield, ArrowRight, Mail } from 'lucide-react'
+import { AlertCircle, ArrowRight, Mail } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
-import { authService, TotpRequiredError } from '../services/auth.service'
-import { setApiTokens, apiClient as api } from '../services/api.service'
+import { apiClient as api } from '../services/api.service'
 import GoogleSignInButton from '../components/auth/GoogleSignInButton'
 import { BailioLogo } from '../components/BailioLogo'
 import toast from 'react-hot-toast'
@@ -71,112 +70,23 @@ function Sep() {
   )
 }
 
-/* ─── TOTP screen ────────────────────────────────────────────────────────── */
-function TotpScreen({
-  userId, onBack, onSuccess,
-}: { userId: string; onBack: () => void; onSuccess: (role: string) => void }) {
-  const { setUser, setTokens } = useAuth()
-  const [code, setCode] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [focused, setFocused] = useState(false)
-
-  const verify = async () => {
-    if (!/^\d{6}$/.test(code)) { setError('Code à 6 chiffres requis'); return }
-    setLoading(true); setError('')
-    try {
-      const result = await authService.totpVerify(userId, code)
-      setApiTokens(result.accessToken, result.refreshToken)
-      setTokens(result.accessToken, result.refreshToken)
-      setUser(result.user)
-      onSuccess(result.user.role)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Code incorrect')
-    } finally { setLoading(false) }
-  }
-
-  return (
-    <div style={{ minHeight: '100dvh', background: '#fafaf8', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', ...font }}>
-      <div style={{
-        background: '#ffffff', border: '1px solid #e4e1db', borderRadius: '16px',
-        padding: '48px 40px', maxWidth: '400px', width: '100%',
-        boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
-      }}>
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{ width: '56px', height: '56px', background: '#fdf5ec', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', border: '1px solid rgba(196,151,106,0.3)' }}>
-            <Shield style={{ width: '24px', height: '24px', color: '#c4976a' }} />
-          </div>
-          <h2 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '28px', color: '#0d0c0a', margin: '0 0 8px' }}>
-            Vérification 2FA
-          </h2>
-          <p style={{ fontSize: '14px', color: '#5a5754', lineHeight: 1.5, margin: 0 }}>
-            Saisissez le code à 6 chiffres de votre application.
-          </p>
-        </div>
-
-        {error && (
-          <div style={{ marginBottom: '16px', padding: '11px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', display: 'flex', gap: '8px' }}>
-            <AlertCircle style={{ width: '15px', height: '15px', color: '#dc2626', flexShrink: 0, marginTop: '1px' }} />
-            <p style={{ fontSize: '13px', color: '#991b1b', margin: 0 }}>{error}</p>
-          </div>
-        )}
-
-        <input
-          type="text" inputMode="numeric" maxLength={6} placeholder="000 000"
-          value={code}
-          onChange={e => { setCode(e.target.value.replace(/\D/g, '')); if (error) setError('') }}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          onKeyDown={e => e.key === 'Enter' && verify()}
-          style={{ ...inputStyle(focused), textAlign: 'center', fontSize: '28px', letterSpacing: '0.3em', marginBottom: '16px' }}
-          autoFocus
-        />
-
-        <button
-          onClick={verify}
-          disabled={loading || code.length !== 6}
-          style={{
-            width: '100%', padding: '13px', marginBottom: '12px',
-            background: (loading || code.length !== 6) ? '#9ca3af' : '#1a1a2e',
-            color: '#fff', border: 'none', borderRadius: '10px',
-            fontSize: '14px', fontWeight: 600,
-            cursor: (loading || code.length !== 6) ? 'not-allowed' : 'pointer',
-            fontFamily: 'inherit',
-          }}
-        >
-          {loading ? 'Vérification…' : 'Confirmer'}
-        </button>
-
-        <button
-          onClick={onBack}
-          style={{ ...font, fontSize: '13px', color: '#9e9b96', background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'center', padding: '4px 0' }}
-        >
-          ← Retour
-        </button>
-      </div>
-    </div>
-  )
-}
-
 /* ═══════════════════════════════════════════════════════════════════════════
-   Page principale — 3 écrans
+   Page principale — 2 écrans
    1. welcome      → Landing: Google / Apple / "Se connecter avec un email"
    2. email_login  → Formulaire email + mot de passe
-   3. totp         → Vérification 2FA
 ═══════════════════════════════════════════════════════════════════════════ */
 export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
   const { login, googleLogin, isLoading } = useAuth()
 
-  type Screen = 'welcome' | 'email_login' | 'totp'
+  type Screen = 'welcome' | 'email_login'
   const [screen, setScreen] = useState<Screen>('welcome')
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [focusedField, setFocusedField] = useState('')
   const [error, setError] = useState('')
-  const [totpUserId, setTotpUserId] = useState('')
 
   // Email non vérifié
   const [emailNotVerified, setEmailNotVerified] = useState(false)
@@ -201,9 +111,6 @@ export default function Login() {
       const userData = await login({ email, password })
       redirectByRole(userData.role)
     } catch (err) {
-      if (err instanceof TotpRequiredError) {
-        setTotpUserId(err.userId); setScreen('totp'); return
-      }
       const msg = err instanceof Error ? err.message : ''
       if (msg === 'EMAIL_NOT_VERIFIED') { setEmailNotVerified(true); return }
       setError('Identifiants incorrects. Vérifiez votre email et mot de passe.')
@@ -244,17 +151,6 @@ export default function Login() {
     } catch {
       toast.error('Erreur lors de l\'envoi.')
     }
-  }
-
-  /* ── TOTP ────────────────────────────────────────────────────────────── */
-  if (screen === 'totp') {
-    return (
-      <TotpScreen
-        userId={totpUserId}
-        onBack={() => setScreen('email_login')}
-        onSuccess={redirectByRole}
-      />
-    )
   }
 
   /* ── Écran d'accueil ──────────────────────────────────────────────────

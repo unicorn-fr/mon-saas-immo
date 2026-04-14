@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Layout } from '../components/layout/Layout'
 import { useAuth } from '../hooks/useAuth'
 import { authService } from '../services/auth.service'
@@ -19,9 +19,6 @@ import {
   Loader2,
   Trash2,
   FileText,
-  ShieldCheck,
-  ShieldOff,
-  QrCode,
   CreditCard,
   MapPin,
   Calendar,
@@ -226,65 +223,6 @@ export default function Profile() {
 
   const hasPassword = true
 
-  // ── TOTP state ───────────────────────────────────────────────────────────────
-  const [totpEnabled, setTotpEnabled] = useState<boolean | null>(null)
-  const [totpModal, setTotpModal] = useState<'setup' | 'disable' | null>(null)
-  const [totpQr, setTotpQr] = useState<string>('')
-  const [totpSecret, setTotpSecret] = useState<string>('')
-  const [totpCode, setTotpCode] = useState<string>('')
-  const [totpStep, setTotpStep] = useState<'qr' | 'verify'>('qr')
-  const [totpLoading, setTotpLoading] = useState(false)
-
-  useEffect(() => {
-    authService.totpStatus().then(setTotpEnabled).catch(() => setTotpEnabled(false))
-  }, [])
-
-  const openTotpSetup = async () => {
-    setTotpLoading(true)
-    try {
-      const { qrCodeDataUrl, secret } = await authService.totpSetup()
-      setTotpQr(qrCodeDataUrl)
-      setTotpSecret(secret)
-      setTotpStep('qr')
-      setTotpCode('')
-      setTotpModal('setup')
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Erreur')
-    } finally {
-      setTotpLoading(false)
-    }
-  }
-
-  const handleTotpEnable = async () => {
-    if (!/^\d{6}$/.test(totpCode)) { toast.error('Code à 6 chiffres requis'); return }
-    setTotpLoading(true)
-    try {
-      await authService.totpEnable(totpCode)
-      setTotpEnabled(true)
-      setTotpModal(null)
-      toast.success('Authentification à deux facteurs activée !')
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Code incorrect')
-    } finally {
-      setTotpLoading(false)
-    }
-  }
-
-  const handleTotpDisable = async () => {
-    if (!/^\d{6}$/.test(totpCode)) { toast.error('Code à 6 chiffres requis'); return }
-    setTotpLoading(true)
-    try {
-      await authService.totpDisable(totpCode)
-      setTotpEnabled(false)
-      setTotpModal(null)
-      toast.success('Authentification à deux facteurs désactivée')
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Code incorrect')
-    } finally {
-      setTotpLoading(false)
-    }
-  }
-
   const avatarColors = getAvatarColors(user?.role || '')
   const initials = `${user?.firstName?.[0] || ''}${user?.lastName?.[0] || ''}`.toUpperCase()
 
@@ -452,14 +390,6 @@ export default function Profile() {
                     <div className="flex items-center justify-between">
                       <span className="text-sm" style={{ color: M.inkMid, fontFamily: M.body }}>Téléphone vérifié</span>
                       {user?.phoneVerified ? (
-                        <CheckCircle className="w-4 h-4" style={{ color: '#15803d' }} />
-                      ) : (
-                        <XCircle className="w-4 h-4" style={{ color: M.danger }} />
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm" style={{ color: M.inkMid, fontFamily: M.body }}>Authentification 2FA</span>
-                      {totpEnabled ? (
                         <CheckCircle className="w-4 h-4" style={{ color: '#15803d' }} />
                       ) : (
                         <XCircle className="w-4 h-4" style={{ color: M.danger }} />
@@ -990,59 +920,6 @@ export default function Profile() {
                     </button>
                   )}
 
-                  {/* 2FA / TOTP */}
-                  <div
-                    className="flex items-center justify-between px-4 py-3"
-                    style={{
-                      background: M.muted,
-                      border: `1px solid ${M.border}`,
-                      borderRadius: '8px',
-                    }}
-                  >
-                    <div className="flex items-center gap-3">
-                      {totpEnabled ? (
-                        <ShieldCheck className="w-5 h-5" style={{ color: '#15803d' }} />
-                      ) : (
-                        <ShieldOff className="w-5 h-5" style={{ color: M.inkFaint }} />
-                      )}
-                      <div>
-                        <p className="text-sm font-semibold" style={{ color: M.ink, fontFamily: M.body }}>
-                          Authentification à deux facteurs
-                        </p>
-                        <p className="text-xs" style={{ color: M.inkFaint, fontFamily: M.body }}>
-                          {totpEnabled === null
-                            ? 'Chargement…'
-                            : totpEnabled
-                            ? 'Activée (Google Authenticator / Authy)'
-                            : 'Désactivée'}
-                        </p>
-                      </div>
-                    </div>
-                    {totpEnabled === null ? (
-                      <Loader2 className="w-4 h-4 animate-spin" style={{ color: M.inkFaint }} />
-                    ) : totpEnabled ? (
-                      <button
-                        onClick={() => { setTotpCode(''); setTotpModal('disable') }}
-                        className="text-sm font-semibold transition-colors"
-                        style={{ color: M.danger, fontFamily: M.body }}
-                        onMouseEnter={(e) => (e.currentTarget.style.color = '#7f1d1d')}
-                        onMouseLeave={(e) => (e.currentTarget.style.color = M.danger)}
-                      >
-                        Désactiver
-                      </button>
-                    ) : (
-                      <button
-                        onClick={openTotpSetup}
-                        disabled={totpLoading}
-                        className="text-sm font-semibold transition-colors disabled:opacity-50"
-                        style={{ color: M.night, fontFamily: M.body }}
-                        onMouseEnter={(e) => !totpLoading && (e.currentTarget.style.color = M.caramel)}
-                        onMouseLeave={(e) => (e.currentTarget.style.color = M.night)}
-                      >
-                        {totpLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Activer'}
-                      </button>
-                    )}
-                  </div>
                 </div>
               </div>
 
@@ -1157,242 +1034,6 @@ export default function Profile() {
         isOpen={showPasswordModal}
         onClose={() => setShowPasswordModal(false)}
       />
-
-      {/* TOTP Setup Modal */}
-      {totpModal === 'setup' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setTotpModal(null)} />
-          <div
-            className="relative w-full max-w-md mx-4 p-6"
-            style={{
-              background: M.surface,
-              borderRadius: '16px',
-              border: `1px solid ${M.border}`,
-              boxShadow: '0 20px 60px rgba(13,12,10,0.15)',
-            }}
-          >
-            <button
-              onClick={() => setTotpModal(null)}
-              className="absolute top-4 right-4 p-1.5 transition-colors"
-              style={{ color: M.inkFaint, borderRadius: '8px' }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-            >
-              <XIcon className="w-5 h-5" />
-            </button>
-            <div className="flex items-center gap-3 mb-5">
-              <div
-                className="w-10 h-10 flex items-center justify-center"
-                style={{ background: M.ownerLight, border: `1px solid #b8ccf0`, borderRadius: '10px' }}
-              >
-                <QrCode className="w-5 h-5" style={{ color: M.owner }} />
-              </div>
-              <div>
-                <h3
-                  style={{
-                    fontFamily: M.display,
-                    fontWeight: 700,
-                    fontStyle: 'italic',
-                    fontSize: '20px',
-                    color: M.ink,
-                  }}
-                >
-                  Activer la 2FA
-                </h3>
-                <p className="text-xs" style={{ color: M.inkFaint, fontFamily: M.body }}>Google Authenticator ou Authy</p>
-              </div>
-            </div>
-
-            {totpStep === 'qr' && (
-              <>
-                <p className="text-sm mb-4" style={{ color: M.inkMid, fontFamily: M.body }}>
-                  Scannez ce QR code avec votre application d'authentification, puis cliquez sur Suivant.
-                </p>
-                {totpQr && (
-                  <div className="flex justify-center mb-4">
-                    <img
-                      src={totpQr}
-                      alt="QR Code 2FA"
-                      className="w-48 h-48"
-                      style={{ border: `1px solid ${M.border}`, borderRadius: '10px' }}
-                    />
-                  </div>
-                )}
-                <details className="mb-4 cursor-pointer">
-                  <summary className="text-xs" style={{ color: M.inkFaint, fontFamily: M.body }}>Saisie manuelle</summary>
-                  <code
-                    className="mt-2 block break-all text-xs p-2"
-                    style={{
-                      background: M.muted,
-                      color: M.ink,
-                      border: `1px solid ${M.border}`,
-                      borderRadius: '8px',
-                      fontFamily: 'monospace',
-                    }}
-                  >
-                    {totpSecret}
-                  </code>
-                </details>
-                <button
-                  onClick={() => setTotpStep('verify')}
-                  className="w-full font-semibold px-4 py-2.5 text-sm text-white"
-                  style={{ background: M.night, borderRadius: '8px', fontFamily: M.body }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = '#2d2d4e')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = M.night)}
-                >
-                  Suivant
-                </button>
-              </>
-            )}
-
-            {totpStep === 'verify' && (
-              <>
-                <p className="text-sm mb-4" style={{ color: M.inkMid, fontFamily: M.body }}>
-                  Saisissez le code à 6 chiffres affiché dans votre application pour confirmer l'activation.
-                </p>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  placeholder="000000"
-                  value={totpCode}
-                  onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
-                  style={{
-                    ...inputStyle,
-                    textAlign: 'center',
-                    fontSize: '1.5rem',
-                    letterSpacing: '0.2em',
-                    marginBottom: '1rem',
-                  }}
-                  onFocus={onFocusInput}
-                  onBlur={onBlurInput}
-                  autoFocus
-                />
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setTotpStep('qr')}
-                    className="flex-1 font-semibold px-4 py-2.5 text-sm transition-colors"
-                    style={{
-                      background: M.surface,
-                      border: `1px solid ${M.border}`,
-                      color: M.inkMid,
-                      borderRadius: '8px',
-                      fontFamily: M.body,
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = M.surface)}
-                  >
-                    Retour
-                  </button>
-                  <button
-                    onClick={handleTotpEnable}
-                    disabled={totpLoading || totpCode.length !== 6}
-                    className="flex-1 font-semibold px-4 py-2.5 text-sm text-white disabled:opacity-50 flex items-center justify-center gap-2"
-                    style={{ background: M.night, borderRadius: '8px', fontFamily: M.body }}
-                    onMouseEnter={(e) => !totpLoading && (e.currentTarget.style.background = '#2d2d4e')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = M.night)}
-                  >
-                    {totpLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmer'}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* TOTP Disable Modal */}
-      {totpModal === 'disable' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setTotpModal(null)} />
-          <div
-            className="relative w-full max-w-md mx-4 p-6"
-            style={{
-              background: M.surface,
-              borderRadius: '16px',
-              border: `1px solid ${M.border}`,
-              boxShadow: '0 20px 60px rgba(13,12,10,0.15)',
-            }}
-          >
-            <button
-              onClick={() => setTotpModal(null)}
-              className="absolute top-4 right-4 p-1.5 transition-colors"
-              style={{ color: M.inkFaint, borderRadius: '8px' }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-            >
-              <XIcon className="w-5 h-5" />
-            </button>
-            <div className="flex items-center gap-3 mb-5">
-              <div
-                className="w-10 h-10 flex items-center justify-center"
-                style={{ background: M.dangerBg, border: `1px solid #f5c6c6`, borderRadius: '10px' }}
-              >
-                <ShieldOff className="w-5 h-5" style={{ color: M.danger }} />
-              </div>
-              <h3
-                style={{
-                  fontFamily: M.display,
-                  fontWeight: 700,
-                  fontStyle: 'italic',
-                  fontSize: '20px',
-                  color: M.ink,
-                }}
-              >
-                Désactiver la 2FA
-              </h3>
-            </div>
-            <p className="text-sm mb-4" style={{ color: M.inkMid, fontFamily: M.body }}>
-              Saisissez le code actuel de votre application pour confirmer la désactivation.
-            </p>
-            <input
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              placeholder="000000"
-              value={totpCode}
-              onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
-              style={{
-                ...inputStyle,
-                textAlign: 'center',
-                fontSize: '1.5rem',
-                letterSpacing: '0.2em',
-                marginBottom: '1rem',
-              }}
-              onFocus={onFocusInput}
-              onBlur={onBlurInput}
-              autoFocus
-            />
-            <div className="flex gap-3">
-              <button
-                onClick={() => setTotpModal(null)}
-                className="flex-1 font-semibold px-4 py-2.5 text-sm transition-colors"
-                style={{
-                  background: M.surface,
-                  border: `1px solid ${M.border}`,
-                  color: M.inkMid,
-                  borderRadius: '8px',
-                  fontFamily: M.body,
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
-                onMouseLeave={(e) => (e.currentTarget.style.background = M.surface)}
-              >
-                Annuler
-              </button>
-              <button
-                onClick={handleTotpDisable}
-                disabled={totpLoading || totpCode.length !== 6}
-                className="flex-1 font-semibold px-4 py-2.5 text-sm text-white disabled:opacity-50 flex items-center justify-center gap-2"
-                style={{ background: M.danger, borderRadius: '8px', fontFamily: M.body }}
-                onMouseEnter={(e) => !totpLoading && (e.currentTarget.style.background = '#7f1d1d')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = M.danger)}
-              >
-                {totpLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Désactiver'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Delete Account Confirmation Dialog */}
       {showDeleteDialog && (
