@@ -59,22 +59,18 @@ export const Header = () => {
   if (hasSidebar) {
     return (
       <header
-        className="flex-shrink-0 z-40 flex items-center justify-end px-4 py-2.5 gap-2"
+        className="flex-shrink-0 z-40 flex items-center justify-end px-4 py-2.5 gap-2 glass-navbar"
         style={{
           position: 'sticky',
           top: 0,
-          transition: 'background 0.25s ease, box-shadow 0.25s ease, backdrop-filter 0.25s ease',
-          background: scrolled ? BAI.glassLight : 'transparent',
-          backdropFilter: scrolled ? BAI.glassBlur : 'none',
-          WebkitBackdropFilter: scrolled ? BAI.glassBlur : 'none',
-          borderBottom: scrolled ? `1px solid ${BAI.glassBorder}` : '1px solid transparent',
-          boxShadow: scrolled ? BAI.glassShadow : 'none',
+          transition: 'background 0.25s ease, box-shadow 0.25s ease',
+          boxShadow: scrolled ? '0 4px 24px rgba(0,0,0,0.20)' : 'none',
         }}>
 
         {/* Mobile hamburger */}
         <button onClick={toggleSidebar}
           className="md:hidden mr-auto flex items-center justify-center w-9 h-9 rounded-xl transition-colors"
-          style={{ background: '#ffffff', border: `1px solid ${BAI.border}`, boxShadow: '0 1px 2px rgba(13,12,10,0.06), 0 4px 12px rgba(13,12,10,0.08)', color: BAI.inkFaint }}
+          style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.22)', color: 'rgba(255,255,255,0.70)' }}
           aria-label="Menu">
           <Menu className="w-4 h-4" />
         </button>
@@ -83,7 +79,7 @@ export const Header = () => {
         {user?.role === 'SUPER_ADMIN' && (
           <Link to="/super-admin"
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold"
-            style={{ background: 'rgba(0,180,216,0.10)', color: '#00b4d8', border: '1px solid rgba(0,180,216,0.25)' }}>
+            style={{ background: 'rgba(0,180,216,0.15)', color: '#00b4d8', border: '1px solid rgba(0,180,216,0.30)' }}>
             <Terminal className="w-3 h-3" />
             <span className="hidden sm:inline">Admin</span>
           </Link>
@@ -91,29 +87,29 @@ export const Header = () => {
 
         {/* Pill : Bell + Profile */}
         <div className="flex items-center gap-0.5 px-1.5 py-1.5 rounded-2xl"
-          style={{ background: '#ffffff', border: `1px solid ${BAI.border}`, boxShadow: '0 1px 2px rgba(13,12,10,0.06), 0 4px 12px rgba(13,12,10,0.08)' }}>
+          style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.18)' }}>
 
           <Link to="/notifications"
             className="p-1.5 rounded-lg transition-colors"
-            style={{ color: BAI.inkFaint }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted; (e.currentTarget as HTMLElement).style.color = BAI.inkMid }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = BAI.inkFaint }}>
+            style={{ color: 'rgba(255,255,255,0.55)' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.12)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.90)' }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.55)' }}>
             <Bell className="w-4 h-4" />
           </Link>
 
-          <div className="w-px h-4 mx-0.5" style={{ background: BAI.border }} />
+          <div className="w-px h-4 mx-0.5" style={{ background: 'rgba(255,255,255,0.20)' }} />
 
           <div className="relative">
             <button onClick={() => setShowUserMenu(!showUserMenu)}
               className="flex items-center gap-1.5 px-1.5 py-1 rounded-lg transition-all"
-              style={{ background: showUserMenu ? BAI.bgMuted : 'transparent' }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
+              style={{ background: showUserMenu ? 'rgba(255,255,255,0.12)' : 'transparent' }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.12)' }}
               onMouseLeave={(e) => { if (!showUserMenu) (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
               <div className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
                 style={{ background: threadColor }}>
                 {initials}
               </div>
-              <span className="text-[12px] font-medium hidden sm:block pr-0.5" style={{ color: BAI.ink, fontFamily: 'var(--font-body)' }}>
+              <span className="text-[12px] font-medium hidden sm:block pr-0.5" style={{ color: 'rgba(255,255,255,0.85)', fontFamily: 'var(--font-body)' }}>
                 {user?.firstName}
               </span>
             </button>
@@ -122,14 +118,14 @@ export const Header = () => {
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
                 <div className="absolute right-0 mt-2 w-56 rounded-xl py-2 z-20"
-                  style={{ background: '#ffffff', border: `1px solid ${BAI.border}`, boxShadow: '0 20px 60px rgba(13,12,10,0.12), 0 4px 16px rgba(13,12,10,0.06)' }}>
-                  <div className="px-4 py-3" style={{ borderBottom: `1px solid ${BAI.border}` }}>
-                    <p className="text-[13px] font-semibold" style={{ color: BAI.ink, fontFamily: 'var(--font-body)' }}>
+                  style={{ background: 'rgba(20,16,48,0.90)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.18)', boxShadow: '0 20px 60px rgba(0,0,0,0.35)' }}>
+                  <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.12)' }}>
+                    <p className="text-[13px] font-semibold" style={{ color: 'rgba(255,255,255,0.92)', fontFamily: 'var(--font-body)' }}>
                       {user?.firstName} {user?.lastName}
                     </p>
-                    <p className="text-[11px] truncate mt-0.5" style={{ color: BAI.inkMid }}>{user?.email}</p>
+                    <p className="text-[11px] truncate mt-0.5" style={{ color: 'rgba(255,255,255,0.50)' }}>{user?.email}</p>
                     <span className="inline-block mt-1.5 text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                      style={{ background: `${threadColor}18`, color: threadColor }}>
+                      style={{ background: `${threadColor}30`, color: threadColor }}>
                       {user?.role === 'OWNER' ? 'Propriétaire' : user?.role === 'TENANT' ? 'Locataire' : user?.role}
                     </span>
                   </div>
@@ -140,18 +136,18 @@ export const Header = () => {
                   ].map(({ to, icon, label }) => (
                     <Link key={to} to={to}
                       className="flex items-center gap-3 px-4 py-2 text-[13px] transition-colors"
-                      style={{ color: BAI.inkMid, fontFamily: 'var(--font-body)' }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
+                      style={{ color: 'rgba(255,255,255,0.65)', fontFamily: 'var(--font-body)' }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)' }}
                       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
                       onClick={() => setShowUserMenu(false)}>
-                      <span style={{ color: BAI.inkFaint }}>{icon}</span> {label}
+                      <span style={{ color: 'rgba(255,255,255,0.40)' }}>{icon}</span> {label}
                     </Link>
                   ))}
-                  <div className="mt-1 pt-1" style={{ borderTop: `1px solid ${BAI.border}` }}>
+                  <div className="mt-1 pt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.10)' }}>
                     <button onClick={handleLogout}
                       className="flex items-center gap-3 px-4 py-2 text-[13px] w-full transition-colors"
-                      style={{ color: '#9b1c1c', fontFamily: 'var(--font-body)' }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#fef2f2' }}
+                      style={{ color: '#f87171', fontFamily: 'var(--font-body)' }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(220,38,38,0.15)' }}
                       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
                       <LogOut className="w-4 h-4" /> Déconnexion
                     </button>
