@@ -34,6 +34,7 @@ import PropertyDetails from './pages/owner/PropertyDetails'
 import BookingManagement from './pages/owner/BookingManagement'
 import ApplicationManagement from './pages/owner/ApplicationManagement'
 import TenantProfile from './pages/owner/TenantProfile'
+import OwnerSettings from './pages/owner/Settings'
 
 // Tenant Pages
 import TenantDashboard from './pages/tenant/TenantDashboard'
@@ -43,6 +44,7 @@ import Favorites from './pages/tenant/Favorites'
 import DossierLocatif from './pages/tenant/DossierLocatif'
 import DossierShareManager from './pages/tenant/DossierShareManager'
 import PrivacyCenter from './pages/tenant/PrivacyCenter'
+import TenantSettings from './pages/tenant/Settings'
 
 // Shared Pages
 import Messages from './pages/Messages'
@@ -236,6 +238,7 @@ function AppRoutes() {
         <Route path="/bookings/manage" element={<BookingManagement />} />
         <Route path="/applications/manage" element={<ApplicationManagement />} />
         <Route path="/owner/tenants/:tenantId" element={<TenantProfile />} />
+        <Route path="/owner/settings" element={<OwnerSettings />} />
       </Route>
 
       {/* Protected Routes - Tenant Dashboard */}
@@ -247,6 +250,7 @@ function AppRoutes() {
         <Route path="/dossier" element={<DossierLocatif />} />
         <Route path="/dossier/partages" element={<DossierShareManager />} />
         <Route path="/privacy" element={<PrivacyCenter />} />
+        <Route path="/tenant/settings" element={<TenantSettings />} />
       </Route>
 
       {/* Role selection after OAuth — bloqué en mode waitlist */}

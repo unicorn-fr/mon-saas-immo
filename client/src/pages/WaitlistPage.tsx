@@ -265,7 +265,7 @@ html, body { margin: 0; padding: 0; scroll-behavior: smooth; }
 .faq-chevron { flex-shrink: 0; transition: transform .25s ease; color: var(--c-ink-faint); }
 .faq-chevron.open { transform: rotate(180deg); }
 .faq-body { overflow: hidden; max-height: 0; transition: max-height .3s ease, padding .3s ease; }
-.faq-body.open { max-height: 300px; padding-bottom: 18px; }
+.faq-body.open { max-height: 600px; padding-bottom: 18px; }
 `
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
@@ -447,26 +447,113 @@ export default function WaitlistPage() {
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
   const cd = useCountdown(LAUNCH_DATE)
 
-  const FAQ_ITEMS = [
+  const FAQ_ITEMS: { cat: string; q: string; a: string }[] = [
+    // ── Général ───────────────────────────────────────────────────────────────
     {
+      cat: 'Général',
       q: "C'est vraiment gratuit de s'inscrire ?",
-      a: "Oui, l'inscription sur la liste d'attente est 100 % gratuite et sans engagement. Bailio sera payant au lancement, avec un modèle tarifaire simple qu'on communiquera avant d'ouvrir — pas de surprise.",
+      a: "Oui, l'inscription sur la liste d'attente est 100 % gratuite et sans engagement. Bailio sera payant au lancement, avec un modèle tarifaire simple qu'on communiquera en amont — aucune surprise au dernier moment.",
     },
     {
-      q: "Un bail signé en ligne, c'est légalement valide ?",
-      a: "Oui. On utilise la signature électronique eIDAS, le standard européen. Elle a exactement la même valeur légale qu'un document signé à la main — et c'est beaucoup plus sécurisé.",
-    },
-    {
-      q: "Je n'ai qu'un seul appartement, c'est fait pour moi ?",
-      a: "Complètement. Bailio est conçu aussi bien pour le propriétaire d'un seul bien que pour celui qui en gère dix. Pas besoin d'être un investisseur expérimenté.",
-    },
-    {
+      cat: 'Général',
       q: "Quand est-ce que la plateforme ouvre ?",
-      a: "On vise le lancement en 2026. Les personnes sur la liste d'attente seront les premières à y avoir accès, et les 150 premiers inscrits bénéficient d'un mois offert sur le plan Pro.",
+      a: "On vise le lancement en juin 2026. Les personnes sur la liste d'attente seront les premières à y avoir accès, avec une période de beta privée avant l'ouverture publique. Les 150 premiers inscrits bénéficient en plus d'un mois offert sur le plan Pro.",
     },
     {
-      q: "Et si j'ai des questions pendant l'utilisation ?",
-      a: "On est là. Bailio intègre une messagerie directe et un support réactif. Tu ne seras jamais seul face à un problème — c'est justement l'une des raisons pour lesquelles on a construit ça.",
+      cat: 'Général',
+      q: "Combien coûte Bailio ?",
+      a: "On publiera les tarifs complets avant le lancement, mais voici la logique : la plateforme sera payante côté propriétaire (abonnement mensuel simple, sans commission sur les loyers) et entièrement gratuite côté locataire. Pas de frais cachés, pas de commission à la relocation.",
+    },
+    {
+      cat: 'Général',
+      q: "Bailio remplace-t-il une agence immobilière ?",
+      a: "Oui, pour la gestion locative au quotidien : annonce, visite, dossier, bail, état des lieux, quittances. En revanche, on n'intervient pas dans la transaction de vente. Si tu as besoin d'un accompagnement juridique spécifique (litige, procédure d'expulsion), Bailio te facilite la gestion mais ne se substitue pas à un avocat.",
+    },
+
+    // ── Propriétaires ─────────────────────────────────────────────────────────
+    {
+      cat: 'Propriétaires',
+      q: "Je n'ai qu'un seul appartement, c'est fait pour moi ?",
+      a: "Absolument. Bailio est conçu autant pour le propriétaire d'un seul studio que pour celui qui gère un portefeuille de dix biens. L'interface s'adapte — si tu as un bien, tout est simple et rapide. Si tu en as plusieurs, tu as une vue d'ensemble sur chacun.",
+    },
+    {
+      cat: 'Propriétaires',
+      q: "Comment je publie mon annonce ?",
+      a: "Tu remplis une fiche guidée en quelques minutes : description, surface, loyer, charges, photos. Bailio te suggère un loyer de référence basé sur le marché local. L'annonce est ensuite visible sur Bailio et, bientôt, syndiquée sur les portails partenaires. Tu peux la mettre en pause ou la dépublier à tout moment.",
+    },
+    {
+      cat: 'Propriétaires',
+      q: "Comment fonctionne la vérification des dossiers locataires ?",
+      a: "Les locataires uploadent leurs justificatifs directement sur Bailio (pièce d'identité, bulletins de salaire, avis d'imposition, etc.). Notre IA les analyse en quelques secondes, vérifie la cohérence des revenus et génère un score de solvabilité. Tu reçois un résumé clair pour chaque candidat — plus besoin d'éplucher une liasse de PDF.",
+    },
+    {
+      cat: 'Propriétaires',
+      q: "Puis-je gérer plusieurs biens depuis un seul compte ?",
+      a: "Oui. Ton tableau de bord propriétaire centralise tous tes biens, les candidatures en cours, les baux actifs et les paiements reçus. Tu passes d'un bien à l'autre en un clic.",
+    },
+    {
+      cat: 'Propriétaires',
+      q: "Qu'est-ce qui se passe si un locataire ne paie pas ?",
+      a: "Bailio t'envoie une alerte automatique dès le premier retard. Tu peux contacter le locataire directement depuis la messagerie intégrée. Pour la suite (mise en demeure, procédure), on prépare des modèles de courriers conformes à la loi ALUR pour te faire gagner du temps — mais cette étape reste entre toi et ton locataire (et éventuellement un huissier).",
+    },
+    {
+      cat: 'Propriétaires',
+      q: "Comment se passe l'état des lieux ?",
+      a: "L'état des lieux d'entrée et de sortie se réalise directement sur Bailio, pièce par pièce, avec photos et commentaires. Les deux parties signent électroniquement sur place depuis leurs téléphones. Le document est archivé et produit une valeur probante en cas de litige.",
+    },
+    {
+      cat: 'Propriétaires',
+      q: "Puis-je utiliser Bailio avec un locataire déjà en place ?",
+      a: "Oui. Tu peux enregistrer un bail existant sur Bailio pour centraliser le suivi des paiements, générer les quittances et préparer l'état des lieux de sortie — même si le bail a été signé en dehors de la plateforme.",
+    },
+
+    // ── Locataires ────────────────────────────────────────────────────────────
+    {
+      cat: 'Locataires',
+      q: "Quels documents dois-je fournir pour constituer mon dossier ?",
+      a: "Les classiques : pièce d'identité, les 3 derniers bulletins de salaire (ou justificatifs de revenus), le dernier avis d'imposition, et un justificatif de domicile actuel. Si tu as un garant, les mêmes documents lui sont demandés. Bailio accepte tous les formats (PDF, photo, scan) et les vérifie automatiquement.",
+    },
+    {
+      cat: 'Locataires',
+      q: "Est-ce que je dois payer quelque chose ?",
+      a: "Non, jamais. Bailio est 100 % gratuit pour les locataires. Zéro frais de dossier, zéro commission, zéro abonnement. C'est le modèle qu'on a choisi dès le début.",
+    },
+    {
+      cat: 'Locataires',
+      q: "Mon dossier est-il partagé sans mon accord ?",
+      a: "Non. Tu contrôles entièrement qui accède à ton dossier. Lorsque tu postules à un bien, tu autorises explicitement le propriétaire à le consulter. Tu peux révoquer cet accès à tout moment depuis ton espace locataire. Aucune donnée ne circule sans ton consentement.",
+    },
+    {
+      cat: 'Locataires',
+      q: "Puis-je postuler à plusieurs biens en même temps ?",
+      a: "Oui, autant que tu veux. Ton dossier est créé une seule fois et tu l'envoies à chaque propriétaire qui t'intéresse en quelques secondes. Pas besoin de tout reconstruire à chaque candidature.",
+    },
+    {
+      cat: 'Locataires',
+      q: "Combien de temps pour avoir une réponse d'un propriétaire ?",
+      a: "Ça dépend du propriétaire, pas de nous. En revanche, Bailio envoie une notification au propriétaire dès que tu postules, et tu reçois un accusé de réception immédiat. Si tu n'as pas de réponse sous 72h, on t'envoie un rappel pour que tu puisses relancer directement via la messagerie.",
+    },
+
+    // ── Légal & Sécurité ──────────────────────────────────────────────────────
+    {
+      cat: 'Légal & Sécurité',
+      q: "Un bail signé en ligne, c'est légalement valide ?",
+      a: "Oui. On utilise la signature électronique qualifiée (standard eIDAS), le référentiel européen. Elle a exactement la même valeur juridique qu'une signature manuscrite — c'est d'ailleurs plus sécurisé, car chaque signature est horodatée, liée à une identité vérifiée et archivée de façon immuable.",
+    },
+    {
+      cat: 'Légal & Sécurité',
+      q: "Le bail généré par Bailio est-il conforme à la loi ?",
+      a: "Oui. Le modèle de bail utilisé est conforme à la loi ALUR (loi du 6 juillet 1989), avec toutes les clauses obligatoires. Il est mis à jour en fonction des évolutions législatives. Tu peux aussi personnaliser les clauses facultatives dans les limites autorisées par la loi.",
+    },
+    {
+      cat: 'Légal & Sécurité',
+      q: "Mes données personnelles sont-elles protégées ?",
+      a: "Oui. Bailio est conforme au RGPD. Tes données sont hébergées en Europe, chiffrées en transit et au repos. Tu peux à tout moment accéder à toutes tes données, demander leur correction ou leur suppression depuis ton espace \"Confidentialité\". On ne revend aucune donnée à des tiers.",
+    },
+    {
+      cat: 'Légal & Sécurité',
+      q: "Et si j'ai des questions ou un problème pendant l'utilisation ?",
+      a: "On est là. Bailio intègre une messagerie directe et un support réactif par email. Tu ne seras jamais seul face à un problème — c'est justement l'une des raisons pour lesquelles on a construit ça.",
     },
   ]
 
@@ -1230,45 +1317,63 @@ export default function WaitlistPage() {
           <div className="bail-reveal bail-d1" role="list">
             {FAQ_ITEMS.map((item, i) => {
               const isOpen = openFaq === i
+              const showCat = i === 0 || FAQ_ITEMS[i - 1].cat !== item.cat
               return (
-                <div key={i} className="faq-item" role="listitem">
-                  <button
-                    className="faq-btn"
-                    aria-expanded={isOpen}
-                    aria-controls={`faq-body-${i}`}
-                    id={`faq-btn-${i}`}
-                    onClick={() => setOpenFaq(isOpen ? null : i)}
-                  >
-                    <span style={{
-                      fontFamily: 'var(--font-body)', fontWeight: 600,
-                      fontSize: 'clamp(14px,1.8vw,16px)', color: 'var(--c-ink)', lineHeight: 1.4,
+                <React.Fragment key={i}>
+                  {showCat && (
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      margin: i === 0 ? '0 0 4px' : '28px 0 4px',
                     }}>
-                      {item.q}
-                    </span>
-                    <svg
-                      className={`faq-chevron${isOpen ? ' open' : ''}`}
-                      width="18" height="18" viewBox="0 0 24 24"
-                      fill="none" stroke="currentColor" strokeWidth="2"
-                      strokeLinecap="round" strokeLinejoin="round"
-                      aria-hidden="true"
+                      <span style={{
+                        fontFamily: 'var(--font-body)', fontSize: 10, fontWeight: 700,
+                        letterSpacing: '0.13em', textTransform: 'uppercase',
+                        color: 'var(--c-accent)',
+                      }}>
+                        {item.cat}
+                      </span>
+                      <div style={{ flex: 1, height: 1, background: 'var(--c-border)' }} />
+                    </div>
+                  )}
+                  <div className="faq-item" role="listitem">
+                    <button
+                      className="faq-btn"
+                      aria-expanded={isOpen}
+                      aria-controls={`faq-body-${i}`}
+                      id={`faq-btn-${i}`}
+                      onClick={() => setOpenFaq(isOpen ? null : i)}
                     >
-                      <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                  </button>
-                  <div
-                    id={`faq-body-${i}`}
-                    role="region"
-                    aria-labelledby={`faq-btn-${i}`}
-                    className={`faq-body${isOpen ? ' open' : ''}`}
-                  >
-                    <p style={{
-                      fontFamily: 'var(--font-body)', fontSize: 14,
-                      color: 'var(--c-ink-mid)', lineHeight: 1.72, margin: 0,
-                    }}>
-                      {item.a}
-                    </p>
+                      <span style={{
+                        fontFamily: 'var(--font-body)', fontWeight: 600,
+                        fontSize: 'clamp(14px,1.8vw,15.5px)', color: 'var(--c-ink)', lineHeight: 1.4,
+                      }}>
+                        {item.q}
+                      </span>
+                      <svg
+                        className={`faq-chevron${isOpen ? ' open' : ''}`}
+                        width="18" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" strokeWidth="2"
+                        strokeLinecap="round" strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </button>
+                    <div
+                      id={`faq-body-${i}`}
+                      role="region"
+                      aria-labelledby={`faq-btn-${i}`}
+                      className={`faq-body${isOpen ? ' open' : ''}`}
+                    >
+                      <p style={{
+                        fontFamily: 'var(--font-body)', fontSize: 14,
+                        color: 'var(--c-ink-mid)', lineHeight: 1.72, margin: 0,
+                      }}>
+                        {item.a}
+                      </p>
+                    </div>
                   </div>
-                </div>
+                </React.Fragment>
               )
             })}
           </div>
