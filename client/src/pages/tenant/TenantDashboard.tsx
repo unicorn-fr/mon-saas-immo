@@ -17,36 +17,15 @@ import { Layout } from '../../components/layout/Layout'
 import type { Application } from '../../types/application.types'
 import { format, differenceInDays } from 'date-fns'
 import { fr } from 'date-fns/locale'
-// BAI tokens unused — glass dark tokens defined below
+import { BAI } from '../../constants/bailio-tokens'
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 
-// ── Glass Dark tokens ─────────────────────────────────────────────────────
-const GD = {
-  ink:          'rgba(255, 255, 255, 0.95)',
-  inkMid:       'rgba(255, 255, 255, 0.65)',
-  inkFaint:     'rgba(255, 255, 255, 0.40)',
-  border:       'rgba(255, 255, 255, 0.18)',
-  borderStrong: 'rgba(255, 255, 255, 0.28)',
-  bgMuted:      'rgba(255, 255, 255, 0.07)',
-  bgSurface:    'rgba(255, 255, 255, 0.10)',
-  tenant:       '#4ade80',
-  tenantLight:  'rgba(74, 222, 128, 0.18)',
-  tenantBorder: 'rgba(74, 222, 128, 0.38)',
-  caramel:      '#e8b97a',
-  caramelLight: 'rgba(196, 151, 106, 0.18)',
-  night:        'rgba(102, 126, 234, 0.85)',
-  shadowMd:     '0 8px 32px rgba(0,0,0,0.20)',
-  shadowLg:     '0 16px 48px rgba(0,0,0,0.28)',
-}
-
 const cardBase: React.CSSProperties = {
-  background: 'rgba(255, 255, 255, 0.10)',
-  backdropFilter: 'blur(16px)',
-  WebkitBackdropFilter: 'blur(16px)',
-  border: '1px solid rgba(255, 255, 255, 0.18)',
+  background:   BAI.bgSurface,
+  border:       `1px solid ${BAI.border}`,
   borderRadius: 16,
-  boxShadow: '0 8px 32px rgba(0,0,0,0.20)',
+  boxShadow:    BAI.shadowMd,
 }
 
 // ─── Catégories requises pour le calcul de complétion du dossier ──────────────
@@ -129,15 +108,15 @@ export default function TenantDashboard() {
   const CIRCUMFERENCE   = 2 * Math.PI * RING_R
   const ringOffset      = CIRCUMFERENCE * (1 - dossierPercent / 100)
   const dossierColor    =
-    dossierPercent >= 80 ? GD.tenant
-    : dossierPercent >= 50 ? GD.caramel
+    dossierPercent >= 80 ? BAI.tenant
+    : dossierPercent >= 50 ? BAI.caramel
     : '#b91c1c'
   const coveredCount = Math.round(dossierPercent / 100 * REQUIRED_CATEGORIES.length)
 
   const STATUS_STYLE: Record<string, React.CSSProperties> = {
-    PENDING:  { background: GD.caramelLight, border: `1px solid rgba(232,185,122,0.35)`, color: GD.caramel },
-    APPROVED: { background: GD.tenantLight,  border: `1px solid ${GD.tenantBorder}`, color: GD.tenant },
-    REJECTED: { background: 'rgba(220,38,38,0.18)', border: '1px solid rgba(248,113,113,0.40)', color: '#f87171' },
+    PENDING:  { background: BAI.caramelLight, border: `1px solid #e8c9a0`, color: BAI.caramel },
+    APPROVED: { background: BAI.tenantLight,  border: `1px solid ${BAI.tenantBorder}`, color: BAI.tenant },
+    REJECTED: { background: '#fef2f2',      border: '1px solid #fecaca', color: '#b91c1c' },
   }
   const STATUS_LABEL: Record<string, string> = {
     PENDING:  'En examen',
@@ -149,27 +128,27 @@ export default function TenantDashboard() {
   if (activeContract) {
     return (
       <Layout>
-        <div style={{ background: 'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)', minHeight: '100vh', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+        <div style={{ background: BAI.bgBase, minHeight: '100vh', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-8">
 
             {/* Header condensé */}
             <div style={{ marginBottom: 28 }}>
-              <p style={{ fontSize: 11, color: GD.inkFaint, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>
+              <p style={{ fontSize: 11, color: BAI.inkFaint, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>
                 {todayLabel}
               </p>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
                 <h1 style={{
                   fontFamily: "'Cormorant Garamond', Georgia, serif",
                   fontWeight: 700, fontStyle: 'italic',
-                  fontSize: 44, color: GD.ink, lineHeight: 1.05, margin: 0,
+                  fontSize: 44, color: BAI.ink, lineHeight: 1.05, margin: 0,
                 }}>
                   Bonjour, {user?.firstName}
                 </h1>
                 <span style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                   padding: '5px 14px', borderRadius: 20,
-                  background: GD.tenantLight, border: `1px solid ${GD.tenantBorder}`,
-                  fontSize: 12, fontWeight: 600, color: GD.tenant,
+                  background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`,
+                  fontSize: 12, fontWeight: 600, color: BAI.tenant,
                 }}>
                   <CheckCircle size={13} /> Bail actif
                 </span>
@@ -178,7 +157,7 @@ export default function TenantDashboard() {
 
             {/* ── HERO : Mon logement ─────────────────────────────────────── */}
             <div style={{
-              background: GD.night,
+              background: BAI.night,
               borderRadius: 20,
               overflow: 'hidden',
               boxShadow: '0 8px 40px rgba(13,12,10,0.22)',
@@ -190,8 +169,8 @@ export default function TenantDashboard() {
                 borderBottom: '1px solid rgba(255,255,255,0.07)',
                 display: 'flex', alignItems: 'center', gap: 8,
               }}>
-                <Building2 size={14} style={{ color: GD.caramel }} />
-                <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: GD.caramel, margin: 0 }}>
+                <Building2 size={14} style={{ color: BAI.caramel }} />
+                <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
                   Mon logement
                 </p>
               </div>
@@ -233,7 +212,7 @@ export default function TenantDashboard() {
                     </p>
                     <p style={{
                       fontFamily: "'Cormorant Garamond', Georgia, serif",
-                      fontSize: 36, fontWeight: 700, color: GD.caramel,
+                      fontSize: 36, fontWeight: 700, color: BAI.caramel,
                       margin: '0 0 4px', lineHeight: 1,
                     }}>
                       {daysUntilPayment !== null ? (daysUntilPayment === 0 ? "Aujourd'hui" : `J-${daysUntilPayment}`) : '—'}
@@ -283,7 +262,7 @@ export default function TenantDashboard() {
                   <Link to={`/contracts/${activeContract.id}`} style={{
                     display: 'inline-flex', alignItems: 'center', gap: 8,
                     padding: '12px 22px', borderRadius: 10,
-                    background: GD.caramel, color: '#ffffff',
+                    background: BAI.caramel, color: '#ffffff',
                     fontWeight: 700, fontSize: 13, textDecoration: 'none',
                     letterSpacing: '0.01em',
                   }}>
@@ -344,17 +323,17 @@ export default function TenantDashboard() {
               {/* Messages récents */}
               <div style={{ ...cardBase }}>
                 <div style={{
-                  padding: '14px 20px', borderBottom: `1px solid ${GD.border}`,
+                  padding: '14px 20px', borderBottom: `1px solid ${BAI.border}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: GD.inkFaint }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint }}>
                       Messages
                     </span>
                     {unreadCount > 0 && (
                       <span style={{
                         fontSize: 11, fontWeight: 700, color: '#ffffff',
-                        background: GD.tenant, borderRadius: 20, padding: '1px 8px',
+                        background: BAI.tenant, borderRadius: 20, padding: '1px 8px',
                       }}>
                         {unreadCount} non lu{unreadCount > 1 ? 's' : ''}
                       </span>
@@ -362,7 +341,7 @@ export default function TenantDashboard() {
                   </div>
                   <Link to="/messages" style={{
                     display: 'flex', alignItems: 'center', gap: 4,
-                    fontSize: 12, fontWeight: 500, color: GD.tenant, textDecoration: 'none',
+                    fontSize: 12, fontWeight: 500, color: BAI.tenant, textDecoration: 'none',
                   }}>
                     Ouvrir <ArrowRight size={12} />
                   </Link>
@@ -372,23 +351,23 @@ export default function TenantDashboard() {
                     <div style={{
                       display: 'flex', alignItems: 'center', gap: 14,
                       padding: '14px 16px', borderRadius: 10,
-                      background: GD.tenantLight, border: `1px solid ${GD.tenantBorder}`,
+                      background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`,
                     }}>
                       <div style={{
                         width: 40, height: 40, borderRadius: 10,
-                        background: GD.tenant, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                        background: BAI.tenant, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                       }}>
                         <MessageSquare size={18} style={{ color: '#ffffff' }} />
                       </div>
                       <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: 14, fontWeight: 600, color: GD.ink, margin: '0 0 2px' }}>
+                        <p style={{ fontSize: 14, fontWeight: 600, color: BAI.ink, margin: '0 0 2px' }}>
                           {unreadCount} message{unreadCount > 1 ? 's' : ''} non lu{unreadCount > 1 ? 's' : ''}
                         </p>
-                        <p style={{ fontSize: 12, color: GD.inkFaint, margin: 0 }}>Votre propriétaire vous a écrit</p>
+                        <p style={{ fontSize: 12, color: BAI.inkFaint, margin: 0 }}>Votre propriétaire vous a écrit</p>
                       </div>
                       <Link to="/messages" style={{
                         padding: '8px 16px', borderRadius: 8,
-                        background: GD.tenant, color: '#ffffff',
+                        background: BAI.tenant, color: '#ffffff',
                         fontSize: 12, fontWeight: 600, textDecoration: 'none', flexShrink: 0,
                       }}>
                         Lire
@@ -396,8 +375,8 @@ export default function TenantDashboard() {
                     </div>
                   ) : (
                     <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                      <CheckCircle size={24} style={{ color: GD.tenant, marginBottom: 8 }} />
-                      <p style={{ fontSize: 13, color: GD.inkMid, margin: 0 }}>Aucun message non lu</p>
+                      <CheckCircle size={24} style={{ color: BAI.tenant, marginBottom: 8 }} />
+                      <p style={{ fontSize: 13, color: BAI.inkMid, margin: 0 }}>Aucun message non lu</p>
                     </div>
                   )}
 
@@ -415,10 +394,10 @@ export default function TenantDashboard() {
                     ].map(({ label, val }) => (
                       <div key={label} style={{
                         padding: '10px 14px', borderRadius: 8,
-                        background: GD.bgMuted, border: `1px solid ${GD.border}`,
+                        background: BAI.bgMuted, border: `1px solid ${BAI.border}`,
                       }}>
-                        <p style={{ fontSize: 10, color: GD.inkFaint, margin: '0 0 3px', letterSpacing: '0.06em' }}>{label}</p>
-                        <p style={{ fontSize: 14, fontWeight: 600, color: GD.ink, margin: 0 }}>{val}</p>
+                        <p style={{ fontSize: 10, color: BAI.inkFaint, margin: '0 0 3px', letterSpacing: '0.06em' }}>{label}</p>
+                        <p style={{ fontSize: 14, fontWeight: 600, color: BAI.ink, margin: 0 }}>{val}</p>
                       </div>
                     ))}
                   </div>
@@ -431,11 +410,11 @@ export default function TenantDashboard() {
                 {/* Dossier locatif mini */}
                 <div style={{ ...cardBase, padding: 20 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                    <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: GD.inkFaint, margin: 0 }}>
+                    <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, margin: 0 }}>
                       Mon dossier
                     </p>
                     <Link to="/dossier" style={{
-                      fontSize: 12, fontWeight: 500, color: GD.tenant, textDecoration: 'none',
+                      fontSize: 12, fontWeight: 500, color: BAI.tenant, textDecoration: 'none',
                       display: 'flex', alignItems: 'center', gap: 3,
                     }}>
                       Gérer <ArrowRight size={11} />
@@ -444,7 +423,7 @@ export default function TenantDashboard() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <div style={{ position: 'relative', width: 64, height: 64, flexShrink: 0 }}>
                       <svg width="64" height="64" viewBox="0 0 64 64" style={{ transform: 'rotate(-90deg)' }}>
-                        <circle cx="32" cy="32" r="24" strokeWidth="5" fill="none" stroke={GD.bgMuted} />
+                        <circle cx="32" cy="32" r="24" strokeWidth="5" fill="none" stroke={BAI.bgMuted} />
                         <circle cx="32" cy="32" r="24" strokeWidth="5" fill="none"
                           style={{
                             stroke: dossierColor,
@@ -455,16 +434,16 @@ export default function TenantDashboard() {
                         />
                       </svg>
                       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 16, fontWeight: 700, color: GD.ink }}>
+                        <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 16, fontWeight: 700, color: BAI.ink }}>
                           {dossierPercent}%
                         </span>
                       </div>
                     </div>
                     <div>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: GD.ink, margin: '0 0 4px' }}>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: BAI.ink, margin: '0 0 4px' }}>
                         {dossierPercent === 100 ? 'Dossier complet' : `${coveredCount}/${REQUIRED_CATEGORIES.length} catégories`}
                       </p>
-                      <p style={{ fontSize: 11, color: GD.inkFaint, margin: 0 }}>
+                      <p style={{ fontSize: 11, color: BAI.inkFaint, margin: 0 }}>
                         {dossierPercent === 100 ? 'Tous les documents présents' : 'Des documents manquent'}
                       </p>
                     </div>
@@ -473,7 +452,7 @@ export default function TenantDashboard() {
 
                 {/* Accès rapides */}
                 <div style={{ ...cardBase, padding: 20 }}>
-                  <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: GD.inkFaint, marginBottom: 14 }}>
+                  <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, marginBottom: 14 }}>
                     Navigation
                   </p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
@@ -487,24 +466,24 @@ export default function TenantDashboard() {
                       <Link key={to} to={to} style={{
                         display: 'flex', alignItems: 'center', gap: 10,
                         padding: '10px 0',
-                        borderBottom: idx < arr.length - 1 ? `1px solid ${GD.border}` : 'none',
-                        textDecoration: 'none', color: GD.ink,
+                        borderBottom: idx < arr.length - 1 ? `1px solid ${BAI.border}` : 'none',
+                        textDecoration: 'none', color: BAI.ink,
                         transition: 'color 0.15s',
                       }}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = GD.tenant }}
-                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = GD.ink }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = BAI.tenant }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = BAI.ink }}
                       >
                         <span style={{ color: 'inherit', display: 'flex', flexShrink: 0 }}>{icon}</span>
                         <span style={{ flex: 1, fontSize: 13, fontWeight: 500 }}>{label}</span>
                         {badge && badge > 0 ? (
                           <span style={{
                             fontSize: 11, fontWeight: 700, color: '#ffffff',
-                            background: GD.tenant, borderRadius: 20, padding: '1px 7px', flexShrink: 0,
+                            background: BAI.tenant, borderRadius: 20, padding: '1px 7px', flexShrink: 0,
                           }}>
                             {badge}
                           </span>
                         ) : (
-                          <ChevronRight size={14} style={{ color: GD.inkFaint, flexShrink: 0 }} />
+                          <ChevronRight size={14} style={{ color: BAI.inkFaint, flexShrink: 0 }} />
                         )}
                       </Link>
                     ))}
@@ -524,19 +503,19 @@ export default function TenantDashboard() {
   // ── VUE RECHERCHE (pas de bail actif) ─────────────────────────────────────
   return (
     <Layout>
-      <div style={{ background: 'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)', minHeight: '100vh', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+      <div style={{ background: BAI.bgBase, minHeight: '100vh', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-8">
 
           {/* ── Page header ─────────────────────────────────────────────── */}
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 32 }}>
             <div>
-              <p style={{ fontSize: 13, color: GD.inkFaint, fontWeight: 400, marginBottom: 4, textTransform: 'capitalize' }}>
+              <p style={{ fontSize: 13, color: BAI.inkFaint, fontWeight: 400, marginBottom: 4, textTransform: 'capitalize' }}>
                 {todayLabel}
               </p>
               <h1 style={{
                 fontFamily: "'Cormorant Garamond', Georgia, serif",
                 fontWeight: 700, fontStyle: 'italic',
-                fontSize: 52, color: GD.ink, lineHeight: 1.05, margin: 0,
+                fontSize: 52, color: BAI.ink, lineHeight: 1.05, margin: 0,
               }}>
                 Bonjour, {user?.firstName}
               </h1>
@@ -544,7 +523,7 @@ export default function TenantDashboard() {
             <Link to="/search" style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               padding: '10px 20px', borderRadius: 10,
-              background: GD.tenant, color: '#ffffff',
+              background: BAI.tenant, color: '#ffffff',
               fontWeight: 600, fontSize: 13, textDecoration: 'none',
             }}>
               <Search size={15} /> Chercher un logement
@@ -574,7 +553,7 @@ export default function TenantDashboard() {
               }}>
                 {/* Bandeau urgence */}
                 <div style={{
-                  background: GD.caramel,
+                  background: BAI.caramel,
                   padding: '8px 20px',
                   display: 'flex', alignItems: 'center', gap: 8,
                 }}>
@@ -631,7 +610,7 @@ export default function TenantDashboard() {
                           </p>
                           <p style={{
                             fontSize: 15, fontWeight: 700,
-                            color: item.accent ? GD.caramel : '#ffffff',
+                            color: item.accent ? BAI.caramel : '#ffffff',
                             margin: 0, fontFamily: "'DM Sans', sans-serif",
                           }}>
                             {item.val}
@@ -667,7 +646,7 @@ export default function TenantDashboard() {
                     <Link to={`/contracts/${c.id}`} style={{
                       display: 'inline-flex', alignItems: 'center', gap: 8,
                       padding: '11px 22px', borderRadius: 10,
-                      background: GD.caramel, color: '#ffffff',
+                      background: BAI.caramel, color: '#ffffff',
                       fontWeight: 700, fontSize: 13, textDecoration: 'none',
                       letterSpacing: '0.01em',
                     }}>
@@ -729,35 +708,35 @@ export default function TenantDashboard() {
               <Link key={kpi.label} to={kpi.to} style={{ textDecoration: 'none', display: 'block' }}>
                 <div style={{
                   ...cardBase,
-                  borderTop: `3px solid ${GD.tenant}`,
+                  borderTop: `3px solid ${BAI.tenant}`,
                   padding: 20,
                   display: 'flex', flexDirection: 'column',
                   boxSizing: 'border-box',
                   transition: 'box-shadow 0.2s, transform 0.2s',
                 }}
                   onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.boxShadow = GD.shadowLg;
+                    (e.currentTarget as HTMLElement).style.boxShadow = BAI.shadowLg;
                     (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'
                   }}
                   onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.boxShadow = GD.shadowMd;
+                    (e.currentTarget as HTMLElement).style.boxShadow = BAI.shadowMd;
                     (e.currentTarget as HTMLElement).style.transform = 'none'
                   }}
                 >
-                  <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: GD.inkFaint, marginBottom: 12 }}>
+                  <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.inkFaint, marginBottom: 12 }}>
                     {kpi.label}
                   </p>
                   <p style={{
                     fontFamily: "'Cormorant Garamond', Georgia, serif",
-                    fontWeight: 700, fontSize: 44, color: GD.ink,
+                    fontWeight: 700, fontSize: 44, color: BAI.ink,
                     lineHeight: 1, marginBottom: 4,
                   }}>
                     {kpi.value}
                   </p>
-                  <p style={{ fontSize: 12, color: GD.inkFaint }}>
+                  <p style={{ fontSize: 12, color: BAI.inkFaint }}>
                     {kpi.sub}
                   </p>
-                  <ArrowRight size={14} style={{ color: GD.inkFaint, marginTop: 'auto', alignSelf: 'flex-end' }} />
+                  <ArrowRight size={14} style={{ color: BAI.inkFaint, marginTop: 'auto', alignSelf: 'flex-end' }} />
                 </div>
               </Link>
             ))}
@@ -773,17 +752,17 @@ export default function TenantDashboard() {
                 {/* ── Dossier locatif widget ──────────────────────────── */}
                 <div style={cardBase}>
                   <div style={{
-                    padding: '16px 20px', borderBottom: `1px solid ${GD.border}`,
+                    padding: '16px 20px', borderBottom: `1px solid ${BAI.border}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: GD.inkFaint }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint }}>
                         Mon dossier locatif
                       </span>
                     </div>
                     <Link to="/dossier" style={{
                       display: 'flex', alignItems: 'center', gap: 4,
-                      fontSize: 12, fontWeight: 500, color: GD.tenant, textDecoration: 'none',
+                      fontSize: 12, fontWeight: 500, color: BAI.tenant, textDecoration: 'none',
                     }}>
                       Gérer <ArrowRight size={12} />
                     </Link>
@@ -794,7 +773,7 @@ export default function TenantDashboard() {
                       {/* SVG ring */}
                       <div style={{ position: 'relative', width: 120, height: 120, flexShrink: 0 }}>
                         <svg width="120" height="120" viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)' }}>
-                          <circle cx="60" cy="60" r={RING_R} strokeWidth="8" fill="none" stroke={GD.bgMuted} />
+                          <circle cx="60" cy="60" r={RING_R} strokeWidth="8" fill="none" stroke={BAI.bgMuted} />
                           <circle cx="60" cy="60" r={RING_R} strokeWidth="8" fill="none"
                             style={{
                               stroke: dossierColor,
@@ -811,7 +790,7 @@ export default function TenantDashboard() {
                         }}>
                           <span style={{
                             fontFamily: "'Cormorant Garamond', Georgia, serif",
-                            fontSize: 32, fontWeight: 700, color: GD.ink, lineHeight: 1,
+                            fontSize: 32, fontWeight: 700, color: BAI.ink, lineHeight: 1,
                           }}>
                             {dossierPercent}%
                           </span>
@@ -820,14 +799,14 @@ export default function TenantDashboard() {
 
                       {/* Right: status + pills */}
                       <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: 15, fontWeight: 600, color: GD.ink, marginBottom: 4 }}>
+                        <p style={{ fontSize: 15, fontWeight: 600, color: BAI.ink, marginBottom: 4 }}>
                           {dossierPercent === 100
                             ? 'Dossier complet — prêt à candidater !'
                             : dossierPercent >= 50
                               ? 'Dossier en bonne voie, continuez !'
                               : 'Complétez votre dossier pour postuler'}
                         </p>
-                        <p style={{ fontSize: 12, color: GD.inkFaint, marginBottom: 16 }}>
+                        <p style={{ fontSize: 12, color: BAI.inkFaint, marginBottom: 16 }}>
                           {coveredCount} / {REQUIRED_CATEGORIES.length} catégories complètes
                         </p>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -843,9 +822,9 @@ export default function TenantDashboard() {
                                 display: 'flex', alignItems: 'center', gap: 6,
                                 padding: '7px 12px', borderRadius: 8, fontSize: 12, fontWeight: 500,
                                 textDecoration: 'none',
-                                background: done ? GD.tenantLight : GD.bgMuted,
-                                border: `1px solid ${done ? GD.tenantBorder : GD.borderStrong}`,
-                                color: done ? GD.tenant : GD.inkFaint,
+                                background: done ? BAI.tenantLight : BAI.bgMuted,
+                                border: `1px solid ${done ? BAI.tenantBorder : BAI.borderStrong}`,
+                                color: done ? BAI.tenant : BAI.inkFaint,
                               }}>
                                 <Icon size={13} style={{ flexShrink: 0 }} />
                                 <span style={{ flex: 1 }}>{label}</span>
@@ -861,7 +840,7 @@ export default function TenantDashboard() {
                       <Link to="/dossier" style={{
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                         padding: '11px', borderRadius: 10,
-                        background: GD.tenant, color: '#ffffff',
+                        background: BAI.tenant, color: '#ffffff',
                         fontSize: 13, fontWeight: 600, textDecoration: 'none',
                       }}>
                         <FolderOpen size={15} /> Compléter mon dossier
@@ -872,16 +851,16 @@ export default function TenantDashboard() {
 
                 {/* ── Candidatures ───────────────────────────────────────── */}
                 <div style={cardBase}>
-                  <div style={{ padding: '16px 20px', borderBottom: `1px solid ${GD.border}` }}>
+                  <div style={{ padding: '16px 20px', borderBottom: `1px solid ${BAI.border}` }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: GD.inkFaint }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint }}>
                           Mes candidatures
                         </span>
                         {pendingApps.length > 0 && (
                           <span style={{
                             fontSize: 11, fontWeight: 700, color: '#ffffff',
-                            background: GD.tenant, borderRadius: 20, padding: '1px 8px',
+                            background: BAI.tenant, borderRadius: 20, padding: '1px 8px',
                           }}>
                             {pendingApps.length}
                           </span>
@@ -889,27 +868,27 @@ export default function TenantDashboard() {
                       </div>
                       <Link to="/my-applications" style={{
                         display: 'flex', alignItems: 'center', gap: 4,
-                        fontSize: 12, fontWeight: 500, color: GD.tenant, textDecoration: 'none',
+                        fontSize: 12, fontWeight: 500, color: BAI.tenant, textDecoration: 'none',
                       }}>
                         Tout voir <ArrowRight size={12} />
                       </Link>
                     </div>
-                    <div style={{ borderTop: `1px solid ${GD.border}` }} />
+                    <div style={{ borderTop: `1px solid ${BAI.border}` }} />
                   </div>
 
                   {activeApps.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '36px 24px' }}>
                       <div style={{
-                        width: 40, height: 40, borderRadius: 12, background: GD.bgMuted,
+                        width: 40, height: 40, borderRadius: 12, background: BAI.bgMuted,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         margin: '0 auto 12px',
                       }}>
-                        <SendHorizonal size={18} style={{ color: GD.inkFaint }} />
+                        <SendHorizonal size={18} style={{ color: BAI.inkFaint }} />
                       </div>
-                      <p style={{ fontSize: 13, color: GD.inkMid, marginBottom: 8 }}>Aucune candidature en cours</p>
+                      <p style={{ fontSize: 13, color: BAI.inkMid, marginBottom: 8 }}>Aucune candidature en cours</p>
                       <Link to="/search" style={{
                         display: 'inline-flex', alignItems: 'center', gap: 5,
-                        fontSize: 12, fontWeight: 500, color: GD.tenant, textDecoration: 'none',
+                        fontSize: 12, fontWeight: 500, color: BAI.tenant, textDecoration: 'none',
                       }}>
                         <Search size={13} /> Parcourir les annonces
                       </Link>
@@ -923,33 +902,33 @@ export default function TenantDashboard() {
                           <div key={app.id} style={{
                             display: 'flex', alignItems: 'center', gap: 14,
                             padding: '12px 20px',
-                            borderBottom: isLast ? 'none' : `1px solid ${GD.border}`,
+                            borderBottom: isLast ? 'none' : `1px solid ${BAI.border}`,
                             transition: 'background 0.15s',
                           }}
-                            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = GD.bgMuted }}
+                            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
                             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
                           >
                             {/* Thumbnail */}
                             {thumb ? (
                               <img src={thumb} alt={app.property?.title}
-                                style={{ width: 52, height: 52, borderRadius: 9, objectFit: 'cover', flexShrink: 0, border: `1px solid ${GD.border}` }}
+                                style={{ width: 52, height: 52, borderRadius: 9, objectFit: 'cover', flexShrink: 0, border: `1px solid ${BAI.border}` }}
                               />
                             ) : (
                               <div style={{
                                 width: 52, height: 52, borderRadius: 9, flexShrink: 0,
-                                background: GD.bgMuted, border: `1px solid ${GD.border}`,
+                                background: BAI.bgMuted, border: `1px solid ${BAI.border}`,
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                               }}>
-                                <Home size={18} style={{ color: GD.inkFaint }} />
+                                <Home size={18} style={{ color: BAI.inkFaint }} />
                               </div>
                             )}
 
                             {/* Info */}
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <p style={{ fontSize: 14, fontWeight: 600, color: GD.ink, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              <p style={{ fontSize: 14, fontWeight: 600, color: BAI.ink, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {app.property?.title}
                               </p>
-                              <p style={{ fontSize: 12, color: GD.inkMid, margin: '0 0 6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              <p style={{ fontSize: 12, color: BAI.inkMid, margin: '0 0 6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 <MapPin size={10} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} />
                                 {app.property?.city} · {app.property?.price} €/mois
                               </p>
@@ -960,8 +939,8 @@ export default function TenantDashboard() {
                                     onClick={() => navigate('/messages', { state: { openWithUserId: app.property?.ownerId } })}
                                     style={{
                                       display: 'inline-flex', alignItems: 'center', gap: 4,
-                                      padding: '4px 10px', borderRadius: 6, border: `1px solid ${GD.border}`,
-                                      background: GD.bgSurface, color: GD.inkMid,
+                                      padding: '4px 10px', borderRadius: 6, border: `1px solid ${BAI.border}`,
+                                      background: BAI.bgSurface, color: BAI.inkMid,
                                       fontSize: 11, fontWeight: 500, cursor: 'pointer',
                                     }}
                                   >
@@ -970,8 +949,8 @@ export default function TenantDashboard() {
                                 )}
                                 <Link to={`/property/${app.property?.id}`} style={{
                                   display: 'inline-flex', alignItems: 'center', gap: 4,
-                                  padding: '4px 10px', borderRadius: 6, border: `1px solid ${GD.border}`,
-                                  background: GD.bgSurface, color: GD.inkMid,
+                                  padding: '4px 10px', borderRadius: 6, border: `1px solid ${BAI.border}`,
+                                  background: BAI.bgSurface, color: BAI.inkMid,
                                   fontSize: 11, fontWeight: 500, textDecoration: 'none',
                                 }}>
                                   <ExternalLink size={11} /> Voir le bien
@@ -980,7 +959,7 @@ export default function TenantDashboard() {
                                   <Link to={`/property/${app.property?.id}`} style={{
                                     display: 'inline-flex', alignItems: 'center', gap: 4,
                                     padding: '4px 10px', borderRadius: 6, border: 'none',
-                                    background: GD.tenant, color: '#ffffff',
+                                    background: BAI.tenant, color: '#ffffff',
                                     fontSize: 11, fontWeight: 600, textDecoration: 'none',
                                   }}>
                                     Réserver
@@ -1007,38 +986,38 @@ export default function TenantDashboard() {
 
                 {/* ── Visites à venir ────────────────────────────────────── */}
                 <div style={cardBase}>
-                  <div style={{ padding: '16px 20px', borderBottom: `1px solid ${GD.border}` }}>
+                  <div style={{ padding: '16px 20px', borderBottom: `1px solid ${BAI.border}` }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: GD.inkFaint }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint }}>
                         Visites à venir
                       </span>
                       <Link to="/my-bookings" style={{
                         display: 'flex', alignItems: 'center', gap: 4,
-                        fontSize: 12, fontWeight: 500, color: GD.tenant, textDecoration: 'none',
+                        fontSize: 12, fontWeight: 500, color: BAI.tenant, textDecoration: 'none',
                       }}>
                         Tout voir <ArrowRight size={12} />
                       </Link>
                     </div>
-                    <div style={{ borderTop: `1px solid ${GD.border}` }} />
+                    <div style={{ borderTop: `1px solid ${BAI.border}` }} />
                   </div>
 
                   {isLoadingBookings ? (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40 }}>
-                      <Loader2 size={24} style={{ color: GD.inkFaint, animation: 'spin 0.8s linear infinite' }} />
+                      <Loader2 size={24} style={{ color: BAI.inkFaint, animation: 'spin 0.8s linear infinite' }} />
                     </div>
                   ) : upcomingBookings.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '36px 24px' }}>
                       <div style={{
-                        width: 40, height: 40, borderRadius: 12, background: GD.bgMuted,
+                        width: 40, height: 40, borderRadius: 12, background: BAI.bgMuted,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         margin: '0 auto 12px',
                       }}>
-                        <Calendar size={18} style={{ color: GD.inkFaint }} />
+                        <Calendar size={18} style={{ color: BAI.inkFaint }} />
                       </div>
-                      <p style={{ fontSize: 13, color: GD.inkMid, marginBottom: 8 }}>Aucune visite programmée</p>
+                      <p style={{ fontSize: 13, color: BAI.inkMid, marginBottom: 8 }}>Aucune visite programmée</p>
                       <Link to="/search" style={{
                         display: 'inline-flex', alignItems: 'center', gap: 5,
-                        fontSize: 12, fontWeight: 500, color: GD.tenant, textDecoration: 'none',
+                        fontSize: 12, fontWeight: 500, color: BAI.tenant, textDecoration: 'none',
                       }}>
                         <Search size={13} /> Trouver un bien à visiter
                       </Link>
@@ -1051,10 +1030,10 @@ export default function TenantDashboard() {
                           <Link key={booking.id} to={`/property/${booking.property.id}`} style={{
                             display: 'flex', alignItems: 'center', gap: 14,
                             padding: '12px 20px',
-                            borderBottom: isLast ? 'none' : `1px solid ${GD.border}`,
+                            borderBottom: isLast ? 'none' : `1px solid ${BAI.border}`,
                             textDecoration: 'none', transition: 'background 0.15s',
                           }}
-                            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = GD.bgMuted }}
+                            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
                             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
                           >
                             {booking.property.images?.[0] ? (
@@ -1064,20 +1043,20 @@ export default function TenantDashboard() {
                             ) : (
                               <div style={{
                                 width: 56, height: 56, borderRadius: 10, flexShrink: 0,
-                                background: GD.bgMuted, border: `1px solid ${GD.border}`,
+                                background: BAI.bgMuted, border: `1px solid ${BAI.border}`,
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                               }}>
-                                <Home size={20} style={{ color: GD.inkFaint }} />
+                                <Home size={20} style={{ color: BAI.inkFaint }} />
                               </div>
                             )}
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <p style={{ fontSize: 14, fontWeight: 600, color: GD.ink, margin: '0 0 3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              <p style={{ fontSize: 14, fontWeight: 600, color: BAI.ink, margin: '0 0 3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {booking.property.title}
                               </p>
-                              <p style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: GD.inkMid, margin: '0 0 4px' }}>
+                              <p style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: BAI.inkMid, margin: '0 0 4px' }}>
                                 <MapPin size={11} /> {booking.property.city}
                               </p>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12, color: GD.inkFaint }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12, color: BAI.inkFaint }}>
                                 <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                   <Calendar size={11} />
                                   {format(new Date(booking.visitDate), 'dd MMM yyyy', { locale: fr })}
@@ -1090,8 +1069,8 @@ export default function TenantDashboard() {
                             <span style={{
                               fontSize: 11, fontWeight: 600, padding: '4px 12px', borderRadius: 20, flexShrink: 0,
                               ...(booking.status === 'CONFIRMED'
-                                ? { background: GD.tenantLight, color: GD.tenant, border: `1px solid ${GD.tenantBorder}` }
-                                : { background: GD.caramelLight, color: GD.caramel, border: '1px solid #e8c9a0' }),
+                                ? { background: BAI.tenantLight, color: BAI.tenant, border: `1px solid ${BAI.tenantBorder}` }
+                                : { background: BAI.caramelLight, color: BAI.caramel, border: '1px solid #e8c9a0' }),
                             }}>
                               {booking.status === 'CONFIRMED' ? 'Confirmée' : 'En attente'}
                             </span>
@@ -1111,18 +1090,18 @@ export default function TenantDashboard() {
               {/* Search CTA */}
               <div style={{
                 borderRadius: 16, padding: 20,
-                background: GD.tenantLight, border: `1px solid ${GD.tenantBorder}`,
+                background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`,
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                   <div style={{
                     width: 28, height: 28, borderRadius: 8,
-                    background: GD.tenant, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: BAI.tenant, display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     <Search size={14} style={{ color: '#ffffff' }} />
                   </div>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: GD.ink, margin: 0 }}>Trouver votre logement</p>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: BAI.ink, margin: 0 }}>Trouver votre logement</p>
                 </div>
-                <p style={{ fontSize: 12, color: GD.inkMid, marginBottom: 14 }}>
+                <p style={{ fontSize: 12, color: BAI.inkMid, marginBottom: 14 }}>
                   {favoriteIds.size > 0
                     ? `${favoriteIds.size} bien${favoriteIds.size > 1 ? 's' : ''} en favori`
                     : 'Explorez les annonces disponibles.'}
@@ -1130,7 +1109,7 @@ export default function TenantDashboard() {
                 <Link to="/search" style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                   padding: '10px', borderRadius: 10,
-                  background: GD.tenant, color: '#ffffff',
+                  background: BAI.tenant, color: '#ffffff',
                   fontSize: 13, fontWeight: 600, textDecoration: 'none',
                 }}>
                   <Search size={14} /> Parcourir les annonces
