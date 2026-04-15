@@ -161,8 +161,8 @@ export default function ContractsList() {
           </div>
           <div className="flex items-center" style={{ fontSize: 13, gap: 8 }}>
             <Euro style={{ width: 13, height: 13, color: M.inkFaint, flexShrink: 0 }} />
-            <span style={{ fontWeight: 600, color: M.caramel }}>{contract.monthlyRent}€/mois</span>
-            {contract.charges ? <span style={{ color: M.inkFaint }}>+ {contract.charges}€ charges</span> : null}
+            <span style={{ fontWeight: 600, color: M.caramel, whiteSpace: 'nowrap' }}>{Number(contract.monthlyRent).toLocaleString('fr-FR')} €/mois</span>
+            {contract.charges ? <span style={{ color: M.inkFaint, whiteSpace: 'nowrap' }}>+ {Number(contract.charges).toLocaleString('fr-FR')} € charges</span> : null}
           </div>
         </div>
 

@@ -88,8 +88,8 @@ export const PropertyCard = ({
             <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
               <Square style={{ width: 11, height: 11 }} />{property.surface}m²
             </span>
-            <span style={{ marginLeft: 'auto', fontWeight: 700, color: BAI.tenant, fontFamily: BAI.fontBody }}>
-              {property.price}€/mois
+            <span style={{ marginLeft: 'auto', fontWeight: 700, color: BAI.tenant, fontFamily: BAI.fontBody, whiteSpace: 'nowrap' }}>
+              {Number(property.price).toLocaleString('fr-FR')} €/mois
             </span>
           </div>
         </div>
@@ -167,10 +167,10 @@ export const PropertyCard = ({
           border: `1px solid ${BAI.border}`,
           borderRadius: 8, padding: '4px 10px',
         }}>
-          <span style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontSize: 17, color: BAI.ink }}>
-            {property.price}€
+          <span style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontSize: 17, color: BAI.ink, whiteSpace: 'nowrap' }}>
+            {Number(property.price).toLocaleString('fr-FR')} €
           </span>
-          <span style={{ fontSize: 11, color: BAI.inkFaint, marginLeft: 3 }}>/mois</span>
+          <span style={{ fontSize: 11, color: BAI.inkFaint, marginLeft: 2, whiteSpace: 'nowrap' }}>/ mois</span>
         </div>
 
         {/* Photo count */}

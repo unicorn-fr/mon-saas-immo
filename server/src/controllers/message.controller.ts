@@ -64,7 +64,7 @@ class MessageController {
   async createConversation(req: AuthRequest, res: Response) {
     try {
       const userId = req.user!.id
-      const { recipientId } = req.body
+      const { recipientId, propertyId } = req.body
 
       if (!recipientId) {
         return res.status(400).json({
@@ -80,7 +80,7 @@ class MessageController {
         })
       }
 
-      const conversation = await messageService.getOrCreateConversation(userId, recipientId)
+      const conversation = await messageService.getOrCreateConversation(userId, recipientId, propertyId)
 
       res.status(200).json({
         success: true,

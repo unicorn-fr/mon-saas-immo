@@ -954,6 +954,7 @@ class PropertyService {
         const message = await messageService.sendMessage(userId, {
           receiverId: property.ownerId,
           content: contactData.message,
+          propertyId,
         })
         conversationId = message.conversationId
       } catch (err) {

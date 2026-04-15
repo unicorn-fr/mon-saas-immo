@@ -382,7 +382,7 @@ export default function PropertyDetailsPublic() {
                 </div>
 
                 {/* Price */}
-                <div className="flex items-baseline gap-2 mt-2">
+                <div className="flex items-baseline gap-1 mt-2" style={{ flexWrap: 'nowrap' }}>
                   <span
                     style={{
                       fontFamily: M.display,
@@ -390,12 +390,13 @@ export default function PropertyDetailsPublic() {
                       fontWeight: 700,
                       color: M.ink,
                       lineHeight: 1,
+                      whiteSpace: 'nowrap',
                     }}
                   >
-                    {property.price}€
+                    {Number(property.price).toLocaleString('fr-FR')} €
                   </span>
-                  <span style={{ fontFamily: M.body, fontSize: '14px', color: M.inkFaint }}>
-                    /mois
+                  <span style={{ fontFamily: M.body, fontSize: '14px', color: M.inkFaint, whiteSpace: 'nowrap' }}>
+                    / mois
                   </span>
                 </div>
 
@@ -651,9 +652,9 @@ export default function PropertyDetailsPublic() {
                         lineHeight: 1,
                       }}
                     >
-                      {property.price}€
+                      {Number(property.price).toLocaleString('fr-FR')} €
                     </span>
-                    <span style={{ fontFamily: M.body, fontSize: '13px', color: M.inkFaint }}>/mois</span>
+                    <span style={{ fontFamily: M.body, fontSize: '13px', color: M.inkFaint, whiteSpace: 'nowrap' }}>/ mois</span>
                   </div>
                   {property.charges && property.charges > 0 && (
                     <p style={{ fontFamily: M.body, fontSize: '12px', color: M.inkFaint, marginTop: '4px' }}>
@@ -732,7 +733,7 @@ export default function PropertyDetailsPublic() {
                   <>
                     {myApplication?.status === 'APPROVED' ? (
                       <button
-                        onClick={() => navigate('/messages', { state: { openWithUserId: property.ownerId } })}
+                        onClick={() => navigate('/messages', { state: { openWithUserId: property.ownerId, propertyId: property.id } })}
                         className="w-full flex items-center justify-center gap-2 px-4 py-3 mb-3 transition-opacity hover:opacity-90"
                         style={{
                           background: M.tenant,

@@ -803,7 +803,7 @@ export default function Home() {
                         gap: 4,
                       }}>
                         <Euro size={12} />
-                        {property.price.toLocaleString('fr-FR')}/mois
+                        {Number(property.price).toLocaleString('fr-FR')} €/mois
                       </div>
                       {/* Type badge */}
                       <div style={{

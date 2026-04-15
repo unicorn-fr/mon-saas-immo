@@ -380,7 +380,7 @@ export default function Dashboard() {
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
                             <p style={{ fontSize: 14, fontWeight: 600, color: BAI.ink, margin: 0 }}>
-                              {property.price} <span style={{ fontWeight: 400, fontSize: 11, color: BAI.inkFaint }}>€/mois</span>
+                              {Number(property.price).toLocaleString('fr-FR')} <span style={{ fontWeight: 400, fontSize: 11, color: BAI.inkFaint, whiteSpace: 'nowrap' }}>€ / mois</span>
                             </p>
                             <span style={{
                               fontSize: 11, fontWeight: 500, padding: '3px 10px', borderRadius: 20,
@@ -665,7 +665,7 @@ export default function Dashboard() {
                                 {contract.property?.title || 'Contrat'}
                               </p>
                               <p style={{ fontSize: 12, color: BAI.inkMid, margin: 0 }}>
-                                {contract.tenant?.firstName} {contract.tenant?.lastName} · {contract.monthlyRent} €/mois
+                                {contract.tenant?.firstName} {contract.tenant?.lastName} · {Number(contract.monthlyRent).toLocaleString('fr-FR')} €/mois
                               </p>
                             </div>
                             <span style={{

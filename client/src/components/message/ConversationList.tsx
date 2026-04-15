@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Search, Loader, User as UserIcon } from 'lucide-react'
+import { Search, Loader, User as UserIcon, Home } from 'lucide-react'
 import { useMessages } from '../../hooks/useMessages'
 import { useAuth } from '../../hooks/useAuth'
 import { Conversation } from '../../types/message.types'
@@ -21,12 +21,14 @@ interface ConversationListProps {
   selectedConversationId: string | null
   onConversationSelect: (conversation: Conversation) => void
   autoSelectUserId?: string
+  autoSelectPropertyId?: string
 }
 
 export const ConversationList = ({
   selectedConversationId,
   onConversationSelect,
   autoSelectUserId,
+  autoSelectPropertyId: _autoSelectPropertyId,
 }: ConversationListProps) => {
   const { user } = useAuth()
   const { conversations, isLoading, fetchConversations, pollConversations, fetchUnreadCount } =
@@ -194,6 +196,18 @@ export const ConversationList = ({
                         </span>
                       )}
                     </div>
+                    {/* Property context badge */}
+                    {conversation.property && (
+                      <div className="flex items-center gap-1 mb-0.5" style={{ overflow: 'hidden' }}>
+                        <Home style={{ width: 10, height: 10, color: '#1b5e3b', flexShrink: 0 }} />
+                        <span
+                          className="text-[11px] truncate"
+                          style={{ color: '#1b5e3b', fontWeight: 500 }}
+                        >
+                          {conversation.property.title} · {Number(conversation.property.price).toLocaleString('fr-FR')} €/mois
+                        </span>
+                      </div>
+                    )}
                     {conversation.lastMessageText && (
                       <p
                         className="text-[12px] truncate"

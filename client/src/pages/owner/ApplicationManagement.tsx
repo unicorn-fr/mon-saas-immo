@@ -397,7 +397,7 @@ function PropertyGroup({
               className="text-xs flex items-center gap-1"
               style={{ color: BAI.inkFaint, fontFamily: "'DM Sans', system-ui, sans-serif" }}
             >
-              <Euro className="w-3 h-3" />{property.price} €/mois
+              <Euro className="w-3 h-3" />{Number(property.price).toLocaleString('fr-FR')} €/mois
             </span>
           </div>
         </div>

@@ -29,6 +29,7 @@ export default function Messages() {
   const navigate = useNavigate()
   const location = useLocation()
   const openWithUserId: string | undefined = (location.state as any)?.openWithUserId
+  const openWithPropertyId: string | undefined = (location.state as any)?.propertyId
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
   const [isMobileView, setIsMobileView] = useState(false)
   const [showLeaseModal, setShowLeaseModal] = useState(false)
@@ -73,6 +74,7 @@ export default function Messages() {
             selectedConversationId={selectedConversation?.id || null}
             onConversationSelect={handleConversationSelect}
             autoSelectUserId={openWithUserId}
+            autoSelectPropertyId={openWithPropertyId}
           />
         </div>
 
@@ -93,12 +95,20 @@ export default function Messages() {
                     borderBottom: `1px solid ${M.border}`,
                   }}
                 >
-                  <p style={{ fontSize: 12, color: M.inkFaint, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-                    Vous discutez avec{' '}
-                    <span style={{ color: M.ink, fontWeight: 500 }}>
-                      {otherUser?.firstName} {otherUser?.lastName}
-                    </span>
-                  </p>
+                  <div>
+                    <p style={{ fontSize: 12, color: M.inkFaint, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+                      Vous discutez avec{' '}
+                      <span style={{ color: M.ink, fontWeight: 500 }}>
+                        {otherUser?.firstName} {otherUser?.lastName}
+                      </span>
+                    </p>
+                    {selectedConversation?.property && (
+                      <p style={{ fontSize: 11, color: M.tenant, fontWeight: 500, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: 1 }}>
+                        <Home style={{ display: 'inline', width: 10, height: 10, marginRight: 3 }} />
+                        {selectedConversation.property.title} · {Number(selectedConversation.property.price).toLocaleString('fr-FR')} €/mois
+                      </p>
+                    )}
+                  </div>
                   <button
                     onClick={() => setShowLeaseModal(true)}
                     style={{
@@ -179,6 +189,34 @@ export default function Messages() {
                   </span>
                 </div>
               </div>
+
+              {/* Property context card */}
+              {selectedConversation?.property && (
+                <div
+                  className="mb-4 rounded-lg overflow-hidden cursor-pointer"
+                  style={{ border: `1px solid ${M.border}`, background: M.muted }}
+                  onClick={() => navigate(`/property/${selectedConversation.property!.id}`)}
+                >
+                  {selectedConversation.property.images?.[0] && (
+                    <img
+                      src={selectedConversation.property.images[0]}
+                      alt={selectedConversation.property.title}
+                      style={{ width: '100%', height: 72, objectFit: 'cover', display: 'block' }}
+                    />
+                  )}
+                  <div className="p-2">
+                    <p style={{ fontSize: 11, fontWeight: 600, color: M.ink, lineHeight: 1.3, marginBottom: 2 }} className="truncate">
+                      {selectedConversation.property.title}
+                    </p>
+                    <p style={{ fontSize: 11, color: M.tenant, fontWeight: 600 }}>
+                      {Number(selectedConversation.property.price).toLocaleString('fr-FR')} €/mois
+                    </p>
+                    <p style={{ fontSize: 10, color: M.inkFaint }}>
+                      {selectedConversation.property.city}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Quick actions */}
               <div className="flex flex-col gap-2">

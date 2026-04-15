@@ -936,7 +936,7 @@ export default function TenantDashboard() {
                               <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                                 {app.property?.ownerId && (
                                   <button
-                                    onClick={() => navigate('/messages', { state: { openWithUserId: app.property?.ownerId } })}
+                                    onClick={() => navigate('/messages', { state: { openWithUserId: app.property?.ownerId, propertyId: app.property?.id } })}
                                     style={{
                                       display: 'inline-flex', alignItems: 'center', gap: 4,
                                       padding: '4px 10px', borderRadius: 6, border: `1px solid ${BAI.border}`,

@@ -12,6 +12,7 @@ interface SendMessageInput {
   receiverId: string
   content: string
   attachments?: string[]
+  propertyId?: string
 }
 
 interface ConversationWithLastMessage extends Conversation {
@@ -71,6 +72,15 @@ class MessageService {
           email: true,
         },
       },
+      property: {
+        select: {
+          id: true,
+          title: true,
+          price: true,
+          city: true,
+          images: true,
+        },
+      },
       messages: {
         orderBy: { createdAt: 'desc' as const },
         take: 1,
@@ -98,7 +108,8 @@ class MessageService {
 
   async getOrCreateConversation(
     user1Id: string,
-    user2Id: string
+    user2Id: string,
+    propertyId?: string
   ): Promise<ConversationWithLastMessage> {
     // Ensure consistent ordering (smaller ID first)
     const [smallerId, largerId] = [user1Id, user2Id].sort()
@@ -120,7 +131,15 @@ class MessageService {
         data: {
           user1Id: smallerId,
           user2Id: largerId,
+          ...(propertyId ? { propertyId } : {}),
         },
+        include: this.conversationInclude,
+      })
+    } else if (propertyId && !conversation.propertyId) {
+      // Backfill property context if not already set
+      conversation = await prisma.conversation.update({
+        where: { id: conversation.id },
+        data: { propertyId },
         include: this.conversationInclude,
       })
     }
@@ -170,12 +189,12 @@ class MessageService {
     senderId: string,
     data: SendMessageInput
   ): Promise<MessageWithUsers> {
-    const { conversationId, receiverId, content, attachments = [] } = data
+    const { conversationId, receiverId, content, attachments = [], propertyId } = data
 
     // Get or create conversation
     const conversation = conversationId
       ? await this.getConversationById(conversationId, senderId)
-      : await this.getOrCreateConversation(senderId, receiverId)
+      : await this.getOrCreateConversation(senderId, receiverId, propertyId)
 
     if (!conversation) {
       throw new Error('Conversation not found or access denied')

@@ -128,7 +128,7 @@ function AppCard({ app, onWithdraw }: { app: Application; onWithdraw: (id: strin
                 {prop.city}
                 {' · '}
                 <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 13, color: '#5a5754' }}>
-                  {prop.price} €/mois
+                  {Number(prop.price).toLocaleString('fr-FR')} €/mois
                 </span>
               </p>
             </div>

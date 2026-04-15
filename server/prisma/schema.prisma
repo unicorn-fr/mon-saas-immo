@@ -251,6 +251,7 @@ model Property {
 
   // Relations
   bookings               Booking[]
+  conversations          Conversation[] @relation("ConversationProperty")
   favorites              Favorite[]
   contracts              Contract[]
   visitAvailabilitySlots VisitAvailabilitySlot[]
@@ -327,6 +328,10 @@ model Conversation {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  // Optional property context (set when conversation starts from a property/application)
+  propertyId    String?
+  property      Property? @relation("ConversationProperty", fields: [propertyId], references: [id], onDelete: SetNull)
+
   // Relations
   messages      Message[]
 
@@ -334,6 +339,7 @@ model Conversation {
   @@index([user1Id])
   @@index([user2Id])
   @@index([lastMessageAt])
+  @@index([propertyId])
   @@map("conversations")
 }
 

@@ -23,6 +23,14 @@ export interface Message {
   receiver: User
 }
 
+export interface ConversationProperty {
+  id: string
+  title: string
+  price: number
+  city: string
+  images: string[]
+}
+
 export interface Conversation {
   id: string
   user1Id: string
@@ -36,6 +44,8 @@ export interface Conversation {
   user1: User
   user2: User
   messages: Message[]
+  propertyId?: string | null
+  property?: ConversationProperty | null
 }
 
 export interface ConversationListItem extends Conversation {
