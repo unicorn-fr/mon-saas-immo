@@ -259,13 +259,28 @@ html, body { margin: 0; padding: 0; scroll-behavior: smooth; }
 .faq-btn {
   width: 100%; background: none; border: none;
   display: flex; align-items: center; justify-content: space-between;
-  gap: 16px; padding: 20px 0; cursor: pointer; text-align: left;
+  gap: 16px; padding: 16px 0 16px 14px; cursor: pointer; text-align: left;
 }
 .faq-btn:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; border-radius: 4px; }
 .faq-chevron { flex-shrink: 0; transition: transform .25s ease; color: var(--c-ink-faint); }
 .faq-chevron.open { transform: rotate(180deg); }
 .faq-body { overflow: hidden; max-height: 0; transition: max-height .3s ease, padding .3s ease; }
-.faq-body.open { max-height: 600px; padding-bottom: 18px; }
+.faq-body.open { max-height: 600px; padding-bottom: 18px; padding-left: 14px; }
+
+/* ── FAQ category toggle ─────────────────────────────────────────────────── */
+.faq-cat-btn {
+  width: 100%; border: 1px solid var(--c-border); cursor: pointer; text-align: left;
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; border-radius: 10px; background: var(--c-surface);
+  transition: background .18s, box-shadow .18s;
+  box-shadow: 0 1px 2px rgba(13,12,10,0.04);
+}
+.faq-cat-btn:hover { background: var(--c-muted); box-shadow: none; }
+.faq-cat-btn:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; }
+.faq-cat-chevron { flex-shrink: 0; transition: transform .25s ease; color: var(--c-ink-faint); }
+.faq-cat-chevron.open { transform: rotate(180deg); }
+.faq-cat-body { overflow: hidden; max-height: 0; transition: max-height .4s ease; }
+.faq-cat-body.open { max-height: 2000px; }
 `
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
@@ -444,6 +459,15 @@ export default function WaitlistPage() {
   const [confetti, setConfetti] = useState(false)
   const [signupCount, setSignupCount] = useState<number | null>(null)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [openCats, setOpenCats] = useState<Set<string>>(new Set())
+  function toggleCat(cat: string) {
+    setOpenCats(prev => {
+      const next = new Set(prev)
+      if (next.has(cat)) { next.delete(cat); } else { next.add(cat) }
+      return next
+    })
+    setOpenFaq(null)
+  }
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
   const cd = useCountdown(LAUNCH_DATE)
 
@@ -1314,66 +1338,103 @@ export default function WaitlistPage() {
             </h2>
           </div>
 
-          <div className="bail-reveal bail-d1" role="list">
-            {FAQ_ITEMS.map((item, i) => {
-              const isOpen = openFaq === i
-              const showCat = i === 0 || FAQ_ITEMS[i - 1].cat !== item.cat
+          <div className="bail-reveal bail-d1" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {Array.from(new Set(FAQ_ITEMS.map(f => f.cat))).map(cat => {
+              const catOpen = openCats.has(cat)
+              const items = FAQ_ITEMS.filter(f => f.cat === cat)
+              const CAT_ICONS: Record<string, string> = {
+                'Général': '💬',
+                'Propriétaires': '🔑',
+                'Locataires': '🏠',
+                'Légal & Sécurité': '🔒',
+              }
               return (
-                <React.Fragment key={i}>
-                  {showCat && (
-                    <div style={{
-                      display: 'flex', alignItems: 'center', gap: 10,
-                      margin: i === 0 ? '0 0 4px' : '28px 0 4px',
+                <div key={cat} style={{ borderRadius: 10, overflow: 'hidden' }}>
+                  {/* Category toggle button */}
+                  <button
+                    className="faq-cat-btn"
+                    aria-expanded={catOpen}
+                    onClick={() => toggleCat(cat)}
+                  >
+                    <span style={{ fontSize: 18, lineHeight: 1 }}>{CAT_ICONS[cat] ?? '📌'}</span>
+                    <span style={{
+                      fontFamily: 'var(--font-body)', fontWeight: 700,
+                      fontSize: 15, color: 'var(--c-ink)', flex: 1,
                     }}>
-                      <span style={{
-                        fontFamily: 'var(--font-body)', fontSize: 10, fontWeight: 700,
-                        letterSpacing: '0.13em', textTransform: 'uppercase',
-                        color: 'var(--c-accent)',
-                      }}>
-                        {item.cat}
-                      </span>
-                      <div style={{ flex: 1, height: 1, background: 'var(--c-border)' }} />
-                    </div>
-                  )}
-                  <div className="faq-item" role="listitem">
-                    <button
-                      className="faq-btn"
-                      aria-expanded={isOpen}
-                      aria-controls={`faq-body-${i}`}
-                      id={`faq-btn-${i}`}
-                      onClick={() => setOpenFaq(isOpen ? null : i)}
+                      {cat}
+                    </span>
+                    <span style={{
+                      fontFamily: 'var(--font-body)', fontSize: 11,
+                      color: 'var(--c-ink-faint)', marginRight: 6,
+                    }}>
+                      {items.length} question{items.length > 1 ? 's' : ''}
+                    </span>
+                    <svg
+                      className={`faq-cat-chevron${catOpen ? ' open' : ''}`}
+                      width="18" height="18" viewBox="0 0 24 24"
+                      fill="none" stroke="currentColor" strokeWidth="2"
+                      strokeLinecap="round" strokeLinejoin="round"
+                      aria-hidden="true"
                     >
-                      <span style={{
-                        fontFamily: 'var(--font-body)', fontWeight: 600,
-                        fontSize: 'clamp(14px,1.8vw,15.5px)', color: 'var(--c-ink)', lineHeight: 1.4,
-                      }}>
-                        {item.q}
-                      </span>
-                      <svg
-                        className={`faq-chevron${isOpen ? ' open' : ''}`}
-                        width="18" height="18" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" strokeWidth="2"
-                        strokeLinecap="round" strokeLinejoin="round"
-                        aria-hidden="true"
-                      >
-                        <polyline points="6 9 12 15 18 9" />
-                      </svg>
-                    </button>
-                    <div
-                      id={`faq-body-${i}`}
-                      role="region"
-                      aria-labelledby={`faq-btn-${i}`}
-                      className={`faq-body${isOpen ? ' open' : ''}`}
-                    >
-                      <p style={{
-                        fontFamily: 'var(--font-body)', fontSize: 14,
-                        color: 'var(--c-ink-mid)', lineHeight: 1.72, margin: 0,
-                      }}>
-                        {item.a}
-                      </p>
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </button>
+
+                  {/* Questions within category */}
+                  <div className={`faq-cat-body${catOpen ? ' open' : ''}`}>
+                    <div style={{
+                      border: '1px solid var(--c-border)', borderTop: 'none',
+                      borderRadius: '0 0 10px 10px',
+                      background: 'var(--c-surface)',
+                      padding: '0 16px',
+                    }}>
+                      {items.map((item, j) => {
+                        const globalIdx = FAQ_ITEMS.indexOf(item)
+                        const isOpen = openFaq === globalIdx
+                        return (
+                          <div key={j} className="faq-item">
+                            <button
+                              className="faq-btn"
+                              aria-expanded={isOpen}
+                              aria-controls={`faq-body-${globalIdx}`}
+                              id={`faq-btn-${globalIdx}`}
+                              onClick={() => setOpenFaq(isOpen ? null : globalIdx)}
+                            >
+                              <span style={{
+                                fontFamily: 'var(--font-body)', fontWeight: 500,
+                                fontSize: 'clamp(13.5px,1.8vw,15px)', color: 'var(--c-ink)', lineHeight: 1.4,
+                              }}>
+                                {item.q}
+                              </span>
+                              <svg
+                                className={`faq-chevron${isOpen ? ' open' : ''}`}
+                                width="16" height="16" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" strokeWidth="2"
+                                strokeLinecap="round" strokeLinejoin="round"
+                                aria-hidden="true"
+                              >
+                                <polyline points="6 9 12 15 18 9" />
+                              </svg>
+                            </button>
+                            <div
+                              id={`faq-body-${globalIdx}`}
+                              role="region"
+                              aria-labelledby={`faq-btn-${globalIdx}`}
+                              className={`faq-body${isOpen ? ' open' : ''}`}
+                            >
+                              <p style={{
+                                fontFamily: 'var(--font-body)', fontSize: 13.5,
+                                color: 'var(--c-ink-mid)', lineHeight: 1.72, margin: 0,
+                              }}>
+                                {item.a}
+                              </p>
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
-                </React.Fragment>
+                </div>
               )
             })}
           </div>
