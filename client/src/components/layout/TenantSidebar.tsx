@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 import { NavLink, Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Search, Heart, Calendar,
-  FolderOpen, SendHorizonal, FileText, MessageSquare, X, LogOut, ShieldCheck,
+  FolderOpen, SendHorizonal, FileText, MessageSquare, X, LogOut, ShieldCheck, Settings,
 } from 'lucide-react'
 import { useSidebarStore } from '../../store/sidebarStore'
 import { useMessages } from '../../hooks/useMessages'
@@ -195,6 +195,9 @@ export function TenantSidebar() {
 
         <SectionLabel label="Confidentialité" compact={compact} />
         <NavItem to="/privacy" icon={ShieldCheck} label="Mes données & RGPD" onClick={closeMobile} compact={compact} />
+
+        <SectionLabel label="Compte" compact={compact} />
+        <NavItem to="/tenant/settings" icon={Settings} label="Paramètres" onClick={closeMobile} compact={compact} />
       </nav>
 
       {/* Dossier progress — masqué en mode compact */}

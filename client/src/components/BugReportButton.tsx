@@ -1,7 +1,7 @@
 /**
  * BugReportButton — Bouton flottant bas-droit pour signaler un bug
  */
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Bug, X, Send, Loader2, CheckCircle, Paperclip } from 'lucide-react'
 import { apiClient as api } from '../services/api.service'
 import toast from 'react-hot-toast'
@@ -34,7 +34,15 @@ export function BugReportButton() {
   const [sent, setSent] = useState(false)
   const [form, setForm] = useState({ title: '', description: '', type: 'error' })
   const [screenshot, setScreenshot] = useState<File | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   const reset = () => {
     setForm({ title: '', description: '', type: 'error' })
@@ -83,7 +91,7 @@ export function BugReportButton() {
         onMouseLeave={() => setHovering(false)}
         title="Signaler un bug"
         style={{
-          position: 'fixed', bottom: 24, right: 24,
+          position: 'fixed', bottom: isMobile ? 76 : 24, right: 16,
           zIndex: 8000,
           display: 'flex', alignItems: 'center', gap: hovering ? 8 : 0,
           padding: hovering ? '10px 16px' : '10px',
@@ -116,8 +124,10 @@ export function BugReportButton() {
           style={{
             position: 'fixed', inset: 0, zIndex: 8100,
             background: 'rgba(13,12,10,0.5)',
-            display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end',
-            padding: 24,
+            display: 'flex',
+            alignItems: isMobile ? 'flex-end' : 'flex-end',
+            justifyContent: isMobile ? 'center' : 'flex-end',
+            padding: isMobile ? '0 0 76px' : 24,
           }}
           onClick={(e) => { if (e.target === e.currentTarget) handleClose() }}
         >
