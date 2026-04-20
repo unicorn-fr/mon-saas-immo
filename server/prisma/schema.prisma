@@ -148,6 +148,8 @@ model User {
   fraudReportsFiled     FraudReport[]         @relation("FraudReporter")
   fraudReportsReceived  FraudReport[]         @relation("FraudTarget")
   subscription          Subscription?
+  calendarInvitesSent   CalendarInvite[]      @relation("CalendarInviteSender")
+  calendarInvitesReceived CalendarInvite[]    @relation("CalendarInviteReceiver")
 
   @@index([email])
   @@index([role])
@@ -257,6 +259,7 @@ model Property {
   visitAvailabilitySlots VisitAvailabilitySlot[]
   visitDateOverrides     VisitDateOverride[]
   applications           Application[]
+  calendarInvites        CalendarInvite[]
 
   @@index([ownerId])
   @@index([city])
@@ -606,6 +609,27 @@ model VisitDateOverride {
   @@index([propertyId])
   @@index([date])
   @@map("visit_date_overrides")
+}
+
+// Invitation propriétaire → locataire pour accéder au calendrier de visite
+model CalendarInvite {
+  id          String   @id @default(uuid())
+
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  ownerId     String
+  owner       User     @relation("CalendarInviteSender", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  tenantId    String
+  tenant      User     @relation("CalendarInviteReceiver", fields: [tenantId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+
+  @@unique([propertyId, tenantId])
+  @@index([tenantId])
+  @@index([ownerId])
+  @@map("calendar_invites")
 }
 
 model Application {

@@ -22,7 +22,7 @@ if (env.STRIPE_SECRET_KEY) {
 export { stripe }
 
 export const PLANS = {
-  FREE:   { maxProperties: 1,        hasAI: false, hasSignature: false, hasAnalytics: false },
+  FREE:   { maxProperties: 10,       hasAI: false, hasSignature: false, hasAnalytics: false },
   PRO:    { maxProperties: 5,        hasAI: true,  hasSignature: true,  hasAnalytics: true  },
   EXPERT: { maxProperties: Infinity, hasAI: true,  hasSignature: true,  hasAnalytics: true  },
 } as const
