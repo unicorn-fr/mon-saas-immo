@@ -7,13 +7,11 @@ import { useEffect, useState } from 'react'
 import { NavLink, Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Home, ClipboardList, Calendar, FileText,
-  MessageSquare, Plus, X, LogOut, TrendingUp, Settings,
+  MessageSquare, Plus, Settings,
 } from 'lucide-react'
 import { useSidebarStore } from '../../store/sidebarStore'
 import { useMessages } from '../../hooks/useMessages'
-import { useAuth } from '../../hooks/useAuth'
 import { applicationService } from '../../services/application.service'
-import { useNavigate } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { useWindowWidth } from '../../hooks/useWindowWidth'
 
@@ -118,8 +116,6 @@ function NavItem({
 export function OwnerSidebar() {
   const { mobileOpen, setMobileOpen } = useSidebarStore()
   const { unreadCount, fetchUnreadCount } = useMessages()
-  const { user, logout } = useAuth()
-  const navigate = useNavigate()
   const [pendingAppsCount, setPendingAppsCount] = useState(0)
   const windowWidth = useWindowWidth()
   const isTabletCompact = windowWidth >= BAI.bpMd && windowWidth < BAI.bpLg
@@ -131,9 +127,7 @@ export function OwnerSidebar() {
       .catch(() => {})
   }, [fetchUnreadCount])
 
-  const initials = `${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}`.toUpperCase()
   const closeMobile = () => setMobileOpen(false)
-  const handleLogout = () => { logout(); navigate('/') }
 
   const Content = ({ compact = false }: { compact?: boolean }) => (
     <div className="flex flex-col h-full" style={{ fontFamily: BAI.fontBody }}>
@@ -188,9 +182,6 @@ export function OwnerSidebar() {
         <SectionLabel label="Administration" compact={compact} />
         <NavItem to="/contracts" icon={FileText} label="Contrats" onClick={closeMobile} compact={compact} />
 
-        <SectionLabel label="Finances" compact={compact} />
-        <NavItem to="/owner/rentabilite" icon={TrendingUp} label="Rentabilité" onClick={closeMobile} compact={compact} />
-
         <SectionLabel label="Communication" compact={compact} />
         <NavItem to="/messages" icon={MessageSquare} label="Messages" badge={unreadCount} onClick={closeMobile} compact={compact} />
 
@@ -198,89 +189,6 @@ export function OwnerSidebar() {
         <NavItem to="/owner/settings" icon={Settings} label="Paramètres" onClick={closeMobile} compact={compact} />
       </nav>
 
-      {/* Divider */}
-      <div style={{ height: 1, background: BAI.nightBorder, margin: compact ? '0 8px' : '0 16px' }} />
-
-      {/* Zone utilisateur */}
-      <div style={{
-        borderTop: `1px solid ${BAI.nightBorder}`,
-        padding: compact ? '12px 0' : '12px 16px',
-        flexShrink: 0,
-        display: 'flex',
-        flexDirection: compact ? 'column' : 'column',
-        alignItems: compact ? 'center' : 'stretch',
-        gap: compact ? 8 : 0,
-      }}>
-        {compact ? (
-          <>
-            <div
-              title={`${user?.firstName} ${user?.lastName}`}
-              style={{
-                width: 32, height: 32, borderRadius: '50%',
-                background: BAI.caramelLight,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13, color: BAI.caramel,
-                flexShrink: 0, cursor: 'default',
-              }}>
-              {initials || '?'}
-            </div>
-            <button
-              onClick={handleLogout}
-              title="Déconnexion"
-              style={{
-                minWidth: BAI.touchMin, minHeight: BAI.touchMin,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: 'none', border: 'none', cursor: 'pointer',
-                color: 'rgba(255,255,255,0.45)', borderRadius: BAI.radius,
-                transition: BAI.transition,
-              }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(155,28,28,0.2)'; (e.currentTarget as HTMLElement).style.color = '#fca5a5' }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.45)' }}>
-              <LogOut className="w-3.5 h-3.5" />
-            </button>
-          </>
-        ) : (
-          <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-              <div style={{
-                width: 32, height: 32, borderRadius: '50%',
-                background: BAI.caramelLight,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13, color: BAI.caramel,
-                flexShrink: 0,
-              }}>
-                {initials || '?'}
-              </div>
-              <div style={{ overflow: 'hidden', flex: 1 }}>
-                <p style={{
-                  fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600,
-                  color: '#ffffff', margin: 0,
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}>
-                  {user?.firstName} {user?.lastName}
-                </p>
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: 'rgba(255,255,255,0.45)', margin: 0 }}>
-                  Propriétaire
-                </p>
-              </div>
-              <button onClick={closeMobile} className="md:hidden p-1 rounded-md" style={{ color: 'rgba(255,255,255,0.45)', background: 'none', border: 'none', cursor: 'pointer' }} aria-label="Fermer">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <button onClick={handleLogout}
-              style={{
-                color: 'rgba(255,255,255,0.45)', fontFamily: BAI.fontBody, background: 'none', border: 'none', cursor: 'pointer', width: '100%',
-                display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: BAI.radius,
-                fontSize: 13, transition: BAI.transition, minHeight: BAI.touchMin,
-              }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(155,28,28,0.2)'; (e.currentTarget as HTMLElement).style.color = '#fca5a5' }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.45)' }}>
-              <LogOut className="w-3.5 h-3.5" />
-              <span>Déconnexion</span>
-            </button>
-          </>
-        )}
-      </div>
     </div>
   )
 

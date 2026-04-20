@@ -7,7 +7,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import {
   LogOut, Settings, LayoutDashboard, Menu,
   Tag, Terminal, CreditCard, Bell, X,
-  MessageSquare, TrendingUp, User,
+  MessageSquare,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useSidebarStore } from '../../store/sidebarStore'
@@ -52,7 +52,7 @@ export const Header = () => {
   const [scrolled, setScrolled] = useState(false)
   const { toggle: toggleSidebar } = useSidebarStore()
   const { unreadCount } = useMessages()
-  const pageTitle = usePageTitle(user?.role)
+  usePageTitle(user?.role)
 
   const hasSidebar = isAuthenticated && (user?.role === 'OWNER' || user?.role === 'TENANT')
 
@@ -61,14 +61,10 @@ export const Header = () => {
   const threadColor = user?.role === 'OWNER' ? ownerColor : tenantColor
 
   useEffect(() => {
-    const threshold = hasSidebar ? 8 : 20
-    const onScroll = () => setScrolled(window.scrollY > threshold)
-    // For dashboard, listen on the main scroll container
-    const target = hasSidebar
-      ? (document.getElementById('main-content') ?? window)
-      : window
-    target.addEventListener('scroll', onScroll, { passive: true })
-    return () => target.removeEventListener('scroll', onScroll)
+    if (hasSidebar) return // bubble style doesn't need scroll detection
+    const onScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
   }, [hasSidebar])
 
   const handleLogout = () => {
@@ -91,52 +87,46 @@ export const Header = () => {
   if (hasSidebar) {
     const settingsLink = user?.role === 'OWNER' ? '/owner/settings' : '/tenant/settings'
     const ownerLinks = [
-      { to: getDashboardLink(),     icon: <LayoutDashboard className="w-4 h-4" />, label: 'Tableau de bord' },
-      { to: '/profile',             icon: <User className="w-4 h-4" />,            label: 'Mon profil' },
-      { to: settingsLink,           icon: <Settings className="w-4 h-4" />,        label: 'Paramètres' },
-      ...(user?.role === 'OWNER'
-        ? [{ to: '/owner/rentabilite', icon: <TrendingUp className="w-4 h-4" />, label: 'Rentabilité' }]
-        : []),
-      { to: '/pricing',             icon: <CreditCard className="w-4 h-4" />,     label: 'Mon abonnement' },
+      { to: getDashboardLink(), icon: <LayoutDashboard className="w-4 h-4" />, label: 'Tableau de bord' },
+      { to: settingsLink,       icon: <Settings className="w-4 h-4" />,        label: 'Paramètres & profil' },
+      { to: '/pricing',         icon: <CreditCard className="w-4 h-4" />,     label: 'Mon abonnement' },
     ]
 
     return (
       <header
-        className="flex-shrink-0 z-40 flex items-center justify-between px-4 sm:px-6"
-        style={{
-          position: 'sticky',
-          top: 0,
-          height: 56,
-          transition: 'background 0.25s ease, box-shadow 0.25s ease',
-          background: scrolled ? 'rgba(250,250,248,0.92)' : 'transparent',
-          backdropFilter: scrolled ? 'blur(8px)' : 'none',
-          WebkitBackdropFilter: scrolled ? 'blur(8px)' : 'none',
-          borderBottom: scrolled ? `1px solid ${BAI.border}` : '1px solid transparent',
-          boxShadow: scrolled ? '0 1px 0 rgba(13,12,10,0.06)' : 'none',
-        }}>
+        className="flex-shrink-0 z-40 relative"
+        style={{ height: 64, pointerEvents: 'none' }}>
 
-        {/* Gauche — hamburger mobile + titre de page */}
-        <div className="flex items-center gap-3">
-          <button onClick={toggleSidebar}
-            className="md:hidden flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
-            style={{ background: '#ffffff', border: `1px solid ${BAI.border}`, color: BAI.inkFaint }}
-            aria-label="Menu">
-            <Menu className="w-4 h-4" />
-          </button>
-          {pageTitle && (
-            <p className="hidden sm:block text-[13px] font-semibold" style={{ color: BAI.ink, fontFamily: 'var(--font-body)' }}>
-              {pageTitle}
-            </p>
-          )}
-        </div>
+        {/* Hamburger mobile — flottant à gauche */}
+        <button onClick={toggleSidebar}
+          className="md:hidden flex items-center justify-center w-9 h-9 rounded-xl transition-colors"
+          style={{
+            position: 'absolute', top: 13, left: 16,
+            background: '#ffffff', border: `1px solid ${BAI.border}`,
+            color: BAI.inkFaint, pointerEvents: 'auto',
+            boxShadow: '0 2px 8px rgba(13,12,10,0.08)',
+          }}
+          aria-label="Menu">
+          <Menu className="w-4 h-4" />
+        </button>
 
-        {/* Droite — actions + profil */}
-        <div className="flex items-center gap-1.5">
+        {/* Bulle flottante — droite */}
+        <div
+          className="flex items-center gap-1"
+          style={{
+            position: 'absolute', top: 13, right: 16,
+            background: '#ffffff',
+            border: `1px solid ${BAI.border}`,
+            borderRadius: 16,
+            padding: '5px 6px',
+            boxShadow: '0 2px 12px rgba(13,12,10,0.08), 0 1px 3px rgba(13,12,10,0.05)',
+            pointerEvents: 'auto',
+          }}>
 
           {/* Super Admin badge */}
           {user?.role === 'SUPER_ADMIN' && (
             <Link to="/super-admin"
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold"
+              className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold"
               style={{ background: 'rgba(0,180,216,0.10)', color: '#00b4d8', border: '1px solid rgba(0,180,216,0.25)' }}>
               <Terminal className="w-3 h-3" />
               <span className="hidden sm:inline">Admin</span>
@@ -170,23 +160,22 @@ export const Header = () => {
           </Link>
 
           {/* Séparateur */}
-          <div className="w-px h-5 mx-1" style={{ background: BAI.border }} />
+          <div className="w-px h-5 mx-0.5" style={{ background: BAI.border }} />
 
           {/* Profil dropdown */}
           <div className="relative">
             <button onClick={() => setShowUserMenu(!showUserMenu)}
               className="flex items-center gap-2 pl-1.5 pr-2.5 py-1.5 rounded-xl transition-all"
               style={{
-                background: showUserMenu ? BAI.bgMuted : '#ffffff',
-                border: `1px solid ${BAI.border}`,
-                boxShadow: '0 1px 2px rgba(13,12,10,0.05)',
+                background: showUserMenu ? BAI.bgMuted : 'transparent',
+                border: 'none',
               }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
-              onMouseLeave={(e) => { if (!showUserMenu) (e.currentTarget as HTMLElement).style.background = '#ffffff' }}>
+              onMouseLeave={(e) => { if (!showUserMenu) (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
               {user?.avatar ? (
-                <img src={user.avatar} alt="" className="w-6 h-6 rounded-md object-cover flex-shrink-0" />
+                <img src={user.avatar} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
               ) : (
-                <div className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
+                <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
                   style={{ background: threadColor }}>
                   {initials}
                 </div>
