@@ -65,7 +65,7 @@ export const Layout = ({ children, showHeader = true, showFooter }: LayoutProps)
       {/* Colonne droite */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {showHeader && <Header />}
-        <main id="main-content" className="flex-1 overflow-y-auto pb-16 md:pb-0">
+        <main id="main-content" className="flex-1 overflow-y-auto pb-16 md:pb-0 pt-16">
           {children}
         </main>
       </div>
