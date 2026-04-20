@@ -94,8 +94,8 @@ export const Header = () => {
 
     return (
       <header
-        className="flex-shrink-0 z-40 relative"
-        style={{ height: 64, pointerEvents: 'none' }}>
+        className="z-40 pointer-events-none"
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 0 }}>
 
         {/* Hamburger mobile — flottant à gauche */}
         <button onClick={toggleSidebar}
