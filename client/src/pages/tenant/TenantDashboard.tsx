@@ -536,12 +536,9 @@ export default function TenantDashboard() {
             const rent      = c.monthlyRent ?? 0
             const charges   = c.charges ?? 0
             const total     = rent + charges
-            const deposit   = c.deposit ?? 0
             const months    = c.startDate && c.endDate
               ? Math.round((new Date(c.endDate).getTime() - new Date(c.startDate).getTime()) / (30.44 * 86400000))
               : null
-            const annuel    = total * 12
-            const totalBail = months ? total * months : null
 
             return (
               <div key={c.id} style={{
@@ -585,38 +582,20 @@ export default function TenantDashboard() {
                       </p>
                     </div>
 
-                    {/* Grille financière */}
+                    {/* Loyer mensuel simplifié */}
                     <div style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))',
-                      gap: 1,
-                      background: 'rgba(255,255,255,0.06)',
+                      display: 'inline-flex', alignItems: 'baseline', gap: 6,
+                      background: 'rgba(196,151,106,0.15)',
                       borderRadius: 10,
-                      overflow: 'hidden',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      flex: 1, minWidth: 300,
+                      padding: '10px 16px',
+                      border: '1px solid rgba(196,151,106,0.25)',
+                      marginTop: 12,
                     }}>
-                      {[
-                        { label: 'Loyer HC / mois', val: fmtEUR(rent) },
-                        { label: 'Charges / mois', val: charges > 0 ? fmtEUR(charges) : '—' },
-                        { label: 'Total / mois', val: fmtEUR(total), accent: true },
-                        { label: 'Total / an', val: fmtEUR(annuel) },
-                        ...(deposit > 0 ? [{ label: 'Dépôt de garantie', val: fmtEUR(deposit) }] : []),
-                        ...(totalBail ? [{ label: `Total bail (${months} mois)`, val: fmtEUR(totalBail) }] : []),
-                      ].map((item, i) => (
-                        <div key={i} style={{ padding: '12px 14px', background: item.accent ? 'rgba(196,151,106,0.15)' : 'transparent' }}>
-                          <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', margin: '0 0 3px', letterSpacing: '0.06em' }}>
-                            {item.label}
-                          </p>
-                          <p style={{
-                            fontSize: 15, fontWeight: 700,
-                            color: item.accent ? BAI.caramel : '#ffffff',
-                            margin: 0, fontFamily: "'DM Sans', sans-serif",
-                          }}>
-                            {item.val}
-                          </p>
-                        </div>
-                      ))}
+                      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}>Loyer mensuel</span>
+                      <span style={{ fontSize: 20, fontWeight: 700, color: '#c4976a', fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
+                        {fmtEUR(total)}
+                      </span>
+                      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>/mois charges comprises</span>
                     </div>
                   </div>
 

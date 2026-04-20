@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 import { NavLink, Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Search, Heart, Calendar,
-  FolderOpen, SendHorizonal, FileText, MessageSquare, X, LogOut, ShieldCheck, Settings,
+  FolderOpen, SendHorizonal, FileText, MessageSquare, X, LogOut, Settings,
 } from 'lucide-react'
 import { useSidebarStore } from '../../store/sidebarStore'
 import { useMessages } from '../../hooks/useMessages'
@@ -61,10 +61,10 @@ function NavItem({
         padding: compact ? '12px 0' : '7px 10px',
         margin: compact ? '2px 6px' : '1px 12px',
         borderRadius: BAI.radius,
-        color: BAI.tenant,
+        color: '#ffffff',
         fontFamily: BAI.fontBody, fontSize: '13px', fontWeight: 600,
-        background: 'rgba(27,94,59,0.20)',
-        borderLeft: compact ? 'none' : `3px solid ${BAI.tenant}`,
+        background: 'rgba(196,151,106,0.18)',
+        borderLeft: compact ? 'none' : `3px solid ${BAI.caramel}`,
         cursor: 'pointer', transition: BAI.transition,
         textDecoration: 'none',
         position: 'relative',
@@ -184,7 +184,6 @@ export function TenantSidebar() {
 
         <SectionLabel label="Mon dossier" compact={compact} />
         <NavItem to="/dossier" icon={FolderOpen} label="Dossier locatif" end onClick={closeMobile} compact={compact} />
-        <NavItem to="/dossier/partages" icon={ShieldCheck} label="Contrôle d'accès" onClick={closeMobile} compact={compact} />
         <NavItem to="/my-applications" icon={SendHorizonal} label="Candidatures" badge={pendingAppsCount} onClick={closeMobile} compact={compact} />
 
         <SectionLabel label="Mon logement" compact={compact} />
@@ -193,16 +192,20 @@ export function TenantSidebar() {
         <SectionLabel label="Communication" compact={compact} />
         <NavItem to="/messages" icon={MessageSquare} label="Messages" badge={unreadCount} onClick={closeMobile} compact={compact} />
 
-        <SectionLabel label="Confidentialité" compact={compact} />
-        <NavItem to="/privacy" icon={ShieldCheck} label="Mes données & RGPD" onClick={closeMobile} compact={compact} />
-
         <SectionLabel label="Compte" compact={compact} />
         <NavItem to="/tenant/settings" icon={Settings} label="Paramètres" onClick={closeMobile} compact={compact} />
       </nav>
 
-      {/* Dossier progress — masqué en mode compact */}
+      {/* Dossier progress — masqué en mode compact, cliquable */}
       {!compact && dossierPercent < 100 && (
-        <div className="mx-4 mb-3 px-3 py-2.5 rounded-lg" style={{ background: BAI.nightHover, border: `1px solid ${BAI.nightBorder}` }}>
+        <Link
+          to="/dossier"
+          onClick={closeMobile}
+          className="mx-4 mb-3 px-3 py-2.5 rounded-lg block"
+          style={{ background: BAI.nightHover, border: `1px solid ${BAI.nightBorder}`, textDecoration: 'none', transition: 'background 0.15s' }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)' }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.nightHover }}
+        >
           <div className="flex items-center justify-between mb-1.5">
             <span style={{ color: 'rgba(255,255,255,0.40)', fontSize: '10px', fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase' as const }}>Dossier complété</span>
             <span style={{ color: dossierColor, fontSize: '11px', fontWeight: 600, fontFamily: BAI.fontDisplay }}>{dossierPercent}%</span>
@@ -211,7 +214,7 @@ export function TenantSidebar() {
             <div className="h-full rounded-full transition-all duration-700"
               style={{ width: `${dossierPercent}%`, backgroundColor: dossierColor }} />
           </div>
-        </div>
+        </Link>
       )}
 
       <div style={{ height: 1, background: BAI.nightBorder, margin: compact ? '0 8px' : '0 16px' }} />
@@ -231,7 +234,7 @@ export function TenantSidebar() {
               title={`${user?.firstName} ${user?.lastName} — Locataire`}
               style={{
                 width: 32, height: 32, borderRadius: '50%',
-                background: BAI.tenantLight, color: BAI.tenant,
+                background: BAI.caramelLight, color: BAI.caramel,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 11, fontWeight: 700, cursor: 'default',
               }}>

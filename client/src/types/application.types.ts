@@ -39,6 +39,7 @@ export interface Application {
   coverLetter: string | null
   hasGuarantor: boolean
   guarantorType: string | null
+  rejectionReason?: string
   createdAt: string
   updatedAt: string
   tenant?: {

@@ -1,6 +1,7 @@
 /**
  * MyApplications — Tenant view of all submitted candidatures.
- * Shows score, verdict, status, and allows withdrawal.
+ * Groups: En cours (PENDING + APPROVED) / Refusées (REJECTED)
+ * Does not show WITHDRAWN.
  */
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -8,9 +9,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Building2, Calendar, Loader2,
   Trash2, ChevronDown, ChevronUp, ArrowUpRight, SendHorizonal,
+  XCircle,
 } from 'lucide-react'
 import { applicationService } from '../../services/application.service'
-import { scoreColor, scoreBg } from '../../utils/matchingEngine'
 import type { Application, ApplicationStatus } from '../../types/application.types'
 import { Layout } from '../../components/layout/Layout'
 import toast from 'react-hot-toast'
@@ -26,35 +27,13 @@ const STATUS_LABEL: Record<ApplicationStatus, string> = {
 
 const STATUS_STYLE: Record<ApplicationStatus, React.CSSProperties> = {
   PENDING:   { background: '#fdf5ec', color: '#92400e', border: '1px solid #e8c99a' },
-  APPROVED:  { background: '#edf7f2', color: '#1b5e3b', border: '1px solid #9fd4ba' },
+  APPROVED:  { background: '#fdf5ec', color: '#c4976a', border: '1px solid #f3c99a' },
   REJECTED:  { background: '#fef2f2', color: '#9b1c1c', border: '1px solid #fca5a5' },
   WITHDRAWN: { background: '#f4f2ee', color: '#9e9b96', border: '1px solid #ccc9c3' },
 }
 
 const SERVER_BASE =
   (import.meta.env.VITE_API_URL as string | undefined)?.replace('/api/v1', '') ?? 'http://localhost:5000'
-
-function ScoreBar({ score }: { score: number }) {
-  return (
-    <div className="flex items-center gap-2">
-      <div
-        className="flex-1 h-1.5 overflow-hidden"
-        style={{ background: '#f4f2ee', borderRadius: 99 }}
-      >
-        <div
-          className={`h-1.5 transition-all duration-700 ${scoreBg(score)}`}
-          style={{ width: `${score}%`, borderRadius: 99 }}
-        />
-      </div>
-      <span
-        className={`text-xs font-bold tabular-nums w-10 text-right ${scoreColor(score)}`}
-        style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 14 }}
-      >
-        {score}/100
-      </span>
-    </div>
-  )
-}
 
 function AppCard({ app, onWithdraw }: { app: Application; onWithdraw: (id: string) => void }) {
   const [expanded, setExpanded] = useState(false)
@@ -76,6 +55,7 @@ function AppCard({ app, onWithdraw }: { app: Application; onWithdraw: (id: strin
   }
 
   const details = app.matchDetails ? Object.values(app.matchDetails) : []
+  const isRejected = app.status === 'REJECTED'
 
   return (
     <motion.div
@@ -85,135 +65,156 @@ function AppCard({ app, onWithdraw }: { app: Application; onWithdraw: (id: strin
       exit={{ opacity: 0 }}
       style={{
         background: '#ffffff',
-        border: '1px solid #e4e1db',
+        border: isRejected ? '1px solid #fca5a5' : '1px solid #e4e1db',
         borderRadius: 12,
         boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
         overflow: 'hidden',
         fontFamily: "'DM Sans', system-ui, sans-serif",
+        opacity: isRejected ? 0.85 : 1,
       }}
     >
-      <div className="flex gap-4 p-4">
-        {/* Property image */}
-        {prop.images && prop.images[0] ? (
-          <img
-            src={`${SERVER_BASE}${prop.images[0]}`}
-            alt={prop.title}
-            className="w-16 h-16 flex-shrink-0 object-cover"
-            style={{ borderRadius: 8 }}
-          />
-        ) : (
-          <div
-            className="w-16 h-16 flex items-center justify-center flex-shrink-0"
-            style={{ background: '#f4f2ee', borderRadius: 8 }}
-          >
-            <Building2 className="w-6 h-6" style={{ color: '#9e9b96' }} />
-          </div>
-        )}
+      <Link
+        to={`/property/${prop.id}`}
+        style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}
+      >
+        <div className="flex gap-4 p-4">
+          {/* Property image */}
+          {prop.images && prop.images[0] ? (
+            <img
+              src={`${SERVER_BASE}${prop.images[0]}`}
+              alt={prop.title}
+              className="w-16 h-16 flex-shrink-0 object-cover"
+              style={{ borderRadius: 8 }}
+            />
+          ) : (
+            <div
+              className="w-16 h-16 flex items-center justify-center flex-shrink-0"
+              style={{ background: '#f4f2ee', borderRadius: 8 }}
+            >
+              <Building2 className="w-6 h-6" style={{ color: '#9e9b96' }} />
+            </div>
+          )}
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <h3
-                className="truncate"
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <h3
+                  className="truncate"
+                  style={{
+                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                    fontWeight: 600,
+                    fontSize: 14,
+                    color: '#0d0c0a',
+                  }}
+                >
+                  {prop.title}
+                </h3>
+                <p style={{ fontSize: 12, color: '#9e9b96', marginTop: 2 }}>
+                  {prop.city}
+                  {' · '}
+                  <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 13, color: '#5a5754' }}>
+                    {Number(prop.price).toLocaleString('fr-FR')} €/mois
+                  </span>
+                </p>
+              </div>
+              <span
+                className="flex-shrink-0"
                 style={{
-                  fontFamily: "'DM Sans', system-ui, sans-serif",
-                  fontWeight: 600,
-                  fontSize: 14,
-                  color: '#0d0c0a',
+                  ...STATUS_STYLE[app.status],
+                  fontSize: 11,
+                  fontWeight: 500,
+                  borderRadius: 99,
+                  padding: '2px 10px',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                {prop.title}
-              </h3>
-              <p style={{ fontSize: 12, color: '#9e9b96', marginTop: 2 }}>
-                {prop.city}
-                {' · '}
-                <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 13, color: '#5a5754' }}>
-                  {Number(prop.price).toLocaleString('fr-FR')} €/mois
-                </span>
+                {STATUS_LABEL[app.status]}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 mt-2">
+              <span style={{ fontSize: 11, color: '#9e9b96' }}>
+                Envoyée le {format(new Date(app.createdAt), 'd MMM yyyy', { locale: fr })}
+              </span>
+              <span
+                className="flex items-center gap-0.5"
+                style={{ fontSize: 11, color: '#c4976a', fontWeight: 500 }}
+              >
+                Voir le bien <ArrowUpRight className="w-3 h-3" />
+              </span>
+            </div>
+
+            {app.status === 'APPROVED' && (
+              <span
+                className="mt-2 inline-flex items-center gap-1.5"
+                style={{
+                  background: '#fdf5ec',
+                  color: '#c4976a',
+                  border: '1px solid #f3c99a',
+                  borderRadius: 8,
+                  padding: '6px 14px',
+                  fontSize: 12,
+                  fontWeight: 500,
+                  fontFamily: "'DM Sans', system-ui, sans-serif",
+                }}
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                Réserver une visite
+              </span>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-1.5 flex-shrink-0" onClick={e => e.preventDefault()}>
+            {app.status === 'PENDING' && (
+              <button
+                onClick={handleWithdraw}
+                disabled={withdrawing}
+                title="Retirer la candidature"
+                className="p-1.5 transition-colors disabled:opacity-50"
+                style={{ borderRadius: 6, color: '#9b1c1c' }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#fef2f2' }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}
+              >
+                {withdrawing
+                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                  : <Trash2 className="w-4 h-4" />}
+              </button>
+            )}
+            {!isRejected && (
+              <button
+                onClick={(e) => { e.preventDefault(); setExpanded(!expanded) }}
+                className="p-1.5 transition-colors"
+                style={{ borderRadius: 6, color: '#9e9b96' }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#f4f2ee' }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}
+              >
+                {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+            )}
+          </div>
+        </div>
+      </Link>
+
+      {/* Rejection reason */}
+      {isRejected && (
+        <div style={{ borderTop: '1px solid #fca5a5', padding: '12px 16px', background: '#fef2f2' }}>
+          <div className="flex items-start gap-2">
+            <XCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#9b1c1c' }} />
+            <div>
+              <p style={{ fontSize: 12, fontWeight: 600, color: '#9b1c1c', fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: '2px' }}>
+                Raison du refus
+              </p>
+              <p style={{ fontSize: 13, color: '#5a5754', fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.5 }}>
+                {app.rejectionReason || 'Aucune raison communiquée'}
               </p>
             </div>
-            <span
-              className="flex-shrink-0"
-              style={{
-                ...STATUS_STYLE[app.status],
-                fontSize: 11,
-                fontWeight: 500,
-                borderRadius: 99,
-                padding: '2px 10px',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {STATUS_LABEL[app.status]}
-            </span>
           </div>
-
-          <div className="mt-2">
-            <ScoreBar score={app.score} />
-          </div>
-
-          <div className="flex items-center gap-3 mt-2">
-            <span style={{ fontSize: 11, color: '#9e9b96' }}>
-              Envoyée le {format(new Date(app.createdAt), 'd MMM yyyy', { locale: fr })}
-            </span>
-            <Link
-              to={`/property/${prop.id}`}
-              className="flex items-center gap-0.5 transition-opacity hover:opacity-70"
-              style={{ fontSize: 11, color: '#1b5e3b', fontWeight: 500 }}
-            >
-              Voir le bien <ArrowUpRight className="w-3 h-3" />
-            </Link>
-          </div>
-
-          {app.status === 'APPROVED' && (
-            <Link
-              to={`/property/${prop.id}`}
-              className="mt-2 inline-flex items-center gap-1.5 transition-opacity hover:opacity-80"
-              style={{
-                background: '#1b5e3b',
-                color: '#ffffff',
-                borderRadius: 8,
-                padding: '6px 14px',
-                fontSize: 12,
-                fontWeight: 500,
-                fontFamily: "'DM Sans', system-ui, sans-serif",
-              }}
-            >
-              <Calendar className="w-3.5 h-3.5" />
-              Réserver une visite
-            </Link>
-          )}
         </div>
+      )}
 
-        <div className="flex flex-col gap-1.5 flex-shrink-0">
-          {app.status === 'PENDING' && (
-            <button
-              onClick={handleWithdraw}
-              disabled={withdrawing}
-              title="Retirer la candidature"
-              className="p-1.5 transition-colors disabled:opacity-50"
-              style={{ borderRadius: 6, color: '#9b1c1c' }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#fef2f2' }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}
-            >
-              {withdrawing
-                ? <Loader2 className="w-4 h-4 animate-spin" />
-                : <Trash2 className="w-4 h-4" />}
-            </button>
-          )}
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="p-1.5 transition-colors"
-            style={{ borderRadius: 6, color: '#9e9b96' }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#f4f2ee' }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}
-          >
-            {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
-        </div>
-      </div>
-
+      {/* Expandable details (non-rejected) */}
       <AnimatePresence>
-        {expanded && (
+        {expanded && !isRejected && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
@@ -235,7 +236,7 @@ function AppCard({ app, onWithdraw }: { app: Application; onWithdraw: (id: strin
                         key={d.label}
                         className="text-xs"
                         style={
-                          d.status === 'pass'    ? { background: '#edf7f2', border: '1px solid #9fd4ba', color: '#1b5e3b', borderRadius: 8, padding: '8px 10px' } :
+                          d.status === 'pass'    ? { background: '#fdf5ec', border: '1px solid #f3c99a', color: '#92400e', borderRadius: 8, padding: '8px 10px' } :
                           d.status === 'partial' ? { background: '#fdf5ec', border: '1px solid #e8c99a', color: '#92400e', borderRadius: 8, padding: '8px 10px' } :
                           d.status === 'fail'    ? { background: '#fef2f2', border: '1px solid #fca5a5', color: '#9b1c1c', borderRadius: 8, padding: '8px 10px' } :
                                                    { background: '#f4f2ee', border: '1px solid #ccc9c3', color: '#5a5754', borderRadius: 8, padding: '8px 10px' }
@@ -306,6 +307,9 @@ export default function MyApplications() {
     setApps((prev) => prev.filter((a) => a.id !== id))
   }
 
+  const activeApps = apps.filter(a => a.status === 'PENDING' || a.status === 'APPROVED')
+  const rejectedApps = apps.filter(a => a.status === 'REJECTED')
+
   return (
     <Layout>
       <div
@@ -334,12 +338,12 @@ export default function MyApplications() {
               >
                 Mes candidatures
               </h1>
-              {!loading && apps.length > 0 && (
+              {!loading && activeApps.length > 0 && (
                 <span
                   style={{
-                    background: '#edf7f2',
-                    color: '#1b5e3b',
-                    border: '1px solid #9fd4ba',
+                    background: '#fdf5ec',
+                    color: '#c4976a',
+                    border: '1px solid #f3c99a',
                     borderRadius: 99,
                     fontSize: 12,
                     fontWeight: 600,
@@ -347,7 +351,7 @@ export default function MyApplications() {
                     fontFamily: "'DM Sans', system-ui, sans-serif",
                   }}
                 >
-                  {apps.length}
+                  {activeApps.length}
                 </span>
               )}
             </div>
@@ -395,7 +399,7 @@ export default function MyApplications() {
                 to="/search"
                 className="inline-flex items-center gap-2 transition-opacity hover:opacity-80"
                 style={{
-                  background: '#1b5e3b',
+                  background: '#1a1a2e',
                   color: '#ffffff',
                   borderRadius: 8,
                   padding: '10px 20px',
@@ -408,12 +412,39 @@ export default function MyApplications() {
               </Link>
             </div>
           ) : (
-            <div className="space-y-3">
-              <AnimatePresence mode="popLayout">
-                {apps.map((app) => (
-                  <AppCard key={app.id} app={app} onWithdraw={handleWithdraw} />
-                ))}
-              </AnimatePresence>
+            <div className="space-y-6">
+
+              {/* ── En cours ── */}
+              {activeApps.length > 0 && (
+                <div className="space-y-3">
+                  <AnimatePresence mode="popLayout">
+                    {activeApps.map((app) => (
+                      <AppCard key={app.id} app={app} onWithdraw={handleWithdraw} />
+                    ))}
+                  </AnimatePresence>
+                </div>
+              )}
+
+              {/* ── Séparateur Refusées ── */}
+              {rejectedApps.length > 0 && (
+                <>
+                  <div className="flex items-center gap-3 pt-2">
+                    <div style={{ flex: 1, height: '1px', background: '#fca5a5' }} />
+                    <span style={{ fontSize: 11, fontWeight: 600, color: '#9b1c1c', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: "'DM Sans', system-ui, sans-serif", whiteSpace: 'nowrap' }}>
+                      Candidatures non retenues
+                    </span>
+                    <div style={{ flex: 1, height: '1px', background: '#fca5a5' }} />
+                  </div>
+                  <div className="space-y-3">
+                    <AnimatePresence mode="popLayout">
+                      {rejectedApps.map((app) => (
+                        <AppCard key={app.id} app={app} onWithdraw={handleWithdraw} />
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                </>
+              )}
+
             </div>
           )}
         </div>
