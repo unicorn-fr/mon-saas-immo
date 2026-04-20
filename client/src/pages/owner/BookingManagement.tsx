@@ -17,6 +17,7 @@ import { useProperties } from '../../hooks/useProperties'
 import { BookingCard } from '../../components/booking/BookingCard'
 import { CancelBookingModal } from '../../components/booking/CancelBookingModal'
 import { Calendar } from '../../components/booking/Calendar'
+import { VisitSlotsManager } from '../../components/booking/VisitSlotsManager'
 import { BookingStatus } from '../../types/booking.types'
 import { Layout } from '../../components/layout/Layout'
 import { BAI } from '../../constants/bailio-tokens'
@@ -429,6 +430,13 @@ export const BookingManagement = () => {
               </div>
             </div>
           </div>
+
+          {/* Visit Slots Manager */}
+          {selectedProperty !== 'all' && (
+            <div className="mb-6">
+              <VisitSlotsManager propertyId={selectedProperty} />
+            </div>
+          )}
 
           {/* Error State */}
           {error && (

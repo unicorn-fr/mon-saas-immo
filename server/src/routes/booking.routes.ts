@@ -25,6 +25,47 @@ router.get(
   bookingController.getAvailableSlots.bind(bookingController)
 )
 
+// Visit slots (owner only)
+router.get(
+  '/property/:propertyId/slots',
+  authenticate,
+  authorize('OWNER'),
+  bookingController.getPropertySlots.bind(bookingController)
+)
+router.post(
+  '/property/:propertyId/slots',
+  authenticate,
+  authorize('OWNER'),
+  bookingController.createPropertySlot.bind(bookingController)
+)
+router.delete(
+  '/property/:propertyId/slots/:slotId',
+  authenticate,
+  authorize('OWNER'),
+  bookingController.deletePropertySlot.bind(bookingController)
+)
+
+// Calendar invites — GET /invites/mine must be before /:id
+router.get('/invites/mine', authenticate, bookingController.getMyInvites.bind(bookingController))
+router.post(
+  '/invites',
+  authenticate,
+  authorize('OWNER'),
+  bookingController.createInvite.bind(bookingController)
+)
+router.delete(
+  '/invites/:inviteId',
+  authenticate,
+  authorize('OWNER'),
+  bookingController.revokeInvite.bind(bookingController)
+)
+router.get(
+  '/property/:propertyId/invites',
+  authenticate,
+  authorize('OWNER'),
+  bookingController.getPropertyInvites.bind(bookingController)
+)
+
 // GET /api/v1/bookings/:id - Get booking by ID
 router.get('/:id', authenticate, bookingController.getBookingById.bind(bookingController))
 

@@ -356,6 +356,134 @@ class BookingController {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // VisitAvailabilitySlot controllers
+  // ---------------------------------------------------------------------------
+
+  /**
+   * GET /api/v1/bookings/property/:propertyId/slots
+   */
+  async getPropertySlots(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { propertyId } = req.params
+      const slots = await bookingService.getPropertySlots(propertyId)
+      return res.json({ success: true, data: { slots } })
+    } catch (e) {
+      next(e)
+    }
+  }
+
+  /**
+   * POST /api/v1/bookings/property/:propertyId/slots
+   */
+  async createPropertySlot(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { propertyId } = req.params
+      const { dayOfWeek, startTime, endTime } = req.body
+      if (dayOfWeek === undefined || !startTime || !endTime) {
+        return res
+          .status(400)
+          .json({ success: false, message: 'dayOfWeek, startTime, endTime requis' })
+      }
+      const slot = await bookingService.createPropertySlot(propertyId, req.user!.id, {
+        dayOfWeek,
+        startTime,
+        endTime,
+      })
+      return res.status(201).json({ success: true, data: { slot } })
+    } catch (e) {
+      if (e instanceof Error && e.message === 'Not authorized') {
+        return res.status(403).json({ success: false, message: e.message })
+      }
+      next(e)
+    }
+  }
+
+  /**
+   * DELETE /api/v1/bookings/property/:propertyId/slots/:slotId
+   */
+  async deletePropertySlot(req: Request, res: Response, next: NextFunction) {
+    try {
+      await bookingService.deletePropertySlot(req.params.slotId, req.user!.id)
+      return res.json({ success: true })
+    } catch (e) {
+      if (e instanceof Error && e.message === 'Not authorized') {
+        return res.status(403).json({ success: false, message: e.message })
+      }
+      next(e)
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // CalendarInvite controllers
+  // ---------------------------------------------------------------------------
+
+  /**
+   * POST /api/v1/bookings/invites
+   */
+  async createInvite(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { propertyId, tenantId } = req.body
+      if (!propertyId || !tenantId) {
+        return res
+          .status(400)
+          .json({ success: false, message: 'propertyId et tenantId requis' })
+      }
+      const invite = await bookingService.createInvite(req.user!.id, propertyId, tenantId)
+      return res.status(201).json({ success: true, data: { invite } })
+    } catch (e) {
+      if (e instanceof Error && e.message === 'Not authorized') {
+        return res.status(403).json({ success: false, message: e.message })
+      }
+      next(e)
+    }
+  }
+
+  /**
+   * DELETE /api/v1/bookings/invites/:inviteId
+   */
+  async revokeInvite(req: Request, res: Response, next: NextFunction) {
+    try {
+      await bookingService.revokeInvite(req.params.inviteId, req.user!.id)
+      return res.json({ success: true })
+    } catch (e) {
+      if (e instanceof Error && e.message === 'Not authorized') {
+        return res.status(403).json({ success: false, message: e.message })
+      }
+      next(e)
+    }
+  }
+
+  /**
+   * GET /api/v1/bookings/invites/mine
+   */
+  async getMyInvites(req: Request, res: Response, next: NextFunction) {
+    try {
+      const invites = await bookingService.getMyInvites(req.user!.id)
+      return res.json({ success: true, data: { invites } })
+    } catch (e) {
+      next(e)
+    }
+  }
+
+  /**
+   * GET /api/v1/bookings/property/:propertyId/invites
+   */
+  async getPropertyInvites(req: Request, res: Response, next: NextFunction) {
+    try {
+      const invites = await bookingService.getPropertyInvites(
+        req.params.propertyId,
+        req.user!.id
+      )
+      return res.json({ success: true, data: { invites } })
+    } catch (e) {
+      if (e instanceof Error && e.message === 'Not authorized') {
+        return res.status(403).json({ success: false, message: e.message })
+      }
+      next(e)
+    }
+  }
+
   /**
    * GET /api/v1/bookings/owner/statistics
    * Get booking statistics for owner

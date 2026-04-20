@@ -7,6 +7,10 @@ import {
   BookingPagination,
   BookingListResponse,
   BookingStatistics,
+  VisitSlot,
+  CalendarInvite,
+  CalendarInviteWithProperty,
+  CalendarInviteWithTenant,
 } from '../types/booking.types'
 
 interface ApiResponse<T> {
@@ -147,6 +151,53 @@ class BookingService {
     } catch (error) {
       throw new Error(handleApiError(error))
     }
+  }
+
+  // ---- Visit Slots ----
+
+  async getPropertySlots(propertyId: string): Promise<VisitSlot[]> {
+    const { data } = await apiClient.get(`/bookings/property/${propertyId}/slots`)
+    return data.data.slots as VisitSlot[]
+  }
+
+  async createPropertySlot(
+    propertyId: string,
+    slot: { dayOfWeek: number; startTime: string; endTime: string }
+  ): Promise<VisitSlot> {
+    const { data } = await apiClient.post(`/bookings/property/${propertyId}/slots`, slot)
+    return data.data.slot as VisitSlot
+  }
+
+  async deletePropertySlot(propertyId: string, slotId: string): Promise<void> {
+    await apiClient.delete(`/bookings/property/${propertyId}/slots/${slotId}`)
+  }
+
+  // ---- Calendar Invites ----
+
+  async createInvite(propertyId: string, tenantId: string): Promise<CalendarInvite> {
+    const { data } = await apiClient.post('/bookings/invites', { propertyId, tenantId })
+    return data.data.invite as CalendarInvite
+  }
+
+  async revokeInvite(inviteId: string): Promise<void> {
+    await apiClient.delete(`/bookings/invites/${inviteId}`)
+  }
+
+  async getMyInvites(): Promise<CalendarInviteWithProperty[]> {
+    const { data } = await apiClient.get('/bookings/invites/mine')
+    return data.data.invites as CalendarInviteWithProperty[]
+  }
+
+  async getPropertyInvites(propertyId: string): Promise<CalendarInviteWithTenant[]> {
+    const { data } = await apiClient.get(`/bookings/property/${propertyId}/invites`)
+    return data.data.invites as CalendarInviteWithTenant[]
+  }
+
+  async getAvailableSlotsForDate(propertyId: string, date: string): Promise<string[]> {
+    const { data } = await apiClient.get(
+      `/bookings/property/${propertyId}/available-slots?date=${date}`
+    )
+    return data.data.availableSlots as string[]
   }
 }
 

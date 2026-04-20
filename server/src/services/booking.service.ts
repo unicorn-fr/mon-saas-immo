@@ -47,6 +47,15 @@ class BookingService {
       throw new Error('Property is not available for booking')
     }
 
+    // Vérifier invitation si le logement a des créneaux configurés
+    const slotsCount = await prisma.visitAvailabilitySlot.count({ where: { propertyId: data.propertyId } })
+    if (slotsCount > 0) {
+      const invite = await prisma.calendarInvite.findUnique({
+        where: { propertyId_tenantId: { propertyId: data.propertyId, tenantId: data.tenantId } }
+      })
+      if (!invite) throw new Error('No calendar invite')
+    }
+
     // Check if the date/time slot is already booked
     const existingBooking = await prisma.booking.findFirst({
       where: {
@@ -639,6 +648,94 @@ class BookingService {
       cancelled,
       completed,
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // VisitAvailabilitySlot methods
+  // ---------------------------------------------------------------------------
+
+  async getPropertySlots(propertyId: string) {
+    return prisma.visitAvailabilitySlot.findMany({
+      where: { propertyId },
+      orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
+    })
+  }
+
+  async createPropertySlot(
+    propertyId: string,
+    ownerId: string,
+    data: { dayOfWeek: number; startTime: string; endTime: string }
+  ) {
+    const prop = await prisma.property.findUnique({ where: { id: propertyId } })
+    if (!prop || prop.ownerId !== ownerId) throw new Error('Not authorized')
+    return prisma.visitAvailabilitySlot.create({ data: { propertyId, ...data } })
+  }
+
+  async deletePropertySlot(slotId: string, ownerId: string) {
+    const slot = await prisma.visitAvailabilitySlot.findUnique({
+      where: { id: slotId },
+      include: { property: true },
+    })
+    if (!slot || slot.property.ownerId !== ownerId) throw new Error('Not authorized')
+    return prisma.visitAvailabilitySlot.delete({ where: { id: slotId } })
+  }
+
+  // ---------------------------------------------------------------------------
+  // CalendarInvite methods
+  // ---------------------------------------------------------------------------
+
+  async createInvite(ownerId: string, propertyId: string, tenantId: string) {
+    const prop = await prisma.property.findUnique({ where: { id: propertyId } })
+    if (!prop || prop.ownerId !== ownerId) throw new Error('Not authorized')
+    return prisma.calendarInvite.upsert({
+      where: { propertyId_tenantId: { propertyId, tenantId } },
+      create: { propertyId, ownerId, tenantId },
+      update: {},
+      include: {
+        property: { select: { id: true, title: true, city: true } },
+        tenant: { select: { id: true, firstName: true, lastName: true, email: true } },
+      },
+    })
+  }
+
+  async revokeInvite(inviteId: string, ownerId: string) {
+    const invite = await prisma.calendarInvite.findUnique({ where: { id: inviteId } })
+    if (!invite || invite.ownerId !== ownerId) throw new Error('Not authorized')
+    return prisma.calendarInvite.delete({ where: { id: inviteId } })
+  }
+
+  async getMyInvites(tenantId: string) {
+    return prisma.calendarInvite.findMany({
+      where: { tenantId },
+      include: {
+        property: {
+          select: {
+            id: true,
+            title: true,
+            address: true,
+            city: true,
+            price: true,
+            images: true,
+            visitDuration: true,
+            visitAvailabilitySlots: { orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }] },
+          },
+        },
+        owner: { select: { id: true, firstName: true, lastName: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+  }
+
+  async getPropertyInvites(propertyId: string, ownerId: string) {
+    const prop = await prisma.property.findUnique({ where: { id: propertyId } })
+    if (!prop || prop.ownerId !== ownerId) throw new Error('Not authorized')
+    return prisma.calendarInvite.findMany({
+      where: { propertyId },
+      include: {
+        tenant: { select: { id: true, firstName: true, lastName: true, email: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    })
   }
 }
 

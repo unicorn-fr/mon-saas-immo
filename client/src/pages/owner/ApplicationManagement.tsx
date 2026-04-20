@@ -7,13 +7,14 @@ import { useEffect, useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   CheckCircle2, XCircle, Clock, Users, ChevronDown, ChevronUp,
-  Building2, RotateCcw, Loader2, MapPin, Euro, ChevronRight, FolderOpen,
+  Building2, RotateCcw, Loader2, MapPin, Euro, ChevronRight, FolderOpen, CalendarDays,
 } from 'lucide-react'
 import { applicationService } from '../../services/application.service'
 import { scoreColor } from '../../utils/matchingEngine'
 import type { Application, ApplicationStatus } from '../../types/application.types'
 import { Layout } from '../../components/layout/Layout'
 import { DossierReviewModal } from '../../components/document/DossierReviewModal'
+import { CalendarShareModal } from '../../components/booking/CalendarShareModal'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -334,11 +335,13 @@ function PropertyGroup({
   apps,
   onDecision,
   onOpenDossier,
+  onShareCalendar,
 }: {
   property: PropertyInfo
   apps: Application[]
   onDecision: (id: string, status: 'APPROVED' | 'REJECTED') => Promise<void>
   onOpenDossier: (tenantId: string, tenantName: string) => void
+  onShareCalendar: (propertyId: string, propertyTitle: string, tenants: { id: string; firstName: string; lastName: string; email: string }[]) => void
 }) {
   const [open, setOpen] = useState(true)
   const pending  = apps.filter((a) => a.status === 'PENDING').length
@@ -425,6 +428,25 @@ function PropertyGroup({
           >
             {apps.length} dossier{apps.length > 1 ? 's' : ''}
           </span>
+          {approved > 0 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                const tenants = apps.filter(a => a.status === 'APPROVED').map(a => ({
+                  id: a.tenant!.id,
+                  firstName: a.tenant!.firstName ?? '',
+                  lastName: a.tenant!.lastName ?? '',
+                  email: a.tenant!.email,
+                }))
+                onShareCalendar(property.id, property.title, tenants)
+              }}
+              className="flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-lg"
+              style={{ background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, color: BAI.owner }}
+            >
+              <CalendarDays className="w-3 h-3" />
+              <span className="hidden sm:inline">Partager</span>
+            </button>
+          )}
           {open
             ? <ChevronUp className="w-4 h-4 ml-1 flex-shrink-0" style={{ color: BAI.inkFaint }} />
             : <ChevronRight className="w-4 h-4 ml-1 flex-shrink-0" style={{ color: BAI.inkFaint }} />
@@ -465,6 +487,7 @@ export default function ApplicationManagement() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<Filter>('ALL')
   const [dossierModal, setDossierModal] = useState<{ tenantId: string; tenantName: string } | null>(null)
+  const [calendarModal, setCalendarModal] = useState<{ propertyId: string; propertyTitle: string; tenants: { id: string; firstName: string; lastName: string; email: string }[] } | null>(null)
 
   async function load() {
     setLoading(true)
@@ -532,6 +555,15 @@ export default function ApplicationManagement() {
           tenantId={dossierModal.tenantId}
           tenantName={dossierModal.tenantName}
           onClose={() => setDossierModal(null)}
+        />
+      )}
+      {calendarModal && (
+        <CalendarShareModal
+          isOpen
+          onClose={() => setCalendarModal(null)}
+          propertyId={calendarModal.propertyId}
+          propertyTitle={calendarModal.propertyTitle}
+          suggestedTenants={calendarModal.tenants}
         />
       )}
       <div
@@ -709,7 +741,12 @@ export default function ApplicationManagement() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
                   >
-                    <PropertyGroup property={property} apps={apps} onDecision={handleDecision} onOpenDossier={(id, name) => setDossierModal({ tenantId: id, tenantName: name })} />
+                    <PropertyGroup
+                      property={property} apps={apps}
+                      onDecision={handleDecision}
+                      onOpenDossier={(id, name) => setDossierModal({ tenantId: id, tenantName: name })}
+                      onShareCalendar={(pid, ptitle, tenants) => setCalendarModal({ propertyId: pid, propertyTitle: ptitle, tenants })}
+                    />
                   </motion.div>
                 ))}
               </AnimatePresence>

@@ -126,3 +126,40 @@ export const BOOKING_DURATIONS = [
   { value: 90, label: '1h30' },
   { value: 120, label: '2 heures' },
 ]
+
+// ---- Visit Slots & Calendar Invites ----
+
+export interface VisitSlot {
+  id: string
+  propertyId: string
+  dayOfWeek: number
+  startTime: string
+  endTime: string
+  createdAt: string
+}
+
+export interface CalendarInvite {
+  id: string
+  propertyId: string
+  tenantId: string
+  ownerId: string
+  createdAt: string
+}
+
+export interface CalendarInviteWithProperty extends CalendarInvite {
+  property: {
+    id: string
+    title: string
+    address: string
+    city: string
+    price: number
+    images: string[]
+    visitDuration: number
+    visitAvailabilitySlots: VisitSlot[]
+  }
+  owner: { id: string; firstName: string; lastName: string }
+}
+
+export interface CalendarInviteWithTenant extends CalendarInvite {
+  tenant: { id: string; firstName: string; lastName: string; email: string }
+}

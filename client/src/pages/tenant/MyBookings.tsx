@@ -8,15 +8,161 @@ import {
   CheckCircle,
   XCircle,
   Home,
+  MapPin,
+  Euro,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
 import { useBookings } from '../../hooks/useBookings'
 import { BookingCard } from '../../components/booking/BookingCard'
 import { CancelBookingModal } from '../../components/booking/CancelBookingModal'
 import { Calendar } from '../../components/booking/Calendar'
-import { BookingStatus } from '../../types/booking.types'
+import { BookingStatus, CalendarInviteWithProperty } from '../../types/booking.types'
 import { Layout } from '../../components/layout/Layout'
+import { bookingService } from '../../services/booking.service'
+import toast from 'react-hot-toast'
 
 type ViewMode = 'list' | 'calendar'
+
+const SERVER_BASE =
+  (import.meta.env.VITE_API_URL as string | undefined)?.replace('/api/v1', '') ?? 'http://localhost:5000'
+
+const DAY_LABELS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
+const DAYS_AHEAD = 14
+
+function InvitePanel({ invite }: { invite: CalendarInviteWithProperty }) {
+  const [open, setOpen] = useState(false)
+  const [selectedDate, setSelectedDate] = useState<string>('')
+  const [availableSlots, setAvailableSlots] = useState<string[]>([])
+  const [loadingSlots, setLoadingSlots] = useState(false)
+  const [bookingSlot, setBookingSlot] = useState<string | null>(null)
+  const { property } = invite
+
+  const dates = Array.from({ length: DAYS_AHEAD }, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() + i)
+    return d.toISOString().split('T')[0]
+  })
+
+  // Filter dates to days that have slots configured
+  const slotDays = new Set(property.visitAvailabilitySlots.map(s => s.dayOfWeek))
+  const validDates = slotDays.size === 0 ? dates : dates.filter(d => slotDays.has(new Date(d + 'T00:00:00').getDay()))
+
+  async function handleSelectDate(date: string) {
+    setSelectedDate(date)
+    setAvailableSlots([])
+    setLoadingSlots(true)
+    try {
+      const slots = await bookingService.getAvailableSlots(property.id, date)
+      setAvailableSlots(slots)
+    } catch { toast.error('Impossible de charger les créneaux') }
+    finally { setLoadingSlots(false) }
+  }
+
+  async function handleBook(time: string) {
+    setBookingSlot(time)
+    try {
+      await bookingService.createBooking({ propertyId: property.id, visitDate: selectedDate, visitTime: time })
+      toast.success('Visite réservée ! Le propriétaire va confirmer.')
+      setAvailableSlots(prev => prev.filter(s => s !== time))
+    } catch (e: any) {
+      const msg = e?.response?.data?.message ?? e?.message ?? 'Erreur'
+      toast.error(msg)
+    } finally { setBookingSlot(null) }
+  }
+
+  const imgSrc = property.images?.[0]
+    ? property.images[0].startsWith('http') ? property.images[0] : `${SERVER_BASE}${property.images[0]}`
+    : null
+
+  return (
+    <div style={{ background: '#ffffff', border: '1px solid #e4e1db', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 2px rgba(13,12,10,0.04)' }}>
+      <button onClick={() => setOpen(o => !o)} className="w-full text-left flex items-center gap-4 p-4" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+        {imgSrc ? (
+          <img src={imgSrc} alt={property.title} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" style={{ border: '1px solid #e4e1db' }} />
+        ) : (
+          <div className="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#f4f2ee' }}>
+            <Home className="w-7 h-7" style={{ color: '#9e9b96' }} />
+          </div>
+        )}
+        <div className="flex-1 min-w-0 text-left">
+          <p style={{ fontSize: 14, fontWeight: 600, color: '#0d0c0a', marginBottom: 2 }} className="truncate">{property.title}</p>
+          <p className="flex items-center gap-1" style={{ fontSize: 12, color: '#9e9b96' }}>
+            <MapPin className="w-3 h-3" />{property.city}
+            <span className="mx-1">·</span>
+            <Euro className="w-3 h-3" />{Number(property.price).toLocaleString('fr-FR')} /mois
+          </p>
+          <p style={{ fontSize: 11, color: '#c4976a', fontWeight: 500, marginTop: 4 }}>
+            Invité par {invite.owner.firstName} {invite.owner.lastName}
+          </p>
+        </div>
+        <div style={{ color: '#9e9b96', flexShrink: 0 }}>
+          {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </div>
+      </button>
+
+      {open && (
+        <div style={{ borderTop: '1px solid #e4e1db', background: '#fafaf8', padding: '16px' }}>
+          {/* Date picker — 14 jours */}
+          <p style={{ fontSize: 11, fontWeight: 600, color: '#9e9b96', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
+            Choisir une date
+          </p>
+          <div className="flex gap-2 flex-wrap mb-4">
+            {validDates.length === 0 ? (
+              <p style={{ fontSize: 13, color: '#9e9b96' }}>Aucun créneau configuré pour ce logement.</p>
+            ) : validDates.map(date => {
+              const d = new Date(date + 'T00:00:00')
+              const isSelected = selectedDate === date
+              return (
+                <button key={date} onClick={() => handleSelectDate(date)}
+                  style={{
+                    background: isSelected ? '#1a1a2e' : '#ffffff',
+                    border: `1px solid ${isSelected ? '#1a1a2e' : '#e4e1db'}`,
+                    color: isSelected ? '#ffffff' : '#0d0c0a',
+                    borderRadius: 8, padding: '6px 12px', fontSize: 12, cursor: 'pointer',
+                    fontFamily: "'DM Sans', system-ui, sans-serif", fontWeight: isSelected ? 600 : 400,
+                  }}>
+                  <span style={{ display: 'block', fontSize: 10, opacity: 0.7 }}>{DAY_LABELS[d.getDay()]}</span>
+                  {d.getDate()}/{d.getMonth() + 1}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Créneaux disponibles */}
+          {selectedDate && (
+            <>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#9e9b96', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
+                Créneaux disponibles
+              </p>
+              {loadingSlots ? (
+                <p style={{ fontSize: 13, color: '#9e9b96' }}>Chargement…</p>
+              ) : availableSlots.length === 0 ? (
+                <p style={{ fontSize: 13, color: '#9e9b96' }}>Aucun créneau disponible ce jour.</p>
+              ) : (
+                <div className="flex gap-2 flex-wrap">
+                  {availableSlots.map(time => (
+                    <button key={time} onClick={() => handleBook(time)}
+                      disabled={bookingSlot === time}
+                      style={{
+                        background: bookingSlot === time ? '#f4f2ee' : '#eaf0fb',
+                        border: '1px solid #b8ccf0', color: '#1a3270',
+                        borderRadius: 8, padding: '7px 14px', fontSize: 13, fontWeight: 600,
+                        cursor: bookingSlot === time ? 'not-allowed' : 'pointer',
+                        fontFamily: "'DM Sans', system-ui, sans-serif",
+                        opacity: bookingSlot === time ? 0.6 : 1,
+                      }}>
+                      {bookingSlot === time ? '…' : time}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export const MyBookings = () => {
   const {
@@ -28,11 +174,16 @@ export const MyBookings = () => {
     cancelBooking,
   } = useBookings()
 
+  const [invites, setInvites] = useState<CalendarInviteWithProperty[]>([])
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [selectedStatus, setSelectedStatus] = useState<BookingStatus | 'all'>('all')
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [cancelModalBookingId, setCancelModalBookingId] = useState<string | null>(null)
+
+  useEffect(() => {
+    bookingService.getMyInvites().then(setInvites).catch(() => {})
+  }, [])
 
   useEffect(() => {
     const filters: any = {}
@@ -131,6 +282,29 @@ export const MyBookings = () => {
               Consultez et gérez vos demandes de visite
             </p>
           </div>
+
+          {/* Invitations calendrier */}
+          {invites.length > 0 && (
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-3">
+                <CalendarIcon className="w-4 h-4" style={{ color: '#c4976a' }} />
+                <h2 style={{ fontSize: 15, fontWeight: 600, color: '#0d0c0a', margin: 0, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+                  Logements à visiter
+                </h2>
+                <span style={{ fontSize: 11, background: '#fdf5ec', color: '#c4976a', border: '1px solid #f3c99a', borderRadius: 20, padding: '1px 8px', fontWeight: 600 }}>
+                  {invites.length}
+                </span>
+              </div>
+              <p style={{ fontSize: 13, color: '#9e9b96', marginBottom: 14 }}>
+                Un propriétaire vous a invité à réserver une visite pour ces logements.
+              </p>
+              <div className="flex flex-col gap-3">
+                {invites.map(invite => (
+                  <InvitePanel key={invite.id} invite={invite} />
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Statistics */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
