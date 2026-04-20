@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import {
   Calendar as CalendarIcon,
   Search,
@@ -8,7 +8,10 @@ import {
   XCircle,
   Loader,
   AlertCircle,
+  MapPin,
 } from 'lucide-react'
+import { format, parseISO, isAfter } from 'date-fns'
+import { fr } from 'date-fns/locale'
 import { useBookings } from '../../hooks/useBookings'
 import { useProperties } from '../../hooks/useProperties'
 import { BookingCard } from '../../components/booking/BookingCard'
@@ -64,6 +67,27 @@ export const BookingManagement = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [cancelModalBookingId, setCancelModalBookingId] = useState<string | null>(null)
+
+  // ── Prochains RDV confirmés ───────────────────────────────────────────────
+  const upcomingConfirmed = useMemo(() => {
+    const now = new Date()
+    return bookings
+      .filter((b) => {
+        if (b.status !== 'CONFIRMED') return false
+        try {
+          const dt = parseISO(`${b.visitDate}T${b.visitTime}`)
+          return isAfter(dt, now)
+        } catch {
+          return false
+        }
+      })
+      .sort((a, b) => {
+        const da = parseISO(`${a.visitDate}T${a.visitTime}`)
+        const db = parseISO(`${b.visitDate}T${b.visitTime}`)
+        return da.getTime() - db.getTime()
+      })
+      .slice(0, 3)
+  }, [bookings])
 
   useEffect(() => {
     fetchOwnerStatistics()
@@ -193,6 +217,76 @@ export const BookingManagement = () => {
               Gérez les demandes de visite de vos propriétés
             </p>
           </div>
+
+          {/* Prochains rendez-vous */}
+          {upcomingConfirmed.length > 0 && (
+            <div className="mb-8">
+              <p
+                className="uppercase tracking-widest mb-3"
+                style={{ fontSize: 10, color: BAI.inkFaint, letterSpacing: '0.12em' }}
+              >
+                Prochains rendez-vous
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {upcomingConfirmed.map((booking) => {
+                  let visitDt: Date | null = null
+                  try { visitDt = parseISO(`${booking.visitDate}T${booking.visitTime}`) } catch { /* */ }
+                  return (
+                    <div
+                      key={booking.id}
+                      className="flex items-start gap-4 p-4"
+                      style={{
+                        background: '#ffffff',
+                        border: `1px solid ${BAI.tenantBorder}`,
+                        borderRadius: 12,
+                        boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
+                      }}
+                    >
+                      {/* Icône date */}
+                      <div
+                        className="flex-shrink-0 w-12 h-12 rounded-xl flex flex-col items-center justify-center"
+                        style={{ background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}` }}
+                      >
+                        {visitDt ? (
+                          <>
+                            <span style={{ fontSize: 9, color: BAI.tenant, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', lineHeight: 1 }}>
+                              {format(visitDt, 'MMM', { locale: fr })}
+                            </span>
+                            <span style={{ fontSize: 20, color: BAI.tenant, fontWeight: 700, lineHeight: 1 }}>
+                              {format(visitDt, 'd')}
+                            </span>
+                          </>
+                        ) : (
+                          <CheckCircle className="w-5 h-5" style={{ color: BAI.tenant }} />
+                        )}
+                      </div>
+
+                      {/* Infos */}
+                      <div className="flex-1 min-w-0">
+                        <p style={{ fontSize: 13, fontWeight: 600, color: BAI.ink, marginBottom: 2 }}>
+                          {booking.tenant.firstName} {booking.tenant.lastName}
+                        </p>
+                        <div className="flex items-center gap-1 mb-1">
+                          <MapPin className="w-3 h-3 flex-shrink-0" style={{ color: BAI.inkFaint }} />
+                          <p className="truncate" style={{ fontSize: 12, color: BAI.inkMid }}>
+                            {booking.property.title}
+                          </p>
+                        </div>
+                        {visitDt && (
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3 flex-shrink-0" style={{ color: BAI.inkFaint }} />
+                            <p style={{ fontSize: 12, color: BAI.inkFaint }}>
+                              {format(visitDt, "EEEE d MMMM · HH'h'mm", { locale: fr })}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Statistics */}
           {statistics && (

@@ -27,10 +27,13 @@ class BookingController {
         })
       }
 
+      // Parse date as local time (appending T00:00:00 prevents UTC midnight shift)
+      const parsedVisitDate = new Date(`${visitDate}T00:00:00`)
+
       const booking = await bookingService.createBooking({
         propertyId,
         tenantId,
-        visitDate: new Date(visitDate),
+        visitDate: parsedVisitDate,
         visitTime,
         duration,
         tenantNotes,
@@ -129,10 +132,12 @@ class BookingController {
       if (req.query.status) filters.status = req.query.status as BookingStatus
 
       if (req.query.dateFrom) {
-        filters.dateFrom = new Date(req.query.dateFrom as string)
+        const df = req.query.dateFrom as string
+        filters.dateFrom = new Date(df.includes('T') ? df : `${df}T00:00:00`)
       }
       if (req.query.dateTo) {
-        filters.dateTo = new Date(req.query.dateTo as string)
+        const dt = req.query.dateTo as string
+        filters.dateTo = new Date(dt.includes('T') ? dt : `${dt}T00:00:00`)
       }
 
       // Role-based filtering
@@ -181,7 +186,7 @@ class BookingController {
       const { visitDate, visitTime, duration, tenantNotes, ownerNotes, status } = req.body
 
       const updateData: any = {}
-      if (visitDate) updateData.visitDate = new Date(visitDate)
+      if (visitDate) updateData.visitDate = new Date(`${visitDate}T00:00:00`)
       if (visitTime) updateData.visitTime = visitTime
       if (duration) updateData.duration = duration
       if (tenantNotes !== undefined) updateData.tenantNotes = tenantNotes
@@ -334,9 +339,12 @@ class BookingController {
         })
       }
 
+      // Parse date as local time (appending T00:00:00 prevents UTC midnight shift)
+      const parsedDate = new Date(`${date as string}T00:00:00`)
+
       const availableSlots = await bookingService.getAvailableSlots(
         propertyId,
-        new Date(date as string)
+        parsedDate
       )
 
       return res.status(200).json({

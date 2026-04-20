@@ -94,7 +94,7 @@ export default function Dashboard() {
   // ── Loading ───────────────────────────────────────────────────────────────
   if (isLoading && !statistics) {
     return (
-      <Layout>
+      <Layout showHeader={false}>
         <div style={{ background: BAI.bgBase, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{
             width: 36, height: 36, borderRadius: '50%',
@@ -110,7 +110,7 @@ export default function Dashboard() {
   // ── Empty state ───────────────────────────────────────────────────────────
   if (totalProps === 0) {
     return (
-      <Layout>
+      <Layout showHeader={false}>
         <div style={{ background: BAI.bgBase, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
           <div style={{ textAlign: 'center', maxWidth: 420 }}>
             <div style={{
@@ -148,7 +148,7 @@ export default function Dashboard() {
 
   // ── Main render ───────────────────────────────────────────────────────────
   return (
-    <Layout>
+    <Layout showHeader={false}>
       <div style={{ background: BAI.bgBase, minHeight: '100vh', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-8">
 

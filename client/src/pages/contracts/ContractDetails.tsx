@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useContractStore } from '../../store/contractStore'
 import { useAuth } from '../../hooks/useAuth'
+import { dossierService, TenantDocument } from '../../services/dossier.service'
 import { ContractClause } from '../../types/contract.types'
 import { SignaturePad } from '../../components/contract/SignaturePad'
 import { ContractPDF } from '../../components/contract/ContractPDF'
@@ -120,6 +121,7 @@ export default function ContractDetails() {
   const [actionLoading, setActionLoading] = useState(false)
   const [initialLoaded, setInitialLoaded] = useState(false)
   const [docsSaved, setDocsSaved] = useState(false)
+  const [tenantDossierDocs, setTenantDossierDocs] = useState<TenantDocument[]>([])
 
   useEffect(() => {
     if (id) {
@@ -127,6 +129,14 @@ export default function ContractDetails() {
       fetchDocuments(id)
     }
   }, [id, fetchContractById, fetchDocuments])
+
+  // Charger le dossier du locataire pour vérifier les pièces requises avant signature
+  useEffect(() => {
+    const isTenantUser = user?.id && contract?.tenantId && user.id === contract.tenantId
+    if (isTenantUser) {
+      dossierService.getDocuments().then(setTenantDossierDocs).catch(() => setTenantDossierDocs([]))
+    }
+  }, [user?.id, contract?.tenantId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load requiredDocs and customDocRequests from contract content once loaded
   useEffect(() => {
@@ -216,6 +226,16 @@ export default function ContractDetails() {
   // Le propriétaire peut signer uniquement si tous les docs locataire sont validés
   const ownerSignBlocked = ownerCanSign && !allTenantDocsValidated
   const tenantCanSign = isTenant && ['SENT', 'SIGNED_OWNER'].includes(contract.status) && !hasSigned
+
+  // Vérification du dossier locataire : IDENTITE + au moins un doc REVENUS requis
+  const REQUIRED_DOSSIER_CATEGORIES: { key: string; label: string }[] = [
+    { key: 'IDENTITE_LOCATAIRE', label: 'Pièce d\'identité' },
+    { key: 'FICHE_PAIE_1', label: 'Fiche de paie (mois M-1)' },
+  ]
+  const uploadedCategories = new Set(tenantDossierDocs.map(d => d.category))
+  const tenantDossierMissing = REQUIRED_DOSSIER_CATEGORIES.filter(c => !uploadedCategories.has(c.key))
+  const tenantSignBlocked = tenantCanSign && tenantDossierMissing.length > 0
+
   const canSign = ownerCanSign || tenantCanSign
   const canSend = isOwner && contract.status === 'DRAFT'
   const canActivate = isOwner && contract.status === 'COMPLETED'
@@ -751,7 +771,7 @@ export default function ContractDetails() {
                     </button>
                   )}
 
-                  {canSign && (
+                  {canSign && !tenantSignBlocked && (
                     <>
                       <button
                         onClick={() => {
@@ -801,6 +821,41 @@ export default function ContractDetails() {
                         </span>
                       </button>
                     </>
+                  )}
+
+                  {tenantSignBlocked && (
+                    <div style={{
+                      background: '#fdf5ec',
+                      border: '1px solid #f3c99a',
+                      borderRadius: 10,
+                      padding: '14px 18px',
+                      fontFamily: M.body,
+                      width: '100%',
+                    }}>
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle style={{ width: 18, height: 18, color: '#92400e', flexShrink: 0, marginTop: 1 }} />
+                        <div>
+                          <p style={{ fontSize: 13, fontWeight: 600, color: '#92400e', margin: '0 0 4px' }}>
+                            Signature impossible — votre dossier locatif est incomplet.
+                          </p>
+                          <p style={{ fontSize: 12, color: '#92400e', margin: '0 0 8px' }}>
+                            Les pièces suivantes sont manquantes :{' '}
+                            <strong>{tenantDossierMissing.map(c => c.label).join(', ')}</strong>.
+                          </p>
+                          <Link
+                            to="/dossier"
+                            style={{
+                              display: 'inline-flex', alignItems: 'center', gap: 5,
+                              fontSize: 12, fontWeight: 600, color: '#92400e',
+                              textDecoration: 'underline', textDecorationColor: '#f3c99a',
+                            }}
+                          >
+                            <FolderOpen style={{ width: 13, height: 13 }} />
+                            Compléter mon dossier
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
                   )}
 
                   {canActivate && (
@@ -1837,7 +1892,7 @@ export default function ContractDetails() {
                 {[
                   { key: 'property' as const, label: "J'ai vérifié les informations du logement", sub: `${contract.property?.address}, ${contract.property?.city} — ${contract.property?.surface} m²` },
                   { key: 'clauses' as const, label: "J'ai lu et j'accepte toutes les clauses du contrat", sub: `${clauses.filter(c => c.enabled).length} clause(s) applicable(s)` },
-                  { key: 'amounts' as const, label: "J'ai vérifié les montants financiers", sub: `Loyer ${contract.monthlyRent} €/mois${contract.charges ? ` + ${contract.charges} € charges` : ''}${contract.deposit ? ` — Dépôt ${contract.deposit} €` : ''}` },
+                  { key: 'amounts' as const, label: "J'ai vérifié les montants financiers", sub: `Loyer charges comprises : ${(contract.monthlyRent ?? 0) + (contract.charges ?? 0)} €/mois${contract.deposit ? ` — Dépôt de garantie : ${contract.deposit} €` : ''}` },
                 ].map(({ key, label, sub }) => (
                   <label key={key} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer' }}>
                     <div

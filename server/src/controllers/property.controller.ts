@@ -155,7 +155,9 @@ class PropertyController {
         hasElevator,
         hasGarden,
         amenities,
-        availableFrom: availableFrom ? new Date(availableFrom) : undefined,
+        availableFrom: availableFrom
+          ? new Date(availableFrom.includes('T') ? availableFrom : `${availableFrom}T00:00:00`)
+          : undefined,
         visitDuration: visitDuration ? parseInt(visitDuration) : undefined,
         visitAvailabilitySlots,
         visitDateOverrides,

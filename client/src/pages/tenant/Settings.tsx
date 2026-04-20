@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Layout } from '../../components/layout/Layout'
 import { useAuth } from '../../hooks/useAuth'
@@ -126,9 +126,32 @@ export default function TenantSettings() {
   const [notifPrefs, setNotifPrefs] = useState<NotifPrefs>(loadNotifPrefs)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [isDirty, setIsDirty] = useState(false)
+
+  // Snapshot of last saved state (to support Annuler)
+  const savedNotifPrefs = useRef<NotifPrefs>(loadNotifPrefs())
+
+  // Intercept browser tab close/refresh when dirty
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault()
+        e.returnValue = ''
+      }
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [isDirty])
 
   function updateNotif(key: keyof NotifPrefs, value: boolean) {
     setNotifPrefs(prev => ({ ...prev, [key]: value }))
+    setSaved(false)
+    setIsDirty(true)
+  }
+
+  function handleCancel() {
+    setNotifPrefs({ ...savedNotifPrefs.current })
+    setIsDirty(false)
     setSaved(false)
   }
 
@@ -136,7 +159,9 @@ export default function TenantSettings() {
     setSaving(true)
     try {
       localStorage.setItem('tenant_notif_prefs', JSON.stringify(notifPrefs))
+      savedNotifPrefs.current = { ...notifPrefs }
       await new Promise(r => setTimeout(r, 300))
+      setIsDirty(false)
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
     } finally {
@@ -146,6 +171,64 @@ export default function TenantSettings() {
 
   return (
     <Layout>
+      {/* ── Dirty bar ─────────────────────────────────────────────────────── */}
+      {isDirty && (
+        <div style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 50,
+          background: '#fdf5ec',
+          border: '1px solid #f3c99a',
+          borderLeft: 'none',
+          borderRight: 'none',
+          padding: '10px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          fontFamily: M.body,
+          gap: '12px',
+        }}>
+          <span style={{ fontSize: '13px', color: '#92400e', fontWeight: 500 }}>
+            Modifications non enregistrées
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleCancel}
+              style={{
+                fontSize: '13px',
+                fontFamily: M.body,
+                color: '#92400e',
+                background: 'transparent',
+                border: '1px solid #f3c99a',
+                borderRadius: '6px',
+                padding: '4px 14px',
+                cursor: 'pointer',
+                fontWeight: 500,
+              }}
+            >
+              Annuler
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              style={{
+                fontSize: '13px',
+                fontFamily: M.body,
+                color: '#ffffff',
+                background: '#92400e',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '4px 14px',
+                cursor: saving ? 'not-allowed' : 'pointer',
+                fontWeight: 500,
+                opacity: saving ? 0.7 : 1,
+              }}
+            >
+              {saving ? 'Enregistrement…' : 'Enregistrer'}
+            </button>
+          </div>
+        </div>
+      )}
       <div style={{ background: M.bg, minHeight: '100vh', fontFamily: M.body }}>
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 

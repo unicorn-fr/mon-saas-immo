@@ -63,9 +63,12 @@ class BookingService {
       throw new Error('This time slot is already booked')
     }
 
-    // Check if visit date is in the future
-    const visitDateTime = new Date(data.visitDate)
-    if (visitDateTime < new Date()) {
+    // Check if visit date is today or in the future (compare date portions only)
+    const visitDay = new Date(data.visitDate)
+    visitDay.setHours(0, 0, 0, 0)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    if (visitDay < today) {
       throw new Error('Visit date must be in the future')
     }
 

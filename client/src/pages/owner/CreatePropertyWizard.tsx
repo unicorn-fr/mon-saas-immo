@@ -182,7 +182,7 @@ interface BanFeature {
 
 export default function CreatePropertyWizard() {
   const navigate = useNavigate()
-  const { createProperty, isLoading } = useProperties()
+  const { createProperty, isLoading, isUploadingImages } = useProperties()
   const [step, setStep] = useState(0)
   const [state, setState] = useState<WizardState>(loadDraft)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -881,16 +881,16 @@ export default function CreatePropertyWizard() {
                 <button
                   type="button"
                   onClick={submit}
-                  disabled={isLoading}
+                  disabled={isLoading || isUploadingImages}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 8, padding: '0.75rem 1.75rem',
-                    background: isLoading ? BAI.borderStrong : BAI.owner, border: 'none', borderRadius: 10,
+                    background: (isLoading || isUploadingImages) ? BAI.borderStrong : BAI.owner, border: 'none', borderRadius: 10,
                     fontFamily: 'DM Sans', fontSize: 14, fontWeight: 600, color: '#fff',
-                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                    cursor: (isLoading || isUploadingImages) ? 'not-allowed' : 'pointer',
                   }}
                 >
-                  {isLoading ? <Loader2 size={16} /> : <Check size={16} />}
-                  {isLoading ? 'Publication…' : 'Publier le bien'}
+                  {(isLoading || isUploadingImages) ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                  {isUploadingImages ? 'Upload en cours…' : isLoading ? 'Publication…' : 'Publier le bien'}
                 </button>
               )}
             </div>
