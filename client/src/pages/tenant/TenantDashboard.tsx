@@ -127,7 +127,7 @@ export default function TenantDashboard() {
   // ── VUE BAIL ACTIF ────────────────────────────────────────────────────────
   if (activeContract) {
     return (
-      <Layout showHeader={false}>
+      <Layout>
         <div style={{ background: BAI.bgBase, minHeight: '100vh', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-8">
 
@@ -502,7 +502,7 @@ export default function TenantDashboard() {
 
   // ── VUE RECHERCHE (pas de bail actif) ─────────────────────────────────────
   return (
-    <Layout showHeader={false}>
+    <Layout>
       <div style={{ background: BAI.bgBase, minHeight: '100vh', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-8">
 

@@ -8,10 +8,10 @@ import { bookingService } from '../../services/booking.service'
 import { applicationService } from '../../services/application.service'
 import { Layout } from '../../components/layout/Layout'
 import {
-  Home, Plus, Eye, TrendingUp,
-  Euro, ArrowRight, MapPin, FileText, PenLine,
+  Home, Plus, Eye,
+  ArrowRight, MapPin, FileText, PenLine,
   AlertTriangle, CalendarCheck, Users,
-  ClipboardList, Zap, Banknote, ArrowUpRight, Clock,
+  ClipboardList, Zap, ArrowUpRight, Clock,
 } from 'lucide-react'
 import type { Application } from '../../types/application.types'
 import type { Booking } from '../../types/booking.types'
@@ -66,7 +66,6 @@ export default function Dashboard() {
   const drafts            = contractStats?.draft || 0
   const urgentContracts   = contracts.filter((c) => c.status === 'SIGNED_TENANT')
   const estimatedYield    = monthlyRevenue > 0 ? ((annualRevenue / (monthlyRevenue * 200)) * 100).toFixed(1) : '—'
-  const cashflow          = monthlyRevenue
 
   const statusBadge: Record<string, { label: string; bg: string; text: string; border: string }> = {
     AVAILABLE: { label: 'Disponible',  bg: '#edf7f2', text: '#1b5e3b', border: '#9fd4ba' },
@@ -94,7 +93,7 @@ export default function Dashboard() {
   // ── Loading ───────────────────────────────────────────────────────────────
   if (isLoading && !statistics) {
     return (
-      <Layout showHeader={false}>
+      <Layout>
         <div style={{ background: BAI.bgBase, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{
             width: 36, height: 36, borderRadius: '50%',
@@ -110,7 +109,7 @@ export default function Dashboard() {
   // ── Empty state ───────────────────────────────────────────────────────────
   if (totalProps === 0) {
     return (
-      <Layout showHeader={false}>
+      <Layout>
         <div style={{ background: BAI.bgBase, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
           <div style={{ textAlign: 'center', maxWidth: 420 }}>
             <div style={{
@@ -148,7 +147,7 @@ export default function Dashboard() {
 
   // ── Main render ───────────────────────────────────────────────────────────
   return (
-    <Layout showHeader={false}>
+    <Layout>
       <div style={{ background: BAI.bgBase, minHeight: '100vh', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-8">
 
@@ -760,40 +759,6 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Finance card */}
-              <div style={{ ...cardBase, padding: 20 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                  <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, margin: 0 }}>
-                    Finances
-                  </p>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  {[
-                    { label: 'Revenus annuels',  value: `${annualRevenue.toLocaleString('fr-FR')} €`, icon: <Banknote size={15} /> },
-                    { label: 'Cash-flow / mois', value: `${cashflow.toLocaleString('fr-FR')} €`,      icon: <Euro size={15} /> },
-                    { label: 'Rendement',         value: `${estimatedYield}%`,                          icon: <TrendingUp size={15} /> },
-                  ].map(({ label, value, icon }) => (
-                    <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{
-                          width: 28, height: 28, borderRadius: 8,
-                          background: BAI.ownerLight, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          color: BAI.owner, flexShrink: 0,
-                        }}>
-                          {icon}
-                        </div>
-                        <span style={{ fontSize: 12, color: BAI.inkMid }}>{label}</span>
-                      </div>
-                      <span style={{
-                        fontFamily: "'Cormorant Garamond', Georgia, serif",
-                        fontSize: 20, fontWeight: 700, color: BAI.ink,
-                      }}>
-                        {value}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
 
 
             </div>
