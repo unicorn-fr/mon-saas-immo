@@ -13,17 +13,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { X, Shield, Lock, Loader2, CheckCircle, XCircle, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
 import { apiClient } from '../../services/api.service'
-
-const M = {
-  owner:   '#1a3270',
-  ownerL:  '#eaf0fb',
-  ownerB:  '#b8ccf0',
-  ink:     '#0d0c0a',
-  inkFaint:'#9e9b96',
-  border:  '#e4e1db',
-  muted:   '#f4f2ee',
-  surface: '#ffffff',
-}
+import { BAI } from '../../constants/bailio-tokens'
 
 export interface WatermarkedViewerActions {
   onValidate?: () => void
@@ -186,8 +176,8 @@ export function WatermarkedViewer({
         <div
           className="w-full max-w-[1100px]"
           style={{
-          background: M.surface,
-          border: `1px solid ${M.border}`,
+          background: BAI.bgSurface,
+          border: `1px solid ${BAI.border}`,
           borderRadius: 14,
           boxShadow: '0 12px 48px rgba(13,12,10,0.28)',
           height: '94dvh',
@@ -196,7 +186,7 @@ export function WatermarkedViewer({
         }}>
           {/* Header */}
           <div style={{
-            background: M.owner,
+            background: BAI.owner,
             padding: '12px 18px',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             flexShrink: 0,
@@ -234,15 +224,15 @@ export function WatermarkedViewer({
 
           {/* Bandeau protection + contrôles zoom image */}
           <div style={{
-            background: M.ownerL,
-            borderBottom: `1px solid ${M.ownerB}`,
+            background: BAI.ownerLight,
+            borderBottom: `1px solid ${BAI.ownerBorder}`,
             padding: '7px 18px',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
             flexShrink: 0,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
-              <Lock style={{ width: 13, height: 13, color: M.owner, flexShrink: 0 }} />
-              <p style={{ fontSize: 11, color: M.owner, fontFamily: "'DM Sans', sans-serif", margin: 0 }}>
+              <Lock style={{ width: 13, height: 13, color: BAI.owner, flexShrink: 0 }} />
+              <p style={{ fontSize: 11, color: BAI.owner, fontFamily: "'DM Sans', sans-serif", margin: 0 }}>
                 Accès sécurisé · Filigrane gravé dans le fichier · Copie et téléchargement bloqués
               </p>
             </div>
@@ -252,8 +242,8 @@ export function WatermarkedViewer({
                   onClick={() => setZoom(z => Math.max(0.5, +(z - 0.25).toFixed(2)))}
                   title="Dézoomer"
                   style={{
-                    width: 28, height: 28, borderRadius: 6, border: `1px solid ${M.ownerB}`,
-                    background: 'rgba(255,255,255,0.6)', color: M.owner,
+                    width: 28, height: 28, borderRadius: 6, border: `1px solid ${BAI.ownerBorder}`,
+                    background: 'rgba(255,255,255,0.6)', color: BAI.owner,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     cursor: 'pointer',
                   }}
@@ -261,7 +251,7 @@ export function WatermarkedViewer({
                   <ZoomOut style={{ width: 13, height: 13 }} />
                 </button>
                 <span style={{
-                  fontSize: 11, fontWeight: 600, color: M.owner,
+                  fontSize: 11, fontWeight: 600, color: BAI.owner,
                   fontFamily: "'DM Sans', sans-serif", minWidth: 36, textAlign: 'center',
                 }}>
                   {Math.round(zoom * 100)}%
@@ -270,8 +260,8 @@ export function WatermarkedViewer({
                   onClick={() => setZoom(z => Math.min(4, +(z + 0.25).toFixed(2)))}
                   title="Zoomer"
                   style={{
-                    width: 28, height: 28, borderRadius: 6, border: `1px solid ${M.ownerB}`,
-                    background: 'rgba(255,255,255,0.6)', color: M.owner,
+                    width: 28, height: 28, borderRadius: 6, border: `1px solid ${BAI.ownerBorder}`,
+                    background: 'rgba(255,255,255,0.6)', color: BAI.owner,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     cursor: 'pointer',
                   }}
@@ -282,8 +272,8 @@ export function WatermarkedViewer({
                   onClick={() => setZoom(1)}
                   title="Réinitialiser"
                   style={{
-                    width: 28, height: 28, borderRadius: 6, border: `1px solid ${M.ownerB}`,
-                    background: 'rgba(255,255,255,0.6)', color: M.owner,
+                    width: 28, height: 28, borderRadius: 6, border: `1px solid ${BAI.ownerBorder}`,
+                    background: 'rgba(255,255,255,0.6)', color: BAI.owner,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     cursor: 'pointer',
                   }}
@@ -342,8 +332,8 @@ export function WatermarkedViewer({
                 alignItems: 'center', justifyContent: 'center',
                 gap: 12,
               }}>
-                <Loader2 style={{ width: 28, height: 28, color: M.owner }} className="animate-spin" />
-                <p style={{ fontSize: 13, color: M.inkFaint, fontFamily: "'DM Sans', sans-serif" }}>
+                <Loader2 style={{ width: 28, height: 28, color: BAI.owner }} className="animate-spin" />
+                <p style={{ fontSize: 13, color: BAI.inkFaint, fontFamily: "'DM Sans', sans-serif" }}>
                   Chargement sécurisé…
                 </p>
               </div>
@@ -356,11 +346,11 @@ export function WatermarkedViewer({
                 alignItems: 'center', justifyContent: 'center',
                 gap: 12, padding: 32,
               }}>
-                <Shield style={{ width: 36, height: 36, color: M.owner, opacity: 0.3 }} />
-                <p style={{ fontSize: 14, color: M.ink, fontFamily: "'DM Sans', sans-serif", fontWeight: 600 }}>
+                <Shield style={{ width: 36, height: 36, color: BAI.owner, opacity: 0.3 }} />
+                <p style={{ fontSize: 14, color: BAI.ink, fontFamily: "'DM Sans', sans-serif", fontWeight: 600 }}>
                   Document non disponible
                 </p>
-                <p style={{ fontSize: 12, color: M.inkFaint, fontFamily: "'DM Sans', sans-serif", textAlign: 'center' }}>
+                <p style={{ fontSize: 12, color: BAI.inkFaint, fontFamily: "'DM Sans', sans-serif", textAlign: 'center' }}>
                   {error}
                 </p>
               </div>
@@ -378,7 +368,7 @@ export function WatermarkedViewer({
                   ref={imgContainerRef}
                   style={{
                     position: 'absolute', inset: 0,
-                    overflow: 'auto', background: M.muted,
+                    overflow: 'auto', background: BAI.bgMuted,
                     display: 'flex', alignItems: zoom <= 1 ? 'center' : 'flex-start',
                     justifyContent: zoom <= 1 ? 'center' : 'flex-start',
                     cursor: zoom > 1 ? 'grab' : 'default',
@@ -410,13 +400,13 @@ export function WatermarkedViewer({
           {/* Pied — légal + actions optionnelles */}
           {actions ? (
             <div style={{
-              background: M.surface,
-              borderTop: `1px solid ${M.border}`,
+              background: BAI.bgSurface,
+              borderTop: `1px solid ${BAI.border}`,
               flexShrink: 0,
             }}>
               {rejectMode ? (
                 <div style={{ padding: '12px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <p style={{ fontSize: 12, fontWeight: 600, color: M.ink, fontFamily: "'DM Sans', sans-serif", margin: 0 }}>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: BAI.ink, fontFamily: "'DM Sans', sans-serif", margin: 0 }}>
                     Motif du refus
                   </p>
                   <textarea
@@ -426,9 +416,9 @@ export function WatermarkedViewer({
                     autoFocus
                     style={{
                       width: '100%', height: 70, resize: 'none',
-                      background: M.muted, border: `1px solid ${M.border}`,
+                      background: BAI.bgMuted, border: `1px solid ${BAI.border}`,
                       borderRadius: 8, padding: '8px 10px',
-                      fontSize: 12, color: M.ink, outline: 'none',
+                      fontSize: 12, color: BAI.ink, outline: 'none',
                       fontFamily: "'DM Sans', sans-serif",
                     }}
                   />
@@ -436,8 +426,8 @@ export function WatermarkedViewer({
                     <button
                       onClick={() => { setRejectMode(false); setRejectInput('') }}
                       style={{
-                        padding: '7px 14px', borderRadius: 7, border: `1px solid ${M.border}`,
-                        background: M.surface, color: M.inkFaint, fontSize: 12, cursor: 'pointer',
+                        padding: '7px 14px', borderRadius: 7, border: `1px solid ${BAI.border}`,
+                        background: BAI.bgSurface, color: BAI.inkFaint, fontSize: 12, cursor: 'pointer',
                         fontFamily: "'DM Sans', sans-serif",
                       }}
                     >
@@ -448,8 +438,8 @@ export function WatermarkedViewer({
                       disabled={!rejectInput.trim()}
                       style={{
                         padding: '7px 14px', borderRadius: 7, border: 'none',
-                        background: rejectInput.trim() ? '#dc2626' : M.border,
-                        color: rejectInput.trim() ? '#ffffff' : M.inkFaint,
+                        background: rejectInput.trim() ? '#dc2626' : BAI.border,
+                        color: rejectInput.trim() ? '#ffffff' : BAI.inkFaint,
                         fontSize: 12, cursor: rejectInput.trim() ? 'pointer' : 'not-allowed',
                         fontFamily: "'DM Sans', sans-serif", fontWeight: 600,
                       }}
@@ -460,7 +450,7 @@ export function WatermarkedViewer({
                 </div>
               ) : (
                 <div style={{ padding: '10px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                  <p style={{ fontSize: 10, color: M.inkFaint, fontFamily: "'DM Sans', sans-serif", margin: 0 }}>
+                  <p style={{ fontSize: 10, color: BAI.inkFaint, fontFamily: "'DM Sans', sans-serif", margin: 0 }}>
                     Ce document correspond-il à la pièce demandée ?
                   </p>
                   <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
@@ -497,11 +487,11 @@ export function WatermarkedViewer({
           ) : (
             <div style={{
               padding: '8px 18px',
-              background: M.muted,
-              borderTop: `1px solid ${M.border}`,
+              background: BAI.bgMuted,
+              borderTop: `1px solid ${BAI.border}`,
               flexShrink: 0,
             }}>
-              <p style={{ fontSize: 10, color: M.inkFaint, fontFamily: "'DM Sans', sans-serif", textAlign: 'center', margin: 0 }}>
+              <p style={{ fontSize: 10, color: BAI.inkFaint, fontFamily: "'DM Sans', sans-serif", textAlign: 'center', margin: 0 }}>
                 Document confidentiel{contractRef ? ` · Contrat ${contractRef}` : ''} · Propriété de {tenantName} · {today} · Toute reproduction est interdite
               </p>
             </div>

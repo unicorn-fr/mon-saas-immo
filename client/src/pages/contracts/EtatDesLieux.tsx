@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import { BAI } from '../../constants/bailio-tokens'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useContractStore } from '../../store/contractStore'
 import { useDocumentStore } from '../../store/documentStore'
@@ -38,18 +39,6 @@ import { celebrateSmall } from '../../utils/celebrate'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
-const M = {
-  bg: '#fafaf8', surface: '#ffffff', muted: '#f4f2ee', inputBg: '#f8f7f4',
-  ink: '#0d0c0a', inkMid: '#5a5754', inkFaint: '#9e9b96',
-  night: '#1a1a2e', caramel: '#c4976a', caramelLight: '#fdf5ec',
-  owner: '#1a3270', ownerLight: '#eaf0fb', ownerBorder: '#b8ccf0',
-  tenant: '#1b5e3b', tenantLight: '#edf7f2', tenantBorder: '#9fd4ba',
-  border: '#e4e1db', borderMid: '#ccc9c3',
-  danger: '#9b1c1c', dangerBg: '#fef2f2',
-  warning: '#92400e', warningBg: '#fdf5ec',
-  display: "'Cormorant Garamond', Georgia, serif",
-  body: "'DM Sans', system-ui, sans-serif",
-}
 
 export default function EtatDesLieux() {
   const { id } = useParams<{ id: string }>()
@@ -92,18 +81,18 @@ export default function EtatDesLieux() {
       <Layout>
         <div
           className="flex items-center justify-center min-h-screen"
-          style={{ background: M.bg, fontFamily: M.body }}
+          style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}
         >
           <div className="flex flex-col items-center gap-3">
             <div
               style={{
                 width: 36, height: 36, borderRadius: '50%',
-                border: `2px solid ${M.border}`,
-                borderTopColor: M.night,
+                border: `2px solid ${BAI.border}`,
+                borderTopColor: BAI.night,
               }}
               className="animate-spin"
             />
-            <p style={{ fontSize: 13, color: M.inkFaint }}>Chargement…</p>
+            <p style={{ fontSize: 13, color: BAI.inkFaint }}>Chargement…</p>
           </div>
         </div>
       </Layout>
@@ -280,94 +269,94 @@ export default function EtatDesLieux() {
 
   // Style helpers
   const cardStyle: React.CSSProperties = {
-    background: M.surface,
-    border: `1px solid ${M.border}`,
+    background: BAI.bgSurface,
+    border: `1px solid ${BAI.border}`,
     borderRadius: 12,
     boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
-    fontFamily: M.body,
+    fontFamily: BAI.fontBody,
   }
 
   const inputStyle: React.CSSProperties = {
-    background: M.inputBg,
-    border: `1px solid ${M.border}`,
+    background: BAI.bgInput,
+    border: `1px solid ${BAI.border}`,
     borderRadius: 8,
     padding: '8px 10px',
     fontSize: 13,
-    color: M.ink,
+    color: BAI.ink,
     outline: 'none',
-    fontFamily: M.body,
+    fontFamily: BAI.fontBody,
   }
 
   const btnPrimary: React.CSSProperties = {
     display: 'inline-flex', alignItems: 'center', gap: 7,
     padding: '10px 18px', borderRadius: 8,
-    background: M.night, color: '#ffffff',
-    fontFamily: M.body, fontWeight: 500, fontSize: 13,
+    background: BAI.night, color: '#ffffff',
+    fontFamily: BAI.fontBody, fontWeight: 500, fontSize: 13,
     border: 'none', cursor: 'pointer',
   }
 
   const btnGhost: React.CSSProperties = {
     display: 'inline-flex', alignItems: 'center', gap: 7,
     padding: '10px 18px', borderRadius: 8,
-    background: M.surface, color: M.inkMid,
-    fontFamily: M.body, fontWeight: 500, fontSize: 13,
-    border: `1px solid ${M.border}`, cursor: 'pointer',
+    background: BAI.bgSurface, color: BAI.inkMid,
+    fontFamily: BAI.fontBody, fontWeight: 500, fontSize: 13,
+    border: `1px solid ${BAI.border}`, cursor: 'pointer',
   }
 
   return (
     <Layout>
-      <div style={{ minHeight: '100vh', background: M.bg, fontFamily: M.body }}>
+      <div style={{ minHeight: '100vh', background: BAI.bgBase, fontFamily: BAI.fontBody }}>
 
         {/* Header */}
-        <div style={{ background: M.surface, borderBottom: `1px solid ${M.border}` }}>
+        <div style={{ background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}` }}>
           <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-3 sm:gap-4">
                 <button
                   onClick={() => navigate(`/contracts/${id}`)}
                   style={{
-                    padding: 8, background: M.surface,
-                    border: `1px solid ${M.border}`, borderRadius: 8,
-                    color: M.inkMid, cursor: 'pointer',
+                    padding: 8, background: BAI.bgSurface,
+                    border: `1px solid ${BAI.border}`, borderRadius: 8,
+                    color: BAI.inkMid, cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}
-                  onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
-                  onMouseLeave={e => (e.currentTarget.style.background = M.surface)}
+                  onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
+                  onMouseLeave={e => (e.currentTarget.style.background = BAI.bgSurface)}
                 >
                   <ArrowLeft style={{ width: 18, height: 18 }} />
                 </button>
                 <div>
                   <p style={{
-                    fontFamily: M.body, fontSize: 10, textTransform: 'uppercase',
-                    letterSpacing: '0.12em', color: M.inkFaint, marginBottom: 4,
+                    fontFamily: BAI.fontBody, fontSize: 10, textTransform: 'uppercase',
+                    letterSpacing: '0.12em', color: BAI.inkFaint, marginBottom: 4,
                   }}>
                     Gestion locative
                   </p>
                   <h1 style={{
-                    fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
-                    fontSize: 'clamp(22px, 5vw, 32px)', color: M.ink, lineHeight: 1.1, margin: 0,
+                    fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+                    fontSize: 'clamp(22px, 5vw, 32px)', color: BAI.ink, lineHeight: 1.1, margin: 0,
                     display: 'flex', alignItems: 'center', gap: 10,
                   }}>
-                    <ClipboardCheck style={{ width: 26, height: 26, color: M.owner }} />
+                    <ClipboardCheck style={{ width: 26, height: 26, color: BAI.owner }} />
                     État des Lieux
                   </h1>
-                  <p style={{ fontSize: 13, color: M.inkMid, marginTop: 2 }}>{contract.property?.title}</p>
+                  <p style={{ fontSize: 13, color: BAI.inkMid, marginTop: 2 }}>{contract.property?.title}</p>
                 </div>
               </div>
 
               {/* Type toggle */}
               <div style={{
                 display: 'flex',
-                background: M.muted, borderRadius: 10, padding: 4,
-                border: `1px solid ${M.border}`,
+                background: BAI.bgMuted, borderRadius: 10, padding: 4,
+                border: `1px solid ${BAI.border}`,
               }}>
                 <button
                   onClick={() => setEdlType('ENTREE')}
                   style={{
                     padding: '8px 18px', borderRadius: 7, fontSize: 13, fontWeight: 500,
-                    fontFamily: M.body, cursor: 'pointer', border: 'none',
-                    background: edlType === 'ENTREE' ? M.surface : 'transparent',
-                    color: edlType === 'ENTREE' ? M.night : M.inkFaint,
+                    fontFamily: BAI.fontBody, cursor: 'pointer', border: 'none',
+                    background: edlType === 'ENTREE' ? BAI.bgSurface : 'transparent',
+                    color: edlType === 'ENTREE' ? BAI.night : BAI.inkFaint,
                     boxShadow: edlType === 'ENTREE' ? '0 1px 4px rgba(13,12,10,0.08)' : 'none',
                     transition: 'all 0.15s',
                   }}
@@ -378,9 +367,9 @@ export default function EtatDesLieux() {
                   onClick={() => setEdlType('SORTIE')}
                   style={{
                     padding: '8px 18px', borderRadius: 7, fontSize: 13, fontWeight: 500,
-                    fontFamily: M.body, cursor: 'pointer', border: 'none',
-                    background: edlType === 'SORTIE' ? M.surface : 'transparent',
-                    color: edlType === 'SORTIE' ? M.night : M.inkFaint,
+                    fontFamily: BAI.fontBody, cursor: 'pointer', border: 'none',
+                    background: edlType === 'SORTIE' ? BAI.bgSurface : 'transparent',
+                    color: edlType === 'SORTIE' ? BAI.night : BAI.inkFaint,
                     boxShadow: edlType === 'SORTIE' ? '0 1px 4px rgba(13,12,10,0.08)' : 'none',
                     transition: 'all 0.15s',
                   }}
@@ -400,15 +389,15 @@ export default function EtatDesLieux() {
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 12,
                 padding: '14px 18px',
-                background: M.ownerLight, border: `1px solid ${M.ownerBorder}`,
+                background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`,
                 borderRadius: 12,
               }}>
-                <Lock style={{ width: 18, height: 18, color: M.owner, flexShrink: 0 }} />
+                <Lock style={{ width: 18, height: 18, color: BAI.owner, flexShrink: 0 }} />
                 <div>
-                  <p style={{ fontWeight: 600, fontSize: 14, color: M.owner, margin: 0 }}>
+                  <p style={{ fontWeight: 600, fontSize: 14, color: BAI.owner, margin: 0 }}>
                     État des lieux finalisé — lecture seule
                   </p>
-                  <p style={{ fontSize: 12, color: M.owner, opacity: 0.75, margin: '2px 0 0' }}>
+                  <p style={{ fontSize: 12, color: BAI.owner, opacity: 0.75, margin: '2px 0 0' }}>
                     Verrouillé le{' '}
                     {format(new Date((edl as any).lockedAt), 'dd MMM yyyy à HH:mm', { locale: fr })}.
                     {' '}Aucune modification n'est possible.
@@ -420,11 +409,11 @@ export default function EtatDesLieux() {
             {/* PDF Downloads & Upload */}
             <div style={{ ...cardStyle, padding: '24px' }}>
               <h3 style={{
-                fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
-                fontSize: 20, color: M.ink, marginBottom: 16,
+                fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+                fontSize: 20, color: BAI.ink, marginBottom: 16,
                 display: 'flex', alignItems: 'center', gap: 8,
               }}>
-                <FileText style={{ width: 18, height: 18, color: M.owner }} />
+                <FileText style={{ width: 18, height: 18, color: BAI.owner }} />
                 Documents EDL
               </h3>
 
@@ -487,9 +476,9 @@ export default function EtatDesLieux() {
                   style={{
                     ...btnGhost,
                     opacity: uploadingPhoto ? 0.5 : 1,
-                    color: M.tenant,
-                    borderColor: M.tenantBorder,
-                    background: M.tenantLight,
+                    color: BAI.tenant,
+                    borderColor: BAI.tenantBorder,
+                    background: BAI.tenantLight,
                   }}
                   title="Prendre une photo avec l'appareil photo (mobile)"
                 >
@@ -522,13 +511,13 @@ export default function EtatDesLieux() {
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 12,
                   padding: '12px 14px',
-                  background: M.tenantLight, border: `1px solid ${M.tenantBorder}`,
+                  background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`,
                   borderRadius: 8,
                 }}>
-                  <CheckCircle style={{ width: 18, height: 18, color: M.tenant, flexShrink: 0 }} />
+                  <CheckCircle style={{ width: 18, height: 18, color: BAI.tenant, flexShrink: 0 }} />
                   <div className="flex-1 min-w-0">
-                    <p style={{ fontSize: 13, fontWeight: 600, color: M.tenant }}>EDL scanné téléversé</p>
-                    <p style={{ fontSize: 11, color: M.tenant, opacity: 0.75 }} className="truncate">
+                    <p style={{ fontSize: 13, fontWeight: 600, color: BAI.tenant }}>EDL scanné téléversé</p>
+                    <p style={{ fontSize: 11, color: BAI.tenant, opacity: 0.75 }} className="truncate">
                       {uploadedEdl.fileName}
                     </p>
                   </div>
@@ -537,11 +526,11 @@ export default function EtatDesLieux() {
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
-                      padding: 6, borderRadius: 6, color: M.tenant,
+                      padding: 6, borderRadius: 6, color: BAI.tenant,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}
                     title="Voir"
-                    onMouseEnter={e => (e.currentTarget.style.background = M.tenantBorder)}
+                    onMouseEnter={e => (e.currentTarget.style.background = BAI.tenantBorder)}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
                     <Eye style={{ width: 15, height: 15 }} />
@@ -550,17 +539,17 @@ export default function EtatDesLieux() {
                     onClick={handleDeleteEdl}
                     style={{
                       padding: 6, borderRadius: 6, background: 'none', border: 'none',
-                      cursor: 'pointer', color: M.inkFaint,
+                      cursor: 'pointer', color: BAI.inkFaint,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}
                     title="Supprimer"
                     onMouseEnter={e => {
-                      e.currentTarget.style.background = M.dangerBg
-                      e.currentTarget.style.color = M.danger
+                      e.currentTarget.style.background = BAI.errorLight
+                      e.currentTarget.style.color = BAI.error
                     }}
                     onMouseLeave={e => {
                       e.currentTarget.style.background = 'none'
-                      e.currentTarget.style.color = M.inkFaint
+                      e.currentTarget.style.color = BAI.inkFaint
                     }}
                   >
                     <Trash2 style={{ width: 15, height: 15 }} />
@@ -568,7 +557,7 @@ export default function EtatDesLieux() {
                 </div>
               )}
 
-              <p style={{ fontSize: 11, color: M.inkFaint, marginTop: 12 }}>
+              <p style={{ fontSize: 11, color: BAI.inkFaint, marginTop: 12 }}>
                 Format accepté : PDF uniquement — Taille max : 5 Mo
               </p>
             </div>
@@ -588,45 +577,45 @@ export default function EtatDesLieux() {
                     style={{
                       width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                       padding: '16px 20px', background: 'none', border: 'none', cursor: 'pointer',
-                      fontFamily: M.body,
+                      fontFamily: BAI.fontBody,
                     }}
-                    onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
+                    onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
                     onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                   >
-                    <h3 style={{ fontWeight: 600, fontSize: 15, color: M.ink }}>{room.name}</h3>
+                    <h3 style={{ fontWeight: 600, fontSize: 15, color: BAI.ink }}>{room.name}</h3>
                     <div className="flex items-center gap-3">
                       {remarques > 0 ? (
                         <span style={{
-                          fontSize: 11, fontWeight: 600, fontFamily: M.body,
-                          background: M.warningBg, color: M.warning,
-                          border: `1px solid ${M.caramel}`, borderRadius: 20,
+                          fontSize: 11, fontWeight: 600, fontFamily: BAI.fontBody,
+                          background: BAI.warningLight, color: BAI.warning,
+                          border: `1px solid ${BAI.caramel}`, borderRadius: 20,
                           padding: '2px 8px',
                         }}>
                           {remarques} remarque(s)
                         </span>
                       ) : (
-                        <span style={{ fontSize: 11, color: M.inkFaint }}>RAS</span>
+                        <span style={{ fontSize: 11, color: BAI.inkFaint }}>RAS</span>
                       )}
                       {isExpanded
-                        ? <ChevronDown style={{ width: 16, height: 16, color: M.inkFaint }} />
-                        : <ChevronRight style={{ width: 16, height: 16, color: M.inkFaint }} />
+                        ? <ChevronDown style={{ width: 16, height: 16, color: BAI.inkFaint }} />
+                        : <ChevronRight style={{ width: 16, height: 16, color: BAI.inkFaint }} />
                       }
                     </div>
                   </button>
 
                   {isExpanded && (
-                    <div style={{ borderTop: `1px solid ${M.border}` }}>
+                    <div style={{ borderTop: `1px solid ${BAI.border}` }}>
                       {room.elements.map((element, idx) => (
                         <div
                           key={element.id}
                           style={{
                             padding: '12px 16px',
-                            borderBottom: idx < room.elements.length - 1 ? `1px solid ${M.border}` : 'none',
+                            borderBottom: idx < room.elements.length - 1 ? `1px solid ${BAI.border}` : 'none',
                           }}
                         >
                           {/* Mobile-first: stack label+etat / observation */}
                           <div className="flex flex-col gap-2">
-                            <p style={{ fontSize: 13, fontWeight: 500, color: M.ink }}>
+                            <p style={{ fontSize: 13, fontWeight: 500, color: BAI.ink }}>
                               {element.label}
                             </p>
                             {/* État selector — pill buttons, large tap targets on mobile */}
@@ -637,10 +626,10 @@ export default function EtatDesLieux() {
                                   onClick={() => updateElement(room.id, element.id, 'etat', etat)}
                                   style={{
                                     padding: '6px 12px', borderRadius: 6, fontSize: 12, fontWeight: 600,
-                                    fontFamily: M.body, cursor: 'pointer', border: 'none',
+                                    fontFamily: BAI.fontBody, cursor: 'pointer', border: 'none',
                                     minHeight: 36,
-                                    background: element.etat === etat ? undefined : M.muted,
-                                    color: element.etat === etat ? undefined : M.inkFaint,
+                                    background: element.etat === etat ? undefined : BAI.bgMuted,
+                                    color: element.etat === etat ? undefined : BAI.inkFaint,
                                   }}
                                   className={element.etat === etat ? ETAT_COLORS[etat] : ''}
                                 >
@@ -668,17 +657,17 @@ export default function EtatDesLieux() {
             {/* Compteurs */}
             <div style={{ ...cardStyle, padding: '24px' }}>
               <h3 style={{
-                fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
-                fontSize: 20, color: M.ink, marginBottom: 16,
+                fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+                fontSize: 20, color: BAI.ink, marginBottom: 16,
                 display: 'flex', alignItems: 'center', gap: 8,
               }}>
-                <Gauge style={{ width: 18, height: 18, color: M.owner }} />
+                <Gauge style={{ width: 18, height: 18, color: BAI.owner }} />
                 Relevés des compteurs
               </h3>
               <div className="space-y-4">
                 {edl.compteurs.map((compteur, index) => (
                   <div key={compteur.type} className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
-                    <label style={{ fontSize: 13, fontWeight: 500, color: M.ink }}>{compteur.label}</label>
+                    <label style={{ fontSize: 13, fontWeight: 500, color: BAI.ink }}>{compteur.label}</label>
                     <input
                       type="text"
                       placeholder="N° compteur"
@@ -701,17 +690,17 @@ export default function EtatDesLieux() {
             {/* Clés */}
             <div style={{ ...cardStyle, padding: '24px' }}>
               <h3 style={{
-                fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
-                fontSize: 20, color: M.ink, marginBottom: 16,
+                fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+                fontSize: 20, color: BAI.ink, marginBottom: 16,
                 display: 'flex', alignItems: 'center', gap: 8,
               }}>
-                <Key style={{ width: 18, height: 18, color: M.owner }} />
+                <Key style={{ width: 18, height: 18, color: BAI.owner }} />
                 Remise des clés
               </h3>
               <div className="space-y-3">
                 {edl.cles.map((cle, index) => (
                   <div key={cle.type} className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
-                    <label style={{ fontSize: 13, fontWeight: 500, color: M.ink }}>{cle.type}</label>
+                    <label style={{ fontSize: 13, fontWeight: 500, color: BAI.ink }}>{cle.type}</label>
                     <input
                       type="number"
                       min={0}
@@ -735,8 +724,8 @@ export default function EtatDesLieux() {
             {/* Observations générales */}
             <div style={{ ...cardStyle, padding: '24px' }}>
               <h3 style={{
-                fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
-                fontSize: 20, color: M.ink, marginBottom: 16,
+                fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+                fontSize: 20, color: BAI.ink, marginBottom: 16,
               }}>
                 Observations générales
               </h3>
@@ -759,8 +748,8 @@ export default function EtatDesLieux() {
               <button
                 onClick={() => navigate(`/contracts/${id}`)}
                 style={btnGhost}
-                onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
-                onMouseLeave={e => (e.currentTarget.style.background = M.surface)}
+                onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
+                onMouseLeave={e => (e.currentTarget.style.background = BAI.bgSurface)}
               >
                 Retour au contrat
               </button>
@@ -770,8 +759,8 @@ export default function EtatDesLieux() {
                     onClick={handleSave}
                     disabled={saving}
                     style={{ ...btnGhost, opacity: saving ? 0.5 : 1 }}
-                    onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
-                    onMouseLeave={e => (e.currentTarget.style.background = M.surface)}
+                    onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
+                    onMouseLeave={e => (e.currentTarget.style.background = BAI.bgSurface)}
                   >
                     <Save style={{ width: 15, height: 15 }} />
                     {saving ? 'Sauvegarde...' : 'Sauvegarder'}
@@ -781,7 +770,7 @@ export default function EtatDesLieux() {
                     disabled={saving}
                     style={{
                       ...btnPrimary,
-                      background: M.tenant,
+                      background: BAI.tenant,
                       opacity: saving ? 0.5 : 1,
                     }}
                   >
@@ -794,9 +783,9 @@ export default function EtatDesLieux() {
                 <div style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                   padding: '10px 16px', borderRadius: 8,
-                  background: M.ownerLight, color: M.owner,
-                  border: `1px solid ${M.ownerBorder}`,
-                  fontSize: 13, fontFamily: M.body,
+                  background: BAI.ownerLight, color: BAI.owner,
+                  border: `1px solid ${BAI.ownerBorder}`,
+                  fontSize: 13, fontFamily: BAI.fontBody,
                 }}>
                   <Lock style={{ width: 14, height: 14 }} />
                   EDL verrouillé

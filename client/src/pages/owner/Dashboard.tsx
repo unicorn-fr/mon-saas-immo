@@ -160,7 +160,7 @@ export default function Dashboard() {
               <h1 style={{
                 fontFamily: "'Cormorant Garamond', Georgia, serif",
                 fontWeight: 700, fontStyle: 'italic',
-                fontSize: 'clamp(32px, 6vw, 52px)', color: BAI.ink, lineHeight: 1.05, margin: 0,
+                fontSize: 'clamp(22px, 4vw, 52px)', color: BAI.ink, lineHeight: 1.05, margin: 0,
               }}>
                 Bonjour, {user?.firstName}
               </h1>

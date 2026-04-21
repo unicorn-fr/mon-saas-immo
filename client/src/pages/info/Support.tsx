@@ -2,21 +2,7 @@ import { Link } from 'react-router-dom'
 import { MessageCircle, Mail, FileText, Shield } from 'lucide-react'
 import { Layout } from '../../components/layout/Layout'
 import Footer from '../../components/layout/Footer'
-
-const M = {
-  bg: '#fafaf8',
-  surface: '#ffffff',
-  muted: '#f4f2ee',
-  ink: '#0d0c0a',
-  inkMid: '#5a5754',
-  inkFaint: '#9e9b96',
-  night: '#1a1a2e',
-  caramel: '#c4976a',
-  caramelLight: '#fdf5ec',
-  border: '#e4e1db',
-  display: "'Cormorant Garamond', Georgia, serif",
-  body: "'DM Sans', system-ui, sans-serif",
-}
+import { BAI } from '../../constants/bailio-tokens'
 
 const SUPPORT_LINKS = [
   {
@@ -24,48 +10,48 @@ const SUPPORT_LINKS = [
     icon: MessageCircle,
     title: 'FAQ',
     description: 'Consultez les questions les plus fréquemment posées par nos utilisateurs.',
-    iconBg: M.muted,
-    iconColor: M.night,
+    iconBg: BAI.bgMuted,
+    iconColor: BAI.night,
   },
   {
     to: '/contact',
     icon: Mail,
     title: 'Nous contacter',
     description: 'Envoyez-nous un message et recevez une réponse sous 24h.',
-    iconBg: M.muted,
-    iconColor: M.night,
+    iconBg: BAI.bgMuted,
+    iconColor: BAI.night,
   },
   {
     to: '/cgu',
     icon: FileText,
     title: 'Conditions d\'utilisation',
     description: 'Consultez nos CGU et nos conditions de service.',
-    iconBg: M.caramelLight,
-    iconColor: M.caramel,
+    iconBg: BAI.caramelLight,
+    iconColor: BAI.caramel,
   },
   {
     to: '/confidentialite',
     icon: Shield,
     title: 'Protection des données',
     description: 'Découvrez comment nous protégeons vos données personnelles.',
-    iconBg: M.caramelLight,
-    iconColor: M.caramel,
+    iconBg: BAI.caramelLight,
+    iconColor: BAI.caramel,
   },
 ]
 
 export default function Support() {
   return (
     <Layout showFooter={false}>
-      <div className="min-h-screen" style={{ background: M.bg, fontFamily: M.body }}>
+      <div className="min-h-screen" style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}>
         {/* Hero */}
         <section
           className="py-20 px-4 text-center"
-          style={{ background: M.night }}
+          style={{ background: BAI.night }}
         >
           <div className="max-w-3xl mx-auto">
             <h1
               style={{
-                fontFamily: M.display,
+                fontFamily: BAI.fontDisplay,
                 fontWeight: 700,
                 fontStyle: 'italic',
                 fontSize: '52px',
@@ -78,7 +64,7 @@ export default function Support() {
             </h1>
             <p
               style={{
-                fontFamily: M.body,
+                fontFamily: BAI.fontBody,
                 fontSize: '16px',
                 color: 'rgba(255,255,255,0.7)',
                 lineHeight: 1.6,
@@ -100,8 +86,8 @@ export default function Support() {
                   to={item.to}
                   className="flex items-start gap-4 group transition-shadow"
                   style={{
-                    background: M.surface,
-                    border: `1px solid ${M.border}`,
+                    background: BAI.bgSurface,
+                    border: `1px solid ${BAI.border}`,
                     borderRadius: '12px',
                     padding: '24px',
                     textDecoration: 'none',
@@ -113,7 +99,7 @@ export default function Support() {
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)'
-                    e.currentTarget.style.borderColor = M.border
+                    e.currentTarget.style.borderColor = BAI.border
                   }}
                 >
                   <div
@@ -130,10 +116,10 @@ export default function Support() {
                   <div>
                     <h3
                       style={{
-                        fontFamily: M.body,
+                        fontFamily: BAI.fontBody,
                         fontWeight: 600,
                         fontSize: '15px',
-                        color: M.ink,
+                        color: BAI.ink,
                         marginBottom: '4px',
                       }}
                     >
@@ -141,9 +127,9 @@ export default function Support() {
                     </h3>
                     <p
                       style={{
-                        fontFamily: M.body,
+                        fontFamily: BAI.fontBody,
                         fontSize: '14px',
-                        color: M.inkMid,
+                        color: BAI.inkMid,
                         lineHeight: 1.6,
                         margin: 0,
                       }}
@@ -160,13 +146,13 @@ export default function Support() {
           <div
             className="text-center py-12 px-8"
             style={{
-              background: M.night,
+              background: BAI.night,
               borderRadius: '12px',
             }}
           >
             <h2
               style={{
-                fontFamily: M.display,
+                fontFamily: BAI.fontDisplay,
                 fontWeight: 700,
                 fontStyle: 'italic',
                 fontSize: '32px',
@@ -178,7 +164,7 @@ export default function Support() {
             </h2>
             <p
               style={{
-                fontFamily: M.body,
+                fontFamily: BAI.fontBody,
                 fontSize: '15px',
                 color: 'rgba(255,255,255,0.7)',
                 marginBottom: '24px',
@@ -194,8 +180,8 @@ export default function Support() {
                 alignItems: 'center',
                 gap: '8px',
                 background: '#ffffff',
-                color: M.night,
-                fontFamily: M.body,
+                color: BAI.night,
+                fontFamily: BAI.fontBody,
                 fontWeight: 600,
                 fontSize: '14px',
                 padding: '10px 24px',

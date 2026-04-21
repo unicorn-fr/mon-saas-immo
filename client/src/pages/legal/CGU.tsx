@@ -1,29 +1,19 @@
 import { Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import Footer from '../../components/layout/Footer'
-
-// ─── Maison tokens ────────────────────────────────────────────────────────────
-
-const M = {
-  bg: '#fafaf8', surface: '#ffffff', muted: '#f4f2ee',
-  ink: '#0d0c0a', inkMid: '#5a5754', inkFaint: '#9e9b96',
-  night: '#1a1a2e', caramel: '#c4976a',
-  border: '#e4e1db',
-  display: "'Cormorant Garamond', Georgia, serif",
-  body: "'DM Sans', system-ui, sans-serif",
-}
+import { BAI } from '../../constants/bailio-tokens'
 
 export default function CGU() {
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: M.bg, fontFamily: M.body }}>
+    <div style={{ minHeight: '100vh', backgroundColor: BAI.bgBase, fontFamily: BAI.fontBody }}>
 
       {/* Hero */}
-      <section style={{ backgroundColor: M.night, padding: '64px 16px 56px' }}>
+      <section style={{ backgroundColor: BAI.night, padding: '64px 16px 56px' }}>
         <div style={{ maxWidth: '896px', margin: '0 auto' }}>
           <Link
             to="/"
             className="inline-flex items-center gap-1.5 transition-opacity hover:opacity-70"
-            style={{ fontFamily: M.body, fontSize: '13px', color: 'rgba(255,255,255,0.45)', marginBottom: '32px', display: 'inline-flex' }}
+            style={{ fontFamily: BAI.fontBody, fontSize: '13px', color: 'rgba(255,255,255,0.45)', marginBottom: '32px', display: 'inline-flex' }}
           >
             <ArrowLeft className="w-4 h-4" />
             Retour à l'accueil
@@ -31,12 +21,12 @@ export default function CGU() {
 
           <p
             style={{
-              fontFamily: M.body,
+              fontFamily: BAI.fontBody,
               fontSize: '10px',
               fontWeight: 600,
               letterSpacing: '0.12em',
               textTransform: 'uppercase' as const,
-              color: M.caramel,
+              color: BAI.caramel,
               marginBottom: '12px',
             }}
           >
@@ -44,7 +34,7 @@ export default function CGU() {
           </p>
           <h1
             style={{
-              fontFamily: M.display,
+              fontFamily: BAI.fontDisplay,
               fontStyle: 'italic',
               fontSize: '40px',
               fontWeight: 600,
@@ -55,7 +45,7 @@ export default function CGU() {
           >
             Conditions Générales d'Utilisation
           </h1>
-          <p style={{ fontFamily: M.body, fontSize: '14px', color: 'rgba(255,255,255,0.45)' }}>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: '14px', color: 'rgba(255,255,255,0.45)' }}>
             Dernière mise à jour : Février 2026
           </p>
         </div>
@@ -68,17 +58,17 @@ export default function CGU() {
           <section>
             <h2
               style={{
-                fontFamily: M.display,
+                fontFamily: BAI.fontDisplay,
                 fontStyle: 'italic',
                 fontSize: '26px',
                 fontWeight: 700,
-                color: M.ink,
+                color: BAI.ink,
                 marginBottom: '12px',
               }}
             >
               1. Objet
             </h2>
-            <p style={{ fontFamily: M.body, fontSize: '15px', color: M.inkMid, lineHeight: 1.7 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: '15px', color: BAI.inkMid, lineHeight: 1.7 }}>
               Les présentes Conditions Générales d'Utilisation (CGU) régissent l'utilisation
               de la plateforme Bailio accessible à l'adresse bailio.fr.
               En accédant au site, l'utilisateur accepte sans réserve les présentes CGU.
@@ -88,24 +78,24 @@ export default function CGU() {
           <section>
             <h2
               style={{
-                fontFamily: M.display,
+                fontFamily: BAI.fontDisplay,
                 fontStyle: 'italic',
                 fontSize: '26px',
                 fontWeight: 700,
-                color: M.ink,
+                color: BAI.ink,
                 marginBottom: '12px',
               }}
             >
               2. Description des services
             </h2>
-            <p style={{ fontFamily: M.body, fontSize: '15px', color: M.inkMid, lineHeight: 1.7 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: '15px', color: BAI.inkMid, lineHeight: 1.7 }}>
               Bailio est une plateforme de mise en relation entre propriétaires
               et locataires pour la location immobilière entre particuliers. Les services incluent :
             </p>
             <div
               style={{
-                backgroundColor: M.muted,
-                borderLeft: `3px solid ${M.caramel}`,
+                backgroundColor: BAI.bgMuted,
+                borderLeft: `3px solid ${BAI.caramel}`,
                 borderRadius: '0 8px 8px 0',
                 padding: '16px 20px',
                 marginTop: '14px',
@@ -123,9 +113,9 @@ export default function CGU() {
                   <li
                     key={item}
                     style={{
-                      fontFamily: M.body,
+                      fontFamily: BAI.fontBody,
                       fontSize: '14px',
-                      color: M.inkMid,
+                      color: BAI.inkMid,
                       lineHeight: 1.6,
                       paddingLeft: '16px',
                       position: 'relative' as const,
@@ -139,7 +129,7 @@ export default function CGU() {
                         width: '4px',
                         height: '4px',
                         borderRadius: '50%',
-                        backgroundColor: M.caramel,
+                        backgroundColor: BAI.caramel,
                         display: 'inline-block',
                       }}
                     />
@@ -153,17 +143,17 @@ export default function CGU() {
           <section>
             <h2
               style={{
-                fontFamily: M.display,
+                fontFamily: BAI.fontDisplay,
                 fontStyle: 'italic',
                 fontSize: '26px',
                 fontWeight: 700,
-                color: M.ink,
+                color: BAI.ink,
                 marginBottom: '12px',
               }}
             >
               3. Inscription
             </h2>
-            <p style={{ fontFamily: M.body, fontSize: '15px', color: M.inkMid, lineHeight: 1.7 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: '15px', color: BAI.inkMid, lineHeight: 1.7 }}>
               L'inscription est gratuite et ouverte à toute personne physique majeure.
               L'utilisateur s'engage à fournir des informations exactes et à jour.
               Chaque utilisateur est responsable de la confidentialité de ses identifiants de connexion.
@@ -173,17 +163,17 @@ export default function CGU() {
           <section>
             <h2
               style={{
-                fontFamily: M.display,
+                fontFamily: BAI.fontDisplay,
                 fontStyle: 'italic',
                 fontSize: '26px',
                 fontWeight: 700,
-                color: M.ink,
+                color: BAI.ink,
                 marginBottom: '12px',
               }}
             >
               4. Obligations des utilisateurs
             </h2>
-            <p style={{ fontFamily: M.body, fontSize: '15px', color: M.inkMid, lineHeight: 1.7, marginBottom: '14px' }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: '15px', color: BAI.inkMid, lineHeight: 1.7, marginBottom: '14px' }}>
               L'utilisateur s'engage à :
             </p>
             <ul className="space-y-2.5">
@@ -197,9 +187,9 @@ export default function CGU() {
                 <li
                   key={item}
                   style={{
-                    fontFamily: M.body,
+                    fontFamily: BAI.fontBody,
                     fontSize: '15px',
-                    color: M.inkMid,
+                    color: BAI.inkMid,
                     lineHeight: 1.6,
                     paddingLeft: '20px',
                     position: 'relative' as const,
@@ -213,7 +203,7 @@ export default function CGU() {
                       width: '5px',
                       height: '5px',
                       borderRadius: '50%',
-                      backgroundColor: M.border,
+                      backgroundColor: BAI.border,
                       display: 'inline-block',
                     }}
                   />
@@ -226,17 +216,17 @@ export default function CGU() {
           <section>
             <h2
               style={{
-                fontFamily: M.display,
+                fontFamily: BAI.fontDisplay,
                 fontStyle: 'italic',
                 fontSize: '26px',
                 fontWeight: 700,
-                color: M.ink,
+                color: BAI.ink,
                 marginBottom: '12px',
               }}
             >
               5. Responsabilité
             </h2>
-            <p style={{ fontFamily: M.body, fontSize: '15px', color: M.inkMid, lineHeight: 1.7 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: '15px', color: BAI.inkMid, lineHeight: 1.7 }}>
               Bailio agit en tant qu'intermédiaire technique et n'est pas partie
               aux contrats de location conclus entre les utilisateurs. La plateforme ne peut
               être tenue responsable des litiges entre propriétaires et locataires.
@@ -246,17 +236,17 @@ export default function CGU() {
           <section>
             <h2
               style={{
-                fontFamily: M.display,
+                fontFamily: BAI.fontDisplay,
                 fontStyle: 'italic',
                 fontSize: '26px',
                 fontWeight: 700,
-                color: M.ink,
+                color: BAI.ink,
                 marginBottom: '12px',
               }}
             >
               6. Propriété intellectuelle
             </h2>
-            <p style={{ fontFamily: M.body, fontSize: '15px', color: M.inkMid, lineHeight: 1.7 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: '15px', color: BAI.inkMid, lineHeight: 1.7 }}>
               Les contenus publiés par les utilisateurs restent leur propriété. En publiant
               sur la plateforme, l'utilisateur accorde à Bailio une licence
               non exclusive d'utilisation pour les besoins du service.
@@ -266,17 +256,17 @@ export default function CGU() {
           <section>
             <h2
               style={{
-                fontFamily: M.display,
+                fontFamily: BAI.fontDisplay,
                 fontStyle: 'italic',
                 fontSize: '26px',
                 fontWeight: 700,
-                color: M.ink,
+                color: BAI.ink,
                 marginBottom: '12px',
               }}
             >
               7. Résiliation
             </h2>
-            <p style={{ fontFamily: M.body, fontSize: '15px', color: M.inkMid, lineHeight: 1.7 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: '15px', color: BAI.inkMid, lineHeight: 1.7 }}>
               L'utilisateur peut supprimer son compte à tout moment depuis les paramètres
               de son profil. Bailio se réserve le droit de suspendre ou supprimer
               un compte en cas de manquement aux présentes CGU.
@@ -286,17 +276,17 @@ export default function CGU() {
           <section>
             <h2
               style={{
-                fontFamily: M.display,
+                fontFamily: BAI.fontDisplay,
                 fontStyle: 'italic',
                 fontSize: '26px',
                 fontWeight: 700,
-                color: M.ink,
+                color: BAI.ink,
                 marginBottom: '12px',
               }}
             >
               8. Modification des CGU
             </h2>
-            <p style={{ fontFamily: M.body, fontSize: '15px', color: M.inkMid, lineHeight: 1.7 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: '15px', color: BAI.inkMid, lineHeight: 1.7 }}>
               Bailio se réserve le droit de modifier les présentes CGU à tout moment.
               Les utilisateurs seront informés par email de toute modification substantielle.
             </p>

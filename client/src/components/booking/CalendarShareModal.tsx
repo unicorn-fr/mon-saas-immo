@@ -6,17 +6,8 @@ import { useEffect, useState } from 'react'
 import { X, UserCheck, Trash2, Calendar } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { bookingService } from '../../services/booking.service'
+import { BAI } from '../../constants/bailio-tokens'
 import type { CalendarInviteWithTenant } from '../../types/booking.types'
-
-const M = {
-  surface: '#ffffff', muted: '#f4f2ee', bg: '#fafaf8',
-  ink: '#0d0c0a', inkMid: '#5a5754', inkFaint: '#9e9b96',
-  night: '#1a1a2e', border: '#e4e1db',
-  owner: '#1a3270', ownerLight: '#eaf0fb', ownerBorder: '#b8ccf0',
-  caramel: '#c4976a', caramelLight: '#fdf5ec', caramelBorder: '#f3c99a',
-  danger: '#9b1c1c', dangerBg: '#fef2f2',
-  body: "'DM Sans', system-ui, sans-serif",
-}
 
 interface Tenant {
   id: string
@@ -78,22 +69,22 @@ export function CalendarShareModal({ isOpen, onClose, propertyId, propertyTitle,
       <div className="fixed inset-0 z-50" style={{ background: 'rgba(0,0,0,0.45)' }} onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
         <div className="w-full max-w-lg rounded-2xl overflow-hidden pointer-events-auto"
-          style={{ background: M.surface, border: `1px solid ${M.border}`, boxShadow: '0 20px 60px rgba(13,12,10,0.16)' }}>
+          style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, boxShadow: '0 20px 60px rgba(13,12,10,0.16)' }}>
 
           {/* Header */}
-          <div className="flex items-start justify-between p-5" style={{ borderBottom: `1px solid ${M.border}` }}>
+          <div className="flex items-start justify-between p-5" style={{ borderBottom: `1px solid ${BAI.border}` }}>
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: M.ownerLight }}>
-                <Calendar className="w-4 h-4" style={{ color: M.owner }} />
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: BAI.ownerLight }}>
+                <Calendar className="w-4 h-4" style={{ color: BAI.owner }} />
               </div>
               <div>
-                <h2 style={{ fontSize: 16, fontWeight: 700, color: M.ink, margin: 0, fontFamily: M.body }}>
+                <h2 style={{ fontSize: 16, fontWeight: 700, color: BAI.ink, margin: 0, fontFamily: BAI.fontBody }}>
                   Partager le calendrier
                 </h2>
-                <p style={{ fontSize: 12, color: M.inkFaint, margin: 0 }}>{propertyTitle}</p>
+                <p style={{ fontSize: 12, color: BAI.inkFaint, margin: 0 }}>{propertyTitle}</p>
               </div>
             </div>
-            <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: M.inkFaint, padding: 4 }}>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: BAI.inkFaint, padding: 4 }}>
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -101,8 +92,8 @@ export function CalendarShareModal({ isOpen, onClose, propertyId, propertyTitle,
           <div className="p-5 flex flex-col gap-5" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
 
             {/* Info */}
-            <div className="flex gap-2 p-3 rounded-lg" style={{ background: M.caramelLight, border: `1px solid ${M.caramelBorder}` }}>
-              <UserCheck className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: M.caramel }} />
+            <div className="flex gap-2 p-3 rounded-lg" style={{ background: BAI.caramelLight, border: `1px solid #f3c99a` }}>
+              <UserCheck className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: BAI.caramel }} />
               <p style={{ fontSize: 13, color: '#92400e', margin: 0, lineHeight: 1.5 }}>
                 Seuls les locataires invités pourront voir les créneaux disponibles et réserver une visite.
               </p>
@@ -110,29 +101,29 @@ export function CalendarShareModal({ isOpen, onClose, propertyId, propertyTitle,
 
             {/* Invitations existantes */}
             <div>
-              <p style={{ fontSize: 11, fontWeight: 600, color: M.inkFaint, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
+              <p style={{ fontSize: 11, fontWeight: 600, color: BAI.inkFaint, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
                 Invités ({invites.length})
               </p>
               {loading ? (
-                <p style={{ fontSize: 13, color: M.inkFaint }}>Chargement…</p>
+                <p style={{ fontSize: 13, color: BAI.inkFaint }}>Chargement…</p>
               ) : invites.length === 0 ? (
-                <p style={{ fontSize: 13, color: M.inkFaint, padding: '10px 0' }}>Aucun locataire invité pour le moment.</p>
+                <p style={{ fontSize: 13, color: BAI.inkFaint, padding: '10px 0' }}>Aucun locataire invité pour le moment.</p>
               ) : (
                 <div className="flex flex-col gap-2">
                   {invites.map(invite => (
                     <div key={invite.id} className="flex items-center justify-between gap-3 p-3 rounded-lg"
-                      style={{ background: M.ownerLight, border: `1px solid ${M.ownerBorder}` }}>
+                      style={{ background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}` }}>
                       <div className="min-w-0">
-                        <p style={{ fontSize: 13, fontWeight: 600, color: M.owner, margin: 0 }}>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: BAI.owner, margin: 0 }}>
                           {invite.tenant.firstName} {invite.tenant.lastName}
                         </p>
-                        <p style={{ fontSize: 11, color: M.inkFaint, margin: 0 }}>{invite.tenant.email}</p>
+                        <p style={{ fontSize: 11, color: BAI.inkFaint, margin: 0 }}>{invite.tenant.email}</p>
                       </div>
                       <button
                         onClick={() => handleRevoke(invite.id, `${invite.tenant.firstName} ${invite.tenant.lastName}`)}
                         disabled={revoking === invite.id}
                         title="Révoquer l'accès"
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: M.danger, padding: 6, borderRadius: 6, opacity: revoking === invite.id ? 0.5 : 1, flexShrink: 0 }}>
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: BAI.error, padding: 6, borderRadius: 6, opacity: revoking === invite.id ? 0.5 : 1, flexShrink: 0 }}>
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -144,26 +135,26 @@ export function CalendarShareModal({ isOpen, onClose, propertyId, propertyTitle,
             {/* Locataires à inviter */}
             {uninvited.length > 0 && (
               <div>
-                <p style={{ fontSize: 11, fontWeight: 600, color: M.inkFaint, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
+                <p style={{ fontSize: 11, fontWeight: 600, color: BAI.inkFaint, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
                   Candidats à inviter
                 </p>
                 <div className="flex flex-col gap-2">
                   {uninvited.map(tenant => (
                     <div key={tenant.id} className="flex items-center justify-between gap-3 p-3 rounded-lg"
-                      style={{ background: M.muted, border: `1px solid ${M.border}` }}>
+                      style={{ background: BAI.bgMuted, border: `1px solid ${BAI.border}` }}>
                       <div className="min-w-0">
-                        <p style={{ fontSize: 13, fontWeight: 600, color: M.ink, margin: 0 }}>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: BAI.ink, margin: 0 }}>
                           {tenant.firstName} {tenant.lastName}
                         </p>
-                        <p style={{ fontSize: 11, color: M.inkFaint, margin: 0 }}>{tenant.email}</p>
+                        <p style={{ fontSize: 11, color: BAI.inkFaint, margin: 0 }}>{tenant.email}</p>
                       </div>
                       <button
                         onClick={() => handleInvite(tenant)}
                         disabled={inviting === tenant.id}
                         style={{
-                          background: M.night, color: '#fff', border: 'none', borderRadius: 8,
+                          background: BAI.night, color: '#fff', border: 'none', borderRadius: 8,
                           padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: inviting === tenant.id ? 'not-allowed' : 'pointer',
-                          opacity: inviting === tenant.id ? 0.7 : 1, fontFamily: M.body, flexShrink: 0,
+                          opacity: inviting === tenant.id ? 0.7 : 1, fontFamily: BAI.fontBody, flexShrink: 0,
                           whiteSpace: 'nowrap',
                         }}>
                         {inviting === tenant.id ? '…' : 'Inviter'}
@@ -175,7 +166,7 @@ export function CalendarShareModal({ isOpen, onClose, propertyId, propertyTitle,
             )}
 
             {suggestedTenants.length === 0 && invites.length === 0 && !loading && (
-              <p style={{ fontSize: 13, color: M.inkFaint }}>
+              <p style={{ fontSize: 13, color: BAI.inkFaint }}>
                 Aucun candidat disponible. Approuvez des candidatures pour pouvoir les inviter.
               </p>
             )}

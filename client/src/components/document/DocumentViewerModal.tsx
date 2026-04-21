@@ -11,18 +11,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { X, FileText, Loader2, AlertCircle, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
 import { apiClient } from '../../services/api.service'
-
-const M = {
-  surface:   '#ffffff',
-  muted:     '#f4f2ee',
-  ink:       '#0d0c0a',
-  inkFaint:  '#9e9b96',
-  border:    '#e4e1db',
-  tenant:    '#1b5e3b',
-  tenantL:   '#edf7f2',
-  tenantB:   '#9fd4ba',
-  night:     '#1a1a2e',
-}
+import { BAI } from '../../constants/bailio-tokens'
 
 interface DocumentViewerModalProps {
   fileUrl: string
@@ -138,8 +127,8 @@ export function DocumentViewerModal({ fileUrl, fileName, onClose }: DocumentView
         className="dvm-shell w-full"
         style={{
           maxWidth: 960,
-          background: M.surface,
-          border: `1px solid ${M.border}`,
+          background: BAI.bgSurface,
+          border: `1px solid ${BAI.border}`,
           borderRadius: 14,
           boxShadow: '0 12px 48px rgba(13,12,10,0.26)',
           height: '92dvh',
@@ -152,7 +141,7 @@ export function DocumentViewerModal({ fileUrl, fileName, onClose }: DocumentView
       >
         {/* ── Header ─────────────────────────────────────────────────────── */}
         <div style={{
-          background: M.tenant,
+          background: BAI.tenant,
           padding: '11px 16px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           flexShrink: 0,
@@ -218,7 +207,7 @@ export function DocumentViewerModal({ fileUrl, fileName, onClose }: DocumentView
 
         {/* ── Zone de visualisation ───────────────────────────────────────── */}
         <div
-          style={{ flex: 1, position: 'relative', overflow: 'hidden', background: M.muted }}
+          style={{ flex: 1, position: 'relative', overflow: 'hidden', background: BAI.bgMuted }}
           onContextMenu={(e) => e.preventDefault()}
         >
           {loading && (
@@ -227,8 +216,8 @@ export function DocumentViewerModal({ fileUrl, fileName, onClose }: DocumentView
               display: 'flex', flexDirection: 'column',
               alignItems: 'center', justifyContent: 'center', gap: 12,
             }}>
-              <Loader2 style={{ width: 28, height: 28, color: M.tenant }} className="animate-spin" />
-              <p style={{ fontSize: 13, color: M.inkFaint, fontFamily: "'DM Sans',sans-serif" }}>
+              <Loader2 style={{ width: 28, height: 28, color: BAI.tenant }} className="animate-spin" />
+              <p style={{ fontSize: 13, color: BAI.inkFaint, fontFamily: "'DM Sans',sans-serif" }}>
                 Chargement…
               </p>
             </div>
@@ -241,17 +230,17 @@ export function DocumentViewerModal({ fileUrl, fileName, onClose }: DocumentView
               alignItems: 'center', justifyContent: 'center', gap: 14, padding: 32,
             }}>
               <AlertCircle style={{ width: 40, height: 40, color: '#9b1c1c', opacity: 0.5 }} />
-              <p style={{ fontSize: 14, fontWeight: 600, color: M.ink, fontFamily: "'DM Sans',sans-serif", textAlign: 'center' }}>
+              <p style={{ fontSize: 14, fontWeight: 600, color: BAI.ink, fontFamily: "'DM Sans',sans-serif", textAlign: 'center' }}>
                 Document non disponible
               </p>
-              <p style={{ fontSize: 12, color: M.inkFaint, fontFamily: "'DM Sans',sans-serif", textAlign: 'center', maxWidth: 320 }}>
+              <p style={{ fontSize: 12, color: BAI.inkFaint, fontFamily: "'DM Sans',sans-serif", textAlign: 'center', maxWidth: 320 }}>
                 {error}
               </p>
               <button
                 onClick={onClose}
                 style={{
-                  padding: '8px 18px', borderRadius: 8, border: `1px solid ${M.border}`,
-                  background: M.surface, color: M.inkFaint, fontSize: 13,
+                  padding: '8px 18px', borderRadius: 8, border: `1px solid ${BAI.border}`,
+                  background: BAI.bgSurface, color: BAI.inkFaint, fontSize: 13,
                   fontFamily: "'DM Sans',sans-serif", cursor: 'pointer',
                 }}
               >
@@ -314,11 +303,11 @@ export function DocumentViewerModal({ fileUrl, fileName, onClose }: DocumentView
         {/* ── Footer ─────────────────────────────────────────────────────── */}
         <div style={{
           padding: '7px 16px',
-          background: M.tenantL,
-          borderTop: `1px solid ${M.tenantB}`,
+          background: BAI.tenantLight,
+          borderTop: `1px solid ${BAI.tenantBorder}`,
           flexShrink: 0,
         }}>
-          <p style={{ fontSize: 10, color: M.tenant, fontFamily: "'DM Sans',sans-serif", textAlign: 'center', margin: 0 }}>
+          <p style={{ fontSize: 10, color: BAI.tenant, fontFamily: "'DM Sans',sans-serif", textAlign: 'center', margin: 0 }}>
             Document confidentiel · Accès sécurisé · Impression et téléchargement désactivés
           </p>
         </div>

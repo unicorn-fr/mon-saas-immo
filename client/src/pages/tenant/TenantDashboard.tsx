@@ -141,7 +141,7 @@ export default function TenantDashboard() {
                 <h1 style={{
                   fontFamily: "'Cormorant Garamond', Georgia, serif",
                   fontWeight: 700, fontStyle: 'italic',
-                  fontSize: 44, color: BAI.ink, lineHeight: 1.05, margin: 0,
+                  fontSize: 'clamp(22px, 4vw, 44px)', color: BAI.ink, lineHeight: 1.05, margin: 0,
                 }}>
                   Bonjour, {user?.firstName}
                 </h1>
@@ -197,7 +197,7 @@ export default function TenantDashboard() {
 
                 {/* KPI row */}
                 <div
-                  className="grid grid-cols-1 xs:grid-cols-3"
+                  className="grid grid-cols-1 sm:grid-cols-3"
                   style={{
                     gap: 1,
                     background: 'rgba(255,255,255,0.06)',
@@ -508,7 +508,7 @@ export default function TenantDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-8">
 
           {/* ── Page header ─────────────────────────────────────────────── */}
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 32 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 32 }}>
             <div>
               <p style={{ fontSize: 13, color: BAI.inkFaint, fontWeight: 400, marginBottom: 4, textTransform: 'capitalize' }}>
                 {todayLabel}
@@ -516,7 +516,7 @@ export default function TenantDashboard() {
               <h1 style={{
                 fontFamily: "'Cormorant Garamond', Georgia, serif",
                 fontWeight: 700, fontStyle: 'italic',
-                fontSize: 52, color: BAI.ink, lineHeight: 1.05, margin: 0,
+                fontSize: 'clamp(22px, 4vw, 52px)', color: BAI.ink, lineHeight: 1.05, margin: 0,
               }}>
                 Bonjour, {user?.firstName}
               </h1>
@@ -754,7 +754,7 @@ export default function TenantDashboard() {
                   </div>
 
                   <div style={{ padding: 20 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 20 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 20, flexWrap: 'wrap' }}>
                       {/* SVG ring */}
                       <div style={{ position: 'relative', width: 120, height: 120, flexShrink: 0 }}>
                         <svg width="120" height="120" viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)' }}>
@@ -885,10 +885,11 @@ export default function TenantDashboard() {
                         const thumb = app.property?.images?.[0]
                         return (
                           <div key={app.id} style={{
-                            display: 'flex', alignItems: 'center', gap: 14,
+                            display: 'flex', alignItems: 'flex-start', gap: 14,
                             padding: '12px 20px',
                             borderBottom: isLast ? 'none' : `1px solid ${BAI.border}`,
                             transition: 'background 0.15s',
+                            flexWrap: 'wrap',
                           }}
                             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
                             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}

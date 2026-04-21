@@ -114,7 +114,9 @@ export const Header = () => {
         <div
           className="flex items-center gap-1"
           style={{
-            position: 'absolute', top: 13, right: 16,
+            position: 'absolute',
+            top: 'clamp(10px, 2vw, 13px)',
+            right: 'clamp(12px, 3vw, 16px)',
             background: '#ffffff',
             border: `1px solid ${BAI.border}`,
             borderRadius: 16,
@@ -133,9 +135,9 @@ export const Header = () => {
             </Link>
           )}
 
-          {/* Messages avec badge */}
+          {/* Messages avec badge — masqués sur mobile */}
           <Link to="/messages"
-            className="relative flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
+            className="relative hidden sm:flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
             style={{ color: BAI.inkFaint }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted; (e.currentTarget as HTMLElement).style.color = BAI.inkMid }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = BAI.inkFaint }}
@@ -149,9 +151,9 @@ export const Header = () => {
             )}
           </Link>
 
-          {/* Notifications */}
+          {/* Notifications — masquées sur mobile */}
           <Link to="/notifications"
-            className="flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
+            className="hidden sm:flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
             style={{ color: BAI.inkFaint }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted; (e.currentTarget as HTMLElement).style.color = BAI.inkMid }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = BAI.inkFaint }}
@@ -159,8 +161,8 @@ export const Header = () => {
             <Bell className="w-4 h-4" />
           </Link>
 
-          {/* Séparateur */}
-          <div className="w-px h-5 mx-0.5" style={{ background: BAI.border }} />
+          {/* Séparateur — masqué sur mobile */}
+          <div className="hidden sm:block w-px h-5 mx-0.5" style={{ background: BAI.border }} />
 
           {/* Profil dropdown */}
           <div className="relative">
@@ -188,8 +190,13 @@ export const Header = () => {
             {showUserMenu && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
-                <div className="absolute right-0 mt-2 w-60 rounded-2xl py-1.5 z-20 overflow-hidden"
-                  style={{ background: '#ffffff', border: `1px solid ${BAI.border}`, boxShadow: '0 20px 60px rgba(13,12,10,0.12), 0 4px 16px rgba(13,12,10,0.06)' }}>
+                <div className="absolute right-0 mt-2 rounded-2xl py-1.5 z-20 overflow-hidden"
+                  style={{
+                    background: '#ffffff',
+                    border: `1px solid ${BAI.border}`,
+                    boxShadow: '0 20px 60px rgba(13,12,10,0.12), 0 4px 16px rgba(13,12,10,0.06)',
+                    width: 'min(240px, calc(100vw - 32px))',
+                  }}>
 
                   {/* Profil header */}
                   <div className="px-4 py-3 flex items-center gap-3" style={{ borderBottom: `1px solid ${BAI.border}` }}>
@@ -221,8 +228,8 @@ export const Header = () => {
                   <div className="py-1">
                     {ownerLinks.map(({ to, icon, label }) => (
                       <Link key={to} to={to}
-                        className="flex items-center gap-3 px-4 py-2 text-[13px] transition-colors"
-                        style={{ color: BAI.inkMid, fontFamily: 'var(--font-body)' }}
+                        className="flex items-center gap-3 px-4 transition-colors"
+                        style={{ color: BAI.inkMid, fontFamily: 'var(--font-body)', fontSize: 14, minHeight: 44, display: 'flex', alignItems: 'center' }}
                         onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted; (e.currentTarget as HTMLElement).style.color = BAI.ink }}
                         onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = BAI.inkMid }}
                         onClick={() => setShowUserMenu(false)}>
@@ -235,8 +242,8 @@ export const Header = () => {
                   {/* Logout */}
                   <div className="pt-1" style={{ borderTop: `1px solid ${BAI.border}` }}>
                     <button onClick={handleLogout}
-                      className="flex items-center gap-3 px-4 py-2.5 text-[13px] w-full transition-colors"
-                      style={{ color: '#9b1c1c', fontFamily: 'var(--font-body)', background: 'none', border: 'none', cursor: 'pointer' }}
+                      className="flex items-center gap-3 px-4 w-full transition-colors"
+                      style={{ color: '#9b1c1c', fontFamily: 'var(--font-body)', fontSize: 14, minHeight: 44, background: 'none', border: 'none', cursor: 'pointer' }}
                       onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#fef2f2' }}
                       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
                       <LogOut className="w-4 h-4" /> Déconnexion
@@ -340,8 +347,13 @@ export const Header = () => {
                   {showUserMenu && (
                     <>
                       <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
-                      <div className="absolute right-0 mt-2 w-56 rounded-xl py-2 z-20"
-                        style={{ background: '#ffffff', border: `1px solid ${BAI.border}`, boxShadow: '0 20px 60px rgba(13,12,10,0.12), 0 4px 16px rgba(13,12,10,0.06)' }}>
+                      <div className="absolute right-0 mt-2 rounded-xl py-2 z-20"
+                        style={{
+                          background: '#ffffff',
+                          border: `1px solid ${BAI.border}`,
+                          boxShadow: '0 20px 60px rgba(13,12,10,0.12), 0 4px 16px rgba(13,12,10,0.06)',
+                          width: 'min(224px, calc(100vw - 32px))',
+                        }}>
                         <div className="px-4 py-3" style={{ borderBottom: `1px solid ${BAI.border}` }}>
                           <p className="text-[13px] font-semibold" style={{ color: BAI.ink }}>{user?.firstName} {user?.lastName}</p>
                           <p className="text-[11px] truncate mt-0.5" style={{ color: BAI.inkMid }}>{user?.email}</p>
@@ -356,8 +368,8 @@ export const Header = () => {
                           { to: '/pricing', icon: <CreditCard className="w-4 h-4" />, label: 'Mon abonnement' },
                         ].map(({ to, icon, label }) => (
                           <Link key={to} to={to}
-                            className="flex items-center gap-3 px-4 py-2 text-[13px] transition-colors"
-                            style={{ color: BAI.inkMid }}
+                            className="flex items-center gap-3 px-4 transition-colors"
+                            style={{ color: BAI.inkMid, fontSize: 14, minHeight: 44, display: 'flex', alignItems: 'center' }}
                             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
                             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
                             onClick={() => setShowUserMenu(false)}>
@@ -366,8 +378,8 @@ export const Header = () => {
                         ))}
                         <div className="mt-1 pt-1" style={{ borderTop: `1px solid ${BAI.border}` }}>
                           <button onClick={handleLogout}
-                            className="flex items-center gap-3 px-4 py-2 text-[13px] w-full transition-colors"
-                            style={{ color: '#9b1c1c' }}
+                            className="flex items-center gap-3 px-4 w-full transition-colors"
+                            style={{ color: '#9b1c1c', fontSize: 14, minHeight: 44, background: 'none', border: 'none', cursor: 'pointer' }}
                             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#fef2f2' }}
                             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
                             <LogOut className="w-4 h-4" /> Déconnexion

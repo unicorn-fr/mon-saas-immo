@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { BAI } from '../../constants/bailio-tokens'
 import { Layout } from '../../components/layout/Layout'
 import {
   Home, Euro, Calendar, Percent,
@@ -7,49 +8,25 @@ import {
 
 // ─── Maison Design Tokens ─────────────────────────────────────────────────────
 
-const M = {
-  bg: '#fafaf8',
-  surface: '#ffffff',
-  muted: '#f4f2ee',
-  inputBg: '#f8f7f4',
-  ink: '#0d0c0a',
-  inkMid: '#5a5754',
-  inkFaint: '#9e9b96',
-  night: '#1a1a2e',
-  owner: '#1a3270',
-  ownerLight: '#eaf0fb',
-  ownerBorder: '#b8ccf0',
-  tenant: '#1b5e3b',
-  tenantLight: '#edf7f2',
-  tenantBorder: '#9fd4ba',
-  caramel: '#c4976a',
-  caramelLight: '#fdf5ec',
-  border: '#e4e1db',
-  borderMid: '#ccc9c3',
-  danger: '#9b1c1c',
-  dangerBg: '#fef2f2',
-  display: "'Cormorant Garamond', Georgia, serif",
-  body: "'DM Sans', system-ui, sans-serif",
-}
 
 const cardStyle: React.CSSProperties = {
-  background: M.surface,
-  border: `1px solid ${M.border}`,
+  background: BAI.bgSurface,
+  border: `1px solid ${BAI.border}`,
   borderRadius: '12px',
   padding: '1.5rem',
   boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
 }
 
 const inputStyle: React.CSSProperties = {
-  background: M.inputBg,
-  border: `1px solid ${M.border}`,
+  background: BAI.bgInput,
+  border: `1px solid ${BAI.border}`,
   borderRadius: '8px',
   padding: '0.6rem 1rem',
-  color: M.ink,
+  color: BAI.ink,
   fontSize: '14px',
   outline: 'none',
   width: '100%',
-  fontFamily: M.body,
+  fontFamily: BAI.fontBody,
 }
 
 const labelStyle: React.CSSProperties = {
@@ -57,7 +34,7 @@ const labelStyle: React.CSSProperties = {
   fontWeight: 600,
   letterSpacing: '0.08em',
   textTransform: 'uppercase' as const,
-  color: M.inkFaint,
+  color: BAI.inkFaint,
   marginBottom: '6px',
   display: 'block',
 }
@@ -310,14 +287,14 @@ function NumInput({
           step={step}
           onChange={e => onChange(parseFloat(e.target.value) || 0)}
           style={{ ...inputStyle, paddingRight: unit.length > 1 ? '3.5rem' : '2.5rem' }}
-          onFocus={e => { e.currentTarget.style.borderColor = M.night }}
-          onBlur={e => { e.currentTarget.style.borderColor = M.border }}
+          onFocus={e => { e.currentTarget.style.borderColor = BAI.night }}
+          onBlur={e => { e.currentTarget.style.borderColor = BAI.border }}
         />
-        <span style={{ position: 'absolute', right: '0.75rem', fontSize: '12px', color: M.inkFaint, pointerEvents: 'none' }}>
+        <span style={{ position: 'absolute', right: '0.75rem', fontSize: '12px', color: BAI.inkFaint, pointerEvents: 'none' }}>
           {unit}
         </span>
       </div>
-      {hint && <p style={{ fontSize: '11px', color: M.inkFaint, marginTop: '3px' }}>{hint}</p>}
+      {hint && <p style={{ fontSize: '11px', color: BAI.inkFaint, marginTop: '3px' }}>{hint}</p>}
     </div>
   )
 }
@@ -334,10 +311,10 @@ function Section({ title, icon, children, defaultOpen = true }: {
         style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
       >
         <div className="flex items-center gap-2">
-          <span style={{ color: M.caramel }}>{icon}</span>
-          <span style={{ fontFamily: M.display, fontWeight: 700, fontSize: '18px', color: M.ink }}>{title}</span>
+          <span style={{ color: BAI.caramel }}>{icon}</span>
+          <span style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontSize: '18px', color: BAI.ink }}>{title}</span>
         </div>
-        {open ? <ChevronUp size={16} style={{ color: M.inkFaint }} /> : <ChevronDown size={16} style={{ color: M.inkFaint }} />}
+        {open ? <ChevronUp size={16} style={{ color: BAI.inkFaint }} /> : <ChevronDown size={16} style={{ color: BAI.inkFaint }} />}
       </button>
       {open && <div className="mt-4 flex flex-col gap-4">{children}</div>}
     </div>
@@ -345,12 +322,12 @@ function Section({ title, icon, children, defaultOpen = true }: {
 }
 
 function KPI({ label, value, sub, positive }: { label: string; value: string; sub?: string; positive?: boolean }) {
-  const color = positive === undefined ? M.ink : positive ? M.tenant : M.danger
+  const color = positive === undefined ? BAI.ink : positive ? BAI.tenant : BAI.error
   return (
-    <div style={{ background: M.muted, borderRadius: '10px', padding: '1rem', border: `1px solid ${M.border}` }}>
-      <p style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: M.inkFaint, marginBottom: '4px' }}>{label}</p>
-      <p style={{ fontFamily: M.display, fontWeight: 700, fontStyle: 'italic', fontSize: '22px', color, lineHeight: 1 }}>{value}</p>
-      {sub && <p style={{ fontSize: '11px', color: M.inkMid, marginTop: '3px' }}>{sub}</p>}
+    <div style={{ background: BAI.bgMuted, borderRadius: '10px', padding: '1rem', border: `1px solid ${BAI.border}` }}>
+      <p style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.inkFaint, marginBottom: '4px' }}>{label}</p>
+      <p style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontStyle: 'italic', fontSize: '22px', color, lineHeight: 1 }}>{value}</p>
+      {sub && <p style={{ fontSize: '11px', color: BAI.inkMid, marginTop: '3px' }}>{sub}</p>}
     </div>
   )
 }
@@ -361,14 +338,14 @@ function Tooltip({ text }: { text: string }) {
     <span style={{ position: 'relative', display: 'inline-flex' }}>
       <Info
         size={12}
-        style={{ color: M.inkFaint, cursor: 'help', marginLeft: 4 }}
+        style={{ color: BAI.inkFaint, cursor: 'help', marginLeft: 4 }}
         onMouseEnter={() => setShow(true)}
         onMouseLeave={() => setShow(false)}
       />
       {show && (
         <span style={{
           position: 'absolute', bottom: '120%', left: '50%', transform: 'translateX(-50%)',
-          background: M.night, color: '#fff', fontSize: '11px', padding: '6px 10px',
+          background: BAI.night, color: '#fff', fontSize: '11px', padding: '6px 10px',
           borderRadius: '6px', whiteSpace: 'pre-wrap', zIndex: 10, maxWidth: '220px',
         }}>
           {text}
@@ -404,18 +381,18 @@ export default function Rentabilite() {
 
   return (
     <Layout>
-      <div style={{ background: M.bg, minHeight: '100vh', fontFamily: M.body }}>
+      <div style={{ background: BAI.bgBase, minHeight: '100vh', fontFamily: BAI.fontBody }}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
           {/* Page Header */}
           <div className="mb-8">
-            <p style={{ fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: M.inkFaint, marginBottom: '6px' }}>
+            <p style={{ fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, marginBottom: '6px' }}>
               Propriétaire
             </p>
-            <h1 style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(32px,5vw,44px)', color: M.ink, lineHeight: 1.1, marginBottom: '8px' }}>
+            <h1 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(32px,5vw,44px)', color: BAI.ink, lineHeight: 1.1, marginBottom: '8px' }}>
               Simulateur de rentabilité
             </h1>
-            <p style={{ fontSize: '14px', color: M.inkMid, maxWidth: '560px' }}>
+            <p style={{ fontSize: '14px', color: BAI.inkMid, maxWidth: '560px' }}>
               Calculez votre rendement net, votre cash-flow, vos impôts et le moment où votre prêt sera remboursé — en tenant compte de votre situation fiscale.
             </p>
           </div>
@@ -447,8 +424,8 @@ export default function Rentabilite() {
               {/* Prêt */}
               <Section title="Financement" icon={<Landmark size={16} />}>
                 <div className="flex items-center gap-3 mb-2">
-                  <label style={{ fontSize: '14px', color: M.ink, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <input type="checkbox" checked={s.avecPret} onChange={e => upd('avecPret', e.target.checked)} style={{ width: 16, height: 16, accentColor: M.night }} />
+                  <label style={{ fontSize: '14px', color: BAI.ink, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <input type="checkbox" checked={s.avecPret} onChange={e => upd('avecPret', e.target.checked)} style={{ width: 16, height: 16, accentColor: BAI.night }} />
                     Financement avec prêt immobilier
                   </label>
                 </div>
@@ -462,16 +439,16 @@ export default function Rentabilite() {
                   </div>
                 )}
                 {s.avecPret && c.mensualitePret > 0 && (
-                  <div style={{ background: M.ownerLight, border: `1px solid ${M.ownerBorder}`, borderRadius: '8px', padding: '10px 14px' }}>
+                  <div style={{ background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, borderRadius: '8px', padding: '10px 14px' }}>
                     <div className="flex flex-wrap gap-x-6 gap-y-1">
-                      <span style={{ fontSize: '13px', color: M.inkMid }}>
-                        Mensualité (hors assurance) : <strong style={{ color: M.owner }}>{fmt(c.mensualitePret)} €/mois</strong>
+                      <span style={{ fontSize: '13px', color: BAI.inkMid }}>
+                        Mensualité (hors assurance) : <strong style={{ color: BAI.owner }}>{fmt(c.mensualitePret)} €/mois</strong>
                       </span>
-                      <span style={{ fontSize: '13px', color: M.inkMid }}>
-                        Total avec assurance : <strong style={{ color: M.owner }}>{fmt(c.mensualitePret + s.assurancePret)} €/mois</strong>
+                      <span style={{ fontSize: '13px', color: BAI.inkMid }}>
+                        Total avec assurance : <strong style={{ color: BAI.owner }}>{fmt(c.mensualitePret + s.assurancePret)} €/mois</strong>
                       </span>
-                      <span style={{ fontSize: '13px', color: M.inkMid }}>
-                        Coût total du crédit : <strong style={{ color: M.owner }}>{fmt(c.coutCreditTotal)} €</strong>
+                      <span style={{ fontSize: '13px', color: BAI.inkMid }}>
+                        Coût total du crédit : <strong style={{ color: BAI.owner }}>{fmt(c.coutCreditTotal)} €</strong>
                       </span>
                     </div>
                   </div>
@@ -507,10 +484,10 @@ export default function Rentabilite() {
                           }}
                           style={{
                             flex: 1, padding: '7px 12px', borderRadius: '7px',
-                            fontFamily: M.body, fontSize: '13px', cursor: 'pointer',
-                            background: s.typeInvestisseur === opt.val ? M.night : M.muted,
-                            color: s.typeInvestisseur === opt.val ? '#ffffff' : M.inkMid,
-                            border: `1px solid ${s.typeInvestisseur === opt.val ? M.night : M.border}`,
+                            fontFamily: BAI.fontBody, fontSize: '13px', cursor: 'pointer',
+                            background: s.typeInvestisseur === opt.val ? BAI.night : BAI.bgMuted,
+                            color: s.typeInvestisseur === opt.val ? '#ffffff' : BAI.inkMid,
+                            border: `1px solid ${s.typeInvestisseur === opt.val ? BAI.night : BAI.border}`,
                             transition: 'all 0.15s',
                           }}
                         >
@@ -544,13 +521,13 @@ export default function Rentabilite() {
                         className="text-left"
                         style={{
                           padding: '10px 12px', borderRadius: '8px', cursor: 'pointer',
-                          border: `1px solid ${s.regimeImpot === r.value ? M.caramel : M.border}`,
-                          background: s.regimeImpot === r.value ? M.caramelLight : M.surface,
+                          border: `1px solid ${s.regimeImpot === r.value ? BAI.caramel : BAI.border}`,
+                          background: s.regimeImpot === r.value ? BAI.caramelLight : BAI.bgSurface,
                           transition: 'all 0.15s',
                         }}
                       >
-                        <div style={{ fontSize: '13px', fontWeight: 600, color: s.regimeImpot === r.value ? M.caramel : M.ink }}>{r.label}</div>
-                        <div style={{ fontSize: '11px', color: M.inkFaint, marginTop: '2px', lineHeight: 1.4 }}>{r.desc}</div>
+                        <div style={{ fontSize: '13px', fontWeight: 600, color: s.regimeImpot === r.value ? BAI.caramel : BAI.ink }}>{r.label}</div>
+                        <div style={{ fontSize: '11px', color: BAI.inkFaint, marginTop: '2px', lineHeight: 1.4 }}>{r.desc}</div>
                       </button>
                     ))}
                   </div>
@@ -566,10 +543,10 @@ export default function Rentabilite() {
                           onClick={() => upd('tauxIS', opt.val)}
                           style={{
                             flex: 1, padding: '7px 12px', borderRadius: '7px',
-                            fontFamily: M.body, fontSize: '13px', cursor: 'pointer',
-                            background: s.tauxIS === opt.val ? M.night : M.muted,
-                            color: s.tauxIS === opt.val ? '#ffffff' : M.inkMid,
-                            border: `1px solid ${s.tauxIS === opt.val ? M.night : M.border}`,
+                            fontFamily: BAI.fontBody, fontSize: '13px', cursor: 'pointer',
+                            background: s.tauxIS === opt.val ? BAI.night : BAI.bgMuted,
+                            color: s.tauxIS === opt.val ? '#ffffff' : BAI.inkMid,
+                            border: `1px solid ${s.tauxIS === opt.val ? BAI.night : BAI.border}`,
                           }}
                         >
                           {opt.label}
@@ -587,12 +564,12 @@ export default function Rentabilite() {
 
               {/* Investissement */}
               <div style={cardStyle}>
-                <p style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: M.inkFaint, marginBottom: '12px' }}>Investissement total</p>
-                <p style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: '32px', color: M.ink, lineHeight: 1, marginBottom: '4px' }}>
+                <p style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, marginBottom: '12px' }}>Investissement total</p>
+                <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '32px', color: BAI.ink, lineHeight: 1, marginBottom: '4px' }}>
                   {fmt(c.investissementTotal)} €
                 </p>
                 {s.avecPret && (
-                  <p style={{ fontSize: '13px', color: M.inkMid }}>
+                  <p style={{ fontSize: '13px', color: BAI.inkMid }}>
                     dont apport : <strong>{fmt(c.apportPersonnel)} €</strong>
                   </p>
                 )}
@@ -600,7 +577,7 @@ export default function Rentabilite() {
 
               {/* Rendements */}
               <div style={cardStyle}>
-                <p style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: M.inkFaint, marginBottom: '12px' }}>Rendements</p>
+                <p style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, marginBottom: '12px' }}>Rendements</p>
                 <div className="flex flex-col gap-3">
                   <KPI label="Rendement brut" value={`${fmtDec(c.rendementBrut)} %`} />
                   <KPI label="Rendement net (avant impôt)" value={`${fmtDec(c.rendementNet)} %`} positive={c.rendementNet >= 3} />
@@ -610,7 +587,7 @@ export default function Rentabilite() {
 
               {/* Cash-flow */}
               <div style={cardStyle}>
-                <p style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: M.inkFaint, marginBottom: '12px' }}>Cash-flow mensuel</p>
+                <p style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, marginBottom: '12px' }}>Cash-flow mensuel</p>
                 <div className="flex flex-col gap-3">
                   <KPI
                     label="Cash-flow brut (avant impôt)"
@@ -629,41 +606,41 @@ export default function Rentabilite() {
 
               {/* Impôts */}
               <div style={cardStyle}>
-                <p style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: M.inkFaint, marginBottom: '12px' }}>Fiscalité annuelle</p>
-                <p style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: '26px', color: c.impotAnnuel === 0 ? M.tenant : M.ink, lineHeight: 1, marginBottom: '4px' }}>
+                <p style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, marginBottom: '12px' }}>Fiscalité annuelle</p>
+                <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '26px', color: c.impotAnnuel === 0 ? BAI.tenant : BAI.ink, lineHeight: 1, marginBottom: '4px' }}>
                   {fmt(c.impotAnnuel)} €/an
                 </p>
-                <p style={{ fontSize: '11px', color: M.inkFaint, lineHeight: 1.5 }}>{c.detailImpot}</p>
+                <p style={{ fontSize: '11px', color: BAI.inkFaint, lineHeight: 1.5 }}>{c.detailImpot}</p>
               </div>
 
               {/* Fin du prêt */}
               {s.avecPret && c.datefinPret && (
-                <div style={{ ...cardStyle, background: M.ownerLight, border: `1px solid ${M.ownerBorder}` }}>
+                <div style={{ ...cardStyle, background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}` }}>
                   <div className="flex items-center gap-2 mb-3">
-                    <Calendar size={14} style={{ color: M.owner }} />
-                    <p style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: M.owner }}>Fin du prêt</p>
+                    <Calendar size={14} style={{ color: BAI.owner }} />
+                    <p style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.owner }}>Fin du prêt</p>
                   </div>
-                  <p style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: '22px', color: M.owner }}>
+                  <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '22px', color: BAI.owner }}>
                     {c.datefinPret.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
                   </p>
-                  <p style={{ fontSize: '12px', color: M.inkMid, marginTop: '4px' }}>
+                  <p style={{ fontSize: '12px', color: BAI.inkMid, marginTop: '4px' }}>
                     Capital restant dû (an 1) : {fmt(c.capitalRestant)} €
                   </p>
-                  <div style={{ height: 1, background: M.ownerBorder, margin: '12px 0' }} />
-                  <p style={{ fontSize: '13px', color: M.inkMid }}>
+                  <div style={{ height: 1, background: BAI.ownerBorder, margin: '12px 0' }} />
+                  <p style={{ fontSize: '13px', color: BAI.inkMid }}>
                     Après remboursement, cash-flow estimé :
                   </p>
-                  <p style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: '20px', color: c.cashflowApresRemboursement >= 0 ? M.tenant : M.danger, marginTop: '2px' }}>
+                  <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '20px', color: c.cashflowApresRemboursement >= 0 ? BAI.tenant : BAI.error, marginTop: '2px' }}>
                     {c.cashflowApresRemboursement >= 0 ? '+' : ''}{fmt(c.cashflowApresRemboursement)} €/mois
                   </p>
-                  <p style={{ fontSize: '11px', color: M.inkFaint, marginTop: '4px' }}>
+                  <p style={{ fontSize: '11px', color: BAI.inkFaint, marginTop: '4px' }}>
                     Gain net cumulé sur {s.dureePret} ans : {c.gainNetCumule >= 0 ? '+' : ''}{fmt(c.gainNetCumule)} €
                   </p>
                 </div>
               )}
 
               {/* Disclaimer */}
-              <p style={{ fontSize: '11px', color: M.inkFaint, lineHeight: 1.6, padding: '0 4px' }}>
+              <p style={{ fontSize: '11px', color: BAI.inkFaint, lineHeight: 1.6, padding: '0 4px' }}>
                 Les résultats sont des estimations indicatives. Consultez un conseiller fiscal pour une analyse personnalisée.
               </p>
 

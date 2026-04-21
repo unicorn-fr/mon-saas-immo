@@ -4,37 +4,21 @@ import { PropertyStatus, PROPERTY_STATUS } from '../../types/property.types'
 import { useMessageStore } from '../../store/messageStore'
 import { useAuth } from '../../hooks/useAuth'
 import { User as MessageUser } from '../../types/message.types'
-
-const M = {
-  ink: '#0d0c0a',
-  inkMid: '#5a5754',
-  inkFaint: '#9e9b96',
-  night: '#1a1a2e',
-  owner: '#1a3270',
-  ownerLight: '#eaf0fb',
-  ownerBorder: '#b8ccf0',
-  tenant: '#1b5e3b',
-  tenantLight: '#edf7f2',
-  tenantBorder: '#9fd4ba',
-  border: '#e4e1db',
-  borderMid: '#ccc9c3',
-  muted: '#f4f2ee',
-  surface: '#ffffff',
-}
+import { BAI } from '../../constants/bailio-tokens'
 
 // Maison color sets per semantic color key
 const colorSets = {
   green: {
-    selectedBorder: M.tenantBorder,
-    selectedBg: M.tenantLight,
-    badgeBg: M.tenantLight,
-    badgeText: M.tenant,
+    selectedBorder: BAI.tenantBorder,
+    selectedBg: BAI.tenantLight,
+    badgeBg: BAI.tenantLight,
+    badgeText: BAI.tenant,
   },
   blue: {
-    selectedBorder: M.ownerBorder,
-    selectedBg: M.ownerLight,
-    badgeBg: M.ownerLight,
-    badgeText: M.owner,
+    selectedBorder: BAI.ownerBorder,
+    selectedBg: BAI.ownerLight,
+    badgeBg: BAI.ownerLight,
+    badgeText: BAI.owner,
   },
   amber: {
     selectedBorder: '#f3c99a',
@@ -43,10 +27,10 @@ const colorSets = {
     badgeText: '#a0622a',
   },
   gray: {
-    selectedBorder: M.borderMid,
-    selectedBg: M.muted,
-    badgeBg: M.muted,
-    badgeText: M.inkMid,
+    selectedBorder: BAI.borderStrong,
+    selectedBg: BAI.bgMuted,
+    badgeBg: BAI.bgMuted,
+    badgeText: BAI.inkMid,
   },
 }
 
@@ -129,25 +113,25 @@ export const StatusChangeModal = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
       <div
         className="rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col"
-        style={{ background: M.surface, boxShadow: '0 8px 32px rgba(13,12,10,0.12)' }}
+        style={{ background: BAI.bgSurface, boxShadow: '0 8px 32px rgba(13,12,10,0.12)' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div
           className="flex items-center justify-between p-6 flex-shrink-0"
-          style={{ borderBottom: `1px solid ${M.border}` }}
+          style={{ borderBottom: `1px solid ${BAI.border}` }}
         >
           <div>
-            <h2 className="text-xl font-bold" style={{ color: M.ink }}>
+            <h2 className="text-xl font-bold" style={{ color: BAI.ink }}>
               {step === 'status' ? 'Changer le statut' : 'Choisir un locataire'}
             </h2>
-            <p className="text-sm mt-1 line-clamp-1" style={{ color: M.inkMid }}>{propertyTitle}</p>
+            <p className="text-sm mt-1 line-clamp-1" style={{ color: BAI.inkMid }}>{propertyTitle}</p>
           </div>
           <button
             onClick={onClose}
             className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
-            style={{ color: M.inkFaint }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
+            style={{ color: BAI.inkFaint }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = BAI.bgMuted)}
             onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
           >
             <X className="w-5 h-5" />
@@ -174,17 +158,17 @@ export const StatusChangeModal = ({
                             background: colors.selectedBg,
                           }
                         : {
-                            borderColor: M.border,
+                            borderColor: BAI.border,
                           }
                     }
                     onMouseEnter={(e) => {
                       if (!isSelected) {
-                        (e.currentTarget as HTMLElement).style.borderColor = M.borderMid
+                        (e.currentTarget as HTMLElement).style.borderColor = BAI.borderStrong
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (!isSelected) {
-                        (e.currentTarget as HTMLElement).style.borderColor = M.border
+                        (e.currentTarget as HTMLElement).style.borderColor = BAI.border
                       }
                     }}
                   >
@@ -205,11 +189,11 @@ export const StatusChangeModal = ({
                           {statusOption.label}
                         </span>
                         {isCurrent && (
-                          <span className="text-xs font-medium" style={{ color: M.inkFaint }}>(actuel)</span>
+                          <span className="text-xs font-medium" style={{ color: BAI.inkFaint }}>(actuel)</span>
                         )}
                       </div>
                       {statusOption.description && (
-                        <p className="text-sm mt-1" style={{ color: M.inkMid }}>{statusOption.description}</p>
+                        <p className="text-sm mt-1" style={{ color: BAI.inkMid }}>{statusOption.description}</p>
                       )}
                     </div>
                   </label>
@@ -220,7 +204,7 @@ export const StatusChangeModal = ({
             {/* Actions */}
             <div
               className="flex gap-3 p-6 flex-shrink-0"
-              style={{ borderTop: `1px solid ${M.border}` }}
+              style={{ borderTop: `1px solid ${BAI.border}` }}
             >
               <button
                 type="button"
@@ -248,13 +232,13 @@ export const StatusChangeModal = ({
           <>
             {/* Tenant Selection */}
             <div className="p-6 flex-1 overflow-hidden flex flex-col">
-              <p className="text-sm mb-4" style={{ color: M.inkMid }}>
+              <p className="text-sm mb-4" style={{ color: BAI.inkMid }}>
                 Sélectionnez le locataire pour ce bien parmi vos contacts :
               </p>
 
               {/* Search */}
               <div className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: M.inkFaint }} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: BAI.inkFaint }} />
                 <input
                   type="text"
                   placeholder="Rechercher un contact..."
@@ -268,8 +252,8 @@ export const StatusChangeModal = ({
               <div className="flex-1 overflow-y-auto space-y-2 max-h-64">
                 {filteredContacts.length === 0 ? (
                   <div className="text-center py-8">
-                    <MessageCircle className="w-10 h-10 mx-auto mb-2" style={{ color: M.inkFaint }} />
-                    <p className="text-sm" style={{ color: M.inkFaint }}>
+                    <MessageCircle className="w-10 h-10 mx-auto mb-2" style={{ color: BAI.inkFaint }} />
+                    <p className="text-sm" style={{ color: BAI.inkFaint }}>
                       {contacts.length === 0
                         ? 'Aucun contact. Discutez avec un locataire potentiel pour le voir ici.'
                         : 'Aucun contact trouvé.'}
@@ -282,17 +266,17 @@ export const StatusChangeModal = ({
                       className="flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all"
                       style={
                         selectedTenantId === contact.id
-                          ? { borderColor: M.ownerBorder, background: M.ownerLight }
-                          : { borderColor: M.border }
+                          ? { borderColor: BAI.ownerBorder, background: BAI.ownerLight }
+                          : { borderColor: BAI.border }
                       }
                       onMouseEnter={(e) => {
                         if (selectedTenantId !== contact.id) {
-                          (e.currentTarget as HTMLElement).style.borderColor = M.borderMid
+                          (e.currentTarget as HTMLElement).style.borderColor = BAI.borderStrong
                         }
                       }}
                       onMouseLeave={(e) => {
                         if (selectedTenantId !== contact.id) {
-                          (e.currentTarget as HTMLElement).style.borderColor = M.border
+                          (e.currentTarget as HTMLElement).style.borderColor = BAI.border
                         }
                       }}
                     >
@@ -306,20 +290,20 @@ export const StatusChangeModal = ({
                       />
                       <div
                         className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                        style={{ background: M.ownerLight }}
+                        style={{ background: BAI.ownerLight }}
                       >
                         {contact.avatar ? (
                           <img src={contact.avatar} alt="" className="w-10 h-10 rounded-full object-cover" />
                         ) : (
-                          <User className="w-5 h-5" style={{ color: M.owner }} />
+                          <User className="w-5 h-5" style={{ color: BAI.owner }} />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm" style={{ color: M.ink }}>
+                        <p className="font-medium text-sm" style={{ color: BAI.ink }}>
                           {contact.firstName} {contact.lastName}
                         </p>
                         {contact.email && (
-                          <p className="text-xs truncate" style={{ color: M.inkFaint }}>{contact.email}</p>
+                          <p className="text-xs truncate" style={{ color: BAI.inkFaint }}>{contact.email}</p>
                         )}
                       </div>
                     </label>
@@ -331,7 +315,7 @@ export const StatusChangeModal = ({
             {/* Actions */}
             <div
               className="flex gap-3 p-6 flex-shrink-0"
-              style={{ borderTop: `1px solid ${M.border}` }}
+              style={{ borderTop: `1px solid ${BAI.border}` }}
             >
               <button
                 type="button"

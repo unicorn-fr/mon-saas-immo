@@ -2,25 +2,7 @@ import { useState, useEffect } from 'react'
 import { X, Calendar, Clock, Info, CheckCircle, AlertCircle } from 'lucide-react'
 import { TimeSlotPicker } from './TimeSlotPicker'
 import { useBookings } from '../../hooks/useBookings'
-
-const M = {
-  ink: '#0d0c0a',
-  inkMid: '#5a5754',
-  inkFaint: '#9e9b96',
-  night: '#1a1a2e',
-  owner: '#1a3270',
-  ownerLight: '#eaf0fb',
-  ownerBorder: '#b8ccf0',
-  tenant: '#1b5e3b',
-  tenantLight: '#edf7f2',
-  tenantBorder: '#9fd4ba',
-  border: '#e4e1db',
-  borderMid: '#ccc9c3',
-  muted: '#f4f2ee',
-  surface: '#ffffff',
-  bg: '#fafaf8',
-  shadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
-}
+import { BAI } from '../../constants/bailio-tokens'
 
 interface BookingModalProps {
   isOpen: boolean
@@ -132,15 +114,15 @@ export const BookingModal = ({
           {/* Header */}
           <div
             className="flex items-start justify-between p-6"
-            style={{ borderBottom: `1px solid ${M.border}` }}
+            style={{ borderBottom: `1px solid ${BAI.border}` }}
           >
             <div>
-              <h2 className="text-2xl font-bold" style={{ color: M.ink }}>Réserver une visite</h2>
-              <p className="text-sm mt-1" style={{ color: M.inkMid }}>{propertyTitle}</p>
+              <h2 className="text-2xl font-bold" style={{ color: BAI.ink }}>Réserver une visite</h2>
+              <p className="text-sm mt-1" style={{ color: BAI.inkMid }}>{propertyTitle}</p>
             </div>
             <button
               onClick={onClose}
-              style={{ color: M.inkFaint }}
+              style={{ color: BAI.inkFaint }}
             >
               <X className="w-6 h-6" />
             </button>
@@ -150,11 +132,11 @@ export const BookingModal = ({
           <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
             {showSuccess ? (
               <div className="text-center py-8">
-                <CheckCircle className="w-16 h-16 mx-auto mb-4" style={{ color: M.tenant }} />
-                <h3 className="text-xl font-bold mb-2" style={{ color: M.ink }}>
+                <CheckCircle className="w-16 h-16 mx-auto mb-4" style={{ color: BAI.tenant }} />
+                <h3 className="text-xl font-bold mb-2" style={{ color: BAI.ink }}>
                   Réservation confirmée !
                 </h3>
-                <p style={{ color: M.inkMid }}>
+                <p style={{ color: BAI.inkMid }}>
                   Votre demande de visite a été envoyée au propriétaire.
                 </p>
               </div>
@@ -162,7 +144,7 @@ export const BookingModal = ({
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Date Selection */}
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: M.inkMid }}>
+                  <label className="block text-sm font-medium mb-2" style={{ color: BAI.inkMid }}>
                     <Calendar className="w-4 h-4 inline mr-2" />
                     Date de visite
                   </label>
@@ -173,10 +155,10 @@ export const BookingModal = ({
                     min={today}
                     className="w-full px-4 py-2 rounded-xl"
                     style={{
-                      border: `1px solid ${M.border}`,
+                      border: `1px solid ${BAI.border}`,
                       outline: 'none',
-                      background: M.surface,
-                      color: M.ink,
+                      background: BAI.bgSurface,
+                      color: BAI.ink,
                     }}
                     required
                   />
@@ -185,7 +167,7 @@ export const BookingModal = ({
                 {/* Time Selection */}
                 {selectedDate && (
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: M.inkMid }}>
+                    <label className="block text-sm font-medium mb-2" style={{ color: BAI.inkMid }}>
                       <Clock className="w-4 h-4 inline mr-2" />
                       Heure de visite
                     </label>
@@ -203,7 +185,7 @@ export const BookingModal = ({
                 {selectedTime && (
                   <div
                     className="flex items-center gap-2 text-sm rounded-xl px-4 py-2"
-                    style={{ background: M.muted, color: M.inkMid }}
+                    style={{ background: BAI.bgMuted, color: BAI.inkMid }}
                   >
                     <Clock className="w-4 h-4" />
                     <span>
@@ -214,7 +196,7 @@ export const BookingModal = ({
 
                 {/* Notes */}
                 <div>
-                  <label htmlFor="notes" className="block text-sm font-medium mb-2" style={{ color: M.inkMid }}>
+                  <label htmlFor="notes" className="block text-sm font-medium mb-2" style={{ color: BAI.inkMid }}>
                     Notes (optionnel)
                   </label>
                   <textarea
@@ -224,10 +206,10 @@ export const BookingModal = ({
                     rows={3}
                     className="w-full px-4 py-2 rounded-xl resize-none"
                     style={{
-                      border: `1px solid ${M.border}`,
+                      border: `1px solid ${BAI.border}`,
                       outline: 'none',
-                      background: M.surface,
-                      color: M.ink,
+                      background: BAI.bgSurface,
+                      color: BAI.ink,
                     }}
                     placeholder="Précisez vos préférences ou questions..."
                   />
@@ -237,12 +219,12 @@ export const BookingModal = ({
                 <div
                   className="rounded-xl p-4 flex gap-3"
                   style={{
-                    background: M.ownerLight,
-                    border: `1px solid ${M.ownerBorder}`,
+                    background: BAI.ownerLight,
+                    border: `1px solid ${BAI.ownerBorder}`,
                   }}
                 >
-                  <Info className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: M.owner }} />
-                  <div className="text-sm" style={{ color: M.owner }}>
+                  <Info className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: BAI.owner }} />
+                  <div className="text-sm" style={{ color: BAI.owner }}>
                     <p className="font-medium mb-1">À savoir :</p>
                     <ul className="list-disc list-inside space-y-1">
                       <li>Le propriétaire recevra une notification de votre demande</li>
@@ -275,7 +257,7 @@ export const BookingModal = ({
           {!showSuccess && (
             <div
               className="flex items-center justify-end gap-3 p-6"
-              style={{ borderTop: `1px solid ${M.border}`, background: M.muted }}
+              style={{ borderTop: `1px solid ${BAI.border}`, background: BAI.bgMuted }}
             >
               <button
                 type="button"
@@ -283,9 +265,9 @@ export const BookingModal = ({
                 disabled={isSubmitting}
                 className="px-6 py-2 rounded-xl transition-colors disabled:opacity-50"
                 style={{
-                  color: M.inkMid,
-                  background: M.surface,
-                  border: `1px solid ${M.border}`,
+                  color: BAI.inkMid,
+                  background: BAI.bgSurface,
+                  border: `1px solid ${BAI.border}`,
                 }}
               >
                 Annuler
@@ -294,7 +276,7 @@ export const BookingModal = ({
                 onClick={handleSubmit}
                 disabled={!selectedDate || !selectedTime || isSubmitting}
                 className="px-6 py-2 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                style={{ background: M.night, color: M.surface }}
+                style={{ background: BAI.night, color: BAI.bgSurface }}
               >
                 {isSubmitting ? (
                   <>

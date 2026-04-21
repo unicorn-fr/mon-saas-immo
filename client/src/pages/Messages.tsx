@@ -8,21 +8,7 @@ import { MessageSquare, FolderOpen, Home, FileText } from 'lucide-react'
 import { Layout } from '../components/layout/Layout'
 import { useAuth } from '../hooks/useAuth'
 import { useNavigate, useLocation } from 'react-router-dom'
-
-const M = {
-  ink:      '#0d0c0a',
-  inkMid:   '#5a5754',
-  inkFaint: '#9e9b96',
-  border:   '#e4e1db',
-  muted:    '#f4f2ee',
-  surface:  '#ffffff',
-  owner:    '#1a3270',
-  ownerL:   '#eaf0fb',
-  ownerB:   '#b8ccf0',
-  tenant:   '#1b5e3b',
-  tenantL:  '#edf7f2',
-  night:    '#1a1a2e',
-}
+import { BAI } from '../constants/bailio-tokens'
 
 export default function Messages() {
   const { user, isOwner } = useAuth()
@@ -61,14 +47,14 @@ export default function Messages() {
   return (
     <Layout>
       <div
-        className="h-full overflow-hidden flex"
+        className="h-full overflow-hidden flex flex-col md:flex-row"
         style={{ backgroundColor: '#fafaf8', fontFamily: "'DM Sans', system-ui, sans-serif" }}
       >
 
         {/* Conversation list — left panel */}
         <div
-          className={`w-full lg:w-[300px] flex-shrink-0 flex flex-col ${isMobileView ? 'hidden lg:flex' : 'flex'}`}
-          style={{ background: M.surface, borderRight: `1px solid ${M.border}` }}
+          className={`w-full md:w-[300px] flex-shrink-0 flex flex-col ${isMobileView ? 'hidden md:flex' : 'flex'}`}
+          style={{ background: BAI.bgSurface, borderRight: `1px solid ${BAI.border}` }}
         >
           <ConversationList
             selectedConversationId={selectedConversation?.id || null}
@@ -78,32 +64,32 @@ export default function Messages() {
           />
         </div>
 
-        {/* Chat window */}
+        {/* Chat window — visible si showChat sur mobile, ou toujours sur md+ */}
         <div
-          className={`flex-1 overflow-hidden ${!selectedConversation ? 'hidden lg:flex' : 'flex'}`}
+          className={`flex-1 overflow-hidden ${isMobileView ? 'flex' : 'hidden md:flex'}`}
           style={{ background: '#fafaf8' }}
         >
           {selectedConversation ? (
             <div className="flex flex-col h-full overflow-hidden">
-              {/* Owner CTA bar — visible on all screen sizes */}
+              {/* Owner CTA bar — visible on mobile/tablet, hidden on xl where right panel shows */}
               {isOwner && otherUserId && (
                 <div
                   className="flex items-center justify-between flex-shrink-0 xl:hidden"
                   style={{
                     padding: '8px 16px',
-                    background: M.surface,
-                    borderBottom: `1px solid ${M.border}`,
+                    background: BAI.bgSurface,
+                    borderBottom: `1px solid ${BAI.border}`,
                   }}
                 >
                   <div>
-                    <p style={{ fontSize: 12, color: M.inkFaint, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+                    <p style={{ fontSize: 12, color: BAI.inkFaint, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
                       Vous discutez avec{' '}
-                      <span style={{ color: M.ink, fontWeight: 500 }}>
+                      <span style={{ color: BAI.ink, fontWeight: 500 }}>
                         {otherUser?.firstName} {otherUser?.lastName}
                       </span>
                     </p>
                     {selectedConversation?.property && (
-                      <p style={{ fontSize: 11, color: M.tenant, fontWeight: 500, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: 1 }}>
+                      <p style={{ fontSize: 11, color: BAI.tenant, fontWeight: 500, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: 1 }}>
                         <Home style={{ display: 'inline', width: 10, height: 10, marginRight: 3 }} />
                         {selectedConversation.property.title} · {Number(selectedConversation.property.price).toLocaleString('fr-FR')} €/mois
                       </p>
@@ -114,7 +100,7 @@ export default function Messages() {
                     style={{
                       display: 'inline-flex', alignItems: 'center', gap: 6,
                       padding: '6px 12px', borderRadius: 7,
-                      background: M.night, color: '#ffffff',
+                      background: BAI.night, color: '#ffffff',
                       fontFamily: "'DM Sans', system-ui, sans-serif",
                       fontWeight: 500, fontSize: 12,
                       border: 'none', cursor: 'pointer',
@@ -133,15 +119,15 @@ export default function Messages() {
             <div className="flex flex-col items-center justify-center w-full h-full gap-5">
               <div
                 className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                style={{ background: M.muted, border: `1px solid ${M.border}`, boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)' }}
+                style={{ background: BAI.bgMuted, border: `1px solid ${BAI.border}`, boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)' }}
               >
-                <MessageSquare className="w-7 h-7" strokeWidth={1.5} style={{ color: M.inkFaint }} />
+                <MessageSquare className="w-7 h-7" strokeWidth={1.5} style={{ color: BAI.inkFaint }} />
               </div>
               <div className="text-center">
-                <p className="mb-1.5" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 700, fontStyle: 'italic', fontSize: '22px', color: M.ink }}>
+                <p className="mb-1.5" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 700, fontStyle: 'italic', fontSize: '22px', color: BAI.ink }}>
                   Vos messages
                 </p>
-                <p style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: '13px', color: M.inkFaint, maxWidth: '210px', lineHeight: '1.6' }}>
+                <p style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: '13px', color: BAI.inkFaint, maxWidth: '210px', lineHeight: '1.6' }}>
                   Sélectionnez une conversation pour commencer à échanger.
                 </p>
               </div>
@@ -153,11 +139,11 @@ export default function Messages() {
         {selectedConversation && otherUser && (
           <div
             className="hidden xl:flex flex-col flex-shrink-0"
-            style={{ width: 240, background: M.surface, borderLeft: `1px solid ${M.border}` }}
+            style={{ width: 240, background: BAI.bgSurface, borderLeft: `1px solid ${BAI.border}` }}
           >
             {/* Header */}
-            <div className="p-4 flex-shrink-0" style={{ borderBottom: `1px solid ${M.border}` }}>
-              <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: M.inkFaint, marginBottom: 12 }}>
+            <div className="p-4 flex-shrink-0" style={{ borderBottom: `1px solid ${BAI.border}` }}>
+              <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, marginBottom: 12 }}>
                 Interlocuteur
               </p>
 
@@ -168,21 +154,21 @@ export default function Messages() {
                 ) : (
                   <div
                     className="w-14 h-14 rounded-full flex items-center justify-center text-[18px] font-bold"
-                    style={{ background: isOwner ? M.tenantL : M.ownerL, color: isOwner ? M.tenant : M.owner }}
+                    style={{ background: isOwner ? BAI.tenantLight : BAI.ownerLight, color: isOwner ? BAI.tenant : BAI.owner }}
                   >
                     {otherInitials}
                   </div>
                 )}
                 <div className="text-center">
-                  <p className="font-semibold text-[14px]" style={{ color: M.ink }}>
+                  <p className="font-semibold text-[14px]" style={{ color: BAI.ink }}>
                     {otherUser.firstName} {otherUser.lastName}
                   </p>
                   <span
                     className="inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full font-semibold"
                     style={
                       isOwner
-                        ? { background: M.tenantL, color: M.tenant, border: `1px solid #9fd4ba` }
-                        : { background: M.ownerL, color: M.owner, border: `1px solid ${M.ownerB}` }
+                        ? { background: BAI.tenantLight, color: BAI.tenant, border: `1px solid #9fd4ba` }
+                        : { background: BAI.ownerLight, color: BAI.owner, border: `1px solid ${BAI.ownerBorder}` }
                     }
                   >
                     {isOwner ? 'Locataire' : 'Propriétaire'}
@@ -194,7 +180,7 @@ export default function Messages() {
               {selectedConversation?.property && (
                 <div
                   className="mb-4 rounded-lg overflow-hidden cursor-pointer"
-                  style={{ border: `1px solid ${M.border}`, background: M.muted }}
+                  style={{ border: `1px solid ${BAI.border}`, background: BAI.bgMuted }}
                   onClick={() => { if (selectedConversation.property?.id) navigate(`/property/${selectedConversation.property.id}`) }}
                 >
                   {selectedConversation.property.images?.[0] && (
@@ -205,13 +191,13 @@ export default function Messages() {
                     />
                   )}
                   <div className="p-2">
-                    <p style={{ fontSize: 11, fontWeight: 600, color: M.ink, lineHeight: 1.3, marginBottom: 2 }} className="truncate">
+                    <p style={{ fontSize: 11, fontWeight: 600, color: BAI.ink, lineHeight: 1.3, marginBottom: 2 }} className="truncate">
                       {selectedConversation.property.title}
                     </p>
-                    <p style={{ fontSize: 11, color: M.tenant, fontWeight: 600 }}>
+                    <p style={{ fontSize: 11, color: BAI.tenant, fontWeight: 600 }}>
                       {Number(selectedConversation.property.price).toLocaleString('fr-FR')} €/mois
                     </p>
-                    <p style={{ fontSize: 10, color: M.inkFaint }}>
+                    <p style={{ fontSize: 10, color: BAI.inkFaint }}>
                       {selectedConversation.property.city}
                     </p>
                   </div>
@@ -224,9 +210,9 @@ export default function Messages() {
                   <button
                     onClick={() => navigate(`/owner/tenants/${otherUserId}`)}
                     className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-medium transition-colors"
-                    style={{ background: M.ownerL, color: M.owner, border: `1px solid ${M.ownerB}` }}
+                    style={{ background: BAI.ownerLight, color: BAI.owner, border: `1px solid ${BAI.ownerBorder}` }}
                     onMouseEnter={(e) => (e.currentTarget.style.background = '#d4e4f7')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = M.ownerL)}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = BAI.ownerLight)}
                   >
                     <FolderOpen className="w-3.5 h-3.5 flex-shrink-0" />
                     Voir le dossier
@@ -236,9 +222,9 @@ export default function Messages() {
                   <button
                     onClick={() => setShowLeaseModal(true)}
                     className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-medium transition-colors"
-                    style={{ background: M.night, color: '#fff' }}
+                    style={{ background: BAI.night, color: '#fff' }}
                     onMouseEnter={(e) => (e.currentTarget.style.background = '#2a2a4e')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = M.night)}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = BAI.night)}
                   >
                     <Home className="w-3.5 h-3.5 flex-shrink-0" />
                     Mettre en location
@@ -248,9 +234,9 @@ export default function Messages() {
                   <button
                     onClick={() => navigate('/search')}
                     className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-medium transition-colors"
-                    style={{ background: M.tenantL, color: M.tenant, border: `1px solid #9fd4ba` }}
+                    style={{ background: BAI.tenantLight, color: BAI.tenant, border: `1px solid #9fd4ba` }}
                     onMouseEnter={(e) => (e.currentTarget.style.background = '#d4ede3')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = M.tenantL)}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = BAI.tenantLight)}
                   >
                     <Home className="w-3.5 h-3.5 flex-shrink-0" />
                     Voir les annonces
@@ -261,7 +247,7 @@ export default function Messages() {
 
             {/* Activité contrat */}
             <div className="p-4 flex-1 overflow-y-auto">
-              <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: M.inkFaint, marginBottom: 12 }}>
+              <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, marginBottom: 12 }}>
                 Suivi du contrat
               </p>
               {otherUserId && (
@@ -270,8 +256,8 @@ export default function Messages() {
             </div>
 
             {/* Footer */}
-            <div className="p-4 flex-shrink-0" style={{ borderTop: `1px solid ${M.border}` }}>
-              <p style={{ fontSize: 10, color: M.inkFaint, lineHeight: 1.5, textAlign: 'center' }}>
+            <div className="p-4 flex-shrink-0" style={{ borderTop: `1px solid ${BAI.border}` }}>
+              <p style={{ fontSize: 10, color: BAI.inkFaint, lineHeight: 1.5, textAlign: 'center' }}>
                 Chiffré TLS · Hébergé en France
               </p>
             </div>

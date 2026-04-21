@@ -103,8 +103,10 @@ export const VisitSlotsManager = ({ propertyId, onClose }: Props) => {
     color: '#0d0c0a',
     fontFamily: "'DM Sans', system-ui, sans-serif",
     fontSize: 13,
-    padding: '8px 10px',
+    padding: '10px 10px',
     outline: 'none',
+    minHeight: 44,
+    width: '100%',
   }
 
   return (
@@ -117,20 +119,20 @@ export const VisitSlotsManager = ({ propertyId, onClose }: Props) => {
         fontFamily: "'DM Sans', system-ui, sans-serif",
       }}
     >
-      {/* Header */}
+      {/* Header — padding et font responsive */}
       <div
-        className="flex items-center justify-between p-5"
+        className="flex items-center justify-between px-4 py-4 sm:p-5"
         style={{ borderBottom: '1px solid #e4e1db' }}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <div
-            className="w-9 h-9 flex items-center justify-center"
+            className="w-9 h-9 flex-shrink-0 flex items-center justify-center"
             style={{ background: '#eaf0fb', borderRadius: 9 }}
           >
             <Clock className="w-4 h-4" style={{ color: '#1a3270' }} />
           </div>
-          <div>
-            <h3 style={{ fontSize: 15, fontWeight: 600, color: '#0d0c0a' }}>
+          <div className="min-w-0">
+            <h3 style={{ fontSize: 'clamp(13px, 3.5vw, 15px)', fontWeight: 600, color: '#0d0c0a' }}>
               Créneaux de visite disponibles
             </h3>
             <p style={{ fontSize: 12, color: '#9e9b96', marginTop: 1 }}>
@@ -141,14 +143,15 @@ export const VisitSlotsManager = ({ propertyId, onClose }: Props) => {
         {onClose && (
           <button
             onClick={onClose}
-            className="flex items-center justify-center transition-opacity hover:opacity-70"
+            className="flex-shrink-0 flex items-center justify-center transition-opacity hover:opacity-70"
             style={{
-              width: 32,
-              height: 32,
+              width: 36,
+              height: 36,
               borderRadius: 8,
               background: '#f4f2ee',
               border: 'none',
               cursor: 'pointer',
+              marginLeft: 12,
             }}
           >
             <X className="w-4 h-4" style={{ color: '#5a5754' }} />
@@ -156,7 +159,7 @@ export const VisitSlotsManager = ({ propertyId, onClose }: Props) => {
         )}
       </div>
 
-      <div className="p-5 space-y-5">
+      <div className="p-4 sm:p-5 space-y-5">
         {/* Existing slots */}
         {isLoading ? (
           <div className="flex items-center justify-center py-6">
@@ -176,14 +179,14 @@ export const VisitSlotsManager = ({ propertyId, onClose }: Props) => {
             {slots.map((slot) => (
               <div
                 key={slot.id}
-                className="flex items-center justify-between px-4 py-3"
+                className="flex items-center justify-between flex-wrap gap-2 px-4 py-3"
                 style={{
                   background: '#eaf0fb',
                   border: '1px solid #b8ccf0',
                   borderRadius: 9,
                 }}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                   <span
                     style={{
                       fontSize: 11,
@@ -192,7 +195,7 @@ export const VisitSlotsManager = ({ propertyId, onClose }: Props) => {
                       background: '#ffffff',
                       border: '1px solid #b8ccf0',
                       borderRadius: 6,
-                      padding: '2px 8px',
+                      padding: '4px 8px',
                       letterSpacing: '0.02em',
                     }}
                   >
@@ -202,23 +205,24 @@ export const VisitSlotsManager = ({ propertyId, onClose }: Props) => {
                     {slot.startTime} – {slot.endTime}
                   </span>
                 </div>
+                {/* Delete button — touch target 44px */}
                 <button
                   onClick={() => handleDelete(slot.id)}
                   disabled={deletingId === slot.id}
                   className="flex items-center justify-center transition-opacity hover:opacity-70"
                   style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 7,
+                    width: 44,
+                    height: 44,
+                    borderRadius: 8,
                     background: '#fef2f2',
                     border: '1px solid #fca5a5',
                     cursor: 'pointer',
                   }}
                 >
                   {deletingId === slot.id ? (
-                    <Loader className="w-3 h-3 animate-spin" style={{ color: '#9b1c1c' }} />
+                    <Loader className="w-4 h-4 animate-spin" style={{ color: '#9b1c1c' }} />
                   ) : (
-                    <X className="w-3 h-3" style={{ color: '#9b1c1c' }} />
+                    <X className="w-4 h-4" style={{ color: '#9b1c1c' }} />
                   )}
                 </button>
               </div>
@@ -226,7 +230,7 @@ export const VisitSlotsManager = ({ propertyId, onClose }: Props) => {
           </div>
         )}
 
-        {/* Add slot form */}
+        {/* Add slot form — selects en grid 1 col mobile, 3 cols sm+ */}
         <div
           className="p-4 space-y-3"
           style={{ background: '#fafaf8', border: '1px solid #e4e1db', borderRadius: 10 }}
@@ -234,11 +238,13 @@ export const VisitSlotsManager = ({ propertyId, onClose }: Props) => {
           <p style={{ fontSize: 12, fontWeight: 600, color: '#5a5754', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
             Ajouter un créneau
           </p>
-          <div className="flex items-center gap-3">
+
+          {/* Selects: colonne sur mobile, 3 colonnes sur sm+ */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <select
               value={form.dayOfWeek}
               onChange={(e) => setForm((f) => ({ ...f, dayOfWeek: Number(e.target.value) }))}
-              style={{ ...selectStyle, flex: '1 1 0' }}
+              style={selectStyle}
             >
               {DAY_OPTIONS.map((d) => (
                 <option key={d.value} value={d.value}>
@@ -250,7 +256,7 @@ export const VisitSlotsManager = ({ propertyId, onClose }: Props) => {
             <select
               value={form.startTime}
               onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))}
-              style={{ ...selectStyle, flex: '1 1 0' }}
+              style={selectStyle}
             >
               {HOUR_OPTIONS.map((h) => (
                 <option key={h} value={h}>
@@ -262,7 +268,7 @@ export const VisitSlotsManager = ({ propertyId, onClose }: Props) => {
             <select
               value={form.endTime}
               onChange={(e) => setForm((f) => ({ ...f, endTime: e.target.value }))}
-              style={{ ...selectStyle, flex: '1 1 0' }}
+              style={selectStyle}
             >
               {HOUR_OPTIONS.map((h) => (
                 <option key={h} value={h}>
@@ -272,20 +278,22 @@ export const VisitSlotsManager = ({ propertyId, onClose }: Props) => {
             </select>
           </div>
 
+          {/* Bouton Ajouter — full width sur mobile, auto sur sm+ */}
           <button
             onClick={handleAdd}
             disabled={isAdding}
-            className="flex items-center gap-2 transition-opacity hover:opacity-80"
+            className="flex items-center justify-center gap-2 w-full sm:w-auto transition-opacity hover:opacity-80"
             style={{
               background: '#1a3270',
               color: '#ffffff',
               border: 'none',
               borderRadius: 8,
-              padding: '9px 16px',
+              padding: '0 20px',
               fontSize: 13,
               fontWeight: 500,
               cursor: 'pointer',
               fontFamily: "'DM Sans', system-ui, sans-serif",
+              minHeight: 44,
             }}
           >
             {isAdding ? (

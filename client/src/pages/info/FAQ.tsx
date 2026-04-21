@@ -3,20 +3,7 @@ import { Link } from 'react-router-dom'
 import { ChevronDown } from 'lucide-react'
 import { Layout } from '../../components/layout/Layout'
 import Footer from '../../components/layout/Footer'
-
-const M = {
-  bg: '#fafaf8',
-  surface: '#ffffff',
-  muted: '#f4f2ee',
-  ink: '#0d0c0a',
-  inkMid: '#5a5754',
-  inkFaint: '#9e9b96',
-  night: '#1a1a2e',
-  caramel: '#c4976a',
-  border: '#e4e1db',
-  display: "'Cormorant Garamond', Georgia, serif",
-  body: "'DM Sans', system-ui, sans-serif",
-}
+import { BAI } from '../../constants/bailio-tokens'
 
 const FAQ_ITEMS = [
   {
@@ -99,16 +86,16 @@ export default function FAQ() {
 
   return (
     <Layout showFooter={false}>
-      <div className="min-h-screen" style={{ background: M.bg, fontFamily: M.body }}>
+      <div className="min-h-screen" style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}>
         {/* Hero */}
         <section
           className="py-20 px-4 text-center"
-          style={{ background: M.night }}
+          style={{ background: BAI.night }}
         >
           <div className="max-w-3xl mx-auto">
             <h1
               style={{
-                fontFamily: M.display,
+                fontFamily: BAI.fontDisplay,
                 fontWeight: 700,
                 fontStyle: 'italic',
                 fontSize: '52px',
@@ -121,7 +108,7 @@ export default function FAQ() {
             </h1>
             <p
               style={{
-                fontFamily: M.body,
+                fontFamily: BAI.fontBody,
                 fontSize: '16px',
                 color: 'rgba(255,255,255,0.7)',
                 lineHeight: 1.6,
@@ -142,9 +129,9 @@ export default function FAQ() {
                   <span
                     style={{
                       display: 'inline-block',
-                      background: M.muted,
-                      color: M.inkFaint,
-                      fontFamily: M.body,
+                      background: BAI.bgMuted,
+                      color: BAI.inkFaint,
+                      fontFamily: BAI.fontBody,
                       fontSize: '11px',
                       fontWeight: 600,
                       letterSpacing: '0.08em',
@@ -165,11 +152,11 @@ export default function FAQ() {
                       <div
                         key={key}
                         style={{
-                          background: M.surface,
-                          border: `1px solid ${M.border}`,
+                          background: BAI.bgSurface,
+                          border: `1px solid ${BAI.border}`,
                           borderRadius: '12px',
                           overflow: 'hidden',
-                          borderLeft: isOpen ? `3px solid ${M.night}` : `1px solid ${M.border}`,
+                          borderLeft: isOpen ? `3px solid ${BAI.night}` : `1px solid ${BAI.border}`,
                           transition: 'border 0.15s ease',
                         }}
                       >
@@ -183,10 +170,10 @@ export default function FAQ() {
                         >
                           <span
                             style={{
-                              fontFamily: M.body,
+                              fontFamily: BAI.fontBody,
                               fontWeight: 600,
                               fontSize: '15px',
-                              color: M.ink,
+                              color: BAI.ink,
                               paddingRight: '16px',
                             }}
                           >
@@ -194,21 +181,21 @@ export default function FAQ() {
                           </span>
                           <ChevronDown
                             className={`flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                            style={{ width: '18px', height: '18px', color: M.inkFaint }}
+                            style={{ width: '18px', height: '18px', color: BAI.inkFaint }}
                           />
                         </button>
                         {isOpen && (
                           <div
                             style={{
-                              borderTop: `1px solid ${M.border}`,
+                              borderTop: `1px solid ${BAI.border}`,
                               padding: '16px 20px 20px',
                             }}
                           >
                             <p
                               style={{
-                                fontFamily: M.body,
+                                fontFamily: BAI.fontBody,
                                 fontSize: '14px',
-                                color: M.inkMid,
+                                color: BAI.inkMid,
                                 lineHeight: 1.7,
                                 margin: 0,
                               }}
@@ -229,16 +216,16 @@ export default function FAQ() {
           <div
             className="text-center mt-14 py-10 px-8"
             style={{
-              background: M.surface,
-              border: `1px solid ${M.border}`,
+              background: BAI.bgSurface,
+              border: `1px solid ${BAI.border}`,
               borderRadius: '12px',
             }}
           >
             <p
               style={{
-                fontFamily: M.body,
+                fontFamily: BAI.fontBody,
                 fontSize: '15px',
-                color: M.inkMid,
+                color: BAI.inkMid,
                 marginBottom: '20px',
               }}
             >
@@ -250,9 +237,9 @@ export default function FAQ() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                background: M.night,
+                background: BAI.night,
                 color: '#ffffff',
-                fontFamily: M.body,
+                fontFamily: BAI.fontBody,
                 fontWeight: 600,
                 fontSize: '14px',
                 padding: '10px 24px',

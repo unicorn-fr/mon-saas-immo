@@ -18,29 +18,11 @@ import {
 } from 'lucide-react'
 import { dossierService, TenantDossierProfile, TenantDocument } from '../../services/dossier.service'
 import { WatermarkedViewer } from './WatermarkedViewer'
-
-// ── Maison tokens ──────────────────────────────────────────────────────────────
-const M = {
-  bg:          '#fafaf8',
-  surface:     '#ffffff',
-  muted:       '#f4f2ee',
-  ink:         '#0d0c0a',
-  inkMid:      '#5a5754',
-  inkFaint:    '#9e9b96',
-  owner:       '#1a3270',
-  ownerLight:  '#eaf0fb',
-  ownerBorder: '#b8ccf0',
-  border:      '#e4e1db',
-  borderMid:   '#ccc9c3',
-  caramel:     '#c4976a',
-  caramelLight:'#fdf5ec',
-  body:        "'DM Sans', system-ui, sans-serif",
-  display:     "'Cormorant Garamond', Georgia, serif",
-}
+import { BAI } from '../../constants/bailio-tokens'
 
 // ── Catégories de documents ────────────────────────────────────────────────────
 const CATEGORY_META: Record<string, { label: string; color: string; bg: string; border: string; icon: React.ReactNode }> = {
-  IDENTITE:  { label: 'Identité',   color: M.owner,    bg: M.ownerLight,  border: M.ownerBorder, icon: <User  style={{ width: 14, height: 14 }} /> },
+  IDENTITE:  { label: 'Identité',   color: BAI.owner,    bg: BAI.ownerLight,  border: BAI.ownerBorder, icon: <User  style={{ width: 14, height: 14 }} /> },
   EMPLOI:    { label: 'Emploi',     color: '#0369a1',  bg: '#f0f9ff',     border: '#bae6fd',     icon: <Briefcase style={{ width: 14, height: 14 }} /> },
   REVENUS:   { label: 'Revenus',    color: '#1b5e3b',  bg: '#edf7f2',     border: '#9fd4ba',     icon: <FileText  style={{ width: 14, height: 14 }} /> },
   DOMICILE:  { label: 'Domicile',   color: '#92400e',  bg: '#fdf5ec',     border: '#f3c99a',     icon: <Home  style={{ width: 14, height: 14 }} /> },
@@ -83,37 +65,37 @@ function DocButton({
       style={{
         display: 'flex', alignItems: 'center', gap: 10,
         padding: '10px 12px', borderRadius: 10,
-        border: `1px solid ${M.border}`, background: M.surface,
+        border: `1px solid ${BAI.border}`, background: BAI.bgSurface,
         cursor: 'pointer', width: '100%', textAlign: 'left',
         transition: 'border-color 0.15s, box-shadow 0.15s',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = M.ownerBorder
+        e.currentTarget.style.borderColor = BAI.ownerBorder
         e.currentTarget.style.boxShadow = '0 2px 8px rgba(26,50,112,0.08)'
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = M.border
+        e.currentTarget.style.borderColor = BAI.border
         e.currentTarget.style.boxShadow = 'none'
       }}
     >
       <div style={{
         width: 36, height: 36, borderRadius: 8, flexShrink: 0,
-        background: M.muted, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: BAI.bgMuted, display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <FileText style={{ width: 16, height: 16, color: M.owner }} />
+        <FileText style={{ width: 16, height: 16, color: BAI.owner }} />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontSize: 13, fontWeight: 500, color: M.ink, margin: 0, fontFamily: M.body, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <p style={{ fontSize: 13, fontWeight: 500, color: BAI.ink, margin: 0, fontFamily: BAI.fontBody, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {label}
         </p>
-        <p style={{ fontSize: 11, color: M.inkFaint, margin: 0, fontFamily: M.body }}>
+        <p style={{ fontSize: 11, color: BAI.inkFaint, margin: 0, fontFamily: BAI.fontBody }}>
           {sizeKB} Ko · filigrané
         </p>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-        <Lock style={{ width: 12, height: 12, color: M.owner }} />
-        <span style={{ fontSize: 11, color: M.owner, fontFamily: M.body, fontWeight: 600 }}>Voir</span>
-        <ChevronRight style={{ width: 14, height: 14, color: M.inkFaint }} />
+        <Lock style={{ width: 12, height: 12, color: BAI.owner }} />
+        <span style={{ fontSize: 11, color: BAI.owner, fontFamily: BAI.fontBody, fontWeight: 600 }}>Voir</span>
+        <ChevronRight style={{ width: 14, height: 14, color: BAI.inkFaint }} />
       </div>
     </button>
   )
@@ -129,7 +111,7 @@ function CategorySection({
 }) {
   const [open, setOpen] = useState(true)
   const meta = CATEGORY_META[category] ?? {
-    label: category, color: M.inkMid, bg: M.muted, border: M.border,
+    label: category, color: BAI.inkMid, bg: BAI.bgMuted, border: BAI.border,
     icon: <FileText style={{ width: 14, height: 14 }} />,
   }
 
@@ -155,7 +137,7 @@ function CategorySection({
         }}>
           {meta.icon}
         </div>
-        <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: meta.color, fontFamily: M.body, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: meta.color, fontFamily: BAI.fontBody, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
           {meta.label}
         </span>
         <span style={{
@@ -171,7 +153,7 @@ function CategorySection({
       </button>
 
       {open && (
-        <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8, background: M.surface }}>
+        <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8, background: BAI.bgSurface }}>
           {docs.map((doc) => (
             <DocButton key={doc.id} doc={doc} onView={onView} />
           ))}
@@ -241,7 +223,7 @@ export function DossierReviewModal({ tenantId, tenantName, onClose }: DossierRev
           background: 'rgba(13,12,10,0.55)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           padding: '16px',
-          fontFamily: M.body,
+          fontFamily: BAI.fontBody,
         }}
         onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
       >
@@ -249,8 +231,8 @@ export function DossierReviewModal({ tenantId, tenantName, onClose }: DossierRev
         <div
           className="w-full max-w-[820px]"
           style={{
-          background: M.bg,
-          border: `1px solid ${M.border}`,
+          background: BAI.bgBase,
+          border: `1px solid ${BAI.border}`,
           borderRadius: 16,
           boxShadow: '0 16px 56px rgba(13,12,10,0.3)',
           maxHeight: '94vh',
@@ -260,7 +242,7 @@ export function DossierReviewModal({ tenantId, tenantName, onClose }: DossierRev
 
           {/* Header */}
           <div style={{
-            background: M.owner,
+            background: BAI.owner,
             padding: '14px 20px',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             flexShrink: 0,
@@ -297,14 +279,14 @@ export function DossierReviewModal({ tenantId, tenantName, onClose }: DossierRev
 
           {/* Bandeau sécurité */}
           <div style={{
-            background: M.ownerLight,
-            borderBottom: `1px solid ${M.ownerBorder}`,
+            background: BAI.ownerLight,
+            borderBottom: `1px solid ${BAI.ownerBorder}`,
             padding: '6px 20px',
             display: 'flex', alignItems: 'center', gap: 8,
             flexShrink: 0,
           }}>
-            <Lock style={{ width: 12, height: 12, color: M.owner, flexShrink: 0 }} />
-            <p style={{ fontSize: 11, color: M.owner, margin: 0 }}>
+            <Lock style={{ width: 12, height: 12, color: BAI.owner, flexShrink: 0 }} />
+            <p style={{ fontSize: 11, color: BAI.owner, margin: 0 }}>
               Consultation uniquement — téléchargement et impression bloqués · Accès tracé
             </p>
           </div>
@@ -314,8 +296,8 @@ export function DossierReviewModal({ tenantId, tenantName, onClose }: DossierRev
 
             {loading ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 60, gap: 12 }}>
-                <Loader2 style={{ width: 28, height: 28, color: M.owner }} className="animate-spin" />
-                <p style={{ fontSize: 13, color: M.inkFaint }}>Chargement du dossier…</p>
+                <Loader2 style={{ width: 28, height: 28, color: BAI.owner }} className="animate-spin" />
+                <p style={{ fontSize: 13, color: BAI.inkFaint }}>Chargement du dossier…</p>
               </div>
 
             ) : shareRequired ? (
@@ -323,13 +305,13 @@ export function DossierReviewModal({ tenantId, tenantName, onClose }: DossierRev
                 display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 24px', gap: 16, textAlign: 'center',
               }}>
                 <div style={{
-                  width: 64, height: 64, borderRadius: '50%', background: M.muted,
+                  width: 64, height: 64, borderRadius: '50%', background: BAI.bgMuted,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
-                  <ShieldOff style={{ width: 28, height: 28, color: M.inkFaint }} />
+                  <ShieldOff style={{ width: 28, height: 28, color: BAI.inkFaint }} />
                 </div>
-                <p style={{ fontSize: 15, fontWeight: 600, color: M.ink }}>Dossier non encore partagé</p>
-                <p style={{ fontSize: 13, color: M.inkMid, maxWidth: 380 }}>
+                <p style={{ fontSize: 15, fontWeight: 600, color: BAI.ink }}>Dossier non encore partagé</p>
+                <p style={{ fontSize: 13, color: BAI.inkMid, maxWidth: 380 }}>
                   Le locataire n'a pas encore partagé son dossier avec vous.
                   Il sera accessible automatiquement une fois la candidature traitée.
                 </p>
@@ -343,52 +325,52 @@ export function DossierReviewModal({ tenantId, tenantName, onClose }: DossierRev
 
                   {/* Avatar + identité */}
                   <div style={{
-                    background: M.surface, border: `1px solid ${M.border}`, borderRadius: 12, padding: 16,
+                    background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: 16,
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
                       <div style={{
                         width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-                        background: M.owner, color: '#ffffff',
+                        background: BAI.owner, color: '#ffffff',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontFamily: M.display, fontWeight: 700, fontSize: 18, fontStyle: 'italic',
+                        fontFamily: BAI.fontDisplay, fontWeight: 700, fontSize: 18, fontStyle: 'italic',
                       }}>
                         {(profile.firstName?.[0] ?? '?').toUpperCase()}
                       </div>
                       <div style={{ minWidth: 0 }}>
-                        <p style={{ fontSize: 14, fontWeight: 600, color: M.ink, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <p style={{ fontSize: 14, fontWeight: 600, color: BAI.ink, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {fullName || 'Locataire'}
                         </p>
-                        <p style={{ fontSize: 11, color: M.inkFaint, margin: 0 }}>Candidat</p>
+                        <p style={{ fontSize: 11, color: BAI.inkFaint, margin: 0 }}>Candidat</p>
                       </div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {profile.email && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: M.inkMid }}>
-                          <Mail style={{ width: 13, height: 13, color: M.inkFaint, flexShrink: 0 }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: BAI.inkMid }}>
+                          <Mail style={{ width: 13, height: 13, color: BAI.inkFaint, flexShrink: 0 }} />
                           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{profile.email}</span>
                         </div>
                       )}
                       {profile.phone && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: M.inkMid }}>
-                          <Phone style={{ width: 13, height: 13, color: M.inkFaint, flexShrink: 0 }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: BAI.inkMid }}>
+                          <Phone style={{ width: 13, height: 13, color: BAI.inkFaint, flexShrink: 0 }} />
                           {profile.phone}
                         </div>
                       )}
                       {profile.birthDate && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: M.inkMid }}>
-                          <CalendarDays style={{ width: 13, height: 13, color: M.inkFaint, flexShrink: 0 }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: BAI.inkMid }}>
+                          <CalendarDays style={{ width: 13, height: 13, color: BAI.inkFaint, flexShrink: 0 }} />
                           {new Date(profile.birthDate).toLocaleDateString('fr-FR')}
                         </div>
                       )}
                       {profile.birthCity && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: M.inkMid }}>
-                          <MapPin style={{ width: 13, height: 13, color: M.inkFaint, flexShrink: 0 }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: BAI.inkMid }}>
+                          <MapPin style={{ width: 13, height: 13, color: BAI.inkFaint, flexShrink: 0 }} />
                           {profile.birthCity}
                         </div>
                       )}
                       {profile.nationality && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: M.inkMid }}>
-                          <Globe style={{ width: 13, height: 13, color: M.inkFaint, flexShrink: 0 }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: BAI.inkMid }}>
+                          <Globe style={{ width: 13, height: 13, color: BAI.inkFaint, flexShrink: 0 }} />
                           {profile.nationality}
                         </div>
                       )}
@@ -397,25 +379,25 @@ export function DossierReviewModal({ tenantId, tenantName, onClose }: DossierRev
 
                   {/* Situation professionnelle */}
                   {!!(composed?.employerName || composed?.contractType || composed?.netSalary) && (
-                    <div style={{ background: M.surface, border: `1px solid ${M.border}`, borderRadius: 12, padding: 16 }}>
-                      <p style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: M.inkFaint, marginBottom: 10 }}>
+                    <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: 16 }}>
+                      <p style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: BAI.inkFaint, marginBottom: 10 }}>
                         Situation pro.
                       </p>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         {!!composed.employerName && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: M.inkMid }}>
-                            <Briefcase style={{ width: 13, height: 13, color: M.inkFaint, flexShrink: 0 }} />
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: BAI.inkMid }}>
+                            <Briefcase style={{ width: 13, height: 13, color: BAI.inkFaint, flexShrink: 0 }} />
                             {String(composed.employerName)}
                           </div>
                         )}
                         {!!composed.contractType && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: M.inkMid }}>
-                            <FileText style={{ width: 13, height: 13, color: M.inkFaint, flexShrink: 0 }} />
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: BAI.inkMid }}>
+                            <FileText style={{ width: 13, height: 13, color: BAI.inkFaint, flexShrink: 0 }} />
                             {String(composed.contractType)}
                           </div>
                         )}
                         {!!composed.netSalary && (
-                          <p style={{ fontSize: 15, fontWeight: 700, color: M.ink, margin: '4px 0 0', fontFamily: M.display }}>
+                          <p style={{ fontSize: 15, fontWeight: 700, color: BAI.ink, margin: '4px 0 0', fontFamily: BAI.fontDisplay }}>
                             {Number(composed.netSalary).toLocaleString('fr-FR')} €/mois
                           </p>
                         )}
@@ -425,12 +407,12 @@ export function DossierReviewModal({ tenantId, tenantName, onClose }: DossierRev
 
                   {/* Notice de sécurité */}
                   <div style={{
-                    background: M.ownerLight, border: `1px solid ${M.ownerBorder}`,
+                    background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`,
                     borderRadius: 10, padding: '10px 12px',
                     display: 'flex', gap: 8,
                   }}>
-                    <Shield style={{ width: 14, height: 14, color: M.owner, flexShrink: 0, marginTop: 1 }} />
-                    <p style={{ fontSize: 11, color: M.owner, margin: 0 }}>
+                    <Shield style={{ width: 14, height: 14, color: BAI.owner, flexShrink: 0, marginTop: 1 }} />
+                    <p style={{ fontSize: 11, color: BAI.owner, margin: 0 }}>
                       Documents intégralement filigrainés. Consultation uniquement.
                     </p>
                   </div>
@@ -439,14 +421,14 @@ export function DossierReviewModal({ tenantId, tenantName, onClose }: DossierRev
                 {/* Colonne droite — Documents */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: M.inkFaint, margin: 0 }}>
+                    <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: BAI.inkFaint, margin: 0 }}>
                       Documents · {profile.tenantDocuments.length} fichier{profile.tenantDocuments.length !== 1 ? 's' : ''}
                     </p>
                   </div>
 
                   {grouped.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '40px 20px', background: M.surface, border: `1px solid ${M.border}`, borderRadius: 12 }}>
-                      <p style={{ fontSize: 13, color: M.inkFaint }}>Aucun document déposé</p>
+                    <div style={{ textAlign: 'center', padding: '40px 20px', background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12 }}>
+                      <p style={{ fontSize: 13, color: BAI.inkFaint }}>Aucun document déposé</p>
                     </div>
                   ) : (
                     grouped.map(([cat, docs]) => (

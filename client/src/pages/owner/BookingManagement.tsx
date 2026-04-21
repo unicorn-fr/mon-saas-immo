@@ -188,7 +188,7 @@ export const BookingManagement = () => {
   return (
     <Layout>
       <div
-        className="min-h-screen p-6 lg:p-8"
+        className="min-h-screen px-4 py-6 sm:px-6 lg:px-8 lg:py-8"
         style={{ background: BAI.bgBase, fontFamily: "'DM Sans', system-ui, sans-serif" }}
       >
         <div className="max-w-7xl mx-auto">
@@ -206,7 +206,7 @@ export const BookingManagement = () => {
                 fontFamily: "'Cormorant Garamond', Georgia, serif",
                 fontWeight: 700,
                 fontStyle: 'italic',
-                fontSize: 40,
+                fontSize: 'clamp(20px, 4vw, 40px)',
                 color: BAI.ink,
                 lineHeight: 1.1,
                 margin: 0,
@@ -291,7 +291,7 @@ export const BookingManagement = () => {
 
           {/* Statistics */}
           {statistics && (
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-8">
               {statCards.map(({ label, value, icon, bg, border, color }) => (
                 <div
                   key={label}
@@ -320,12 +320,12 @@ export const BookingManagement = () => {
 
           {/* Filters and View Toggle */}
           <div
-            className="p-5 mb-6"
+            className="p-4 sm:p-5 mb-6"
             style={cardStyle}
           >
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="flex flex-col sm:flex-row gap-3">
               {/* Search */}
-              <div className="relative">
+              <div className="relative flex-1">
                 <Search
                   className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
                   style={{ color: BAI.inkFaint }}
@@ -347,93 +347,96 @@ export const BookingManagement = () => {
                 />
               </div>
 
-              {/* Property Filter */}
-              <select
-                value={selectedProperty}
-                onChange={(e) => setSelectedProperty(e.target.value)}
-                style={inputStyle}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = BAI.owner
-                  e.currentTarget.style.boxShadow = `0 0 0 3px ${BAI.ownerLight}`
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = BAI.border
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
-              >
-                <option value="all">Toutes les propriétés</option>
-                {properties.map((property) => (
-                  <option key={property.id} value={property.id}>
-                    {property.title}
-                  </option>
-                ))}
-              </select>
-
-              {/* Status Filter */}
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value as BookingStatus | 'all')}
-                style={inputStyle}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = BAI.owner
-                  e.currentTarget.style.boxShadow = `0 0 0 3px ${BAI.ownerLight}`
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = BAI.border
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
-              >
-                <option value="all">Tous les statuts</option>
-                <option value="PENDING">En attente</option>
-                <option value="CONFIRMED">Confirmées</option>
-                <option value="CANCELLED">Annulées</option>
-                <option value="COMPLETED">Terminées</option>
-              </select>
-
-              {/* View Toggle */}
-              <div
-                className="flex items-center gap-1 p-1"
-                style={{ background: BAI.bgMuted, border: `1px solid ${BAI.border}`, borderRadius: 10 }}
-              >
-                <button
-                  onClick={() => setViewMode('list')}
-                  className="flex-1 py-2 px-3 text-sm font-semibold transition-all"
-                  style={
-                    viewMode === 'list'
-                      ? {
-                          background: BAI.bgSurface,
-                          color: BAI.owner,
-                          borderRadius: 8,
-                          boxShadow: '0 1px 3px rgba(13,12,10,0.08)',
-                        }
-                      : { background: 'transparent', color: BAI.inkMid, borderRadius: 8 }
-                  }
+              {/* Selects row: 2 selects + toggle côte à côte sur mobile, inline sur sm+ */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:contents">
+                {/* Property Filter */}
+                <select
+                  value={selectedProperty}
+                  onChange={(e) => setSelectedProperty(e.target.value)}
+                  style={inputStyle}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = BAI.owner
+                    e.currentTarget.style.boxShadow = `0 0 0 3px ${BAI.ownerLight}`
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = BAI.border
+                    e.currentTarget.style.boxShadow = 'none'
+                  }}
                 >
-                  Liste
-                </button>
-                <button
-                  onClick={() => setViewMode('calendar')}
-                  className="flex-1 py-2 px-3 text-sm font-semibold transition-all"
-                  style={
-                    viewMode === 'calendar'
-                      ? {
-                          background: BAI.bgSurface,
-                          color: BAI.owner,
-                          borderRadius: 8,
-                          boxShadow: '0 1px 3px rgba(13,12,10,0.08)',
-                        }
-                      : { background: 'transparent', color: BAI.inkMid, borderRadius: 8 }
-                  }
+                  <option value="all">Toutes les propriétés</option>
+                  {properties.map((property) => (
+                    <option key={property.id} value={property.id}>
+                      {property.title}
+                    </option>
+                  ))}
+                </select>
+
+                {/* Status Filter */}
+                <select
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value as BookingStatus | 'all')}
+                  style={inputStyle}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = BAI.owner
+                    e.currentTarget.style.boxShadow = `0 0 0 3px ${BAI.ownerLight}`
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = BAI.border
+                    e.currentTarget.style.boxShadow = 'none'
+                  }}
                 >
-                  Calendrier
-                </button>
+                  <option value="all">Tous les statuts</option>
+                  <option value="PENDING">En attente</option>
+                  <option value="CONFIRMED">Confirmées</option>
+                  <option value="CANCELLED">Annulées</option>
+                  <option value="COMPLETED">Terminées</option>
+                </select>
+
+                {/* View Toggle */}
+                <div
+                  className="flex items-center gap-1 p-1"
+                  style={{ background: BAI.bgMuted, border: `1px solid ${BAI.border}`, borderRadius: 10, minHeight: 44 }}
+                >
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className="flex-1 py-2 px-3 text-sm font-semibold transition-all"
+                    style={
+                      viewMode === 'list'
+                        ? {
+                            background: BAI.bgSurface,
+                            color: BAI.owner,
+                            borderRadius: 8,
+                            boxShadow: '0 1px 3px rgba(13,12,10,0.08)',
+                          }
+                        : { background: 'transparent', color: BAI.inkMid, borderRadius: 8 }
+                    }
+                  >
+                    Liste
+                  </button>
+                  <button
+                    onClick={() => setViewMode('calendar')}
+                    className="flex-1 py-2 px-3 text-sm font-semibold transition-all"
+                    style={
+                      viewMode === 'calendar'
+                        ? {
+                            background: BAI.bgSurface,
+                            color: BAI.owner,
+                            borderRadius: 8,
+                            boxShadow: '0 1px 3px rgba(13,12,10,0.08)',
+                          }
+                        : { background: 'transparent', color: BAI.inkMid, borderRadius: 8 }
+                    }
+                  >
+                    Calendrier
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Visit Slots Manager */}
           {selectedProperty !== 'all' && (
-            <div className="mb-6">
+            <div className="mb-6 w-full">
               <VisitSlotsManager propertyId={selectedProperty} />
             </div>
           )}

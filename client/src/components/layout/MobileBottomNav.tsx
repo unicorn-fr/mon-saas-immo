@@ -69,7 +69,7 @@ export function MobileBottomNav({
       }}
       aria-label="Navigation principale"
     >
-      <div className="flex items-stretch justify-around h-14">
+      <div className="flex items-stretch justify-around" style={{ height: 60 }}>
         {items.map((item) => {
           const Icon = item.icon
           const isActive = location.pathname === item.to
@@ -116,6 +116,7 @@ export function MobileBottomNav({
 
               {/* Label */}
               <span
+                className="truncate max-w-full"
                 style={{
                   fontSize: '10px',
                   fontWeight: isActive ? 600 : 400,

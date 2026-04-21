@@ -3,25 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom'
 import { Lock, CheckCircle, XCircle } from 'lucide-react'
 import { authService } from '../services/auth.service'
 import { BailioLogo } from '../components/BailioLogo'
-
-const M = {
-  bg: '#fafaf8',
-  surface: '#ffffff',
-  ink: '#0d0c0a',
-  inkMid: '#5a5754',
-  inkFaint: '#9e9b96',
-  night: '#1a1a2e',
-  border: '#e4e1db',
-  inputBg: '#f8f7f4',
-  danger: '#9b1c1c',
-  dangerBg: '#fef2f2',
-  dangerBorder: '#fca5a5',
-  success: '#1b5e3b',
-  successBg: '#edf7f2',
-  successBorder: '#9fd4ba',
-  display: "'Cormorant Garamond', Georgia, serif",
-  body: "'DM Sans', system-ui, sans-serif",
-}
+import { BAI } from '../constants/bailio-tokens'
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams()
@@ -95,7 +77,7 @@ export default function ResetPassword() {
     <div className="text-center mb-8">
       <Link to="/" className="inline-flex items-center gap-2.5 hover:opacity-80 transition-opacity" style={{ textDecoration: 'none' }}>
         <BailioLogo size={34} />
-        <span style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: '26px', color: M.night, letterSpacing: '-0.02em', lineHeight: 1 }}>
+        <span style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '26px', color: BAI.night, letterSpacing: '-0.02em', lineHeight: 1 }}>
           Bailio
         </span>
       </Link>
@@ -103,50 +85,50 @@ export default function ResetPassword() {
   )
 
   const inputStyle: React.CSSProperties = {
-    background: M.inputBg,
-    border: `1px solid ${M.border}`,
+    background: BAI.bgInput,
+    border: `1px solid ${BAI.border}`,
     borderRadius: '8px',
-    fontFamily: M.body,
+    fontFamily: BAI.fontBody,
     fontSize: '13px',
-    color: M.ink,
+    color: BAI.ink,
   }
 
   if (!token) {
     return (
       <div
         className="min-h-screen flex items-center justify-center p-4"
-        style={{ background: M.bg, fontFamily: M.body }}
+        style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}
       >
         <div className="w-full max-w-md">
           <LogoHeader />
           <div
             className="p-8 text-center"
             style={{
-              background: M.surface,
-              border: `1px solid ${M.border}`,
+              background: BAI.bgSurface,
+              border: `1px solid ${BAI.border}`,
               borderRadius: '16px',
               boxShadow: '0 4px 24px rgba(13,12,10,0.08)',
             }}
           >
             <div
               className="w-16 h-16 flex items-center justify-center mx-auto mb-6"
-              style={{ background: M.dangerBg, border: `1px solid ${M.dangerBorder}`, borderRadius: '12px' }}
+              style={{ background: BAI.errorLight, border: `1px solid ${'#fca5a5'}`, borderRadius: '12px' }}
             >
-              <XCircle className="w-8 h-8" style={{ color: M.danger }} />
+              <XCircle className="w-8 h-8" style={{ color: BAI.error }} />
             </div>
             <h2
               className="mb-3"
-              style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: '26px', color: M.ink }}
+              style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '26px', color: BAI.ink }}
             >
               Lien invalide
             </h2>
-            <p className="mb-6" style={{ fontFamily: M.body, fontSize: '14px', color: M.inkMid }}>
+            <p className="mb-6" style={{ fontFamily: BAI.fontBody, fontSize: '14px', color: BAI.inkMid }}>
               Ce lien de réinitialisation est invalide ou a expiré.
             </p>
             <Link
               to="/forgot-password"
               className="block w-full text-center py-2.5 transition-opacity hover:opacity-90"
-              style={{ background: M.night, color: '#ffffff', borderRadius: '8px', fontFamily: M.body, fontSize: '14px', fontWeight: 500 }}
+              style={{ background: BAI.night, color: '#ffffff', borderRadius: '8px', fontFamily: BAI.fontBody, fontSize: '14px', fontWeight: 500 }}
             >
               Demander un nouveau lien
             </Link>
@@ -159,7 +141,7 @@ export default function ResetPassword() {
   return (
     <div
       className="min-h-screen flex items-center justify-center p-4"
-      style={{ background: M.bg, fontFamily: M.body }}
+      style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}
     >
       <div className="w-full max-w-md">
         <LogoHeader />
@@ -167,8 +149,8 @@ export default function ResetPassword() {
         <div
           className="p-8"
           style={{
-            background: M.surface,
-            border: `1px solid ${M.border}`,
+            background: BAI.bgSurface,
+            border: `1px solid ${BAI.border}`,
             borderRadius: '16px',
             boxShadow: '0 4px 24px rgba(13,12,10,0.08)',
           }}
@@ -177,23 +159,23 @@ export default function ResetPassword() {
             <div className="text-center">
               <div
                 className="w-16 h-16 flex items-center justify-center mx-auto mb-6"
-                style={{ background: M.successBg, border: `1px solid ${M.successBorder}`, borderRadius: '12px' }}
+                style={{ background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`, borderRadius: '12px' }}
               >
-                <CheckCircle className="w-8 h-8" style={{ color: M.success }} />
+                <CheckCircle className="w-8 h-8" style={{ color: BAI.tenant }} />
               </div>
               <h2
                 className="mb-3"
-                style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: '26px', color: M.ink }}
+                style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '26px', color: BAI.ink }}
               >
                 Mot de passe réinitialisé !
               </h2>
-              <p className="mb-6" style={{ fontFamily: M.body, fontSize: '14px', color: M.inkMid, lineHeight: '1.6' }}>
+              <p className="mb-6" style={{ fontFamily: BAI.fontBody, fontSize: '14px', color: BAI.inkMid, lineHeight: '1.6' }}>
                 Votre mot de passe a été modifié avec succès. Vous pouvez maintenant vous connecter.
               </p>
               <Link
                 to="/login"
                 className="block w-full text-center py-2.5 transition-opacity hover:opacity-90"
-                style={{ background: M.night, color: '#ffffff', borderRadius: '8px', fontFamily: M.body, fontSize: '14px', fontWeight: 500 }}
+                style={{ background: BAI.night, color: '#ffffff', borderRadius: '8px', fontFamily: BAI.fontBody, fontSize: '14px', fontWeight: 500 }}
               >
                 Se connecter
               </Link>
@@ -202,21 +184,21 @@ export default function ResetPassword() {
             <div className="text-center">
               <div
                 className="w-16 h-16 flex items-center justify-center mx-auto mb-6"
-                style={{ background: M.dangerBg, border: `1px solid ${M.dangerBorder}`, borderRadius: '12px' }}
+                style={{ background: BAI.errorLight, border: `1px solid ${'#fca5a5'}`, borderRadius: '12px' }}
               >
-                <XCircle className="w-8 h-8" style={{ color: M.danger }} />
+                <XCircle className="w-8 h-8" style={{ color: BAI.error }} />
               </div>
               <h2
                 className="mb-3"
-                style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: '26px', color: M.ink }}
+                style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '26px', color: BAI.ink }}
               >
                 Erreur
               </h2>
-              <p className="mb-6" style={{ fontFamily: M.body, fontSize: '14px', color: M.inkMid }}>{error}</p>
+              <p className="mb-6" style={{ fontFamily: BAI.fontBody, fontSize: '14px', color: BAI.inkMid }}>{error}</p>
               <Link
                 to="/forgot-password"
                 className="block w-full text-center py-2.5 transition-opacity hover:opacity-90"
-                style={{ background: M.night, color: '#ffffff', borderRadius: '8px', fontFamily: M.body, fontSize: '14px', fontWeight: 500 }}
+                style={{ background: BAI.night, color: '#ffffff', borderRadius: '8px', fontFamily: BAI.fontBody, fontSize: '14px', fontWeight: 500 }}
               >
                 Demander un nouveau lien
               </Link>
@@ -226,11 +208,11 @@ export default function ResetPassword() {
               <div className="mb-6">
                 <h1
                   className="mb-2"
-                  style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: '32px', color: M.ink, lineHeight: '1.1' }}
+                  style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '32px', color: BAI.ink, lineHeight: '1.1' }}
                 >
                   Nouveau mot de passe
                 </h1>
-                <p style={{ fontFamily: M.body, fontSize: '14px', color: M.inkMid }}>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: '14px', color: BAI.inkMid }}>
                   Choisissez votre nouveau mot de passe.
                 </p>
               </div>
@@ -238,9 +220,9 @@ export default function ResetPassword() {
               {error && (
                 <div
                   className="mb-4 p-3"
-                  style={{ background: M.dangerBg, border: `1px solid ${M.dangerBorder}`, borderRadius: '8px' }}
+                  style={{ background: BAI.errorLight, border: `1px solid ${'#fca5a5'}`, borderRadius: '8px' }}
                 >
-                  <p style={{ fontFamily: M.body, fontSize: '13px', color: M.danger }}>{error}</p>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: '13px', color: BAI.error }}>{error}</p>
                 </div>
               )}
 
@@ -248,12 +230,12 @@ export default function ResetPassword() {
                 <div>
                   <label
                     className="block mb-1.5"
-                    style={{ fontFamily: M.body, fontSize: '13px', fontWeight: 500, color: M.ink }}
+                    style={{ fontFamily: BAI.fontBody, fontSize: '13px', fontWeight: 500, color: BAI.ink }}
                   >
                     Nouveau mot de passe
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: M.inkFaint }} />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: BAI.inkFaint }} />
                     <input
                       type="password"
                       value={newPassword}
@@ -263,8 +245,8 @@ export default function ResetPassword() {
                       required
                       className="w-full pl-10 pr-4 py-2.5 outline-none transition-all"
                       style={inputStyle}
-                      onFocus={(e) => { e.currentTarget.style.borderColor = M.night; e.currentTarget.style.boxShadow = `0 0 0 3px rgba(26,26,46,0.08)` }}
-                      onBlur={(e) => { e.currentTarget.style.borderColor = M.border; e.currentTarget.style.boxShadow = 'none' }}
+                      onFocus={(e) => { e.currentTarget.style.borderColor = BAI.night; e.currentTarget.style.boxShadow = `0 0 0 3px rgba(26,26,46,0.08)` }}
+                      onBlur={(e) => { e.currentTarget.style.borderColor = BAI.border; e.currentTarget.style.boxShadow = 'none' }}
                     />
                   </div>
 
@@ -272,7 +254,7 @@ export default function ResetPassword() {
                     <div className="mt-2">
                       <div
                         className="h-1 rounded-full overflow-hidden"
-                        style={{ background: M.border }}
+                        style={{ background: BAI.border }}
                       >
                         <div
                           className="h-full transition-all duration-300"
@@ -288,21 +270,21 @@ export default function ResetPassword() {
                         key={i}
                         className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full"
                         style={{
-                          fontFamily: M.body,
+                          fontFamily: BAI.fontBody,
                           fontSize: '11px',
                           fontWeight: 500,
-                          background: req.met ? M.successBg : '#f4f2ee',
-                          color: req.met ? M.success : M.inkFaint,
-                          border: `1px solid ${req.met ? M.successBorder : M.border}`,
+                          background: req.met ? BAI.tenantLight : '#f4f2ee',
+                          color: req.met ? BAI.tenant : BAI.inkFaint,
+                          border: `1px solid ${req.met ? BAI.tenantBorder : BAI.border}`,
                           transition: 'all 0.2s',
                         }}
                       >
                         {req.met ? (
                           <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-                            <polyline points="10 3 5 9 2 6" stroke={M.success} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            <polyline points="10 3 5 9 2 6" stroke={BAI.tenant} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         ) : (
-                          <span style={{ width: 10, height: 10, display: 'inline-block', borderRadius: '50%', border: `1.5px solid ${M.inkFaint}` }} />
+                          <span style={{ width: 10, height: 10, display: 'inline-block', borderRadius: '50%', border: `1.5px solid ${BAI.inkFaint}` }} />
                         )}
                         {req.text}
                       </span>
@@ -313,12 +295,12 @@ export default function ResetPassword() {
                 <div>
                   <label
                     className="block mb-1.5"
-                    style={{ fontFamily: M.body, fontSize: '13px', fontWeight: 500, color: M.ink }}
+                    style={{ fontFamily: BAI.fontBody, fontSize: '13px', fontWeight: 500, color: BAI.ink }}
                   >
                     Confirmer le mot de passe
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: M.inkFaint }} />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: BAI.inkFaint }} />
                     <input
                       type="password"
                       value={confirmPassword}
@@ -328,12 +310,12 @@ export default function ResetPassword() {
                       required
                       className="w-full pl-10 pr-4 py-2.5 outline-none transition-all"
                       style={inputStyle}
-                      onFocus={(e) => { e.currentTarget.style.borderColor = M.night; e.currentTarget.style.boxShadow = `0 0 0 3px rgba(26,26,46,0.08)` }}
-                      onBlur={(e) => { e.currentTarget.style.borderColor = M.border; e.currentTarget.style.boxShadow = 'none' }}
+                      onFocus={(e) => { e.currentTarget.style.borderColor = BAI.night; e.currentTarget.style.boxShadow = `0 0 0 3px rgba(26,26,46,0.08)` }}
+                      onBlur={(e) => { e.currentTarget.style.borderColor = BAI.border; e.currentTarget.style.boxShadow = 'none' }}
                     />
                   </div>
                   {confirmPassword && newPassword !== confirmPassword && (
-                    <p className="mt-1" style={{ fontFamily: M.body, fontSize: '12px', color: M.danger }}>
+                    <p className="mt-1" style={{ fontFamily: BAI.fontBody, fontSize: '12px', color: BAI.error }}>
                       Les mots de passe ne correspondent pas
                     </p>
                   )}
@@ -344,10 +326,10 @@ export default function ResetPassword() {
                   disabled={isLoading || !isPasswordStrong || newPassword !== confirmPassword}
                   className="w-full py-2.5 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
-                    background: M.night,
+                    background: BAI.night,
                     color: '#ffffff',
                     borderRadius: '8px',
-                    fontFamily: M.body,
+                    fontFamily: BAI.fontBody,
                     fontSize: '14px',
                     fontWeight: 500,
                     border: 'none',

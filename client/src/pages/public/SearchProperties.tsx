@@ -127,7 +127,7 @@ export default function SearchProperties() {
         {/* Search Bar */}
         <div style={{ background: M.surface, borderBottom: `1px solid ${M.border}`, boxShadow: '0 1px 2px rgba(13,12,10,0.04)' }}>
           <div className="container mx-auto px-4 py-4">
-            <form onSubmit={handleSearch} className="flex gap-3">
+            <form onSubmit={handleSearch} className="flex gap-2 sm:gap-3">
               <div className="flex-1 relative">
                 <Search
                   className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
@@ -137,7 +137,7 @@ export default function SearchProperties() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Rechercher par ville, adresse, code postal…"
+                  placeholder="Ville, adresse, code postal…"
                   style={{
                     background: M.inputBg,
                     border: `1px solid ${M.border}`,
@@ -180,9 +180,11 @@ export default function SearchProperties() {
                   fontWeight: 600,
                   fontSize: 14,
                   border: 'none',
-                  padding: '0 20px',
+                  padding: '0 16px',
                   cursor: 'pointer',
                   transition: 'opacity 0.15s',
+                  minHeight: 44,
+                  whiteSpace: 'nowrap',
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.88' }}
                 onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
@@ -197,7 +199,7 @@ export default function SearchProperties() {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col lg:flex-row gap-6">
 
-            {/* Filters Sidebar — mobile: full width block; desktop: side panel */}
+            {/* Filters Sidebar — mobile: collapsible full-width; desktop: side panel */}
             {showFilters && (
               <div className="w-full lg:w-80 flex-shrink-0">
                 <div style={{
@@ -220,10 +222,11 @@ export default function SearchProperties() {
 
               {/* Toolbar */}
               <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
+                  {/* Filtres toggle — touch target ≥ 44px */}
                   <button
                     onClick={() => setShowFilters(!showFilters)}
-                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold transition-colors"
+                    className="inline-flex items-center gap-2 text-sm font-semibold transition-colors"
                     style={{
                       borderRadius: 8,
                       border: `1px solid ${showFilters ? M.tenant : M.border}`,
@@ -231,6 +234,8 @@ export default function SearchProperties() {
                       color: showFilters ? '#fff' : M.inkMid,
                       fontFamily: M.body,
                       cursor: 'pointer',
+                      padding: '0 16px',
+                      minHeight: 44,
                     }}
                   >
                     <SlidersHorizontal className="w-4 h-4" />
@@ -260,7 +265,7 @@ export default function SearchProperties() {
                       setCurrentPage(1)
                     }}
                     style={{
-                      padding: '8px 12px',
+                      padding: '0 12px',
                       borderRadius: 8,
                       border: `1px solid ${M.border}`,
                       background: M.inputBg,
@@ -269,6 +274,7 @@ export default function SearchProperties() {
                       fontSize: 14,
                       outline: 'none',
                       cursor: 'pointer',
+                      minHeight: 44,
                     }}
                   >
                     <option value="createdAt-desc">Plus récent</option>
@@ -278,7 +284,7 @@ export default function SearchProperties() {
                     <option value="views-desc">Plus vus</option>
                   </select>
 
-                  {/* View Mode */}
+                  {/* View Mode — touch targets ≥ 44px */}
                   <div style={{ display: 'flex', border: `1px solid ${M.border}`, borderRadius: 8, overflow: 'hidden', background: M.surface }}>
                     {[
                       { mode: 'grid', Icon: Grid3x3, title: 'Vue grille' },
@@ -290,13 +296,18 @@ export default function SearchProperties() {
                         onClick={() => setViewMode(mode as any)}
                         title={title}
                         style={{
-                          padding: '8px 10px',
+                          padding: '0 14px',
+                          minHeight: 44,
+                          minWidth: 44,
                           background: viewMode === mode ? M.tenant : 'transparent',
                           color: viewMode === mode ? '#fff' : M.inkFaint,
                           border: 'none',
                           borderLeft: idx > 0 ? `1px solid ${M.border}` : 'none',
                           cursor: 'pointer',
                           transition: 'background 0.15s',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
                         }}
                       >
                         <Icon className="w-4 h-4" />
@@ -356,6 +367,7 @@ export default function SearchProperties() {
                         border: 'none',
                         padding: '10px 20px',
                         cursor: 'pointer',
+                        minHeight: 44,
                       }}
                     >
                       Réinitialiser les filtres
@@ -380,8 +392,9 @@ export default function SearchProperties() {
                     </div>
                   ) : (
                     <>
+                      {/* Grid: 1 col mobile → 2 col sm → 3 col lg */}
                       <div className={viewMode === 'grid'
-                        ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+                        ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
                         : 'space-y-4'
                       }>
                         {properties.map((property) => (
@@ -393,14 +406,15 @@ export default function SearchProperties() {
                         ))}
                       </div>
 
-                      {/* Pagination */}
+                      {/* Pagination — centrée, boutons min 40px */}
                       {totalPages > 1 && (
                         <div className="flex items-center justify-center gap-2 mt-8">
                           <button
                             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                             disabled={currentPage === 1}
                             style={{
-                              padding: '8px',
+                              width: 44,
+                              height: 44,
                               borderRadius: 8,
                               border: `1px solid ${M.border}`,
                               background: M.surface,
@@ -408,6 +422,9 @@ export default function SearchProperties() {
                               cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
                               opacity: currentPage === 1 ? 0.4 : 1,
                               transition: 'background 0.15s',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
                             }}
                             onMouseEnter={(e) => { if (currentPage !== 1) e.currentTarget.style.background = M.muted }}
                             onMouseLeave={(e) => { e.currentTarget.style.background = M.surface }}
@@ -433,7 +450,7 @@ export default function SearchProperties() {
                                   key={pageNum}
                                   onClick={() => setCurrentPage(pageNum)}
                                   style={{
-                                    width: 40, height: 40,
+                                    width: 44, height: 44,
                                     borderRadius: 8,
                                     fontSize: 14,
                                     fontWeight: 600,
@@ -455,7 +472,8 @@ export default function SearchProperties() {
                             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                             disabled={currentPage === totalPages}
                             style={{
-                              padding: '8px',
+                              width: 44,
+                              height: 44,
                               borderRadius: 8,
                               border: `1px solid ${M.border}`,
                               background: M.surface,
@@ -463,6 +481,9 @@ export default function SearchProperties() {
                               cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
                               opacity: currentPage === totalPages ? 0.4 : 1,
                               transition: 'background 0.15s',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
                             }}
                             onMouseEnter={(e) => { if (currentPage !== totalPages) e.currentTarget.style.background = M.muted }}
                             onMouseLeave={(e) => { e.currentTarget.style.background = M.surface }}

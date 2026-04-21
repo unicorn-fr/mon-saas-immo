@@ -1,22 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { Upload, X, Image as ImageIcon, ZoomIn, ZoomOut, RotateCcw, Check } from 'lucide-react'
 import { useProperties } from '../../hooks/useProperties'
-
-// ── Maison tokens ──────────────────────────────────────────────────────────────
-const M = {
-  ink: '#0d0c0a',
-  inkMid: '#5a5754',
-  inkFaint: '#9e9b96',
-  border: '#e4e1db',
-  borderMid: '#ccc9c3',
-  muted: '#f4f2ee',
-  surface: '#ffffff',
-  night: '#1a1a2e',
-  danger: '#9b1c1c',
-  dangerBg: '#fef2f2',
-  success: '#1b5e3b',
-  successBg: '#edf7f2',
-}
+import { BAI } from '../../constants/bailio-tokens'
 
 // Minimum dimensions that trigger the crop modal
 const MIN_WIDTH = 800
@@ -103,12 +88,12 @@ function ImageCropModal({ file, onConfirm, onCancel }: CropModalProps) {
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70">
       <div
         className="rounded-2xl max-w-xl w-full"
-        style={{ background: M.surface, boxShadow: '0 8px 32px rgba(13,12,10,0.16)' }}
+        style={{ background: BAI.bgSurface, boxShadow: '0 8px 32px rgba(13,12,10,0.16)' }}
       >
         {/* Header */}
-        <div className="p-5 border-b" style={{ borderColor: M.border }}>
-          <h3 className="text-base font-semibold" style={{ color: M.ink }}>Recadrer l'image</h3>
-          <p className="text-sm mt-0.5" style={{ color: M.inkMid }}>
+        <div className="p-5 border-b" style={{ borderColor: BAI.border }}>
+          <h3 className="text-base font-semibold" style={{ color: BAI.ink }}>Recadrer l'image</h3>
+          <p className="text-sm mt-0.5" style={{ color: BAI.inkMid }}>
             L'image est trop petite — recadrez-la pour un rendu optimal (ratio 4:3)
           </p>
         </div>
@@ -138,7 +123,7 @@ function ImageCropModal({ file, onConfirm, onCancel }: CropModalProps) {
             <button
               onClick={() => setZoom((z) => Math.max(z - 0.1, 0.2))}
               className="p-2 rounded-lg border transition-colors"
-              style={{ borderColor: M.border, color: M.inkMid }}
+              style={{ borderColor: BAI.border, color: BAI.inkMid }}
             >
               <ZoomOut className="w-4 h-4" />
             </button>
@@ -153,20 +138,20 @@ function ImageCropModal({ file, onConfirm, onCancel }: CropModalProps) {
             <button
               onClick={() => setZoom((z) => Math.min(z + 0.1, 4))}
               className="p-2 rounded-lg border transition-colors"
-              style={{ borderColor: M.border, color: M.inkMid }}
+              style={{ borderColor: BAI.border, color: BAI.inkMid }}
             >
               <ZoomIn className="w-4 h-4" />
             </button>
             <button
               onClick={handleReset}
               className="p-2 rounded-lg border transition-colors ml-1"
-              style={{ borderColor: M.border, color: M.inkMid }}
+              style={{ borderColor: BAI.border, color: BAI.inkMid }}
               title="Réinitialiser"
             >
               <RotateCcw className="w-4 h-4" />
             </button>
           </div>
-          <p className="text-xs text-center mt-2" style={{ color: M.inkFaint }}>
+          <p className="text-xs text-center mt-2" style={{ color: BAI.inkFaint }}>
             Glissez pour repositionner · zoom {Math.round(zoom * 100)}%
           </p>
         </div>
@@ -344,7 +329,7 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
         className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
           isUploadingImages ? 'opacity-50 pointer-events-none' : ''
         }`}
-        style={dragActive ? { borderColor: M.night, background: '#eaf0fb' } : { borderColor: M.borderMid }}
+        style={dragActive ? { borderColor: BAI.night, background: '#eaf0fb' } : { borderColor: BAI.borderStrong }}
       >
         <input
           type="file"
@@ -359,29 +344,29 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
           htmlFor="image-upload"
           className={`cursor-pointer block ${images.length >= maxImages ? 'cursor-not-allowed opacity-50' : ''}`}
         >
-          <Upload className="w-12 h-12 mx-auto mb-3" style={{ color: M.inkFaint }} />
-          <p className="text-base font-medium mb-1" style={{ color: M.ink }}>
+          <Upload className="w-12 h-12 mx-auto mb-3" style={{ color: BAI.inkFaint }} />
+          <p className="text-base font-medium mb-1" style={{ color: BAI.ink }}>
             {isUploadingImages ? 'Upload en cours…' : 'Glissez vos images ici ou cliquez pour sélectionner'}
           </p>
-          <p className="text-sm" style={{ color: M.inkMid }}>
+          <p className="text-sm" style={{ color: BAI.inkMid }}>
             JPG, PNG, WebP — max 10 Mo · {images.length}/{maxImages} images
           </p>
-          <p className="text-xs mt-1" style={{ color: M.inkFaint }}>
+          <p className="text-xs mt-1" style={{ color: BAI.inkFaint }}>
             Dimensions recommandées : 1200 × 900 px minimum
           </p>
         </label>
 
         {isUploadingImages && (
           <div className="absolute inset-0 flex items-center justify-center rounded-xl" style={{ background: 'rgba(255,255,255,0.8)' }}>
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: M.night }} />
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: BAI.night }} />
           </div>
         )}
       </div>
 
       {/* Error */}
       {error && (
-        <div className="mt-3 p-3 rounded-xl" style={{ background: M.dangerBg, border: '1px solid #fca5a5' }}>
-          <p className="text-sm" style={{ color: M.danger }}>{error}</p>
+        <div className="mt-3 p-3 rounded-xl" style={{ background: BAI.errorLight, border: '1px solid #fca5a5' }}>
+          <p className="text-sm" style={{ color: BAI.error }}>{error}</p>
         </div>
       )}
 
@@ -392,7 +377,7 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
             <div
               key={index}
               className="relative group aspect-[4/3] rounded-xl overflow-hidden"
-              style={{ background: M.muted }}
+              style={{ background: BAI.bgMuted }}
             >
               <img
                 src={url}
@@ -405,7 +390,7 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
                 <button
                   onClick={() => removeImage(index)}
                   className="opacity-0 group-hover:opacity-100 transition-opacity p-2 rounded-full"
-                  style={{ background: M.danger, color: '#fff' }}
+                  style={{ background: BAI.error, color: '#fff' }}
                   title="Supprimer"
                 >
                   <X className="w-4 h-4" />
@@ -414,7 +399,7 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
                   <button
                     onClick={() => moveImage(index, index - 1)}
                     className="opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1.5 rounded-full text-xs font-medium"
-                    style={{ background: '#fff', color: M.ink }}
+                    style={{ background: '#fff', color: BAI.ink }}
                     title="Vers la gauche"
                   >←</button>
                 )}
@@ -422,14 +407,14 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
                   <button
                     onClick={() => moveImage(index, index + 1)}
                     className="opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1.5 rounded-full text-xs font-medium"
-                    style={{ background: '#fff', color: M.ink }}
+                    style={{ background: '#fff', color: BAI.ink }}
                     title="Vers la droite"
                   >→</button>
                 )}
               </div>
 
               {index === 0 && (
-                <div className="absolute top-2 left-2 text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: M.night, color: '#fff' }}>
+                <div className="absolute top-2 left-2 text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: BAI.night, color: '#fff' }}>
                   Principale
                 </div>
               )}
@@ -442,7 +427,7 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 10 }: ImageUpl
       )}
 
       {images.length > 0 && (
-        <p className="mt-3 text-sm" style={{ color: M.inkMid }}>
+        <p className="mt-3 text-sm" style={{ color: BAI.inkMid }}>
           <ImageIcon className="w-4 h-4 inline mr-1" />
           La première image est l'image principale. Utilisez les flèches pour réorganiser.
         </p>

@@ -26,60 +26,39 @@ import {
   Hash,
 } from 'lucide-react'
 
-// ─── Maison Design Tokens ─────────────────────────────────────────────────────
+// ─── Bailio Design Tokens ─────────────────────────────────────────────────────
 
-const M = {
-  bg: '#fafaf8',
-  surface: '#ffffff',
-  muted: '#f4f2ee',
-  inputBg: '#f8f7f4',
-  ink: '#0d0c0a',
-  inkMid: '#5a5754',
-  inkFaint: '#9e9b96',
-  night: '#1a1a2e',
-  caramel: '#c4976a',
-  caramelLight: '#fdf5ec',
-  owner: '#1a3270',
-  ownerLight: '#eaf0fb',
-  tenant: '#1b5e3b',
-  tenantLight: '#edf7f2',
-  border: '#e4e1db',
-  borderMid: '#ccc9c3',
-  danger: '#9b1c1c',
-  dangerBg: '#fef2f2',
-  display: "'Cormorant Garamond', Georgia, serif",
-  body: "'DM Sans', system-ui, sans-serif",
-}
+import { BAI } from '../constants/bailio-tokens'
 
 // ─── Shared style constants ───────────────────────────────────────────────────
 
 const cardStyle: React.CSSProperties = {
-  background: M.surface,
-  border: `1px solid ${M.border}`,
+  background: BAI.bgSurface,
+  border: `1px solid ${BAI.border}`,
   borderRadius: '12px',
   padding: '1.5rem',
   boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
 }
 
 const inputStyle: React.CSSProperties = {
-  background: M.inputBg,
-  border: `1px solid ${M.border}`,
+  background: BAI.bgInput,
+  border: `1px solid ${BAI.border}`,
   borderRadius: '8px',
   padding: '0.625rem 1rem',
-  color: M.ink,
+  color: BAI.ink,
   fontSize: '0.875rem',
   outline: 'none',
   width: '100%',
-  fontFamily: M.body,
+  fontFamily: BAI.fontBody,
   transition: 'border-color 0.15s, box-shadow 0.15s',
 }
 
 function onFocusInput(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
-  e.currentTarget.style.borderColor = M.night
+  e.currentTarget.style.borderColor = BAI.night
   e.currentTarget.style.boxShadow = `0 0 0 3px rgba(26,26,46,0.10)`
 }
 function onBlurInput(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
-  e.currentTarget.style.borderColor = M.border
+  e.currentTarget.style.borderColor = BAI.border
   e.currentTarget.style.boxShadow = 'none'
 }
 
@@ -90,18 +69,18 @@ function SectionHeader({ label }: { label: string }) {
     <div className="flex items-center gap-3 mb-5">
       <span
         style={{
-          fontFamily: M.body,
+          fontFamily: BAI.fontBody,
           fontSize: '11px',
           fontWeight: 600,
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
-          color: M.inkFaint,
+          color: BAI.inkFaint,
           whiteSpace: 'nowrap',
         }}
       >
         {label}
       </span>
-      <div style={{ flex: 1, height: '1px', background: M.border }} />
+      <div style={{ flex: 1, height: '1px', background: BAI.border }} />
     </div>
   )
 }
@@ -113,13 +92,13 @@ function ReadonlyField({ icon, value }: { icon: React.ReactNode; value: React.Re
     <div
       className="flex items-center gap-3 px-4 py-3"
       style={{
-        background: M.muted,
-        border: `1px solid ${M.border}`,
+        background: BAI.bgMuted,
+        border: `1px solid ${BAI.border}`,
         borderRadius: '8px',
       }}
     >
-      <span style={{ color: M.inkFaint }}>{icon}</span>
-      <span className="text-sm" style={{ color: M.ink, fontFamily: M.body }}>{value}</span>
+      <span style={{ color: BAI.inkFaint }}>{icon}</span>
+      <span className="text-sm" style={{ color: BAI.ink, fontFamily: BAI.fontBody }}>{value}</span>
     </div>
   )
 }
@@ -202,22 +181,22 @@ export default function Profile() {
 
   const getAvatarColors = (role: string) => {
     switch (role) {
-      case 'OWNER':  return { bg: M.ownerLight, color: M.owner }
-      case 'TENANT': return { bg: M.tenantLight, color: M.tenant }
-      default:       return { bg: M.muted, color: M.inkMid }
+      case 'OWNER':  return { bg: BAI.ownerLight, color: BAI.owner }
+      case 'TENANT': return { bg: BAI.tenantLight, color: BAI.tenant }
+      default:       return { bg: BAI.bgMuted, color: BAI.inkMid }
     }
   }
 
   const getRoleBadgeStyle = (role: string): React.CSSProperties => {
     switch (role) {
       case 'OWNER':
-        return { background: M.ownerLight, border: `1px solid #b8ccf0`, color: M.owner }
+        return { background: BAI.ownerLight, border: `1px solid #b8ccf0`, color: BAI.owner }
       case 'TENANT':
-        return { background: M.tenantLight, border: `1px solid #a8d5bb`, color: M.tenant }
+        return { background: BAI.tenantLight, border: `1px solid #a8d5bb`, color: BAI.tenant }
       case 'ADMIN':
-        return { background: M.dangerBg, border: `1px solid #f5c6c6`, color: M.danger }
+        return { background: BAI.errorLight, border: `1px solid #f5c6c6`, color: BAI.error }
       default:
-        return { background: M.muted, border: `1px solid ${M.border}`, color: M.inkMid }
+        return { background: BAI.bgMuted, border: `1px solid ${BAI.border}`, color: BAI.inkMid }
     }
   }
 
@@ -230,7 +209,7 @@ export default function Profile() {
     <Layout>
       <div
         className="min-h-screen p-6 lg:p-8"
-        style={{ background: M.bg, fontFamily: M.body }}
+        style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}
       >
         <div className="max-w-4xl mx-auto">
 
@@ -246,10 +225,10 @@ export default function Profile() {
             >
               <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#d97706' }} />
               <div className="flex-1">
-                <p className="text-sm font-semibold" style={{ color: '#d97706', fontFamily: M.body }}>
+                <p className="text-sm font-semibold" style={{ color: '#d97706', fontFamily: BAI.fontBody }}>
                   Votre adresse email n'est pas vérifiée
                 </p>
-                <p className="text-sm mt-0.5" style={{ color: '#78350f', fontFamily: M.body }}>
+                <p className="text-sm mt-0.5" style={{ color: '#78350f', fontFamily: BAI.fontBody }}>
                   Vérifiez votre email pour accéder à toutes les fonctionnalités.
                 </p>
               </div>
@@ -260,7 +239,7 @@ export default function Profile() {
                 style={{
                   background: '#d97706',
                   borderRadius: '8px',
-                  fontFamily: M.body,
+                  fontFamily: BAI.fontBody,
                 }}
                 onMouseEnter={(e) => (e.currentTarget.style.background = '#b45309')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = '#d97706')}
@@ -278,12 +257,12 @@ export default function Profile() {
           <div className="mb-8">
             <p
               style={{
-                fontFamily: M.body,
+                fontFamily: BAI.fontBody,
                 fontSize: '10px',
                 fontWeight: 600,
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
-                color: M.inkFaint,
+                color: BAI.inkFaint,
                 marginBottom: '6px',
               }}
             >
@@ -291,18 +270,18 @@ export default function Profile() {
             </p>
             <h1
               style={{
-                fontFamily: M.display,
+                fontFamily: BAI.fontDisplay,
                 fontWeight: 700,
                 fontStyle: 'italic',
                 fontSize: '40px',
-                color: M.ink,
+                color: BAI.ink,
                 lineHeight: 1.1,
                 marginBottom: '6px',
               }}
             >
               Mon profil
             </h1>
-            <p style={{ fontFamily: M.body, fontSize: '14px', color: M.inkMid }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: '14px', color: BAI.inkMid }}>
               Gérez vos informations personnelles et vos paramètres de sécurité
             </p>
           </div>
@@ -320,16 +299,16 @@ export default function Profile() {
                         src={user.avatar}
                         alt="Avatar"
                         className="w-24 h-24 rounded-full object-cover"
-                        style={{ border: `3px solid ${M.border}` }}
+                        style={{ border: `3px solid ${BAI.border}` }}
                       />
                     ) : (
                       <div
                         className="w-24 h-24 rounded-full flex items-center justify-center select-none"
                         style={{
                           background: avatarColors.bg,
-                          border: `3px solid ${M.border}`,
+                          border: `3px solid ${BAI.border}`,
                           color: avatarColors.color,
-                          fontFamily: M.display,
+                          fontFamily: BAI.fontDisplay,
                           fontWeight: 700,
                           fontSize: '32px',
                           fontStyle: 'italic',
@@ -342,10 +321,10 @@ export default function Profile() {
 
                   <h2
                     style={{
-                      fontFamily: M.display,
+                      fontFamily: BAI.fontDisplay,
                       fontWeight: 700,
                       fontSize: '22px',
-                      color: M.ink,
+                      color: BAI.ink,
                       lineHeight: 1.2,
                     }}
                   >
@@ -353,7 +332,7 @@ export default function Profile() {
                   </h2>
                   <p
                     className="text-sm mt-1"
-                    style={{ fontFamily: M.body, color: M.inkMid }}
+                    style={{ fontFamily: BAI.fontBody, color: BAI.inkMid }}
                   >
                     {user?.email}
                   </p>
@@ -366,7 +345,7 @@ export default function Profile() {
                       borderRadius: '20px',
                       fontSize: '11px',
                       fontWeight: 600,
-                      fontFamily: M.body,
+                      fontFamily: BAI.fontBody,
                       letterSpacing: '0.04em',
                     }}
                   >
@@ -376,23 +355,23 @@ export default function Profile() {
                 </div>
 
                 {/* Verification status */}
-                <div className="mt-6 pt-5" style={{ borderTop: `1px solid ${M.border}` }}>
+                <div className="mt-6 pt-5" style={{ borderTop: `1px solid ${BAI.border}` }}>
                   <SectionHeader label="Vérifications" />
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm" style={{ color: M.inkMid, fontFamily: M.body }}>Email vérifié</span>
+                      <span className="text-sm" style={{ color: BAI.inkMid, fontFamily: BAI.fontBody }}>Email vérifié</span>
                       {user?.emailVerified ? (
                         <CheckCircle className="w-4 h-4" style={{ color: '#15803d' }} />
                       ) : (
-                        <XCircle className="w-4 h-4" style={{ color: M.danger }} />
+                        <XCircle className="w-4 h-4" style={{ color: BAI.error }} />
                       )}
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm" style={{ color: M.inkMid, fontFamily: M.body }}>Téléphone vérifié</span>
+                      <span className="text-sm" style={{ color: BAI.inkMid, fontFamily: BAI.fontBody }}>Téléphone vérifié</span>
                       {user?.phoneVerified ? (
                         <CheckCircle className="w-4 h-4" style={{ color: '#15803d' }} />
                       ) : (
-                        <XCircle className="w-4 h-4" style={{ color: M.danger }} />
+                        <XCircle className="w-4 h-4" style={{ color: BAI.error }} />
                       )}
                     </div>
                   </div>
@@ -405,14 +384,14 @@ export default function Profile() {
                       disabled={isResendingVerification}
                       className="w-full font-semibold px-4 py-2.5 text-sm transition-colors disabled:opacity-50"
                       style={{
-                        background: M.surface,
-                        border: `1px solid ${M.border}`,
-                        color: M.inkMid,
+                        background: BAI.bgSurface,
+                        border: `1px solid ${BAI.border}`,
+                        color: BAI.inkMid,
                         borderRadius: '8px',
-                        fontFamily: M.body,
+                        fontFamily: BAI.fontBody,
                       }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = M.surface)}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = BAI.bgMuted)}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = BAI.bgSurface)}
                     >
                       {isResendingVerification ? (
                         <span className="flex items-center justify-center gap-2">
@@ -422,7 +401,7 @@ export default function Profile() {
                         'Vérifier mon email'
                       )}
                     </button>
-                    <p className="text-xs text-center mt-2" style={{ color: M.inkFaint, fontFamily: M.body }}>
+                    <p className="text-xs text-center mt-2" style={{ color: BAI.inkFaint, fontFamily: BAI.fontBody }}>
                       La vérification augmente la confiance des autres utilisateurs
                     </p>
                   </div>
@@ -442,16 +421,16 @@ export default function Profile() {
                       onClick={() => setIsEditing(true)}
                       className="inline-flex items-center gap-2 font-semibold px-3 py-2 text-sm transition-colors"
                       style={{
-                        background: M.surface,
-                        border: `1px solid ${M.border}`,
-                        color: M.inkMid,
+                        background: BAI.bgSurface,
+                        border: `1px solid ${BAI.border}`,
+                        color: BAI.inkMid,
                         borderRadius: '8px',
-                        fontFamily: M.body,
+                        fontFamily: BAI.fontBody,
                         flexShrink: 0,
                         marginTop: '-20px',
                       }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = M.surface)}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = BAI.bgMuted)}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = BAI.bgSurface)}
                     >
                       <Edit2 className="w-4 h-4" />
                       Modifier
@@ -463,11 +442,11 @@ export default function Profile() {
                         disabled={isSaving}
                         className="inline-flex items-center gap-1.5 font-semibold px-3 py-2 text-sm transition-colors disabled:opacity-50"
                         style={{
-                          background: M.surface,
-                          border: `1px solid ${M.border}`,
-                          color: M.inkMid,
+                          background: BAI.bgSurface,
+                          border: `1px solid ${BAI.border}`,
+                          color: BAI.inkMid,
                           borderRadius: '8px',
-                          fontFamily: M.body,
+                          fontFamily: BAI.fontBody,
                         }}
                       >
                         <XIcon className="w-4 h-4" />
@@ -478,12 +457,12 @@ export default function Profile() {
                         disabled={isSaving}
                         className="inline-flex items-center gap-1.5 font-semibold px-3 py-2 text-sm text-white transition-colors disabled:opacity-50"
                         style={{
-                          background: M.night,
+                          background: BAI.night,
                           borderRadius: '8px',
-                          fontFamily: M.body,
+                          fontFamily: BAI.fontBody,
                         }}
                         onMouseEnter={(e) => !isSaving && (e.currentTarget.style.background = '#2d2d4e')}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = M.night)}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = BAI.night)}
                       >
                         {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         Enregistrer
@@ -498,7 +477,7 @@ export default function Profile() {
                     <div>
                       <label
                         className="block text-sm font-semibold mb-1.5"
-                        style={{ color: M.inkMid, fontFamily: M.body }}
+                        style={{ color: BAI.inkMid, fontFamily: BAI.fontBody }}
                       >
                         Prénom
                       </label>
@@ -521,7 +500,7 @@ export default function Profile() {
                     <div>
                       <label
                         className="block text-sm font-semibold mb-1.5"
-                        style={{ color: M.inkMid, fontFamily: M.body }}
+                        style={{ color: BAI.inkMid, fontFamily: BAI.fontBody }}
                       >
                         Nom
                       </label>
@@ -546,25 +525,25 @@ export default function Profile() {
                   <div>
                     <label
                       className="block text-sm font-semibold mb-1.5"
-                      style={{ color: M.inkMid, fontFamily: M.body }}
+                      style={{ color: BAI.inkMid, fontFamily: BAI.fontBody }}
                     >
                       Email
                     </label>
                     <div
                       className="flex items-center gap-3 px-4 py-3"
                       style={{
-                        background: M.muted,
-                        border: `1px solid ${M.border}`,
+                        background: BAI.bgMuted,
+                        border: `1px solid ${BAI.border}`,
                         borderRadius: '8px',
                       }}
                     >
-                      <Mail className="w-4 h-4 flex-shrink-0" style={{ color: M.inkFaint }} />
-                      <span className="text-sm flex-1" style={{ color: M.ink, fontFamily: M.body }}>{user?.email}</span>
+                      <Mail className="w-4 h-4 flex-shrink-0" style={{ color: BAI.inkFaint }} />
+                      <span className="text-sm flex-1" style={{ color: BAI.ink, fontFamily: BAI.fontBody }}>{user?.email}</span>
                       {user?.emailVerified && (
                         <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: '#15803d' }} />
                       )}
                     </div>
-                    <p className="text-xs mt-1" style={{ color: M.inkFaint, fontFamily: M.body }}>
+                    <p className="text-xs mt-1" style={{ color: BAI.inkFaint, fontFamily: BAI.fontBody }}>
                       L'email ne peut pas être modifié
                     </p>
                   </div>
@@ -573,7 +552,7 @@ export default function Profile() {
                   <div>
                     <label
                       className="block text-sm font-semibold mb-1.5"
-                      style={{ color: M.inkMid, fontFamily: M.body }}
+                      style={{ color: BAI.inkMid, fontFamily: BAI.fontBody }}
                     >
                       Téléphone
                     </label>
@@ -593,13 +572,13 @@ export default function Profile() {
                       <div
                         className="flex items-center gap-3 px-4 py-3"
                         style={{
-                          background: M.muted,
-                          border: `1px solid ${M.border}`,
+                          background: BAI.bgMuted,
+                          border: `1px solid ${BAI.border}`,
                           borderRadius: '8px',
                         }}
                       >
-                        <Phone className="w-4 h-4 flex-shrink-0" style={{ color: M.inkFaint }} />
-                        <span className="text-sm flex-1" style={{ color: M.ink, fontFamily: M.body }}>
+                        <Phone className="w-4 h-4 flex-shrink-0" style={{ color: BAI.inkFaint }} />
+                        <span className="text-sm flex-1" style={{ color: BAI.ink, fontFamily: BAI.fontBody }}>
                           {user?.phone || 'Non renseigné'}
                         </span>
                         {user?.phoneVerified && (
@@ -613,7 +592,7 @@ export default function Profile() {
                   <div>
                     <label
                       className="block text-sm font-semibold mb-1.5"
-                      style={{ color: M.inkMid, fontFamily: M.body }}
+                      style={{ color: BAI.inkMid, fontFamily: BAI.fontBody }}
                     >
                       Bio
                     </label>
@@ -642,7 +621,7 @@ export default function Profile() {
                     <div>
                       <label
                         className="block text-sm font-semibold mb-1.5"
-                        style={{ color: M.inkMid, fontFamily: M.body }}
+                        style={{ color: BAI.inkMid, fontFamily: BAI.fontBody }}
                       >
                         Type de compte
                       </label>
@@ -651,7 +630,7 @@ export default function Profile() {
                     <div>
                       <label
                         className="block text-sm font-semibold mb-1.5"
-                        style={{ color: M.inkMid, fontFamily: M.body }}
+                        style={{ color: BAI.inkMid, fontFamily: BAI.fontBody }}
                       >
                         Membre depuis
                       </label>
@@ -679,14 +658,14 @@ export default function Profile() {
                     <div
                       className="w-9 h-9 flex items-center justify-center"
                       style={{
-                        background: M.tenantLight,
+                        background: BAI.tenantLight,
                         border: `1px solid #a8d5bb`,
                         borderRadius: '10px',
                       }}
                     >
-                      <CreditCard className="w-4 h-4" style={{ color: M.tenant }} />
+                      <CreditCard className="w-4 h-4" style={{ color: BAI.tenant }} />
                     </div>
-                    <p className="text-xs" style={{ color: M.inkFaint, fontFamily: M.body }}>
+                    <p className="text-xs" style={{ color: BAI.inkFaint, fontFamily: BAI.fontBody }}>
                       Classifiées automatiquement depuis vos documents scannés
                     </p>
                   </div>
@@ -695,15 +674,15 @@ export default function Profile() {
                   {(user.birthDate || user.birthCity || user.nationality || user.documentNumber || user.documentExpiry || user.nationalNumber) && (
                     <div className="mt-4 mb-5">
                       <div className="flex items-center gap-2 mb-3">
-                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: M.tenant }} />
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: BAI.tenant }} />
                         <span
                           style={{
-                            fontFamily: M.body,
+                            fontFamily: BAI.fontBody,
                             fontSize: '11px',
                             fontWeight: 600,
                             letterSpacing: '0.06em',
                             textTransform: 'uppercase',
-                            color: M.tenant,
+                            color: BAI.tenant,
                           }}
                         >
                           Identité
@@ -713,72 +692,72 @@ export default function Profile() {
                         {user.birthDate && (
                           <div
                             className="flex items-center gap-2 p-3"
-                            style={{ background: M.tenantLight, border: `1px solid #a8d5bb`, borderRadius: '8px' }}
+                            style={{ background: BAI.tenantLight, border: `1px solid #a8d5bb`, borderRadius: '8px' }}
                           >
-                            <Calendar className="w-4 h-4 flex-shrink-0" style={{ color: M.tenant }} />
+                            <Calendar className="w-4 h-4 flex-shrink-0" style={{ color: BAI.tenant }} />
                             <div>
-                              <p className="text-xs font-semibold" style={{ color: M.tenant, fontFamily: M.body }}>Date de naissance</p>
-                              <p className="text-sm" style={{ color: M.ink, fontFamily: M.body }}>{user.birthDate}</p>
+                              <p className="text-xs font-semibold" style={{ color: BAI.tenant, fontFamily: BAI.fontBody }}>Date de naissance</p>
+                              <p className="text-sm" style={{ color: BAI.ink, fontFamily: BAI.fontBody }}>{user.birthDate}</p>
                             </div>
                           </div>
                         )}
                         {user.birthCity && (
                           <div
                             className="flex items-center gap-2 p-3"
-                            style={{ background: M.tenantLight, border: `1px solid #a8d5bb`, borderRadius: '8px' }}
+                            style={{ background: BAI.tenantLight, border: `1px solid #a8d5bb`, borderRadius: '8px' }}
                           >
-                            <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: M.tenant }} />
+                            <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: BAI.tenant }} />
                             <div>
-                              <p className="text-xs font-semibold" style={{ color: M.tenant, fontFamily: M.body }}>Lieu de naissance</p>
-                              <p className="text-sm" style={{ color: M.ink, fontFamily: M.body }}>{user.birthCity}</p>
+                              <p className="text-xs font-semibold" style={{ color: BAI.tenant, fontFamily: BAI.fontBody }}>Lieu de naissance</p>
+                              <p className="text-sm" style={{ color: BAI.ink, fontFamily: BAI.fontBody }}>{user.birthCity}</p>
                             </div>
                           </div>
                         )}
                         {user.nationality && (
                           <div
                             className="flex items-center gap-2 p-3"
-                            style={{ background: M.tenantLight, border: `1px solid #a8d5bb`, borderRadius: '8px' }}
+                            style={{ background: BAI.tenantLight, border: `1px solid #a8d5bb`, borderRadius: '8px' }}
                           >
-                            <Globe className="w-4 h-4 flex-shrink-0" style={{ color: M.tenant }} />
+                            <Globe className="w-4 h-4 flex-shrink-0" style={{ color: BAI.tenant }} />
                             <div>
-                              <p className="text-xs font-semibold" style={{ color: M.tenant, fontFamily: M.body }}>Nationalité</p>
-                              <p className="text-sm" style={{ color: M.ink, fontFamily: M.body }}>{user.nationality}</p>
+                              <p className="text-xs font-semibold" style={{ color: BAI.tenant, fontFamily: BAI.fontBody }}>Nationalité</p>
+                              <p className="text-sm" style={{ color: BAI.ink, fontFamily: BAI.fontBody }}>{user.nationality}</p>
                             </div>
                           </div>
                         )}
                         {user.documentNumber && (
                           <div
                             className="flex items-center gap-2 p-3"
-                            style={{ background: M.tenantLight, border: `1px solid #a8d5bb`, borderRadius: '8px' }}
+                            style={{ background: BAI.tenantLight, border: `1px solid #a8d5bb`, borderRadius: '8px' }}
                           >
-                            <Hash className="w-4 h-4 flex-shrink-0" style={{ color: M.tenant }} />
+                            <Hash className="w-4 h-4 flex-shrink-0" style={{ color: BAI.tenant }} />
                             <div>
-                              <p className="text-xs font-semibold" style={{ color: M.tenant, fontFamily: M.body }}>N° de pièce d'identité</p>
-                              <p className="text-sm font-mono" style={{ color: M.ink }}>{user.documentNumber}</p>
+                              <p className="text-xs font-semibold" style={{ color: BAI.tenant, fontFamily: BAI.fontBody }}>N° de pièce d'identité</p>
+                              <p className="text-sm font-mono" style={{ color: BAI.ink }}>{user.documentNumber}</p>
                             </div>
                           </div>
                         )}
                         {user.documentExpiry && (
                           <div
                             className="flex items-center gap-2 p-3"
-                            style={{ background: M.tenantLight, border: `1px solid #a8d5bb`, borderRadius: '8px' }}
+                            style={{ background: BAI.tenantLight, border: `1px solid #a8d5bb`, borderRadius: '8px' }}
                           >
-                            <Calendar className="w-4 h-4 flex-shrink-0" style={{ color: M.tenant }} />
+                            <Calendar className="w-4 h-4 flex-shrink-0" style={{ color: BAI.tenant }} />
                             <div>
-                              <p className="text-xs font-semibold" style={{ color: M.tenant, fontFamily: M.body }}>Validité du document</p>
-                              <p className="text-sm" style={{ color: M.ink, fontFamily: M.body }}>{user.documentExpiry}</p>
+                              <p className="text-xs font-semibold" style={{ color: BAI.tenant, fontFamily: BAI.fontBody }}>Validité du document</p>
+                              <p className="text-sm" style={{ color: BAI.ink, fontFamily: BAI.fontBody }}>{user.documentExpiry}</p>
                             </div>
                           </div>
                         )}
                         {user.nationalNumber && (
                           <div
                             className="flex items-center gap-2 p-3"
-                            style={{ background: M.tenantLight, border: `1px solid #a8d5bb`, borderRadius: '8px' }}
+                            style={{ background: BAI.tenantLight, border: `1px solid #a8d5bb`, borderRadius: '8px' }}
                           >
-                            <Shield className="w-4 h-4 flex-shrink-0" style={{ color: M.tenant }} />
+                            <Shield className="w-4 h-4 flex-shrink-0" style={{ color: BAI.tenant }} />
                             <div>
-                              <p className="text-xs font-semibold" style={{ color: M.tenant, fontFamily: M.body }}>N° sécurité sociale</p>
-                              <p className="text-sm font-mono" style={{ color: M.ink }}>{user.nationalNumber}</p>
+                              <p className="text-xs font-semibold" style={{ color: BAI.tenant, fontFamily: BAI.fontBody }}>N° sécurité sociale</p>
+                              <p className="text-sm font-mono" style={{ color: BAI.ink }}>{user.nationalNumber}</p>
                             </div>
                           </div>
                         )}
@@ -791,15 +770,15 @@ export default function Profile() {
                     .filter(([family]) => family !== 'IDENTITE')
                     .map(([family, meta]) => {
                       const SECTION_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; dot: string }> = {
-                        BULLETIN:        { label: 'Revenus — Bulletins de salaire', color: M.owner,   bg: M.ownerLight,  border: '#b8ccf0', dot: M.owner },
-                        REVENUS_FISCAUX: { label: 'Revenus fiscaux',               color: M.tenant,  bg: M.tenantLight, border: '#a8d5bb', dot: M.tenant },
-                        DOMICILE:        { label: 'Domicile',                       color: '#92400e', bg: '#fffbeb',     border: '#fde68a', dot: M.caramel },
-                        GARANTIE:        { label: 'Garanties (Visale / Caution)',   color: M.owner,   bg: M.ownerLight,  border: '#b8ccf0', dot: M.owner },
-                        BANCAIRE:        { label: 'Compte bancaire',                color: M.inkMid,  bg: M.muted,       border: M.border,  dot: M.inkFaint },
+                        BULLETIN:        { label: 'Revenus — Bulletins de salaire', color: BAI.owner,   bg: BAI.ownerLight,  border: '#b8ccf0', dot: BAI.owner },
+                        REVENUS_FISCAUX: { label: 'Revenus fiscaux',               color: BAI.tenant,  bg: BAI.tenantLight, border: '#a8d5bb', dot: BAI.tenant },
+                        DOMICILE:        { label: 'Domicile',                       color: '#92400e', bg: '#fffbeb',     border: '#fde68a', dot: BAI.caramel },
+                        GARANTIE:        { label: 'Garanties (Visale / Caution)',   color: BAI.owner,   bg: BAI.ownerLight,  border: '#b8ccf0', dot: BAI.owner },
+                        BANCAIRE:        { label: 'Compte bancaire',                color: BAI.inkMid,  bg: BAI.bgMuted,       border: BAI.border,  dot: BAI.inkFaint },
                         EMPLOI:          { label: 'Emploi',                         color: '#9a3412', bg: '#fff7ed',     border: '#fed7aa', dot: '#f97316' },
                         LOGEMENT:        { label: 'Logement',                       color: '#0f766e', bg: '#f0fdfa',     border: '#99f6e4', dot: '#14b8a6' },
                       }
-                      const cfg = SECTION_CONFIG[family] ?? { label: family, color: M.inkMid, bg: M.muted, border: M.border, dot: M.inkFaint }
+                      const cfg = SECTION_CONFIG[family] ?? { label: family, color: BAI.inkMid, bg: BAI.bgMuted, border: BAI.border, dot: BAI.inkFaint }
                       const FIELD_LABELS: Record<string, string> = {
                         employerName: 'Employeur', netSalary: 'Salaire net', grossSalary: 'Salaire brut',
                         bulletinPeriod: 'Période', contractType: 'Type de contrat', siret: 'SIRET',
@@ -820,7 +799,7 @@ export default function Profile() {
                             <div className="w-1.5 h-1.5 rounded-full" style={{ background: cfg.dot }} />
                             <span
                               style={{
-                                fontFamily: M.body,
+                                fontFamily: BAI.fontBody,
                                 fontSize: '11px',
                                 fontWeight: 600,
                                 letterSpacing: '0.06em',
@@ -831,7 +810,7 @@ export default function Profile() {
                               {cfg.label}
                             </span>
                             {meta._docType ? (
-                              <span className="text-xs ml-auto" style={{ color: M.inkFaint, fontFamily: M.body }}>{String(meta._docType)}</span>
+                              <span className="text-xs ml-auto" style={{ color: BAI.inkFaint, fontFamily: BAI.fontBody }}>{String(meta._docType)}</span>
                             ) : null}
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -843,8 +822,8 @@ export default function Profile() {
                               >
                                 <FileText className="w-4 h-4 flex-shrink-0" style={{ color: cfg.dot }} />
                                 <div>
-                                  <p className="text-xs font-semibold" style={{ color: cfg.color, fontFamily: M.body }}>{FIELD_LABELS[key]}</p>
-                                  <p className="text-sm" style={{ color: M.ink, fontFamily: M.body }}>
+                                  <p className="text-xs font-semibold" style={{ color: cfg.color, fontFamily: BAI.fontBody }}>{FIELD_LABELS[key]}</p>
+                                  <p className="text-sm" style={{ color: BAI.ink, fontFamily: BAI.fontBody }}>
                                     {typeof value === 'number'
                                       ? `${value.toLocaleString('fr-FR')} ${['netSalary','grossSalary','cafAmount','areAmount','pensionAmount','visaleAmount','loanAmount'].includes(key) ? '€' : ''}`
                                       : String(value)}
@@ -865,32 +844,32 @@ export default function Profile() {
                       <div
                         className="w-12 h-12 flex items-center justify-center mb-4"
                         style={{
-                          background: M.muted,
-                          border: `1px solid ${M.border}`,
+                          background: BAI.bgMuted,
+                          border: `1px solid ${BAI.border}`,
                           borderRadius: '12px',
                         }}
                       >
-                        <CreditCard className="w-6 h-6" style={{ color: M.inkFaint }} />
+                        <CreditCard className="w-6 h-6" style={{ color: BAI.inkFaint }} />
                       </div>
                       <p
                         style={{
-                          fontFamily: M.display,
+                          fontFamily: BAI.fontDisplay,
                           fontWeight: 700,
                           fontStyle: 'italic',
                           fontSize: '18px',
-                          color: M.ink,
+                          color: BAI.ink,
                           marginBottom: '6px',
                         }}
                       >
                         Aucune donnée extraite
                       </p>
-                      <p className="text-xs max-w-xs" style={{ color: M.inkFaint, fontFamily: M.body, lineHeight: 1.6 }}>
+                      <p className="text-xs max-w-xs" style={{ color: BAI.inkFaint, fontFamily: BAI.fontBody, lineHeight: 1.6 }}>
                         Déposez vos documents dans le dossier locataire — l'IA extraira et classifiera automatiquement vos données.
                       </p>
                     </div>
                   )}
 
-                  <p className="text-xs mt-4 flex items-center gap-1.5" style={{ color: M.inkFaint, fontFamily: M.body }}>
+                  <p className="text-xs mt-4 flex items-center gap-1.5" style={{ color: BAI.inkFaint, fontFamily: BAI.fontBody }}>
                     <Shield className="w-3.5 h-3.5" />
                     Données chiffrées et sécurisées — utilisées uniquement pour valider votre dossier locataire.
                   </p>
@@ -906,16 +885,16 @@ export default function Profile() {
                       onClick={() => setShowPasswordModal(true)}
                       className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold transition-colors text-left"
                       style={{
-                        background: M.surface,
-                        border: `1px solid ${M.border}`,
-                        color: M.inkMid,
+                        background: BAI.bgSurface,
+                        border: `1px solid ${BAI.border}`,
+                        color: BAI.inkMid,
                         borderRadius: '8px',
-                        fontFamily: M.body,
+                        fontFamily: BAI.fontBody,
                       }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = M.surface)}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = BAI.bgMuted)}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = BAI.bgSurface)}
                     >
-                      <Lock className="w-4 h-4" style={{ color: M.inkFaint }} />
+                      <Lock className="w-4 h-4" style={{ color: BAI.inkFaint }} />
                       Changer le mot de passe
                     </button>
                   )}
@@ -929,8 +908,8 @@ export default function Profile() {
                 <div
                   className="flex items-center justify-between p-4"
                   style={{
-                    background: M.muted,
-                    border: `1px solid ${M.border}`,
+                    background: BAI.bgMuted,
+                    border: `1px solid ${BAI.border}`,
                     borderRadius: '8px',
                   }}
                 >
@@ -942,8 +921,8 @@ export default function Profile() {
                       <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                     </svg>
                     <div>
-                      <p className="font-semibold text-sm" style={{ color: M.ink, fontFamily: M.body }}>Google</p>
-                      <p className="text-xs" style={{ color: M.inkFaint, fontFamily: M.body }}>
+                      <p className="font-semibold text-sm" style={{ color: BAI.ink, fontFamily: BAI.fontBody }}>Google</p>
+                      <p className="text-xs" style={{ color: BAI.inkFaint, fontFamily: BAI.fontBody }}>
                         Connectez-vous avec votre compte Google
                       </p>
                     </div>
@@ -951,11 +930,11 @@ export default function Profile() {
                   <span
                     className="text-xs font-semibold px-2.5 py-1"
                     style={{
-                      background: M.surface,
-                      border: `1px solid ${M.border}`,
-                      color: M.inkFaint,
+                      background: BAI.bgSurface,
+                      border: `1px solid ${BAI.border}`,
+                      color: BAI.inkFaint,
                       borderRadius: '20px',
-                      fontFamily: M.body,
+                      fontFamily: BAI.fontBody,
                     }}
                   >
                     {import.meta.env.VITE_GOOGLE_CLIENT_ID ? 'Disponible' : 'Non configuré'}
@@ -968,7 +947,7 @@ export default function Profile() {
                 style={{
                   ...cardStyle,
                   border: `1px solid #f5c6c6`,
-                  background: M.dangerBg,
+                  background: BAI.errorLight,
                 }}
               >
                 <div className="flex items-center gap-2.5 mb-1">
@@ -980,23 +959,23 @@ export default function Profile() {
                       borderRadius: '10px',
                     }}
                   >
-                    <AlertTriangle className="w-4 h-4" style={{ color: M.danger }} />
+                    <AlertTriangle className="w-4 h-4" style={{ color: BAI.error }} />
                   </div>
                   <h3
                     style={{
-                      fontFamily: M.body,
+                      fontFamily: BAI.fontBody,
                       fontSize: '13px',
                       fontWeight: 700,
                       letterSpacing: '0.06em',
                       textTransform: 'uppercase',
-                      color: M.danger,
+                      color: BAI.error,
                     }}
                   >
                     Zone de danger
                   </h3>
                 </div>
                 <div style={{ height: '1px', background: '#f5c6c6', margin: '12px 0 16px' }} />
-                <p className="text-sm mb-4" style={{ color: M.inkMid, fontFamily: M.body }}>
+                <p className="text-sm mb-4" style={{ color: BAI.inkMid, fontFamily: BAI.fontBody }}>
                   Une fois votre compte supprimé, toutes vos données seront définitivement perdues.
                   Cette action est irréversible.
                 </p>
@@ -1004,18 +983,18 @@ export default function Profile() {
                   onClick={() => setShowDeleteDialog(true)}
                   className="inline-flex items-center gap-2 font-semibold px-4 py-2.5 text-sm transition-colors"
                   style={{
-                    background: M.dangerBg,
+                    background: BAI.errorLight,
                     border: `1px solid #f5c6c6`,
-                    color: M.danger,
+                    color: BAI.error,
                     borderRadius: '8px',
-                    fontFamily: M.body,
+                    fontFamily: BAI.fontBody,
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background = '#fee2e2'
                     e.currentTarget.style.borderColor = '#f5c6c6'
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = M.dangerBg
+                    e.currentTarget.style.background = BAI.errorLight
                     e.currentTarget.style.borderColor = '#f5c6c6'
                   }}
                 >
@@ -1045,39 +1024,39 @@ export default function Profile() {
           <div
             className="relative w-full max-w-md mx-4 p-6"
             style={{
-              background: M.surface,
+              background: BAI.bgSurface,
               borderRadius: '16px',
-              border: `1px solid ${M.border}`,
+              border: `1px solid ${BAI.border}`,
               boxShadow: '0 20px 60px rgba(13,12,10,0.15)',
             }}
           >
             <div className="flex items-center gap-3 mb-4">
               <div
                 className="w-10 h-10 flex items-center justify-center"
-                style={{ background: M.dangerBg, border: `1px solid #f5c6c6`, borderRadius: '10px' }}
+                style={{ background: BAI.errorLight, border: `1px solid #f5c6c6`, borderRadius: '10px' }}
               >
-                <AlertTriangle className="w-5 h-5" style={{ color: M.danger }} />
+                <AlertTriangle className="w-5 h-5" style={{ color: BAI.error }} />
               </div>
               <h3
                 style={{
-                  fontFamily: M.display,
+                  fontFamily: BAI.fontDisplay,
                   fontWeight: 700,
                   fontStyle: 'italic',
                   fontSize: '20px',
-                  color: M.ink,
+                  color: BAI.ink,
                 }}
               >
                 Supprimer votre compte ?
               </h3>
             </div>
-            <p className="text-sm mb-4" style={{ color: M.inkMid, fontFamily: M.body }}>
+            <p className="text-sm mb-4" style={{ color: BAI.inkMid, fontFamily: BAI.fontBody }}>
               Cette action est <strong>irréversible</strong>. Toutes vos données, propriétés,
               contrats et messages seront supprimés définitivement.
             </p>
             <div className="mb-4">
               <label
                 className="block text-sm font-semibold mb-1.5"
-                style={{ color: M.inkMid, fontFamily: M.body }}
+                style={{ color: BAI.inkMid, fontFamily: BAI.fontBody }}
               >
                 Tapez <strong>SUPPRIMER</strong> pour confirmer
               </label>
@@ -1096,14 +1075,14 @@ export default function Profile() {
                 onClick={() => { setShowDeleteDialog(false); setDeleteConfirmText('') }}
                 className="flex-1 font-semibold px-4 py-2.5 text-sm transition-colors"
                 style={{
-                  background: M.surface,
-                  border: `1px solid ${M.border}`,
-                  color: M.inkMid,
+                  background: BAI.bgSurface,
+                  border: `1px solid ${BAI.border}`,
+                  color: BAI.inkMid,
                   borderRadius: '8px',
-                  fontFamily: M.body,
+                  fontFamily: BAI.fontBody,
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
-                onMouseLeave={(e) => (e.currentTarget.style.background = M.surface)}
+                onMouseEnter={(e) => (e.currentTarget.style.background = BAI.bgMuted)}
+                onMouseLeave={(e) => (e.currentTarget.style.background = BAI.bgSurface)}
               >
                 Annuler
               </button>
@@ -1115,9 +1094,9 @@ export default function Profile() {
                   setDeleteConfirmText('')
                 }}
                 className="flex-1 font-semibold px-4 py-2.5 text-sm text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ background: M.danger, borderRadius: '8px', fontFamily: M.body }}
+                style={{ background: BAI.error, borderRadius: '8px', fontFamily: BAI.fontBody }}
                 onMouseEnter={(e) => deleteConfirmText === 'SUPPRIMER' && (e.currentTarget.style.background = '#7f1d1d')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = M.danger)}
+                onMouseLeave={(e) => (e.currentTarget.style.background = BAI.error)}
               >
                 Supprimer définitivement
               </button>

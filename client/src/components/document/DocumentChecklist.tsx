@@ -19,24 +19,7 @@ import {
 import toast from 'react-hot-toast'
 import { WatermarkedViewer } from './WatermarkedViewer'
 import { celebrateSmall } from '../../utils/celebrate'
-
-const M = {
-  ink: '#0d0c0a',
-  inkMid: '#5a5754',
-  inkFaint: '#9e9b96',
-  owner: '#1a3270',
-  ownerLight: '#eaf0fb',
-  ownerBorder: '#b8ccf0',
-  tenant: '#1b5e3b',
-  tenantLight: '#edf7f2',
-  tenantBorder: '#9fd4ba',
-  border: '#e4e1db',
-  borderMid: '#ccc9c3',
-  muted: '#f4f2ee',
-  surface: '#ffffff',
-  caramelBg: '#fdf5ec',
-  caramel: '#92400e',
-}
+import { BAI } from '../../constants/bailio-tokens'
 
 interface CustomChecklistItem {
   category: string
@@ -186,12 +169,12 @@ export const DocumentChecklist = ({
   }
 
   const statusIcon = (doc: ContractDocument | undefined) => {
-    if (!doc) return <Clock className="w-5 h-5" style={{ color: M.inkFaint }} />
+    if (!doc) return <Clock className="w-5 h-5" style={{ color: BAI.inkFaint }} />
     switch (doc.status) {
-      case 'UPLOADED': return <Clock className="w-5 h-5" style={{ color: M.owner }} />
-      case 'VALIDATED': return <CheckCircle className="w-5 h-5" style={{ color: M.tenant }} />
+      case 'UPLOADED': return <Clock className="w-5 h-5" style={{ color: BAI.owner }} />
+      case 'VALIDATED': return <CheckCircle className="w-5 h-5" style={{ color: BAI.tenant }} />
       case 'REJECTED': return <XCircle className="w-5 h-5 text-red-500" />
-      default: return <Clock className="w-5 h-5" style={{ color: M.inkFaint }} />
+      default: return <Clock className="w-5 h-5" style={{ color: BAI.inkFaint }} />
     }
   }
 
@@ -227,9 +210,9 @@ export const DocumentChecklist = ({
         <div
           className="flex items-center gap-2 p-3 rounded-xl text-sm"
           style={{
-            background: tenantHasSigned ? M.ownerLight : M.surface,
-            border: `1px solid ${tenantHasSigned ? M.ownerBorder : M.border}`,
-            color: tenantHasSigned ? M.owner : M.inkMid,
+            background: tenantHasSigned ? BAI.ownerLight : BAI.bgSurface,
+            border: `1px solid ${tenantHasSigned ? BAI.ownerBorder : BAI.border}`,
+            color: tenantHasSigned ? BAI.owner : BAI.inkMid,
           }}
         >
           <Shield className="w-4 h-4 shrink-0" />
@@ -242,21 +225,21 @@ export const DocumentChecklist = ({
       )}
 
       {/* Progress bar */}
-      <div className="rounded-xl border p-4" style={{ background: M.surface, borderColor: M.border }}>
+      <div className="rounded-xl border p-4" style={{ background: BAI.bgSurface, borderColor: BAI.border }}>
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-semibold" style={{ color: M.ink }}>
+          <h3 className="text-sm font-semibold" style={{ color: BAI.ink }}>
             {userRole === 'OWNER' ? 'Documents proprietaire' : 'Documents locataire'}
           </h3>
-          <span className="text-sm" style={{ color: M.inkFaint }}>
+          <span className="text-sm" style={{ color: BAI.inkFaint }}>
             {completedCount}/{checklist.length} fournis
           </span>
         </div>
-        <div className="w-full rounded-full h-2" style={{ background: M.border }}>
+        <div className="w-full rounded-full h-2" style={{ background: BAI.border }}>
           <div
             className="h-2 rounded-full transition-all"
             style={{
               width: `${(completedCount / checklist.length) * 100}%`,
-              background: M.tenant,
+              background: BAI.tenant,
             }}
           />
         </div>
@@ -273,7 +256,7 @@ export const DocumentChecklist = ({
               style={
                 doc?.status === 'REJECTED'
                   ? { background: '#fef2f2', borderColor: '#fca5a5' }
-                  : { background: M.surface, borderColor: M.border }
+                  : { background: BAI.bgSurface, borderColor: BAI.border }
               }
             >
               <div className="flex items-start gap-3">
@@ -283,13 +266,13 @@ export const DocumentChecklist = ({
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-medium" style={{ color: M.ink }}>
+                    <p className="text-sm font-medium" style={{ color: BAI.ink }}>
                       {item.label}
                     </p>
                     {doc?.fromDossier && doc.status !== 'REJECTED' && (
                       <span
                         className="text-xs font-medium px-1.5 py-0.5 rounded"
-                        style={{ background: M.tenantLight, color: M.tenant, border: `1px solid ${M.tenantBorder}` }}
+                        style={{ background: BAI.tenantLight, color: BAI.tenant, border: `1px solid ${BAI.tenantBorder}` }}
                       >
                         Importé du dossier
                       </span>
@@ -297,7 +280,7 @@ export const DocumentChecklist = ({
                     {item.category.startsWith('CUSTOM_') && (
                       <span
                         className="text-xs font-medium px-1.5 py-0.5 rounded"
-                        style={{ background: M.caramelBg, color: M.caramel }}
+                        style={{ background: BAI.caramelLight, color: '#92400e' }}
                       >
                         Demande perso.
                       </span>
@@ -306,21 +289,21 @@ export const DocumentChecklist = ({
                       <span className="text-xs text-red-500 font-medium">Obligatoire</span>
                     )}
                   </div>
-                  <p className="text-xs mt-0.5" style={{ color: M.inkFaint }}>{item.description}</p>
+                  <p className="text-xs mt-0.5" style={{ color: BAI.inkFaint }}>{item.description}</p>
 
                   {/* Document info */}
                   {doc && (
                     <div className="mt-2 flex items-center gap-2 text-xs">
-                      <FileText className="w-3.5 h-3.5" style={{ color: M.inkFaint }} />
-                      <span className="truncate" style={{ color: M.inkMid }}>{doc.fileName}</span>
+                      <FileText className="w-3.5 h-3.5" style={{ color: BAI.inkFaint }} />
+                      <span className="truncate" style={{ color: BAI.inkMid }}>{doc.fileName}</span>
                       <span
                         className="px-1.5 py-0.5 rounded text-xs font-medium"
                         style={
                           doc.status === 'VALIDATED'
-                            ? { background: M.tenantLight, color: M.tenant }
+                            ? { background: BAI.tenantLight, color: BAI.tenant }
                             : doc.status === 'REJECTED'
                             ? { background: '#fef2f2', color: '#9b1c1c' }
-                            : { background: M.ownerLight, color: M.owner }
+                            : { background: BAI.ownerLight, color: BAI.owner }
                         }
                       >
                         {statusLabel(doc)}
@@ -347,14 +330,14 @@ export const DocumentChecklist = ({
                       onClick={() => handleFileSelect(item.category)}
                       disabled={isLoading}
                       className="p-2 rounded-xl transition-colors"
-                      style={{ color: M.inkMid }}
+                      style={{ color: BAI.inkMid }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = M.tenantLight
-                        e.currentTarget.style.color = M.tenant
+                        e.currentTarget.style.background = BAI.tenantLight
+                        e.currentTarget.style.color = BAI.tenant
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.background = 'transparent'
-                        e.currentTarget.style.color = M.inkMid
+                        e.currentTarget.style.color = BAI.inkMid
                       }}
                       title="Telecharger"
                     >
@@ -370,14 +353,14 @@ export const DocumentChecklist = ({
                         <button
                           onClick={() => openViewer(doc)}
                           className="p-2 rounded-xl transition-colors"
-                          style={{ color: viewedDocIds.has(doc.id) ? M.owner : M.inkMid }}
+                          style={{ color: viewedDocIds.has(doc.id) ? BAI.owner : BAI.inkMid }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.background = M.ownerLight
-                            e.currentTarget.style.color = M.owner
+                            e.currentTarget.style.background = BAI.ownerLight
+                            e.currentTarget.style.color = BAI.owner
                           }}
                           onMouseLeave={(e) => {
                             e.currentTarget.style.background = 'transparent'
-                            e.currentTarget.style.color = viewedDocIds.has(doc.id) ? M.owner : M.inkMid
+                            e.currentTarget.style.color = viewedDocIds.has(doc.id) ? BAI.owner : BAI.inkMid
                           }}
                           title={viewedDocIds.has(doc.id) ? 'Consulter à nouveau' : 'Consulter avec filigrane (requis avant validation)'}
                         >
@@ -386,7 +369,7 @@ export const DocumentChecklist = ({
                       ) : (
                         <span
                           title="Disponible après signature du locataire"
-                          style={{ padding: 8, color: M.inkFaint, cursor: 'default', display: 'flex', alignItems: 'center' }}
+                          style={{ padding: 8, color: BAI.inkFaint, cursor: 'default', display: 'flex', alignItems: 'center' }}
                         >
                           <Eye className="w-4 h-4 opacity-30" />
                         </span>
@@ -397,14 +380,14 @@ export const DocumentChecklist = ({
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-2 rounded-xl transition-colors"
-                        style={{ color: M.inkMid }}
+                        style={{ color: BAI.inkMid }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.background = M.tenantLight
-                          e.currentTarget.style.color = M.tenant
+                          e.currentTarget.style.background = BAI.tenantLight
+                          e.currentTarget.style.color = BAI.tenant
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.background = 'transparent'
-                          e.currentTarget.style.color = M.inkMid
+                          e.currentTarget.style.color = BAI.inkMid
                         }}
                         title="Voir"
                       >
@@ -420,14 +403,14 @@ export const DocumentChecklist = ({
                     <button
                       onClick={() => handleDelete(doc.id)}
                       className="p-2 rounded-xl transition-colors"
-                      style={{ color: M.inkMid }}
+                      style={{ color: BAI.inkMid }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.background = '#fef2f2'
                         e.currentTarget.style.color = '#dc2626'
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.background = 'transparent'
-                        e.currentTarget.style.color = M.inkMid
+                        e.currentTarget.style.color = BAI.inkMid
                       }}
                       title="Supprimer"
                     >
@@ -443,12 +426,12 @@ export const DocumentChecklist = ({
                         disabled={!viewedDocIds.has(doc.id)}
                         className="p-2 rounded-xl transition-colors"
                         style={{
-                          color: viewedDocIds.has(doc.id) ? M.tenant : M.inkFaint,
+                          color: viewedDocIds.has(doc.id) ? BAI.tenant : BAI.inkFaint,
                           cursor: viewedDocIds.has(doc.id) ? 'pointer' : 'not-allowed',
                           opacity: viewedDocIds.has(doc.id) ? 1 : 0.4,
                         }}
                         onMouseEnter={(e) => {
-                          if (viewedDocIds.has(doc.id)) e.currentTarget.style.background = M.tenantLight
+                          if (viewedDocIds.has(doc.id)) e.currentTarget.style.background = BAI.tenantLight
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.background = 'transparent'
@@ -462,7 +445,7 @@ export const DocumentChecklist = ({
                         disabled={!viewedDocIds.has(doc.id)}
                         className="p-2 rounded-xl transition-colors"
                         style={{
-                          color: M.inkMid,
+                          color: BAI.inkMid,
                           cursor: viewedDocIds.has(doc.id) ? 'pointer' : 'not-allowed',
                           opacity: viewedDocIds.has(doc.id) ? 1 : 0.4,
                         }}
@@ -474,7 +457,7 @@ export const DocumentChecklist = ({
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.background = 'transparent'
-                          e.currentTarget.style.color = M.inkMid
+                          e.currentTarget.style.color = BAI.inkMid
                         }}
                         title={viewedDocIds.has(doc.id) ? 'Refuser' : 'Consultez le document avant de pouvoir le refuser'}
                       >
@@ -522,14 +505,14 @@ export const DocumentChecklist = ({
       {/* Reject modal */}
       {rejectingDocId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-          <div className="rounded-2xl shadow-2xl max-w-md w-full p-6" style={{ background: M.surface }}>
-            <h3 className="text-lg font-bold mb-4" style={{ color: M.ink }}>Refuser le document</h3>
+          <div className="rounded-2xl shadow-2xl max-w-md w-full p-6" style={{ background: BAI.bgSurface }}>
+            <h3 className="text-lg font-bold mb-4" style={{ color: BAI.ink }}>Refuser le document</h3>
             <textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               placeholder="Motif du refus (obligatoire)..."
               className="w-full rounded-xl p-3 text-sm mb-4 h-24 resize-none"
-              style={{ border: `1px solid ${M.border}`, outline: 'none', color: M.ink }}
+              style={{ border: `1px solid ${BAI.border}`, outline: 'none', color: BAI.ink }}
             />
             <div className="flex gap-3 justify-end">
               <button

@@ -126,26 +126,31 @@ function AppCard({ app, onWithdraw }: { app: Application; onWithdraw: (id: strin
         to={`/property/${prop.id}`}
         style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}
       >
-        <div className="flex gap-4 p-4">
-          {/* Property image */}
+        {/* Card body — colonne sur mobile, ligne sur sm+ */}
+        <div className="flex flex-col sm:flex-row gap-0 sm:gap-4 sm:p-4">
+          {/* Property image — 100px mobile (full width), 64px sm+ (fixed) */}
           {prop.images && prop.images[0] ? (
             <img
               src={`${SERVER_BASE}${prop.images[0]}`}
               alt={prop.title}
-              className="w-16 h-16 flex-shrink-0 object-cover"
-              style={{ borderRadius: 8 }}
+              className="w-full sm:w-16 sm:flex-shrink-0 object-cover"
+              style={{
+                height: 100,
+                borderRadius: 0,
+              }}
             />
           ) : (
             <div
-              className="w-16 h-16 flex items-center justify-center flex-shrink-0"
-              style={{ background: '#f4f2ee', borderRadius: 8 }}
+              className="w-full sm:w-16 sm:flex-shrink-0 flex items-center justify-center"
+              style={{ height: 100, background: '#f4f2ee' }}
             >
               <Building2 className="w-6 h-6" style={{ color: '#9e9b96' }} />
             </div>
           )}
 
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0 p-4 sm:p-0">
+            {/* Title + status badge */}
+            <div className="flex items-start justify-between gap-2 flex-wrap">
               <div className="min-w-0">
                 <h3
                   className="truncate"
@@ -173,7 +178,7 @@ function AppCard({ app, onWithdraw }: { app: Application; onWithdraw: (id: strin
                   fontSize: 11,
                   fontWeight: 500,
                   borderRadius: 99,
-                  padding: '2px 10px',
+                  padding: '4px 10px',
                   whiteSpace: 'nowrap',
                 }}
               >
@@ -181,7 +186,7 @@ function AppCard({ app, onWithdraw }: { app: Application; onWithdraw: (id: strin
               </span>
             </div>
 
-            <div className="flex items-center gap-3 mt-2">
+            <div className="flex items-center gap-3 mt-2 flex-wrap">
               <span style={{ fontSize: 11, color: '#9e9b96' }}>
                 Envoyée le {format(new Date(app.createdAt), 'd MMM yyyy', { locale: fr })}
               </span>
@@ -201,45 +206,72 @@ function AppCard({ app, onWithdraw }: { app: Application; onWithdraw: (id: strin
                   color: '#c4976a',
                   border: '1px solid #f3c99a',
                   borderRadius: 8,
-                  padding: '6px 14px',
+                  padding: '8px 14px',
                   fontSize: 12,
                   fontWeight: 500,
                   fontFamily: "'DM Sans', system-ui, sans-serif",
+                  minHeight: 44,
                 }}
               >
                 <Calendar className="w-3.5 h-3.5" />
                 Réserver une visite
               </span>
             )}
-          </div>
 
-          <div className="flex flex-col gap-1.5 flex-shrink-0" onClick={e => e.preventDefault()}>
-            {app.status === 'PENDING' && (
-              <button
-                onClick={handleWithdraw}
-                disabled={withdrawing}
-                title="Retirer la candidature"
-                className="p-1.5 transition-colors disabled:opacity-50"
-                style={{ borderRadius: 6, color: '#9b1c1c' }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#fef2f2' }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}
-              >
-                {withdrawing
-                  ? <Loader2 className="w-4 h-4 animate-spin" />
-                  : <Trash2 className="w-4 h-4" />}
-              </button>
-            )}
-            {!isRejected && !isWithdrawn && (
-              <button
-                onClick={(e) => { e.preventDefault(); setExpanded(!expanded) }}
-                className="p-1.5 transition-colors"
-                style={{ borderRadius: 6, color: '#9e9b96' }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#f4f2ee' }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}
-              >
-                {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </button>
-            )}
+            {/* Actions — flex-wrap, touch targets ≥ 44px */}
+            <div
+              className="flex items-center gap-2 flex-wrap mt-3"
+              onClick={e => e.preventDefault()}
+            >
+              {app.status === 'PENDING' && (
+                <button
+                  onClick={handleWithdraw}
+                  disabled={withdrawing}
+                  className="inline-flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                  style={{
+                    borderRadius: 8,
+                    color: '#9b1c1c',
+                    border: '1px solid #fca5a5',
+                    background: '#fef2f2',
+                    padding: '10px 14px',
+                    fontSize: 12,
+                    fontWeight: 500,
+                    cursor: withdrawing ? 'not-allowed' : 'pointer',
+                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                    minHeight: 44,
+                  }}
+                >
+                  {withdrawing
+                    ? <Loader2 className="w-4 h-4 animate-spin" />
+                    : <Trash2 className="w-4 h-4" />}
+                  Retirer
+                </button>
+              )}
+              {!isRejected && !isWithdrawn && (
+                <button
+                  onClick={(e) => { e.preventDefault(); setExpanded(!expanded) }}
+                  className="inline-flex items-center gap-1.5 transition-colors"
+                  style={{
+                    borderRadius: 8,
+                    color: '#5a5754',
+                    border: '1px solid #e4e1db',
+                    background: '#f4f2ee',
+                    padding: '10px 14px',
+                    fontSize: 12,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                    minHeight: 44,
+                  }}
+                >
+                  {expanded ? (
+                    <><ChevronUp className="w-4 h-4" /> Réduire</>
+                  ) : (
+                    <><ChevronDown className="w-4 h-4" /> Détails</>
+                  )}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </Link>
@@ -380,11 +412,11 @@ export default function MyApplications() {
   return (
     <Layout>
       <div
-        className="min-h-screen p-6 lg:p-8"
+        className="min-h-screen px-4 py-6 lg:p-8"
         style={{ background: '#fafaf8', fontFamily: "'DM Sans', system-ui, sans-serif" }}
       >
         <div className="max-w-3xl mx-auto">
-          {/* Page header */}
+          {/* Page header — responsive font size */}
           <div className="mb-8">
             <p
               className="uppercase tracking-widest mb-1"
@@ -392,13 +424,13 @@ export default function MyApplications() {
             >
               Espace locataire
             </p>
-            <div className="flex items-baseline gap-3">
+            <div className="flex items-baseline gap-3 flex-wrap">
               <h1
                 style={{
                   fontFamily: "'Cormorant Garamond', Georgia, serif",
                   fontWeight: 700,
                   fontStyle: 'italic',
-                  fontSize: 40,
+                  fontSize: 'clamp(28px, 7vw, 40px)',
                   color: '#0d0c0a',
                   lineHeight: 1,
                 }}
@@ -434,7 +466,7 @@ export default function MyApplications() {
             </div>
           ) : apps.length === 0 ? (
             <div
-              className="text-center py-16"
+              className="text-center py-16 px-4"
               style={{
                 background: '#ffffff',
                 border: '1px solid #e4e1db',
@@ -469,10 +501,11 @@ export default function MyApplications() {
                   background: '#1a1a2e',
                   color: '#ffffff',
                   borderRadius: 8,
-                  padding: '10px 20px',
+                  padding: '12px 20px',
                   fontSize: 13,
                   fontWeight: 500,
                   fontFamily: "'DM Sans', system-ui, sans-serif",
+                  minHeight: 44,
                 }}
               >
                 Parcourir les annonces

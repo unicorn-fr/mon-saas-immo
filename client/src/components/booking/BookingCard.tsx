@@ -3,6 +3,7 @@ import { Booking, BookingStatus } from '../../types/booking.types'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useNavigate } from 'react-router-dom'
+import { BAI } from '../../constants/bailio-tokens'
 
 interface BookingCardProps {
   booking: Booking
@@ -10,36 +11,6 @@ interface BookingCardProps {
   onConfirm?: (id: string) => void
   onCancel?: (id: string) => void
   isLoading?: boolean
-}
-
-// ─── Maison tokens ────────────────────────────────────────────────────────────
-const M = {
-  bg:           '#fafaf8',
-  surface:      '#ffffff',
-  muted:        '#f4f2ee',
-  inputBg:      '#f8f7f4',
-  ink:          '#0d0c0a',
-  inkMid:       '#5a5754',
-  inkFaint:     '#9e9b96',
-  caramel:      '#c4976a',
-  caramelLight: '#fdf5ec',
-  owner:        '#1a3270',
-  ownerLight:   '#eaf0fb',
-  ownerBorder:  '#b8ccf0',
-  tenant:       '#1b5e3b',
-  tenantLight:  '#edf7f2',
-  tenantBorder: '#9fd4ba',
-  border:       '#e4e1db',
-  borderMid:    '#ccc9c3',
-  night:        '#1a1a2e',
-  danger:       '#9b1c1c',
-  dangerBg:     '#fef2f2',
-  dangerBorder: '#fca5a5',
-  warning:      '#92400e',
-  warningBg:    '#fdf5ec',
-  warningBorder:'#f3c99a',
-  body:         "'DM Sans', system-ui, sans-serif",
-  display:      "'Cormorant Garamond', Georgia, serif",
 }
 
 const STATUS_CONFIG: Record<
@@ -55,30 +26,30 @@ const STATUS_CONFIG: Record<
   PENDING: {
     label: 'En attente',
     icon: AlertCircle,
-    color: M.warning,
-    bgColor: M.warningBg,
-    borderColor: M.warningBorder,
+    color: '#92400e',
+    bgColor: '#fdf5ec',
+    borderColor: '#f3c99a',
   },
   CONFIRMED: {
     label: 'Confirmée',
     icon: CheckCircle,
-    color: M.tenant,
-    bgColor: M.tenantLight,
-    borderColor: M.tenantBorder,
+    color: BAI.tenant,
+    bgColor: BAI.tenantLight,
+    borderColor: BAI.tenantBorder,
   },
   CANCELLED: {
     label: 'Annulée',
     icon: XCircle,
-    color: M.danger,
-    bgColor: M.dangerBg,
-    borderColor: M.dangerBorder,
+    color: BAI.error,
+    bgColor: BAI.errorLight,
+    borderColor: '#fca5a5',
   },
   COMPLETED: {
     label: 'Terminée',
     icon: CheckCircle,
-    color: M.inkMid,
-    bgColor: M.muted,
-    borderColor: M.border,
+    color: BAI.inkMid,
+    bgColor: BAI.bgMuted,
+    borderColor: BAI.border,
   },
 }
 
@@ -130,13 +101,13 @@ export const BookingCard = ({
   return (
     <div
       style={{
-        background: M.surface,
+        background: BAI.bgSurface,
         border: `1px solid ${statusConfig.borderColor}`,
         borderRadius: 12,
         boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
         overflow: 'hidden',
         transition: 'box-shadow 0.15s ease',
-        fontFamily: M.body,
+        fontFamily: BAI.fontBody,
       }}
     >
       <div className="p-6">
@@ -149,15 +120,15 @@ export const BookingCard = ({
               style={{
                 fontSize: 17,
                 fontWeight: 600,
-                color: M.ink,
+                color: BAI.ink,
                 marginBottom: 4,
                 lineHeight: 1.3,
-                fontFamily: M.body,
+                fontFamily: BAI.fontBody,
               }}
             >
               {booking.property.title}
             </h3>
-            <div className="flex items-center gap-1.5" style={{ color: M.inkMid, fontSize: 13 }}>
+            <div className="flex items-center gap-1.5" style={{ color: BAI.inkMid, fontSize: 13 }}>
               <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
               <span>{booking.property.city}</span>
             </div>
@@ -185,26 +156,26 @@ export const BookingCard = ({
           <div className="flex items-center gap-3">
             <div
               className="w-9 h-9 flex items-center justify-center flex-shrink-0"
-              style={{ background: M.ownerLight, borderRadius: 10 }}
+              style={{ background: BAI.ownerLight, borderRadius: 10 }}
             >
-              <Calendar className="w-4 h-4" style={{ color: M.owner }} />
+              <Calendar className="w-4 h-4" style={{ color: BAI.owner }} />
             </div>
             <div>
-              <p style={{ fontSize: 11, color: M.inkFaint, marginBottom: 2 }}>Date</p>
-              <p style={{ fontSize: 13, fontWeight: 600, color: M.ink }}>{formattedDateShort}</p>
+              <p style={{ fontSize: 11, color: BAI.inkFaint, marginBottom: 2 }}>Date</p>
+              <p style={{ fontSize: 13, fontWeight: 600, color: BAI.ink }}>{formattedDateShort}</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <div
               className="w-9 h-9 flex items-center justify-center flex-shrink-0"
-              style={{ background: M.ownerLight, borderRadius: 10 }}
+              style={{ background: BAI.ownerLight, borderRadius: 10 }}
             >
-              <Clock className="w-4 h-4" style={{ color: M.owner }} />
+              <Clock className="w-4 h-4" style={{ color: BAI.owner }} />
             </div>
             <div>
-              <p style={{ fontSize: 11, color: M.inkFaint, marginBottom: 2 }}>Horaire</p>
-              <p style={{ fontSize: 13, fontWeight: 600, color: M.ink }}>
+              <p style={{ fontSize: 11, color: BAI.inkFaint, marginBottom: 2 }}>Horaire</p>
+              <p style={{ fontSize: 13, fontWeight: 600, color: BAI.ink }}>
                 {booking.visitTime} · {booking.duration} min
               </p>
             </div>
@@ -213,15 +184,15 @@ export const BookingCard = ({
           <div className="flex items-center gap-3">
             <div
               className="w-9 h-9 flex items-center justify-center flex-shrink-0"
-              style={{ background: M.ownerLight, borderRadius: 10 }}
+              style={{ background: BAI.ownerLight, borderRadius: 10 }}
             >
-              <User className="w-4 h-4" style={{ color: M.owner }} />
+              <User className="w-4 h-4" style={{ color: BAI.owner }} />
             </div>
             <div>
-              <p style={{ fontSize: 11, color: M.inkFaint, marginBottom: 2 }}>
+              <p style={{ fontSize: 11, color: BAI.inkFaint, marginBottom: 2 }}>
                 {viewMode === 'owner' ? 'Visiteur' : 'Propriétaire'}
               </p>
-              <p style={{ fontSize: 13, fontWeight: 600, color: M.ink }}>
+              <p style={{ fontSize: 13, fontWeight: 600, color: BAI.ink }}>
                 {viewMode === 'owner'
                   ? `${booking.tenant.firstName} ${booking.tenant.lastName}`
                   : booking.property.owner
@@ -236,12 +207,12 @@ export const BookingCard = ({
         {booking.tenantNotes && (
           <div
             className="flex items-start gap-2 p-3 mb-4"
-            style={{ background: M.muted, borderRadius: 8 }}
+            style={{ background: BAI.bgMuted, borderRadius: 8 }}
           >
-            <MessageSquare className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: M.inkMid }} />
+            <MessageSquare className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: BAI.inkMid }} />
             <div>
-              <p style={{ fontSize: 11, color: M.inkFaint, marginBottom: 2 }}>Notes</p>
-              <p style={{ fontSize: 13, color: M.ink }}>{booking.tenantNotes}</p>
+              <p style={{ fontSize: 11, color: BAI.inkFaint, marginBottom: 2 }}>Notes</p>
+              <p style={{ fontSize: 13, color: BAI.ink }}>{booking.tenantNotes}</p>
             </div>
           </div>
         )}
@@ -250,14 +221,14 @@ export const BookingCard = ({
         {booking.status === 'CANCELLED' && booking.cancellationReason && (
           <div
             className="flex items-start gap-2 p-3 mb-4"
-            style={{ background: M.dangerBg, border: `1px solid ${M.dangerBorder}`, borderRadius: 8 }}
+            style={{ background: BAI.errorLight, border: `1px solid #fca5a5`, borderRadius: 8 }}
           >
-            <XCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: M.danger }} />
+            <XCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: BAI.error }} />
             <div>
-              <p style={{ fontSize: 11, color: M.danger, marginBottom: 2 }}>Raison de l'annulation</p>
-              <p style={{ fontSize: 13, color: M.danger }}>{booking.cancellationReason}</p>
+              <p style={{ fontSize: 11, color: BAI.error, marginBottom: 2 }}>Raison de l'annulation</p>
+              <p style={{ fontSize: 13, color: BAI.error }}>{booking.cancellationReason}</p>
               {booking.cancelledAt && (
-                <p style={{ fontSize: 11, color: M.danger, opacity: 0.7, marginTop: 2 }}>
+                <p style={{ fontSize: 11, color: BAI.error, opacity: 0.7, marginTop: 2 }}>
                   Le {format(new Date(booking.cancelledAt), 'Pp', { locale: fr })}
                 </p>
               )}
@@ -270,14 +241,14 @@ export const BookingCard = ({
           <div
             className="flex items-center justify-between p-3 mb-4"
             style={{
-              background: M.tenantLight,
-              border: `1px solid ${M.tenantBorder}`,
+              background: BAI.tenantLight,
+              border: `1px solid ${BAI.tenantBorder}`,
               borderRadius: 10,
             }}
           >
             <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" style={{ color: M.tenant }} />
-              <p style={{ fontSize: 13, color: M.tenant, fontWeight: 500 }}>
+              <Calendar className="w-4 h-4" style={{ color: BAI.tenant }} />
+              <p style={{ fontSize: 13, color: BAI.tenant, fontWeight: 500 }}>
                 Visite confirmée — ajoutez-la à votre agenda
               </p>
             </div>
@@ -287,13 +258,13 @@ export const BookingCard = ({
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 px-3 py-1.5"
               style={{
-                background: M.tenant,
+                background: BAI.tenant,
                 color: '#ffffff',
                 borderRadius: 8,
                 fontSize: 12,
                 fontWeight: 600,
                 textDecoration: 'none',
-                fontFamily: M.body,
+                fontFamily: BAI.fontBody,
                 flexShrink: 0,
               }}
             >
@@ -307,7 +278,7 @@ export const BookingCard = ({
         {(canConfirm || canCancel) && (
           <div
             className="flex items-center gap-3 pt-4"
-            style={{ borderTop: `1px solid ${M.border}` }}
+            style={{ borderTop: `1px solid ${BAI.border}` }}
           >
             {canConfirm && onConfirm && (
               <button
@@ -315,7 +286,7 @@ export const BookingCard = ({
                 disabled={isLoading}
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4"
                 style={{
-                  background: M.night,
+                  background: BAI.night,
                   color: '#ffffff',
                   borderRadius: 10,
                   border: 'none',
@@ -323,7 +294,7 @@ export const BookingCard = ({
                   fontWeight: 600,
                   cursor: isLoading ? 'not-allowed' : 'pointer',
                   opacity: isLoading ? 0.6 : 1,
-                  fontFamily: M.body,
+                  fontFamily: BAI.fontBody,
                 }}
               >
                 {isLoading ? (
@@ -341,15 +312,15 @@ export const BookingCard = ({
                 disabled={isLoading}
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4"
                 style={{
-                  background: M.surface,
-                  color: M.danger,
-                  border: `1px solid ${M.dangerBorder}`,
+                  background: BAI.bgSurface,
+                  color: BAI.error,
+                  border: `1px solid #fca5a5`,
                   borderRadius: 10,
                   fontSize: 13,
                   fontWeight: 600,
                   cursor: isLoading ? 'not-allowed' : 'pointer',
                   opacity: isLoading ? 0.6 : 1,
-                  fontFamily: M.body,
+                  fontFamily: BAI.fontBody,
                 }}
               >
                 <XCircle className="w-4 h-4" />
@@ -362,7 +333,7 @@ export const BookingCard = ({
         {/* Footer */}
         <div
           className="flex items-center justify-between pt-3 mt-3"
-          style={{ borderTop: `1px solid ${M.border}`, fontSize: 11, color: M.inkFaint }}
+          style={{ borderTop: `1px solid ${BAI.border}`, fontSize: 11, color: BAI.inkFaint }}
         >
           <span>Réservation #{booking.id.slice(0, 8)}</span>
           <span>Créée le {format(new Date(booking.createdAt), 'Pp', { locale: fr })}</span>

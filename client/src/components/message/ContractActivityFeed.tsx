@@ -13,25 +13,7 @@ import {
 import { contractService } from '../../services/contract.service'
 import { Contract } from '../../types/contract.types'
 import { useAuth } from '../../hooks/useAuth'
-
-const M = {
-  ink:      '#0d0c0a',
-  inkMid:   '#5a5754',
-  inkFaint: '#9e9b96',
-  border:   '#e4e1db',
-  muted:    '#f4f2ee',
-  surface:  '#ffffff',
-  owner:    '#1a3270',
-  ownerL:   '#eaf0fb',
-  ownerB:   '#b8ccf0',
-  tenant:   '#1b5e3b',
-  tenantL:  '#edf7f2',
-  tenantB:  '#9fd4ba',
-  night:    '#1a1a2e',
-  caramel:  '#c4976a',
-  danger:   '#9b1c1c',
-  dangerBg: '#fef2f2',
-}
+import { BAI } from '../../constants/bailio-tokens'
 
 interface ActivityEvent {
   id: string
@@ -139,7 +121,7 @@ export function ContractActivityFeed({ otherUserId }: Props) {
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px 0' }}>
-        <Loader2 style={{ width: 16, height: 16, color: M.inkFaint }} className="animate-spin" />
+        <Loader2 style={{ width: 16, height: 16, color: BAI.inkFaint }} className="animate-spin" />
       </div>
     )
   }
@@ -148,11 +130,11 @@ export function ContractActivityFeed({ otherUserId }: Props) {
     return (
       <div style={{
         padding: '14px 12px', borderRadius: 10,
-        background: M.muted, border: `1px solid ${M.border}`,
+        background: BAI.bgMuted, border: `1px solid ${BAI.border}`,
         textAlign: 'center',
       }}>
-        <FileText style={{ width: 18, height: 18, color: M.inkFaint, margin: '0 auto 6px' }} />
-        <p style={{ fontSize: 11, color: M.inkFaint, margin: 0, lineHeight: 1.5 }}>
+        <FileText style={{ width: 18, height: 18, color: BAI.inkFaint, margin: '0 auto 6px' }} />
+        <p style={{ fontSize: 11, color: BAI.inkFaint, margin: 0, lineHeight: 1.5 }}>
           Aucun contrat en cours avec cet interlocuteur
         </p>
       </div>
@@ -169,22 +151,22 @@ export function ContractActivityFeed({ otherUserId }: Props) {
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           width: '100%', padding: '10px 12px', borderRadius: 10, marginBottom: 14,
-          background: isOwner ? M.ownerL : M.tenantL,
-          border: `1px solid ${isOwner ? M.ownerB : M.tenantB}`,
+          background: isOwner ? BAI.ownerLight : BAI.tenantLight,
+          border: `1px solid ${isOwner ? BAI.ownerBorder : BAI.tenantBorder}`,
           cursor: 'pointer',
         }}
         onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
         onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
       >
         <div style={{ textAlign: 'left' }}>
-          <p style={{ fontSize: 11, fontWeight: 700, color: isOwner ? M.owner : M.tenant, margin: 0, fontFamily: "'DM Sans', sans-serif" }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: isOwner ? BAI.owner : BAI.tenant, margin: 0, fontFamily: "'DM Sans', sans-serif" }}>
             {contract.property?.address ?? 'Contrat de location'}
           </p>
-          <p style={{ fontSize: 10, color: M.inkFaint, margin: '2px 0 0', fontFamily: "'DM Sans', sans-serif" }}>
+          <p style={{ fontSize: 10, color: BAI.inkFaint, margin: '2px 0 0', fontFamily: "'DM Sans', sans-serif" }}>
             {contract.monthlyRent} €/mois · Voir le contrat
           </p>
         </div>
-        <ArrowRight style={{ width: 13, height: 13, color: isOwner ? M.owner : M.tenant, flexShrink: 0 }} />
+        <ArrowRight style={{ width: 13, height: 13, color: isOwner ? BAI.owner : BAI.tenant, flexShrink: 0 }} />
       </button>
 
       {/* Timeline */}
@@ -192,16 +174,16 @@ export function ContractActivityFeed({ otherUserId }: Props) {
         {/* Ligne verticale */}
         <div style={{
           position: 'absolute', left: 7, top: 6, bottom: 6,
-          width: 2, background: M.border,
+          width: 2, background: BAI.border,
         }} />
 
         {events.map((evt, i) => {
           const Icon = evt.icon
           const color = evt.danger
-            ? M.danger
+            ? BAI.error
             : evt.done
-            ? (isOwner ? M.owner : M.tenant)
-            : M.inkFaint
+            ? (isOwner ? BAI.owner : BAI.tenant)
+            : BAI.inkFaint
 
           return (
             <div key={evt.id} style={{ position: 'relative', marginBottom: i < events.length - 1 ? 16 : 0 }}>
@@ -209,8 +191,8 @@ export function ContractActivityFeed({ otherUserId }: Props) {
               <div style={{
                 position: 'absolute', left: -22, top: 1,
                 width: 14, height: 14, borderRadius: '50%',
-                background: evt.done ? color : M.surface,
-                border: `2px solid ${evt.done ? color : M.border}`,
+                background: evt.done ? color : BAI.bgSurface,
+                border: `2px solid ${evt.done ? color : BAI.border}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 zIndex: 1,
               }}>
@@ -222,14 +204,14 @@ export function ContractActivityFeed({ otherUserId }: Props) {
               <div>
                 <p style={{
                   fontSize: 11, fontWeight: evt.active ? 600 : 500,
-                  color: evt.done ? M.ink : M.inkFaint,
+                  color: evt.done ? BAI.ink : BAI.inkFaint,
                   margin: 0, fontFamily: "'DM Sans', sans-serif",
                   lineHeight: 1.4,
                 }}>
                   {evt.label}
                 </p>
                 {evt.sub && (
-                  <p style={{ fontSize: 10, color: M.inkFaint, margin: '1px 0 0', fontFamily: "'DM Sans', sans-serif" }}>
+                  <p style={{ fontSize: 10, color: BAI.inkFaint, margin: '1px 0 0', fontFamily: "'DM Sans', sans-serif" }}>
                     {evt.sub}
                   </p>
                 )}

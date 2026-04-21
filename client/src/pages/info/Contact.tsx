@@ -3,22 +3,7 @@ import { Mail, Phone, MapPin, Send } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Layout } from '../../components/layout/Layout'
 import Footer from '../../components/layout/Footer'
-
-const M = {
-  bg: '#fafaf8',
-  surface: '#ffffff',
-  muted: '#f4f2ee',
-  inputBg: '#f8f7f4',
-  ink: '#0d0c0a',
-  inkMid: '#5a5754',
-  inkFaint: '#9e9b96',
-  night: '#1a1a2e',
-  caramel: '#c4976a',
-  caramelLight: '#fdf5ec',
-  border: '#e4e1db',
-  display: "'Cormorant Garamond', Georgia, serif",
-  body: "'DM Sans', system-ui, sans-serif",
-}
+import { BAI } from '../../constants/bailio-tokens'
 
 const CONTACT_INFO = [
   {
@@ -45,10 +30,10 @@ const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '11px 14px',
   borderRadius: '8px',
-  border: `1px solid ${M.border}`,
-  background: M.inputBg,
-  color: M.ink,
-  fontFamily: M.body,
+  border: `1px solid ${BAI.border}`,
+  background: BAI.bgMuted,
+  color: BAI.ink,
+  fontFamily: BAI.fontBody,
   fontSize: '14px',
   outline: 'none',
   transition: 'border-color 0.15s ease',
@@ -75,21 +60,21 @@ export default function Contact() {
 
   const getInputStyle = (field: string): React.CSSProperties => ({
     ...inputStyle,
-    borderColor: focused === field ? M.night : M.border,
+    borderColor: focused === field ? BAI.night : BAI.border,
   })
 
   return (
     <Layout showFooter={false}>
-      <div className="min-h-screen" style={{ background: M.bg, fontFamily: M.body }}>
+      <div className="min-h-screen" style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}>
         {/* Hero */}
         <section
           className="py-20 px-4 text-center"
-          style={{ background: M.night }}
+          style={{ background: BAI.night }}
         >
           <div className="max-w-3xl mx-auto">
             <h1
               style={{
-                fontFamily: M.display,
+                fontFamily: BAI.fontDisplay,
                 fontWeight: 700,
                 fontStyle: 'italic',
                 fontSize: '52px',
@@ -102,7 +87,7 @@ export default function Contact() {
             </h1>
             <p
               style={{
-                fontFamily: M.body,
+                fontFamily: BAI.fontBody,
                 fontSize: '16px',
                 color: 'rgba(255,255,255,0.7)',
                 lineHeight: 1.6,
@@ -124,8 +109,8 @@ export default function Contact() {
                   key={info.label}
                   className="text-center"
                   style={{
-                    background: M.surface,
-                    border: `1px solid ${M.border}`,
+                    background: BAI.bgSurface,
+                    border: `1px solid ${BAI.border}`,
                     borderRadius: '12px',
                     padding: '28px 20px',
                   }}
@@ -135,28 +120,28 @@ export default function Contact() {
                     style={{
                       width: '44px',
                       height: '44px',
-                      background: M.muted,
+                      background: BAI.bgMuted,
                       borderRadius: '10px',
                     }}
                   >
-                    <Icon style={{ width: '20px', height: '20px', color: M.night }} />
+                    <Icon style={{ width: '20px', height: '20px', color: BAI.night }} />
                   </div>
                   <h3
                     style={{
-                      fontFamily: M.body,
+                      fontFamily: BAI.fontBody,
                       fontWeight: 600,
                       fontSize: '14px',
-                      color: M.ink,
+                      color: BAI.ink,
                       marginBottom: '6px',
                     }}
                   >
                     {info.label}
                   </h3>
-                  <p style={{ fontFamily: M.body, fontSize: '14px', color: M.inkMid, margin: 0 }}>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: '14px', color: BAI.inkMid, margin: 0 }}>
                     {info.value}
                   </p>
                   {info.sub && (
-                    <p style={{ fontFamily: M.body, fontSize: '12px', color: M.inkFaint, margin: '2px 0 0' }}>
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: '12px', color: BAI.inkFaint, margin: '2px 0 0' }}>
                       {info.sub}
                     </p>
                   )}
@@ -168,19 +153,19 @@ export default function Contact() {
           {/* Form card */}
           <div
             style={{
-              background: M.surface,
-              border: `1px solid ${M.border}`,
+              background: BAI.bgSurface,
+              border: `1px solid ${BAI.border}`,
               borderRadius: '12px',
               padding: '40px',
             }}
           >
             <h2
               style={{
-                fontFamily: M.display,
+                fontFamily: BAI.fontDisplay,
                 fontWeight: 700,
                 fontStyle: 'italic',
                 fontSize: '32px',
-                color: M.ink,
+                color: BAI.ink,
                 marginBottom: '28px',
               }}
             >
@@ -193,10 +178,10 @@ export default function Contact() {
                   <label
                     style={{
                       display: 'block',
-                      fontFamily: M.body,
+                      fontFamily: BAI.fontBody,
                       fontWeight: 500,
                       fontSize: '13px',
-                      color: M.ink,
+                      color: BAI.ink,
                       marginBottom: '6px',
                     }}
                   >
@@ -216,10 +201,10 @@ export default function Contact() {
                   <label
                     style={{
                       display: 'block',
-                      fontFamily: M.body,
+                      fontFamily: BAI.fontBody,
                       fontWeight: 500,
                       fontSize: '13px',
-                      color: M.ink,
+                      color: BAI.ink,
                       marginBottom: '6px',
                     }}
                   >
@@ -241,10 +226,10 @@ export default function Contact() {
                 <label
                   style={{
                     display: 'block',
-                    fontFamily: M.body,
+                    fontFamily: BAI.fontBody,
                     fontWeight: 500,
                     fontSize: '13px',
-                    color: M.ink,
+                    color: BAI.ink,
                     marginBottom: '6px',
                   }}
                 >
@@ -270,10 +255,10 @@ export default function Contact() {
                 <label
                   style={{
                     display: 'block',
-                    fontFamily: M.body,
+                    fontFamily: BAI.fontBody,
                     fontWeight: 500,
                     fontSize: '13px',
-                    color: M.ink,
+                    color: BAI.ink,
                     marginBottom: '6px',
                   }}
                 >
@@ -300,9 +285,9 @@ export default function Contact() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '8px',
-                  background: sending ? M.inkFaint : M.night,
+                  background: sending ? BAI.inkFaint : BAI.night,
                   color: '#ffffff',
-                  fontFamily: M.body,
+                  fontFamily: BAI.fontBody,
                   fontWeight: 600,
                   fontSize: '14px',
                   padding: '11px 24px',

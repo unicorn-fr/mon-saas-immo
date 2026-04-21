@@ -4,22 +4,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { Link, useNavigate } from 'react-router-dom'
 import { propertyService } from '../../services/property.service'
 import { shareApi } from '../../services/dossier.service'
-
-const M = {
-  ink: '#0d0c0a',
-  inkMid: '#5a5754',
-  inkFaint: '#9e9b96',
-  night: '#1a1a2e',
-  owner: '#1a3270',
-  ownerLight: '#eaf0fb',
-  ownerBorder: '#b8ccf0',
-  tenant: '#1b5e3b',
-  tenantLight: '#edf7f2',
-  tenantBorder: '#9fd4ba',
-  border: '#e4e1db',
-  muted: '#f4f2ee',
-  surface: '#ffffff',
-}
+import { BAI } from '../../constants/bailio-tokens'
 
 interface ContactModalProps {
   isOpen: boolean
@@ -122,23 +107,23 @@ export const ContactModal = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
       <div
         className="rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-        style={{ background: M.surface, boxShadow: '0 8px 32px rgba(13,12,10,0.12)' }}
+        style={{ background: BAI.bgSurface, boxShadow: '0 8px 32px rgba(13,12,10,0.12)' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div
           className="flex items-center justify-between p-6"
-          style={{ borderBottom: `1px solid ${M.border}` }}
+          style={{ borderBottom: `1px solid ${BAI.border}` }}
         >
           <div>
-            <h2 className="text-2xl font-bold" style={{ color: M.ink }}>Contacter le propriétaire</h2>
-            <p className="text-sm mt-1 line-clamp-1" style={{ color: M.inkMid }}>{propertyTitle}</p>
+            <h2 className="text-2xl font-bold" style={{ color: BAI.ink }}>Contacter le propriétaire</h2>
+            <p className="text-sm mt-1 line-clamp-1" style={{ color: BAI.inkMid }}>{propertyTitle}</p>
           </div>
           <button
             onClick={onClose}
             className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
-            style={{ color: M.inkFaint }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
+            style={{ color: BAI.inkFaint }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = BAI.bgMuted)}
             onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
           >
             <X className="w-5 h-5" />
@@ -152,26 +137,26 @@ export const ContactModal = ({
             <div className="flex flex-col gap-4">
               {/* Sent confirmation */}
               <div className="p-4 rounded-xl flex items-start gap-3"
-                style={{ background: M.tenantLight, border: `1px solid ${M.tenantBorder}` }}>
-                <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: M.tenant }} />
-                <p className="text-sm font-medium" style={{ color: M.tenant }}>
+                style={{ background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}` }}>
+                <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: BAI.tenant }} />
+                <p className="text-sm font-medium" style={{ color: BAI.tenant }}>
                   Message envoyé ! Le propriétaire a bien reçu votre demande.
                 </p>
               </div>
 
               {/* Share prompt */}
               <div className="p-5 rounded-xl flex flex-col gap-4"
-                style={{ background: M.ownerLight, border: `1px solid ${M.ownerBorder}` }}>
+                style={{ background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}` }}>
                 <div className="flex items-center gap-2.5">
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                     style={{ background: '#d4e4f7' }}>
-                    <ShieldCheck className="w-4 h-4" style={{ color: M.owner }} />
+                    <ShieldCheck className="w-4 h-4" style={{ color: BAI.owner }} />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold" style={{ color: M.owner }}>
+                    <p className="text-sm font-semibold" style={{ color: BAI.owner }}>
                       Partager votre dossier locatif ?
                     </p>
-                    <p className="text-xs mt-0.5" style={{ color: M.owner, opacity: 0.75 }}>
+                    <p className="text-xs mt-0.5" style={{ color: BAI.owner, opacity: 0.75 }}>
                       Documents 100 % filigranés · consultation uniquement · 30 jours
                     </p>
                   </div>
@@ -181,7 +166,7 @@ export const ContactModal = ({
                     onClick={handleShareAndGo}
                     disabled={isSharing}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[13px] font-semibold text-white transition-opacity disabled:opacity-60"
-                    style={{ background: M.tenant }}
+                    style={{ background: BAI.tenant }}
                   >
                     {isSharing
                       ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Partage…</>
@@ -192,7 +177,7 @@ export const ContactModal = ({
                     onClick={goToMessages}
                     disabled={isSharing}
                     className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold"
-                    style={{ background: M.muted, color: M.inkMid, border: `1px solid ${M.border}` }}
+                    style={{ background: BAI.bgMuted, color: BAI.inkMid, border: `1px solid ${BAI.border}` }}
                   >
                     Non merci
                   </button>
@@ -201,9 +186,9 @@ export const ContactModal = ({
             </div>
           ) : success ? (
             <div className="mb-6 p-4 rounded-xl flex items-start gap-3"
-              style={{ background: M.tenantLight, border: `1px solid ${M.tenantBorder}` }}>
-              <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: M.tenant }} />
-              <p className="text-sm font-medium" style={{ color: M.tenant }}>
+              style={{ background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}` }}>
+              <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: BAI.tenant }} />
+              <p className="text-sm font-medium" style={{ color: BAI.tenant }}>
                 Message envoyé avec succès.
               </p>
             </div>
@@ -214,14 +199,14 @@ export const ContactModal = ({
             <div
               className="mb-6 p-4 rounded-xl"
               style={{
-                background: M.ownerLight,
-                border: `1px solid ${M.ownerBorder}`,
+                background: BAI.ownerLight,
+                border: `1px solid ${BAI.ownerBorder}`,
               }}
             >
-              <p className="text-sm" style={{ color: M.ink }}>
+              <p className="text-sm" style={{ color: BAI.ink }}>
                 Vous n'etes pas connecte. Vous pouvez toujours envoyer un message, mais nous
                 vous recommandons de{' '}
-                <Link to="/login" className="font-medium hover:underline" style={{ color: M.owner }}>
+                <Link to="/login" className="font-medium hover:underline" style={{ color: BAI.owner }}>
                   vous connecter
                 </Link>{' '}
                 pour suivre vos echanges dans la messagerie.
@@ -240,7 +225,7 @@ export const ContactModal = ({
           {/* Form */}
           {!success && <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: M.inkMid }}>
+              <label className="block text-sm font-medium mb-1" style={{ color: BAI.inkMid }}>
                 <User className="w-4 h-4 inline mr-1" />
                 Votre nom *
               </label>
@@ -256,7 +241,7 @@ export const ContactModal = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: M.inkMid }}>
+              <label className="block text-sm font-medium mb-1" style={{ color: BAI.inkMid }}>
                 <Mail className="w-4 h-4 inline mr-1" />
                 Votre email *
               </label>
@@ -272,7 +257,7 @@ export const ContactModal = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: M.inkMid }}>
+              <label className="block text-sm font-medium mb-1" style={{ color: BAI.inkMid }}>
                 <MessageSquare className="w-4 h-4 inline mr-1" />
                 Votre message *
               </label>
@@ -285,15 +270,15 @@ export const ContactModal = ({
                 className="input"
                 required
               />
-              <p className="text-xs mt-1" style={{ color: M.inkFaint }}>
+              <p className="text-xs mt-1" style={{ color: BAI.inkFaint }}>
                 Presentez-vous et expliquez votre projet de location
               </p>
             </div>
 
             {/* Tips */}
-            <div className="p-4 rounded-xl" style={{ background: M.muted }}>
-              <p className="text-sm font-medium mb-2" style={{ color: M.ink }}>Conseils</p>
-              <ul className="text-sm space-y-1" style={{ color: M.inkMid }}>
+            <div className="p-4 rounded-xl" style={{ background: BAI.bgMuted }}>
+              <p className="text-sm font-medium mb-2" style={{ color: BAI.ink }}>Conseils</p>
+              <ul className="text-sm space-y-1" style={{ color: BAI.inkMid }}>
                 <li>- Presentez-vous brievement (situation professionnelle, familiale)</li>
                 <li>- Indiquez votre date d'emmenagement souhaitee</li>
                 <li>- Mentionnez si vous avez des garanties (garant, CDI, etc.)</li>
@@ -304,9 +289,9 @@ export const ContactModal = ({
             {/* Dossier auto-share notice */}
             {isAuthenticated && ownerId && (
               <div className="p-3 rounded-xl flex gap-2.5"
-                style={{ background: M.ownerLight, border: `1px solid ${M.ownerBorder}` }}>
-                <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" style={{ color: M.owner }} />
-                <p className="text-xs" style={{ color: M.owner }}>
+                style={{ background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}` }}>
+                <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" style={{ color: BAI.owner }} />
+                <p className="text-xs" style={{ color: BAI.owner }}>
                   Votre dossier locatif sera automatiquement partagé avec le propriétaire (documents intégralement filigrainés — consultation uniquement).
                 </p>
               </div>

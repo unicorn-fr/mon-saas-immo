@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { BAI } from '../../constants/bailio-tokens'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useContractStore } from '../../store/contractStore'
 import { useAuth } from '../../hooks/useAuth'
@@ -46,18 +47,6 @@ import { fr } from 'date-fns/locale'
 import toast from 'react-hot-toast'
 import { celebrateBig, celebrateSmall } from '../../utils/celebrate'
 
-const M = {
-  bg: '#fafaf8', surface: '#ffffff', muted: '#f4f2ee', inputBg: '#f8f7f4',
-  ink: '#0d0c0a', inkMid: '#5a5754', inkFaint: '#9e9b96',
-  night: '#1a1a2e', caramel: '#c4976a', caramelLight: '#fdf5ec',
-  owner: '#1a3270', ownerLight: '#eaf0fb', ownerBorder: '#b8ccf0',
-  tenant: '#1b5e3b', tenantLight: '#edf7f2', tenantBorder: '#9fd4ba',
-  border: '#e4e1db', borderMid: '#ccc9c3',
-  danger: '#9b1c1c', dangerBg: '#fef2f2',
-  warning: '#92400e', warningBg: '#fdf5ec',
-  display: "'Cormorant Garamond', Georgia, serif",
-  body: "'DM Sans', system-ui, sans-serif",
-}
 
 // Progress stepper configuration
 const CONTRACT_STEPS = [
@@ -161,18 +150,18 @@ export default function ContractDetails() {
       <Layout>
         <div
           className="flex items-center justify-center min-h-screen"
-          style={{ background: M.bg, fontFamily: M.body }}
+          style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}
         >
           <div className="flex flex-col items-center gap-3">
             <div
               style={{
                 width: 36, height: 36, borderRadius: '50%',
-                border: `2px solid ${M.border}`,
-                borderTopColor: M.night,
+                border: `2px solid ${BAI.border}`,
+                borderTopColor: BAI.night,
               }}
               className="animate-spin"
             />
-            <p style={{ fontSize: 13, color: M.inkFaint }}>Chargement du contrat…</p>
+            <p style={{ fontSize: 13, color: BAI.inkFaint }}>Chargement du contrat…</p>
           </div>
         </div>
       </Layout>
@@ -184,22 +173,22 @@ export default function ContractDetails() {
       <Layout>
         <div
           className="flex flex-col items-center justify-center min-h-screen gap-4"
-          style={{ background: M.bg, fontFamily: M.body }}
+          style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}
         >
           <div style={{
             width: 64, height: 64, borderRadius: '50%',
-            background: M.muted, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: BAI.bgMuted, display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <AlertCircle style={{ width: 28, height: 28, color: M.inkFaint }} />
+            <AlertCircle style={{ width: 28, height: 28, color: BAI.inkFaint }} />
           </div>
-          <p style={{ fontSize: 14, color: M.inkMid, fontWeight: 500 }}>Contrat introuvable</p>
+          <p style={{ fontSize: 14, color: BAI.inkMid, fontWeight: 500 }}>Contrat introuvable</p>
           <button
             onClick={() => navigate('/contracts')}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               padding: '10px 20px', borderRadius: 8,
-              background: M.night, color: '#ffffff',
-              fontFamily: M.body, fontWeight: 500, fontSize: 13,
+              background: BAI.night, color: '#ffffff',
+              fontFamily: BAI.fontBody, fontWeight: 500, fontSize: 13,
               border: 'none', cursor: 'pointer',
             }}
           >
@@ -394,112 +383,112 @@ export default function ContractDetails() {
 
   // Maison status config
   const statusConfig: Record<string, { bg: string; color: string; border: string; label: string; icon: typeof CheckCircle }> = {
-    DRAFT:         { bg: M.muted,       color: M.inkMid,  border: M.borderMid,   label: 'Brouillon',                   icon: Circle },
-    SENT:          { bg: M.warningBg,   color: M.warning, border: M.caramel,     label: 'Envoyé au locataire',          icon: Send },
-    SIGNED_OWNER:  { bg: M.ownerLight,  color: M.owner,   border: M.ownerBorder, label: 'Signé par le propriétaire',   icon: PenTool },
-    SIGNED_TENANT: { bg: M.ownerLight,  color: M.owner,   border: M.ownerBorder, label: 'Signé par le locataire',      icon: PenTool },
-    COMPLETED:     { bg: M.tenantLight, color: M.tenant,  border: M.tenantBorder,label: 'Signé par les deux parties',  icon: CheckCircle },
-    ACTIVE:        { bg: M.tenantLight, color: M.tenant,  border: M.tenantBorder,label: 'Actif',                       icon: CheckCircle },
-    EXPIRED:       { bg: M.muted,       color: M.inkFaint,border: M.border,      label: 'Expiré',                      icon: Clock },
-    TERMINATED:    { bg: M.dangerBg,    color: M.danger,  border: '#fca5a5',     label: 'Résilié',                     icon: Ban },
-    CANCELLED:     { bg: M.muted,       color: M.inkFaint,border: M.border,      label: 'Annulé',                      icon: XCircle },
+    DRAFT:         { bg: BAI.bgMuted,       color: BAI.inkMid,  border: BAI.borderStrong,   label: 'Brouillon',                   icon: Circle },
+    SENT:          { bg: BAI.warningLight,   color: BAI.warning, border: BAI.caramel,     label: 'Envoyé au locataire',          icon: Send },
+    SIGNED_OWNER:  { bg: BAI.ownerLight,  color: BAI.owner,   border: BAI.ownerBorder, label: 'Signé par le propriétaire',   icon: PenTool },
+    SIGNED_TENANT: { bg: BAI.ownerLight,  color: BAI.owner,   border: BAI.ownerBorder, label: 'Signé par le locataire',      icon: PenTool },
+    COMPLETED:     { bg: BAI.tenantLight, color: BAI.tenant,  border: BAI.tenantBorder,label: 'Signé par les deux parties',  icon: CheckCircle },
+    ACTIVE:        { bg: BAI.tenantLight, color: BAI.tenant,  border: BAI.tenantBorder,label: 'Actif',                       icon: CheckCircle },
+    EXPIRED:       { bg: BAI.bgMuted,       color: BAI.inkFaint,border: BAI.border,      label: 'Expiré',                      icon: Clock },
+    TERMINATED:    { bg: BAI.errorLight,    color: BAI.error,  border: '#fca5a5',     label: 'Résilié',                     icon: Ban },
+    CANCELLED:     { bg: BAI.bgMuted,       color: BAI.inkFaint,border: BAI.border,      label: 'Annulé',                      icon: XCircle },
   }
 
   const status = statusConfig[contract.status] || statusConfig.DRAFT
   const StatusIcon = status.icon
 
   const cardStyle: React.CSSProperties = {
-    background: M.surface,
-    border: `1px solid ${M.border}`,
+    background: BAI.bgSurface,
+    border: `1px solid ${BAI.border}`,
     borderRadius: 12,
     boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
     padding: '24px',
     marginBottom: 24,
-    fontFamily: M.body,
+    fontFamily: BAI.fontBody,
   }
 
   const inputStyle: React.CSSProperties = {
     width: '100%',
-    background: M.inputBg,
-    border: `1px solid ${M.border}`,
+    background: BAI.bgInput,
+    border: `1px solid ${BAI.border}`,
     borderRadius: 8,
     padding: '10px 12px',
     fontSize: 13,
-    color: M.ink,
+    color: BAI.ink,
     outline: 'none',
-    fontFamily: M.body,
+    fontFamily: BAI.fontBody,
   }
 
   const labelStyle: React.CSSProperties = {
     display: 'block',
     fontSize: 10,
     fontWeight: 600,
-    color: M.inkFaint,
+    color: BAI.inkFaint,
     textTransform: 'uppercase',
     letterSpacing: '0.1em',
     marginBottom: 4,
-    fontFamily: M.body,
+    fontFamily: BAI.fontBody,
   }
 
   const btnPrimary: React.CSSProperties = {
     display: 'inline-flex', alignItems: 'center', gap: 7,
     padding: '10px 18px', borderRadius: 8,
-    background: M.night, color: '#ffffff',
-    fontFamily: M.body, fontWeight: 500, fontSize: 13,
+    background: BAI.night, color: '#ffffff',
+    fontFamily: BAI.fontBody, fontWeight: 500, fontSize: 13,
     border: 'none', cursor: 'pointer',
   }
 
   const btnGhost: React.CSSProperties = {
     display: 'inline-flex', alignItems: 'center', gap: 7,
     padding: '10px 18px', borderRadius: 8,
-    background: M.surface, color: M.inkMid,
-    fontFamily: M.body, fontWeight: 500, fontSize: 13,
-    border: `1px solid ${M.border}`, cursor: 'pointer',
+    background: BAI.bgSurface, color: BAI.inkMid,
+    fontFamily: BAI.fontBody, fontWeight: 500, fontSize: 13,
+    border: `1px solid ${BAI.border}`, cursor: 'pointer',
   }
 
   const btnDanger: React.CSSProperties = {
     display: 'inline-flex', alignItems: 'center', gap: 7,
     padding: '10px 18px', borderRadius: 8,
-    background: M.dangerBg, color: M.danger,
-    fontFamily: M.body, fontWeight: 500, fontSize: 13,
+    background: BAI.errorLight, color: BAI.error,
+    fontFamily: BAI.fontBody, fontWeight: 500, fontSize: 13,
     border: `1px solid #fca5a5`, cursor: 'pointer',
   }
 
   return (
     <Layout>
-      <div style={{ minHeight: '100vh', background: M.bg, fontFamily: M.body }}>
+      <div style={{ minHeight: '100vh', background: BAI.bgBase, fontFamily: BAI.fontBody }}>
         {/* Header */}
-        <div style={{ background: M.surface, borderBottom: `1px solid ${M.border}` }}>
+        <div style={{ background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}` }}>
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => navigate('/contracts')}
                   style={{
-                    padding: 8, background: M.surface,
-                    border: `1px solid ${M.border}`, borderRadius: 8,
-                    color: M.inkMid, cursor: 'pointer',
+                    padding: 8, background: BAI.bgSurface,
+                    border: `1px solid ${BAI.border}`, borderRadius: 8,
+                    color: BAI.inkMid, cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}
-                  onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
-                  onMouseLeave={e => (e.currentTarget.style.background = M.surface)}
+                  onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
+                  onMouseLeave={e => (e.currentTarget.style.background = BAI.bgSurface)}
                 >
                   <ArrowLeft style={{ width: 18, height: 18 }} />
                 </button>
                 <div>
                   <p style={{
-                    fontFamily: M.body, fontSize: 10, textTransform: 'uppercase',
-                    letterSpacing: '0.12em', color: M.inkFaint, marginBottom: 4,
+                    fontFamily: BAI.fontBody, fontSize: 10, textTransform: 'uppercase',
+                    letterSpacing: '0.12em', color: BAI.inkFaint, marginBottom: 4,
                   }}>
                     Gestion locative
                   </p>
                   <h1 style={{
-                    fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
-                    fontSize: 32, color: M.ink, lineHeight: 1.1, margin: 0,
+                    fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+                    fontSize: 32, color: BAI.ink, lineHeight: 1.1, margin: 0,
                   }}>
                     Contrat de Location
                   </h1>
-                  <p style={{ fontSize: 13, color: M.inkMid, marginTop: 2 }}>
+                  <p style={{ fontSize: 13, color: BAI.inkMid, marginTop: 2 }}>
                     {contract.property?.title}
                   </p>
                 </div>
@@ -510,7 +499,7 @@ export default function ContractDetails() {
                   padding: '6px 14px', borderRadius: 20,
                   background: status.bg, color: status.color,
                   border: `1px solid ${status.border}`,
-                  fontFamily: M.body, fontWeight: 600, fontSize: 12,
+                  fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 12,
                 }}>
                   <StatusIcon style={{ width: 13, height: 13 }} />
                   {status.label}
@@ -524,8 +513,8 @@ export default function ContractDetails() {
                       style={{
                         display: 'inline-flex', alignItems: 'center', gap: 6,
                         padding: '7px 14px', borderRadius: 8,
-                        background: M.caramel, color: '#ffffff',
-                        fontFamily: M.body, fontWeight: 600, fontSize: 12,
+                        background: BAI.caramel, color: '#ffffff',
+                        fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 12,
                         border: 'none', cursor: pdfLoading ? 'wait' : 'pointer',
                         opacity: pdfLoading ? 0.7 : 1,
                       }}
@@ -542,9 +531,9 @@ export default function ContractDetails() {
                     style={{
                       display: 'inline-flex', alignItems: 'center', gap: 6,
                       padding: '7px 14px', borderRadius: 8,
-                      background: M.muted, color: M.inkMid,
-                      border: `1px solid ${M.border}`,
-                      fontFamily: M.body, fontWeight: 500, fontSize: 12,
+                      background: BAI.bgMuted, color: BAI.inkMid,
+                      border: `1px solid ${BAI.border}`,
+                      fontFamily: BAI.fontBody, fontWeight: 500, fontSize: 12,
                       textDecoration: 'none',
                     }}
                   >
@@ -583,8 +572,8 @@ export default function ContractDetails() {
                           <div style={{
                             width: 40, height: 40, borderRadius: '50%',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            background: isCompleted ? M.tenant : isCurrent ? M.night : M.muted,
-                            color: isCompleted || isCurrent ? '#ffffff' : M.inkFaint,
+                            background: isCompleted ? BAI.tenant : isCurrent ? BAI.night : BAI.bgMuted,
+                            color: isCompleted || isCurrent ? '#ffffff' : BAI.inkFaint,
                             boxShadow: isCurrent ? `0 0 0 4px rgba(26,26,46,0.12)` : 'none',
                             transition: 'all 0.2s',
                           }}>
@@ -596,18 +585,18 @@ export default function ContractDetails() {
                           </div>
                           <span style={{
                             fontSize: 11, fontWeight: 500, marginTop: 6,
-                            color: isCompleted ? M.tenant : isCurrent ? M.night : M.inkFaint,
+                            color: isCompleted ? BAI.tenant : isCurrent ? BAI.night : BAI.inkFaint,
                           }}>
                             {step.label}
                           </span>
                           {signatureDetail && (
-                            <span style={{ fontSize: 10, color: M.caramel, marginTop: 2 }}>{signatureDetail}</span>
+                            <span style={{ fontSize: 10, color: BAI.caramel, marginTop: 2 }}>{signatureDetail}</span>
                           )}
                         </div>
                         {index < CONTRACT_STEPS.length - 1 && (
                           <div style={{
                             height: 2, flex: 1, marginLeft: 4, marginRight: 4, marginTop: -24,
-                            background: isCompleted ? M.tenant : isUpcoming ? M.border : M.ownerBorder,
+                            background: isCompleted ? BAI.tenant : isUpcoming ? BAI.border : BAI.ownerBorder,
                           }} />
                         )}
                       </div>
@@ -621,17 +610,17 @@ export default function ContractDetails() {
             {contract.status === 'CANCELLED' && (
               <div style={{
                 marginBottom: 24, padding: '14px 16px',
-                background: M.muted, border: `1px solid ${M.border}`,
+                background: BAI.bgMuted, border: `1px solid ${BAI.border}`,
                 borderRadius: 10, display: 'flex', alignItems: 'flex-start', gap: 12,
               }}>
-                <XCircle style={{ width: 18, height: 18, color: M.inkFaint, flexShrink: 0, marginTop: 1 }} />
+                <XCircle style={{ width: 18, height: 18, color: BAI.inkFaint, flexShrink: 0, marginTop: 1 }} />
                 <div>
-                  <p style={{ fontWeight: 600, fontSize: 14, color: M.ink }}>Contrat annulé</p>
+                  <p style={{ fontWeight: 600, fontSize: 14, color: BAI.ink }}>Contrat annulé</p>
                   {cancellation?.reason && (
-                    <p style={{ fontSize: 13, color: M.inkMid, marginTop: 4 }}>Motif : {cancellation.reason}</p>
+                    <p style={{ fontSize: 13, color: BAI.inkMid, marginTop: 4 }}>Motif : {cancellation.reason}</p>
                   )}
                   {cancellation?.cancelledAt && (
-                    <p style={{ fontSize: 11, color: M.inkFaint, marginTop: 4 }}>
+                    <p style={{ fontSize: 11, color: BAI.inkFaint, marginTop: 4 }}>
                       Annulé le {format(new Date(cancellation.cancelledAt), 'dd MMM yyyy HH:mm', { locale: fr })}
                     </p>
                   )}
@@ -642,13 +631,13 @@ export default function ContractDetails() {
             {contract.status === 'TERMINATED' && (
               <div style={{
                 marginBottom: 24, padding: '14px 16px',
-                background: M.dangerBg, border: `1px solid #fca5a5`,
+                background: BAI.errorLight, border: `1px solid #fca5a5`,
                 borderRadius: 10, display: 'flex', alignItems: 'flex-start', gap: 12,
               }}>
-                <Ban style={{ width: 18, height: 18, color: M.danger, flexShrink: 0, marginTop: 1 }} />
+                <Ban style={{ width: 18, height: 18, color: BAI.error, flexShrink: 0, marginTop: 1 }} />
                 <div>
-                  <p style={{ fontWeight: 600, fontSize: 14, color: M.danger }}>Contrat résilié</p>
-                  <p style={{ fontSize: 13, color: M.danger, opacity: 0.8, marginTop: 4 }}>
+                  <p style={{ fontWeight: 600, fontSize: 14, color: BAI.error }}>Contrat résilié</p>
+                  <p style={{ fontSize: 13, color: BAI.error, opacity: 0.8, marginTop: 4 }}>
                     Ce contrat a été résilié. Le bien est de nouveau disponible.
                   </p>
                 </div>
@@ -659,13 +648,13 @@ export default function ContractDetails() {
             {contract.status === 'SENT' && isTenant && (
               <div style={{
                 marginBottom: 24, padding: '14px 16px',
-                background: M.ownerLight, border: `1px solid ${M.ownerBorder}`,
+                background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`,
                 borderRadius: 10, display: 'flex', alignItems: 'flex-start', gap: 12,
               }}>
-                <Info style={{ width: 18, height: 18, color: M.owner, flexShrink: 0, marginTop: 1 }} />
+                <Info style={{ width: 18, height: 18, color: BAI.owner, flexShrink: 0, marginTop: 1 }} />
                 <div>
-                  <p style={{ fontWeight: 600, fontSize: 14, color: M.ink }}>Contrat en attente de votre signature</p>
-                  <p style={{ fontSize: 13, color: M.owner, marginTop: 4 }}>
+                  <p style={{ fontWeight: 600, fontSize: 14, color: BAI.ink }}>Contrat en attente de votre signature</p>
+                  <p style={{ fontSize: 13, color: BAI.owner, marginTop: 4 }}>
                     Le propriétaire vous a envoyé ce contrat. Lisez-le attentivement puis signez-le ci-dessous.
                   </p>
                 </div>
@@ -675,13 +664,13 @@ export default function ContractDetails() {
             {isTenant && !canSign && !['COMPLETED', 'CANCELLED', 'TERMINATED', 'ACTIVE'].includes(contract.status) && (
               <div style={{
                 marginBottom: 24, padding: '14px 16px',
-                background: M.warningBg, border: `1px solid ${M.caramel}`,
+                background: BAI.warningLight, border: `1px solid ${BAI.caramel}`,
                 borderRadius: 10, display: 'flex', alignItems: 'flex-start', gap: 12,
               }}>
-                <AlertCircle style={{ width: 18, height: 18, color: M.warning, flexShrink: 0, marginTop: 1 }} />
+                <AlertCircle style={{ width: 18, height: 18, color: BAI.warning, flexShrink: 0, marginTop: 1 }} />
                 <div>
-                  <p style={{ fontWeight: 600, fontSize: 14, color: M.warning }}>Impossible de signer pour le moment</p>
-                  <p style={{ fontSize: 13, color: M.warning, opacity: 0.85, marginTop: 4 }}>
+                  <p style={{ fontWeight: 600, fontSize: 14, color: BAI.warning }}>Impossible de signer pour le moment</p>
+                  <p style={{ fontSize: 13, color: BAI.warning, opacity: 0.85, marginTop: 4 }}>
                     {hasSigned
                       ? 'Vous avez déjà signé ce contrat.'
                       : contract.status === 'DRAFT'
@@ -699,10 +688,10 @@ export default function ContractDetails() {
                 background: '#fdf5ec', border: `1px solid #f3c99a`,
                 borderRadius: 10, display: 'flex', alignItems: 'flex-start', gap: 12,
               }}>
-                <ClipboardCheck style={{ width: 18, height: 18, color: M.warning, flexShrink: 0, marginTop: 1 }} />
+                <ClipboardCheck style={{ width: 18, height: 18, color: BAI.warning, flexShrink: 0, marginTop: 1 }} />
                 <div>
-                  <p style={{ fontWeight: 600, fontSize: 14, color: M.warning }}>Validation des documents requise</p>
-                  <p style={{ fontSize: 13, color: M.warning, opacity: 0.85, marginTop: 4 }}>
+                  <p style={{ fontWeight: 600, fontSize: 14, color: BAI.warning }}>Validation des documents requise</p>
+                  <p style={{ fontSize: 13, color: BAI.warning, opacity: 0.85, marginTop: 4 }}>
                     {unvalidatedTenantDocs.length} document{unvalidatedTenantDocs.length > 1 ? 's' : ''} en attente de validation.
                     Consultez et validez chaque pièce justificative dans la section « Dossier documents » ci-dessous avant de signer.
                   </p>
@@ -714,13 +703,13 @@ export default function ContractDetails() {
             {isOwner && ['SENT', 'SIGNED_OWNER'].includes(contract.status) && !hasSigned && (
               <div style={{
                 marginBottom: 24, padding: '14px 16px',
-                background: M.warningBg, border: `1px solid ${M.caramel}`,
+                background: BAI.warningLight, border: `1px solid ${BAI.caramel}`,
                 borderRadius: 10, display: 'flex', alignItems: 'flex-start', gap: 12,
               }}>
-                <Clock style={{ width: 18, height: 18, color: M.warning, flexShrink: 0, marginTop: 1 }} />
+                <Clock style={{ width: 18, height: 18, color: BAI.warning, flexShrink: 0, marginTop: 1 }} />
                 <div>
-                  <p style={{ fontWeight: 600, fontSize: 14, color: M.warning }}>En attente de la signature du locataire</p>
-                  <p style={{ fontSize: 13, color: M.warning, opacity: 0.85, marginTop: 4 }}>
+                  <p style={{ fontWeight: 600, fontSize: 14, color: BAI.warning }}>En attente de la signature du locataire</p>
+                  <p style={{ fontSize: 13, color: BAI.warning, opacity: 0.85, marginTop: 4 }}>
                     Le locataire doit signer en premier. Vous pourrez apposer votre signature une fois qu'il aura signé.
                   </p>
                 </div>
@@ -730,13 +719,13 @@ export default function ContractDetails() {
             {contract.status === 'COMPLETED' && isOwner && (
               <div style={{
                 marginBottom: 24, padding: '14px 16px',
-                background: M.tenantLight, border: `1px solid ${M.tenantBorder}`,
+                background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`,
                 borderRadius: 10, display: 'flex', alignItems: 'flex-start', gap: 12,
               }}>
-                <CheckCircle style={{ width: 18, height: 18, color: M.tenant, flexShrink: 0, marginTop: 1 }} />
+                <CheckCircle style={{ width: 18, height: 18, color: BAI.tenant, flexShrink: 0, marginTop: 1 }} />
                 <div>
-                  <p style={{ fontWeight: 600, fontSize: 14, color: M.tenant }}>Les deux parties ont signé</p>
-                  <p style={{ fontSize: 13, color: M.tenant, opacity: 0.85, marginTop: 4 }}>
+                  <p style={{ fontWeight: 600, fontSize: 14, color: BAI.tenant }}>Les deux parties ont signé</p>
+                  <p style={{ fontSize: 13, color: BAI.tenant, opacity: 0.85, marginTop: 4 }}>
                     Vous pouvez maintenant activer le contrat. Le bien sera marqué comme occupé.
                   </p>
                 </div>
@@ -746,11 +735,11 @@ export default function ContractDetails() {
             {hasSigned && !otherPartySigned && !isTerminal && (
               <div style={{
                 marginBottom: 24, padding: '14px 16px',
-                background: M.warningBg, border: `1px solid ${M.caramel}`,
+                background: BAI.warningLight, border: `1px solid ${BAI.caramel}`,
                 borderRadius: 10, display: 'flex', alignItems: 'center', gap: 12,
               }}>
-                <AlertCircle style={{ width: 16, height: 16, color: M.warning, flexShrink: 0 }} />
-                <p style={{ fontSize: 13, color: M.warning }}>
+                <AlertCircle style={{ width: 16, height: 16, color: BAI.warning, flexShrink: 0 }} />
+                <p style={{ fontSize: 13, color: BAI.warning }}>
                   Vous avez signé ce contrat. En attente de la signature de l'autre partie.
                 </p>
               </div>
@@ -803,17 +792,17 @@ export default function ContractDetails() {
                         style={{
                           display: 'inline-flex', alignItems: 'center', gap: 7,
                           padding: '10px 18px', borderRadius: 8,
-                          background: M.surface, color: M.inkMid,
-                          border: `1px solid ${M.border}`, cursor: 'pointer',
-                          fontFamily: M.body, fontWeight: 500, fontSize: 13,
+                          background: BAI.bgSurface, color: BAI.inkMid,
+                          border: `1px solid ${BAI.border}`, cursor: 'pointer',
+                          fontFamily: BAI.fontBody, fontWeight: 500, fontSize: 13,
                           opacity: actionLoading || ownerSignBlocked ? 0.4 : 1,
                         }}
                       >
-                        <ShieldCheck style={{ width: 15, height: 15, color: M.caramel }} />
+                        <ShieldCheck style={{ width: 15, height: 15, color: BAI.caramel }} />
                         YouSign
                         <span style={{
                           fontSize: 10, fontWeight: 700,
-                          background: M.caramelLight, color: M.caramel,
+                          background: BAI.caramelLight, color: BAI.caramel,
                           border: `1px solid #e8c99a`, borderRadius: 4,
                           padding: '1px 5px', letterSpacing: '0.04em',
                         }}>
@@ -829,7 +818,7 @@ export default function ContractDetails() {
                       border: '1px solid #f3c99a',
                       borderRadius: 10,
                       padding: '14px 18px',
-                      fontFamily: M.body,
+                      fontFamily: BAI.fontBody,
                       width: '100%',
                     }}>
                       <div className="flex items-start gap-3">
@@ -864,7 +853,7 @@ export default function ContractDetails() {
                       disabled={actionLoading}
                       style={{
                         ...btnPrimary,
-                        background: M.tenant,
+                        background: BAI.tenant,
                         opacity: actionLoading ? 0.5 : 1,
                       }}
                     >
@@ -912,8 +901,8 @@ export default function ContractDetails() {
             {/* Property Info */}
             <div style={cardStyle}>
               <h2 style={{
-                fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
-                fontSize: 20, color: M.ink, marginBottom: 16,
+                fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+                fontSize: 20, color: BAI.ink, marginBottom: 16,
               }}>
                 Propriété
               </h2>
@@ -926,15 +915,15 @@ export default function ContractDetails() {
                   />
                 )}
                 <div className="flex-1">
-                  <h3 style={{ fontWeight: 600, fontSize: 15, color: M.ink, marginBottom: 6 }}>
+                  <h3 style={{ fontWeight: 600, fontSize: 15, color: BAI.ink, marginBottom: 6 }}>
                     {contract.property?.title}
                   </h3>
-                  <div className="flex items-center" style={{ fontSize: 13, color: M.inkMid, gap: 6, marginBottom: 6 }}>
-                    <HomeIcon style={{ width: 14, height: 14, color: M.inkFaint }} />
+                  <div className="flex items-center" style={{ fontSize: 13, color: BAI.inkMid, gap: 6, marginBottom: 6 }}>
+                    <HomeIcon style={{ width: 14, height: 14, color: BAI.inkFaint }} />
                     {contract.property?.address}, {contract.property?.city} {contract.property?.postalCode}
                   </div>
                   {contract.property?.bedrooms != null && (
-                    <p style={{ fontSize: 12, color: M.inkFaint }}>
+                    <p style={{ fontSize: 12, color: BAI.inkFaint }}>
                       {contract.property.bedrooms} chambres — {contract.property.bathrooms} SDB — {contract.property.surface} m²
                     </p>
                   )}
@@ -946,48 +935,48 @@ export default function ContractDetails() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               {/* Owner */}
               <div style={{
-                background: M.surface,
-                border: `1px solid ${M.border}`,
+                background: BAI.bgSurface,
+                border: `1px solid ${BAI.border}`,
                 borderRadius: 12,
-                borderLeft: `3px solid ${contract.signedByOwner ? M.tenant : M.border}`,
+                borderLeft: `3px solid ${contract.signedByOwner ? BAI.tenant : BAI.border}`,
                 boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
                 padding: '20px',
               }}>
-                <h3 style={{ fontWeight: 600, fontSize: 13, color: M.ink, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h3 style={{ fontWeight: 600, fontSize: 13, color: BAI.ink, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{
                     width: 28, height: 28, borderRadius: 6,
-                    background: M.ownerLight, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: BAI.ownerLight, display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
-                    <User style={{ width: 14, height: 14, color: M.owner }} />
+                    <User style={{ width: 14, height: 14, color: BAI.owner }} />
                   </div>
                   Propriétaire
                 </h3>
-                <p style={{ fontWeight: 600, fontSize: 14, color: M.ink }}>
+                <p style={{ fontWeight: 600, fontSize: 14, color: BAI.ink }}>
                   {contract.owner?.firstName} {contract.owner?.lastName}
                 </p>
-                <p style={{ fontSize: 12, color: M.inkFaint, marginTop: 2 }}>{contract.owner?.email}</p>
-                {contract.owner?.phone && <p style={{ fontSize: 12, color: M.inkFaint }}>{contract.owner.phone}</p>}
+                <p style={{ fontSize: 12, color: BAI.inkFaint, marginTop: 2 }}>{contract.owner?.email}</p>
+                {contract.owner?.phone && <p style={{ fontSize: 12, color: BAI.inkFaint }}>{contract.owner.phone}</p>}
 
-                <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${M.border}` }}>
+                <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${BAI.border}` }}>
                   {contract.signedByOwner ? (
                     <>
-                      <div className="flex items-center" style={{ fontSize: 12, color: M.tenant, gap: 6, marginBottom: 8 }}>
+                      <div className="flex items-center" style={{ fontSize: 12, color: BAI.tenant, gap: 6, marginBottom: 8 }}>
                         <CheckCircle style={{ width: 13, height: 13 }} />
                         Signé le {format(new Date(contract.signedByOwner), 'dd MMM yyyy HH:mm', { locale: fr })}
                       </div>
                       {contract.ownerSignature && (
                         <img src={contract.ownerSignature} alt="Signature propriétaire"
-                          style={{ height: 56, border: `1px solid ${M.border}`, borderRadius: 6, padding: 4, background: M.surface }} />
+                          style={{ height: 56, border: `1px solid ${BAI.border}`, borderRadius: 6, padding: 4, background: BAI.bgSurface }} />
                       )}
                       {signatureMetadata?.owner && (
-                        <div className="flex items-center" style={{ marginTop: 8, gap: 4, fontSize: 11, color: M.inkFaint }}>
-                          <ShieldCheck style={{ width: 12, height: 12, color: M.tenant }} />
+                        <div className="flex items-center" style={{ marginTop: 8, gap: 4, fontSize: 11, color: BAI.inkFaint }}>
+                          <ShieldCheck style={{ width: 12, height: 12, color: BAI.tenant }} />
                           Signature électronique certifiée
                         </div>
                       )}
                     </>
                   ) : (
-                    <div className="flex items-center" style={{ fontSize: 12, color: M.caramel, gap: 6 }}>
+                    <div className="flex items-center" style={{ fontSize: 12, color: BAI.caramel, gap: 6 }}>
                       <Clock style={{ width: 13, height: 13 }} />
                       En attente de signature
                     </div>
@@ -997,48 +986,48 @@ export default function ContractDetails() {
 
               {/* Tenant */}
               <div style={{
-                background: M.surface,
-                border: `1px solid ${M.border}`,
+                background: BAI.bgSurface,
+                border: `1px solid ${BAI.border}`,
                 borderRadius: 12,
-                borderLeft: `3px solid ${contract.signedByTenant ? M.tenant : M.border}`,
+                borderLeft: `3px solid ${contract.signedByTenant ? BAI.tenant : BAI.border}`,
                 boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
                 padding: '20px',
               }}>
-                <h3 style={{ fontWeight: 600, fontSize: 13, color: M.ink, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h3 style={{ fontWeight: 600, fontSize: 13, color: BAI.ink, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{
                     width: 28, height: 28, borderRadius: 6,
-                    background: M.tenantLight, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: BAI.tenantLight, display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
-                    <User style={{ width: 14, height: 14, color: M.tenant }} />
+                    <User style={{ width: 14, height: 14, color: BAI.tenant }} />
                   </div>
                   Locataire
                 </h3>
-                <p style={{ fontWeight: 600, fontSize: 14, color: M.ink }}>
+                <p style={{ fontWeight: 600, fontSize: 14, color: BAI.ink }}>
                   {contract.tenant?.firstName} {contract.tenant?.lastName}
                 </p>
-                <p style={{ fontSize: 12, color: M.inkFaint, marginTop: 2 }}>{contract.tenant?.email}</p>
-                {contract.tenant?.phone && <p style={{ fontSize: 12, color: M.inkFaint }}>{contract.tenant.phone}</p>}
+                <p style={{ fontSize: 12, color: BAI.inkFaint, marginTop: 2 }}>{contract.tenant?.email}</p>
+                {contract.tenant?.phone && <p style={{ fontSize: 12, color: BAI.inkFaint }}>{contract.tenant.phone}</p>}
 
-                <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${M.border}` }}>
+                <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${BAI.border}` }}>
                   {contract.signedByTenant ? (
                     <>
-                      <div className="flex items-center" style={{ fontSize: 12, color: M.tenant, gap: 6, marginBottom: 8 }}>
+                      <div className="flex items-center" style={{ fontSize: 12, color: BAI.tenant, gap: 6, marginBottom: 8 }}>
                         <CheckCircle style={{ width: 13, height: 13 }} />
                         Signé le {format(new Date(contract.signedByTenant), 'dd MMM yyyy HH:mm', { locale: fr })}
                       </div>
                       {contract.tenantSignature && (
                         <img src={contract.tenantSignature} alt="Signature locataire"
-                          style={{ height: 56, border: `1px solid ${M.border}`, borderRadius: 6, padding: 4, background: M.surface }} />
+                          style={{ height: 56, border: `1px solid ${BAI.border}`, borderRadius: 6, padding: 4, background: BAI.bgSurface }} />
                       )}
                       {signatureMetadata?.tenant && (
-                        <div className="flex items-center" style={{ marginTop: 8, gap: 4, fontSize: 11, color: M.inkFaint }}>
-                          <ShieldCheck style={{ width: 12, height: 12, color: M.tenant }} />
+                        <div className="flex items-center" style={{ marginTop: 8, gap: 4, fontSize: 11, color: BAI.inkFaint }}>
+                          <ShieldCheck style={{ width: 12, height: 12, color: BAI.tenant }} />
                           Signature électronique certifiée
                         </div>
                       )}
                     </>
                   ) : (
-                    <div className="flex items-center" style={{ fontSize: 12, color: M.caramel, gap: 6 }}>
+                    <div className="flex items-center" style={{ fontSize: 12, color: BAI.caramel, gap: 6 }}>
                       <Clock style={{ width: 13, height: 13 }} />
                       En attente de signature
                     </div>
@@ -1050,8 +1039,8 @@ export default function ContractDetails() {
             {/* Contract Details */}
             <div style={cardStyle}>
               <h2 style={{
-                fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
-                fontSize: 20, color: M.ink, marginBottom: 20,
+                fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+                fontSize: 20, color: BAI.ink, marginBottom: 20,
               }}>
                 Détails du contrat
               </h2>
@@ -1059,8 +1048,8 @@ export default function ContractDetails() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
                   <p style={labelStyle}>Période</p>
-                  <div className="flex items-center" style={{ fontWeight: 600, fontSize: 14, color: M.ink, gap: 8 }}>
-                    <Calendar style={{ width: 15, height: 15, color: M.inkFaint }} />
+                  <div className="flex items-center" style={{ fontWeight: 600, fontSize: 14, color: BAI.ink, gap: 8 }}>
+                    <Calendar style={{ width: 15, height: 15, color: BAI.inkFaint }} />
                     {format(new Date(contract.startDate), 'dd MMM yyyy', { locale: fr })} —{' '}
                     {format(new Date(contract.endDate), 'dd MMM yyyy', { locale: fr })}
                   </div>
@@ -1068,29 +1057,29 @@ export default function ContractDetails() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div style={{ background: M.muted, borderRadius: 8, padding: '14px 16px' }}>
+                <div style={{ background: BAI.bgMuted, borderRadius: 8, padding: '14px 16px' }}>
                   <p style={labelStyle}>Loyer mensuel</p>
-                  <div className="flex items-center" style={{ fontSize: 22, fontWeight: 700, color: M.caramel, gap: 4 }}>
+                  <div className="flex items-center" style={{ fontSize: 22, fontWeight: 700, color: BAI.caramel, gap: 4 }}>
                     <Euro style={{ width: 18, height: 18 }} />
                     {contract.monthlyRent} €
                   </div>
                 </div>
 
                 {contract.charges != null && (
-                  <div style={{ background: M.muted, borderRadius: 8, padding: '14px 16px' }}>
+                  <div style={{ background: BAI.bgMuted, borderRadius: 8, padding: '14px 16px' }}>
                     <p style={labelStyle}>Charges</p>
-                    <div className="flex items-center" style={{ fontSize: 22, fontWeight: 700, color: M.ink, gap: 4 }}>
-                      <Euro style={{ width: 18, height: 18, color: M.inkFaint }} />
+                    <div className="flex items-center" style={{ fontSize: 22, fontWeight: 700, color: BAI.ink, gap: 4 }}>
+                      <Euro style={{ width: 18, height: 18, color: BAI.inkFaint }} />
                       {contract.charges} €
                     </div>
                   </div>
                 )}
 
                 {contract.deposit != null && (
-                  <div style={{ background: M.muted, borderRadius: 8, padding: '14px 16px' }}>
+                  <div style={{ background: BAI.bgMuted, borderRadius: 8, padding: '14px 16px' }}>
                     <p style={labelStyle}>Dépôt de garantie</p>
-                    <div className="flex items-center" style={{ fontSize: 22, fontWeight: 700, color: M.ink, gap: 4 }}>
-                      <Euro style={{ width: 18, height: 18, color: M.inkFaint }} />
+                    <div className="flex items-center" style={{ fontSize: 22, fontWeight: 700, color: BAI.ink, gap: 4 }}>
+                      <Euro style={{ width: 18, height: 18, color: BAI.inkFaint }} />
                       {contract.deposit} €
                     </div>
                   </div>
@@ -1098,9 +1087,9 @@ export default function ContractDetails() {
               </div>
 
               {contract.terms && (
-                <div style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${M.border}` }}>
+                <div style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${BAI.border}` }}>
                   <p style={labelStyle}>Conditions particulières</p>
-                  <p style={{ fontSize: 13, color: M.inkMid, whiteSpace: 'pre-wrap', marginTop: 6 }}>{contract.terms}</p>
+                  <p style={{ fontSize: 13, color: BAI.inkMid, whiteSpace: 'pre-wrap', marginTop: 6 }}>{contract.terms}</p>
                 </div>
               )}
             </div>
@@ -1109,30 +1098,30 @@ export default function ContractDetails() {
             {clauses.length > 0 && (
               <div style={cardStyle}>
                 <h2 style={{
-                  fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
-                  fontSize: 20, color: M.ink, marginBottom: 16,
+                  fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+                  fontSize: 20, color: BAI.ink, marginBottom: 16,
                 }}>
                   Clauses du contrat
                 </h2>
                 <div className="space-y-3">
                   {clauses.filter((c) => c.enabled).map((clause, index) => (
                     <div key={clause.id} style={{
-                      border: `1px solid ${M.border}`, borderRadius: 8, padding: '12px 14px',
+                      border: `1px solid ${BAI.border}`, borderRadius: 8, padding: '12px 14px',
                     }}>
-                      <h4 style={{ fontWeight: 600, fontSize: 13, color: M.ink, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <h4 style={{ fontWeight: 600, fontSize: 13, color: BAI.ink, display: 'flex', alignItems: 'center', gap: 8 }}>
                         {index + 1}. {clause.title}
                         {clause.isCustom && (
                           <span style={{
-                            fontSize: 10, fontWeight: 600, fontFamily: M.body,
-                            background: M.caramelLight, color: M.caramel,
-                            border: `1px solid ${M.caramel}`, borderRadius: 20,
+                            fontSize: 10, fontWeight: 600, fontFamily: BAI.fontBody,
+                            background: BAI.caramelLight, color: BAI.caramel,
+                            border: `1px solid ${BAI.caramel}`, borderRadius: 20,
                             padding: '2px 8px',
                           }}>
                             Personnalisée
                           </span>
                         )}
                       </h4>
-                      <p style={{ fontSize: 12, color: M.inkMid, marginTop: 4 }}>{clause.description}</p>
+                      <p style={{ fontSize: 12, color: BAI.inkMid, marginTop: 4 }}>{clause.description}</p>
                     </div>
                   ))}
                 </div>
@@ -1155,15 +1144,15 @@ export default function ContractDetails() {
               return (
                 <div style={{
                   ...cardStyle,
-                  background: M.night,
+                  background: BAI.night,
                   border: `1px solid rgba(255,255,255,0.08)`,
                 }}>
                   <h2 style={{
-                    fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
+                    fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
                     fontSize: 20, color: '#ffffff', marginBottom: 16,
                     display: 'flex', alignItems: 'center', gap: 10,
                   }}>
-                    <Euro style={{ width: 18, height: 18, color: M.caramel }} />
+                    <Euro style={{ width: 18, height: 18, color: BAI.caramel }} />
                     Votre engagement financier
                   </h2>
                   <div style={{
@@ -1189,7 +1178,7 @@ export default function ContractDetails() {
                         <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', margin: '0 0 4px', letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>
                           {item.label}
                         </p>
-                        <p style={{ fontSize: 16, fontWeight: 700, color: item.accent ? M.caramel : '#ffffff', margin: 0 }}>
+                        <p style={{ fontSize: 16, fontWeight: 700, color: item.accent ? BAI.caramel : '#ffffff', margin: 0 }}>
                           {item.val}
                         </p>
                       </div>
@@ -1203,13 +1192,13 @@ export default function ContractDetails() {
             })()}
 
             {/* PDF & EDL — mis en avant */}
-            <div style={{ ...cardStyle, background: M.night, border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ ...cardStyle, background: BAI.night, border: '1px solid rgba(255,255,255,0.08)' }}>
               <h2 style={{
-                fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
+                fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
                 fontSize: 20, color: '#ffffff', marginBottom: 16,
                 display: 'flex', alignItems: 'center', gap: 10,
               }}>
-                <FileText style={{ width: 18, height: 18, color: M.caramel }} />
+                <FileText style={{ width: 18, height: 18, color: BAI.caramel }} />
                 Documents du contrat
               </h2>
               <div className="flex flex-wrap gap-3">
@@ -1227,8 +1216,8 @@ export default function ContractDetails() {
                       style={{
                         display: 'inline-flex', alignItems: 'center', gap: 8,
                         padding: '11px 20px', borderRadius: 9,
-                        background: M.caramel, color: '#ffffff',
-                        fontFamily: M.body, fontWeight: 600, fontSize: 13,
+                        background: BAI.caramel, color: '#ffffff',
+                        fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13,
                         border: 'none', cursor: 'pointer',
                         opacity: loading ? 0.6 : 1,
                       }}
@@ -1249,7 +1238,7 @@ export default function ContractDetails() {
                       background: 'rgba(255,255,255,0.10)',
                       border: '1px solid rgba(255,255,255,0.16)',
                       color: '#ffffff',
-                      fontFamily: M.body, fontWeight: 500, fontSize: 13,
+                      fontFamily: BAI.fontBody, fontWeight: 500, fontSize: 13,
                       textDecoration: 'none',
                     }}
                   >
@@ -1275,16 +1264,16 @@ export default function ContractDetails() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{
                     width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-                    background: M.ownerLight,
+                    background: BAI.ownerLight,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
-                    <ShieldCheck style={{ width: 20, height: 20, color: M.owner }} />
+                    <ShieldCheck style={{ width: 20, height: 20, color: BAI.owner }} />
                   </div>
                   <div>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: M.ink, margin: 0, fontFamily: M.body }}>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: BAI.ink, margin: 0, fontFamily: BAI.fontBody }}>
                       Dossier de {contract.tenant.firstName} {contract.tenant.lastName}
                     </p>
-                    <p style={{ fontSize: 12, color: M.inkFaint, margin: '2px 0 0', fontFamily: M.body }}>
+                    <p style={{ fontSize: 12, color: BAI.inkFaint, margin: '2px 0 0', fontFamily: BAI.fontBody }}>
                       Consultez les pièces justificatives · Documents filigrainés et sécurisés
                     </p>
                   </div>
@@ -1294,8 +1283,8 @@ export default function ContractDetails() {
                   style={{
                     display: 'inline-flex', alignItems: 'center', gap: 8,
                     padding: '10px 18px', borderRadius: 8,
-                    background: M.owner, color: '#ffffff',
-                    fontFamily: M.body, fontWeight: 600, fontSize: 13,
+                    background: BAI.owner, color: '#ffffff',
+                    fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13,
                     border: 'none', cursor: 'pointer', flexShrink: 0,
                   }}
                 >
@@ -1309,20 +1298,20 @@ export default function ContractDetails() {
             {contract.status === 'DRAFT' && isOwner && (
               <div style={cardStyle}>
                 <h2 style={{
-                  fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
-                  fontSize: 20, color: M.ink, marginBottom: 6,
+                  fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+                  fontSize: 20, color: BAI.ink, marginBottom: 6,
                   display: 'flex', alignItems: 'center', gap: 10,
                 }}>
-                  <FolderOpen style={{ width: 20, height: 20, color: M.owner }} />
+                  <FolderOpen style={{ width: 20, height: 20, color: BAI.owner }} />
                   Dossier de location — Documents requis
                 </h2>
-                <p style={{ fontSize: 13, color: M.inkMid, marginBottom: 20 }}>
+                <p style={{ fontSize: 13, color: BAI.inkMid, marginBottom: 20 }}>
                   Sélectionnez les documents que le locataire devra fournir avant la signature du contrat.
                 </p>
 
                 {/* Owner documents (DDT) */}
                 <div style={{ marginBottom: 20 }}>
-                  <h4 style={{ fontSize: 12, fontWeight: 700, color: M.ink, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  <h4 style={{ fontSize: 12, fontWeight: 700, color: BAI.ink, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     Documents propriétaire (DDT)
                   </h4>
                   <div className="space-y-1">
@@ -1331,7 +1320,7 @@ export default function ContractDetails() {
                         display: 'flex', alignItems: 'flex-start', gap: 12,
                         padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
                       }}
-                        onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
+                        onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
                         <input
@@ -1341,8 +1330,8 @@ export default function ContractDetails() {
                           style={{ marginTop: 2 }}
                         />
                         <div className="flex-1 min-w-0">
-                          <p style={{ fontSize: 13, fontWeight: 500, color: M.ink }}>{item.label}</p>
-                          <p style={{ fontSize: 11, color: M.inkFaint }}>{item.description}</p>
+                          <p style={{ fontSize: 13, fontWeight: 500, color: BAI.ink }}>{item.label}</p>
+                          <p style={{ fontSize: 11, color: BAI.inkFaint }}>{item.description}</p>
                         </div>
                       </label>
                     ))}
@@ -1351,7 +1340,7 @@ export default function ContractDetails() {
 
                 {/* Tenant documents */}
                 <div style={{ marginBottom: 20 }}>
-                  <h4 style={{ fontSize: 12, fontWeight: 700, color: M.ink, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  <h4 style={{ fontSize: 12, fontWeight: 700, color: BAI.ink, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     Documents locataire
                   </h4>
                   <div className="space-y-1">
@@ -1360,7 +1349,7 @@ export default function ContractDetails() {
                         display: 'flex', alignItems: 'flex-start', gap: 12,
                         padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
                       }}
-                        onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
+                        onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
                         <input
@@ -1370,8 +1359,8 @@ export default function ContractDetails() {
                           style={{ marginTop: 2 }}
                         />
                         <div className="flex-1 min-w-0">
-                          <p style={{ fontSize: 13, fontWeight: 500, color: M.ink }}>{item.label}</p>
-                          <p style={{ fontSize: 11, color: M.inkFaint }}>{item.description}</p>
+                          <p style={{ fontSize: 13, fontWeight: 500, color: BAI.ink }}>{item.label}</p>
+                          <p style={{ fontSize: 11, color: BAI.inkFaint }}>{item.description}</p>
                         </div>
                       </label>
                     ))}
@@ -1381,7 +1370,7 @@ export default function ContractDetails() {
                 {/* Custom document requests */}
                 <div style={{ marginBottom: 20 }}>
                   <div className="flex items-center justify-between" style={{ marginBottom: 10 }}>
-                    <h4 style={{ fontSize: 12, fontWeight: 700, color: M.ink, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    <h4 style={{ fontSize: 12, fontWeight: 700, color: BAI.ink, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                       Demandes personnalisées
                     </h4>
                     <button
@@ -1389,9 +1378,9 @@ export default function ContractDetails() {
                       onClick={() => setShowCustomDocForm(true)}
                       style={{
                         display: 'inline-flex', alignItems: 'center', gap: 4,
-                        fontSize: 12, fontWeight: 500, color: M.owner,
+                        fontSize: 12, fontWeight: 500, color: BAI.owner,
                         background: 'none', border: 'none', cursor: 'pointer',
-                        fontFamily: M.body,
+                        fontFamily: BAI.fontBody,
                       }}
                     >
                       <Plus style={{ width: 14, height: 14 }} />
@@ -1405,21 +1394,21 @@ export default function ContractDetails() {
                         <div key={index} style={{
                           display: 'flex', alignItems: 'flex-start', gap: 12,
                           padding: '10px 12px',
-                          background: M.ownerLight, border: `1px solid ${M.ownerBorder}`,
+                          background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`,
                           borderRadius: 8,
                         }}>
-                          <FileText style={{ width: 14, height: 14, color: M.owner, marginTop: 2, flexShrink: 0 }} />
+                          <FileText style={{ width: 14, height: 14, color: BAI.owner, marginTop: 2, flexShrink: 0 }} />
                           <div className="flex-1 min-w-0">
-                            <p style={{ fontSize: 13, fontWeight: 500, color: M.ink }}>{doc.title}</p>
+                            <p style={{ fontSize: 13, fontWeight: 500, color: BAI.ink }}>{doc.title}</p>
                             {doc.description && (
-                              <p style={{ fontSize: 11, color: M.inkFaint, marginTop: 2 }}>{doc.description}</p>
+                              <p style={{ fontSize: 11, color: BAI.inkFaint, marginTop: 2 }}>{doc.description}</p>
                             )}
                           </div>
                           <button
                             onClick={() => handleRemoveCustomDoc(index)}
-                            style={{ padding: 4, background: 'none', border: 'none', cursor: 'pointer', color: M.inkFaint }}
-                            onMouseEnter={e => (e.currentTarget.style.color = M.danger)}
-                            onMouseLeave={e => (e.currentTarget.style.color = M.inkFaint)}
+                            style={{ padding: 4, background: 'none', border: 'none', cursor: 'pointer', color: BAI.inkFaint }}
+                            onMouseEnter={e => (e.currentTarget.style.color = BAI.error)}
+                            onMouseLeave={e => (e.currentTarget.style.color = BAI.inkFaint)}
                           >
                             <X style={{ width: 14, height: 14 }} />
                           </button>
@@ -1430,8 +1419,8 @@ export default function ContractDetails() {
 
                   {showCustomDocForm && (
                     <div style={{
-                      padding: '14px', background: M.muted,
-                      border: `1px solid ${M.border}`, borderRadius: 8,
+                      padding: '14px', background: BAI.bgMuted,
+                      border: `1px solid ${BAI.border}`, borderRadius: 8,
                     }} className="space-y-2">
                       <input
                         type="text"
@@ -1466,14 +1455,14 @@ export default function ContractDetails() {
                   )}
 
                   {customDocRequests.length === 0 && !showCustomDocForm && (
-                    <p style={{ fontSize: 12, color: M.inkFaint, fontStyle: 'italic' }}>Aucune demande personnalisée</p>
+                    <p style={{ fontSize: 12, color: BAI.inkFaint, fontStyle: 'italic' }}>Aucune demande personnalisée</p>
                   )}
                 </div>
 
                 <div style={{
-                  fontSize: 11, color: M.inkFaint, marginBottom: 16,
+                  fontSize: 11, color: BAI.inkFaint, marginBottom: 16,
                   padding: '10px 14px',
-                  background: M.muted, border: `1px solid ${M.border}`, borderRadius: 8,
+                  background: BAI.bgMuted, border: `1px solid ${BAI.border}`, borderRadius: 8,
                 }}>
                   Format accepté : PDF uniquement — Taille max : 5 Mo par document
                 </div>
@@ -1485,7 +1474,7 @@ export default function ContractDetails() {
                 >
                   {docsSaved ? (
                     <>
-                      <Check style={{ width: 14, height: 14, color: M.tenant }} />
+                      <Check style={{ width: 14, height: 14, color: BAI.tenant }} />
                       Enregistré
                     </>
                   ) : (
@@ -1499,14 +1488,14 @@ export default function ContractDetails() {
             {contract.status !== 'DRAFT' && (
               <div style={cardStyle}>
                 <h2 style={{
-                  fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
-                  fontSize: 20, color: M.ink, marginBottom: 6,
+                  fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+                  fontSize: 20, color: BAI.ink, marginBottom: 6,
                   display: 'flex', alignItems: 'center', gap: 10,
                 }}>
-                  <FolderOpen style={{ width: 20, height: 20, color: M.owner }} />
+                  <FolderOpen style={{ width: 20, height: 20, color: BAI.owner }} />
                   Dossier de location
                 </h2>
-                <p style={{ fontSize: 13, color: M.inkMid, marginBottom: 20 }}>
+                <p style={{ fontSize: 13, color: BAI.inkMid, marginBottom: 20 }}>
                   Téléchargez les documents obligatoires pour constituer le dossier complet.
                 </p>
 
@@ -1567,28 +1556,28 @@ export default function ContractDetails() {
             padding: 16, background: 'rgba(13,12,10,0.45)',
           }}>
             <div style={{
-              background: M.surface,
-              border: `1px solid ${M.border}`,
+              background: BAI.bgSurface,
+              border: `1px solid ${BAI.border}`,
               borderRadius: 14,
               boxShadow: '0 8px 40px rgba(13,12,10,0.18)',
               maxWidth: 460, width: '100%', padding: 24,
-              fontFamily: M.body,
+              fontFamily: BAI.fontBody,
             }}>
               <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
-                <h3 style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: M.ink }}>
+                <h3 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: BAI.ink }}>
                   Envoyer le contrat
                 </h3>
                 <button
                   onClick={() => setShowSendModal(false)}
-                  style={{ padding: 6, background: 'none', border: 'none', cursor: 'pointer', color: M.inkFaint, borderRadius: 6 }}
-                  onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
+                  style={{ padding: 6, background: 'none', border: 'none', cursor: 'pointer', color: BAI.inkFaint, borderRadius: 6 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
                   onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                 >
                   <X style={{ width: 18, height: 18 }} />
                 </button>
               </div>
 
-              <p style={{ fontSize: 13, color: M.inkMid, marginBottom: 16 }}>
+              <p style={{ fontSize: 13, color: BAI.inkMid, marginBottom: 16 }}>
                 Le contrat sera envoyé au locataire avec la liste des {requiredDocs.size} document(s) requis
                 {customDocRequests.length > 0 ? ` et ${customDocRequests.length} demande(s) personnalisée(s)` : ''}.
               </p>
@@ -1596,11 +1585,11 @@ export default function ContractDetails() {
               {requiredDocs.size === 0 && (
                 <div style={{
                   marginBottom: 16, padding: '10px 14px',
-                  background: M.warningBg, border: `1px solid ${M.caramel}`,
+                  background: BAI.warningLight, border: `1px solid ${BAI.caramel}`,
                   borderRadius: 8, display: 'flex', alignItems: 'center', gap: 10,
                 }}>
-                  <AlertCircle style={{ width: 15, height: 15, color: M.warning, flexShrink: 0 }} />
-                  <p style={{ fontSize: 12, color: M.warning }}>
+                  <AlertCircle style={{ width: 15, height: 15, color: BAI.warning, flexShrink: 0 }} />
+                  <p style={{ fontSize: 12, color: BAI.warning }}>
                     Veuillez d'abord sélectionner les documents requis dans la section "Dossier de location" ci-dessus.
                   </p>
                 </div>
@@ -1646,23 +1635,23 @@ export default function ContractDetails() {
             padding: 16, background: 'rgba(13,12,10,0.45)',
           }}>
             <div style={{
-              background: M.surface,
-              border: `1px solid ${M.border}`,
+              background: BAI.bgSurface,
+              border: `1px solid ${BAI.border}`,
               borderRadius: 14,
               boxShadow: '0 8px 40px rgba(13,12,10,0.18)',
               maxWidth: 460, width: '100%', padding: 24,
-              fontFamily: M.body,
+              fontFamily: BAI.fontBody,
             }}>
               <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
-                <h3 style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: M.ink }}>
+                <h3 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: BAI.ink }}>
                   {confirmModal === 'delete' && 'Supprimer le contrat'}
                   {confirmModal === 'terminate' && 'Résilier le contrat'}
                   {confirmModal === 'cancel' && 'Annuler le contrat'}
                 </h3>
                 <button
                   onClick={() => { setConfirmModal(null); setCancelReason('') }}
-                  style={{ padding: 6, background: 'none', border: 'none', cursor: 'pointer', color: M.inkFaint, borderRadius: 6 }}
-                  onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
+                  style={{ padding: 6, background: 'none', border: 'none', cursor: 'pointer', color: BAI.inkFaint, borderRadius: 6 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
                   onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                 >
                   <X style={{ width: 18, height: 18 }} />
@@ -1672,30 +1661,30 @@ export default function ContractDetails() {
               <div style={{
                 padding: '12px 14px', borderRadius: 8, marginBottom: 16,
                 display: 'flex', alignItems: 'flex-start', gap: 10,
-                background: confirmModal === 'cancel' ? M.warningBg : M.dangerBg,
-                border: `1px solid ${confirmModal === 'cancel' ? M.caramel : '#fca5a5'}`,
+                background: confirmModal === 'cancel' ? BAI.warningLight : BAI.errorLight,
+                border: `1px solid ${confirmModal === 'cancel' ? BAI.caramel : '#fca5a5'}`,
               }}>
                 <AlertTriangle style={{
                   width: 18, height: 18, flexShrink: 0, marginTop: 1,
-                  color: confirmModal === 'cancel' ? M.warning : M.danger,
+                  color: confirmModal === 'cancel' ? BAI.warning : BAI.error,
                 }} />
                 <div style={{ fontSize: 13 }}>
                   {confirmModal === 'delete' && (
-                    <p style={{ color: M.danger }}>
+                    <p style={{ color: BAI.error }}>
                       Cette action est irréversible. Le contrat brouillon sera définitivement supprimé.
                     </p>
                   )}
                   {confirmModal === 'terminate' && (
-                    <p style={{ color: M.danger }}>
+                    <p style={{ color: BAI.error }}>
                       La résiliation mettra fin au contrat actif. Le bien sera remis en disponible.
                     </p>
                   )}
                   {confirmModal === 'cancel' && (
                     <>
-                      <p style={{ color: M.warning, fontWeight: 600 }}>
+                      <p style={{ color: BAI.warning, fontWeight: 600 }}>
                         Attention : cette action annulera le contrat en cours de signature.
                       </p>
-                      <p style={{ color: M.warning, marginTop: 4 }}>
+                      <p style={{ color: BAI.warning, marginTop: 4 }}>
                         {contract.signedByOwner || contract.signedByTenant
                           ? 'Une ou plusieurs signatures ont déjà été apposées. Elles seront invalidées.'
                           : "Le locataire sera notifié de l'annulation."}
@@ -1738,9 +1727,9 @@ export default function ContractDetails() {
                   disabled={actionLoading || (confirmModal === 'cancel' && !cancelReason.trim())}
                   style={{
                     ...btnDanger,
-                    background: confirmModal === 'cancel' ? M.warningBg : M.dangerBg,
-                    color: confirmModal === 'cancel' ? M.warning : M.danger,
-                    border: `1px solid ${confirmModal === 'cancel' ? M.caramel : '#fca5a5'}`,
+                    background: confirmModal === 'cancel' ? BAI.warningLight : BAI.errorLight,
+                    color: confirmModal === 'cancel' ? BAI.warning : BAI.error,
+                    border: `1px solid ${confirmModal === 'cancel' ? BAI.caramel : '#fca5a5'}`,
                     opacity: actionLoading || (confirmModal === 'cancel' && !cancelReason.trim()) ? 0.5 : 1,
                   }}
                 >
@@ -1748,7 +1737,7 @@ export default function ContractDetails() {
                     <div style={{
                       width: 14, height: 14, borderRadius: '50%',
                       border: `2px solid rgba(0,0,0,0.2)`,
-                      borderTopColor: confirmModal === 'cancel' ? M.warning : M.danger,
+                      borderTopColor: confirmModal === 'cancel' ? BAI.warning : BAI.error,
                     }} className="animate-spin" />
                   ) : (
                     <>
@@ -1774,19 +1763,19 @@ export default function ContractDetails() {
             padding: 16, background: 'rgba(13,12,10,0.45)',
           }}>
             <div style={{
-              background: M.surface, border: `1px solid ${M.border}`,
+              background: BAI.bgSurface, border: `1px solid ${BAI.border}`,
               borderRadius: 14, boxShadow: '0 8px 40px rgba(13,12,10,0.18)',
-              maxWidth: 480, width: '100%', padding: 28, fontFamily: M.body,
+              maxWidth: 480, width: '100%', padding: 28, fontFamily: BAI.fontBody,
             }}>
               <div className="flex items-center gap-3" style={{ marginBottom: 20 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: M.ownerLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <ClipboardCheck style={{ width: 20, height: 20, color: M.owner }} />
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: BAI.ownerLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <ClipboardCheck style={{ width: 20, height: 20, color: BAI.owner }} />
                 </div>
                 <div>
-                  <h3 style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: M.ink, margin: 0 }}>
+                  <h3 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: BAI.ink, margin: 0 }}>
                     Avant d'envoyer
                   </h3>
-                  <p style={{ fontSize: 12, color: M.inkFaint, margin: 0 }}>Confirmez chaque point avant l'envoi au locataire</p>
+                  <p style={{ fontSize: 12, color: BAI.inkFaint, margin: 0 }}>Confirmez chaque point avant l'envoi au locataire</p>
                 </div>
               </div>
 
@@ -1803,8 +1792,8 @@ export default function ContractDetails() {
                       onClick={() => setPreSendChecks(prev => ({ ...prev, [key]: !prev[key] }))}
                       style={{
                         width: 20, height: 20, borderRadius: 5, flexShrink: 0, marginTop: 2,
-                        border: `2px solid ${preSendChecks[key] ? M.owner : M.border}`,
-                        background: preSendChecks[key] ? M.owner : M.surface,
+                        border: `2px solid ${preSendChecks[key] ? BAI.owner : BAI.border}`,
+                        background: preSendChecks[key] ? BAI.owner : BAI.bgSurface,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         cursor: 'pointer', transition: 'all 0.15s',
                       }}
@@ -1812,8 +1801,8 @@ export default function ContractDetails() {
                       {preSendChecks[key] && <Check style={{ width: 12, height: 12, color: '#ffffff' }} />}
                     </div>
                     <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => setPreSendChecks(prev => ({ ...prev, [key]: !prev[key] }))}>
-                      <p style={{ fontSize: 13, fontWeight: 500, color: M.ink, margin: 0 }}>{label}</p>
-                      <p style={{ fontSize: 11, color: M.inkFaint, margin: '2px 0 0' }}>{sub}</p>
+                      <p style={{ fontSize: 13, fontWeight: 500, color: BAI.ink, margin: 0 }}>{label}</p>
+                      <p style={{ fontSize: 11, color: BAI.inkFaint, margin: '2px 0 0' }}>{sub}</p>
                     </div>
                     {action === 'dossier' && (
                       <button
@@ -1824,9 +1813,9 @@ export default function ContractDetails() {
                         style={{
                           display: 'inline-flex', alignItems: 'center', gap: 6,
                           padding: '5px 12px', borderRadius: 6, flexShrink: 0,
-                          background: M.ownerLight, color: M.owner,
-                          border: `1px solid ${M.ownerBorder}`,
-                          fontFamily: M.body, fontWeight: 600, fontSize: 11,
+                          background: BAI.ownerLight, color: BAI.owner,
+                          border: `1px solid ${BAI.ownerBorder}`,
+                          fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 11,
                           cursor: 'pointer',
                         }}
                       >
@@ -1842,8 +1831,8 @@ export default function ContractDetails() {
                 <button
                   onClick={() => setShowPreSendChecklist(false)}
                   style={{ ...btnGhost }}
-                  onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
-                  onMouseLeave={e => (e.currentTarget.style.background = M.surface)}
+                  onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
+                  onMouseLeave={e => (e.currentTarget.style.background = BAI.bgSurface)}
                 >
                   Annuler
                 </button>
@@ -1872,19 +1861,19 @@ export default function ContractDetails() {
             padding: 16, background: 'rgba(13,12,10,0.45)',
           }}>
             <div style={{
-              background: M.surface, border: `1px solid ${M.border}`,
+              background: BAI.bgSurface, border: `1px solid ${BAI.border}`,
               borderRadius: 14, boxShadow: '0 8px 40px rgba(13,12,10,0.18)',
-              maxWidth: 460, width: '100%', padding: 28, fontFamily: M.body,
+              maxWidth: 460, width: '100%', padding: 28, fontFamily: BAI.fontBody,
             }}>
               <div className="flex items-center gap-3" style={{ marginBottom: 20 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: M.tenantLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <ShieldCheck style={{ width: 20, height: 20, color: M.tenant }} />
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: BAI.tenantLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <ShieldCheck style={{ width: 20, height: 20, color: BAI.tenant }} />
                 </div>
                 <div>
-                  <h3 style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: M.ink, margin: 0 }}>
+                  <h3 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: BAI.ink, margin: 0 }}>
                     Avant de signer
                   </h3>
-                  <p style={{ fontSize: 12, color: M.inkFaint, margin: 0 }}>Confirmez avoir vérifié chaque point. La signature est définitive.</p>
+                  <p style={{ fontSize: 12, color: BAI.inkFaint, margin: 0 }}>Confirmez avoir vérifié chaque point. La signature est définitive.</p>
                 </div>
               </div>
 
@@ -1899,8 +1888,8 @@ export default function ContractDetails() {
                       onClick={() => setPreSignChecks(prev => ({ ...prev, [key]: !prev[key] }))}
                       style={{
                         width: 20, height: 20, borderRadius: 5, flexShrink: 0, marginTop: 2,
-                        border: `2px solid ${preSignChecks[key] ? M.tenant : M.border}`,
-                        background: preSignChecks[key] ? M.tenant : M.surface,
+                        border: `2px solid ${preSignChecks[key] ? BAI.tenant : BAI.border}`,
+                        background: preSignChecks[key] ? BAI.tenant : BAI.bgSurface,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         cursor: 'pointer', transition: 'all 0.15s',
                       }}
@@ -1908,8 +1897,8 @@ export default function ContractDetails() {
                       {preSignChecks[key] && <Check style={{ width: 12, height: 12, color: '#ffffff' }} />}
                     </div>
                     <div onClick={() => setPreSignChecks(prev => ({ ...prev, [key]: !prev[key] }))}>
-                      <p style={{ fontSize: 13, fontWeight: 500, color: M.ink, margin: 0 }}>{label}</p>
-                      <p style={{ fontSize: 11, color: M.inkFaint, margin: '2px 0 0' }}>{sub}</p>
+                      <p style={{ fontSize: 13, fontWeight: 500, color: BAI.ink, margin: 0 }}>{label}</p>
+                      <p style={{ fontSize: 11, color: BAI.inkFaint, margin: '2px 0 0' }}>{sub}</p>
                     </div>
                   </label>
                 ))}
@@ -1919,8 +1908,8 @@ export default function ContractDetails() {
                 <button
                   onClick={() => setShowPreSignChecklist(false)}
                   style={{ ...btnGhost }}
-                  onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
-                  onMouseLeave={e => (e.currentTarget.style.background = M.surface)}
+                  onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
+                  onMouseLeave={e => (e.currentTarget.style.background = BAI.bgSurface)}
                 >
                   Annuler
                 </button>
@@ -1929,7 +1918,7 @@ export default function ContractDetails() {
                   disabled={!Object.values(preSignChecks).every(Boolean)}
                   style={{
                     ...btnPrimary,
-                    background: M.tenant,
+                    background: BAI.tenant,
                     opacity: Object.values(preSignChecks).every(Boolean) ? 1 : 0.4,
                     cursor: Object.values(preSignChecks).every(Boolean) ? 'pointer' : 'not-allowed',
                   }}

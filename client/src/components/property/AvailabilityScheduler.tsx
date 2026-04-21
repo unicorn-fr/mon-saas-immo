@@ -17,23 +17,7 @@ import {
   DAYS_OF_WEEK,
   VISIT_DURATIONS,
 } from '../../types/property.types'
-
-const M = {
-  ink: '#0d0c0a',
-  inkMid: '#5a5754',
-  inkFaint: '#9e9b96',
-  night: '#1a1a2e',
-  owner: '#1a3270',
-  ownerLight: '#eaf0fb',
-  ownerBorder: '#b8ccf0',
-  tenant: '#1b5e3b',
-  tenantLight: '#edf7f2',
-  tenantBorder: '#9fd4ba',
-  border: '#e4e1db',
-  borderMid: '#ccc9c3',
-  muted: '#f4f2ee',
-  surface: '#ffffff',
-}
+import { BAI } from '../../constants/bailio-tokens'
 
 interface AvailabilitySchedulerProps {
   recurringSlots: VisitAvailabilitySlot[]
@@ -232,17 +216,17 @@ export function AvailabilityScheduler({
         className="w-full flex items-center justify-between text-left"
       >
         <div>
-          <h2 className="text-lg font-semibold" style={{ color: M.ink }}>Disponibilites de visite</h2>
-          <p className="text-sm mt-1" style={{ color: M.inkFaint }}>
+          <h2 className="text-lg font-semibold" style={{ color: BAI.ink }}>Disponibilites de visite</h2>
+          <p className="text-sm mt-1" style={{ color: BAI.inkFaint }}>
             {totalConfig === 0
               ? 'Par defaut : tous les jours de 9h a 18h'
               : `${dateOverrides.length} date(s) specifique(s), ${recurringSlots.length} creneau(x) recurrent(s)`}
           </p>
         </div>
         {isOpen ? (
-          <ChevronUp className="w-5 h-5" style={{ color: M.inkFaint }} />
+          <ChevronUp className="w-5 h-5" style={{ color: BAI.inkFaint }} />
         ) : (
-          <ChevronDown className="w-5 h-5" style={{ color: M.inkFaint }} />
+          <ChevronDown className="w-5 h-5" style={{ color: BAI.inkFaint }} />
         )}
       </button>
 
@@ -252,12 +236,12 @@ export function AvailabilityScheduler({
           <div
             className="rounded-xl p-3 mb-4 flex gap-2"
             style={{
-              background: M.ownerLight,
-              border: `1px solid ${M.ownerBorder}`,
+              background: BAI.ownerLight,
+              border: `1px solid ${BAI.ownerBorder}`,
             }}
           >
-            <Info className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: M.owner }} />
-            <p className="text-xs" style={{ color: M.owner }}>
+            <Info className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: BAI.owner }} />
+            <p className="text-xs" style={{ color: BAI.owner }}>
               Configurez vos disponibilites pour les visites. Sans configuration, les locataires
               pourront reserver tous les jours de 9h a 18h.
             </p>
@@ -265,7 +249,7 @@ export function AvailabilityScheduler({
 
           {/* Visit Duration Selector */}
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-2" style={{ color: M.inkMid }}>
+            <label className="block text-sm font-medium mb-2" style={{ color: BAI.inkMid }}>
               <Clock className="w-4 h-4 inline mr-1.5" />
               Duree des visites
             </label>
@@ -279,15 +263,15 @@ export function AvailabilityScheduler({
                   style={
                     visitDuration === d.value
                       ? {
-                          background: M.night,
-                          color: M.surface,
-                          outline: `2px solid ${M.ownerBorder}`,
+                          background: BAI.night,
+                          color: BAI.bgSurface,
+                          outline: `2px solid ${BAI.ownerBorder}`,
                           outlineOffset: '2px',
                         }
                       : {
-                          background: M.surface,
-                          color: M.inkMid,
-                          border: `1px solid ${M.border}`,
+                          background: BAI.bgSurface,
+                          color: BAI.inkMid,
+                          border: `1px solid ${BAI.border}`,
                         }
                   }
                 >
@@ -300,7 +284,7 @@ export function AvailabilityScheduler({
           {/* Tabs */}
           <div
             className="flex mb-4"
-            style={{ borderBottom: `1px solid ${M.border}` }}
+            style={{ borderBottom: `1px solid ${BAI.border}` }}
           >
             <button
               type="button"
@@ -308,8 +292,8 @@ export function AvailabilityScheduler({
               className="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
               style={
                 activeTab === 'dates'
-                  ? { borderColor: M.owner, color: M.owner }
-                  : { borderColor: 'transparent', color: M.inkFaint }
+                  ? { borderColor: BAI.owner, color: BAI.owner }
+                  : { borderColor: 'transparent', color: BAI.inkFaint }
               }
             >
               <Calendar className="w-4 h-4 inline mr-1.5" />
@@ -321,8 +305,8 @@ export function AvailabilityScheduler({
               className="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
               style={
                 activeTab === 'recurring'
-                  ? { borderColor: M.owner, color: M.owner }
-                  : { borderColor: 'transparent', color: M.inkFaint }
+                  ? { borderColor: BAI.owner, color: BAI.owner }
+                  : { borderColor: 'transparent', color: BAI.inkFaint }
               }
             >
               <Clock className="w-4 h-4 inline mr-1.5" />
@@ -336,7 +320,7 @@ export function AvailabilityScheduler({
               {/* Calendar */}
               <div
                 className="rounded-xl p-3"
-                style={{ border: `1px solid ${M.border}` }}
+                style={{ border: `1px solid ${BAI.border}` }}
               >
                 {/* Calendar header */}
                 <div className="flex items-center justify-between mb-3">
@@ -344,29 +328,29 @@ export function AvailabilityScheduler({
                     type="button"
                     onClick={prevMonth}
                     className="p-1 rounded"
-                    onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = BAI.bgMuted)}
                     onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                   >
-                    <ChevronLeft className="w-5 h-5" style={{ color: M.inkMid }} />
+                    <ChevronLeft className="w-5 h-5" style={{ color: BAI.inkMid }} />
                   </button>
-                  <h4 className="text-sm font-semibold" style={{ color: M.ink }}>
+                  <h4 className="text-sm font-semibold" style={{ color: BAI.ink }}>
                     {MONTH_NAMES[calendarMonth]} {calendarYear}
                   </h4>
                   <button
                     type="button"
                     onClick={nextMonth}
                     className="p-1 rounded"
-                    onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = BAI.bgMuted)}
                     onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                   >
-                    <ChevronRight className="w-5 h-5" style={{ color: M.inkMid }} />
+                    <ChevronRight className="w-5 h-5" style={{ color: BAI.inkMid }} />
                   </button>
                 </div>
 
                 {/* Day headers */}
                 <div className="grid grid-cols-7 gap-1 mb-1">
                   {DAY_HEADERS.map((d) => (
-                    <div key={d} className="text-center text-xs font-medium py-1" style={{ color: M.inkFaint }}>
+                    <div key={d} className="text-center text-xs font-medium py-1" style={{ color: BAI.inkFaint }}>
                       {d}
                     </div>
                   ))}
@@ -390,7 +374,7 @@ export function AvailabilityScheduler({
                     let cellStyle: React.CSSProperties = {}
 
                     if (isPast) {
-                      cellStyle = { color: M.inkFaint, cursor: 'not-allowed' }
+                      cellStyle = { color: BAI.inkFaint, cursor: 'not-allowed' }
                     } else if (isBlocked) {
                       cellStyle = {
                         background: '#fee2e2',
@@ -400,28 +384,28 @@ export function AvailabilityScheduler({
                       }
                     } else if (isAvailable) {
                       cellStyle = {
-                        background: M.tenantLight,
-                        color: M.tenant,
-                        border: `2px solid ${M.tenantBorder}`,
+                        background: BAI.tenantLight,
+                        color: BAI.tenant,
+                        border: `2px solid ${BAI.tenantBorder}`,
                         cursor: 'pointer',
                       }
                     } else if (isSelected) {
                       cellStyle = {
-                        background: M.ownerLight,
-                        color: M.owner,
-                        border: `2px solid ${M.ownerBorder}`,
+                        background: BAI.ownerLight,
+                        color: BAI.owner,
+                        border: `2px solid ${BAI.ownerBorder}`,
                         cursor: 'pointer',
                       }
                     } else if (isToday) {
                       cellStyle = {
-                        background: M.muted,
-                        color: M.ink,
-                        border: `1px solid ${M.border}`,
+                        background: BAI.bgMuted,
+                        color: BAI.ink,
+                        border: `1px solid ${BAI.border}`,
                         cursor: 'pointer',
                       }
                     } else {
                       cellStyle = {
-                        color: M.inkMid,
+                        color: BAI.inkMid,
                         border: '1px solid transparent',
                         cursor: 'pointer',
                       }
@@ -445,23 +429,23 @@ export function AvailabilityScheduler({
                 {/* Legend */}
                 <div
                   className="flex flex-wrap gap-3 mt-3 pt-3"
-                  style={{ borderTop: `1px solid ${M.border}` }}
+                  style={{ borderTop: `1px solid ${BAI.border}` }}
                 >
-                  <div className="flex items-center gap-1.5 text-xs" style={{ color: M.inkFaint }}>
+                  <div className="flex items-center gap-1.5 text-xs" style={{ color: BAI.inkFaint }}>
                     <div
                       className="w-3 h-3 rounded"
-                      style={{ background: M.tenantLight, border: `1px solid ${M.tenantBorder}` }}
+                      style={{ background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}` }}
                     />
                     Disponible
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs" style={{ color: M.inkFaint }}>
+                  <div className="flex items-center gap-1.5 text-xs" style={{ color: BAI.inkFaint }}>
                     <div className="w-3 h-3 rounded bg-red-100 border border-red-300" />
                     Bloque
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs" style={{ color: M.inkFaint }}>
+                  <div className="flex items-center gap-1.5 text-xs" style={{ color: BAI.inkFaint }}>
                     <div
                       className="w-3 h-3 rounded"
-                      style={{ background: M.ownerLight, border: `1px solid ${M.ownerBorder}` }}
+                      style={{ background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}` }}
                     />
                     Selectionne
                   </div>
@@ -473,17 +457,17 @@ export function AvailabilityScheduler({
                 <div
                   className="rounded-xl p-4"
                   style={{
-                    background: M.muted,
-                    border: `1px solid ${M.border}`,
+                    background: BAI.bgMuted,
+                    border: `1px solid ${BAI.border}`,
                   }}
                 >
-                  <p className="text-sm font-semibold mb-3" style={{ color: M.ink }}>
+                  <p className="text-sm font-semibold mb-3" style={{ color: BAI.ink }}>
                     {formatDateFR(selectedDate)} - Configurer la disponibilite
                   </p>
 
                   <div className="flex flex-wrap items-end gap-3">
                     <div>
-                      <label className="block text-xs mb-1" style={{ color: M.inkFaint }}>De</label>
+                      <label className="block text-xs mb-1" style={{ color: BAI.inkFaint }}>De</label>
                       <select
                         value={newStart}
                         onChange={(e) => setNewStart(e.target.value)}
@@ -496,7 +480,7 @@ export function AvailabilityScheduler({
                     </div>
 
                     <div>
-                      <label className="block text-xs mb-1" style={{ color: M.inkFaint }}>A</label>
+                      <label className="block text-xs mb-1" style={{ color: BAI.inkFaint }}>A</label>
                       <select
                         value={newEnd}
                         onChange={(e) => setNewEnd(e.target.value)}
@@ -541,7 +525,7 @@ export function AvailabilityScheduler({
               {/* List of configured dates */}
               {dateOverrides.length > 0 && (
                 <div>
-                  <h4 className="text-xs font-semibold uppercase mb-2" style={{ color: M.inkFaint }}>
+                  <h4 className="text-xs font-semibold uppercase mb-2" style={{ color: BAI.inkFaint }}>
                     Dates configurees ({dateOverrides.length})
                   </h4>
                   <div className="space-y-1.5 max-h-48 overflow-y-auto">
@@ -556,7 +540,7 @@ export function AvailabilityScheduler({
                             style={
                               override.type === 'BLOCKED'
                                 ? { background: '#fef2f2', borderColor: '#fca5a5', color: '#9b1c1c' }
-                                : { background: M.tenantLight, borderColor: M.tenantBorder, color: M.tenant }
+                                : { background: BAI.tenantLight, borderColor: BAI.tenantBorder, color: BAI.tenant }
                             }
                           >
                             <span>
@@ -585,7 +569,7 @@ export function AvailabilityScheduler({
           {/* === TAB: Creneaux recurrents === */}
           {activeTab === 'recurring' && (
             <div className="space-y-4">
-              <p className="text-xs" style={{ color: M.inkFaint }}>
+              <p className="text-xs" style={{ color: BAI.inkFaint }}>
                 Les creneaux recurrents s'appliquent chaque semaine. Les dates specifiques sont
                 prioritaires.
               </p>
@@ -598,11 +582,11 @@ export function AvailabilityScheduler({
                       key={index}
                       className="flex items-center justify-between rounded-xl px-3 py-2"
                       style={{
-                        background: M.ownerLight,
-                        border: `1px solid ${M.ownerBorder}`,
+                        background: BAI.ownerLight,
+                        border: `1px solid ${BAI.ownerBorder}`,
                       }}
                     >
-                      <span className="text-sm" style={{ color: M.owner }}>
+                      <span className="text-sm" style={{ color: BAI.owner }}>
                         <strong>{getDayLabel(slot.dayOfWeek)}</strong> de {slot.startTime} a{' '}
                         {slot.endTime}
                       </span>
@@ -621,7 +605,7 @@ export function AvailabilityScheduler({
               {/* Add recurring slot form */}
               <div className="flex flex-wrap items-end gap-2">
                 <div>
-                  <label className="block text-xs mb-1" style={{ color: M.inkFaint }}>Jour</label>
+                  <label className="block text-xs mb-1" style={{ color: BAI.inkFaint }}>Jour</label>
                   <select
                     value={newSlotDay}
                     onChange={(e) => setNewSlotDay(parseInt(e.target.value))}
@@ -636,7 +620,7 @@ export function AvailabilityScheduler({
                 </div>
 
                 <div>
-                  <label className="block text-xs mb-1" style={{ color: M.inkFaint }}>De</label>
+                  <label className="block text-xs mb-1" style={{ color: BAI.inkFaint }}>De</label>
                   <select
                     value={newSlotStart}
                     onChange={(e) => setNewSlotStart(e.target.value)}
@@ -649,7 +633,7 @@ export function AvailabilityScheduler({
                 </div>
 
                 <div>
-                  <label className="block text-xs mb-1" style={{ color: M.inkFaint }}>A</label>
+                  <label className="block text-xs mb-1" style={{ color: BAI.inkFaint }}>A</label>
                   <select
                     value={newSlotEnd}
                     onChange={(e) => setNewSlotEnd(e.target.value)}

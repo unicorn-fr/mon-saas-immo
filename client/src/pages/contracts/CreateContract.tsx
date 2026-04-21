@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { BAI } from '../../constants/bailio-tokens'
 import { useNavigate } from 'react-router-dom'
 import { useContractStore } from '../../store/contractStore'
 import { useProperties } from '../../hooks/useProperties'
@@ -26,18 +27,6 @@ import {
   X,
 } from 'lucide-react'
 
-const M = {
-  bg: '#fafaf8', surface: '#ffffff', muted: '#f4f2ee', inputBg: '#f8f7f4',
-  ink: '#0d0c0a', inkMid: '#5a5754', inkFaint: '#9e9b96',
-  night: '#1a1a2e', caramel: '#c4976a', caramelLight: '#fdf5ec',
-  owner: '#1a3270', ownerLight: '#eaf0fb', ownerBorder: '#b8ccf0',
-  tenant: '#1b5e3b', tenantLight: '#edf7f2', tenantBorder: '#9fd4ba',
-  border: '#e4e1db', borderMid: '#ccc9c3',
-  danger: '#9b1c1c', dangerBg: '#fef2f2',
-  warning: '#92400e', warningBg: '#fdf5ec',
-  display: "'Cormorant Garamond', Georgia, serif",
-  body: "'DM Sans', system-ui, sans-serif",
-}
 
 type WizardStep = 1 | 2 | 3
 
@@ -222,14 +211,14 @@ export default function CreateContract() {
   // Maison style helpers
   const inputStyle = (hasError?: boolean): React.CSSProperties => ({
     width: '100%',
-    background: M.inputBg,
-    border: `1px solid ${hasError ? '#fca5a5' : M.border}`,
+    background: BAI.bgInput,
+    border: `1px solid ${hasError ? '#fca5a5' : BAI.border}`,
     borderRadius: 8,
     padding: '10px 12px',
     fontSize: 13,
-    color: M.ink,
+    color: BAI.ink,
     outline: 'none',
-    fontFamily: M.body,
+    fontFamily: BAI.fontBody,
     boxSizing: 'border-box',
   })
 
@@ -237,71 +226,71 @@ export default function CreateContract() {
     display: 'block',
     fontSize: 11,
     fontWeight: 600,
-    color: M.inkMid,
+    color: BAI.inkMid,
     marginBottom: 6,
-    fontFamily: M.body,
+    fontFamily: BAI.fontBody,
   }
 
   const cardStyle: React.CSSProperties = {
-    background: M.surface,
-    border: `1px solid ${M.border}`,
+    background: BAI.bgSurface,
+    border: `1px solid ${BAI.border}`,
     borderRadius: 12,
     boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
     padding: '28px',
-    fontFamily: M.body,
+    fontFamily: BAI.fontBody,
   }
 
   const btnPrimary: React.CSSProperties = {
     display: 'inline-flex', alignItems: 'center', gap: 7,
     padding: '10px 20px', borderRadius: 8,
-    background: M.night, color: '#ffffff',
-    fontFamily: M.body, fontWeight: 500, fontSize: 13,
+    background: BAI.night, color: '#ffffff',
+    fontFamily: BAI.fontBody, fontWeight: 500, fontSize: 13,
     border: 'none', cursor: 'pointer',
   }
 
   const btnGhost: React.CSSProperties = {
     display: 'inline-flex', alignItems: 'center', gap: 7,
     padding: '10px 20px', borderRadius: 8,
-    background: M.surface, color: M.inkMid,
-    fontFamily: M.body, fontWeight: 500, fontSize: 13,
-    border: `1px solid ${M.border}`, cursor: 'pointer',
+    background: BAI.bgSurface, color: BAI.inkMid,
+    fontFamily: BAI.fontBody, fontWeight: 500, fontSize: 13,
+    border: `1px solid ${BAI.border}`, cursor: 'pointer',
   }
 
   return (
     <Layout>
-      <div style={{ minHeight: '100vh', background: M.bg, fontFamily: M.body }}>
+      <div style={{ minHeight: '100vh', background: BAI.bgBase, fontFamily: BAI.fontBody }}>
 
         {/* Header */}
-        <div style={{ background: M.surface, borderBottom: `1px solid ${M.border}` }}>
+        <div style={{ background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}` }}>
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate('/contracts')}
                 style={{
-                  padding: 8, background: M.surface,
-                  border: `1px solid ${M.border}`, borderRadius: 8,
-                  color: M.inkMid, cursor: 'pointer',
+                  padding: 8, background: BAI.bgSurface,
+                  border: `1px solid ${BAI.border}`, borderRadius: 8,
+                  color: BAI.inkMid, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
-                onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
-                onMouseLeave={e => (e.currentTarget.style.background = M.surface)}
+                onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
+                onMouseLeave={e => (e.currentTarget.style.background = BAI.bgSurface)}
               >
                 <ArrowLeft style={{ width: 18, height: 18 }} />
               </button>
               <div>
                 <p style={{
-                  fontFamily: M.body, fontSize: 10, textTransform: 'uppercase',
-                  letterSpacing: '0.12em', color: M.inkFaint, marginBottom: 4,
+                  fontFamily: BAI.fontBody, fontSize: 10, textTransform: 'uppercase',
+                  letterSpacing: '0.12em', color: BAI.inkFaint, marginBottom: 4,
                 }}>
                   Gestion locative
                 </p>
                 <h1 style={{
-                  fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
-                  fontSize: 32, color: M.ink, lineHeight: 1.1, margin: 0,
+                  fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+                  fontSize: 32, color: BAI.ink, lineHeight: 1.1, margin: 0,
                 }}>
                   Nouveau Contrat
                 </h1>
-                <p style={{ fontSize: 13, color: M.inkMid, marginTop: 2 }}>
+                <p style={{ fontSize: 13, color: BAI.inkMid, marginTop: 2 }}>
                   Générateur de bail — Loi ALUR
                 </p>
               </div>
@@ -324,17 +313,17 @@ export default function CreateContract() {
                       <div style={{
                         width: 40, height: 40, borderRadius: '50%',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 13, fontWeight: 700, fontFamily: M.body,
-                        background: isActive ? M.night : isCompleted ? M.tenant : M.muted,
-                        color: isActive || isCompleted ? '#ffffff' : M.inkFaint,
+                        fontSize: 13, fontWeight: 700, fontFamily: BAI.fontBody,
+                        background: isActive ? BAI.night : isCompleted ? BAI.tenant : BAI.bgMuted,
+                        color: isActive || isCompleted ? '#ffffff' : BAI.inkFaint,
                         boxShadow: isActive ? `0 0 0 4px rgba(26,26,46,0.12)` : 'none',
                         transition: 'all 0.2s',
                       }}>
                         {isCompleted ? <Check style={{ width: 18, height: 18 }} /> : stepNum}
                       </div>
                       <span style={{
-                        fontSize: 11, marginTop: 6, fontWeight: 500, fontFamily: M.body,
-                        color: isActive ? M.night : isCompleted ? M.tenant : M.inkFaint,
+                        fontSize: 11, marginTop: 6, fontWeight: 500, fontFamily: BAI.fontBody,
+                        color: isActive ? BAI.night : isCompleted ? BAI.tenant : BAI.inkFaint,
                       }}>
                         {label}
                       </span>
@@ -342,7 +331,7 @@ export default function CreateContract() {
                     {i < stepLabels.length - 1 && (
                       <div style={{
                         width: 64, height: 2, marginLeft: 6, marginRight: 6, marginTop: -20,
-                        background: step > stepNum ? M.tenant : M.border,
+                        background: step > stepNum ? BAI.tenant : BAI.border,
                       }} />
                     )}
                   </div>
@@ -354,8 +343,8 @@ export default function CreateContract() {
             {step === 1 && (
               <div style={cardStyle}>
                 <h2 style={{
-                  fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
-                  fontSize: 24, color: M.ink, marginBottom: 24,
+                  fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+                  fontSize: 24, color: BAI.ink, marginBottom: 24,
                 }}>
                   Étape 1 — Informations de base
                 </h2>
@@ -363,7 +352,7 @@ export default function CreateContract() {
                 {/* Property Selection */}
                 <div style={{ marginBottom: 24 }}>
                   <label style={labelStyle}>
-                    Propriété <span style={{ color: M.danger }}>*</span>
+                    Propriété <span style={{ color: BAI.error }}>*</span>
                   </label>
                   <select
                     value={propertyId}
@@ -378,14 +367,14 @@ export default function CreateContract() {
                     ))}
                   </select>
                   {errors.propertyId && (
-                    <p style={{ fontSize: 11, color: M.danger, marginTop: 4 }}>{errors.propertyId}</p>
+                    <p style={{ fontSize: 11, color: BAI.error, marginTop: 4 }}>{errors.propertyId}</p>
                   )}
                 </div>
 
                 {/* Property Preview */}
                 {selectedProperty && (
                   <div style={{
-                    background: M.ownerLight, border: `1px solid ${M.ownerBorder}`,
+                    background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`,
                     borderRadius: 10, padding: 16,
                     display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 24,
                   }}>
@@ -398,21 +387,21 @@ export default function CreateContract() {
                     ) : (
                       <div style={{
                         width: 96, height: 96, borderRadius: 8, flexShrink: 0,
-                        background: M.ownerBorder, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: BAI.ownerBorder, display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
-                        <HomeIcon style={{ width: 28, height: 28, color: M.owner }} />
+                        <HomeIcon style={{ width: 28, height: 28, color: BAI.owner }} />
                       </div>
                     )}
                     <div>
-                      <h3 style={{ fontWeight: 600, fontSize: 14, color: M.ink }}>{selectedProperty.title}</h3>
-                      <p className="flex items-center" style={{ fontSize: 12, color: M.inkMid, marginTop: 4, gap: 4 }}>
-                        <MapPin style={{ width: 12, height: 12, color: M.owner }} />
+                      <h3 style={{ fontWeight: 600, fontSize: 14, color: BAI.ink }}>{selectedProperty.title}</h3>
+                      <p className="flex items-center" style={{ fontSize: 12, color: BAI.inkMid, marginTop: 4, gap: 4 }}>
+                        <MapPin style={{ width: 12, height: 12, color: BAI.owner }} />
                         {selectedProperty.address}, {selectedProperty.postalCode} {selectedProperty.city}
                       </p>
-                      <div className="flex gap-4" style={{ marginTop: 8, fontSize: 11, color: M.inkFaint }}>
+                      <div className="flex gap-4" style={{ marginTop: 8, fontSize: 11, color: BAI.inkFaint }}>
                         {selectedProperty.surface && <span>{selectedProperty.surface} m²</span>}
                         {selectedProperty.bedrooms != null && <span>{selectedProperty.bedrooms} ch.</span>}
-                        <span style={{ color: M.caramel, fontWeight: 600 }}>{selectedProperty.price} €/mois</span>
+                        <span style={{ color: BAI.caramel, fontWeight: 600 }}>{selectedProperty.price} €/mois</span>
                       </div>
                     </div>
                   </div>
@@ -421,7 +410,7 @@ export default function CreateContract() {
                 {/* Tenant Email */}
                 <div style={{ marginBottom: 24 }}>
                   <label style={labelStyle}>
-                    Locataire <span style={{ color: M.danger }}>*</span>
+                    Locataire <span style={{ color: BAI.error }}>*</span>
                   </label>
 
                   {/* Contact sélectionné */}
@@ -429,7 +418,7 @@ export default function CreateContract() {
                     <div style={{
                       display: 'flex', alignItems: 'center', gap: 12,
                       padding: '10px 14px', borderRadius: 8, marginBottom: 12,
-                      border: `1px solid ${M.tenantBorder}`, background: M.tenantLight,
+                      border: `1px solid ${BAI.tenantBorder}`, background: BAI.tenantLight,
                     }}>
                       {selectedContact.avatar ? (
                         <img src={selectedContact.avatar} alt={selectedContact.name}
@@ -437,23 +426,23 @@ export default function CreateContract() {
                       ) : (
                         <div style={{
                           width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
-                          background: M.tenantBorder, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          background: BAI.tenantBorder, display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}>
-                          <User style={{ width: 16, height: 16, color: M.tenant }} />
+                          <User style={{ width: 16, height: 16, color: BAI.tenant }} />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p style={{ fontWeight: 600, fontSize: 13, color: M.ink }}>{selectedContact.name}</p>
-                        <p style={{ fontSize: 11, color: M.inkFaint }}>{selectedContact.email}</p>
+                        <p style={{ fontWeight: 600, fontSize: 13, color: BAI.ink }}>{selectedContact.name}</p>
+                        <p style={{ fontSize: 11, color: BAI.inkFaint }}>{selectedContact.email}</p>
                       </div>
                       <button
                         type="button"
                         onClick={() => { setSelectedContact(null); setTenantEmail('') }}
                         style={{
                           padding: 4, background: 'none', border: 'none',
-                          cursor: 'pointer', color: M.inkFaint, borderRadius: 4,
+                          cursor: 'pointer', color: BAI.inkFaint, borderRadius: 4,
                         }}
-                        onMouseEnter={e => (e.currentTarget.style.background = M.tenantBorder)}
+                        onMouseEnter={e => (e.currentTarget.style.background = BAI.tenantBorder)}
                         onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                       >
                         <X style={{ width: 14, height: 14 }} />
@@ -470,36 +459,36 @@ export default function CreateContract() {
                         style={{
                           width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                           padding: '10px 14px', borderRadius: 8,
-                          border: `1px solid ${M.border}`, background: M.surface,
-                          fontSize: 13, fontWeight: 500, color: M.inkMid,
-                          cursor: 'pointer', fontFamily: M.body,
+                          border: `1px solid ${BAI.border}`, background: BAI.bgSurface,
+                          fontSize: 13, fontWeight: 500, color: BAI.inkMid,
+                          cursor: 'pointer', fontFamily: BAI.fontBody,
                         }}
-                        onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
-                        onMouseLeave={e => (e.currentTarget.style.background = M.surface)}
+                        onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
+                        onMouseLeave={e => (e.currentTarget.style.background = BAI.bgSurface)}
                       >
                         <span className="flex items-center gap-2">
-                          <MessageSquare style={{ width: 14, height: 14, color: M.owner }} />
+                          <MessageSquare style={{ width: 14, height: 14, color: BAI.owner }} />
                           Choisir depuis mes contacts messagerie
                           <span style={{
-                            fontSize: 10, fontWeight: 700, fontFamily: M.body,
-                            background: M.ownerLight, color: M.owner,
-                            border: `1px solid ${M.ownerBorder}`, borderRadius: 20,
+                            fontSize: 10, fontWeight: 700, fontFamily: BAI.fontBody,
+                            background: BAI.ownerLight, color: BAI.owner,
+                            border: `1px solid ${BAI.ownerBorder}`, borderRadius: 20,
                             padding: '1px 7px',
                           }}>
                             {messagingContacts.length}
                           </span>
                         </span>
                         {showContactPicker
-                          ? <ChevronUp style={{ width: 14, height: 14, color: M.inkFaint }} />
-                          : <ChevronDown style={{ width: 14, height: 14, color: M.inkFaint }} />
+                          ? <ChevronUp style={{ width: 14, height: 14, color: BAI.inkFaint }} />
+                          : <ChevronDown style={{ width: 14, height: 14, color: BAI.inkFaint }} />
                         }
                       </button>
 
                       {showContactPicker && (
                         <div style={{
                           marginTop: 4, borderRadius: 8,
-                          border: `1px solid ${M.border}`,
-                          overflow: 'hidden', background: M.surface,
+                          border: `1px solid ${BAI.border}`,
+                          overflow: 'hidden', background: BAI.bgSurface,
                           boxShadow: '0 4px 16px rgba(13,12,10,0.08)',
                         }}>
                           {messagingContacts.map((contact) => (
@@ -516,10 +505,10 @@ export default function CreateContract() {
                                 width: '100%', display: 'flex', alignItems: 'center', gap: 12,
                                 padding: '10px 14px', textAlign: 'left',
                                 background: 'none', border: 'none',
-                                borderBottom: `1px solid ${M.border}`,
-                                cursor: 'pointer', fontFamily: M.body,
+                                borderBottom: `1px solid ${BAI.border}`,
+                                cursor: 'pointer', fontFamily: BAI.fontBody,
                               }}
-                              onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
+                              onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
                               onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                             >
                               {contact.avatar ? (
@@ -528,14 +517,14 @@ export default function CreateContract() {
                               ) : (
                                 <div style={{
                                   width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
-                                  background: M.ownerLight, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  background: BAI.ownerLight, display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 }}>
-                                  <User style={{ width: 14, height: 14, color: M.owner }} />
+                                  <User style={{ width: 14, height: 14, color: BAI.owner }} />
                                 </div>
                               )}
                               <div className="flex-1 min-w-0">
-                                <p style={{ fontWeight: 500, fontSize: 13, color: M.ink }}>{contact.name}</p>
-                                <p style={{ fontSize: 11, color: M.inkFaint }} className="truncate">{contact.email}</p>
+                                <p style={{ fontWeight: 500, fontSize: 13, color: BAI.ink }}>{contact.name}</p>
+                                <p style={{ fontSize: 11, color: BAI.inkFaint }} className="truncate">{contact.email}</p>
                               </div>
                             </button>
                           ))}
@@ -547,9 +536,9 @@ export default function CreateContract() {
                   {/* Séparateur */}
                   {messagingContacts.length > 0 && !selectedContact && (
                     <div className="flex items-center gap-3" style={{ marginBottom: 12 }}>
-                      <div style={{ flex: 1, height: 1, background: M.border }} />
-                      <span style={{ fontSize: 11, color: M.inkFaint }}>ou saisir manuellement</span>
-                      <div style={{ flex: 1, height: 1, background: M.border }} />
+                      <div style={{ flex: 1, height: 1, background: BAI.border }} />
+                      <span style={{ fontSize: 11, color: BAI.inkFaint }}>ou saisir manuellement</span>
+                      <div style={{ flex: 1, height: 1, background: BAI.border }} />
                     </div>
                   )}
 
@@ -563,14 +552,14 @@ export default function CreateContract() {
                         placeholder="locataire@example.com"
                         style={inputStyle(!!errors.tenantEmail)}
                       />
-                      <p style={{ fontSize: 11, color: M.inkFaint, marginTop: 4 }}>
+                      <p style={{ fontSize: 11, color: BAI.inkFaint, marginTop: 4 }}>
                         Le locataire doit avoir un compte avec cet email sur la plateforme
                       </p>
                     </>
                   )}
 
                   {errors.tenantEmail && (
-                    <p style={{ fontSize: 11, color: M.danger, marginTop: 4 }}>{errors.tenantEmail}</p>
+                    <p style={{ fontSize: 11, color: BAI.error, marginTop: 4 }}>{errors.tenantEmail}</p>
                   )}
                 </div>
               </div>
@@ -580,8 +569,8 @@ export default function CreateContract() {
             {step === 2 && (
               <div style={cardStyle}>
                 <h2 style={{
-                  fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
-                  fontSize: 24, color: M.ink, marginBottom: 24,
+                  fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+                  fontSize: 24, color: BAI.ink, marginBottom: 24,
                 }}>
                   Étape 2 — Conditions juridiques
                 </h2>
@@ -590,7 +579,7 @@ export default function CreateContract() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={{ marginBottom: 24 }}>
                   <div>
                     <label style={labelStyle}>
-                      Date de prise d'effet <span style={{ color: M.danger }}>*</span>
+                      Date de prise d'effet <span style={{ color: BAI.error }}>*</span>
                     </label>
                     <input
                       type="date"
@@ -599,12 +588,12 @@ export default function CreateContract() {
                       style={inputStyle(!!errors.startDate)}
                     />
                     {errors.startDate && (
-                      <p style={{ fontSize: 11, color: M.danger, marginTop: 4 }}>{errors.startDate}</p>
+                      <p style={{ fontSize: 11, color: BAI.error, marginTop: 4 }}>{errors.startDate}</p>
                     )}
                   </div>
                   <div>
                     <label style={labelStyle}>
-                      Date de fin du bail <span style={{ color: M.danger }}>*</span>
+                      Date de fin du bail <span style={{ color: BAI.error }}>*</span>
                     </label>
                     <input
                       type="date"
@@ -613,7 +602,7 @@ export default function CreateContract() {
                       style={inputStyle(!!errors.endDate)}
                     />
                     {errors.endDate && (
-                      <p style={{ fontSize: 11, color: M.danger, marginTop: 4 }}>{errors.endDate}</p>
+                      <p style={{ fontSize: 11, color: BAI.error, marginTop: 4 }}>{errors.endDate}</p>
                     )}
                   </div>
                 </div>
@@ -622,7 +611,7 @@ export default function CreateContract() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6" style={{ marginBottom: 24 }}>
                   <div>
                     <label style={labelStyle}>
-                      Loyer mensuel (€) <span style={{ color: M.danger }}>*</span>
+                      Loyer mensuel (€) <span style={{ color: BAI.error }}>*</span>
                     </label>
                     <input
                       type="number"
@@ -633,7 +622,7 @@ export default function CreateContract() {
                       style={inputStyle(!!errors.monthlyRent)}
                     />
                     {errors.monthlyRent && (
-                      <p style={{ fontSize: 11, color: M.danger, marginTop: 4 }}>{errors.monthlyRent}</p>
+                      <p style={{ fontSize: 11, color: BAI.error, marginTop: 4 }}>{errors.monthlyRent}</p>
                     )}
                   </div>
                   <div>
@@ -694,15 +683,15 @@ export default function CreateContract() {
                 {/* Total Preview */}
                 {monthlyRent && (
                   <div style={{
-                    background: M.caramelLight, border: `1px solid ${M.caramel}`,
+                    background: BAI.caramelLight, border: `1px solid ${BAI.caramel}`,
                     borderRadius: 8, padding: '12px 16px',
                   }}>
-                    <p style={{ fontSize: 13, color: M.inkMid }}>
-                      <span style={{ fontWeight: 600, color: M.ink }}>Total mensuel : </span>
-                      <span style={{ fontWeight: 700, color: M.caramel, fontSize: 15 }}>
+                    <p style={{ fontSize: 13, color: BAI.inkMid }}>
+                      <span style={{ fontWeight: 600, color: BAI.ink }}>Total mensuel : </span>
+                      <span style={{ fontWeight: 700, color: BAI.caramel, fontSize: 15 }}>
                         {(parseFloat(monthlyRent || '0') + parseFloat(charges || '0')).toFixed(2)} €
                       </span>
-                      <span style={{ color: M.inkMid }}>
+                      <span style={{ color: BAI.inkMid }}>
                         {' '}(loyer {monthlyRent} €{charges ? ` + charges ${charges} €` : ''})
                       </span>
                     </p>
@@ -715,12 +704,12 @@ export default function CreateContract() {
             {step === 3 && (
               <div style={cardStyle}>
                 <h2 style={{
-                  fontFamily: M.display, fontStyle: 'italic', fontWeight: 700,
-                  fontSize: 24, color: M.ink, marginBottom: 8,
+                  fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+                  fontSize: 24, color: BAI.ink, marginBottom: 8,
                 }}>
                   Étape 3 — Clauses du contrat
                 </h2>
-                <p style={{ fontSize: 13, color: M.inkFaint, marginBottom: 24 }}>
+                <p style={{ fontSize: 13, color: BAI.inkFaint, marginBottom: 24 }}>
                   Les clauses standard de la Loi ALUR sont activées par défaut. Vous pouvez les désactiver ou ajouter des clauses personnalisées.
                 </p>
 
@@ -730,9 +719,9 @@ export default function CreateContract() {
                     <div
                       key={clause.id}
                       style={{
-                        border: `1px solid ${clause.enabled ? M.tenantBorder : M.border}`,
+                        border: `1px solid ${clause.enabled ? BAI.tenantBorder : BAI.border}`,
                         borderRadius: 8, padding: '14px 16px',
-                        background: clause.enabled ? M.tenantLight : M.muted,
+                        background: clause.enabled ? BAI.tenantLight : BAI.bgMuted,
                         opacity: clause.enabled ? 1 : 0.6,
                         transition: 'all 0.15s',
                       }}
@@ -746,29 +735,29 @@ export default function CreateContract() {
                         />
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <h4 style={{ fontWeight: 600, fontSize: 13, color: M.ink }}>{clause.title}</h4>
+                            <h4 style={{ fontWeight: 600, fontSize: 13, color: BAI.ink }}>{clause.title}</h4>
                             {clause.isCustom && (
                               <span style={{
-                                fontSize: 10, fontWeight: 600, fontFamily: M.body,
-                                background: M.caramelLight, color: M.caramel,
-                                border: `1px solid ${M.caramel}`, borderRadius: 20,
+                                fontSize: 10, fontWeight: 600, fontFamily: BAI.fontBody,
+                                background: BAI.caramelLight, color: BAI.caramel,
+                                border: `1px solid ${BAI.caramel}`, borderRadius: 20,
                                 padding: '2px 8px',
                               }}>
                                 Personnalisée
                               </span>
                             )}
                           </div>
-                          <p style={{ fontSize: 12, color: M.inkMid, marginTop: 4 }}>{clause.description}</p>
+                          <p style={{ fontSize: 12, color: BAI.inkMid, marginTop: 4 }}>{clause.description}</p>
                         </div>
                         {clause.isCustom && (
                           <button
                             onClick={() => removeCustomClause(clause.id)}
                             style={{
                               padding: 4, background: 'none', border: 'none',
-                              cursor: 'pointer', color: M.inkFaint,
+                              cursor: 'pointer', color: BAI.inkFaint,
                             }}
-                            onMouseEnter={e => (e.currentTarget.style.color = M.danger)}
-                            onMouseLeave={e => (e.currentTarget.style.color = M.inkFaint)}
+                            onMouseEnter={e => (e.currentTarget.style.color = BAI.error)}
+                            onMouseLeave={e => (e.currentTarget.style.color = BAI.inkFaint)}
                           >
                             <Trash2 style={{ width: 14, height: 14 }} />
                           </button>
@@ -780,14 +769,14 @@ export default function CreateContract() {
 
                 {/* Add Custom Clause */}
                 <div style={{
-                  border: `2px dashed ${M.border}`, borderRadius: 10,
+                  border: `2px dashed ${BAI.border}`, borderRadius: 10,
                   padding: '16px', marginBottom: 24,
                 }}>
                   <h4 style={{
-                    fontWeight: 600, fontSize: 13, color: M.ink, marginBottom: 12,
+                    fontWeight: 600, fontSize: 13, color: BAI.ink, marginBottom: 12,
                     display: 'flex', alignItems: 'center', gap: 8,
                   }}>
-                    <Plus style={{ width: 14, height: 14, color: M.owner }} />
+                    <Plus style={{ width: 14, height: 14, color: BAI.owner }} />
                     Ajouter une clause personnalisée
                   </h4>
                   <div className="space-y-3">
@@ -831,7 +820,7 @@ export default function CreateContract() {
                     rows={4}
                   />
                   <div style={{ marginTop: 10 }}>
-                    <p style={{ fontSize: 11, color: M.inkFaint, marginBottom: 8 }}>Exemples de conditions particulières :</p>
+                    <p style={{ fontSize: 11, color: BAI.inkFaint, marginBottom: 8 }}>Exemples de conditions particulières :</p>
                     <div className="flex flex-wrap gap-2">
                       {[
                         "Le locataire s'engage à souscrire un contrat d'entretien annuel de la chaudière.",
@@ -847,19 +836,19 @@ export default function CreateContract() {
                           onClick={() => setTerms(prev => prev ? `${prev}\n${example}` : example)}
                           style={{
                             fontSize: 11, padding: '4px 10px', borderRadius: 20,
-                            background: M.muted, color: M.inkMid,
-                            border: `1px solid ${M.border}`, cursor: 'pointer',
-                            fontFamily: M.body,
+                            background: BAI.bgMuted, color: BAI.inkMid,
+                            border: `1px solid ${BAI.border}`, cursor: 'pointer',
+                            fontFamily: BAI.fontBody,
                           }}
                           onMouseEnter={e => {
-                            e.currentTarget.style.background = M.caramelLight
-                            e.currentTarget.style.color = M.caramel
-                            e.currentTarget.style.borderColor = M.caramel
+                            e.currentTarget.style.background = BAI.caramelLight
+                            e.currentTarget.style.color = BAI.caramel
+                            e.currentTarget.style.borderColor = BAI.caramel
                           }}
                           onMouseLeave={e => {
-                            e.currentTarget.style.background = M.muted
-                            e.currentTarget.style.color = M.inkMid
-                            e.currentTarget.style.borderColor = M.border
+                            e.currentTarget.style.background = BAI.bgMuted
+                            e.currentTarget.style.color = BAI.inkMid
+                            e.currentTarget.style.borderColor = BAI.border
                           }}
                         >
                           + {example.slice(0, 50)}…
@@ -904,8 +893,8 @@ export default function CreateContract() {
                 type="button"
                 onClick={step === 1 ? () => navigate('/contracts') : goPrev}
                 style={btnGhost}
-                onMouseEnter={e => (e.currentTarget.style.background = M.muted)}
-                onMouseLeave={e => (e.currentTarget.style.background = M.surface)}
+                onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
+                onMouseLeave={e => (e.currentTarget.style.background = BAI.bgSurface)}
               >
                 <ArrowLeft style={{ width: 15, height: 15 }} />
                 {step === 1 ? 'Annuler' : 'Précédent'}

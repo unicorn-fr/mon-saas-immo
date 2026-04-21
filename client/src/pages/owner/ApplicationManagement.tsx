@@ -115,63 +115,68 @@ function ApplicationCard({
         overflow: 'hidden',
       }}
     >
-      {/* Main row */}
-      <div className="flex items-center gap-3 p-4">
-        {/* Avatar */}
-        <div
-          className="flex items-center justify-center flex-shrink-0 rounded-full w-9 h-9 text-sm font-bold"
-          style={{
-            background: BAI.ownerLight,
-            color: BAI.owner,
-            fontFamily: "'DM Sans', system-ui, sans-serif",
-          }}
-        >
-          {initials}
-        </div>
+      {/* Main row — stack on mobile, row on sm+ */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4">
+        {/* Top section: avatar + score + nom/statut */}
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          {/* Avatar */}
+          <div
+            className="flex items-center justify-center flex-shrink-0 rounded-full w-9 h-9 text-sm font-bold"
+            style={{
+              background: BAI.ownerLight,
+              color: BAI.owner,
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+            }}
+          >
+            {initials}
+          </div>
 
-        <ScoreBadge score={app.score} />
+          <ScoreBadge score={app.score} />
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span
-              className="font-semibold text-sm"
-              style={{ color: BAI.ink, fontFamily: "'DM Sans', system-ui, sans-serif" }}
-            >
-              {tenant.firstName} {tenant.lastName}
-            </span>
-            <span
-              className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center"
-              style={STATUS_STYLE[app.status]}
-            >
-              {STATUS_LABEL[app.status]}
-            </span>
-            {app.hasGuarantor && (
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span
+                className="font-semibold text-sm"
+                style={{ color: BAI.ink, fontFamily: "'DM Sans', system-ui, sans-serif" }}
+              >
+                {tenant.firstName} {tenant.lastName}
+              </span>
               <span
                 className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center"
-                style={{ background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, color: BAI.owner }}
+                style={STATUS_STYLE[app.status]}
               >
-                Garant {app.guarantorType}
+                {STATUS_LABEL[app.status]}
               </span>
-            )}
-          </div>
-          <div
-            className="text-xs mt-0.5"
-            style={{ color: BAI.inkFaint, fontFamily: "'DM Sans', system-ui, sans-serif" }}
-          >
-            {tenant.email} · {format(new Date(app.createdAt), 'd MMM yyyy', { locale: fr })}
+              {app.hasGuarantor && (
+                <span
+                  className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center"
+                  style={{ background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, color: BAI.owner }}
+                >
+                  Garant {app.guarantorType}
+                </span>
+              )}
+            </div>
+            <div
+              className="text-xs mt-0.5 truncate"
+              style={{ color: BAI.inkFaint, fontFamily: "'DM Sans', system-ui, sans-serif" }}
+            >
+              {tenant.email} · {format(new Date(app.createdAt), 'd MMM yyyy', { locale: fr })}
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+        {/* Actions row */}
+        <div className="flex items-center gap-1.5 flex-wrap flex-shrink-0">
           <button
             onClick={() => onOpenDossier(tenant.id, `${tenant.firstName ?? ''} ${tenant.lastName ?? ''}`.trim())}
-            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold transition-colors"
+            className="flex items-center gap-1 px-3 text-xs font-semibold transition-colors"
             style={{
               background: BAI.ownerLight,
               border: `1px solid ${BAI.ownerBorder}`,
               color: BAI.owner,
               borderRadius: 8,
               fontFamily: "'DM Sans', system-ui, sans-serif",
+              minHeight: 40,
             }}
             onMouseEnter={(e) => (e.currentTarget.style.background = '#d8e8fa')}
             onMouseLeave={(e) => (e.currentTarget.style.background = BAI.ownerLight)}
@@ -184,11 +189,12 @@ function ApplicationCard({
               <button
                 onClick={() => decide('APPROVED')}
                 disabled={loading}
-                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-50"
+                className="flex items-center gap-1 px-3 text-xs font-semibold text-white transition-colors disabled:opacity-50"
                 style={{
                   background: BAI.owner,
                   borderRadius: 8,
                   fontFamily: "'DM Sans', system-ui, sans-serif",
+                  minHeight: 40,
                 }}
                 onMouseEnter={(e) => !loading && (e.currentTarget.style.background = '#142860')}
                 onMouseLeave={(e) => !loading && (e.currentTarget.style.background = BAI.owner)}
@@ -199,13 +205,14 @@ function ApplicationCard({
               <button
                 onClick={() => decide('REJECTED')}
                 disabled={loading}
-                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50"
+                className="flex items-center gap-1 px-3 text-xs font-semibold transition-colors disabled:opacity-50"
                 style={{
                   background: BAI.errorLight,
                   border: `1px solid #f5c6c6`,
                   color: BAI.error,
                   borderRadius: 8,
                   fontFamily: "'DM Sans', system-ui, sans-serif",
+                  minHeight: 40,
                 }}
                 onMouseEnter={(e) => !loading && (e.currentTarget.style.background = '#fde8e8')}
                 onMouseLeave={(e) => !loading && (e.currentTarget.style.background = BAI.errorLight)}
@@ -217,8 +224,8 @@ function ApplicationCard({
           )}
           <button
             onClick={() => setExpanded(!expanded)}
-            className="p-1.5 transition-colors"
-            style={{ color: BAI.inkFaint, borderRadius: 8 }}
+            className="flex items-center justify-center transition-colors"
+            style={{ color: BAI.inkFaint, borderRadius: 8, minHeight: 40, minWidth: 40 }}
             onMouseEnter={(e) => (e.currentTarget.style.background = BAI.bgMuted)}
             onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
           >
@@ -363,7 +370,7 @@ function PropertyGroup({
       {/* Property header */}
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-4 p-4 text-left transition-opacity hover:opacity-90"
+        className="w-full flex items-start sm:items-center gap-3 sm:gap-4 p-4 text-left transition-opacity hover:opacity-90 flex-wrap sm:flex-nowrap"
         style={{ background: BAI.bgSurface }}
       >
         {imgSrc ? (
@@ -405,7 +412,7 @@ function PropertyGroup({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-wrap flex-shrink-0 ml-auto">
           {pending > 0 && (
             <span
               className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center"
@@ -440,16 +447,16 @@ function PropertyGroup({
                 }))
                 onShareCalendar(property.id, property.title, tenants)
               }}
-              className="flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-lg"
-              style={{ background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, color: BAI.owner }}
+              className="flex items-center gap-1 text-[11px] font-semibold px-2.5 rounded-lg"
+              style={{ background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, color: BAI.owner, minHeight: 32 }}
             >
               <CalendarDays className="w-3 h-3" />
-              <span className="hidden sm:inline">Partager</span>
+              <span>Partager</span>
             </button>
           )}
           {open
-            ? <ChevronUp className="w-4 h-4 ml-1 flex-shrink-0" style={{ color: BAI.inkFaint }} />
-            : <ChevronRight className="w-4 h-4 ml-1 flex-shrink-0" style={{ color: BAI.inkFaint }} />
+            ? <ChevronUp className="w-4 h-4 flex-shrink-0" style={{ color: BAI.inkFaint }} />
+            : <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: BAI.inkFaint }} />
           }
         </div>
       </button>
@@ -573,7 +580,7 @@ export default function ApplicationManagement() {
         <div className="max-w-4xl mx-auto">
 
           {/* Page header — Maison style */}
-          <div className="flex items-start justify-between mb-8">
+          <div className="flex items-start justify-between gap-3 mb-8 flex-wrap">
             <div>
               <p
                 className="uppercase tracking-widest mb-1"
@@ -586,7 +593,7 @@ export default function ApplicationManagement() {
                   fontFamily: "'Cormorant Garamond', Georgia, serif",
                   fontWeight: 700,
                   fontStyle: 'italic',
-                  fontSize: 40,
+                  fontSize: 'clamp(20px, 4vw, 40px)',
                   color: BAI.ink,
                   lineHeight: 1.1,
                   margin: 0,
@@ -616,7 +623,7 @@ export default function ApplicationManagement() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-1 xs:grid-cols-3 gap-3 mb-6">
+          <div className="grid grid-cols-3 gap-3 mb-6">
             {[
               {
                 label: 'En attente',
@@ -669,7 +676,7 @@ export default function ApplicationManagement() {
 
           {/* Filter tab bar */}
           <div
-            className="flex mb-5"
+            className="flex flex-wrap mb-5"
             style={{ borderBottom: `1px solid ${BAI.border}` }}
           >
             {FILTERS.map(({ key, label, count }) => {

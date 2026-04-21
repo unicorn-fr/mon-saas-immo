@@ -77,26 +77,46 @@ function InvitePanel({ invite }: { invite: CalendarInviteWithProperty }) {
 
   return (
     <div style={{ background: '#ffffff', border: '1px solid #e4e1db', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 2px rgba(13,12,10,0.04)' }}>
-      <button onClick={() => setOpen(o => !o)} className="w-full text-left flex items-center gap-4 p-4" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-        {imgSrc ? (
-          <img src={imgSrc} alt={property?.title ?? 'Logement'} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" style={{ border: '1px solid #e4e1db' }} />
-        ) : (
-          <div className="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#f4f2ee' }}>
-            <Home className="w-7 h-7" style={{ color: '#9e9b96' }} />
-          </div>
-        )}
+      {/* Card header — always visible, tap to expand */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full text-left flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-4"
+        style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+      >
+        {/* Image responsive: 120px mobile, 160px sm+ */}
+        <div className="w-full sm:w-auto flex-shrink-0">
+          {imgSrc ? (
+            <img
+              src={imgSrc}
+              alt={property?.title ?? 'Logement'}
+              className="w-full sm:w-16 object-cover rounded-xl"
+              style={{
+                height: 120,
+                border: '1px solid #e4e1db',
+              }}
+            />
+          ) : (
+            <div
+              className="w-full sm:w-16 rounded-xl flex items-center justify-center"
+              style={{ height: 120, background: '#f4f2ee' }}
+            >
+              <Home className="w-7 h-7" style={{ color: '#9e9b96' }} />
+            </div>
+          )}
+        </div>
+
         <div className="flex-1 min-w-0 text-left">
           <p style={{ fontSize: 14, fontWeight: 600, color: '#0d0c0a', marginBottom: 2 }} className="truncate">{property?.title ?? 'Logement'}</p>
-          <p className="flex items-center gap-1" style={{ fontSize: 12, color: '#9e9b96' }}>
-            <MapPin className="w-3 h-3" />{property?.city ?? ''}
+          <p className="flex items-center gap-1 flex-wrap" style={{ fontSize: 12, color: '#9e9b96' }}>
+            <MapPin className="w-3 h-3 flex-shrink-0" />{property?.city ?? ''}
             <span className="mx-1">·</span>
-            <Euro className="w-3 h-3" />{Number(property?.price ?? 0).toLocaleString('fr-FR')} /mois
+            <Euro className="w-3 h-3 flex-shrink-0" />{Number(property?.price ?? 0).toLocaleString('fr-FR')} /mois
           </p>
           <p style={{ fontSize: 11, color: '#c4976a', fontWeight: 500, marginTop: 4 }}>
             Invité par {invite.owner.firstName} {invite.owner.lastName}
           </p>
         </div>
-        <div style={{ color: '#9e9b96', flexShrink: 0 }}>
+        <div style={{ color: '#9e9b96', flexShrink: 0, alignSelf: 'flex-start' }} className="hidden sm:block">
           {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </div>
       </button>
@@ -119,8 +139,9 @@ function InvitePanel({ invite }: { invite: CalendarInviteWithProperty }) {
                     background: isSelected ? '#1a1a2e' : '#ffffff',
                     border: `1px solid ${isSelected ? '#1a1a2e' : '#e4e1db'}`,
                     color: isSelected ? '#ffffff' : '#0d0c0a',
-                    borderRadius: 8, padding: '6px 12px', fontSize: 12, cursor: 'pointer',
+                    borderRadius: 8, padding: '8px 12px', fontSize: 12, cursor: 'pointer',
                     fontFamily: "'DM Sans', system-ui, sans-serif", fontWeight: isSelected ? 600 : 400,
+                    minHeight: 44,
                   }}>
                   <span style={{ display: 'block', fontSize: 10, opacity: 0.7 }}>{DAY_LABELS[d.getDay()]}</span>
                   {d.getDate()}/{d.getMonth() + 1}
@@ -129,7 +150,7 @@ function InvitePanel({ invite }: { invite: CalendarInviteWithProperty }) {
             })}
           </div>
 
-          {/* Créneaux disponibles */}
+          {/* Créneaux disponibles — grid 2 cols mobile, 3 cols sm+ */}
           {selectedDate && (
             <>
               <p style={{ fontSize: 11, fontWeight: 600, color: '#9e9b96', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
@@ -140,17 +161,18 @@ function InvitePanel({ invite }: { invite: CalendarInviteWithProperty }) {
               ) : availableSlots.length === 0 ? (
                 <p style={{ fontSize: 13, color: '#9e9b96' }}>Aucun créneau disponible à cette date. Essayez un autre jour.</p>
               ) : (
-                <div className="flex gap-2 flex-wrap">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {availableSlots.map(time => (
                     <button key={time} onClick={() => handleBook(time)}
                       disabled={bookingSlot === time}
                       style={{
                         background: bookingSlot === time ? '#f4f2ee' : '#eaf0fb',
                         border: '1px solid #b8ccf0', color: '#1a3270',
-                        borderRadius: 8, padding: '7px 14px', fontSize: 13, fontWeight: 600,
+                        borderRadius: 8, padding: '10px 14px', fontSize: 13, fontWeight: 600,
                         cursor: bookingSlot === time ? 'not-allowed' : 'pointer',
                         fontFamily: "'DM Sans', system-ui, sans-serif",
                         opacity: bookingSlot === time ? 0.6 : 1,
+                        minHeight: 44,
                       }}>
                       {bookingSlot === time ? '…' : time}
                     </button>
@@ -254,7 +276,7 @@ export const MyBookings = () => {
   return (
     <Layout>
       <div
-        className="min-h-screen p-6 lg:p-8"
+        className="min-h-screen px-4 py-6 lg:p-8"
         style={{ background: '#fafaf8', fontFamily: "'DM Sans', system-ui, sans-serif" }}
       >
         <div className="max-w-7xl mx-auto">
@@ -271,7 +293,7 @@ export const MyBookings = () => {
                 fontFamily: "'Cormorant Garamond', Georgia, serif",
                 fontWeight: 700,
                 fontStyle: 'italic',
-                fontSize: 40,
+                fontSize: 'clamp(28px, 6vw, 40px)',
                 color: '#0d0c0a',
                 lineHeight: 1,
                 marginBottom: 6,
@@ -307,12 +329,12 @@ export const MyBookings = () => {
             </div>
           )}
 
-          {/* Statistics */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          {/* Statistics — 2 cols mobile, 4 cols sm+ */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
             {statCards.map(({ label, value, valueColor, iconBg, icon }) => (
               <div
                 key={label}
-                className="p-5"
+                className="p-4 sm:p-5"
                 style={{
                   background: '#ffffff',
                   border: '1px solid #e4e1db',
@@ -336,7 +358,7 @@ export const MyBookings = () => {
                     </p>
                   </div>
                   <div
-                    className="w-11 h-11 flex items-center justify-center"
+                    className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center"
                     style={{ background: iconBg, borderRadius: 10 }}
                   >
                     {icon}
@@ -356,20 +378,21 @@ export const MyBookings = () => {
               boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
             }}
           >
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3">
               {/* Status Filter */}
-              <div className="flex items-center gap-2 flex-1">
-                <Filter className="w-4 h-4" style={{ color: '#9e9b96' }} />
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <Filter className="w-4 h-4 flex-shrink-0" style={{ color: '#9e9b96' }} />
                 <select
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value as BookingStatus | 'all')}
-                  className="flex-1 px-3 py-2 text-sm outline-none transition-all"
+                  className="flex-1 min-w-0 px-3 text-sm outline-none transition-all"
                   style={{
                     border: '1px solid #e4e1db',
                     background: '#f8f7f4',
                     borderRadius: 8,
                     color: '#0d0c0a',
                     fontFamily: "'DM Sans', system-ui, sans-serif",
+                    minHeight: 44,
                   }}
                   onFocus={(e) => {
                     e.target.style.borderColor = '#1b5e3b'
@@ -388,14 +411,14 @@ export const MyBookings = () => {
                 </select>
               </div>
 
-              {/* View Toggle */}
+              {/* View Toggle — touch targets ≥ 44px */}
               <div
-                className="flex items-center gap-1 p-1"
+                className="flex items-center gap-1 p-1 flex-shrink-0"
                 style={{ background: '#f4f2ee', borderRadius: 10 }}
               >
                 <button
                   onClick={() => setViewMode('list')}
-                  className="px-4 py-2 text-sm font-medium transition-all"
+                  className="px-4 text-sm font-medium transition-all"
                   style={
                     viewMode === 'list'
                       ? {
@@ -404,15 +427,16 @@ export const MyBookings = () => {
                           borderRadius: 8,
                           boxShadow: '0 1px 3px rgba(13,12,10,0.08)',
                           fontFamily: "'DM Sans', system-ui, sans-serif",
+                          minHeight: 36,
                         }
-                      : { color: '#9e9b96', fontFamily: "'DM Sans', system-ui, sans-serif" }
+                      : { color: '#9e9b96', fontFamily: "'DM Sans', system-ui, sans-serif", minHeight: 36 }
                   }
                 >
                   Liste
                 </button>
                 <button
                   onClick={() => setViewMode('calendar')}
-                  className="px-4 py-2 text-sm font-medium transition-all"
+                  className="px-4 text-sm font-medium transition-all"
                   style={
                     viewMode === 'calendar'
                       ? {
@@ -421,8 +445,9 @@ export const MyBookings = () => {
                           borderRadius: 8,
                           boxShadow: '0 1px 3px rgba(13,12,10,0.08)',
                           fontFamily: "'DM Sans', system-ui, sans-serif",
+                          minHeight: 36,
                         }
-                      : { color: '#9e9b96', fontFamily: "'DM Sans', system-ui, sans-serif" }
+                      : { color: '#9e9b96', fontFamily: "'DM Sans', system-ui, sans-serif", minHeight: 36 }
                   }
                 >
                   Calendrier
@@ -461,7 +486,7 @@ export const MyBookings = () => {
             <div className="space-y-4">
               {bookings.length === 0 ? (
                 <div
-                  className="p-12 text-center"
+                  className="p-8 sm:p-12 text-center"
                   style={{
                     background: '#ffffff',
                     border: '1px solid #e4e1db',
@@ -499,10 +524,11 @@ export const MyBookings = () => {
                         background: '#1b5e3b',
                         color: '#ffffff',
                         borderRadius: 8,
-                        padding: '10px 20px',
+                        padding: '12px 20px',
                         fontSize: 13,
                         fontWeight: 500,
                         fontFamily: "'DM Sans', system-ui, sans-serif",
+                        minHeight: 44,
                       }}
                     >
                       <Home className="w-4 h-4" />

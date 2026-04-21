@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { BAI } from '../../constants/bailio-tokens'
 import { useNavigate } from 'react-router-dom'
 import { Layout } from '../../components/layout/Layout'
 import { useAuth } from '../../hooks/useAuth'
@@ -34,32 +35,10 @@ import {
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
 
-const M = {
-  bg: '#fafaf8',
-  surface: '#ffffff',
-  muted: '#f4f2ee',
-  inputBg: '#f8f7f4',
-  ink: '#0d0c0a',
-  inkMid: '#5a5754',
-  inkFaint: '#9e9b96',
-  night: '#1a1a2e',
-  owner: '#1a3270',
-  ownerLight: '#eaf0fb',
-  ownerBorder: '#b8ccf0',
-  border: '#e4e1db',
-  borderMid: '#ccc9c3',
-  caramel: '#c4976a',
-  caramelLight: '#fdf5ec',
-  danger: '#9b1c1c',
-  dangerBg: '#fef2f2',
-  dangerBorder: '#fca5a5',
-  display: "'Cormorant Garamond', Georgia, serif",
-  body: "'DM Sans', system-ui, sans-serif",
-}
 
 const cardStyle: React.CSSProperties = {
-  background: M.surface,
-  border: `1px solid ${M.border}`,
+  background: BAI.bgSurface,
+  border: `1px solid ${BAI.border}`,
   borderRadius: '12px',
   padding: '1.5rem',
   boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
@@ -67,13 +46,13 @@ const cardStyle: React.CSSProperties = {
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
-  background: M.inputBg,
-  border: `1px solid ${M.border}`,
+  background: BAI.bgInput,
+  border: `1px solid ${BAI.border}`,
   borderRadius: '8px',
   padding: '9px 12px',
   fontSize: '14px',
-  fontFamily: M.body,
-  color: M.ink,
+  fontFamily: BAI.fontBody,
+  color: BAI.ink,
   outline: 'none',
   boxSizing: 'border-box',
 }
@@ -169,7 +148,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
         borderRadius: 12,
         border: 'none',
         cursor: 'pointer',
-        background: checked ? M.night : M.borderMid,
+        background: checked ? BAI.night : BAI.borderStrong,
         position: 'relative',
         transition: 'background 0.2s',
         flexShrink: 0,
@@ -208,8 +187,8 @@ function NotifRow({
   return (
     <div className="flex items-center justify-between gap-4">
       <div className="flex items-center gap-2">
-        <span style={{ color: M.inkFaint }}>{icon}</span>
-        <span style={{ fontSize: '14px', color: M.ink }}>{label}</span>
+        <span style={{ color: BAI.inkFaint }}>{icon}</span>
+        <span style={{ fontSize: '14px', color: BAI.ink }}>{label}</span>
       </div>
       <Toggle checked={checked} onChange={onChange} />
     </div>
@@ -219,7 +198,7 @@ function NotifRow({
 // ─── Divider ──────────────────────────────────────────────────────────────────
 
 function Divider({ my = 16 }: { my?: number }) {
-  return <div style={{ height: 1, background: M.border, marginTop: my, marginBottom: my }} />
+  return <div style={{ height: 1, background: BAI.border, marginTop: my, marginBottom: my }} />
 }
 
 // ─── Save Bar ─────────────────────────────────────────────────────────────────
@@ -244,28 +223,28 @@ function SaveBar({
         zIndex: 50,
         background: '#fdf5ec',
         borderBottom: '1px solid #f3c99a',
-        padding: '10px 24px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        fontFamily: M.body,
-        gap: '12px',
+        fontFamily: BAI.fontBody,
+        gap: '8px',
+        padding: 'clamp(8px, 2vw, 10px) clamp(12px, 3vw, 24px)',
       }}
     >
-      <span style={{ fontSize: '13px', color: '#92400e', fontWeight: 500 }}>
+      <span style={{ fontSize: 'clamp(12px, 2vw, 13px)', color: '#92400e', fontWeight: 500, flexShrink: 0 }}>
         Modifications non enregistrées
       </span>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>
         <button
           onClick={onCancel}
           style={{
-            fontSize: '13px',
-            fontFamily: M.body,
+            fontSize: 'clamp(12px, 2vw, 13px)',
+            fontFamily: BAI.fontBody,
             color: '#92400e',
             background: 'transparent',
             border: '1px solid #f3c99a',
             borderRadius: '6px',
-            padding: '4px 14px',
+            padding: '4px 12px',
             cursor: 'pointer',
             fontWeight: 500,
           }}
@@ -276,16 +255,17 @@ function SaveBar({
           onClick={onSave}
           disabled={saving}
           style={{
-            fontSize: '13px',
-            fontFamily: M.body,
+            fontSize: 'clamp(12px, 2vw, 13px)',
+            fontFamily: BAI.fontBody,
             color: '#ffffff',
             background: '#92400e',
             border: 'none',
             borderRadius: '6px',
-            padding: '4px 14px',
+            padding: '4px 12px',
             cursor: saving ? 'not-allowed' : 'pointer',
             fontWeight: 500,
             opacity: saving ? 0.7 : 1,
+            whiteSpace: 'nowrap',
           }}
         >
           {saving ? 'Enregistrement…' : 'Enregistrer'}
@@ -304,8 +284,8 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
         fontSize: '11px',
         letterSpacing: '0.1em',
         textTransform: 'uppercase',
-        color: M.inkFaint,
-        fontFamily: M.body,
+        color: BAI.inkFaint,
+        fontFamily: BAI.fontBody,
         marginBottom: '10px',
       }}
     >
@@ -464,7 +444,7 @@ export default function OwnerSettings() {
   function getInputStyle(id: string): React.CSSProperties {
     return {
       ...inputStyle,
-      borderColor: focusedInput === id ? M.night : M.border,
+      borderColor: focusedInput === id ? BAI.night : BAI.border,
       boxShadow: focusedInput === id ? '0 0 0 3px rgba(26,26,46,0.10)' : 'none',
     }
   }
@@ -490,18 +470,18 @@ export default function OwnerSettings() {
         onSave={handlePropertySave}
       />
 
-      <div style={{ background: M.bg, minHeight: '100vh', fontFamily: M.body }}>
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div style={{ background: BAI.bgBase, minHeight: '100vh', fontFamily: BAI.fontBody }}>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
 
           {/* Page Header */}
           <div className="mb-8">
-            <p style={{ fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: M.inkFaint, fontFamily: M.body, marginBottom: '6px' }}>
+            <p style={{ fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, fontFamily: BAI.fontBody, marginBottom: '6px' }}>
               Propriétaire
             </p>
-            <h1 style={{ fontFamily: M.display, fontStyle: 'italic', fontWeight: 700, fontSize: '40px', color: M.ink, lineHeight: 1.1, marginBottom: '8px' }}>
+            <h1 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '40px', color: BAI.ink, lineHeight: 1.1, marginBottom: '8px' }}>
               Paramètres
             </h1>
-            <p style={{ fontSize: '14px', color: M.inkMid }}>
+            <p style={{ fontSize: '14px', color: BAI.inkMid }}>
               Gérez votre profil, vos préférences et la sécurité de votre compte.
             </p>
           </div>
@@ -512,8 +492,8 @@ export default function OwnerSettings() {
             {/* ── Sidebar (desktop) / Tab bar (mobile) ── */}
             {/* Mobile: horizontal scrollable tab bar */}
             <div
-              className="flex md:hidden gap-1 overflow-x-auto pb-1"
-              style={{ borderBottom: `1px solid ${M.border}`, marginBottom: '4px' }}
+              className="flex md:hidden gap-1 overflow-x-auto pb-1 scrollbar-hide"
+              style={{ borderBottom: `1px solid ${BAI.border}`, marginBottom: '4px' }}
             >
               {TABS.map(tab => {
                 const isActive = activeTab === tab.id
@@ -523,22 +503,24 @@ export default function OwnerSettings() {
                     onClick={() => setActiveTab(tab.id)}
                     className="flex items-center gap-1.5 whitespace-nowrap"
                     style={{
-                      padding: '7px 12px',
+                      padding: '7px 10px',
                       borderRadius: '8px 8px 0 0',
                       fontSize: '13px',
-                      fontFamily: M.body,
+                      fontFamily: BAI.fontBody,
                       fontWeight: isActive ? 600 : 400,
                       border: 'none',
                       cursor: 'pointer',
-                      background: isActive ? M.surface : 'transparent',
-                      color: isActive ? M.night : M.inkMid,
-                      borderBottom: isActive ? `2px solid ${M.night}` : '2px solid transparent',
+                      background: isActive ? BAI.bgSurface : 'transparent',
+                      color: isActive ? BAI.night : BAI.inkMid,
+                      borderBottom: isActive ? `2px solid ${BAI.night}` : '2px solid transparent',
                       transition: 'all 0.15s',
                       flexShrink: 0,
+                      minWidth: '44px',
+                      justifyContent: 'center',
                     }}
                   >
-                    <span style={{ color: isActive ? M.night : M.inkFaint }}>{tab.icon}</span>
-                    {tab.label}
+                    <span style={{ color: isActive ? BAI.night : BAI.inkFaint, flexShrink: 0 }}>{tab.icon}</span>
+                    <span className="hidden xs:inline">{tab.label}</span>
                   </button>
                 )
               })}
@@ -560,17 +542,17 @@ export default function OwnerSettings() {
                       padding: '9px 14px',
                       borderRadius: '8px',
                       fontSize: '14px',
-                      fontFamily: M.body,
+                      fontFamily: BAI.fontBody,
                       fontWeight: isActive ? 600 : 400,
                       border: 'none',
                       cursor: 'pointer',
-                      background: isActive ? M.ownerLight : 'transparent',
-                      color: isActive ? M.owner : M.inkMid,
+                      background: isActive ? BAI.ownerLight : 'transparent',
+                      color: isActive ? BAI.owner : BAI.inkMid,
                       transition: 'all 0.15s',
                       width: '100%',
                     }}
                   >
-                    <span style={{ color: isActive ? M.owner : M.inkFaint, flexShrink: 0 }}>{tab.icon}</span>
+                    <span style={{ color: isActive ? BAI.owner : BAI.inkFaint, flexShrink: 0 }}>{tab.icon}</span>
                     {tab.label}
                   </button>
                 )
@@ -587,10 +569,10 @@ export default function OwnerSettings() {
                 <div style={cardStyle}>
                   <div className="flex items-start justify-between mb-5">
                     <div>
-                      <h2 style={{ fontFamily: M.display, fontWeight: 700, fontSize: '22px', color: M.ink, marginBottom: '4px' }}>
+                      <h2 style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontSize: '22px', color: BAI.ink, marginBottom: '4px' }}>
                         Mon profil
                       </h2>
-                      <p style={{ fontSize: '13px', color: M.inkMid }}>
+                      <p style={{ fontSize: '13px', color: BAI.inkMid }}>
                         Informations personnelles visibles par les locataires.
                       </p>
                     </div>
@@ -602,11 +584,11 @@ export default function OwnerSettings() {
                           padding: '7px 14px',
                           borderRadius: '8px',
                           fontSize: '13px',
-                          fontFamily: M.body,
+                          fontFamily: BAI.fontBody,
                           fontWeight: 500,
-                          border: `1px solid ${M.border}`,
-                          background: M.muted,
-                          color: M.ink,
+                          border: `1px solid ${BAI.border}`,
+                          background: BAI.bgMuted,
+                          color: BAI.ink,
                           cursor: 'pointer',
                           flexShrink: 0,
                         }}
@@ -624,25 +606,25 @@ export default function OwnerSettings() {
                         width: 64,
                         height: 64,
                         borderRadius: '50%',
-                        background: M.ownerLight,
-                        border: `2px solid ${M.ownerBorder}`,
+                        background: BAI.ownerLight,
+                        border: `2px solid ${BAI.ownerBorder}`,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         flexShrink: 0,
-                        fontFamily: M.display,
+                        fontFamily: BAI.fontDisplay,
                         fontWeight: 700,
                         fontSize: '22px',
-                        color: M.owner,
+                        color: BAI.owner,
                       }}
                     >
-                      {initials || <User size={24} style={{ color: M.owner }} />}
+                      {initials || <User size={24} style={{ color: BAI.owner }} />}
                     </div>
                     <div>
-                      <p style={{ fontWeight: 600, color: M.ink, fontSize: '16px', marginBottom: '2px' }}>
+                      <p style={{ fontWeight: 600, color: BAI.ink, fontSize: '16px', marginBottom: '2px' }}>
                         {user?.firstName} {user?.lastName}
                       </p>
-                      <p style={{ fontSize: '13px', color: M.inkMid }}>Propriétaire</p>
+                      <p style={{ fontSize: '13px', color: BAI.inkMid }}>Propriétaire</p>
                     </div>
                   </div>
 
@@ -652,7 +634,7 @@ export default function OwnerSettings() {
                       {/* First + Last name */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label style={{ fontSize: '12px', fontWeight: 500, color: M.inkMid, display: 'block', marginBottom: '6px' }}>
+                          <label style={{ fontSize: '12px', fontWeight: 500, color: BAI.inkMid, display: 'block', marginBottom: '6px' }}>
                             Prénom
                           </label>
                           <input
@@ -666,7 +648,7 @@ export default function OwnerSettings() {
                           />
                         </div>
                         <div>
-                          <label style={{ fontSize: '12px', fontWeight: 500, color: M.inkMid, display: 'block', marginBottom: '6px' }}>
+                          <label style={{ fontSize: '12px', fontWeight: 500, color: BAI.inkMid, display: 'block', marginBottom: '6px' }}>
                             Nom
                           </label>
                           <input
@@ -683,7 +665,7 @@ export default function OwnerSettings() {
 
                       {/* Phone */}
                       <div>
-                        <label style={{ fontSize: '12px', fontWeight: 500, color: M.inkMid, display: 'block', marginBottom: '6px' }}>
+                        <label style={{ fontSize: '12px', fontWeight: 500, color: BAI.inkMid, display: 'block', marginBottom: '6px' }}>
                           Téléphone
                         </label>
                         <div style={{ position: 'relative' }}>
@@ -694,7 +676,7 @@ export default function OwnerSettings() {
                               left: '12px',
                               top: '50%',
                               transform: 'translateY(-50%)',
-                              color: M.inkFaint,
+                              color: BAI.inkFaint,
                               pointerEvents: 'none',
                             }}
                           />
@@ -712,8 +694,8 @@ export default function OwnerSettings() {
 
                       {/* Bio */}
                       <div>
-                        <label style={{ fontSize: '12px', fontWeight: 500, color: M.inkMid, display: 'block', marginBottom: '6px' }}>
-                          Bio <span style={{ color: M.inkFaint, fontWeight: 400 }}>({bio.length}/200)</span>
+                        <label style={{ fontSize: '12px', fontWeight: 500, color: BAI.inkMid, display: 'block', marginBottom: '6px' }}>
+                          Bio <span style={{ color: BAI.inkFaint, fontWeight: 400 }}>({bio.length}/200)</span>
                         </label>
                         <textarea
                           value={bio}
@@ -728,25 +710,25 @@ export default function OwnerSettings() {
 
                       {/* Email — read only */}
                       <div>
-                        <label style={{ fontSize: '12px', fontWeight: 500, color: M.inkMid, display: 'block', marginBottom: '6px' }}>
+                        <label style={{ fontSize: '12px', fontWeight: 500, color: BAI.inkMid, display: 'block', marginBottom: '6px' }}>
                           Email
                         </label>
                         <div className="flex items-center gap-2">
                           <div
                             style={{
                               flex: 1,
-                              background: M.muted,
-                              border: `1px solid ${M.border}`,
+                              background: BAI.bgMuted,
+                              border: `1px solid ${BAI.border}`,
                               borderRadius: '8px',
                               padding: '9px 12px',
                               fontSize: '14px',
-                              color: M.inkMid,
+                              color: BAI.inkMid,
                               display: 'flex',
                               alignItems: 'center',
                               gap: '8px',
                             }}
                           >
-                            <Mail size={14} style={{ color: M.inkFaint, flexShrink: 0 }} />
+                            <Mail size={14} style={{ color: BAI.inkFaint, flexShrink: 0 }} />
                             {user?.email}
                           </div>
                           {user?.emailVerified ? (
@@ -772,9 +754,9 @@ export default function OwnerSettings() {
                               style={{
                                 fontSize: '11px',
                                 fontWeight: 600,
-                                color: M.danger,
-                                background: M.dangerBg,
-                                border: `1px solid ${M.dangerBorder}`,
+                                color: BAI.error,
+                                background: BAI.errorLight,
+                                border: `1px solid ${'#fca5a5'}`,
                                 borderRadius: '5px',
                                 padding: '3px 8px',
                                 whiteSpace: 'nowrap',
@@ -796,11 +778,11 @@ export default function OwnerSettings() {
                             padding: '8px 16px',
                             borderRadius: '8px',
                             fontSize: '14px',
-                            fontFamily: M.body,
+                            fontFamily: BAI.fontBody,
                             fontWeight: 500,
-                            border: `1px solid ${M.border}`,
-                            background: M.muted,
-                            color: M.ink,
+                            border: `1px solid ${BAI.border}`,
+                            background: BAI.bgMuted,
+                            color: BAI.ink,
                             cursor: 'pointer',
                           }}
                         >
@@ -815,10 +797,10 @@ export default function OwnerSettings() {
                             padding: '8px 20px',
                             borderRadius: '8px',
                             fontSize: '14px',
-                            fontFamily: M.body,
+                            fontFamily: BAI.fontBody,
                             fontWeight: 500,
                             border: 'none',
-                            background: M.night,
+                            background: BAI.night,
                             color: '#ffffff',
                             cursor: profileSaving ? 'not-allowed' : 'pointer',
                             opacity: profileSaving ? 0.7 : 1,
@@ -838,34 +820,34 @@ export default function OwnerSettings() {
                     <div className="flex flex-col gap-3">
                       <div
                         style={{
-                          background: M.muted,
-                          border: `1px solid ${M.border}`,
+                          background: BAI.bgMuted,
+                          border: `1px solid ${BAI.border}`,
                           borderRadius: '10px',
                           padding: '14px 16px',
                         }}
                       >
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: M.inkFaint, marginBottom: '3px' }}>Prénom</p>
-                            <p style={{ fontSize: '14px', color: M.ink, fontWeight: 500 }}>{user?.firstName || '—'}</p>
+                            <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: BAI.inkFaint, marginBottom: '3px' }}>Prénom</p>
+                            <p style={{ fontSize: '14px', color: BAI.ink, fontWeight: 500 }}>{user?.firstName || '—'}</p>
                           </div>
                           <div>
-                            <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: M.inkFaint, marginBottom: '3px' }}>Nom</p>
-                            <p style={{ fontSize: '14px', color: M.ink, fontWeight: 500 }}>{user?.lastName || '—'}</p>
+                            <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: BAI.inkFaint, marginBottom: '3px' }}>Nom</p>
+                            <p style={{ fontSize: '14px', color: BAI.ink, fontWeight: 500 }}>{user?.lastName || '—'}</p>
                           </div>
                         </div>
                       </div>
                       <div
                         style={{
-                          background: M.muted,
-                          border: `1px solid ${M.border}`,
+                          background: BAI.bgMuted,
+                          border: `1px solid ${BAI.border}`,
                           borderRadius: '10px',
                           padding: '14px 16px',
                         }}
                       >
-                        <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: M.inkFaint, marginBottom: '3px' }}>Email</p>
+                        <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: BAI.inkFaint, marginBottom: '3px' }}>Email</p>
                         <div className="flex items-center gap-2">
-                          <p style={{ fontSize: '14px', color: M.ink }}>{user?.email}</p>
+                          <p style={{ fontSize: '14px', color: BAI.ink }}>{user?.email}</p>
                           {user?.emailVerified ? (
                             <span
                               className="flex items-center gap-1"
@@ -888,9 +870,9 @@ export default function OwnerSettings() {
                               style={{
                                 fontSize: '11px',
                                 fontWeight: 600,
-                                color: M.danger,
-                                background: M.dangerBg,
-                                border: `1px solid ${M.dangerBorder}`,
+                                color: BAI.error,
+                                background: BAI.errorLight,
+                                border: `1px solid ${'#fca5a5'}`,
                                 borderRadius: '5px',
                                 padding: '2px 7px',
                               }}
@@ -904,27 +886,27 @@ export default function OwnerSettings() {
                       {(user as { phone?: string })?.phone && (
                         <div
                           style={{
-                            background: M.muted,
-                            border: `1px solid ${M.border}`,
+                            background: BAI.bgMuted,
+                            border: `1px solid ${BAI.border}`,
                             borderRadius: '10px',
                             padding: '14px 16px',
                           }}
                         >
-                          <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: M.inkFaint, marginBottom: '3px' }}>Téléphone</p>
-                          <p style={{ fontSize: '14px', color: M.ink }}>{(user as { phone?: string }).phone}</p>
+                          <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: BAI.inkFaint, marginBottom: '3px' }}>Téléphone</p>
+                          <p style={{ fontSize: '14px', color: BAI.ink }}>{(user as { phone?: string }).phone}</p>
                         </div>
                       )}
                       {(user as { bio?: string })?.bio && (
                         <div
                           style={{
-                            background: M.muted,
-                            border: `1px solid ${M.border}`,
+                            background: BAI.bgMuted,
+                            border: `1px solid ${BAI.border}`,
                             borderRadius: '10px',
                             padding: '14px 16px',
                           }}
                         >
-                          <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: M.inkFaint, marginBottom: '3px' }}>Bio</p>
-                          <p style={{ fontSize: '14px', color: M.ink, lineHeight: 1.6 }}>{(user as { bio?: string }).bio}</p>
+                          <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: BAI.inkFaint, marginBottom: '3px' }}>Bio</p>
+                          <p style={{ fontSize: '14px', color: BAI.ink, lineHeight: 1.6 }}>{(user as { bio?: string }).bio}</p>
                         </div>
                       )}
                     </div>
@@ -937,10 +919,10 @@ export default function OwnerSettings() {
               ════════════════════════════════════════ */}
               {activeTab === 'notifications' && (
                 <div style={cardStyle}>
-                  <h2 style={{ fontFamily: M.display, fontWeight: 700, fontSize: '22px', color: M.ink, marginBottom: '4px' }}>
+                  <h2 style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontSize: '22px', color: BAI.ink, marginBottom: '4px' }}>
                     Notifications
                   </h2>
-                  <p style={{ fontSize: '13px', color: M.inkMid, marginBottom: '20px' }}>
+                  <p style={{ fontSize: '13px', color: BAI.inkMid, marginBottom: '20px' }}>
                     Choisissez les événements pour lesquels vous souhaitez être notifié.
                   </p>
 
@@ -981,11 +963,11 @@ export default function OwnerSettings() {
                           padding: '8px 16px',
                           borderRadius: '8px',
                           fontSize: '14px',
-                          fontFamily: M.body,
+                          fontFamily: BAI.fontBody,
                           fontWeight: 500,
-                          border: `1px solid ${M.border}`,
-                          background: M.muted,
-                          color: M.ink,
+                          border: `1px solid ${BAI.border}`,
+                          background: BAI.bgMuted,
+                          color: BAI.ink,
                           cursor: 'pointer',
                         }}
                       >
@@ -999,10 +981,10 @@ export default function OwnerSettings() {
                           padding: '8px 20px',
                           borderRadius: '8px',
                           fontSize: '14px',
-                          fontFamily: M.body,
+                          fontFamily: BAI.fontBody,
                           fontWeight: 500,
                           border: 'none',
-                          background: M.night,
+                          background: BAI.night,
                           color: '#ffffff',
                           cursor: saving ? 'not-allowed' : 'pointer',
                           opacity: saving ? 0.7 : 1,
@@ -1023,23 +1005,23 @@ export default function OwnerSettings() {
                 <div className="flex flex-col gap-4">
                   {/* Password */}
                   <div style={cardStyle}>
-                    <h2 style={{ fontFamily: M.display, fontWeight: 700, fontSize: '22px', color: M.ink, marginBottom: '4px' }}>
+                    <h2 style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontSize: '22px', color: BAI.ink, marginBottom: '4px' }}>
                       Mot de passe
                     </h2>
-                    <p style={{ fontSize: '13px', color: M.inkMid, marginBottom: '16px' }}>
+                    <p style={{ fontSize: '13px', color: BAI.inkMid, marginBottom: '16px' }}>
                       Modifiez votre mot de passe de connexion.
                     </p>
                     <button
                       onClick={() => setShowPasswordModal(true)}
                       className="flex items-center gap-2"
                       style={{
-                        background: M.night,
+                        background: BAI.night,
                         border: 'none',
                         borderRadius: '8px',
                         padding: '9px 18px',
                         color: '#ffffff',
                         fontSize: '14px',
-                        fontFamily: M.body,
+                        fontFamily: BAI.fontBody,
                         cursor: 'pointer',
                         fontWeight: 500,
                       }}
@@ -1053,28 +1035,28 @@ export default function OwnerSettings() {
                   <div
                     style={{
                       ...cardStyle,
-                      border: `1px solid ${M.dangerBorder}`,
+                      border: `1px solid ${'#fca5a5'}`,
                     }}
                   >
                     <div className="flex items-center gap-2 mb-1">
-                      <AlertTriangle size={16} style={{ color: M.danger }} />
-                      <h2 style={{ fontFamily: M.display, fontWeight: 700, fontSize: '22px', color: M.danger }}>
+                      <AlertTriangle size={16} style={{ color: BAI.error }} />
+                      <h2 style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontSize: '22px', color: BAI.error }}>
                         Zone de danger
                       </h2>
                     </div>
-                    <p style={{ fontSize: '13px', color: M.inkMid, marginBottom: '20px' }}>
+                    <p style={{ fontSize: '13px', color: BAI.inkMid, marginBottom: '20px' }}>
                       La suppression de votre compte est définitive et irréversible. Toutes vos données seront effacées.
                     </p>
 
                     <div
                       style={{
-                        background: M.dangerBg,
-                        border: `1px solid ${M.dangerBorder}`,
+                        background: BAI.errorLight,
+                        border: `1px solid ${'#fca5a5'}`,
                         borderRadius: '10px',
                         padding: '16px',
                       }}
                     >
-                      <p style={{ fontSize: '13px', color: M.danger, fontWeight: 500, marginBottom: '10px' }}>
+                      <p style={{ fontSize: '13px', color: BAI.error, fontWeight: 500, marginBottom: '10px' }}>
                         Pour confirmer, saisissez <strong>SUPPRIMER</strong> dans le champ ci-dessous.
                       </p>
                       <input
@@ -1084,24 +1066,22 @@ export default function OwnerSettings() {
                         placeholder="SUPPRIMER"
                         style={{
                           ...inputStyle,
-                          borderColor: deleteConfirm === 'SUPPRIMER' ? M.dangerBorder : M.border,
+                          borderColor: deleteConfirm === 'SUPPRIMER' ? '#fca5a5' : BAI.border,
                           marginBottom: '12px',
-                          maxWidth: '280px',
                         }}
                       />
-                      <br />
                       <button
                         onClick={handleDeleteAccount}
                         disabled={deleteConfirm !== 'SUPPRIMER' || deleteSaving}
-                        className="flex items-center gap-1.5"
+                        className="flex items-center justify-center gap-1.5 w-full sm:w-auto"
                         style={{
-                          padding: '8px 18px',
+                          padding: '10px 18px',
                           borderRadius: '8px',
                           fontSize: '14px',
-                          fontFamily: M.body,
+                          fontFamily: BAI.fontBody,
                           fontWeight: 500,
                           border: 'none',
-                          background: deleteConfirm === 'SUPPRIMER' ? M.danger : M.borderMid,
+                          background: deleteConfirm === 'SUPPRIMER' ? BAI.error : BAI.borderStrong,
                           color: '#ffffff',
                           cursor: deleteConfirm !== 'SUPPRIMER' || deleteSaving ? 'not-allowed' : 'pointer',
                           opacity: deleteSaving ? 0.7 : 1,
@@ -1126,20 +1106,20 @@ export default function OwnerSettings() {
               {activeTab === 'preferences' && (
                 <div style={cardStyle}>
                   <div className="flex items-center gap-2 mb-1">
-                    <Sliders size={16} style={{ color: M.caramel }} />
-                    <h2 style={{ fontFamily: M.display, fontWeight: 700, fontSize: '22px', color: M.ink }}>
+                    <Sliders size={16} style={{ color: BAI.caramel }} />
+                    <h2 style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontSize: '22px', color: BAI.ink }}>
                       Préférences de publication
                     </h2>
                   </div>
-                  <p style={{ fontSize: '13px', color: M.inkMid, marginBottom: '20px' }}>
+                  <p style={{ fontSize: '13px', color: BAI.inkMid, marginBottom: '20px' }}>
                     Valeurs par défaut appliquées à chaque nouveau bien que vous publiez.
                   </p>
 
                   {/* Default visibility */}
                   <div className="flex items-center justify-between mb-4 gap-4">
                     <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: '14px', fontWeight: 500, color: M.ink }}>Visibilité par défaut</p>
-                      <p style={{ fontSize: '12px', color: M.inkFaint, marginTop: '2px' }}>État initial lors de la création d'un bien</p>
+                      <p style={{ fontSize: '14px', fontWeight: 500, color: BAI.ink }}>Visibilité par défaut</p>
+                      <p style={{ fontSize: '12px', color: BAI.inkFaint, marginTop: '2px' }}>État initial lors de la création d'un bien</p>
                     </div>
                     <div className="flex gap-2" style={{ flexShrink: 0 }}>
                       {(['PUBLISHED', 'DRAFT'] as const).map(v => (
@@ -1151,11 +1131,11 @@ export default function OwnerSettings() {
                             padding: '5px 12px',
                             borderRadius: '6px',
                             fontSize: '12px',
-                            fontFamily: M.body,
+                            fontFamily: BAI.fontBody,
                             cursor: 'pointer',
-                            border: `1px solid ${propertyDefaults.defaultVisibility === v ? M.night : M.border}`,
-                            background: propertyDefaults.defaultVisibility === v ? M.night : M.surface,
-                            color: propertyDefaults.defaultVisibility === v ? '#ffffff' : M.inkMid,
+                            border: `1px solid ${propertyDefaults.defaultVisibility === v ? BAI.night : BAI.border}`,
+                            background: propertyDefaults.defaultVisibility === v ? BAI.night : BAI.bgSurface,
+                            color: propertyDefaults.defaultVisibility === v ? '#ffffff' : BAI.inkMid,
                             transition: 'all 0.15s',
                             fontWeight: propertyDefaults.defaultVisibility === v ? 600 : 400,
                           }}
@@ -1174,30 +1154,30 @@ export default function OwnerSettings() {
                     {/* Min income multiplier */}
                     <div className="flex items-center justify-between gap-4">
                       <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: '14px', fontWeight: 500, color: M.ink }}>Revenus minimum</p>
-                        <p style={{ fontSize: '12px', color: M.inkFaint, marginTop: '2px' }}>Multiple du loyer exigé (ex. ×3 = 3 fois le loyer)</p>
+                        <p style={{ fontSize: '14px', fontWeight: 500, color: BAI.ink }}>Revenus minimum</p>
+                        <p style={{ fontSize: '12px', color: BAI.inkFaint, marginTop: '2px' }}>Multiple du loyer exigé (ex. ×3 = 3 fois le loyer)</p>
                       </div>
                       <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>
                         <button
                           onClick={() => updatePropertyDefault('minMonthlyIncome', Math.max(1, propertyDefaults.minMonthlyIncome - 0.5))}
                           style={{
                             width: 28, height: 28, borderRadius: '6px',
-                            border: `1px solid ${M.border}`, background: M.surface,
-                            cursor: 'pointer', fontSize: '16px', color: M.ink,
+                            border: `1px solid ${BAI.border}`, background: BAI.bgSurface,
+                            cursor: 'pointer', fontSize: '16px', color: BAI.ink,
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                           }}
                         >
                           −
                         </button>
-                        <span style={{ minWidth: '36px', textAlign: 'center', fontSize: '14px', fontWeight: 600, color: M.ink }}>
+                        <span style={{ minWidth: '36px', textAlign: 'center', fontSize: '14px', fontWeight: 600, color: BAI.ink }}>
                           ×{propertyDefaults.minMonthlyIncome}
                         </span>
                         <button
                           onClick={() => updatePropertyDefault('minMonthlyIncome', Math.min(10, propertyDefaults.minMonthlyIncome + 0.5))}
                           style={{
                             width: 28, height: 28, borderRadius: '6px',
-                            border: `1px solid ${M.border}`, background: M.surface,
-                            cursor: 'pointer', fontSize: '16px', color: M.ink,
+                            border: `1px solid ${BAI.border}`, background: BAI.bgSurface,
+                            cursor: 'pointer', fontSize: '16px', color: BAI.ink,
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                           }}
                         >
@@ -1220,11 +1200,11 @@ export default function OwnerSettings() {
                           padding: '8px 16px',
                           borderRadius: '8px',
                           fontSize: '14px',
-                          fontFamily: M.body,
+                          fontFamily: BAI.fontBody,
                           fontWeight: 500,
-                          border: `1px solid ${M.border}`,
-                          background: M.muted,
-                          color: M.ink,
+                          border: `1px solid ${BAI.border}`,
+                          background: BAI.bgMuted,
+                          color: BAI.ink,
                           cursor: 'pointer',
                         }}
                       >
@@ -1238,10 +1218,10 @@ export default function OwnerSettings() {
                           padding: '8px 20px',
                           borderRadius: '8px',
                           fontSize: '14px',
-                          fontFamily: M.body,
+                          fontFamily: BAI.fontBody,
                           fontWeight: 500,
                           border: 'none',
-                          background: M.night,
+                          background: BAI.night,
                           color: '#ffffff',
                           cursor: saving ? 'not-allowed' : 'pointer',
                           opacity: saving ? 0.7 : 1,
@@ -1259,21 +1239,21 @@ export default function OwnerSettings() {
                   ABONNEMENT
               ════════════════════════════════════════ */}
               {activeTab === 'subscription' && (
-                <div style={{ ...cardStyle, background: M.ownerLight, border: `1px solid ${M.ownerBorder}` }}>
+                <div style={{ ...cardStyle, background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}` }}>
                   <div className="flex items-center gap-2 mb-1">
-                    <CreditCard size={16} style={{ color: M.owner }} />
-                    <h2 style={{ fontFamily: M.display, fontWeight: 700, fontSize: '22px', color: M.owner }}>
+                    <CreditCard size={16} style={{ color: BAI.owner }} />
+                    <h2 style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontSize: '22px', color: BAI.owner }}>
                       Abonnement
                     </h2>
                   </div>
-                  <p style={{ fontSize: '13px', color: M.inkMid, marginBottom: '20px' }}>
+                  <p style={{ fontSize: '13px', color: BAI.inkMid, marginBottom: '20px' }}>
                     Gérez votre formule et votre facturation.
                   </p>
 
                   <div
                     style={{
-                      background: M.surface,
-                      border: `1px solid ${M.ownerBorder}`,
+                      background: BAI.bgSurface,
+                      border: `1px solid ${BAI.ownerBorder}`,
                       borderRadius: '10px',
                       padding: '16px',
                       marginBottom: '16px',
@@ -1281,16 +1261,16 @@ export default function OwnerSettings() {
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <p style={{ fontSize: '12px', color: M.inkFaint, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Formule actuelle</p>
-                        <p style={{ fontSize: '18px', fontWeight: 700, color: M.owner, fontFamily: M.display }}>Découverte — Gratuit</p>
-                        <p style={{ fontSize: '13px', color: M.inkMid, marginTop: '4px' }}>Accès aux fonctionnalités essentielles</p>
+                        <p style={{ fontSize: '12px', color: BAI.inkFaint, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Formule actuelle</p>
+                        <p style={{ fontSize: '18px', fontWeight: 700, color: BAI.owner, fontFamily: BAI.fontDisplay }}>Découverte — Gratuit</p>
+                        <p style={{ fontSize: '13px', color: BAI.inkMid, marginTop: '4px' }}>Accès aux fonctionnalités essentielles</p>
                       </div>
                       <span
                         style={{
                           fontSize: '11px',
-                          background: M.ownerLight,
-                          color: M.owner,
-                          border: `1px solid ${M.ownerBorder}`,
+                          background: BAI.ownerLight,
+                          color: BAI.owner,
+                          border: `1px solid ${BAI.ownerBorder}`,
                           borderRadius: '5px',
                           padding: '3px 9px',
                           fontWeight: 700,
@@ -1307,13 +1287,13 @@ export default function OwnerSettings() {
                     onClick={() => navigate('/pricing')}
                     className="flex items-center justify-between gap-2 w-full"
                     style={{
-                      background: M.owner,
+                      background: BAI.owner,
                       border: 'none',
                       borderRadius: '8px',
                       padding: '11px 18px',
                       color: '#ffffff',
                       fontSize: '14px',
-                      fontFamily: M.body,
+                      fontFamily: BAI.fontBody,
                       cursor: 'pointer',
                       fontWeight: 500,
                     }}

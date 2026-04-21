@@ -5,17 +5,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { Conversation } from '../../types/message.types'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-
-const M = {
-  ink: '#0d0c0a',
-  inkMid: '#5a5754',
-  inkFaint: '#9e9b96',
-  night: '#1a1a2e',
-  muted: '#f4f2ee',
-  border: '#e4e1db',
-  surface: '#ffffff',
-  inputBg: '#f8f7f4',
-}
+import { BAI } from '../../constants/bailio-tokens'
 
 interface ConversationListProps {
   selectedConversationId: string | null
@@ -89,7 +79,7 @@ export const ConversationList = ({
   if (isLoading && conversations.length === 0) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader className="w-5 h-5 animate-spin" style={{ color: M.inkFaint }} />
+        <Loader className="w-5 h-5 animate-spin" style={{ color: BAI.inkFaint }} />
       </div>
     )
   }
@@ -102,7 +92,7 @@ export const ConversationList = ({
         <div className="relative">
           <Search
             className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5"
-            style={{ color: M.inkFaint }}
+            style={{ color: BAI.inkFaint }}
           />
           <input
             type="text"
@@ -111,9 +101,9 @@ export const ConversationList = ({
             placeholder="Rechercher..."
             className="w-full pl-9 pr-3 py-[7px] text-[13px] rounded-[10px] focus:outline-none transition-all"
             style={{
-              background: M.inputBg,
-              border: `1px solid ${M.border}`,
-              color: M.ink,
+              background: BAI.bgInput,
+              border: `1px solid ${BAI.border}`,
+              color: BAI.ink,
               fontFamily: "'DM Sans', system-ui, sans-serif",
             }}
           />
@@ -124,7 +114,7 @@ export const ConversationList = ({
       <div className="flex-1 overflow-y-auto">
         {filteredConversations.length === 0 ? (
           <div className="flex items-center justify-center h-full px-6">
-            <p className="text-[13px] text-center" style={{ color: M.inkFaint }}>
+            <p className="text-[13px] text-center" style={{ color: BAI.inkFaint }}>
               {search.trim() ? 'Aucun résultat.' : 'Aucune conversation pour le moment.'}
             </p>
           </div>
@@ -141,9 +131,9 @@ export const ConversationList = ({
                   key={conversation.id}
                   onClick={() => onConversationSelect(conversation)}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-[10px] transition-all text-left"
-                  style={{ background: isSelected ? M.muted : 'transparent' }}
+                  style={{ background: isSelected ? BAI.bgMuted : 'transparent' }}
                   onMouseEnter={(e) => {
-                    if (!isSelected) (e.currentTarget as HTMLButtonElement).style.background = M.muted
+                    if (!isSelected) (e.currentTarget as HTMLButtonElement).style.background = BAI.bgMuted
                   }}
                   onMouseLeave={(e) => {
                     if (!isSelected) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'
@@ -160,7 +150,7 @@ export const ConversationList = ({
                     ) : (
                       <div
                         className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold"
-                        style={{ background: M.night, color: M.surface }}
+                        style={{ background: BAI.night, color: BAI.bgSurface }}
                       >
                         {initials || <UserIcon className="w-4 h-4" />}
                       </div>
@@ -168,9 +158,9 @@ export const ConversationList = ({
                     {unread > 0 && (
                       <div
                         className="absolute -top-0.5 -right-0.5 w-[18px] h-[18px] rounded-full flex items-center justify-center"
-                        style={{ background: M.night }}
+                        style={{ background: BAI.night }}
                       >
-                        <span className="text-[10px] font-bold leading-none" style={{ color: M.surface }}>
+                        <span className="text-[10px] font-bold leading-none" style={{ color: BAI.bgSurface }}>
                           {unread > 9 ? '9+' : unread}
                         </span>
                       </div>
@@ -183,7 +173,7 @@ export const ConversationList = ({
                       <span
                         className="text-[13.5px] truncate"
                         style={{
-                          color: M.ink,
+                          color: BAI.ink,
                           fontWeight: unread > 0 ? 600 : 500,
                           fontFamily: "'DM Sans', system-ui, sans-serif",
                         }}
@@ -191,7 +181,7 @@ export const ConversationList = ({
                         {otherUser.firstName} {otherUser.lastName}
                       </span>
                       {conversation.lastMessageAt && (
-                        <span className="text-[11px] flex-shrink-0 ml-2" style={{ color: M.inkFaint }}>
+                        <span className="text-[11px] flex-shrink-0 ml-2" style={{ color: BAI.inkFaint }}>
                           {formatTime(conversation.lastMessageAt)}
                         </span>
                       )}
@@ -212,7 +202,7 @@ export const ConversationList = ({
                       <p
                         className="text-[12px] truncate"
                         style={{
-                          color: unread > 0 ? M.inkMid : M.inkFaint,
+                          color: unread > 0 ? BAI.inkMid : BAI.inkFaint,
                           fontWeight: unread > 0 ? 500 : 400,
                         }}
                       >

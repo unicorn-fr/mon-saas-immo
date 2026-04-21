@@ -1,21 +1,7 @@
 import { Download, Mail } from 'lucide-react'
 import { Layout } from '../../components/layout/Layout'
 import Footer from '../../components/layout/Footer'
-
-const M = {
-  bg: '#fafaf8',
-  surface: '#ffffff',
-  muted: '#f4f2ee',
-  ink: '#0d0c0a',
-  inkMid: '#5a5754',
-  inkFaint: '#9e9b96',
-  night: '#1a1a2e',
-  caramel: '#c4976a',
-  caramelLight: '#fdf5ec',
-  border: '#e4e1db',
-  display: "'Cormorant Garamond', Georgia, serif",
-  body: "'DM Sans', system-ui, sans-serif",
-}
+import { BAI } from '../../constants/bailio-tokens'
 
 const STATS = [
   { value: '10 000+', label: 'Annonces actives' },
@@ -26,16 +12,16 @@ const STATS = [
 export default function Presse() {
   return (
     <Layout showFooter={false}>
-      <div className="min-h-screen" style={{ background: M.bg, fontFamily: M.body }}>
+      <div className="min-h-screen" style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}>
         {/* Hero */}
         <section
           className="py-20 px-4 text-center"
-          style={{ background: M.night }}
+          style={{ background: BAI.night }}
         >
           <div className="max-w-3xl mx-auto">
             <h1
               style={{
-                fontFamily: M.display,
+                fontFamily: BAI.fontDisplay,
                 fontWeight: 700,
                 fontStyle: 'italic',
                 fontSize: '52px',
@@ -48,7 +34,7 @@ export default function Presse() {
             </h1>
             <p
               style={{
-                fontFamily: M.body,
+                fontFamily: BAI.fontBody,
                 fontSize: '16px',
                 color: 'rgba(255,255,255,0.7)',
                 lineHeight: 1.6,
@@ -64,19 +50,19 @@ export default function Presse() {
           {/* About section */}
           <div
             style={{
-              background: M.surface,
-              border: `1px solid ${M.border}`,
+              background: BAI.bgSurface,
+              border: `1px solid ${BAI.border}`,
               borderRadius: '12px',
               padding: '40px',
             }}
           >
             <h2
               style={{
-                fontFamily: M.display,
+                fontFamily: BAI.fontDisplay,
                 fontWeight: 700,
                 fontStyle: 'italic',
                 fontSize: '32px',
-                color: M.ink,
+                color: BAI.ink,
                 marginBottom: '16px',
               }}
             >
@@ -84,9 +70,9 @@ export default function Presse() {
             </h2>
             <p
               style={{
-                fontFamily: M.body,
+                fontFamily: BAI.fontBody,
                 fontSize: '15px',
-                color: M.inkMid,
+                color: BAI.inkMid,
                 lineHeight: 1.7,
                 marginBottom: '32px',
               }}
@@ -104,17 +90,17 @@ export default function Presse() {
                   key={stat.label}
                   className="text-center"
                   style={{
-                    background: M.muted,
+                    background: BAI.bgMuted,
                     borderRadius: '10px',
                     padding: '24px 16px',
                   }}
                 >
                   <p
                     style={{
-                      fontFamily: M.display,
+                      fontFamily: BAI.fontDisplay,
                       fontWeight: 700,
                       fontSize: '48px',
-                      color: M.ink,
+                      color: BAI.ink,
                       lineHeight: 1,
                       marginBottom: '8px',
                     }}
@@ -123,9 +109,9 @@ export default function Presse() {
                   </p>
                   <p
                     style={{
-                      fontFamily: M.body,
+                      fontFamily: BAI.fontBody,
                       fontSize: '13px',
-                      color: M.inkMid,
+                      color: BAI.inkMid,
                       margin: 0,
                     }}
                   >
@@ -139,19 +125,19 @@ export default function Presse() {
           {/* Press kit section */}
           <div
             style={{
-              background: M.surface,
-              border: `1px solid ${M.border}`,
+              background: BAI.bgSurface,
+              border: `1px solid ${BAI.border}`,
               borderRadius: '12px',
               padding: '40px',
             }}
           >
             <h2
               style={{
-                fontFamily: M.display,
+                fontFamily: BAI.fontDisplay,
                 fontWeight: 700,
                 fontStyle: 'italic',
                 fontSize: '32px',
-                color: M.ink,
+                color: BAI.ink,
                 marginBottom: '12px',
               }}
             >
@@ -159,9 +145,9 @@ export default function Presse() {
             </h2>
             <p
               style={{
-                fontFamily: M.body,
+                fontFamily: BAI.fontBody,
                 fontSize: '15px',
-                color: M.inkMid,
+                color: BAI.inkMid,
                 lineHeight: 1.7,
                 marginBottom: '24px',
               }}
@@ -175,9 +161,9 @@ export default function Presse() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                background: M.caramel,
+                background: BAI.caramel,
                 color: '#ffffff',
-                fontFamily: M.body,
+                fontFamily: BAI.fontBody,
                 fontWeight: 600,
                 fontSize: '14px',
                 padding: '11px 22px',
@@ -197,19 +183,19 @@ export default function Presse() {
           {/* Press contact section */}
           <div
             style={{
-              background: M.surface,
-              border: `1px solid ${M.border}`,
+              background: BAI.bgSurface,
+              border: `1px solid ${BAI.border}`,
               borderRadius: '12px',
               padding: '40px',
             }}
           >
             <h2
               style={{
-                fontFamily: M.display,
+                fontFamily: BAI.fontDisplay,
                 fontWeight: 700,
                 fontStyle: 'italic',
                 fontSize: '32px',
-                color: M.ink,
+                color: BAI.ink,
                 marginBottom: '12px',
               }}
             >
@@ -217,9 +203,9 @@ export default function Presse() {
             </h2>
             <p
               style={{
-                fontFamily: M.body,
+                fontFamily: BAI.fontBody,
                 fontSize: '15px',
-                color: M.inkMid,
+                color: BAI.inkMid,
                 lineHeight: 1.7,
                 marginBottom: '20px',
               }}
@@ -232,18 +218,18 @@ export default function Presse() {
                 style={{
                   width: '40px',
                   height: '40px',
-                  background: M.muted,
+                  background: BAI.bgMuted,
                   borderRadius: '10px',
                 }}
               >
-                <Mail style={{ width: '17px', height: '17px', color: M.night }} />
+                <Mail style={{ width: '17px', height: '17px', color: BAI.night }} />
               </div>
               <span
                 style={{
-                  fontFamily: M.body,
+                  fontFamily: BAI.fontBody,
                   fontWeight: 600,
                   fontSize: '15px',
-                  color: M.ink,
+                  color: BAI.ink,
                 }}
               >
                 presse@bailio.fr

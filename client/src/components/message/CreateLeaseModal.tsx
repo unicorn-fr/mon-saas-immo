@@ -3,30 +3,15 @@ import { useNavigate } from 'react-router-dom'
 import { X, CheckCircle, Info, Loader, Home, MapPin } from 'lucide-react'
 import { usePropertyStore } from '../../store/propertyStore'
 import { useContractStore } from '../../store/contractStore'
-
-const M = {
-  ink: '#0d0c0a',
-  inkMid: '#5a5754',
-  inkFaint: '#9e9b96',
-  night: '#1a1a2e',
-  owner: '#1a3270',
-  ownerLight: '#eaf0fb',
-  ownerBorder: '#b8ccf0',
-  tenant: '#1b5e3b',
-  tenantLight: '#edf7f2',
-  border: '#e4e1db',
-  muted: '#f4f2ee',
-  inputBg: '#f8f7f4',
-  surface: '#ffffff',
-}
+import { BAI } from '../../constants/bailio-tokens'
 
 const inputStyle = (hasError?: boolean) => ({
   width: '100%',
   padding: '10px 16px',
-  border: `1px solid ${hasError ? '#fca5a5' : M.border}`,
+  border: `1px solid ${hasError ? '#fca5a5' : BAI.border}`,
   borderRadius: '12px',
-  background: M.inputBg,
-  color: M.ink,
+  background: BAI.bgInput,
+  color: BAI.ink,
   fontSize: '14px',
   fontFamily: "'DM Sans', system-ui, sans-serif",
   outline: 'none',
@@ -139,43 +124,43 @@ export const CreateLeaseModal = ({
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
         <div className="rounded-2xl max-w-md w-full p-8 text-center"
-          style={{ background: M.surface, boxShadow: '0 8px 40px rgba(13,12,10,0.15)' }}>
+          style={{ background: BAI.bgSurface, boxShadow: '0 8px 40px rgba(13,12,10,0.15)' }}>
           <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-            style={{ background: M.tenantLight }}>
-            <CheckCircle className="w-8 h-8" style={{ color: M.tenant }} />
+            style={{ background: BAI.tenantLight }}>
+            <CheckCircle className="w-8 h-8" style={{ color: BAI.tenant }} />
           </div>
-          <h3 className="text-xl font-bold mb-2" style={{ color: M.ink }}>Contrat cree avec succes</h3>
-          <p className="text-sm" style={{ color: M.inkMid }}>Redirection vers le contrat...</p>
+          <h3 className="text-xl font-bold mb-2" style={{ color: BAI.ink }}>Contrat cree avec succes</h3>
+          <p className="text-sm" style={{ color: BAI.inkMid }}>Redirection vers le contrat...</p>
         </div>
       </div>
     )
   }
 
-  const labelStyle = { display: 'block', fontSize: '13px', fontWeight: 500, color: M.inkMid, marginBottom: '6px', fontFamily: "'DM Sans', system-ui, sans-serif" }
+  const labelStyle = { display: 'block', fontSize: '13px', fontWeight: 500, color: BAI.inkMid, marginBottom: '6px', fontFamily: "'DM Sans', system-ui, sans-serif" }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
       <div
         className="rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col"
-        style={{ background: M.surface, boxShadow: '0 8px 40px rgba(13,12,10,0.15)' }}
+        style={{ background: BAI.bgSurface, boxShadow: '0 8px 40px rgba(13,12,10,0.15)' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-6 border-b shrink-0"
-          style={{ borderColor: M.border }}>
+          style={{ borderColor: BAI.border }}>
           <div>
-            <h2 className="text-xl font-bold" style={{ color: M.ink, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+            <h2 className="text-xl font-bold" style={{ color: BAI.ink, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
               Mettre en location
             </h2>
-            <p className="text-sm mt-1" style={{ color: M.inkMid }}>
+            <p className="text-sm mt-1" style={{ color: BAI.inkMid }}>
               Creer un bail pour {tenantName}
             </p>
           </div>
           <button
             onClick={onClose}
             className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
-            style={{ color: M.inkFaint }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
+            style={{ color: BAI.inkFaint }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = BAI.bgMuted)}
             onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
             disabled={isSubmitting}
           >
@@ -191,12 +176,12 @@ export const CreateLeaseModal = ({
               Propriete <span style={{ color: '#9b1c1c' }}>*</span>
             </label>
             {isLoadingProperties ? (
-              <div className="flex items-center gap-2 text-sm" style={{ color: M.inkFaint }}>
+              <div className="flex items-center gap-2 text-sm" style={{ color: BAI.inkFaint }}>
                 <Loader className="w-4 h-4 animate-spin" />
                 Chargement des proprietes...
               </div>
             ) : availableProperties.length === 0 ? (
-              <p className="text-sm" style={{ color: M.inkFaint }}>
+              <p className="text-sm" style={{ color: BAI.inkFaint }}>
                 Aucune propriete disponible. Vos biens doivent avoir le statut "Disponible".
               </p>
             ) : (
@@ -221,7 +206,7 @@ export const CreateLeaseModal = ({
           {/* Property Info Card */}
           {selectedProperty && (
             <div className="rounded-xl p-4 flex items-start gap-4"
-              style={{ background: M.muted, border: `1px solid ${M.border}` }}>
+              style={{ background: BAI.bgMuted, border: `1px solid ${BAI.border}` }}>
               {selectedProperty.images?.[0] ? (
                 <img
                   src={selectedProperty.images[0]}
@@ -230,17 +215,17 @@ export const CreateLeaseModal = ({
                 />
               ) : (
                 <div className="w-20 h-20 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: M.border }}>
-                  <Home className="w-8 h-8" style={{ color: M.inkFaint }} />
+                  style={{ background: BAI.border }}>
+                  <Home className="w-8 h-8" style={{ color: BAI.inkFaint }} />
                 </div>
               )}
               <div className="min-w-0">
-                <h4 className="font-semibold truncate" style={{ color: M.ink }}>{selectedProperty.title}</h4>
-                <p className="text-sm flex items-center gap-1 mt-0.5" style={{ color: M.inkMid }}>
+                <h4 className="font-semibold truncate" style={{ color: BAI.ink }}>{selectedProperty.title}</h4>
+                <p className="text-sm flex items-center gap-1 mt-0.5" style={{ color: BAI.inkMid }}>
                   <MapPin className="w-3.5 h-3.5 shrink-0" />
                   {selectedProperty.address}, {selectedProperty.postalCode} {selectedProperty.city}
                 </p>
-                <div className="flex gap-3 mt-1 text-xs" style={{ color: M.inkFaint }}>
+                <div className="flex gap-3 mt-1 text-xs" style={{ color: BAI.inkFaint }}>
                   {selectedProperty.surface && <span>{selectedProperty.surface} m²</span>}
                   {selectedProperty.bedrooms != null && <span>{selectedProperty.bedrooms} ch.</span>}
                 </div>
@@ -339,16 +324,16 @@ export const CreateLeaseModal = ({
 
           {/* Info Banner */}
           <div className="rounded-xl p-4 flex gap-3"
-            style={{ background: M.ownerLight, border: `1px solid ${M.ownerBorder}` }}>
-            <Info className="w-5 h-5 shrink-0 mt-0.5" style={{ color: M.owner }} />
-            <p className="text-sm" style={{ color: M.owner }}>
+            style={{ background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}` }}>
+            <Info className="w-5 h-5 shrink-0 mt-0.5" style={{ color: BAI.owner }} />
+            <p className="text-sm" style={{ color: BAI.owner }}>
               Le contrat sera cree en brouillon. Les deux parties devront le signer pour qu'il soit active.
             </p>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 p-4 sm:p-6 border-t shrink-0" style={{ borderColor: M.border }}>
+        <div className="flex gap-3 p-4 sm:p-6 border-t shrink-0" style={{ borderColor: BAI.border }}>
           <button
             type="button"
             onClick={onClose}

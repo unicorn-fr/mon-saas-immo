@@ -1,27 +1,17 @@
 import { Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import Footer from '../../components/layout/Footer'
-
-// ─── Maison tokens ────────────────────────────────────────────────────────────
-
-const M = {
-  bg: '#fafaf8', surface: '#ffffff', muted: '#f4f2ee',
-  ink: '#0d0c0a', inkMid: '#5a5754', inkFaint: '#9e9b96',
-  night: '#1a1a2e', caramel: '#c4976a',
-  border: '#e4e1db',
-  display: "'Cormorant Garamond', Georgia, serif",
-  body: "'DM Sans', system-ui, sans-serif",
-}
+import { BAI } from '../../constants/bailio-tokens'
 
 function SectionH2({ children }: { children: React.ReactNode }) {
   return (
     <h2
       style={{
-        fontFamily: M.display,
+        fontFamily: BAI.fontDisplay,
         fontStyle: 'italic',
         fontSize: '26px',
         fontWeight: 700,
-        color: M.ink,
+        color: BAI.ink,
         marginBottom: '12px',
       }}
     >
@@ -32,7 +22,7 @@ function SectionH2({ children }: { children: React.ReactNode }) {
 
 function Body({ children }: { children: React.ReactNode }) {
   return (
-    <p style={{ fontFamily: M.body, fontSize: '15px', color: M.inkMid, lineHeight: 1.7 }}>
+    <p style={{ fontFamily: BAI.fontBody, fontSize: '15px', color: BAI.inkMid, lineHeight: 1.7 }}>
       {children}
     </p>
   )
@@ -40,15 +30,15 @@ function Body({ children }: { children: React.ReactNode }) {
 
 export default function MentionsLegales() {
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: M.bg, fontFamily: M.body }}>
+    <div style={{ minHeight: '100vh', backgroundColor: BAI.bgBase, fontFamily: BAI.fontBody }}>
 
       {/* Hero */}
-      <section style={{ backgroundColor: M.night, padding: '64px 16px 56px' }}>
+      <section style={{ backgroundColor: BAI.night, padding: '64px 16px 56px' }}>
         <div style={{ maxWidth: '896px', margin: '0 auto' }}>
           <Link
             to="/"
             className="inline-flex items-center gap-1.5 transition-opacity hover:opacity-70"
-            style={{ fontFamily: M.body, fontSize: '13px', color: 'rgba(255,255,255,0.45)', marginBottom: '32px', display: 'inline-flex' }}
+            style={{ fontFamily: BAI.fontBody, fontSize: '13px', color: 'rgba(255,255,255,0.45)', marginBottom: '32px', display: 'inline-flex' }}
           >
             <ArrowLeft className="w-4 h-4" />
             Retour à l'accueil
@@ -56,12 +46,12 @@ export default function MentionsLegales() {
 
           <p
             style={{
-              fontFamily: M.body,
+              fontFamily: BAI.fontBody,
               fontSize: '10px',
               fontWeight: 600,
               letterSpacing: '0.12em',
               textTransform: 'uppercase' as const,
-              color: M.caramel,
+              color: BAI.caramel,
               marginBottom: '12px',
             }}
           >
@@ -69,7 +59,7 @@ export default function MentionsLegales() {
           </p>
           <h1
             style={{
-              fontFamily: M.display,
+              fontFamily: BAI.fontDisplay,
               fontStyle: 'italic',
               fontSize: '40px',
               fontWeight: 600,
@@ -80,7 +70,7 @@ export default function MentionsLegales() {
           >
             Mentions légales
           </h1>
-          <p style={{ fontFamily: M.body, fontSize: '14px', color: 'rgba(255,255,255,0.45)' }}>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: '14px', color: 'rgba(255,255,255,0.45)' }}>
             Dernière mise à jour : Février 2026
           </p>
         </div>
@@ -99,8 +89,8 @@ export default function MentionsLegales() {
             </Body>
             <div
               style={{
-                backgroundColor: M.muted,
-                borderLeft: `3px solid ${M.caramel}`,
+                backgroundColor: BAI.bgMuted,
+                borderLeft: `3px solid ${BAI.caramel}`,
                 borderRadius: '0 8px 8px 0',
                 padding: '16px 20px',
                 marginTop: '16px',
@@ -115,9 +105,9 @@ export default function MentionsLegales() {
                 ].map(({ label, value }) => (
                   <li
                     key={label}
-                    style={{ fontFamily: M.body, fontSize: '14px', color: M.inkMid, lineHeight: 1.6 }}
+                    style={{ fontFamily: BAI.fontBody, fontSize: '14px', color: BAI.inkMid, lineHeight: 1.6 }}
                   >
-                    <span style={{ fontWeight: 600, color: M.ink }}>{label} : </span>
+                    <span style={{ fontWeight: 600, color: BAI.ink }}>{label} : </span>
                     {value}
                   </li>
                 ))}

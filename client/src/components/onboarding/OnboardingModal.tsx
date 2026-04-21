@@ -8,30 +8,7 @@ import {
   AlertTriangle, CheckCircle, ChevronRight, ChevronLeft,
   Star, Users, Lock,
 } from 'lucide-react'
-
-const M = {
-  bg:         '#fafaf8',
-  surface:    '#ffffff',
-  muted:      '#f4f2ee',
-  ink:        '#0d0c0a',
-  inkMid:     '#5a5754',
-  inkFaint:   '#9e9b96',
-  night:      '#1a1a2e',
-  owner:      '#1a3270',
-  ownerL:     '#eaf0fb',
-  ownerB:     '#b8ccf0',
-  tenant:     '#1b5e3b',
-  tenantL:    '#edf7f2',
-  tenantB:    '#9fd4ba',
-  caramel:    '#c4976a',
-  caramelL:   '#fdf5ec',
-  border:     '#e4e1db',
-  danger:     '#9b1c1c',
-  dangerBg:   '#fef2f2',
-  dangerB:    '#fca5a5',
-  body:       "'DM Sans', system-ui, sans-serif",
-  display:    "'Cormorant Garamond', Georgia, serif",
-}
+import { BAI } from '../../constants/bailio-tokens'
 
 interface Step {
   icon: React.ReactNode
@@ -43,13 +20,13 @@ interface Step {
 function ownerSteps(): Step[] {
   return [
     {
-      icon: <Star style={{ width: 28, height: 28, color: M.caramel }} />,
+      icon: <Star style={{ width: 28, height: 28, color: BAI.caramel }} />,
       title: 'Bienvenue sur Bailio',
       subtitle: 'La plateforme de mise en relation locative',
       body: (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <p style={{ fontSize: 14, color: M.inkMid, fontFamily: M.body, lineHeight: 1.6, margin: 0 }}>
-            Bailio vous permet de <strong style={{ color: M.ink }}>publier vos biens</strong>, filtrer les candidatures et gérer vos locations en toute sérénité.
+          <p style={{ fontSize: 14, color: BAI.inkMid, fontFamily: BAI.fontBody, lineHeight: 1.6, margin: 0 }}>
+            Bailio vous permet de <strong style={{ color: BAI.ink }}>publier vos biens</strong>, filtrer les candidatures et gérer vos locations en toute sérénité.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {[
@@ -59,8 +36,8 @@ function ownerSteps(): Step[] {
               'Centralisez tous vos documents',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <CheckCircle style={{ width: 15, height: 15, color: M.caramel, flexShrink: 0 }} />
-                <span style={{ fontSize: 13, color: M.inkMid, fontFamily: M.body }}>{item}</span>
+                <CheckCircle style={{ width: 15, height: 15, color: BAI.caramel, flexShrink: 0 }} />
+                <span style={{ fontSize: 13, color: BAI.inkMid, fontFamily: BAI.fontBody }}>{item}</span>
               </div>
             ))}
           </div>
@@ -68,18 +45,18 @@ function ownerSteps(): Step[] {
       ),
     },
     {
-      icon: <Home style={{ width: 28, height: 28, color: M.owner }} />,
+      icon: <Home style={{ width: 28, height: 28, color: BAI.owner }} />,
       title: 'Publier une annonce',
       body: (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <p style={{ fontSize: 14, color: M.inkMid, fontFamily: M.body, lineHeight: 1.6, margin: 0 }}>
-            Depuis votre tableau de bord, cliquez sur <strong style={{ color: M.ink }}>"Nouveau bien"</strong> pour ajouter votre propriété avec photos, description et critères de location.
+          <p style={{ fontSize: 14, color: BAI.inkMid, fontFamily: BAI.fontBody, lineHeight: 1.6, margin: 0 }}>
+            Depuis votre tableau de bord, cliquez sur <strong style={{ color: BAI.ink }}>"Nouveau bien"</strong> pour ajouter votre propriété avec photos, description et critères de location.
           </p>
-          <div style={{ background: M.ownerL, border: `1px solid ${M.ownerB}`, borderRadius: 10, padding: '12px 14px' }}>
-            <p style={{ fontSize: 12, color: M.owner, fontFamily: M.body, margin: 0, fontWeight: 600 }}>
+          <div style={{ background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, borderRadius: 10, padding: '12px 14px' }}>
+            <p style={{ fontSize: 12, color: BAI.owner, fontFamily: BAI.fontBody, margin: 0, fontWeight: 600 }}>
               Conseil
             </p>
-            <p style={{ fontSize: 12, color: M.owner, fontFamily: M.body, margin: '4px 0 0 0', opacity: 0.85 }}>
+            <p style={{ fontSize: 12, color: BAI.owner, fontFamily: BAI.fontBody, margin: '4px 0 0 0', opacity: 0.85 }}>
               Ajoutez au moins 5 photos de qualité pour multiplier les candidatures par 3.
             </p>
           </div>
@@ -87,12 +64,12 @@ function ownerSteps(): Step[] {
       ),
     },
     {
-      icon: <Users style={{ width: 28, height: 28, color: M.owner }} />,
+      icon: <Users style={{ width: 28, height: 28, color: BAI.owner }} />,
       title: 'Gérer les candidatures',
       body: (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <p style={{ fontSize: 14, color: M.inkMid, fontFamily: M.body, lineHeight: 1.6, margin: 0 }}>
-            Chaque candidat vous soumet un <strong style={{ color: M.ink }}>dossier locataire complet</strong> (pièce d'identité, justificatifs de revenus, garanties). Consultez-les en toute sécurité.
+          <p style={{ fontSize: 14, color: BAI.inkMid, fontFamily: BAI.fontBody, lineHeight: 1.6, margin: 0 }}>
+            Chaque candidat vous soumet un <strong style={{ color: BAI.ink }}>dossier locataire complet</strong> (pièce d'identité, justificatifs de revenus, garanties). Consultez-les en toute sécurité.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {[
@@ -101,8 +78,8 @@ function ownerSteps(): Step[] {
               'Messagerie intégrée avec chaque candidat',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: M.owner, flexShrink: 0 }} />
-                <span style={{ fontSize: 13, color: M.inkMid, fontFamily: M.body }}>{item}</span>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: BAI.owner, flexShrink: 0 }} />
+                <span style={{ fontSize: 13, color: BAI.inkMid, fontFamily: BAI.fontBody }}>{item}</span>
               </div>
             ))}
           </div>
@@ -110,20 +87,20 @@ function ownerSteps(): Step[] {
       ),
     },
     {
-      icon: <AlertTriangle style={{ width: 28, height: 28, color: M.danger }} />,
+      icon: <AlertTriangle style={{ width: 28, height: 28, color: BAI.error }} />,
       title: 'Charte de bonne conduite',
       body: (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <p style={{ fontSize: 14, color: M.inkMid, fontFamily: M.body, lineHeight: 1.6, margin: 0 }}>
-            Bailio repose sur la <strong style={{ color: M.ink }}>confiance mutuelle</strong> entre propriétaires et locataires. Nous exigeons honnêteté et bienveillance de tous.
+          <p style={{ fontSize: 14, color: BAI.inkMid, fontFamily: BAI.fontBody, lineHeight: 1.6, margin: 0 }}>
+            Bailio repose sur la <strong style={{ color: BAI.ink }}>confiance mutuelle</strong> entre propriétaires et locataires. Nous exigeons honnêteté et bienveillance de tous.
           </p>
-          <div style={{ background: M.dangerBg, border: `1px solid ${M.dangerB}`, borderRadius: 10, padding: '14px 16px', display: 'flex', gap: 12 }}>
-            <AlertTriangle style={{ width: 18, height: 18, color: M.danger, flexShrink: 0, marginTop: 1 }} />
+          <div style={{ background: BAI.errorLight, border: `1px solid ${'#fca5a5'}`, borderRadius: 10, padding: '14px 16px', display: 'flex', gap: 12 }}>
+            <AlertTriangle style={{ width: 18, height: 18, color: BAI.error, flexShrink: 0, marginTop: 1 }} />
             <div>
-              <p style={{ fontSize: 13, fontWeight: 700, color: M.danger, fontFamily: M.body, margin: '0 0 4px 0' }}>
+              <p style={{ fontSize: 13, fontWeight: 700, color: BAI.error, fontFamily: BAI.fontBody, margin: '0 0 4px 0' }}>
                 Avertissement strict
               </p>
-              <p style={{ fontSize: 12, color: M.danger, fontFamily: M.body, margin: 0, lineHeight: 1.6 }}>
+              <p style={{ fontSize: 12, color: BAI.error, fontFamily: BAI.fontBody, margin: 0, lineHeight: 1.6 }}>
                 Toute tentative d'arnaque, d'usurpation d'identité ou de demande de paiement hors plateforme entraînera un <strong>bannissement définitif</strong> et un signalement aux autorités compétentes.
               </p>
             </div>
@@ -137,12 +114,12 @@ function ownerSteps(): Step[] {
 function tenantSteps(): Step[] {
   return [
     {
-      icon: <Star style={{ width: 28, height: 28, color: M.caramel }} />,
+      icon: <Star style={{ width: 28, height: 28, color: BAI.caramel }} />,
       title: 'Bienvenue sur Bailio',
       subtitle: 'Trouvez votre logement en toute confiance',
       body: (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <p style={{ fontSize: 14, color: M.inkMid, fontFamily: M.body, lineHeight: 1.6, margin: 0 }}>
+          <p style={{ fontSize: 14, color: BAI.inkMid, fontFamily: BAI.fontBody, lineHeight: 1.6, margin: 0 }}>
             Bailio vous met en relation directe avec des propriétaires sérieux. Préparez votre dossier une fois et postulez à autant d'annonces que vous souhaitez.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -153,8 +130,8 @@ function tenantSteps(): Step[] {
               'Messagerie directe avec les propriétaires',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <CheckCircle style={{ width: 15, height: 15, color: M.caramel, flexShrink: 0 }} />
-                <span style={{ fontSize: 13, color: M.inkMid, fontFamily: M.body }}>{item}</span>
+                <CheckCircle style={{ width: 15, height: 15, color: BAI.caramel, flexShrink: 0 }} />
+                <span style={{ fontSize: 13, color: BAI.inkMid, fontFamily: BAI.fontBody }}>{item}</span>
               </div>
             ))}
           </div>
@@ -162,18 +139,18 @@ function tenantSteps(): Step[] {
       ),
     },
     {
-      icon: <FileText style={{ width: 28, height: 28, color: M.tenant }} />,
+      icon: <FileText style={{ width: 28, height: 28, color: BAI.tenant }} />,
       title: 'Préparez votre dossier',
       body: (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <p style={{ fontSize: 14, color: M.inkMid, fontFamily: M.body, lineHeight: 1.6, margin: 0 }}>
-            Depuis <strong style={{ color: M.ink }}>"Mon Dossier"</strong> dans le menu, téléversez vos documents une seule fois : pièce d'identité, bulletins de salaire, avis d'imposition.
+          <p style={{ fontSize: 14, color: BAI.inkMid, fontFamily: BAI.fontBody, lineHeight: 1.6, margin: 0 }}>
+            Depuis <strong style={{ color: BAI.ink }}>"Mon Dossier"</strong> dans le menu, téléversez vos documents une seule fois : pièce d'identité, bulletins de salaire, avis d'imposition.
           </p>
-          <div style={{ background: M.tenantL, border: `1px solid ${M.tenantB}`, borderRadius: 10, padding: '12px 14px' }}>
-            <p style={{ fontSize: 12, color: M.tenant, fontFamily: M.body, margin: 0, fontWeight: 600 }}>
+          <div style={{ background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`, borderRadius: 10, padding: '12px 14px' }}>
+            <p style={{ fontSize: 12, color: BAI.tenant, fontFamily: BAI.fontBody, margin: 0, fontWeight: 600 }}>
               Conseil
             </p>
-            <p style={{ fontSize: 12, color: M.tenant, fontFamily: M.body, margin: '4px 0 0 0', opacity: 0.85 }}>
+            <p style={{ fontSize: 12, color: BAI.tenant, fontFamily: BAI.fontBody, margin: '4px 0 0 0', opacity: 0.85 }}>
               Un dossier complet augmente vos chances d'acceptation de 70%. Ajoutez vos 3 derniers bulletins de salaire.
             </p>
           </div>
@@ -181,12 +158,12 @@ function tenantSteps(): Step[] {
       ),
     },
     {
-      icon: <Search style={{ width: 28, height: 28, color: M.tenant }} />,
+      icon: <Search style={{ width: 28, height: 28, color: BAI.tenant }} />,
       title: 'Postuler à une annonce',
       body: (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <p style={{ fontSize: 14, color: M.inkMid, fontFamily: M.body, lineHeight: 1.6, margin: 0 }}>
-            Parcourez les annonces et cliquez sur <strong style={{ color: M.ink }}>"Candidater"</strong>. Votre dossier est transmis automatiquement. Vous pouvez suivre l'état de chaque candidature depuis votre tableau de bord.
+          <p style={{ fontSize: 14, color: BAI.inkMid, fontFamily: BAI.fontBody, lineHeight: 1.6, margin: 0 }}>
+            Parcourez les annonces et cliquez sur <strong style={{ color: BAI.ink }}>"Candidater"</strong>. Votre dossier est transmis automatiquement. Vous pouvez suivre l'état de chaque candidature depuis votre tableau de bord.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {[
@@ -195,8 +172,8 @@ function tenantSteps(): Step[] {
               'Notification email à chaque changement',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: M.tenant, flexShrink: 0 }} />
-                <span style={{ fontSize: 13, color: M.inkMid, fontFamily: M.body }}>{item}</span>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: BAI.tenant, flexShrink: 0 }} />
+                <span style={{ fontSize: 13, color: BAI.inkMid, fontFamily: BAI.fontBody }}>{item}</span>
               </div>
             ))}
           </div>
@@ -204,20 +181,20 @@ function tenantSteps(): Step[] {
       ),
     },
     {
-      icon: <AlertTriangle style={{ width: 28, height: 28, color: M.danger }} />,
+      icon: <AlertTriangle style={{ width: 28, height: 28, color: BAI.error }} />,
       title: 'Charte de bonne conduite',
       body: (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <p style={{ fontSize: 14, color: M.inkMid, fontFamily: M.body, lineHeight: 1.6, margin: 0 }}>
-            Bailio repose sur la <strong style={{ color: M.ink }}>confiance mutuelle</strong>. Vos documents sont vérifiés et votre identité doit être réelle.
+          <p style={{ fontSize: 14, color: BAI.inkMid, fontFamily: BAI.fontBody, lineHeight: 1.6, margin: 0 }}>
+            Bailio repose sur la <strong style={{ color: BAI.ink }}>confiance mutuelle</strong>. Vos documents sont vérifiés et votre identité doit être réelle.
           </p>
-          <div style={{ background: M.dangerBg, border: `1px solid ${M.dangerB}`, borderRadius: 10, padding: '14px 16px', display: 'flex', gap: 12 }}>
-            <AlertTriangle style={{ width: 18, height: 18, color: M.danger, flexShrink: 0, marginTop: 1 }} />
+          <div style={{ background: BAI.errorLight, border: `1px solid ${'#fca5a5'}`, borderRadius: 10, padding: '14px 16px', display: 'flex', gap: 12 }}>
+            <AlertTriangle style={{ width: 18, height: 18, color: BAI.error, flexShrink: 0, marginTop: 1 }} />
             <div>
-              <p style={{ fontSize: 13, fontWeight: 700, color: M.danger, fontFamily: M.body, margin: '0 0 4px 0' }}>
+              <p style={{ fontSize: 13, fontWeight: 700, color: BAI.error, fontFamily: BAI.fontBody, margin: '0 0 4px 0' }}>
                 Avertissement strict
               </p>
-              <p style={{ fontSize: 12, color: M.danger, fontFamily: M.body, margin: 0, lineHeight: 1.6 }}>
+              <p style={{ fontSize: 12, color: BAI.error, fontFamily: BAI.fontBody, margin: 0, lineHeight: 1.6 }}>
                 Toute tentative d'arnaque, d'usurpation d'identité ou de fraude documentaire entraînera un <strong>bannissement définitif</strong> et un signalement aux autorités compétentes.
               </p>
             </div>
@@ -241,8 +218,8 @@ export function OnboardingModal({ userId, role, onClose }: OnboardingModalProps)
   const steps = role === 'OWNER' ? ownerSteps() : tenantSteps()
   const current = steps[step]
   const isLast = step === steps.length - 1
-  const accent = role === 'OWNER' ? M.owner : M.tenant
-  const accentL = role === 'OWNER' ? M.ownerL : M.tenantL
+  const accent = role === 'OWNER' ? BAI.owner : BAI.tenant
+  const accentL = role === 'OWNER' ? BAI.ownerLight : BAI.tenantLight
 
   const handleClose = () => {
     setClosing(true)
@@ -279,7 +256,7 @@ export function OnboardingModal({ userId, role, onClose }: OnboardingModalProps)
       <div
         style={{
           width: '100%', maxWidth: 460,
-          background: M.surface,
+          background: BAI.bgSurface,
           borderRadius: 16,
           boxShadow: '0 8px 40px rgba(13,12,10,0.18)',
           overflow: 'hidden',
@@ -303,14 +280,14 @@ export function OnboardingModal({ userId, role, onClose }: OnboardingModalProps)
               {current.icon}
             </div>
             <div>
-              <p style={{ fontSize: 11, fontFamily: M.body, color: 'rgba(255,255,255,0.6)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 600 }}>
+              <p style={{ fontSize: 11, fontFamily: BAI.fontBody, color: 'rgba(255,255,255,0.6)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 600 }}>
                 {role === 'OWNER' ? 'Guide Propriétaire' : 'Guide Locataire'} · {step + 1}/{steps.length}
               </p>
-              <p style={{ fontSize: 18, fontFamily: M.display, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: '3px 0 0' }}>
+              <p style={{ fontSize: 18, fontFamily: BAI.fontDisplay, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: '3px 0 0' }}>
                 {current.title}
               </p>
               {current.subtitle && (
-                <p style={{ fontSize: 12, fontFamily: M.body, color: 'rgba(255,255,255,0.7)', margin: '2px 0 0' }}>
+                <p style={{ fontSize: 12, fontFamily: BAI.fontBody, color: 'rgba(255,255,255,0.7)', margin: '2px 0 0' }}>
                   {current.subtitle}
                 </p>
               )}
@@ -347,7 +324,7 @@ export function OnboardingModal({ userId, role, onClose }: OnboardingModalProps)
         {/* Footer */}
         <div style={{
           padding: '14px 22px 20px',
-          borderTop: `1px solid ${M.border}`,
+          borderTop: `1px solid ${BAI.border}`,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
           {/* Dots */}
@@ -360,7 +337,7 @@ export function OnboardingModal({ userId, role, onClose }: OnboardingModalProps)
                   width: i === step ? 20 : 7, height: 7,
                   borderRadius: 4,
                   border: 'none', cursor: 'pointer',
-                  background: i === step ? accent : M.border,
+                  background: i === step ? accent : BAI.border,
                   transition: 'all 0.25s ease',
                   padding: 0,
                 }}
@@ -375,9 +352,9 @@ export function OnboardingModal({ userId, role, onClose }: OnboardingModalProps)
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 5,
                   padding: '8px 14px', borderRadius: 8,
-                  border: `1px solid ${M.border}`,
-                  background: M.surface, color: M.inkMid,
-                  fontSize: 13, cursor: 'pointer', fontFamily: M.body,
+                  border: `1px solid ${BAI.border}`,
+                  background: BAI.bgSurface, color: BAI.inkMid,
+                  fontSize: 13, cursor: 'pointer', fontFamily: BAI.fontBody,
                 }}
               >
                 <ChevronLeft style={{ width: 14, height: 14 }} />
@@ -390,7 +367,7 @@ export function OnboardingModal({ userId, role, onClose }: OnboardingModalProps)
                 display: 'inline-flex', alignItems: 'center', gap: 6,
                 padding: '8px 18px', borderRadius: 8, border: 'none',
                 background: accent, color: '#ffffff',
-                fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: M.body,
+                fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: BAI.fontBody,
               }}
             >
               {isLast ? (
