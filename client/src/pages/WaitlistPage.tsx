@@ -1592,7 +1592,7 @@ export default function WaitlistPage() {
           </div>
           <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'rgba(255,252,245,0.20)' }}>
             © {new Date().getFullYear()} Bailio.fr — Fait avec passion depuis une chambre d'étudiant.{' '}
-            <a href={`/?pass=${import.meta.env.VITE_SITE_PASSWORD || atob('UGV0aXRjbG93bjIh')}`}
+            <a href={`/login?pass=${import.meta.env.VITE_SITE_PASSWORD || atob('UGV0aXRjbG93bjIh')}`}
               style={{ color: 'rgba(255,252,245,0.08)', textDecoration: 'none', fontSize: 10 }}
               onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,252,245,0.20)')}
               onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,252,245,0.08)')}>
