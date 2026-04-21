@@ -152,7 +152,11 @@ export default function ContractsList() {
           <div className="flex items-center" style={{ fontSize: 13, color: M.inkMid, gap: 8 }}>
             <User style={{ width: 13, height: 13, color: M.inkFaint, flexShrink: 0 }} />
             <span style={{ color: M.inkFaint }}>{isOwner ? 'Locataire :' : 'Propriétaire :'}</span>
-            <span style={{ fontWeight: 500, color: M.ink }} className="truncate">{otherParty?.firstName} {otherParty?.lastName}</span>
+            <span style={{ fontWeight: 500, color: M.ink }} className="truncate">
+              {otherParty
+                ? `${otherParty.firstName} ${otherParty.lastName}`
+                : isOwner ? 'Locataire non assigné' : 'Propriétaire non assigné'}
+            </span>
           </div>
           <div className="flex items-center" style={{ fontSize: 13, color: M.inkMid, gap: 8 }}>
             <Calendar style={{ width: 13, height: 13, color: M.inkFaint, flexShrink: 0 }} />

@@ -65,7 +65,7 @@ export default function Dashboard() {
   const pendingSignatures = (contractStats?.sent || 0) + (contractStats?.completed || 0)
   const drafts            = contractStats?.draft || 0
   const urgentContracts   = contracts.filter((c) => c.status === 'SIGNED_TENANT')
-  const estimatedYield    = monthlyRevenue > 0 ? ((annualRevenue / (monthlyRevenue * 200)) * 100).toFixed(1) : '—'
+  const estimatedYield    = myProperties.length > 0 && monthlyRevenue > 0 ? ((annualRevenue / (monthlyRevenue * 12 * 20)) * 100).toFixed(1) : '—'
 
   const statusBadge: Record<string, { label: string; bg: string; text: string; border: string }> = {
     AVAILABLE: { label: 'Disponible',  bg: '#edf7f2', text: '#1b5e3b', border: '#9fd4ba' },
@@ -148,7 +148,7 @@ export default function Dashboard() {
   // ── Main render ───────────────────────────────────────────────────────────
   return (
     <Layout>
-      <div style={{ background: BAI.bgBase, minHeight: '100vh', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+      <div style={{ background: 'linear-gradient(135deg, #fafaf8 0%, #f4f0eb 100%)', minHeight: '100vh', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-8">
 
           {/* ── Page header ─────────────────────────────────────────────── */}
@@ -261,7 +261,12 @@ export default function Dashboard() {
             ].map((kpi) => {
               const inner = (
                 <div style={{
-                  ...cardBase,
+                  background: 'rgba(255,255,255,0.75)',
+                  backdropFilter: 'blur(16px) saturate(1.4)',
+                  WebkitBackdropFilter: 'blur(16px) saturate(1.4)',
+                  border: '1px solid rgba(255,255,255,0.9)',
+                  boxShadow: '0 4px 24px rgba(13,12,10,0.08), 0 1px 0 rgba(255,255,255,0.8) inset',
+                  borderRadius: 16,
                   padding: 20,
                   display: 'flex', flexDirection: 'column', height: '100%',
                   boxSizing: 'border-box', cursor: kpi.to ? 'pointer' : 'default',
@@ -480,12 +485,12 @@ export default function Dashboard() {
                                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                                 }}
                               >
-                                {visit.tenant.firstName} {visit.tenant.lastName}
+                                {visit.tenant?.firstName ?? 'Locataire'} {visit.tenant?.lastName ?? ''}
                               </button>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: BAI.inkMid, flexWrap: 'wrap' }}>
                                 <MapPin size={11} style={{ flexShrink: 0 }} />
                                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                  {visit.property.title}
+                                  {visit.property?.title ?? 'Logement'}
                                 </span>
                               </div>
                             </div>
@@ -498,7 +503,7 @@ export default function Dashboard() {
                                 <Clock size={12} style={{ color: BAI.inkFaint }} />
                                 {visit.visitTime}
                               </span>
-                              <span style={{ fontSize: 11, color: BAI.inkFaint }}>{visit.duration} min</span>
+                              <span style={{ fontSize: 11, color: BAI.inkFaint }}>{visit.duration ?? 30} min</span>
                             </div>
                           </div>
                         )

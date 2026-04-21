@@ -1,7 +1,6 @@
 /**
  * MyApplications — Tenant view of all submitted candidatures.
- * Groups: En cours (PENDING + APPROVED) / Refusées (REJECTED)
- * Does not show WITHDRAWN.
+ * Groups: En cours (PENDING + APPROVED) / Refusées (REJECTED) / Retirées (WITHDRAWN)
  */
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -38,7 +37,7 @@ const SERVER_BASE =
 function AppCard({ app, onWithdraw }: { app: Application; onWithdraw: (id: string) => void }) {
   const [expanded, setExpanded] = useState(false)
   const [withdrawing, setWithdrawing] = useState(false)
-  const prop = app.property!
+  const prop = app.property
 
   async function handleWithdraw() {
     if (!confirm('Retirer votre candidature pour ce bien ?')) return
@@ -56,6 +55,56 @@ function AppCard({ app, onWithdraw }: { app: Application; onWithdraw: (id: strin
 
   const details = app.matchDetails ? Object.values(app.matchDetails) : []
   const isRejected = app.status === 'REJECTED'
+  const isWithdrawn = app.status === 'WITHDRAWN'
+
+  // Fallback si la propriété n'est plus disponible
+  if (!prop) {
+    return (
+      <motion.div
+        layout
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0 }}
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e4e1db',
+          borderRadius: 12,
+          boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
+          overflow: 'hidden',
+          fontFamily: "'DM Sans', system-ui, sans-serif",
+          opacity: 0.6,
+        }}
+      >
+        <div className="flex gap-4 p-4 items-center">
+          <div
+            className="w-16 h-16 flex items-center justify-center flex-shrink-0"
+            style={{ background: '#f4f2ee', borderRadius: 8 }}
+          >
+            <Building2 className="w-6 h-6" style={{ color: '#9e9b96' }} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p style={{ fontSize: 14, fontWeight: 600, color: '#9e9b96' }}>Logement non disponible</p>
+            <p style={{ fontSize: 12, color: '#9e9b96', marginTop: 2 }}>
+              Ce bien n'est plus accessible.
+            </p>
+          </div>
+          <span
+            className="flex-shrink-0"
+            style={{
+              ...STATUS_STYLE[app.status],
+              fontSize: 11,
+              fontWeight: 500,
+              borderRadius: 99,
+              padding: '2px 10px',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {STATUS_LABEL[app.status]}
+          </span>
+        </div>
+      </motion.div>
+    )
+  }
 
   return (
     <motion.div
@@ -65,12 +114,12 @@ function AppCard({ app, onWithdraw }: { app: Application; onWithdraw: (id: strin
       exit={{ opacity: 0 }}
       style={{
         background: '#ffffff',
-        border: isRejected ? '1px solid #fca5a5' : '1px solid #e4e1db',
+        border: isRejected ? '1px solid #fca5a5' : isWithdrawn ? '1px solid #ccc9c3' : '1px solid #e4e1db',
         borderRadius: 12,
         boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
         overflow: 'hidden',
         fontFamily: "'DM Sans', system-ui, sans-serif",
-        opacity: isRejected ? 0.85 : 1,
+        opacity: isRejected || isWithdrawn ? 0.85 : 1,
       }}
     >
       <Link
@@ -180,7 +229,7 @@ function AppCard({ app, onWithdraw }: { app: Application; onWithdraw: (id: strin
                   : <Trash2 className="w-4 h-4" />}
               </button>
             )}
-            {!isRejected && (
+            {!isRejected && !isWithdrawn && (
               <button
                 onClick={(e) => { e.preventDefault(); setExpanded(!expanded) }}
                 className="p-1.5 transition-colors"
@@ -202,19 +251,36 @@ function AppCard({ app, onWithdraw }: { app: Application; onWithdraw: (id: strin
             <XCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#9b1c1c' }} />
             <div>
               <p style={{ fontSize: 12, fontWeight: 600, color: '#9b1c1c', fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: '2px' }}>
-                Raison du refus
+                Refusée
               </p>
               <p style={{ fontSize: 13, color: '#5a5754', fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.5 }}>
-                {app.rejectionReason || 'Aucune raison communiquée'}
+                Le propriétaire n'a pas retenu votre dossier.{app.rejectionReason ? ` Raison\u00a0: ${app.rejectionReason}` : ''}
               </p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Expandable details (non-rejected) */}
+      {/* Withdrawn notice */}
+      {isWithdrawn && (
+        <div style={{ borderTop: '1px solid #ccc9c3', padding: '12px 16px', background: '#f4f2ee' }}>
+          <div className="flex items-start gap-2">
+            <XCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#9e9b96' }} />
+            <div>
+              <p style={{ fontSize: 12, fontWeight: 600, color: '#5a5754', fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: '2px' }}>
+                Retirée
+              </p>
+              <p style={{ fontSize: 13, color: '#5a5754', fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.5 }}>
+                Vous avez retiré cette candidature.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Expandable details (non-rejected, non-withdrawn) */}
       <AnimatePresence>
-        {expanded && !isRejected && (
+        {expanded && !isRejected && !isWithdrawn && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
@@ -293,7 +359,7 @@ export default function MyApplications() {
     setLoading(true)
     try {
       const data = await applicationService.list()
-      setApps(data.filter((a) => a.status !== 'WITHDRAWN'))
+      setApps(data)
     } catch {
       toast.error('Impossible de charger vos candidatures.')
     } finally {
@@ -309,6 +375,7 @@ export default function MyApplications() {
 
   const activeApps = apps.filter(a => a.status === 'PENDING' || a.status === 'APPROVED')
   const rejectedApps = apps.filter(a => a.status === 'REJECTED')
+  const withdrawnApps = apps.filter(a => a.status === 'WITHDRAWN')
 
   return (
     <Layout>
@@ -438,6 +505,26 @@ export default function MyApplications() {
                   <div className="space-y-3">
                     <AnimatePresence mode="popLayout">
                       {rejectedApps.map((app) => (
+                        <AppCard key={app.id} app={app} onWithdraw={handleWithdraw} />
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                </>
+              )}
+
+              {/* ── Séparateur Retirées ── */}
+              {withdrawnApps.length > 0 && (
+                <>
+                  <div className="flex items-center gap-3 pt-2">
+                    <div style={{ flex: 1, height: '1px', background: '#ccc9c3' }} />
+                    <span style={{ fontSize: 11, fontWeight: 600, color: '#9e9b96', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: "'DM Sans', system-ui, sans-serif", whiteSpace: 'nowrap' }}>
+                      Candidatures retirées
+                    </span>
+                    <div style={{ flex: 1, height: '1px', background: '#ccc9c3' }} />
+                  </div>
+                  <div className="space-y-3">
+                    <AnimatePresence mode="popLayout">
+                      {withdrawnApps.map((app) => (
                         <AppCard key={app.id} app={app} onWithdraw={handleWithdraw} />
                       ))}
                     </AnimatePresence>

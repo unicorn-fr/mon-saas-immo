@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Calendar as CalendarIcon,
   Filter,
@@ -44,7 +45,7 @@ function InvitePanel({ invite }: { invite: CalendarInviteWithProperty }) {
   })
 
   // Filter dates to days that have slots configured
-  const slotDays = new Set(property.visitAvailabilitySlots.map(s => s.dayOfWeek))
+  const slotDays = new Set((property?.visitAvailabilitySlots ?? []).map(s => s.dayOfWeek))
   const validDates = slotDays.size === 0 ? dates : dates.filter(d => slotDays.has(new Date(d + 'T00:00:00').getDay()))
 
   async function handleSelectDate(date: string) {
@@ -52,7 +53,7 @@ function InvitePanel({ invite }: { invite: CalendarInviteWithProperty }) {
     setAvailableSlots([])
     setLoadingSlots(true)
     try {
-      const slots = await bookingService.getAvailableSlots(property.id, date)
+      const slots = await bookingService.getAvailableSlots(property?.id, date)
       setAvailableSlots(slots)
     } catch { toast.error('Impossible de charger les créneaux') }
     finally { setLoadingSlots(false) }
@@ -61,7 +62,7 @@ function InvitePanel({ invite }: { invite: CalendarInviteWithProperty }) {
   async function handleBook(time: string) {
     setBookingSlot(time)
     try {
-      await bookingService.createBooking({ propertyId: property.id, visitDate: selectedDate, visitTime: time })
+      await bookingService.createBooking({ propertyId: property?.id, visitDate: selectedDate, visitTime: time })
       toast.success('Visite réservée ! Le propriétaire va confirmer.')
       setAvailableSlots(prev => prev.filter(s => s !== time))
     } catch (e: any) {
@@ -70,7 +71,7 @@ function InvitePanel({ invite }: { invite: CalendarInviteWithProperty }) {
     } finally { setBookingSlot(null) }
   }
 
-  const imgSrc = property.images?.[0]
+  const imgSrc = property?.images?.[0]
     ? property.images[0].startsWith('http') ? property.images[0] : `${SERVER_BASE}${property.images[0]}`
     : null
 
@@ -78,18 +79,18 @@ function InvitePanel({ invite }: { invite: CalendarInviteWithProperty }) {
     <div style={{ background: '#ffffff', border: '1px solid #e4e1db', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 2px rgba(13,12,10,0.04)' }}>
       <button onClick={() => setOpen(o => !o)} className="w-full text-left flex items-center gap-4 p-4" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
         {imgSrc ? (
-          <img src={imgSrc} alt={property.title} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" style={{ border: '1px solid #e4e1db' }} />
+          <img src={imgSrc} alt={property?.title ?? 'Logement'} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" style={{ border: '1px solid #e4e1db' }} />
         ) : (
           <div className="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#f4f2ee' }}>
             <Home className="w-7 h-7" style={{ color: '#9e9b96' }} />
           </div>
         )}
         <div className="flex-1 min-w-0 text-left">
-          <p style={{ fontSize: 14, fontWeight: 600, color: '#0d0c0a', marginBottom: 2 }} className="truncate">{property.title}</p>
+          <p style={{ fontSize: 14, fontWeight: 600, color: '#0d0c0a', marginBottom: 2 }} className="truncate">{property?.title ?? 'Logement'}</p>
           <p className="flex items-center gap-1" style={{ fontSize: 12, color: '#9e9b96' }}>
-            <MapPin className="w-3 h-3" />{property.city}
+            <MapPin className="w-3 h-3" />{property?.city ?? ''}
             <span className="mx-1">·</span>
-            <Euro className="w-3 h-3" />{Number(property.price).toLocaleString('fr-FR')} /mois
+            <Euro className="w-3 h-3" />{Number(property?.price ?? 0).toLocaleString('fr-FR')} /mois
           </p>
           <p style={{ fontSize: 11, color: '#c4976a', fontWeight: 500, marginTop: 4 }}>
             Invité par {invite.owner.firstName} {invite.owner.lastName}
@@ -108,7 +109,7 @@ function InvitePanel({ invite }: { invite: CalendarInviteWithProperty }) {
           </p>
           <div className="flex gap-2 flex-wrap mb-4">
             {validDates.length === 0 ? (
-              <p style={{ fontSize: 13, color: '#9e9b96' }}>Aucun créneau configuré pour ce logement.</p>
+              <p style={{ fontSize: 13, color: '#9e9b96' }}>Le propriétaire n'a pas encore configuré de créneaux de visite.</p>
             ) : validDates.map(date => {
               const d = new Date(date + 'T00:00:00')
               const isSelected = selectedDate === date
@@ -137,7 +138,7 @@ function InvitePanel({ invite }: { invite: CalendarInviteWithProperty }) {
               {loadingSlots ? (
                 <p style={{ fontSize: 13, color: '#9e9b96' }}>Chargement…</p>
               ) : availableSlots.length === 0 ? (
-                <p style={{ fontSize: 13, color: '#9e9b96' }}>Aucun créneau disponible ce jour.</p>
+                <p style={{ fontSize: 13, color: '#9e9b96' }}>Aucun créneau disponible à cette date. Essayez un autre jour.</p>
               ) : (
                 <div className="flex gap-2 flex-wrap">
                   {availableSlots.map(time => (
@@ -491,8 +492,8 @@ export const MyBookings = () => {
                       : 'Vous n\'avez pas encore de visites. Commencez à explorer des propriétés\u00a0!'}
                   </p>
                   {selectedStatus === 'all' && (
-                    <a
-                      href="/search"
+                    <Link
+                      to="/search"
                       className="inline-flex items-center gap-2 transition-opacity hover:opacity-80"
                       style={{
                         background: '#1b5e3b',
@@ -506,7 +507,7 @@ export const MyBookings = () => {
                     >
                       <Home className="w-4 h-4" />
                       Explorer les propriétés
-                    </a>
+                    </Link>
                   )}
                 </div>
               ) : (

@@ -107,10 +107,10 @@ export const BookingManagement = () => {
     if (!searchQuery) return true
     const query = searchQuery.toLowerCase()
     return (
-      booking.property.title.toLowerCase().includes(query) ||
-      booking.tenant.firstName.toLowerCase().includes(query) ||
-      booking.tenant.lastName.toLowerCase().includes(query) ||
-      booking.tenant.email.toLowerCase().includes(query)
+      (booking.property?.title ?? '').toLowerCase().includes(query) ||
+      (booking.tenant?.firstName ?? '').toLowerCase().includes(query) ||
+      (booking.tenant?.lastName ?? '').toLowerCase().includes(query) ||
+      (booking.tenant?.email ?? '').toLowerCase().includes(query)
     )
   })
 
@@ -265,12 +265,12 @@ export const BookingManagement = () => {
                       {/* Infos */}
                       <div className="flex-1 min-w-0">
                         <p style={{ fontSize: 13, fontWeight: 600, color: BAI.ink, marginBottom: 2 }}>
-                          {booking.tenant.firstName} {booking.tenant.lastName}
+                          {booking.tenant?.firstName ?? 'Locataire'} {booking.tenant?.lastName ?? ''}
                         </p>
                         <div className="flex items-center gap-1 mb-1">
                           <MapPin className="w-3 h-3 flex-shrink-0" style={{ color: BAI.inkFaint }} />
                           <p className="truncate" style={{ fontSize: 12, color: BAI.inkMid }}>
-                            {booking.property.title}
+                            {booking.property?.title ?? 'Logement'}
                           </p>
                         </div>
                         {visitDt && (

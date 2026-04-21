@@ -94,7 +94,8 @@ export default function TenantDashboard() {
 
   // ── Calculs contrat actif ─────────────────────────────────────────────────
   const activeCnt        = (activeContract?.content as Record<string, any>) || {}
-  const paymentDay       = activeCnt.paymentDay ? Number(activeCnt.paymentDay) : (activeContract ? new Date(activeContract.startDate).getDate() : 1)
+  const _rawPaymentDay   = activeCnt.paymentDay ? Number(activeCnt.paymentDay) : (activeContract ? new Date(activeContract.startDate).getDate() : 1)
+  const paymentDay       = Number.isFinite(_rawPaymentDay) ? _rawPaymentDay : 1
   const nextPaymentDate  = activeContract ? computeNextPaymentDate(paymentDay) : null
   const daysUntilPayment = nextPaymentDate ? differenceInDays(nextPaymentDate, new Date()) : null
   const daysUntilEnd     = activeContract ? differenceInDays(new Date(activeContract.endDate), new Date()) : null
@@ -686,19 +687,24 @@ export default function TenantDashboard() {
             ].map((kpi) => (
               <Link key={kpi.label} to={kpi.to} style={{ textDecoration: 'none', display: 'block' }}>
                 <div style={{
-                  ...cardBase,
+                  background: 'rgba(255,255,255,0.7)',
+                  backdropFilter: 'blur(20px) saturate(1.5)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(1.5)',
+                  border: '1px solid rgba(255,255,255,0.9)',
                   borderTop: `3px solid ${BAI.tenant}`,
+                  boxShadow: '0 4px 32px rgba(13,12,10,0.08), 0 1px 0 rgba(255,255,255,0.8) inset',
+                  borderRadius: 16,
                   padding: 20,
                   display: 'flex', flexDirection: 'column',
                   boxSizing: 'border-box',
                   transition: 'box-shadow 0.2s, transform 0.2s',
                 }}
                   onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.boxShadow = BAI.shadowLg;
+                    (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 40px rgba(13,12,10,0.12), 0 1px 0 rgba(255,255,255,0.9) inset';
                     (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'
                   }}
                   onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.boxShadow = BAI.shadowMd;
+                    (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 32px rgba(13,12,10,0.08), 0 1px 0 rgba(255,255,255,0.8) inset';
                     (e.currentTarget as HTMLElement).style.transform = 'none'
                   }}
                 >
@@ -874,8 +880,8 @@ export default function TenantDashboard() {
                     </div>
                   ) : (
                     <div>
-                      {activeApps.slice(0, 4).map((app, idx) => {
-                        const isLast = idx === Math.min(activeApps.length, 4) - 1
+                      {activeApps.slice(0, 5).map((app, idx) => {
+                        const isLast = idx === Math.min(activeApps.length, 5) - 1
                         const thumb = app.property?.images?.[0]
                         return (
                           <div key={app.id} style={{
@@ -959,6 +965,16 @@ export default function TenantDashboard() {
                           </div>
                         )
                       })}
+                      {activeApps.length > 5 && (
+                        <div style={{ padding: '12px 20px', borderTop: `1px solid ${BAI.border}`, textAlign: 'center' }}>
+                          <Link to="/my-applications" style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 4,
+                            fontSize: 12, fontWeight: 500, color: BAI.tenant, textDecoration: 'none',
+                          }}>
+                            Voir toutes les candidatures <ArrowRight size={12} />
+                          </Link>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

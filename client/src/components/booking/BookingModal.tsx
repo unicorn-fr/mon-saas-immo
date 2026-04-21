@@ -122,7 +122,12 @@ export const BookingModal = ({
       <div className="flex min-h-full items-center justify-center p-4">
         <div
           className="relative rounded-xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
-          style={{ background: M.surface, boxShadow: '0 8px 32px rgba(13,12,10,0.12)' }}
+          style={{
+            background: 'rgba(255,255,255,0.92)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            boxShadow: '0 8px 32px rgba(13,12,10,0.12)',
+          }}
         >
           {/* Header */}
           <div

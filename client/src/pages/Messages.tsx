@@ -195,7 +195,7 @@ export default function Messages() {
                 <div
                   className="mb-4 rounded-lg overflow-hidden cursor-pointer"
                   style={{ border: `1px solid ${M.border}`, background: M.muted }}
-                  onClick={() => navigate(`/property/${selectedConversation.property!.id}`)}
+                  onClick={() => { if (selectedConversation.property?.id) navigate(`/property/${selectedConversation.property.id}`) }}
                 >
                   {selectedConversation.property.images?.[0] && (
                     <img

@@ -232,7 +232,7 @@ export default function PropertyDetailsPublic() {
                     alt={`${property.title} - Image ${selectedImage + 1}`}
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      e.currentTarget.src = '/placeholder-property.jpg'
+                      e.currentTarget.style.display = 'none'
                     }}
                   />
 
@@ -248,7 +248,7 @@ export default function PropertyDetailsPublic() {
                       </button>
                       <button
                         onClick={() => setSelectedImage((prev) => (prev + 1) % images.length)}
-                        className="absolute right-14 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full transition-colors"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full transition-colors"
                         style={{ background: M.surface, border: `1px solid ${M.border}` }}
                       >
                         <ChevronRight className="w-4 h-4" style={{ color: M.ink }} />
@@ -332,7 +332,7 @@ export default function PropertyDetailsPublic() {
                           alt={`Thumbnail ${index + 1}`}
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            e.currentTarget.src = '/placeholder-property.jpg'
+                            e.currentTarget.style.display = 'none'
                           }}
                         />
                       </button>
@@ -594,7 +594,6 @@ export default function PropertyDetailsPublic() {
                 className="p-5 rounded-xl"
                 style={{
                   background: M.tenantLight,
-                  borderLeft: `3px solid ${M.tenantBorder}`,
                   border: `1px solid ${M.tenantBorder}`,
                   borderLeftWidth: '3px',
                 }}
@@ -851,7 +850,7 @@ export default function PropertyDetailsPublic() {
           onClose={() => setShowContactModal(false)}
           propertyId={property.id}
           propertyTitle={property.title}
-          ownerName={property.owner?.firstName + ' ' + property.owner?.lastName}
+          ownerName={property.owner ? `${property.owner.firstName ?? ''} ${property.owner.lastName ?? ''}`.trim() || 'Propriétaire' : 'Propriétaire'}
           ownerId={property.ownerId}
         />
 

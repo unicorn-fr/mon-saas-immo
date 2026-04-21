@@ -185,10 +185,28 @@ export default function Home() {
         }
       `}</style>
 
+      {/* Ambient orb — caramel glow top-right */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          top: -120,
+          right: -120,
+          width: 560,
+          height: 560,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, #c4976a 0%, transparent 70%)',
+          filter: 'blur(120px)',
+          opacity: 0.15,
+          pointerEvents: 'none',
+          zIndex: 0,
+        }}
+      />
+
       {/* ══════════════════════════════════════════════════════════════
           HERO
       ══════════════════════════════════════════════════════════════ */}
-      <section style={{ minHeight: '92vh', backgroundColor: T.bgBase, display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
+      <section style={{ minHeight: '92vh', background: 'linear-gradient(135deg, #fafaf8 0%, #f0ebe4 100%)', display: 'flex', alignItems: 'center', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 w-full">
           <div
             className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12"
@@ -198,6 +216,27 @@ export default function Home() {
               className="w-full lg:w-[55%] flex flex-col items-start"
               style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 0 }}
             >
+              {/* Launch badge */}
+              <div style={{ marginBottom: 20 }}>
+                <span style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '5px 14px',
+                  borderRadius: 40,
+                  background: `${T.caramel}18`,
+                  border: `1px solid ${T.caramel}50`,
+                  fontFamily: T.fontBody,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: T.caramel,
+                  letterSpacing: '0.03em',
+                }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.caramel, display: 'inline-block', animation: 'pulse 2s infinite' }} />
+                  Lancement juin 2026
+                </span>
+              </div>
+
               {/* Overline */}
               <p style={{
                 fontFamily: T.fontBody,
@@ -555,22 +594,25 @@ export default function Home() {
                 <div
                   key={feat.title}
                   style={{
-                    backgroundColor: T.bgSurface,
-                    border: `1px solid ${T.border}`,
-                    borderRadius: 16,
+                    background: 'rgba(255,255,255,0.7)',
+                    backdropFilter: 'blur(20px) saturate(1.5)',
+                    WebkitBackdropFilter: 'blur(20px) saturate(1.5)',
+                    border: '1px solid rgba(255,255,255,0.9)',
+                    borderTop: '1px solid rgba(255,255,255,1)',
+                    boxShadow: '0 4px 32px rgba(13,12,10,0.08), 0 1px 0 rgba(255,255,255,0.8) inset',
+                    borderRadius: 20,
                     padding: '28px 28px 28px',
-                    boxShadow: T.shadow,
                     transition: 'transform 0.2s, box-shadow 0.2s',
                   }}
                   onMouseEnter={e => {
                     const el = e.currentTarget as HTMLDivElement
                     el.style.transform = 'translateY(-3px)'
-                    el.style.boxShadow = '0 4px 20px rgba(13,12,10,0.10), 0 1px 4px rgba(13,12,10,0.06)'
+                    el.style.boxShadow = '0 8px 40px rgba(13,12,10,0.12), 0 1px 0 rgba(255,255,255,0.9) inset'
                   }}
                   onMouseLeave={e => {
                     const el = e.currentTarget as HTMLDivElement
                     el.style.transform = 'translateY(0)'
-                    el.style.boxShadow = T.shadow
+                    el.style.boxShadow = '0 4px 32px rgba(13,12,10,0.08), 0 1px 0 rgba(255,255,255,0.8) inset'
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>

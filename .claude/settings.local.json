@@ -100,7 +100,14 @@
       "Bash(find /Users/enzo/Desktop/Projets/Applications_Web/En_Cours/plateforme-gestion-locative/server/src -type f \\\\\\(-name *.ts -o -name *.js \\\\\\))",
       "Bash(xargs LC_ALL=C grep -lPn [^x00-x7F])",
       "Bash(./node_modules/.bin/prisma --version)",
-      "Bash(./node_modules/.bin/tsc --version)"
+      "Bash(./node_modules/.bin/tsc --version)",
+      "Bash(DATABASE_URL=\"postgresql://test:test@localhost/test\" JWT_SECRET=\"fa6ef5c995c05eec410f2354cd83ef19d2010457b025e074ddcd95ddeedb587f\" REFRESH_TOKEN_SECRET=\"1b63c0167b28e64cef71b8f63394b77df77b24168b0b2108024323e029ea16a5\" NODE_ENV=\"production\" PORT=\"5001\" timeout 5 node dist/server.js)",
+      "Bash(git config:*)",
+      "Bash(/Users/enzo/Desktop/Projets/Applications_Web/En_Cours/plateforme-gestion-locative/client/public/icons/icon.svg:*)",
+      "Bash(pip3 install:*)",
+      "Bash(mkdir -p /mnt/user-data/outputs)",
+      "Bash(cp /tmp/saas_audit_report.pdf /mnt/user-data/outputs/saas_audit_report.pdf)",
+      "Bash(./node_modules/.bin/tsc --noEmit)"
     ]
   }
 }
