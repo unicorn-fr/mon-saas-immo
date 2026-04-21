@@ -220,7 +220,7 @@ export function OwnerSidebar() {
           />
           <aside
             className="fixed left-0 top-0 bottom-0 z-50 flex flex-col md:hidden"
-            style={{ ...sidebarStyle, width: 256, boxShadow: '4px 0 32px rgba(0,0,0,0.25)' }}>
+            style={{ ...sidebarStyle, width: 'min(256px, 85vw)', boxShadow: '4px 0 32px rgba(0,0,0,0.25)', overflowX: 'hidden' }}>
             <Content compact={false} />
           </aside>
         </>

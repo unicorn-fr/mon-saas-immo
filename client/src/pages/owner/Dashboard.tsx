@@ -267,7 +267,7 @@ export default function Dashboard() {
                   border: '1px solid rgba(255,255,255,0.9)',
                   boxShadow: '0 4px 24px rgba(13,12,10,0.08), 0 1px 0 rgba(255,255,255,0.8) inset',
                   borderRadius: 16,
-                  padding: 20,
+                  padding: 'clamp(12px, 3vw, 20px)',
                   display: 'flex', flexDirection: 'column', height: '100%',
                   boxSizing: 'border-box', cursor: kpi.to ? 'pointer' : 'default',
                   transition: 'box-shadow 0.2s, transform 0.2s',
@@ -295,7 +295,7 @@ export default function Dashboard() {
                   </p>
                   <p style={{
                     fontFamily: "'Cormorant Garamond', Georgia, serif",
-                    fontWeight: 700, fontSize: 44, color: BAI.ink,
+                    fontWeight: 700, fontSize: 'clamp(28px, 6vw, 44px)', color: BAI.ink,
                     lineHeight: 1, marginBottom: 4,
                   }}>
                     {kpi.value}
@@ -376,10 +376,10 @@ export default function Dashboard() {
                             <p style={{ fontSize: 14, fontWeight: 600, color: BAI.ink, margin: '0 0 3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {property.title}
                             </p>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: BAI.inkMid }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: BAI.inkMid, flexWrap: 'wrap' }}>
                               <MapPin size={11} style={{ flexShrink: 0 }} />
                               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{property.city}</span>
-                              <span style={{ flexShrink: 0 }}>· {property.bedrooms} ch · {property.surface} m²</span>
+                              <span style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>· {property.bedrooms} ch · {property.surface} m²</span>
                             </div>
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>

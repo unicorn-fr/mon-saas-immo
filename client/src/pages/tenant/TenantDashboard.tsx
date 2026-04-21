@@ -207,13 +207,13 @@ export default function TenantDashboard() {
                     marginBottom: 24,
                   }}>
                   {/* Prochain paiement */}
-                  <div style={{ padding: '18px 20px' }}>
+                  <div style={{ padding: 'clamp(12px,3vw,18px) clamp(14px,4vw,20px)' }}>
                     <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 5 }}>
                       <Clock size={11} /> Prochain paiement
                     </p>
                     <p style={{
                       fontFamily: "'Cormorant Garamond', Georgia, serif",
-                      fontSize: 36, fontWeight: 700, color: BAI.caramel,
+                      fontSize: 'clamp(22px,5vw,36px)', fontWeight: 700, color: BAI.caramel,
                       margin: '0 0 4px', lineHeight: 1,
                     }}>
                       {daysUntilPayment !== null ? (daysUntilPayment === 0 ? "Aujourd'hui" : `J-${daysUntilPayment}`) : '—'}
@@ -224,13 +224,13 @@ export default function TenantDashboard() {
                   </div>
 
                   {/* Loyer mensuel */}
-                  <div style={{ padding: '18px 20px', background: 'rgba(196,151,106,0.10)', borderLeft: '1px solid rgba(255,255,255,0.06)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ padding: 'clamp(12px,3vw,18px) clamp(14px,4vw,20px)', background: 'rgba(196,151,106,0.10)', borderLeft: '1px solid rgba(255,255,255,0.06)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
                     <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 5 }}>
                       <TrendingUp size={11} /> Coût mensuel
                     </p>
                     <p style={{
                       fontFamily: "'Cormorant Garamond', Georgia, serif",
-                      fontSize: 36, fontWeight: 700, color: '#ffffff',
+                      fontSize: 'clamp(22px,5vw,36px)', fontWeight: 700, color: '#ffffff',
                       margin: '0 0 4px', lineHeight: 1,
                     }}>
                       {fmtEUR(activeTotal)}
@@ -241,13 +241,13 @@ export default function TenantDashboard() {
                   </div>
 
                   {/* Fin du bail */}
-                  <div style={{ padding: '18px 20px' }}>
+                  <div style={{ padding: 'clamp(12px,3vw,18px) clamp(14px,4vw,20px)' }}>
                     <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 5 }}>
                       <Key size={11} /> Fin du bail
                     </p>
                     <p style={{
                       fontFamily: "'Cormorant Garamond', Georgia, serif",
-                      fontSize: 36, fontWeight: 700, color: '#ffffff',
+                      fontSize: 'clamp(22px,5vw,36px)', fontWeight: 700, color: '#ffffff',
                       margin: '0 0 4px', lineHeight: 1,
                     }}>
                       {monthsUntilEnd !== null ? (monthsUntilEnd >= 12 ? `${Math.floor(monthsUntilEnd / 12)} an${Math.floor(monthsUntilEnd / 12) > 1 ? 's' : ''}` : `${monthsUntilEnd} mois`) : '—'}
@@ -262,10 +262,10 @@ export default function TenantDashboard() {
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                   <Link to={`/contracts/${activeContract.id}`} style={{
                     display: 'inline-flex', alignItems: 'center', gap: 8,
-                    padding: '12px 22px', borderRadius: 10,
+                    padding: 'clamp(9px,2vw,12px) clamp(14px,3vw,22px)', borderRadius: 10,
                     background: BAI.caramel, color: '#ffffff',
-                    fontWeight: 700, fontSize: 13, textDecoration: 'none',
-                    letterSpacing: '0.01em',
+                    fontWeight: 700, fontSize: 'clamp(12px,3vw,13px)', textDecoration: 'none',
+                    letterSpacing: '0.01em', whiteSpace: 'nowrap',
                   }}>
                     <FileText size={15} /> Mon contrat
                   </Link>
@@ -384,8 +384,8 @@ export default function TenantDashboard() {
                   {/* Infos contrat résumé */}
                   <div style={{
                     marginTop: 16,
-                    display: 'grid', gridTemplateColumns: '1fr 1fr',
-                    gap: 10,
+                    display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: 8,
                   }}>
                     {[
                       { label: 'Début bail',    val: format(new Date(activeContract.startDate), 'd MMM yyyy', { locale: fr }) },
@@ -713,7 +713,7 @@ export default function TenantDashboard() {
                   </p>
                   <p style={{
                     fontFamily: "'Cormorant Garamond', Georgia, serif",
-                    fontWeight: 700, fontSize: 44, color: BAI.ink,
+                    fontWeight: 700, fontSize: 'clamp(28px,6vw,44px)', color: BAI.ink,
                     lineHeight: 1, marginBottom: 4,
                   }}>
                     {kpi.value}
@@ -794,7 +794,7 @@ export default function TenantDashboard() {
                         <p style={{ fontSize: 12, color: BAI.inkFaint, marginBottom: 16 }}>
                           {coveredCount} / {REQUIRED_CATEGORIES.length} catégories complètes
                         </p>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
                           {([
                             { id: 'IDENTITE', label: 'Identité',  Icon: CreditCard },
                             { id: 'EMPLOI',   label: 'Emploi',    Icon: Briefcase },

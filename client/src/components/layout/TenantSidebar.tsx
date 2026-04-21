@@ -320,7 +320,7 @@ export function TenantSidebar() {
           />
           <aside
             className="fixed left-0 top-0 bottom-0 z-50 flex flex-col md:hidden"
-            style={{ ...sidebarStyle, width: 256, boxShadow: '4px 0 24px rgba(13,12,10,0.12)' }}>
+            style={{ ...sidebarStyle, width: 'min(256px, 85vw)', boxShadow: '4px 0 24px rgba(13,12,10,0.12)', overflowX: 'hidden' }}>
             <Content compact={false} />
           </aside>
         </>

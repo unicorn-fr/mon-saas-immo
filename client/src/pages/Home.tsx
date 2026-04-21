@@ -511,14 +511,14 @@ export default function Home() {
       {/* ══════════════════════════════════════════════════════════════
           STATS BAND
       ══════════════════════════════════════════════════════════════ */}
-      <section style={{ backgroundColor: T.bgMuted, padding: '80px 24px' }}>
+      <section style={{ backgroundColor: T.bgMuted, padding: 'clamp(40px,8vw,80px) clamp(16px,5vw,24px)' }}>
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
           <div
             className="stats-grid"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: 0,
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '32px 0',
             }}
           >
             {STATS.map((stat, i) => (
@@ -526,14 +526,14 @@ export default function Home() {
                 key={stat.label}
                 style={{
                   textAlign: 'center',
-                  padding: '0 32px',
-                  borderRight: i < STATS.length - 1 ? `1px solid ${T.border}` : 'none',
+                  padding: '0 clamp(12px,3vw,32px)',
+                  borderRight: i % 2 === 0 ? `1px solid ${T.border}` : 'none',
                 }}
               >
                 <p style={{
                   fontFamily: T.fontDisplay,
                   fontWeight: 700,
-                  fontSize: 64,
+                  fontSize: 'clamp(36px,7vw,64px)',
                   lineHeight: 1,
                   color: T.ink,
                   margin: '0 0 10px',
@@ -575,7 +575,7 @@ export default function Home() {
             <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 500, letterSpacing: '0.18em', color: T.caramel, textTransform: 'uppercase', marginBottom: 16 }}>
               Fonctionnalités
             </p>
-            <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 48, lineHeight: 1.15, color: T.ink, margin: '0 0 16px', letterSpacing: '-0.02em' }}>
+            <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(28px,5vw,48px)', lineHeight: 1.15, color: T.ink, margin: '0 0 16px', letterSpacing: '-0.02em' }}>
               Tout ce dont vous<br />avez besoin.
             </h2>
             <p style={{ fontFamily: T.fontBody, fontWeight: 400, fontSize: 16, color: T.inkMid, lineHeight: 1.65, margin: 0 }}>
@@ -586,7 +586,7 @@ export default function Home() {
           {/* Grid */}
           <div
             className="feat-grid"
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}
+            style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))', gap: 16 }}
           >
             {FEATURES.map(feat => {
               const Icon = feat.icon
@@ -655,7 +655,7 @@ export default function Home() {
             <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 500, letterSpacing: '0.18em', color: T.caramel, textTransform: 'uppercase', marginBottom: 16 }}>
               Comment ça marche
             </p>
-            <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 48, lineHeight: 1.15, color: '#f5f4f0', margin: 0, letterSpacing: '-0.02em' }}>
+            <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(28px,5vw,48px)', lineHeight: 1.15, color: '#f5f4f0', margin: 0, letterSpacing: '-0.02em' }}>
               Simple et rapide.
             </h2>
           </div>
