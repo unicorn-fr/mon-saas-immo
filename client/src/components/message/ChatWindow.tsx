@@ -229,10 +229,11 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
         {onBack && (
           <button
             onClick={onBack}
-            className="lg:hidden p-2 rounded-xl transition-colors"
-            style={{ color: '#5a5754' }}
+            className="md:hidden flex items-center justify-center rounded-xl transition-colors"
+            style={{ color: '#5a5754', minWidth: 44, minHeight: 44 }}
             onMouseEnter={(e) => (e.currentTarget.style.background = '#f4f2ee')}
             onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            aria-label="Retour à la liste"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -427,8 +428,8 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
               <button
                 onClick={handleShareDossier}
                 disabled={isSharing}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[13px] font-semibold text-white transition-opacity disabled:opacity-60"
-                style={{ background: '#1b5e3b' }}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[13px] font-semibold transition-opacity disabled:opacity-60"
+                style={{ background: '#1b5e3b', color: '#ffffff' }}
               >
                 {isSharing ? 'Partage…' : <>
                   <ShieldCheck className="w-3.5 h-3.5" />

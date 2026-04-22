@@ -110,6 +110,7 @@ class ContractService {
 
     const tenant = await prisma.user.findUnique({
       where: tenantLookup,
+      select: { id: true, role: true, firstName: true, lastName: true, email: true, tenantScore: true },
     })
 
     if (!tenant) {
@@ -118,6 +119,12 @@ class ContractService {
 
     if (tenant.role !== 'TENANT') {
       throw new Error('L\'utilisateur trouvé n\'a pas le rôle locataire.')
+    }
+
+    // Vérifier que le dossier du locataire est complet (score ≥ 75 — IDENTITE + EMPLOI + REVENUS)
+    const tenantDossierScore = tenant.tenantScore ?? 0
+    if (tenantDossierScore < 75) {
+      throw new Error(`DOSSIER_INCOMPLET:Le dossier de ${tenant.firstName} ${tenant.lastName} est incomplet (score : ${tenantDossierScore}/100). Les pièces d'identité, justificatifs d'emploi et de revenus sont obligatoires pour générer un contrat.`)
     }
 
     const overlappingContract = await prisma.contract.findFirst({

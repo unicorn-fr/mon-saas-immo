@@ -527,7 +527,7 @@ export default function ContractDetails() {
                 </PDFDownloadLink>
                 {contract.status !== 'DRAFT' && (
                   <Link
-                    to={`/contracts/${contract.id}/edl`}
+                    to={`/contracts/${contract.id}/edl/session`}
                     style={{
                       display: 'inline-flex', alignItems: 'center', gap: 6,
                       padding: '7px 14px', borderRadius: 8,
@@ -1231,7 +1231,7 @@ export default function ContractDetails() {
 
                 {contract.status !== 'DRAFT' && (
                   <Link
-                    to={`/contracts/${contract.id}/edl`}
+                    to={`/contracts/${contract.id}/edl/session`}
                     style={{
                       display: 'inline-flex', alignItems: 'center', gap: 8,
                       padding: '11px 20px', borderRadius: 9,

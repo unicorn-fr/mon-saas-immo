@@ -60,7 +60,7 @@ class DossierService {
     })
 
     if (existing) {
-      return prisma.tenantDocument.update({
+      const updated = await prisma.tenantDocument.update({
         where: { id: existing.id },
         data: {
           fileName: data.fileName,
@@ -72,6 +72,8 @@ class DossierService {
           expiresAt,
         },
       })
+      await this.recalculateTenantScore(data.userId)
+      return updated
     }
 
     const doc = await prisma.tenantDocument.create({ data: { ...data, expiresAt } })

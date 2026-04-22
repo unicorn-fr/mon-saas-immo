@@ -47,14 +47,19 @@ class BookingService {
       throw new Error('Property is not available for booking')
     }
 
-    // Vérifier invitation si le logement a des créneaux configurés
-    const slotsCount = await prisma.visitAvailabilitySlot.count({ where: { propertyId: data.propertyId } })
-    if (slotsCount > 0) {
-      const invite = await prisma.calendarInvite.findUnique({
-        where: { propertyId_tenantId: { propertyId: data.propertyId, tenantId: data.tenantId } }
-      })
-      if (!invite) throw new Error('No calendar invite')
-    }
+    // Vérifier que le locataire a une candidature approuvée OU une invitation directe
+    const [approvedApp, invite] = await Promise.all([
+      prisma.application.findUnique({
+        where: { propertyId_tenantId: { propertyId: data.propertyId, tenantId: data.tenantId } },
+        select: { status: true },
+      }),
+      prisma.calendarInvite.findUnique({
+        where: { propertyId_tenantId: { propertyId: data.propertyId, tenantId: data.tenantId } },
+        select: { id: true },
+      }),
+    ])
+    const hasAccess = approvedApp?.status === 'APPROVED' || invite !== null
+    if (!hasAccess) throw new Error('Vous devez avoir une candidature approuvée pour réserver une visite')
 
     // Check if the date/time slot is already booked
     const existingBooking = await prisma.booking.findFirst({

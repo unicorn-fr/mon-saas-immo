@@ -67,6 +67,12 @@ enum ApplicationStatus {
   WITHDRAWN   // Retirée par le locataire
 }
 
+enum EdlSessionStatus {
+  WAITING     // Créée, en attente que le locataire rejoigne
+  ACTIVE      // Les deux parties sont connectées
+  COMPLETED   // EDL finalisé et signé
+}
+
 enum TokenType {
   EMAIL_VERIFY
   PASSWORD_RESET
@@ -150,6 +156,8 @@ model User {
   subscription          Subscription?
   calendarInvitesSent   CalendarInvite[]      @relation("CalendarInviteSender")
   calendarInvitesReceived CalendarInvite[]    @relation("CalendarInviteReceiver")
+  edlSessionsOwned      EdlSession[]          @relation("EdlSessionOwner")
+  edlSessionsJoined     EdlSession[]          @relation("EdlSessionTenant")
 
   @@index([email])
   @@index([role])
@@ -426,6 +434,7 @@ model Contract {
   // Relations
   documents   ContractDocument[]
   payments    Payment[]
+  edlSession  EdlSession?
 
   @@index([propertyId])
   @@index([tenantId])
@@ -831,6 +840,33 @@ model Payment {
   @@map("payments")
 }
 
+
+// ============================================
+// EDL SESSION (État des Lieux Synchrone)
+// ============================================
+
+model EdlSession {
+  id          String           @id @default(cuid())
+  contractId  String           @unique
+  contract    Contract         @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  pin         String           // Code PIN 6 chiffres
+  ownerId     String
+  owner       User             @relation("EdlSessionOwner", fields: [ownerId], references: [id])
+  tenantId    String?          // Défini quand le locataire rejoint
+  tenant      User?            @relation("EdlSessionTenant", fields: [tenantId], references: [id])
+
+  status      EdlSessionStatus @default(WAITING)
+  edlType     String           @default("ENTREE") // ENTREE | SORTIE
+  data        Json             @default("{}") // État complet de l'EDL (pièces, éléments, photos)
+
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([pin])
+  @@index([ownerId])
+  @@map("edl_sessions")
+}
 
 // ============================================
 // WAITLIST

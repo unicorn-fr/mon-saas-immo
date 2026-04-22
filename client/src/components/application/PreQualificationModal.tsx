@@ -125,8 +125,15 @@ export function PreQualificationModal({
       }
       onSuccess()
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erreur lors de l\'envoi.'
-      toast.error(msg)
+      const raw = err instanceof Error ? err.message : 'Erreur lors de l\'envoi.'
+      // Erreur dossier incomplet — rediriger vers le dossier
+      if (raw.includes('dossier locatif est incomplet') || raw.includes('DOSSIER_INCOMPLET')) {
+        toast.error('Dossier incomplet — complétez votre dossier avant de postuler', { duration: 6000 })
+        onClose()
+        window.location.href = '/dossier'
+        return
+      }
+      toast.error(raw)
       setPhase('apply')
     }
   }

@@ -261,11 +261,9 @@ export default function Dashboard() {
             ].map((kpi) => {
               const inner = (
                 <div style={{
-                  background: 'rgba(255,255,255,0.75)',
-                  backdropFilter: 'blur(16px) saturate(1.4)',
-                  WebkitBackdropFilter: 'blur(16px) saturate(1.4)',
-                  border: '1px solid rgba(255,255,255,0.9)',
-                  boxShadow: '0 4px 24px rgba(13,12,10,0.08), 0 1px 0 rgba(255,255,255,0.8) inset',
+                  background: BAI.bgSurface,
+                  border: `1px solid ${BAI.border}`,
+                  boxShadow: BAI.shadowMd,
                   borderRadius: 16,
                   padding: 'clamp(12px, 3vw, 20px)',
                   display: 'flex', flexDirection: 'column', height: '100%',
@@ -276,12 +274,12 @@ export default function Dashboard() {
                   onMouseEnter={(e) => {
                     if (kpi.to) {
                       (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'
-                      ;(e.currentTarget as HTMLElement).style.boxShadow = '0 12px 40px rgba(13,12,10,0.13), inset 0 1px 0 rgba(255,255,255,0.70)'
+                      ;(e.currentTarget as HTMLElement).style.boxShadow = '0 8px 24px rgba(13,12,10,0.10)'
                     }
                   }}
                   onMouseLeave={(e) => {
                     (e.currentTarget as HTMLElement).style.transform = 'none'
-                    ;(e.currentTarget as HTMLElement).style.boxShadow = BAI.glassShadow
+                    ;(e.currentTarget as HTMLElement).style.boxShadow = BAI.shadowMd
                   }}
                 >
                   {/* Accent bar */}

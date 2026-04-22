@@ -29,6 +29,7 @@
     "lucide-react": "^0.331.0",
     "mrz": "^5.0.1",
     "pdfjs-dist": "^5.4.624",
+    "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-dropzone": "^14.2.3",

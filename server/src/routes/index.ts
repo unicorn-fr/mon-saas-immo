@@ -32,6 +32,7 @@ import stripeRoutes from './stripe.routes.js'
 import paymentRoutes from './payment.routes.js'
 import dashboardRoutes from './dashboard.routes.js'
 import waitlistRoutes from './waitlist.routes.js'
+import edlRoutes from './edl.routes.js'
 
 /**
  * Register all application routes on the Express app.
@@ -69,6 +70,9 @@ export function registerRoutes(app: Application, prefix: string): void {
 
   // ── Aggregation ─────────────────────────────────────────────────────────
   app.use(`${prefix}/dashboard`, dashboardRoutes)
+
+  // ── EDL Synchrone ───────────────────────────────────────────────────────
+  app.use(`${prefix}/edl`, edlRoutes)
 
   // ── Administration ──────────────────────────────────────────────────────
   app.use(`${prefix}/admin`, adminRoutes)

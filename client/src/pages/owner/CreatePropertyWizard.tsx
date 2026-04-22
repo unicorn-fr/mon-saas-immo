@@ -12,19 +12,32 @@ import { celebrateBig } from '../../utils/celebrate'
 import type { CreatePropertyInput, PropertyType } from '../../types/property.types'
 import { AMENITIES } from '../../types/property.types'
 import { BAI } from '../../constants/bailio-tokens'
+import { bookingService } from '../../services/booking.service'
+import { propertyService } from '../../services/property.service'
 
 // ─── Maison tokens ────────────────────────────────────────────────────────────
 
 const DRAFT_KEY = 'create_property_wizard_v1'
 
 const STEPS = [
-  { label: 'Type',     title: 'Quel type de bien ?' },
-  { label: 'Adresse',  title: 'Où se situe le bien ?' },
+  { label: 'Type',      title: 'Quel type de bien ?' },
+  { label: 'Adresse',   title: 'Où se situe le bien ?' },
   { label: 'Descriptif', title: 'Caractéristiques' },
-  { label: 'DPE',      title: 'Performance énergétique' },
-  { label: 'Prix',     title: 'Loyer et disponibilité' },
-  { label: 'Médias',   title: 'Photos et description' },
+  { label: 'DPE',       title: 'Performance énergétique' },
+  { label: 'Prix',      title: 'Loyer et disponibilité' },
+  { label: 'Critères',  title: 'Critères de sélection' },
+  { label: 'Créneaux',  title: 'Disponibilités pour les visites' },
+  { label: 'Médias',    title: 'Photos et description' },
 ]
+
+const DAYS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
+const DAY_FULL = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi']
+
+interface VisitSlotDraft {
+  dayOfWeek: number
+  startTime: string
+  endTime: string
+}
 
 type ExtendedType = PropertyType | 'CHAMBRE' | 'PARKING' | 'LOCAL_COMMERCIAL'
 
@@ -77,6 +90,14 @@ interface WizardState {
   visitDuration: number
   images: string[]
   description: string
+  visitSlots: VisitSlotDraft[]
+  // Critères de sélection
+  minSalaryRatio: number
+  requiredGuarantor: boolean
+  acceptedGuarantorTypes: string[]
+  preferredContractTypes: string[]
+  autoPilot: boolean
+  minScore: number
 }
 
 const INITIAL: WizardState = {
@@ -87,6 +108,13 @@ const INITIAL: WizardState = {
   dpeClass: '', dpeValue: '', gesClass: '', gesValue: '',
   price: '', charges: '', deposit: '', availableFrom: '', visitDuration: 30,
   images: [], description: '',
+  visitSlots: [],
+  minSalaryRatio: 3,
+  requiredGuarantor: false,
+  acceptedGuarantorTypes: ['physique', 'visale'],
+  preferredContractTypes: ['CDI'],
+  autoPilot: false,
+  minScore: 70,
 }
 
 function loadDraft(): WizardState {
@@ -173,6 +201,274 @@ function DpeGauge({
   )
 }
 
+// ─── CriteriaStep component ───────────────────────────────────────────────────
+
+function CriteriaStep({
+  state, update, price,
+}: { state: WizardState; update: (p: Partial<WizardState>) => void; price: number }) {
+  const labelS: React.CSSProperties = { fontSize: 12, fontWeight: 500, color: BAI.inkMid, display: 'block', marginBottom: 6 }
+
+  const contractOptions = ['CDI', 'CDD', 'Indépendant', 'Fonctionnaire', 'Retraité', 'Étudiant']
+  const guarantorOptions = [{ v: 'physique', l: 'Garant physique' }, { v: 'visale', l: 'Garantie Visale' }, { v: 'organisme', l: 'Organisme garant' }]
+
+  function toggleContractType(v: string) {
+    const current = state.preferredContractTypes
+    update({ preferredContractTypes: current.includes(v) ? current.filter(c => c !== v) : [...current, v] })
+  }
+  function toggleGuarantorType(v: string) {
+    const current = state.acceptedGuarantorTypes
+    update({ acceptedGuarantorTypes: current.includes(v) ? current.filter(c => c !== v) : [...current, v] })
+  }
+
+  const threshold = Math.round(price * state.minSalaryRatio)
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+      <div style={{ background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, borderRadius: 10, padding: '12px 14px' }}>
+        <p style={{ fontSize: 13, color: BAI.owner, margin: 0, lineHeight: 1.5 }}>
+          Ces critères permettent à Bailio de calculer un score de compatibilité pour chaque candidature. Ils sont optionnels — des valeurs par défaut s'appliquent.
+        </p>
+      </div>
+
+      {/* Solvabilité */}
+      <div>
+        <label style={labelS}>Ratio revenus / loyer minimum</label>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {[2, 2.5, 3, 3.5, 4].map(r => (
+            <button key={r} type="button" onClick={() => update({ minSalaryRatio: r })}
+              style={{
+                padding: '8px 14px', borderRadius: 8, border: `1.5px solid ${state.minSalaryRatio === r ? BAI.owner : BAI.border}`,
+                background: state.minSalaryRatio === r ? BAI.ownerLight : BAI.bgSurface,
+                color: state.minSalaryRatio === r ? BAI.owner : BAI.inkMid,
+                fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: BAI.fontBody,
+              }}>{r}×</button>
+          ))}
+        </div>
+        {price > 0 && (
+          <p style={{ fontSize: 12, color: BAI.inkFaint, marginTop: 6 }}>
+            Salaire net minimum requis : <strong style={{ color: BAI.inkMid }}>{threshold.toLocaleString('fr-FR')} €/mois</strong>
+          </p>
+        )}
+      </div>
+
+      {/* Type de contrat */}
+      <div>
+        <label style={labelS}>Types de contrat acceptés</label>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {contractOptions.map(v => {
+            const active = state.preferredContractTypes.includes(v)
+            return (
+              <button key={v} type="button" onClick={() => toggleContractType(v)}
+                style={{
+                  padding: '6px 14px', borderRadius: 20, border: `1.5px solid ${active ? BAI.owner : BAI.border}`,
+                  background: active ? BAI.ownerLight : BAI.bgSurface,
+                  color: active ? BAI.owner : BAI.inkMid, fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                  fontFamily: BAI.fontBody, transition: 'all 0.15s',
+                }}>{active ? '✓ ' : ''}{v}</button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Garant */}
+      <div>
+        <label style={labelS}>Garant</label>
+        <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+          {[{ v: false, l: 'Non requis' }, { v: true, l: 'Obligatoire' }].map(({ v, l }) => (
+            <button key={l} type="button" onClick={() => update({ requiredGuarantor: v })}
+              style={{
+                flex: 1, padding: '10px', border: `2px solid ${state.requiredGuarantor === v ? BAI.owner : BAI.border}`,
+                background: state.requiredGuarantor === v ? BAI.ownerLight : BAI.bgSurface,
+                borderRadius: 10, cursor: 'pointer', fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600,
+                color: state.requiredGuarantor === v ? BAI.owner : BAI.inkMid,
+              }}>{l}</button>
+          ))}
+        </div>
+        {state.requiredGuarantor && (
+          <div>
+            <p style={{ ...labelS, marginBottom: 8 }}>Types de garant acceptés</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {guarantorOptions.map(({ v, l }) => {
+                const active = state.acceptedGuarantorTypes.includes(v)
+                return (
+                  <button key={v} type="button" onClick={() => toggleGuarantorType(v)}
+                    style={{
+                      padding: '6px 14px', borderRadius: 20, border: `1.5px solid ${active ? BAI.owner : BAI.border}`,
+                      background: active ? BAI.ownerLight : BAI.bgSurface,
+                      color: active ? BAI.owner : BAI.inkMid, fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                      fontFamily: BAI.fontBody,
+                    }}>{active ? '✓ ' : ''}{l}</button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Score minimum & AutoPilot */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+        <div>
+          <label style={labelS}>Score minimum d'éligibilité ({state.minScore}/100)</label>
+          <input type="range" min={40} max={95} step={5} value={state.minScore}
+            onChange={e => update({ minScore: Number(e.target.value) })}
+            style={{ width: '100%', accentColor: BAI.owner }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: BAI.inkFaint, marginTop: 2 }}>
+            <span>Ouvert (40)</span><span>Sélectif (95)</span>
+          </div>
+        </div>
+        <div>
+          <label style={labelS}>AutoPilote</label>
+          <button type="button" onClick={() => update({ autoPilot: !state.autoPilot })}
+            style={{
+              width: '100%', padding: '10px', borderRadius: 10, cursor: 'pointer',
+              border: `2px solid ${state.autoPilot ? BAI.owner : BAI.border}`,
+              background: state.autoPilot ? BAI.ownerLight : BAI.bgSurface,
+              fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600,
+              color: state.autoPilot ? BAI.owner : BAI.inkMid,
+            }}>
+            {state.autoPilot ? '✓ Activé' : 'Désactivé'}
+          </button>
+          <p style={{ fontSize: 11, color: BAI.inkFaint, marginTop: 6, lineHeight: 1.4 }}>
+            {state.autoPilot ? `Candidatures ≥ ${state.minScore} pts approuvées automatiquement` : 'Approbation manuelle de chaque candidature'}
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── SlotStep component ───────────────────────────────────────────────────────
+
+function SlotStep({
+  slots, visitDuration, onChange,
+}: { slots: VisitSlotDraft[]; visitDuration: number; onChange: (s: VisitSlotDraft[]) => void }) {
+  const [dayOfWeek, setDayOfWeek] = useState(1)
+  const [startTime, setStartTime] = useState('09:00')
+  const [endTime, setEndTime] = useState('12:00')
+  const [err, setErr] = useState('')
+
+  const inputS: React.CSSProperties = {
+    background: '#f8f7f4', border: `1px solid ${BAI.border}`, borderRadius: 8,
+    padding: '8px 12px', fontFamily: BAI.fontBody, fontSize: 14, color: BAI.ink, outline: 'none',
+  }
+
+  function addSlot() {
+    if (startTime >= endTime) { setErr('L\'heure de fin doit être après l\'heure de début'); return }
+    const dupe = slots.some(s => s.dayOfWeek === dayOfWeek && s.startTime === startTime && s.endTime === endTime)
+    if (dupe) { setErr('Ce créneau existe déjà'); return }
+    setErr('')
+    onChange([...slots, { dayOfWeek, startTime, endTime }])
+  }
+
+  function removeSlot(i: number) {
+    onChange(slots.filter((_, idx) => idx !== i))
+  }
+
+  const grouped = DAY_FULL.map((day, dow) => ({
+    day, dow, slots: slots.filter(s => s.dayOfWeek === dow),
+  })).filter(g => g.slots.length > 0)
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div style={{ background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, borderRadius: 10, padding: '12px 14px' }}>
+        <p style={{ fontSize: 13, color: BAI.owner, margin: 0, lineHeight: 1.5 }}>
+          Définissez vos créneaux de visite hebdomadaires. Une fois la candidature d'un locataire approuvée, il pourra réserver directement sur ces créneaux ({visitDuration} min/visite).
+        </p>
+      </div>
+
+      {/* Add slot form */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
+        <div>
+          <p style={{ fontSize: 12, fontWeight: 500, color: BAI.inkMid, marginBottom: 6 }}>Jour</p>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {DAYS.map((d, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setDayOfWeek(i)}
+                style={{
+                  padding: '6px 10px', borderRadius: 6, border: `1.5px solid ${dayOfWeek === i ? BAI.owner : BAI.border}`,
+                  background: dayOfWeek === i ? BAI.ownerLight : BAI.bgSurface,
+                  color: dayOfWeek === i ? BAI.owner : BAI.inkMid,
+                  fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s',
+                  fontFamily: BAI.fontBody,
+                }}
+              >{d}</button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p style={{ fontSize: 12, fontWeight: 500, color: BAI.inkMid, marginBottom: 6 }}>Début</p>
+          <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} style={inputS} />
+        </div>
+        <div>
+          <p style={{ fontSize: 12, fontWeight: 500, color: BAI.inkMid, marginBottom: 6 }}>Fin</p>
+          <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} style={inputS} />
+        </div>
+        <button
+          type="button"
+          onClick={addSlot}
+          style={{
+            padding: '9px 18px', background: BAI.owner, color: '#fff', border: 'none',
+            borderRadius: 8, fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, cursor: 'pointer',
+          }}
+        >+ Ajouter</button>
+      </div>
+
+      {err && <p style={{ color: BAI.error, fontSize: 13, margin: '-12px 0 0' }}>{err}</p>}
+
+      {/* Slot list */}
+      {grouped.length === 0 ? (
+        <div style={{
+          textAlign: 'center', padding: '32px 16px',
+          border: `1.5px dashed ${BAI.border}`, borderRadius: 12,
+        }}>
+          <p style={{ fontSize: 14, color: BAI.inkFaint, margin: 0 }}>
+            Aucun créneau ajouté — cette étape est optionnelle.
+          </p>
+          <p style={{ fontSize: 13, color: BAI.inkFaint, marginTop: 4 }}>
+            Vous pourrez en ajouter depuis le tableau de bord après publication.
+          </p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {grouped.map(({ day, dow, slots: daySlots }) => (
+            <div key={dow}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: BAI.inkMid, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{day}</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {daySlots.map((slot, i) => {
+                  const globalIdx = slots.findIndex(s => s.dayOfWeek === dow && s.startTime === slot.startTime && s.endTime === slot.endTime)
+                  return (
+                    <div key={i} style={{
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`,
+                      borderRadius: 8, padding: '6px 10px 6px 12px',
+                    }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: BAI.owner, fontFamily: BAI.fontBody }}>
+                        {slot.startTime} – {slot.endTime}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeSlot(globalIdx)}
+                        style={{
+                          background: 'none', border: 'none', cursor: 'pointer',
+                          color: BAI.inkFaint, fontSize: 16, lineHeight: 1, padding: '0 2px',
+                        }}
+                        aria-label="Supprimer ce créneau"
+                      >×</button>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Main wizard component ────────────────────────────────────────────────────
 
 interface BanFeature {
@@ -253,7 +549,9 @@ export default function CreatePropertyWizard() {
     if (s === 4) {
       if (!state.price || Number(state.price) <= 0) e.price = 'Loyer requis'
     }
-    if (s === 5) {
+    // s === 5: critères — optionnel, pas de validation bloquante
+    // s === 6: créneaux — optionnel, pas de validation bloquante
+    if (s === 7) {
       if (!state.description.trim()) e.description = 'Description requise'
     }
     setErrors(e)
@@ -272,7 +570,7 @@ export default function CreatePropertyWizard() {
   }
 
   async function submit() {
-    if (!validate(5)) return
+    if (!validate(7)) return
 
     const amenitiesAll = [...state.amenities]
     if (state.dpeClass) amenitiesAll.push(`dpe_class:${state.dpeClass}`)
@@ -319,10 +617,26 @@ export default function CreatePropertyWizard() {
       amenities: amenitiesAll,
       availableFrom: state.availableFrom || undefined,
       visitDuration: state.visitDuration,
+      selectionCriteria: {
+        minSalaryRatio: state.minSalaryRatio,
+        requiredGuarantor: state.requiredGuarantor,
+        acceptedGuarantorTypes: state.acceptedGuarantorTypes,
+        preferredContractTypes: state.preferredContractTypes,
+        autoPilot: state.autoPilot,
+        minScore: state.minScore,
+      },
     }
 
     try {
-      await createProperty(input)
+      const property = await createProperty(input)
+      // Create visit slots if any were defined
+      if (state.visitSlots.length > 0) {
+        await Promise.allSettled(
+          state.visitSlots.map(slot => bookingService.createPropertySlot(property.id, slot))
+        )
+      }
+      // Publish immediately (DRAFT → AVAILABLE)
+      await propertyService.publishProperty(property.id)
       localStorage.removeItem(DRAFT_KEY)
       celebrateBig()
       navigate('/dashboard/owner')
@@ -807,8 +1121,22 @@ export default function CreatePropertyWizard() {
               </div>
             )}
 
-            {/* ── Step 5: Médias ───────────────────────────────────────────── */}
+            {/* ── Step 5: Critères de sélection ───────────────────────────── */}
             {step === 5 && (
+              <CriteriaStep state={state} update={update} price={Number(state.price) || 0} />
+            )}
+
+            {/* ── Step 6: Créneaux de visite ──────────────────────────────── */}
+            {step === 6 && (
+              <SlotStep
+                slots={state.visitSlots}
+                visitDuration={state.visitDuration}
+                onChange={slots => update({ visitSlots: slots })}
+              />
+            )}
+
+            {/* ── Step 7: Médias ───────────────────────────────────────────── */}
+            {step === 7 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 <div>
                   <label style={labelStyle}>Photos du bien</label>

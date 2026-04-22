@@ -942,7 +942,7 @@ export default function TenantDashboard() {
                                   <ExternalLink size={11} /> Voir le bien
                                 </Link>
                                 {app.status === 'APPROVED' && (
-                                  <Link to={`/property/${app.property?.id}`} style={{
+                                  <Link to="/my-bookings" style={{
                                     display: 'inline-flex', alignItems: 'center', gap: 4,
                                     padding: '4px 10px', borderRadius: 6, border: 'none',
                                     background: BAI.tenant, color: '#ffffff',

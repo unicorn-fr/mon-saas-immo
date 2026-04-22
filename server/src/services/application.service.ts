@@ -191,22 +191,27 @@ class ApplicationService {
     if (!property) throw new Error('Annonce introuvable')
     if (property.status !== 'AVAILABLE') throw new Error('Ce bien n\'est plus disponible')
 
-    // Check for existing application
+    // Vérifier que le locataire a un dossier suffisamment complet (≥ 50/100)
+    const tenantUser = await prisma.user.findUnique({ where: { id: tenantId }, select: { tenantScore: true } })
+    const dossierScore = tenantUser?.tenantScore ?? 0
+    if (dossierScore < 50) {
+      throw new Error('DOSSIER_INCOMPLET:Votre dossier locatif est incomplet. Ajoutez au minimum une pièce d\'identité et vos justificatifs de revenus avant de postuler.')
+    }
+
+    // Check for existing application — block only if PENDING or APPROVED (active)
     const existing = await prisma.application.findUnique({
       where: { propertyId_tenantId: { propertyId, tenantId } },
     })
-    if (existing && existing.status !== 'WITHDRAWN') {
-      throw new Error('Vous avez déjà postulé pour ce bien')
+    if (existing && existing.status === 'PENDING') {
+      throw new Error('Votre candidature est déjà en cours d\'examen')
     }
+    if (existing && existing.status === 'APPROVED') {
+      throw new Error('Votre candidature a déjà été approuvée')
+    }
+    // REJECTED or WITHDRAWN → allow reapplication
 
-    // Compute score
+    // Compute score (informational only — owner always decides manually)
     const match = await computeMatchScore(propertyId, tenantId, hasGuarantor, guarantorType)
-
-    // Check autoPilot
-    const criteria = (property.selectionCriteria ?? {}) as SelectionCriteria
-    const autoPilot = criteria.autoPilot ?? false
-    const minScore = criteria.minScore ?? 70
-    const autoApprove = autoPilot && match.score >= minScore
 
     const appData = {
       propertyId,
@@ -216,10 +221,10 @@ class ApplicationService {
       guarantorType,
       score: match.score,
       matchDetails: match.details as object,
-      status: autoApprove ? ('APPROVED' as ApplicationStatus) : ('PENDING' as ApplicationStatus),
+      status: 'PENDING' as ApplicationStatus, // Always PENDING — owner decides
     }
 
-    // Upsert if previously withdrawn
+    // Upsert if previously rejected or withdrawn
     if (existing) {
       return prisma.application.update({
         where: { id: existing.id },
@@ -251,7 +256,7 @@ class ApplicationService {
       where,
       include: {
         tenant: { select: { id: true, firstName: true, lastName: true, email: true, phone: true, profileMeta: true } },
-        property: { select: { id: true, title: true, price: true, city: true, address: true, images: true, selectionCriteria: true, ownerId: true } },
+        property: { select: { id: true, title: true, price: true, city: true, address: true, images: true, selectionCriteria: true, ownerId: true, visitDuration: true, visitAvailabilitySlots: { select: { dayOfWeek: true, startTime: true, endTime: true } } } },
       },
       orderBy: [{ score: 'desc' }, { createdAt: 'desc' }],
     })
@@ -287,7 +292,7 @@ class ApplicationService {
     if (app.property.ownerId !== ownerId) throw new Error('Accès refusé')
     if (!['APPROVED', 'REJECTED'].includes(status)) throw new Error('Statut invalide')
 
-    return prisma.application.update({
+    const updated = await prisma.application.update({
       where: { id },
       data: { status },
       include: {
@@ -295,6 +300,17 @@ class ApplicationService {
         property: { select: { id: true, title: true } },
       },
     })
+
+    // Auto-create CalendarInvite when application is approved so tenant can book visits
+    if (status === 'APPROVED') {
+      await prisma.calendarInvite.upsert({
+        where: { propertyId_tenantId: { propertyId: app.propertyId, tenantId: app.tenantId } },
+        create: { propertyId: app.propertyId, ownerId, tenantId: app.tenantId },
+        update: {},
+      })
+    }
+
+    return updated
   }
 
   /**

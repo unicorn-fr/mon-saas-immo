@@ -57,6 +57,8 @@ import ContractsList from './pages/contracts/ContractsList'
 import CreateContract from './pages/contracts/CreateContract'
 import ContractDetails from './pages/contracts/ContractDetails'
 import EtatDesLieux from './pages/contracts/EtatDesLieux'
+import EdlSessionPage from './pages/contracts/EdlSession'
+import EdlJoin from './pages/contracts/EdlJoin'
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard'
@@ -271,6 +273,8 @@ function AppRoutes() {
         <Route path="/contracts" element={<ContractsList />} />
         <Route path="/contracts/:id" element={<ContractDetails />} />
         <Route path="/contracts/:id/edl" element={<EtatDesLieux />} />
+        <Route path="/contracts/:contractId/edl/session" element={<EdlSessionPage />} />
+        <Route path="/edl/join" element={<EdlJoin />} />
       </Route>
 
       {/* Protected Routes - Create Contract (Owner only) */}

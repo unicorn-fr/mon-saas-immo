@@ -3,12 +3,12 @@
  * Groups: En cours (PENDING + APPROVED) / Refusées (REJECTED) / Retirées (WITHDRAWN)
  */
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Building2, Calendar, Loader2,
   Trash2, ChevronDown, ChevronUp, ArrowUpRight, SendHorizonal,
-  XCircle,
+  XCircle, RefreshCw,
 } from 'lucide-react'
 import { applicationService } from '../../services/application.service'
 import type { Application, ApplicationStatus } from '../../types/application.types'
@@ -34,9 +34,11 @@ const STATUS_STYLE: Record<ApplicationStatus, React.CSSProperties> = {
 const SERVER_BASE =
   (import.meta.env.VITE_API_URL as string | undefined)?.replace('/api/v1', '') ?? 'http://localhost:5000'
 
-function AppCard({ app, onWithdraw }: { app: Application; onWithdraw: (id: string) => void }) {
+function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw: (id: string) => void; onReapply: (updated: Application) => void }) {
   const [expanded, setExpanded] = useState(false)
   const [withdrawing, setWithdrawing] = useState(false)
+  const [reapplying, setReapplying] = useState(false)
+  const navigate = useNavigate()
   const prop = app.property
 
   async function handleWithdraw() {
@@ -50,6 +52,26 @@ function AppCard({ app, onWithdraw }: { app: Application; onWithdraw: (id: strin
       toast.error('Erreur lors du retrait.')
     } finally {
       setWithdrawing(false)
+    }
+  }
+
+  async function handleReapply() {
+    if (!prop) return
+    setReapplying(true)
+    try {
+      const updated = await applicationService.create({ propertyId: prop.id })
+      toast.success('Candidature envoyée à nouveau !')
+      onReapply(updated)
+    } catch (e: any) {
+      const msg: string = e?.message ?? 'Impossible de repostuler'
+      if (msg.includes('dossier locatif est incomplet') || msg.includes('DOSSIER_INCOMPLET')) {
+        toast.error('Complétez votre dossier avant de postuler', { duration: 5000 })
+        window.location.href = '/dossier'
+        return
+      }
+      toast.error(msg)
+    } finally {
+      setReapplying(false)
     }
   }
 
@@ -199,23 +221,25 @@ function AppCard({ app, onWithdraw }: { app: Application; onWithdraw: (id: strin
             </div>
 
             {app.status === 'APPROVED' && (
-              <span
+              <button
                 className="mt-2 inline-flex items-center gap-1.5"
+                onClick={e => { e.preventDefault(); e.stopPropagation(); navigate('/my-bookings') }}
                 style={{
-                  background: '#fdf5ec',
-                  color: '#c4976a',
-                  border: '1px solid #f3c99a',
+                  background: '#edf7f2',
+                  color: '#1b5e3b',
+                  border: '1px solid #9fd4ba',
                   borderRadius: 8,
                   padding: '8px 14px',
                   fontSize: 12,
-                  fontWeight: 500,
+                  fontWeight: 600,
                   fontFamily: "'DM Sans', system-ui, sans-serif",
                   minHeight: 44,
+                  cursor: 'pointer',
                 }}
               >
                 <Calendar className="w-3.5 h-3.5" />
-                Réserver une visite
-              </span>
+                Réserver une visite →
+              </button>
             )}
 
             {/* Actions — flex-wrap, touch targets ≥ 44px */}
@@ -276,19 +300,37 @@ function AppCard({ app, onWithdraw }: { app: Application; onWithdraw: (id: strin
         </div>
       </Link>
 
-      {/* Rejection reason */}
+      {/* Rejection reason + Reapply */}
       {isRejected && (
         <div style={{ borderTop: '1px solid #fca5a5', padding: '12px 16px', background: '#fef2f2' }}>
-          <div className="flex items-start gap-2">
-            <XCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#9b1c1c' }} />
-            <div>
-              <p style={{ fontSize: 12, fontWeight: 600, color: '#9b1c1c', fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: '2px' }}>
-                Refusée
-              </p>
-              <p style={{ fontSize: 13, color: '#5a5754', fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.5 }}>
-                Le propriétaire n'a pas retenu votre dossier.{app.rejectionReason ? ` Raison\u00a0: ${app.rejectionReason}` : ''}
-              </p>
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div className="flex items-start gap-2 flex-1">
+              <XCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#9b1c1c' }} />
+              <div>
+                <p style={{ fontSize: 12, fontWeight: 600, color: '#9b1c1c', fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: '2px' }}>
+                  Non retenue
+                </p>
+                <p style={{ fontSize: 13, color: '#5a5754', fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.5 }}>
+                  Le propriétaire n'a pas retenu votre dossier.{app.rejectionReason ? ` Raison\u00a0: ${app.rejectionReason}` : ''}
+                </p>
+              </div>
             </div>
+            {prop && (
+              <button
+                onClick={e => { e.preventDefault(); e.stopPropagation(); handleReapply() }}
+                disabled={reapplying}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '8px 14px', borderRadius: 8, cursor: reapplying ? 'not-allowed' : 'pointer',
+                  background: '#ffffff', border: '1px solid #fca5a5', color: '#9b1c1c',
+                  fontSize: 12, fontWeight: 600, fontFamily: "'DM Sans', system-ui, sans-serif",
+                  opacity: reapplying ? 0.6 : 1, minHeight: 44, flexShrink: 0,
+                }}
+              >
+                {reapplying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                Repostuler
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -405,6 +447,10 @@ export default function MyApplications() {
     setApps((prev) => prev.filter((a) => a.id !== id))
   }
 
+  function handleReapply(updated: Application) {
+    setApps((prev) => prev.map((a) => a.id === updated.id ? updated : a))
+  }
+
   const activeApps = apps.filter(a => a.status === 'PENDING' || a.status === 'APPROVED')
   const rejectedApps = apps.filter(a => a.status === 'REJECTED')
   const withdrawnApps = apps.filter(a => a.status === 'WITHDRAWN')
@@ -519,7 +565,7 @@ export default function MyApplications() {
                 <div className="space-y-3">
                   <AnimatePresence mode="popLayout">
                     {activeApps.map((app) => (
-                      <AppCard key={app.id} app={app} onWithdraw={handleWithdraw} />
+                      <AppCard key={app.id} app={app} onWithdraw={handleWithdraw} onReapply={handleReapply} />
                     ))}
                   </AnimatePresence>
                 </div>
@@ -538,7 +584,7 @@ export default function MyApplications() {
                   <div className="space-y-3">
                     <AnimatePresence mode="popLayout">
                       {rejectedApps.map((app) => (
-                        <AppCard key={app.id} app={app} onWithdraw={handleWithdraw} />
+                        <AppCard key={app.id} app={app} onWithdraw={handleWithdraw} onReapply={handleReapply} />
                       ))}
                     </AnimatePresence>
                   </div>
@@ -558,7 +604,7 @@ export default function MyApplications() {
                   <div className="space-y-3">
                     <AnimatePresence mode="popLayout">
                       {withdrawnApps.map((app) => (
-                        <AppCard key={app.id} app={app} onWithdraw={handleWithdraw} />
+                        <AppCard key={app.id} app={app} onWithdraw={handleWithdraw} onReapply={handleReapply} />
                       ))}
                     </AnimatePresence>
                   </div>

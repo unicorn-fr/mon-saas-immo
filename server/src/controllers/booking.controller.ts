@@ -55,9 +55,16 @@ class BookingController {
         if (
           error.message.includes('not available') ||
           error.message.includes('already booked') ||
-          error.message.includes('must be in the future')
+          error.message.includes('must be in the future') ||
+          error.message.includes('not available for this property')
         ) {
           return res.status(400).json({
+            success: false,
+            message: error.message,
+          })
+        }
+        if (error.message.includes('candidature approuvée')) {
+          return res.status(403).json({
             success: false,
             message: error.message,
           })

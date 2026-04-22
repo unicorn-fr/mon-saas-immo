@@ -45,6 +45,9 @@ class ContractController {
       })
     } catch (error) {
       if (error instanceof Error) {
+        if (error.message.startsWith('DOSSIER_INCOMPLET:')) {
+          return res.status(403).json({ success: false, code: 'DOSSIER_INCOMPLET', message: error.message.replace('DOSSIER_INCOMPLET:', '') })
+        }
         return res.status(400).json({ success: false, message: error.message })
       }
       next(error)

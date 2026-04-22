@@ -21,6 +21,7 @@ import { Calendar } from '../../components/booking/Calendar'
 import { BookingStatus, CalendarInviteWithProperty } from '../../types/booking.types'
 import { Layout } from '../../components/layout/Layout'
 import { bookingService } from '../../services/booking.service'
+import { applicationService } from '../../services/application.service'
 import toast from 'react-hot-toast'
 
 type ViewMode = 'list' | 'calendar'
@@ -49,20 +50,22 @@ function InvitePanel({ invite }: { invite: CalendarInviteWithProperty }) {
   const validDates = slotDays.size === 0 ? dates : dates.filter(d => slotDays.has(new Date(d + 'T00:00:00').getDay()))
 
   async function handleSelectDate(date: string) {
+    if (!property?.id) return
     setSelectedDate(date)
     setAvailableSlots([])
     setLoadingSlots(true)
     try {
-      const slots = await bookingService.getAvailableSlots(property?.id, date)
+      const slots = await bookingService.getAvailableSlots(property.id, date)
       setAvailableSlots(slots)
     } catch { toast.error('Impossible de charger les créneaux') }
     finally { setLoadingSlots(false) }
   }
 
   async function handleBook(time: string) {
+    if (!property?.id) return
     setBookingSlot(time)
     try {
-      await bookingService.createBooking({ propertyId: property?.id, visitDate: selectedDate, visitTime: time })
+      await bookingService.createBooking({ propertyId: property.id, visitDate: selectedDate, visitTime: time })
       toast.success('Visite réservée ! Le propriétaire va confirmer.')
       setAvailableSlots(prev => prev.filter(s => s !== time))
     } catch (e: any) {
@@ -205,7 +208,36 @@ export const MyBookings = () => {
   const [cancelModalBookingId, setCancelModalBookingId] = useState<string | null>(null)
 
   useEffect(() => {
-    bookingService.getMyInvites().then(setInvites).catch(() => {})
+    // Load both explicit invites AND approved applications (auto-fallback for historical data)
+    Promise.all([
+      bookingService.getMyInvites().catch(() => [] as CalendarInviteWithProperty[]),
+      applicationService.list().catch(() => [] as any[]),
+    ]).then(([fetchedInvites, apps]) => {
+      const invitedPropertyIds = new Set(fetchedInvites.map((i: CalendarInviteWithProperty) => i.propertyId))
+      // Build synthetic invites for approved apps that don't have an explicit invite yet
+      const approvedApps = (apps as any[]).filter((a: any) =>
+        a.status === 'APPROVED' && a.property && !invitedPropertyIds.has(a.propertyId)
+      )
+      const syntheticInvites: CalendarInviteWithProperty[] = approvedApps.map((a: any) => ({
+        id: `app-${a.id}`,
+        propertyId: a.propertyId,
+        tenantId: a.tenantId,
+        ownerId: a.property.ownerId ?? '',
+        createdAt: a.createdAt,
+        property: {
+          id: a.property.id,
+          title: a.property.title,
+          address: a.property.address ?? '',
+          city: a.property.city,
+          price: a.property.price,
+          images: a.property.images ?? [],
+          visitDuration: 30,
+          visitAvailabilitySlots: [], // slots chargés dynamiquement via getAvailableSlots
+        },
+        owner: { id: a.property.ownerId ?? '', firstName: 'le', lastName: 'propriétaire' },
+      }))
+      setInvites([...fetchedInvites, ...syntheticInvites])
+    })
   }, [])
 
   useEffect(() => {
@@ -319,7 +351,7 @@ export const MyBookings = () => {
                 </span>
               </div>
               <p style={{ fontSize: 13, color: '#9e9b96', marginBottom: 14 }}>
-                Un propriétaire vous a invité à réserver une visite pour ces logements.
+                Votre candidature a été approuvée — choisissez un créneau pour visiter.
               </p>
               <div className="flex flex-col gap-3">
                 {invites.map(invite => (

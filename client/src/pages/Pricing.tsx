@@ -2,18 +2,7 @@ import { Link } from 'react-router-dom'
 import { Check, X, Zap, Building2, Crown, ArrowRight, HelpCircle } from 'lucide-react'
 import { Layout } from '../components/layout/Layout'
 import { useReveal } from '../hooks/useReveal'
-
-// ─── Maison tokens ────────────────────────────────────────────────────────────
-
-const M = {
-  bg: '#fafaf8', surface: '#ffffff', muted: '#f4f2ee',
-  ink: '#0d0c0a', inkMid: '#5a5754', inkFaint: '#9e9b96',
-  night: '#1a1a2e', caramel: '#c4976a', caramelLight: '#fdf5ec',
-  tenant: '#1b5e3b', tenantLight: '#edf7f2',
-  border: '#e4e1db',
-  display: "'Cormorant Garamond', Georgia, serif",
-  body: "'DM Sans', system-ui, sans-serif",
-}
+import { BAI } from '../constants/bailio-tokens'
 
 // ─── Plan data ────────────────────────────────────────────────────────────────
 
@@ -142,22 +131,22 @@ function PlanCard({ plan, delay }: { plan: Plan; delay: number }) {
         transform: visible
           ? plan.highlighted ? 'translateY(0) scale(1.02)' : 'translateY(0)'
           : 'translateY(24px)',
-        backgroundColor: M.surface,
-        border: plan.highlighted ? `2px solid ${M.night}` : `1px solid ${M.border}`,
+        backgroundColor: BAI.bgSurface,
+        border: plan.highlighted ? `2px solid ${BAI.night}` : `1px solid ${BAI.border}`,
         borderRadius: '12px',
         boxShadow: plan.highlighted
           ? '0 8px 40px rgba(26,26,46,0.14), 0 2px 8px rgba(26,26,46,0.08)'
           : '0 1px 4px rgba(13,12,10,0.05)',
-        fontFamily: M.body,
+        fontFamily: BAI.fontBody,
       }}
     >
       {plan.badge && (
         <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
           <span
             style={{
-              backgroundColor: M.night,
+              backgroundColor: BAI.night,
               color: '#ffffff',
-              fontFamily: M.body,
+              fontFamily: BAI.fontBody,
               fontSize: '11px',
               fontWeight: 600,
               letterSpacing: '0.04em',
@@ -178,23 +167,23 @@ function PlanCard({ plan, delay }: { plan: Plan; delay: number }) {
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{
-              backgroundColor: plan.highlighted ? M.night : M.muted,
+              backgroundColor: plan.highlighted ? BAI.night : BAI.bgMuted,
             }}
           >
             <Icon
               className="w-5 h-5"
               style={{
-                color: plan.highlighted ? '#ffffff' : plan.id === 'enterprise' ? M.caramel : M.inkFaint,
+                color: plan.highlighted ? '#ffffff' : plan.id === 'enterprise' ? BAI.caramel : BAI.inkFaint,
               }}
             />
           </div>
           <h3
             style={{
-              fontFamily: M.display,
+              fontFamily: BAI.fontDisplay,
               fontStyle: 'italic',
               fontSize: '22px',
               fontWeight: 700,
-              color: M.ink,
+              color: BAI.ink,
             }}
           >
             {plan.name}
@@ -206,26 +195,26 @@ function PlanCard({ plan, delay }: { plan: Plan; delay: number }) {
           <div className="flex items-baseline gap-1">
             <span
               style={{
-                fontFamily: M.display,
+                fontFamily: BAI.fontDisplay,
                 fontSize: '56px',
                 fontWeight: 600,
-                color: M.ink,
+                color: BAI.ink,
                 lineHeight: 1,
               }}
             >
               {plan.price}
             </span>
           </div>
-          <p style={{ fontFamily: M.body, fontSize: '14px', color: M.inkFaint, marginTop: '4px' }}>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: '14px', color: BAI.inkFaint, marginTop: '4px' }}>
             {plan.priceNote}
           </p>
         </div>
 
         <p
           style={{
-            fontFamily: M.body,
+            fontFamily: BAI.fontBody,
             fontSize: '14px',
-            color: M.inkMid,
+            color: BAI.inkMid,
             lineHeight: 1.6,
             marginBottom: '24px',
           }}
@@ -238,15 +227,15 @@ function PlanCard({ plan, delay }: { plan: Plan; delay: number }) {
           to={plan.ctaLink}
           className="w-full text-center flex items-center justify-center gap-2 transition-opacity hover:opacity-80"
           style={{
-            fontFamily: M.body,
+            fontFamily: BAI.fontBody,
             fontSize: '14px',
             fontWeight: 600,
             padding: '11px 20px',
             borderRadius: '8px',
             marginBottom: '28px',
             ...(plan.highlighted
-              ? { backgroundColor: M.night, color: '#ffffff', border: 'none' }
-              : { backgroundColor: 'transparent', color: M.inkMid, border: `1px solid ${M.border}` }),
+              ? { backgroundColor: BAI.night, color: '#ffffff', border: 'none' }
+              : { backgroundColor: 'transparent', color: BAI.inkMid, border: `1px solid ${BAI.border}` }),
           }}
         >
           {plan.cta}
@@ -254,7 +243,7 @@ function PlanCard({ plan, delay }: { plan: Plan; delay: number }) {
         </Link>
 
         {/* Separator */}
-        <div style={{ height: '1px', backgroundColor: M.border, marginBottom: '20px' }} />
+        <div style={{ height: '1px', backgroundColor: BAI.border, marginBottom: '20px' }} />
 
         {/* Features */}
         <ul className="space-y-3 flex-1">
@@ -263,18 +252,18 @@ function PlanCard({ plan, delay }: { plan: Plan; delay: number }) {
               {f.included ? (
                 <Check
                   className="w-4 h-4 flex-shrink-0 mt-0.5"
-                  style={{ color: M.tenant }}
+                  style={{ color: BAI.tenant }}
                 />
               ) : (
                 <X
                   className="w-4 h-4 flex-shrink-0 mt-0.5"
-                  style={{ color: M.border }}
+                  style={{ color: BAI.border }}
                 />
               )}
-              <span style={{ fontFamily: M.body, fontSize: '14px', color: f.included ? M.ink : M.inkFaint }}>
+              <span style={{ fontFamily: BAI.fontBody, fontSize: '14px', color: f.included ? BAI.ink : BAI.inkFaint }}>
                 {f.label}
                 {f.note && (
-                  <span style={{ display: 'block', fontSize: '12px', color: M.inkFaint, marginTop: '1px' }}>
+                  <span style={{ display: 'block', fontSize: '12px', color: BAI.inkFaint, marginTop: '1px' }}>
                     {f.note}
                   </span>
                 )}
@@ -295,11 +284,11 @@ export default function Pricing() {
 
   return (
     <Layout>
-      <div style={{ backgroundColor: M.bg, fontFamily: M.body }}>
+      <div style={{ backgroundColor: BAI.bgBase, fontFamily: BAI.fontBody }}>
 
         {/* Hero */}
         <section
-          style={{ backgroundColor: M.night, padding: '80px 16px 72px' }}
+          style={{ backgroundColor: BAI.night, padding: '80px 16px 72px' }}
           className="text-center"
         >
           <div
@@ -309,12 +298,12 @@ export default function Pricing() {
           >
             <p
               style={{
-                fontFamily: M.body,
+                fontFamily: BAI.fontBody,
                 fontSize: '10px',
                 fontWeight: 600,
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
-                color: M.caramel,
+                color: BAI.caramel,
                 marginBottom: '16px',
               }}
             >
@@ -322,7 +311,7 @@ export default function Pricing() {
             </p>
             <h1
               style={{
-                fontFamily: M.display,
+                fontFamily: BAI.fontDisplay,
                 fontStyle: 'italic',
                 fontSize: 'clamp(38px, 5vw, 52px)',
                 fontWeight: 600,
@@ -335,7 +324,7 @@ export default function Pricing() {
             </h1>
             <p
               style={{
-                fontFamily: M.body,
+                fontFamily: BAI.fontBody,
                 fontSize: '16px',
                 color: 'rgba(255,255,255,0.65)',
                 maxWidth: '560px',
@@ -359,12 +348,12 @@ export default function Pricing() {
           {/* Enterprise note */}
           <p
             className="text-center"
-            style={{ fontFamily: M.body, fontSize: '14px', color: M.inkFaint, marginTop: '32px' }}
+            style={{ fontFamily: BAI.fontBody, fontSize: '14px', color: BAI.inkFaint, marginTop: '32px' }}
           >
             Vous gérez plus de 50 biens ?{' '}
             <Link
               to="/contact"
-              style={{ color: M.night, textDecoration: 'underline', fontWeight: 500 }}
+              style={{ color: BAI.night, textDecoration: 'underline', fontWeight: 500 }}
             >
               Demandez un devis sur mesure
             </Link>.
@@ -388,22 +377,22 @@ export default function Pricing() {
                 width: '32px',
                 height: '32px',
                 borderRadius: '8px',
-                backgroundColor: M.caramelLight,
+                backgroundColor: BAI.caramelLight,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
               }}
             >
-              <HelpCircle className="w-4 h-4" style={{ color: M.caramel }} />
+              <HelpCircle className="w-4 h-4" style={{ color: BAI.caramel }} />
             </div>
             <h2
               style={{
-                fontFamily: M.display,
+                fontFamily: BAI.fontDisplay,
                 fontStyle: 'italic',
                 fontSize: '26px',
                 fontWeight: 700,
-                color: M.ink,
+                color: BAI.ink,
               }}
             >
               Questions fréquentes
@@ -415,24 +404,24 @@ export default function Pricing() {
               <div
                 key={item.q}
                 style={{
-                  backgroundColor: M.surface,
-                  border: `1px solid ${M.border}`,
+                  backgroundColor: BAI.bgSurface,
+                  border: `1px solid ${BAI.border}`,
                   borderRadius: '12px',
                   padding: '20px 24px',
                 }}
               >
                 <p
                   style={{
-                    fontFamily: M.body,
+                    fontFamily: BAI.fontBody,
                     fontSize: '15px',
                     fontWeight: 600,
-                    color: M.ink,
+                    color: BAI.ink,
                     marginBottom: '8px',
                   }}
                 >
                   {item.q}
                 </p>
-                <p style={{ fontFamily: M.body, fontSize: '14px', color: M.inkMid, lineHeight: 1.7 }}>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: '14px', color: BAI.inkMid, lineHeight: 1.7 }}>
                   {item.a}
                 </p>
               </div>
