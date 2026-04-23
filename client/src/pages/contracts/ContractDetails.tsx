@@ -3,7 +3,6 @@ import { BAI } from '../../constants/bailio-tokens'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useContractStore } from '../../store/contractStore'
 import { useAuth } from '../../hooks/useAuth'
-import { dossierService, TenantDocument } from '../../services/dossier.service'
 import { ContractClause } from '../../types/contract.types'
 import { SignaturePad } from '../../components/contract/SignaturePad'
 import { ContractPDF } from '../../components/contract/ContractPDF'
@@ -110,22 +109,12 @@ export default function ContractDetails() {
   const [actionLoading, setActionLoading] = useState(false)
   const [initialLoaded, setInitialLoaded] = useState(false)
   const [docsSaved, setDocsSaved] = useState(false)
-  const [tenantDossierDocs, setTenantDossierDocs] = useState<TenantDocument[]>([])
-
   useEffect(() => {
     if (id) {
       fetchContractById(id).then(() => setInitialLoaded(true))
       fetchDocuments(id)
     }
   }, [id, fetchContractById, fetchDocuments])
-
-  // Charger le dossier du locataire pour vérifier les pièces requises avant signature
-  useEffect(() => {
-    const isTenantUser = user?.id && contract?.tenantId && user.id === contract.tenantId
-    if (isTenantUser) {
-      dossierService.getDocuments().then(setTenantDossierDocs).catch(() => setTenantDossierDocs([]))
-    }
-  }, [user?.id, contract?.tenantId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load requiredDocs and customDocRequests from contract content once loaded
   useEffect(() => {
