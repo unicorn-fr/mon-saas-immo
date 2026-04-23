@@ -68,7 +68,9 @@ class EdlService {
     const updated = await prisma.edlSession.update({
       where: { id: session.id },
       data: { tenantId, status: 'ACTIVE' },
-      include: { contract: { select: { id: true, propertyId: true } } },
+      include: {
+        contract: { select: { id: true, propertyId: true, property: { select: { title: true, address: true } } } },
+      },
     })
 
     // Notifie le propriétaire que le locataire a rejoint
