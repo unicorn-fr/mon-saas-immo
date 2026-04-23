@@ -122,7 +122,19 @@ class ContractService {
     }
 
     // Vérifier que le dossier du locataire est complet (score ≥ 75 — IDENTITE + EMPLOI + REVENUS)
-    const tenantDossierScore = tenant.tenantScore ?? 0
+    // Calcul à la volée sur les documents réels
+    const tenantDocsForContract = await prisma.tenantDocument.findMany({
+      where: { userId: tenant.id },
+      select: { category: true, status: true },
+    })
+    const contractWeights: Record<string, number> = { IDENTITE: 25, EMPLOI: 20, REVENUS: 30, DOMICILE: 15, GARANTIES: 10 }
+    const validCatsContract = new Set(
+      tenantDocsForContract.filter(d => d.status === 'UPLOADED' || d.status === 'VALIDATED').map(d => d.category)
+    )
+    let tenantDossierScore = 0
+    for (const [cat, w] of Object.entries(contractWeights)) {
+      if (validCatsContract.has(cat)) tenantDossierScore += w
+    }
     if (tenantDossierScore < 75) {
       throw new Error(`DOSSIER_INCOMPLET:Le dossier de ${tenant.firstName} ${tenant.lastName} est incomplet (score : ${tenantDossierScore}/100). Les pièces d'identité, justificatifs d'emploi et de revenus sont obligatoires pour générer un contrat.`)
     }

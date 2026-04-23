@@ -192,8 +192,22 @@ class ApplicationService {
     if (property.status !== 'AVAILABLE') throw new Error('Ce bien n\'est plus disponible')
 
     // Vérifier que le locataire a un dossier suffisamment complet (≥ 50/100)
-    const tenantUser = await prisma.user.findUnique({ where: { id: tenantId }, select: { tenantScore: true } })
-    const dossierScore = tenantUser?.tenantScore ?? 0
+    // Calcul à la volée sur les documents réels (ne pas dépendre du champ tenantScore potentiellement NULL)
+    const tenantDocs = await prisma.tenantDocument.findMany({
+      where: { userId: tenantId },
+      select: { category: true, status: true },
+    })
+    const dossierWeights: Record<string, number> = { IDENTITE: 25, EMPLOI: 20, REVENUS: 30, DOMICILE: 15, GARANTIES: 10 }
+    const validCats = new Set(
+      tenantDocs.filter(d => d.status === 'UPLOADED' || d.status === 'VALIDATED').map(d => d.category)
+    )
+    let dossierScore = 0
+    for (const [cat, w] of Object.entries(dossierWeights)) {
+      if (validCats.has(cat)) dossierScore += w
+    }
+    // Mettre à jour tenantScore en base pour cohérence
+    await prisma.user.update({ where: { id: tenantId }, data: { tenantScore: dossierScore } })
+
     if (dossierScore < 50) {
       throw new Error('DOSSIER_INCOMPLET:Votre dossier locatif est incomplet. Ajoutez au minimum une pièce d\'identité et vos justificatifs de revenus avant de postuler.')
     }
