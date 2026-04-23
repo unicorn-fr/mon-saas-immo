@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
+import jsQR from 'jsqr'
 import { BAI } from '../../constants/bailio-tokens'
 import { Layout } from '../../components/layout/Layout'
 import { useAuth } from '../../hooks/useAuth'
@@ -15,7 +16,7 @@ import { useContractStore } from '../../store/contractStore'
 import toast from 'react-hot-toast'
 import {
   ClipboardCheck, CheckCircle, Lock, ChevronDown, ChevronRight,
-  Loader2, QrCode, Wifi, WifiOff, Users, Camera, ArrowLeft,
+  Loader2, QrCode, Wifi, WifiOff, Users, Camera, ArrowLeft, X,
 } from 'lucide-react'
 
 // ── Constantes ────────────────────────────────────────────────────────────────
@@ -42,6 +43,159 @@ const btnBase = (bg: string, color = '#fff'): React.CSSProperties => ({
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
   minHeight: 44, touchAction: 'manipulation',
 })
+
+// ── Scanner QR live ───────────────────────────────────────────────────────────
+
+function QrScannerOverlay({ onScan, onClose }: { onScan: (pin: string) => void; onClose: () => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [camError, setCamError] = useState<string | null>(null)
+  const [scanning, setScanning] = useState(false)
+
+  useEffect(() => {
+    let alive = true
+
+    async function start() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+        })
+        if (!alive) { stream.getTracks().forEach(t => t.stop()); return }
+        streamRef.current = stream
+        const video = videoRef.current!
+        video.srcObject = stream
+        video.play()
+        setScanning(true)
+
+        timerRef.current = setInterval(() => {
+          if (!alive || !videoRef.current || !canvasRef.current) return
+          const v = videoRef.current
+          if (v.readyState < v.HAVE_ENOUGH_DATA) return
+          const canvas = canvasRef.current
+          canvas.width = v.videoWidth
+          canvas.height = v.videoHeight
+          const ctx = canvas.getContext('2d', { willReadFrequently: true })!
+          ctx.drawImage(v, 0, 0)
+          const img = ctx.getImageData(0, 0, canvas.width, canvas.height)
+          const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' })
+          if (code?.data) {
+            const match = code.data.match(/[?&]pin=(\d{6})/)
+            if (match) {
+              stop()
+              onScan(match[1])
+            }
+          }
+        }, 200)
+      } catch {
+        setCamError('Impossible d\'accéder à la caméra.\nVérifiez les permissions dans votre navigateur.')
+      }
+    }
+
+    function stop() {
+      alive = false
+      if (timerRef.current) clearInterval(timerRef.current)
+      streamRef.current?.getTracks().forEach(t => t.stop())
+    }
+
+    start()
+    return stop
+  }, [onScan])
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 9999,
+      background: '#000', display: 'flex', flexDirection: 'column',
+    }}>
+      {/* Vidéo */}
+      <video
+        ref={videoRef}
+        playsInline muted autoPlay
+        style={{ flex: 1, width: '100%', objectFit: 'cover', display: camError ? 'none' : 'block' }}
+      />
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
+
+      {/* Overlay de scan */}
+      {!camError && scanning && (
+        <div style={{
+          position: 'absolute', inset: 0, display: 'flex',
+          flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          pointerEvents: 'none',
+        }}>
+          {/* Cadre de visée */}
+          <div style={{ position: 'relative', width: 240, height: 240 }}>
+            {/* 4 coins */}
+            {[
+              { top: 0, left: 0, borderTop: '4px solid #fff', borderLeft: '4px solid #fff', borderRadius: '12px 0 0 0' },
+              { top: 0, right: 0, borderTop: '4px solid #fff', borderRight: '4px solid #fff', borderRadius: '0 12px 0 0' },
+              { bottom: 0, left: 0, borderBottom: '4px solid #fff', borderLeft: '4px solid #fff', borderRadius: '0 0 0 12px' },
+              { bottom: 0, right: 0, borderBottom: '4px solid #fff', borderRight: '4px solid #fff', borderRadius: '0 0 12px 0' },
+            ].map((s, i) => (
+              <div key={i} style={{ position: 'absolute', width: 32, height: 32, ...s }} />
+            ))}
+            {/* Ligne de scan animée */}
+            <div style={{
+              position: 'absolute', left: 8, right: 8, height: 2,
+              background: BAI.caramel,
+              animation: 'edl-scan 1.6s ease-in-out infinite',
+            }} />
+          </div>
+          <p style={{
+            marginTop: 24, color: '#fff', fontSize: 14, fontWeight: 500,
+            fontFamily: BAI.fontBody, textAlign: 'center',
+            textShadow: '0 1px 4px rgba(0,0,0,0.6)',
+          }}>
+            Pointez la caméra vers le QR code du propriétaire
+          </p>
+        </div>
+      )}
+
+      {/* Erreur caméra */}
+      {camError && (
+        <div style={{
+          flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+          justifyContent: 'center', padding: 32, textAlign: 'center',
+        }}>
+          <Camera size={48} style={{ color: '#666', marginBottom: 16 }} />
+          <p style={{ color: '#fff', fontSize: 14, fontFamily: BAI.fontBody, whiteSpace: 'pre-line', marginBottom: 8 }}>
+            {camError}
+          </p>
+          <p style={{ color: '#888', fontSize: 12, fontFamily: BAI.fontBody }}>
+            Saisissez le code PIN manuellement.
+          </p>
+        </div>
+      )}
+
+      {/* Bouton fermer */}
+      <button
+        onClick={() => {
+          if (timerRef.current) clearInterval(timerRef.current)
+          streamRef.current?.getTracks().forEach(t => t.stop())
+          onClose()
+        }}
+        style={{
+          position: 'absolute', top: 16, right: 16,
+          width: 44, height: 44, borderRadius: '50%',
+          background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', zIndex: 10,
+        }}
+      >
+        <X size={20} style={{ color: '#fff' }} />
+      </button>
+
+      {/* CSS animation inline */}
+      <style>{`
+        @keyframes edl-scan {
+          0%   { top: 8px; opacity: 1; }
+          50%  { top: calc(100% - 10px); opacity: 0.8; }
+          100% { top: 8px; opacity: 1; }
+        }
+      `}</style>
+    </div>
+  )
+}
 
 // ── Pièce collaborative ───────────────────────────────────────────────────────
 
@@ -185,9 +339,8 @@ function RoomPanel({
 
 function PinInput({ onJoin, joining }: { onJoin: (pin: string) => void; joining: boolean }) {
   const [digits, setDigits] = useState(['', '', '', '', '', ''])
-  const [scanning, setScanning] = useState(false)
+  const [showScanner, setShowScanner] = useState(false)
   const refs = useRef<(HTMLInputElement | null)[]>([])
-  const fileRef = useRef<HTMLInputElement>(null)
 
   function handleInput(i: number, val: string) {
     const d = val.replace(/\D/g, '').slice(-1)
@@ -213,84 +366,78 @@ function PinInput({ onJoin, joining }: { onJoin: (pin: string) => void; joining:
     if (pasted.length === 6) onJoin(pasted)
   }
 
-  async function handleScanFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]; if (!file) return
-    setScanning(true)
-    try {
-      const bd = new (window as any).BarcodeDetector({ formats: ['qr_code'] })
-      const img = await createImageBitmap(file)
-      const codes = await bd.detect(img)
-      if (!codes.length) { toast.error('Aucun QR code détecté. Réessayez.'); return }
-      const match = (codes[0].rawValue as string).match(/[?&]pin=(\d{6})/)
-      if (!match) { toast.error('QR code invalide — pas un QR code Bailio.'); return }
-      const pin = match[1]
-      setDigits(pin.split('').concat(Array(6).fill('')).slice(0, 6))
-      onJoin(pin)
-    } catch {
-      toast.error('Scanner non supporté. Saisissez le code manuellement.')
-    } finally {
-      setScanning(false)
-      if (fileRef.current) fileRef.current.value = ''
-    }
+  function handleScanned(pin: string) {
+    setShowScanner(false)
+    setDigits(pin.split(''))
+    onJoin(pin)
   }
 
   const complete = digits.every(x => x)
 
   return (
-    <div>
-      {/* Cases */}
-      <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 20 }}>
-        {digits.map((d, i) => (
-          <input
-            key={i}
-            ref={el => { refs.current[i] = el }}
-            type="text" inputMode="numeric" maxLength={1} value={d}
-            autoFocus={i === 0}
-            onChange={e => handleInput(i, e.target.value)}
-            onKeyDown={e => handleKeyDown(i, e)}
-            onPaste={handlePaste}
-            onFocus={e => e.target.select()}
-            style={{
-              width: 'clamp(40px, 13vw, 52px)', height: 60, textAlign: 'center',
-              fontSize: 26, fontWeight: 700, fontFamily: BAI.fontBody, color: BAI.ink,
-              outline: 'none', caretColor: BAI.caramel,
-              background: d ? BAI.bgSurface : BAI.bgMuted,
-              border: `2px solid ${d ? BAI.caramel : BAI.border}`,
-              borderRadius: 12, transition: 'border-color 0.15s, background 0.15s',
-            }}
-          />
-        ))}
+    <>
+      {/* Scanner plein écran */}
+      {showScanner && (
+        <QrScannerOverlay
+          onScan={handleScanned}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
+
+      <div>
+        {/* Cases OTP */}
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 20 }}>
+          {digits.map((d, i) => (
+            <input
+              key={i}
+              ref={el => { refs.current[i] = el }}
+              type="text" inputMode="numeric" maxLength={1} value={d}
+              autoFocus={i === 0}
+              onChange={e => handleInput(i, e.target.value)}
+              onKeyDown={e => handleKeyDown(i, e)}
+              onPaste={handlePaste}
+              onFocus={e => e.target.select()}
+              style={{
+                width: 'clamp(40px, 13vw, 52px)', height: 60, textAlign: 'center',
+                fontSize: 26, fontWeight: 700, fontFamily: BAI.fontBody, color: BAI.ink,
+                outline: 'none', caretColor: BAI.caramel,
+                background: d ? BAI.bgSurface : BAI.bgMuted,
+                border: `2px solid ${d ? BAI.caramel : BAI.border}`,
+                borderRadius: 12, transition: 'border-color 0.15s, background 0.15s',
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Rejoindre */}
+        <button
+          onClick={() => { if (complete) onJoin(digits.join('')) }}
+          disabled={joining || !complete}
+          style={{ ...btnBase(BAI.night), width: '100%', opacity: complete ? 1 : 0.35, marginBottom: 12 }}
+        >
+          {joining ? <><Loader2 size={15} className="animate-spin" /> Connexion…</> : 'Rejoindre l\'état des lieux'}
+        </button>
+
+        {/* Séparateur */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+          <div style={{ flex: 1, height: 1, background: BAI.border }} />
+          <span style={{ fontSize: 11, color: BAI.inkFaint }}>ou</span>
+          <div style={{ flex: 1, height: 1, background: BAI.border }} />
+        </div>
+
+        {/* Scanner live */}
+        <button
+          onClick={() => setShowScanner(true)}
+          style={{ ...btnBase(BAI.bgMuted, BAI.ink), width: '100%', border: `1px solid ${BAI.border}` }}
+        >
+          <Camera size={16} />
+          Scanner le QR code avec la caméra
+        </button>
+        <p style={{ fontSize: 11, color: BAI.inkFaint, textAlign: 'center', marginTop: 8 }}>
+          Ouvre la caméra directement dans le navigateur
+        </p>
       </div>
-
-      {/* Rejoindre */}
-      <button
-        onClick={() => { if (complete) onJoin(digits.join('')) }}
-        disabled={joining || !complete}
-        style={{ ...btnBase(BAI.night), width: '100%', opacity: complete ? 1 : 0.35, marginBottom: 12 }}
-      >
-        {joining ? <><Loader2 size={15} className="animate-spin" /> Connexion…</> : 'Rejoindre l\'état des lieux'}
-      </button>
-
-      {/* Séparateur */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-        <div style={{ flex: 1, height: 1, background: BAI.border }} />
-        <span style={{ fontSize: 11, color: BAI.inkFaint }}>ou</span>
-        <div style={{ flex: 1, height: 1, background: BAI.border }} />
-      </div>
-
-      {/* Scanner */}
-      <button
-        onClick={() => fileRef.current?.click()}
-        disabled={scanning}
-        style={{ ...btnBase(BAI.bgMuted, BAI.inkMid), width: '100%' }}
-      >
-        {scanning ? <><Loader2 size={15} className="animate-spin" /> Lecture…</> : <><Camera size={15} /> Prendre une photo du QR code</>}
-      </button>
-      <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleScanFile} style={{ display: 'none' }} />
-      <p style={{ fontSize: 11, color: BAI.inkFaint, textAlign: 'center', marginTop: 8 }}>
-        Ouvre l'appareil photo — prenez en photo le QR code du propriétaire
-      </p>
-    </div>
+    </>
   )
 }
 
