@@ -15,7 +15,7 @@ import { useContractStore } from '../../store/contractStore'
 import toast from 'react-hot-toast'
 import {
   ClipboardCheck, CheckCircle, Lock, ChevronDown, ChevronRight,
-  Loader2, QrCode, Wifi, WifiOff, Users,
+  Loader2, QrCode, Wifi, WifiOff, Users, Camera,
 } from 'lucide-react'
 
 // ── Styles ────────────────────────────────────────────────────────────────────
@@ -164,7 +164,9 @@ function RoomPanel({
 
 function PinInput({ onJoin, joining }: { onJoin: (pin: string) => void; joining: boolean }) {
   const [digits, setDigits] = useState(['', '', '', '', '', ''])
+  const [scanning, setScanning] = useState(false)
   const refs = useRef<(HTMLInputElement | null)[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   function handleInput(i: number, val: string) {
     const d = val.replace(/\D/g, '').slice(-1)
@@ -199,6 +201,32 @@ function PinInput({ onJoin, joining }: { onJoin: (pin: string) => void; joining:
     if (pasted.length === 6) onJoin(pasted)
   }
 
+  async function handleScanFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setScanning(true)
+    try {
+      // Utilise BarcodeDetector (Chrome/Android/iOS 17+) pour lire le QR code
+      const bd = new (window as any).BarcodeDetector({ formats: ['qr_code'] })
+      const img = await createImageBitmap(file)
+      const codes = await bd.detect(img)
+      if (codes.length === 0) { toast.error('Aucun QR code détecté. Réessayez.'); return }
+      const url = codes[0].rawValue as string
+      // Extraire le PIN depuis l'URL (?pin=XXXXXX)
+      const match = url.match(/[?&]pin=(\d{6})/)
+      if (!match) { toast.error('QR code invalide — ce n\'est pas un QR code Bailio.'); return }
+      const pin = match[1]
+      const filled = pin.split('').concat(Array(6).fill('')).slice(0, 6)
+      setDigits(filled)
+      onJoin(pin)
+    } catch {
+      toast.error('Scan non supporté sur ce navigateur. Saisissez le code PIN manuellement.')
+    } finally {
+      setScanning(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
   const digitStyle = (filled: boolean): React.CSSProperties => ({
     width: 48, height: 60, textAlign: 'center', fontSize: 26, fontWeight: 700,
     fontFamily: BAI.fontBody, color: BAI.ink, outline: 'none',
@@ -208,8 +236,11 @@ function PinInput({ onJoin, joining }: { onJoin: (pin: string) => void; joining:
     caretColor: BAI.caramel,
   })
 
+  const complete = digits.every(x => x)
+
   return (
     <div>
+      {/* Cases PIN */}
       <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 20 }}>
         {digits.map((d, i) => (
           <input
@@ -228,16 +259,49 @@ function PinInput({ onJoin, joining }: { onJoin: (pin: string) => void; joining:
           />
         ))}
       </div>
+
+      {/* Bouton rejoindre */}
       <button
-        onClick={() => { if (digits.every(x => x)) onJoin(digits.join('')) }}
-        disabled={joining || !digits.every(x => x)}
-        style={{ ...btnStyle(BAI.night), width: '100%', justifyContent: 'center', opacity: digits.every(x => x) ? 1 : 0.4 }}
+        onClick={() => { if (complete) onJoin(digits.join('')) }}
+        disabled={joining || !complete}
+        style={{ ...btnStyle(BAI.night), width: '100%', justifyContent: 'center', opacity: complete ? 1 : 0.35, marginBottom: 12 }}
       >
         {joining
           ? <><Loader2 size={15} className="animate-spin" /> Connexion…</>
           : 'Rejoindre l\'état des lieux'
         }
       </button>
+
+      {/* Séparateur */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+        <div style={{ flex: 1, height: 1, background: BAI.border }} />
+        <span style={{ fontSize: 11, color: BAI.inkFaint, fontWeight: 500 }}>ou</span>
+        <div style={{ flex: 1, height: 1, background: BAI.border }} />
+      </div>
+
+      {/* Bouton scanner QR */}
+      <button
+        onClick={() => fileInputRef.current?.click()}
+        disabled={scanning}
+        style={{ ...btnStyle(BAI.bgMuted, BAI.inkMid), width: '100%', justifyContent: 'center' }}
+      >
+        {scanning
+          ? <><Loader2 size={15} className="animate-spin" /> Lecture du QR…</>
+          : <><Camera size={15} /> Scanner le QR code du propriétaire</>
+        }
+      </button>
+      {/* Input caméra caché */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleScanFile}
+        style={{ display: 'none' }}
+      />
+      <p style={{ fontSize: 11, color: BAI.inkFaint, textAlign: 'center', marginTop: 8 }}>
+        Prend une photo du QR code affiché sur l'écran du propriétaire
+      </p>
     </div>
   )
 }

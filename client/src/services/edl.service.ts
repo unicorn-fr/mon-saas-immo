@@ -56,7 +56,9 @@ class EdlService {
   /** Ouvre un flux SSE et appelle onMessage à chaque événement */
   connectStream(sessionId: string, onMessage: (event: Record<string, unknown>) => void): () => void {
     const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? ''
-    const source = new EventSource(`${API_URL}/edl/sessions/${sessionId}/stream`, { withCredentials: true })
+    // EventSource ne peut pas envoyer Authorization header → token via query param
+    const token = localStorage.getItem('accessToken') ?? ''
+    const source = new EventSource(`${API_URL}/edl/sessions/${sessionId}/stream?token=${encodeURIComponent(token)}`)
 
     source.onmessage = (e) => {
       try { onMessage(JSON.parse(e.data as string)) } catch { /* ignore */ }

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { edlService, addSseClient, removeSseClient, broadcastEdlUpdate } from '../services/edl.service.js'
+import { verifyAccessToken } from '../utils/jwt.util.js'
 
 class EdlController {
   /** POST /api/v1/edl/sessions — Owner crée/récupère la session d'un contrat */
@@ -86,9 +87,21 @@ class EdlController {
     }
   }
 
-  /** GET /api/v1/edl/sessions/:id/stream — SSE temps réel */
+  /** GET /api/v1/edl/sessions/:id/stream — SSE temps réel
+   *  EventSource ne supporte pas les headers custom → token via ?token= query param
+   */
   streamSession(req: Request, res: Response) {
-    const userId = req.user?.id
+    // Auth: priorité au middleware, sinon query param (EventSource limitation)
+    let userId = req.user?.id
+    if (!userId) {
+      const queryToken = req.query.token as string | undefined
+      if (queryToken) {
+        try {
+          const decoded = verifyAccessToken(queryToken)
+          userId = decoded.userId
+        } catch { /* token invalide */ }
+      }
+    }
     if (!userId) { res.status(401).end(); return }
 
     const { id: sessionId } = req.params

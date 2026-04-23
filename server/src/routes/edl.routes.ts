@@ -16,8 +16,8 @@ router.get('/sessions/by-contract/:contractId', authenticate, edlController.getB
 // Récupérer session par ID
 router.get('/sessions/:id', authenticate, edlController.getSession.bind(edlController))
 
-// SSE — flux temps réel
-router.get('/sessions/:id/stream', authenticate, edlController.streamSession.bind(edlController))
+// SSE — EventSource ne peut pas envoyer Authorization header → auth via query token
+router.get('/sessions/:id/stream', edlController.streamSession.bind(edlController))
 
 // Mettre à jour les données EDL
 router.patch('/sessions/:id/data', authenticate, edlController.updateData.bind(edlController))
