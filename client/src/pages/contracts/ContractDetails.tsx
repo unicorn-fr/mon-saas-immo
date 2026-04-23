@@ -216,14 +216,9 @@ export default function ContractDetails() {
   const ownerSignBlocked = ownerCanSign && !allTenantDocsValidated
   const tenantCanSign = isTenant && ['SENT', 'SIGNED_OWNER'].includes(contract.status) && !hasSigned
 
-  // Vérification du dossier locataire : IDENTITE + au moins un doc REVENUS requis
-  const REQUIRED_DOSSIER_CATEGORIES: { key: string; label: string }[] = [
-    { key: 'IDENTITE_LOCATAIRE', label: 'Pièce d\'identité' },
-    { key: 'FICHE_PAIE_1', label: 'Fiche de paie (mois M-1)' },
-  ]
-  const uploadedCategories = new Set(tenantDossierDocs.map(d => d.category))
-  const tenantDossierMissing = REQUIRED_DOSSIER_CATEGORIES.filter(c => !uploadedCategories.has(c.key))
-  const tenantSignBlocked = tenantCanSign && tenantDossierMissing.length > 0
+  // Pas de blocage frontend pour la signature — le backend vérifie le dossier à la création du contrat
+  const tenantDossierMissing: { key: string; label: string }[] = []
+  const tenantSignBlocked = false
 
   const canSign = ownerCanSign || tenantCanSign
   const canSend = isOwner && contract.status === 'DRAFT'

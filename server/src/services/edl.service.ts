@@ -107,7 +107,8 @@ class EdlService {
       },
     })
     if (!session) return null
-    if (session.ownerId !== userId && session.tenantId !== userId) throw new Error('Accès refusé')
+    // WAITING: tenantId is null — prospective tenant returns null (they must join via PIN)
+    if (session.ownerId !== userId && session.tenantId !== userId) return null
     return session
   }
 

@@ -130,6 +130,9 @@ export default function EdlSessionPage() {
   const [completed, setCompleted] = useState(false)
   const [loading, setLoading] = useState(true)
   const [completing, setCompleting] = useState(false)
+  const [showPinEntry, setShowPinEntry] = useState(false)
+  const [pinInput, setPinInput] = useState('')
+  const [joining, setJoining] = useState(false)
   const sseCleanupRef = useRef<(() => void) | null>(null)
 
   const isOwner = user?.role === 'OWNER'
@@ -156,8 +159,13 @@ export default function EdlSessionPage() {
         }
 
         if (!sess) {
-          toast.error('Aucune session EDL active. Demandez au propriétaire de lancer l\'état des lieux.')
-          navigate(`/contracts/${contractId}`)
+          if (!isOwner) {
+            // Tenant: show inline PIN entry instead of redirecting
+            setShowPinEntry(true)
+            setLoading(false)
+            return
+          }
+          // Owner: no session yet → createSession will have created one above
           return
         }
 
@@ -165,8 +173,13 @@ export default function EdlSessionPage() {
         setEdlData((sess.data ?? {}) as Record<string, unknown>)
         setPeerConnected(sess.status === 'ACTIVE')
         setCompleted(sess.status === 'COMPLETED')
-      } catch (e: any) {
-        toast.error(e?.message ?? 'Erreur chargement session')
+      } catch {
+        if (!isOwner) {
+          // Tenant: session not joined yet or access denied → show PIN entry
+          setShowPinEntry(true)
+        } else {
+          toast.error('Erreur lors du chargement de la session EDL')
+        }
       } finally {
         setLoading(false)
       }
@@ -229,6 +242,25 @@ export default function EdlSessionPage() {
     } catch { /* silencieux — l'UI est déjà mise à jour */ }
   }, [session?.id, completed])
 
+  async function handleJoinByPin() {
+    const pin = pinInput.trim()
+    if (pin.length !== 6) { toast.error('Le code PIN doit comporter 6 chiffres.'); return }
+    setJoining(true)
+    try {
+      const sess = await edlService.joinSession(pin)
+      setSession(sess)
+      setEdlData((sess.data ?? {}) as Record<string, unknown>)
+      setPeerConnected(sess.status === 'ACTIVE')
+      setCompleted(sess.status === 'COMPLETED')
+      setShowPinEntry(false)
+      toast.success('Vous avez rejoint l\'état des lieux !')
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Code PIN invalide ou session introuvable.')
+    } finally {
+      setJoining(false)
+    }
+  }
+
   async function handleComplete() {
     if (!session?.id) return
     setCompleting(true)
@@ -250,6 +282,75 @@ export default function EdlSessionPage() {
       <Layout>
         <div className="flex items-center justify-center min-h-screen" style={{ background: BAI.bgBase }}>
           <Loader2 size={32} className="animate-spin" style={{ color: BAI.inkFaint }} />
+        </div>
+      </Layout>
+    )
+  }
+
+  // Tenant: no session yet — show PIN entry
+  if (showPinEntry) {
+    return (
+      <Layout>
+        <div style={{ background: BAI.bgBase, minHeight: '100vh', fontFamily: BAI.fontBody, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ ...card, maxWidth: 420, width: '100%', textAlign: 'center' }}>
+            <QrCode size={40} style={{ color: BAI.caramel, margin: '0 auto 16px' }} />
+            <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, marginBottom: 4 }}>
+              État des Lieux
+            </p>
+            <h2 style={{ fontFamily: BAI.fontDisplay, fontSize: 28, fontWeight: 700, fontStyle: 'italic', color: BAI.ink, marginBottom: 8 }}>
+              Rejoindre la session
+            </h2>
+            <p style={{ fontSize: 13, color: BAI.inkMid, marginBottom: 24 }}>
+              Entrez le code PIN que vous a communiqué le propriétaire, ou scannez son QR code.
+            </p>
+
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 20 }}>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} style={{
+                  width: 44, height: 56, background: BAI.bgMuted, border: `2px solid ${pinInput[i] ? BAI.caramel : BAI.border}`,
+                  borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 24, fontWeight: 700, color: BAI.ink, transition: 'border-color 0.15s',
+                }}>
+                  {pinInput[i] ?? ''}
+                </div>
+              ))}
+            </div>
+
+            <input
+              type="number"
+              maxLength={6}
+              value={pinInput}
+              onChange={e => setPinInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              onKeyDown={e => e.key === 'Enter' && handleJoinByPin()}
+              placeholder="Code à 6 chiffres"
+              autoFocus
+              style={{
+                width: '100%', padding: '12px 16px', borderRadius: 10, fontSize: 18,
+                textAlign: 'center', letterSpacing: '0.3em', fontWeight: 700,
+                background: BAI.bgInput, border: `1px solid ${BAI.border}`,
+                color: BAI.ink, outline: 'none', marginBottom: 16, boxSizing: 'border-box',
+                fontFamily: BAI.fontBody,
+              }}
+            />
+
+            <button
+              onClick={handleJoinByPin}
+              disabled={joining || pinInput.length !== 6}
+              style={{ ...btn(BAI.night), width: '100%', opacity: pinInput.length !== 6 ? 0.5 : 1 }}
+            >
+              {joining
+                ? <span className="flex items-center justify-center gap-2"><Loader2 size={14} className="animate-spin" /> Connexion…</span>
+                : 'Rejoindre l\'état des lieux'
+              }
+            </button>
+
+            <button
+              style={{ ...btn(BAI.bgMuted, BAI.inkMid), width: '100%', marginTop: 10 }}
+              onClick={() => navigate(`/contracts/${contractId}`)}
+            >
+              Retour au contrat
+            </button>
+          </div>
         </div>
       </Layout>
     )
