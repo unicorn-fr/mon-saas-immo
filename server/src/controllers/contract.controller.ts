@@ -509,7 +509,7 @@ class ContractController {
   async validateDocument(req: Request, res: Response, next: NextFunction) {
     try {
       const { id: contractId, docId } = req.params
-      const userId = (req as any).user?.id
+      const userId = req.user?.id
 
       if (!contractId || !docId) {
         return res.status(400).json({ success: false, message: 'Contract ID and Document ID are required' })
@@ -534,7 +534,7 @@ class ContractController {
     try {
       const { id: contractId, docId } = req.params
       const { rejectionReason } = req.body
-      const userId = (req as any).user?.id
+      const userId = req.user?.id
 
       if (!contractId || !docId) {
         return res.status(400).json({ success: false, message: 'Contract ID and Document ID are required' })

@@ -6,7 +6,6 @@ import { useAuth } from '../../hooks/useAuth'
 import { ContractClause } from '../../types/contract.types'
 import { SignaturePad } from '../../components/contract/SignaturePad'
 import { ContractPDF } from '../../components/contract/ContractPDF'
-import { DocumentChecklist } from '../../components/document/DocumentChecklist'
 import { DossierReviewModal } from '../../components/document/DossierReviewModal'
 import { Layout } from '../../components/layout/Layout'
 import { PDFDownloadLink } from '@react-pdf/renderer'
@@ -36,11 +35,6 @@ import {
   Circle,
   Plus,
 } from 'lucide-react'
-import {
-  OWNER_DOCUMENT_CHECKLIST,
-  TENANT_DOCUMENT_CHECKLIST,
-} from '../../types/document.types'
-import { useDocumentStore } from '../../store/documentStore'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import toast from 'react-hot-toast'
@@ -89,50 +83,25 @@ export default function ContractDetails() {
     cancelContract,
   } = useContractStore()
 
-  const { documents, fetchDocuments } = useDocumentStore()
-
   const [confirmModal, setConfirmModal] = useState<ConfirmModalType>(null)
   const [showSignature, setShowSignature] = useState(false)
   const [showSendModal, setShowSendModal] = useState(false)
   const [showPreSendChecklist, setShowPreSendChecklist] = useState(false)
   const [showDossierModal, setShowDossierModal] = useState(false)
   const [showPreSignChecklist, setShowPreSignChecklist] = useState(false)
-  // Owner pre-send checklist: well info + clauses + dossier checked
-  const [preSendChecks, setPreSendChecks] = useState({ property: false, clauses: false, dossier: false, docs: false })
+  // Owner pre-send checklist: property + clauses + dossier
+  const [preSendChecks, setPreSendChecks] = useState({ property: false, clauses: false, dossier: false })
   // Tenant pre-sign checklist: property info + clauses + amounts
   const [preSignChecks, setPreSignChecks] = useState({ property: false, clauses: false, amounts: false })
-  const [requiredDocs, setRequiredDocs] = useState<Set<string>>(new Set())
-  const [customDocRequests, setCustomDocRequests] = useState<{ title: string; description: string }[]>([])
-  const [newCustomDoc, setNewCustomDoc] = useState({ title: '', description: '' })
-  const [showCustomDocForm, setShowCustomDocForm] = useState(false)
   const [cancelReason, setCancelReason] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
   const [initialLoaded, setInitialLoaded] = useState(false)
-  const [docsSaved, setDocsSaved] = useState(false)
   useEffect(() => {
     if (id) {
       fetchContractById(id).then(() => setInitialLoaded(true))
-      fetchDocuments(id)
     }
-  }, [id, fetchContractById, fetchDocuments])
+  }, [id, fetchContractById])
 
-  // Load requiredDocs and customDocRequests from contract content once loaded
-  useEffect(() => {
-    if (contract) {
-      const content = (contract.content as Record<string, any>) || {}
-      if (content.requiredDocuments && Array.isArray(content.requiredDocuments)) {
-        setRequiredDocs(new Set(content.requiredDocuments))
-      } else {
-        const defaults = new Set<string>()
-        OWNER_DOCUMENT_CHECKLIST.filter(d => d.required).forEach(d => defaults.add(d.category))
-        TENANT_DOCUMENT_CHECKLIST.filter(d => d.required).forEach(d => defaults.add(d.category))
-        setRequiredDocs(defaults)
-      }
-      if (content.customDocRequests && Array.isArray(content.customDocRequests)) {
-        setCustomDocRequests(content.customDocRequests)
-      }
-    }
-  }, [contract?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!initialLoaded || (!contract && isLoading)) {
     return (
@@ -192,17 +161,7 @@ export default function ContractDetails() {
   const isTenant = user?.id === contract.tenantId
   const hasSigned = isOwner ? !!contract.signedByOwner : !!contract.signedByTenant
   const otherPartySigned = isOwner ? !!contract.signedByTenant : !!contract.signedByOwner
-  // ── Gate de validation documents ─────────────────────────────────────────
-  // Le propriétaire doit avoir validé tous les documents du locataire avant de signer
-  // Compte les docs non-rejetés qui ne sont pas encore VALIDATED
-  const unvalidatedTenantDocs = documents.filter(
-    (d) => d.status === 'UPLOADED' && d.fromDossier !== true
-  )
-  const allTenantDocsValidated = unvalidatedTenantDocs.length === 0
-
   const ownerCanSign = isOwner && contract.status === 'SIGNED_TENANT' && !hasSigned
-  // Le propriétaire peut signer uniquement si tous les docs locataire sont validés
-  const ownerSignBlocked = ownerCanSign && !allTenantDocsValidated
   const tenantCanSign = isTenant && ['SENT', 'SIGNED_OWNER'].includes(contract.status) && !hasSigned
 
   // Pas de blocage frontend pour la signature — le backend vérifie le dossier à la création du contrat
@@ -236,20 +195,8 @@ export default function ContractDetails() {
   }
 
   const handleSend = async () => {
-    if (requiredDocs.size === 0) {
-      toast.error('Veuillez sélectionner au moins un document requis dans la section Dossier')
-      return
-    }
     setActionLoading(true)
     try {
-      const content = (contract.content as Record<string, any>) || {}
-      await updateContract(contract.id, {
-        content: {
-          ...content,
-          requiredDocuments: Array.from(requiredDocs),
-          customDocRequests,
-        },
-      })
       await sendContract(contract.id)
       setShowSendModal(false)
       setShowPreSendChecklist(false)
@@ -257,45 +204,6 @@ export default function ContractDetails() {
     } finally {
       setActionLoading(false)
     }
-  }
-
-  const toggleRequiredDoc = (category: string) => {
-    setRequiredDocs(prev => {
-      const next = new Set(prev)
-      next.has(category) ? next.delete(category) : next.add(category)
-      return next
-    })
-    setDocsSaved(false)
-  }
-
-  const handleSaveDocRequirements = async () => {
-    setActionLoading(true)
-    try {
-      const content = (contract.content as Record<string, any>) || {}
-      await updateContract(contract.id, {
-        content: {
-          ...content,
-          requiredDocuments: Array.from(requiredDocs),
-          customDocRequests,
-        },
-      })
-      setDocsSaved(true)
-    } finally {
-      setActionLoading(false)
-    }
-  }
-
-  const handleAddCustomDoc = () => {
-    if (!newCustomDoc.title.trim()) return
-    setCustomDocRequests(prev => [...prev, { title: newCustomDoc.title.trim(), description: newCustomDoc.description.trim() }])
-    setNewCustomDoc({ title: '', description: '' })
-    setShowCustomDocForm(false)
-    setDocsSaved(false)
-  }
-
-  const handleRemoveCustomDoc = (index: number) => {
-    setCustomDocRequests(prev => prev.filter((_, i) => i !== index))
-    setDocsSaved(false)
   }
 
   const handleSignature = async (signatureBase64: string) => {
@@ -665,23 +573,6 @@ export default function ContractDetails() {
               </div>
             )}
 
-            {/* Gate validation : propriétaire doit valider les docs avant de signer */}
-            {ownerSignBlocked && (
-              <div style={{
-                marginBottom: 24, padding: '14px 16px',
-                background: '#fdf5ec', border: `1px solid #f3c99a`,
-                borderRadius: 10, display: 'flex', alignItems: 'flex-start', gap: 12,
-              }}>
-                <ClipboardCheck style={{ width: 18, height: 18, color: BAI.warning, flexShrink: 0, marginTop: 1 }} />
-                <div>
-                  <p style={{ fontWeight: 600, fontSize: 14, color: BAI.warning }}>Validation des documents requise</p>
-                  <p style={{ fontSize: 13, color: BAI.warning, opacity: 0.85, marginTop: 4 }}>
-                    {unvalidatedTenantDocs.length} document{unvalidatedTenantDocs.length > 1 ? 's' : ''} en attente de validation.
-                    Consultez et validez chaque pièce justificative dans la section « Dossier documents » ci-dessous avant de signer.
-                  </p>
-                </div>
-              </div>
-            )}
 
             {/* Owner waiting for tenant to sign */}
             {isOwner && ['SENT', 'SIGNED_OWNER'].includes(contract.status) && !hasSigned && (
@@ -748,7 +639,6 @@ export default function ContractDetails() {
                     <>
                       <button
                         onClick={() => {
-                          if (ownerSignBlocked) return
                           if (isTenant) {
                             setPreSignChecks({ property: false, clauses: false, amounts: false })
                             setShowPreSignChecklist(true)
@@ -756,12 +646,10 @@ export default function ContractDetails() {
                             setShowSignature(true)
                           }
                         }}
-                        disabled={actionLoading || ownerSignBlocked}
-                        title={ownerSignBlocked ? 'Validez tous les documents du locataire avant de signer' : undefined}
+                        disabled={actionLoading}
                         style={{
                           ...btnPrimary,
-                          opacity: actionLoading || ownerSignBlocked ? 0.5 : 1,
-                          cursor: ownerSignBlocked ? 'not-allowed' : 'pointer',
+                          opacity: actionLoading ? 0.5 : 1,
                         }}
                       >
                         <PenTool style={{ width: 15, height: 15 }} />
@@ -771,7 +659,7 @@ export default function ContractDetails() {
                       {/* YouSign stub — signature électronique certifiée eIDAS */}
                       <button
                         onClick={() => toast('Intégration YouSign bientôt disponible — utilisez la signature intégrée ci-dessus en attendant.', { icon: '🔏' })}
-                        disabled={actionLoading || ownerSignBlocked}
+                        disabled={actionLoading}
                         title="Signature certifiée eIDAS via YouSign — bientôt disponible"
                         style={{
                           display: 'inline-flex', alignItems: 'center', gap: 7,
@@ -779,7 +667,7 @@ export default function ContractDetails() {
                           background: BAI.bgSurface, color: BAI.inkMid,
                           border: `1px solid ${BAI.border}`, cursor: 'pointer',
                           fontFamily: BAI.fontBody, fontWeight: 500, fontSize: 13,
-                          opacity: actionLoading || ownerSignBlocked ? 0.4 : 1,
+                          opacity: actionLoading ? 0.4 : 1,
                         }}
                       >
                         <ShieldCheck style={{ width: 15, height: 15, color: BAI.caramel }} />
@@ -1278,245 +1166,118 @@ export default function ContractDetails() {
               </div>
             )}
 
-            {/* Document Requirements Section - DRAFT mode */}
-            {contract.status === 'DRAFT' && isOwner && (
+            {/* Dossier du locataire */}
+            {contract.tenant && (
               <div style={cardStyle}>
-                <h2 style={{
-                  fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-                  fontSize: 20, color: BAI.ink, marginBottom: 6,
-                  display: 'flex', alignItems: 'center', gap: 10,
-                }}>
-                  <FolderOpen style={{ width: 20, height: 20, color: BAI.owner }} />
-                  Dossier de location — Documents requis
-                </h2>
-                <p style={{ fontSize: 13, color: BAI.inkMid, marginBottom: 20 }}>
-                  Sélectionnez les documents que le locataire devra fournir avant la signature du contrat.
-                </p>
-
-                {/* Owner documents (DDT) */}
-                <div style={{ marginBottom: 20 }}>
-                  <h4 style={{ fontSize: 12, fontWeight: 700, color: BAI.ink, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                    Documents propriétaire (DDT)
-                  </h4>
-                  <div className="space-y-1">
-                    {OWNER_DOCUMENT_CHECKLIST.map((item) => (
-                      <label key={item.category} style={{
-                        display: 'flex', alignItems: 'flex-start', gap: 12,
-                        padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
-                      }}
-                        onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
-                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={requiredDocs.has(item.category)}
-                          onChange={() => toggleRequiredDoc(item.category)}
-                          style={{ marginTop: 2 }}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p style={{ fontSize: 13, fontWeight: 500, color: BAI.ink }}>{item.label}</p>
-                          <p style={{ fontSize: 11, color: BAI.inkFaint }}>{item.description}</p>
-                        </div>
-                      </label>
-                    ))}
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
+                  <div>
+                    <h2 style={{
+                      fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+                      fontSize: 20, color: BAI.ink, marginBottom: 4,
+                      display: 'flex', alignItems: 'center', gap: 10,
+                    }}>
+                      <FolderOpen style={{ width: 20, height: 20, color: BAI.owner }} />
+                      Dossier du locataire
+                    </h2>
+                    <p style={{ fontSize: 13, color: BAI.inkMid }}>
+                      {contract.tenant.firstName} {contract.tenant.lastName} — {contract.tenant.email}
+                    </p>
                   </div>
-                </div>
-
-                {/* Tenant documents */}
-                <div style={{ marginBottom: 20 }}>
-                  <h4 style={{ fontSize: 12, fontWeight: 700, color: BAI.ink, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                    Documents locataire
-                  </h4>
-                  <div className="space-y-1">
-                    {TENANT_DOCUMENT_CHECKLIST.map((item) => (
-                      <label key={item.category} style={{
-                        display: 'flex', alignItems: 'flex-start', gap: 12,
-                        padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
-                      }}
-                        onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
-                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={requiredDocs.has(item.category)}
-                          onChange={() => toggleRequiredDoc(item.category)}
-                          style={{ marginTop: 2 }}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p style={{ fontSize: 13, fontWeight: 500, color: BAI.ink }}>{item.label}</p>
-                          <p style={{ fontSize: 11, color: BAI.inkFaint }}>{item.description}</p>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Custom document requests */}
-                <div style={{ marginBottom: 20 }}>
-                  <div className="flex items-center justify-between" style={{ marginBottom: 10 }}>
-                    <h4 style={{ fontSize: 12, fontWeight: 700, color: BAI.ink, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                      Demandes personnalisées
-                    </h4>
+                  {isOwner && (
                     <button
-                      type="button"
-                      onClick={() => setShowCustomDocForm(true)}
+                      onClick={() => setShowDossierModal(true)}
                       style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 4,
-                        fontSize: 12, fontWeight: 500, color: BAI.owner,
-                        background: 'none', border: 'none', cursor: 'pointer',
-                        fontFamily: BAI.fontBody,
+                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                        padding: '8px 14px', borderRadius: 8,
+                        background: BAI.ownerLight, color: BAI.owner,
+                        border: `1px solid ${BAI.ownerBorder}`,
+                        fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13,
+                        cursor: 'pointer',
                       }}
                     >
-                      <Plus style={{ width: 14, height: 14 }} />
-                      Ajouter
+                      <FolderOpen style={{ width: 14, height: 14 }} />
+                      Consulter le dossier
                     </button>
-                  </div>
-
-                  {customDocRequests.length > 0 && (
-                    <div className="space-y-2" style={{ marginBottom: 12 }}>
-                      {customDocRequests.map((doc, index) => (
-                        <div key={index} style={{
-                          display: 'flex', alignItems: 'flex-start', gap: 12,
-                          padding: '10px 12px',
-                          background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`,
-                          borderRadius: 8,
-                        }}>
-                          <FileText style={{ width: 14, height: 14, color: BAI.owner, marginTop: 2, flexShrink: 0 }} />
-                          <div className="flex-1 min-w-0">
-                            <p style={{ fontSize: 13, fontWeight: 500, color: BAI.ink }}>{doc.title}</p>
-                            {doc.description && (
-                              <p style={{ fontSize: 11, color: BAI.inkFaint, marginTop: 2 }}>{doc.description}</p>
-                            )}
-                          </div>
-                          <button
-                            onClick={() => handleRemoveCustomDoc(index)}
-                            style={{ padding: 4, background: 'none', border: 'none', cursor: 'pointer', color: BAI.inkFaint }}
-                            onMouseEnter={e => (e.currentTarget.style.color = BAI.error)}
-                            onMouseLeave={e => (e.currentTarget.style.color = BAI.inkFaint)}
-                          >
-                            <X style={{ width: 14, height: 14 }} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
                   )}
+                </div>
 
-                  {showCustomDocForm && (
-                    <div style={{
-                      padding: '14px', background: BAI.bgMuted,
-                      border: `1px solid ${BAI.border}`, borderRadius: 8,
-                    }} className="space-y-2">
-                      <input
-                        type="text"
-                        value={newCustomDoc.title}
-                        onChange={(e) => setNewCustomDoc(prev => ({ ...prev, title: e.target.value }))}
-                        placeholder="Titre du document (ex : Garantie Visale)"
-                        style={inputStyle}
-                      />
-                      <input
-                        type="text"
-                        value={newCustomDoc.description}
-                        onChange={(e) => setNewCustomDoc(prev => ({ ...prev, description: e.target.value }))}
-                        placeholder="Description (facultatif)"
-                        style={inputStyle}
-                      />
-                      <div className="flex gap-2 justify-end">
-                        <button
-                          onClick={() => { setShowCustomDocForm(false); setNewCustomDoc({ title: '', description: '' }) }}
-                          style={{ ...btnGhost, padding: '6px 14px', fontSize: 12 }}
-                        >
-                          Annuler
-                        </button>
-                        <button
-                          onClick={handleAddCustomDoc}
-                          disabled={!newCustomDoc.title.trim()}
-                          style={{ ...btnPrimary, padding: '6px 14px', fontSize: 12, opacity: !newCustomDoc.title.trim() ? 0.5 : 1 }}
-                        >
-                          Ajouter
-                        </button>
+                {/* Score dossier */}
+                {(() => {
+                  const score: number = (contract.tenant as any).tenantScore ?? 0
+                  const isComplete = score >= 75
+                  const isPartial = score >= 50 && score < 75
+                  const scoreColor = isComplete ? BAI.tenant : isPartial ? BAI.warning : BAI.error
+                  const scoreBg = isComplete ? BAI.tenantLight : isPartial ? '#fdf5ec' : BAI.errorLight
+                  const scoreBorder = isComplete ? BAI.tenantBorder : isPartial ? '#f3c99a' : '#fca5a5'
+                  const scoreLabel = isComplete ? 'Dossier complet' : isPartial ? 'Dossier partiel' : 'Dossier incomplet'
+
+                  const categories = [
+                    { label: 'Pièce d\'identité', weight: 25, key: 'IDENTITE' },
+                    { label: 'Revenus', weight: 30, key: 'REVENUS' },
+                    { label: 'Emploi', weight: 20, key: 'EMPLOI' },
+                    { label: 'Domicile', weight: 15, key: 'DOMICILE' },
+                    { label: 'Garanties', weight: 10, key: 'GARANTIES' },
+                  ]
+
+                  return (
+                    <div>
+                      {/* Score global */}
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 16,
+                        padding: '14px 16px', borderRadius: 12,
+                        background: scoreBg, border: `1px solid ${scoreBorder}`,
+                        marginBottom: 16,
+                      }}>
+                        {/* Jauge circulaire */}
+                        <div style={{ position: 'relative', width: 60, height: 60, flexShrink: 0 }}>
+                          <svg width="60" height="60" viewBox="0 0 60 60">
+                            <circle cx="30" cy="30" r="24" fill="none" stroke={scoreBorder} strokeWidth="6" />
+                            <circle
+                              cx="30" cy="30" r="24" fill="none"
+                              stroke={scoreColor} strokeWidth="6"
+                              strokeDasharray={`${(score / 100) * 150.8} 150.8`}
+                              strokeLinecap="round"
+                              transform="rotate(-90 30 30)"
+                            />
+                          </svg>
+                          <div style={{
+                            position: 'absolute', inset: 0, display: 'flex',
+                            alignItems: 'center', justifyContent: 'center',
+                            fontSize: 13, fontWeight: 700, color: scoreColor,
+                          }}>
+                            {score}
+                          </div>
+                        </div>
+                        <div>
+                          <p style={{ fontSize: 15, fontWeight: 700, color: scoreColor, marginBottom: 2 }}>
+                            {scoreLabel}
+                          </p>
+                          <p style={{ fontSize: 12, color: BAI.inkMid }}>
+                            Score : {score}/100 — seuil requis pour signer : 75
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Barres par catégorie */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {categories.map(cat => (
+                          <div key={cat.key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <span style={{ fontSize: 12, color: BAI.inkMid, width: 110, flexShrink: 0 }}>{cat.label}</span>
+                            <div style={{ flex: 1, height: 6, background: BAI.bgMuted, borderRadius: 3, overflow: 'hidden' }}>
+                              <div style={{
+                                height: '100%', borderRadius: 3,
+                                background: BAI.tenant,
+                                width: score >= cat.weight ? '100%' : '0%',
+                                transition: 'width 0.4s ease',
+                              }} />
+                            </div>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: score >= cat.weight ? BAI.tenant : BAI.inkFaint, width: 32, textAlign: 'right' }}>
+                              {cat.weight}pts
+                            </span>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  )}
-
-                  {customDocRequests.length === 0 && !showCustomDocForm && (
-                    <p style={{ fontSize: 12, color: BAI.inkFaint, fontStyle: 'italic' }}>Aucune demande personnalisée</p>
-                  )}
-                </div>
-
-                <div style={{
-                  fontSize: 11, color: BAI.inkFaint, marginBottom: 16,
-                  padding: '10px 14px',
-                  background: BAI.bgMuted, border: `1px solid ${BAI.border}`, borderRadius: 8,
-                }}>
-                  Format accepté : PDF uniquement — Taille max : 5 Mo par document
-                </div>
-
-                <button
-                  onClick={handleSaveDocRequirements}
-                  disabled={actionLoading}
-                  style={{ ...btnGhost, opacity: actionLoading ? 0.5 : 1 }}
-                >
-                  {docsSaved ? (
-                    <>
-                      <Check style={{ width: 14, height: 14, color: BAI.tenant }} />
-                      Enregistré
-                    </>
-                  ) : (
-                    'Enregistrer les documents requis'
-                  )}
-                </button>
-              </div>
-            )}
-
-            {/* Documents - Dossier de location (after DRAFT) */}
-            {contract.status !== 'DRAFT' && (
-              <div style={cardStyle}>
-                <h2 style={{
-                  fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-                  fontSize: 20, color: BAI.ink, marginBottom: 6,
-                  display: 'flex', alignItems: 'center', gap: 10,
-                }}>
-                  <FolderOpen style={{ width: 20, height: 20, color: BAI.owner }} />
-                  Dossier de location
-                </h2>
-                <p style={{ fontSize: 13, color: BAI.inkMid, marginBottom: 20 }}>
-                  Téléchargez les documents obligatoires pour constituer le dossier complet.
-                </p>
-
-                {isOwner && (
-                  <div style={{ marginBottom: 24 }}>
-                    <DocumentChecklist
-                      contractId={contract.id}
-                      userRole="OWNER"
-                      isOwner={true}
-                      requiredCategories={requiredDocuments}
-                      contractRef={contract.id.substring(0, 8).toUpperCase()}
-                      tenantName={`${contract.tenant?.firstName ?? ''} ${contract.tenant?.lastName ?? ''}`}
-                      tenantHasSigned={!!contract.signedByTenant}
-                    />
-                  </div>
-                )}
-
-                {(isOwner || isTenant) && (() => {
-                  const customDocItems = (contractContent.customDocRequests ?? []).map(
-                    (req: { title: string; description: string }, i: number) => ({
-                      category: `CUSTOM_${i}`,
-                      label: req.title,
-                      description: req.description || '',
-                    })
-                  )
-                  const tenantRequired = isOwner ? undefined : requiredDocuments
-                  return (
-                    <DocumentChecklist
-                      contractId={contract.id}
-                      userRole="TENANT"
-                      isOwner={isOwner}
-                      requiredCategories={tenantRequired}
-                      customItems={customDocItems}
-                      contractRef={contract.id.substring(0, 8).toUpperCase()}
-                      tenantName={`${contract.tenant?.firstName ?? ''} ${contract.tenant?.lastName ?? ''}`}
-                      tenantHasSigned={!!contract.signedByTenant}
-                    />
                   )
                 })()}
               </div>
@@ -1562,22 +1323,8 @@ export default function ContractDetails() {
               </div>
 
               <p style={{ fontSize: 13, color: BAI.inkMid, marginBottom: 16 }}>
-                Le contrat sera envoyé au locataire avec la liste des {requiredDocs.size} document(s) requis
-                {customDocRequests.length > 0 ? ` et ${customDocRequests.length} demande(s) personnalisée(s)` : ''}.
+                Le contrat sera envoyé au locataire pour signature. Un email de notification lui sera adressé.
               </p>
-
-              {requiredDocs.size === 0 && (
-                <div style={{
-                  marginBottom: 16, padding: '10px 14px',
-                  background: BAI.warningLight, border: `1px solid ${BAI.caramel}`,
-                  borderRadius: 8, display: 'flex', alignItems: 'center', gap: 10,
-                }}>
-                  <AlertCircle style={{ width: 15, height: 15, color: BAI.warning, flexShrink: 0 }} />
-                  <p style={{ fontSize: 12, color: BAI.warning }}>
-                    Veuillez d'abord sélectionner les documents requis dans la section "Dossier de location" ci-dessus.
-                  </p>
-                </div>
-              )}
 
               <div className="flex gap-3 justify-end">
                 <button
@@ -1589,10 +1336,10 @@ export default function ContractDetails() {
                 </button>
                 <button
                   onClick={handleSend}
-                  disabled={actionLoading || requiredDocs.size === 0}
+                  disabled={actionLoading}
                   style={{
                     ...btnPrimary,
-                    opacity: actionLoading || requiredDocs.size === 0 ? 0.5 : 1,
+                    opacity: actionLoading ? 0.5 : 1,
                   }}
                 >
                   {actionLoading ? (
@@ -1769,7 +1516,6 @@ export default function ContractDetails() {
                   { key: 'property' as const, label: "J'ai vérifié les informations du bien (adresse, surface, type)", sub: `${contract.property?.address}, ${contract.property?.city}`, action: null },
                   { key: 'clauses' as const, label: "J'ai relu et validé toutes les clauses du contrat", sub: `${clauses.filter(c => c.enabled).length} clause(s) activée(s)`, action: null },
                   { key: 'dossier' as const, label: "J'ai consulté le dossier du locataire et vérifié son identité", sub: `${contract.tenant?.firstName} ${contract.tenant?.lastName}`, action: 'dossier' },
-                  { key: 'docs' as const, label: "J'ai configuré les documents requis et éventuelles demandes personnalisées", sub: `${requiredDocs.size} document(s) requis sélectionné(s)`, action: null },
                 ].map(({ key, label, sub, action }) => (
                   <div key={key} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                     <div

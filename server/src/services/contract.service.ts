@@ -66,6 +66,7 @@ const contractIncludes = {
       lastName: true,
       email: true,
       phone: true,
+      tenantScore: true,
     },
   },
   owner: {

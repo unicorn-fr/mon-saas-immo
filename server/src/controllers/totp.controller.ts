@@ -9,7 +9,7 @@ import { generateAccessToken, generateRefreshToken } from '../utils/jwt.util.js'
  */
 export async function setup(req: Request, res: Response) {
   try {
-    const userId = (req as any).user.userId
+    const userId = req.user!.id
     const result = await totpService.setupTotp(userId)
     return res.json({
       success: true,
@@ -31,7 +31,7 @@ export async function setup(req: Request, res: Response) {
  */
 export async function enable(req: Request, res: Response) {
   try {
-    const userId = (req as any).user.userId
+    const userId = req.user!.id
     const { token } = req.body
     if (!token || !/^\d{6}$/.test(token)) {
       return res.status(400).json({ success: false, message: 'Code TOTP invalide (6 chiffres)' })
@@ -50,7 +50,7 @@ export async function enable(req: Request, res: Response) {
  */
 export async function disable(req: Request, res: Response) {
   try {
-    const userId = (req as any).user.userId
+    const userId = req.user!.id
     const { token } = req.body
     if (!token || !/^\d{6}$/.test(token)) {
       return res.status(400).json({ success: false, message: 'Code TOTP requis pour desactiver la 2FA' })
@@ -111,7 +111,7 @@ export async function verify(req: Request, res: Response) {
  */
 export async function status(req: Request, res: Response) {
   try {
-    const userId = (req as any).user.userId
+    const userId = req.user!.id
     const enabled = await totpService.isTotpEnabled(userId)
     return res.json({ success: true, data: { totpEnabled: enabled } })
   } catch (error: any) {
