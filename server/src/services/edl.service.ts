@@ -119,7 +119,7 @@ class EdlService {
     const session = await prisma.edlSession.findUnique({ where: { id: sessionId } })
     if (!session) throw new Error('Session introuvable')
     if (session.ownerId !== userId && session.tenantId !== userId) throw new Error('Accès refusé')
-    if (session.status !== 'ACTIVE') throw new Error('Session non active')
+    if (session.status === 'COMPLETED') throw new Error('Session déjà finalisée')
 
     const currentData = (session.data ?? {}) as Record<string, unknown>
     const newData = { ...currentData, ...patch }
