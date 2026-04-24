@@ -328,6 +328,58 @@ class ApplicationService {
   }
 
   /**
+   * Owner cancels a rejection — puts the application back to PENDING
+   * Also restores property to AVAILABLE if it was set to RENTED/UNAVAILABLE prematurely
+   */
+  async unrejectApplication(id: string, ownerId: string) {
+    const app = await prisma.application.findUnique({
+      where: { id },
+      include: { property: true },
+    })
+    if (!app) throw new Error('Candidature introuvable')
+    if (app.property.ownerId !== ownerId) throw new Error('Accès refusé')
+    if (app.status !== 'REJECTED') throw new Error('La candidature n\'est pas refusée')
+
+    const updated = await prisma.application.update({
+      where: { id },
+      data: { status: 'PENDING' },
+      include: {
+        tenant: { select: { id: true, firstName: true, lastName: true, email: true } },
+        property: { select: { id: true, title: true } },
+      },
+    })
+
+    // If property is not available anymore, restore it
+    if (app.property.status !== 'AVAILABLE') {
+      await prisma.property.update({
+        where: { id: app.propertyId },
+        data: { status: 'AVAILABLE' },
+      })
+    }
+
+    return updated
+  }
+
+  /**
+   * After all candidatures for a property are REJECTED or WITHDRAWN,
+   * auto-restore property status to AVAILABLE so it can receive new applications.
+   */
+  async maybeRestorePropertyAvailability(propertyId: string) {
+    const active = await prisma.application.count({
+      where: {
+        propertyId,
+        status: { in: ['PENDING', 'APPROVED'] },
+      },
+    })
+    if (active === 0) {
+      await prisma.property.updateMany({
+        where: { id: propertyId, status: { not: 'AVAILABLE' } },
+        data: { status: 'AVAILABLE' },
+      })
+    }
+  }
+
+  /**
    * Tenant withdraws candidature
    */
   async withdraw(id: string, tenantId: string) {

@@ -17,6 +17,9 @@ router.get('/:id', applicationController.getOne.bind(applicationController))
 // Owner decision
 router.patch('/:id/status', applicationController.updateStatus.bind(applicationController))
 
+// Owner cancels a rejection
+router.patch('/:id/unreject', applicationController.unreject.bind(applicationController))
+
 // Tenant withdraws
 router.delete('/:id', applicationController.withdraw.bind(applicationController))
 

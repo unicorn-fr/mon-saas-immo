@@ -47,7 +47,18 @@ class EdlService {
     return data.data.data as Record<string, unknown>
   }
 
-  /** Finalise la session */
+  /** Enregistre la signature d'une partie — finalise automatiquement si les 2 ont signé */
+  async signSession(sessionId: string, signatureBase64: string): Promise<{
+    session: EdlSession
+    ownerSigned: boolean
+    tenantSigned: boolean
+    bothSigned: boolean
+  }> {
+    const { data } = await apiClient.post(`/edl/sessions/${sessionId}/sign`, { signatureBase64 })
+    return data.data
+  }
+
+  /** Finalise la session (compat) */
   async completeSession(sessionId: string): Promise<EdlSession> {
     const { data } = await apiClient.post(`/edl/sessions/${sessionId}/complete`)
     return data.data.session as EdlSession

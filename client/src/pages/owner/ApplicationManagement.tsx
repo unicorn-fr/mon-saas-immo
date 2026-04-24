@@ -86,10 +86,12 @@ const STATUS_STYLE: Record<ApplicationStatus, React.CSSProperties> = {
 function ApplicationCard({
   app,
   onDecision,
+  onUnreject,
   onOpenDossier,
 }: {
   app: Application
   onDecision: (id: string, status: 'APPROVED' | 'REJECTED') => Promise<void>
+  onUnreject: (id: string) => Promise<void>
   onOpenDossier: (tenantId: string, tenantName: string) => void
 }) {
   const [expanded, setExpanded] = useState(false)
@@ -222,6 +224,29 @@ function ApplicationCard({
               </button>
             </>
           )}
+          {app.status === 'REJECTED' && (
+            <button
+              onClick={async () => {
+                setLoading(true)
+                try { await onUnreject(app.id) } finally { setLoading(false) }
+              }}
+              disabled={loading}
+              className="flex items-center gap-1 px-3 text-xs font-semibold transition-colors disabled:opacity-50"
+              style={{
+                background: BAI.warningLight,
+                border: `1px solid #e8c98b`,
+                color: BAI.warning,
+                borderRadius: 8,
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+                minHeight: 40,
+              }}
+              onMouseEnter={(e) => !loading && (e.currentTarget.style.background = '#faebd0')}
+              onMouseLeave={(e) => !loading && (e.currentTarget.style.background = BAI.warningLight)}
+            >
+              {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3" />}
+              Annuler le refus
+            </button>
+          )}
           <button
             onClick={() => setExpanded(!expanded)}
             className="flex items-center justify-center transition-colors"
@@ -341,12 +366,14 @@ function PropertyGroup({
   property,
   apps,
   onDecision,
+  onUnreject,
   onOpenDossier,
   onShareCalendar,
 }: {
   property: PropertyInfo
   apps: Application[]
   onDecision: (id: string, status: 'APPROVED' | 'REJECTED') => Promise<void>
+  onUnreject: (id: string) => Promise<void>
   onOpenDossier: (tenantId: string, tenantName: string) => void
   onShareCalendar: (propertyId: string, propertyTitle: string, tenants: { id: string; firstName: string; lastName: string; email: string }[]) => void
 }) {
@@ -475,7 +502,7 @@ function PropertyGroup({
               style={{ borderTop: `1px solid ${BAI.border}`, background: BAI.bgMuted }}
             >
               {sorted.map((app) => (
-                <ApplicationCard key={app.id} app={app} onDecision={onDecision} onOpenDossier={onOpenDossier} />
+                <ApplicationCard key={app.id} app={app} onDecision={onDecision} onUnreject={onUnreject} onOpenDossier={onOpenDossier} />
               ))}
             </div>
           </motion.div>
@@ -514,6 +541,12 @@ export default function ApplicationManagement() {
     await applicationService.updateStatus(id, status)
     toast.success(status === 'APPROVED' ? 'Candidature approuvée !' : 'Candidature refusée.')
     setApplications((prev) => prev.map((a) => a.id === id ? { ...a, status } : a))
+  }
+
+  async function handleUnreject(id: string) {
+    await applicationService.unreject(id)
+    toast.success('Refus annulé — candidature remise en attente.')
+    setApplications((prev) => prev.map((a) => a.id === id ? { ...a, status: 'PENDING' } : a))
   }
 
   const filtered = useMemo(() => {
@@ -751,6 +784,7 @@ export default function ApplicationManagement() {
                     <PropertyGroup
                       property={property} apps={apps}
                       onDecision={handleDecision}
+                      onUnreject={handleUnreject}
                       onOpenDossier={(id, name) => setDossierModal({ tenantId: id, tenantName: name })}
                       onShareCalendar={(pid, ptitle, tenants) => setCalendarModal({ propertyId: pid, propertyTitle: ptitle, tenants })}
                     />

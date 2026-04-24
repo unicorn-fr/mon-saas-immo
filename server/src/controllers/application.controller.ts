@@ -73,6 +73,23 @@ class ApplicationController {
       if (!ownerId) return res.status(401).json({ success: false, message: 'Non authentifié' })
       const { status } = req.body as { status: ApplicationStatus }
       const app = await applicationService.updateStatus(req.params.id, ownerId, status)
+      // If rejected, maybe restore property availability
+      if (status === 'REJECTED') {
+        await applicationService.maybeRestorePropertyAvailability(app.propertyId)
+      }
+      return res.json({ success: true, data: app })
+    } catch (error) {
+      if (error instanceof Error) return res.status(400).json({ success: false, message: error.message })
+      next(error)
+    }
+  }
+
+  /** PATCH /api/v1/applications/:id/unreject — owner cancels a rejection */
+  async unreject(req: Request, res: Response, next: NextFunction) {
+    try {
+      const ownerId = req.user?.id
+      if (!ownerId) return res.status(401).json({ success: false, message: 'Non authentifié' })
+      const app = await applicationService.unrejectApplication(req.params.id, ownerId)
       return res.json({ success: true, data: app })
     } catch (error) {
       if (error instanceof Error) return res.status(400).json({ success: false, message: error.message })

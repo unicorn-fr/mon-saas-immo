@@ -349,48 +349,52 @@ export default function ContractDetails() {
         {/* Header */}
         <div style={{ background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}` }}>
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
+              {/* Left: back + title */}
+              <div className="flex items-center gap-3">
                 <button
                   onClick={() => navigate('/contracts')}
                   style={{
-                    padding: 8, background: BAI.bgSurface,
+                    padding: 10, background: BAI.bgSurface,
                     border: `1px solid ${BAI.border}`, borderRadius: 8,
-                    color: BAI.inkMid, cursor: 'pointer',
+                    color: BAI.inkMid, cursor: 'pointer', flexShrink: 0,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    minHeight: 44, minWidth: 44,
                   }}
                   onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
                   onMouseLeave={e => (e.currentTarget.style.background = BAI.bgSurface)}
                 >
                   <ArrowLeft style={{ width: 18, height: 18 }} />
                 </button>
-                <div>
+                <div className="min-w-0">
                   <p style={{
                     fontFamily: BAI.fontBody, fontSize: 10, textTransform: 'uppercase',
-                    letterSpacing: '0.12em', color: BAI.inkFaint, marginBottom: 4,
+                    letterSpacing: '0.12em', color: BAI.inkFaint, marginBottom: 2,
                   }}>
                     Gestion locative
                   </p>
                   <h1 style={{
                     fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-                    fontSize: 32, color: BAI.ink, lineHeight: 1.1, margin: 0,
+                    fontSize: 'clamp(20px, 5vw, 32px)', color: BAI.ink, lineHeight: 1.1, margin: 0,
                   }}>
                     Contrat de Location
                   </h1>
-                  <p style={{ fontSize: 13, color: BAI.inkMid, marginTop: 2 }}>
+                  <p className="truncate" style={{ fontSize: 13, color: BAI.inkMid, marginTop: 2 }}>
                     {contract.property?.title}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              {/* Right: status + actions */}
+              <div className="flex items-center gap-2 flex-wrap">
                 <span style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '6px 14px', borderRadius: 20,
+                  padding: '6px 12px', borderRadius: 20,
                   background: status.bg, color: status.color,
                   border: `1px solid ${status.border}`,
-                  fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 12,
+                  fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 11,
+                  whiteSpace: 'nowrap',
                 }}>
-                  <StatusIcon style={{ width: 13, height: 13 }} />
+                  <StatusIcon style={{ width: 12, height: 12 }} />
                   {status.label}
                 </span>
                 <PDFDownloadLink
@@ -401,7 +405,7 @@ export default function ContractDetails() {
                     <button
                       style={{
                         display: 'inline-flex', alignItems: 'center', gap: 6,
-                        padding: '7px 14px', borderRadius: 8,
+                        padding: '10px 14px', borderRadius: 8, minHeight: 44,
                         background: BAI.caramel, color: '#ffffff',
                         fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 12,
                         border: 'none', cursor: pdfLoading ? 'wait' : 'pointer',
@@ -410,7 +414,7 @@ export default function ContractDetails() {
                       disabled={pdfLoading}
                     >
                       <Download style={{ width: 13, height: 13 }} />
-                      {pdfLoading ? 'Génération…' : 'PDF'}
+                      PDF
                     </button>
                   )}
                 </PDFDownloadLink>
@@ -419,11 +423,11 @@ export default function ContractDetails() {
                     to={`/contracts/${contract.id}/edl/session`}
                     style={{
                       display: 'inline-flex', alignItems: 'center', gap: 6,
-                      padding: '7px 14px', borderRadius: 8,
+                      padding: '10px 14px', borderRadius: 8, minHeight: 44,
                       background: BAI.bgMuted, color: BAI.inkMid,
                       border: `1px solid ${BAI.border}`,
                       fontFamily: BAI.fontBody, fontWeight: 500, fontSize: 12,
-                      textDecoration: 'none',
+                      textDecoration: 'none', whiteSpace: 'nowrap',
                     }}
                   >
                     <ClipboardCheck style={{ width: 13, height: 13 }} />
@@ -1123,162 +1127,99 @@ export default function ContractDetails() {
               )}
             </div>
 
-            {/* Dossier locataire — accès rapide pour le propriétaire */}
-            {isOwner && contract.tenant && (
-              <div style={{
-                ...cardStyle,
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                gap: 16, flexWrap: 'wrap',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{
-                    width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-                    background: BAI.ownerLight,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <ShieldCheck style={{ width: 20, height: 20, color: BAI.owner }} />
-                  </div>
-                  <div>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: BAI.ink, margin: 0, fontFamily: BAI.fontBody }}>
-                      Dossier de {contract.tenant.firstName} {contract.tenant.lastName}
-                    </p>
-                    <p style={{ fontSize: 12, color: BAI.inkFaint, margin: '2px 0 0', fontFamily: BAI.fontBody }}>
-                      Consultez les pièces justificatives · Documents filigrainés et sécurisés
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowDossierModal(true)}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 8,
-                    padding: '10px 18px', borderRadius: 8,
-                    background: BAI.owner, color: '#ffffff',
-                    fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13,
-                    border: 'none', cursor: 'pointer', flexShrink: 0,
-                  }}
-                >
-                  <FolderOpen style={{ width: 15, height: 15 }} />
-                  Consulter le dossier
-                </button>
-              </div>
-            )}
-
             {/* Dossier du locataire — visible uniquement par le propriétaire */}
-            {isOwner && contract.tenant && (
-              <div style={cardStyle}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
-                  <div>
-                    <h2 style={{
-                      fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-                      fontSize: 20, color: BAI.ink, marginBottom: 4,
-                      display: 'flex', alignItems: 'center', gap: 10,
-                    }}>
-                      <FolderOpen style={{ width: 20, height: 20, color: BAI.owner }} />
-                      Dossier du locataire
-                    </h2>
-                    <p style={{ fontSize: 13, color: BAI.inkMid }}>
-                      {contract.tenant.firstName} {contract.tenant.lastName} — {contract.tenant.email}
-                    </p>
-                  </div>
-                  {isOwner && (
+            {isOwner && contract.tenant && (() => {
+              const score: number = (contract.tenant as any).tenantScore ?? 0
+              const isComplete = score >= 75
+              const isPartial = score >= 50 && score < 75
+              const scoreColor = isComplete ? BAI.tenant : isPartial ? BAI.warning : BAI.error
+              const scoreBg = isComplete ? BAI.tenantLight : isPartial ? '#fdf5ec' : BAI.errorLight
+              const scoreBorder = isComplete ? BAI.tenantBorder : isPartial ? '#f3c99a' : '#fca5a5'
+              const scoreLabel = isComplete ? 'Dossier complet' : isPartial ? 'Dossier partiel' : 'Dossier incomplet'
+              const categories = [
+                { label: 'Identité', weight: 25, key: 'IDENTITE' },
+                { label: 'Revenus', weight: 30, key: 'REVENUS' },
+                { label: 'Emploi', weight: 20, key: 'EMPLOI' },
+                { label: 'Domicile', weight: 15, key: 'DOMICILE' },
+                { label: 'Garanties', weight: 10, key: 'GARANTIES' },
+              ]
+              return (
+                <div style={cardStyle}>
+                  {/* Header */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 10, background: BAI.ownerLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <ShieldCheck style={{ width: 18, height: 18, color: BAI.owner }} />
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 14, fontWeight: 700, color: BAI.ink, margin: 0, fontFamily: BAI.fontBody }}>
+                          {contract.tenant.firstName} {contract.tenant.lastName}
+                        </p>
+                        <p style={{ fontSize: 12, color: BAI.inkFaint, margin: '2px 0 0', fontFamily: BAI.fontBody }}>
+                          {contract.tenant.email}
+                        </p>
+                      </div>
+                    </div>
                     <button
                       onClick={() => setShowDossierModal(true)}
                       style={{
                         display: 'inline-flex', alignItems: 'center', gap: 6,
-                        padding: '8px 14px', borderRadius: 8,
-                        background: BAI.ownerLight, color: BAI.owner,
-                        border: `1px solid ${BAI.ownerBorder}`,
+                        padding: '10px 16px', borderRadius: 8,
+                        background: BAI.owner, color: '#ffffff',
                         fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13,
-                        cursor: 'pointer',
+                        border: 'none', cursor: 'pointer', flexShrink: 0, minHeight: 44,
                       }}
                     >
                       <FolderOpen style={{ width: 14, height: 14 }} />
                       Consulter le dossier
                     </button>
-                  )}
-                </div>
+                  </div>
 
-                {/* Score dossier */}
-                {(() => {
-                  const score: number = (contract.tenant as any).tenantScore ?? 0
-                  const isComplete = score >= 75
-                  const isPartial = score >= 50 && score < 75
-                  const scoreColor = isComplete ? BAI.tenant : isPartial ? BAI.warning : BAI.error
-                  const scoreBg = isComplete ? BAI.tenantLight : isPartial ? '#fdf5ec' : BAI.errorLight
-                  const scoreBorder = isComplete ? BAI.tenantBorder : isPartial ? '#f3c99a' : '#fca5a5'
-                  const scoreLabel = isComplete ? 'Dossier complet' : isPartial ? 'Dossier partiel' : 'Dossier incomplet'
-
-                  const categories = [
-                    { label: 'Pièce d\'identité', weight: 25, key: 'IDENTITE' },
-                    { label: 'Revenus', weight: 30, key: 'REVENUS' },
-                    { label: 'Emploi', weight: 20, key: 'EMPLOI' },
-                    { label: 'Domicile', weight: 15, key: 'DOMICILE' },
-                    { label: 'Garanties', weight: 10, key: 'GARANTIES' },
-                  ]
-
-                  return (
-                    <div>
-                      {/* Score global */}
-                      <div style={{
-                        display: 'flex', alignItems: 'center', gap: 16,
-                        padding: '14px 16px', borderRadius: 12,
-                        background: scoreBg, border: `1px solid ${scoreBorder}`,
-                        marginBottom: 16,
-                      }}>
-                        {/* Jauge circulaire */}
-                        <div style={{ position: 'relative', width: 60, height: 60, flexShrink: 0 }}>
-                          <svg width="60" height="60" viewBox="0 0 60 60">
-                            <circle cx="30" cy="30" r="24" fill="none" stroke={scoreBorder} strokeWidth="6" />
-                            <circle
-                              cx="30" cy="30" r="24" fill="none"
-                              stroke={scoreColor} strokeWidth="6"
-                              strokeDasharray={`${(score / 100) * 150.8} 150.8`}
-                              strokeLinecap="round"
-                              transform="rotate(-90 30 30)"
-                            />
-                          </svg>
-                          <div style={{
-                            position: 'absolute', inset: 0, display: 'flex',
-                            alignItems: 'center', justifyContent: 'center',
-                            fontSize: 13, fontWeight: 700, color: scoreColor,
-                          }}>
-                            {score}
-                          </div>
-                        </div>
-                        <div>
-                          <p style={{ fontSize: 15, fontWeight: 700, color: scoreColor, marginBottom: 2 }}>
-                            {scoreLabel}
-                          </p>
-                          <p style={{ fontSize: 12, color: BAI.inkMid }}>
-                            Score : {score}/100 — seuil requis pour signer : 75
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Barres par catégorie */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        {categories.map(cat => (
-                          <div key={cat.key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <span style={{ fontSize: 12, color: BAI.inkMid, width: 110, flexShrink: 0 }}>{cat.label}</span>
-                            <div style={{ flex: 1, height: 6, background: BAI.bgMuted, borderRadius: 3, overflow: 'hidden' }}>
-                              <div style={{
-                                height: '100%', borderRadius: 3,
-                                background: BAI.tenant,
-                                width: score >= cat.weight ? '100%' : '0%',
-                                transition: 'width 0.4s ease',
-                              }} />
-                            </div>
-                            <span style={{ fontSize: 11, fontWeight: 600, color: score >= cat.weight ? BAI.tenant : BAI.inkFaint, width: 32, textAlign: 'right' }}>
-                              {cat.weight}pts
-                            </span>
-                          </div>
-                        ))}
+                  {/* Score global */}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 14,
+                    padding: '12px 14px', borderRadius: 10,
+                    background: scoreBg, border: `1px solid ${scoreBorder}`,
+                    marginBottom: 14,
+                  }}>
+                    <div style={{ position: 'relative', width: 52, height: 52, flexShrink: 0 }}>
+                      <svg width="52" height="52" viewBox="0 0 52 52">
+                        <circle cx="26" cy="26" r="20" fill="none" stroke={scoreBorder} strokeWidth="5" />
+                        <circle
+                          cx="26" cy="26" r="20" fill="none"
+                          stroke={scoreColor} strokeWidth="5"
+                          strokeDasharray={`${(score / 100) * 125.7} 125.7`}
+                          strokeLinecap="round"
+                          transform="rotate(-90 26 26)"
+                        />
+                      </svg>
+                      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: scoreColor }}>
+                        {score}
                       </div>
                     </div>
-                  )
-                })()}
-              </div>
-            )}
+                    <div>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: scoreColor, marginBottom: 2 }}>{scoreLabel}</p>
+                      <p style={{ fontSize: 12, color: BAI.inkMid }}>Score {score}/100 · seuil : 75</p>
+                    </div>
+                  </div>
+
+                  {/* Barres par catégorie */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                    {categories.map(cat => (
+                      <div key={cat.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 12, color: BAI.inkMid, width: 80, flexShrink: 0 }}>{cat.label}</span>
+                        <div style={{ flex: 1, height: 5, background: BAI.bgMuted, borderRadius: 3, overflow: 'hidden' }}>
+                          <div style={{ height: '100%', borderRadius: 3, background: BAI.tenant, width: score >= cat.weight ? '100%' : '0%', transition: 'width 0.4s ease' }} />
+                        </div>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: score >= cat.weight ? BAI.tenant : BAI.inkFaint, width: 30, textAlign: 'right' }}>
+                          {cat.weight}p
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
           </div>
         </div>
 

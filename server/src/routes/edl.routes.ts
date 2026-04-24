@@ -22,7 +22,10 @@ router.get('/sessions/:id/stream', edlController.streamSession.bind(edlControlle
 // Mettre à jour les données EDL
 router.patch('/sessions/:id/data', authenticate, edlController.updateData.bind(edlController))
 
-// Finaliser la session
+// Signer l'EDL (owner ou tenant) — déclenche la finalisation quand les 2 ont signé
+router.post('/sessions/:id/sign', authenticate, edlController.signSession.bind(edlController))
+
+// Finaliser la session (compat — appelé auto depuis signSession)
 router.post('/sessions/:id/complete', authenticate, edlController.completeSession.bind(edlController))
 
 export default router

@@ -134,7 +134,46 @@ class EdlService {
   }
 
   /**
-   * Finalise et verrouille l'EDL
+   * Enregistre la signature d'une partie (owner ou tenant).
+   * Retourne la session mise à jour + indique si les deux ont signé.
+   */
+  async signSession(sessionId: string, userId: string, signatureBase64: string) {
+    const session = await prisma.edlSession.findUnique({ where: { id: sessionId } })
+    if (!session) throw new Error('Session introuvable')
+    if (session.ownerId !== userId && session.tenantId !== userId) throw new Error('Accès refusé')
+    if (session.status === 'COMPLETED') throw new Error('Session déjà finalisée')
+
+    const isOwner = session.ownerId === userId
+    const currentData = (session.data ?? {}) as Record<string, unknown>
+    const sigKey = isOwner ? '_ownerSignature' : '_tenantSignature'
+
+    const newData = { ...currentData, [sigKey]: signatureBase64 }
+
+    const updated = await prisma.edlSession.update({
+      where: { id: sessionId },
+      data: { data: newData as object },
+    })
+
+    // Broadcast so the other party sees the signature arrived
+    broadcastEdlUpdate(sessionId, userId, {
+      type: 'SIGNATURE_RECEIVED',
+      role: isOwner ? 'owner' : 'tenant',
+    })
+
+    // Check if both have now signed
+    const ownerSigned = !!newData._ownerSignature
+    const tenantSigned = !!newData._tenantSignature
+    const bothSigned = ownerSigned && tenantSigned
+
+    if (bothSigned) {
+      await this.completeSession(sessionId, userId)
+    }
+
+    return { session: updated, ownerSigned, tenantSigned, bothSigned }
+  }
+
+  /**
+   * Finalise et verrouille l'EDL (appelé automatiquement quand les 2 ont signé)
    */
   async completeSession(sessionId: string, userId: string) {
     const session = await prisma.edlSession.findUnique({ where: { id: sessionId } })

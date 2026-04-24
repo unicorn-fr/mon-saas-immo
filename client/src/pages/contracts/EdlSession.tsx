@@ -464,6 +464,10 @@ export default function EdlSessionPage() {
   const [syncError, setSyncError] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)  // modale "Êtes-vous sûr ?"
   const [showSignature, setShowSignature] = useState(false) // signature pad
+  // Double-signature tracking
+  const [ownerSigned, setOwnerSigned] = useState(false)
+  const [tenantSigned, setTenantSigned] = useState(false)
+  const [iHaveSigned, setIHaveSigned] = useState(false)   // moi j'ai signé, j'attends l'autre
 
   const isOwner = user?.role === 'OWNER'
 
@@ -491,9 +495,17 @@ export default function EdlSessionPage() {
           return
         }
         setSession(sess)
-        setEdlData((sess.data ?? {}) as Record<string, unknown>)
+        const data = (sess.data ?? {}) as Record<string, unknown>
+        setEdlData(data)
         setPeerConnected(sess.status === 'ACTIVE')
         setCompleted(sess.status === 'COMPLETED')
+        // Restore signature state if session was already partially signed
+        const oSigned = !!data._ownerSignature
+        const tSigned = !!data._tenantSignature
+        setOwnerSigned(oSigned)
+        setTenantSigned(tSigned)
+        const mySigned = isOwner ? oSigned : tSigned
+        setIHaveSigned(mySigned)
       } catch {
         if (!isOwner) setShowPinEntry(true)
         else toast.error('Erreur chargement session')
@@ -531,9 +543,19 @@ export default function EdlSessionPage() {
         return
       }
 
+      if (ev.type === 'SIGNATURE_RECEIVED') {
+        const role = (event as any).role as 'owner' | 'tenant'
+        if (role === 'owner') setOwnerSigned(true)
+        else setTenantSigned(true)
+        toast.success(role === 'owner' ? 'Le propriétaire a signé !' : 'Le locataire a signé !')
+        return
+      }
+
       if (ev.type === 'SESSION_COMPLETED') {
         setCompleted(true)
-        toast.success('État des lieux finalisé !')
+        setOwnerSigned(true)
+        setTenantSigned(true)
+        toast.success('État des lieux signé par les deux parties !')
         return
       }
 
@@ -606,17 +628,24 @@ export default function EdlSessionPage() {
     setShowSignature(true)
   }
 
-  // Étape 3 : signature → appel API + finalisation
-  async function handleSignAndComplete(_signatureBase64: string) {
+  // Étape 3 : signature → appel API + finalisation si les deux ont signé
+  async function handleSignAndComplete(signatureBase64: string) {
     if (!session?.id) return
     setShowSignature(false)
     setCompleting(true)
     try {
-      await edlService.completeSession(session.id)
-      setCompleted(true)
-      toast.success('État des lieux signé et enregistré !')
+      const result = await edlService.signSession(session.id, signatureBase64)
+      setOwnerSigned(result.ownerSigned)
+      setTenantSigned(result.tenantSigned)
+      setIHaveSigned(true)
+      if (result.bothSigned) {
+        setCompleted(true)
+        toast.success('État des lieux signé par les deux parties !')
+      } else {
+        toast.success('Votre signature a été enregistrée. En attente de l\'autre partie…')
+      }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Erreur lors de la finalisation')
+      toast.error(e instanceof Error ? e.message : 'Erreur lors de la signature')
     } finally {
       setCompleting(false)
     }
@@ -790,19 +819,58 @@ export default function EdlSessionPage() {
             }
           </div>
 
-          {/* Actions — bouton Terminer */}
+          {/* Actions — signatures */}
           {!completed && !peerLeft && sessionActive && (
-            <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 32 }}>
-              <button
-                style={btnBase(BAI.night)}
-                onClick={handleRequestComplete}
-                disabled={completing}
-              >
-                {completing
-                  ? <><Loader2 size={14} className="animate-spin" /> Finalisation…</>
-                  : <><CheckCircle size={14} /> Terminer l'état des lieux</>
-                }
-              </button>
+            <div style={{ ...card, marginBottom: 14 }}>
+              {/* Indicateurs de signature */}
+              <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: BAI.inkFaint, marginBottom: 12 }}>
+                Signatures
+              </p>
+              <div style={{ display: 'flex', gap: 10, marginBottom: 18, flexWrap: 'wrap' }}>
+                {[
+                  { label: 'Propriétaire', signed: ownerSigned },
+                  { label: 'Locataire', signed: tenantSigned },
+                ].map(({ label, signed }) => (
+                  <div key={label} style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '8px 14px', borderRadius: 10, flex: 1, minWidth: 140,
+                    background: signed ? BAI.tenantLight : BAI.bgMuted,
+                    border: `1px solid ${signed ? BAI.tenantBorder : BAI.border}`,
+                  }}>
+                    {signed
+                      ? <CheckCircle size={15} style={{ color: BAI.tenant, flexShrink: 0 }} />
+                      : <div style={{ width: 15, height: 15, borderRadius: '50%', border: `2px solid ${BAI.border}`, flexShrink: 0 }} />
+                    }
+                    <span style={{ fontSize: 13, fontWeight: 600, color: signed ? BAI.tenant : BAI.inkMid }}>
+                      {label}
+                    </span>
+                    <span style={{ fontSize: 11, color: signed ? BAI.tenant : BAI.inkFaint, marginLeft: 'auto' }}>
+                      {signed ? 'Signé' : 'En attente'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Bouton ou message d'attente */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                {iHaveSigned ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderRadius: 10, background: '#fdf5ec', border: `1px solid ${BAI.border}` }}>
+                    <Loader2 size={14} className="animate-spin" style={{ color: BAI.caramel }} />
+                    <span style={{ fontSize: 13, color: BAI.inkMid }}>En attente de la signature de l'autre partie…</span>
+                  </div>
+                ) : (
+                  <button
+                    style={btnBase(BAI.night)}
+                    onClick={handleRequestComplete}
+                    disabled={completing}
+                  >
+                    {completing
+                      ? <><Loader2 size={14} className="animate-spin" /> Signature…</>
+                      : <><PenTool size={14} /> Signer l'état des lieux</>
+                    }
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
@@ -820,13 +888,31 @@ export default function EdlSessionPage() {
 
           {/* Finalisé */}
           {completed && (
-            <div style={{ textAlign: 'center', padding: '28px 20px', background: BAI.tenantLight, borderRadius: 14, border: `1px solid ${BAI.tenantBorder}`, marginBottom: 32 }}>
-              <CheckCircle size={36} style={{ color: BAI.tenant, margin: '0 auto 12px' }} />
-              <p style={{ fontSize: 15, fontWeight: 700, color: BAI.tenant, marginBottom: 4 }}>État des lieux signé et enregistré</p>
-              <p style={{ fontSize: 13, color: BAI.inkMid, marginBottom: 18 }}>Les données sont archivées dans le contrat.</p>
-              <button style={btnBase(BAI.night)} onClick={() => navigate(`/contracts/${contractId}`)}>
-                Retour au contrat
-              </button>
+            <div style={{ padding: '28px 20px', background: BAI.tenantLight, borderRadius: 14, border: `1px solid ${BAI.tenantBorder}`, marginBottom: 32 }}>
+              <div style={{ textAlign: 'center', marginBottom: 20 }}>
+                <CheckCircle size={36} style={{ color: BAI.tenant, margin: '0 auto 12px' }} />
+                <p style={{ fontSize: 15, fontWeight: 700, color: BAI.tenant, marginBottom: 4 }}>État des lieux signé par les deux parties</p>
+                <p style={{ fontSize: 13, color: BAI.inkMid }}>Les données sont archivées dans le contrat.</p>
+              </div>
+              {/* Récap signatures */}
+              <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
+                {['Propriétaire', 'Locataire'].map(label => (
+                  <div key={label} style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '8px 14px', borderRadius: 10, flex: 1, minWidth: 140,
+                    background: '#fff', border: `1px solid ${BAI.tenantBorder}`,
+                  }}>
+                    <CheckCircle size={15} style={{ color: BAI.tenant, flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: BAI.tenant }}>{label}</span>
+                    <span style={{ fontSize: 11, color: BAI.tenant, marginLeft: 'auto' }}>Signé</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <button style={btnBase(BAI.night)} onClick={() => navigate(`/contracts/${contractId}`)}>
+                  Retour au contrat
+                </button>
+              </div>
             </div>
           )}
         </div>

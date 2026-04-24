@@ -44,6 +44,12 @@ class ApplicationService {
     return res.data.data as Application
   }
 
+  /** Owner cancels a rejection — puts back to PENDING */
+  async unreject(id: string): Promise<Application> {
+    const res = await api.patch(`/applications/${id}/unreject`)
+    return res.data.data as Application
+  }
+
   /** Tenant withdraws */
   async withdraw(id: string): Promise<void> {
     await api.delete(`/applications/${id}`)

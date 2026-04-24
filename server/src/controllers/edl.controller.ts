@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express'
 import { edlService, addSseClient, removeSseClient, broadcastEdlUpdate } from '../services/edl.service.js'
 import { verifyAccessToken } from '../utils/jwt.util.js'
 
+
 class EdlController {
   /** POST /api/v1/edl/sessions — Owner crée/récupère la session d'un contrat */
   async createSession(req: Request, res: Response, next: NextFunction) {
@@ -74,7 +75,22 @@ class EdlController {
     }
   }
 
-  /** POST /api/v1/edl/sessions/:id/complete — Finalise la session */
+  /** POST /api/v1/edl/sessions/:id/sign — Enregistre la signature d'une partie */
+  async signSession(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.id
+      if (!userId) return res.status(401).json({ success: false, message: 'Non authentifié' })
+      const { signatureBase64 } = req.body
+      if (!signatureBase64) return res.status(400).json({ success: false, message: 'signatureBase64 requis' })
+      const result = await edlService.signSession(req.params.id, userId, signatureBase64)
+      return res.json({ success: true, data: result })
+    } catch (e) {
+      if (e instanceof Error) return res.status(400).json({ success: false, message: e.message })
+      next(e)
+    }
+  }
+
+  /** POST /api/v1/edl/sessions/:id/complete — Finalise la session (usage interne, garde pour compat) */
   async completeSession(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user?.id
