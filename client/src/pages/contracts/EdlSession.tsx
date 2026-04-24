@@ -607,7 +607,7 @@ export default function EdlSessionPage() {
   }
 
   // Étape 3 : signature → appel API + finalisation
-  async function handleSignAndComplete(signatureBase64: string) {
+  async function handleSignAndComplete(_signatureBase64: string) {
     if (!session?.id) return
     setShowSignature(false)
     setCompleting(true)

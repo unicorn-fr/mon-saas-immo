@@ -26,6 +26,7 @@ import { useFavoriteStore } from '../../store/favoriteStore'
 import { ContactModal } from '../../components/property/ContactModal'
 import { PropertyMap } from '../../components/property/PropertyMap'
 import { PreQualificationModal } from '../../components/application/PreQualificationModal'
+import { BookingModal } from '../../components/booking/BookingModal'
 import { PROPERTY_TYPES, AMENITIES } from '../../types/property.types'
 import { Layout } from '../../components/layout/Layout'
 import { applicationService } from '../../services/application.service'
@@ -72,6 +73,7 @@ export default function PropertyDetailsPublic() {
   const [showPreQualModal, setShowPreQualModal] = useState(false)
   const [myApplication, setMyApplication] = useState<Application | null | undefined>(undefined)
   const [docCategories, setDocCategories] = useState<string[]>([])
+  const [showBookingModal, setShowBookingModal] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -732,7 +734,7 @@ export default function PropertyDetailsPublic() {
                   <>
                     {myApplication?.status === 'APPROVED' ? (
                       <button
-                        onClick={() => navigate('/messages', { state: { openWithUserId: property.ownerId, propertyId: property.id } })}
+                        onClick={() => setShowBookingModal(true)}
                         className="w-full flex items-center justify-center gap-2 px-4 py-3 mb-3 transition-opacity hover:opacity-90"
                         style={{
                           background: M.tenant,
@@ -743,10 +745,11 @@ export default function PropertyDetailsPublic() {
                           borderRadius: '8px',
                           border: 'none',
                           cursor: 'pointer',
+                          minHeight: 44,
                         }}
                       >
                         <Calendar className="w-4 h-4" />
-                        Contacter pour une visite
+                        Réserver une visite
                       </button>
                     ) : myApplication?.status === 'PENDING' ? (
                       <div
@@ -843,6 +846,16 @@ export default function PropertyDetailsPublic() {
             </div>
           </div>
         </div>
+
+        {/* Booking Modal — locataire APPROVED */}
+        <BookingModal
+          isOpen={showBookingModal}
+          onClose={() => setShowBookingModal(false)}
+          propertyId={property.id}
+          propertyTitle={property.title}
+          visitDuration={property.visitDuration ?? 30}
+          onSuccess={() => { setShowBookingModal(false); navigate('/my-bookings') }}
+        />
 
         {/* Contact Modal */}
         <ContactModal

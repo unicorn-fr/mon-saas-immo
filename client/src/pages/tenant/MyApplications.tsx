@@ -13,6 +13,7 @@ import {
 import { applicationService } from '../../services/application.service'
 import type { Application, ApplicationStatus } from '../../types/application.types'
 import { Layout } from '../../components/layout/Layout'
+import { BookingModal } from '../../components/booking/BookingModal'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -38,6 +39,7 @@ function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw:
   const [expanded, setExpanded] = useState(false)
   const [withdrawing, setWithdrawing] = useState(false)
   const [reapplying, setReapplying] = useState(false)
+  const [showBooking, setShowBooking] = useState(false)
   const navigate = useNavigate()
   const prop = app.property
 
@@ -220,26 +222,36 @@ function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw:
               </span>
             </div>
 
-            {app.status === 'APPROVED' && (
-              <button
-                className="mt-2 inline-flex items-center gap-1.5"
-                onClick={e => { e.preventDefault(); e.stopPropagation(); navigate('/my-bookings') }}
-                style={{
-                  background: '#edf7f2',
-                  color: '#1b5e3b',
-                  border: '1px solid #9fd4ba',
-                  borderRadius: 8,
-                  padding: '8px 14px',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  fontFamily: "'DM Sans', system-ui, sans-serif",
-                  minHeight: 44,
-                  cursor: 'pointer',
-                }}
-              >
-                <Calendar className="w-3.5 h-3.5" />
-                Réserver une visite →
-              </button>
+            {app.status === 'APPROVED' && prop && (
+              <>
+                <button
+                  className="mt-2 inline-flex items-center gap-1.5"
+                  onClick={e => { e.preventDefault(); e.stopPropagation(); setShowBooking(true) }}
+                  style={{
+                    background: '#edf7f2',
+                    color: '#1b5e3b',
+                    border: '1px solid #9fd4ba',
+                    borderRadius: 8,
+                    padding: '8px 14px',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                    minHeight: 44,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  Réserver une visite →
+                </button>
+                <BookingModal
+                  isOpen={showBooking}
+                  onClose={() => setShowBooking(false)}
+                  propertyId={prop.id}
+                  propertyTitle={prop.title}
+                  visitDuration={prop.visitDuration}
+                  onSuccess={() => { setShowBooking(false); navigate('/my-bookings') }}
+                />
+              </>
             )}
 
             {/* Actions — flex-wrap, touch targets ≥ 44px */}

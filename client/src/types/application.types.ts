@@ -57,6 +57,7 @@ export interface Application {
     city: string
     address?: string
     images?: string[]
+    visitDuration?: number
     selectionCriteria?: SelectionCriteria
     ownerId?: string
   }

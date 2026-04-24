@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useWindowWidth } from '../../hooks/useWindowWidth'
 import {
   Check, ChevronLeft, ChevronRight, Home, Building2,
   Warehouse, Layers, Box, BedDouble, Car, Store,
@@ -141,7 +142,7 @@ function Counter({
         disabled={value <= min}
         style={{
           background: BAI.bgMuted, border: 'none', cursor: value <= min ? 'not-allowed' : 'pointer',
-          padding: '6px 14px', fontSize: 18, color: value <= min ? BAI.inkFaint : BAI.ink, lineHeight: 1,
+          padding: '10px 16px', fontSize: 18, color: value <= min ? BAI.inkFaint : BAI.ink, lineHeight: 1,
         }}
       >−</button>
       <span style={{
@@ -206,6 +207,8 @@ function DpeGauge({
 function CriteriaStep({
   state, update, price,
 }: { state: WizardState; update: (p: Partial<WizardState>) => void; price: number }) {
+  const windowWidth = useWindowWidth()
+  const isMobile = windowWidth < 640
   const labelS: React.CSSProperties = { fontSize: 12, fontWeight: 500, color: BAI.inkMid, display: 'block', marginBottom: 6 }
 
   const contractOptions = ['CDI', 'CDD', 'Indépendant', 'Fonctionnaire', 'Retraité', 'Étudiant']
@@ -306,7 +309,7 @@ function CriteriaStep({
       </div>
 
       {/* Score minimum & AutoPilot */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20 }}>
         <div>
           <label style={labelS}>Score minimum d'éligibilité ({state.minScore}/100)</label>
           <input type="range" min={40} max={95} step={5} value={state.minScore}
@@ -387,11 +390,11 @@ function SlotStep({
                 type="button"
                 onClick={() => setDayOfWeek(i)}
                 style={{
-                  padding: '6px 10px', borderRadius: 6, border: `1.5px solid ${dayOfWeek === i ? BAI.owner : BAI.border}`,
+                  padding: '10px 10px', borderRadius: 6, border: `1.5px solid ${dayOfWeek === i ? BAI.owner : BAI.border}`,
                   background: dayOfWeek === i ? BAI.ownerLight : BAI.bgSurface,
                   color: dayOfWeek === i ? BAI.owner : BAI.inkMid,
                   fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s',
-                  fontFamily: BAI.fontBody,
+                  minHeight: 44, fontFamily: BAI.fontBody,
                 }}
               >{d}</button>
             ))}
@@ -410,8 +413,8 @@ function SlotStep({
           type="button"
           onClick={addSlot}
           style={{
-            padding: '9px 18px', background: BAI.owner, color: '#fff', border: 'none',
-            borderRadius: 8, fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, cursor: 'pointer',
+            padding: '12px 18px', background: BAI.owner, color: '#fff', border: 'none',
+            borderRadius: 8, fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, cursor: 'pointer', minHeight: 44,
           }}
         >+ Ajouter</button>
       </div>
@@ -645,6 +648,11 @@ export default function CreatePropertyWizard() {
     }
   }
 
+  // ─── Responsive ──────────────────────────────────────────────────────────────
+
+  const windowWidth = useWindowWidth()
+  const isMobile = windowWidth < 640
+
   // ─── Styles ──────────────────────────────────────────────────────────────────
 
   const inputStyle: React.CSSProperties = {
@@ -671,7 +679,7 @@ export default function CreatePropertyWizard() {
               letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, marginBottom: 8,
             }}>Publier un bien</p>
             <h1 style={{
-              fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 36,
+              fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 'clamp(24px, 6vw, 36px)',
               fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: 0,
             }}>{STEPS[step].title}</h1>
           </div>
@@ -710,27 +718,36 @@ export default function CreatePropertyWizard() {
                 width: `${progress}%`, transition: 'width 0.3s ease',
               }} />
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-              {STEPS.map((s, i) => (
-                <span key={i} style={{
-                  fontSize: 10, fontWeight: 500,
-                  color: i === step ? BAI.owner : i < step ? BAI.inkMid : BAI.inkFaint,
-                }}>{s.label}</span>
-              ))}
-            </div>
+            {!isMobile && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+                {STEPS.map((s, i) => (
+                  <span key={i} style={{
+                    fontSize: 10, fontWeight: 500,
+                    color: i === step ? BAI.owner : i < step ? BAI.inkMid : BAI.inkFaint,
+                  }}>{s.label}</span>
+                ))}
+              </div>
+            )}
+            {isMobile && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 6 }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: BAI.owner }}>
+                  Étape {step + 1}/{STEPS.length} — {STEPS[step].label}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Step card */}
           <div style={{
             background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16,
-            padding: '2rem', boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
+            padding: isMobile ? '1rem' : '2rem', boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
           }}>
 
             {/* ── Step 0: Type ─────────────────────────────────────────────── */}
             {step === 0 && (
               <div>
                 <div style={{
-                  display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 24,
+                  display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 10, marginBottom: 24,
                 }}>
                   {TYPE_CARDS.map(card => {
                     const sel = state.propertyType === card.value
@@ -946,7 +963,7 @@ export default function CreatePropertyWizard() {
 
                 <div>
                   <p style={{ ...labelStyle, marginBottom: 12 }}>Équipements inclus</p>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 8 }}>
                     {AMENITIES.map(am => {
                       const active = state.amenities.includes(am.value)
                       return (
@@ -977,7 +994,7 @@ export default function CreatePropertyWizard() {
                   Le DPE est obligatoire depuis 2021 pour tout logement mis en location. Il évalue la consommation d'énergie et l'impact climatique du bien.
                 </p>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 24 : 32 }}>
                   <div>
                     <DpeGauge
                       label="Classe énergie (DPE)"
@@ -1045,7 +1062,7 @@ export default function CreatePropertyWizard() {
                   {errors.price && <p style={{ color: BAI.error, fontSize: 13, marginTop: 4 }}>{errors.price}</p>}
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
                   <div>
                     <label style={labelStyle}>Charges mensuelles (€)</label>
                     <input
