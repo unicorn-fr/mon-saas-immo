@@ -17,8 +17,11 @@ import app from './app.js'
 import { env } from './config/env.js'
 import { prisma } from './config/database.js'
 import { connectRedis } from './utils/cache.js'
+import { checkRequiredEnvVars } from './utils/checkEnv.js'
 import cron from 'node-cron'
 import { generateMonthlyPayments } from './jobs/generateMonthlyPayments.js'
+
+checkRequiredEnvVars()
 
 const PORT = Number(process.env.PORT) || 5000
 
