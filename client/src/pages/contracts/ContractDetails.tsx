@@ -33,7 +33,6 @@ import {
   X,
   Check,
   Circle,
-  Plus,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -74,7 +73,6 @@ export default function ContractDetails() {
     currentContract: contract,
     isLoading,
     fetchContractById,
-    updateContract,
     sendContract,
     signContract,
     activateContract,
@@ -270,7 +268,6 @@ export default function ContractDetails() {
   const contractContent = (contract.content as Record<string, any>) || {}
   const signatureMetadata = contractContent.signatureMetadata
   const cancellation = contractContent.cancellation
-  const requiredDocuments: string[] | undefined = contractContent.requiredDocuments
   const currentStepIndex = getStepIndex(contract.status)
 
   // Maison status config
@@ -626,7 +623,7 @@ export default function ContractDetails() {
                 <div className="flex flex-wrap gap-3">
                   {canSend && (
                     <button
-                      onClick={() => { setPreSendChecks({ property: false, clauses: false, dossier: false, docs: false }); setShowPreSendChecklist(true) }}
+                      onClick={() => { setPreSendChecks({ property: false, clauses: false, dossier: false }); setShowPreSendChecklist(true) }}
                       disabled={actionLoading}
                       style={{ ...btnPrimary, opacity: actionLoading ? 0.5 : 1 }}
                     >
