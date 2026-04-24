@@ -28,8 +28,8 @@ import {
   ShieldCheck, ShieldAlert, AlertTriangle, Cpu, QrCode,
 } from 'lucide-react'
 import { useState } from 'react'
-import type { DocFamily } from '../../utils/DocumentIntelligence'
-import { FAMILY_LABELS, FAMILY_COLORS } from '../../utils/DocumentIntelligence'
+import type { DocFamily } from '../../utils/document'
+import { FAMILY_LABELS, FAMILY_COLORS } from '../../utils/document'
 import { BAI } from '../../constants/bailio-tokens'
 
 // ─── Types ────────────────────────────────────────────────────────────────────

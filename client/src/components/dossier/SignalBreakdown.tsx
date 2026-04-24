@@ -6,8 +6,8 @@
  *   📐 Structure (page count + file size)
  */
 
-import type { MultiSignalResult, SignalDetail } from '../../utils/DocumentIntelligence'
-import { FAMILY_LABELS } from '../../utils/DocumentIntelligence'
+import type { MultiSignalResult, SignalDetail } from '../../utils/document'
+import { FAMILY_LABELS } from '../../utils/document'
 
 interface SignalBreakdownProps {
   signals: MultiSignalResult['signals']

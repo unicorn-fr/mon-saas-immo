@@ -9,7 +9,7 @@ import {
   validateNIR,
   autoClassifyFilename,
   validateDocumentIntegrity,
-} from '../utils/validateDocumentIntegrity'
+} from '../utils/document'
 
 // ─── luhnSiret ───────────────────────────────────────────────────────────────
 
@@ -284,7 +284,7 @@ import {
   scoreAnchorGroup,
   extractFieldsFromText,
   crossCheckSalaries,
-} from '../utils/DocumentIntelligence'
+} from '../utils/document'
 
 // ── Standard bulletin de salaire ─────────────────────────────────────────────
 
@@ -632,7 +632,7 @@ describe('crossCheckSalaries', () => {
 
 // ─── TemporalMapper ──────────────────────────────────────────────────────────
 
-import { mapBulletinPeriod, mOffsetToSlotLabel } from '../utils/TemporalMapper'
+import { mapBulletinPeriod, mOffsetToSlotLabel } from '../utils/document'
 
 // Fixed reference date: 2026-02-28 (février 2026)
 const NOW = new Date('2026-02-28')
@@ -723,7 +723,7 @@ describe('TemporalMapper — M-offset & slot assignment', () => {
 
 // ─── IdentityMatcher ─────────────────────────────────────────────────────────
 
-import { levenshtein, similarity, parseMrz, matchIdentity } from '../utils/IdentityMatcher'
+import { levenshtein, similarity, parseMrz, matchIdentity } from '../utils/document'
 
 describe('levenshtein', () => {
   it('identical strings → 0', () => {
