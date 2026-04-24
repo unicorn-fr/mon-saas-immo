@@ -1,4 +1,5 @@
 // Notification Types
+import type { PaginationMeta } from './api.types'
 
 export interface Notification {
   id: string
@@ -15,12 +16,7 @@ export interface Notification {
 
 export interface NotificationListResponse {
   notifications: Notification[]
-  pagination: {
-    page: number
-    limit: number
-    total: number
-    totalPages: number
-  }
+  pagination: PaginationMeta
 }
 
 export interface NotificationsResponse {

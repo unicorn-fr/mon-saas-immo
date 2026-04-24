@@ -3,7 +3,7 @@ import { X, User, Search, MessageCircle } from 'lucide-react'
 import { PropertyStatus, PROPERTY_STATUS } from '../../types/property.types'
 import { useMessageStore } from '../../store/messageStore'
 import { useAuth } from '../../hooks/useAuth'
-import { User as MessageUser } from '../../types/message.types'
+import { UserPreview as MessageUser } from '../../types/message.types'
 import { BAI } from '../../constants/bailio-tokens'
 
 // Maison color sets per semantic color key

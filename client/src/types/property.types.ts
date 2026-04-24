@@ -1,3 +1,5 @@
+import type { PaginationMeta } from './api.types'
+
 export type PropertyType = 'APARTMENT' | 'HOUSE' | 'STUDIO' | 'DUPLEX' | 'LOFT'
 export type PropertyStatus = 'AVAILABLE' | 'OCCUPIED' | 'RESERVED' | 'DRAFT' | 'PENDING_REVIEW'
 export type DateOverrideType = 'BLOCKED' | 'EXTRA'
@@ -205,13 +207,7 @@ export interface PropertyPagination {
 
 export interface PropertyListResponse {
   properties: Property[]
-  pagination: {
-    total: number
-    page: number
-    limit: number
-    totalPages: number
-    hasMore: boolean
-  }
+  pagination: PaginationMeta
 }
 
 export interface PropertyStatistics {

@@ -1,3 +1,5 @@
+import type { PaginationMeta } from './api.types'
+
 export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED'
 
 export interface Booking {
@@ -73,13 +75,7 @@ export interface BookingPagination {
 
 export interface BookingListResponse {
   bookings: Booking[]
-  pagination: {
-    total: number
-    page: number
-    limit: number
-    totalPages: number
-    hasMore: boolean
-  }
+  pagination: PaginationMeta
 }
 
 export interface BookingStatistics {

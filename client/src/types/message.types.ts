@@ -1,12 +1,11 @@
 // Message Types
+import type { PaginationMeta } from './api.types'
+import type { User as AuthUser } from './auth.types'
 
-export interface User {
-  id: string
-  firstName: string
-  lastName: string
-  avatar: string | null
-  email?: string
-}
+// UserPreview — version allégée pour les contextes messagerie/conversation
+export type UserPreview = Pick<AuthUser, 'id' | 'firstName' | 'lastName' | 'avatar'> & { email?: string }
+/** @deprecated Utilise UserPreview — conservé pour compatibilité */
+export type User = UserPreview
 
 export interface Message {
   id: string
@@ -69,12 +68,7 @@ export interface CreateConversationInput {
 
 export interface MessageListResponse {
   messages: Message[]
-  pagination: {
-    page: number
-    limit: number
-    total: number
-    totalPages: number
-  }
+  pagination: PaginationMeta
 }
 
 export interface ConversationResponse {
