@@ -47,8 +47,10 @@ router.put(
   contractController.sendContract.bind(contractController)
 )
 
-// PUT /api/v1/contracts/:id/sign - Sign contract (owner or tenant) — feature PRO
-router.put('/:id/sign', requirePlan('PRO'), contractController.signContract.bind(contractController))
+// PUT /api/v1/contracts/:id/sign - Sign contract (owner or tenant)
+// Pas de requirePlan ici : le tenant (FREE) doit pouvoir signer le contrat envoyé par un owner PRO.
+// La vérification du plan est faite à la création/envoi du contrat (côté owner).
+router.put('/:id/sign', contractController.signContract.bind(contractController))
 
 // PUT /api/v1/contracts/:id/activate - Activate contract (owner only)
 router.put(

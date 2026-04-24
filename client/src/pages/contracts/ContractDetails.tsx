@@ -1163,8 +1163,8 @@ export default function ContractDetails() {
               </div>
             )}
 
-            {/* Dossier du locataire */}
-            {contract.tenant && (
+            {/* Dossier du locataire — visible uniquement par le propriétaire */}
+            {isOwner && contract.tenant && (
               <div style={cardStyle}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
                   <div>

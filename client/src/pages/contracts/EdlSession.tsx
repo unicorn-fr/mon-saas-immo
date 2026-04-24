@@ -13,10 +13,12 @@ import {
   EDLRoom,
 } from '../../data/etatDesLieuxTemplate'
 import { useContractStore } from '../../store/contractStore'
+import { SignaturePad } from '../../components/contract/SignaturePad'
 import toast from 'react-hot-toast'
 import {
   ClipboardCheck, CheckCircle, Lock, ChevronDown, ChevronRight,
   Loader2, QrCode, Wifi, WifiOff, Users, Camera, ArrowLeft, X,
+  AlertTriangle, PenTool,
 } from 'lucide-react'
 
 // ── Constantes ────────────────────────────────────────────────────────────────
@@ -453,12 +455,15 @@ export default function EdlSessionPage() {
   const [edlData, setEdlData] = useState<Record<string, unknown>>({})
   const [rooms, setRooms] = useState<EDLRoom[]>([])
   const [peerConnected, setPeerConnected] = useState(false)
+  const [peerLeft, setPeerLeft] = useState(false)        // pair a quitté la session
   const [completed, setCompleted] = useState(false)
   const [loading, setLoading] = useState(true)
   const [completing, setCompleting] = useState(false)
   const [showPinEntry, setShowPinEntry] = useState(false)
   const [joining, setJoining] = useState(false)
   const [syncError, setSyncError] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)  // modale "Êtes-vous sûr ?"
+  const [showSignature, setShowSignature] = useState(false) // signature pad
 
   const isOwner = user?.role === 'OWNER'
 
@@ -534,6 +539,8 @@ export default function EdlSessionPage() {
 
       if (ev.type === 'PEER_DISCONNECTED') {
         setPeerConnected(false)
+        setPeerLeft(true)
+        toast('L\'autre partie a quitté la session. La session est verrouillée.', { icon: '🔒', duration: 6000 })
         return
       }
     })
@@ -588,15 +595,28 @@ export default function EdlSessionPage() {
     }
   }
 
-  async function handleComplete() {
+  // Étape 1 : clic "Terminer" → confirmation
+  function handleRequestComplete() {
+    setShowConfirm(true)
+  }
+
+  // Étape 2 : confirmation → signature
+  function handleConfirmComplete() {
+    setShowConfirm(false)
+    setShowSignature(true)
+  }
+
+  // Étape 3 : signature → appel API + finalisation
+  async function handleSignAndComplete(signatureBase64: string) {
     if (!session?.id) return
+    setShowSignature(false)
     setCompleting(true)
     try {
       await edlService.completeSession(session.id)
       setCompleted(true)
-      toast.success('État des lieux finalisé et enregistré !')
+      toast.success('État des lieux signé et enregistré !')
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Erreur')
+      toast.error(e instanceof Error ? e.message : 'Erreur lors de la finalisation')
     } finally {
       setCompleting(false)
     }
@@ -652,6 +672,8 @@ export default function EdlSessionPage() {
 
   const joinUrl = `${window.location.origin}/edl/join?pin=${session?.pin ?? ''}`
   const sessionActive = session?.status === 'ACTIVE' || peerConnected
+  // Verrouillé si : finalisé OU pair a quitté
+  const locked = completed || peerLeft
 
   return (
     <Layout>
@@ -679,23 +701,25 @@ export default function EdlSessionPage() {
           <div style={{
             marginBottom: 14, borderRadius: 12, padding: '12px 16px',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8,
-            background: completed ? BAI.tenantLight : sessionActive ? '#f0faf5' : syncError ? '#fef2f2' : BAI.bgMuted,
-            border: `1px solid ${completed ? BAI.tenantBorder : sessionActive ? '#9fd4ba' : syncError ? '#fca5a5' : BAI.border}`,
+            background: completed ? BAI.tenantLight : peerLeft ? BAI.errorLight : sessionActive ? '#f0faf5' : syncError ? '#fef2f2' : BAI.bgMuted,
+            border: `1px solid ${completed ? BAI.tenantBorder : peerLeft ? '#fca5a5' : sessionActive ? '#9fd4ba' : syncError ? '#fca5a5' : BAI.border}`,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {completed
                 ? <><Lock size={15} style={{ color: BAI.tenant }} /><span style={{ fontSize: 13, fontWeight: 600, color: BAI.tenant }}>État des lieux finalisé</span></>
+                : peerLeft
+                ? <><Lock size={15} style={{ color: BAI.error }} /><span style={{ fontSize: 13, fontWeight: 600, color: BAI.error }}>L'autre partie a quitté — session verrouillée</span></>
                 : syncError
                 ? <><WifiOff size={15} style={{ color: BAI.error }} /><span style={{ fontSize: 13, color: BAI.error }}>Connexion perdue — rechargez la page</span></>
                 : sessionActive
-                ? <><Wifi size={15} style={{ color: '#1b5e3b' }} /><span style={{ fontSize: 13, fontWeight: 600, color: '#1b5e3b' }}>Les deux parties sont connectées</span></>
+                ? <><Wifi size={15} style={{ color: '#1b5e3b' }} /><span style={{ fontSize: 13, fontWeight: 600, color: '#1b5e3b' }}>Les deux parties sont connectées — en temps réel</span></>
                 : <><WifiOff size={15} style={{ color: BAI.inkFaint }} /><span style={{ fontSize: 13, color: BAI.inkMid }}>En attente du locataire…</span></>
               }
             </div>
-            {sessionActive && !completed && (
+            {sessionActive && !completed && !peerLeft && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: BAI.inkFaint }}>
                 <Users size={13} />
-                <span>Temps réel</span>
+                <span>Synchronisé</span>
               </div>
             )}
           </div>
@@ -760,24 +784,36 @@ export default function EdlSessionPage() {
                   room={room}
                   edlData={edlData}
                   onUpdate={handleUpdate}
-                  locked={completed}
+                  locked={locked}
                 />
               ))
             }
           </div>
 
-          {/* Actions */}
-          {!completed && (
+          {/* Actions — bouton Terminer */}
+          {!completed && !peerLeft && sessionActive && (
             <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 32 }}>
               <button
                 style={btnBase(BAI.night)}
-                onClick={handleComplete}
+                onClick={handleRequestComplete}
                 disabled={completing}
               >
                 {completing
                   ? <><Loader2 size={14} className="animate-spin" /> Finalisation…</>
-                  : <><CheckCircle size={14} /> Finaliser l'état des lieux</>
+                  : <><CheckCircle size={14} /> Terminer l'état des lieux</>
                 }
+              </button>
+            </div>
+          )}
+
+          {/* Session verrouillée — pair parti */}
+          {peerLeft && !completed && (
+            <div style={{ textAlign: 'center', padding: '24px 20px', background: BAI.errorLight, borderRadius: 14, border: `1px solid #fca5a5`, marginBottom: 32 }}>
+              <Lock size={28} style={{ color: BAI.error, margin: '0 auto 12px' }} />
+              <p style={{ fontSize: 14, fontWeight: 700, color: BAI.error, marginBottom: 4 }}>Session verrouillée</p>
+              <p style={{ fontSize: 13, color: BAI.inkMid, marginBottom: 18 }}>L'autre partie a quitté la session. Les données sont sauvegardées.</p>
+              <button style={btnBase(BAI.night)} onClick={() => navigate(`/contracts/${contractId}`)}>
+                Retour au contrat
               </button>
             </div>
           )}
@@ -795,6 +831,61 @@ export default function EdlSessionPage() {
           )}
         </div>
       </div>
+
+      {/* ── Modale confirmation "Êtes-vous sûr ?" ── */}
+      {showConfirm && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 50,
+          background: 'rgba(13,12,10,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+        }}>
+          <div style={{
+            background: BAI.bgSurface, borderRadius: 16, padding: 28,
+            maxWidth: 420, width: '100%', boxShadow: '0 8px 40px rgba(13,12,10,0.2)',
+            fontFamily: BAI.fontBody,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+                background: '#fdf5ec', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <AlertTriangle size={22} style={{ color: BAI.caramel }} />
+              </div>
+              <div>
+                <h3 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 20, color: BAI.ink, margin: 0 }}>
+                  Terminer l'état des lieux ?
+                </h3>
+                <p style={{ fontSize: 12, color: BAI.inkFaint, margin: 0 }}>Cette action est irréversible</p>
+              </div>
+            </div>
+            <p style={{ fontSize: 13, color: BAI.inkMid, marginBottom: 24, lineHeight: 1.6 }}>
+              En confirmant, vous allez signer l'état des lieux. Les deux parties ne pourront plus modifier les données.
+            </p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowConfirm(false)}
+                style={{ ...btnBase(BAI.bgMuted, BAI.inkMid), padding: '10px 18px', fontSize: 13 }}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleConfirmComplete}
+                style={{ ...btnBase(BAI.night), padding: '10px 18px', fontSize: 13 }}
+              >
+                <PenTool size={14} /> Oui, signer maintenant
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Pad de signature ── */}
+      <SignaturePad
+        isOpen={showSignature}
+        onClose={() => setShowSignature(false)}
+        onConfirm={handleSignAndComplete}
+        signerName={`${user?.firstName ?? ''} ${user?.lastName ?? ''}`}
+      />
     </Layout>
   )
 }
