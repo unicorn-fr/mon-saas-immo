@@ -144,7 +144,7 @@ export default function SearchProperties() {
                     borderRadius: 8,
                     color: M.ink,
                     fontFamily: M.body,
-                    fontSize: 14,
+                    fontSize: 16,
                     outline: 'none',
                   }}
                   className="w-full pl-9 pr-9 py-2.5 transition-colors"
@@ -271,7 +271,7 @@ export default function SearchProperties() {
                       background: M.inputBg,
                       color: M.inkMid,
                       fontFamily: M.body,
-                      fontSize: 14,
+                      fontSize: 16,
                       outline: 'none',
                       cursor: 'pointer',
                       minHeight: 44,

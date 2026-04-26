@@ -291,49 +291,50 @@ export default function Pricing() {
           style={{ backgroundColor: BAI.night, padding: '80px 16px 72px' }}
           className="text-center"
         >
-          <div
-            ref={heroReveal.ref as React.RefObject<HTMLDivElement>}
-            className="transition-all duration-700"
-            style={{ opacity: heroReveal.visible ? 1 : 0, transform: heroReveal.visible ? 'translateY(0)' : 'translateY(16px)' }}
-          >
-            <p
-              style={{
-                fontFamily: BAI.fontBody,
-                fontSize: '10px',
-                fontWeight: 600,
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
-                color: BAI.caramel,
-                marginBottom: '16px',
-              }}
+          <div className="max-w-3xl mx-auto">
+            <div
+              ref={heroReveal.ref as React.RefObject<HTMLDivElement>}
+              className="transition-all duration-700"
+              style={{ opacity: heroReveal.visible ? 1 : 0, transform: heroReveal.visible ? 'translateY(0)' : 'translateY(16px)' }}
             >
-              Tarifs
-            </p>
-            <h1
-              style={{
-                fontFamily: BAI.fontDisplay,
-                fontStyle: 'italic',
-                fontSize: 'clamp(38px, 5vw, 52px)',
-                fontWeight: 600,
-                color: '#ffffff',
-                marginBottom: '18px',
-                lineHeight: 1.15,
-              }}
-            >
-              Simple. Transparent. Sans surprise.
-            </h1>
-            <p
-              style={{
-                fontFamily: BAI.fontBody,
-                fontSize: '16px',
-                color: 'rgba(255,255,255,0.65)',
-                maxWidth: '560px',
-                margin: '0 auto',
-                lineHeight: 1.65,
-              }}
-            >
-              Que vous soyez propriétaire d'un studio ou gestionnaire d'un parc locatif, il existe une formule taillée pour vous — et une période d'essai pour en être certain.
-            </p>
+              <p
+                style={{
+                  fontFamily: BAI.fontBody,
+                  fontSize: '10px',
+                  fontWeight: 600,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: BAI.caramel,
+                  marginBottom: '16px',
+                }}
+              >
+                Tarifs
+              </p>
+              <h1
+                style={{
+                  fontFamily: BAI.fontDisplay,
+                  fontStyle: 'italic',
+                  fontSize: 'clamp(36px, 5vw, 52px)',
+                  fontWeight: 600,
+                  color: '#ffffff',
+                  marginBottom: '18px',
+                  lineHeight: 1.15,
+                }}
+              >
+                Simple. Transparent. Sans surprise.
+              </h1>
+              <p
+                style={{
+                  fontFamily: BAI.fontBody,
+                  fontSize: '16px',
+                  color: 'rgba(255,255,255,0.65)',
+                  margin: '0 auto',
+                  lineHeight: 1.65,
+                }}
+              >
+                Que vous soyez propriétaire d'un studio ou gestionnaire d'un parc locatif, il existe une formule taillée pour vous — et une période d'essai pour en être certain.
+              </p>
+            </div>
           </div>
         </section>
 

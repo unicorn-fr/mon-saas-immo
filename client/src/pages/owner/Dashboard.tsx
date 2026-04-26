@@ -344,56 +344,65 @@ export default function Dashboard() {
                     <div style={{ borderTop: `1px solid ${BAI.border}` }} />
                   </div>
 
-                  <div>
-                    {myProperties.slice(0, 5).map((property, idx) => {
+                  {/* ── Grille 2 colonnes ────── */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3">
+                    {myProperties.slice(0, 6).map((property) => {
                       const badge = statusBadge[property.status] || statusBadge['DRAFT']
-                      const isLast = idx === Math.min(myProperties.length, 5) - 1
                       return (
                         <button key={property.id} onClick={() => navigate(`/properties/${property.id}`)}
                           style={{
-                            width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-                            padding: 'clamp(10px,2.5vw,14px) 16px', textAlign: 'left', background: 'transparent',
-                            border: 'none', borderBottom: isLast ? 'none' : `1px solid ${BAI.border}`,
-                            cursor: 'pointer', transition: 'background 0.15s',
+                            display: 'flex', alignItems: 'center', gap: 10,
+                            padding: '10px 12px', textAlign: 'left',
+                            background: BAI.bgSurface,
+                            border: `1px solid ${BAI.border}`,
+                            borderRadius: 10, cursor: 'pointer',
+                            transition: 'border-color 0.15s, box-shadow 0.15s',
                             minHeight: 44, touchAction: 'manipulation',
                           }}
-                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
-                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+                          onMouseEnter={(e) => {
+                            (e.currentTarget as HTMLElement).style.borderColor = BAI.ownerBorder
+                            ;(e.currentTarget as HTMLElement).style.boxShadow = `0 2px 8px rgba(26,50,112,0.08)`
+                          }}
+                          onMouseLeave={(e) => {
+                            (e.currentTarget as HTMLElement).style.borderColor = BAI.border
+                            ;(e.currentTarget as HTMLElement).style.boxShadow = 'none'
+                          }}
                         >
+                          {/* Thumbnail */}
                           {property.images?.[0] ? (
                             <img src={property.images[0]} alt={property.title}
-                              style={{ width: 64, height: 64, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }}
+                              style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }}
                               onError={(e) => { e.currentTarget.style.display = 'none' }}
                             />
                           ) : (
                             <div style={{
-                              width: 64, height: 64, borderRadius: 10, flexShrink: 0,
+                              width: 48, height: 48, borderRadius: 8, flexShrink: 0,
                               background: BAI.bgMuted, border: `1px solid ${BAI.border}`,
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                             }}>
-                              <Home size={24} style={{ color: BAI.inkFaint }} />
+                              <Home size={18} style={{ color: BAI.inkFaint }} />
                             </div>
                           )}
+                          {/* Info */}
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ fontSize: 14, fontWeight: 600, color: BAI.ink, margin: '0 0 3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <p style={{ fontSize: 13, fontWeight: 600, color: BAI.ink, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {property.title}
                             </p>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: BAI.inkMid, flexWrap: 'wrap' }}>
-                              <MapPin size={11} style={{ flexShrink: 0 }} />
-                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{property.city}</span>
-                              <span style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>· {property.bedrooms} ch · {property.surface} m²</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: BAI.inkFaint }}>
+                              <MapPin size={10} style={{ flexShrink: 0 }} />
+                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>{property.city}</span>
                             </div>
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
-                            <p style={{ fontSize: 14, fontWeight: 600, color: BAI.ink, margin: 0 }}>
-                              {Number(property.price).toLocaleString('fr-FR')} <span style={{ fontWeight: 400, fontSize: 11, color: BAI.inkFaint, whiteSpace: 'nowrap' }}>€ / mois</span>
-                            </p>
-                            <span style={{
-                              fontSize: 11, fontWeight: 500, padding: '3px 10px', borderRadius: 20,
-                              background: badge.bg, color: badge.text, border: `1px solid ${badge.border}`,
-                            }}>
-                              {badge.label}
-                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 5, gap: 6 }}>
+                              <span style={{ fontSize: 12, fontWeight: 600, color: BAI.ink, whiteSpace: 'nowrap' }}>
+                                {Number(property.price).toLocaleString('fr-FR')} <span style={{ fontWeight: 400, fontSize: 10, color: BAI.inkFaint }}>€/mois</span>
+                              </span>
+                              <span style={{
+                                fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20, flexShrink: 0,
+                                background: badge.bg, color: badge.text, border: `1px solid ${badge.border}`,
+                              }}>
+                                {badge.label}
+                              </span>
+                            </div>
                           </div>
                         </button>
                       )
@@ -652,37 +661,53 @@ export default function Dashboard() {
                       </Link>
                     </div>
                   ) : (
-                    <div>
-                      {contracts.slice(0, 4).map((contract, idx) => {
-                        const isLast = idx === Math.min(contracts.length, 4) - 1
-                        return (
-                          <button key={contract.id} onClick={() => navigate(`/contracts/${contract.id}`)}
-                            style={{
-                              width: '100%', display: 'flex', alignItems: 'center', gap: 16,
-                              padding: '12px 20px', textAlign: 'left', background: 'transparent',
-                              border: 'none', borderBottom: isLast ? 'none' : `1px solid ${BAI.border}`,
-                              cursor: 'pointer', transition: 'background 0.15s',
-                            }}
-                            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
-                            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
-                          >
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <p style={{ fontSize: 14, fontWeight: 600, color: BAI.ink, margin: '0 0 3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {contract.property?.title || 'Contrat'}
-                              </p>
-                              <p style={{ fontSize: 12, color: BAI.inkMid, margin: 0 }}>
-                                {contract.tenant?.firstName} {contract.tenant?.lastName} · {Number(contract.monthlyRent).toLocaleString('fr-FR')} €/mois
-                              </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3">
+                      {contracts.slice(0, 4).map((contract) => (
+                        <button key={contract.id} onClick={() => navigate(`/contracts/${contract.id}`)}
+                          style={{
+                            display: 'flex', flexDirection: 'column', gap: 4,
+                            padding: '12px', textAlign: 'left',
+                            background: BAI.bgSurface,
+                            border: `1px solid ${BAI.border}`,
+                            borderRadius: 10, cursor: 'pointer',
+                            transition: 'border-color 0.15s, box-shadow 0.15s',
+                            minHeight: 44, touchAction: 'manipulation',
+                          }}
+                          onMouseEnter={(e) => {
+                            (e.currentTarget as HTMLElement).style.borderColor = BAI.ownerBorder
+                            ;(e.currentTarget as HTMLElement).style.boxShadow = `0 2px 8px rgba(26,50,112,0.08)`
+                          }}
+                          onMouseLeave={(e) => {
+                            (e.currentTarget as HTMLElement).style.borderColor = BAI.border
+                            ;(e.currentTarget as HTMLElement).style.boxShadow = 'none'
+                          }}
+                        >
+                          {/* Icon + title */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                            <div style={{ width: 32, height: 32, borderRadius: 8, background: BAI.ownerLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              <FileText size={14} style={{ color: BAI.owner }} />
                             </div>
+                            <p style={{ fontSize: 13, fontWeight: 600, color: BAI.ink, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
+                              {contract.property?.title || 'Contrat'}
+                            </p>
+                          </div>
+                          {/* Tenant + rent + status */}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, paddingLeft: 40 }}>
+                            <p style={{ fontSize: 11, color: BAI.inkMid, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
+                              {contract.tenant?.firstName} {contract.tenant?.lastName}
+                            </p>
                             <span style={{
-                              fontSize: 11, fontWeight: 600, padding: '4px 12px', borderRadius: 20, flexShrink: 0,
+                              fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20, flexShrink: 0,
                               ...contractStatusStyle(contract.status),
                             }}>
                               {getContractStatusLabel(contract.status)}
                             </span>
-                          </button>
-                        )
-                      })}
+                          </div>
+                          <p style={{ fontSize: 12, fontWeight: 600, color: BAI.ink, margin: 0, paddingLeft: 40 }}>
+                            {Number(contract.monthlyRent).toLocaleString('fr-FR')} <span style={{ fontWeight: 400, fontSize: 10, color: BAI.inkFaint }}>€/mois</span>
+                          </p>
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>
