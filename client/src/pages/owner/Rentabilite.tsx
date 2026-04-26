@@ -23,7 +23,7 @@ const inputStyle: React.CSSProperties = {
   borderRadius: '8px',
   padding: '0.6rem 1rem',
   color: BAI.ink,
-  fontSize: '14px',
+  fontSize: '16px',
   outline: 'none',
   width: '100%',
   fontFamily: BAI.fontBody,

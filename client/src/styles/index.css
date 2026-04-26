@@ -123,7 +123,7 @@
     border-color: var(--border);
     color: var(--ink);
     font-family: var(--font-body);
-    font-size: 13px;
+    font-size: 16px;
     border-radius: 8px;
   }
   .input:focus {

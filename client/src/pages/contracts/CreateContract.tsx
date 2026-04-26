@@ -215,7 +215,7 @@ export default function CreateContract() {
     border: `1px solid ${hasError ? '#fca5a5' : BAI.border}`,
     borderRadius: 8,
     padding: '10px 12px',
-    fontSize: 13,
+    fontSize: 16,
     color: BAI.ink,
     outline: 'none',
     fontFamily: BAI.fontBody,

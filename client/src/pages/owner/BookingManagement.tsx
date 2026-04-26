@@ -40,7 +40,7 @@ const inputStyle: React.CSSProperties = {
   borderRadius: 8,
   padding: '0.625rem 1rem',
   color: BAI.ink,
-  fontSize: '0.875rem',
+  fontSize: '16px',
   outline: 'none',
   width: '100%',
   fontFamily: "'DM Sans', system-ui, sans-serif",

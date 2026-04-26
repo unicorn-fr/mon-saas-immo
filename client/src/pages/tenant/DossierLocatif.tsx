@@ -615,7 +615,7 @@ function FormField({
         placeholder={placeholder}
         style={{
           padding: '9px 12px', borderRadius: 8, border: `1px solid ${BAI.border}`,
-          background: BAI.bgInput, fontSize: 13, fontFamily: BAI.fontBody, color: BAI.ink,
+          background: BAI.bgInput, fontSize: 16, fontFamily: BAI.fontBody, color: BAI.ink,
           outline: 'none',
         }}
       />

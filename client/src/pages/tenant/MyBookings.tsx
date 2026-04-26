@@ -417,12 +417,13 @@ export const MyBookings = () => {
                 <select
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value as BookingStatus | 'all')}
-                  className="flex-1 min-w-0 px-3 text-sm outline-none transition-all"
+                  className="flex-1 min-w-0 px-3 outline-none transition-all"
                   style={{
                     border: '1px solid #e4e1db',
                     background: '#f8f7f4',
                     borderRadius: 8,
                     color: '#0d0c0a',
+                    fontSize: 16,
                     fontFamily: "'DM Sans', system-ui, sans-serif",
                     minHeight: 44,
                   }}
