@@ -99,15 +99,16 @@ export const Header = () => {
 
         {/* Hamburger mobile — flottant à gauche */}
         <button onClick={toggleSidebar}
-          className="md:hidden flex items-center justify-center w-9 h-9 rounded-xl transition-colors"
+          className="md:hidden flex items-center justify-center rounded-xl transition-colors"
           style={{
-            position: 'absolute', top: 13, left: 16,
+            position: 'absolute', top: 8, left: 12,
+            minWidth: 44, minHeight: 44,
             background: '#ffffff', border: `1px solid ${BAI.border}`,
             color: BAI.inkFaint, pointerEvents: 'auto',
             boxShadow: '0 2px 8px rgba(13,12,10,0.08)',
           }}
           aria-label="Menu">
-          <Menu className="w-4 h-4" />
+          <Menu className="w-5 h-5" />
         </button>
 
         {/* Bulle flottante — droite */}
@@ -115,12 +116,12 @@ export const Header = () => {
           className="flex items-center gap-1"
           style={{
             position: 'absolute',
-            top: 'clamp(10px, 2vw, 13px)',
+            top: 8,
             right: 'clamp(12px, 3vw, 16px)',
             background: '#ffffff',
             border: `1px solid ${BAI.border}`,
             borderRadius: 16,
-            padding: '5px 6px',
+            padding: '4px 6px',
             boxShadow: '0 2px 12px rgba(13,12,10,0.08), 0 1px 3px rgba(13,12,10,0.05)',
             pointerEvents: 'auto',
           }}>
@@ -137,8 +138,8 @@ export const Header = () => {
 
           {/* Messages avec badge — masqués sur mobile */}
           <Link to="/messages"
-            className="relative hidden sm:flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
-            style={{ color: BAI.inkFaint }}
+            className="relative hidden sm:flex items-center justify-center rounded-lg transition-colors"
+            style={{ color: BAI.inkFaint, minWidth: 36, minHeight: 36 }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted; (e.currentTarget as HTMLElement).style.color = BAI.inkMid }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = BAI.inkFaint }}
             title="Messages">
@@ -153,8 +154,8 @@ export const Header = () => {
 
           {/* Notifications — masquées sur mobile */}
           <Link to="/notifications"
-            className="hidden sm:flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
-            style={{ color: BAI.inkFaint }}
+            className="hidden sm:flex items-center justify-center rounded-lg transition-colors"
+            style={{ color: BAI.inkFaint, minWidth: 36, minHeight: 36 }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted; (e.currentTarget as HTMLElement).style.color = BAI.inkMid }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = BAI.inkFaint }}
             title="Notifications">
@@ -167,8 +168,9 @@ export const Header = () => {
           {/* Profil dropdown */}
           <div className="relative">
             <button onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-2 pl-1.5 pr-2.5 py-1.5 rounded-xl transition-all"
+              className="flex items-center gap-2 pl-1.5 pr-2.5 rounded-xl transition-all"
               style={{
+                minHeight: 44,
                 background: showUserMenu ? BAI.bgMuted : 'transparent',
                 border: 'none',
               }}
@@ -260,12 +262,10 @@ export const Header = () => {
 
   // ── PUBLIC HEADER ──────────────────────────────────────────────────────────
   const publicHeaderStyle: React.CSSProperties = {
-    background: scrolled ? BAI.glassLight : 'transparent',
-    backdropFilter: scrolled ? BAI.glassBlur : 'none',
-    WebkitBackdropFilter: scrolled ? BAI.glassBlur : 'none',
-    borderBottom: scrolled ? `1px solid ${BAI.glassBorder}` : '1px solid transparent',
-    boxShadow: scrolled ? BAI.glassShadow : 'none',
-    transition: 'background 0.25s ease, border-color 0.25s ease, backdrop-filter 0.25s ease, box-shadow 0.25s ease',
+    background: scrolled ? BAI.bgSurface : 'transparent',
+    borderBottom: scrolled ? `1px solid ${BAI.border}` : '1px solid transparent',
+    boxShadow: scrolled ? BAI.shadowMd : 'none',
+    transition: 'background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease',
   }
 
   return (
@@ -322,8 +322,8 @@ export const Header = () => {
             {isAuthenticated ? (
               <>
                 <Link to="/notifications"
-                  className="p-2 rounded-lg transition-colors"
-                  style={{ color: BAI.inkFaint }}
+                  className="flex items-center justify-center rounded-lg transition-colors"
+                  style={{ color: BAI.inkFaint, minWidth: 44, minHeight: 44 }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
                   <Bell className="w-[18px] h-[18px]" />
@@ -331,8 +331,8 @@ export const Header = () => {
 
                 <div className="relative">
                   <button onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-lg transition-all"
-                    style={{ border: `1px solid ${BAI.border}`, background: showUserMenu ? BAI.bgMuted : 'transparent' }}
+                    className="flex items-center gap-2 pl-2 pr-3 rounded-lg transition-all"
+                    style={{ minHeight: 44, border: `1px solid ${BAI.border}`, background: showUserMenu ? BAI.bgMuted : 'transparent' }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
                     onMouseLeave={(e) => { if (!showUserMenu) (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
                     <div className="w-7 h-7 rounded-md flex items-center justify-center text-[11px] font-bold text-white"
@@ -394,8 +394,8 @@ export const Header = () => {
               <>
                 {/* Mobile burger */}
                 <button onClick={() => setShowMobilePublicMenu(!showMobilePublicMenu)}
-                  className="md:hidden p-2 rounded-lg transition-colors"
-                  style={{ color: BAI.inkMid }}
+                  className="md:hidden flex items-center justify-center rounded-lg transition-colors"
+                  style={{ color: BAI.inkMid, minWidth: 44, minHeight: 44 }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
                   {showMobilePublicMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

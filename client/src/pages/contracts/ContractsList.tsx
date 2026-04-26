@@ -222,18 +222,18 @@ export default function ContractsList() {
 
         {/* Header */}
         <div style={{ background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}` }}>
-          <div className="container mx-auto px-4 py-8">
-            <div className="flex items-start justify-between">
+          <div className="container mx-auto px-4 py-6 sm:py-8">
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
               <div>
                 <p style={{
                   fontFamily: BAI.fontBody, fontSize: 10, textTransform: 'uppercase',
-                  letterSpacing: '0.12em', color: BAI.inkFaint, marginBottom: 6,
+                  letterSpacing: '0.12em', color: BAI.caramel, marginBottom: 6,
                 }}>
                   Gestion locative
                 </p>
                 <h1 style={{
                   fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-                  fontSize: 40, color: BAI.ink, lineHeight: 1.1, margin: 0,
+                  fontSize: 'clamp(24px, 5vw, 40px)', color: BAI.ink, lineHeight: 1.1, margin: 0,
                 }}>
                   Mes contrats
                   {statistics && (
@@ -262,11 +262,12 @@ export default function ContractsList() {
                   to="/contracts/new"
                   style={{
                     display: 'inline-flex', alignItems: 'center', gap: 8,
-                    padding: '10px 18px', borderRadius: 8,
+                    padding: '0 18px', minHeight: 44, borderRadius: 8,
                     background: BAI.night, color: '#ffffff',
                     fontFamily: BAI.fontBody, fontWeight: 500, fontSize: 13,
                     textDecoration: 'none', border: 'none',
                     transition: 'opacity 0.15s',
+                    touchAction: 'manipulation',
                   }}
                   onMouseEnter={e => (e.currentTarget.style.opacity = '0.88')}
                   onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
@@ -279,10 +280,10 @@ export default function ContractsList() {
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* Tabs — scrollables horizontalement sur mobile */}
         <div style={{ background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}` }}>
           <div className="container mx-auto px-4">
-            <div className="flex gap-0">
+            <div style={{ display: 'flex', gap: 0, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.key
                 return (
@@ -290,13 +291,15 @@ export default function ContractsList() {
                     key={tab.key}
                     onClick={() => setActiveTab(tab.key)}
                     style={{
-                      display: 'flex', alignItems: 'center', gap: 8,
-                      padding: '14px 20px', fontSize: 13, fontWeight: 500,
+                      display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0,
+                      padding: '14px 16px', fontSize: 13, fontWeight: 500,
                       fontFamily: BAI.fontBody, cursor: 'pointer',
                       background: 'transparent', border: 'none',
                       borderBottom: `2px solid ${isActive ? BAI.night : 'transparent'}`,
                       color: isActive ? BAI.ink : BAI.inkFaint,
                       transition: 'color 0.15s, border-color 0.15s',
+                      minHeight: 48, touchAction: 'manipulation',
+                      whiteSpace: 'nowrap',
                     }}
                   >
                     {tab.label}

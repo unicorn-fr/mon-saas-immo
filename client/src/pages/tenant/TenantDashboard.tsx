@@ -687,12 +687,10 @@ export default function TenantDashboard() {
             ].map((kpi) => (
               <Link key={kpi.label} to={kpi.to} style={{ textDecoration: 'none', display: 'block' }}>
                 <div style={{
-                  background: 'rgba(255,255,255,0.7)',
-                  backdropFilter: 'blur(20px) saturate(1.5)',
-                  WebkitBackdropFilter: 'blur(20px) saturate(1.5)',
-                  border: '1px solid rgba(255,255,255,0.9)',
+                  background: '#ffffff',
+                  border: `1px solid ${BAI.border}`,
                   borderTop: `3px solid ${BAI.tenant}`,
-                  boxShadow: '0 4px 32px rgba(13,12,10,0.08), 0 1px 0 rgba(255,255,255,0.8) inset',
+                  boxShadow: BAI.shadowMd,
                   borderRadius: 16,
                   padding: 20,
                   display: 'flex', flexDirection: 'column',

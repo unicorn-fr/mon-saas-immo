@@ -48,7 +48,7 @@ const inputStyle: React.CSSProperties = {
   borderRadius: '8px',
   padding: '0.625rem 1rem',
   color: BAI.ink,
-  fontSize: '0.875rem',
+  fontSize: '16px', /* prevents iOS auto-zoom */
   outline: 'none',
   width: '100%',
   fontFamily: BAI.fontBody,

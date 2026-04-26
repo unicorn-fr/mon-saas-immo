@@ -121,8 +121,29 @@ export const MessageInput = ({
     setAttachments((prev) => prev.filter((_, i) => i !== index))
   }
 
+  // Auto-resize textarea
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setContent(e.target.value)
+    // Auto-resize
+    const ta = e.target
+    ta.style.height = 'auto'
+    ta.style.height = Math.min(ta.scrollHeight, 120) + 'px'
+  }
+
   return (
-    <div className="p-4 border-t" style={{ background: M.surface, borderColor: M.border }}>
+    <div
+      className="border-t"
+      style={{
+        background: M.surface,
+        borderColor: M.border,
+        /* Safe-area iOS bottom padding */
+        paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
+        paddingTop: 10,
+        paddingLeft: 12,
+        paddingRight: 12,
+      }}
+    >
       {/* Upload Error */}
       {uploadError && (
         <div className="mb-2 px-3 py-2 rounded-xl flex items-center justify-between"
@@ -144,12 +165,12 @@ export const MessageInput = ({
               style={{ background: M.muted, border: `1px solid ${M.border}` }}
             >
               <FileText className="w-4 h-4" style={{ color: M.inkMid }} />
-              <span className="max-w-[150px] truncate" style={{ color: M.inkMid }}>{attachment.name}</span>
+              <span className="max-w-[120px] truncate" style={{ color: M.inkMid }}>{attachment.name}</span>
               <span className="text-xs" style={{ color: M.inkFaint }}>({formatFileSize(attachment.size)})</span>
               <button
                 onClick={() => removeAttachment(index)}
                 className="ml-1"
-                style={{ color: M.inkFaint }}
+                style={{ color: M.inkFaint, minWidth: 24, minHeight: 24 }}
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -169,37 +190,52 @@ export const MessageInput = ({
 
       {/* Input Area */}
       <div className="flex items-end gap-2">
-        {/* Attachment Button */}
-        <div className="flex items-center pb-2">
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="p-2 rounded-xl transition-colors"
-            style={{ color: M.inkFaint }}
-            title="Ajouter un fichier (max 5 Mo)"
-            disabled={isSending || isUploading || attachments.length >= 5}
-          >
-            {isUploading ? (
-              <Loader className="w-5 h-5 animate-spin" />
-            ) : (
-              <Paperclip className="w-5 h-5" />
-            )}
-          </button>
-        </div>
+        {/* Attachment Button — 44px touch target */}
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          style={{
+            color: M.inkFaint,
+            minWidth: 44,
+            minHeight: 44,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: 12,
+            background: 'transparent',
+            border: 'none',
+            flexShrink: 0,
+            cursor: isSending || isUploading || attachments.length >= 5 ? 'not-allowed' : 'pointer',
+            opacity: isSending || isUploading || attachments.length >= 5 ? 0.4 : 1,
+          }}
+          title="Ajouter un fichier (max 5 Mo)"
+          disabled={isSending || isUploading || attachments.length >= 5}
+        >
+          {isUploading ? (
+            <Loader className="w-5 h-5 animate-spin" />
+          ) : (
+            <Paperclip className="w-5 h-5" />
+          )}
+        </button>
 
-        {/* Text Input */}
+        {/* Text Input — fontSize 16px to prevent iOS zoom */}
         <div className="flex-1">
           <textarea
+            ref={textareaRef}
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={handleContentChange}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
             rows={1}
             disabled={isSending}
-            className="w-full px-4 py-2 rounded-xl resize-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-3 py-2.5 rounded-xl focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
-              height: '42px',
+              fontSize: 16, /* prevents iOS auto-zoom */
+              lineHeight: 1.4,
+              minHeight: 44,
+              maxHeight: 120,
               overflowY: 'auto',
+              resize: 'none',
               background: M.inputBg,
               border: `1px solid ${M.border}`,
               color: M.ink,
@@ -208,12 +244,25 @@ export const MessageInput = ({
           />
         </div>
 
-        {/* Send Button */}
+        {/* Send Button — 44x44px */}
         <button
           onClick={handleSubmit}
           disabled={(!content.trim() && attachments.length === 0) || isSending}
-          className="p-2.5 rounded-xl transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
-          style={{ background: M.night, color: M.surface }}
+          style={{
+            background: M.night,
+            color: M.surface,
+            minWidth: 44,
+            minHeight: 44,
+            borderRadius: 12,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            border: 'none',
+            cursor: (!content.trim() && attachments.length === 0) || isSending ? 'not-allowed' : 'pointer',
+            opacity: (!content.trim() && attachments.length === 0) || isSending ? 0.5 : 1,
+            transition: 'opacity 0.15s',
+          }}
           title="Envoyer (Enter)"
         >
           {isSending ? (
@@ -224,8 +273,8 @@ export const MessageInput = ({
         </button>
       </div>
 
-      {/* Helper Text */}
-      <p className="text-xs mt-2" style={{ color: M.inkFaint }}>
+      {/* Helper Text — hidden on mobile to save space */}
+      <p className="hidden sm:block text-xs mt-2" style={{ color: M.inkFaint }}>
         <kbd className="px-1 py-0.5 rounded text-xs"
           style={{ background: M.muted, color: M.inkMid, border: `1px solid ${M.border}` }}>Entree</kbd>{' '}
         pour envoyer,{' '}

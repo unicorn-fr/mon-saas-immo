@@ -16,12 +16,14 @@ import {
 import type { Application } from '../../types/application.types'
 import type { Booking } from '../../types/booking.types'
 import { format, isAfter, parseISO } from 'date-fns'
-import { BAI, glassStyle } from '../../constants/bailio-tokens'
+import { BAI } from '../../constants/bailio-tokens'
 import { fr } from 'date-fns/locale'
 
 
 const cardBase: React.CSSProperties = {
-  ...glassStyle('light', 'light'),
+  background: BAI.bgSurface,
+  border: `1px solid ${BAI.border}`,
+  boxShadow: BAI.shadowMd,
   borderRadius: 16,
 }
 
@@ -149,10 +151,10 @@ export default function Dashboard() {
   return (
     <Layout>
       <div style={{ background: 'linear-gradient(135deg, #fafaf8 0%, #f4f0eb 100%)', minHeight: '100vh', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-4 lg:py-8">
 
           {/* ── Page header ─────────────────────────────────────────────── */}
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 32 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 'clamp(16px, 4vw, 32px)' }}>
             <div>
               <p style={{ fontSize: 13, color: BAI.inkFaint, fontWeight: 400, marginBottom: 4, textTransform: 'capitalize' }}>
                 {todayLabel}
@@ -167,10 +169,11 @@ export default function Dashboard() {
             </div>
             <Link to="/properties/new" style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
-              padding: '10px 20px', borderRadius: 10,
+              padding: '12px 20px', borderRadius: 10,
               background: BAI.owner, color: '#ffffff',
               fontWeight: 600, fontSize: 13, textDecoration: 'none',
               transition: 'opacity 0.15s',
+              minHeight: 44, touchAction: 'manipulation',
             }}>
               <Plus size={15} /> Nouveau bien
             </Link>
@@ -229,8 +232,8 @@ export default function Dashboard() {
           )}
 
           {/* ── KPI row ─────────────────────────────────────────────────── */}
-          <div style={{ marginBottom: 32 }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6"
+          <div style={{ marginBottom: 'clamp(16px, 4vw, 32px)' }}
+            className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6"
           >
             {/* We render four KPI cards inline */}
             {[
@@ -293,7 +296,7 @@ export default function Dashboard() {
                   </p>
                   <p style={{
                     fontFamily: "'Cormorant Garamond', Georgia, serif",
-                    fontWeight: 700, fontSize: 'clamp(28px, 6vw, 44px)', color: BAI.ink,
+                    fontWeight: 700, fontSize: 'clamp(22px, 5vw, 44px)', color: BAI.ink,
                     lineHeight: 1, marginBottom: 4,
                   }}>
                     {kpi.value}
@@ -317,7 +320,7 @@ export default function Dashboard() {
           </div>
 
           {/* ── Main grid ───────────────────────────────────────────────── */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 lg:gap-8">
 
             {/* Left column (2/3) */}
             <div>
@@ -348,10 +351,11 @@ export default function Dashboard() {
                       return (
                         <button key={property.id} onClick={() => navigate(`/properties/${property.id}`)}
                           style={{
-                            width: '100%', display: 'flex', alignItems: 'center', gap: 16,
-                            padding: '12px 20px', textAlign: 'left', background: 'transparent',
+                            width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                            padding: 'clamp(10px,2.5vw,14px) 16px', textAlign: 'left', background: 'transparent',
                             border: 'none', borderBottom: isLast ? 'none' : `1px solid ${BAI.border}`,
                             cursor: 'pointer', transition: 'background 0.15s',
+                            minHeight: 44, touchAction: 'manipulation',
                           }}
                           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
                           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}

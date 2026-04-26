@@ -313,9 +313,7 @@ export function TenantSidebar() {
             className="fixed inset-0 z-40 md:hidden"
             onClick={closeMobile}
             style={{
-              background: 'rgba(0,0,0,0.45)',
-              backdropFilter: BAI.glassBlurLight,
-              WebkitBackdropFilter: BAI.glassBlurLight,
+              background: 'rgba(0,0,0,0.5)',
             }}
           />
           <aside

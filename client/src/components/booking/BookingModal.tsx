@@ -93,31 +93,54 @@ export const BookingModal = ({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 50,
+        background: 'rgba(13,12,10,0.5)',
+        display: 'flex', alignItems: 'flex-end',
+        overflowY: 'auto',
+      }}
+      className="sm:items-center sm:justify-center sm:p-4"
+    >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        style={{ position: 'fixed', inset: 0 }}
         onClick={onClose}
       />
 
-      {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div
-          className="relative rounded-xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
-          style={{
-            background: 'rgba(255,255,255,0.92)',
-            backdropFilter: 'blur(24px)',
-            WebkitBackdropFilter: 'blur(24px)',
-            boxShadow: '0 8px 32px rgba(13,12,10,0.12)',
-          }}
-        >
+      {/* Modal — bottom sheet mobile, modal centré sm+ */}
+      <div
+        style={{
+          position: 'relative',
+          background: '#ffffff',
+          boxShadow: '0 -4px 40px rgba(13,12,10,0.14)',
+          width: '100%',
+          maxWidth: 680,
+          maxHeight: '95dvh',
+          overflowY: 'auto',
+          borderRadius: '20px 20px 0 0',
+        }}
+        className="sm:rounded-xl sm:shadow-2xl"
+      >
+        {/* Drag handle mobile */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden">
+          <div style={{ width: 36, height: 4, borderRadius: 2, background: '#e4e1db' }} />
+        </div>
+
           {/* Header */}
           <div
-            className="flex items-start justify-between p-6"
+            className="flex items-start justify-between p-5 sm:p-6"
             style={{ borderBottom: `1px solid ${BAI.border}` }}
           >
             <div>
-              <h2 className="text-2xl font-bold" style={{ color: BAI.ink }}>Réserver une visite</h2>
+              <h2
+                style={{
+                  fontFamily: "'Cormorant Garamond', Georgia, serif",
+                  fontStyle: 'italic', fontWeight: 700,
+                  fontSize: 'clamp(20px, 5vw, 26px)',
+                  color: BAI.ink, margin: 0,
+                }}
+              >Réserver une visite</h2>
               <p className="text-sm mt-1" style={{ color: BAI.inkMid }}>{propertyTitle}</p>
             </div>
             <button
@@ -291,6 +314,5 @@ export const BookingModal = ({
           )}
         </div>
       </div>
-    </div>
   )
 }

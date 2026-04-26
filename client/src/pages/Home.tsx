@@ -594,12 +594,9 @@ export default function Home() {
                 <div
                   key={feat.title}
                   style={{
-                    background: 'rgba(255,255,255,0.7)',
-                    backdropFilter: 'blur(20px) saturate(1.5)',
-                    WebkitBackdropFilter: 'blur(20px) saturate(1.5)',
-                    border: '1px solid rgba(255,255,255,0.9)',
-                    borderTop: '1px solid rgba(255,255,255,1)',
-                    boxShadow: '0 4px 32px rgba(13,12,10,0.08), 0 1px 0 rgba(255,255,255,0.8) inset',
+                    background: '#ffffff',
+                    border: '1px solid #e4e1db',
+                    boxShadow: '0 4px 32px rgba(13,12,10,0.06)',
                     borderRadius: 20,
                     padding: '28px 28px 28px',
                     transition: 'transform 0.2s, box-shadow 0.2s',

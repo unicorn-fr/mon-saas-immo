@@ -17,7 +17,7 @@ const inputBase: React.CSSProperties = {
   border: '1px solid #e4e1db',
   borderRadius: '10px',
   padding: '14px 16px',
-  fontSize: '15px',
+  fontSize: '16px', /* prevents iOS auto-zoom */
   color: '#0d0c0a',
   outline: 'none',
   fontFamily: "'DM Sans', system-ui, sans-serif",
