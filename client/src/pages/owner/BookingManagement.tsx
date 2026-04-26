@@ -9,6 +9,7 @@ import {
   Loader,
   AlertCircle,
   MapPin,
+  Info,
 } from 'lucide-react'
 import { format, parseISO, isAfter } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -433,6 +434,27 @@ export const BookingManagement = () => {
               </div>
             </div>
           </div>
+
+          {/* Guide de démarrage — affiché quand aucune visite reçue et aucune propriété sélectionnée */}
+          {!isLoading && bookings.length === 0 && selectedProperty === 'all' && !searchQuery && selectedStatus === 'all' && (
+            <div
+              className="flex gap-4 p-5 mb-6"
+              style={{ background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, borderRadius: 12 }}
+            >
+              <Info className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: BAI.owner }} />
+              <div>
+                <p style={{ fontSize: 14, fontWeight: 600, color: BAI.owner, marginBottom: 6 }}>
+                  Comment activer les visites ?
+                </p>
+                <ol className="space-y-1" style={{ fontSize: 13, color: BAI.owner, paddingLeft: 16, lineHeight: 1.6 }}>
+                  <li>Sélectionnez un bien dans le filtre ci-dessus</li>
+                  <li>Configurez vos créneaux de disponibilité (jours + plages horaires)</li>
+                  <li>Approuvez les candidatures des locataires dans <strong>Candidatures</strong></li>
+                  <li>Les locataires approuvés pourront alors réserver un créneau</li>
+                </ol>
+              </div>
+            </div>
+          )}
 
           {/* Visit Slots Manager */}
           {selectedProperty !== 'all' && (

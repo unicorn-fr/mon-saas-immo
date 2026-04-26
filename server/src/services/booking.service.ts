@@ -1,5 +1,6 @@
 import { BookingStatus, Prisma } from '@prisma/client'
 import { prisma } from '../config/database.js'
+import { notificationService } from './notification.service.js'
 
 export interface CreateBookingInput {
   propertyId: string
@@ -129,8 +130,9 @@ class BookingService {
       },
     })
 
-    // TODO: Send notification to property owner
-    // await notificationService.notifyNewBooking(property.ownerId, booking)
+    // Notify property owner of new booking request
+    const tenantName = `${booking.tenant.firstName} ${booking.tenant.lastName}`
+    notificationService.notifyNewBooking(booking.property.owner.id, booking.id, booking.property.title, tenantName).catch(() => {})
 
     return booking
   }
@@ -423,12 +425,10 @@ class BookingService {
       },
     })
 
-    // TODO: Notify the other party
-    // if (isTenant) {
-    //   await notificationService.notifyBookingCancelled(booking.property.ownerId, cancelledBooking)
-    // } else {
-    //   await notificationService.notifyBookingCancelled(booking.tenantId, cancelledBooking)
-    // }
+    // Notify the other party of cancellation
+    const cancelledBy = isTenant ? 'tenant' : 'owner'
+    const notifyUserId = isTenant ? cancelledBooking.property.owner.id : cancelledBooking.tenantId
+    notificationService.notifyBookingCancelled(notifyUserId, cancelledBooking.id, cancelledBooking.property.title, cancelledBy).catch(() => {})
 
     return cancelledBooking
   }
@@ -484,8 +484,8 @@ class BookingService {
       },
     })
 
-    // TODO: Notify tenant
-    // await notificationService.notifyBookingConfirmed(booking.tenantId, confirmedBooking)
+    // Notify tenant of booking confirmation
+    notificationService.notifyBookingConfirmed(confirmedBooking.tenantId, confirmedBooking.id, confirmedBooking.property.title).catch(() => {})
 
     return confirmedBooking
   }

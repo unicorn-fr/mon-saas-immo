@@ -79,6 +79,47 @@ function buildGoogleCalendarUrl(booking: Booking): string {
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${fmt(visitDate)}/${fmt(endDate)}&details=${details}&location=${location}`
 }
 
+/**
+ * Download an iCal (.ics) file for the booking.
+ */
+function downloadIcal(booking: Booking) {
+  const visitDate = new Date(booking.visitDate)
+  const [h, m] = (booking.visitTime || '10:00').split(':').map(Number)
+  visitDate.setHours(h, m, 0, 0)
+  const endDate = new Date(visitDate.getTime() + (booking.duration || 30) * 60_000)
+
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const fmt = (d: Date) =>
+    `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`
+
+  const location = [booking.property.address, booking.property.city].filter(Boolean).join(', ')
+  const uid = `booking-${booking.id}@bailio.fr`
+
+  const ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Bailio//Visite//FR',
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTAMP:${fmt(new Date())}`,
+    `DTSTART:${fmt(visitDate)}`,
+    `DTEND:${fmt(endDate)}`,
+    `SUMMARY:Visite — ${booking.property.title}`,
+    `LOCATION:${location}`,
+    `DESCRIPTION:Réservation #${booking.id.slice(0, 8)} via Bailio`,
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ].join('\r\n')
+
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `visite-${booking.property.title.replace(/\s+/g, '-').toLowerCase()}.ics`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 export const BookingCard = ({
   booking,
   viewMode,
@@ -96,7 +137,7 @@ export const BookingCard = ({
   const isPast = visitDate < new Date()
   const canConfirm = viewMode === 'owner' && booking.status === 'PENDING' && !isPast
   const canCancel = booking.status === 'PENDING' && !isPast
-  const canAddToCalendar = booking.status === 'CONFIRMED' && !isPast
+  const canAddToCalendar = (booking.status === 'CONFIRMED' || (viewMode === 'tenant' && booking.status === 'PENDING')) && !isPast
 
   return (
     <div
@@ -236,41 +277,60 @@ export const BookingCard = ({
           </div>
         )}
 
-        {/* Google Calendar CTA — visites confirmées à venir */}
+        {/* Agenda CTA — visites à venir (PENDING côté locataire ou CONFIRMED) */}
         {canAddToCalendar && (
           <div
-            className="flex items-center justify-between p-3 mb-4"
+            className="flex flex-wrap items-center justify-between gap-2 p-3 mb-4"
             style={{
-              background: BAI.tenantLight,
-              border: `1px solid ${BAI.tenantBorder}`,
+              background: booking.status === 'CONFIRMED' ? BAI.tenantLight : BAI.bgMuted,
+              border: `1px solid ${booking.status === 'CONFIRMED' ? BAI.tenantBorder : BAI.border}`,
               borderRadius: 10,
             }}
           >
             <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" style={{ color: BAI.tenant }} />
-              <p style={{ fontSize: 13, color: BAI.tenant, fontWeight: 500 }}>
-                Visite confirmée — ajoutez-la à votre agenda
+              <Calendar className="w-4 h-4" style={{ color: booking.status === 'CONFIRMED' ? BAI.tenant : BAI.inkMid }} />
+              <p style={{ fontSize: 13, color: booking.status === 'CONFIRMED' ? BAI.tenant : BAI.inkMid, fontWeight: 500 }}>
+                {booking.status === 'CONFIRMED' ? 'Visite confirmée — ajoutez-la à votre agenda' : 'Enregistrer ce créneau dans votre agenda'}
               </p>
             </div>
-            <a
-              href={buildGoogleCalendarUrl(booking)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5"
-              style={{
-                background: BAI.tenant,
-                color: '#ffffff',
-                borderRadius: 8,
-                fontSize: 12,
-                fontWeight: 600,
-                textDecoration: 'none',
-                fontFamily: BAI.fontBody,
-                flexShrink: 0,
-              }}
-            >
-              <ExternalLink className="w-3 h-3" />
-              Google Calendar
-            </a>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => downloadIcal(booking)}
+                className="flex items-center gap-1.5 px-3 py-1.5"
+                style={{
+                  background: BAI.bgSurface,
+                  color: BAI.inkMid,
+                  border: `1px solid ${BAI.border}`,
+                  borderRadius: 8,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontFamily: BAI.fontBody,
+                }}
+              >
+                <ExternalLink className="w-3 h-3" />
+                iCal
+              </button>
+              <a
+                href={buildGoogleCalendarUrl(booking)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-3 py-1.5"
+                style={{
+                  background: booking.status === 'CONFIRMED' ? BAI.tenant : BAI.night,
+                  color: '#ffffff',
+                  borderRadius: 8,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  fontFamily: BAI.fontBody,
+                  flexShrink: 0,
+                }}
+              >
+                <ExternalLink className="w-3 h-3" />
+                Google Calendar
+              </a>
+            </div>
           </div>
         )}
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { X, Plus, Loader, Clock } from 'lucide-react'
+import { X, Plus, Loader, Clock, Info } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { bookingService } from '../../services/booking.service'
 import { VisitSlot } from '../../types/booking.types'
@@ -102,7 +102,7 @@ export const VisitSlotsManager = ({ propertyId, onClose }: Props) => {
     borderRadius: 8,
     color: '#0d0c0a',
     fontFamily: "'DM Sans', system-ui, sans-serif",
-    fontSize: 13,
+    fontSize: 16,
     padding: '10px 10px',
     outline: 'none',
     minHeight: 44,
@@ -167,12 +167,19 @@ export const VisitSlotsManager = ({ propertyId, onClose }: Props) => {
           </div>
         ) : slots.length === 0 ? (
           <div
-            className="py-6 text-center"
-            style={{ background: '#f4f2ee', borderRadius: 8 }}
+            className="flex gap-3 p-4"
+            style={{ background: '#fdf5ec', border: '1px solid #f3c99a', borderRadius: 10 }}
           >
-            <p style={{ fontSize: 13, color: '#9e9b96' }}>
-              Aucun créneau défini pour ce logement
-            </p>
+            <Info className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#92400e' }} />
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 600, color: '#92400e', marginBottom: 4 }}>
+                Aucun créneau configuré
+              </p>
+              <p style={{ fontSize: 12, color: '#92400e', lineHeight: 1.5 }}>
+                Les locataires dont la candidature est approuvée ne peuvent pas encore réserver de visite pour ce bien.
+                Ajoutez vos plages horaires ci-dessous pour les débloquer.
+              </p>
+            </div>
           </div>
         ) : (
           <div className="space-y-2">
