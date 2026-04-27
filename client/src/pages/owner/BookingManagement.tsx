@@ -248,7 +248,7 @@ export const BookingManagement = () => {
 
                       {/* Infos */}
                       <div className="flex-1 min-w-0">
-                        <p style={{ fontSize: 13, fontWeight: 600, color: BAI.ink, marginBottom: 2 }}>
+                        <p className="truncate" style={{ fontSize: 13, fontWeight: 600, color: BAI.ink, marginBottom: 2 }}>
                           {booking.tenant?.firstName ?? 'Locataire'} {booking.tenant?.lastName ?? ''}
                         </p>
                         <div className="flex items-center gap-1 mb-1">
@@ -260,8 +260,8 @@ export const BookingManagement = () => {
                         {visitDt && (
                           <div className="flex items-center gap-1">
                             <Clock className="w-3 h-3 flex-shrink-0" style={{ color: BAI.inkFaint }} />
-                            <p style={{ fontSize: 12, color: BAI.inkFaint }}>
-                              {format(visitDt, "EEEE d MMMM · HH'h'mm", { locale: fr })}
+                            <p className="truncate" style={{ fontSize: 12, color: BAI.inkFaint }}>
+                              {format(visitDt, "d MMM · HH'h'mm", { locale: fr })}
                             </p>
                           </div>
                         )}
@@ -288,11 +288,10 @@ export const BookingManagement = () => {
                   >
                     {icon}
                   </div>
-                  <div className="text-center sm:text-left">
-                    <p style={{ fontSize: 11, color: BAI.inkFaint, marginBottom: 2 }}>{label}</p>
+                  <div className="text-center sm:text-left min-w-0">
+                    <p style={{ fontSize: 10, color: BAI.inkFaint, marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</p>
                     <p
-                      className="text-2xl font-bold"
-                      style={{ color: BAI.ink, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1 }}
+                      style={{ color: BAI.ink, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1, fontSize: 'clamp(18px,4vw,28px)', fontWeight: 700 }}
                     >
                       {value}
                     </p>

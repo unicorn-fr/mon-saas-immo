@@ -117,11 +117,10 @@ function ApplicationCard({
         overflow: 'hidden',
       }}
     >
-      {/* Main row — stack on mobile, row on sm+ */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4">
-        {/* Top section: avatar + score + nom/statut */}
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          {/* Avatar */}
+      {/* Main row — stack sur mobile */}
+      <div className="flex flex-col gap-3 p-4">
+        {/* Ligne 1 : avatar + score + nom/statut */}
+        <div className="flex items-center gap-3 min-w-0">
           <div
             className="flex items-center justify-center flex-shrink-0 rounded-full w-9 h-9 text-sm font-bold"
             style={{
@@ -138,23 +137,23 @@ function ApplicationCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span
-                className="font-semibold text-sm"
-                style={{ color: BAI.ink, fontFamily: "'DM Sans', system-ui, sans-serif" }}
+                className="font-semibold text-sm truncate"
+                style={{ color: BAI.ink, fontFamily: "'DM Sans', system-ui, sans-serif", maxWidth: '160px' }}
               >
                 {tenant.firstName} {tenant.lastName}
               </span>
               <span
-                className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center"
+                className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center flex-shrink-0"
                 style={STATUS_STYLE[app.status]}
               >
                 {STATUS_LABEL[app.status]}
               </span>
               {app.hasGuarantor && (
                 <span
-                  className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center"
+                  className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center flex-shrink-0"
                   style={{ background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, color: BAI.owner }}
                 >
-                  Garant {app.guarantorType}
+                  Garant
                 </span>
               )}
             </div>
@@ -165,20 +164,32 @@ function ApplicationCard({
               {tenant.email} · {format(new Date(app.createdAt), 'd MMM yyyy', { locale: fr })}
             </div>
           </div>
+
+          {/* Expand toggle — placé en fin de ligne 1 */}
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="flex items-center justify-center transition-colors flex-shrink-0"
+            style={{ color: BAI.inkFaint, borderRadius: 8, minHeight: 36, minWidth: 36 }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = BAI.bgMuted)}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+          >
+            {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
         </div>
 
-        {/* Actions row */}
-        <div className="flex items-center gap-1.5 flex-wrap flex-shrink-0">
+        {/* Ligne 2 : boutons actions — full width, scroll horizontal si besoin */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none' }}>
           <button
             onClick={() => onOpenDossier(tenant.id, `${tenant.firstName ?? ''} ${tenant.lastName ?? ''}`.trim())}
-            className="flex items-center gap-1 px-3 text-xs font-semibold transition-colors"
+            className="flex items-center gap-1.5 flex-shrink-0 text-xs font-semibold transition-colors"
             style={{
               background: BAI.ownerLight,
               border: `1px solid ${BAI.ownerBorder}`,
               color: BAI.owner,
               borderRadius: 8,
               fontFamily: "'DM Sans', system-ui, sans-serif",
-              minHeight: 40,
+              minHeight: 36, padding: '0 12px',
+              whiteSpace: 'nowrap',
             }}
             onMouseEnter={(e) => (e.currentTarget.style.background = '#d8e8fa')}
             onMouseLeave={(e) => (e.currentTarget.style.background = BAI.ownerLight)}
@@ -186,17 +197,18 @@ function ApplicationCard({
             <FolderOpen className="w-3 h-3" />
             Dossier
           </button>
+
           {app.status === 'PENDING' && (
             <>
               <button
                 onClick={() => decide('APPROVED')}
                 disabled={loading}
-                className="flex items-center gap-1 px-3 text-xs font-semibold text-white transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 flex-shrink-0 text-xs font-semibold text-white transition-colors disabled:opacity-50"
                 style={{
-                  background: BAI.owner,
-                  borderRadius: 8,
+                  background: BAI.owner, borderRadius: 8,
                   fontFamily: "'DM Sans', system-ui, sans-serif",
-                  minHeight: 40,
+                  minHeight: 36, padding: '0 12px',
+                  whiteSpace: 'nowrap',
                 }}
                 onMouseEnter={(e) => !loading && (e.currentTarget.style.background = '#142860')}
                 onMouseLeave={(e) => !loading && (e.currentTarget.style.background = BAI.owner)}
@@ -207,14 +219,12 @@ function ApplicationCard({
               <button
                 onClick={() => decide('REJECTED')}
                 disabled={loading}
-                className="flex items-center gap-1 px-3 text-xs font-semibold transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 flex-shrink-0 text-xs font-semibold transition-colors disabled:opacity-50"
                 style={{
-                  background: BAI.errorLight,
-                  border: `1px solid #f5c6c6`,
-                  color: BAI.error,
-                  borderRadius: 8,
-                  fontFamily: "'DM Sans', system-ui, sans-serif",
-                  minHeight: 40,
+                  background: BAI.errorLight, border: `1px solid #f5c6c6`, color: BAI.error,
+                  borderRadius: 8, fontFamily: "'DM Sans', system-ui, sans-serif",
+                  minHeight: 36, padding: '0 12px',
+                  whiteSpace: 'nowrap',
                 }}
                 onMouseEnter={(e) => !loading && (e.currentTarget.style.background = '#fde8e8')}
                 onMouseLeave={(e) => !loading && (e.currentTarget.style.background = BAI.errorLight)}
@@ -231,31 +241,20 @@ function ApplicationCard({
                 try { await onUnreject(app.id) } finally { setLoading(false) }
               }}
               disabled={loading}
-              className="flex items-center gap-1 px-3 text-xs font-semibold transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 flex-shrink-0 text-xs font-semibold transition-colors disabled:opacity-50"
               style={{
-                background: BAI.warningLight,
-                border: `1px solid #e8c98b`,
-                color: BAI.warning,
-                borderRadius: 8,
-                fontFamily: "'DM Sans', system-ui, sans-serif",
-                minHeight: 40,
+                background: BAI.warningLight, border: `1px solid #e8c98b`, color: BAI.warning,
+                borderRadius: 8, fontFamily: "'DM Sans', system-ui, sans-serif",
+                minHeight: 36, padding: '0 12px',
+                whiteSpace: 'nowrap',
               }}
               onMouseEnter={(e) => !loading && (e.currentTarget.style.background = '#faebd0')}
               onMouseLeave={(e) => !loading && (e.currentTarget.style.background = BAI.warningLight)}
             >
               {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3" />}
-              Annuler le refus
+              Annuler refus
             </button>
           )}
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="flex items-center justify-center transition-colors"
-            style={{ color: BAI.inkFaint, borderRadius: 8, minHeight: 40, minWidth: 40 }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = BAI.bgMuted)}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-          >
-            {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
         </div>
       </div>
 

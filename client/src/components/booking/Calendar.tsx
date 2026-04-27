@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { ChevronLeft, ChevronRight, X, MapPin, Clock, User, ExternalLink, CheckCircle, AlertCircle, XCircle } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X, MapPin, Clock, User, ExternalLink, CheckCircle, AlertCircle, XCircle, FolderOpen } from 'lucide-react'
 import {
   format,
   startOfMonth,
@@ -250,26 +250,49 @@ function BookingPopup({
           </div>
         )}
 
-        {/* CTA → voir le bien */}
-        <button
-          onClick={() => navigate(`/property/${booking.property.id}`)}
-          style={{
-            marginTop: 14,
-            width: '100%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-            padding: '9px 16px',
-            background: BAI.night, color: '#ffffff',
-            border: 'none', borderRadius: 8, cursor: 'pointer',
-            fontSize: 13, fontWeight: 600,
-            fontFamily: BAI.fontBody,
-            transition: 'opacity 0.15s',
-          }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.88' }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1' }}
-        >
-          <ExternalLink className="w-3.5 h-3.5" />
-          Voir le bien
-        </button>
+        {/* CTAs */}
+        <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <button
+            onClick={() => navigate(`/property/${booking.property.id}`)}
+            style={{
+              width: '100%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              padding: '9px 16px',
+              background: BAI.night, color: '#ffffff',
+              border: 'none', borderRadius: 8, cursor: 'pointer',
+              fontSize: 13, fontWeight: 600,
+              fontFamily: BAI.fontBody,
+              transition: 'opacity 0.15s',
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.88' }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1' }}
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            Voir le bien
+          </button>
+
+          {/* Dossier locataire — visible owner uniquement */}
+          {viewMode === 'owner' && (
+            <button
+              onClick={() => navigate(`/owner/tenants/${booking.tenantId}`)}
+              style={{
+                width: '100%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                padding: '9px 16px',
+                background: BAI.ownerLight, color: BAI.owner,
+                border: `1px solid ${BAI.ownerBorder}`, borderRadius: 8, cursor: 'pointer',
+                fontSize: 13, fontWeight: 600,
+                fontFamily: BAI.fontBody,
+                transition: 'filter 0.12s',
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.filter = 'brightness(0.94)' }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.filter = 'none' }}
+            >
+              <FolderOpen className="w-3.5 h-3.5" />
+              Dossier de {booking.tenant.firstName} {booking.tenant.lastName}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )

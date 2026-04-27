@@ -651,38 +651,42 @@ export default function TenantDashboard() {
 
           {/* ── KPI row ─────────────────────────────────────────────────── */}
           <div style={{ marginBottom: 32 }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-3"
           >
             {[
               {
                 to: '/my-bookings',
-                label: 'Visites à venir',
+                label: 'Visites',
+                sublabel: 'à venir',
                 value: upcomingBookings.length,
                 sub: upcomingBookings.length > 0
-                  ? `Prochaine le ${format(new Date(upcomingBookings[0].visitDate), 'd MMM', { locale: fr })}`
-                  : 'Aucune programmée',
+                  ? `Le ${format(new Date(upcomingBookings[0].visitDate), 'd MMM', { locale: fr })}`
+                  : 'Aucune',
               },
               {
                 to: '/my-applications',
-                label: 'Candidatures',
+                label: 'Candida-',
+                sublabel: 'tures',
                 value: activeApps.length,
                 sub: pendingApps.length > 0
                   ? `${pendingApps.length} en attente`
                   : approvedApps.length > 0
                     ? `${approvedApps.length} approuvée${approvedApps.length > 1 ? 's' : ''}`
-                    : 'Aucune en cours',
+                    : 'Aucune',
               },
               {
                 to: '/messages',
                 label: 'Messages',
+                sublabel: '',
                 value: unreadCount,
                 sub: unreadCount > 0 ? `${unreadCount} non lu${unreadCount > 1 ? 's' : ''}` : 'Tout lu',
               },
               {
                 to: '/favorites',
                 label: 'Favoris',
+                sublabel: '',
                 value: favoriteIds.size,
-                sub: favoriteIds.size > 0 ? `${favoriteIds.size} bien${favoriteIds.size > 1 ? 's' : ''}` : 'Aucun favori',
+                sub: favoriteIds.size > 0 ? `${favoriteIds.size} bien${favoriteIds.size > 1 ? 's' : ''}` : 'Aucun',
               },
             ].map((kpi) => (
               <Link key={kpi.label} to={kpi.to} style={{ textDecoration: 'none', display: 'block' }}>
@@ -691,35 +695,36 @@ export default function TenantDashboard() {
                   border: `1px solid ${BAI.border}`,
                   borderTop: `3px solid ${BAI.tenant}`,
                   boxShadow: BAI.shadowMd,
-                  borderRadius: 16,
-                  padding: 20,
+                  borderRadius: 14,
+                  padding: 'clamp(10px,3vw,18px)',
                   display: 'flex', flexDirection: 'column',
                   boxSizing: 'border-box',
                   transition: 'box-shadow 0.2s, transform 0.2s',
+                  height: '100%',
                 }}
                   onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 40px rgba(13,12,10,0.12), 0 1px 0 rgba(255,255,255,0.9) inset';
+                    (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 40px rgba(13,12,10,0.12)';
                     (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'
                   }}
                   onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 32px rgba(13,12,10,0.08), 0 1px 0 rgba(255,255,255,0.8) inset';
+                    (e.currentTarget as HTMLElement).style.boxShadow = BAI.shadowMd;
                     (e.currentTarget as HTMLElement).style.transform = 'none'
                   }}
                 >
-                  <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.inkFaint, marginBottom: 12 }}>
-                    {kpi.label}
+                  <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.inkFaint, marginBottom: 8, lineHeight: 1.4 }}>
+                    {kpi.label}{kpi.sublabel && <><br />{kpi.sublabel}</>}
                   </p>
                   <p style={{
                     fontFamily: "'Cormorant Garamond', Georgia, serif",
-                    fontWeight: 700, fontSize: 'clamp(28px,6vw,44px)', color: BAI.ink,
+                    fontWeight: 700, fontSize: 'clamp(20px,4vw,36px)', color: BAI.ink,
                     lineHeight: 1, marginBottom: 4,
                   }}>
                     {kpi.value}
                   </p>
-                  <p style={{ fontSize: 12, color: BAI.inkFaint }}>
+                  <p style={{ fontSize: 11, color: BAI.inkFaint, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {kpi.sub}
                   </p>
-                  <ArrowRight size={14} style={{ color: BAI.inkFaint, marginTop: 'auto', alignSelf: 'flex-end' }} />
+                  <ArrowRight size={12} style={{ color: BAI.inkFaint, marginTop: 'auto', alignSelf: 'flex-end', paddingTop: 6 }} />
                 </div>
               </Link>
             ))}
