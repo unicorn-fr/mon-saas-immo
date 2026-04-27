@@ -281,7 +281,6 @@ export const Calendar = ({
   bookings,
   onDateSelect,
   selectedDate = null,
-  minDate,
 }: CalendarProps) => {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
