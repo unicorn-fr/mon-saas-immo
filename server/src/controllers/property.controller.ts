@@ -718,6 +718,137 @@ class PropertyController {
   }
 
   /**
+   * POST /api/v1/properties/parse-query
+   * Parse natural language query into property filters (French)
+   */
+  async parseNaturalQuery(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { query } = req.body
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ success: false, message: 'Query is required' })
+      }
+
+      const q = query.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+
+      const filters: Record<string, unknown> = {}
+      const chips: { label: string; value: string }[] = []
+
+      // Price
+      const maxPriceMatch = q.match(/(?:moins de|max|maximum|pas plus de|inferieur a|jusqu.a|jusqu a)\s*(\d[\d\s]*)\s*(?:euros?|€|eur)/i)
+      if (maxPriceMatch) {
+        filters.maxPrice = parseInt(maxPriceMatch[1].replace(/\s/g, ''))
+        chips.push({ label: 'Prix max', value: `${filters.maxPrice}€` })
+      }
+      const minPriceMatch = q.match(/(?:plus de|min|minimum|au moins|superieur a|a partir de|depuis)\s*(\d[\d\s]*)\s*(?:euros?|€|eur)/i)
+      if (minPriceMatch) {
+        filters.minPrice = parseInt(minPriceMatch[1].replace(/\s/g, ''))
+        chips.push({ label: 'Prix min', value: `${filters.minPrice}€` })
+      }
+
+      // Surface
+      const minSurfaceMatch = q.match(/(?:plus de|au moins|minimum|min|superieur a)\s*(\d+)\s*(?:m2|m²|metres? carres?|m\s*carre)/i)
+        || q.match(/(\d+)\s*(?:m2|m²|metres? carres?|m\s*carre)\s*(?:minimum|min|au moins|ou plus)/i)
+      if (minSurfaceMatch) {
+        filters.minSurface = parseInt(minSurfaceMatch[1])
+        chips.push({ label: 'Surface min', value: `${filters.minSurface}m²` })
+      }
+      const maxSurfaceMatch = q.match(/(?:moins de|maximum|max|pas plus de)\s*(\d+)\s*(?:m2|m²|metres? carres?|m\s*carre)/i)
+        || q.match(/(\d+)\s*(?:m2|m²|metres? carres?|m\s*carre)\s*(?:maximum|max|au plus)/i)
+      if (maxSurfaceMatch) {
+        filters.maxSurface = parseInt(maxSurfaceMatch[1])
+        chips.push({ label: 'Surface max', value: `${filters.maxSurface}m²` })
+      }
+
+      // Bedrooms
+      const bedroomsMatch = q.match(/(\d+)\s*(?:chambres?|pieces?|p\b)/)
+      if (bedroomsMatch) {
+        filters.bedrooms = parseInt(bedroomsMatch[1])
+        chips.push({ label: 'Chambres', value: bedroomsMatch[1] })
+      }
+
+      // Type
+      if (/\bstudio\b/.test(q)) {
+        filters.type = 'STUDIO'
+        chips.push({ label: 'Type', value: 'Studio' })
+      } else if (/\bmaison\b/.test(q)) {
+        filters.type = 'HOUSE'
+        chips.push({ label: 'Type', value: 'Maison' })
+      } else if (/\bappartement\b/.test(q)) {
+        filters.type = 'APARTMENT'
+        chips.push({ label: 'Type', value: 'Appartement' })
+      } else if (/\bloft\b/.test(q)) {
+        filters.type = 'LOFT'
+        chips.push({ label: 'Type', value: 'Loft' })
+      } else if (/\bchalet\b/.test(q)) {
+        filters.type = 'CHALET'
+        chips.push({ label: 'Type', value: 'Chalet' })
+      } else if (/\bvilla\b/.test(q)) {
+        filters.type = 'VILLA'
+        chips.push({ label: 'Type', value: 'Villa' })
+      }
+
+      // Furnished
+      if (/\bmeuble\b/.test(q) && !/\bnon meuble\b/.test(q) && !/\bpas meuble\b/.test(q)) {
+        filters.furnished = true
+        chips.push({ label: 'Meublé', value: 'Oui' })
+      } else if (/\bnon[- ]?meuble\b/.test(q) || /\bpas meuble\b/.test(q) || /\bvide\b/.test(q)) {
+        filters.furnished = false
+        chips.push({ label: 'Meublé', value: 'Non' })
+      }
+
+      // Parking
+      if (/\bparking\b|\bgarage\b/.test(q)) {
+        filters.hasParking = true
+        chips.push({ label: 'Parking', value: 'Oui' })
+      }
+
+      // Elevator
+      if (/\bascenseur\b/.test(q)) {
+        filters.hasElevator = true
+        chips.push({ label: 'Ascenseur', value: 'Oui' })
+      }
+
+      // Garden / Terrace
+      if (/\bjardin\b|\bterrasse\b/.test(q)) {
+        filters.hasGarden = true
+        chips.push({ label: /\bterrasse\b/.test(q) ? 'Terrasse' : 'Jardin', value: 'Oui' })
+      }
+
+      // Balcony
+      if (/\bbalcon\b/.test(q)) {
+        filters.hasBalcony = true
+        chips.push({ label: 'Balcon', value: 'Oui' })
+      }
+
+      // Floor
+      const floorMatch = q.match(/(\d+)(?:er|eme|ème|e)?\s*etage/)
+      if (floorMatch) {
+        filters.floor = parseInt(floorMatch[1])
+        chips.push({ label: 'Étage', value: floorMatch[1] })
+      }
+
+      // City (simple heuristic: "à Paris", "en Lyon", "sur Bordeaux", etc.)
+      const cityMatch = q.match(/\b(?:a|au|en|sur|dans)\s+([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s-]{2,20})(?:\b|$)/)
+      if (cityMatch) {
+        const candidate = cityMatch[1].trim()
+        // Filter out common non-city words
+        const stopWords = ['moins', 'plus', 'minimum', 'maximum', 'moins de', 'plus de', 'centre', 'etage']
+        if (!stopWords.some(sw => candidate.toLowerCase().startsWith(sw))) {
+          filters.city = candidate.charAt(0).toUpperCase() + candidate.slice(1).toLowerCase()
+          chips.push({ label: 'Ville', value: filters.city as string })
+        }
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: { filters, chips, originalQuery: query },
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  /**
    * POST /api/v1/properties/:id/contact
    * Contact property owner
    */
