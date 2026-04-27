@@ -233,32 +233,35 @@ export default function Dashboard() {
 
           {/* ── KPI row ─────────────────────────────────────────────────── */}
           <div style={{ marginBottom: 'clamp(16px, 4vw, 32px)' }}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-3"
           >
-            {/* We render four KPI cards inline */}
             {[
               {
-                label: 'Revenus mensuels',
+                label: 'Revenus',
+                sublabel: 'mensuels',
                 value: `${monthlyRevenue.toLocaleString('fr-FR')} €`,
                 sub: `${annualRevenue.toLocaleString('fr-FR')} € / an`,
                 to: undefined as string | undefined,
               },
               {
-                label: "Taux d'occupation",
+                label: 'Occupation',
+                sublabel: '',
                 value: `${occupancyRate}%`,
-                sub: `${occupiedProps} loué${occupiedProps > 1 ? 's' : ''} / ${totalProps} biens`,
+                sub: `${occupiedProps}/${totalProps} biens`,
                 to: '/properties/owner/me',
               },
               {
-                label: 'Rendement estimé',
+                label: 'Rendement',
+                sublabel: 'estimé',
                 value: monthlyRevenue > 0 ? `${estimatedYield}%` : '—',
-                sub: 'Rendement brut annuel',
+                sub: 'Brut annuel',
                 to: '/applications/manage',
               },
               {
-                label: 'Candidatures en attente',
+                label: 'Candidatures',
+                sublabel: 'en attente',
                 value: String(pendingApps.length),
-                sub: pendingApps.length > 0 ? 'En attente de traitement' : 'Aucune en attente',
+                sub: pendingApps.length > 0 ? 'À traiter' : 'Aucune',
                 to: '/applications/manage',
               },
             ].map((kpi) => {
@@ -267,8 +270,8 @@ export default function Dashboard() {
                   background: BAI.bgSurface,
                   border: `1px solid ${BAI.border}`,
                   boxShadow: BAI.shadowMd,
-                  borderRadius: 16,
-                  padding: 'clamp(12px, 3vw, 20px)',
+                  borderRadius: 14,
+                  padding: 'clamp(10px, 3vw, 20px)',
                   display: 'flex', flexDirection: 'column', height: '100%',
                   boxSizing: 'border-box', cursor: kpi.to ? 'pointer' : 'default',
                   transition: 'box-shadow 0.2s, transform 0.2s',
@@ -289,23 +292,27 @@ export default function Dashboard() {
                   <div style={{
                     position: 'absolute', top: 0, left: 0, right: 0, height: 3,
                     background: `linear-gradient(90deg, ${BAI.owner}, ${BAI.ownerBorder})`,
-                    borderRadius: '16px 16px 0 0',
+                    borderRadius: '14px 14px 0 0',
                   }} />
-                  <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.inkFaint, marginBottom: 12 }}>
+                  {/* Label — 2 lignes sur mobile pour éviter l'écrasement */}
+                  <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.inkFaint, marginBottom: 8, lineHeight: 1.4 }}>
                     {kpi.label}
+                    {kpi.sublabel && <><br />{kpi.sublabel}</>}
                   </p>
                   <p style={{
                     fontFamily: "'Cormorant Garamond', Georgia, serif",
-                    fontWeight: 700, fontSize: 'clamp(22px, 5vw, 44px)', color: BAI.ink,
+                    fontWeight: 700,
+                    fontSize: 'clamp(18px, 4vw, 36px)',
+                    color: BAI.ink,
                     lineHeight: 1, marginBottom: 4,
                   }}>
                     {kpi.value}
                   </p>
-                  <p style={{ fontSize: 12, color: BAI.inkFaint }}>
+                  <p style={{ fontSize: 11, color: BAI.inkFaint, lineHeight: 1.3 }}>
                     {kpi.sub}
                   </p>
                   {kpi.to && (
-                    <ArrowUpRight size={14} style={{ color: BAI.inkFaint, marginTop: 'auto', alignSelf: 'flex-end', marginBottom: 0 }} />
+                    <ArrowUpRight size={12} style={{ color: BAI.inkFaint, marginTop: 'auto', alignSelf: 'flex-end' }} />
                   )}
                 </div>
               )

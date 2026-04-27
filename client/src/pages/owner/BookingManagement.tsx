@@ -2,7 +2,6 @@ import { useEffect, useState, useMemo } from 'react'
 import {
   Calendar as CalendarIcon,
   Search,
-  TrendingUp,
   Clock,
   CheckCircle,
   XCircle,
@@ -145,14 +144,6 @@ export const BookingManagement = () => {
 
   const statCards = statistics ? [
     {
-      label: 'Total',
-      value: statistics.total,
-      icon: <CalendarIcon className="w-5 h-5" />,
-      bg: BAI.ownerLight,
-      border: BAI.ownerBorder,
-      color: BAI.owner,
-    },
-    {
       label: 'En attente',
       value: statistics.pending,
       icon: <Clock className="w-5 h-5" />,
@@ -175,14 +166,6 @@ export const BookingManagement = () => {
       bg: BAI.errorLight,
       border: '#f5c6c6',
       color: BAI.error,
-    },
-    {
-      label: 'Terminées',
-      value: statistics.completed,
-      icon: <TrendingUp className="w-5 h-5" />,
-      bg: BAI.bgMuted,
-      border: BAI.border,
-      color: BAI.inkMid,
     },
   ] : []
 
@@ -292,24 +275,24 @@ export const BookingManagement = () => {
 
           {/* Statistics */}
           {statistics && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-8">
+            <div className="grid grid-cols-3 gap-3 mb-8">
               {statCards.map(({ label, value, icon, bg, border, color }) => (
                 <div
                   key={label}
-                  className="flex items-center gap-4 p-5"
+                  className="flex flex-col sm:flex-row items-center sm:items-start gap-3 p-4"
                   style={cardStyle}
                 >
                   <div
-                    className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                     style={{ background: bg, border: `1px solid ${border}`, color }}
                   >
                     {icon}
                   </div>
-                  <div>
-                    <p style={{ fontSize: 12, color: BAI.inkFaint, marginBottom: 2 }}>{label}</p>
+                  <div className="text-center sm:text-left">
+                    <p style={{ fontSize: 11, color: BAI.inkFaint, marginBottom: 2 }}>{label}</p>
                     <p
                       className="text-2xl font-bold"
-                      style={{ color: BAI.ink, fontFamily: "'DM Sans', system-ui, sans-serif" }}
+                      style={{ color: BAI.ink, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1 }}
                     >
                       {value}
                     </p>
