@@ -205,20 +205,48 @@ export default function SearchProperties() {
     <Layout>
       <div style={{ background: M.bg, fontFamily: M.body }} className="min-h-screen">
 
-        {/* Search Bar */}
-        <div style={{ background: M.surface, borderBottom: `1px solid ${M.border}`, boxShadow: '0 1px 2px rgba(13,12,10,0.04)' }}>
-          <div className="container mx-auto px-4 py-4 space-y-3">
+        {/* ── Dark hero search ───────────────────────────────────────────── */}
+        <div style={{ background: '#1a1a2e', position: 'relative', overflow: 'hidden' }}>
+          {/* ambient clouds */}
+          <div style={{ position: 'absolute', width: 380, height: 110, top: '10%', right: -100, borderRadius: '50%', background: 'rgba(196,151,106,0.12)', filter: 'blur(60px)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', width: 280, height: 90, bottom: 0, left: '10%', borderRadius: '50%', background: 'rgba(255,255,255,0.04)', filter: 'blur(50px)', pointerEvents: 'none' }} />
+
+          <div style={{ maxWidth: 980, margin: '0 auto', padding: 'clamp(40px,6vh,64px) clamp(16px,5vw,48px) clamp(32px,5vh,48px)', position: 'relative', zIndex: 2, textAlign: 'center' }}>
+
+            {/* eyebrow pill */}
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)',
+              borderRadius: 999, padding: '6px 14px', marginBottom: 20,
+              fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: M.caramel,
+              fontFamily: M.body,
+            }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: M.caramel, display: 'inline-block', flexShrink: 0, boxShadow: `0 0 0 0 rgba(196,151,106,0.6)`, animation: 'pulseDot 1.8s infinite' }} />
+              Recherche propulsée par l'IA
+            </span>
+
+            <h1 style={{
+              fontFamily: "'Cormorant Garamond', Georgia, serif",
+              fontStyle: 'italic', fontWeight: 700,
+              fontSize: 'clamp(28px,4.5vw,52px)',
+              color: '#fff', lineHeight: 1.05, margin: '0 0 12px',
+            }}>
+              Décris ton logement <em style={{ color: M.caramel }}>idéal.</em>
+            </h1>
+            <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.7)', margin: '0 0 32px', fontFamily: M.body }}>
+              Une phrase suffit. L'IA fait le tri parmi tous les biens disponibles.
+            </p>
 
             {/* Mode toggle */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 justify-center mb-4">
               <button
                 onClick={() => setNlMode(false)}
                 style={{
                   fontSize: 12, fontWeight: 600, fontFamily: M.body,
-                  padding: '4px 12px', borderRadius: 20,
-                  border: `1px solid ${!nlMode ? M.tenant : M.border}`,
-                  background: !nlMode ? M.tenantLight : 'transparent',
-                  color: !nlMode ? M.tenant : M.inkFaint,
+                  padding: '6px 16px', borderRadius: 20,
+                  border: `1px solid ${!nlMode ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.15)'}`,
+                  background: !nlMode ? 'rgba(255,255,255,0.12)' : 'transparent',
+                  color: !nlMode ? '#fff' : 'rgba(255,255,255,0.5)',
                   cursor: 'pointer',
                 }}
               >
@@ -229,10 +257,10 @@ export default function SearchProperties() {
                 className="inline-flex items-center gap-1.5"
                 style={{
                   fontSize: 12, fontWeight: 600, fontFamily: M.body,
-                  padding: '4px 12px', borderRadius: 20,
-                  border: `1px solid ${nlMode ? M.caramel : M.border}`,
-                  background: nlMode ? M.caramelLight : 'transparent',
-                  color: nlMode ? M.caramel : M.inkFaint,
+                  padding: '6px 16px', borderRadius: 20,
+                  border: `1px solid ${nlMode ? M.caramel : 'rgba(255,255,255,0.15)'}`,
+                  background: nlMode ? 'rgba(196,151,106,0.18)' : 'transparent',
+                  color: nlMode ? M.caramel : 'rgba(255,255,255,0.5)',
                   cursor: 'pointer',
                 }}
               >
@@ -245,45 +273,47 @@ export default function SearchProperties() {
             {!nlMode && (
               <form onSubmit={handleSearch} className="flex gap-2 sm:gap-3">
                 <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: M.inkFaint }} />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'rgba(255,255,255,0.4)' }} />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Ville, adresse, code postal…"
+                    placeholder="Ville, arrondissement, code postal…"
                     style={{
-                      background: M.inputBg,
-                      border: `1px solid ${M.border}`,
-                      borderRadius: 8,
-                      color: M.ink,
+                      background: 'rgba(255,255,255,0.08)',
+                      border: '1px solid rgba(255,255,255,0.18)',
+                      borderRadius: 10,
+                      color: '#fff',
                       fontFamily: M.body,
                       fontSize: 16,
                       outline: 'none',
+                      width: '100%',
+                      boxSizing: 'border-box',
                     }}
-                    className="w-full pl-9 pr-9 py-2.5"
-                    onFocus={(e) => { e.currentTarget.style.borderColor = M.tenant; e.currentTarget.style.boxShadow = `0 0 0 3px ${M.tenantLight}` }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = M.border; e.currentTarget.style.boxShadow = 'none' }}
+                    className="w-full pl-9 pr-9 py-3"
+                    onFocus={(e) => { e.currentTarget.style.borderColor = M.caramel; e.currentTarget.style.background = 'rgba(255,255,255,0.12)' }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; e.currentTarget.style.background = 'rgba(255,255,255,0.08)' }}
                   />
                   {searchQuery && (
                     <button type="button" onClick={() => { setSearchQuery(''); setSearchParams({}) }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: M.inkFaint }}>
+                      className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'rgba(255,255,255,0.5)' }}>
                       <X className="w-4 h-4" />
                     </button>
                   )}
                 </div>
                 <button type="submit" style={{
-                  background: M.tenant, color: '#fff', borderRadius: 8,
+                  background: M.caramel, color: '#fff', borderRadius: 10,
                   fontFamily: M.body, fontWeight: 600, fontSize: 14, border: 'none',
-                  padding: '0 20px', cursor: 'pointer', minHeight: 44, whiteSpace: 'nowrap',
+                  padding: '0 24px', cursor: 'pointer', minHeight: 48, whiteSpace: 'nowrap',
                 }}>
-                  Rechercher
+                  Chercher
                 </button>
               </form>
             )}
 
             {/* NL search bar */}
             {nlMode && (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <form onSubmit={handleNLSearch} className="flex gap-2 sm:gap-3">
                   <div className="flex-1 relative">
                     <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: M.caramel }} />
@@ -291,56 +321,78 @@ export default function SearchProperties() {
                       type="text"
                       value={nlQuery}
                       onChange={(e) => setNlQuery(e.target.value)}
-                      placeholder="Ex: appartement moins de 800€ avec parking et jardin à Lyon…"
+                      placeholder="Ex : T2 à Lyon centre, moins de 800 € par mois, avec parking…"
                       style={{
-                        background: M.caramelLight,
-                        border: `1px solid ${M.caramel}`,
-                        borderRadius: 8,
-                        color: M.ink,
+                        background: 'rgba(196,151,106,0.1)',
+                        border: `1px solid rgba(196,151,106,0.4)`,
+                        borderRadius: 10,
+                        color: '#fff',
                         fontFamily: M.body,
                         fontSize: 15,
                         outline: 'none',
+                        width: '100%',
+                        boxSizing: 'border-box',
                       }}
-                      className="w-full pl-9 pr-9 py-2.5"
-                      onFocus={(e) => { e.currentTarget.style.boxShadow = `0 0 0 3px ${M.caramelLight}` }}
-                      onBlur={(e) => { e.currentTarget.style.boxShadow = 'none' }}
+                      className="w-full pl-9 pr-9 py-3"
+                      onFocus={(e) => { e.currentTarget.style.borderColor = M.caramel }}
+                      onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(196,151,106,0.4)' }}
                     />
                     {nlQuery && (
                       <button type="button" onClick={() => { setNlQuery(''); setNlChips([]) }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: M.inkFaint }}>
+                        className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'rgba(255,255,255,0.5)' }}>
                         <X className="w-4 h-4" />
                       </button>
                     )}
                   </div>
                   <button type="submit" disabled={nlLoading} style={{
-                    background: M.caramel, color: '#fff', borderRadius: 8,
+                    background: M.caramel, color: '#fff', borderRadius: 10,
                     fontFamily: M.body, fontWeight: 600, fontSize: 14, border: 'none',
-                    padding: '0 20px', cursor: nlLoading ? 'wait' : 'pointer',
-                    minHeight: 44, whiteSpace: 'nowrap', opacity: nlLoading ? 0.7 : 1,
+                    padding: '0 24px', cursor: nlLoading ? 'wait' : 'pointer',
+                    minHeight: 48, whiteSpace: 'nowrap', opacity: nlLoading ? 0.7 : 1,
                   }}>
                     {nlLoading ? '…' : 'Analyser'}
                   </button>
                 </form>
 
-                {/* NL chips */}
+                {/* Preset chips */}
+                {nlChips.length === 0 && !nlLoading && (
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {['Studio Paris 11e < 1 100 €', 'T3 Lyon avec balcon', 'Meublé Bordeaux centre', 'Maison Nantes avec jardin'].map(preset => (
+                      <button key={preset} onClick={() => { setNlQuery(preset) }}
+                        style={{
+                          background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)',
+                          color: 'rgba(255,255,255,0.8)', padding: '7px 14px', borderRadius: 999,
+                          fontSize: 12.5, cursor: 'pointer', fontFamily: M.body,
+                          transition: 'all .18s',
+                        }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(196,151,106,0.15)'; (e.currentTarget as HTMLButtonElement).style.borderColor = M.caramel; (e.currentTarget as HTMLButtonElement).style.color = '#fff' }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.12)'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.8)' }}
+                      >
+                        {preset}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* NL chips result */}
                 {nlChips.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 justify-center">
                     {nlChips.map((chip, i) => (
                       <span key={i} className="inline-flex items-center gap-1.5" style={{
-                        background: M.caramelLight, border: `1px solid ${M.caramel}`,
-                        borderRadius: 20, padding: '3px 10px', fontSize: 12,
-                        fontFamily: M.body, color: M.caramel, fontWeight: 600,
+                        background: 'rgba(196,151,106,0.18)', border: `1px solid rgba(196,151,106,0.4)`,
+                        borderRadius: 999, padding: '6px 12px', fontSize: 12.5,
+                        fontFamily: M.body, color: '#fff',
                       }}>
-                        <span style={{ color: M.inkMid, fontWeight: 400 }}>{chip.label} :</span>
+                        <span style={{ color: M.caramel, fontWeight: 600 }}>{chip.label} :</span>
                         {chip.value}
-                        <button onClick={() => removeNlChip(chip)} style={{ color: M.caramel, lineHeight: 1, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                        <button onClick={() => removeNlChip(chip)} style={{ color: 'rgba(255,255,255,0.5)', lineHeight: 1, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                           <X className="w-3 h-3" />
                         </button>
                       </span>
                     ))}
                     <button onClick={() => { setNlChips([]); handleResetFilters() }} style={{
-                      fontSize: 12, fontFamily: M.body, color: M.inkFaint,
-                      background: 'none', border: 'none', cursor: 'pointer', padding: '3px 6px',
+                      fontSize: 12, fontFamily: M.body, color: 'rgba(255,255,255,0.4)',
+                      background: 'none', border: 'none', cursor: 'pointer', padding: '6px',
                     }}>
                       Tout effacer
                     </button>
