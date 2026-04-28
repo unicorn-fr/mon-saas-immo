@@ -259,9 +259,7 @@ export const Header = () => {
     <>
     <header style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
-      background: 'rgba(255,255,255,0.78)',
-      backdropFilter: 'blur(18px)',
-      WebkitBackdropFilter: 'blur(18px)',
+      background: '#ffffff',
       borderBottom: `1px solid ${BAI.border}`,
     }}>
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
@@ -444,45 +442,76 @@ export const Header = () => {
           </div>
         </div>
 
-        {/* Menu mobile public */}
-        {!isAuthenticated && showMobilePublicMenu && (
-          <div className="md:hidden py-3 space-y-0.5" style={{ borderTop: `1px solid ${BAI.border}` }}>
-            {[
-              { to: '/', label: 'Accueil' },
-              { to: '/search', label: 'Chercher' },
-              { to: '/proprietaires', label: 'Propriétaires' },
-              { to: '/locataires', label: 'Locataires' },
-              { to: '/pricing', label: 'Tarifs' },
-              { to: '/a-propos', label: 'À propos' },
-            ].map(({ to, label }) => (
-              <Link key={to} to={to}
-                className="block px-4 py-2.5 rounded-lg text-[13px] font-medium transition-colors"
-                style={{ color: BAI.inkMid, fontFamily: 'var(--font-body)' }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
-                onClick={() => setShowMobilePublicMenu(false)}>
-                {label}
-              </Link>
-            ))}
-            <div className="flex flex-col gap-2 pt-3 px-2">
-              <Link to="/login"
-                className="text-center py-2.5 text-[13px] font-medium rounded-lg transition-all"
-                style={{ color: BAI.night, border: `1px solid ${BAI.night}` }}
-                onClick={() => setShowMobilePublicMenu(false)}>
-                Connexion
-              </Link>
-              <Link to="/register"
-                className="text-center py-2.5 text-[13px] font-semibold rounded-lg text-white"
-                style={{ background: BAI.night }}
-                onClick={() => setShowMobilePublicMenu(false)}>
-                S'inscrire
-              </Link>
-            </div>
-          </div>
-        )}
       </div>
     </header>
-    {/* Spacer — exactement la hauteur du header, zéro blanc visible */}
+
+    {/* Menu mobile public — overlay fixe SOUS le header, hors du flux */}
+    {!isAuthenticated && showMobilePublicMenu && (
+      <div
+        className="md:hidden"
+        style={{
+          position: 'fixed', top: 64, left: 0, right: 0, zIndex: 49,
+          background: '#ffffff',
+          borderBottom: `1px solid ${BAI.border}`,
+          boxShadow: '0 8px 24px rgba(13,12,10,0.08)',
+        }}>
+        <div style={{ padding: '8px 16px 12px' }}>
+          {[
+            { to: '/', label: 'Accueil' },
+            { to: '/search', label: 'Chercher' },
+            { to: '/proprietaires', label: 'Propriétaires' },
+            { to: '/locataires', label: 'Locataires' },
+            { to: '/pricing', label: 'Tarifs' },
+            { to: '/a-propos', label: 'À propos' },
+          ].map(({ to, label }) => (
+            <Link key={to} to={to}
+              style={{
+                display: 'block', padding: '11px 12px', borderRadius: 8,
+                fontSize: 14, fontWeight: 500, fontFamily: 'var(--font-body)',
+                color: BAI.inkMid, textDecoration: 'none',
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted; (e.currentTarget as HTMLElement).style.color = BAI.ink }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = BAI.inkMid }}
+              onClick={() => setShowMobilePublicMenu(false)}>
+              {label}
+            </Link>
+          ))}
+          <div style={{ display: 'flex', gap: 8, paddingTop: 10, marginTop: 4, borderTop: `1px solid ${BAI.border}` }}>
+            <Link to="/login"
+              style={{
+                flex: 1, textAlign: 'center', padding: '11px 0',
+                fontSize: 14, fontWeight: 500, fontFamily: 'var(--font-body)',
+                color: BAI.night, border: `1px solid ${BAI.border}`,
+                borderRadius: 8, textDecoration: 'none',
+              }}
+              onClick={() => setShowMobilePublicMenu(false)}>
+              Connexion
+            </Link>
+            <Link to="/register"
+              style={{
+                flex: 1, textAlign: 'center', padding: '11px 0',
+                fontSize: 14, fontWeight: 600, fontFamily: 'var(--font-body)',
+                color: '#ffffff', background: BAI.night,
+                borderRadius: 8, textDecoration: 'none',
+              }}
+              onClick={() => setShowMobilePublicMenu(false)}>
+              S'inscrire
+            </Link>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Overlay sombre derrière le menu mobile */}
+    {!isAuthenticated && showMobilePublicMenu && (
+      <div
+        className="md:hidden"
+        style={{ position: 'fixed', inset: 0, top: 64, zIndex: 48, background: 'rgba(13,12,10,0.25)' }}
+        onClick={() => setShowMobilePublicMenu(false)}
+      />
+    )}
+
+    {/* Spacer — exactement la hauteur du header */}
     <div aria-hidden style={{ height: 64, flexShrink: 0 }} />
     </>
   )

@@ -191,10 +191,11 @@ export default function Home() {
           .cta-grid     { flex-direction: column !important; }
           .footer-grid  { grid-template-columns: repeat(2, 1fr) !important; }
           .footer-brand { grid-column: span 2 !important; }
-          .search-row   { flex-direction: column !important; }
           .trust-badges { flex-direction: column !important; gap: 8px !important; }
           .hero-right   { width: 100% !important; flex-shrink: 1 !important; }
           .cta-split-card { padding: 32px 24px !important; }
+          .search-card  { padding: 18px !important; }
+          .search-accesrapide { display: none !important; }
         }
         @media (max-width: 480px) {
           .stats-grid  { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
@@ -298,7 +299,7 @@ export default function Home() {
 
           {/* Right — search card */}
           <div className="hero-right" style={{ width: 380, flexShrink: 0 }}>
-            <div style={{ background: T.bgSurface, borderRadius: 16, padding: 28, boxShadow: '0 20px 60px rgba(13,12,10,0.28)' }}>
+            <div className="search-card" style={{ background: T.bgSurface, borderRadius: 16, padding: 28, boxShadow: '0 20px 60px rgba(13,12,10,0.28)' }}>
               <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.caramel, marginBottom: 16 }}>
                 Rechercher un bien
               </p>
@@ -325,7 +326,7 @@ export default function Home() {
                   </button>
                 </div>
               </form>
-              <div style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${T.border}` }}>
+              <div className="search-accesrapide" style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${T.border}` }}>
                 <p style={{ fontFamily: T.fontBody, fontSize: 12, color: T.inkFaint, marginBottom: 12 }}>Accès rapide</p>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {['Paris', 'Lyon', 'Marseille', 'Bordeaux', 'Nantes'].map(city => (
