@@ -66,7 +66,6 @@ export default function SearchProperties() {
   const observerRef = useRef<IntersectionObserver | null>(null)
 
   // NL Search state
-  const [nlMode, setNlMode] = useState(false)
   const [nlQuery, setNlQuery] = useState('')
   const [nlChips, setNlChips] = useState<NLChip[]>([])
   const [nlLoading, setNlLoading] = useState(false)
@@ -125,16 +124,6 @@ export default function SearchProperties() {
   const resetPage = () => {
     setCurrentPage(1)
     setAllProperties([])
-  }
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    resetPage()
-    if (searchQuery.trim()) {
-      setSearchParams({ q: searchQuery })
-    } else {
-      setSearchParams({})
-    }
   }
 
   const handleFiltersChange = (newFilters: PropertyFilters) => {
@@ -237,167 +226,96 @@ export default function SearchProperties() {
               Une phrase suffit. L'IA fait le tri parmi tous les biens disponibles.
             </p>
 
-            {/* Mode toggle */}
-            <div className="flex gap-2 justify-center mb-4">
-              <button
-                onClick={() => setNlMode(false)}
-                style={{
-                  fontSize: 12, fontWeight: 600, fontFamily: M.body,
-                  padding: '6px 16px', borderRadius: 20,
-                  border: `1px solid ${!nlMode ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.15)'}`,
-                  background: !nlMode ? 'rgba(255,255,255,0.12)' : 'transparent',
-                  color: !nlMode ? '#fff' : 'rgba(255,255,255,0.5)',
-                  cursor: 'pointer',
-                }}
-              >
-                Classique
-              </button>
-              <button
-                onClick={() => setNlMode(true)}
-                className="inline-flex items-center gap-1.5"
-                style={{
-                  fontSize: 12, fontWeight: 600, fontFamily: M.body,
-                  padding: '6px 16px', borderRadius: 20,
-                  border: `1px solid ${nlMode ? M.caramel : 'rgba(255,255,255,0.15)'}`,
-                  background: nlMode ? 'rgba(196,151,106,0.18)' : 'transparent',
-                  color: nlMode ? M.caramel : 'rgba(255,255,255,0.5)',
-                  cursor: 'pointer',
-                }}
-              >
-                <Sparkles className="w-3 h-3" />
-                Recherche IA
-              </button>
-            </div>
-
-            {/* Classic search bar */}
-            {!nlMode && (
-              <form onSubmit={handleSearch} className="flex gap-2 sm:gap-3">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'rgba(255,255,255,0.4)' }} />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Ville, arrondissement, code postal…"
-                    style={{
-                      background: 'rgba(255,255,255,0.08)',
-                      border: '1px solid rgba(255,255,255,0.18)',
-                      borderRadius: 10,
-                      color: '#fff',
-                      fontFamily: M.body,
-                      fontSize: 16,
-                      outline: 'none',
-                      width: '100%',
-                      boxSizing: 'border-box',
-                    }}
-                    className="w-full pl-9 pr-9 py-3"
-                    onFocus={(e) => { e.currentTarget.style.borderColor = M.caramel; e.currentTarget.style.background = 'rgba(255,255,255,0.12)' }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; e.currentTarget.style.background = 'rgba(255,255,255,0.08)' }}
-                  />
-                  {searchQuery && (
-                    <button type="button" onClick={() => { setSearchQuery(''); setSearchParams({}) }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
+              {/* ── AI Box (reference design) ── */}
+            <div
+              style={{
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)',
+                borderRadius: 18, padding: 8, backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.3)', transition: 'all .25s',
+              }}
+              onFocusCapture={e => { e.currentTarget.style.borderColor = M.caramel; e.currentTarget.style.background = 'rgba(255,255,255,0.09)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(196,151,106,0.18)' }}
+              onBlurCapture={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)' }}
+            >
+              <form onSubmit={handleNLSearch} style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
+                <div style={{ width: 52, display: 'flex', alignItems: 'center', justifyContent: 'center', color: M.caramel, flexShrink: 0 }}>
+                  <Sparkles className="w-5 h-5" />
                 </div>
-                <button type="submit" style={{
-                  background: M.caramel, color: '#fff', borderRadius: 10,
-                  fontFamily: M.body, fontWeight: 600, fontSize: 14, border: 'none',
-                  padding: '0 24px', cursor: 'pointer', minHeight: 48, whiteSpace: 'nowrap',
+                <textarea
+                  value={nlQuery}
+                  onChange={e => setNlQuery(e.target.value)}
+                  placeholder="Ex : T2 à Lyon centre, moins de 800 € par mois, plus de 30 m², avec parking…"
+                  rows={1}
+                  style={{
+                    flex: 1, background: 'transparent', border: 0, outline: 0,
+                    fontFamily: M.body, color: '#fff', fontSize: 16,
+                    padding: '18px 4px', resize: 'none', minHeight: 52, maxHeight: 120, lineHeight: 1.4,
+                  }}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleNLSearch(e as any) } }}
+                  onInput={e => { const t = e.currentTarget; t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 120) + 'px' }}
+                />
+                <button type="submit" disabled={nlLoading} style={{
+                  background: nlLoading ? '#6a6a8a' : M.caramel, color: '#fff', border: 0, borderRadius: 12,
+                  padding: '0 22px', fontFamily: M.body, fontWeight: 600, fontSize: 14,
+                  cursor: nlLoading ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex', alignItems: 'center', gap: 8, transition: 'all .2s', whiteSpace: 'nowrap',
                 }}>
-                  Chercher
+                  <Search className="w-4 h-4" />
+                  {nlLoading ? '…' : 'Chercher'}
                 </button>
               </form>
+            </div>
+
+            {/* Preset chips */}
+            {nlChips.length === 0 && !nlLoading && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: 18 }}>
+                {['Studio Paris 11e < 1 100 €', 'T3 Lyon avec balcon', 'Meublé Bordeaux centre', 'Maison Nantes avec jardin'].map(preset => (
+                  <button key={preset} onClick={() => setNlQuery(preset)}
+                    style={{
+                      background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)',
+                      color: 'rgba(255,255,255,0.85)', padding: '8px 14px', borderRadius: 999,
+                      fontSize: 12.5, cursor: 'pointer', fontFamily: M.body, transition: 'all .18s',
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(196,151,106,0.15)'; (e.currentTarget as HTMLButtonElement).style.borderColor = M.caramel; (e.currentTarget as HTMLButtonElement).style.color = '#fff'; (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)' }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.12)'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.85)'; (e.currentTarget as HTMLButtonElement).style.transform = '' }}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
             )}
 
-            {/* NL search bar */}
-            {nlMode && (
-              <div className="space-y-3">
-                <form onSubmit={handleNLSearch} className="flex gap-2 sm:gap-3">
-                  <div className="flex-1 relative">
-                    <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: M.caramel }} />
-                    <input
-                      type="text"
-                      value={nlQuery}
-                      onChange={(e) => setNlQuery(e.target.value)}
-                      placeholder="Ex : T2 à Lyon centre, moins de 800 € par mois, avec parking…"
-                      style={{
-                        background: 'rgba(196,151,106,0.1)',
-                        border: `1px solid rgba(196,151,106,0.4)`,
-                        borderRadius: 10,
-                        color: '#fff',
-                        fontFamily: M.body,
-                        fontSize: 15,
-                        outline: 'none',
-                        width: '100%',
-                        boxSizing: 'border-box',
-                      }}
-                      className="w-full pl-9 pr-9 py-3"
-                      onFocus={(e) => { e.currentTarget.style.borderColor = M.caramel }}
-                      onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(196,151,106,0.4)' }}
-                    />
-                    {nlQuery && (
-                      <button type="button" onClick={() => { setNlQuery(''); setNlChips([]) }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                  <button type="submit" disabled={nlLoading} style={{
-                    background: M.caramel, color: '#fff', borderRadius: 10,
-                    fontFamily: M.body, fontWeight: 600, fontSize: 14, border: 'none',
-                    padding: '0 24px', cursor: nlLoading ? 'wait' : 'pointer',
-                    minHeight: 48, whiteSpace: 'nowrap', opacity: nlLoading ? 0.7 : 1,
+            {/* Loading dots */}
+            {nlLoading && (
+              <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 13, color: 'rgba(255,255,255,0.7)', fontFamily: M.body }}>
+                <span style={{ display: 'inline-flex', gap: 4 }}>
+                  {[0, 1, 2].map(i => (
+                    <span key={i} style={{ width: 6, height: 6, background: M.caramel, borderRadius: '50%', display: 'inline-block', animation: `bounce 1.2s ${i * 0.16}s infinite ease-in-out` }} />
+                  ))}
+                </span>
+                L'IA analyse ta demande…
+              </div>
+            )}
+
+            {/* Criteria pills */}
+            {nlChips.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: 16 }}>
+                {nlChips.map((chip, i) => (
+                  <span key={i} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    background: 'rgba(196,151,106,0.18)', border: '1px solid rgba(196,151,106,0.4)',
+                    color: '#fff', padding: '6px 12px', borderRadius: 999, fontSize: 12.5, fontFamily: M.body,
                   }}>
-                    {nlLoading ? '…' : 'Analyser'}
-                  </button>
-                </form>
-
-                {/* Preset chips */}
-                {nlChips.length === 0 && !nlLoading && (
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    {['Studio Paris 11e < 1 100 €', 'T3 Lyon avec balcon', 'Meublé Bordeaux centre', 'Maison Nantes avec jardin'].map(preset => (
-                      <button key={preset} onClick={() => { setNlQuery(preset) }}
-                        style={{
-                          background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)',
-                          color: 'rgba(255,255,255,0.8)', padding: '7px 14px', borderRadius: 999,
-                          fontSize: 12.5, cursor: 'pointer', fontFamily: M.body,
-                          transition: 'all .18s',
-                        }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(196,151,106,0.15)'; (e.currentTarget as HTMLButtonElement).style.borderColor = M.caramel; (e.currentTarget as HTMLButtonElement).style.color = '#fff' }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.12)'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.8)' }}
-                      >
-                        {preset}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* NL chips result */}
-                {nlChips.length > 0 && (
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    {nlChips.map((chip, i) => (
-                      <span key={i} className="inline-flex items-center gap-1.5" style={{
-                        background: 'rgba(196,151,106,0.18)', border: `1px solid rgba(196,151,106,0.4)`,
-                        borderRadius: 999, padding: '6px 12px', fontSize: 12.5,
-                        fontFamily: M.body, color: '#fff',
-                      }}>
-                        <span style={{ color: M.caramel, fontWeight: 600 }}>{chip.label} :</span>
-                        {chip.value}
-                        <button onClick={() => removeNlChip(chip)} style={{ color: 'rgba(255,255,255,0.5)', lineHeight: 1, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    ))}
-                    <button onClick={() => { setNlChips([]); handleResetFilters() }} style={{
-                      fontSize: 12, fontFamily: M.body, color: 'rgba(255,255,255,0.4)',
-                      background: 'none', border: 'none', cursor: 'pointer', padding: '6px',
-                    }}>
-                      Tout effacer
+                    <span style={{ color: M.caramel, fontWeight: 600 }}>{chip.label} :</span>
+                    {chip.value}
+                    <button onClick={() => removeNlChip(chip)} style={{ color: 'rgba(255,255,255,0.5)', lineHeight: 1, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                      <X className="w-3 h-3" />
                     </button>
-                  </div>
-                )}
+                  </span>
+                ))}
+                <button onClick={() => { setNlChips([]); handleResetFilters() }} style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', background: 'none', border: 'none', cursor: 'pointer', padding: '6px', fontFamily: M.body }}>
+                  Tout effacer
+                </button>
               </div>
             )}
           </div>
