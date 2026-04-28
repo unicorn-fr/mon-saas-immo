@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
+import Footer from '../components/layout/Footer'
 import {
   Search,
   ArrowRight,
@@ -740,62 +741,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── FOOTER ───────────────────────────────────────────────────── */}
-      <footer style={{ background: T.night, padding: '64px 24px 0', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-          <div className="footer-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 40, paddingBottom: 48, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-            <div className="footer-brand">
-              <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'baseline', gap: 2, marginBottom: 16 }}>
-                <span style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 28, color: '#f5f4f0', letterSpacing: '-0.01em' }}>Bailio<span style={{ color: T.caramel }}>.</span></span>
-              </Link>
-              <p style={{ fontFamily: T.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.40)', lineHeight: 1.65, maxWidth: 260, margin: '0 0 24px' }}>
-                La plateforme de location immobilière entre particuliers. Simple, sécurisée, sans intermédiaire.
-              </p>
-              <p style={{ fontFamily: T.fontBody, fontSize: 12, color: T.caramel, opacity: 0.8, margin: 0, fontStyle: 'italic' }}>
-                Hébergé en France · RGPD conforme
-              </p>
-            </div>
-
-            {[
-              { title: 'Plateforme', links: [{ to: '/search', label: 'Annonces' }, { to: '/pricing', label: 'Tarifs' }, { to: '/register', label: "S'inscrire" }] },
-              { title: 'Ressources', links: [{ to: '/faq', label: 'FAQ' }, { to: '/support', label: 'Support' }, { to: '/contact', label: 'Contact' }, { to: '/presse', label: 'Presse' }] },
-              { title: 'Légal', links: [{ to: '/cgu', label: 'CGU' }, { to: '/confidentialite', label: 'Confidentialité' }, { to: '/cookies', label: 'Cookies' }, { to: '/mentions-legales', label: 'Mentions légales' }] },
-            ].map(col => (
-              <div key={col.title}>
-                <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#fff', margin: '0 0 20px' }}>{col.title}</p>
-                <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {col.links.map(l => (
-                    <li key={l.to}>
-                      <Link to={l.to} style={{ fontFamily: T.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.60)', textDecoration: 'none', transition: 'color .15s' }}
-                        onMouseEnter={e => { e.currentTarget.style.color = '#fff' }}
-                        onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.60)' }}
-                      >
-                        {l.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 0 28px', flexWrap: 'wrap', gap: 12 }}>
-            <p style={{ fontFamily: T.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.28)', margin: 0 }}>
-              © {new Date().getFullYear()} Bailio. Tous droits réservés.
-            </p>
-            <div style={{ display: 'flex', gap: 24 }}>
-              {[{ to: '/cgu', label: 'CGU' }, { to: '/confidentialite', label: 'Vie privée' }, { to: '/cookies', label: 'Cookies' }].map(l => (
-                <Link key={l.to} to={l.to} style={{ fontFamily: T.fontBody, fontSize: 12, color: 'rgba(255,255,255,0.28)', textDecoration: 'none' }}
-                  onMouseEnter={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.55)' }}
-                  onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.28)' }}
-                >
-                  {l.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

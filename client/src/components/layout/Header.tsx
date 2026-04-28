@@ -6,7 +6,7 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import {
   LogOut, Settings, LayoutDashboard, Menu,
-  Tag, Terminal, CreditCard, Bell, X,
+  Terminal, CreditCard, Bell, X,
   MessageSquare,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
@@ -47,6 +47,7 @@ function usePageTitle(_role: string | undefined) {
 export const Header = () => {
   const { isAuthenticated, user, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showMobilePublicMenu, setShowMobilePublicMenu] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -293,18 +294,36 @@ export const Header = () => {
           {!isAuthenticated && (
             <nav className="hidden md:flex items-center gap-7">
               {[
-                { to: '/', label: 'Accueil' },
-                { to: '/search', label: 'Annonces' },
-                { to: '/pricing', label: 'Tarifs', icon: <Tag className="w-3.5 h-3.5" /> },
-              ].map(({ to, label, icon }) => (
-                <Link key={to} to={to}
-                  className="text-[13px] font-medium flex items-center gap-1.5 transition-colors group"
-                  style={{ color: BAI.inkMid, fontFamily: 'var(--font-body)' }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = BAI.night }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = BAI.inkMid }}>
-                  {icon}{label}
-                </Link>
-              ))}
+                { to: '/', label: 'Accueil', exact: true },
+                { to: '/search', label: 'Chercher', exact: false },
+                { to: '/proprietaires', label: 'Propriétaires', exact: false },
+                { to: '/locataires', label: 'Locataires', exact: false },
+                { to: '/pricing', label: 'Tarifs', exact: false },
+                { to: '/a-propos', label: 'À propos', exact: false },
+              ].map(({ to, label, exact }) => {
+                const loc = location.pathname
+                const isActive = exact ? loc === to : loc === to || loc.startsWith(to + '/')
+                return (
+                  <Link key={to} to={to}
+                    className="text-[14px] font-medium transition-colors relative"
+                    style={{
+                      color: isActive ? BAI.ink : BAI.inkMid,
+                      fontFamily: 'var(--font-body)',
+                      textDecoration: 'none',
+                      paddingBottom: '2px',
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = BAI.ink }}
+                    onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.color = BAI.inkMid }}>
+                    {label}
+                    {isActive && (
+                      <span style={{
+                        position: 'absolute', left: 0, right: 0, bottom: -20,
+                        height: 2, background: BAI.caramel, borderRadius: 1,
+                      }} />
+                    )}
+                  </Link>
+                )
+              })}
             </nav>
           )}
 
@@ -428,8 +447,11 @@ export const Header = () => {
           <div className="md:hidden py-3 space-y-0.5" style={{ borderTop: `1px solid ${BAI.border}` }}>
             {[
               { to: '/', label: 'Accueil' },
-              { to: '/search', label: 'Annonces' },
+              { to: '/search', label: 'Chercher' },
+              { to: '/proprietaires', label: 'Propriétaires' },
+              { to: '/locataires', label: 'Locataires' },
               { to: '/pricing', label: 'Tarifs' },
+              { to: '/a-propos', label: 'À propos' },
             ].map(({ to, label }) => (
               <Link key={to} to={to}
                 className="block px-4 py-2.5 rounded-lg text-[13px] font-medium transition-colors"
