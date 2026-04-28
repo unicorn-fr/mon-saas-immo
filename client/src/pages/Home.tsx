@@ -206,7 +206,7 @@ export default function Home() {
       <Header />
 
       {/* ── HERO ─────────────────────────────────────────────────────── */}
-      <section style={{ position: 'relative', background: T.night, color: '#fff', overflow: 'hidden', padding: 'clamp(70px,12vh,130px) 0 clamp(90px,14vh,160px)', marginTop: 12 }}>
+      <section style={{ position: 'relative', background: T.night, color: '#fff', overflow: 'hidden', padding: 'clamp(70px,12vh,130px) 0 clamp(90px,14vh,160px)' }}>
         {/* Animated clouds */}
         <div style={{ position: 'absolute', width: 340, height: 100, top: '12%', right: -80, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', filter: 'blur(40px)', animation: 'cloud1 22s ease-in-out infinite', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', width: 260, height: 80, top: '48%', left: '50%', borderRadius: '50%', background: 'rgba(255,255,255,0.04)', filter: 'blur(40px)', animation: 'cloud2 28s ease-in-out infinite', pointerEvents: 'none' }} />

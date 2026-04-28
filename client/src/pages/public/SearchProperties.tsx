@@ -195,7 +195,7 @@ export default function SearchProperties() {
       <div style={{ background: M.bg, fontFamily: M.body }} className="min-h-screen">
 
         {/* ── Dark hero search ───────────────────────────────────────────── */}
-        <div style={{ background: '#1a1a2e', position: 'relative', overflow: 'hidden', marginTop: 12 }}>
+        <div style={{ background: '#1a1a2e', position: 'relative', overflow: 'hidden' }}>
           {/* ambient clouds */}
           <div style={{ position: 'absolute', width: 380, height: 110, top: '10%', right: -100, borderRadius: '50%', background: 'rgba(196,151,106,0.12)', filter: 'blur(60px)', pointerEvents: 'none' }} />
           <div style={{ position: 'absolute', width: 280, height: 90, bottom: 0, left: '10%', borderRadius: '50%', background: 'rgba(255,255,255,0.04)', filter: 'blur(50px)', pointerEvents: 'none' }} />

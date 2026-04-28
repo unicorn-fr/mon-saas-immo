@@ -448,7 +448,7 @@ export default function Proprietaires() {
       </section>
 
       {/* ── CTA STRIP ────────────────────────────────────────────────────── */}
-      <section style={{ background: BAI.night, padding: '80px 0', marginTop: 12 }}>
+      <section style={{ background: BAI.night, padding: '80px 0' }}>
         <div style={{
           maxWidth: 1280, margin: '0 auto',
           padding: '0 clamp(16px,5vw,48px)', textAlign: 'center',

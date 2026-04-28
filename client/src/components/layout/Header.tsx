@@ -264,8 +264,8 @@ export const Header = () => {
       WebkitBackdropFilter: 'blur(18px)',
       borderBottom: `1px solid ${BAI.border}`,
     }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 52 }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 52, position: 'relative' }}>
 
           {/* Logo */}
           <Link to="/" className="hover:opacity-80 transition-opacity flex-shrink-0 flex items-center gap-2">
@@ -283,9 +283,13 @@ export const Header = () => {
             </span>
           </Link>
 
-          {/* Navigation desktop */}
+          {/* Navigation desktop — centrée en absolu */}
           {!isAuthenticated && (
-            <nav className="hidden md:flex items-center gap-7">
+            <nav style={{
+              position: 'absolute', left: '50%', top: 0, bottom: 0,
+              transform: 'translateX(-50%)',
+              display: 'flex', alignItems: 'center', gap: 28,
+            }} className="hidden md:flex">
               {[
                 { to: '/', label: 'Accueil', exact: true },
                 { to: '/search', label: 'Chercher', exact: false },
@@ -298,21 +302,25 @@ export const Header = () => {
                 const isActive = exact ? loc === to : loc === to || loc.startsWith(to + '/')
                 return (
                   <Link key={to} to={to}
-                    className="text-[14px] font-medium relative"
                     style={{
                       color: isActive ? BAI.ink : BAI.inkMid,
                       fontFamily: 'var(--font-body)',
+                      fontSize: 14,
+                      fontWeight: 500,
                       textDecoration: 'none',
-                      paddingBottom: '2px',
                       transition: 'color 0.2s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      height: '100%',
+                      position: 'relative',
                     }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = BAI.ink }}
                     onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.color = BAI.inkMid }}>
                     {label}
                     {isActive && (
                       <span style={{
-                        position: 'absolute', left: 0, right: 0, bottom: -22,
-                        height: 2, background: BAI.caramel, borderRadius: 1,
+                        position: 'absolute', left: 0, right: 0, bottom: 0,
+                        height: 2, background: BAI.caramel, borderRadius: '1px 1px 0 0',
                       }} />
                     )}
                   </Link>
@@ -474,8 +482,8 @@ export const Header = () => {
         )}
       </div>
     </header>
-    {/* Spacer — pousse le contenu sous le header fixe */}
-    <div aria-hidden style={{ height: 52, flexShrink: 0 }} />
+    {/* Spacer — pousse le contenu sous le header fixe, crée le liseré blanc */}
+    <div aria-hidden style={{ height: 64, flexShrink: 0 }} />
     </>
   )
 }

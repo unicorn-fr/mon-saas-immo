@@ -56,7 +56,7 @@ export default function Locataires() {
       <Header />
 
       {/* ── HERO dark ── */}
-      <section style={{ background: BAI.night, color: '#fff', padding: '80px 0 100px', overflow: 'hidden', marginTop: 12 }}>
+      <section style={{ background: BAI.night, color: '#fff', padding: '80px 0 100px', overflow: 'hidden' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
           <div className="hero-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'center' }}>
 
