@@ -272,7 +272,7 @@ export const Header = () => {
             <BailioLogo size={30} />
             <span style={{
               fontFamily: 'var(--font-display)',
-              fontSize: '26px',
+              fontSize: 'clamp(18px,4vw,26px)',
               fontWeight: 700,
               fontStyle: 'italic',
               color: '#1a3270',

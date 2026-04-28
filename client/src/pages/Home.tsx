@@ -35,7 +35,7 @@ const T = {
 
 const STATS = [
   { value: '0 €',    label: "Frais d'agence, pour les deux parties" },
-  { value: '1 %',    label: 'Du loyer mensuel — seule commission propriétaire' },
+  { value: '9,99 €', label: 'Par mois — plan Starter, zéro commission sur le loyer' },
   { value: '8 min',  label: 'Pour publier une annonce complète' },
   { value: '96 k€',  label: 'De garantie loyers impayés (option)' },
 ]
@@ -61,7 +61,7 @@ const STEPS = [
 const FEATURES = [
   {
     title: 'Zéro frais d\'agence.',
-    desc: 'Ni côté propriétaire à la mise en location, ni côté locataire. Le seul prélèvement : 1 % du loyer mensuel une fois le bail signé. Suspendu si le bien est vacant.',
+    desc: 'Ni côté propriétaire, ni côté locataire. Un abonnement fixe à partir de 9,99 €/mois — jamais de commission prélevée sur le loyer, jamais de surprise.',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="24" height="24"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
     ),
@@ -193,7 +193,7 @@ export default function Home() {
           .footer-brand { grid-column: span 2 !important; }
           .search-row   { flex-direction: column !important; }
           .trust-badges { flex-direction: column !important; gap: 8px !important; }
-          .hero-right   { display: none !important; }
+          .hero-right   { width: 100% !important; flex-shrink: 1 !important; }
           .cta-split-card { padding: 32px 24px !important; }
         }
         @media (max-width: 480px) {
@@ -541,7 +541,7 @@ export default function Home() {
                 </div>
                 <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#1a3270', margin: '0 0 6px' }}>Propriétaires</p>
                 <h3 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: T.ink, margin: '0 0 10px', lineHeight: 1.2 }}>Louer sans agence.</h3>
-                <p style={{ fontSize: 14, color: T.inkMid, lineHeight: 1.65, margin: '0 0 20px' }}>Annonce en 8 min, candidatures vérifiées et scorées, bail signé électroniquement, loyers encaissés automatiquement. 1 % du loyer, rien d'autre.</p>
+                <p style={{ fontSize: 14, color: T.inkMid, lineHeight: 1.65, margin: '0 0 20px' }}>Annonce en 8 min, candidatures vérifiées et scorées, bail signé électroniquement, loyers encaissés automatiquement. À partir de 9,99 €/mois, sans commission sur le loyer.</p>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 600, color: '#1a3270', fontFamily: T.fontBody }}>
                   En savoir plus <ArrowRight size={14} />
                 </span>
@@ -579,7 +579,7 @@ export default function Home() {
                 </div>
                 <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.caramel, margin: '0 0 6px' }}>Tarifs</p>
                 <h3 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: T.ink, margin: '0 0 10px', lineHeight: 1.2 }}>Un prix juste.</h3>
-                <p style={{ fontSize: 14, color: T.inkMid, lineHeight: 1.65, margin: '0 0 20px' }}>1 % du loyer mensuel pour le propriétaire, uniquement après signature du bail. Locataire : 0 € — toujours. Comparatif avec les agences inclus.</p>
+                <p style={{ fontSize: 14, color: T.inkMid, lineHeight: 1.65, margin: '0 0 20px' }}>À partir de 9,99 €/mois pour le propriétaire — zéro commission sur le loyer. Locataire : 0 € — toujours. Comparatif avec les agences inclus.</p>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 600, color: T.caramel, fontFamily: T.fontBody }}>
                   Voir les tarifs <ArrowRight size={14} />
                 </span>

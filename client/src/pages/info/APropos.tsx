@@ -11,7 +11,7 @@ const PRINCIPLES = [
   },
   {
     title: 'Aucune commission cachée.',
-    desc: "Pas de frais d'agence côté locataire. Un seul prix transparent côté propriétaire : 1 % du loyer mensuel, suspendu si le bien est vacant.",
+    desc: "Pas de frais d'agence côté locataire. Un abonnement fixe et transparent côté propriétaire — à partir de 9,99 €/mois, sans commission prélevée sur le loyer.",
   },
   {
     title: 'Données en France.',

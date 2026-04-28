@@ -251,26 +251,26 @@ export default function Proprietaires() {
                 Calcul rapide
               </p>
               <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', margin: '0 0 4px' }}>
-                Pour un loyer mensuel de 1 200 €
+                Abonnement Starter — tout inclus
               </p>
               <p style={{
                 fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
                 fontSize: 48, color: '#fff', margin: 0, lineHeight: 1,
               }}>
-                12 €
+                9,99 €
                 <span style={{
                   fontSize: 18, color: 'rgba(255,255,255,0.6)',
                   fontWeight: 400, fontStyle: 'normal',
                 }}> /mois</span>
               </p>
               <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', margin: '8px 0 24px' }}>
-                soit <strong style={{ color: BAI.caramel }}>144 €/an</strong> · contre 1 100 € en agence classique
+                soit <strong style={{ color: BAI.caramel }}>99,99 €/an</strong> · contre 1 100 € en agence classique
               </p>
               <div style={{
                 background: 'rgba(196,151,106,0.12)', border: '1px solid rgba(196,151,106,0.3)',
                 borderRadius: 8, padding: 14, fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 1.5,
               }}>
-                🎁 <strong style={{ color: BAI.caramel }}>Économie estimée :</strong> 956 € sur la première année.
+                🎁 <strong style={{ color: BAI.caramel }}>Économie estimée :</strong> plus de 1 000 € sur la première année.
               </div>
             </div>
 
@@ -482,7 +482,7 @@ export default function Proprietaires() {
           </div>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
             <Check size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} />
-            Gratuit pour commencer · 1 % du loyer seulement quand c'est loué · Pas d'engagement
+            Essai 14 jours sans CB · À partir de 9,99 €/mois · Pas d'engagement
           </p>
         </div>
       </section>
