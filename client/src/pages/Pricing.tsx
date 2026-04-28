@@ -41,7 +41,7 @@ const COMPARISON: ComparisonRow[] = [
   {
     label: 'Honoraires de gestion mensuels',
     agency: '7 % · 84 €',
-    bailio: '1 % · 12 €',
+    bailio: '9,99 €',
     bailioColor: BAI.caramel,
     bg: BAI.bgBase,
     fontWeight: 400,
@@ -163,7 +163,7 @@ export default function Pricing() {
                   lineHeight: 1,
                   letterSpacing: '-0.02em',
                 }}>
-                  1%
+                  9,99 €
                 </span>
                 <span style={{
                   fontFamily: BAI.fontBody,
@@ -171,11 +171,11 @@ export default function Pricing() {
                   color: BAI.inkFaint,
                   fontWeight: 400,
                 }}>
-                  / mois de loyer
+                  / mois
                 </span>
               </div>
               <p style={{ fontSize: 13, color: BAI.inkMid, lineHeight: 1.6, margin: '0 0 28px' }}>
-                Prélevé automatiquement sur chaque quittance. Suspendu si le bien est vacant.
+                Par bien géré. Suspendu automatiquement si le bien est vacant.
               </p>
               <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 0 }}>
                 {OWNER_FEATURES.map(f => (
@@ -314,60 +314,6 @@ export default function Pricing() {
             </div>
           </div>
 
-          {/* ── SECTION 3 — GLI Option ── */}
-          <div style={{
-            maxWidth: 920,
-            margin: '48px auto 0',
-            background: BAI.bgMuted,
-            border: `1px solid ${BAI.border}`,
-            borderRadius: 12,
-            padding: 32,
-            display: 'flex',
-            gap: 24,
-            alignItems: 'center',
-          }}>
-            <div style={{
-              width: 60,
-              height: 60,
-              flexShrink: 0,
-              borderRadius: 14,
-              background: BAI.caramelLight,
-              color: BAI.caramelHover,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                width="28"
-                height="28"
-              >
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-              </svg>
-            </div>
-            <div style={{ flex: 1 }}>
-              <h4 style={{
-                fontFamily: BAI.fontDisplay,
-                fontStyle: 'italic',
-                fontWeight: 700,
-                fontSize: 22,
-                color: BAI.ink,
-                margin: '0 0 8px',
-              }}>
-                Garantie loyers impayés — option propriétaire
-              </h4>
-              <p style={{ margin: 0, fontSize: 14, color: BAI.inkMid, lineHeight: 1.6 }}>
-                2,5 % du loyer, jusqu'à 96 000 € par sinistre, procédure juridique incluse.
-                Activable en un clic depuis ton dashboard.
-              </p>
-            </div>
-          </div>
         </div>
       </section>
 
