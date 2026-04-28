@@ -182,18 +182,24 @@ export default function Home() {
         @keyframes cloud1 { 0%,100%{transform:translateX(0)} 50%{transform:translateX(-60px)} }
         @keyframes cloud2 { 0%,100%{transform:translateX(0)} 50%{transform:translateX(50px)} }
         @media (max-width: 768px) {
-          .hero-inner  { flex-direction: column !important; }
-          .stats-grid  { grid-template-columns: repeat(2, 1fr) !important; }
-          .steps-grid  { grid-template-columns: 1fr !important; }
-          .feat-grid   { grid-template-columns: 1fr !important; }
-          .props-grid  { grid-template-columns: 1fr !important; }
-          .testi-grid  { grid-template-columns: 1fr !important; }
-          .cta-grid    { flex-direction: column !important; }
-          .footer-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .hero-inner   { flex-direction: column !important; }
+          .stats-grid   { grid-template-columns: repeat(2, 1fr) !important; gap: 16px !important; }
+          .steps-grid   { grid-template-columns: 1fr !important; }
+          .feat-grid    { grid-template-columns: 1fr !important; }
+          .props-grid   { grid-template-columns: 1fr !important; }
+          .testi-grid   { grid-template-columns: 1fr !important; }
+          .cta-grid     { flex-direction: column !important; }
+          .footer-grid  { grid-template-columns: repeat(2, 1fr) !important; }
           .footer-brand { grid-column: span 2 !important; }
-          .search-row  { flex-direction: column !important; }
-          .trust-badges { flex-direction: column !important; gap: 12px !important; }
-          .hero-right  { display: none !important; }
+          .search-row   { flex-direction: column !important; }
+          .trust-badges { flex-direction: column !important; gap: 8px !important; }
+          .hero-right   { display: none !important; }
+          .cta-split-card { padding: 32px 24px !important; }
+        }
+        @media (max-width: 480px) {
+          .stats-grid  { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+          .stats-grid > div { border-right: none !important; border-bottom: 1px solid #e4e1db; padding-bottom: 16px !important; }
+          .cta-grid    { gap: 12px !important; }
         }
         @media (min-width: 1024px) {
           .feat-grid   { grid-template-columns: repeat(3, 1fr) !important; }
@@ -653,11 +659,11 @@ export default function Home() {
       </section>
 
       {/* ── CTA SPLIT ────────────────────────────────────────────────── */}
-      <section style={{ padding: '80px 24px', background: T.bgBase }}>
+      <section style={{ padding: 'clamp(48px,8vh,80px) clamp(16px,4vw,24px)', background: T.bgBase }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <div className="cta-grid" style={{ display: 'flex', gap: 20 }}>
             {/* Owners */}
-            <div style={{ flex: 1, background: T.night, borderRadius: 20, padding: '48px 44px', display: 'flex', flexDirection: 'column' }}>
+            <div className="cta-split-card" style={{ flex: 1, background: T.night, borderRadius: 20, padding: '48px 44px', display: 'flex', flexDirection: 'column' }}>
               <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: T.caramel, textTransform: 'uppercase', marginBottom: 16 }}>Propriétaires</p>
               <h3 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 36, color: '#f5f4f0', lineHeight: 1.2, margin: '0 0 24px', letterSpacing: '-0.02em' }}>
                 Louez vite,<br />louez bien.
@@ -682,7 +688,7 @@ export default function Home() {
             </div>
 
             {/* Tenants */}
-            <div style={{ flex: 1, background: T.caramel, borderRadius: 20, padding: '48px 44px', display: 'flex', flexDirection: 'column' }}>
+            <div className="cta-split-card" style={{ flex: 1, background: T.caramel, borderRadius: 20, padding: '48px 44px', display: 'flex', flexDirection: 'column' }}>
               <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.70)', textTransform: 'uppercase', marginBottom: 16 }}>Locataires</p>
               <h3 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 36, color: '#fff', lineHeight: 1.2, margin: '0 0 24px', letterSpacing: '-0.02em' }}>
                 Trouvez votre<br />prochain chez-vous.
@@ -710,7 +716,7 @@ export default function Home() {
       </section>
 
       {/* ── CTA STRIP ────────────────────────────────────────────────── */}
-      <section style={{ background: T.night, padding: '80px 0' }}>
+      <section style={{ background: T.night, padding: 'clamp(48px,8vh,80px) 0' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 32 }}>
           <div>
             <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(28px,4vw,42px)', color: '#fff', margin: '0 0 10px', lineHeight: 1.1 }}>

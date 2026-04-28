@@ -73,12 +73,17 @@ export default function Pricing() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=DM+Sans:wght@400;500;600;700&display=swap');
         @media (max-width: 900px) {
-          .pricing-grid { grid-template-columns: 1fr !important; max-width: 480px !important; }
+          .pricing-grid { grid-template-columns: 1fr !important; max-width: 480px !important; margin-left: auto !important; margin-right: auto !important; }
           .pricing-grid > div:nth-child(2) { order: -1; }
         }
         @media (max-width: 640px) {
           .cmp-grid { grid-template-columns: 1fr 1fr !important; }
-          .cmp-label { grid-column: span 2; font-size: 12px !important; font-weight: 600; }
+          .cmp-label { grid-column: span 2; font-size: 12px !important; font-weight: 600; padding-bottom: 4px; }
+          .cmp-header { display: none !important; }
+          .cmp-mobile-header { display: flex !important; }
+        }
+        @media (max-width: 480px) {
+          .pricing-grid { max-width: 100% !important; }
         }
       `}</style>
 
@@ -275,7 +280,7 @@ export default function Pricing() {
           </h2>
           <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, overflow: 'hidden', textAlign: 'left' }}>
             {/* Header */}
-            <div className="cmp-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', background: BAI.bgMuted, padding: '12px 24px', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.inkFaint }}>
+            <div className="cmp-grid cmp-header" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', background: BAI.bgMuted, padding: '12px 24px', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.inkFaint }}>
               <span>Pour un loyer de 1 200 €</span>
               <span style={{ textAlign: 'center' }}>Agence</span>
               <span style={{ textAlign: 'center', color: BAI.caramel }}>Bailio</span>

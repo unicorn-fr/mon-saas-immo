@@ -83,13 +83,18 @@ export default function Proprietaires() {
           .prop-kpi-grid  { grid-template-columns: repeat(2,1fr) !important; }
         }
         @media (max-width: 768px) {
-          .prop-hero-grid  { grid-template-columns: 1fr !important; }
+          .prop-hero-grid  { grid-template-columns: 1fr !important; gap: 28px !important; }
           .prop-feat-grid  { grid-template-columns: 1fr !important; }
           .prop-kpi-grid   { grid-template-columns: 1fr 1fr !important; }
           .prop-dash-bot   { grid-template-columns: 1fr !important; }
+          .prop-hero-sec   { padding: 56px 0 64px !important; }
+          .prop-cta-sec    { padding: 56px 0 !important; }
+          .prop-btn-group  { justify-content: flex-start !important; }
         }
         @media (max-width: 480px) {
-          .prop-kpi-grid   { grid-template-columns: 1fr !important; }
+          .prop-kpi-grid   { grid-template-columns: 1fr 1fr !important; }
+          .prop-btn-group  { flex-direction: column !important; width: 100% !important; }
+          .prop-btn-caramel, .prop-btn-ghost, .prop-btn-outline-dark { width: 100% !important; justify-content: center !important; }
         }
 
         .prop-feat-card {
@@ -163,7 +168,7 @@ export default function Proprietaires() {
       <Header />
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      <section style={{
+      <section className="prop-hero-sec" style={{
         position: 'relative',
         background: BAI.night,
         color: '#fff',
@@ -220,7 +225,7 @@ export default function Proprietaires() {
                 Signe le bail en ligne. Les loyers tombent tout seuls. C'est tout.
               </p>
 
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <div className="prop-btn-group" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 <Link to="/register?role=OWNER" className="prop-btn-caramel">
                   Publier mon annonce <ArrowRight size={16} />
                 </Link>
@@ -448,7 +453,7 @@ export default function Proprietaires() {
       </section>
 
       {/* ── CTA STRIP ────────────────────────────────────────────────────── */}
-      <section style={{ background: BAI.night, padding: '80px 0' }}>
+      <section className="prop-cta-sec" style={{ background: BAI.night, padding: '80px 0' }}>
         <div style={{
           maxWidth: 1280, margin: '0 auto',
           padding: '0 clamp(16px,5vw,48px)', textAlign: 'center',

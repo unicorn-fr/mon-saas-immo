@@ -45,18 +45,22 @@ export default function Locataires() {
           100% { box-shadow: 0 0 0 0 rgba(196,151,106,0); }
         }
         @media (max-width: 768px) {
-          .hero-grid  { grid-template-columns: 1fr !important; }
-          .steps-grid { grid-template-columns: 1fr 1fr !important; }
+          .hero-grid   { grid-template-columns: 1fr !important; gap: 28px !important; }
+          .steps-grid  { grid-template-columns: 1fr 1fr !important; }
+          .loc-hero-sec { padding: 56px 0 64px !important; }
+          .loc-cta-sec  { padding: 56px 0 !important; }
         }
         @media (max-width: 480px) {
-          .steps-grid { grid-template-columns: 1fr !important; }
+          .steps-grid  { grid-template-columns: 1fr !important; }
+          .loc-btn-group { flex-direction: column !important; }
+          .loc-btn-group a { width: 100% !important; justify-content: center !important; }
         }
       `}</style>
 
       <Header />
 
       {/* ── HERO dark ── */}
-      <section style={{ background: BAI.night, color: '#fff', padding: '80px 0 100px', overflow: 'hidden' }}>
+      <section className="loc-hero-sec" style={{ background: BAI.night, color: '#fff', padding: '80px 0 100px', overflow: 'hidden' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
           <div className="hero-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'center' }}>
 
@@ -94,7 +98,7 @@ export default function Locataires() {
                 Communique en direct avec le propriétaire. Signe ton bail en ligne, depuis ton canapé.
               </p>
 
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 32 }}>
+              <div className="loc-btn-group" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 32 }}>
                 <Link
                   to="/search"
                   style={{
@@ -250,7 +254,7 @@ export default function Locataires() {
       </section>
 
       {/* ── CTA dark ── */}
-      <section style={{ background: BAI.night, padding: '80px 0' }}>
+      <section className="loc-cta-sec" style={{ background: BAI.night, padding: '80px 0' }}>
         <div style={{
           maxWidth: 1280, margin: '0 auto',
           padding: '0 clamp(16px,5vw,48px)', textAlign: 'center',

@@ -3,7 +3,6 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { AlertCircle, ArrowRight, Mail } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { apiClient as api } from '../services/api.service'
-import GoogleSignInButton from '../components/auth/GoogleSignInButton'
 import { BailioLogo } from '../components/BailioLogo'
 import toast from 'react-hot-toast'
 
@@ -33,42 +32,6 @@ function inputStyle(focused: boolean): React.CSSProperties {
   }
 }
 
-/* ─── Apple button ───────────────────────────────────────────────────────── */
-function AppleButton({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        gap: '10px', padding: '12px 16px',
-        background: '#0d0c0a', color: '#ffffff', border: 'none',
-        borderRadius: '10px', cursor: 'pointer',
-        fontSize: '14px', fontWeight: 600,
-        fontFamily: "'DM Sans', system-ui, sans-serif",
-        transition: 'background 0.15s',
-      }}
-      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#2a2a2a' }}
-      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = '#0d0c0a' }}
-    >
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
-        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-      </svg>
-      Continuer avec Apple
-    </button>
-  )
-}
-
-/* ─── Separator ──────────────────────────────────────────────────────────── */
-function Sep() {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-      <div style={{ flex: 1, height: '1px', background: '#e4e1db' }} />
-      <span style={{ ...font, fontSize: '12px', color: '#9e9b96' }}>ou</span>
-      <div style={{ flex: 1, height: '1px', background: '#e4e1db' }} />
-    </div>
-  )
-}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Page principale — 2 écrans
@@ -78,7 +41,7 @@ function Sep() {
 export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { login, googleLogin, isLoading } = useAuth()
+  const { login, isLoading } = useAuth()
 
   type Screen = 'welcome' | 'email_login'
   const [screen, setScreen] = useState<Screen>('welcome')
@@ -114,22 +77,6 @@ export default function Login() {
       setError('Identifiants incorrects. Vérifiez votre email et mot de passe.')
     }
   }
-
-  const handleGoogle = async (idToken: string) => {
-    setError('')
-    try {
-      const { user, isNewUser } = await googleLogin(idToken)
-      if (isNewUser) {
-        navigate('/select-role', { replace: true })
-      } else {
-        redirectByRole(user.role)
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Échec connexion Google')
-    }
-  }
-
-  const handleApple = () => toast('Connexion Apple bientôt disponible', { icon: '🍎' })
 
   const handleMagicLink = async () => {
     if (!email.trim()) { setError('Entrez votre adresse email'); return }
@@ -215,16 +162,6 @@ export default function Login() {
                 Connectez-vous pour accéder à votre espace.
               </p>
             </div>
-
-            {/* Social */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
-              <div style={{ border: '1px solid #e4e1db', borderRadius: '10px', overflow: 'hidden' }}>
-                <GoogleSignInButton onSuccess={handleGoogle} onError={setError} text="signin_with" />
-              </div>
-              <AppleButton onClick={handleApple} />
-            </div>
-
-            <div style={{ marginBottom: '20px' }}><Sep /></div>
 
             {/* Email CTA */}
             <button
@@ -340,18 +277,6 @@ export default function Login() {
             <p style={{ fontSize: '14px', color: '#5a5754', margin: 0 }}>
               Utilisez votre adresse email et votre mot de passe.
             </p>
-          </div>
-
-          {/* Social (rappel) */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
-            <div style={{ border: '1px solid #e4e1db', borderRadius: '10px', overflow: 'hidden' }}>
-              <GoogleSignInButton onSuccess={handleGoogle} onError={setError} text="signin_with" />
-            </div>
-            <AppleButton onClick={handleApple} />
-          </div>
-
-          <div style={{ marginBottom: '20px' }}>
-            <Sep />
           </div>
 
           {/* Error banner */}
