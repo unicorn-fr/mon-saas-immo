@@ -100,7 +100,7 @@ export default function Pricing() {
 
           {/* Toggle annuel / mensuel */}
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, background: BAI.bgMuted, border: `1px solid ${BAI.border}`, borderRadius: 999, padding: '4px 6px' }}>
-            {(['annual', 'monthly'] as const).map(b => (
+            {(['monthly', 'annual'] as const).map(b => (
               <button
                 key={b}
                 onClick={() => setBilling(b)}
