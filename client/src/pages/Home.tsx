@@ -183,7 +183,7 @@ export default function Home() {
         @keyframes cloud2 { 0%,100%{transform:translateX(0)} 50%{transform:translateX(50px)} }
         @media (max-width: 768px) {
           .hero-inner        { flex-direction: column !important; gap: 28px !important; }
-          .hero-section      { padding: 36px 0 44px !important; }
+          .hero-section      { padding: 32px 0 40px !important; }
           .hero-trust        { display: none !important; }
           .stats-grid        { grid-template-columns: repeat(2, 1fr) !important; gap: 16px !important; }
           .steps-grid        { grid-template-columns: 1fr !important; }

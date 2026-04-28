@@ -6,7 +6,7 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import {
   LogOut, Settings, LayoutDashboard, Menu,
-  Terminal, CreditCard, Bell, X,
+  Terminal, CreditCard, Bell, X, ArrowRight,
   MessageSquare,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
@@ -255,71 +255,62 @@ export const Header = () => {
   }
 
   // ── PUBLIC HEADER ──────────────────────────────────────────────────────────
+  const NAV_LINKS = [
+    { to: '/', label: 'Accueil', exact: true },
+    { to: '/search', label: 'Chercher', exact: false },
+    { to: '/proprietaires', label: 'Propriétaires', exact: false },
+    { to: '/locataires', label: 'Locataires', exact: false },
+    { to: '/pricing', label: 'Tarifs', exact: false },
+    { to: '/a-propos', label: 'À propos', exact: false },
+  ]
+
+  const closeMobileMenu = () => setShowMobilePublicMenu(false)
+
   return (
     <>
+    {/* ── Barre de navigation ── */}
     <header style={{
-      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
+      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
       background: '#ffffff',
       borderBottom: `1px solid ${BAI.border}`,
+      height: 56,
+      display: 'flex', alignItems: 'center',
     }}>
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64, position: 'relative' }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,4vw,48px)', width: '100%' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
 
           {/* Logo */}
-          <Link to="/" className="hover:opacity-80 transition-opacity flex-shrink-0 flex items-center gap-2">
-            <BailioLogo size={30} />
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 7, textDecoration: 'none', flexShrink: 0 }}>
+            <BailioLogo size={24} />
             <span style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 'clamp(18px,4vw,26px)',
-              fontWeight: 700,
-              fontStyle: 'italic',
-              color: '#1a3270',
-              letterSpacing: '-0.01em',
-              lineHeight: 1,
+              fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700,
+              fontStyle: 'italic', color: '#1a3270', letterSpacing: '-0.01em', lineHeight: 1,
             }}>
               Bailio<span style={{ color: BAI.caramel }}>.</span>
             </span>
           </Link>
 
-          {/* Navigation desktop — centrée en absolu */}
+          {/* Nav desktop centrée */}
           {!isAuthenticated && (
             <nav style={{
-              position: 'absolute', left: '50%', top: 0, bottom: 0,
-              transform: 'translateX(-50%)',
-              display: 'flex', alignItems: 'center', gap: 28,
+              position: 'absolute', left: '50%', top: '50%',
+              transform: 'translate(-50%, -50%)',
+              display: 'flex', alignItems: 'center', gap: 24,
             }} className="hidden md:flex">
-              {[
-                { to: '/', label: 'Accueil', exact: true },
-                { to: '/search', label: 'Chercher', exact: false },
-                { to: '/proprietaires', label: 'Propriétaires', exact: false },
-                { to: '/locataires', label: 'Locataires', exact: false },
-                { to: '/pricing', label: 'Tarifs', exact: false },
-                { to: '/a-propos', label: 'À propos', exact: false },
-              ].map(({ to, label, exact }) => {
-                const loc = location.pathname
-                const isActive = exact ? loc === to : loc === to || loc.startsWith(to + '/')
+              {NAV_LINKS.map(({ to, label, exact }) => {
+                const isActive = exact ? location.pathname === to : location.pathname === to || location.pathname.startsWith(to + '/')
                 return (
                   <Link key={to} to={to}
                     style={{
                       color: isActive ? BAI.ink : BAI.inkMid,
-                      fontFamily: 'var(--font-body)',
-                      fontSize: 14,
-                      fontWeight: 500,
-                      textDecoration: 'none',
-                      transition: 'color 0.2s',
-                      display: 'flex',
-                      alignItems: 'center',
-                      height: '100%',
-                      position: 'relative',
+                      fontFamily: 'var(--font-body)', fontSize: 13.5, fontWeight: 500,
+                      textDecoration: 'none', position: 'relative', paddingBottom: 2,
                     }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = BAI.ink }}
                     onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.color = BAI.inkMid }}>
                     {label}
                     {isActive && (
-                      <span style={{
-                        position: 'absolute', left: 0, right: 0, bottom: 0,
-                        height: 2, background: BAI.caramel, borderRadius: '1px 1px 0 0',
-                      }} />
+                      <span style={{ position: 'absolute', left: 0, right: 0, bottom: -18, height: 2, background: BAI.caramel, borderRadius: 2 }} />
                     )}
                   </Link>
                 )
@@ -327,81 +318,63 @@ export const Header = () => {
             </nav>
           )}
 
-          {/* Super Admin badge */}
+          {/* Super Admin badge desktop */}
           {isAuthenticated && user?.role === 'SUPER_ADMIN' && (
             <Link to="/super-admin"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
               style={{ background: 'rgba(0,180,216,0.10)', color: '#00b4d8', border: '1px solid rgba(0,180,216,0.25)' }}>
               <Terminal className="w-3 h-3" /> Cerveau Central
             </Link>
           )}
 
-          {/* Right — desktop : Se connecter + S'inscrire */}
+          {/* ── Droite desktop ── */}
           <div className="hidden md:flex items-center gap-2">
             {isAuthenticated ? (
               <>
                 <Link to="/notifications"
-                  className="flex items-center justify-center rounded-lg transition-colors"
-                  style={{ color: BAI.inkFaint, minWidth: 44, minHeight: 44 }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, color: BAI.inkFaint, width: 36, height: 36 }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
-                  <Bell className="w-[18px] h-[18px]" />
+                  <Bell size={17} />
                 </Link>
-
                 <div className="relative">
                   <button onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-2 pl-2 pr-3 rounded-lg transition-all"
-                    style={{ minHeight: 44, border: `1px solid ${BAI.border}`, background: showUserMenu ? BAI.bgMuted : 'transparent' }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 8, padding: '5px 12px 5px 6px',
+                      borderRadius: 8, border: `1px solid ${BAI.border}`,
+                      background: showUserMenu ? BAI.bgMuted : 'transparent', cursor: 'pointer',
+                    }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
                     onMouseLeave={(e) => { if (!showUserMenu) (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
-                    <div className="w-7 h-7 rounded-md flex items-center justify-center text-[11px] font-bold text-white"
-                      style={{ background: threadColor }}>
-                      {initials}
-                    </div>
-                    <span className="text-sm font-medium" style={{ color: BAI.ink, fontFamily: 'var(--font-body)' }}>
-                      {user?.firstName}
-                    </span>
+                    <div style={{ width: 26, height: 26, borderRadius: 6, background: threadColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700 }}>{initials}</div>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: BAI.ink, fontFamily: 'var(--font-body)' }}>{user?.firstName}</span>
                   </button>
-
                   {showUserMenu && (
                     <>
                       <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
-                      <div className="absolute right-0 mt-2 rounded-xl py-2 z-20"
-                        style={{
-                          background: '#ffffff',
-                          border: `1px solid ${BAI.border}`,
-                          boxShadow: '0 20px 60px rgba(13,12,10,0.12), 0 4px 16px rgba(13,12,10,0.06)',
-                          width: 224,
-                        }}>
-                        <div className="px-4 py-3" style={{ borderBottom: `1px solid ${BAI.border}` }}>
-                          <p className="text-[13px] font-semibold" style={{ color: BAI.ink }}>{user?.firstName} {user?.lastName}</p>
-                          <p className="text-[11px] truncate mt-0.5" style={{ color: BAI.inkMid }}>{user?.email}</p>
-                          <span className="inline-block mt-1.5 text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                            style={{ background: `${threadColor}18`, color: threadColor }}>
-                            {user?.role === 'OWNER' ? 'Propriétaire' : user?.role === 'TENANT' ? 'Locataire' : user?.role}
-                          </span>
+                      <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 8, background: '#fff', border: `1px solid ${BAI.border}`, borderRadius: 12, boxShadow: '0 16px 48px rgba(13,12,10,0.12)', width: 220, zIndex: 20, overflow: 'hidden' }}>
+                        <div style={{ padding: '12px 16px', borderBottom: `1px solid ${BAI.border}` }}>
+                          <p style={{ fontSize: 13, fontWeight: 600, color: BAI.ink, margin: 0 }}>{user?.firstName} {user?.lastName}</p>
+                          <p style={{ fontSize: 11, color: BAI.inkMid, margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</p>
                         </div>
                         {[
-                          { to: getDashboardLink(), icon: <LayoutDashboard className="w-4 h-4" />, label: 'Tableau de bord' },
-                          { to: '/profile', icon: <Settings className="w-4 h-4" />, label: 'Mon profil' },
-                          { to: '/pricing', icon: <CreditCard className="w-4 h-4" />, label: 'Mon abonnement' },
+                          { to: getDashboardLink(), icon: <LayoutDashboard size={15} />, label: 'Tableau de bord' },
+                          { to: '/profile', icon: <Settings size={15} />, label: 'Mon profil' },
+                          { to: '/pricing', icon: <CreditCard size={15} />, label: 'Mon abonnement' },
                         ].map(({ to, icon, label }) => (
-                          <Link key={to} to={to}
-                            className="flex items-center gap-3 px-4 transition-colors"
-                            style={{ color: BAI.inkMid, fontSize: 14, minHeight: 44, display: 'flex', alignItems: 'center' }}
+                          <Link key={to} to={to} onClick={() => setShowUserMenu(false)}
+                            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 16px', fontSize: 13.5, minHeight: 42, color: BAI.inkMid, textDecoration: 'none' }}
                             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
-                            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
-                            onClick={() => setShowUserMenu(false)}>
-                            <span style={{ color: BAI.inkFaint }}>{icon}</span> {label}
+                            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
+                            <span style={{ color: BAI.inkFaint }}>{icon}</span>{label}
                           </Link>
                         ))}
-                        <div className="mt-1 pt-1" style={{ borderTop: `1px solid ${BAI.border}` }}>
+                        <div style={{ borderTop: `1px solid ${BAI.border}`, paddingTop: 4 }}>
                           <button onClick={handleLogout}
-                            className="flex items-center gap-3 px-4 w-full transition-colors"
-                            style={{ color: '#9b1c1c', fontSize: 14, minHeight: 44, background: 'none', border: 'none', cursor: 'pointer' }}
+                            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 16px', width: '100%', fontSize: 13.5, minHeight: 42, color: '#9b1c1c', background: 'none', border: 'none', cursor: 'pointer' }}
                             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#fef2f2' }}
                             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
-                            <LogOut className="w-4 h-4" /> Déconnexion
+                            <LogOut size={15} /> Déconnexion
                           </button>
                         </div>
                       </div>
@@ -412,19 +385,13 @@ export const Header = () => {
             ) : (
               <>
                 <Link to="/login"
-                  style={{
-                    padding: '9px 16px', borderRadius: 8, fontSize: 13.5, fontWeight: 500,
-                    color: BAI.inkMid, fontFamily: 'var(--font-body)', textDecoration: 'none',
-                  }}
+                  style={{ padding: '8px 14px', borderRadius: 8, fontSize: 13.5, fontWeight: 500, color: BAI.inkMid, textDecoration: 'none' }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = BAI.ink }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = BAI.inkMid }}>
                   Se connecter
                 </Link>
                 <Link to="/register"
-                  style={{
-                    padding: '9px 18px', borderRadius: 8, fontSize: 13.5, fontWeight: 600,
-                    background: BAI.night, color: '#fff', fontFamily: 'var(--font-body)', textDecoration: 'none',
-                  }}
+                  style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13.5, fontWeight: 600, background: BAI.night, color: '#fff', textDecoration: 'none' }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = BAI.nightHover }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = BAI.night }}>
                   S'inscrire
@@ -433,69 +400,19 @@ export const Header = () => {
             )}
           </div>
 
-          {/* Right — mobile uniquement (non authentifié) */}
-          {!isAuthenticated && (
-            <div className="flex md:hidden items-center gap-2">
-              {/* S'inscrire toujours visible */}
-              <Link to="/register"
-                style={{
-                  padding: '8px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-                  background: BAI.night, color: '#fff', textDecoration: 'none',
-                  fontFamily: 'var(--font-body)',
-                }}>
-                S'inscrire
-              </Link>
-              {/* Burger avec label "Menu" */}
-              <button
-                onClick={() => setShowMobilePublicMenu(!showMobilePublicMenu)}
-                style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  gap: 2, padding: '6px 10px', borderRadius: 8,
-                  border: `1px solid ${BAI.border}`, background: showMobilePublicMenu ? BAI.bgMuted : 'transparent',
-                  cursor: 'pointer', minHeight: 44,
-                }}
-                aria-label="Navigation">
-                {showMobilePublicMenu
-                  ? <X size={18} color={BAI.ink} />
-                  : <Menu size={18} color={BAI.ink} />}
-                <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', color: BAI.inkMid, lineHeight: 1 }}>
-                  {showMobilePublicMenu ? 'FERMER' : 'MENU'}
-                </span>
-              </button>
-            </div>
-          )}
-
-          {/* Right — mobile authentifié */}
-          {isAuthenticated && (
-            <div className="flex md:hidden items-center">
+          {/* ── Droite mobile ── */}
+          <div className="flex md:hidden items-center">
+            {isAuthenticated ? (
               <div className="relative">
                 <button onClick={() => setShowUserMenu(!showUserMenu)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 8,
-                    padding: '6px 10px', borderRadius: 8,
-                    border: `1px solid ${BAI.border}`, background: 'transparent', cursor: 'pointer',
-                    minHeight: 44,
-                  }}>
-                  <div style={{
-                    width: 28, height: 28, borderRadius: 8,
-                    background: threadColor, color: '#fff',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 11, fontWeight: 700,
-                  }}>
-                    {initials}
-                  </div>
+                  style={{ display: 'flex', alignItems: 'center', width: 36, height: 36, borderRadius: 8, border: `1px solid ${BAI.border}`, background: 'transparent', cursor: 'pointer', justifyContent: 'center' }}>
+                  <div style={{ width: 24, height: 24, borderRadius: 6, background: threadColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700 }}>{initials}</div>
                 </button>
-
                 {showUserMenu && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
-                    <div className="absolute right-0 mt-2 rounded-xl py-2 z-20"
-                      style={{
-                        background: '#ffffff', border: `1px solid ${BAI.border}`,
-                        boxShadow: '0 20px 60px rgba(13,12,10,0.12)',
-                        width: 'min(224px, calc(100vw - 32px))',
-                      }}>
-                      <div className="px-4 py-3" style={{ borderBottom: `1px solid ${BAI.border}` }}>
+                    <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 8, background: '#fff', border: `1px solid ${BAI.border}`, borderRadius: 12, boxShadow: '0 16px 48px rgba(13,12,10,0.12)', width: 'min(220px,calc(100vw - 32px))', zIndex: 20, overflow: 'hidden' }}>
+                      <div style={{ padding: '12px 16px', borderBottom: `1px solid ${BAI.border}` }}>
                         <p style={{ fontSize: 13, fontWeight: 600, color: BAI.ink, margin: 0 }}>{user?.firstName} {user?.lastName}</p>
                         <p style={{ fontSize: 11, color: BAI.inkMid, margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</p>
                       </div>
@@ -504,100 +421,125 @@ export const Header = () => {
                         { to: '/profile', label: 'Mon profil' },
                         { to: '/pricing', label: 'Mon abonnement' },
                       ].map(({ to, label }) => (
-                        <Link key={to} to={to}
+                        <Link key={to} to={to} onClick={() => setShowUserMenu(false)}
                           style={{ display: 'flex', alignItems: 'center', padding: '0 16px', fontSize: 14, minHeight: 44, color: BAI.inkMid, textDecoration: 'none' }}
                           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
-                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
-                          onClick={() => setShowUserMenu(false)}>
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
                           {label}
                         </Link>
                       ))}
-                      <div style={{ borderTop: `1px solid ${BAI.border}`, marginTop: 4, paddingTop: 4 }}>
+                      <div style={{ borderTop: `1px solid ${BAI.border}`, paddingTop: 4 }}>
                         <button onClick={handleLogout}
                           style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 16px', width: '100%', fontSize: 14, minHeight: 44, color: '#9b1c1c', background: 'none', border: 'none', cursor: 'pointer' }}
                           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#fef2f2' }}
                           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
-                          <LogOut className="w-4 h-4" /> Déconnexion
+                          <LogOut size={15} /> Déconnexion
                         </button>
                       </div>
                     </div>
                   </>
                 )}
               </div>
-            </div>
-          )}
+            ) : (
+              /* Hamburger seul — icône 3 barres propre */
+              <button
+                onClick={() => setShowMobilePublicMenu(!showMobilePublicMenu)}
+                style={{
+                  display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+                  gap: 5, width: 40, height: 40, borderRadius: 8,
+                  border: `1px solid ${BAI.border}`, background: 'transparent', cursor: 'pointer', padding: 0,
+                }}
+                aria-label="Menu">
+                <span style={{ display: 'block', width: 18, height: 1.5, background: BAI.ink, borderRadius: 2, transition: 'all .25s', transform: showMobilePublicMenu ? 'rotate(45deg) translateY(6.5px)' : 'none' }} />
+                <span style={{ display: 'block', width: 18, height: 1.5, background: BAI.ink, borderRadius: 2, transition: 'all .25s', opacity: showMobilePublicMenu ? 0 : 1 }} />
+                <span style={{ display: 'block', width: 18, height: 1.5, background: BAI.ink, borderRadius: 2, transition: 'all .25s', transform: showMobilePublicMenu ? 'rotate(-45deg) translateY(-6.5px)' : 'none' }} />
+              </button>
+            )}
+          </div>
+
         </div>
       </div>
     </header>
 
-    {/* ── Menu mobile public — overlay fixe sous le header ─────────────────── */}
+    {/* ── FULLSCREEN mobile menu — pattern Stripe / Linear ───────────────────── */}
     {!isAuthenticated && showMobilePublicMenu && (
       <div
         className="md:hidden"
         style={{
-          position: 'fixed', top: 64, left: 0, right: 0, zIndex: 49,
-          background: '#ffffff',
-          borderBottom: `1px solid ${BAI.border}`,
-          boxShadow: '0 12px 32px rgba(13,12,10,0.12)',
+          position: 'fixed', inset: 0, zIndex: 99,
+          background: BAI.night,
+          display: 'flex', flexDirection: 'column',
         }}>
-        <div style={{ padding: '6px 12px 14px' }}>
-          {/* Navigation links */}
-          {[
-            { to: '/', label: 'Accueil', sub: 'Page principale' },
-            { to: '/search', label: 'Chercher un logement', sub: 'Toutes les annonces' },
-            { to: '/proprietaires', label: 'Propriétaires', sub: 'Publier et gérer son bien' },
-            { to: '/locataires', label: 'Locataires', sub: 'Dossier et candidatures' },
-            { to: '/pricing', label: 'Tarifs', sub: 'Plans et abonnements' },
-            { to: '/a-propos', label: 'À propos', sub: 'Notre mission' },
-          ].map(({ to, label, sub }) => {
-            const isActive = location.pathname === to
+
+        {/* Topbar overlay */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          height: 56, padding: '0 20px',
+          borderBottom: '1px solid rgba(255,255,255,0.10)', flexShrink: 0,
+        }}>
+          <Link to="/" onClick={closeMobileMenu} style={{ display: 'flex', alignItems: 'center', gap: 7, textDecoration: 'none' }}>
+            <BailioLogo size={22} />
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', lineHeight: 1 }}>
+              Bailio<span style={{ color: BAI.caramel }}>.</span>
+            </span>
+          </Link>
+          <button onClick={closeMobileMenu}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', cursor: 'pointer' }}>
+            <X size={18} color="#ffffff" />
+          </button>
+        </div>
+
+        {/* Nav links — grands, aérés */}
+        <nav style={{ flex: 1, padding: '32px 24px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 0 }}>
+          {NAV_LINKS.map(({ to, label, exact }) => {
+            const isActive = exact ? location.pathname === to : location.pathname === to || location.pathname.startsWith(to + '/')
             return (
-              <Link key={to} to={to}
+              <Link key={to} to={to} onClick={closeMobileMenu}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '11px 12px', borderRadius: 10, textDecoration: 'none',
-                  background: isActive ? BAI.bgMuted : 'transparent',
-                }}
-                onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
-                onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
-                onClick={() => setShowMobilePublicMenu(false)}>
-                <span>
-                  <span style={{ display: 'block', fontSize: 15, fontWeight: 500, color: isActive ? BAI.ink : BAI.inkMid, fontFamily: 'var(--font-body)' }}>{label}</span>
-                  <span style={{ display: 'block', fontSize: 11, color: BAI.inkFaint, marginTop: 1 }}>{sub}</span>
+                  padding: '14px 0',
+                  borderBottom: '1px solid rgba(255,255,255,0.07)',
+                  textDecoration: 'none',
+                }}>
+                <span style={{
+                  fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 700,
+                  fontSize: 32, color: isActive ? BAI.caramel : 'rgba(255,255,255,0.90)',
+                  lineHeight: 1,
+                }}>
+                  {label}
                 </span>
-                {isActive && <span style={{ width: 6, height: 6, borderRadius: '50%', background: BAI.caramel, flexShrink: 0 }} />}
+                <ArrowRight size={16} color={isActive ? BAI.caramel : 'rgba(255,255,255,0.30)'} />
               </Link>
             )
           })}
+        </nav>
 
-          {/* Se connecter */}
-          <div style={{ marginTop: 8, paddingTop: 10, borderTop: `1px solid ${BAI.border}` }}>
-            <Link to="/login"
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                padding: '12px 0', borderRadius: 8, textDecoration: 'none',
-                fontSize: 14, fontWeight: 500, fontFamily: 'var(--font-body)',
-                color: BAI.inkMid, border: `1px solid ${BAI.border}`,
-              }}
-              onClick={() => setShowMobilePublicMenu(false)}>
-              Se connecter
-            </Link>
-          </div>
+        {/* Boutons auth en bas */}
+        <div style={{ padding: '20px 24px 32px', display: 'flex', flexDirection: 'column', gap: 10, flexShrink: 0 }}>
+          <Link to="/register" onClick={closeMobileMenu}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: '14px 0', borderRadius: 10, textDecoration: 'none',
+              fontFamily: 'var(--font-body)', fontSize: 15, fontWeight: 600,
+              background: BAI.caramel, color: '#fff',
+            }}>
+            S'inscrire gratuitement
+          </Link>
+          <Link to="/login" onClick={closeMobileMenu}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: '14px 0', borderRadius: 10, textDecoration: 'none',
+              fontFamily: 'var(--font-body)', fontSize: 15, fontWeight: 500,
+              border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.85)',
+            }}>
+            Se connecter
+          </Link>
         </div>
       </div>
     )}
 
-    {/* Overlay sombre cliquable pour fermer */}
-    {!isAuthenticated && showMobilePublicMenu && (
-      <div
-        className="md:hidden"
-        style={{ position: 'fixed', inset: 0, top: 64, zIndex: 48, background: 'rgba(13,12,10,0.3)' }}
-        onClick={() => setShowMobilePublicMenu(false)}
-      />
-    )}
-
-    {/* Spacer — hauteur fixe header */}
-    <div aria-hidden style={{ height: 64, flexShrink: 0 }} />
+    {/* Spacer */}
+    <div aria-hidden style={{ height: 56, flexShrink: 0 }} />
     </>
   )
 }
