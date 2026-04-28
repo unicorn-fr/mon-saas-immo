@@ -36,7 +36,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 
 // ─── Pricing Page ─────────────────────────────────────────────────────────────
 export default function Pricing() {
-  const [billing, setBilling] = useState<'annual' | 'monthly'>('annual')
+  const [billing, setBilling] = useState<'annual' | 'monthly'>('monthly')
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
