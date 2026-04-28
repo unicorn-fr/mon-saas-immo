@@ -1,17 +1,14 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
-import { LaunchGuard } from './components/auth/LaunchGuard'
-import { SiteGate, isSiteUnlocked } from './components/auth/SiteGate'
 import { useAuth } from './hooks/useAuth'
 import { useThemeStore } from './store/themeStore'
 import { ScrollToTop } from './components/ScrollToTop'
 
 // Pages
 import Home from './pages/Home'
-import WaitlistPage from './pages/WaitlistPage'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
@@ -158,15 +155,6 @@ function App() {
 
 function AppRoutes() {
   const { isAuthenticated, isLoading, user } = useAuth()
-  const location = useLocation()
-  const [unlocked, setUnlocked] = useState(() => isSiteUnlocked())
-
-  // ── Verrou complet en mode waitlist ──────────────────────────────────────
-  // Toutes les routes sauf "/" sont bloquées par un mot de passe.
-  const isWaitlistMode = import.meta.env.VITE_LAUNCH_MODE === 'waitlist'
-  if (isWaitlistMode && location.pathname !== '/' && !unlocked) {
-    return <SiteGate onUnlock={() => setUnlocked(true)} />
-  }
 
   if (isLoading) {
     return (
@@ -181,12 +169,7 @@ function AppRoutes() {
     <ScrollToTop />
     <Routes>
       {/* Public Routes */}
-      <Route
-        path="/"
-        element={
-          import.meta.env.VITE_LAUNCH_MODE === 'waitlist' ? <WaitlistPage /> : <Home />
-        }
-      />
+      <Route path="/" element={<Home />} />
       <Route path="/search" element={<SearchProperties />} />
       <Route path="/property/:id" element={<PropertyDetailsPublic />} />
 
@@ -202,14 +185,9 @@ function AppRoutes() {
             } replace />
           : <Login />}
       />
-      {/* /register — bloqué en mode waitlist (LaunchGuard redirige vers /) */}
       <Route
         path="/register"
-        element={
-          isAuthenticated
-            ? <Navigate to="/" replace />
-            : <LaunchGuard><Register /></LaunchGuard>
-        }
+        element={isAuthenticated ? <Navigate to="/" replace /> : <Register />}
       />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
@@ -257,12 +235,8 @@ function AppRoutes() {
         <Route path="/tenant/settings" element={<TenantSettings />} />
       </Route>
 
-      {/* Role selection after OAuth — bloqué en mode waitlist */}
       <Route element={<ProtectedRoute />}>
-        <Route
-          path="/select-role"
-          element={<LaunchGuard><SelectRole /></LaunchGuard>}
-        />
+        <Route path="/select-role" element={<SelectRole />} />
       </Route>
 
       {/* Protected Routes - All authenticated users */}
