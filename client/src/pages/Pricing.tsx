@@ -434,10 +434,8 @@ export default function Pricing() {
             ))}
           </div>
 
-          <p style={{ margin: '24px auto 0', fontSize: 14, color: BAI.inkMid }}>
-            Soit{' '}
-            <strong style={{ color: BAI.caramelHover }}>2 214 € d'économie</strong>
-            {' '}sur la première année.
+          <p style={{ margin: '24px auto 0', fontSize: 13, color: BAI.inkFaint }}>
+            Estimation sur 12 mois, basée sur un loyer de 1 200 €/mois et les tarifs moyens des agences de gestion locative.
           </p>
         </div>
       </section>

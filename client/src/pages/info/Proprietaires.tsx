@@ -465,7 +465,7 @@ export default function Proprietaires() {
             color: 'rgba(255,255,255,0.72)', fontSize: 17,
             margin: '0 auto 36px', maxWidth: '52ch', lineHeight: 1.6,
           }}>
-            Crée ton annonce, on s'occupe du reste. La première mise en location est offerte aux 150 premiers propriétaires.
+            Crée ton annonce, on s'occupe du reste. La plateforme est en accès anticipé — rejoins les premiers propriétaires à simplifier leur gestion.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 20 }}>
             <Link to="/register?role=OWNER" className="prop-btn-caramel">
@@ -477,7 +477,7 @@ export default function Proprietaires() {
           </div>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
             <Check size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} />
-            Gratuit pour commencer · Pas d'engagement · 150 places disponibles
+            Gratuit pour commencer · 1 % du loyer seulement quand c'est loué · Pas d'engagement
           </p>
         </div>
       </section>

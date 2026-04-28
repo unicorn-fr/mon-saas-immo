@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useSidebarStore } from '../../store/sidebarStore'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { BailioLogo } from '../BailioLogo'
 import { BAI } from '../../constants/bailio-tokens'
 import { useMessages } from '../../hooks/useMessages'
@@ -55,6 +55,18 @@ export const Header = () => {
   usePageTitle(user?.role)
 
   const hasSidebar = isAuthenticated && (user?.role === 'OWNER' || user?.role === 'TENANT')
+
+  // Scroll detection for public header
+  const [scrolled, setScrolled] = useState(false)
+  useEffect(() => {
+    const handle = () => setScrolled(window.scrollY > 30)
+    window.addEventListener('scroll', handle, { passive: true })
+    return () => window.removeEventListener('scroll', handle)
+  }, [])
+
+  // Pages with a dark hero behind the header
+  const darkHeroPages = ['/search', '/proprietaires', '/locataires']
+  const isDarkHero = darkHeroPages.some(r => location.pathname === r || location.pathname.startsWith(r + '/'))
 
   const ownerColor = '#1a3270'
   const tenantColor = '#1b5e3b'
@@ -255,12 +267,29 @@ export const Header = () => {
   }
 
   // ── PUBLIC HEADER ──────────────────────────────────────────────────────────
-  const publicHeaderStyle: React.CSSProperties = {
-    background: 'rgba(255,255,255,0.78)',
-    backdropFilter: 'blur(18px)',
-    WebkitBackdropFilter: 'blur(18px)',
-    borderBottom: `1px solid ${BAI.border}`,
+  const publicHeaderStyle: React.CSSProperties = scrolled
+    ? {
+        background: 'rgba(255,255,255,0.88)',
+        backdropFilter: 'blur(18px)',
+        WebkitBackdropFilter: 'blur(18px)',
+        borderBottom: `1px solid ${BAI.border}`,
+        transition: 'background 0.25s, border-color 0.25s, box-shadow 0.25s',
+        boxShadow: '0 1px 12px rgba(13,12,10,0.06)',
+      }
+    : {
+        background: isDarkHero ? 'rgba(26,26,46,0.3)' : 'rgba(255,255,255,0.0)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderBottom: isDarkHero ? '1px solid rgba(255,255,255,0.08)' : '1px solid transparent',
+        transition: 'background 0.25s, border-color 0.25s, box-shadow 0.25s',
+      }
+
+  const navLinkColor = (isActive: boolean) => {
+    if (scrolled) return isActive ? BAI.ink : BAI.inkMid
+    if (isDarkHero) return isActive ? '#ffffff' : 'rgba(255,255,255,0.75)'
+    return isActive ? BAI.ink : BAI.inkMid
   }
+  const logoColor = !scrolled && isDarkHero ? '#ffffff' : '#1a3270'
 
   return (
     <header className="sticky top-0 z-50 flex-shrink-0" style={publicHeaderStyle}>
@@ -275,9 +304,10 @@ export const Header = () => {
               fontSize: '26px',
               fontWeight: 700,
               fontStyle: 'italic',
-              color: '#1a3270',
+              color: logoColor,
               letterSpacing: '-0.01em',
               lineHeight: 1,
+              transition: 'color 0.25s',
             }}>
               Bailio<span style={{ color: BAI.caramel }}>.</span>
             </span>
@@ -298,15 +328,16 @@ export const Header = () => {
                 const isActive = exact ? loc === to : loc === to || loc.startsWith(to + '/')
                 return (
                   <Link key={to} to={to}
-                    className="text-[14px] font-medium transition-colors relative"
+                    className="text-[14px] font-medium relative"
                     style={{
-                      color: isActive ? BAI.ink : BAI.inkMid,
+                      color: navLinkColor(isActive),
                       fontFamily: 'var(--font-body)',
                       textDecoration: 'none',
                       paddingBottom: '2px',
+                      transition: 'color 0.2s',
                     }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = BAI.ink }}
-                    onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.color = BAI.inkMid }}>
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = scrolled || !isDarkHero ? BAI.ink : '#ffffff' }}
+                    onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.color = navLinkColor(false) }}>
                     {label}
                     {isActive && (
                       <span style={{
@@ -407,28 +438,49 @@ export const Header = () => {
                 {/* Mobile burger */}
                 <button onClick={() => setShowMobilePublicMenu(!showMobilePublicMenu)}
                   className="md:hidden flex items-center justify-center rounded-lg transition-colors"
-                  style={{ color: BAI.inkMid, minWidth: 44, minHeight: 44 }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
+                  style={{ color: !scrolled && isDarkHero ? 'rgba(255,255,255,0.85)' : BAI.inkMid, minWidth: 44, minHeight: 44 }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = !scrolled && isDarkHero ? 'rgba(255,255,255,0.1)' : BAI.bgMuted }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
                   {showMobilePublicMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                 </button>
 
                 {/* CTA desktop */}
                 <div className="hidden md:flex items-center gap-2">
-                  <Link to="/login"
-                    className="px-4 py-2 text-[13px] font-medium rounded-lg transition-all"
-                    style={{ color: BAI.night, border: `1px solid ${BAI.night}`, fontFamily: 'var(--font-body)' }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#edf0f8' }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
-                    Connexion
-                  </Link>
-                  <Link to="/register"
-                    className="px-4 py-2 text-[13px] font-semibold rounded-lg text-white transition-all"
-                    style={{ background: BAI.night, fontFamily: 'var(--font-body)' }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.nightHover }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.night }}>
-                    S'inscrire
-                  </Link>
+                  {!scrolled && isDarkHero ? (
+                    <>
+                      <Link to="/login"
+                        className="px-4 py-2 text-[13px] font-medium rounded-lg transition-all"
+                        style={{ color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.3)', fontFamily: 'var(--font-body)' }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.1)' }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
+                        Connexion
+                      </Link>
+                      <Link to="/register"
+                        className="px-4 py-2 text-[13px] font-semibold rounded-lg transition-all"
+                        style={{ background: BAI.caramel, color: '#fff', fontFamily: 'var(--font-body)' }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.9' }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1' }}>
+                        S'inscrire
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <Link to="/login"
+                        className="px-4 py-2 text-[13px] font-medium rounded-lg transition-all"
+                        style={{ color: BAI.night, border: `1px solid ${BAI.night}`, fontFamily: 'var(--font-body)' }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#edf0f8' }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
+                        Connexion
+                      </Link>
+                      <Link to="/register"
+                        className="px-4 py-2 text-[13px] font-semibold rounded-lg text-white transition-all"
+                        style={{ background: BAI.night, fontFamily: 'var(--font-body)' }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.nightHover }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.night }}>
+                        S'inscrire
+                      </Link>
+                    </>
+                  )}
                 </div>
               </>
             )}

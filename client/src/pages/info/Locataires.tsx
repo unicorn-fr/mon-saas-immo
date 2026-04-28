@@ -178,13 +178,7 @@ export default function Locataires() {
                   fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
                   fontSize: 36, color: BAI.caramel, lineHeight: 1,
                 }}>
-                  87
-                </span>
-                <span style={{
-                  fontFamily: BAI.fontDisplay, fontSize: 18,
-                  color: 'rgba(255,255,255,0.4)', fontWeight: 400,
-                }}>
-                  /100
+                  87%
                 </span>
                 <span style={{
                   marginLeft: 8, fontSize: 12, color: 'rgba(255,255,255,0.5)',
