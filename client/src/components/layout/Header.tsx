@@ -256,6 +256,7 @@ export const Header = () => {
 
   // ── PUBLIC HEADER ──────────────────────────────────────────────────────────
   return (
+    <>
     <header style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
       background: 'rgba(255,255,255,0.78)',
@@ -264,7 +265,7 @@ export const Header = () => {
       borderBottom: `1px solid ${BAI.border}`,
     }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between h-16">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 52 }}>
 
           {/* Logo */}
           <Link to="/" className="hover:opacity-80 transition-opacity flex-shrink-0 flex items-center gap-2">
@@ -473,5 +474,8 @@ export const Header = () => {
         )}
       </div>
     </header>
+    {/* Spacer — pousse le contenu sous le header fixe */}
+    <div aria-hidden style={{ height: 52, flexShrink: 0 }} />
+    </>
   )
 }
