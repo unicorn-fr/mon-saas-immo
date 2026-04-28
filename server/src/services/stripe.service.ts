@@ -95,10 +95,15 @@ export async function syncSubscriptionFromStripe(stripeSubId: string) {
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 function mapPriceIdToPlan(priceId: string): PlanType {
   const mapping: Record<string, PlanType> = {
-    [env.STRIPE_PRO_MONTHLY_PRICE_ID]:    'PRO',
-    [env.STRIPE_PRO_ANNUAL_PRICE_ID]:     'PRO',
-    [env.STRIPE_EXPERT_MONTHLY_PRICE_ID]: 'EXPERT',
-    [env.STRIPE_EXPERT_ANNUAL_PRICE_ID]:  'EXPERT',
+    // Plan Starter (UI) → PRO en base
+    [env.STRIPE_STARTER_MONTHLY_PRICE_ID]: 'PRO',
+    [env.STRIPE_STARTER_ANNUAL_PRICE_ID]:  'PRO',
+    // Plan Pro (UI) → EXPERT en base
+    [env.STRIPE_PRO_MONTHLY_PRICE_ID]:     'EXPERT',
+    [env.STRIPE_PRO_ANNUAL_PRICE_ID]:      'EXPERT',
+    // Aliases legacy
+    [env.STRIPE_EXPERT_MONTHLY_PRICE_ID]:  'EXPERT',
+    [env.STRIPE_EXPERT_ANNUAL_PRICE_ID]:   'EXPERT',
   }
   return mapping[priceId] ?? 'FREE'
 }

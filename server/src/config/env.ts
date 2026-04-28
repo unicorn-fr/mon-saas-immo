@@ -57,6 +57,11 @@ const envSchema = z.object({
   // Stripe — abonnements et paiements
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  // Plan Starter (UI) = PRO en base
+  STRIPE_STARTER_MONTHLY_PRICE_ID: z.string().optional(),
+  STRIPE_STARTER_ANNUAL_PRICE_ID: z.string().optional(),
+  // Plan Pro (UI) = EXPERT en base
+  // Plan Pro (UI) = EXPERT en base (anciennement STRIPE_PRO_* → alias legacy)
   STRIPE_PRO_MONTHLY_PRICE_ID: z.string().optional(),
   STRIPE_PRO_ANNUAL_PRICE_ID: z.string().optional(),
   STRIPE_EXPERT_MONTHLY_PRICE_ID: z.string().optional(),
@@ -115,6 +120,8 @@ const data: any = parsedEnv.success ? parsedEnv.data : {
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
   STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
   STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+  STRIPE_STARTER_MONTHLY_PRICE_ID: process.env.STRIPE_STARTER_MONTHLY_PRICE_ID,
+  STRIPE_STARTER_ANNUAL_PRICE_ID: process.env.STRIPE_STARTER_ANNUAL_PRICE_ID,
   STRIPE_PRO_MONTHLY_PRICE_ID: process.env.STRIPE_PRO_MONTHLY_PRICE_ID,
   STRIPE_PRO_ANNUAL_PRICE_ID: process.env.STRIPE_PRO_ANNUAL_PRICE_ID,
   STRIPE_EXPERT_MONTHLY_PRICE_ID: process.env.STRIPE_EXPERT_MONTHLY_PRICE_ID,
@@ -174,6 +181,8 @@ export const env = {
 
   STRIPE_SECRET_KEY: data.STRIPE_SECRET_KEY || '',
   STRIPE_WEBHOOK_SECRET: data.STRIPE_WEBHOOK_SECRET || '',
+  STRIPE_STARTER_MONTHLY_PRICE_ID: data.STRIPE_STARTER_MONTHLY_PRICE_ID || '',
+  STRIPE_STARTER_ANNUAL_PRICE_ID: data.STRIPE_STARTER_ANNUAL_PRICE_ID || '',
   STRIPE_PRO_MONTHLY_PRICE_ID: data.STRIPE_PRO_MONTHLY_PRICE_ID || '',
   STRIPE_PRO_ANNUAL_PRICE_ID: data.STRIPE_PRO_ANNUAL_PRICE_ID || '',
   STRIPE_EXPERT_MONTHLY_PRICE_ID: data.STRIPE_EXPERT_MONTHLY_PRICE_ID || '',
