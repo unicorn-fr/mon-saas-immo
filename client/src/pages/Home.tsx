@@ -33,69 +33,69 @@ const T = {
 } as const
 
 const STATS = [
-  { value: '+12 400',    label: 'Inscrits sur la plateforme' },
-  { value: '0 €',        label: "Frais d'agence" },
-  { value: '8 min',      label: 'Pour publier une annonce' },
-  { value: '96 k€',      label: 'Garantie loyers (option)' },
+  { value: '0 €',    label: "Frais d'agence, pour les deux parties" },
+  { value: '1 %',    label: 'Du loyer mensuel — seule commission propriétaire' },
+  { value: '8 min',  label: 'Pour publier une annonce complète' },
+  { value: '96 k€',  label: 'De garantie loyers impayés (option)' },
 ]
 
 const STEPS = [
   {
     n: '1',
     title: 'Publie ton annonce.',
-    desc: 'Photos, description, loyer. On optimise ton annonce avec l\'IA pour qu\'elle sorte du lot. Huit minutes chrono.',
+    desc: 'Tu remplis les informations du bien, tu téléverses tes photos. En huit minutes, l\'annonce est en ligne et visible par les candidats.',
   },
   {
     n: '2',
-    title: 'Choisis ton locataire.',
-    desc: 'Candidatures déjà vérifiées et scorées par IA. Tu ouvres, tu compares, tu sélectionnes. Zéro paperasse.',
+    title: 'Reçois les candidatures.',
+    desc: 'Chaque dossier arrive avec une analyse de solvabilité — taux d\'effort, stabilité pro, garant. Tu compares, tu choisis.',
   },
   {
     n: '3',
-    title: 'Signe ton bail.',
-    desc: 'Signature électronique à valeur probante, état des lieux guidé, prélèvements SEPA. Tu n\'as plus rien à faire.',
+    title: 'Signe et encaisse.',
+    desc: 'Bail conforme loi ALUR signé électroniquement. SEPA mis en place, quittances automatiques, état des lieux guidé. C\'est tout.',
   },
 ]
 
 const FEATURES = [
   {
     title: 'Zéro frais d\'agence.',
-    desc: 'Tu publies, tu signes, tu économises. Pas de commission, pas de frais cachés, pas de semaine à négocier avec un intermédiaire.',
+    desc: 'Ni côté propriétaire à la mise en location, ni côté locataire. Le seul prélèvement : 1 % du loyer mensuel une fois le bail signé. Suspendu si le bien est vacant.',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="24" height="24"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
     ),
   },
   {
-    title: 'Dossiers vérifiés par IA.',
-    desc: 'Chaque candidature passe au crible : identité, revenus, garant. Tu reçois un score de fiabilité et un dossier déjà propre.',
+    title: 'Dossiers analysés.',
+    desc: 'Chaque candidature arrive avec une analyse de cohérence : taux d\'effort, stabilité professionnelle, présence d\'un garant. Tu compares en un coup d\'œil.',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="24" height="24"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
     ),
   },
   {
     title: 'Bail 100 % en ligne.',
-    desc: 'Conforme loi ALUR, valeur probante, signé en quelques clics. Les quittances partent automatiquement, mois après mois.',
+    desc: 'Conforme loi ALUR, signé via une solution certifiée eIDAS. Même valeur probante qu\'un bail papier, accessible à vie dans ton espace. Les quittances partent automatiquement.',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="24" height="24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
     ),
   },
   {
     title: 'État des lieux guidé.',
-    desc: 'Photo par photo, pièce par pièce. Horodaté, signé, archivé. Le jour de la sortie, tout est déjà documenté.',
+    desc: 'Pièce par pièce, photo par photo, depuis ton téléphone. Horodaté, signé des deux côtés, archivé. À la sortie, on compare automatiquement avec l\'entrée.',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="24" height="24"><path d="m9 12 2 2 4-4"/><path d="M5 7c0-1.1.9-2 2-2h10a2 2 0 0 1 2 2v12H5z"/><path d="M22 19H2"/></svg>
     ),
   },
   {
-    title: 'SEPA automatique.',
-    desc: 'Le loyer tombe le 5 du mois. La quittance part dans la foulée. Si un prélèvement rate, on te prévient avant.',
+    title: 'Encaissement SEPA.',
+    desc: 'Prélèvement le 5 du mois, virement sur ton compte le 7, quittance envoyée dans la foulée. Si un paiement pose problème, tu es prévenu avant.',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="24" height="24"><path d="M2 9V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4"/><path d="M2 13v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4"/><line x1="6" x2="6.01" y1="11" y2="11"/><line x1="10" x2="10.01" y1="11" y2="11"/></svg>
     ),
   },
   {
     title: 'Garantie loyers (option).',
-    desc: 'Jusqu\'à 96 000 € couverts par sinistre, procédure incluse. Activable en un clic, par un assureur français agréé.',
+    desc: 'Jusqu\'à 96 000 € par sinistre, procédure juridique incluse, en partenariat avec un assureur agréé. Activable en un clic depuis ton tableau de bord.',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="24" height="24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
     ),
@@ -104,21 +104,21 @@ const FEATURES = [
 
 const TESTIMONIALS = [
   {
-    quote: 'J\'ai relogé mon studio en huit jours. Bailio a filtré les profils, j\'ai juste eu à choisir. Les quittances partent toutes seules.',
+    quote: 'J\'ai mis mon studio en location sans passer par une agence pour la première fois. Le dossier était déjà vérifié, j\'ai juste eu à choisir. Les quittances partent toutes seules.',
     name: 'Camille L.',
-    role: 'Propriétaire · Paris 11e',
+    role: 'Propriétaire · Paris',
     initials: 'CL',
     bg: '#1a3270',
   },
   {
-    quote: 'Trouvé un T2 à Lyon depuis Marseille. Aucun déplacement, dossier numérique, bail signé en deux jours. Surréaliste.',
+    quote: 'J\'ai postulé depuis mon téléphone, envoyé mon dossier une seule fois pour trois biens différents. Le bail a été signé en ligne. Je n\'ai rien eu à imprimer.',
     name: 'Théo M.',
     role: 'Locataire · Lyon',
     initials: 'TM',
     bg: '#1b5e3b',
   },
   {
-    quote: 'Trois biens en gestion, plus aucun rendez-vous d\'agence. La rentabilité affichée en temps réel, j\'arbitre vraiment.',
+    quote: 'Deux biens en gestion, plus un seul rendez-vous d\'agence. Tout passe par le tableau de bord — candidatures, loyers, quittances. Je récupère du temps.',
     name: 'Sophie R.',
     role: 'Propriétaire · Bordeaux',
     initials: 'SR',
@@ -241,7 +241,7 @@ export default function Home() {
             {/* Badge */}
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: 'rgba(196,151,106,0.12)', border: '1px solid rgba(196,151,106,0.35)', color: T.caramel, padding: '6px 14px', borderRadius: 999, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 28 }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.caramel, animation: 'pulse-dot 2s infinite', display: 'inline-block' }} />
-              Disponible maintenant
+              Plateforme ouverte · Inscription gratuite
             </span>
 
             <h1 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(42px,7vw,80px)', lineHeight: 1.02, letterSpacing: '-0.02em', color: '#fff', margin: '0 0 22px', maxWidth: '16ch' }}>
@@ -249,7 +249,7 @@ export default function Home() {
             </h1>
 
             <p style={{ fontSize: 'clamp(15px,1.3vw,17px)', color: 'rgba(255,255,255,0.78)', lineHeight: 1.6, maxWidth: 560, margin: '0 0 40px' }}>
-              Publie ton annonce, reçois des candidatures vérifiées et signe ton bail en ligne. Sans frais d'agence, sans paperasse, sans prise de tête.
+              Publie ton bien, reçois des dossiers analysés, signe le bail en ligne. Locataire : postule en un clic, dossier numérique, rien à imprimer. Sans frais d'agence des deux côtés.
             </p>
 
             {/* CTAs */}
@@ -276,7 +276,7 @@ export default function Home() {
             <div className="trust-badges" style={{ display: 'flex', gap: 32, color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 500, letterSpacing: '0.03em', flexWrap: 'wrap' }}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                 <Check size={14} color={T.caramel} strokeWidth={2.5} />
-                150 premiers · frais à vie offerts
+                Gratuit pour les locataires, toujours
               </span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                 <Check size={14} color={T.caramel} strokeWidth={2.5} />
@@ -360,7 +360,7 @@ export default function Home() {
             Trois étapes. <em style={{ color: T.caramel }}>Pas une de plus.</em>
           </h2>
           <p style={{ fontSize: 16, color: T.inkMid, lineHeight: 1.65, maxWidth: '56ch', margin: '0 0 56px' }}>
-            Tu es propriétaire ? Tu publies, tu choisis ton locataire, tu signes. Tu cherches un logement ? Tu postules, tu signes, tu emménages.
+            Tu publies un bien ou tu cherches un logement — dans les deux cas, Bailio supprime tout ce qui ne sert à rien : les intermédiaires, les formulaires papier, les allers-retours inutiles.
           </p>
 
           <div className="steps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
@@ -468,7 +468,7 @@ export default function Home() {
             Moins d'intermédiaires. <em style={{ color: T.caramel }}>Plus de confiance.</em>
           </h2>
           <p style={{ fontSize: 16, color: T.inkMid, lineHeight: 1.65, maxWidth: '56ch', margin: '0 0 56px' }}>
-            On a construit Bailio comme on aurait aimé louer. Sans commission, sans rendez-vous d'agence à 18h, sans dossier papier perdu dans un tiroir.
+            Louer en France est une corvée. Les agences coûtent cher, les dossiers se perdent, les bails s'impriment en triple. Bailio a été conçu pour que propriétaires et locataires se fassent confiance sans avoir besoin d'un intermédiaire payant.
           </p>
 
           <div className="feat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 20 }}>
@@ -585,7 +585,7 @@ export default function Home() {
               Prêt à <em style={{ color: T.caramel }}>commencer ?</em>
             </h2>
             <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 15, margin: 0 }}>
-              Inscris-toi gratuitement. Tu publies ou tu cherches en moins de cinq minutes.
+              Inscription gratuite. Propriétaires : première annonce publiée en huit minutes. Locataires : dossier numérique, candidature en un clic.
             </p>
           </div>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>

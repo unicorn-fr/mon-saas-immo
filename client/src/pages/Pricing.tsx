@@ -190,7 +190,7 @@ export default function Pricing() {
             Questions <em style={{ color: T.caramel }}>fréquentes.</em>
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {FAQ.map((item, i) => (
+            {FAQ.map((item) => (
               <div key={item.q} style={{ borderBottom: `1px solid ${T.border}`, padding: '22px 0' }}>
                 <p style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 600, fontSize: 19, color: T.ink, margin: '0 0 10px', lineHeight: 1.3 }}>{item.q}</p>
                 <p style={{ fontSize: 14, color: T.inkMid, lineHeight: 1.7, margin: 0 }}>{item.a}</p>
