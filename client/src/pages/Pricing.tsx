@@ -1,436 +1,242 @@
 import { Link } from 'react-router-dom'
-import { Check, X, Zap, Building2, Crown, ArrowRight, HelpCircle } from 'lucide-react'
-import { Layout } from '../components/layout/Layout'
-import { useReveal } from '../hooks/useReveal'
-import { BAI } from '../constants/bailio-tokens'
+import { Check, ArrowRight } from 'lucide-react'
+import { Header } from '../components/layout/Header'
 
-// ─── Plan data ────────────────────────────────────────────────────────────────
+const T = {
+  bgBase:    '#fafaf8',
+  bgSurface: '#ffffff',
+  bgMuted:   '#f4f2ee',
+  ink:       '#0d0c0a',
+  inkMid:    '#5a5754',
+  inkFaint:  '#9e9b96',
+  night:     '#1a1a2e',
+  caramel:   '#c4976a',
+  caramelHover: '#b07f54',
+  caramelLight: '#fdf5ec',
+  caramelBorder: '#e8ccaa',
+  owner:     '#1a3270',
+  ownerLight: '#eaf0fb',
+  tenant:    '#1b5e3b',
+  tenantLight: '#edf7f2',
+  success:   '#1b5e3b',
+  border:    '#e4e1db',
+  fontDisplay: "'Cormorant Garamond', Georgia, serif",
+  fontBody:    "'DM Sans', system-ui, sans-serif",
+} as const
 
-interface Plan {
-  id: string
-  name: string
-  price: string
-  priceNote: string
-  tagline: string
-  cta: string
-  ctaLink: string
-  highlighted: boolean
-  badge?: string
-  icon: React.ElementType
-  features: { label: string; included: boolean; note?: string }[]
-}
+const OWNER_FEATURES = [
+  'Annonce publiée sur Bailio',
+  'Analyse des candidatures',
+  'Bail généré automatiquement (conforme loi ALUR)',
+  'État des lieux guidé (entrée + sortie)',
+  'Encaissement SEPA + quittances automatiques',
+  'Garantie loyers impayés (option à 2,5 %)',
+]
 
-const PLANS: Plan[] = [
-  {
-    id: 'free',
-    name: 'Gratuit',
-    price: '0 €',
-    priceNote: 'pour toujours',
-    tagline: 'Pour découvrir la plateforme et gérer un premier bien.',
-    cta: 'Démarrer gratuitement',
-    ctaLink: '/register',
-    highlighted: false,
-    icon: Building2,
-    features: [
-      { label: '1 annonce active', included: true },
-      { label: 'Recherche & favoris', included: true },
-      { label: 'Messagerie directe', included: true },
-      { label: 'Réservation de visites', included: true },
-      { label: 'Contrat de bail basique', included: true },
-      { label: 'Dossier locataire numérique', included: true },
-      { label: 'Annonces illimitées', included: false },
-      { label: 'Priorité dans les résultats', included: false },
-      { label: 'Signature électronique avancée', included: false },
-      { label: 'Statistiques de performance', included: false },
-      { label: 'Support prioritaire', included: false },
-    ],
-  },
-  {
-    id: 'pro',
-    name: 'Pro',
-    price: '9,90 €',
-    priceNote: 'par mois, sans engagement',
-    tagline: 'Pour les propriétaires qui gèrent plusieurs biens sérieusement.',
-    cta: 'Essayer 14 jours gratuit',
-    ctaLink: '/register?plan=pro',
-    highlighted: true,
-    badge: 'Le plus populaire',
-    icon: Zap,
-    features: [
-      { label: 'Annonces illimitées', included: true },
-      { label: 'Recherche & favoris', included: true },
-      { label: 'Messagerie directe', included: true },
-      { label: 'Réservation de visites', included: true },
-      { label: 'Contrats & modèles complets', included: true, note: 'Bail, EDL, cautionnement' },
-      { label: 'Dossier locataire numérique', included: true },
-      { label: 'Priorité dans les résultats', included: true },
-      { label: 'Signature électronique avancée', included: true },
-      { label: 'Statistiques de performance', included: true },
-      { label: 'Alertes locataires en temps réel', included: true },
-      { label: 'Support prioritaire', included: false },
-    ],
-  },
-  {
-    id: 'enterprise',
-    name: 'Enterprise',
-    price: '29,90 €',
-    priceNote: 'par mois, facturation annuelle',
-    tagline: 'Pour les agences, marchands de biens et gestionnaires multi-patrimoines.',
-    cta: "Contacter l'équipe commerciale",
-    ctaLink: '/contact',
-    highlighted: false,
-    icon: Crown,
-    features: [
-      { label: 'Tout ce qui est dans Pro', included: true },
-      { label: 'Gestion multi-utilisateurs', included: true, note: "Jusqu'à 10 comptes" },
-      { label: 'API & intégrations', included: true, note: 'Logiciels tiers, CRM' },
-      { label: 'Tableau de bord patrimoine', included: true },
-      { label: 'Rapports PDF exportables', included: true },
-      { label: 'Statistiques de performance', included: true },
-      { label: 'Onboarding dédié', included: true },
-      { label: 'Support prioritaire 7j/7', included: true },
-      { label: 'SLA garanti', included: true },
-      { label: 'Personnalisation marque blanche', included: true },
-      { label: "Formation de l'équipe", included: true },
-    ],
-  },
+const TENANT_FEATURES = [
+  'Dossier locatif numérique',
+  'Candidature en un clic',
+  'Messagerie directe avec le propriétaire',
+  'Quittances et bail dans ton espace',
+  'Accompagnement état des lieux',
+  'Historique des locations conservé à vie',
+]
+
+const COMPARISON = [
+  { label: 'Frais de mise en location', agency: '~ 1 100 €', bailio: '0 €', bailioGood: true },
+  { label: 'Honoraires de gestion mensuels (loyer 1 200 €)', agency: '7 % · 84 €/mois', bailio: '1 % · 12 €/mois', bailioGood: true },
+  { label: 'Renouvellement de bail', agency: '~ 250 €', bailio: '0 €', bailioGood: true },
+  { label: 'Coût total — 1ère année', agency: '~ 2 358 €', bailio: '144 €', bailioGood: true, highlight: true },
 ]
 
 const FAQ = [
-  {
-    q: 'Puis-je changer de formule à tout moment ?',
-    a: "Oui. Le passage de Gratuit à Pro est immédiat. L'annulation prend effet à la fin de la période en cours — aucun remboursement prorata n'est effectué.",
-  },
-  {
-    q: "La période d'essai Pro nécessite-t-elle une carte bancaire ?",
-    a: 'Non. Vous créez votre compte et profitez de 14 jours complets en accès Pro, sans renseigner de moyen de paiement.',
-  },
-  {
-    q: 'Comment fonctionne la facturation Enterprise ?',
-    a: "L'offre Enterprise est facturée annuellement, ce qui représente une économie de 20 % par rapport à un tarif mensuel. Un devis personnalisé est disponible pour les structures de plus de 50 biens.",
-  },
-  {
-    q: 'Les données de mes locataires sont-elles protégées ?',
-    a: "L'ensemble des documents stockés sur notre plateforme est chiffré au repos (AES-256) et en transit (TLS 1.3). Nous sommes conformes RGPD et hébergeons nos données exclusivement en France.",
-  },
+  { q: 'Quand suis-je facturé en tant que propriétaire ?', a: 'Jamais avant la signature du bail. Une fois ton locataire installé, 1 % du loyer mensuel est prélevé sur chaque quittance. Si le bien est vacant, la facturation est suspendue automatiquement.' },
+  { q: 'Bailio est vraiment gratuit pour les locataires ?', a: 'Oui, totalement. La loi ALUR interdit les frais à la charge du locataire lors de la mise en location. Nous allons plus loin : aucun frais, aucune surprise, pour toujours.' },
+  { q: 'Comment fonctionne la garantie loyers impayés ?', a: 'C\'est une option activable depuis ton tableau de bord. Elle couvre jusqu\'à 96 000 € par sinistre, procédure juridique incluse, en partenariat avec un assureur agréé. Son coût est de 2,5 % du loyer mensuel.' },
+  { q: 'Y a-t-il des frais cachés ?', a: 'Non. Le seul prélèvement est 1 % du loyer mensuel, visible sur chaque quittance. Aucun frais d\'entrée, aucun frais de dossier, aucun frais de sortie.' },
 ]
 
-// ─── Components ───────────────────────────────────────────────────────────────
-
-function PlanCard({ plan, delay }: { plan: Plan; delay: number }) {
-  const { ref, visible } = useReveal()
-  const Icon = plan.icon
-
-  return (
-    <div
-      ref={ref as React.RefObject<HTMLDivElement>}
-      className="relative flex flex-col transition-all duration-500"
-      style={{
-        transitionDelay: `${delay}ms`,
-        opacity: visible ? 1 : 0,
-        transform: visible
-          ? plan.highlighted ? 'translateY(0) scale(1.02)' : 'translateY(0)'
-          : 'translateY(24px)',
-        backgroundColor: BAI.bgSurface,
-        border: plan.highlighted ? `2px solid ${BAI.night}` : `1px solid ${BAI.border}`,
-        borderRadius: '12px',
-        boxShadow: plan.highlighted
-          ? '0 8px 40px rgba(26,26,46,0.14), 0 2px 8px rgba(26,26,46,0.08)'
-          : '0 1px 4px rgba(13,12,10,0.05)',
-        fontFamily: BAI.fontBody,
-      }}
-    >
-      {plan.badge && (
-        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-          <span
-            style={{
-              backgroundColor: BAI.night,
-              color: '#ffffff',
-              fontFamily: BAI.fontBody,
-              fontSize: '11px',
-              fontWeight: 600,
-              letterSpacing: '0.04em',
-              padding: '4px 14px',
-              borderRadius: '100px',
-              whiteSpace: 'nowrap',
-              display: 'inline-block',
-            }}
-          >
-            {plan.badge}
-          </span>
-        </div>
-      )}
-
-      <div className="p-7 flex-1 flex flex-col">
-        {/* Plan header */}
-        <div className="flex items-center gap-3 mb-5">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{
-              backgroundColor: plan.highlighted ? BAI.night : BAI.bgMuted,
-            }}
-          >
-            <Icon
-              className="w-5 h-5"
-              style={{
-                color: plan.highlighted ? '#ffffff' : plan.id === 'enterprise' ? BAI.caramel : BAI.inkFaint,
-              }}
-            />
-          </div>
-          <h3
-            style={{
-              fontFamily: BAI.fontDisplay,
-              fontStyle: 'italic',
-              fontSize: '22px',
-              fontWeight: 700,
-              color: BAI.ink,
-            }}
-          >
-            {plan.name}
-          </h3>
-        </div>
-
-        {/* Price */}
-        <div className="mb-4">
-          <div className="flex items-baseline gap-1">
-            <span
-              style={{
-                fontFamily: BAI.fontDisplay,
-                fontSize: '56px',
-                fontWeight: 600,
-                color: BAI.ink,
-                lineHeight: 1,
-              }}
-            >
-              {plan.price}
-            </span>
-          </div>
-          <p style={{ fontFamily: BAI.fontBody, fontSize: '14px', color: BAI.inkFaint, marginTop: '4px' }}>
-            {plan.priceNote}
-          </p>
-        </div>
-
-        <p
-          style={{
-            fontFamily: BAI.fontBody,
-            fontSize: '14px',
-            color: BAI.inkMid,
-            lineHeight: 1.6,
-            marginBottom: '24px',
-          }}
-        >
-          {plan.tagline}
-        </p>
-
-        {/* CTA */}
-        <Link
-          to={plan.ctaLink}
-          className="w-full text-center flex items-center justify-center gap-2 transition-opacity hover:opacity-80"
-          style={{
-            fontFamily: BAI.fontBody,
-            fontSize: '14px',
-            fontWeight: 600,
-            padding: '11px 20px',
-            borderRadius: '8px',
-            marginBottom: '28px',
-            ...(plan.highlighted
-              ? { backgroundColor: BAI.night, color: '#ffffff', border: 'none' }
-              : { backgroundColor: 'transparent', color: BAI.inkMid, border: `1px solid ${BAI.border}` }),
-          }}
-        >
-          {plan.cta}
-          <ArrowRight className="w-4 h-4" />
-        </Link>
-
-        {/* Separator */}
-        <div style={{ height: '1px', backgroundColor: BAI.border, marginBottom: '20px' }} />
-
-        {/* Features */}
-        <ul className="space-y-3 flex-1">
-          {plan.features.map((f) => (
-            <li key={f.label} className="flex items-start gap-2.5">
-              {f.included ? (
-                <Check
-                  className="w-4 h-4 flex-shrink-0 mt-0.5"
-                  style={{ color: BAI.tenant }}
-                />
-              ) : (
-                <X
-                  className="w-4 h-4 flex-shrink-0 mt-0.5"
-                  style={{ color: BAI.border }}
-                />
-              )}
-              <span style={{ fontFamily: BAI.fontBody, fontSize: '14px', color: f.included ? BAI.ink : BAI.inkFaint }}>
-                {f.label}
-                {f.note && (
-                  <span style={{ display: 'block', fontSize: '12px', color: BAI.inkFaint, marginTop: '1px' }}>
-                    {f.note}
-                  </span>
-                )}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  )
-}
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export default function Pricing() {
-  const heroReveal = useReveal()
-  const faqReveal = useReveal()
-
   return (
-    <Layout>
-      <div style={{ backgroundColor: BAI.bgBase, fontFamily: BAI.fontBody }}>
+    <div style={{ backgroundColor: T.bgBase, fontFamily: T.fontBody, color: T.ink, minHeight: '100vh' }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=DM+Sans:wght@400;500;600;700&display=swap');
+      @media (max-width: 768px) { .plans-grid { grid-template-columns: 1fr !important; } .cmp-row { grid-template-columns: 1fr 1fr !important; gap: 4px !important; } .cmp-row span:first-child { grid-column: span 2; font-weight: 600; font-size: 12px; } }
+      `}</style>
 
-        {/* Hero */}
-        <section
-          style={{ backgroundColor: BAI.night, padding: '80px 16px 72px' }}
-          className="text-center"
-        >
-          <div className="max-w-3xl mx-auto">
-            <div
-              ref={heroReveal.ref as React.RefObject<HTMLDivElement>}
-              className="transition-all duration-700"
-              style={{ opacity: heroReveal.visible ? 1 : 0, transform: heroReveal.visible ? 'translateY(0)' : 'translateY(16px)' }}
-            >
-              <p
-                style={{
-                  fontFamily: BAI.fontBody,
-                  fontSize: '10px',
-                  fontWeight: 600,
-                  letterSpacing: '0.12em',
-                  textTransform: 'uppercase',
-                  color: BAI.caramel,
-                  marginBottom: '16px',
-                }}
-              >
-                Tarifs
-              </p>
-              <h1
-                style={{
-                  fontFamily: BAI.fontDisplay,
-                  fontStyle: 'italic',
-                  fontSize: 'clamp(36px, 5vw, 52px)',
-                  fontWeight: 600,
-                  color: '#ffffff',
-                  marginBottom: '18px',
-                  lineHeight: 1.15,
-                }}
-              >
-                Simple. Transparent. Sans surprise.
-              </h1>
-              <p
-                style={{
-                  fontFamily: BAI.fontBody,
-                  fontSize: '16px',
-                  color: 'rgba(255,255,255,0.65)',
-                  margin: '0 auto',
-                  lineHeight: 1.65,
-                }}
-              >
-                Que vous soyez propriétaire d'un studio ou gestionnaire d'un parc locatif, il existe une formule taillée pour vous — et une période d'essai pour en être certain.
-              </p>
-            </div>
-          </div>
-        </section>
+      <Header />
 
-        {/* Plans grid */}
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '64px', paddingBottom: '80px' }}>
-          <div className="grid md:grid-cols-3 gap-6 items-start">
-            {PLANS.map((plan, i) => (
-              <PlanCard key={plan.id} plan={plan} delay={i * 120} />
-            ))}
-          </div>
-
-          {/* Enterprise note */}
-          <p
-            className="text-center"
-            style={{ fontFamily: BAI.fontBody, fontSize: '14px', color: BAI.inkFaint, marginTop: '32px' }}
-          >
-            Vous gérez plus de 50 biens ?{' '}
-            <Link
-              to="/contact"
-              style={{ color: BAI.night, textDecoration: 'underline', fontWeight: 500 }}
-            >
-              Demandez un devis sur mesure
-            </Link>.
+      {/* ── HERO ── */}
+      <section style={{ padding: 'clamp(64px,10vh,100px) 0 clamp(32px,5vh,48px)', background: T.bgBase, textAlign: 'center' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
+          <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.caramel, margin: '0 0 14px' }}>
+            Tarifs simples
           </p>
-        </section>
+          <h1 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(36px,5vw,60px)', margin: '0 auto 18px', maxWidth: '18ch', lineHeight: 1.05 }}>
+            Un prix juste. <em style={{ color: T.caramel }}>Pour tout le monde.</em>
+          </h1>
+          <p style={{ fontSize: 16, color: T.inkMid, maxWidth: '54ch', margin: '0 auto', lineHeight: 1.65 }}>
+            Pas de frais d'entrée, pas de palier mystère. Tu paies seulement 1 % du loyer mensuel une fois ton bail signé — et les locataires ne paient rien, jamais.
+          </p>
+        </div>
+      </section>
 
-        {/* FAQ */}
-        <section
-          ref={faqReveal.ref as React.RefObject<HTMLElement>}
-          className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-700"
-          style={{
-            paddingBottom: '80px',
-            opacity: faqReveal.visible ? 1 : 0,
-            transform: faqReveal.visible ? 'translateY(0)' : 'translateY(16px)',
-          }}
-        >
-          {/* Section header */}
-          <div className="flex items-center gap-3 mb-8">
-            <div
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                backgroundColor: BAI.caramelLight,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <HelpCircle className="w-4 h-4" style={{ color: BAI.caramel }} />
+      {/* ── PLANS ── */}
+      <section style={{ padding: 'clamp(16px,3vh,24px) 0 clamp(64px,10vh,100px)' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
+          <div className="plans-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, maxWidth: 920, margin: '0 auto' }}>
+
+            {/* Propriétaire */}
+            <div style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderTop: `3px solid ${T.owner}`, borderRadius: 12, padding: 40 }}>
+              <p style={{ fontSize: 13, color: T.owner, margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>Propriétaire</p>
+              <h3 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 28, margin: '0 0 14px', color: T.ink }}>Bailio Serein</h3>
+              <div style={{ margin: '0 0 6px' }}>
+                <span style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 56, color: T.ink, lineHeight: 1, letterSpacing: '-0.02em' }}>1</span>
+                <span style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 28, verticalAlign: 'super', color: T.inkFaint }}>%</span>
+                <span style={{ fontFamily: T.fontBody, fontStyle: 'normal', fontSize: 15, color: T.inkFaint, fontWeight: 400, marginLeft: 8 }}>/ mois de loyer</span>
+              </div>
+              <p style={{ fontSize: 13, color: T.inkMid, margin: '0 0 28px', lineHeight: 1.55 }}>
+                Prélevé automatiquement sur chaque quittance. Suspendu si le bien est vacant. Aucun frais si le bail n'est pas signé.
+              </p>
+              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 0 }}>
+                {OWNER_FEATURES.map(f => (
+                  <li key={f} style={{ display: 'flex', gap: 12, fontSize: 14, color: T.ink, padding: '10px 0', borderBottom: `1px solid ${T.border}`, alignItems: 'flex-start' }}>
+                    <Check size={18} color={T.success} strokeWidth={2} style={{ flexShrink: 0, marginTop: 1 }} />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Link to="/register?role=OWNER" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '14px 0', borderRadius: 8, fontFamily: T.fontBody, fontWeight: 600, fontSize: 15, background: T.night, color: '#fff', textDecoration: 'none', transition: 'opacity .15s' }}
+                onMouseEnter={e => { e.currentTarget.style.opacity = '0.85' }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
+              >
+                Publier mon annonce <ArrowRight size={16} />
+              </Link>
             </div>
-            <h2
-              style={{
-                fontFamily: BAI.fontDisplay,
-                fontStyle: 'italic',
-                fontSize: '26px',
-                fontWeight: 700,
-                color: BAI.ink,
-              }}
-            >
-              Questions fréquentes
-            </h2>
+
+            {/* Locataire */}
+            <div style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderTop: `3px solid ${T.tenant}`, borderRadius: 12, padding: 40 }}>
+              <p style={{ fontSize: 13, color: T.tenant, margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>Locataire</p>
+              <h3 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 28, margin: '0 0 14px', color: T.ink }}>Accès libre</h3>
+              <div style={{ margin: '0 0 6px' }}>
+                <span style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 56, color: T.ink, lineHeight: 1, letterSpacing: '-0.02em' }}>0</span>
+                <span style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 28, verticalAlign: 'super', color: T.inkFaint }}>€</span>
+                <span style={{ fontFamily: T.fontBody, fontStyle: 'normal', fontSize: 15, color: T.inkFaint, fontWeight: 400, marginLeft: 8 }}>toujours</span>
+              </div>
+              <p style={{ fontSize: 13, color: T.inkMid, margin: '0 0 28px', lineHeight: 1.55 }}>
+                Tu cherches, tu postules, tu signes. Rien à payer, jamais. La loi ALUR interdit les frais à ta charge et nous l'appliquons strictement.
+              </p>
+              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 0 }}>
+                {TENANT_FEATURES.map(f => (
+                  <li key={f} style={{ display: 'flex', gap: 12, fontSize: 14, color: T.ink, padding: '10px 0', borderBottom: `1px solid ${T.border}`, alignItems: 'flex-start' }}>
+                    <Check size={18} color={T.success} strokeWidth={2} style={{ flexShrink: 0, marginTop: 1 }} />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Link to="/search" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '14px 0', borderRadius: 8, fontFamily: T.fontBody, fontWeight: 600, fontSize: 15, background: T.tenant, color: '#fff', textDecoration: 'none', transition: 'opacity .15s' }}
+                onMouseEnter={e => { e.currentTarget.style.opacity = '0.85' }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
+              >
+                Chercher un logement <ArrowRight size={16} />
+              </Link>
+            </div>
           </div>
 
-          <div className="space-y-4">
-            {FAQ.map((item) => (
-              <div
-                key={item.q}
-                style={{
-                  backgroundColor: BAI.bgSurface,
-                  border: `1px solid ${BAI.border}`,
-                  borderRadius: '12px',
-                  padding: '20px 24px',
-                }}
-              >
-                <p
-                  style={{
-                    fontFamily: BAI.fontBody,
-                    fontSize: '15px',
-                    fontWeight: 600,
-                    color: BAI.ink,
-                    marginBottom: '8px',
-                  }}
-                >
-                  {item.q}
-                </p>
-                <p style={{ fontFamily: BAI.fontBody, fontSize: '14px', color: BAI.inkMid, lineHeight: 1.7 }}>
-                  {item.a}
-                </p>
+          {/* Garantie loyers */}
+          <div style={{ maxWidth: 920, margin: '48px auto 0', background: T.bgMuted, border: `1px solid ${T.border}`, borderRadius: 12, padding: 32, display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ width: 60, height: 60, borderRadius: 14, background: T.caramelLight, color: T.caramelHover, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="28" height="28"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </div>
+            <div style={{ flex: 1, minWidth: 240 }}>
+              <h4 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, margin: '0 0 6px', color: T.ink }}>Garantie loyers impayés — option propriétaire</h4>
+              <p style={{ margin: 0, fontSize: 14, color: T.inkMid, lineHeight: 1.6 }}>2,5 % du loyer mensuel · jusqu'à 96 000 € par sinistre · procédure juridique incluse. Activable en un clic depuis ton tableau de bord, en partenariat avec un assureur agréé.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── COMPARATIF ── */}
+      <section style={{ padding: 'clamp(64px,10vh,100px) 0', background: T.bgMuted }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)', textAlign: 'center' }}>
+          <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(28px,4vw,44px)', lineHeight: 1.1, color: T.ink, margin: '0 auto 56px', maxWidth: '18ch' }}>
+            Comparé aux <em style={{ color: T.caramel }}>agences classiques.</em>
+          </h2>
+
+          <div style={{ maxWidth: 780, margin: '0 auto', background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 12, overflow: 'hidden' }}>
+            {/* Header */}
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', background: T.bgMuted, padding: '16px 24px', fontSize: 12, fontWeight: 600, color: T.inkFaint, textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'left' }}>
+              <span>Pour un loyer de 1 200 €</span>
+              <span style={{ textAlign: 'center' }}>Agence</span>
+              <span style={{ textAlign: 'center', color: T.caramel }}>Bailio</span>
+            </div>
+            {COMPARISON.map((row, i) => (
+              <div key={row.label} className="cmp-row" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', padding: '16px 24px', borderTop: `${row.highlight ? '2px' : '1px'} solid ${T.border}`, fontSize: row.highlight ? 15 : 14, textAlign: 'left', alignItems: 'center', background: row.highlight ? T.caramelLight : i % 2 === 1 ? T.bgBase : T.bgSurface, fontWeight: row.highlight ? 700 : 400 }}>
+                <span style={{ color: T.ink }}>{row.label}</span>
+                <span style={{ textAlign: 'center', color: T.inkMid }}>{row.agency}</span>
+                <span style={{ textAlign: 'center', color: row.bailioGood ? T.success : T.ink, fontWeight: 600 }}>{row.bailio}</span>
               </div>
             ))}
           </div>
-        </section>
+          <p style={{ margin: '24px auto 0', fontSize: 14, color: T.inkMid }}>
+            Soit <strong style={{ color: T.caramelHover }}>plus de 2 200 € d'économie</strong> sur la première année par rapport à une agence classique.
+          </p>
+        </div>
+      </section>
 
-      </div>
-    </Layout>
+      {/* ── FAQ ── */}
+      <section style={{ padding: 'clamp(64px,10vh,100px) 0', background: T.bgBase }}>
+        <div style={{ maxWidth: 780, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
+          <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(24px,3.5vw,36px)', lineHeight: 1.1, color: T.ink, margin: '0 0 40px', textAlign: 'center' }}>
+            Questions <em style={{ color: T.caramel }}>fréquentes.</em>
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {FAQ.map((item, i) => (
+              <div key={item.q} style={{ borderBottom: `1px solid ${T.border}`, padding: '22px 0' }}>
+                <p style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 600, fontSize: 19, color: T.ink, margin: '0 0 10px', lineHeight: 1.3 }}>{item.q}</p>
+                <p style={{ fontSize: 14, color: T.inkMid, lineHeight: 1.7, margin: 0 }}>{item.a}</p>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: 48, background: T.bgMuted, border: `1px solid ${T.border}`, borderRadius: 12, padding: 32, textAlign: 'center' }}>
+            <p style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 24, margin: '0 0 8px', color: T.ink }}>Encore une question ?</p>
+            <p style={{ fontSize: 14, color: T.inkMid, margin: '0 0 20px' }}>On répond en moins de 4 heures ouvrées.</p>
+            <Link to="/contact" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '12px 24px', borderRadius: 8, fontFamily: T.fontBody, fontWeight: 600, fontSize: 14, background: T.night, color: '#fff', textDecoration: 'none' }}>
+              Nous contacter <ArrowRight size={15} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA ── */}
+      <section style={{ background: T.night, padding: '72px 0' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 32 }}>
+          <div>
+            <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(24px,3.5vw,40px)', color: '#fff', margin: '0 0 10px', lineHeight: 1.1 }}>
+              Prêt à <em style={{ color: T.caramel }}>commencer ?</em>
+            </h2>
+            <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 15, margin: 0 }}>Inscris-toi gratuitement. Locataires : c'est gratuit pour toujours.</p>
+          </div>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <Link to="/register" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '14px 26px', borderRadius: 8, fontFamily: T.fontBody, fontSize: 15, fontWeight: 600, background: T.caramel, color: '#fff', textDecoration: 'none' }}>
+              Créer mon compte <ArrowRight size={16} />
+            </Link>
+            <Link to="/faq" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '14px 26px', borderRadius: 8, fontFamily: T.fontBody, fontSize: 15, fontWeight: 600, background: 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,0.3)', textDecoration: 'none' }}>
+              Voir toutes les questions
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <footer style={{ background: T.night, padding: '32px 0', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <p style={{ fontFamily: T.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.28)', margin: 0 }}>© {new Date().getFullYear()} Bailio. Tous droits réservés.</p>
+          <div style={{ display: 'flex', gap: 20 }}>
+            {[{ to: '/cgu', label: 'CGU' }, { to: '/confidentialite', label: 'Confidentialité' }, { to: '/mentions-legales', label: 'Mentions légales' }].map(l => (
+              <Link key={l.to} to={l.to} style={{ fontFamily: T.fontBody, fontSize: 12, color: 'rgba(255,255,255,0.35)', textDecoration: 'none' }}>{l.label}</Link>
+            ))}
+          </div>
+        </div>
+      </footer>
+    </div>
   )
 }

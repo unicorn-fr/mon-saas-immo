@@ -1,262 +1,170 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronDown } from 'lucide-react'
-import { Layout } from '../../components/layout/Layout'
-import Footer from '../../components/layout/Footer'
-import { BAI } from '../../constants/bailio-tokens'
+import { ArrowRight, Plus, Minus } from 'lucide-react'
+import { Header } from '../../components/layout/Header'
 
-const FAQ_ITEMS = [
+const T = {
+  bgBase:    '#fafaf8',
+  bgSurface: '#ffffff',
+  bgMuted:   '#f4f2ee',
+  ink:       '#0d0c0a',
+  inkMid:    '#5a5754',
+  inkFaint:  '#9e9b96',
+  night:     '#1a1a2e',
+  caramel:   '#c4976a',
+  border:    '#e4e1db',
+  fontDisplay: "'Cormorant Garamond', Georgia, serif",
+  fontBody:    "'DM Sans', system-ui, sans-serif",
+} as const
+
+interface FaqItem {
+  q: string
+  a: string
+}
+
+interface FaqSection {
+  category: string
+  items: FaqItem[]
+}
+
+const FAQ_SECTIONS: FaqSection[] = [
   {
-    category: 'Général',
-    questions: [
+    category: 'Sécurité & juridique',
+    items: [
       {
-        q: 'Qu\'est-ce qu\'Bailio ?',
-        a: 'Bailio est une plateforme de mise en relation directe entre propriétaires et locataires. Elle permet de publier des annonces, rechercher des biens, constituer des dossiers de location et signer des baux électroniquement, le tout sans frais d\'agence.',
+        q: 'Le bail signé sur Bailio a-t-il la même valeur qu\'un bail papier ?',
+        a: 'Oui. Le bail électronique Bailio est conforme à la loi ALUR et signé via un prestataire certifié eIDAS niveau avancé. Il a la même valeur probante qu\'un bail papier — mieux : il est horodaté, archivé et accessible à vie dans ton espace.',
       },
       {
-        q: 'L\'inscription est-elle gratuite ?',
-        a: 'Oui, l\'inscription est entièrement gratuite pour les propriétaires comme pour les locataires. La publication d\'annonces est également gratuite.',
+        q: 'Comment fonctionnent les dossiers vérifiés ?',
+        a: 'Le candidat dépose sa pièce d\'identité, ses trois derniers bulletins de salaire, son avis d\'imposition et son justificatif de domicile. On vérifie la cohérence des documents et on produit une analyse basée sur des critères objectifs : taux d\'effort, stabilité professionnelle, présence d\'un garant.',
       },
       {
-        q: 'Comment fonctionne la vérification des profils ?',
-        a: 'Les propriétaires doivent fournir une pièce d\'identité et un justificatif de propriété avant de pouvoir publier une annonce. Les locataires peuvent constituer un dossier sécurisé avec leurs documents certifiés.',
+        q: 'Vos données sont hébergées où ?',
+        a: 'En France, sur des serveurs sécurisés. Nous ne partageons aucune donnée avec un tiers non essentiel au service. Le RGPD, on l\'applique — y compris le droit à l\'export et à la suppression de compte, accessibles en deux clics.',
+      },
+      {
+        q: 'Est-ce que Bailio est conforme à la loi ALUR ?',
+        a: 'Oui. Les baux générés respectent les modèles types définis par décret, incluent toutes les mentions obligatoires et sont signés via une solution certifiée. L\'état des lieux est également conforme au décret du 30 mars 2016.',
       },
     ],
   },
   {
-    category: 'Pour les propriétaires',
-    questions: [
+    category: 'Tarifs & paiement',
+    items: [
       {
-        q: 'Comment publier une annonce ?',
-        a: 'Créez votre compte en tant que propriétaire, puis cliquez sur "Publier une annonce". Remplissez les informations du bien, ajoutez vos photos, et fournissez les documents de vérification requis. Votre annonce sera en ligne une fois validée.',
+        q: 'Bailio est gratuit pour les locataires ?',
+        a: 'Oui, totalement. La loi ALUR interdit les frais à la charge du locataire lors de la mise en location. Nous allons plus loin : aucun frais de dossier, aucun frais d\'état des lieux, aucune commission. Gratuit, pour toujours.',
       },
       {
-        q: 'Comment fonctionne le contrat de location ?',
-        a: 'Notre plateforme génère un bail conforme à la loi Alur avec toutes les clauses obligatoires. Vous pouvez le personnaliser, puis l\'envoyer au locataire pour signature électronique.',
+        q: 'Et si le locataire ne paie plus ?',
+        a: 'La garantie loyers impayés (option à 2,5 % du loyer mensuel) couvre jusqu\'à 96 000 € par sinistre, procédure juridique incluse. Elle est proposée en partenariat avec un assureur agréé et activable en un clic depuis ton tableau de bord.',
       },
       {
-        q: 'Qu\'est-ce que la garantie loyers impayés ?',
-        a: 'C\'est une assurance optionnelle qui vous protège en cas de défaut de paiement de votre locataire. Elle couvre les loyers impayés et les éventuels frais de procédure.',
-      },
-    ],
-  },
-  {
-    category: 'Pour les locataires',
-    questions: [
-      {
-        q: 'Comment contacter un propriétaire ?',
-        a: 'Depuis la page d\'un bien, cliquez sur "Contacter le propriétaire". Vous pourrez envoyer un message directement via notre messagerie intégrée.',
+        q: 'Quand suis-je facturé en tant que propriétaire ?',
+        a: 'Jamais avant la signature du bail. Une fois ton locataire installé, 1 % du loyer mensuel est prélevé sur chaque quittance. Si le bien est vacant, la facturation est suspendue automatiquement.',
       },
       {
-        q: 'Comment constituer mon dossier de location ?',
-        a: 'Dans votre espace locataire, accédez à la section "Mon dossier". Vous pourrez y télécharger vos justificatifs (identité, revenus, emploi, etc.) de manière sécurisée.',
-      },
-      {
-        q: 'Y a-t-il des frais pour les locataires ?',
-        a: 'Non, l\'utilisation de la plateforme est 100% gratuite pour les locataires. Aucun frais d\'agence ne vous sera demandé.',
+        q: 'Y a-t-il des frais cachés ?',
+        a: 'Non. Le seul prélèvement est 1 % du loyer mensuel, visible sur chaque quittance. Aucun frais d\'entrée, aucun frais de mise en location, aucun frais de sortie, aucun renouvellement payant.',
       },
     ],
   },
   {
-    category: 'Sécurité',
-    questions: [
+    category: 'Utilisation',
+    items: [
       {
-        q: 'Mes données sont-elles sécurisées ?',
-        a: 'Oui, nous utilisons un chiffrement de bout en bout pour protéger vos données. Vos documents personnels sont stockés de manière sécurisée et ne sont accessibles qu\'aux personnes autorisées.',
+        q: 'Combien de temps pour publier une annonce ?',
+        a: 'Quelques minutes. Tu remplis les informations essentielles (surface, loyer, équipements, ville), tu téléverses tes photos et tu publies. L\'annonce est en ligne immédiatement.',
       },
       {
-        q: 'Comment signaler un problème ou une fraude ?',
-        a: 'Vous pouvez signaler tout comportement suspect via le bouton "Signaler" présent sur chaque annonce et profil, ou en contactant directement notre équipe support.',
+        q: 'Puis-je gérer plusieurs biens ?',
+        a: 'Oui. Le tableau de bord regroupe tous tes biens, tes loyers encaissés, tes candidatures et ta rentabilité globale. Chaque bien a sa propre fiche avec son historique complet.',
+      },
+      {
+        q: 'Comment fonctionne l\'état des lieux ?',
+        a: 'Pièce par pièce, photo par photo, depuis ton téléphone ou ton ordinateur. L\'application te guide, le locataire valide, le tout est horodaté et archivé dans les deux espaces. À la sortie, on compare automatiquement avec l\'état des lieux d\'entrée.',
+      },
+      {
+        q: 'Puis-je utiliser Bailio si je suis déjà en location ?',
+        a: 'Oui. Tu peux importer un contrat existant pour gérer les quittances, la messagerie et l\'état des lieux de sortie, même si le bail n\'a pas été signé sur Bailio.',
       },
     ],
   },
 ]
 
-export default function FAQ() {
-  const [openItems, setOpenItems] = useState<Set<string>>(new Set())
-
-  const toggleItem = (key: string) => {
-    setOpenItems((prev) => {
-      const next = new Set(prev)
-      if (next.has(key)) next.delete(key)
-      else next.add(key)
-      return next
-    })
-  }
-
+function FaqItem({ item }: { item: FaqItem }) {
+  const [open, setOpen] = useState(false)
   return (
-    <Layout showFooter={false}>
-      <div className="min-h-screen" style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}>
-        {/* Hero */}
-        <section
-          className="py-20 px-4 text-center"
-          style={{ background: BAI.night }}
-        >
-          <div className="max-w-3xl mx-auto">
-            <h1
-              style={{
-                fontFamily: BAI.fontDisplay,
-                fontWeight: 700,
-                fontStyle: 'italic',
-                fontSize: '52px',
-                color: '#ffffff',
-                lineHeight: 1.15,
-                marginBottom: '16px',
-              }}
-            >
-              Foire aux questions
-            </h1>
-            <p
-              style={{
-                fontFamily: BAI.fontBody,
-                fontSize: '16px',
-                color: 'rgba(255,255,255,0.7)',
-                lineHeight: 1.6,
-              }}
-            >
-              Retrouvez les réponses aux questions les plus fréquentes
-            </p>
-          </div>
-        </section>
+    <div style={{ borderBottom: `1px solid ${T.border}`, padding: '22px 0', cursor: 'pointer' }} onClick={() => setOpen(o => !o)}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
+        <p style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 600, fontSize: 19, color: T.ink, margin: 0, lineHeight: 1.3, flex: 1 }}>{item.q}</p>
+        <div style={{ color: T.caramel, flexShrink: 0, transition: 'transform .2s' }}>
+          {open ? <Minus size={22} /> : <Plus size={22} />}
+        </div>
+      </div>
+      {open && (
+        <p style={{ fontSize: 14, color: T.inkMid, lineHeight: 1.7, margin: '14px 0 0', textWrap: 'pretty' } as React.CSSProperties}>{item.a}</p>
+      )}
+    </div>
+  )
+}
 
-        {/* Content */}
-        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="space-y-12">
-            {FAQ_ITEMS.map((category) => (
-              <div key={category.category}>
-                {/* Category pill */}
-                <div className="mb-5">
-                  <span
-                    style={{
-                      display: 'inline-block',
-                      background: BAI.bgMuted,
-                      color: BAI.inkFaint,
-                      fontFamily: BAI.fontBody,
-                      fontSize: '11px',
-                      fontWeight: 600,
-                      letterSpacing: '0.08em',
-                      textTransform: 'uppercase' as const,
-                      padding: '4px 12px',
-                      borderRadius: '100px',
-                    }}
-                  >
-                    {category.category}
-                  </span>
-                </div>
+export default function FAQ() {
+  return (
+    <div style={{ backgroundColor: T.bgBase, fontFamily: T.fontBody, color: T.ink, minHeight: '100vh' }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=DM+Sans:wght@400;500;600;700&display=swap');`}</style>
 
-                <div className="space-y-2">
-                  {category.questions.map((item) => {
-                    const key = `${category.category}-${item.q}`
-                    const isOpen = openItems.has(key)
-                    return (
-                      <div
-                        key={key}
-                        style={{
-                          background: BAI.bgSurface,
-                          border: `1px solid ${BAI.border}`,
-                          borderRadius: '12px',
-                          overflow: 'hidden',
-                          borderLeft: isOpen ? `3px solid ${BAI.night}` : `1px solid ${BAI.border}`,
-                          transition: 'border 0.15s ease',
-                        }}
-                      >
-                        <button
-                          onClick={() => toggleItem(key)}
-                          className="w-full flex items-center justify-between text-left transition-colors"
-                          style={{
-                            padding: '18px 20px',
-                            background: 'transparent',
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontFamily: BAI.fontBody,
-                              fontWeight: 600,
-                              fontSize: '15px',
-                              color: BAI.ink,
-                              paddingRight: '16px',
-                            }}
-                          >
-                            {item.q}
-                          </span>
-                          <ChevronDown
-                            className={`flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                            style={{ width: '18px', height: '18px', color: BAI.inkFaint }}
-                          />
-                        </button>
-                        {isOpen && (
-                          <div
-                            style={{
-                              borderTop: `1px solid ${BAI.border}`,
-                              padding: '16px 20px 20px',
-                            }}
-                          >
-                            <p
-                              style={{
-                                fontFamily: BAI.fontBody,
-                                fontSize: '14px',
-                                color: BAI.inkMid,
-                                lineHeight: 1.7,
-                                margin: 0,
-                              }}
-                            >
-                              {item.a}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
+      <Header />
 
-          {/* CTA bottom */}
-          <div
-            className="text-center mt-14 py-10 px-8"
-            style={{
-              background: BAI.bgSurface,
-              border: `1px solid ${BAI.border}`,
-              borderRadius: '12px',
-            }}
-          >
-            <p
-              style={{
-                fontFamily: BAI.fontBody,
-                fontSize: '15px',
-                color: BAI.inkMid,
-                marginBottom: '20px',
-              }}
-            >
-              Vous n'avez pas trouvé la réponse à votre question ?
-            </p>
-            <Link
-              to="/contact"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: BAI.night,
-                color: '#ffffff',
-                fontFamily: BAI.fontBody,
-                fontWeight: 600,
-                fontSize: '14px',
-                padding: '10px 24px',
-                borderRadius: '8px',
-                textDecoration: 'none',
-                transition: 'opacity 0.15s ease',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.85')}
-              onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
-            >
-              Contactez-nous
+      {/* ── HERO ── */}
+      <section style={{ padding: 'clamp(64px,10vh,100px) 0 clamp(40px,6vh,60px)', textAlign: 'center' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
+          <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.caramel, margin: '0 0 14px' }}>
+            Support
+          </p>
+          <h1 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(36px,5vw,60px)', margin: '0 auto 18px', lineHeight: 1.05, maxWidth: '18ch' }}>
+            Les réponses <em style={{ color: T.caramel }}>aux vraies questions.</em>
+          </h1>
+          <p style={{ fontSize: 16, color: T.inkMid, maxWidth: '52ch', margin: '0 auto' }}>
+            Tu ne trouves pas ? Écris-nous, on répond en moins de 4 heures ouvrées.
+          </p>
+        </div>
+      </section>
+
+      {/* ── FAQ ── */}
+      <section style={{ padding: '0 0 clamp(64px,10vh,100px)' }}>
+        <div style={{ maxWidth: 780, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
+          {FAQ_SECTIONS.map(section => (
+            <div key={section.category}>
+              <p style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 24, margin: '48px 0 0', color: T.ink }}>{section.category}</p>
+              {section.items.map(item => (
+                <FaqItem key={item.q} item={item} />
+              ))}
+            </div>
+          ))}
+
+          {/* Contact block */}
+          <div style={{ marginTop: 64, background: T.bgMuted, border: `1px solid ${T.border}`, borderRadius: 12, padding: 32, textAlign: 'center' }}>
+            <p style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 24, margin: '0 0 8px', color: T.ink }}>Encore une question ?</p>
+            <p style={{ fontSize: 14, color: T.inkMid, margin: '0 0 20px' }}>L'équipe répond en moins de 4 heures ouvrées.</p>
+            <Link to="/contact" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '12px 24px', borderRadius: 8, fontFamily: T.fontBody, fontWeight: 600, fontSize: 14, background: T.night, color: '#fff', textDecoration: 'none' }}>
+              Nous contacter <ArrowRight size={15} />
             </Link>
           </div>
-        </main>
+        </div>
+      </section>
 
-        <Footer />
-      </div>
-    </Layout>
+      <footer style={{ background: T.night, padding: '32px 0' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <p style={{ fontFamily: T.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.28)', margin: 0 }}>© {new Date().getFullYear()} Bailio. Tous droits réservés.</p>
+          <div style={{ display: 'flex', gap: 20 }}>
+            {[{ to: '/cgu', label: 'CGU' }, { to: '/confidentialite', label: 'Confidentialité' }, { to: '/mentions-legales', label: 'Mentions légales' }].map(l => (
+              <Link key={l.to} to={l.to} style={{ fontFamily: T.fontBody, fontSize: 12, color: 'rgba(255,255,255,0.35)', textDecoration: 'none' }}>{l.label}</Link>
+            ))}
+          </div>
+        </div>
+      </footer>
+    </div>
   )
 }
