@@ -182,19 +182,20 @@ export default function Home() {
         @keyframes cloud1 { 0%,100%{transform:translateX(0)} 50%{transform:translateX(-60px)} }
         @keyframes cloud2 { 0%,100%{transform:translateX(0)} 50%{transform:translateX(50px)} }
         @media (max-width: 768px) {
-          .hero-inner   { flex-direction: column !important; }
-          .stats-grid   { grid-template-columns: repeat(2, 1fr) !important; gap: 16px !important; }
-          .steps-grid   { grid-template-columns: 1fr !important; }
-          .feat-grid    { grid-template-columns: 1fr !important; }
-          .props-grid   { grid-template-columns: 1fr !important; }
-          .testi-grid   { grid-template-columns: 1fr !important; }
-          .cta-grid     { flex-direction: column !important; }
-          .footer-grid  { grid-template-columns: repeat(2, 1fr) !important; }
-          .footer-brand { grid-column: span 2 !important; }
-          .trust-badges { flex-direction: column !important; gap: 8px !important; }
-          .hero-right   { width: 100% !important; flex-shrink: 1 !important; }
-          .cta-split-card { padding: 32px 24px !important; }
-          .search-card  { padding: 18px !important; }
+          .hero-inner        { flex-direction: column !important; gap: 28px !important; }
+          .hero-section      { padding: 36px 0 44px !important; }
+          .hero-trust        { display: none !important; }
+          .stats-grid        { grid-template-columns: repeat(2, 1fr) !important; gap: 16px !important; }
+          .steps-grid        { grid-template-columns: 1fr !important; }
+          .feat-grid         { grid-template-columns: 1fr !important; }
+          .props-grid        { grid-template-columns: 1fr !important; }
+          .testi-grid        { grid-template-columns: 1fr !important; }
+          .cta-grid          { flex-direction: column !important; }
+          .footer-grid       { grid-template-columns: repeat(2, 1fr) !important; }
+          .footer-brand      { grid-column: span 2 !important; }
+          .hero-right        { width: 100% !important; flex-shrink: 1 !important; }
+          .cta-split-card    { padding: 28px 20px !important; }
+          .search-card       { padding: 14px !important; }
           .search-accesrapide { display: none !important; }
         }
         @media (max-width: 480px) {
@@ -213,7 +214,7 @@ export default function Home() {
       <Header />
 
       {/* ── HERO ─────────────────────────────────────────────────────── */}
-      <section style={{ position: 'relative', background: T.night, color: '#fff', overflow: 'hidden', padding: 'clamp(70px,12vh,130px) 0 clamp(90px,14vh,160px)' }}>
+      <section className="hero-section" style={{ position: 'relative', background: T.night, color: '#fff', overflow: 'hidden', padding: 'clamp(70px,12vh,130px) 0 clamp(90px,14vh,160px)' }}>
         {/* Animated clouds */}
         <div style={{ position: 'absolute', width: 340, height: 100, top: '12%', right: -80, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', filter: 'blur(40px)', animation: 'cloud1 22s ease-in-out infinite', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', width: 260, height: 80, top: '48%', left: '50%', borderRadius: '50%', background: 'rgba(255,255,255,0.04)', filter: 'blur(40px)', animation: 'cloud2 28s ease-in-out infinite', pointerEvents: 'none' }} />
@@ -281,7 +282,7 @@ export default function Home() {
             </div>
 
             {/* Trust badges */}
-            <div className="trust-badges" style={{ display: 'flex', gap: 32, color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 500, letterSpacing: '0.03em', flexWrap: 'wrap' }}>
+            <div className="trust-badges hero-trust" style={{ display: 'flex', gap: 32, color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 500, letterSpacing: '0.03em', flexWrap: 'wrap' }}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                 <Check size={14} color={T.caramel} strokeWidth={2.5} />
                 Gratuit pour les locataires, toujours
