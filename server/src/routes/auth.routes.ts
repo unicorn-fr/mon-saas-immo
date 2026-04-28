@@ -30,8 +30,11 @@ router.post(
   authController.forgotPassword.bind(authController)
 )
 
-// POST /api/v1/auth/verify-email - Verify email with token
+// POST /api/v1/auth/verify-email - Verify email with token (legacy)
 router.post('/verify-email', authController.verifyEmail.bind(authController))
+
+// POST /api/v1/auth/verify-email-code - Verify email with 6-digit code
+router.post('/verify-email-code', authController.verifyEmailCode.bind(authController))
 
 // POST /api/v1/auth/reset-password - Reset password with token
 router.post('/reset-password', authController.resetPassword.bind(authController))

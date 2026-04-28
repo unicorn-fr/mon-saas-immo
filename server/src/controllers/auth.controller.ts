@@ -414,6 +414,26 @@ class AuthController {
    * POST /api/v1/auth/verify-email
    * Verify email with token
    */
+  /**
+   * POST /api/v1/auth/verify-email-code
+   * Verify email with 6-digit code
+   */
+  async verifyEmailCode(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { email, code } = req.body
+      if (!email || !code) {
+        return res.status(400).json({ success: false, message: 'Email et code requis' })
+      }
+      await authService.verifyEmailWithCode(email.toLowerCase().trim(), code.trim())
+      return res.status(200).json({ success: true, message: 'Email vérifié avec succès' })
+    } catch (error) {
+      if (error instanceof Error) {
+        return res.status(400).json({ success: false, message: error.message })
+      }
+      next(error)
+    }
+  }
+
   async verifyEmail(req: Request, res: Response, next: NextFunction) {
     try {
       const { token } = req.body

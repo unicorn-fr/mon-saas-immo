@@ -129,21 +129,20 @@ class AuthService {
       })
       user.emailVerified = true
     } else {
-      const verificationToken = generateSecureToken()
+      const code = Math.floor(100000 + Math.random() * 900000).toString()
       const tokenExpiresAt = new Date()
-      tokenExpiresAt.setHours(tokenExpiresAt.getHours() + 24)
+      tokenExpiresAt.setMinutes(tokenExpiresAt.getMinutes() + 15)
 
       await prisma.verificationToken.create({
         data: {
-          token: verificationToken,
+          token: code,
           userId: user.id,
           type: 'EMAIL_VERIFY',
           expiresAt: tokenExpiresAt,
         },
       })
 
-      const verifyUrl = `${env.FRONTEND_URL}/verify-email?token=${verificationToken}`
-      const tpl = emailVerificationTemplate({ firstName: user.firstName, verifyUrl })
+      const tpl = emailVerificationTemplate({ firstName: user.firstName, code })
       await sendEmail({ to: user.email, ...tpl })
     }
 
@@ -319,6 +318,35 @@ class AuthService {
   }
 
   /**
+   * Verify email with 6-digit code
+   */
+  async verifyEmailWithCode(email: string, code: string): Promise<void> {
+    const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } })
+    if (!user) throw new Error('Compte introuvable')
+    if (user.emailVerified) throw new Error('Email déjà vérifié')
+
+    const record = await prisma.verificationToken.findFirst({
+      where: { userId: user.id, type: 'EMAIL_VERIFY', token: code },
+    })
+
+    if (!record) throw new Error('Code invalide')
+    if (record.expiresAt < new Date()) {
+      await prisma.verificationToken.delete({ where: { id: record.id } })
+      throw new Error('Code expiré')
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { emailVerified: true, emailVerifiedAt: new Date() },
+    })
+
+    await prisma.verificationToken.delete({ where: { id: record.id } })
+
+    const tpl = welcomeTemplate({ firstName: user.firstName, loginUrl: `${env.FRONTEND_URL}/login` })
+    await sendEmail({ to: user.email, ...tpl })
+  }
+
+  /**
    * Verify email with token
    */
   async verifyEmailWithToken(token: string): Promise<void> {
@@ -369,16 +397,15 @@ class AuthService {
 
     await prisma.verificationToken.deleteMany({ where: { userId: user.id, type: 'EMAIL_VERIFY' } })
 
-    const token = generateSecureToken()
+    const code = Math.floor(100000 + Math.random() * 900000).toString()
     const expiresAt = new Date()
-    expiresAt.setHours(expiresAt.getHours() + 24)
+    expiresAt.setMinutes(expiresAt.getMinutes() + 15)
 
     await prisma.verificationToken.create({
-      data: { token, userId: user.id, type: 'EMAIL_VERIFY', expiresAt },
+      data: { token: code, userId: user.id, type: 'EMAIL_VERIFY', expiresAt },
     })
 
-    const verifyUrl = `${env.FRONTEND_URL}/verify-email?token=${token}`
-    const tpl = emailVerificationTemplate({ firstName: user.firstName, verifyUrl })
+    const tpl = emailVerificationTemplate({ firstName: user.firstName, code })
     await sendEmail({ to: user.email, ...tpl })
   }
 
@@ -401,22 +428,21 @@ class AuthService {
       where: { userId, type: 'EMAIL_VERIFY' },
     })
 
-    // Generate new token
-    const token = generateSecureToken()
+    // Generate new 6-digit code
+    const code = Math.floor(100000 + Math.random() * 900000).toString()
     const expiresAt = new Date()
-    expiresAt.setHours(expiresAt.getHours() + 24)
+    expiresAt.setMinutes(expiresAt.getMinutes() + 15)
 
     await prisma.verificationToken.create({
       data: {
-        token,
+        token: code,
         userId,
         type: 'EMAIL_VERIFY',
         expiresAt,
       },
     })
 
-    const verifyUrl = `${env.FRONTEND_URL}/verify-email?token=${token}`
-    const tpl = emailVerificationTemplate({ firstName: user.firstName, verifyUrl })
+    const tpl = emailVerificationTemplate({ firstName: user.firstName, code })
     await sendEmail({ to: user.email, ...tpl })
   }
 

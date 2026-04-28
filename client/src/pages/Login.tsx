@@ -88,11 +88,6 @@ export default function Login() {
   const [focusedField, setFocusedField] = useState('')
   const [error, setError] = useState('')
 
-  // Email non vérifié
-  const [emailNotVerified, setEmailNotVerified] = useState(false)
-  const [resendLoading, setResendLoading] = useState(false)
-  const [resendDone, setResendDone] = useState(false)
-
   const redirectByRole = (role: string) => {
     const from = (location.state as { from?: string })?.from
     if (from) return navigate(from, { replace: true })
@@ -106,25 +101,18 @@ export default function Login() {
   const handlePasswordLogin = async (e: FormEvent) => {
     e.preventDefault()
     if (!email || !password) { setError('Remplissez tous les champs'); return }
-    setError(''); setEmailNotVerified(false)
+    setError('')
     try {
       const userData = await login({ email, password })
       redirectByRole(userData.role)
     } catch (err) {
       const msg = err instanceof Error ? err.message : ''
-      if (msg === 'EMAIL_NOT_VERIFIED') { setEmailNotVerified(true); return }
+      if (msg === 'EMAIL_NOT_VERIFIED') {
+        navigate('/verify-email', { state: { email }, replace: true })
+        return
+      }
       setError('Identifiants incorrects. Vérifiez votre email et mot de passe.')
     }
-  }
-
-  const handleResendVerif = async () => {
-    setResendLoading(true)
-    try {
-      await api.post('/auth/resend-verification-public', { email })
-      setResendDone(true)
-      toast.success('Email de vérification envoyé !')
-    } catch { toast.error('Erreur lors de l\'envoi.') }
-    finally { setResendLoading(false) }
   }
 
   const handleGoogle = async (idToken: string) => {
@@ -326,7 +314,7 @@ export default function Login() {
       >
         {/* Back button */}
         <button
-          onClick={() => { setScreen('welcome'); setError(''); setEmailNotVerified(false) }}
+          onClick={() => { setScreen('welcome'); setError('') }}
           style={{ position: 'absolute', top: '24px', left: '28px', background: 'none', border: 'none', fontSize: '13px', color: '#9e9b96', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'inherit' }}
           onMouseEnter={e => (e.currentTarget.style.color = '#5a5754')}
           onMouseLeave={e => (e.currentTarget.style.color = '#9e9b96')}
@@ -374,23 +362,6 @@ export default function Login() {
             </div>
           )}
 
-          {/* Email not verified banner */}
-          {emailNotVerified && (
-            <div style={{ marginBottom: '16px', padding: '14px 16px', background: '#fdf5ec', border: '1px solid #f3c99a', borderRadius: '8px' }}>
-              <p style={{ fontSize: '13px', color: '#92400e', margin: '0 0 10px', fontWeight: 500 }}>
-                Email non vérifié. Vérifiez votre boîte mail.
-              </p>
-              {resendDone ? (
-                <p style={{ fontSize: '12px', color: '#1b5e3b', fontWeight: 500, margin: 0 }}>Email envoyé !</p>
-              ) : (
-                <button onClick={handleResendVerif} disabled={resendLoading}
-                  style={{ fontSize: '12px', color: '#92400e', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline', fontFamily: 'inherit' }}>
-                  {resendLoading ? 'Envoi…' : 'Renvoyer le lien de vérification'}
-                </button>
-              )}
-            </div>
-          )}
-
           {/* Form */}
           <form onSubmit={handlePasswordLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div>
@@ -400,7 +371,7 @@ export default function Login() {
               <input
                 type="email" placeholder="votre@email.com"
                 value={email}
-                onChange={e => { setEmail(e.target.value); if (error) setError(''); setEmailNotVerified(false) }}
+                onChange={e => { setEmail(e.target.value); if (error) setError('') }}
                 onFocus={() => setFocusedField('email')}
                 onBlur={() => setFocusedField('')}
                 required disabled={isLoading}

@@ -1,7 +1,8 @@
-import { useState, FormEvent } from 'react'
+import { useState, FormEvent, useRef, KeyboardEvent, ClipboardEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AlertCircle, CheckCircle, ArrowRight, UserPlus } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import { apiClient } from '../services/api.service'
 import GoogleSignInButton from '../components/auth/GoogleSignInButton'
 import { celebrateBig } from '../utils/celebrate'
 import { BailioLogo } from '../components/BailioLogo'
@@ -70,17 +71,183 @@ function Sep() {
   )
 }
 
+/* ─── VerifyCodeScreen ───────────────────────────────────────────────────── */
+function VerifyCodeScreen({ email, onBack }: { email: string; onBack: () => void }) {
+  const navigate = useNavigate()
+  const [digits, setDigits] = useState(['', '', '', '', '', ''])
+  const [codeError, setCodeError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [resendLoading, setResendLoading] = useState(false)
+  const [resendDone, setResendDone] = useState(false)
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+
+  const handleDigit = (index: number, value: string) => {
+    const char = value.replace(/\D/g, '').slice(-1)
+    const next = [...digits]
+    next[index] = char
+    setDigits(next)
+    setCodeError('')
+    if (char && index < 5) inputRefs.current[index + 1]?.focus()
+  }
+
+  const handleKey = (index: number, e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !digits[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus()
+    }
+  }
+
+  const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault()
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
+    const next = [...digits]
+    for (let i = 0; i < pasted.length; i++) next[i] = pasted[i]
+    setDigits(next)
+    inputRefs.current[Math.min(pasted.length, 5)]?.focus()
+  }
+
+  const handleVerify = async () => {
+    const code = digits.join('')
+    if (code.length !== 6) { setCodeError('Entrez les 6 chiffres du code'); return }
+    setLoading(true)
+    setCodeError('')
+    try {
+      await apiClient.post('/auth/verify-email-code', { email, code })
+      toast.success('Email vérifié ! Bienvenue sur Bailio.')
+      navigate('/login', { replace: true })
+    } catch (err: unknown) {
+      const msg = err && typeof err === 'object' && 'response' in err
+        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message ?? 'Code invalide'
+        : 'Code invalide'
+      setCodeError(msg)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleResend = async () => {
+    setResendLoading(true)
+    try {
+      await apiClient.post('/auth/resend-verification-public', { email })
+      setResendDone(true)
+      toast.success('Nouveau code envoyé !')
+    } catch { toast.error('Erreur lors du renvoi.') }
+    finally { setResendLoading(false) }
+  }
+
+  return (
+    <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafaf8', padding: '24px', ...font }}>
+      <div style={{
+        background: '#ffffff', border: '1px solid #e4e1db', borderRadius: '20px',
+        padding: '48px 40px', maxWidth: '440px', width: '100%', textAlign: 'center',
+        boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 8px 24px rgba(13,12,10,0.07)',
+      }}>
+        {/* Icon */}
+        <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#fdf5ec', border: '1px solid #f3c99a', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 28px' }}>
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <path d="M4 8h24v16a2 2 0 01-2 2H6a2 2 0 01-2-2V8z" stroke="#c4976a" strokeWidth="1.8" fill="none" strokeLinejoin="round" />
+            <path d="M4 8l12 10L28 8" stroke="#c4976a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+
+        <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#9e9b96', marginBottom: '12px' }}>
+          Vérification requise
+        </div>
+        <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '32px', color: '#0d0c0a', margin: '0 0 12px', lineHeight: 1.2 }}>
+          Vérifiez votre email
+        </h1>
+        <p style={{ fontSize: '14px', color: '#5a5754', lineHeight: 1.7, margin: '0 0 6px' }}>
+          Un code à 6 chiffres a été envoyé à
+        </p>
+        <p style={{ fontSize: '14px', fontWeight: 600, color: '#1a1a2e', margin: '0 0 28px', wordBreak: 'break-all' }}>
+          {email}
+        </p>
+
+        {/* Code boxes */}
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '20px' }}>
+          {digits.map((d, i) => (
+            <input
+              key={i}
+              ref={el => { inputRefs.current[i] = el }}
+              type="text"
+              inputMode="numeric"
+              maxLength={1}
+              value={d}
+              onChange={e => handleDigit(i, e.target.value)}
+              onKeyDown={e => handleKey(i, e)}
+              onPaste={handlePaste}
+              style={{
+                width: '48px', height: '56px', textAlign: 'center',
+                fontSize: '24px', fontWeight: 700, color: '#0d0c0a',
+                background: '#f8f7f4',
+                border: `2px solid ${codeError ? '#fca5a5' : d ? '#1a1a2e' : '#e4e1db'}`,
+                borderRadius: '10px', outline: 'none',
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+                transition: 'border-color 0.15s',
+              }}
+              onFocus={e => { e.currentTarget.style.borderColor = '#1a1a2e' }}
+              onBlur={e => { e.currentTarget.style.borderColor = codeError ? '#fca5a5' : d ? '#1a1a2e' : '#e4e1db' }}
+            />
+          ))}
+        </div>
+
+        {codeError && (
+          <p style={{ fontSize: '13px', color: '#9b1c1c', margin: '0 0 16px' }}>{codeError}</p>
+        )}
+
+        <button
+          onClick={handleVerify}
+          disabled={loading}
+          style={{
+            width: '100%', background: loading ? '#5a5754' : '#1a1a2e', color: '#fff', border: 'none',
+            borderRadius: '8px', padding: '14px 32px',
+            ...font, fontWeight: 600, fontSize: '15px',
+            cursor: loading ? 'not-allowed' : 'pointer', marginBottom: '20px', transition: 'background 0.15s',
+          }}
+          onMouseEnter={e => { if (!loading) e.currentTarget.style.background = '#2a2a4a' }}
+          onMouseLeave={e => { if (!loading) e.currentTarget.style.background = '#1a1a2e' }}
+        >
+          {loading ? 'Vérification…' : 'Confirmer le code'}
+        </button>
+
+        <p style={{ fontSize: '13px', color: '#9e9b96', margin: '0 0 8px' }}>
+          Code non reçu ?{' '}
+          {resendDone ? (
+            <span style={{ color: '#1b5e3b', fontWeight: 500 }}>Envoyé !</span>
+          ) : (
+            <button
+              onClick={handleResend}
+              disabled={resendLoading}
+              style={{ background: 'none', border: 'none', color: '#c4976a', fontWeight: 500, cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontFamily: 'inherit' }}
+            >
+              {resendLoading ? 'Envoi…' : 'Renvoyer le code'}
+            </button>
+          )}
+        </p>
+        <p style={{ fontSize: '13px', color: '#9e9b96' }}>
+          Mauvaise adresse ?{' '}
+          <button
+            onClick={onBack}
+            style={{ background: 'none', border: 'none', color: '#c4976a', fontWeight: 500, cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontFamily: 'inherit' }}
+          >
+            Modifier l'email
+          </button>
+        </p>
+      </div>
+    </div>
+  )
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    Page Register — 3 écrans
-   1. welcome    → Landing: Google / Apple / "Créer un compte avec un email"
-   2. form       → Formulaire complet + tagline
-   3. email_sent → "Email de confirmation envoyé"
+   1. welcome     → Landing: Google / Apple / "Créer un compte avec un email"
+   2. form        → Formulaire complet + tagline
+   3. verify_code → Saisie du code à 6 chiffres
 ═══════════════════════════════════════════════════════════════════════════ */
 export default function Register() {
   const navigate = useNavigate()
   const { register, googleLogin, isLoading } = useAuth()
 
-  type Screen = 'welcome' | 'form' | 'email_sent'
+  type Screen = 'welcome' | 'form' | 'verify_code'
   const [screen, setScreen] = useState<Screen>('welcome')
 
   const [formData, setFormData] = useState({
@@ -132,7 +299,7 @@ export default function Register() {
       })
       celebrateBig()
       setRegisteredEmail(formData.email)
-      setScreen('email_sent')
+      setScreen('verify_code')
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Échec de l\'inscription. Veuillez réessayer.'
       setError(msg)
@@ -157,68 +324,9 @@ export default function Register() {
 
   const handleApple = () => toast('Connexion Apple bientôt disponible', { icon: '🍎' })
 
-  /* ── Écran confirmation email ─────────────────────────────────────────── */
-  if (screen === 'email_sent') {
-    return (
-      <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafaf8', padding: '24px', ...font }}>
-        <div style={{
-          background: '#ffffff', border: '1px solid #e4e1db', borderRadius: '20px',
-          padding: '48px 40px', maxWidth: '460px', width: '100%', textAlign: 'center',
-          boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 8px 24px rgba(13,12,10,0.07)',
-        }}>
-          {/* Icon */}
-          <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#fdf5ec', border: '1px solid #f3c99a', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 28px' }}>
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <path d="M4 8h24v16a2 2 0 01-2 2H6a2 2 0 01-2-2V8z" stroke="#c4976a" strokeWidth="1.8" fill="none" strokeLinejoin="round" />
-              <path d="M4 8l12 10L28 8" stroke="#c4976a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-
-          <div style={{ fontSize: '10px', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#9e9b96', marginBottom: '12px' }}>
-            Vérification requise
-          </div>
-          <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '34px', color: '#0d0c0a', margin: '0 0 14px', lineHeight: 1.2 }}>
-            Email de confirmation envoyé
-          </h1>
-          <p style={{ fontSize: '15px', color: '#5a5754', lineHeight: 1.7, margin: '0 0 8px' }}>
-            Un lien de vérification a été envoyé à
-          </p>
-          <p style={{ fontSize: '15px', fontWeight: 600, color: '#1a1a2e', margin: '0 0 16px', wordBreak: 'break-all' }}>
-            {registeredEmail}
-          </p>
-          <p style={{ fontSize: '13px', color: '#9e9b96', lineHeight: 1.6, margin: '0 0 8px' }}>
-            Cliquez sur le lien dans l'email pour activer votre compte.
-          </p>
-          <p style={{ fontSize: '13px', color: '#9e9b96', lineHeight: 1.6, margin: '0 0 32px' }}>
-            Vérifiez aussi vos <strong>spams</strong> si vous ne le trouvez pas.
-          </p>
-
-          <button
-            onClick={() => navigate('/login')}
-            style={{
-              width: '100%', background: '#1a1a2e', color: '#fff', border: 'none',
-              borderRadius: '8px', padding: '13px 32px',
-              ...font, fontWeight: 600, fontSize: '14px',
-              cursor: 'pointer', marginBottom: '16px', transition: 'background 0.15s',
-            }}
-            onMouseEnter={e => (e.currentTarget.style.background = '#2a2a4a')}
-            onMouseLeave={e => (e.currentTarget.style.background = '#1a1a2e')}
-          >
-            Aller à la connexion
-          </button>
-
-          <p style={{ fontSize: '13px', color: '#9e9b96' }}>
-            Email non reçu ?{' '}
-            <button
-              onClick={() => { setScreen('form'); setRegisteredEmail('') }}
-              style={{ background: 'none', border: 'none', color: '#c4976a', fontWeight: 500, cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontFamily: 'inherit' }}
-            >
-              Saisir à nouveau l'email
-            </button>
-          </p>
-        </div>
-      </div>
-    )
+  /* ── Écran saisie du code ─────────────────────────────────────────────── */
+  if (screen === 'verify_code') {
+    return <VerifyCodeScreen email={registeredEmail} onBack={() => { setScreen('form'); setRegisteredEmail('') }} />
   }
 
   /* ── Écran d'accueil ──────────────────────────────────────────────────

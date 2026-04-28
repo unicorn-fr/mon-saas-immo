@@ -1,5 +1,5 @@
 /**
- * Email templates — ImmoParticuliers
+ * Email templates — Bailio
  * Design cohérent avec le DA "Maison" (Cormorant Garamond + DM Sans, #1a1a2e, #c4976a)
  */
 
@@ -9,7 +9,7 @@ const BASE = (content: string) => `
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ImmoParticuliers</title>
+  <title>Bailio</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -34,13 +34,13 @@ const BASE = (content: string) => `
 <body>
   <div class="wrapper">
     <div class="header">
-      <div class="header-logo">Immo<span>Particuliers</span></div>
+      <div class="header-logo">Bai<span>lio</span></div>
     </div>
     <div class="body">
       ${content}
     </div>
     <div class="footer">
-      <p>ImmoParticuliers — Plateforme de gestion locative</p>
+      <p>Bailio — Plateforme de gestion locative</p>
       <p style="margin-top:6px;">Vous recevez cet email car vous avez un compte sur notre plateforme.</p>
     </div>
   </div>
@@ -50,25 +50,20 @@ const BASE = (content: string) => `
 
 export const emailVerificationTemplate = (params: {
   firstName: string
-  verifyUrl: string
+  code: string
 }) => ({
-  subject: 'Vérifiez votre adresse email — ImmoParticuliers',
+  subject: 'Votre code de vérification — Bailio',
   html: BASE(`
     <div class="overline">Vérification du compte</div>
-    <div class="title">Bonjour ${params.firstName},<br>confirmez votre email</div>
+    <div class="title">Bonjour ${params.firstName},<br>voici votre code</div>
     <p class="text">
-      Merci de vous être inscrit sur ImmoParticuliers. Pour activer votre compte et accéder à toutes les fonctionnalités, cliquez sur le bouton ci-dessous.
+      Merci de vous être inscrit sur Bailio. Entrez ce code sur le site pour activer votre compte.
     </p>
-    <div style="text-align:center;">
-      <a href="${params.verifyUrl}" class="btn">Vérifier mon adresse email</a>
+    <div class="code-block">
+      <div class="code">${params.code}</div>
     </div>
-    <hr class="divider" />
-    <p class="text" style="font-size:12px;">
-      Ou copiez ce lien dans votre navigateur :<br/>
-      <a href="${params.verifyUrl}" class="link">${params.verifyUrl}</a>
-    </p>
     <div class="warning">
-      Ce lien expire dans <strong>24 heures</strong>. Si vous n'avez pas créé de compte, ignorez cet email.
+      Ce code expire dans <strong>15 minutes</strong>. Si vous n'avez pas créé de compte, ignorez cet email.
     </div>
   `),
 })
@@ -77,7 +72,7 @@ export const passwordResetTemplate = (params: {
   firstName: string
   resetUrl: string
 }) => ({
-  subject: 'Réinitialisation de votre mot de passe — ImmoParticuliers',
+  subject: 'Réinitialisation de votre mot de passe — Bailio',
   html: BASE(`
     <div class="overline">Sécurité du compte</div>
     <div class="title">Réinitialiser votre mot de passe</div>
@@ -102,7 +97,7 @@ export const phoneOtpTemplate = (params: {
   firstName: string
   code: string
 }) => ({
-  subject: 'Votre code de vérification — ImmoParticuliers',
+  subject: 'Votre code de vérification — Bailio',
   html: BASE(`
     <div class="overline">Vérification du téléphone</div>
     <div class="title">Votre code de vérification</div>
@@ -119,7 +114,7 @@ export const phoneOtpTemplate = (params: {
 })
 
 export const welcomeTemplate = (params: { firstName: string; loginUrl: string }) => ({
-  subject: 'Bienvenue sur ImmoParticuliers !',
+  subject: 'Bienvenue sur Bailio !',
   html: BASE(`
     <div class="overline">Compte activé</div>
     <div class="title">Bienvenue, ${params.firstName} !</div>
@@ -133,12 +128,12 @@ export const welcomeTemplate = (params: { firstName: string; loginUrl: string })
 })
 
 export const magicLinkTemplate = (params: { magicUrl: string; expiresMinutes?: number }) => ({
-  subject: 'Votre lien de connexion — ImmoParticuliers',
+  subject: 'Votre lien de connexion — Bailio',
   html: BASE(`
     <div class="overline">Connexion sécurisée</div>
     <div class="title">Votre lien de connexion</div>
     <p class="text">
-      Cliquez sur le bouton ci-dessous pour vous connecter instantanément à votre espace ImmoParticuliers. Aucun mot de passe requis.
+      Cliquez sur le bouton ci-dessous pour vous connecter instantanément à votre espace Bailio. Aucun mot de passe requis.
     </p>
     <div style="text-align:center;">
       <a href="${params.magicUrl}" class="btn">Se connecter maintenant</a>
