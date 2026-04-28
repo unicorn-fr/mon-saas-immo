@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useSidebarStore } from '../../store/sidebarStore'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { BailioLogo } from '../BailioLogo'
 import { BAI } from '../../constants/bailio-tokens'
 import { useMessages } from '../../hooks/useMessages'
@@ -50,7 +50,6 @@ export const Header = () => {
   const location = useLocation()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showMobilePublicMenu, setShowMobilePublicMenu] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
   const { toggle: toggleSidebar } = useSidebarStore()
   const { unreadCount } = useMessages()
   usePageTitle(user?.role)
@@ -61,12 +60,6 @@ export const Header = () => {
   const tenantColor = '#1b5e3b'
   const threadColor = user?.role === 'OWNER' ? ownerColor : tenantColor
 
-  useEffect(() => {
-    if (hasSidebar) return // bubble style doesn't need scroll detection
-    const onScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [hasSidebar])
 
   const handleLogout = () => {
     logout()
@@ -263,10 +256,10 @@ export const Header = () => {
 
   // ── PUBLIC HEADER ──────────────────────────────────────────────────────────
   const publicHeaderStyle: React.CSSProperties = {
-    background: scrolled ? BAI.bgSurface : 'transparent',
-    borderBottom: scrolled ? `1px solid ${BAI.border}` : '1px solid transparent',
-    boxShadow: scrolled ? BAI.shadowMd : 'none',
-    transition: 'background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease',
+    background: 'rgba(255,255,255,0.78)',
+    backdropFilter: 'blur(18px)',
+    WebkitBackdropFilter: 'blur(18px)',
+    borderBottom: `1px solid ${BAI.border}`,
   }
 
   return (
@@ -282,11 +275,11 @@ export const Header = () => {
               fontSize: '26px',
               fontWeight: 700,
               fontStyle: 'italic',
-              color: BAI.night,
-              letterSpacing: '-0.02em',
+              color: '#1a3270',
+              letterSpacing: '-0.01em',
               lineHeight: 1,
             }}>
-              Bailio
+              Bailio<span style={{ color: BAI.caramel }}>.</span>
             </span>
           </Link>
 
