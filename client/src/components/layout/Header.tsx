@@ -265,7 +265,7 @@ export const Header = () => {
       borderBottom: `1px solid ${BAI.border}`,
     }}>
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 52, position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64, position: 'relative' }}>
 
           {/* Logo */}
           <Link to="/" className="hover:opacity-80 transition-opacity flex-shrink-0 flex items-center gap-2">
@@ -482,7 +482,7 @@ export const Header = () => {
         )}
       </div>
     </header>
-    {/* Spacer — pousse le contenu sous le header fixe, crée le liseré blanc */}
+    {/* Spacer — exactement la hauteur du header, zéro blanc visible */}
     <div aria-hidden style={{ height: 64, flexShrink: 0 }} />
     </>
   )
