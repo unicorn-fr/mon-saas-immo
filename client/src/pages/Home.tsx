@@ -489,6 +489,137 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── PAGES OVERVIEW ───────────────────────────────────────────── */}
+      <section style={{ padding: 'clamp(72px,12vh,130px) 0', background: T.bgMuted }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
+          <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.caramel, margin: '0 0 14px' }}>
+            Explorer Bailio
+          </p>
+          <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(32px,5vw,52px)', lineHeight: 1.05, color: T.ink, margin: '0 0 16px' }}>
+            Tout ce que tu peux <em style={{ color: T.caramel }}>faire ici.</em>
+          </h2>
+          <p style={{ fontSize: 16, color: T.inkMid, lineHeight: 1.65, maxWidth: '52ch', margin: '0 0 52px' }}>
+            De la recherche de logement à la signature du bail, en passant par la tarification et nos valeurs — tout est là.
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px,100%),1fr))', gap: 20 }}>
+            {/* Chercher */}
+            <Link to="/search" style={{ textDecoration: 'none', display: 'block' }}>
+              <div
+                style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 16, padding: 28, height: '100%', boxSizing: 'border-box', transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', position: 'relative', overflow: 'hidden' }}
+                onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-3px)'; el.style.boxShadow = '0 8px 24px rgba(13,12,10,0.1)'; el.style.borderColor = '#e8ccaa' }}
+                onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = 'none'; el.style.borderColor = T.border }}
+              >
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: '#edf7f2', color: '#1b5e3b', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="22" height="22"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                </div>
+                <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#1b5e3b', margin: '0 0 6px' }}>Chercher</p>
+                <h3 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: T.ink, margin: '0 0 10px', lineHeight: 1.2 }}>Trouver un logement.</h3>
+                <p style={{ fontSize: 14, color: T.inkMid, lineHeight: 1.65, margin: '0 0 20px' }}>Des annonces entre particuliers, une recherche classique ou en langage naturel propulsée par l'IA. Filtre, carte, infini.</p>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 600, color: '#1b5e3b', fontFamily: T.fontBody }}>
+                  Lancer la recherche <ArrowRight size={14} />
+                </span>
+              </div>
+            </Link>
+
+            {/* Propriétaires */}
+            <Link to="/proprietaires" style={{ textDecoration: 'none', display: 'block' }}>
+              <div
+                style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 16, padding: 28, height: '100%', boxSizing: 'border-box', transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', position: 'relative', overflow: 'hidden' }}
+                onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-3px)'; el.style.boxShadow = '0 8px 24px rgba(13,12,10,0.1)'; el.style.borderColor = '#b8ccf0' }}
+                onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = 'none'; el.style.borderColor = T.border }}
+              >
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: '#eaf0fb', color: '#1a3270', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="22" height="22"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </div>
+                <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#1a3270', margin: '0 0 6px' }}>Propriétaires</p>
+                <h3 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: T.ink, margin: '0 0 10px', lineHeight: 1.2 }}>Louer sans agence.</h3>
+                <p style={{ fontSize: 14, color: T.inkMid, lineHeight: 1.65, margin: '0 0 20px' }}>Annonce en 8 min, candidatures vérifiées et scorées, bail signé électroniquement, loyers encaissés automatiquement. 1 % du loyer, rien d'autre.</p>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 600, color: '#1a3270', fontFamily: T.fontBody }}>
+                  En savoir plus <ArrowRight size={14} />
+                </span>
+              </div>
+            </Link>
+
+            {/* Locataires */}
+            <Link to="/locataires" style={{ textDecoration: 'none', display: 'block' }}>
+              <div
+                style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 16, padding: 28, height: '100%', boxSizing: 'border-box', transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', position: 'relative', overflow: 'hidden' }}
+                onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-3px)'; el.style.boxShadow = '0 8px 24px rgba(13,12,10,0.1)'; el.style.borderColor = '#9fd4ba' }}
+                onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = 'none'; el.style.borderColor = T.border }}
+              >
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: '#edf7f2', color: '#1b5e3b', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="22" height="22"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#1b5e3b', margin: '0 0 6px' }}>Locataires</p>
+                <h3 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: T.ink, margin: '0 0 10px', lineHeight: 1.2 }}>Louer plus vite.</h3>
+                <p style={{ fontSize: 14, color: T.inkMid, lineHeight: 1.65, margin: '0 0 20px' }}>Dossier numérique constitué une fois pour toutes, candidature en un clic, messagerie directe, bail signé depuis ton téléphone. 100 % gratuit, pour toujours.</p>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 600, color: '#1b5e3b', fontFamily: T.fontBody }}>
+                  Découvrir <ArrowRight size={14} />
+                </span>
+              </div>
+            </Link>
+
+            {/* Tarifs */}
+            <Link to="/pricing" style={{ textDecoration: 'none', display: 'block' }}>
+              <div
+                style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 16, padding: 28, height: '100%', boxSizing: 'border-box', transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', position: 'relative', overflow: 'hidden' }}
+                onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-3px)'; el.style.boxShadow = '0 8px 24px rgba(13,12,10,0.1)'; el.style.borderColor = '#e8ccaa' }}
+                onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = 'none'; el.style.borderColor = T.border }}
+              >
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: '#fdf5ec', color: T.caramel, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="22" height="22"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                </div>
+                <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.caramel, margin: '0 0 6px' }}>Tarifs</p>
+                <h3 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: T.ink, margin: '0 0 10px', lineHeight: 1.2 }}>Un prix juste.</h3>
+                <p style={{ fontSize: 14, color: T.inkMid, lineHeight: 1.65, margin: '0 0 20px' }}>1 % du loyer mensuel pour le propriétaire, uniquement après signature du bail. Locataire : 0 € — toujours. Comparatif avec les agences inclus.</p>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 600, color: T.caramel, fontFamily: T.fontBody }}>
+                  Voir les tarifs <ArrowRight size={14} />
+                </span>
+              </div>
+            </Link>
+
+            {/* À propos */}
+            <Link to="/a-propos" style={{ textDecoration: 'none', display: 'block' }}>
+              <div
+                style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 16, padding: 28, height: '100%', boxSizing: 'border-box', transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', position: 'relative', overflow: 'hidden' }}
+                onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-3px)'; el.style.boxShadow = '0 8px 24px rgba(13,12,10,0.1)'; el.style.borderColor = '#ccc9c3' }}
+                onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = 'none'; el.style.borderColor = T.border }}
+              >
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: T.bgMuted, color: T.inkMid, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="22" height="22"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                </div>
+                <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.inkMid, margin: '0 0 6px' }}>À propos</p>
+                <h3 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: T.ink, margin: '0 0 10px', lineHeight: 1.2 }}>Pourquoi Bailio.</h3>
+                <p style={{ fontSize: 14, color: T.inkMid, lineHeight: 1.65, margin: '0 0 20px' }}>Tutoiement, aucune commission cachée, données hébergées en France. Nos principes, notre mission, ce qui nous distingue des agences.</p>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 600, color: T.inkMid, fontFamily: T.fontBody }}>
+                  Notre histoire <ArrowRight size={14} />
+                </span>
+              </div>
+            </Link>
+
+            {/* FAQ — bonus */}
+            <Link to="/faq" style={{ textDecoration: 'none', display: 'block' }}>
+              <div
+                style={{ background: T.night, border: `1px solid rgba(255,255,255,0.08)`, borderRadius: 16, padding: 28, height: '100%', boxSizing: 'border-box', transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', position: 'relative', overflow: 'hidden' }}
+                onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-3px)'; el.style.boxShadow = '0 8px 24px rgba(13,12,10,0.2)' }}
+                onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = 'none' }}
+              >
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(196,151,106,0.15)', color: T.caramel, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="22" height="22"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+                </div>
+                <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.caramel, margin: '0 0 6px' }}>FAQ</p>
+                <h3 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: '#fff', margin: '0 0 10px', lineHeight: 1.2 }}>Les vraies réponses.</h3>
+                <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.60)', lineHeight: 1.65, margin: '0 0 20px' }}>Sécurité juridique, tarifs, fonctionnement — les questions les plus posées. On répond en clair, sans jargon.</p>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 600, color: T.caramel, fontFamily: T.fontBody }}>
+                  Lire la FAQ <ArrowRight size={14} />
+                </span>
+              </div>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ── TESTIMONIALS ─────────────────────────────────────────────── */}
       <section style={{ padding: 'clamp(72px,12vh,130px) 0', background: T.bgMuted }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
