@@ -424,8 +424,8 @@ class AuthController {
       if (!email || !code) {
         return res.status(400).json({ success: false, message: 'Email et code requis' })
       }
-      await authService.verifyEmailWithCode(email.toLowerCase().trim(), code.trim())
-      return res.status(200).json({ success: true, message: 'Email vérifié avec succès' })
+      const result = await authService.verifyEmailWithCodeAndLogin(email.toLowerCase().trim(), code.trim())
+      return res.status(200).json({ success: true, message: 'Email vérifié avec succès', data: result })
     } catch (error) {
       if (error instanceof Error) {
         return res.status(400).json({ success: false, message: error.message })

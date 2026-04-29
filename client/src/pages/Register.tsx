@@ -2,11 +2,19 @@ import { useState, FormEvent, useRef, KeyboardEvent, ClipboardEvent } from 'reac
 import { Link, useNavigate } from 'react-router-dom'
 import { AlertCircle, CheckCircle, ArrowRight, UserPlus } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import { useAuthStore } from '../store/authStore'
 import { apiClient } from '../services/api.service'
 import { celebrateBig } from '../utils/celebrate'
 import { BailioLogo } from '../components/BailioLogo'
 import GoogleSignInButton from '../components/auth/GoogleSignInButton'
 import toast from 'react-hot-toast'
+
+const ROLE_PATHS: Record<string, string> = {
+  OWNER: '/dashboard/owner',
+  TENANT: '/dashboard/tenant',
+  ADMIN: '/admin/dashboard',
+  SUPER_ADMIN: '/super-admin/dashboard',
+}
 
 /* ─── Tokens ─────────────────────────────────────────────────────────────── */
 const font: React.CSSProperties = { fontFamily: "'DM Sans', system-ui, sans-serif" }
@@ -38,6 +46,7 @@ function inp(focused: boolean): React.CSSProperties {
 /* ─── VerifyCodeScreen ───────────────────────────────────────────────────── */
 function VerifyCodeScreen({ email, onBack }: { email: string; onBack: () => void }) {
   const navigate = useNavigate()
+  const { setUser, setTokens } = useAuthStore()
   const [digits, setDigits] = useState(['', '', '', '', '', ''])
   const [codeError, setCodeError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -75,9 +84,13 @@ function VerifyCodeScreen({ email, onBack }: { email: string; onBack: () => void
     setLoading(true)
     setCodeError('')
     try {
-      await apiClient.post('/auth/verify-email-code', { email, code })
+      const res = await apiClient.post('/auth/verify-email-code', { email, code })
+      const { user, accessToken, refreshToken } = res.data.data
+      setTokens(accessToken, refreshToken)
+      setUser(user)
+      celebrateBig()
       toast.success('Email vérifié ! Bienvenue sur Bailio.')
-      navigate('/login', { replace: true })
+      navigate(ROLE_PATHS[user.role] ?? '/', { replace: true })
     } catch (err: unknown) {
       const msg = err && typeof err === 'object' && 'response' in err
         ? (err as { response?: { data?: { message?: string } } }).response?.data?.message ?? 'Code invalide'

@@ -84,19 +84,10 @@ export const useAuthStore = create<AuthStore>()(
         set({ isLoading: true, error: null })
 
         try {
-          const response = await authService.register(data)
-
-          // Store tokens in memory + localStorage
-          setApiTokens(response.accessToken, response.refreshToken)
-
-          set({
-            user: response.user,
-            accessToken: response.accessToken,
-            refreshToken: response.refreshToken,
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-          })
+          // Register only — tokens are NOT stored here.
+          // Authentication happens after email verification (OTP).
+          await authService.register(data)
+          set({ isLoading: false, error: null })
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : 'Registration failed'

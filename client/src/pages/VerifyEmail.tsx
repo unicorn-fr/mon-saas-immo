@@ -3,6 +3,7 @@ import { useSearchParams, useLocation, useNavigate, Link } from 'react-router-do
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react'
 import { authService } from '../services/auth.service'
 import { apiClient } from '../services/api.service'
+import { useAuthStore } from '../store/authStore'
 import { BailioLogo } from '../components/BailioLogo'
 import { BAI } from '../constants/bailio-tokens'
 import toast from 'react-hot-toast'
@@ -11,8 +12,18 @@ const font: React.CSSProperties = { fontFamily: "'DM Sans', system-ui, sans-seri
 const fontDisplay: React.CSSProperties = { fontFamily: "'Cormorant Garamond', Georgia, serif" }
 
 /* ─── Code screen (6 digit boxes) ──────────────────────────────────────── */
-function CodeEntry({ email }: { email: string }) {
+const ROLE_PATHS: Record<string, string> = {
+  OWNER: '/dashboard/owner',
+  TENANT: '/dashboard/tenant',
+  ADMIN: '/admin/dashboard',
+  SUPER_ADMIN: '/super-admin/dashboard',
+}
+
+function CodeEntry({ email: initialEmail }: { email: string }) {
   const navigate = useNavigate()
+  const { setUser, setTokens } = useAuthStore()
+  const [email, setEmail] = useState(initialEmail)
+  const [editingEmail, setEditingEmail] = useState(!initialEmail)
   const [digits, setDigits] = useState(['', '', '', '', '', ''])
   const [codeError, setCodeError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -50,9 +61,12 @@ function CodeEntry({ email }: { email: string }) {
     setLoading(true)
     setCodeError('')
     try {
-      await apiClient.post('/auth/verify-email-code', { email, code })
+      const res = await apiClient.post('/auth/verify-email-code', { email, code })
+      const { user, accessToken, refreshToken } = res.data.data
+      setTokens(accessToken, refreshToken)
+      setUser(user)
       toast.success('Email vérifié ! Bienvenue sur Bailio.')
-      navigate('/login', { replace: true })
+      navigate(ROLE_PATHS[user.role] ?? '/', { replace: true })
     } catch (err: unknown) {
       const msg = err && typeof err === 'object' && 'response' in err
         ? (err as { response?: { data?: { message?: string } } }).response?.data?.message ?? 'Code invalide'
@@ -102,15 +116,56 @@ function CodeEntry({ email }: { email: string }) {
         <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '30px', color: BAI.ink, margin: '0 0 12px', lineHeight: 1.2 }}>
           Vérifiez votre email
         </h1>
-        <p style={{ fontSize: '14px', color: BAI.inkMid, lineHeight: 1.7, margin: '0 0 6px' }}>
-          Un code à 6 chiffres a été envoyé à
-        </p>
-        <p style={{ fontSize: '14px', fontWeight: 600, color: BAI.night, margin: '0 0 28px', wordBreak: 'break-all' }}>
-          {email}
-        </p>
+        {editingEmail ? (
+          <div style={{ marginBottom: 24 }}>
+            <p style={{ fontSize: '14px', color: BAI.inkMid, lineHeight: 1.7, margin: '0 0 10px' }}>
+              Entrez votre adresse email pour recevoir le code
+            </p>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="votre@email.com"
+              style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: `1px solid ${BAI.border}`, fontFamily: BAI.fontBody, fontSize: 14, color: BAI.ink, background: '#f8f7f4', outline: 'none', boxSizing: 'border-box', marginBottom: 8 }}
+              autoFocus
+            />
+            <button
+              onClick={async () => {
+                if (!email.trim()) return
+                setResendLoading(true)
+                try {
+                  await apiClient.post('/auth/resend-verification-public', { email: email.trim() })
+                  setEditingEmail(false)
+                  setResendDone(false)
+                  toast.success('Code envoyé à ' + email.trim())
+                } catch { toast.error('Email introuvable ou erreur.') }
+                finally { setResendLoading(false) }
+              }}
+              disabled={resendLoading || !email.trim()}
+              style={{ width: '100%', background: BAI.night, color: '#fff', border: 'none', borderRadius: 8, padding: '12px', fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 14, cursor: resendLoading ? 'not-allowed' : 'pointer' }}
+            >
+              {resendLoading ? 'Envoi…' : 'Envoyer le code'}
+            </button>
+          </div>
+        ) : (
+          <>
+            <p style={{ fontSize: '14px', color: BAI.inkMid, lineHeight: 1.7, margin: '0 0 6px' }}>
+              Un code à 6 chiffres a été envoyé à
+            </p>
+            <p style={{ fontSize: '14px', fontWeight: 600, color: BAI.night, margin: '0 0 4px', wordBreak: 'break-all' }}>
+              {email}
+            </p>
+            <button
+              onClick={() => setEditingEmail(true)}
+              style={{ background: 'none', border: 'none', color: BAI.caramel, fontWeight: 500, cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontFamily: 'inherit', marginBottom: 20 }}
+            >
+              Mauvaise adresse ? Modifier
+            </button>
+          </>
+        )}
 
-        {/* Code boxes */}
-        <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '20px' }}>
+        {/* Code boxes — masqués si on édite l'email */}
+        {!editingEmail && <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '20px' }}>
           {digits.map((d, i) => (
             <input
               key={i}
@@ -135,28 +190,30 @@ function CodeEntry({ email }: { email: string }) {
               onBlur={e => { e.currentTarget.style.borderColor = codeError ? '#fca5a5' : d ? BAI.night : BAI.border }}
             />
           ))}
-        </div>
+        </div>}
 
-        {codeError && (
+        {!editingEmail && codeError && (
           <p style={{ fontSize: '13px', color: BAI.error, margin: '0 0 16px' }}>{codeError}</p>
         )}
 
-        <button
-          onClick={handleVerify}
-          disabled={loading}
-          style={{
-            width: '100%', background: loading ? BAI.inkMid : BAI.night, color: '#fff', border: 'none',
-            borderRadius: '8px', padding: '14px 32px',
-            ...font, fontWeight: 600, fontSize: '15px',
-            cursor: loading ? 'not-allowed' : 'pointer', marginBottom: '20px', transition: 'background 0.15s',
-          }}
-          onMouseEnter={e => { if (!loading) e.currentTarget.style.background = '#2a2a4a' }}
-          onMouseLeave={e => { if (!loading) e.currentTarget.style.background = BAI.night }}
-        >
-          {loading ? 'Vérification…' : 'Confirmer le code'}
-        </button>
+        {!editingEmail && (
+          <button
+            onClick={handleVerify}
+            disabled={loading}
+            style={{
+              width: '100%', background: loading ? BAI.inkMid : BAI.night, color: '#fff', border: 'none',
+              borderRadius: '8px', padding: '14px 32px',
+              ...font, fontWeight: 600, fontSize: '15px',
+              cursor: loading ? 'not-allowed' : 'pointer', marginBottom: '20px', transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => { if (!loading) e.currentTarget.style.background = '#2a2a4a' }}
+            onMouseLeave={e => { if (!loading) e.currentTarget.style.background = BAI.night }}
+          >
+            {loading ? 'Vérification…' : 'Confirmer le code'}
+          </button>
+        )}
 
-        <p style={{ fontSize: '13px', color: BAI.inkFaint, margin: '0 0 8px' }}>
+        {!editingEmail && <p style={{ fontSize: '13px', color: BAI.inkFaint, margin: '0 0 8px' }}>
           Code non reçu ?{' '}
           {resendDone ? (
             <span style={{ color: BAI.tenant, fontWeight: 500 }}>Envoyé !</span>
@@ -169,11 +226,14 @@ function CodeEntry({ email }: { email: string }) {
               {resendLoading ? 'Envoi…' : 'Renvoyer le code'}
             </button>
           )}
-        </p>
+        </p>}
         <p style={{ fontSize: '13px', color: BAI.inkFaint }}>
-          <Link to="/login" style={{ color: BAI.caramel, textDecoration: 'underline', fontWeight: 500 }}>
+          <button
+            onClick={() => { useAuthStore.getState().clearAuth(); navigate('/login', { replace: true }) }}
+            style={{ background: 'none', border: 'none', color: BAI.caramel, fontWeight: 500, cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontFamily: 'inherit' }}
+          >
             Retour à la connexion
-          </Link>
+          </button>
         </p>
       </div>
     </div>

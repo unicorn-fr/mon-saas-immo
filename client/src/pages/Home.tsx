@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import Footer from '../components/layout/Footer'
 import {
-  Search,
   ArrowRight,
   Building2,
   MapPin,
@@ -143,9 +142,7 @@ const TENANT_BENEFITS = [
 
 export default function Home() {
   const { isAuthenticated, user } = useAuth()
-  const navigate = useNavigate()
 
-  const [searchQuery, setSearchQuery] = useState('')
   const [featuredProperties, setFeaturedProperties] = useState<Property[]>([])
   const [loadingProperties, setLoadingProperties] = useState(true)
 
@@ -164,11 +161,6 @@ export default function Home() {
       .finally(() => setLoadingProperties(false))
   }, [])
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    navigate(`/search${searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : ''}`)
-  }
-
   if (isAuthenticated && user) {
     if (user.role === 'OWNER')  return <Navigate to="/dashboard/owner"  replace />
     if (user.role === 'TENANT') return <Navigate to="/dashboard/tenant" replace />
@@ -182,7 +174,6 @@ export default function Home() {
         @keyframes cloud1 { 0%,100%{transform:translateX(0)} 50%{transform:translateX(-60px)} }
         @keyframes cloud2 { 0%,100%{transform:translateX(0)} 50%{transform:translateX(50px)} }
         @media (max-width: 768px) {
-          .hero-inner        { flex-direction: column !important; gap: 28px !important; }
           .hero-section      { padding: 32px 0 40px !important; }
           .hero-trust        { display: none !important; }
           .stats-grid        { grid-template-columns: repeat(2, 1fr) !important; gap: 16px !important; }
@@ -193,10 +184,7 @@ export default function Home() {
           .cta-grid          { flex-direction: column !important; }
           .footer-grid       { grid-template-columns: repeat(2, 1fr) !important; }
           .footer-brand      { grid-column: span 2 !important; }
-          .hero-right        { width: 100% !important; flex-shrink: 1 !important; }
           .cta-split-card    { padding: 28px 20px !important; }
-          .search-card       { padding: 14px !important; }
-          .search-accesrapide { display: none !important; }
         }
         @media (max-width: 480px) {
           .stats-grid  { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
@@ -244,9 +232,8 @@ export default function Home() {
           </g>
         </svg>
 
-        <div className="hero-inner" style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)', position: 'relative', zIndex: 3, display: 'flex', alignItems: 'center', gap: 48 }}>
-          {/* Left */}
-          <div style={{ flex: '1 1 0', minWidth: 0 }}>
+        <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)', position: 'relative', zIndex: 3 }}>
+          <div>
             {/* Badge */}
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: 'rgba(196,151,106,0.12)', border: '1px solid rgba(196,151,106,0.35)', color: T.caramel, padding: '6px 14px', borderRadius: 999, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 28 }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.caramel, animation: 'pulse-dot 2s infinite', display: 'inline-block' }} />
@@ -298,50 +285,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right — search card */}
-          <div className="hero-right" style={{ width: 380, flexShrink: 0 }}>
-            <div className="search-card" style={{ background: T.bgSurface, borderRadius: 16, padding: 28, boxShadow: '0 20px 60px rgba(13,12,10,0.28)' }}>
-              <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.caramel, marginBottom: 16 }}>
-                Rechercher un bien
-              </p>
-              <form onSubmit={handleSearch}>
-                <div className="search-row" style={{ display: 'flex', gap: 8 }}>
-                  <div style={{ flex: 1, position: 'relative' }}>
-                    <MapPin size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: T.inkFaint }} />
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                      placeholder="Paris, Lyon, Marseille…"
-                      style={{ width: '100%', paddingLeft: 34, paddingRight: 12, paddingTop: 12, paddingBottom: 12, borderRadius: 8, border: `1px solid ${T.border}`, fontFamily: T.fontBody, fontSize: 14, color: T.ink, outline: 'none', background: T.bgBase, boxSizing: 'border-box' }}
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    style={{ background: T.caramel, color: '#fff', border: 'none', borderRadius: 8, padding: '12px 16px', fontFamily: T.fontBody, fontWeight: 600, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, transition: 'all .2s' }}
-                    onMouseEnter={e => { e.currentTarget.style.background = T.caramelHover; e.currentTarget.style.transform = 'translateY(-1px)' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = T.caramel; e.currentTarget.style.transform = 'translateY(0)' }}
-                  >
-                    <Search size={14} />
-                    Chercher
-                  </button>
-                </div>
-              </form>
-              <div className="search-accesrapide" style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${T.border}` }}>
-                <p style={{ fontFamily: T.fontBody, fontSize: 12, color: T.inkFaint, marginBottom: 12 }}>Accès rapide</p>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {['Paris', 'Lyon', 'Marseille', 'Bordeaux', 'Nantes'].map(city => (
-                    <Link key={city} to={`/search?q=${city}`} style={{ padding: '5px 12px', borderRadius: 20, border: `1px solid ${T.border}`, fontFamily: T.fontBody, fontSize: 12, color: T.inkMid, textDecoration: 'none', transition: 'all .15s' }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = T.caramel; e.currentTarget.style.color = T.caramel }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.inkMid }}
-                    >
-                      {city}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 

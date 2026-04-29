@@ -321,6 +321,10 @@ class AuthService {
    * Verify email with 6-digit code
    */
   async verifyEmailWithCode(email: string, code: string): Promise<void> {
+    await this.verifyEmailWithCodeAndLogin(email, code)
+  }
+
+  async verifyEmailWithCodeAndLogin(email: string, code: string): Promise<AuthResponse> {
     const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } })
     if (!user) throw new Error('Compte introuvable')
     if (user.emailVerified) throw new Error('Email déjà vérifié')
@@ -335,15 +339,26 @@ class AuthService {
       throw new Error('Code expiré')
     }
 
-    await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: user.id },
       data: { emailVerified: true, emailVerifiedAt: new Date() },
+      select: { id: true, email: true, firstName: true, lastName: true, role: true, avatar: true, emailVerified: true },
     })
 
     await prisma.verificationToken.delete({ where: { id: record.id } })
 
     const tpl = welcomeTemplate({ firstName: user.firstName, loginUrl: `${env.FRONTEND_URL}/login` })
     await sendEmail({ to: user.email, ...tpl })
+
+    const jwtPayload: JwtPayload = { userId: updatedUser.id, email: updatedUser.email, role: updatedUser.role }
+    const accessToken = generateAccessToken(jwtPayload)
+    const refreshToken = generateRefreshToken(jwtPayload)
+
+    const expiresAt = new Date()
+    expiresAt.setDate(expiresAt.getDate() + 7)
+    await prisma.refreshToken.create({ data: { token: refreshToken, userId: updatedUser.id, expiresAt } })
+
+    return { user: updatedUser, accessToken, refreshToken }
   }
 
   /**
