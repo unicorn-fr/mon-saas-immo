@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import { apiClient } from '../services/api.service'
 import { celebrateBig } from '../utils/celebrate'
 import { BailioLogo } from '../components/BailioLogo'
+import GoogleSignInButton from '../components/auth/GoogleSignInButton'
 import toast from 'react-hot-toast'
 
 /* ─── Tokens ─────────────────────────────────────────────────────────────── */
@@ -207,7 +208,8 @@ function VerifyCodeScreen({ email, onBack }: { email: string; onBack: () => void
    3. verify_code → Saisie du code à 6 chiffres
 ═══════════════════════════════════════════════════════════════════════════ */
 export default function Register() {
-  const { register, isLoading } = useAuth()
+  const { register, googleLogin, isLoading } = useAuth()
+  const navigate = useNavigate()
 
   type Screen = 'welcome' | 'form' | 'verify_code'
   const [screen, setScreen] = useState<Screen>('welcome')
@@ -236,6 +238,19 @@ export default function Register() {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
     if (error) setError('')
+  }
+
+  const handleGoogleSuccess = async (idToken: string) => {
+    try {
+      const { user: u } = await googleLogin(idToken)
+      const paths: Record<string, string> = {
+        OWNER: '/dashboard/owner', TENANT: '/dashboard/tenant',
+        SUPER_ADMIN: '/super-admin', ADMIN: '/admin',
+      }
+      navigate(paths[u.role] ?? '/', { replace: true })
+    } catch {
+      toast.error('Inscription Google échouée.')
+    }
   }
 
   const handleSubmit = async (e: FormEvent) => {
@@ -354,6 +369,16 @@ export default function Register() {
               <p style={{ fontSize: '14px', color: '#5a5754', margin: 0 }}>
                 Rejoignez la plateforme en quelques minutes.
               </p>
+            </div>
+
+            {/* Google */}
+            <GoogleSignInButton onSuccess={handleGoogleSuccess} text="signup_with" />
+
+            {/* Séparateur */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '16px 0' }}>
+              <div style={{ flex: 1, height: 1, background: '#e4e1db' }} />
+              <span style={{ fontSize: 12, color: '#9e9b96' }}>ou</span>
+              <div style={{ flex: 1, height: 1, background: '#e4e1db' }} />
             </div>
 
             {/* Email CTA */}

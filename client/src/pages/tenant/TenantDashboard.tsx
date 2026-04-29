@@ -125,6 +125,104 @@ export default function TenantDashboard() {
     REJECTED: 'Non retenue',
   }
 
+  // ── ONBOARDING BLOQUANT — dossier incomplet et pas de bail actif ─────────
+  if (!activeContract && dossierPercent < 100) {
+    const steps = [
+      { cat: 'IDENTITE', label: 'Pièce d\'identité', icon: '🪪', done: false },
+      { cat: 'EMPLOI',   label: 'Justificatif d\'emploi', icon: '💼', done: false },
+      { cat: 'REVENUS',  label: 'Bulletins de salaire', icon: '💶', done: false },
+      { cat: 'DOMICILE', label: 'Justificatif de domicile', icon: '🏠', done: false },
+    ].map(s => ({ ...s, done: false }))
+    // marquer les catégories uploadées (on n'a pas les docs ici, on calcule via percent)
+    const coveredCats = Math.round(dossierPercent / 100 * REQUIRED_CATEGORIES.length)
+    const stepsWithDone = steps.map((s, i) => ({ ...s, done: i < coveredCats }))
+
+    return (
+      <Layout>
+        <div style={{ minHeight: '100vh', background: BAI.bgBase, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+          {/* ── Bandeau top ── */}
+          <div style={{ background: BAI.night, padding: 'clamp(40px,8vh,80px) 16px 0' }}>
+            <div style={{ maxWidth: 560, margin: '0 auto', textAlign: 'center', paddingBottom: 'clamp(40px,6vh,64px)' }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, marginBottom: 14 }}>
+                Étape obligatoire
+              </p>
+              <h1 style={{
+                fontFamily: "'Cormorant Garamond', Georgia, serif",
+                fontSize: 'clamp(28px,6vw,52px)', fontWeight: 700, fontStyle: 'italic',
+                color: '#ffffff', lineHeight: 1.1, margin: '0 0 16px',
+              }}>
+                Construis ton dossier<br />
+                <em style={{ color: BAI.caramel }}>avant de postuler.</em>
+              </h1>
+              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.65)', lineHeight: 1.65, margin: '0 0 32px', maxWidth: 420, marginLeft: 'auto', marginRight: 'auto' }}>
+                Sans dossier complet, les propriétaires ne peuvent pas évaluer ta candidature.
+                Ça prend 5 minutes — et tu n'auras à le faire qu'une seule fois.
+              </p>
+
+              {/* Barre de progression */}
+              <div style={{ background: 'rgba(255,255,255,0.10)', borderRadius: 999, height: 8, maxWidth: 360, margin: '0 auto 10px', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${dossierPercent}%`, background: BAI.caramel, borderRadius: 999, transition: 'width 0.4s' }} />
+              </div>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', margin: 0 }}>
+                {dossierPercent}% complété · {coveredCats}/{REQUIRED_CATEGORIES.length} catégories
+              </p>
+            </div>
+          </div>
+
+          {/* ── Cartes des étapes ── */}
+          <div style={{ maxWidth: 560, margin: '-24px auto 0', padding: '0 16px 48px' }}>
+            <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 24px rgba(13,12,10,0.10)' }}>
+              {stepsWithDone.map((step, i) => (
+                <div key={step.cat} style={{
+                  display: 'flex', alignItems: 'center', gap: 14, padding: '18px 20px',
+                  borderBottom: i < stepsWithDone.length - 1 ? `1px solid ${BAI.border}` : 'none',
+                }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+                    background: step.done ? BAI.tenantLight : BAI.bgMuted,
+                    border: `1px solid ${step.done ? BAI.tenantBorder : BAI.border}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 18,
+                  }}>
+                    {step.done ? <CheckCircle size={18} color={BAI.tenant} /> : step.icon}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: BAI.ink, margin: '0 0 2px' }}>{step.label}</p>
+                    <p style={{ fontSize: 12, color: step.done ? BAI.tenant : BAI.inkFaint, margin: 0 }}>
+                      {step.done ? 'Document uploadé ✓' : 'Document manquant'}
+                    </p>
+                  </div>
+                  {!step.done && (
+                    <span style={{ fontSize: 11, fontWeight: 600, color: BAI.caramel, background: '#fdf5ec', padding: '3px 10px', borderRadius: 20, border: '1px solid #f3c99a', flexShrink: 0 }}>
+                      Requis
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* CTA principal */}
+            <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <button
+                onClick={() => navigate('/dossier')}
+                style={{
+                  width: '100%', padding: '16px', borderRadius: 12,
+                  background: BAI.night, color: '#fff', border: 'none', cursor: 'pointer',
+                  fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 15, fontWeight: 600,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                }}>
+                Compléter mon dossier <ArrowRight size={16} />
+              </button>
+              <p style={{ textAlign: 'center', fontSize: 12, color: BAI.inkFaint, margin: 0 }}>
+                Tu pourras accéder au reste du tableau de bord une fois ton dossier terminé.
+              </p>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    )
+  }
+
   // ── VUE BAIL ACTIF ────────────────────────────────────────────────────────
   if (activeContract) {
     return (

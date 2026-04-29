@@ -4,6 +4,7 @@ import { AlertCircle, ArrowRight, Mail } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { apiClient as api } from '../services/api.service'
 import { BailioLogo } from '../components/BailioLogo'
+import GoogleSignInButton from '../components/auth/GoogleSignInButton'
 import toast from 'react-hot-toast'
 
 /* ─── Tokens ─────────────────────────────────────────────────────────────── */
@@ -41,7 +42,7 @@ function inputStyle(focused: boolean): React.CSSProperties {
 export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { login, isLoading } = useAuth()
+  const { login, googleLogin, isLoading } = useAuth()
 
   type Screen = 'welcome' | 'email_login'
   const [screen, setScreen] = useState<Screen>('welcome')
@@ -75,6 +76,15 @@ export default function Login() {
         return
       }
       setError('Identifiants incorrects. Vérifiez votre email et mot de passe.')
+    }
+  }
+
+  const handleGoogleSuccess = async (idToken: string) => {
+    try {
+      const { user: u } = await googleLogin(idToken)
+      redirectByRole(u.role)
+    } catch {
+      toast.error('Connexion Google échouée.')
     }
   }
 
@@ -161,6 +171,16 @@ export default function Login() {
               <p style={{ fontSize: '14px', color: '#5a5754', margin: 0 }}>
                 Connectez-vous pour accéder à votre espace.
               </p>
+            </div>
+
+            {/* Google */}
+            <GoogleSignInButton onSuccess={handleGoogleSuccess} text="signin_with" />
+
+            {/* Séparateur */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '16px 0' }}>
+              <div style={{ flex: 1, height: 1, background: '#e4e1db' }} />
+              <span style={{ fontSize: 12, color: '#9e9b96' }}>ou</span>
+              <div style={{ flex: 1, height: 1, background: '#e4e1db' }} />
             </div>
 
             {/* Email CTA */}
