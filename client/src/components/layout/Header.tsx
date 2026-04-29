@@ -275,27 +275,29 @@ export const Header = () => {
       borderBottom: `1px solid ${BAI.border}`,
       height: 56,
       display: 'flex', alignItems: 'center',
+      overflow: 'hidden',
     }}>
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,4vw,48px)', width: '100%' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 16px', width: '100%', boxSizing: 'border-box' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', width: '100%', minWidth: 0 }}>
 
           {/* Logo */}
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 7, textDecoration: 'none', flexShrink: 0 }}>
-            <BailioLogo size={24} />
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', flexShrink: 0, minWidth: 0 }}>
+            <BailioLogo size={22} />
             <span style={{
-              fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700,
+              fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700,
               fontStyle: 'italic', color: '#1a3270', letterSpacing: '-0.01em', lineHeight: 1,
+              whiteSpace: 'nowrap',
             }}>
               Bailio<span style={{ color: BAI.caramel }}>.</span>
             </span>
           </Link>
 
-          {/* Nav desktop centrée */}
+          {/* Nav desktop centrée — PAS de display:flex en inline (Tailwind gère hidden/flex) */}
           {!isAuthenticated && (
             <nav style={{
               position: 'absolute', left: '50%', top: '50%',
               transform: 'translate(-50%, -50%)',
-              display: 'flex', alignItems: 'center', gap: 24,
+              alignItems: 'center', gap: 24,
             }} className="hidden md:flex">
               {NAV_LINKS.map(({ to, label, exact }) => {
                 const isActive = exact ? location.pathname === to : location.pathname === to || location.pathname.startsWith(to + '/')
@@ -328,7 +330,7 @@ export const Header = () => {
           )}
 
           {/* ── Droite desktop ── */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2" style={{ flexShrink: 0 }}>
             {isAuthenticated ? (
               <>
                 <Link to="/notifications"
@@ -401,7 +403,7 @@ export const Header = () => {
           </div>
 
           {/* ── Droite mobile ── */}
-          <div className="flex md:hidden items-center">
+          <div className="flex md:hidden items-center" style={{ flexShrink: 0 }}>
             {isAuthenticated ? (
               <div className="relative">
                 <button onClick={() => setShowUserMenu(!showUserMenu)}
@@ -503,7 +505,7 @@ export const Header = () => {
                 }}>
                 <span style={{
                   fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 700,
-                  fontSize: 32, color: isActive ? BAI.caramel : 'rgba(255,255,255,0.90)',
+                  fontSize: 'clamp(24px,7vw,36px)', color: isActive ? BAI.caramel : 'rgba(255,255,255,0.90)',
                   lineHeight: 1,
                 }}>
                   {label}
