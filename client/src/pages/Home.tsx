@@ -142,6 +142,137 @@ const TENANT_BENEFITS = [
   'Signature électronique incluse',
 ]
 
+function FeaturedCarousel({ properties, loading }: { properties: Property[]; loading: boolean }) {
+  const carouselRef = useRef<HTMLDivElement>(null)
+  const [activeIndex, setActiveIndex] = useState(0)
+
+  const scrollToIndex = useCallback((index: number) => {
+    const el = carouselRef.current
+    if (!el) return
+    const card = el.children[index] as HTMLElement
+    if (!card) return
+    el.scrollTo({ left: card.offsetLeft, behavior: 'smooth' })
+    setActiveIndex(index)
+  }, [])
+
+  const handleScroll = useCallback(() => {
+    const el = carouselRef.current
+    if (!el) return
+    const cardWidth = (el.children[0] as HTMLElement)?.offsetWidth ?? 1
+    const gap = 20
+    const index = Math.round(el.scrollLeft / (cardWidth + gap))
+    setActiveIndex(Math.max(0, Math.min(index, properties.length - 1)))
+  }, [properties.length])
+
+  if (loading) {
+    return (
+      <div className="props-carousel">
+        {[1, 2, 3].map(n => (
+          <div key={n} className="props-carousel-item" style={{ background: T.bgSurface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: 'hidden' }}>
+            <div style={{ height: 240, background: T.border }} />
+            <div style={{ padding: 20 }}>
+              <div style={{ height: 18, background: T.border, borderRadius: 4, marginBottom: 12, width: '70%' }} />
+              <div style={{ height: 14, background: T.border, borderRadius: 4, width: '50%' }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (properties.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: '64px 0', color: T.inkFaint }}>
+        <Building2 size={48} style={{ opacity: 0.3, margin: '0 auto 12px', display: 'block' }} />
+        <p style={{ fontFamily: T.fontBody, fontSize: 15 }}>Aucun bien disponible pour le moment.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <div style={{ position: 'relative' }}>
+        {/* Prev arrow */}
+        <button
+          className="carousel-arrows"
+          onClick={() => scrollToIndex(Math.max(0, activeIndex - 1))}
+          disabled={activeIndex === 0}
+          style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', zIndex: 2, width: 40, height: 40, borderRadius: '50%', background: T.bgSurface, border: `1px solid ${T.border}`, boxShadow: T.shadow, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: activeIndex === 0 ? 'not-allowed' : 'pointer', opacity: activeIndex === 0 ? 0.4 : 1, transition: 'opacity .2s', padding: 0 }}
+          aria-label="Précédent"
+        >
+          <ChevronLeft size={18} color={T.ink} />
+        </button>
+
+        {/* Scrollable track */}
+        <div className="props-carousel" ref={carouselRef} onScroll={handleScroll}>
+          {properties.map(property => (
+            <div key={property.id} className="props-carousel-item">
+              <Link to={`/properties/${property.id}`} style={{ textDecoration: 'none', display: 'block' }}>
+                <div
+                  style={{ background: T.bgSurface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: 'hidden', boxShadow: T.shadow, transition: 'transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s cubic-bezier(0.16,1,0.3,1)' }}
+                  onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-2px)'; el.style.boxShadow = T.shadowHover; el.style.borderColor = '#e8ccaa' }}
+                  onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = T.shadow; el.style.borderColor = T.border }}
+                >
+                  <div style={{ position: 'relative', height: 240, background: T.bgMuted, overflow: 'hidden' }}>
+                    {property.images?.[0] ? (
+                      <img src={property.images[0]} alt={property.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Building2 size={40} color={T.inkFaint} />
+                      </div>
+                    )}
+                    <div style={{ position: 'absolute', bottom: 12, left: 12, background: 'rgba(255,255,255,0.96)', padding: '6px 12px', borderRadius: 8, fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 18, color: T.ink, border: '1px solid rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      {Number(property.price).toLocaleString('fr-FR')} €<span style={{ fontFamily: T.fontBody, fontStyle: 'normal', fontWeight: 500, fontSize: 11, color: T.inkMid }}>/mois</span>
+                    </div>
+                    <div style={{ position: 'absolute', top: 12, left: 12, background: 'rgba(26,26,46,0.92)', color: '#fff', borderRadius: 6, padding: '5px 10px', fontFamily: T.fontBody, fontWeight: 600, fontSize: 11, letterSpacing: '0.04em' }}>
+                      {property.type}
+                    </div>
+                  </div>
+                  <div style={{ padding: '18px 18px 20px' }}>
+                    <p style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 20, color: T.ink, margin: '0 0 8px', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{property.title}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: T.inkMid, fontSize: 13, marginBottom: 14 }}>
+                      <MapPin size={13} color={T.caramel} />
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{property.city}</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: 16, fontSize: 12.5, color: T.inkMid, paddingTop: 12, borderTop: `1px solid ${T.border}` }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Bed size={13} color={T.inkFaint} />{property.bedrooms} ch.</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Maximize2 size={13} color={T.inkFaint} />{property.surface} m²</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Euro size={13} color={T.inkFaint} />{Number(property.price).toLocaleString('fr-FR')} €</span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          ))}
+        </div>
+
+        {/* Next arrow */}
+        <button
+          className="carousel-arrows"
+          onClick={() => scrollToIndex(Math.min(properties.length - 1, activeIndex + 1))}
+          disabled={activeIndex === properties.length - 1}
+          style={{ position: 'absolute', right: -20, top: '50%', transform: 'translateY(-50%)', zIndex: 2, width: 40, height: 40, borderRadius: '50%', background: T.bgSurface, border: `1px solid ${T.border}`, boxShadow: T.shadow, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: activeIndex === properties.length - 1 ? 'not-allowed' : 'pointer', opacity: activeIndex === properties.length - 1 ? 0.4 : 1, transition: 'opacity .2s', padding: 0 }}
+          aria-label="Suivant"
+        >
+          <ChevronRight size={18} color={T.ink} />
+        </button>
+      </div>
+
+      {/* Dots */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 24 }}>
+        {properties.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => scrollToIndex(i)}
+            style={{ width: i === activeIndex ? 24 : 8, height: 8, borderRadius: 4, border: 'none', padding: 0, cursor: 'pointer', background: i === activeIndex ? T.caramel : T.border, transition: 'all .25s cubic-bezier(0.16,1,0.3,1)' }}
+            aria-label={`Aller au bien ${i + 1}`}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function Home() {
   const { isAuthenticated, user } = useAuth()
 
@@ -150,14 +281,9 @@ export default function Home() {
 
   useEffect(() => {
     propertyService
-      .searchProperties('', { page: 1, limit: 4 })
-      .then((data: unknown) => {
-        const d = data as { properties?: Property[] } | Property[]
-        setFeaturedProperties(
-          Array.isArray(d)
-            ? (d as Property[]).slice(0, 4)
-            : ((d as { properties?: Property[] })?.properties?.slice(0, 4) ?? [])
-        )
+      .getProperties({ status: 'AVAILABLE' }, { page: 1, limit: 4 })
+      .then((data) => {
+        setFeaturedProperties(data.properties?.slice(0, 4) ?? [])
       })
       .catch(() => setFeaturedProperties([]))
       .finally(() => setLoadingProperties(false))
@@ -362,141 +488,7 @@ export default function Home() {
             </Link>
           </div>
 
-          {(() => {
-            const carouselRef = useRef<HTMLDivElement>(null)
-            const [activeIndex, setActiveIndex] = useState(0)
-
-            const scrollToIndex = useCallback((index: number) => {
-              const el = carouselRef.current
-              if (!el) return
-              const card = el.children[index] as HTMLElement
-              if (!card) return
-              el.scrollTo({ left: card.offsetLeft, behavior: 'smooth' })
-              setActiveIndex(index)
-            }, [])
-
-            const handleScroll = useCallback(() => {
-              const el = carouselRef.current
-              if (!el) return
-              const cardWidth = (el.children[0] as HTMLElement)?.offsetWidth ?? 1
-              const gap = 20
-              const index = Math.round(el.scrollLeft / (cardWidth + gap))
-              setActiveIndex(Math.max(0, Math.min(index, featuredProperties.length - 1)))
-            }, [])
-
-            if (loadingProperties) {
-              return (
-                <div className="props-carousel" ref={carouselRef}>
-                  {[1, 2, 3].map(n => (
-                    <div key={n} className="props-carousel-item" style={{ background: T.bgSurface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: 'hidden', flexShrink: 0 }}>
-                      <div style={{ height: 240, background: T.border }} />
-                      <div style={{ padding: 20 }}>
-                        <div style={{ height: 18, background: T.border, borderRadius: 4, marginBottom: 12, width: '70%' }} />
-                        <div style={{ height: 14, background: T.border, borderRadius: 4, width: '50%' }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )
-            }
-
-            if (featuredProperties.length === 0) {
-              return (
-                <div style={{ textAlign: 'center', padding: '64px 0', color: T.inkFaint }}>
-                  <Building2 size={48} style={{ opacity: 0.3, margin: '0 auto 12px', display: 'block' }} />
-                  <p style={{ fontFamily: T.fontBody, fontSize: 15 }}>Aucun bien disponible pour le moment.</p>
-                </div>
-              )
-            }
-
-            return (
-              <div>
-                {/* Track + arrows */}
-                <div style={{ position: 'relative' }}>
-                  {/* Prev arrow */}
-                  <button
-                    className="carousel-arrows"
-                    onClick={() => scrollToIndex(Math.max(0, activeIndex - 1))}
-                    disabled={activeIndex === 0}
-                    style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', zIndex: 2, width: 40, height: 40, borderRadius: '50%', background: T.bgSurface, border: `1px solid ${T.border}`, boxShadow: T.shadow, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: activeIndex === 0 ? 'not-allowed' : 'pointer', opacity: activeIndex === 0 ? 0.4 : 1, transition: 'opacity .2s', padding: 0 }}
-                    aria-label="Précédent"
-                  >
-                    <ChevronLeft size={18} color={T.ink} />
-                  </button>
-
-                  {/* Scrollable track */}
-                  <div
-                    className="props-carousel"
-                    ref={carouselRef}
-                    onScroll={handleScroll}
-                  >
-                    {featuredProperties.map(property => (
-                      <div key={property.id} className="props-carousel-item">
-                        <Link to={`/properties/${property.id}`} style={{ textDecoration: 'none', display: 'block' }}>
-                          <div
-                            style={{ background: T.bgSurface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: 'hidden', boxShadow: T.shadow, transition: 'transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s cubic-bezier(0.16,1,0.3,1)' }}
-                            onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-2px)'; el.style.boxShadow = T.shadowHover; el.style.borderColor = '#e8ccaa' }}
-                            onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = T.shadow; el.style.borderColor = T.border }}
-                          >
-                            <div style={{ position: 'relative', height: 240, background: T.bgMuted, overflow: 'hidden' }}>
-                              {property.images?.[0] ? (
-                                <img src={property.images[0]} alt={property.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
-                              ) : (
-                                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                  <Building2 size={40} color={T.inkFaint} />
-                                </div>
-                              )}
-                              <div style={{ position: 'absolute', bottom: 12, left: 12, background: 'rgba(255,255,255,0.96)', padding: '6px 12px', borderRadius: 8, fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 18, color: T.ink, border: '1px solid rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                {Number(property.price).toLocaleString('fr-FR')} €<span style={{ fontFamily: T.fontBody, fontStyle: 'normal', fontWeight: 500, fontSize: 11, color: T.inkMid }}>/mois</span>
-                              </div>
-                              <div style={{ position: 'absolute', top: 12, left: 12, background: 'rgba(26,26,46,0.92)', color: '#fff', borderRadius: 6, padding: '5px 10px', fontFamily: T.fontBody, fontWeight: 600, fontSize: 11, letterSpacing: '0.04em' }}>
-                                {property.type}
-                              </div>
-                            </div>
-                            <div style={{ padding: '18px 18px 20px' }}>
-                              <p style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 20, color: T.ink, margin: '0 0 8px', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{property.title}</p>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: T.inkMid, fontSize: 13, marginBottom: 14 }}>
-                                <MapPin size={13} color={T.caramel} />
-                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{property.city}</span>
-                              </div>
-                              <div style={{ display: 'flex', gap: 16, fontSize: 12.5, color: T.inkMid, paddingTop: 12, borderTop: `1px solid ${T.border}` }}>
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Bed size={13} color={T.inkFaint} />{property.bedrooms} ch.</span>
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Maximize2 size={13} color={T.inkFaint} />{property.surface} m²</span>
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Euro size={13} color={T.inkFaint} />{Number(property.price).toLocaleString('fr-FR')} €</span>
-                              </div>
-                            </div>
-                          </div>
-                        </Link>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Next arrow */}
-                  <button
-                    className="carousel-arrows"
-                    onClick={() => scrollToIndex(Math.min(featuredProperties.length - 1, activeIndex + 1))}
-                    disabled={activeIndex === featuredProperties.length - 1}
-                    style={{ position: 'absolute', right: -20, top: '50%', transform: 'translateY(-50%)', zIndex: 2, width: 40, height: 40, borderRadius: '50%', background: T.bgSurface, border: `1px solid ${T.border}`, boxShadow: T.shadow, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: activeIndex === featuredProperties.length - 1 ? 'not-allowed' : 'pointer', opacity: activeIndex === featuredProperties.length - 1 ? 0.4 : 1, transition: 'opacity .2s', padding: 0 }}
-                    aria-label="Suivant"
-                  >
-                    <ChevronRight size={18} color={T.ink} />
-                  </button>
-                </div>
-
-                {/* Dots */}
-                <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 24 }}>
-                  {featuredProperties.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => scrollToIndex(i)}
-                      style={{ width: i === activeIndex ? 24 : 8, height: 8, borderRadius: 4, border: 'none', padding: 0, cursor: 'pointer', background: i === activeIndex ? T.caramel : T.border, transition: 'all .25s cubic-bezier(0.16,1,0.3,1)' }}
-                      aria-label={`Aller au bien ${i + 1}`}
-                    />
-                  ))}
-                </div>
-              </div>
-            )
-          })()}
+          <FeaturedCarousel properties={featuredProperties} loading={loadingProperties} />
         </div>
       </section>
 
