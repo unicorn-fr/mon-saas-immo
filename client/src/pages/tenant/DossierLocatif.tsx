@@ -818,34 +818,57 @@ export default function DossierLocatif() {
         })
         if (res.ok) {
           const json = await res.json()
-          const d = json.data as Record<string, string>
+          const d = json.data as Record<string, string | boolean>
+
+          // ── Not an ID document ──────────────────────────────────────────────
+          if (d.isIdDocument === false) {
+            const reason = String(d.rejectReason || 'Ce document ne semble pas être une pièce d\'identité valide.')
+            toast.error(`Document refusé — ${reason}`, { duration: 6000 })
+            return
+          }
+
           if (d && (d.nom || d.prenom)) {
-            setOcrResult(d)
+            setOcrResult(d as Record<string, string>)
             // Pre-fill only empty fields
             setForm(prev => ({
-              firstName:   prev.firstName   || (d.prenom ?? ''),
-              lastName:    prev.lastName    || (d.nom ?? ''),
-              birthDate:   prev.birthDate   || (d.dob ?? ''),
+              firstName:   prev.firstName   || (String(d.prenom ?? '')),
+              lastName:    prev.lastName    || (String(d.nom    ?? '')),
+              birthDate:   prev.birthDate   || (String(d.dob   ?? '')),
               birthCity:   prev.birthCity,
-              nationality: prev.nationality || (d.nationality ?? ''),
+              nationality: prev.nationality || (String(d.nationality ?? '')),
             }))
             // Recto/verso side detection
-            if (d.side === 'recto' || d.side === 'verso' || d.side === 'unknown') {
-              setOcrSide(d.side as 'recto' | 'verso' | 'unknown')
+            const side = String(d.side ?? 'unknown')
+            if (side === 'recto' || side === 'verso' || side === 'unknown') {
+              setOcrSide(side as 'recto' | 'verso' | 'unknown')
+            }
+            // MRZ validation via mrz package (client-side)
+            const mrzRaw = String(d.mrz ?? '')
+            if (mrzRaw) {
+              try {
+                const { parse } = await import('mrz')
+                const lines = mrzRaw.split('|').map(l => l.trim()).filter(Boolean)
+                if (lines.length >= 2) {
+                  const parsed = parse(lines)
+                  if (parsed.valid) {
+                    toast.success('MRZ validée — document authentifié', { duration: 3000 })
+                  }
+                }
+              } catch { /* mrz parse failure is silent */ }
             }
             // Name verification against registered profile
             const norm = (s: string) => s.trim().toLowerCase()
               .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
               .replace(/[^a-z\s-]/g, '').replace(/\s+/g, ' ')
-            const docNom    = norm(d.nom    ?? '')
-            const docPrenom = norm(d.prenom ?? '')
+            const docNom    = norm(String(d.nom    ?? ''))
+            const docPrenom = norm(String(d.prenom ?? ''))
             const regNom    = norm(user?.lastName  ?? '')
             const regPrenom = norm(user?.firstName ?? '')
             const nomOk    = !docNom    || !regNom    || docNom.includes(regNom)    || regNom.includes(docNom)
             const prenomOk = !docPrenom || !regPrenom || docPrenom.includes(regPrenom) || regPrenom.includes(docPrenom)
             if (!nomOk || !prenomOk) {
               setNameWarning(
-                `Nom sur le document : ${d.prenom || '—'} ${d.nom || '—'}. Cela ne correspond pas au profil enregistré. Vérifiez vos informations.`
+                `Nom sur le document : ${String(d.prenom || '—')} ${String(d.nom || '—')}. Cela ne correspond pas au profil enregistré. Vérifiez vos informations.`
               )
             } else {
               setNameWarning('')

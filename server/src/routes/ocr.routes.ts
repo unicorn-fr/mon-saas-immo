@@ -99,17 +99,25 @@ router.post(
               },
               {
                 type: 'text',
-                text: `You are an OCR assistant extracting data from a French identity document (${docType}).
-Extract ONLY these fields if visible and return ONLY valid JSON, no explanation:
+                text: `You are an expert OCR and identity document verification assistant.
+
+STEP 1 — Verify this is a genuine identity document.
+A genuine identity document has: a photo, a full name, a document number, an expiry date, and usually MRZ lines at the bottom. It may be a CNI (French national ID), passport, or titre de séjour.
+
+STEP 2 — Extract fields and return ONLY valid JSON, no explanation:
 {
-  "nom": "",
-  "prenom": "",
+  "isIdDocument": true or false,
+  "rejectReason": "if not an ID: brief reason in French, else empty",
+  "nom": "family name in uppercase or empty",
+  "prenom": "given name(s) or empty",
   "dob": "YYYY-MM-DD or empty",
-  "nationality": "country name in French or empty",
-  "documentNumber": "",
+  "nationality": "nationality in French (e.g. Française) or empty",
+  "documentNumber": "document number or empty",
   "expiry": "YYYY-MM-DD or empty",
-  "side": "recto if this is the front face showing photo and full name, verso if this is the back showing MRZ lines or address, unknown otherwise"
+  "mrz": "MRZ lines joined by | if visible, else empty",
+  "side": "recto if front face (photo visible), verso if back (MRZ/address), unknown otherwise"
 }
+
 If a field is not visible or unclear, leave it as empty string. Never invent data.`,
               },
             ],
@@ -129,12 +137,15 @@ If a field is not visible or unclear, leave it as empty string. Never invent dat
 
       // Sanitize — only return known safe fields
       const safe = {
+        isIdDocument:   extracted.isIdDocument === true || extracted.isIdDocument === 'true',
+        rejectReason:   String(extracted.rejectReason   ?? '').slice(0, 200),
         nom:            String(extracted.nom            ?? '').slice(0, 80),
         prenom:         String(extracted.prenom         ?? '').slice(0, 80),
         dob:            String(extracted.dob            ?? '').slice(0, 10),
         nationality:    String(extracted.nationality    ?? '').slice(0, 80),
         documentNumber: String(extracted.documentNumber ?? '').slice(0, 40),
         expiry:         String(extracted.expiry         ?? '').slice(0, 10),
+        mrz:            String(extracted.mrz            ?? '').slice(0, 200),
         side:           String(extracted.side           ?? 'unknown').slice(0, 10),
       }
 

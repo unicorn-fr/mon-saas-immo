@@ -1,28 +1,23 @@
 /**
- * CameraCapture — Smart ID document scanner
+ * CameraCapture — Scanner de pièce d'identité avec jscanify + OpenCV.js
  *
- * Pipeline:
- *  1. Analyse chaque frame @ 500ms : Sobel → détection des 4 coins extrêmes
- *  2. Mesure le flou (variance Laplacien) → avertit si tremblé
- *  3. Dessine le quadrilatère détecté sur un canvas overlay en temps réel
- *  4. Après 2 s stables : capture full-res + correction de perspective (homographie pure JS)
- *  5. Preview du document redressé → Reprendre / Utiliser
+ * Pipeline :
+ *  1. Charge OpenCV.js dynamiquement (8 MB, une seule fois, mis en cache)
+ *  2. Détecte les contours du document via jscanify.findPaperContour() (Canny + findContours)
+ *  3. Dessine le quadrilatère détecté sur un canvas overlay en temps réel (RAF)
+ *  4. Après 2 s stables : capture full-res + warpPerspective via jscanify.extractPaper()
+ *  5. Mesure le flou (variance Laplacien pure JS) — avertit si tremblé
+ *  6. Preview du document redressé → Reprendre / Utiliser
  */
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { X, ZapOff, FlipHorizontal, RotateCcw, Check } from 'lucide-react'
+import { X, ZapOff, FlipHorizontal, RotateCcw, Check, Loader2 } from 'lucide-react'
 import { BAI } from '../../constants/bailio-tokens'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 type DocType = 'CNI_RECTO' | 'CNI_VERSO' | 'PASSEPORT' | 'TITRE_SEJOUR' | string
-type Phase = 'scanning' | 'processing' | 'captured'
+type Phase = 'loading-cv' | 'scanning' | 'processing' | 'captured'
 
-interface NormPoint { x: number; y: number } // normalized 0-1
-
-interface AnalysisResult {
-  score: number               // 0-1 detection confidence
-  corners: NormPoint[] | null // [TL, TR, BR, BL] normalized, or null
-  blurry: boolean
-}
+interface CornerPoint { x: number; y: number }
 
 interface CameraCaptureProps {
   docType: DocType
@@ -30,7 +25,7 @@ interface CameraCaptureProps {
   onClose: () => void
 }
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+// ── Guide ratios (mm → aspect ratio) ─────────────────────────────────────────
 const GUIDE_LABELS: Record<string, string> = {
   CNI_RECTO:    'Recto de la CNI',
   CNI_VERSO:    'Verso de la CNI',
@@ -38,316 +33,203 @@ const GUIDE_LABELS: Record<string, string> = {
   TITRE_SEJOUR: 'Titre de séjour',
 }
 
-const GUIDE_RATIOS: Record<string, { w: number; h: number }> = {
-  CNI_RECTO:    { w: 85.6, h: 54.0 },
-  CNI_VERSO:    { w: 85.6, h: 54.0 },
-  PASSEPORT:    { w: 125,  h: 88   },
-  TITRE_SEJOUR: { w: 85.6, h: 54.0 },
+const GUIDE_ASPECT: Record<string, number> = {
+  CNI_RECTO:    85.6 / 54.0,   // ID-1
+  CNI_VERSO:    85.6 / 54.0,
+  PASSEPORT:    125  / 88,      // ID-3 page ouverte
+  TITRE_SEJOUR: 85.6 / 54.0,
 }
 
-const STABLE_NEEDED = 4   // frames × 500 ms = 2 s
+const STABLE_NEEDED = 4   // 4 × 500 ms = 2 s
 const INTERVAL_MS   = 500
+const ANALYSIS_W    = 480  // downsampled width for detection
+const ANALYSIS_H    = 320
 
-// ── Pure-JS computer vision ───────────────────────────────────────────────────
+// ── OpenCV loader (singleton, cached globally) ────────────────────────────────
+let _cvPromise: Promise<void> | null = null
 
-/** Analyse a video frame: Sobel edge + corner detection + blur check. */
-function analyzeFrame(video: HTMLVideoElement): AnalysisResult {
-  const W = 320, H = 214
+function loadOpenCV(): Promise<void> {
+  if (_cvPromise) return _cvPromise
+  _cvPromise = new Promise((resolve, reject) => {
+    const win = window as any
+    if (win.cv?.Mat) { resolve(); return }
+
+    const script = document.createElement('script')
+    script.src   = 'https://docs.opencv.org/4.7.0/opencv.js'
+    script.async = true
+    script.onerror = () => reject(new Error('Échec du chargement OpenCV'))
+    script.onload  = () => {
+      // OpenCV initializes asynchronously after onload
+      const t0 = Date.now()
+      const poll = setInterval(() => {
+        if (win.cv?.Mat) { clearInterval(poll); resolve() }
+        else if (Date.now() - t0 > 30_000) { clearInterval(poll); reject(new Error('OpenCV timeout')) }
+      }, 80)
+    }
+    document.head.appendChild(script)
+  })
+  return _cvPromise
+}
+
+// ── Blur metric (pure JS — fast, no OpenCV needed) ────────────────────────────
+function isBlurry(video: HTMLVideoElement): boolean {
+  const W = 160, H = 100
   const c = document.createElement('canvas')
   c.width = W; c.height = H
   const ctx = c.getContext('2d', { willReadFrequently: true })
-  if (!ctx) return { score: 0, corners: null, blurry: false }
-
-  try {
-    ctx.drawImage(video, 0, 0, W, H)
-    const { data } = ctx.getImageData(0, 0, W, H)
-
-    // Grayscale
-    const gray = new Uint8Array(W * H)
-    for (let i = 0; i < W * H; i++) {
-      gray[i] = (data[i * 4] * 77 + data[i * 4 + 1] * 151 + data[i * 4 + 2] * 28) >> 8
-    }
-
-    // Blur metric: variance of Laplacian
-    let lapSum = 0, lapSq = 0, lapN = 0
-    for (let y = 1; y < H - 1; y++) {
-      for (let x = 1; x < W - 1; x++) {
-        const i = y * W + x
-        const v = 4 * gray[i] - gray[i - 1] - gray[i + 1] - gray[i - W] - gray[i + W]
-        lapSum += v; lapSq += v * v; lapN++
-      }
-    }
-    const lapMean = lapSum / lapN
-    const lapVar  = lapSq / lapN - lapMean * lapMean
-    const blurry  = lapVar < 55
-
-    // Sobel + 4-corner extreme point detection (DLT corners)
-    const EDGE_THRESH = 28
-    const bests = [Infinity, Infinity, Infinity, Infinity]
-    const pts: { x: number; y: number }[] = [
-      { x: W / 2, y: H / 2 },
-      { x: W / 2, y: H / 2 },
-      { x: W / 2, y: H / 2 },
-      { x: W / 2, y: H / 2 },
-    ]
-
-    const x0 = Math.floor(W * 0.04), x1 = Math.ceil(W * 0.96)
-    const y0 = Math.floor(H * 0.04), y1 = Math.ceil(H * 0.96)
-
-    let edgePixels = 0, totalPixels = 0
-
-    for (let y = y0 + 1; y < y1 - 1; y++) {
-      for (let x = x0 + 1; x < x1 - 1; x++) {
-        totalPixels++
-        const i = y * W + x
-        const gx =
-          -gray[i - W - 1] - 2 * gray[i - 1] - gray[i + W - 1]
-          + gray[i - W + 1] + 2 * gray[i + 1] + gray[i + W + 1]
-        const gy =
-          -gray[i - W - 1] - 2 * gray[i - W] - gray[i - W + 1]
-          + gray[i + W - 1] + 2 * gray[i + W] + gray[i + W + 1]
-        const mag = Math.abs(gx) + Math.abs(gy)
-        if (mag < EDGE_THRESH) continue
-        edgePixels++
-
-        const s = [x + y, (W - x) + y, (W - x) + (H - y), x + (H - y)]
-        for (let k = 0; k < 4; k++) {
-          if (s[k] < bests[k]) { bests[k] = s[k]; pts[k] = { x, y } }
-        }
-      }
-    }
-
-    const edgeDensity = totalPixels > 0 ? edgePixels / totalPixels : 0
-
-    // Validate: quad must be sufficiently large
-    const tltr = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y)
-    const tlbl = Math.hypot(pts[3].x - pts[0].x, pts[3].y - pts[0].y)
-
-    const valid = edgeDensity > 0.032 && tltr > W * 0.35 && tlbl > H * 0.22
-
-    const corners: NormPoint[] | null = valid
-      ? pts.map(p => ({ x: p.x / W, y: p.y / H }))
-      : null
-
-    const score = valid
-      ? Math.min(1, (edgeDensity / 0.07) * (blurry ? 0.25 : 1))
-      : edgeDensity * 0.25
-
-    return { score, corners, blurry }
-  } catch {
-    return { score: 0, corners: null, blurry: false }
+  if (!ctx) return false
+  ctx.drawImage(video, 0, 0, W, H)
+  const { data } = ctx.getImageData(0, 0, W, H)
+  const gray = new Uint8Array(W * H)
+  for (let i = 0; i < W * H; i++) {
+    gray[i] = (data[i * 4] * 77 + data[i * 4 + 1] * 151 + data[i * 4 + 2] * 28) >> 8
   }
-}
-
-// ── Homography (pure JS) ──────────────────────────────────────────────────────
-
-function gaussElim(A: number[][], b: number[]): number[] {
-  const n = b.length
-  const M = A.map((row, i) => [...row, b[i]])
-  for (let col = 0; col < n; col++) {
-    let maxRow = col
-    for (let row = col + 1; row < n; row++) {
-      if (Math.abs(M[row][col]) > Math.abs(M[maxRow][col])) maxRow = row
-    }
-    ;[M[col], M[maxRow]] = [M[maxRow], M[col]]
-    const piv = M[col][col]
-    if (Math.abs(piv) < 1e-12) continue
-    for (let row = 0; row < n; row++) {
-      if (row === col) continue
-      const f = M[row][col] / piv
-      for (let k = col; k <= n; k++) M[row][k] -= f * M[col][k]
+  let sum = 0, sq = 0, n = 0
+  for (let y = 1; y < H - 1; y++) {
+    for (let x = 1; x < W - 1; x++) {
+      const i = y * W + x
+      const v = 4 * gray[i] - gray[i - 1] - gray[i + 1] - gray[i - W] - gray[i + W]
+      sum += v; sq += v * v; n++
     }
   }
-  return M.map((row, i) => row[n] / row[i])
+  const variance = sq / n - (sum / n) ** 2
+  return variance < 50
 }
 
-function computeHomography(src: [number, number][], dst: [number, number][]): Float64Array {
-  const A: number[][] = []
-  const b: number[]   = []
-  for (let i = 0; i < 4; i++) {
-    const [x, y]   = src[i]
-    const [xp, yp] = dst[i]
-    A.push([x, y, 1, 0, 0, 0, -xp * x, -xp * y]); b.push(xp)
-    A.push([0, 0, 0, x, y, 1, -yp * x, -yp * y]); b.push(yp)
+// ── Overlay drawing ───────────────────────────────────────────────────────────
+function drawCornerBrackets(
+  ctx: CanvasRenderingContext2D,
+  x: number, y: number, w: number, h: number,
+  color: string, size = 26, thickness = 3,
+) {
+  ctx.strokeStyle = color
+  ctx.lineWidth   = thickness
+  const b = (bx: number, by: number, dx: number, dy: number) => {
+    ctx.beginPath()
+    ctx.moveTo(bx + dx * size, by)
+    ctx.lineTo(bx, by)
+    ctx.lineTo(bx, by + dy * size)
+    ctx.stroke()
   }
-  const h = gaussElim(A, b)
-  return new Float64Array([h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7], 1])
+  b(x,     y,      1,  1)
+  b(x + w, y,     -1,  1)
+  b(x,     y + h,  1, -1)
+  b(x + w, y + h, -1, -1)
 }
 
-function applyH(H: Float64Array, x: number, y: number): [number, number] {
-  const w = H[6] * x + H[7] * y + H[8]
-  return [(H[0] * x + H[1] * y + H[2]) / w, (H[3] * x + H[4] * y + H[5]) / w]
-}
-
-/**
- * Perspective-correct the document using 4 detected corners.
- * Inverse mapping: for each output pixel, back-project to source.
- */
-function warpPerspective(
-  srcCanvas: HTMLCanvasElement,
-  corners: NormPoint[],
-  outW: number,
-  outH: number,
-): string {
-  const sw = srcCanvas.width, sh = srcCanvas.height
-  const srcPts: [number, number][] = corners.map(c => [c.x * sw, c.y * sh])
-  const dstPts: [number, number][] = [[0, 0], [outW, 0], [outW, outH], [0, outH]]
-  const Hinv = computeHomography(dstPts, srcPts)
-
-  const out    = document.createElement('canvas')
-  out.width = outW; out.height = outH
-  const octx   = out.getContext('2d')!
-  const srcCtx = srcCanvas.getContext('2d')!
-  const srcData = srcCtx.getImageData(0, 0, sw, sh)
-  const outData = octx.createImageData(outW, outH)
-  const s = srcData.data, d = outData.data
-
-  for (let dy = 0; dy < outH; dy++) {
-    for (let dx = 0; dx < outW; dx++) {
-      const [sx, sy] = applyH(Hinv, dx, dy)
-      const sxi = Math.round(sx), syi = Math.round(sy)
-      if (sxi >= 0 && sxi < sw && syi >= 0 && syi < sh) {
-        const si = (syi * sw + sxi) << 2
-        const di = (dy  * outW + dx) << 2
-        d[di] = s[si]; d[di + 1] = s[si + 1]; d[di + 2] = s[si + 2]; d[di + 3] = 255
-      }
-    }
-  }
-  octx.putImageData(outData, 0, 0)
-  return out.toDataURL('image/jpeg', 0.95)
-}
-
-// ── Overlay renderer ──────────────────────────────────────────────────────────
-
-function drawOverlay(
+function drawDocumentOverlay(
   canvas: HTMLCanvasElement,
-  corners: NormPoint[] | null,
-  guide: { w: number; h: number },
-  score: number,
+  corners: CornerPoint[] | null,   // [TL, TR, BR, BL] in display pixels
+  aspect: number,
   stableFrames: number,
+  blurry: boolean,
 ) {
   const W = canvas.width, H = canvas.height
-  if (W === 0 || H === 0) return
+  if (!W || !H) return
   const ctx = canvas.getContext('2d')!
   ctx.clearRect(0, 0, W, H)
 
   if (corners && corners.length === 4) {
-    const pts = corners.map(c => ({ x: c.x * W, y: c.y * H }))
-    const isGreen = score > 0.55
-    const col = isGreen ? '#4ade80' : BAI.caramel
+    const [tl, tr, br, bl] = corners
+    const isReady  = stableFrames >= STABLE_NEEDED
+    const isGood   = stableFrames > 0 && !blurry
+    const color    = isReady ? '#4ade80' : isGood ? BAI.caramel : 'rgba(255,255,255,0.5)'
 
-    // Dark mask with polygon hole
+    // Dark mask with polygon "hole"
     ctx.save()
-    ctx.fillStyle = 'rgba(0,0,0,0.52)'
+    ctx.fillStyle = 'rgba(0,0,0,0.5)'
     ctx.fillRect(0, 0, W, H)
     ctx.globalCompositeOperation = 'destination-out'
     ctx.beginPath()
-    ctx.moveTo(pts[0].x, pts[0].y)
-    for (let i = 1; i < 4; i++) ctx.lineTo(pts[i].x, pts[i].y)
+    ctx.moveTo(tl.x, tl.y)
+    ctx.lineTo(tr.x, tr.y)
+    ctx.lineTo(br.x, br.y)
+    ctx.lineTo(bl.x, bl.y)
     ctx.closePath()
     ctx.fill()
     ctx.restore()
 
     // Glowing border
-    ctx.shadowColor = col
-    ctx.shadowBlur  = 16
-    ctx.strokeStyle = col
-    ctx.lineWidth   = 2.5
+    ctx.shadowColor = color; ctx.shadowBlur = 18
+    ctx.strokeStyle = color; ctx.lineWidth  = 2.5
     ctx.beginPath()
-    ctx.moveTo(pts[0].x, pts[0].y)
-    for (let i = 1; i < 4; i++) ctx.lineTo(pts[i].x, pts[i].y)
+    ctx.moveTo(tl.x, tl.y)
+    ctx.lineTo(tr.x, tr.y)
+    ctx.lineTo(br.x, br.y)
+    ctx.lineTo(bl.x, bl.y)
     ctx.closePath()
     ctx.stroke()
     ctx.shadowBlur = 0
 
     // Corner dots
-    pts.forEach(p => {
-      ctx.fillStyle = col
-      ctx.beginPath()
-      ctx.arc(p.x, p.y, 5, 0, Math.PI * 2)
-      ctx.fill()
+    ;[tl, tr, br, bl].forEach(p => {
+      ctx.fillStyle = color
+      ctx.beginPath(); ctx.arc(p.x, p.y, 5.5, 0, Math.PI * 2); ctx.fill()
     })
 
-    // Countdown progress ring at center
+    // Countdown progress ring at centroid
     if (stableFrames > 0) {
-      const cx = pts.reduce((s, p) => s + p.x, 0) / 4
-      const cy = pts.reduce((s, p) => s + p.y, 0) / 4
-      const r  = 22
-      ctx.strokeStyle = 'rgba(255,255,255,0.15)'
-      ctx.lineWidth = 3.5
+      const cx = (tl.x + tr.x + br.x + bl.x) / 4
+      const cy = (tl.y + tr.y + br.y + bl.y) / 4
+      const r  = 20
+      ctx.strokeStyle = 'rgba(255,255,255,0.14)'; ctx.lineWidth = 3.5
       ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke()
-      ctx.strokeStyle = col
+      ctx.strokeStyle = color
       ctx.beginPath()
       ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + (stableFrames / STABLE_NEEDED) * Math.PI * 2)
       ctx.stroke()
     }
 
-    // Horizontal scan line animation
-    const pct  = ((Date.now() % 1600) / 1600)
-    const minY = Math.min(...pts.map(p => p.y))
-    const maxY = Math.max(...pts.map(p => p.y))
-    const minX = Math.min(...pts.map(p => p.x))
-    const maxX = Math.max(...pts.map(p => p.x))
+    // Scan-line animation
+    const minY = Math.min(tl.y, tr.y)
+    const maxY = Math.max(bl.y, br.y)
+    const minX = Math.min(tl.x, bl.x)
+    const maxX = Math.max(tr.x, br.x)
+    const pct  = (Date.now() % 1800) / 1800
     const scanY = minY + pct * (maxY - minY)
-    const alpha = isGreen ? 0.45 : 0.35
-    const g = ctx.createLinearGradient(minX, scanY, maxX, scanY)
-    g.addColorStop(0,   'rgba(0,0,0,0)')
-    g.addColorStop(0.3, `rgba(${isGreen ? '74,222,128' : '196,151,106'},${alpha})`)
-    g.addColorStop(0.7, `rgba(${isGreen ? '74,222,128' : '196,151,106'},${alpha})`)
-    g.addColorStop(1,   'rgba(0,0,0,0)')
-    ctx.strokeStyle = g
-    ctx.lineWidth   = 1.5
+    const g    = ctx.createLinearGradient(minX, scanY, maxX, scanY)
+    const rgb  = isReady ? '74,222,128' : isGood ? '196,151,106' : '255,255,255'
+    g.addColorStop(0, 'rgba(0,0,0,0)')
+    g.addColorStop(0.3, `rgba(${rgb},0.4)`)
+    g.addColorStop(0.7, `rgba(${rgb},0.4)`)
+    g.addColorStop(1, 'rgba(0,0,0,0)')
+    ctx.strokeStyle = g; ctx.lineWidth = 1.5
     ctx.beginPath(); ctx.moveTo(minX + 8, scanY); ctx.lineTo(maxX - 8, scanY); ctx.stroke()
 
   } else {
     // No document — static guide with corner brackets
-    const aspect = guide.w / guide.h
-    const maxGW  = W * 0.84, maxGH = H * 0.84
+    const maxGW = W * 0.84, maxGH = H * 0.84
     let gW: number, gH: number
     if (maxGW / maxGH > aspect) { gH = maxGH; gW = gH * aspect }
     else { gW = maxGW; gH = gW / aspect }
     const gX = (W - gW) / 2, gY = (H - gH) / 2
 
-    // Vignette
     ctx.fillStyle = 'rgba(0,0,0,0.52)'
     ctx.fillRect(0, 0, W, H)
-    // Clear guide area
     ctx.clearRect(gX, gY, gW, gH)
-
-    // Corner brackets
-    const s = 26, t = 3
-    ctx.strokeStyle = 'rgba(255,255,255,0.30)'
-    ctx.lineWidth   = t
-    const bracket = (bx: number, by: number, dx: number, dy: number) => {
-      ctx.beginPath()
-      ctx.moveTo(bx + dx * s, by)
-      ctx.lineTo(bx, by)
-      ctx.lineTo(bx, by + dy * s)
-      ctx.stroke()
-    }
-    bracket(gX,      gY,       1,  1)
-    bracket(gX + gW, gY,      -1,  1)
-    bracket(gX,      gY + gH,  1, -1)
-    bracket(gX + gW, gY + gH, -1, -1)
+    drawCornerBrackets(ctx, gX, gY, gW, gH, 'rgba(255,255,255,0.28)')
   }
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProps) {
-  const videoRef         = useRef<HTMLVideoElement>(null)
-  const overlayRef       = useRef<HTMLCanvasElement>(null)
-  const streamRef        = useRef<MediaStream | null>(null)
-  const timerRef         = useRef<ReturnType<typeof setInterval> | null>(null)
-  const rafRef           = useRef<number>(0)
-  const stableRef        = useRef(0)
-  const lastCornersRef   = useRef<NormPoint[] | null>(null)
-  const lastScoreRef     = useRef(0)
-  const phaseRef         = useRef<Phase>('scanning')
+  const videoRef       = useRef<HTMLVideoElement>(null)
+  const overlayRef     = useRef<HTMLCanvasElement>(null)
+  const streamRef      = useRef<MediaStream | null>(null)
+  const timerRef       = useRef<ReturnType<typeof setInterval> | null>(null)
+  const rafRef         = useRef<number>(0)
+  const stableRef      = useRef(0)
+  const cornersRef     = useRef<CornerPoint[] | null>(null)
+  const stableFramesForRaf = useRef(0)
+  const blurryRef      = useRef(false)
+  const phaseRef       = useRef<Phase>('loading-cv')
+  const scannerRef     = useRef<any>(null)
 
   const [facingMode,   setFacingMode]   = useState<'environment' | 'user'>('environment')
   const [ready,        setReady]        = useState(false)
   const [error,        setError]        = useState('')
-  const [phase,        setPhase]        = useState<Phase>('scanning')
+  const [phase,        setPhase]        = useState<Phase>('loading-cv')
+  const [cvError,      setCvError]      = useState('')
   const [stableFrames, setStableFrames] = useState(0)
   const [blurWarning,  setBlurWarning]  = useState(false)
   const [detected,     setDetected]     = useState(false)
@@ -355,73 +237,90 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
   const [capturedFile, setCapturedFile] = useState<File | null>(null)
   const [flash,        setFlash]        = useState(false)
 
-  const guide = GUIDE_RATIOS[docType] ?? GUIDE_RATIOS['CNI_RECTO']
+  const aspect = GUIDE_ASPECT[docType] ?? GUIDE_ASPECT['CNI_RECTO']
 
-  useEffect(() => { phaseRef.current = phase }, [phase])
+  const setPhaseSync = (p: Phase) => { phaseRef.current = p; setPhase(p) }
 
-  // ── RAF overlay loop ──────────────────────────────────────────────────────
+  // ── Load OpenCV + init scanner ─────────────────────────────────────────────
+  useEffect(() => {
+    loadOpenCV()
+      .then(() => import('jscanify'))
+      .then(({ default: Jscanify }) => {
+        scannerRef.current = new Jscanify()
+        setPhaseSync('scanning')
+      })
+      .catch(e => setCvError(e.message ?? 'Erreur chargement scanner'))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── RAF overlay loop ───────────────────────────────────────────────────────
   const drawLoop = useCallback(() => {
     const canvas = overlayRef.current
     if (canvas && phaseRef.current === 'scanning') {
       const { offsetWidth: w, offsetHeight: h } = canvas
       if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h }
-      drawOverlay(canvas, lastCornersRef.current, guide, lastScoreRef.current, stableRef.current)
+      drawDocumentOverlay(
+        canvas, cornersRef.current, aspect,
+        stableFramesForRaf.current, blurryRef.current,
+      )
     }
     rafRef.current = requestAnimationFrame(drawLoop)
-  }, [guide])
+  }, [aspect])
 
   useEffect(() => {
     rafRef.current = requestAnimationFrame(drawLoop)
     return () => cancelAnimationFrame(rafRef.current)
   }, [drawLoop])
 
-  // ── Capture + perspective warp ────────────────────────────────────────────
-  const doCapture = useCallback((video: HTMLVideoElement, corners: NormPoint[] | null) => {
-    setPhase('processing')
-    phaseRef.current = 'processing'
+  // ── Capture with perspective correction ───────────────────────────────────
+  const doCapture = useCallback((video: HTMLVideoElement) => {
+    setPhaseSync('processing')
     setFlash(true)
     setTimeout(() => setFlash(false), 220)
 
+    // Full-res canvas
     const fc = document.createElement('canvas')
     fc.width = video.videoWidth; fc.height = video.videoHeight
     fc.getContext('2d')!.drawImage(video, 0, 0)
 
-    const aspect = guide.w / guide.h
-    const outW   = 960, outH = Math.round(outW / aspect)
+    const outW = 1000, outH = Math.round(outW / aspect)
 
-    // Run in a microtask to not block UI
     setTimeout(() => {
       try {
-        const url = corners && corners.length === 4
-          ? warpPerspective(fc, corners, outW, outH)
-          : (() => {
-              // Fallback: crop center guide zone
-              const cx = fc.width / 2, cy = fc.height / 2
-              const cw = fc.width * 0.78, ch = cw / aspect
-              const crop = document.createElement('canvas')
-              crop.width = outW; crop.height = outH
-              crop.getContext('2d')!.drawImage(fc, cx - cw / 2, cy - ch / 2, cw, ch, 0, 0, outW, outH)
-              return crop.toDataURL('image/jpeg', 0.95)
-            })()
+        const scanner = scannerRef.current
+        // jscanify.extractPaper returns a canvas with the warped document
+        const paperCanvas: HTMLCanvasElement | null = scanner
+          ? scanner.extractPaper(fc, outW, outH)
+          : null
 
-        setPreviewUrl(url)
-        const byteStr = atob(url.split(',')[1])
-        const ab = new ArrayBuffer(byteStr.length)
-        const ia = new Uint8Array(ab)
-        for (let i = 0; i < byteStr.length; i++) ia[i] = byteStr.charCodeAt(i)
-        const file = new File([ab], `${docType.toLowerCase()}_${Date.now()}.jpg`, { type: 'image/jpeg' })
-        setCapturedFile(file)
-        setPhase('captured')
+        const sourceCanvas = paperCanvas ?? (() => {
+          // Fallback: center crop
+          const c = document.createElement('canvas')
+          c.width = outW; c.height = outH
+          const cx = fc.width / 2, cy = fc.height / 2
+          const cw = fc.width * 0.80, ch = cw / aspect
+          c.getContext('2d')!.drawImage(fc, cx - cw / 2, cy - ch / 2, cw, ch, 0, 0, outW, outH)
+          return c
+        })()
+
+        sourceCanvas.toBlob(blob => {
+          if (!blob) { setPhaseSync('scanning'); return }
+          const url  = URL.createObjectURL(blob)
+          const file = new File([blob], `${docType.toLowerCase()}_${Date.now()}.jpg`, { type: 'image/jpeg' })
+          setPreviewUrl(url)
+          setCapturedFile(file)
+          setPhaseSync('captured')
+        }, 'image/jpeg', 0.95)
       } catch {
+        // Fallback: plain capture
         fc.toBlob(blob => {
-          if (!blob) return
+          if (!blob) { setPhaseSync('scanning'); return }
           setPreviewUrl(URL.createObjectURL(blob))
           setCapturedFile(new File([blob], `${docType.toLowerCase()}_${Date.now()}.jpg`, { type: 'image/jpeg' }))
-          setPhase('captured')
+          setPhaseSync('captured')
         }, 'image/jpeg', 0.92)
       }
     }, 0)
-  }, [docType, guide])
+  }, [docType, aspect])
 
   // ── Analysis loop ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -429,25 +328,80 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
     if (timerRef.current) clearInterval(timerRef.current)
 
     timerRef.current = setInterval(() => {
-      const video = videoRef.current
-      if (!video || phaseRef.current !== 'scanning') return
+      const video   = videoRef.current
+      const scanner = scannerRef.current
+      if (!video || !scanner || phaseRef.current !== 'scanning') return
 
-      const { score, corners, blurry } = analyzeFrame(video)
+      // Blur check
+      const blurry = isBlurry(video)
+      blurryRef.current = blurry
       setBlurWarning(blurry)
-      setDetected(!!corners)
-      lastCornersRef.current = corners
-      lastScoreRef.current   = score
 
-      if (score > 0.45 && !blurry) {
+      // Document detection on downsampled canvas
+      const win = window as any
+      if (!win.cv?.Mat) return
+
+      const offscreen = document.createElement('canvas')
+      offscreen.width = ANALYSIS_W; offscreen.height = ANALYSIS_H
+      offscreen.getContext('2d')!.drawImage(video, 0, 0, ANALYSIS_W, ANALYSIS_H)
+
+      let detected = false
+      try {
+        const cvImg  = win.cv.imread(offscreen)
+        const contour = scanner.findPaperContour(cvImg)
+
+        if (contour) {
+          const { topLeftCorner, topRightCorner, bottomLeftCorner, bottomRightCorner }
+            = scanner.getCornerPoints(contour, cvImg)
+
+          cvImg.delete()
+
+          if (topLeftCorner && topRightCorner && bottomLeftCorner && bottomRightCorner) {
+            // Validate: quad must be large enough (≥30% of analysis frame)
+            const w = Math.hypot(topRightCorner.x - topLeftCorner.x, topRightCorner.y - topLeftCorner.y)
+            const h = Math.hypot(bottomLeftCorner.x - topLeftCorner.x, bottomLeftCorner.y - topLeftCorner.y)
+
+            if (w > ANALYSIS_W * 0.28 && h > ANALYSIS_H * 0.20) {
+              detected = true
+
+              // Scale corners from analysis resolution → display resolution
+              const overlay = overlayRef.current
+              const scaleX  = overlay ? overlay.offsetWidth  / ANALYSIS_W : 1
+              const scaleY  = overlay ? overlay.offsetHeight / ANALYSIS_H : 1
+
+              cornersRef.current = [
+                { x: topLeftCorner.x     * scaleX, y: topLeftCorner.y     * scaleY },
+                { x: topRightCorner.x    * scaleX, y: topRightCorner.y    * scaleY },
+                { x: bottomRightCorner.x * scaleX, y: bottomRightCorner.y * scaleY },
+                { x: bottomLeftCorner.x  * scaleX, y: bottomLeftCorner.y  * scaleY },
+              ]
+            }
+          } else {
+            cvImg.delete()
+          }
+        } else {
+          cvImg.delete()
+        }
+      } catch {
+        // OpenCV error — ignore frame
+      }
+
+      setDetected(detected)
+
+      if (detected && !blurry) {
         stableRef.current = Math.min(stableRef.current + 1, STABLE_NEEDED + 1)
+        stableFramesForRaf.current = stableRef.current
         setStableFrames(stableRef.current)
+
         if (stableRef.current >= STABLE_NEEDED) {
           clearInterval(timerRef.current!)
-          doCapture(video, corners)
+          doCapture(video)
         }
       } else {
         stableRef.current = 0
+        stableFramesForRaf.current = 0
         setStableFrames(0)
+        if (!detected) cornersRef.current = null
       }
     }, INTERVAL_MS)
 
@@ -458,9 +412,11 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
   const startCamera = useCallback(async (mode: 'environment' | 'user') => {
     streamRef.current?.getTracks().forEach(t => t.stop())
     if (timerRef.current) clearInterval(timerRef.current)
-    stableRef.current = 0; lastCornersRef.current = null; lastScoreRef.current = 0
-    setStableFrames(0); setReady(false); setError(''); setPhase('scanning')
-    setPreviewUrl(''); setCapturedFile(null); setDetected(false); setBlurWarning(false)
+    stableRef.current = 0; stableFramesForRaf.current = 0; cornersRef.current = null
+    setStableFrames(0); setReady(false); setError('')
+    setDetected(false); setBlurWarning(false)
+    if (phaseRef.current !== 'loading-cv') setPhaseSync('scanning')
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: mode }, width: { ideal: 1920 }, height: { ideal: 1080 } },
@@ -482,35 +438,43 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
     }
   }, [])
 
+  // Start camera once OpenCV is ready
   useEffect(() => {
-    startCamera(facingMode)
+    if (phase === 'scanning') startCamera(facingMode)
+  }, [phase]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
     return () => {
       streamRef.current?.getTracks().forEach(t => t.stop())
       if (timerRef.current) clearInterval(timerRef.current)
     }
-  }, [facingMode, startCamera])
+  }, [])
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
+  const handleFacingMode = (mode: 'environment' | 'user') => {
+    setFacingMode(mode)
+    startCamera(mode)
+  }
+
   const handleManualCapture = () => {
     const video = videoRef.current
     if (!video || !ready || phase !== 'scanning') return
     if (timerRef.current) clearInterval(timerRef.current)
-    doCapture(video, lastCornersRef.current)
+    doCapture(video)
   }
 
   const handleRetry = () => {
-    stableRef.current = 0; lastCornersRef.current = null; lastScoreRef.current = 0
+    stableRef.current = 0; stableFramesForRaf.current = 0; cornersRef.current = null
     setStableFrames(0); setPreviewUrl(''); setCapturedFile(null)
-    setDetected(false); setBlurWarning(false); setPhase('scanning')
+    setDetected(false); setBlurWarning(false); setPhaseSync('scanning')
   }
 
   const handleConfirm = () => { if (capturedFile) onCapture(capturedFile) }
 
-  // ── Status ────────────────────────────────────────────────────────────────
+  // ── Status text ───────────────────────────────────────────────────────────
   const statusText =
     blurWarning ? '⚠ Tenez le téléphone immobile'
-    : !detected ? '→ Cadrez votre document dans la zone'
-    : stableFrames < STABLE_NEEDED ? `⚡ Document repéré — maintenez stable…`
+    : !detected  ? '→ Cadrez le document dans la zone'
+    : stableFrames < STABLE_NEEDED ? `⚡ Document repéré — maintenez stable`
     : '✓ Capture en cours…'
 
   const statusBg =
@@ -534,7 +498,7 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
       }}>
         <div>
           <p style={{ margin: 0, fontSize: 10, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
-            {phase === 'captured' ? 'Document extrait' : phase === 'processing' ? 'Traitement…' : 'Scan IA · Détection auto'}
+            {phase === 'captured' ? 'Document extrait' : phase === 'processing' ? 'Traitement…' : phase === 'loading-cv' ? 'Chargement…' : 'Scan IA · Détection automatique'}
           </p>
           <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: '#fff' }}>
             {GUIDE_LABELS[docType] ?? docType}
@@ -554,7 +518,33 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
         position: 'relative', width: '100%', flex: 1,
         display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
       }}>
-        {error ? (
+
+        {cvError ? (
+          /* OpenCV load error */
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: 32, textAlign: 'center' }}>
+            <ZapOff size={40} color="rgba(255,255,255,0.4)" />
+            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, maxWidth: 320, lineHeight: 1.6 }}>
+              {cvError}<br />
+              <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12 }}>Vérifiez votre connexion internet.</span>
+            </p>
+          </div>
+
+        ) : phase === 'loading-cv' ? (
+          /* OpenCV loading screen */
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+            <Loader2 size={40} color={BAI.caramel} style={{ animation: 'spin 1s linear infinite' }} />
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ color: '#fff', fontSize: 14, fontWeight: 600, margin: '0 0 4px' }}>
+                Initialisation du scanner IA…
+              </p>
+              <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12, margin: 0 }}>
+                Téléchargement OpenCV (une seule fois, ~8 Mo)
+              </p>
+            </div>
+          </div>
+
+        ) : error ? (
+          /* Camera error */
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: 32, textAlign: 'center' }}>
             <ZapOff size={40} color="rgba(255,255,255,0.4)" />
             <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, maxWidth: 320, lineHeight: 1.6 }}>{error}</p>
@@ -563,7 +553,9 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
               color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
             }}>Réessayer</button>
           </div>
+
         ) : phase === 'processing' ? (
+          /* Perspective correction running */
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
             <div style={{
               width: 56, height: 56, borderRadius: '50%',
@@ -574,7 +566,9 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
               Correction de perspective…
             </p>
           </div>
+
         ) : phase === 'captured' && previewUrl ? (
+          /* Preview */
           <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <img
               src={previewUrl} alt="Document extrait"
@@ -593,7 +587,9 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
               <Check size={22} color="#14532d" strokeWidth={3} />
             </div>
           </div>
+
         ) : (
+          /* Live camera + overlay */
           <>
             <video
               ref={videoRef} playsInline muted
@@ -602,14 +598,18 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
                 objectFit: 'cover', opacity: ready ? 1 : 0, transition: 'opacity 0.3s',
               }}
             />
-            {flash && <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.7)', zIndex: 5, pointerEvents: 'none' }} />}
+            {flash && (
+              <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.7)', zIndex: 5, pointerEvents: 'none' }} />
+            )}
+            {/* Overlay canvas — drawn by RAF */}
             <canvas
               ref={overlayRef}
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 2 }}
             />
+            {/* Status */}
             {ready && (
               <div style={{
-                position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+                position: 'absolute', bottom: 28, left: '50%', transform: 'translateX(-50%)',
                 zIndex: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
               }}>
                 <div style={{
@@ -647,24 +647,25 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
 
       {/* Controls */}
       <div style={{
-        padding: '18px 20px 36px',
+        padding: '16px 20px 36px',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         gap: 20, width: '100%', maxWidth: 420,
         background: 'linear-gradient(to top, rgba(0,0,0,0.65), transparent)',
       }}>
-        {phase === 'scanning' ? (
+        {phase === 'scanning' && (
           <>
-            <button onClick={() => setFacingMode(m => m === 'environment' ? 'user' : 'environment')}
+            <button
+              onClick={() => handleFacingMode(facingMode === 'environment' ? 'user' : 'environment')}
               style={{
                 width: 48, height: 48, borderRadius: '50%',
                 background: 'rgba(255,255,255,0.13)', border: 'none', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.75)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'rgba(255,255,255,0.75)',
               }}>
               <FlipHorizontal size={20} />
             </button>
 
-            <button onClick={handleManualCapture} disabled={!ready}
-              title="Photographier maintenant"
+            <button onClick={handleManualCapture} disabled={!ready} title="Photographier maintenant"
               style={{
                 width: 72, height: 72, borderRadius: '50%',
                 background: ready ? '#fff' : 'rgba(255,255,255,0.2)',
@@ -684,12 +685,15 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
               style={{
                 width: 48, height: 48, borderRadius: '50%',
                 background: 'rgba(255,255,255,0.13)', border: 'none', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.75)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'rgba(255,255,255,0.75)',
               }}>
               <RotateCcw size={18} />
             </button>
           </>
-        ) : phase === 'captured' ? (
+        )}
+
+        {phase === 'captured' && (
           <>
             <button onClick={handleRetry} style={{
               flex: 1, maxWidth: 160, padding: '14px 0', borderRadius: 12,
@@ -697,8 +701,7 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
               color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
             }}>
-              <RotateCcw size={15} />
-              Reprendre
+              <RotateCcw size={15} /> Reprendre
             </button>
             <button onClick={handleConfirm} style={{
               flex: 1, maxWidth: 160, padding: '14px 0', borderRadius: 12,
@@ -706,11 +709,10 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
               color: '#14532d', fontSize: 14, fontWeight: 700, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
             }}>
-              <Check size={15} />
-              Utiliser
+              <Check size={15} /> Utiliser
             </button>
           </>
-        ) : null}
+        )}
       </div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
