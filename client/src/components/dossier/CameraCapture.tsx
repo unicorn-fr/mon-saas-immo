@@ -14,7 +14,7 @@ import { BAI } from '../../constants/bailio-tokens'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 type DocType = 'CNI_RECTO' | 'CNI_VERSO' | 'PASSEPORT' | 'TITRE_SEJOUR' | string
-type Phase = 'loading-cv' | 'scanning' | 'processing' | 'verifying' | 'captured' | 'rejected'
+type Phase = 'loading-cv' | 'scanning' | 'processing' | 'verifying' | 'captured' | 'rejected' | 'ocr-error'
 
 interface CornerPoint { x: number; y: number }
 
@@ -283,18 +283,27 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: fd,
       })
-      if (!res.ok) throw new Error('OCR service unavailable')
+      if (!res.ok) {
+        // Auth error or server down — show error, don't silently accept
+        setRejectReason('Impossible de vérifier le document. Vérifiez votre connexion et réessayez.')
+        setPhaseSync('ocr-error')
+        return
+      }
       const json = await res.json()
       const d = json?.data
-      if (d?.isIdDocument === false) {
-        setRejectReason(String(d.rejectReason || 'Ce document ne semble pas être une pièce d\'identité valide.'))
+      if (!d || d.isIdDocument === false) {
+        // Explicitly rejected by AI
+        setRejectReason(String(
+          d?.rejectReason || 'Ce document n\'est pas une pièce d\'identité acceptée (CNI, passeport ou titre de séjour requis).'
+        ))
         setPhaseSync('rejected')
       } else {
         setPhaseSync('captured')
       }
     } catch {
-      // OCR error: don't block the user — let parent handle it
-      setPhaseSync('captured')
+      // Network error — show error state, do NOT silently accept
+      setRejectReason('Erreur de connexion. Vérifiez votre réseau et réessayez.')
+      setPhaseSync('ocr-error')
     }
   }, [docType])
 
@@ -510,6 +519,7 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
     'verifying':   'Vérification IA',
     'captured':    'Document extrait',
     'rejected':    'Document refusé',
+    'ocr-error':   'Erreur de vérification',
   }[phase]
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -592,7 +602,7 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
           </div>
 
         /* ── IA Verification (new phase) ────────────────────────────────── */
-        ) : (phase === 'verifying' || phase === 'rejected') && previewUrl ? (
+        ) : (phase === 'verifying' || phase === 'rejected' || phase === 'ocr-error') && previewUrl ? (
           <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
 
             {/* Background: captured image, dimmed */}
@@ -684,8 +694,8 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
               </div>
             )}
 
-            {/* Rejection overlay */}
-            {phase === 'rejected' && (
+            {/* Rejection / OCR error overlay */}
+            {(phase === 'rejected' || phase === 'ocr-error') && (
               <div style={{
                 position: 'absolute', inset: 0, zIndex: 2,
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -812,44 +822,55 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
         minHeight: 100,
       }}>
         {phase === 'scanning' && (
-          <>
-            <button
-              onClick={() => handleFacingMode(facingMode === 'environment' ? 'user' : 'environment')}
-              style={{
-                width: 48, height: 48, borderRadius: '50%',
-                background: 'rgba(255,255,255,0.13)', border: 'none', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'rgba(255,255,255,0.75)',
-              }}>
-              <FlipHorizontal size={20} />
-            </button>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, width: '100%', maxWidth: 300 }}>
+            {/* Capture hint */}
+            <p style={{
+              margin: 0, fontSize: 11, color: 'rgba(255,255,255,0.45)',
+              letterSpacing: '0.05em', textAlign: 'center',
+            }}>
+              Détection auto · ou appuyez sur ○ pour photographier
+            </p>
 
-            <button onClick={handleManualCapture} disabled={!ready} title="Photographier maintenant"
-              style={{
-                width: 72, height: 72, borderRadius: '50%',
-                background: ready ? '#fff' : 'rgba(255,255,255,0.2)',
-                border: `4px solid ${ready ? BAI.caramel : 'rgba(255,255,255,0.08)'}`,
-                cursor: ready ? 'pointer' : 'not-allowed',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'all 0.2s',
-                boxShadow: ready ? '0 0 0 6px rgba(196,151,106,0.22)' : 'none',
-              }}>
-              <div style={{
-                width: 28, height: 28, borderRadius: '50%',
-                background: ready ? BAI.caramel : 'rgba(255,255,255,0.25)',
-              }} />
-            </button>
+            {/* Buttons row */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, width: '100%' }}>
+              <button
+                onClick={() => handleFacingMode(facingMode === 'environment' ? 'user' : 'environment')}
+                style={{
+                  width: 48, height: 48, borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.13)', border: 'none', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'rgba(255,255,255,0.75)',
+                }}>
+                <FlipHorizontal size={20} />
+              </button>
 
-            <button onClick={() => startCamera(facingMode)}
-              style={{
-                width: 48, height: 48, borderRadius: '50%',
-                background: 'rgba(255,255,255,0.13)', border: 'none', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'rgba(255,255,255,0.75)',
-              }}>
-              <RotateCcw size={18} />
-            </button>
-          </>
+              <button onClick={handleManualCapture} disabled={!ready} title="Photographier maintenant"
+                style={{
+                  width: 72, height: 72, borderRadius: '50%',
+                  background: ready ? '#fff' : 'rgba(255,255,255,0.2)',
+                  border: `4px solid ${ready ? BAI.caramel : 'rgba(255,255,255,0.08)'}`,
+                  cursor: ready ? 'pointer' : 'not-allowed',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'all 0.2s',
+                  boxShadow: ready ? '0 0 0 6px rgba(196,151,106,0.22)' : 'none',
+                }}>
+                <div style={{
+                  width: 28, height: 28, borderRadius: '50%',
+                  background: ready ? BAI.caramel : 'rgba(255,255,255,0.25)',
+                }} />
+              </button>
+
+              <button onClick={() => startCamera(facingMode)}
+                style={{
+                  width: 48, height: 48, borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.13)', border: 'none', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'rgba(255,255,255,0.75)',
+                }}>
+                <RotateCcw size={18} />
+              </button>
+            </div>
+          </div>
         )}
 
         {phase === 'captured' && (
