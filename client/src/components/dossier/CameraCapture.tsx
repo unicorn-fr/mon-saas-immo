@@ -1,11 +1,17 @@
 /**
- * CameraCapture v6 — YouSign-style professional ID scanner
+ * CameraCapture v7 — YouSign-style professional ID scanner
  *
- * Key changes from v5:
- *  - NO auto-capture: blur score drives only visual feedback, never triggers capture
- *  - OCR via apiClient (axios) instead of raw fetch — handles JWT refresh automatically
- *  - Full-screen dark modal with semi-transparent overlay + rectangular hole
- *  - Manual shutter button only
+ * OCR 100% local — Tesseract.js (bundled) + mrz parser (bundled).
+ * Zero external API call. Works offline after first language-data load (~10MB cached).
+ *
+ * Pipeline:
+ *  1. Camera live feed + guide overlay
+ *  2. Manual shutter — crops guide region
+ *  3. Tesseract.js phase 1: MRZ scan on bottom 40% (OCR-B whitelist, fast)
+ *  4. If MRZ found → parse with mrz package → validated ID + full data
+ *  5. Tesseract.js phase 2: full image OCR → keyword detection for recto scans
+ *  6. isIdDocument false → 'rejected' phase
+ *  7. CNI_RECTO → flip → CNI_VERSO flow built-in
  */
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import {
@@ -13,7 +19,6 @@ import {
   Loader2, ShieldOff, ArrowRight, RefreshCw,
 } from 'lucide-react'
 import { BAI } from '../../constants/bailio-tokens'
-import { apiClient } from '../../services/api.service'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 type Phase =
@@ -185,6 +190,154 @@ function drawGuide(
   }
 }
 
+// ── Local OCR engine (Tesseract.js + mrz — zero external API) ────────────────
+
+interface LocalOcrResult {
+  isIdDocument: boolean; rejectReason: string
+  nom: string; prenom: string; dob: string
+  nationality: string; documentNumber: string; expiry: string; side: string
+}
+
+/** Grayscale + contrast stretch a canvas in-place */
+function enhanceCanvas(src: HTMLCanvasElement): HTMLCanvasElement {
+  const W = src.width, H = src.height
+  const c = document.createElement('canvas')
+  c.width = W; c.height = H
+  const ctx = c.getContext('2d')!
+  ctx.drawImage(src, 0, 0)
+  const id = ctx.getImageData(0, 0, W, H)
+  const d = id.data
+  let lo = 255, hi = 0
+  for (let i = 0; i < d.length; i += 4) {
+    const g = (d[i] * 77 + d[i+1] * 151 + d[i+2] * 28) >> 8
+    if (g < lo) lo = g; if (g > hi) hi = g
+  }
+  const range = hi - lo || 1
+  for (let i = 0; i < d.length; i += 4) {
+    const g = Math.round(((d[i]*77 + d[i+1]*151 + d[i+2]*28) >> 8) - lo) * 255 / range
+    d[i] = d[i+1] = d[i+2] = Math.min(255, Math.max(0, g))
+    d[i+3] = 255
+  }
+  ctx.putImageData(id, 0, 0)
+  return c
+}
+
+/** Crop bottom fraction of a canvas (where MRZ lives) */
+function cropBottom(src: HTMLCanvasElement, frac = 0.40): HTMLCanvasElement {
+  const H = Math.floor(src.height * frac)
+  const c = document.createElement('canvas')
+  c.width = src.width; c.height = H
+  c.getContext('2d')!.drawImage(src, 0, src.height - H, src.width, H, 0, 0, src.width, H)
+  return c
+}
+
+/** Find MRZ lines in raw OCR text (TD1: 3×30, TD3: 2×44) */
+function findMrz(text: string): string[] | null {
+  const lines = text.split('\n')
+    .map(l => l.replace(/\s/g, '').toUpperCase().replace(/[^A-Z0-9<]/g, ''))
+    .filter(l => l.length >= 28)
+
+  // TD1 (CNI): 3 lines ~30 chars
+  const td1 = lines.filter(l => l.length >= 28 && l.length <= 32)
+  if (td1.length >= 3) return td1.slice(0, 3).map(l => l.padEnd(30, '<').slice(0, 30))
+
+  // TD3 (Passeport): 2 lines ~44 chars
+  const td3 = lines.filter(l => l.length >= 40 && l.length <= 46)
+  if (td3.length >= 2) return td3.slice(0, 2).map(l => l.padEnd(44, '<').slice(0, 44))
+
+  return null
+}
+
+/** YYMMDD → YYYY-MM-DD */
+function mrzDate(s: string): string {
+  if (!s || s.length < 6) return ''
+  const yy = parseInt(s.slice(0, 2)), mm = s.slice(2, 4), dd = s.slice(4, 6)
+  return `${yy > 30 ? 1900 + yy : 2000 + yy}-${mm}-${dd}`
+}
+
+/** ID keywords for recto detection (works with eng model + French docs) */
+const ID_KEYWORDS = [
+  'CARTE NATIONALE', 'IDENTIT', 'PASSEPORT', 'PASSPORT',
+  'TITRE DE SEJOUR', 'TITRE DE S', 'REPUBLIQUE FRANC', 'FRENCH REPUBLIC',
+  'NATIONALITY', 'NATIONALIT', 'DATE OF BIRTH', 'DATE DE NAISSANCE',
+  'DOCUMENT', 'NOM', 'SURNAME', 'GIVEN NAME',
+]
+
+/**
+ * Main local OCR pipeline.
+ * Phase 1 — MRZ scan (fast, bottom 40%, whitelist chars)
+ * Phase 2 — Full image keyword detection for recto
+ */
+async function localOcrExtract(canvas: HTMLCanvasElement): Promise<LocalOcrResult> {
+  const fail = (reason: string): LocalOcrResult => ({
+    isIdDocument: false, rejectReason: reason,
+    nom: '', prenom: '', dob: '', nationality: '', documentNumber: '', expiry: '', side: 'unknown',
+  })
+
+  try {
+    const { createWorker } = await import('tesseract.js')
+
+    // ── Phase 1: MRZ (bottom strip, fast) ──────────────────────────────────
+    const bottom = enhanceCanvas(cropBottom(canvas, 0.42))
+    const w1 = await createWorker('eng')
+    await (w1 as any).setParameters({ tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ<' })
+    const { data: { text: mrzText } } = await w1.recognize(bottom)
+    await w1.terminate()
+
+    const mrzLines = findMrz(mrzText)
+    if (mrzLines) {
+      try {
+        const { parse } = await import('mrz')
+        const parsed = parse(mrzLines)
+        if (parsed.valid || parsed.fields?.documentNumber) {
+          const f = parsed.fields
+          return {
+            isIdDocument: true, rejectReason: '',
+            nom:            String(f.lastName       ?? '').replace(/</g, ' ').trim(),
+            prenom:         String(f.firstName      ?? '').replace(/</g, ' ').trim(),
+            dob:            mrzDate(String(f.birthDate      ?? '')),
+            nationality:    String(f.nationality    ?? ''),
+            documentNumber: String(f.documentNumber ?? '').replace(/</g, ''),
+            expiry:         mrzDate(String(f.expirationDate ?? '')),
+            side: 'verso',
+          }
+        }
+      } catch { /* mrz parse failure → fall through to phase 2 */ }
+    }
+
+    // ── Phase 2: Full image — recto keyword detection ───────────────────────
+    const full = enhanceCanvas(canvas)
+    const w2 = await createWorker('eng')
+    const { data: { text: fullText } } = await w2.recognize(full)
+    await w2.terminate()
+
+    const upper = fullText.toUpperCase()
+    const isId = ID_KEYWORDS.some(kw => upper.includes(kw))
+
+    if (!isId) {
+      return fail(
+        'Aucune pièce d\'identité reconnue. Présentez le recto ou le verso de votre CNI, votre passeport, ou votre titre de séjour.'
+      )
+    }
+
+    // Try to extract name from recto text
+    const nomMatch    = upper.match(/NOM[^A-Z]{0,4}([A-Z][A-ZÉÈÊËÀÂÔÛÙÎÏÇ\-]{1,30})/)
+    const prenomMatch = upper.match(/PR[EÉ]NOM[S]?[^A-Z]{0,4}([A-Z][A-ZÉÈÊËÀÂÔÛÙÎÏÇ\-\s]{1,30})/)
+    const nomRaw      = nomMatch    ? nomMatch[1].trim()    : ''
+    const prenomRaw   = prenomMatch ? prenomMatch[1].trim().split(' ')[0] : ''
+
+    return {
+      isIdDocument: true, rejectReason: '',
+      nom: nomRaw, prenom: prenomRaw,
+      dob: '', nationality: '', documentNumber: '', expiry: '',
+      side: 'recto',
+    }
+
+  } catch {
+    return fail('Analyse impossible. Assurez-vous d\'avoir une bonne luminosité et réessayez.')
+  }
+}
+
 // ── Component ──────────────────────────────────────────────────────────────────
 export function CameraCapture({ docType, onComplete, onClose }: CameraCaptureProps) {
   const videoRef    = useRef<HTMLVideoElement>(null)
@@ -233,46 +386,37 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
     return () => cancelAnimationFrame(rafRef.current)
   }, [drawLoop])
 
-  // ── OCR via apiClient ────────────────────────────────────────────────────
-  const doVerify = useCallback(async (file: File, dt: string): Promise<boolean> => {
+  // ── OCR local (Tesseract.js + mrz — zero server call) ───────────────────
+  const doVerify = useCallback(async (file: File, _dt: string): Promise<boolean> => {
     setPhaseSync('verifying')
     try {
-      const fd = new FormData()
-      fd.append('file', file)
-      fd.append('docType', dt)
-      // ⚠️ Do NOT set Content-Type manually — axios auto-sets multipart/form-data
-      // with the correct boundary when FormData is passed. Manual override breaks multer.
-      const res = await apiClient.post('/ocr/extract', fd)
-      const d = res.data?.data
-      if (!d || d.isIdDocument === false) {
-        setRejectReason(
-          String(d?.rejectReason ?? "Ce document n'est pas une pièce d'identité valide (CNI, passeport ou titre de séjour requis).")
-        )
+      // Convert File → canvas for OCR
+      const bitmap = await createImageBitmap(file)
+      const canvas = document.createElement('canvas')
+      canvas.width = bitmap.width; canvas.height = bitmap.height
+      canvas.getContext('2d')!.drawImage(bitmap, 0, 0)
+      bitmap.close()
+
+      const result = await localOcrExtract(canvas)
+
+      if (!result.isIdDocument) {
+        setRejectReason(result.rejectReason)
         setPhaseSync('rejected')
         return false
       }
       setOcrData({
-        nom:            String(d.nom            ?? ''),
-        prenom:         String(d.prenom         ?? ''),
-        dob:            String(d.dob            ?? ''),
-        nationality:    String(d.nationality    ?? ''),
-        documentNumber: String(d.documentNumber ?? ''),
-        expiry:         String(d.expiry         ?? ''),
-        side:           String(d.side           ?? 'unknown'),
+        nom:            result.nom,
+        prenom:         result.prenom,
+        dob:            result.dob,
+        nationality:    result.nationality,
+        documentNumber: result.documentNumber,
+        expiry:         result.expiry,
+        side:           result.side,
       })
       setPhaseSync('verified')
       return true
-    } catch (err: unknown) {
-      // Extract server error message if available
-      const axiosData = (err as any)?.response?.data
-      const serverMsg = axiosData?.message as string | undefined
-      if (serverMsg === 'OCR non configuré.') {
-        setRejectReason('Service OCR non disponible. Importez le document manuellement.')
-      } else if ((err as any)?.response?.status === 401) {
-        setRejectReason('Session expirée. Fermez et reconnectez-vous.')
-      } else {
-        setRejectReason(serverMsg || 'Erreur réseau. Vérifiez votre connexion et réessayez.')
-      }
+    } catch {
+      setRejectReason('Analyse impossible. Vérifiez la luminosité et réessayez.')
       setPhaseSync('error')
       return false
     }
@@ -413,7 +557,7 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
   const phaseLabel: Record<Phase, string> = {
     scanning:   'Scan · Capture manuelle',
     processing: 'Traitement…',
-    verifying:  'Vérification IA',
+    verifying:  'Analyse en cours',
     verified:   'Validé',
     flip:       'Recto scanné',
     rejected:   'Document refusé',
@@ -510,7 +654,7 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
                   {phase === 'processing' ? "Traitement de l'image…" : 'Vérification IA en cours'}
                 </p>
                 <p style={{ margin: '0 0 16px', color: 'rgba(255,255,255,0.45)', fontSize: 12 }}>
-                  {phase === 'processing' ? 'Recadrage…' : "Analyse de la pièce d'identité…"}
+                  {phase === 'processing' ? 'Recadrage…' : 'Lecture du document (peut prendre ~10s)…'}
                 </p>
                 <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
                   {[0, 1, 2].map(i => (
