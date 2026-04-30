@@ -166,16 +166,17 @@ export const SearchMap = ({
   }
 
   return (
-    <div className="relative w-full" style={{ height: 'clamp(300px, 50dvh, 500px)' }}>
+    // isolation: isolate creates a new stacking context — confines Leaflet z-indexes (200–1000+) inside this wrapper
+    <div className="relative w-full" style={{ height: 'clamp(300px, 50dvh, 500px)', isolation: 'isolate' }}>
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
+        <div className="absolute inset-0 flex items-center justify-center bg-white" style={{ zIndex: 10 }}>
           <Loader className="w-8 h-8 animate-spin" style={{ color: '#1a1a2e' }} />
         </div>
       )}
       <div ref={mapRef} className="w-full" style={{ height: 'clamp(300px, 50dvh, 500px)' }} />
 
-      {/* Info overlay */}
-      <div className="absolute top-4 left-4 bg-white rounded-xl shadow-lg p-3 z-[1000]">
+      {/* Info overlay — z-index relative to this stacking context only */}
+      <div className="absolute top-4 left-4 bg-white rounded-xl shadow-lg p-3" style={{ zIndex: 1001 }}>
         <p className="text-sm font-medium" style={{ color: '#0d0c0a' }}>
           {propertiesWithCoords.length} bien{propertiesWithCoords.length > 1 ? 's' : ''} sur la
           carte

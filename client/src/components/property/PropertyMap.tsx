@@ -122,7 +122,7 @@ export const PropertyMap = ({
   }
 
   return (
-    <div className="relative">
+    <div className="relative" style={{ isolation: 'isolate' }}>
       <div ref={mapRef} className="rounded-xl shadow-md" style={{ height: 'clamp(300px, 50dvh, 500px)', width: '100%' }} />
       <div className="mt-3 flex items-center gap-2 text-sm" style={{ color: '#5a5754' }}>
         <MapPin className="w-4 h-4" />
