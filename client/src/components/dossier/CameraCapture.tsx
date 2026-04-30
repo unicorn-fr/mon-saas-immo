@@ -266,9 +266,22 @@ function mrzDate(s: string): string {
 }
 
 // ── EU Driving License structural detector ────────────────────────────────────
+//
+// STRICT detection: require ≥2 strong signals to avoid false positives.
+// A gift card / terms-and-conditions page with letters A/B or numbered lists
+// must NOT be detected as a driving license.
+//
+// Signals:
+//   +2  "PERMIS DE CONDUIRE" or "DRIVING LICEN(C|S)E" as a phrase
+//   +1  compound EU category code: AM, A1, A2, BE, B1, C1, CE, D1, DE
+//   +1  French license number format (99XX999999)
+//   +1  "PRÉFECTURE" or "PERMIS DE" (shorter phrase)
+// → detected if score ≥ 2
 
-const DL_CATEGORY_RE = /\b(AM|A[12]?|B[E1]?|C[E1]?|D[E1]?)\b/g
-const DL_NUMBER_FR   = /\b\d{2}[A-Z]{2}\d{6,10}\b/
+const DL_COMPOUND_RE = /\b(AM|A[12]|B[E1]|C[E1]|D[E1])\b/g  // compound only, never bare A/B/C/D
+const DL_NUMBER_FR   = /\b\d{2}[A-Z]{2}\d{6,10}\b/            // French license number
+const DL_PHRASE_RE   = /PERMIS\s+DE\s+CONDUIRE|DRIVING\s+LICEN[CS]E/i
+const DL_SOFT_KW_RE  = /PRÉFECTURE|PREFECTURE|PERMIS\s+DE\b/i
 
 interface DlResult {
   detected: boolean
@@ -293,25 +306,40 @@ function dateAfterField(text: string, marker: RegExp): string {
 
 function parseDrivingLicense(text: string): DlResult {
   const up = text.toUpperCase()
-  const cats    = [...up.matchAll(DL_CATEGORY_RE)].map(m => m[0])
-  const hasFields = /\b[123]\s*[.,]/.test(text)
-  const hasNum  = DL_NUMBER_FR.test(up.replace(/\s/g, ''))
-  const hasKw   = /PERMIS|CONDUIRE|DRIVING|PREFECT|LICEN[CS]E/.test(up)
-  const detected = cats.length >= 1 || hasFields || hasNum || hasKw
 
+  // ── Strict multi-signal detection ──────────────────────────────────────────
+  const compoundCount = [...up.matchAll(DL_COMPOUND_RE)].length
+  const hasPhrase     = DL_PHRASE_RE.test(text)
+  const hasNum        = DL_NUMBER_FR.test(up.replace(/\s/g, ''))
+  const hasSoftKw     = DL_SOFT_KW_RE.test(text)
+
+  const score = (hasPhrase ? 2 : 0) + (compoundCount >= 1 ? 1 : 0) + (hasNum ? 1 : 0) + (hasSoftKw ? 1 : 0)
+  const detected = score >= 2
+  // Early exit — don't waste time on field extraction if not detected
+  if (!detected) return { detected: false, nom: '', prenom: '', dob: '', documentNumber: '', expiry: '' }
+
+  // ── Champ 1 : Nom ──────────────────────────────────────────────────────────
   let nom = ''
-  const f1 = text.match(/(?:^|\n)\s*1\s*[.,]?\s*([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-ZÉÈÊËÀÂÔÛÙÎÏÇa-zéèêëàâôûùîïç\-]+)/m)
-  if (f1) nom = f1[1].trim()
+  // Try numbered field first, then NOM: label
+  const f1a = text.match(/(?:^|\n)\s*1\s*[.,]?\s*([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-ZÉÈÊËÀÂÔÛÙÎÏÇa-zéèêëàâôûùîïç\-]+)/m)
+  const f1b = text.match(/NOM[^A-Za-z]{0,6}([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-Za-z\-]{2,})/i)
+  if (f1a) nom = f1a[1].trim()
+  else if (f1b) nom = f1b[1].trim()
 
+  // ── Champ 2 : Prénom ───────────────────────────────────────────────────────
   let prenom = ''
-  const f2 = text.match(/(?:^|\n)\s*2\s*[.,]?\s*([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-ZÉÈÊËÀÂÔÛÙÎÏÇa-zéèêëàâôûùîïç\-\s,]+)/m)
-  if (f2) {
-    prenom = f2[1].trim().split(/[,\n]/)[0].trim().split(/\s+/)[0]
-  }
+  const f2a = text.match(/(?:^|\n)\s*2\s*[.,]?\s*([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-ZÉÈÊËÀÂÔÛÙÎÏÇa-zéèêëàâôûùîïç\-\s,]+)/m)
+  const f2b = text.match(/PR[EÉ]NOM[S]?[^A-Za-z]{0,6}([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-Za-z\-\s]{2,})/i)
+  if (f2a) prenom = f2a[1].trim().split(/[,\n]/)[0].trim().split(/\s+/)[0]
+  else if (f2b) prenom = f2b[1].trim().split(/\s+/)[0]
 
-  const dob    = dateAfterField(text, /(?:^|\n)\s*3\s*[.,]?/m)
+  // ── Champ 3 : Date de naissance ────────────────────────────────────────────
+  const dob = dateAfterField(text, /(?:^|\n)\s*3\s*[.,]?/m)
+
+  // ── Champ 4b : Date d'expiration ───────────────────────────────────────────
   const expiry = dateAfterField(text, /4\s*[Bb]\s*[.,]?/)
 
+  // ── Champ 5 : Numéro du permis ─────────────────────────────────────────────
   let documentNumber = ''
   const f5 = text.match(/(?:^|\n)\s*5\s*[.,]?\s*([A-Z0-9\-]{6,20})/m)
   if (f5) documentNumber = f5[1].trim()
@@ -327,11 +355,31 @@ function parseDrivingLicense(text: string): DlResult {
 
 function parseCniRecto(text: string): { nom: string; prenom: string; dob: string } {
   let nom = '', prenom = '', dob = ''
-  const nomMatch    = text.match(/NOM[^A-Za-z]{0,4}([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-Za-z\-]{1,25})/)
-  const prenomMatch = text.match(/PR[EÉ]NOM[S]?[^A-Za-z]{0,4}([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-Za-z\-\s]{1,25})/)
-  const dobMatch    = text.match(/N[EÉ][E]?\s*LE\s*:?\s*(\d{2}[.\-/]\d{2}[.\-/]\d{2,4})/i)
-  if (nomMatch)    nom    = nomMatch[1].trim()
-  if (prenomMatch) prenom = prenomMatch[1].trim().split(/\s+/)[0]
+
+  // Nom — try multiple OCR-tolerant patterns
+  const nomPatterns = [
+    /NOM\s*:?\s*([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-Za-zÉÈÊËÀÂÔÛÙÎÏÇéèêëàâôûùîïç\-]{2,})/i,
+    /Nom\s*[:\-]?\s*([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-Za-zÉÈÊËÀÂÔÛÙÎÏÇéèêëàâôûùîïç\-]{2,})/,
+    /^([A-ZÉÈÊËÀÂÔÛÙÎÏÇ]{2,})\s*$/m,   // all-caps line (common on CNI)
+  ]
+  for (const re of nomPatterns) {
+    const m = text.match(re)
+    if (m) { nom = m[1].trim(); break }
+  }
+
+  // Prénom — try multiple patterns
+  const prenomPatterns = [
+    /PR[EÉ]NOM[S]?\s*:?\s*([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-Za-zÉÈÊËÀÂÔÛÙÎÏÇéèêëàâôûùîïç\-\s]{2,})/i,
+    /Pr[ée]nom\s*[:\-]?\s*([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-Za-zÉÈÊËÀÂÔÛÙÎÏÇéèêëàâôûùîïç\-\s]{2,})/,
+  ]
+  for (const re of prenomPatterns) {
+    const m = text.match(re)
+    if (m) { prenom = m[1].trim().split(/\s+/)[0]; break }
+  }
+
+  // Date de naissance
+  const dobMatch = text.match(/N[EÉ][E]?\s*(?:LE)?\s*:?\s*(\d{2}[.\-/]\d{2}[.\-/]\d{2,4})/i)
+    ?? text.match(/Date\s+de\s+naissance\s*:?\s*(\d{2}[.\-/]\d{2}[.\-/]\d{2,4})/i)
   if (dobMatch) {
     const p = dobMatch[1].split(/[.\-/]/)
     if (p.length === 3) {
@@ -711,9 +759,9 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
     ? 'Conditions optimales — appuyez pour capturer'
     : 'Centrez votre document dans le cadre'
 
-  const docKindLabel: Record<string, string> = {
-    permis: 'Permis de conduire', passport: 'Passeport',
-    sejour: 'Titre de séjour', cni: "Carte d'identité",
+  const familyLabel: Record<DocFamily, string> = {
+    cni: "Carte d'identité", permis: 'Permis de conduire',
+    passport: 'Passeport', sejour: 'Titre de séjour',
   }
 
   // ── Top bar title & step indicator logic ──────────────────────────────────
@@ -933,73 +981,81 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
           <div style={{
             position: 'relative', width: '100%', height: '100%',
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            padding: '80px 24px 140px',
+            padding: '72px 20px 140px', overflowY: 'auto',
           }}>
+            {/* Blurred document background */}
             {previewUrl && (
-              <img src={previewUrl} alt="Document" style={{
+              <img src={previewUrl} alt="" style={{
                 position: 'absolute', inset: 0, width: '100%', height: '100%',
-                objectFit: 'contain', padding: '60px 24px', filter: 'brightness(0.18)',
+                objectFit: 'cover', filter: 'brightness(0.12) blur(6px)', transform: 'scale(1.05)',
               }} />
             )}
+
+            {/* Result card */}
             <div style={{
-              position: 'relative', zIndex: 1, width: '100%', maxWidth: 340,
-              background: 'rgba(10,12,18,0.94)', border: '1px solid rgba(196,151,106,0.25)',
-              borderRadius: 18, padding: '24px 20px',
+              position: 'relative', zIndex: 1, width: '100%', maxWidth: 360,
+              background: 'rgba(10,12,18,0.96)', border: '1px solid rgba(196,151,106,0.2)',
+              borderRadius: 20, overflow: 'hidden',
             }}>
-              <div style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center',
-                gap: 12, marginBottom: 20,
-              }}>
-                <div style={{
-                  width: 56, height: 56, borderRadius: '50%',
-                  border: `2px solid ${CARAMEL}`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: 'rgba(196,151,106,0.1)',
-                  animation: 'checkPop 0.4s cubic-bezier(0.175,0.885,0.32,1.275)',
-                }}>
-                  <CheckCircle2 size={24} color={CARAMEL} />
+              {/* Document thumbnail strip */}
+              {previewUrl && (
+                <div style={{ position: 'relative', height: 100, overflow: 'hidden' }}>
+                  <img src={previewUrl} alt="Document" style={{
+                    width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.7)',
+                  }} />
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    background: 'linear-gradient(to bottom, transparent 40%, rgba(10,12,18,0.96) 100%)',
+                  }} />
+                  {/* Success badge on thumbnail */}
+                  <div style={{
+                    position: 'absolute', top: 10, right: 10,
+                    width: 30, height: 30, borderRadius: '50%',
+                    background: CARAMEL, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    animation: 'checkPop 0.4s cubic-bezier(0.175,0.885,0.32,1.275)',
+                  }}>
+                    <CheckCircle2 size={16} color="#fff" strokeWidth={3} />
+                  </div>
                 </div>
-                <div style={{ textAlign: 'center' }}>
-                  <p style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 700, color: '#fff' }}>
-                    {isVerso ? 'Verso enregistré' : 'Document reconnu'}
-                  </p>
+              )}
+
+              <div style={{ padding: '16px 20px 20px' }}>
+                {/* Label */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                   <span style={{
                     fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
                     textTransform: 'uppercase', color: CARAMEL,
                     border: '1px solid rgba(196,151,106,0.3)',
-                    padding: '3px 10px', borderRadius: 20, display: 'inline-block',
+                    padding: '3px 10px', borderRadius: 20,
                   }}>
-                    {isVerso
-                      ? 'Verso capturé'
-                      : `${docKindLabel[detectedKindRef.current] ?? 'Document'} — Recto`}
+                    {selectedFamily ? familyLabel[selectedFamily] : 'Document'}
+                    {' — '}
+                    {isVerso ? 'Verso' : 'Recto'}
+                  </span>
+                  <span style={{ fontSize: 11, color: 'rgba(196,151,106,0.8)', marginLeft: 'auto' }}>
+                    ✓ Vérifié
                   </span>
                 </div>
+
+                {/* Data rows */}
+                {!isVerso && (ocrData?.nom || ocrData?.prenom || ocrData?.dob || ocrData?.documentNumber) ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                    {(ocrData?.prenom || ocrData?.nom) && (
+                      <DataRow label="Identité" value={[ocrData?.prenom, ocrData?.nom].filter(Boolean).join(' ')} />
+                    )}
+                    {ocrData?.dob            && <DataRow label="Date de naissance" value={fmt(ocrData.dob)} />}
+                    {ocrData?.nationality    && <DataRow label="Nationalité"        value={ocrData.nationality} />}
+                    {ocrData?.documentNumber && <DataRow label="N° document"        value={ocrData.documentNumber} />}
+                    {ocrData?.expiry         && <DataRow label="Expire le"          value={fmt(ocrData.expiry)} />}
+                  </div>
+                ) : (
+                  <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, textAlign: 'center' }}>
+                    {isVerso
+                      ? 'Verso capturé — document complet.'
+                      : 'Document accepté. Les données seront vérifiées par le propriétaire.'}
+                  </p>
+                )}
               </div>
-
-              {/* Data rows — show on recto (or if verso happened to extract data) */}
-              {!isVerso && (
-                <div style={{
-                  borderTop: '1px solid rgba(255,255,255,0.07)',
-                  paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 0,
-                }}>
-                  {(ocrData?.prenom || ocrData?.nom) && (
-                    <DataRow label="Nom" value={[ocrData?.prenom, ocrData?.nom].filter(Boolean).join(' ')} />
-                  )}
-                  {ocrData?.dob            && <DataRow label="Né·e le"     value={fmt(ocrData.dob)} />}
-                  {ocrData?.nationality    && <DataRow label="Nationalité"  value={ocrData.nationality} />}
-                  {ocrData?.documentNumber && <DataRow label="N° document"  value={ocrData.documentNumber} />}
-                  {ocrData?.expiry         && <DataRow label="Expire le"    value={fmt(ocrData.expiry)} />}
-                </div>
-              )}
-
-              {isVerso && (
-                <p style={{
-                  margin: '12px 0 0', textAlign: 'center', fontSize: 12,
-                  color: 'rgba(255,255,255,0.45)', lineHeight: 1.6,
-                }}>
-                  Le verso a bien été capturé. Vous pouvez maintenant terminer.
-                </p>
-              )}
             </div>
           </div>
         )}
@@ -1016,15 +1072,15 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
               position: 'relative', zIndex: 1,
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20,
             }}>
-              {/* Step dots — recto done, verso next */}
-              <div style={{ display: 'flex', gap: 5, marginBottom: 4 }}>
-                {[1, 2].map(n => (
-                  <div key={n} style={{
-                    width: n === 1 ? 18 : 6, height: 6, borderRadius: 3,
-                    background: n === 1 ? CARAMEL : 'rgba(255,255,255,0.2)',
-                    transition: 'all 0.3s',
-                  }} />
-                ))}
+              {/* Step dots — step 1 done (caramel), step 2 active (white) */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                <div style={{ width: 22, height: 22, borderRadius: '50%', background: CARAMEL, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <CheckCircle2 size={13} color="#fff" strokeWidth={3} />
+                </div>
+                <div style={{ width: 28, height: 2, borderRadius: 1, background: 'rgba(255,255,255,0.2)' }} />
+                <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(255,255,255,0.12)', border: '2px solid rgba(255,255,255,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: 10, color: '#fff', fontWeight: 700 }}>2</span>
+                </div>
               </div>
 
               {/* Recto thumbnail */}
@@ -1051,11 +1107,14 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
               </div>
 
               <div style={{ textAlign: 'center' }}>
-                <p style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 700, color: '#fff' }}>
+                <p style={{ margin: '0 0 4px', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: CARAMEL, fontFamily: BAI.fontBody }}>
+                  Recto ✓ capturé
+                </p>
+                <p style={{ margin: '0 0 10px', fontFamily: BAI.fontDisplay, fontSize: 24, fontWeight: 700, fontStyle: 'italic', color: '#fff' }}>
                   Retournez votre document
                 </p>
-                <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.5)', maxWidth: 280, lineHeight: 1.6 }}>
-                  Photographiez maintenant le verso pour compléter votre dossier.
+                <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.5)', maxWidth: 260, lineHeight: 1.65 }}>
+                  Placez maintenant le <strong style={{ color: 'rgba(255,255,255,0.8)' }}>verso</strong> face à la caméra pour compléter votre dossier.
                 </p>
               </div>
             </div>
@@ -1089,11 +1148,16 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
               </div>
               <div>
                 <p style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 700, color: '#fff' }}>
-                  {phase === 'error' ? 'Erreur de lecture' : 'Document non reconnu'}
+                  {phase === 'error' ? 'Erreur de lecture' : 'Document non valide'}
                 </p>
-                <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.5)', maxWidth: 300, lineHeight: 1.6 }}>
+                <p style={{ margin: '0 0 10px', fontSize: 13, color: 'rgba(255,255,255,0.5)', maxWidth: 300, lineHeight: 1.6 }}>
                   {rejectReason}
                 </p>
+                {selectedFamily && (
+                  <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.3)', maxWidth: 300, lineHeight: 1.5 }}>
+                    Attendu : {selectedFamily ? familyLabel[selectedFamily] : 'pièce d\'identité officielle'} avec photo.
+                  </p>
+                )}
               </div>
             </div>
           </div>

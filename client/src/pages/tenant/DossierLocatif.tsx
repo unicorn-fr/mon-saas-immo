@@ -377,8 +377,18 @@ function DocSlot({
           docType={slot.docType}
           onComplete={async (captures: CaptureEntry[]) => {
             setShowCamera(false)
-            for (const { file, docType: dt } of captures) {
-              await handleFile(file, dt)
+            setUploading(true)
+            try {
+              for (const { file, docType: dt } of captures) {
+                const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'application/pdf']
+                if (!ALLOWED.includes(file.type)) { toast.error('Format non supporté.'); continue }
+                if (file.size > 10 * 1024 * 1024) { toast.error('Fichier trop volumineux (max 10 Mo).'); continue }
+                await onUpload(file, dt)
+              }
+            } catch {
+              toast.error("Erreur lors de l'envoi d'un document. Réessayez.")
+            } finally {
+              setUploading(false)
             }
           }}
           onClose={() => setShowCamera(false)}
