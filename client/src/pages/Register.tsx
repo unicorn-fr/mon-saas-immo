@@ -287,7 +287,6 @@ export default function Register() {
         lastName: prefix,
         role: 'TENANT',
       })
-      celebrateBig()
       setRegisteredEmail(formData.email)
       setScreen('verify_code')
     } catch (err) {

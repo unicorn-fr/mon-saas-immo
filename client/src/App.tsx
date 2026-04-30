@@ -190,7 +190,7 @@ function AppRoutes() {
       />
       <Route
         path="/register"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <Register />}
+        element={isAuthenticated && user?.emailVerified ? <Navigate to="/" replace /> : <Register />}
       />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />

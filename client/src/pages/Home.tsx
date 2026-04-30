@@ -179,7 +179,7 @@ export default function Home() {
           .stats-grid        { grid-template-columns: repeat(2, 1fr) !important; gap: 16px !important; }
           .steps-grid        { grid-template-columns: 1fr !important; }
           .feat-grid         { grid-template-columns: 1fr !important; }
-          .props-grid        { grid-template-columns: 1fr !important; }
+          .props-grid        { grid-template-columns: repeat(2, 1fr) !important; }
           .testi-grid        { grid-template-columns: 1fr !important; }
           .cta-grid          { flex-direction: column !important; }
           .footer-grid       { grid-template-columns: repeat(2, 1fr) !important; }
@@ -193,7 +193,7 @@ export default function Home() {
         }
         @media (min-width: 1024px) {
           .feat-grid   { grid-template-columns: repeat(3, 1fr) !important; }
-          .props-grid  { grid-template-columns: repeat(4, 1fr) !important; }
+          .props-grid  { grid-template-columns: repeat(3, 1fr) !important; }
           .testi-grid  { grid-template-columns: repeat(3, 1fr) !important; }
           .footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr !important; }
         }
@@ -348,10 +348,10 @@ export default function Home() {
           </div>
 
           {loadingProperties ? (
-            <div className="props-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 20 }}>
-              {[1, 2, 3, 4].map(n => (
+            <div className="props-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+              {[1, 2, 3].map(n => (
                 <div key={n} style={{ background: T.bgSurface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: 'hidden' }}>
-                  <div style={{ height: 200, background: T.border }} />
+                  <div style={{ height: 260, background: T.border }} />
                   <div style={{ padding: 20 }}>
                     <div style={{ height: 18, background: T.border, borderRadius: 4, marginBottom: 12, width: '70%' }} />
                     <div style={{ height: 14, background: T.border, borderRadius: 4, width: '50%' }} />
@@ -365,15 +365,15 @@ export default function Home() {
               <p style={{ fontFamily: T.fontBody, fontSize: 15 }}>Aucun bien disponible pour le moment.</p>
             </div>
           ) : (
-            <div className="props-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 20 }}>
-              {featuredProperties.map(property => (
+            <div className="props-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+              {featuredProperties.slice(0, 3).map(property => (
                 <Link key={property.id} to={`/properties/${property.id}`} style={{ textDecoration: 'none', display: 'block' }}>
                   <div
                     style={{ background: T.bgSurface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: 'hidden', boxShadow: T.shadow, transition: 'transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s cubic-bezier(0.16,1,0.3,1)' }}
                     onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-2px)'; el.style.boxShadow = T.shadowHover; el.style.borderColor = '#e8ccaa' }}
                     onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = T.shadow; el.style.borderColor = T.border }}
                   >
-                    <div style={{ position: 'relative', height: 200, background: T.bgMuted, overflow: 'hidden' }}>
+                    <div style={{ position: 'relative', height: 260, background: T.bgMuted, overflow: 'hidden' }}>
                       {property.images?.[0] ? (
                         <img src={property.images[0]} alt={property.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
                       ) : (

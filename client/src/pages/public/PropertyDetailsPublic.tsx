@@ -72,7 +72,9 @@ export default function PropertyDetailsPublic() {
   const [showShareMenu, setShowShareMenu] = useState(false)
   const [showPreQualModal, setShowPreQualModal] = useState(false)
   const [myApplication, setMyApplication] = useState<Application | null | undefined>(undefined)
+  const REQUIRED_DOC_CATEGORIES = ['IDENTITE', 'EMPLOI', 'REVENUS', 'DOMICILE']
   const [docCategories, setDocCategories] = useState<string[]>([])
+  const dossierComplete = REQUIRED_DOC_CATEGORIES.every(c => docCategories.includes(c))
   const [showBookingModal, setShowBookingModal] = useState(false)
 
   useEffect(() => {
@@ -776,7 +778,7 @@ export default function PropertyDetailsPublic() {
                       >
                         Candidature non retenue
                       </div>
-                    ) : (
+                    ) : dossierComplete ? (
                       <button
                         onClick={() => setShowPreQualModal(true)}
                         className="w-full flex items-center justify-center gap-2 px-4 py-3 mb-3 transition-opacity hover:opacity-90"
@@ -794,6 +796,31 @@ export default function PropertyDetailsPublic() {
                         <SendHorizonal className="w-4 h-4" />
                         Postuler à cette annonce
                       </button>
+                    ) : (
+                      <div style={{ marginBottom: 12 }}>
+                        <div
+                          className="w-full flex items-center justify-center gap-2 px-4 py-3 mb-2"
+                          style={{
+                            background: '#f4f2ee',
+                            color: '#9e9b96',
+                            fontFamily: M.body,
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            borderRadius: '8px',
+                            border: '1px solid #e4e1db',
+                            cursor: 'not-allowed',
+                          }}
+                        >
+                          <SendHorizonal className="w-4 h-4" />
+                          Postuler à cette annonce
+                        </div>
+                        <p style={{ fontFamily: M.body, fontSize: 12, color: '#9b1c1c', textAlign: 'center', margin: 0, lineHeight: 1.5 }}>
+                          Dossier locatif incomplet.{' '}
+                          <a href="/dossier" style={{ color: '#9b1c1c', fontWeight: 600, textDecoration: 'underline' }}>
+                            Complétez-le pour postuler.
+                          </a>
+                        </p>
+                      </div>
                     )}
                   </>
                 ) : user?.role === 'OWNER' ? (
