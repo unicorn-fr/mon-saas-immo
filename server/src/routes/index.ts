@@ -33,6 +33,7 @@ import paymentRoutes from './payment.routes.js'
 import dashboardRoutes from './dashboard.routes.js'
 import waitlistRoutes from './waitlist.routes.js'
 import edlRoutes from './edl.routes.js'
+import ocrRoutes from './ocr.routes.js'
 
 /**
  * Register all application routes on the Express app.
@@ -73,6 +74,9 @@ export function registerRoutes(app: Application, prefix: string): void {
 
   // ── EDL Synchrone ───────────────────────────────────────────────────────
   app.use(`${prefix}/edl`, edlRoutes)
+
+  // ── OCR (Claude Haiku) ──────────────────────────────────────────────────
+  app.use(`${prefix}/ocr`, ocrRoutes)
 
   // ── Administration ──────────────────────────────────────────────────────
   app.use(`${prefix}/admin`, adminRoutes)

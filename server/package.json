@@ -28,6 +28,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.91.1",
     "@prisma/client": "^5.9.0",
     "@react-pdf/renderer": "^3.4.0",
     "@types/qrcode": "^1.5.6",

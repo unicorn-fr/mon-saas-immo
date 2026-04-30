@@ -3,12 +3,14 @@ import {
   User, Briefcase, TrendingUp, Home, Shield,
   Upload, Eye, Trash2, CheckCircle2, Loader2, BookOpen, Star,
   ArrowRight, ArrowLeft, HelpCircle, CreditCard,
-  LayoutGrid, ChevronDown, ChevronUp,
+  LayoutGrid, ChevronDown, ChevronUp, Camera, FileText,
 } from 'lucide-react'
 import { Layout } from '../../components/layout/Layout'
 import { useAuth } from '../../hooks/useAuth'
 import { dossierService, TenantDocument } from '../../services/dossier.service'
 import { DocumentViewerModal } from '../../components/document/DocumentViewerModal'
+import { CameraCapture } from '../../components/dossier/CameraCapture'
+import { NationalitySearch } from '../../components/dossier/NationalitySearch'
 import toast from 'react-hot-toast'
 import { BAI } from '../../constants/bailio-tokens'
 
@@ -247,11 +249,25 @@ function DocSlot({
   onDelete: (id: string) => Promise<void>
   onView: (doc: TenantDocument) => void
 }) {
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef   = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
-  const [deleting, setDeleting]   = useState(false)
+  const [deleting,  setDeleting]  = useState(false)
+  const [dragging,  setDragging]  = useState(false)
+  const [showCamera, setShowCamera] = useState(false)
+
+  const isImage = doc && (doc.fileUrl?.match(/\.(jpe?g|png|webp|gif)/i) || doc.fileName?.match(/\.(jpe?g|png|webp|gif)/i))
 
   const handleFile = async (file: File) => {
+    // Basic client-side guard (10 MB, types)
+    const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'application/pdf']
+    if (!ALLOWED.includes(file.type)) {
+      toast.error('Format non supporté. Utilisez JPG, PNG, WebP ou PDF.')
+      return
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Fichier trop volumineux (max 10 Mo).')
+      return
+    }
     setUploading(true)
     try { await onUpload(file, slot.docType) } finally { setUploading(false) }
   }
@@ -262,56 +278,64 @@ function DocSlot({
     try { await onDelete(doc.id) } finally { setDeleting(false) }
   }
 
-  return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: 10,
-      padding: '10px 14px',
-      border: `1px solid ${doc ? BAI.tenantBorder : BAI.border}`,
-      borderRadius: 10,
-      background: doc ? BAI.tenantLight : BAI.bgSurface,
-      transition: 'background 0.15s, border-color 0.15s',
-    }}>
-      {/* Status dot */}
-      {doc
-        ? <CheckCircle2 style={{ width: 15, height: 15, color: BAI.tenant, flexShrink: 0 }} />
-        : <div style={{
-            width: 15, height: 15, borderRadius: '50%', flexShrink: 0,
-            border: `2px solid ${slot.required ? BAI.caramel : BAI.borderStrong}`,
-          }} />
-      }
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragging(false)
+    const file = e.dataTransfer.files[0]
+    if (file) handleFile(file)
+  }
 
-      {/* Label */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{
-          fontSize: 13, fontFamily: BAI.fontBody, margin: 0,
-          color: doc ? BAI.tenant : BAI.ink,
-          fontWeight: doc ? 600 : slot.required ? 500 : 400,
+  // ── Uploaded state ─────────────────────────────────────────────────────────
+  if (doc) {
+    return (
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 12,
+        padding: '12px 14px',
+        border: `1px solid ${BAI.tenantBorder}`,
+        borderRadius: 12,
+        background: BAI.tenantLight,
+      }}>
+        {/* Thumbnail or icon */}
+        <div style={{
+          width: 48, height: 48, borderRadius: 8, flexShrink: 0, overflow: 'hidden',
+          background: BAI.bgMuted, border: `1px solid ${BAI.border}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          {slot.label}
-          {slot.required && !doc && (
-            <span style={{ marginLeft: 5, fontSize: 10, color: BAI.caramel, fontWeight: 500 }}>requis</span>
+          {isImage ? (
+            <img
+              src={doc.fileUrl} alt={doc.fileName}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              onError={e => { e.currentTarget.style.display = 'none' }}
+            />
+          ) : (
+            <FileText style={{ width: 22, height: 22, color: BAI.inkFaint }} />
           )}
-        </p>
-        {doc && (
+        </div>
+
+        {/* Info */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
+            <CheckCircle2 style={{ width: 13, height: 13, color: BAI.tenant, flexShrink: 0 }} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: BAI.tenant, fontFamily: BAI.fontBody }}>
+              {slot.label}
+            </span>
+          </div>
           <p style={{
-            fontSize: 11, color: BAI.inkFaint, fontFamily: BAI.fontBody,
-            margin: '1px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 240,
+            fontSize: 11, color: BAI.inkFaint, fontFamily: BAI.fontBody, margin: 0,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
             {doc.fileName}
           </p>
-        )}
-      </div>
+        </div>
 
-      {/* Help */}
-      <HelpTooltip content={slot.help} />
+        <HelpTooltip content={slot.help} />
 
-      {/* Actions */}
-      {doc ? (
+        {/* Actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
           <button
             onClick={() => onView(doc)}
             style={{
-              padding: '4px 10px', borderRadius: 7, border: `1px solid ${BAI.tenantBorder}`,
+              padding: '5px 10px', borderRadius: 7, border: `1px solid ${BAI.tenantBorder}`,
               background: BAI.bgSurface, color: BAI.tenant,
               fontSize: 12, fontFamily: BAI.fontBody, cursor: 'pointer',
               display: 'flex', alignItems: 'center', gap: 4,
@@ -322,7 +346,7 @@ function DocSlot({
           <button
             onClick={handleDelete} disabled={deleting}
             style={{
-              padding: '4px 8px', borderRadius: 7, border: `1px solid ${BAI.border}`,
+              padding: '5px 8px', borderRadius: 7, border: `1px solid ${BAI.border}`,
               background: BAI.bgSurface, color: deleting ? BAI.inkFaint : '#9b1c1c',
               fontSize: 12, cursor: deleting ? 'default' : 'pointer',
               display: 'flex', alignItems: 'center',
@@ -330,39 +354,131 @@ function DocSlot({
           >
             {deleting
               ? <Loader2 style={{ width: 12, height: 12 }} className="animate-spin" />
-              : <Trash2 style={{ width: 12, height: 12 }} />
-            }
+              : <Trash2 style={{ width: 12, height: 12 }} />}
           </button>
         </div>
-      ) : (
-        <>
-          <input
-            ref={inputRef} type="file"
-            accept=".pdf,image/jpeg,image/png,image/webp"
-            style={{ display: 'none' }}
-            onChange={(e) => {
-              const f = e.target.files?.[0]
-              if (f) { handleFile(f); e.target.value = '' }
-            }}
-          />
-          <button
-            onClick={() => inputRef.current?.click()} disabled={uploading}
-            style={{
-              padding: '4px 12px', borderRadius: 7, border: `1px solid ${BAI.borderStrong}`,
-              background: uploading ? BAI.bgMuted : BAI.bgSurface,
-              color: uploading ? BAI.inkFaint : BAI.inkMid,
-              fontSize: 12, fontFamily: BAI.fontBody, cursor: uploading ? 'default' : 'pointer',
-              display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0,
-            }}
-          >
-            {uploading
-              ? <><Loader2 style={{ width: 11, height: 11 }} className="animate-spin" />Envoi…</>
-              : <><Upload style={{ width: 11, height: 11 }} />Ajouter</>
-            }
-          </button>
-        </>
+      </div>
+    )
+  }
+
+  // ── Empty / upload state ───────────────────────────────────────────────────
+  return (
+    <>
+      {showCamera && (
+        <CameraCapture
+          docType={slot.docType}
+          onCapture={file => { setShowCamera(false); handleFile(file) }}
+          onClose={() => setShowCamera(false)}
+        />
       )}
-    </div>
+
+      <div
+        onDragEnter={() => setDragging(true)}
+        onDragOver={e => { e.preventDefault(); setDragging(true) }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={handleDrop}
+        style={{
+          borderRadius: 12,
+          border: `1.5px dashed ${dragging ? BAI.tenant : uploading ? BAI.caramel : BAI.border}`,
+          background: dragging ? BAI.tenantLight : BAI.bgSurface,
+          transition: 'all 0.15s',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Header row */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '11px 14px 8px',
+        }}>
+          <div style={{
+            width: 14, height: 14, borderRadius: '50%', flexShrink: 0,
+            border: `2px solid ${slot.required ? BAI.caramel : BAI.border}`,
+          }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ fontSize: 13, fontWeight: slot.required ? 600 : 400, color: BAI.ink, fontFamily: BAI.fontBody }}>
+              {slot.label}
+            </span>
+            {slot.required && (
+              <span style={{ marginLeft: 6, fontSize: 10, color: BAI.caramel, fontWeight: 600 }}>requis</span>
+            )}
+          </div>
+          <HelpTooltip content={slot.help} />
+        </div>
+
+        {/* Drop zone + action buttons */}
+        <div style={{ padding: '0 14px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {/* Drop hint */}
+          <div style={{
+            padding: '10px',
+            borderRadius: 8,
+            background: dragging ? 'rgba(27,94,59,0.06)' : BAI.bgMuted,
+            textAlign: 'center',
+            fontSize: 11, color: BAI.inkFaint, fontFamily: BAI.fontBody,
+            transition: 'background 0.15s',
+          }}>
+            {uploading
+              ? <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  <Loader2 style={{ width: 13, height: 13 }} className="animate-spin" />
+                  Envoi en cours…
+                </span>
+              : dragging
+                ? '↓ Relâcher pour ajouter'
+                : 'Glisser-déposer un fichier ici'
+            }
+          </div>
+
+          {/* Buttons row */}
+          <div style={{ display: 'flex', gap: 6 }}>
+            {/* File import */}
+            <input
+              ref={inputRef} type="file"
+              accept=".pdf,image/jpeg,image/png,image/webp,image/heic"
+              style={{ display: 'none' }}
+              onChange={e => {
+                const f = e.target.files?.[0]
+                if (f) { handleFile(f); e.target.value = '' }
+              }}
+            />
+            <button
+              onClick={() => inputRef.current?.click()}
+              disabled={uploading}
+              style={{
+                flex: 1, padding: '8px 10px', borderRadius: 8,
+                border: `1px solid ${BAI.border}`,
+                background: BAI.bgSurface, color: BAI.inkMid,
+                fontSize: 12, fontFamily: BAI.fontBody, cursor: uploading ? 'default' : 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                transition: 'border-color 0.15s, background 0.15s',
+              }}
+              onMouseEnter={e => { if (!uploading) { e.currentTarget.style.borderColor = BAI.inkMid; e.currentTarget.style.background = BAI.bgMuted } }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = BAI.border; e.currentTarget.style.background = BAI.bgSurface }}
+            >
+              <Upload style={{ width: 12, height: 12 }} />
+              Importer
+            </button>
+
+            {/* Camera button */}
+            <button
+              onClick={() => setShowCamera(true)}
+              disabled={uploading}
+              style={{
+                flex: 1, padding: '8px 10px', borderRadius: 8,
+                border: `1px solid ${BAI.border}`,
+                background: BAI.bgSurface, color: BAI.inkMid,
+                fontSize: 12, fontFamily: BAI.fontBody, cursor: uploading ? 'default' : 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                transition: 'border-color 0.15s, background 0.15s',
+              }}
+              onMouseEnter={e => { if (!uploading) { e.currentTarget.style.borderColor = BAI.caramel; e.currentTarget.style.color = BAI.caramel } }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = BAI.border; e.currentTarget.style.color = BAI.inkMid }}
+            >
+              <Camera style={{ width: 12, height: 12 }} />
+              Caméra
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
   )
 }
 
@@ -665,12 +781,18 @@ export default function DossierLocatif() {
   const [loadingDocs, setLoadingDocs] = useState(true)
   const [viewerDoc,  setViewerDoc]  = useState<TenantDocument | null>(null)
 
+  // ── OCR state ───────────────────────────────────────────────────────────────
+  const [ocrResult, setOcrResult] = useState<Record<string, string> | null>(null)
+
   useEffect(() => {
     dossierService.getDocuments()
       .then(setDocuments)
       .catch(() => toast.error('Impossible de charger vos documents'))
       .finally(() => setLoadingDocs(false))
   }, [])
+
+  // Identity doc types that trigger OCR auto-fill
+  const OCR_DOC_TYPES = new Set(['CNI_RECTO', 'PASSEPORT', 'TITRE_SEJOUR'])
 
   const handleUpload = useCallback(async (file: File, category: string, docType: string) => {
     const doc = await dossierService.uploadDocument(category, docType, file)
@@ -679,7 +801,39 @@ export default function DossierLocatif() {
       return [doc, ...filtered]
     })
     toast.success('Document ajouté')
-  }, [])
+
+    // Trigger OCR for identity documents (fire-and-forget, non-blocking)
+    if (OCR_DOC_TYPES.has(docType) && file.type.startsWith('image/')) {
+      try {
+        const fd = new FormData()
+        fd.append('file', file)
+        fd.append('docType', docType)
+        const token = localStorage.getItem('accessToken') ?? sessionStorage.getItem('accessToken') ?? ''
+        const res = await fetch('/api/v1/ocr/extract', {
+          method: 'POST',
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: fd,
+        })
+        if (res.ok) {
+          const json = await res.json()
+          const d = json.data as Record<string, string>
+          if (d && (d.nom || d.prenom)) {
+            setOcrResult(d)
+            // Pre-fill only empty fields
+            setForm(prev => ({
+              firstName:   prev.firstName   || (d.prenom ?? ''),
+              lastName:    prev.lastName    || (d.nom ?? ''),
+              birthDate:   prev.birthDate   || (d.dob ?? ''),
+              birthCity:   prev.birthCity,
+              nationality: prev.nationality || (d.nationality ?? ''),
+            }))
+          }
+        }
+      } catch {
+        // OCR failure is silent — user fills manually
+      }
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDelete = useCallback(async (id: string) => {
     await dossierService.deleteDocument(id)
@@ -935,6 +1089,29 @@ export default function DossierLocatif() {
                 </p>
               </div>
 
+              {/* OCR auto-fill banner (shown after ID doc uploaded + OCR extracted) */}
+              {ocrResult && (
+                <div style={{
+                  marginBottom: 16, padding: '12px 16px', borderRadius: 10,
+                  background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`,
+                  display: 'flex', alignItems: 'flex-start', gap: 10,
+                }}>
+                  <CheckCircle2 style={{ width: 16, height: 16, color: BAI.tenant, flexShrink: 0, marginTop: 1 }} />
+                  <div>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: BAI.tenant }}>
+                      Données extraites automatiquement
+                    </p>
+                    <p style={{ margin: '2px 0 0', fontSize: 12, color: BAI.inkMid }}>
+                      Vérifiez et corrigez si nécessaire avant de continuer.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setOcrResult(null)}
+                    style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: BAI.inkFaint, flexShrink: 0 }}
+                  >×</button>
+                </div>
+              )}
+
               {/* Priority: Prénom + Nom */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ marginBottom: 20 }}>
                 <FormField
@@ -962,8 +1139,8 @@ export default function DossierLocatif() {
                   label="Ville de naissance" placeholder="Paris" value={form.birthCity}
                   onChange={v => setForm(p => ({ ...p, birthCity: v }))}
                 />
-                <FormField
-                  label="Nationalité" placeholder="Française" value={form.nationality}
+                <NationalitySearch
+                  value={form.nationality}
                   onChange={v => setForm(p => ({ ...p, nationality: v }))}
                 />
               </div>

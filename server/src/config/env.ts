@@ -133,6 +133,7 @@ const data: any = parsedEnv.success ? parsedEnv.data : {
   ADMIN_EMAILS: process.env.ADMIN_EMAILS,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+  ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
 }
 
 export const env = {
@@ -155,6 +156,7 @@ export const env = {
 
   GOOGLE_CLIENT_ID: data.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: data.GOOGLE_CLIENT_SECRET,
+  ANTHROPIC_API_KEY: data.ANTHROPIC_API_KEY || '',
 
   MAX_FILE_SIZE: parseInt(data.MAX_FILE_SIZE, 10),
   UPLOAD_DIR: data.UPLOAD_DIR,
