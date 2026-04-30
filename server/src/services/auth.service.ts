@@ -652,7 +652,10 @@ class AuthService {
           },
         })
       } else {
-        // Create new user
+        // Create new user — blocked in waitlist mode
+        if (env.LAUNCH_MODE === 'waitlist') {
+          throw new Error('Les inscriptions sont fermées. Bailio ouvre bientôt — rejoignez la liste d\'attente.')
+        }
         isNewUser = true
         user = await prisma.user.create({
           data: {

@@ -39,8 +39,8 @@ router.post('/verify-email-code', authController.verifyEmailCode.bind(authContro
 // POST /api/v1/auth/reset-password - Reset password with token
 router.post('/reset-password', authController.resetPassword.bind(authController))
 
-// POST /api/v1/auth/google - Google OAuth login (bloqué en mode waitlist pour les nouveaux comptes)
-router.post('/google', requireOpenRegistrations, authController.googleAuth.bind(authController))
+// POST /api/v1/auth/google - Google OAuth login (waitlist check inside service for new users only)
+router.post('/google', authController.googleAuth.bind(authController))
 
 // POST /api/v1/auth/magic-link — envoie un magic link (5 tentatives / heure)
 router.post('/magic-link', emailRateLimiter, authController.sendMagicLink.bind(authController))

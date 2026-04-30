@@ -261,8 +261,9 @@ export default function Register() {
         SUPER_ADMIN: '/super-admin', ADMIN: '/admin',
       }
       navigate(paths[u.role] ?? '/', { replace: true })
-    } catch {
-      toast.error('Inscription Google échouée.')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Inscription Google échouée.'
+      toast.error(msg)
     }
   }
 

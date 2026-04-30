@@ -83,8 +83,9 @@ export default function Login() {
     try {
       const { user: u } = await googleLogin(idToken)
       redirectByRole(u.role)
-    } catch {
-      toast.error('Connexion Google échouée.')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Connexion Google échouée.'
+      toast.error(msg)
     }
   }
 
