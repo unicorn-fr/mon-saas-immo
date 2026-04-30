@@ -240,9 +240,9 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
       const fd = new FormData()
       fd.append('file', file)
       fd.append('docType', dt)
-      const res = await apiClient.post('/ocr/extract', fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
+      // ⚠️ Do NOT set Content-Type manually — axios auto-sets multipart/form-data
+      // with the correct boundary when FormData is passed. Manual override breaks multer.
+      const res = await apiClient.post('/ocr/extract', fd)
       const d = res.data?.data
       if (!d || d.isIdDocument === false) {
         setRejectReason(
@@ -262,8 +262,17 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
       })
       setPhaseSync('verified')
       return true
-    } catch {
-      setRejectReason('Erreur réseau. Vérifiez votre connexion et réessayez.')
+    } catch (err: unknown) {
+      // Extract server error message if available
+      const axiosData = (err as any)?.response?.data
+      const serverMsg = axiosData?.message as string | undefined
+      if (serverMsg === 'OCR non configuré.') {
+        setRejectReason('Service OCR non disponible. Importez le document manuellement.')
+      } else if ((err as any)?.response?.status === 401) {
+        setRejectReason('Session expirée. Fermez et reconnectez-vous.')
+      } else {
+        setRejectReason(serverMsg || 'Erreur réseau. Vérifiez votre connexion et réessayez.')
+      }
       setPhaseSync('error')
       return false
     }
