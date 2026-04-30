@@ -40,6 +40,7 @@ const STEPS = [
 ] as const
 
 const STORAGE_KEY = 'dossier_stepper_v1'
+const GUIDE_DONE_KEY = 'dossier_guide_done_v1'
 const TOTAL_STEPS = STEPS.length // 6
 
 // ── Document categories with per-slot help text ────────────────────────────────
@@ -628,7 +629,10 @@ export default function DossierLocatif() {
   const { user, updateProfile } = useAuth()
 
   // ── Stepper state (persisted) ───────────────────────────────────────────────
+  // Si le guide a déjà été terminé, on va directement en mode vue d'ensemble.
+  const guideDone = (() => { try { return localStorage.getItem(GUIDE_DONE_KEY) === '1' } catch { return false } })()
   const [currentStep, setCurrentStep] = useState<number>(() => {
+    if (guideDone) return 0
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved !== null) return Number(saved)
@@ -636,9 +640,9 @@ export default function DossierLocatif() {
     return 0
   })
   const [showOverview, setShowOverview] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem(STORAGE_KEY) === String(TOTAL_STEPS)
-    } catch { return false }
+    // Si guide déjà fait → vue d'ensemble directement
+    if (guideDone) return true
+    try { return localStorage.getItem(STORAGE_KEY) === String(TOTAL_STEPS) } catch { return false }
   })
 
   const goToStep = (n: number) => {
@@ -646,7 +650,10 @@ export default function DossierLocatif() {
     setCurrentStep(clamped)
     if (clamped >= TOTAL_STEPS) {
       setShowOverview(true)
-      try { localStorage.setItem(STORAGE_KEY, String(TOTAL_STEPS)) } catch { /* ignore */ }
+      try {
+        localStorage.setItem(STORAGE_KEY, String(TOTAL_STEPS))
+        localStorage.setItem(GUIDE_DONE_KEY, '1') // ne plus jamais montrer le guide
+      } catch { /* ignore */ }
     } else {
       setShowOverview(false)
       try { localStorage.setItem(STORAGE_KEY, String(clamped)) } catch { /* ignore */ }

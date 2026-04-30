@@ -127,96 +127,124 @@ export default function TenantDashboard() {
 
   // ── ONBOARDING BLOQUANT — dossier incomplet et pas de bail actif ─────────
   if (!activeContract && dossierPercent < 100) {
-    const steps = [
-      { cat: 'IDENTITE', label: 'Pièce d\'identité', icon: '🪪', done: false },
-      { cat: 'EMPLOI',   label: 'Justificatif d\'emploi', icon: '💼', done: false },
-      { cat: 'REVENUS',  label: 'Bulletins de salaire', icon: '💶', done: false },
-      { cat: 'DOMICILE', label: 'Justificatif de domicile', icon: '🏠', done: false },
-    ].map(s => ({ ...s, done: false }))
-    // marquer les catégories uploadées (on n'a pas les docs ici, on calcule via percent)
+    const ONBOARDING_STEPS = [
+      { cat: 'IDENTITE', label: 'Pièce d\'identité',       sub: 'CNI ou passeport en cours de validité', Icon: CreditCard },
+      { cat: 'EMPLOI',   label: 'Justificatif d\'emploi',  sub: 'Contrat de travail, promesse d\'embauche…', Icon: Briefcase },
+      { cat: 'REVENUS',  label: 'Bulletins de salaire',     sub: '3 derniers bulletins + avis d\'imposition', Icon: Banknote },
+      { cat: 'DOMICILE', label: 'Justificatif de domicile', sub: 'Quittance de loyer ou facture récente', Icon: Home },
+    ] as const
     const coveredCats = Math.round(dossierPercent / 100 * REQUIRED_CATEGORIES.length)
-    const stepsWithDone = steps.map((s, i) => ({ ...s, done: i < coveredCats }))
 
     return (
       <Layout>
-        <div style={{ minHeight: '100vh', background: BAI.bgBase, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-          {/* ── Bandeau top ── */}
-          <div style={{ background: BAI.night, padding: 'clamp(40px,8vh,80px) 16px 0' }}>
-            <div style={{ maxWidth: 560, margin: '0 auto', textAlign: 'center', paddingBottom: 'clamp(40px,6vh,64px)' }}>
-              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, marginBottom: 14 }}>
-                Étape obligatoire
-              </p>
-              <h1 style={{
-                fontFamily: "'Cormorant Garamond', Georgia, serif",
-                fontSize: 'clamp(28px,6vw,52px)', fontWeight: 700, fontStyle: 'italic',
-                color: '#ffffff', lineHeight: 1.1, margin: '0 0 16px',
-              }}>
-                Construis ton dossier<br />
-                <em style={{ color: BAI.caramel }}>avant de postuler.</em>
+        <style>{`
+          @media (max-width: 600px) {
+            .onb-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+            .onb-hero  { padding: 48px 20px 0 !important; }
+            .onb-body  { padding: 0 16px 56px !important; }
+          }
+        `}</style>
+        <div style={{ minHeight: '100vh', background: BAI.bgBase, fontFamily: BAI.fontBody }}>
+
+          {/* ── Hero sombre ── */}
+          <div className="onb-hero" style={{ background: BAI.night, padding: 'clamp(56px,10vh,100px) 24px 0' }}>
+            <div style={{ maxWidth: 680, margin: '0 auto', textAlign: 'center', paddingBottom: 'clamp(48px,8vh,80px)' }}>
+
+              {/* Badge */}
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(196,151,106,0.14)', border: '1px solid rgba(196,151,106,0.35)', borderRadius: 999, padding: '6px 16px', marginBottom: 28 }}>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: BAI.caramel }} />
+                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel }}>
+                  Avant de commencer
+                </span>
+              </div>
+
+              <h1 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(30px,6vw,56px)', color: '#fff', lineHeight: 1.08, margin: '0 0 18px' }}>
+                Ton dossier locatif,<br /><em style={{ color: BAI.caramel }}>une seule fois.</em>
               </h1>
-              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.65)', lineHeight: 1.65, margin: '0 0 32px', maxWidth: 420, marginLeft: 'auto', marginRight: 'auto' }}>
-                Sans dossier complet, les propriétaires ne peuvent pas évaluer ta candidature.
-                Ça prend 5 minutes — et tu n'auras à le faire qu'une seule fois.
+              <p style={{ fontSize: 'clamp(14px,1.5vw,16px)', color: 'rgba(255,255,255,0.6)', lineHeight: 1.7, maxWidth: 480, margin: '0 auto 36px' }}>
+                Constitue-le en 5 minutes. Il sera partagé automatiquement avec les propriétaires
+                à chaque candidature — tu n'auras jamais à le refaire.
               </p>
 
-              {/* Barre de progression */}
-              <div style={{ background: 'rgba(255,255,255,0.10)', borderRadius: 999, height: 8, maxWidth: 360, margin: '0 auto 10px', overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${dossierPercent}%`, background: BAI.caramel, borderRadius: 999, transition: 'width 0.4s' }} />
+              {/* Progress ring + label */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+                <div style={{ position: 'relative', width: 80, height: 80 }}>
+                  <svg width="80" height="80" viewBox="0 0 80 80" style={{ transform: 'rotate(-90deg)' }}>
+                    <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,0.10)" strokeWidth="7" />
+                    <circle cx="40" cy="40" r="34" fill="none" stroke={BAI.caramel} strokeWidth="7"
+                      strokeDasharray={`${2 * Math.PI * 34}`}
+                      strokeDashoffset={`${2 * Math.PI * 34 * (1 - dossierPercent / 100)}`}
+                      strokeLinecap="round"
+                      style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+                    />
+                  </svg>
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 18, color: '#fff' }}>{dossierPercent}%</span>
+                  </div>
+                </div>
+                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
+                  {coveredCats} / {REQUIRED_CATEGORIES.length} catégories complètes
+                </p>
               </div>
-              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', margin: 0 }}>
-                {dossierPercent}% complété · {coveredCats}/{REQUIRED_CATEGORIES.length} catégories
-              </p>
             </div>
           </div>
 
-          {/* ── Cartes des étapes ── */}
-          <div style={{ maxWidth: 560, margin: '-24px auto 0', padding: '0 16px 48px' }}>
-            <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 24px rgba(13,12,10,0.10)' }}>
-              {stepsWithDone.map((step, i) => (
-                <div key={step.cat} style={{
-                  display: 'flex', alignItems: 'center', gap: 14, padding: '18px 20px',
-                  borderBottom: i < stepsWithDone.length - 1 ? `1px solid ${BAI.border}` : 'none',
-                }}>
-                  <div style={{
-                    width: 40, height: 40, borderRadius: 10, flexShrink: 0,
-                    background: step.done ? BAI.tenantLight : BAI.bgMuted,
-                    border: `1px solid ${step.done ? BAI.tenantBorder : BAI.border}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 18,
+          {/* ── Corps ── */}
+          <div className="onb-body" style={{ maxWidth: 680, margin: '-20px auto 0', padding: '0 24px 64px' }}>
+
+            {/* Grille des 4 étapes */}
+            <div className="onb-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 24 }}>
+              {ONBOARDING_STEPS.map((step, i) => {
+                const done = i < coveredCats
+                const { Icon } = step
+                return (
+                  <div key={step.cat} style={{
+                    background: BAI.bgSurface, border: `1px solid ${done ? BAI.tenantBorder : BAI.border}`,
+                    borderRadius: 16, padding: '20px 18px',
+                    boxShadow: done ? '0 2px 12px rgba(27,94,59,0.07)' : BAI.shadowMd,
+                    display: 'flex', flexDirection: 'column', gap: 12,
+                    transition: 'border-color 0.2s',
                   }}>
-                    {step.done ? <CheckCircle size={18} color={BAI.tenant} /> : step.icon}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{
+                        width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+                        background: done ? BAI.tenantLight : BAI.bgMuted,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <Icon size={17} color={done ? BAI.tenant : BAI.inkFaint} />
+                      </div>
+                      {done
+                        ? <CheckCircle size={16} color={BAI.tenant} />
+                        : <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.caramel, background: '#fdf5ec', padding: '3px 8px', borderRadius: 20, border: '1px solid #f3c99a' }}>Requis</span>
+                      }
+                    </div>
+                    <div>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: done ? BAI.tenant : BAI.ink, margin: '0 0 3px' }}>{step.label}</p>
+                      <p style={{ fontSize: 11, color: BAI.inkFaint, margin: 0, lineHeight: 1.5 }}>{step.sub}</p>
+                    </div>
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: BAI.ink, margin: '0 0 2px' }}>{step.label}</p>
-                    <p style={{ fontSize: 12, color: step.done ? BAI.tenant : BAI.inkFaint, margin: 0 }}>
-                      {step.done ? 'Document uploadé ✓' : 'Document manquant'}
-                    </p>
-                  </div>
-                  {!step.done && (
-                    <span style={{ fontSize: 11, fontWeight: 600, color: BAI.caramel, background: '#fdf5ec', padding: '3px 10px', borderRadius: 20, border: '1px solid #f3c99a', flexShrink: 0 }}>
-                      Requis
-                    </span>
-                  )}
-                </div>
-              ))}
+                )
+              })}
             </div>
 
-            {/* CTA principal */}
-            <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <button
-                onClick={() => navigate('/dossier')}
-                style={{
-                  width: '100%', padding: '16px', borderRadius: 12,
-                  background: BAI.night, color: '#fff', border: 'none', cursor: 'pointer',
-                  fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 15, fontWeight: 600,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                }}>
-                Compléter mon dossier <ArrowRight size={16} />
-              </button>
-              <p style={{ textAlign: 'center', fontSize: 12, color: BAI.inkFaint, margin: 0 }}>
-                Tu pourras accéder au reste du tableau de bord une fois ton dossier terminé.
-              </p>
-            </div>
+            {/* CTA */}
+            <button
+              onClick={() => navigate('/dossier')}
+              style={{
+                width: '100%', padding: '16px', borderRadius: 12,
+                background: BAI.night, color: '#fff', border: 'none', cursor: 'pointer',
+                fontFamily: BAI.fontBody, fontSize: 15, fontWeight: 600,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                boxShadow: '0 4px 16px rgba(26,26,46,0.18)',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#2a2a4e' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = BAI.night }}
+            >
+              Constituer mon dossier <ArrowRight size={16} />
+            </button>
+            <p style={{ textAlign: 'center', fontSize: 12, color: BAI.inkFaint, margin: '12px 0 0' }}>
+              Accès complet au tableau de bord une fois les 4 catégories renseignées.
+            </p>
           </div>
         </div>
       </Layout>
