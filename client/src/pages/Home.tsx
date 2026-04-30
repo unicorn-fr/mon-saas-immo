@@ -7,7 +7,6 @@ import {
   MapPin,
   Bed,
   Maximize2,
-  Euro,
   Check,
 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
