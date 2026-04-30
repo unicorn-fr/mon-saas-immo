@@ -9,7 +9,7 @@ import { Layout } from '../../components/layout/Layout'
 import { useAuth } from '../../hooks/useAuth'
 import { dossierService, TenantDocument } from '../../services/dossier.service'
 import { DocumentViewerModal } from '../../components/document/DocumentViewerModal'
-import { CameraCapture } from '../../components/dossier/CameraCapture'
+import { CameraCapture, CaptureEntry } from '../../components/dossier/CameraCapture'
 import { NationalitySearch } from '../../components/dossier/NationalitySearch'
 import toast from 'react-hot-toast'
 import { BAI } from '../../constants/bailio-tokens'
@@ -257,7 +257,7 @@ function DocSlot({
 
   const isImage = doc && (doc.fileUrl?.match(/\.(jpe?g|png|webp|gif)/i) || doc.fileName?.match(/\.(jpe?g|png|webp|gif)/i))
 
-  const handleFile = async (file: File) => {
+  const handleFile = async (file: File, overrideDocType?: string) => {
     // Basic client-side guard (10 MB, types)
     const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'application/pdf']
     if (!ALLOWED.includes(file.type)) {
@@ -269,7 +269,7 @@ function DocSlot({
       return
     }
     setUploading(true)
-    try { await onUpload(file, slot.docType) } finally { setUploading(false) }
+    try { await onUpload(file, overrideDocType ?? slot.docType) } finally { setUploading(false) }
   }
 
   const handleDelete = async () => {
@@ -367,7 +367,12 @@ function DocSlot({
       {showCamera && (
         <CameraCapture
           docType={slot.docType}
-          onCapture={file => { setShowCamera(false); handleFile(file) }}
+          onComplete={async (captures: CaptureEntry[]) => {
+            setShowCamera(false)
+            for (const { file, docType: dt } of captures) {
+              await handleFile(file, dt)
+            }
+          }}
           onClose={() => setShowCamera(false)}
         />
       )}
