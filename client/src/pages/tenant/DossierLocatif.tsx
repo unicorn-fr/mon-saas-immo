@@ -67,6 +67,14 @@ const CATEGORIES: Category[] = [
         docType: 'TITRE_SEJOUR', label: 'Titre de séjour', required: false,
         help: 'Titre de séjour en cours de validité. Obligatoire pour les ressortissants hors UE qui ne disposent pas d\'une CNI européenne.',
       },
+      {
+        docType: 'PERMIS_RECTO', label: 'Permis de conduire recto', required: false,
+        help: 'Recto de votre permis de conduire européen. Vérifiez que les champs 1 à 5 (nom, prénom, date de naissance, numéro) sont lisibles.',
+      },
+      {
+        docType: 'PERMIS_VERSO', label: 'Permis de conduire verso', required: false,
+        help: 'Verso du permis de conduire indiquant les catégories (A, B, C, D…) et restrictions.',
+      },
     ],
   },
   {
