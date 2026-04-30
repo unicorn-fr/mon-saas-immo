@@ -69,6 +69,7 @@ app.use(
       },
     },
     crossOriginEmbedderPolicy: false, // allow PDF/image loads
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' }, // required for Google Sign-In popups
     hsts: {
       maxAge: 31536000, // 1 year
       includeSubDomains: true,
