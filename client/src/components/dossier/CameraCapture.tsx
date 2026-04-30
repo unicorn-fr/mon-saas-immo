@@ -221,6 +221,8 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
   const rafRef     = useRef<number>(0)
   const stableRef  = useRef(0)
   const cornersRef = useRef<CornerPoint[] | null>(null)
+  // Raw corners in ANALYSIS coords (480×320) — scaled to video coords in doCapture
+  const rawCornersRef = useRef<{ tl: CornerPoint; tr: CornerPoint; bl: CornerPoint; br: CornerPoint } | null>(null)
   const stableRaf  = useRef(0)
   const blurryRef  = useRef(false)
   const phaseRef   = useRef<Phase>('loading-cv')
@@ -313,45 +315,53 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
     setFlash(true)
     setTimeout(() => setFlash(false), 220)
 
+    const vW = video.videoWidth, vH = video.videoHeight
     const fc = document.createElement('canvas')
-    fc.width = video.videoWidth; fc.height = video.videoHeight
+    fc.width = vW; fc.height = vH
     fc.getContext('2d')!.drawImage(video, 0, 0)
 
-    const outW = 1000, outH = Math.round(outW / aspect)
+    const outW = 1200, outH = Math.round(outW / aspect)
+
+    // Scale pre-detected corners from analysis coords (480×320) → video coords
+    const raw = rawCornersRef.current
+    const cornerPoints = raw ? {
+      topLeftCorner:     { x: raw.tl.x * (vW / ANALYSIS_W), y: raw.tl.y * (vH / ANALYSIS_H) },
+      topRightCorner:    { x: raw.tr.x * (vW / ANALYSIS_W), y: raw.tr.y * (vH / ANALYSIS_H) },
+      bottomLeftCorner:  { x: raw.bl.x * (vW / ANALYSIS_W), y: raw.bl.y * (vH / ANALYSIS_H) },
+      bottomRightCorner: { x: raw.br.x * (vW / ANALYSIS_W), y: raw.br.y * (vH / ANALYSIS_H) },
+    } : undefined
+
+    const saveResult = (canvas: HTMLCanvasElement) => {
+      canvas.toBlob(blob => {
+        if (!blob) { setPhaseSync('scanning'); return }
+        const url  = URL.createObjectURL(blob)
+        const file = new File([blob], `${docType.toLowerCase()}_${Date.now()}.jpg`, { type: 'image/jpeg' })
+        setPreviewUrl(url)
+        setCapturedFile(file)
+        doVerify(file)
+      }, 'image/jpeg', 0.95)
+    }
 
     setTimeout(() => {
       try {
         const scanner = scannerRef.current
-        const paperCanvas: HTMLCanvasElement | null = scanner
-          ? scanner.extractPaper(fc, outW, outH)
-          : null
 
-        const sourceCanvas = paperCanvas ?? (() => {
-          const c = document.createElement('canvas')
-          c.width = outW; c.height = outH
-          const cx = fc.width / 2, cy = fc.height / 2
-          const cw = fc.width * 0.80, ch = cw / aspect
-          c.getContext('2d')!.drawImage(fc, cx - cw / 2, cy - ch / 2, cw, ch, 0, 0, outW, outH)
-          return c
-        })()
+        if (cornerPoints && scanner) {
+          // ✅ Pass our pre-detected corners — NO re-detection on full-res
+          const warped = scanner.extractPaper(fc, outW, outH, cornerPoints)
+          if (warped) { saveResult(warped); return }
+        }
 
-        sourceCanvas.toBlob(blob => {
-          if (!blob) { setPhaseSync('scanning'); return }
-          const url  = URL.createObjectURL(blob)
-          const file = new File([blob], `${docType.toLowerCase()}_${Date.now()}.jpg`, { type: 'image/jpeg' })
-          setPreviewUrl(url)
-          setCapturedFile(file)
-          doVerify(file)         // → 'verifying' phase
-        }, 'image/jpeg', 0.95)
+        // Fallback: center-crop (no corners detected, e.g. manual capture)
+        const crop = document.createElement('canvas')
+        crop.width = outW; crop.height = outH
+        const cx = vW / 2, cy = vH / 2
+        const cw = vW * 0.82, ch = cw / aspect
+        crop.getContext('2d')!.drawImage(fc, cx - cw / 2, cy - ch / 2, cw, ch, 0, 0, outW, outH)
+        saveResult(crop)
       } catch {
-        fc.toBlob(blob => {
-          if (!blob) { setPhaseSync('scanning'); return }
-          const url  = URL.createObjectURL(blob)
-          const file = new File([blob], `${docType.toLowerCase()}_${Date.now()}.jpg`, { type: 'image/jpeg' })
-          setPreviewUrl(url)
-          setCapturedFile(file)
-          doVerify(file)
-        }, 'image/jpeg', 0.92)
+        // Last resort: save full frame
+        saveResult(fc)
       }
     }, 0)
   }, [docType, aspect, doVerify])
@@ -403,6 +413,9 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
               ratio <= MAX_ASPECT
             ) {
               isDetected = true
+              // Store raw analysis-coord corners for use in doCapture (scaled to video)
+              rawCornersRef.current = { tl, tr, bl, br }
+              // Also store display-coord corners for overlay drawing
               const overlay = overlayRef.current
               const scaleX  = overlay ? overlay.offsetWidth  / ANALYSIS_W : 1
               const scaleY  = overlay ? overlay.offsetHeight / ANALYSIS_H : 1
@@ -432,7 +445,7 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
         }
       } else {
         stableRef.current = 0; stableRaf.current = 0; setStableFrames(0)
-        if (!isDetected) cornersRef.current = null
+        if (!isDetected) { cornersRef.current = null; rawCornersRef.current = null }
       }
     }, INTERVAL_MS)
 
@@ -443,7 +456,7 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
   const startCamera = useCallback(async (mode: 'environment' | 'user') => {
     streamRef.current?.getTracks().forEach(t => t.stop())
     if (timerRef.current) clearInterval(timerRef.current)
-    stableRef.current = 0; stableRaf.current = 0; cornersRef.current = null
+    stableRef.current = 0; stableRaf.current = 0; cornersRef.current = null; rawCornersRef.current = null
     setStableFrames(0); setReady(false); setError('')
     setDetected(false); setBlurWarning(false)
     if (phaseRef.current !== 'loading-cv') setPhaseSync('scanning')
@@ -491,7 +504,7 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
   }
 
   const handleRetry = () => {
-    stableRef.current = 0; stableRaf.current = 0; cornersRef.current = null
+    stableRef.current = 0; stableRaf.current = 0; cornersRef.current = null; rawCornersRef.current = null
     setStableFrames(0); setPreviewUrl(''); setCapturedFile(null)
     setRejectReason(''); setDetected(false); setBlurWarning(false)
     setPhaseSync('scanning')
