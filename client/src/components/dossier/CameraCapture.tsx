@@ -257,10 +257,17 @@ function mrzDate(s: string): string {
 
 /** ID keywords for recto detection (works with eng model + French docs) */
 const ID_KEYWORDS = [
-  'CARTE NATIONALE', 'IDENTIT', 'PASSEPORT', 'PASSPORT',
-  'TITRE DE SEJOUR', 'TITRE DE S', 'REPUBLIQUE FRANC', 'FRENCH REPUBLIC',
+  // CNI / titre de séjour
+  'CARTE NATIONALE', 'IDENTIT', 'TITRE DE SEJOUR', 'TITRE DE S',
+  // Passeport
+  'PASSEPORT', 'PASSPORT',
+  // Permis de conduire (EU + FR)
+  'PERMIS DE CONDUIRE', 'PERMIS', 'CONDUIRE', 'DRIVING LICENCE', 'DRIVING LICENSE',
+  'PREFECTURE', 'PREFET', 'CATEGORIE', 'CATEGORY',
+  // Champs communs
+  'REPUBLIQUE FRANC', 'FRENCH REPUBLIC',
   'NATIONALITY', 'NATIONALIT', 'DATE OF BIRTH', 'DATE DE NAISSANCE',
-  'DOCUMENT', 'NOM', 'SURNAME', 'GIVEN NAME',
+  'NOM', 'SURNAME', 'GIVEN NAME',
 ]
 
 /**
