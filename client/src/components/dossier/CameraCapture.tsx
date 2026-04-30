@@ -48,10 +48,12 @@ interface CameraCaptureProps {
 const ASPECT: Record<string, number> = {
   CNI_RECTO: 85.6 / 54, CNI_VERSO: 85.6 / 54,
   PASSEPORT: 125 / 88,  TITRE_SEJOUR: 85.6 / 54,
+  PERMIS_VERSO: 85.6 / 54,
 }
 const LABEL: Record<string, string> = {
   CNI_RECTO: 'Recto de la CNI', CNI_VERSO: 'Verso de la CNI',
   PASSEPORT: 'Page photo du passeport', TITRE_SEJOUR: 'Titre de séjour',
+  PERMIS_VERSO: 'Verso du permis',
 }
 
 const BLUR_OK     = 70    // threshold for "sharp enough" feedback
@@ -488,9 +490,17 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
   const [rectoPreview, setRectoPreview] = useState('')
   const [ocrData,      setOcrData]      = useState<OcrData | null>(null)
   const [rejectReason, setRejectReason] = useState('')
+  const [detectedKind, setDetectedKind] = useState('')
 
-  const aspect   = ASPECT[currentDt] ?? ASPECT.CNI_RECTO
-  const isForCNI = docType === 'CNI_RECTO'
+  const aspect = ASPECT[currentDt] ?? ASPECT.CNI_RECTO
+
+  // Multi-step flow: cni or permis
+  const isMultiStep = detectedKind === 'cni' || detectedKind === 'permis' || docType === 'CNI_RECTO'
+  const stepNum     = currentDt.includes('VERSO') ? 2 : 1
+
+  // Button condition helpers
+  const showFlipBtn = phase === 'verified' && (detectedKind === 'cni' || detectedKind === 'permis') && !currentDt.includes('VERSO')
+  const showDoneBtn = phase === 'verified' && !((detectedKind === 'cni' || detectedKind === 'permis') && !currentDt.includes('VERSO'))
 
   const setPhaseSync = useCallback((p: Phase) => {
     phaseRef.current = p
@@ -517,7 +527,6 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
   const doVerify = useCallback(async (file: File, _dt: string): Promise<boolean> => {
     setPhaseSync('verifying')
     try {
-      // Convert File → canvas for OCR
       const bitmap = await createImageBitmap(file)
       const canvas = document.createElement('canvas')
       canvas.width = bitmap.width; canvas.height = bitmap.height
@@ -541,6 +550,7 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
         side:           result.side,
         docKind:        result.docKind,
       })
+      setDetectedKind(result.docKind)
       setPhaseSync('verified')
       return true
     } catch {
@@ -555,7 +565,6 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
     setPhaseSync('processing')
 
-    // Brief white flash
     flashRaf.current = true
     setFlash(true)
     setTimeout(() => { flashRaf.current = false; setFlash(false) }, 200)
@@ -573,13 +582,13 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
             ...capturesRef.current.filter(c => c.docType !== dt),
             { file, docType: dt },
           ]
-          if (dt === 'CNI_RECTO') setRectoPreview(url)
+          if (!dt.includes('VERSO')) setRectoPreview(url)
         }
       }, 'image/jpeg', 0.95)
     }, 0)
   }, [doVerify, setPhaseSync])
 
-  // ── Blur scoring loop (visual feedback only — NO auto-capture) ───────────
+  // ── Blur scoring loop ────────────────────────────────────────────────────
   useEffect(() => {
     if (!camReady || phase !== 'scanning') return
     if (timerRef.current) clearInterval(timerRef.current)
@@ -625,10 +634,8 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
     }
   }, [setPhaseSync])
 
-  // Initial camera start
   useEffect(() => { startCamera(facingMode) }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       streamRef.current?.getTracks().forEach(t => t.stop())
@@ -652,20 +659,21 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
 
   const handleRetry = () => {
     scoreRaf.current = 0
-    setScore(0); setPreviewUrl(''); setRejectReason(''); setOcrData(null)
+    setScore(0); setPreviewUrl(''); setRejectReason(''); setOcrData(null); setDetectedKind('')
     startCamera(facingMode)
   }
 
   const handleRectoVerified = () => setPhaseSync('flip')
 
   const handleStartVerso = () => {
-    setCurrentDt('CNI_VERSO')
-    setPreviewUrl(''); setOcrData(null)
+    const versoType = detectedKind === 'permis' ? 'PERMIS_VERSO' : 'CNI_VERSO'
+    setCurrentDt(versoType)
+    setPreviewUrl(''); setOcrData(null); setDetectedKind('')
     scoreRaf.current = 0; setScore(0)
     setPhaseSync('scanning')
   }
 
-  const handleDone = useCallback(() => { onComplete(capturesRef.current) }, [onComplete])
+  const handleDone         = useCallback(() => { onComplete(capturesRef.current) }, [onComplete])
   const handleVersoVerified = useCallback(() => { onComplete(capturesRef.current) }, [onComplete])
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -679,17 +687,10 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
   const statusMsg = isSharp
     ? 'Conditions optimales — appuyez pour capturer'
     : 'Centrez votre document dans le cadre'
-  const statusColor = isSharp ? CARAMEL : 'rgba(255,255,255,0.45)'
 
-  // Phase label for header
-  const phaseLabel: Record<Phase, string> = {
-    scanning:   'Scan · Capture manuelle',
-    processing: 'Traitement…',
-    verifying:  'Analyse en cours',
-    verified:   'Validé',
-    flip:       'Recto scanné',
-    rejected:   'Document refusé',
-    error:      'Erreur',
+  const docKindLabel: Record<string, string> = {
+    permis: 'Permis de conduire', passport: 'Passeport',
+    sejour: 'Titre de séjour', cni: "Carte d'identité",
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -704,15 +705,28 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
         position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10,
         padding: '14px 18px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        background: 'linear-gradient(to bottom, rgba(0,0,0,0.72), transparent)',
+        background: 'linear-gradient(to bottom, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.0) 100%)',
       }}>
         <div>
-          <p style={{ margin: 0, fontSize: 10, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
-            {phaseLabel[phase]}
-          </p>
           <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: '#fff' }}>
             {LABEL[currentDt] ?? currentDt}
           </p>
+          {isMultiStep && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.38)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                Étape {stepNum}/2
+              </span>
+              <div style={{ display: 'flex', gap: 5 }}>
+                {[1, 2].map(n => (
+                  <div key={n} style={{
+                    width: n === stepNum ? 18 : 6, height: 6, borderRadius: 3,
+                    background: n <= stepNum ? CARAMEL : 'rgba(255,255,255,0.2)',
+                    transition: 'all 0.3s',
+                  }} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         <button
           onClick={onClose}
@@ -760,7 +774,6 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
                 borderRadius: 12, position: 'relative', overflow: 'hidden',
                 animation: 'framePulse 1.8s ease-in-out infinite',
               }}>
-                {/* Corner brackets */}
                 {([
                   { top: -1, left: -1, borderRight: 'none', borderBottom: 'none', borderRadius: '8px 0 0 0' },
                   { top: -1, right: -1, borderLeft: 'none', borderBottom: 'none', borderRadius: '0 8px 0 0' },
@@ -769,7 +782,6 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
                 ] as React.CSSProperties[]).map((s, i) => (
                   <div key={i} style={{ position: 'absolute', width: 22, height: 22, border: `2.5px solid ${CARAMEL}`, ...s }} />
                 ))}
-                {/* Scan line */}
                 <div style={{
                   position: 'absolute', left: 0, right: 0, height: 2,
                   background: `linear-gradient(90deg, transparent, rgba(196,151,106,0.9) 30%, #fff 50%, rgba(196,151,106,0.9) 70%, transparent)`,
@@ -778,11 +790,11 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
                 }} />
               </div>
               <div style={{ textAlign: 'center' }}>
-                <p style={{ margin: '0 0 8px', color: '#fff', fontSize: 14, fontWeight: 600 }}>
-                  {phase === 'processing' ? "Traitement de l'image…" : 'Vérification IA en cours'}
+                <p style={{ margin: '0 0 4px', color: '#fff', fontSize: 14, fontWeight: 600 }}>
+                  Lecture du document…
                 </p>
                 <p style={{ margin: '0 0 16px', color: 'rgba(255,255,255,0.45)', fontSize: 12 }}>
-                  {phase === 'processing' ? 'Recadrage…' : 'Lecture du document (peut prendre ~10s)…'}
+                  {phase === 'processing' ? 'Recadrage en cours…' : 'Analyse OCR locale (≈10s)…'}
                 </p>
                 <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
                   {[0, 1, 2].map(i => (
@@ -798,50 +810,54 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
           <div style={{
             position: 'relative', width: '100%', height: '100%',
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            padding: '80px 24px 120px',
+            padding: '80px 24px 140px',
           }}>
             {previewUrl && (
               <img src={previewUrl} alt="Document" style={{
                 position: 'absolute', inset: 0, width: '100%', height: '100%',
-                objectFit: 'contain', padding: '60px 24px', filter: 'brightness(0.25)',
+                objectFit: 'contain', padding: '60px 24px', filter: 'brightness(0.18)',
               }} />
             )}
             <div style={{
               position: 'relative', zIndex: 1, width: '100%', maxWidth: 340,
-              background: 'rgba(10,12,18,0.92)', border: `1px solid rgba(196,151,106,0.3)`,
-              borderRadius: 16, padding: '24px 20px',
+              background: 'rgba(10,12,18,0.94)', border: `1px solid rgba(196,151,106,0.25)`,
+              borderRadius: 18, padding: '24px 20px',
             }}>
-              {/* Success badge */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+              {/* Success header */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginBottom: 20 }}>
                 <div style={{
-                  width: 40, height: 40, borderRadius: '50%',
-                  background: `rgba(196,151,106,0.15)`, border: `1.5px solid rgba(196,151,106,0.45)`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  width: 56, height: 56, borderRadius: '50%',
+                  border: `2px solid ${CARAMEL}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: 'rgba(196,151,106,0.1)',
+                  animation: 'checkPop 0.4s cubic-bezier(0.175,0.885,0.32,1.275)',
                 }}>
-                  <CheckCircle2 size={20} color={CARAMEL} />
+                  <CheckCircle2 size={24} color={CARAMEL} />
                 </div>
-                <div>
-                  <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: CARAMEL }}>
-                    {{
-                      permis:   'Permis de conduire reconnu',
-                      passport: 'Passeport reconnu',
-                      sejour:   'Titre de séjour reconnu',
-                      cni:      'Carte d\'identité reconnue',
-                    }[ocrData?.docKind ?? ''] ?? 'Document reconnu'}
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 700, color: '#fff' }}>
+                    Document reconnu
                   </p>
-                  <p style={{ margin: 0, fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{LABEL[currentDt]}</p>
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
+                    color: CARAMEL, border: `1px solid rgba(196,151,106,0.3)`,
+                    padding: '3px 10px', borderRadius: 20,
+                    display: 'inline-block',
+                  }}>
+                    {docKindLabel[detectedKind] ?? 'Document'} — {currentDt.includes('VERSO') ? 'Verso' : 'Recto'}
+                  </span>
                 </div>
               </div>
 
-              {/* Extracted fields */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {/* Data rows */}
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 0 }}>
                 {(ocrData?.prenom || ocrData?.nom) && (
                   <DataRow label="Nom" value={[ocrData?.prenom, ocrData?.nom].filter(Boolean).join(' ')} />
                 )}
-                {ocrData?.dob && <DataRow label="Né·e le" value={fmt(ocrData.dob)} />}
-                {ocrData?.nationality && <DataRow label="Nationalité" value={ocrData.nationality} />}
+                {ocrData?.dob      && <DataRow label="Né·e le"     value={fmt(ocrData.dob)} />}
+                {ocrData?.nationality   && <DataRow label="Nationalité"  value={ocrData.nationality} />}
                 {ocrData?.documentNumber && <DataRow label="N° document" value={ocrData.documentNumber} />}
-                {ocrData?.expiry && <DataRow label="Expire le" value={fmt(ocrData.expiry)} />}
+                {ocrData?.expiry   && <DataRow label="Expire le"   value={fmt(ocrData.expiry)} />}
               </div>
             </div>
           </div>
@@ -851,14 +867,27 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
           <div style={{
             position: 'relative', width: '100%', height: '100%',
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            padding: '80px 28px 140px', gap: 24,
+            padding: '80px 28px 160px', gap: 24,
           }}>
-            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.92)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.94)' }} />
             <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+              {/* Step dots showing step 2 */}
+              <div style={{ display: 'flex', gap: 5, marginBottom: 4 }}>
+                {[1, 2].map(n => (
+                  <div key={n} style={{
+                    width: n === 2 ? 18 : 6, height: 6, borderRadius: 3,
+                    background: n <= 1 ? CARAMEL : 'rgba(255,255,255,0.2)',
+                    transition: 'all 0.3s',
+                  }} />
+                ))}
+              </div>
+
+              {/* Recto thumbnail */}
               <div style={{ position: 'relative', display: 'inline-block' }}>
                 <img src={rectoPreview} alt="Recto" style={{
                   width: 180, height: 113, objectFit: 'cover', borderRadius: 10,
-                  border: `2px solid rgba(196,151,106,0.5)`, boxShadow: `0 0 24px rgba(196,151,106,0.15)`,
+                  border: `1.5px solid rgba(196,151,106,0.5)`,
+                  boxShadow: `0 0 28px rgba(196,151,106,0.12)`,
                 }} />
                 <div style={{
                   position: 'absolute', top: -10, right: -10, width: 28, height: 28, borderRadius: '50%',
@@ -867,11 +896,14 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
                   <CheckCircle2 size={16} color="#fff" strokeWidth={3} />
                 </div>
               </div>
-              <div style={{ fontSize: 36, animation: 'flipBounce 1.5s ease-in-out infinite' }}>↩</div>
+
+              {/* Rotating arrow */}
+              <div style={{ fontSize: 34, animation: 'rotateBounce 1.8s ease-in-out infinite', color: CARAMEL }}>↻</div>
+
               <div style={{ textAlign: 'center' }}>
-                <p style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700, color: '#fff' }}>Recto scanné</p>
+                <p style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 700, color: '#fff' }}>Recto capturé</p>
                 <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.5)', maxWidth: 280, lineHeight: 1.6 }}>
-                  Retournez votre carte et photographiez le verso pour compléter votre dossier.
+                  Retournez votre document pour photographier le verso.
                 </p>
               </div>
             </div>
@@ -925,20 +957,35 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
             {flash && (
               <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.75)', zIndex: 5 }} />
             )}
-            {/* Semi-transparent overlay with hole */}
             <canvas ref={overlayRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 2 }} />
+
+            {/* Recto/Verso label inside guide */}
+            {camReady && (
+              <div style={{
+                position: 'absolute', bottom: 160, left: '50%', transform: 'translateX(-50%)',
+                zIndex: 3, textAlign: 'center',
+              }}>
+                <p style={{ margin: 0, fontSize: 11, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  {currentDt.includes('VERSO') ? 'Verso — Retourner le document' : 'Recto — Face avant avec photo'}
+                </p>
+              </div>
+            )}
 
             {/* Status pill */}
             {camReady && (
               <div style={{
-                position: 'absolute', bottom: 110, left: '50%', transform: 'translateX(-50%)',
-                zIndex: 3, whiteSpace: 'nowrap',
-                background: 'rgba(0,0,0,0.65)', padding: '7px 20px', borderRadius: 20,
-                fontSize: 12, color: statusColor, fontWeight: 500,
-                border: `1px solid ${isSharp ? 'rgba(196,151,106,0.4)' : 'rgba(255,255,255,0.1)'}`,
-                transition: 'color 0.3s, border-color 0.3s',
+                position: 'absolute', bottom: 130, left: '50%', transform: 'translateX(-50%)',
+                zIndex: 3,
+                display: 'flex', alignItems: 'center', gap: 6,
+                background: isSharp ? 'rgba(196,151,106,0.15)' : 'rgba(0,0,0,0.55)',
+                border: `1px solid ${isSharp ? 'rgba(196,151,106,0.5)' : 'rgba(255,255,255,0.1)'}`,
+                padding: '6px 16px', borderRadius: 20, whiteSpace: 'nowrap',
+                transition: 'all 0.3s',
               }}>
-                {statusMsg}
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: isSharp ? CARAMEL : 'rgba(255,255,255,0.3)', flexShrink: 0 }} />
+                <span style={{ fontSize: 12, color: isSharp ? CARAMEL : 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
+                  {statusMsg}
+                </span>
               </div>
             )}
           </>
@@ -955,60 +1002,53 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
 
         {/* Scanning controls */}
         {phase === 'scanning' && (
-          <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-              {/* Flip camera */}
-              <Btn round onClick={handleFlipCamera}>
-                <FlipHorizontal size={19} />
-              </Btn>
-
-              {/* Shutter button */}
-              <button
-                onClick={handleManualCapture}
-                disabled={!camReady}
-                style={{
-                  width: 72, height: 72, borderRadius: '50%',
-                  background: camReady ? '#fff' : 'rgba(255,255,255,0.18)',
-                  border: `4px solid ${camReady ? CARAMEL : 'rgba(255,255,255,0.08)'}`,
-                  cursor: camReady ? 'pointer' : 'not-allowed',
-                  boxShadow: camReady ? `0 0 0 6px rgba(196,151,106,0.2)` : 'none',
-                  transition: 'all 0.2s',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0,
-                }}
-              >
-                <div style={{
-                  width: 28, height: 28, borderRadius: '50%',
-                  background: camReady ? CARAMEL : 'rgba(255,255,255,0.22)',
-                }} />
-              </button>
-
-              {/* Retry / reset camera */}
-              <Btn round onClick={() => startCamera(facingMode)}>
-                <RotateCcw size={17} />
-              </Btn>
-            </div>
-          </>
-        )}
-
-        {/* Verified (non-CNI or CNI_VERSO) */}
-        {phase === 'verified' && (!isForCNI || currentDt === 'CNI_VERSO') && (
-          <div style={{ display: 'flex', gap: 10, width: '100%', maxWidth: 340 }}>
-            <Btn flex secondary onClick={handleRetry}><RotateCcw size={14} /> Reprendre</Btn>
-            <Btn flex primary onClick={currentDt === 'CNI_VERSO' ? handleVersoVerified : () => onComplete(capturesRef.current)}>
-              <CheckCircle2 size={14} />
-              {currentDt === 'CNI_VERSO' ? 'Terminer' : 'Utiliser'}
-              <ArrowRight size={13} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+            <Btn round onClick={handleFlipCamera}>
+              <FlipHorizontal size={19} />
+            </Btn>
+            <button
+              onClick={handleManualCapture}
+              disabled={!camReady}
+              style={{
+                width: 72, height: 72, borderRadius: '50%',
+                background: camReady ? '#fff' : 'rgba(255,255,255,0.18)',
+                border: `4px solid ${camReady ? CARAMEL : 'rgba(255,255,255,0.08)'}`,
+                cursor: camReady ? 'pointer' : 'not-allowed',
+                boxShadow: camReady ? `0 0 0 6px rgba(196,151,106,0.2)` : 'none',
+                transition: 'all 0.2s',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <div style={{
+                width: 28, height: 28, borderRadius: '50%',
+                background: camReady ? CARAMEL : 'rgba(255,255,255,0.22)',
+              }} />
+            </button>
+            <Btn round onClick={() => startCamera(facingMode)}>
+              <RotateCcw size={17} />
             </Btn>
           </div>
         )}
 
-        {/* Verified recto CNI → propose flip */}
-        {phase === 'verified' && isForCNI && currentDt === 'CNI_RECTO' && (
+        {/* Verified — recto of cni/permis: "Reprendre" + "Scanner le verso →" */}
+        {showFlipBtn && (
           <div style={{ display: 'flex', gap: 10, width: '100%', maxWidth: 340 }}>
             <Btn flex secondary onClick={handleRetry}><RotateCcw size={14} /> Reprendre</Btn>
             <Btn flex primary onClick={handleRectoVerified}>
               Scanner le verso <ArrowRight size={13} />
+            </Btn>
+          </div>
+        )}
+
+        {/* Verified — done (verso completed or non-multi-step) */}
+        {showDoneBtn && (
+          <div style={{ display: 'flex', gap: 10, width: '100%', maxWidth: 340 }}>
+            <Btn flex secondary onClick={handleRetry}><RotateCcw size={14} /> Reprendre</Btn>
+            <Btn flex primary onClick={currentDt.includes('VERSO') ? handleVersoVerified : () => onComplete(capturesRef.current)}>
+              <CheckCircle2 size={14} />
+              {currentDt.includes('VERSO') ? 'Terminer' : 'Utiliser'}
+              <ArrowRight size={13} />
             </Btn>
           </div>
         )}
@@ -1031,11 +1071,13 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
 
       {/* Keyframes */}
       <style>{`
-        @keyframes spin       { to { transform: rotate(360deg) } }
-        @keyframes scanLine   { 0%{top:5%} 48%{top:88%} 52%{top:88%} 100%{top:5%} }
-        @keyframes framePulse { 0%,100%{border-color:rgba(196,151,106,0.35)} 50%{border-color:rgba(196,151,106,0.9);box-shadow:0 0 20px 4px rgba(196,151,106,0.2)} }
-        @keyframes dotBounce  { 0%,80%,100%{transform:scale(0.7);opacity:0.45} 40%{transform:scale(1.25);opacity:1} }
-        @keyframes flipBounce { 0%,100%{transform:translateY(0) rotate(-5deg)} 50%{transform:translateY(-8px) rotate(5deg)} }
+        @keyframes spin          { to { transform: rotate(360deg) } }
+        @keyframes scanLine      { 0%{top:5%} 48%{top:88%} 52%{top:88%} 100%{top:5%} }
+        @keyframes framePulse    { 0%,100%{border-color:rgba(196,151,106,0.35)} 50%{border-color:rgba(196,151,106,0.9);box-shadow:0 0 20px 4px rgba(196,151,106,0.2)} }
+        @keyframes dotBounce     { 0%,80%,100%{transform:scale(0.7);opacity:0.45} 40%{transform:scale(1.25);opacity:1} }
+        @keyframes flipBounce    { 0%,100%{transform:translateY(0) rotate(-5deg)} 50%{transform:translateY(-8px) rotate(5deg)} }
+        @keyframes checkPop      { 0%{transform:scale(0.5);opacity:0} 100%{transform:scale(1);opacity:1} }
+        @keyframes rotateBounce  { 0%,100%{transform:rotate(-20deg)} 50%{transform:rotate(20deg)} }
       `}</style>
     </div>
   )
@@ -1045,9 +1087,13 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
 function DataRow({ label, value }: { label: string; value: string }) {
   if (!value) return null
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 10px', background: 'rgba(255,255,255,0.05)', borderRadius: 8 }}>
-      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', minWidth: 80 }}>{label}</span>
-      <span style={{ fontSize: 13, color: '#fff', fontWeight: 500, flex: 1, textAlign: 'right' }}>{value}</span>
+    <div style={{
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      padding: '9px 0',
+      borderBottom: '1px solid rgba(255,255,255,0.06)',
+    }}>
+      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.38)', fontWeight: 500 }}>{label}</span>
+      <span style={{ fontSize: 13, color: '#fff', fontWeight: 600 }}>{value}</span>
     </div>
   )
 }
