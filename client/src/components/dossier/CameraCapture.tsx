@@ -33,6 +33,7 @@ type Phase =
 interface OcrData {
   nom: string; prenom: string; dob: string
   nationality: string; documentNumber: string; expiry: string; side: string
+  docKind?: string
 }
 
 export interface CaptureEntry { file: File; docType: string }
@@ -190,15 +191,29 @@ function drawGuide(
   }
 }
 
-// ── Local OCR engine (Tesseract.js + mrz — zero external API) ────────────────
+// ── Local OCR engine (Tesseract LSTM + mrz — zero external API) ───────────────
+//
+// Architecture :
+//   Phase 1 — MRZ (bas de l'image, whitelist ASCII, moteur LSTM)
+//             → parse avec mrz package → CNI verso / passeport
+//   Phase 2 — Full image LSTM neural net (fra+eng) → analyse structurelle
+//             → détection permis de conduire EU (champs 1-12, catégories, numéro)
+//             → détection CNI recto / titre de séjour par champs structurels
+//
+// Tesseract OEM.LSTM_ONLY utilise le réseau de neurones LSTM entraîné sur des
+// corpus de documents officiels (permis, cartes d'identité, passeports…).
+// ─────────────────────────────────────────────────────────────────────────────
 
 interface LocalOcrResult {
   isIdDocument: boolean; rejectReason: string
   nom: string; prenom: string; dob: string
   nationality: string; documentNumber: string; expiry: string; side: string
+  docKind: 'cni' | 'passport' | 'permis' | 'sejour' | 'unknown'
 }
 
-/** Grayscale + contrast stretch a canvas in-place */
+// ── Image preprocessing ───────────────────────────────────────────────────────
+
+/** Grayscale + auto-contrast stretch */
 function enhanceCanvas(src: HTMLCanvasElement): HTMLCanvasElement {
   const W = src.width, H = src.height
   const c = document.createElement('canvas')
@@ -209,21 +224,20 @@ function enhanceCanvas(src: HTMLCanvasElement): HTMLCanvasElement {
   const d = id.data
   let lo = 255, hi = 0
   for (let i = 0; i < d.length; i += 4) {
-    const g = (d[i] * 77 + d[i+1] * 151 + d[i+2] * 28) >> 8
+    const g = (d[i]*77 + d[i+1]*151 + d[i+2]*28) >> 8
     if (g < lo) lo = g; if (g > hi) hi = g
   }
   const range = hi - lo || 1
   for (let i = 0; i < d.length; i += 4) {
-    const g = Math.round(((d[i]*77 + d[i+1]*151 + d[i+2]*28) >> 8) - lo) * 255 / range
-    d[i] = d[i+1] = d[i+2] = Math.min(255, Math.max(0, g))
-    d[i+3] = 255
+    const g = Math.min(255, Math.max(0, Math.round(((d[i]*77 + d[i+1]*151 + d[i+2]*28) >> 8) - lo) * 255 / range))
+    d[i] = d[i+1] = d[i+2] = g; d[i+3] = 255
   }
   ctx.putImageData(id, 0, 0)
   return c
 }
 
-/** Crop bottom fraction of a canvas (where MRZ lives) */
-function cropBottom(src: HTMLCanvasElement, frac = 0.40): HTMLCanvasElement {
+/** Crop bottom fraction (MRZ zone) */
+function cropBottom(src: HTMLCanvasElement, frac = 0.42): HTMLCanvasElement {
   const H = Math.floor(src.height * frac)
   const c = document.createElement('canvas')
   c.width = src.width; c.height = H
@@ -231,62 +245,140 @@ function cropBottom(src: HTMLCanvasElement, frac = 0.40): HTMLCanvasElement {
   return c
 }
 
-/** Find MRZ lines in raw OCR text (TD1: 3×30, TD3: 2×44) */
+// ── MRZ helpers ───────────────────────────────────────────────────────────────
+
 function findMrz(text: string): string[] | null {
   const lines = text.split('\n')
     .map(l => l.replace(/\s/g, '').toUpperCase().replace(/[^A-Z0-9<]/g, ''))
     .filter(l => l.length >= 28)
-
-  // TD1 (CNI): 3 lines ~30 chars
   const td1 = lines.filter(l => l.length >= 28 && l.length <= 32)
   if (td1.length >= 3) return td1.slice(0, 3).map(l => l.padEnd(30, '<').slice(0, 30))
-
-  // TD3 (Passeport): 2 lines ~44 chars
   const td3 = lines.filter(l => l.length >= 40 && l.length <= 46)
   if (td3.length >= 2) return td3.slice(0, 2).map(l => l.padEnd(44, '<').slice(0, 44))
-
   return null
 }
 
-/** YYMMDD → YYYY-MM-DD */
 function mrzDate(s: string): string {
   if (!s || s.length < 6) return ''
   const yy = parseInt(s.slice(0, 2)), mm = s.slice(2, 4), dd = s.slice(4, 6)
   return `${yy > 30 ? 1900 + yy : 2000 + yy}-${mm}-${dd}`
 }
 
-/** ID keywords for recto detection (works with eng model + French docs) */
-const ID_KEYWORDS = [
-  // CNI / titre de séjour
-  'CARTE NATIONALE', 'IDENTIT', 'TITRE DE SEJOUR', 'TITRE DE S',
-  // Passeport
-  'PASSEPORT', 'PASSPORT',
-  // Permis de conduire (EU + FR)
-  'PERMIS DE CONDUIRE', 'PERMIS', 'CONDUIRE', 'DRIVING LICENCE', 'DRIVING LICENSE',
-  'PREFECTURE', 'PREFET', 'CATEGORIE', 'CATEGORY',
-  // Champs communs
-  'REPUBLIQUE FRANC', 'FRENCH REPUBLIC',
-  'NATIONALITY', 'NATIONALIT', 'DATE OF BIRTH', 'DATE DE NAISSANCE',
-  'NOM', 'SURNAME', 'GIVEN NAME',
-]
+// ── EU Driving License structural detector ────────────────────────────────────
+//
+// Le permis de conduire européen (directive 2006/126/CE) a des champs
+// numérotés standardisés :
+//   1. Date de délivrance   2. Date d'expiration   3. Autorité
+//   4a. Date de naissance   4b. Lieu de naissance   5. Nom / Prénom
+//   7. Signature    8. Domicile    9. Catégories    10-12. Restrictions
+//
+// Le numéro de permis FR suit le format : 99XX99999999 (dép + 2 lettres + chiffres)
+// Les codes catégories : AM A1 A2 A  B1 BE B  C1 CE C  D1 DE D
 
-/**
- * Main local OCR pipeline.
- * Phase 1 — MRZ scan (fast, bottom 40%, whitelist chars)
- * Phase 2 — Full image keyword detection for recto
- */
+const DL_CATEGORY_RE = /\b(AM|A[12]?|B[E1]?|C[E1]?|D[E1]?)\b/g
+const DL_FIELD_RE    = /\b(4\s*[Aa]|4\s*[Bb]|[19]\s*\.)/  // champs 4a, 4b, 9
+const DL_NUMBER_FR   = /\b\d{2}[A-Z]{2}\d{6,10}\b/          // ex: 75AB123456
+
+interface DlResult {
+  detected: boolean
+  nom: string; prenom: string; dob: string
+  documentNumber: string; expiry: string
+}
+
+function parseDrivingLicense(text: string): DlResult {
+  const raw = text
+  const up  = raw.toUpperCase()
+
+  // ── Détection ────────────────────────────────────────────────────────────
+  const cats    = [...up.matchAll(DL_CATEGORY_RE)].map(m => m[0])
+  const hasField= DL_FIELD_RE.test(up)
+  const hasNum  = DL_NUMBER_FR.test(up.replace(/\s/g, ''))
+  const hasKw   = /PERMIS|CONDUIRE|DRIVING|PREFECT|LICEN[CS]E|FÜHRERSCHEIN|CARNET DE CONDUCIR/.test(up)
+
+  const detected = cats.length >= 1 || hasField || hasNum || hasKw
+
+  // ── Extraction champ 5 (Nom / Prénom) ────────────────────────────────────
+  // Le champ 5 contient "NOM, Prénom" ou séparé par une virgule
+  let nom = '', prenom = ''
+  const field5 = raw.match(/5[.\s]*([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-ZÉÈÊËÀÂÔÛÙÎÏÇa-z\-]+)[,\s]+([A-ZÉÈÊËÀÂÔÛÙÎÏÇa-z\-\s]+)/)
+  if (field5) { nom = field5[1].trim(); prenom = field5[2].trim().split(/\s+/)[0] }
+  // Fallback : chercher NOM / PRÉNOM labels
+  if (!nom) {
+    const nm = raw.match(/NOM[^A-Za-z]{0,4}([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-Za-z\-]{1,25})/)
+    if (nm) nom = nm[1].trim()
+  }
+
+  // ── Extraction champ 4a (Date de naissance) ──────────────────────────────
+  let dob = ''
+  const dobMatch = raw.match(/4\s*[Aa][^0-9]{0,5}(\d{2}[.\-/]\d{2}[.\-/]\d{2,4})/)
+  if (dobMatch) {
+    const parts = dobMatch[1].split(/[.\-/]/)
+    if (parts.length === 3) {
+      const y = parts[2].length === 2 ? (parseInt(parts[2]) > 30 ? '19'+parts[2] : '20'+parts[2]) : parts[2]
+      dob = `${y}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`
+    }
+  }
+
+  // ── Extraction champ 2 (Expiration) ──────────────────────────────────────
+  let expiry = ''
+  const expMatch = raw.match(/2[^0-9]{0,5}(\d{2}[.\-/]\d{2}[.\-/]\d{2,4})/)
+  if (expMatch) {
+    const parts = expMatch[1].split(/[.\-/]/)
+    if (parts.length === 3) {
+      const y = parts[2].length === 2 ? '20'+parts[2] : parts[2]
+      expiry = `${y}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`
+    }
+  }
+
+  // ── Numéro de permis ──────────────────────────────────────────────────────
+  const numMatch = up.replace(/\s/g, '').match(DL_NUMBER_FR)
+  const documentNumber = numMatch ? numMatch[0] : ''
+
+  return { detected, nom, prenom, dob, documentNumber, expiry }
+}
+
+// ── CNI / Passeport / Titre de séjour structural detector ────────────────────
+
+function parseCniRecto(text: string): { nom: string; prenom: string; dob: string } {
+  let nom = '', prenom = '', dob = ''
+  const nomMatch    = text.match(/NOM[^A-Za-z]{0,4}([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-Za-z\-]{1,25})/)
+  const prenomMatch = text.match(/PR[EÉ]NOM[S]?[^A-Za-z]{0,4}([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-Za-z\-\s]{1,25})/)
+  const dobMatch    = text.match(/N[EÉ][E]?\s*LE\s*:?\s*(\d{2}[.\-/]\d{2}[.\-/]\d{2,4})/i)
+  if (nomMatch)    nom    = nomMatch[1].trim()
+  if (prenomMatch) prenom = prenomMatch[1].trim().split(/\s+/)[0]
+  if (dobMatch) {
+    const p = dobMatch[1].split(/[.\-/]/)
+    if (p.length === 3) {
+      const y = p[2].length === 2 ? (parseInt(p[2]) > 30 ? '19'+p[2] : '20'+p[2]) : p[2]
+      dob = `${y}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`
+    }
+  }
+  return { nom, prenom, dob }
+}
+
+// ── Signature de chaque type de document (structural keywords) ────────────────
+
+const DOC_PATTERNS = {
+  cni:     /CARTE\s+NATIONALE|CNI|IDENTIT[EÉ]|CARTE\s+D.IDENTIT/i,
+  passport:/PASSEPORT|PASSPORT/i,
+  sejour:  /TITRE\s+DE\s+S[EÉ]JOUR|R[EÉ]SIDENT|TITRE\s+DE\s+VOYAGE/i,
+  republic:/R[EÉ]PUBLIQUE\s+FRAN[CÇ]|FRENCH\s+REPUBLIC|MINIST[EÈ]RE/i,
+}
+
+// ── Main pipeline ─────────────────────────────────────────────────────────────
+
 async function localOcrExtract(canvas: HTMLCanvasElement): Promise<LocalOcrResult> {
   const fail = (reason: string): LocalOcrResult => ({
-    isIdDocument: false, rejectReason: reason,
+    isIdDocument: false, rejectReason: reason, docKind: 'unknown',
     nom: '', prenom: '', dob: '', nationality: '', documentNumber: '', expiry: '', side: 'unknown',
   })
 
   try {
-    const { createWorker } = await import('tesseract.js')
+    const { createWorker, OEM } = await import('tesseract.js')
 
-    // ── Phase 1: MRZ (bottom strip, fast) ──────────────────────────────────
+    // ── Phase 1 : MRZ — LSTM, bottom 42%, whitelist ───────────────────────
     const bottom = enhanceCanvas(cropBottom(canvas, 0.42))
-    const w1 = await createWorker('eng')
+    const w1 = await createWorker('eng', OEM.LSTM_ONLY)
     await (w1 as any).setParameters({ tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ<' })
     const { data: { text: mrzText } } = await w1.recognize(bottom)
     await w1.terminate()
@@ -298,8 +390,10 @@ async function localOcrExtract(canvas: HTMLCanvasElement): Promise<LocalOcrResul
         const parsed = parse(mrzLines)
         if (parsed.valid || parsed.fields?.documentNumber) {
           const f = parsed.fields
+          const code = String(f.documentCode ?? '').toUpperCase()
+          const kind = code.startsWith('P') ? 'passport' : 'cni'
           return {
-            isIdDocument: true, rejectReason: '',
+            isIdDocument: true, rejectReason: '', docKind: kind,
             nom:            String(f.lastName       ?? '').replace(/</g, ' ').trim(),
             prenom:         String(f.firstName      ?? '').replace(/</g, ' ').trim(),
             dob:            mrzDate(String(f.birthDate      ?? '')),
@@ -309,39 +403,49 @@ async function localOcrExtract(canvas: HTMLCanvasElement): Promise<LocalOcrResul
             side: 'verso',
           }
         }
-      } catch { /* mrz parse failure → fall through to phase 2 */ }
+      } catch { /* fall through */ }
     }
 
-    // ── Phase 2: Full image — recto keyword detection ───────────────────────
+    // ── Phase 2 : Pleine image — LSTM fra+eng (réseau de neurones) ────────
     const full = enhanceCanvas(canvas)
-    const w2 = await createWorker('eng')
+    const w2 = await createWorker('fra+eng', OEM.LSTM_ONLY)
     const { data: { text: fullText } } = await w2.recognize(full)
     await w2.terminate()
 
-    const upper = fullText.toUpperCase()
-    const isId = ID_KEYWORDS.some(kw => upper.includes(kw))
-
-    if (!isId) {
-      return fail(
-        'Aucune pièce d\'identité reconnue. Présentez le recto ou le verso de votre CNI, votre passeport, ou votre titre de séjour.'
-      )
+    // ── Permis de conduire (analyse structurelle EU) ────────────────────────
+    const dl = parseDrivingLicense(fullText)
+    if (dl.detected) {
+      return {
+        isIdDocument: true, rejectReason: '', docKind: 'permis',
+        nom: dl.nom, prenom: dl.prenom, dob: dl.dob,
+        nationality: '', documentNumber: dl.documentNumber, expiry: dl.expiry,
+        side: 'recto',
+      }
     }
 
-    // Try to extract name from recto text
-    const nomMatch    = upper.match(/NOM[^A-Z]{0,4}([A-Z][A-ZÉÈÊËÀÂÔÛÙÎÏÇ\-]{1,30})/)
-    const prenomMatch = upper.match(/PR[EÉ]NOM[S]?[^A-Z]{0,4}([A-Z][A-ZÉÈÊËÀÂÔÛÙÎÏÇ\-\s]{1,30})/)
-    const nomRaw      = nomMatch    ? nomMatch[1].trim()    : ''
-    const prenomRaw   = prenomMatch ? prenomMatch[1].trim().split(' ')[0] : ''
+    // ── CNI recto, Passeport recto, Titre de séjour ─────────────────────────
+    const isCni      = DOC_PATTERNS.cni.test(fullText)
+    const isPassport = DOC_PATTERNS.passport.test(fullText)
+    const isSejour   = DOC_PATTERNS.sejour.test(fullText)
+    const isRepublic = DOC_PATTERNS.republic.test(fullText)
 
-    return {
-      isIdDocument: true, rejectReason: '',
-      nom: nomRaw, prenom: prenomRaw,
-      dob: '', nationality: '', documentNumber: '', expiry: '',
-      side: 'recto',
+    if (isCni || isPassport || isSejour || isRepublic) {
+      const kind: LocalOcrResult['docKind'] = isPassport ? 'passport' : isSejour ? 'sejour' : 'cni'
+      const { nom, prenom, dob } = parseCniRecto(fullText)
+      return {
+        isIdDocument: true, rejectReason: '', docKind: kind,
+        nom, prenom, dob,
+        nationality: '', documentNumber: '', expiry: '',
+        side: 'recto',
+      }
     }
+
+    return fail(
+      'Document non reconnu. Présentez votre CNI, passeport, titre de séjour ou permis de conduire.'
+    )
 
   } catch {
-    return fail('Analyse impossible. Assurez-vous d\'avoir une bonne luminosité et réessayez.')
+    return fail('Analyse impossible. Vérifiez la luminosité et réessayez.')
   }
 }
 
@@ -419,6 +523,7 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
         documentNumber: result.documentNumber,
         expiry:         result.expiry,
         side:           result.side,
+        docKind:        result.docKind,
       })
       setPhaseSync('verified')
       return true
@@ -700,7 +805,14 @@ export function CameraCapture({ docType, onComplete, onClose }: CameraCapturePro
                   <CheckCircle2 size={20} color={CARAMEL} />
                 </div>
                 <div>
-                  <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: CARAMEL }}>Pièce d'identité vérifiée</p>
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: CARAMEL }}>
+                    {{
+                      permis:   'Permis de conduire reconnu',
+                      passport: 'Passeport reconnu',
+                      sejour:   'Titre de séjour reconnu',
+                      cni:      'Carte d\'identité reconnue',
+                    }[ocrData?.docKind ?? ''] ?? 'Document reconnu'}
+                  </p>
                   <p style={{ margin: 0, fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{LABEL[currentDt]}</p>
                 </div>
               </div>
