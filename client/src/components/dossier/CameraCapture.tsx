@@ -275,9 +275,18 @@ function mrzDate(s: string): string {
 // Le numéro de permis FR suit le format : 99XX99999999 (dép + 2 lettres + chiffres)
 // Les codes catégories : AM A1 A2 A  B1 BE B  C1 CE C  D1 DE D
 
+// EU Driving License field numbering (Directive 2006/126/CE) :
+//   1.  Nom de famille
+//   2.  Prénoms (le premier est le prénom usuel)
+//   3.  Date de naissance
+//   4a. Date de délivrance  ← PAS la date de naissance
+//   4b. Date d'expiration
+//   4c. Autorité délivrante
+//   5.  Numéro du permis
+//   9.  Catégories (A, B, C, D…)
+
 const DL_CATEGORY_RE = /\b(AM|A[12]?|B[E1]?|C[E1]?|D[E1]?)\b/g
-const DL_FIELD_RE    = /\b(4\s*[Aa]|4\s*[Bb]|[19]\s*\.)/  // champs 4a, 4b, 9
-const DL_NUMBER_FR   = /\b\d{2}[A-Z]{2}\d{6,10}\b/          // ex: 75AB123456
+const DL_NUMBER_FR   = /\b\d{2}[A-Z]{2}\d{6,10}\b/
 
 interface DlResult {
   detected: boolean
@@ -285,54 +294,61 @@ interface DlResult {
   documentNumber: string; expiry: string
 }
 
+/** Parse a date string DD.MM.YYYY (or DD/MM/YYYY or DD-MM-YYYY) → YYYY-MM-DD */
+function parseEuDate(raw: string): string {
+  const parts = raw.split(/[.\-/]/)
+  if (parts.length !== 3) return ''
+  const dd = parts[0].padStart(2, '0')
+  const mm = parts[1].padStart(2, '0')
+  const yy = parts[2]
+  const yyyy = yy.length === 2 ? (parseInt(yy) > 30 ? '19' + yy : '20' + yy) : yy
+  return `${yyyy}-${mm}-${dd}`
+}
+
+/** Extract the first date pattern (DD.MM.YYYY) after a field marker */
+function dateAfterField(text: string, marker: RegExp): string {
+  const m = text.match(new RegExp(marker.source + String.raw`[^0-9]{0,6}(\d{2}[.\-/]\d{2}[.\-/]\d{2,4})`))
+  return m ? parseEuDate(m[1]) : ''
+}
+
 function parseDrivingLicense(text: string): DlResult {
-  const raw = text
-  const up  = raw.toUpperCase()
+  const up = text.toUpperCase()
 
   // ── Détection ────────────────────────────────────────────────────────────
   const cats    = [...up.matchAll(DL_CATEGORY_RE)].map(m => m[0])
-  const hasField= DL_FIELD_RE.test(up)
+  const hasFields = /\b[123]\s*[.,]/.test(text)          // champs 1. 2. 3.
   const hasNum  = DL_NUMBER_FR.test(up.replace(/\s/g, ''))
-  const hasKw   = /PERMIS|CONDUIRE|DRIVING|PREFECT|LICEN[CS]E|FÜHRERSCHEIN|CARNET DE CONDUCIR/.test(up)
+  const hasKw   = /PERMIS|CONDUIRE|DRIVING|PREFECT|LICEN[CS]E/.test(up)
+  const detected = cats.length >= 1 || hasFields || hasNum || hasKw
 
-  const detected = cats.length >= 1 || hasField || hasNum || hasKw
+  // ── Champ 1 : Nom de famille ──────────────────────────────────────────────
+  // Le champ 1. est suivi immédiatement du nom (tout en majuscules sur le permis)
+  let nom = ''
+  const f1 = text.match(/(?:^|\n)\s*1\s*[.,]?\s*([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-ZÉÈÊËÀÂÔÛÙÎÏÇa-zéèêëàâôûùîïç\-]+)/m)
+  if (f1) nom = f1[1].trim()
 
-  // ── Extraction champ 5 (Nom / Prénom) ────────────────────────────────────
-  // Le champ 5 contient "NOM, Prénom" ou séparé par une virgule
-  let nom = '', prenom = ''
-  const field5 = raw.match(/5[.\s]*([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-ZÉÈÊËÀÂÔÛÙÎÏÇa-z\-]+)[,\s]+([A-ZÉÈÊËÀÂÔÛÙÎÏÇa-z\-\s]+)/)
-  if (field5) { nom = field5[1].trim(); prenom = field5[2].trim().split(/\s+/)[0] }
-  // Fallback : chercher NOM / PRÉNOM labels
-  if (!nom) {
-    const nm = raw.match(/NOM[^A-Za-z]{0,4}([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-Za-z\-]{1,25})/)
-    if (nm) nom = nm[1].trim()
+  // ── Champ 2 : Prénoms — ne garder que le PREMIER ─────────────────────────
+  let prenom = ''
+  const f2 = text.match(/(?:^|\n)\s*2\s*[.,]?\s*([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-ZÉÈÊËÀÂÔÛÙÎÏÇa-zéèêëàâôûùîïç\-\s,]+)/m)
+  if (f2) {
+    // Plusieurs prénoms séparés par virgule, espace ou saut de ligne : on prend le 1er
+    prenom = f2[1].trim().split(/[,\n]/)[0].trim().split(/\s+/)[0]
   }
 
-  // ── Extraction champ 4a (Date de naissance) ──────────────────────────────
-  let dob = ''
-  const dobMatch = raw.match(/4\s*[Aa][^0-9]{0,5}(\d{2}[.\-/]\d{2}[.\-/]\d{2,4})/)
-  if (dobMatch) {
-    const parts = dobMatch[1].split(/[.\-/]/)
-    if (parts.length === 3) {
-      const y = parts[2].length === 2 ? (parseInt(parts[2]) > 30 ? '19'+parts[2] : '20'+parts[2]) : parts[2]
-      dob = `${y}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`
-    }
-  }
+  // ── Champ 3 : Date de naissance ──────────────────────────────────────────
+  const dob = dateAfterField(text, /(?:^|\n)\s*3\s*[.,]?/m)
 
-  // ── Extraction champ 2 (Expiration) ──────────────────────────────────────
-  let expiry = ''
-  const expMatch = raw.match(/2[^0-9]{0,5}(\d{2}[.\-/]\d{2}[.\-/]\d{2,4})/)
-  if (expMatch) {
-    const parts = expMatch[1].split(/[.\-/]/)
-    if (parts.length === 3) {
-      const y = parts[2].length === 2 ? '20'+parts[2] : parts[2]
-      expiry = `${y}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`
-    }
-  }
+  // ── Champ 4b : Date d'expiration (≠ 4a = date de délivrance) ─────────────
+  const expiry = dateAfterField(text, /4\s*[Bb]\s*[.,]?/)
 
-  // ── Numéro de permis ──────────────────────────────────────────────────────
-  const numMatch = up.replace(/\s/g, '').match(DL_NUMBER_FR)
-  const documentNumber = numMatch ? numMatch[0] : ''
+  // ── Champ 5 : Numéro du permis ────────────────────────────────────────────
+  let documentNumber = ''
+  const f5 = text.match(/(?:^|\n)\s*5\s*[.,]?\s*([A-Z0-9\-]{6,20})/m)
+  if (f5) documentNumber = f5[1].trim()
+  if (!documentNumber) {
+    const numMatch = up.replace(/\s/g, '').match(DL_NUMBER_FR)
+    if (numMatch) documentNumber = numMatch[0]
+  }
 
   return { detected, nom, prenom, dob, documentNumber, expiry }
 }
