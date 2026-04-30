@@ -1,21 +1,20 @@
 /**
- * CameraCapture — Scanner de pièce d'identité avec jscanify + OpenCV.js
+ * CameraCapture v3 — Scanner de pièce d'identité
  *
  * Pipeline :
- *  1. Charge OpenCV.js dynamiquement (8 MB, une seule fois, mis en cache)
- *  2. Détecte les contours du document via jscanify.findPaperContour() (Canny + findContours)
- *  3. Dessine le quadrilatère détecté sur un canvas overlay en temps réel (RAF)
- *  4. Après 2 s stables : capture full-res + warpPerspective via jscanify.extractPaper()
- *  5. Mesure le flou (variance Laplacien pure JS) — avertit si tremblé
- *  6. Preview du document redressé → Reprendre / Utiliser
+ *  1. Charge OpenCV.js + jscanify (alias Vite → build browser)
+ *  2. Détection stricte : aspect ratio + taille + stabilité 3 s
+ *  3. Capture full-res + warpPerspective
+ *  4. Vérification IA (Claude Haiku OCR) avec animation scan
+ *  5. Rejet si non-pièce d'identité, sinon aperçu + confirmation
  */
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { X, ZapOff, FlipHorizontal, RotateCcw, Check, Loader2 } from 'lucide-react'
+import { X, ZapOff, FlipHorizontal, RotateCcw, Check, Loader2, ShieldOff } from 'lucide-react'
 import { BAI } from '../../constants/bailio-tokens'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 type DocType = 'CNI_RECTO' | 'CNI_VERSO' | 'PASSEPORT' | 'TITRE_SEJOUR' | string
-type Phase = 'loading-cv' | 'scanning' | 'processing' | 'captured'
+type Phase = 'loading-cv' | 'scanning' | 'processing' | 'verifying' | 'captured' | 'rejected'
 
 interface CornerPoint { x: number; y: number }
 
@@ -25,7 +24,7 @@ interface CameraCaptureProps {
   onClose: () => void
 }
 
-// ── Guide ratios (mm → aspect ratio) ─────────────────────────────────────────
+// ── Guide labels & aspect ratios ──────────────────────────────────────────────
 const GUIDE_LABELS: Record<string, string> = {
   CNI_RECTO:    'Recto de la CNI',
   CNI_VERSO:    'Verso de la CNI',
@@ -34,18 +33,25 @@ const GUIDE_LABELS: Record<string, string> = {
 }
 
 const GUIDE_ASPECT: Record<string, number> = {
-  CNI_RECTO:    85.6 / 54.0,   // ID-1
+  CNI_RECTO:    85.6 / 54.0,
   CNI_VERSO:    85.6 / 54.0,
-  PASSEPORT:    125  / 88,      // ID-3 page ouverte
+  PASSEPORT:    125  / 88,
   TITRE_SEJOUR: 85.6 / 54.0,
 }
 
-const STABLE_NEEDED = 4   // 4 × 500 ms = 2 s
-const INTERVAL_MS   = 500
-const ANALYSIS_W    = 480  // downsampled width for detection
-const ANALYSIS_H    = 320
+// ── Detection thresholds ──────────────────────────────────────────────────────
+// Stricter than before to avoid capturing random rectangles from the environment
+const STABLE_NEEDED   = 6     // 6 × 500 ms = 3 s stable
+const INTERVAL_MS     = 500
+const ANALYSIS_W      = 480
+const ANALYSIS_H      = 320
+const MIN_W_RATIO     = 0.42  // detected width ≥ 42 % of analysis frame
+const MIN_H_RATIO     = 0.30  // detected height ≥ 30 %
+const MIN_AREA_RATIO  = 0.20  // quad area ≥ 20 % of frame (avoid thin strips)
+const MIN_ASPECT      = 1.10  // min w/h — reject near-square shapes
+const MAX_ASPECT      = 2.30  // max w/h — reject very elongated shapes
 
-// ── OpenCV loader (singleton, cached globally) ────────────────────────────────
+// ── OpenCV loader (singleton) ─────────────────────────────────────────────────
 let _cvPromise: Promise<void> | null = null
 
 function loadOpenCV(): Promise<void> {
@@ -53,13 +59,11 @@ function loadOpenCV(): Promise<void> {
   _cvPromise = new Promise((resolve, reject) => {
     const win = window as any
     if (win.cv?.Mat) { resolve(); return }
-
-    const script = document.createElement('script')
-    script.src   = 'https://docs.opencv.org/4.7.0/opencv.js'
-    script.async = true
+    const script   = document.createElement('script')
+    script.src     = 'https://docs.opencv.org/4.7.0/opencv.js'
+    script.async   = true
     script.onerror = () => reject(new Error('Échec du chargement OpenCV'))
     script.onload  = () => {
-      // OpenCV initializes asynchronously after onload
       const t0 = Date.now()
       const poll = setInterval(() => {
         if (win.cv?.Mat) { clearInterval(poll); resolve() }
@@ -71,7 +75,7 @@ function loadOpenCV(): Promise<void> {
   return _cvPromise
 }
 
-// ── Blur metric (pure JS — fast, no OpenCV needed) ────────────────────────────
+// ── Blur metric (Laplacian variance) ─────────────────────────────────────────
 function isBlurry(video: HTMLVideoElement): boolean {
   const W = 160, H = 100
   const c = document.createElement('canvas')
@@ -92,11 +96,18 @@ function isBlurry(video: HTMLVideoElement): boolean {
       sum += v; sq += v * v; n++
     }
   }
-  const variance = sq / n - (sum / n) ** 2
-  return variance < 50
+  return sq / n - (sum / n) ** 2 < 50
 }
 
-// ── Overlay drawing ───────────────────────────────────────────────────────────
+// ── Shoelace area for a quad ──────────────────────────────────────────────────
+function quadArea(pts: CornerPoint[]): number {
+  const [a, b, c, d] = pts
+  return 0.5 * Math.abs(
+    a.x * (b.y - d.y) + b.x * (c.y - a.y) + c.x * (d.y - b.y) + d.x * (a.y - c.y),
+  )
+}
+
+// ── Corner bracket drawing ────────────────────────────────────────────────────
 function drawCornerBrackets(
   ctx: CanvasRenderingContext2D,
   x: number, y: number, w: number, h: number,
@@ -117,9 +128,10 @@ function drawCornerBrackets(
   b(x + w, y + h, -1, -1)
 }
 
+// ── Overlay drawing ───────────────────────────────────────────────────────────
 function drawDocumentOverlay(
   canvas: HTMLCanvasElement,
-  corners: CornerPoint[] | null,   // [TL, TR, BR, BL] in display pixels
+  corners: CornerPoint[] | null,
   aspect: number,
   stableFrames: number,
   blurry: boolean,
@@ -131,34 +143,28 @@ function drawDocumentOverlay(
 
   if (corners && corners.length === 4) {
     const [tl, tr, br, bl] = corners
-    const isReady  = stableFrames >= STABLE_NEEDED
-    const isGood   = stableFrames > 0 && !blurry
-    const color    = isReady ? '#4ade80' : isGood ? BAI.caramel : 'rgba(255,255,255,0.5)'
+    const isReady = stableFrames >= STABLE_NEEDED
+    const isGood  = stableFrames > 0 && !blurry
+    const color   = isReady ? '#4ade80' : isGood ? BAI.caramel : 'rgba(255,255,255,0.5)'
 
-    // Dark mask with polygon "hole"
+    // Dark mask with quad hole
     ctx.save()
-    ctx.fillStyle = 'rgba(0,0,0,0.5)'
+    ctx.fillStyle = 'rgba(0,0,0,0.48)'
     ctx.fillRect(0, 0, W, H)
     ctx.globalCompositeOperation = 'destination-out'
     ctx.beginPath()
-    ctx.moveTo(tl.x, tl.y)
-    ctx.lineTo(tr.x, tr.y)
-    ctx.lineTo(br.x, br.y)
-    ctx.lineTo(bl.x, bl.y)
-    ctx.closePath()
-    ctx.fill()
+    ctx.moveTo(tl.x, tl.y); ctx.lineTo(tr.x, tr.y)
+    ctx.lineTo(br.x, br.y); ctx.lineTo(bl.x, bl.y)
+    ctx.closePath(); ctx.fill()
     ctx.restore()
 
     // Glowing border
     ctx.shadowColor = color; ctx.shadowBlur = 18
     ctx.strokeStyle = color; ctx.lineWidth  = 2.5
     ctx.beginPath()
-    ctx.moveTo(tl.x, tl.y)
-    ctx.lineTo(tr.x, tr.y)
-    ctx.lineTo(br.x, br.y)
-    ctx.lineTo(bl.x, bl.y)
-    ctx.closePath()
-    ctx.stroke()
+    ctx.moveTo(tl.x, tl.y); ctx.lineTo(tr.x, tr.y)
+    ctx.lineTo(br.x, br.y); ctx.lineTo(bl.x, bl.y)
+    ctx.closePath(); ctx.stroke()
     ctx.shadowBlur = 0
 
     // Corner dots
@@ -167,37 +173,32 @@ function drawDocumentOverlay(
       ctx.beginPath(); ctx.arc(p.x, p.y, 5.5, 0, Math.PI * 2); ctx.fill()
     })
 
-    // Countdown progress ring at centroid
+    // Countdown progress ring
     if (stableFrames > 0) {
       const cx = (tl.x + tr.x + br.x + bl.x) / 4
       const cy = (tl.y + tr.y + br.y + bl.y) / 4
-      const r  = 20
       ctx.strokeStyle = 'rgba(255,255,255,0.14)'; ctx.lineWidth = 3.5
-      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke()
+      ctx.beginPath(); ctx.arc(cx, cy, 20, 0, Math.PI * 2); ctx.stroke()
       ctx.strokeStyle = color
       ctx.beginPath()
-      ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + (stableFrames / STABLE_NEEDED) * Math.PI * 2)
+      ctx.arc(cx, cy, 20, -Math.PI / 2, -Math.PI / 2 + (stableFrames / STABLE_NEEDED) * Math.PI * 2)
       ctx.stroke()
     }
 
-    // Scan-line animation
-    const minY = Math.min(tl.y, tr.y)
-    const maxY = Math.max(bl.y, br.y)
-    const minX = Math.min(tl.x, bl.x)
-    const maxX = Math.max(tr.x, br.x)
+    // Scan line
+    const minY = Math.min(tl.y, tr.y), maxY = Math.max(bl.y, br.y)
+    const minX = Math.min(tl.x, bl.x), maxX = Math.max(tr.x, br.x)
     const pct  = (Date.now() % 1800) / 1800
     const scanY = minY + pct * (maxY - minY)
-    const g    = ctx.createLinearGradient(minX, scanY, maxX, scanY)
-    const rgb  = isReady ? '74,222,128' : isGood ? '196,151,106' : '255,255,255'
-    g.addColorStop(0, 'rgba(0,0,0,0)')
-    g.addColorStop(0.3, `rgba(${rgb},0.4)`)
-    g.addColorStop(0.7, `rgba(${rgb},0.4)`)
-    g.addColorStop(1, 'rgba(0,0,0,0)')
+    const g = ctx.createLinearGradient(minX, scanY, maxX, scanY)
+    const rgb = isReady ? '74,222,128' : isGood ? '196,151,106' : '255,255,255'
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.3, `rgba(${rgb},0.4)`)
+    g.addColorStop(0.7, `rgba(${rgb},0.4)`); g.addColorStop(1, 'rgba(0,0,0,0)')
     ctx.strokeStyle = g; ctx.lineWidth = 1.5
     ctx.beginPath(); ctx.moveTo(minX + 8, scanY); ctx.lineTo(maxX - 8, scanY); ctx.stroke()
 
   } else {
-    // No document — static guide with corner brackets
+    // Static guide
     const maxGW = W * 0.84, maxGH = H * 0.84
     let gW: number, gH: number
     if (maxGW / maxGH > aspect) { gH = maxGH; gW = gH * aspect }
@@ -213,17 +214,17 @@ function drawDocumentOverlay(
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProps) {
-  const videoRef       = useRef<HTMLVideoElement>(null)
-  const overlayRef     = useRef<HTMLCanvasElement>(null)
-  const streamRef      = useRef<MediaStream | null>(null)
-  const timerRef       = useRef<ReturnType<typeof setInterval> | null>(null)
-  const rafRef         = useRef<number>(0)
-  const stableRef      = useRef(0)
-  const cornersRef     = useRef<CornerPoint[] | null>(null)
-  const stableFramesForRaf = useRef(0)
-  const blurryRef      = useRef(false)
-  const phaseRef       = useRef<Phase>('loading-cv')
-  const scannerRef     = useRef<any>(null)
+  const videoRef   = useRef<HTMLVideoElement>(null)
+  const overlayRef = useRef<HTMLCanvasElement>(null)
+  const streamRef  = useRef<MediaStream | null>(null)
+  const timerRef   = useRef<ReturnType<typeof setInterval> | null>(null)
+  const rafRef     = useRef<number>(0)
+  const stableRef  = useRef(0)
+  const cornersRef = useRef<CornerPoint[] | null>(null)
+  const stableRaf  = useRef(0)
+  const blurryRef  = useRef(false)
+  const phaseRef   = useRef<Phase>('loading-cv')
+  const scannerRef = useRef<any>(null)
 
   const [facingMode,   setFacingMode]   = useState<'environment' | 'user'>('environment')
   const [ready,        setReady]        = useState(false)
@@ -236,12 +237,13 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
   const [previewUrl,   setPreviewUrl]   = useState('')
   const [capturedFile, setCapturedFile] = useState<File | null>(null)
   const [flash,        setFlash]        = useState(false)
+  const [rejectReason, setRejectReason] = useState('')
 
   const aspect = GUIDE_ASPECT[docType] ?? GUIDE_ASPECT['CNI_RECTO']
 
   const setPhaseSync = (p: Phase) => { phaseRef.current = p; setPhase(p) }
 
-  // ── Load OpenCV + init scanner ─────────────────────────────────────────────
+  // ── Load OpenCV + jscanify ─────────────────────────────────────────────────
   useEffect(() => {
     loadOpenCV()
       .then(() => import('jscanify'))
@@ -258,10 +260,7 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
     if (canvas && phaseRef.current === 'scanning') {
       const { offsetWidth: w, offsetHeight: h } = canvas
       if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h }
-      drawDocumentOverlay(
-        canvas, cornersRef.current, aspect,
-        stableFramesForRaf.current, blurryRef.current,
-      )
+      drawDocumentOverlay(canvas, cornersRef.current, aspect, stableRaf.current, blurryRef.current)
     }
     rafRef.current = requestAnimationFrame(drawLoop)
   }, [aspect])
@@ -271,13 +270,40 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
     return () => cancelAnimationFrame(rafRef.current)
   }, [drawLoop])
 
-  // ── Capture with perspective correction ───────────────────────────────────
+  // ── OCR verification ───────────────────────────────────────────────────────
+  const doVerify = useCallback(async (file: File) => {
+    setPhaseSync('verifying')
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('docType', docType)
+      const token = localStorage.getItem('accessToken') ?? sessionStorage.getItem('accessToken') ?? ''
+      const res = await fetch('/api/v1/ocr/extract', {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: fd,
+      })
+      if (!res.ok) throw new Error('OCR service unavailable')
+      const json = await res.json()
+      const d = json?.data
+      if (d?.isIdDocument === false) {
+        setRejectReason(String(d.rejectReason || 'Ce document ne semble pas être une pièce d\'identité valide.'))
+        setPhaseSync('rejected')
+      } else {
+        setPhaseSync('captured')
+      }
+    } catch {
+      // OCR error: don't block the user — let parent handle it
+      setPhaseSync('captured')
+    }
+  }, [docType])
+
+  // ── Perspective-corrected capture ──────────────────────────────────────────
   const doCapture = useCallback((video: HTMLVideoElement) => {
     setPhaseSync('processing')
     setFlash(true)
     setTimeout(() => setFlash(false), 220)
 
-    // Full-res canvas
     const fc = document.createElement('canvas')
     fc.width = video.videoWidth; fc.height = video.videoHeight
     fc.getContext('2d')!.drawImage(video, 0, 0)
@@ -287,13 +313,11 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
     setTimeout(() => {
       try {
         const scanner = scannerRef.current
-        // jscanify.extractPaper returns a canvas with the warped document
         const paperCanvas: HTMLCanvasElement | null = scanner
           ? scanner.extractPaper(fc, outW, outH)
           : null
 
         const sourceCanvas = paperCanvas ?? (() => {
-          // Fallback: center crop
           const c = document.createElement('canvas')
           c.width = outW; c.height = outH
           const cx = fc.width / 2, cy = fc.height / 2
@@ -308,19 +332,20 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
           const file = new File([blob], `${docType.toLowerCase()}_${Date.now()}.jpg`, { type: 'image/jpeg' })
           setPreviewUrl(url)
           setCapturedFile(file)
-          setPhaseSync('captured')
+          doVerify(file)         // → 'verifying' phase
         }, 'image/jpeg', 0.95)
       } catch {
-        // Fallback: plain capture
         fc.toBlob(blob => {
           if (!blob) { setPhaseSync('scanning'); return }
-          setPreviewUrl(URL.createObjectURL(blob))
-          setCapturedFile(new File([blob], `${docType.toLowerCase()}_${Date.now()}.jpg`, { type: 'image/jpeg' }))
-          setPhaseSync('captured')
+          const url  = URL.createObjectURL(blob)
+          const file = new File([blob], `${docType.toLowerCase()}_${Date.now()}.jpg`, { type: 'image/jpeg' })
+          setPreviewUrl(url)
+          setCapturedFile(file)
+          doVerify(file)
         }, 'image/jpeg', 0.92)
       }
     }, 0)
-  }, [docType, aspect])
+  }, [docType, aspect, doVerify])
 
   // ── Analysis loop ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -332,12 +357,10 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
       const scanner = scannerRef.current
       if (!video || !scanner || phaseRef.current !== 'scanning') return
 
-      // Blur check
       const blurry = isBlurry(video)
       blurryRef.current = blurry
       setBlurWarning(blurry)
 
-      // Document detection on downsampled canvas
       const win = window as any
       if (!win.cv?.Mat) return
 
@@ -345,52 +368,53 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
       offscreen.width = ANALYSIS_W; offscreen.height = ANALYSIS_H
       offscreen.getContext('2d')!.drawImage(video, 0, 0, ANALYSIS_W, ANALYSIS_H)
 
-      let detected = false
+      let isDetected = false
       try {
-        const cvImg  = win.cv.imread(offscreen)
+        const cvImg   = win.cv.imread(offscreen)
         const contour = scanner.findPaperContour(cvImg)
 
         if (contour) {
-          const { topLeftCorner, topRightCorner, bottomLeftCorner, bottomRightCorner }
+          const { topLeftCorner: tl, topRightCorner: tr, bottomLeftCorner: bl, bottomRightCorner: br }
             = scanner.getCornerPoints(contour, cvImg)
-
           cvImg.delete()
 
-          if (topLeftCorner && topRightCorner && bottomLeftCorner && bottomRightCorner) {
-            // Validate: quad must be large enough (≥30% of analysis frame)
-            const w = Math.hypot(topRightCorner.x - topLeftCorner.x, topRightCorner.y - topLeftCorner.y)
-            const h = Math.hypot(bottomLeftCorner.x - topLeftCorner.x, bottomLeftCorner.y - topLeftCorner.y)
+          if (tl && tr && bl && br) {
+            const w     = Math.hypot(tr.x - tl.x, tr.y - tl.y)
+            const h     = Math.hypot(bl.x - tl.x, bl.y - tl.y)
+            const ratio = w / Math.max(h, 1)
+            const area  = quadArea([tl, tr, br, bl])
+            const frameArea = ANALYSIS_W * ANALYSIS_H
 
-            if (w > ANALYSIS_W * 0.28 && h > ANALYSIS_H * 0.20) {
-              detected = true
-
-              // Scale corners from analysis resolution → display resolution
+            // Strict validation — must look like a real ID card
+            if (
+              w > ANALYSIS_W * MIN_W_RATIO &&
+              h > ANALYSIS_H * MIN_H_RATIO &&
+              area / frameArea >= MIN_AREA_RATIO &&
+              ratio >= MIN_ASPECT &&
+              ratio <= MAX_ASPECT
+            ) {
+              isDetected = true
               const overlay = overlayRef.current
               const scaleX  = overlay ? overlay.offsetWidth  / ANALYSIS_W : 1
               const scaleY  = overlay ? overlay.offsetHeight / ANALYSIS_H : 1
-
               cornersRef.current = [
-                { x: topLeftCorner.x     * scaleX, y: topLeftCorner.y     * scaleY },
-                { x: topRightCorner.x    * scaleX, y: topRightCorner.y    * scaleY },
-                { x: bottomRightCorner.x * scaleX, y: bottomRightCorner.y * scaleY },
-                { x: bottomLeftCorner.x  * scaleX, y: bottomLeftCorner.y  * scaleY },
+                { x: tl.x * scaleX, y: tl.y * scaleY },
+                { x: tr.x * scaleX, y: tr.y * scaleY },
+                { x: br.x * scaleX, y: br.y * scaleY },
+                { x: bl.x * scaleX, y: bl.y * scaleY },
               ]
             }
-          } else {
-            cvImg.delete()
           }
         } else {
           cvImg.delete()
         }
-      } catch {
-        // OpenCV error — ignore frame
-      }
+      } catch { /* ignore frame */ }
 
-      setDetected(detected)
+      setDetected(isDetected)
 
-      if (detected && !blurry) {
+      if (isDetected && !blurry) {
         stableRef.current = Math.min(stableRef.current + 1, STABLE_NEEDED + 1)
-        stableFramesForRaf.current = stableRef.current
+        stableRaf.current = stableRef.current
         setStableFrames(stableRef.current)
 
         if (stableRef.current >= STABLE_NEEDED) {
@@ -398,10 +422,8 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
           doCapture(video)
         }
       } else {
-        stableRef.current = 0
-        stableFramesForRaf.current = 0
-        setStableFrames(0)
-        if (!detected) cornersRef.current = null
+        stableRef.current = 0; stableRaf.current = 0; setStableFrames(0)
+        if (!isDetected) cornersRef.current = null
       }
     }, INTERVAL_MS)
 
@@ -412,11 +434,10 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
   const startCamera = useCallback(async (mode: 'environment' | 'user') => {
     streamRef.current?.getTracks().forEach(t => t.stop())
     if (timerRef.current) clearInterval(timerRef.current)
-    stableRef.current = 0; stableFramesForRaf.current = 0; cornersRef.current = null
+    stableRef.current = 0; stableRaf.current = 0; cornersRef.current = null
     setStableFrames(0); setReady(false); setError('')
     setDetected(false); setBlurWarning(false)
     if (phaseRef.current !== 'loading-cv') setPhaseSync('scanning')
-
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: mode }, width: { ideal: 1920 }, height: { ideal: 1080 } },
@@ -430,15 +451,14 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
       if (msg.includes('NotAllowed') || msg.includes('Permission'))
-        setError("Accès à la caméra refusé. Autorisez l'accès dans les paramètres de votre navigateur.")
+        setError("Accès à la caméra refusé. Autorisez l'accès dans les paramètres.")
       else if (msg.includes('NotFound'))
-        setError("Aucune caméra détectée. Utilisez l'option d'import de fichier.")
+        setError("Aucune caméra détectée.")
       else
-        setError("Impossible d'accéder à la caméra. Essayez de recharger la page.")
+        setError("Impossible d'accéder à la caméra. Rechargez la page.")
     }
   }, [])
 
-  // Start camera once OpenCV is ready
   useEffect(() => {
     if (phase === 'scanning') startCamera(facingMode)
   }, [phase]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -451,8 +471,7 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
   }, [])
 
   const handleFacingMode = (mode: 'environment' | 'user') => {
-    setFacingMode(mode)
-    startCamera(mode)
+    setFacingMode(mode); startCamera(mode)
   }
 
   const handleManualCapture = () => {
@@ -463,17 +482,18 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
   }
 
   const handleRetry = () => {
-    stableRef.current = 0; stableFramesForRaf.current = 0; cornersRef.current = null
+    stableRef.current = 0; stableRaf.current = 0; cornersRef.current = null
     setStableFrames(0); setPreviewUrl(''); setCapturedFile(null)
-    setDetected(false); setBlurWarning(false); setPhaseSync('scanning')
+    setRejectReason(''); setDetected(false); setBlurWarning(false)
+    setPhaseSync('scanning')
   }
 
   const handleConfirm = () => { if (capturedFile) onCapture(capturedFile) }
 
   // ── Status text ───────────────────────────────────────────────────────────
   const statusText =
-    blurWarning ? '⚠ Tenez le téléphone immobile'
-    : !detected  ? '→ Cadrez le document dans la zone'
+    blurWarning ? '⚠ Tenez immobile'
+    : !detected  ? '→ Cadrez votre pièce d\'identité'
     : stableFrames < STABLE_NEEDED ? `⚡ Document repéré — maintenez stable`
     : '✓ Capture en cours…'
 
@@ -481,6 +501,16 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
     blurWarning ? 'rgba(155,28,28,0.88)'
     : detected  ? 'rgba(196,151,106,0.92)'
     : 'rgba(0,0,0,0.68)'
+
+  // ── Header label ─────────────────────────────────────────────────────────
+  const headerLabel = {
+    'loading-cv':  'Chargement…',
+    'scanning':    'Scan IA · Détection automatique',
+    'processing':  'Traitement…',
+    'verifying':   'Vérification IA',
+    'captured':    'Document extrait',
+    'rejected':    'Document refusé',
+  }[phase]
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -498,7 +528,7 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
       }}>
         <div>
           <p style={{ margin: 0, fontSize: 10, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
-            {phase === 'captured' ? 'Document extrait' : phase === 'processing' ? 'Traitement…' : phase === 'loading-cv' ? 'Chargement…' : 'Scan IA · Détection automatique'}
+            {headerLabel}
           </p>
           <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: '#fff' }}>
             {GUIDE_LABELS[docType] ?? docType}
@@ -519,8 +549,8 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
         display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
       }}>
 
+        {/* ── OpenCV error ───────────────────────────────────────────────── */}
         {cvError ? (
-          /* OpenCV load error */
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: 32, textAlign: 'center' }}>
             <ZapOff size={40} color="rgba(255,255,255,0.4)" />
             <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, maxWidth: 320, lineHeight: 1.6 }}>
@@ -529,46 +559,165 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
             </p>
           </div>
 
+        /* ── Loading OpenCV ─────────────────────────────────────────────── */
         ) : phase === 'loading-cv' ? (
-          /* OpenCV loading screen */
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
             <Loader2 size={40} color={BAI.caramel} style={{ animation: 'spin 1s linear infinite' }} />
             <div style={{ textAlign: 'center' }}>
-              <p style={{ color: '#fff', fontSize: 14, fontWeight: 600, margin: '0 0 4px' }}>
-                Initialisation du scanner IA…
-              </p>
-              <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12, margin: 0 }}>
-                Téléchargement OpenCV (une seule fois, ~8 Mo)
-              </p>
+              <p style={{ color: '#fff', fontSize: 14, fontWeight: 600, margin: '0 0 4px' }}>Initialisation du scanner IA…</p>
+              <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12, margin: 0 }}>Téléchargement OpenCV (~8 Mo, une seule fois)</p>
             </div>
           </div>
 
+        /* ── Camera error ───────────────────────────────────────────────── */
         ) : error ? (
-          /* Camera error */
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: 32, textAlign: 'center' }}>
             <ZapOff size={40} color="rgba(255,255,255,0.4)" />
             <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, maxWidth: 320, lineHeight: 1.6 }}>{error}</p>
             <button onClick={() => startCamera(facingMode)} style={{
-              padding: '10px 22px', borderRadius: 8, background: BAI.caramel, border: 'none',
-              color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+              padding: '10px 22px', borderRadius: 8, background: BAI.caramel,
+              border: 'none', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
             }}>Réessayer</button>
           </div>
 
+        /* ── Perspective correction ─────────────────────────────────────── */
         ) : phase === 'processing' ? (
-          /* Perspective correction running */
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
             <div style={{
               width: 56, height: 56, borderRadius: '50%',
               border: '3px solid rgba(255,255,255,0.12)', borderTopColor: '#4ade80',
               animation: 'spin 0.9s linear infinite',
             }} />
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, margin: 0 }}>
-              Correction de perspective…
-            </p>
+            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, margin: 0 }}>Correction de perspective…</p>
           </div>
 
+        /* ── IA Verification (new phase) ────────────────────────────────── */
+        ) : (phase === 'verifying' || phase === 'rejected') && previewUrl ? (
+          <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+
+            {/* Background: captured image, dimmed */}
+            <img
+              src={previewUrl} alt="Document capturé"
+              style={{
+                position: 'absolute', inset: 0, width: '100%', height: '100%',
+                objectFit: 'contain', padding: '60px 24px',
+                filter: phase === 'rejected' ? 'brightness(0.25) saturate(0.3)' : 'brightness(0.35)',
+              }}
+            />
+
+            {/* Scanning animation overlay (only during verifying) */}
+            {phase === 'verifying' && (
+              <div style={{
+                position: 'absolute', inset: 0,
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              }}>
+                {/* Scan frame */}
+                <div style={{
+                  position: 'relative',
+                  width: 'min(340px, 80vw)',
+                  height: 'min(220px, 52vw)',
+                  border: '1.5px solid rgba(74,222,128,0.35)',
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                  animation: 'framePulse 2s ease-in-out infinite',
+                }}>
+                  {/* Corner brackets */}
+                  {([
+                    { top: -1, left: -1, borderRight: 'none', borderBottom: 'none' },
+                    { top: -1, right: -1, borderLeft: 'none', borderBottom: 'none' },
+                    { bottom: -1, left: -1, borderRight: 'none', borderTop: 'none' },
+                    { bottom: -1, right: -1, borderLeft: 'none', borderTop: 'none' },
+                  ] as React.CSSProperties[]).map((s, i) => (
+                    <div key={i} style={{
+                      position: 'absolute', width: 24, height: 24,
+                      border: '2.5px solid #4ade80',
+                      borderRadius: i === 0 ? '8px 0 0 0' : i === 1 ? '0 8px 0 0' : i === 2 ? '0 0 0 8px' : '0 0 8px 0',
+                      ...s,
+                    }} />
+                  ))}
+
+                  {/* Moving scan line */}
+                  <div style={{
+                    position: 'absolute', left: 0, right: 0, height: 2,
+                    background: 'linear-gradient(90deg, transparent, rgba(74,222,128,0.9) 30%, #fff 50%, rgba(74,222,128,0.9) 70%, transparent)',
+                    boxShadow: '0 0 16px 4px rgba(74,222,128,0.35)',
+                    animation: 'scanLine 2s ease-in-out infinite',
+                  }}>
+                    {/* Glow beam below the line */}
+                    <div style={{
+                      position: 'absolute', top: 0, bottom: -60, left: 0, right: 0,
+                      background: 'linear-gradient(to bottom, rgba(74,222,128,0.10), transparent)',
+                      pointerEvents: 'none',
+                    }} />
+                  </div>
+
+                  {/* Grid overlay */}
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    backgroundImage: `
+                      linear-gradient(rgba(74,222,128,0.04) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(74,222,128,0.04) 1px, transparent 1px)
+                    `,
+                    backgroundSize: '20px 20px',
+                  }} />
+                </div>
+
+                {/* Text */}
+                <div style={{ marginTop: 32, textAlign: 'center', zIndex: 1 }}>
+                  <p style={{ margin: '0 0 6px', color: '#fff', fontSize: 15, fontWeight: 600 }}>
+                    Vérification IA en cours
+                  </p>
+                  <p style={{ margin: '0 0 16px', color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>
+                    Analyse de la pièce d'identité…
+                  </p>
+                  {/* Animated dots */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    {[0, 1, 2].map(i => (
+                      <div key={i} style={{
+                        width: 7, height: 7, borderRadius: '50%',
+                        background: '#4ade80',
+                        animation: `dotBounce 1.2s ease-in-out ${i * 0.2}s infinite`,
+                      }} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Rejection overlay */}
+            {phase === 'rejected' && (
+              <div style={{
+                position: 'absolute', inset: 0, zIndex: 2,
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                padding: 32, textAlign: 'center',
+              }}>
+                <div style={{
+                  width: 72, height: 72, borderRadius: '50%',
+                  background: 'rgba(155,28,28,0.25)', border: '2px solid rgba(255,100,100,0.5)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20,
+                }}>
+                  <ShieldOff size={32} color="#f87171" />
+                </div>
+                <p style={{ margin: '0 0 8px', color: '#fff', fontSize: 16, fontWeight: 700 }}>
+                  Document non reconnu
+                </p>
+                <p style={{ margin: '0 0 24px', color: 'rgba(255,255,255,0.55)', fontSize: 13, maxWidth: 300, lineHeight: 1.6 }}>
+                  {rejectReason}
+                </p>
+                <button onClick={handleRetry} style={{
+                  padding: '12px 28px', borderRadius: 12,
+                  background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
+                  color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 8,
+                }}>
+                  <RotateCcw size={15} /> Reprendre le scan
+                </button>
+              </div>
+            )}
+          </div>
+
+        /* ── Preview after verification ─────────────────────────────────── */
         ) : phase === 'captured' && previewUrl ? (
-          /* Preview */
           <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <img
               src={previewUrl} alt="Document extrait"
@@ -578,6 +727,7 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
                 boxShadow: '0 8px 40px rgba(0,0,0,0.8)',
               }}
             />
+            {/* Success badge */}
             <div style={{
               position: 'absolute', top: 12, right: '6%',
               background: '#4ade80', borderRadius: '50%', width: 40, height: 40,
@@ -586,10 +736,19 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
             }}>
               <Check size={22} color="#14532d" strokeWidth={3} />
             </div>
+            {/* "Verified" label */}
+            <div style={{
+              position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)',
+              background: 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.3)',
+              borderRadius: 20, padding: '5px 14px',
+              fontSize: 12, color: '#4ade80', fontWeight: 600, whiteSpace: 'nowrap',
+            }}>
+              ✓ Pièce d'identité vérifiée
+            </div>
           </div>
 
+        /* ── Live camera + overlay ───────────────────────────────────────── */
         ) : (
-          /* Live camera + overlay */
           <>
             <video
               ref={videoRef} playsInline muted
@@ -601,12 +760,11 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
             {flash && (
               <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.7)', zIndex: 5, pointerEvents: 'none' }} />
             )}
-            {/* Overlay canvas — drawn by RAF */}
             <canvas
               ref={overlayRef}
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 2 }}
             />
-            {/* Status */}
+            {/* Status pill */}
             {ready && (
               <div style={{
                 position: 'absolute', bottom: 28, left: '50%', transform: 'translateX(-50%)',
@@ -651,6 +809,7 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         gap: 20, width: '100%', maxWidth: 420,
         background: 'linear-gradient(to top, rgba(0,0,0,0.65), transparent)',
+        minHeight: 100,
       }}>
         {phase === 'scanning' && (
           <>
@@ -715,7 +874,24 @@ export function CameraCapture({ docType, onCapture, onClose }: CameraCaptureProp
         )}
       </div>
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+      {/* CSS Animations */}
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg) } }
+        @keyframes scanLine {
+          0%   { top: 4% }
+          48%  { top: 88% }
+          52%  { top: 88% }
+          100% { top: 4% }
+        }
+        @keyframes framePulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); border-color: rgba(74,222,128,0.35) }
+          50%       { box-shadow: 0 0 24px 4px rgba(74,222,128,0.12); border-color: rgba(74,222,128,0.7) }
+        }
+        @keyframes dotBounce {
+          0%, 80%, 100% { transform: scale(0.7); opacity: 0.5 }
+          40%            { transform: scale(1.2); opacity: 1 }
+        }
+      `}</style>
     </div>
   )
 }
