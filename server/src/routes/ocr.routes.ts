@@ -107,7 +107,8 @@ Extract ONLY these fields if visible and return ONLY valid JSON, no explanation:
   "dob": "YYYY-MM-DD or empty",
   "nationality": "country name in French or empty",
   "documentNumber": "",
-  "expiry": "YYYY-MM-DD or empty"
+  "expiry": "YYYY-MM-DD or empty",
+  "side": "recto if this is the front face showing photo and full name, verso if this is the back showing MRZ lines or address, unknown otherwise"
 }
 If a field is not visible or unclear, leave it as empty string. Never invent data.`,
               },
@@ -134,6 +135,7 @@ If a field is not visible or unclear, leave it as empty string. Never invent dat
         nationality:    String(extracted.nationality    ?? '').slice(0, 80),
         documentNumber: String(extracted.documentNumber ?? '').slice(0, 40),
         expiry:         String(extracted.expiry         ?? '').slice(0, 10),
+        side:           String(extracted.side           ?? 'unknown').slice(0, 10),
       }
 
       return res.status(200).json({ success: true, data: safe })

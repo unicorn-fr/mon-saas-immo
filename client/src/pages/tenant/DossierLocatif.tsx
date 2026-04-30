@@ -782,7 +782,9 @@ export default function DossierLocatif() {
   const [viewerDoc,  setViewerDoc]  = useState<TenantDocument | null>(null)
 
   // ── OCR state ───────────────────────────────────────────────────────────────
-  const [ocrResult, setOcrResult] = useState<Record<string, string> | null>(null)
+  const [ocrResult,    setOcrResult]    = useState<Record<string, string> | null>(null)
+  const [ocrSide,      setOcrSide]      = useState<'recto' | 'verso' | 'unknown' | null>(null)
+  const [nameWarning,  setNameWarning]  = useState('')
 
   useEffect(() => {
     dossierService.getDocuments()
@@ -827,6 +829,27 @@ export default function DossierLocatif() {
               birthCity:   prev.birthCity,
               nationality: prev.nationality || (d.nationality ?? ''),
             }))
+            // Recto/verso side detection
+            if (d.side === 'recto' || d.side === 'verso' || d.side === 'unknown') {
+              setOcrSide(d.side as 'recto' | 'verso' | 'unknown')
+            }
+            // Name verification against registered profile
+            const norm = (s: string) => s.trim().toLowerCase()
+              .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+              .replace(/[^a-z\s-]/g, '').replace(/\s+/g, ' ')
+            const docNom    = norm(d.nom    ?? '')
+            const docPrenom = norm(d.prenom ?? '')
+            const regNom    = norm(user?.lastName  ?? '')
+            const regPrenom = norm(user?.firstName ?? '')
+            const nomOk    = !docNom    || !regNom    || docNom.includes(regNom)    || regNom.includes(docNom)
+            const prenomOk = !docPrenom || !regPrenom || docPrenom.includes(regPrenom) || regPrenom.includes(docPrenom)
+            if (!nomOk || !prenomOk) {
+              setNameWarning(
+                `Nom sur le document : ${d.prenom || '—'} ${d.nom || '—'}. Cela ne correspond pas au profil enregistré. Vérifiez vos informations.`
+              )
+            } else {
+              setNameWarning('')
+            }
           }
         }
       } catch {
@@ -1184,6 +1207,43 @@ export default function DossierLocatif() {
                   </p>
                 </div>
               </div>
+
+              {/* ── Banners IDENTITE — side detection + name check ─────────── */}
+              {currentCat.id === 'IDENTITE' && ocrSide === 'recto' && !documents.some(d => d.docType === 'CNI_VERSO') && (
+                <div style={{
+                  marginBottom: 10, padding: '12px 16px', borderRadius: 10,
+                  background: '#eff6ff', border: '1px solid #bfdbfe',
+                  display: 'flex', alignItems: 'center', gap: 10,
+                }}>
+                  <span style={{ fontSize: 18, flexShrink: 0 }}>↩</span>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#1e40af', fontFamily: BAI.fontBody }}>
+                      Recto scanné — retournez votre carte
+                    </p>
+                    <p style={{ margin: '2px 0 0', fontSize: 12, color: '#3b82f6', fontFamily: BAI.fontBody }}>
+                      Photographiez maintenant le verso pour compléter votre dossier d'identité.
+                    </p>
+                  </div>
+                  <button onClick={() => setOcrSide(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#93c5fd', fontSize: 18, lineHeight: 1 }}>×</button>
+                </div>
+              )}
+
+              {currentCat.id === 'IDENTITE' && nameWarning && (
+                <div style={{
+                  marginBottom: 10, padding: '12px 16px', borderRadius: 10,
+                  background: BAI.errorLight, border: `1px solid rgba(155,28,28,0.25)`,
+                  display: 'flex', alignItems: 'center', gap: 10,
+                }}>
+                  <span style={{ fontSize: 18, flexShrink: 0 }}>⚠️</span>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: BAI.error, fontFamily: BAI.fontBody }}>
+                      Vérification d'identité
+                    </p>
+                    <p style={{ margin: '2px 0 0', fontSize: 12, color: BAI.inkMid, fontFamily: BAI.fontBody }}>{nameWarning}</p>
+                  </div>
+                  <button onClick={() => setNameWarning('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: BAI.inkFaint, fontSize: 18, lineHeight: 1 }}>×</button>
+                </div>
+              )}
 
               {loadingDocs ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, gap: 10 }}>
