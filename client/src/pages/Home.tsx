@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import Footer from '../components/layout/Footer'
 import {
@@ -9,8 +9,6 @@ import {
   Maximize2,
   Euro,
   Check,
-  ChevronLeft,
-  ChevronRight,
 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { propertyService } from '../services/property.service'
@@ -144,25 +142,42 @@ const TENANT_BENEFITS = [
 
 function FeaturedCarousel({ properties, loading }: { properties: Property[]; loading: boolean }) {
   const carouselRef = useRef<HTMLDivElement>(null)
-  const [activeIndex, setActiveIndex] = useState(0)
+  const isDragging = useRef(false)
+  const startX = useRef(0)
+  const scrollLeft = useRef(0)
+  const didDrag = useRef(false)
 
-  const scrollToIndex = useCallback((index: number) => {
+  const onMouseDown = (e: React.MouseEvent) => {
     const el = carouselRef.current
     if (!el) return
-    const card = el.children[index] as HTMLElement
-    if (!card) return
-    el.scrollTo({ left: card.offsetLeft, behavior: 'smooth' })
-    setActiveIndex(index)
-  }, [])
+    isDragging.current = true
+    didDrag.current = false
+    startX.current = e.pageX - el.offsetLeft
+    scrollLeft.current = el.scrollLeft
+    el.style.cursor = 'grabbing'
+    el.style.userSelect = 'none'
+  }
 
-  const handleScroll = useCallback(() => {
-    const el = carouselRef.current
-    if (!el) return
-    const cardWidth = (el.children[0] as HTMLElement)?.offsetWidth ?? 1
-    const gap = 20
-    const index = Math.round(el.scrollLeft / (cardWidth + gap))
-    setActiveIndex(Math.max(0, Math.min(index, properties.length - 1)))
-  }, [properties.length])
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging.current || !carouselRef.current) return
+    e.preventDefault()
+    const x = e.pageX - carouselRef.current.offsetLeft
+    const walk = (x - startX.current) * 1.2
+    if (Math.abs(walk) > 4) didDrag.current = true
+    carouselRef.current.scrollLeft = scrollLeft.current - walk
+  }
+
+  const onMouseUp = () => {
+    isDragging.current = false
+    if (carouselRef.current) {
+      carouselRef.current.style.cursor = 'grab'
+      carouselRef.current.style.userSelect = ''
+    }
+  }
+
+  const onLinkClick = (e: React.MouseEvent) => {
+    if (didDrag.current) e.preventDefault()
+  }
 
   if (loading) {
     return (
@@ -190,85 +205,71 @@ function FeaturedCarousel({ properties, loading }: { properties: Property[]; loa
   }
 
   return (
-    <div>
-      <div style={{ position: 'relative' }}>
-        {/* Prev arrow */}
-        <button
-          className="carousel-arrows"
-          onClick={() => scrollToIndex(Math.max(0, activeIndex - 1))}
-          disabled={activeIndex === 0}
-          style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', zIndex: 2, width: 40, height: 40, borderRadius: '50%', background: T.bgSurface, border: `1px solid ${T.border}`, boxShadow: T.shadow, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: activeIndex === 0 ? 'not-allowed' : 'pointer', opacity: activeIndex === 0 ? 0.4 : 1, transition: 'opacity .2s', padding: 0 }}
-          aria-label="Précédent"
-        >
-          <ChevronLeft size={18} color={T.ink} />
-        </button>
-
-        {/* Scrollable track */}
-        <div className="props-carousel" ref={carouselRef} onScroll={handleScroll}>
-          {properties.map(property => (
-            <div key={property.id} className="props-carousel-item">
-              <Link to={`/properties/${property.id}`} style={{ textDecoration: 'none', display: 'block' }}>
-                <div
-                  style={{ background: T.bgSurface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: 'hidden', boxShadow: T.shadow, transition: 'transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s cubic-bezier(0.16,1,0.3,1)' }}
-                  onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-2px)'; el.style.boxShadow = T.shadowHover; el.style.borderColor = '#e8ccaa' }}
-                  onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = T.shadow; el.style.borderColor = T.border }}
-                >
-                  <div style={{ position: 'relative', height: 240, background: T.bgMuted, overflow: 'hidden' }}>
-                    {property.images?.[0] ? (
-                      <img src={property.images[0]} alt={property.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
-                    ) : (
-                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Building2 size={40} color={T.inkFaint} />
-                      </div>
-                    )}
-                    <div style={{ position: 'absolute', bottom: 12, left: 12, background: 'rgba(255,255,255,0.96)', padding: '6px 12px', borderRadius: 8, fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 18, color: T.ink, border: '1px solid rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                      {Number(property.price).toLocaleString('fr-FR')} €<span style={{ fontFamily: T.fontBody, fontStyle: 'normal', fontWeight: 500, fontSize: 11, color: T.inkMid }}>/mois</span>
-                    </div>
-                    <div style={{ position: 'absolute', top: 12, left: 12, background: 'rgba(26,26,46,0.92)', color: '#fff', borderRadius: 6, padding: '5px 10px', fontFamily: T.fontBody, fontWeight: 600, fontSize: 11, letterSpacing: '0.04em' }}>
-                      {property.type}
-                    </div>
+    <div
+      className="props-carousel"
+      ref={carouselRef}
+      onMouseDown={onMouseDown}
+      onMouseMove={onMouseMove}
+      onMouseUp={onMouseUp}
+      onMouseLeave={onMouseUp}
+      style={{ cursor: 'grab' }}
+    >
+      {properties.map(property => (
+        <div key={property.id} className="props-carousel-item">
+          <Link
+            to={`/property/${property.id}`}
+            style={{ textDecoration: 'none', display: 'block' }}
+            onClick={onLinkClick}
+          >
+            <article
+              style={{ background: T.bgSurface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: 'hidden', boxShadow: T.shadow, transition: 'transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s cubic-bezier(0.16,1,0.3,1)' }}
+              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.transform = 'translateY(-4px)'; el.style.boxShadow = T.shadowHover }}
+              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = T.shadow }}
+            >
+              {/* Image 1:1 */}
+              <div style={{ position: 'relative', paddingBottom: '100%', overflow: 'hidden', background: T.bgMuted }}>
+                {property.images?.[0] ? (
+                  <img
+                    src={property.images[0]} alt={property.title}
+                    draggable={false}
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                    onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+                  />
+                ) : (
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Building2 size={40} color={T.inkFaint} />
                   </div>
-                  <div style={{ padding: '18px 18px 20px' }}>
-                    <p style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 20, color: T.ink, margin: '0 0 8px', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{property.title}</p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: T.inkMid, fontSize: 13, marginBottom: 14 }}>
-                      <MapPin size={13} color={T.caramel} />
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{property.city}</span>
-                    </div>
-                    <div style={{ display: 'flex', gap: 16, fontSize: 12.5, color: T.inkMid, paddingTop: 12, borderTop: `1px solid ${T.border}` }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Bed size={13} color={T.inkFaint} />{property.bedrooms} ch.</span>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Maximize2 size={13} color={T.inkFaint} />{property.surface} m²</span>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Euro size={13} color={T.inkFaint} />{Number(property.price).toLocaleString('fr-FR')} €</span>
-                    </div>
-                  </div>
+                )}
+                {/* Gradient */}
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(13,12,10,0.62) 0%, rgba(13,12,10,0.18) 45%, transparent 70%)', pointerEvents: 'none' }} />
+                {/* Type badge */}
+                <div style={{ position: 'absolute', top: 12, left: 12, background: 'rgba(255,255,255,0.96)', borderRadius: 20, padding: '4px 10px', fontFamily: T.fontBody, fontWeight: 600, fontSize: 11, color: T.ink }}>
+                  {property.type}
                 </div>
-              </Link>
-            </div>
-          ))}
+                {/* Price */}
+                <div style={{ position: 'absolute', bottom: 12, left: 14 }}>
+                  <span style={{ fontFamily: T.fontDisplay, fontWeight: 700, fontSize: 22, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
+                    {Number(property.price).toLocaleString('fr-FR')} €
+                  </span>
+                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.82)', marginLeft: 4 }}>/mois</span>
+                </div>
+              </div>
+              {/* Info */}
+              <div style={{ padding: '14px 16px 16px', fontFamily: T.fontBody }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6 }}>
+                  <MapPin size={12} color={T.caramel} />
+                  <span style={{ fontSize: 11, fontWeight: 600, color: T.caramel, letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>{property.city}</span>
+                </div>
+                <p style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 18, color: T.ink, margin: '0 0 12px', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{property.title}</p>
+                <div style={{ display: 'flex', gap: 0, fontSize: 12, color: T.inkMid, paddingTop: 12, borderTop: `1px solid ${T.border}` }}>
+                  <span style={{ flex: 1, display: 'inline-flex', alignItems: 'center', gap: 5 }}><Bed size={13} color={T.inkFaint} />{property.bedrooms} ch.</span>
+                  <span style={{ flex: 1, display: 'inline-flex', alignItems: 'center', gap: 5, borderLeft: `1px solid ${T.border}`, paddingLeft: 12 }}><Maximize2 size={13} color={T.inkFaint} />{property.surface} m²</span>
+                </div>
+              </div>
+            </article>
+          </Link>
         </div>
-
-        {/* Next arrow */}
-        <button
-          className="carousel-arrows"
-          onClick={() => scrollToIndex(Math.min(properties.length - 1, activeIndex + 1))}
-          disabled={activeIndex === properties.length - 1}
-          style={{ position: 'absolute', right: -20, top: '50%', transform: 'translateY(-50%)', zIndex: 2, width: 40, height: 40, borderRadius: '50%', background: T.bgSurface, border: `1px solid ${T.border}`, boxShadow: T.shadow, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: activeIndex === properties.length - 1 ? 'not-allowed' : 'pointer', opacity: activeIndex === properties.length - 1 ? 0.4 : 1, transition: 'opacity .2s', padding: 0 }}
-          aria-label="Suivant"
-        >
-          <ChevronRight size={18} color={T.ink} />
-        </button>
-      </div>
-
-      {/* Dots */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 24 }}>
-        {properties.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => scrollToIndex(i)}
-            style={{ width: i === activeIndex ? 24 : 8, height: 8, borderRadius: 4, border: 'none', padding: 0, cursor: 'pointer', background: i === activeIndex ? T.caramel : T.border, transition: 'all .25s cubic-bezier(0.16,1,0.3,1)' }}
-            aria-label={`Aller au bien ${i + 1}`}
-          />
-        ))}
-      </div>
+      ))}
     </div>
   )
 }
@@ -281,9 +282,9 @@ export default function Home() {
 
   useEffect(() => {
     propertyService
-      .getProperties({ status: 'AVAILABLE' }, { page: 1, limit: 4 })
+      .getProperties({ status: 'AVAILABLE' }, { page: 1, limit: 12 })
       .then((data) => {
-        setFeaturedProperties(data.properties?.slice(0, 4) ?? [])
+        setFeaturedProperties(data.properties?.slice(0, 12) ?? [])
       })
       .catch(() => setFeaturedProperties([]))
       .finally(() => setLoadingProperties(false))
@@ -328,15 +329,21 @@ export default function Home() {
           display: flex;
           gap: 20px;
           overflow-x: auto;
-          scroll-snap-type: x mandatory;
           -webkit-overflow-scrolling: touch;
           scrollbar-width: none;
-          padding-bottom: 4px;
+          padding-bottom: 8px;
         }
         .props-carousel::-webkit-scrollbar { display: none; }
         .props-carousel-item {
-          flex: 0 0 clamp(280px, 80vw, 340px);
-          scroll-snap-align: start;
+          flex: 0 0 clamp(260px, 72vw, 320px);
+        }
+        @media (pointer: coarse) {
+          .props-carousel {
+            scroll-snap-type: x proximity;
+          }
+          .props-carousel-item {
+            scroll-snap-align: start;
+          }
         }
       `}</style>
 

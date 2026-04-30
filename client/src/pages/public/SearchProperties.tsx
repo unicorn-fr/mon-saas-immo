@@ -11,7 +11,6 @@ import { apiClient } from '../../services/api.service'
 import {
   Search,
   Grid3x3,
-  List,
   Map as MapIcon,
   SlidersHorizontal,
   X,
@@ -53,7 +52,7 @@ export default function SearchProperties() {
 
   // UI State
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '')
-  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid')
+  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid')
   const [showFilters, setShowFilters] = useState(false)
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<'createdAt' | 'price' | 'views'>('createdAt')
@@ -389,7 +388,6 @@ export default function SearchProperties() {
                   <div style={{ display: 'flex', border: `1px solid ${M.border}`, borderRadius: 8, overflow: 'hidden', background: M.surface }}>
                     {([
                       { mode: 'grid', Icon: Grid3x3, title: 'Vue grille' },
-                      { mode: 'list', Icon: List, title: 'Vue liste' },
                       { mode: 'map', Icon: MapIcon, title: 'Vue carte' },
                     ] as const).map(({ mode, Icon, title }, idx) => (
                       <button
@@ -459,17 +457,13 @@ export default function SearchProperties() {
                 </div>
               )}
 
-              {/* Grid / List View */}
+              {/* Grid View */}
               {viewMode !== 'map' && allProperties.length > 0 && (
-                <div className={viewMode === 'grid'
-                  ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
-                  : 'space-y-4'
-                }>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {allProperties.map((property) => (
                     <PropertyCard
                       key={property.id}
                       property={property}
-                      variant={viewMode === 'list' ? 'compact' : 'default'}
                     />
                   ))}
                 </div>
