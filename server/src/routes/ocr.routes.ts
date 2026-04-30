@@ -127,7 +127,7 @@ If a field is not visible or unclear, leave it as empty string. Never invent dat
 
       // Parse response
       const raw = message.content[0]?.type === 'text' ? message.content[0].text : '{}'
-      let extracted: Record<string, string> = {}
+      let extracted: Record<string, any> = {}
       try {
         const jsonMatch = raw.match(/\{[\s\S]*\}/)
         if (jsonMatch) extracted = JSON.parse(jsonMatch[0])

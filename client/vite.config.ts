@@ -76,6 +76,12 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
+      // Force jscanify to resolve to its browser-compatible UMD build.
+      // The default package entry ("main") points to jscanify-node.js which
+      // requires `canvas` and `jsdom` and crashes in the browser. The browser
+      // build is jscanify.js — we redirect ALL imports of "jscanify" here so
+      // Vite/esbuild pre-bundles the correct file instead of the Node version.
+      'jscanify': path.resolve(__dirname, './node_modules/jscanify/src/jscanify.js'),
       '@': path.resolve(__dirname, './src'),
       '@/components': path.resolve(__dirname, './src/components'),
       '@/pages': path.resolve(__dirname, './src/pages'),
