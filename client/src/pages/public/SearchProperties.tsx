@@ -588,6 +588,7 @@ export default function SearchProperties() {
                   properties={allProperties}
                   onFavorite={async (id) => { await toggleFavorite(id) }}
                   isFavorite={(id) => isFavorite(id)}
+                  onClose={() => setViewMode('grid')}
                 />
               )}
 

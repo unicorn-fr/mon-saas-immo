@@ -1,18 +1,27 @@
 import { useState } from 'react'
 import { motion, useMotionValue, useTransform, useAnimation, AnimatePresence } from 'framer-motion'
-import { Heart, X, RotateCcw, MapPin, Bed, Square, Home } from 'lucide-react'
+import { Heart, X, RotateCcw, MapPin, Bed, Bath, Square, Home, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Property } from '../../types/property.types'
 import { Link } from 'react-router-dom'
+
+const PROPERTY_TYPE_LABELS: Record<string, string> = {
+  APARTMENT: 'Appartement', HOUSE: 'Maison', STUDIO: 'Studio',
+  LOFT: 'Loft', DUPLEX: 'Duplex', VILLA: 'Villa', ROOM: 'Chambre',
+}
 
 interface SwipeStackProps {
   properties: Property[]
   onFavorite: (id: string) => Promise<void>
   isFavorite: (id: string) => boolean
+  onClose: () => void
 }
 
 interface HistoryEntry { property: Property; wasFavorited: boolean }
 
-function DragCard({ property, onSwipeRight, onSwipeLeft, dragX }: {
+// ── Draggable card ──────────────────────────────────────────────────────────────
+function DragCard({
+  property, onSwipeRight, onSwipeLeft, dragX,
+}: {
   property: Property
   onSwipeRight: () => void
   onSwipeLeft: () => void
@@ -22,39 +31,36 @@ function DragCard({ property, onSwipeRight, onSwipeLeft, dragX }: {
   const images = property.images?.length ? property.images : ['/placeholder-property.jpg']
   const [imgIdx, setImgIdx] = useState(0)
 
-  const likeOpacity = useTransform(dragX, [20, 120], [0, 1])
-  const nopeOpacity = useTransform(dragX, [-120, -20], [1, 0])
-  const cardRotate = useTransform(dragX, [-300, 300], [-10, 10])
+  const likeOpacity  = useTransform(dragX, [20, 110], [0, 1])
+  const nopeOpacity  = useTransform(dragX, [-110, -20], [1, 0])
+  const cardRotate   = useTransform(dragX, [-300, 300], [-9, 9])
 
   async function handleDragEnd(_: unknown, info: { offset: { x: number } }) {
-    if (info.offset.x > 120) {
-      await controls.start({ x: 650, rotate: 18, opacity: 0, transition: { duration: 0.32 } })
-      dragX.set(0)
-      onSwipeRight()
-    } else if (info.offset.x < -120) {
-      await controls.start({ x: -650, rotate: -18, opacity: 0, transition: { duration: 0.32 } })
-      dragX.set(0)
-      onSwipeLeft()
+    if (info.offset.x > 110) {
+      await controls.start({ x: 700, rotate: 18, opacity: 0, transition: { duration: 0.3 } })
+      dragX.set(0); onSwipeRight()
+    } else if (info.offset.x < -110) {
+      await controls.start({ x: -700, rotate: -18, opacity: 0, transition: { duration: 0.3 } })
+      dragX.set(0); onSwipeLeft()
     } else {
       controls.start({ x: 0, rotate: 0, transition: { type: 'spring', stiffness: 300, damping: 22 } })
     }
   }
 
+  const typeLabel = PROPERTY_TYPE_LABELS[property.type ?? ''] ?? property.type
+
   return (
     <motion.div
       drag="x"
-      dragElastic={0.15}
+      dragElastic={0.12}
       style={{ x: dragX, rotate: cardRotate, position: 'absolute', inset: 0, cursor: 'grab', willChange: 'transform', touchAction: 'none' }}
       animate={controls}
       onDragEnd={handleDragEnd}
       whileTap={{ cursor: 'grabbing' }}
     >
-      <div style={{
-        width: '100%', height: '100%', borderRadius: 20, overflow: 'hidden',
-        boxShadow: '0 8px 40px rgba(13,12,10,0.18)',
-        background: '#0d0c0a', position: 'relative', userSelect: 'none',
-      }}>
-        {/* Image */}
+      <div style={{ width: '100%', height: '100%', borderRadius: 0, overflow: 'hidden', background: '#0d0c0a', position: 'relative', userSelect: 'none' }}>
+
+        {/* Full-screen image */}
         <img
           src={images[imgIdx]}
           alt={property.title}
@@ -63,94 +69,168 @@ function DragCard({ property, onSwipeRight, onSwipeLeft, dragX }: {
           onError={e => { e.currentTarget.src = '/placeholder-property.jpg' }}
         />
 
-        {/* Image nav dots */}
+        {/* Image nav — prev/next arrows */}
         {images.length > 1 && (
-          <div style={{ position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 6, zIndex: 5 }}>
-            {images.map((_, i) => (
-              <button key={i} onClick={e => { e.stopPropagation(); setImgIdx(i) }}
-                style={{ width: i === imgIdx ? 20 : 6, height: 6, borderRadius: 999, background: i === imgIdx ? '#fff' : 'rgba(255,255,255,0.5)', border: 'none', cursor: 'pointer', transition: 'all 0.2s', padding: 0 }} />
-            ))}
-          </div>
+          <>
+            <button
+              onClick={e => { e.stopPropagation(); setImgIdx(i => (i - 1 + images.length) % images.length) }}
+              style={{ position: 'absolute', left: 12, top: '42%', zIndex: 10, background: 'rgba(0,0,0,0.35)', border: 'none', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+            >
+              <ChevronLeft style={{ width: 18, height: 18, color: '#fff' }} />
+            </button>
+            <button
+              onClick={e => { e.stopPropagation(); setImgIdx(i => (i + 1) % images.length) }}
+              style={{ position: 'absolute', right: 12, top: '42%', zIndex: 10, background: 'rgba(0,0,0,0.35)', border: 'none', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+            >
+              <ChevronRight style={{ width: 18, height: 18, color: '#fff' }} />
+            </button>
+            {/* Dots */}
+            <div style={{ position: 'absolute', top: 56, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 5, zIndex: 10 }}>
+              {images.map((_, i) => (
+                <div key={i} style={{ width: i === imgIdx ? 18 : 5, height: 5, borderRadius: 999, background: i === imgIdx ? '#fff' : 'rgba(255,255,255,0.45)', transition: 'all 0.2s' }} />
+              ))}
+            </div>
+          </>
         )}
 
-        {/* Gradient overlay */}
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(13,12,10,0.92) 0%, rgba(13,12,10,0.4) 40%, transparent 70%)', pointerEvents: 'none' }} />
+        {/* Deep gradient — bottom 60% */}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(10,9,8,0.97) 0%, rgba(10,9,8,0.72) 35%, rgba(10,9,8,0.18) 58%, transparent 75%)', pointerEvents: 'none' }} />
 
-        {/* COUP DE COEUR badge */}
+        {/* COUP DE CŒUR badge */}
         <motion.div style={{
-          opacity: likeOpacity, position: 'absolute', top: 28, left: 24, zIndex: 10,
-          background: '#1b5e3b', color: '#fff', borderRadius: 8, padding: '8px 16px',
-          fontFamily: "'DM Sans', system-ui, sans-serif", fontWeight: 700, fontSize: 15,
+          opacity: likeOpacity, position: 'absolute', top: 36, left: 20, zIndex: 10,
+          background: '#1b5e3b', color: '#fff', borderRadius: 10, padding: '10px 18px',
+          fontFamily: "'DM Sans', system-ui, sans-serif", fontWeight: 800, fontSize: 16,
           border: '2px solid #9fd4ba', transform: 'rotate(-8deg)',
+          boxShadow: '0 4px 16px rgba(27,94,59,0.4)',
         }}>
           ❤️ Coup de cœur
         </motion.div>
 
         {/* PASSER badge */}
         <motion.div style={{
-          opacity: nopeOpacity, position: 'absolute', top: 28, right: 24, zIndex: 10,
-          background: '#9b1c1c', color: '#fff', borderRadius: 8, padding: '8px 16px',
-          fontFamily: "'DM Sans', system-ui, sans-serif", fontWeight: 700, fontSize: 15,
+          opacity: nopeOpacity, position: 'absolute', top: 36, right: 20, zIndex: 10,
+          background: '#9b1c1c', color: '#fff', borderRadius: 10, padding: '10px 18px',
+          fontFamily: "'DM Sans', system-ui, sans-serif", fontWeight: 800, fontSize: 16,
           border: '2px solid #fca5a5', transform: 'rotate(8deg)',
+          boxShadow: '0 4px 16px rgba(155,28,28,0.4)',
         }}>
           ✕ Passer
         </motion.div>
 
-        {/* Property info at bottom */}
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '20px 20px 24px', zIndex: 5 }}>
-          {/* Price */}
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 6 }}>
-            <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 34, fontWeight: 700, color: '#fff', lineHeight: 1 }}>
-              {Number(property.price).toLocaleString('fr-FR')} €
-            </span>
-            <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', fontFamily: "'DM Sans', system-ui, sans-serif" }}>/mois</span>
-          </div>
+        {/* Info panel — bottom of card */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 20px 24px', zIndex: 5 }}>
 
-          {/* Title */}
-          <p style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 16, fontWeight: 600, color: '#fff', margin: '0 0 8px', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-            {property.title}
-          </p>
-
-          {/* Location + specs */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'rgba(255,255,255,0.8)' }}>
-              <MapPin style={{ width: 13, height: 13 }} />
-              <span style={{ fontSize: 13, fontFamily: "'DM Sans', system-ui, sans-serif" }}>{property.city}</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'rgba(255,255,255,0.8)' }}>
-              <Bed style={{ width: 13, height: 13 }} />
-              <span style={{ fontSize: 13, fontFamily: "'DM Sans', system-ui, sans-serif" }}>{property.bedrooms} ch.</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'rgba(255,255,255,0.8)' }}>
-              <Square style={{ width: 13, height: 13 }} />
-              <span style={{ fontSize: 13, fontFamily: "'DM Sans', system-ui, sans-serif" }}>{property.surface} m²</span>
-            </div>
+          {/* Type badge */}
+          <div style={{ marginBottom: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <span style={{
+              display: 'inline-block', padding: '3px 10px', borderRadius: 999,
+              background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)',
+              fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 11, fontWeight: 600,
+              color: '#fff', letterSpacing: '0.04em', textTransform: 'uppercase',
+            }}>{typeLabel}</span>
             {property.furnished && (
-              <span style={{ fontSize: 11, fontFamily: "'DM Sans', system-ui, sans-serif", background: 'rgba(255,255,255,0.15)', color: '#fff', padding: '2px 8px', borderRadius: 999 }}>Meublé</span>
+              <span style={{
+                display: 'inline-block', padding: '3px 10px', borderRadius: 999,
+                background: 'rgba(159,212,186,0.25)', border: '1px solid rgba(159,212,186,0.5)',
+                fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 11, fontWeight: 600,
+                color: '#9fd4ba', letterSpacing: '0.04em', textTransform: 'uppercase',
+              }}>Meublé</span>
             )}
           </div>
 
-          {/* Voir le bien link */}
-          <Link to={`/property/${property.id}`}
-            onClick={e => e.stopPropagation()}
-            style={{ display: 'inline-block', marginTop: 12, fontSize: 12, color: 'rgba(255,255,255,0.6)', fontFamily: "'DM Sans', system-ui, sans-serif", textDecoration: 'underline' }}>
-            Voir l'annonce complète →
-          </Link>
+          {/* Price */}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 4 }}>
+            <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 40, fontWeight: 700, color: '#fff', lineHeight: 1 }}>
+              {Number(property.price).toLocaleString('fr-FR')} €
+            </span>
+            <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', fontFamily: "'DM Sans', system-ui, sans-serif" }}>/mois</span>
+            {property.charges && property.charges > 0 && (
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+                + {property.charges}€ charges
+              </span>
+            )}
+          </div>
+
+          {/* Title */}
+          <p style={{
+            fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 17, fontWeight: 600,
+            color: '#fff', margin: '0 0 10px',
+            overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const,
+          }}>
+            {property.title}
+          </p>
+
+          {/* Address */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 12 }}>
+            <MapPin style={{ width: 13, height: 13, color: 'rgba(255,255,255,0.6)', flexShrink: 0 }} />
+            <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+              {property.address ? `${property.address}, ` : ''}{property.city}{property.postalCode ? ` ${property.postalCode}` : ''}
+            </span>
+          </div>
+
+          {/* Spec pills */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
+            {[
+              { Icon: Square,  label: `${property.surface} m²` },
+              { Icon: Bed,     label: `${property.bedrooms} chambre${property.bedrooms > 1 ? 's' : ''}` },
+              { Icon: Bath,    label: `${property.bathrooms} sdb` },
+              ...(property.floor != null ? [{ Icon: Home, label: `Étage ${property.floor}` }] : []),
+            ].map(({ Icon, label }) => (
+              <div key={label} style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.18)',
+                borderRadius: 8, padding: '5px 10px',
+              }}>
+                <Icon style={{ width: 12, height: 12, color: 'rgba(255,255,255,0.7)' }} />
+                <span style={{ fontSize: 12, color: '#fff', fontFamily: "'DM Sans', system-ui, sans-serif", fontWeight: 500 }}>{label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Deposit + amenities row */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {property.deposit && property.deposit > 0 && (
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+                  Dépôt {property.deposit.toLocaleString('fr-FR')}€
+                </span>
+              )}
+              {property.hasParking && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontFamily: "'DM Sans', system-ui, sans-serif" }}>🚗 Parking</span>}
+              {property.hasBalcony && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontFamily: "'DM Sans', system-ui, sans-serif" }}>🌿 Balcon</span>}
+              {property.hasGarden  && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontFamily: "'DM Sans', system-ui, sans-serif" }}>🌳 Jardin</span>}
+              {property.hasElevator && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontFamily: "'DM Sans', system-ui, sans-serif" }}>🛗 Ascenseur</span>}
+            </div>
+            <Link
+              to={`/property/${property.id}`}
+              onClick={e => e.stopPropagation()}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                fontSize: 12, color: '#c4976a', fontFamily: "'DM Sans', system-ui, sans-serif",
+                fontWeight: 600, textDecoration: 'none',
+              }}
+            >
+              <ExternalLink style={{ width: 12, height: 12 }} />
+              Voir l'annonce
+            </Link>
+          </div>
         </div>
       </div>
     </motion.div>
   )
 }
 
-export function SwipeStack({ properties, onFavorite, isFavorite }: SwipeStackProps) {
+// ── SwipeStack — fullscreen overlay ────────────────────────────────────────────
+export function SwipeStack({ properties, onFavorite, isFavorite, onClose }: SwipeStackProps) {
   const [stackIndex, setStackIndex] = useState(0)
-  const [history, setHistory] = useState<HistoryEntry[]>([])
+  const [history, setHistory]       = useState<HistoryEntry[]>([])
   const dragX = useMotionValue(0)
 
-  const current = properties[stackIndex]
-  const next1 = properties[stackIndex + 1]
-  const next2 = properties[stackIndex + 2]
+  const current   = properties[stackIndex]
+  const next1     = properties[stackIndex + 1]
+  const next2     = properties[stackIndex + 2]
   const remaining = properties.length - stackIndex
+  const savedCount = history.filter(h => isFavorite(h.property.id)).length
 
   async function handleSwipeRight() {
     if (!current) return
@@ -169,87 +249,77 @@ export function SwipeStack({ properties, onFavorite, isFavorite }: SwipeStackPro
   async function handleUndo() {
     const last = history[history.length - 1]
     if (!last) return
-    if (!last.wasFavorited && isFavorite(last.property.id)) {
-      await onFavorite(last.property.id)
-    }
+    if (!last.wasFavorited && isFavorite(last.property.id)) await onFavorite(last.property.id)
     setHistory(h => h.slice(0, -1))
     setStackIndex(i => i - 1)
     dragX.set(0)
   }
 
-  async function triggerSwipeRight() {
-    if (!current) return
-    const wasFav = isFavorite(current.id)
-    if (!wasFav) await onFavorite(current.id)
-    setHistory(h => [...h, { property: current, wasFavorited: wasFav }])
-    setStackIndex(i => i + 1)
-    dragX.set(0)
-  }
+  function triggerSwipeRight() { handleSwipeRight(); dragX.set(0) }
+  function triggerSwipeLeft()  { handleSwipeLeft();  dragX.set(0) }
 
-  async function triggerSwipeLeft() {
-    if (!current) return
-    setHistory(h => [...h, { property: current, wasFavorited: false }])
-    setStackIndex(i => i + 1)
-    dragX.set(0)
-  }
-
+  // ── Empty state ───────────────────────────────────────────────────────────────
   if (!current) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '70dvh', gap: 16 }}>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: '#fafaf8', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+        <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(0,0,0,0.06)', border: 'none', borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <X style={{ width: 20, height: 20, color: '#5a5754' }} />
+        </button>
         <div style={{ width: 72, height: 72, borderRadius: 20, background: '#edf7f2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Home style={{ width: 32, height: 32, color: '#1b5e3b' }} />
         </div>
-        <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 24, fontStyle: 'italic', fontWeight: 700, color: '#0d0c0a' }}>
-          Vous avez tout vu !
-        </p>
-        <p style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 14, color: '#9e9b96', textAlign: 'center', maxWidth: 260 }}>
+        <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontStyle: 'italic', fontWeight: 700, color: '#0d0c0a' }}>Vous avez tout vu !</p>
+        <p style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 14, color: '#9e9b96', textAlign: 'center', maxWidth: 260, margin: 0 }}>
           Modifiez vos filtres pour découvrir d'autres biens.
         </p>
-        {history.length > 0 && (
-          <button onClick={handleUndo} style={{ marginTop: 8, padding: '10px 20px', borderRadius: 10, border: '1px solid #e4e1db', background: '#fff', fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 14, cursor: 'pointer', color: '#5a5754' }}>
-            ↩ Revoir le dernier bien
+        <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+          {history.length > 0 && (
+            <button onClick={handleUndo} style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid #e4e1db', background: '#fff', fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 14, cursor: 'pointer', color: '#5a5754' }}>
+              ↩ Revoir le dernier
+            </button>
+          )}
+          <button onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, border: 'none', background: '#1a1a2e', fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 14, cursor: 'pointer', color: '#fff', fontWeight: 600 }}>
+            Retour à la liste
           </button>
-        )}
+        </div>
       </div>
     )
   }
 
-  const savedCount = history.filter(h => isFavorite(h.property.id)).length
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, userSelect: 'none' }}>
-      {/* Counter */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingInline: 4 }}>
-        <p style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 13, color: '#9e9b96' }}>
-          <span style={{ fontWeight: 700, color: '#0d0c0a' }}>{remaining}</span> bien{remaining > 1 ? 's' : ''} à explorer
-        </p>
-        {history.length > 0 && (
-          <span style={{ fontSize: 12, color: '#9e9b96', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-            {savedCount} ❤️ sauvegardé{savedCount > 1 ? 's' : ''}
+    <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: '#0d0c0a', display: 'flex', flexDirection: 'column' }}>
+
+      {/* Top bar — counter + close */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20, padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>
+            <span style={{ fontWeight: 700, color: '#fff' }}>{remaining}</span> à explorer
           </span>
-        )}
+          {savedCount > 0 && (
+            <span style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
+              · {savedCount} ❤️
+            </span>
+          )}
+        </div>
+        <button
+          onClick={onClose}
+          style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: '50%', width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+        >
+          <X style={{ width: 18, height: 18, color: '#fff' }} />
+        </button>
       </div>
 
-      {/* Card stack */}
-      <div style={{ position: 'relative', height: 'clamp(440px, 68dvh, 620px)', overflow: 'hidden' }}>
-        {/* Background cards */}
+      {/* Card stack — fills entire screen */}
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+        {/* Background card 2 */}
         {next2 && (
-          <div style={{
-            position: 'absolute', inset: 0, borderRadius: 20, overflow: 'hidden',
-            transform: 'scale(0.90) translateY(16px)', transformOrigin: 'bottom center',
-            transition: 'transform 0.3s ease', opacity: 0.5, zIndex: 1,
-            background: '#e4e1db',
-          }}>
+          <div style={{ position: 'absolute', inset: 0, transform: 'scale(0.91) translateY(14px)', transformOrigin: 'bottom center', transition: 'transform 0.3s ease', opacity: 0.45, zIndex: 1 }}>
             <img src={next2.images?.[0] || '/placeholder-property.jpg'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} draggable={false} alt="" />
           </div>
         )}
+        {/* Background card 1 */}
         {next1 && (
-          <div style={{
-            position: 'absolute', inset: 0, borderRadius: 20, overflow: 'hidden',
-            transform: 'scale(0.95) translateY(8px)', transformOrigin: 'bottom center',
-            transition: 'transform 0.3s ease', opacity: 0.75, zIndex: 2,
-            background: '#ccc9c3',
-          }}>
+          <div style={{ position: 'absolute', inset: 0, transform: 'scale(0.96) translateY(7px)', transformOrigin: 'bottom center', transition: 'transform 0.3s ease', opacity: 0.7, zIndex: 2 }}>
             <img src={next1.images?.[0] || '/placeholder-property.jpg'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} draggable={false} alt="" />
           </div>
         )}
@@ -259,9 +329,9 @@ export function SwipeStack({ properties, onFavorite, isFavorite }: SwipeStackPro
           <motion.div
             key={current.id}
             style={{ position: 'absolute', inset: 0, zIndex: 3 }}
-            initial={{ opacity: 0, scale: 0.96 }}
+            initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.18 }}
           >
             <DragCard
               property={current}
@@ -273,51 +343,58 @@ export function SwipeStack({ properties, onFavorite, isFavorite }: SwipeStackPro
         </AnimatePresence>
       </div>
 
-      {/* Action buttons */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
-        {/* Dismiss */}
-        <button onClick={triggerSwipeLeft} style={{
-          width: 58, height: 58, borderRadius: '50%', border: '2px solid #fca5a5',
-          background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 4px 16px rgba(155,28,28,0.12)', transition: 'transform 0.15s',
-        }}
-          onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.08)')}
-          onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
-        >
-          <X style={{ width: 24, height: 24, color: '#9b1c1c' }} />
-        </button>
+      {/* Action bar — floating at the bottom */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 20,
+        padding: '16px 24px max(20px, env(safe-area-inset-bottom))',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
+          {/* Dismiss */}
+          <button onClick={triggerSwipeLeft} style={{
+            width: 62, height: 62, borderRadius: '50%', border: '2px solid rgba(252,165,165,0.6)',
+            background: 'rgba(155,28,28,0.2)', backdropFilter: 'blur(12px)', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 20px rgba(155,28,28,0.25)', transition: 'transform 0.15s',
+          }}
+            onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.1)')}
+            onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
+          >
+            <X style={{ width: 26, height: 26, color: '#fca5a5' }} />
+          </button>
 
-        {/* Undo */}
-        <button onClick={handleUndo} disabled={history.length === 0} style={{
-          width: 44, height: 44, borderRadius: '50%', border: '1px solid #e4e1db',
-          background: '#fff', cursor: history.length === 0 ? 'not-allowed' : 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          opacity: history.length === 0 ? 0.4 : 1, transition: 'opacity 0.2s, transform 0.15s',
-        }}
-          onMouseEnter={e => { if (history.length > 0) e.currentTarget.style.transform = 'scale(1.08)' }}
-          onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
-        >
-          <RotateCcw style={{ width: 18, height: 18, color: '#5a5754' }} />
-        </button>
+          {/* Undo */}
+          <button onClick={handleUndo} disabled={history.length === 0} style={{
+            width: 46, height: 46, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)',
+            background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', cursor: history.length === 0 ? 'not-allowed' : 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            opacity: history.length === 0 ? 0.35 : 1, transition: 'opacity 0.2s, transform 0.15s',
+          }}
+            onMouseEnter={e => { if (history.length > 0) e.currentTarget.style.transform = 'scale(1.1)' }}
+            onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
+          >
+            <RotateCcw style={{ width: 18, height: 18, color: 'rgba(255,255,255,0.8)' }} />
+          </button>
 
-        {/* Favorite */}
-        <button onClick={triggerSwipeRight} style={{
-          width: 58, height: 58, borderRadius: '50%', border: '2px solid #9fd4ba',
-          background: isFavorite(current.id) ? '#1b5e3b' : '#fff',
-          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 4px 16px rgba(27,94,59,0.18)', transition: 'transform 0.15s, background 0.2s',
-        }}
-          onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.08)')}
-          onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
-        >
-          <Heart style={{ width: 24, height: 24, color: isFavorite(current.id) ? '#fff' : '#1b5e3b', fill: isFavorite(current.id) ? '#fff' : 'none' }} />
-        </button>
+          {/* Favorite */}
+          <button onClick={triggerSwipeRight} style={{
+            width: 62, height: 62, borderRadius: '50%', border: '2px solid rgba(159,212,186,0.6)',
+            background: isFavorite(current.id) ? 'rgba(27,94,59,0.7)' : 'rgba(27,94,59,0.2)',
+            backdropFilter: 'blur(12px)', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 20px rgba(27,94,59,0.3)', transition: 'transform 0.15s, background 0.2s',
+          }}
+            onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.1)')}
+            onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
+          >
+            <Heart style={{ width: 26, height: 26, color: '#9fd4ba', fill: isFavorite(current.id) ? '#9fd4ba' : 'none' }} />
+          </button>
+        </div>
+
+        <p style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 11, color: 'rgba(255,255,255,0.35)', margin: 0 }}>
+          ← Passer · ↩ Annuler · Sauvegarder →
+        </p>
       </div>
-
-      {/* Hint */}
-      <p style={{ textAlign: 'center', fontSize: 12, color: '#9e9b96', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-        Glisse → pour sauvegarder · Glisse ← pour passer
-      </p>
     </div>
   )
 }
