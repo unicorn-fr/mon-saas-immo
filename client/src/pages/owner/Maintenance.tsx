@@ -19,54 +19,116 @@ import {
   ChevronDown,
   ChevronUp,
   ExternalLink,
-  AlertTriangle,
+  Zap,
+  Droplets,
+  Lock,
+  Hammer,
   CheckCircle,
   Clock,
+  AlertTriangle,
   XCircle,
 } from 'lucide-react'
 
-// Priority colors
+// ── Status helpers ──────────────────────────────────────────────────────────
+
+function statusBg(s: MaintenanceStatus): string {
+  if (s === 'OPEN')        return '#fef9ec'
+  if (s === 'IN_PROGRESS') return BAI.ownerLight
+  if (s === 'RESOLVED')    return BAI.tenantLight
+  return BAI.bgMuted
+}
+function statusColor(s: MaintenanceStatus): string {
+  if (s === 'OPEN')        return '#92400e'
+  if (s === 'IN_PROGRESS') return BAI.owner
+  if (s === 'RESOLVED')    return BAI.tenant
+  return BAI.inkFaint
+}
+function statusBorder(s: MaintenanceStatus): string {
+  if (s === 'OPEN')        return '#f3c99a'
+  if (s === 'IN_PROGRESS') return BAI.ownerBorder
+  if (s === 'RESOLVED')    return BAI.tenantBorder
+  return BAI.border
+}
+
+function StatusBadge({ s }: { s: MaintenanceStatus }) {
+  const icons = {
+    OPEN: <AlertTriangle style={{ width: 12, height: 12 }} />,
+    IN_PROGRESS: <Clock style={{ width: 12, height: 12 }} />,
+    RESOLVED: <CheckCircle style={{ width: 12, height: 12 }} />,
+    CLOSED: <XCircle style={{ width: 12, height: 12 }} />,
+  }
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 4,
+        padding: '3px 10px',
+        borderRadius: 999,
+        background: statusBg(s),
+        border: `1px solid ${statusBorder(s)}`,
+        fontFamily: BAI.fontBody,
+        fontSize: 11,
+        fontWeight: 700,
+        color: statusColor(s),
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {icons[s]}
+      {MAINTENANCE_STATUS_LABELS[s]}
+    </span>
+  )
+}
+
+// ── Category icon ──────────────────────────────────────────────────────────
+
+function CategoryIcon({ category, size = 16 }: { category: MaintenanceCategory; size?: number }) {
+  const style = { width: size, height: size }
+  if (category === 'PLOMBERIE')  return <Droplets style={{ ...style, color: '#1a6caf' }} />
+  if (category === 'ELECTRICITE') return <Zap style={{ ...style, color: '#c4976a' }} />
+  if (category === 'SERRURERIE')  return <Lock style={{ ...style, color: '#5a5754' }} />
+  return <Hammer style={{ ...style, color: BAI.caramel }} />
+}
+
+// ── Priority helpers ───────────────────────────────────────────────────────
+
 function priorityColor(p: MaintenancePriority): string {
   if (p === 'URGENT') return '#9b1c1c'
-  if (p === 'HIGH') return '#c4976a'
-  if (p === 'MEDIUM') return '#1a3270'
-  return '#9e9b96'
+  if (p === 'HIGH')   return BAI.caramel
+  if (p === 'MEDIUM') return BAI.owner
+  return BAI.inkFaint
 }
 function priorityBg(p: MaintenancePriority): string {
-  if (p === 'URGENT') return '#fef2f2'
-  if (p === 'HIGH') return '#fdf5ec'
-  if (p === 'MEDIUM') return '#eaf0fb'
-  return '#f4f2ee'
+  if (p === 'URGENT') return BAI.errorLight
+  if (p === 'HIGH')   return BAI.caramelLight
+  if (p === 'MEDIUM') return BAI.ownerLight
+  return BAI.bgMuted
 }
 
-// Status icon
-function StatusIcon({ s }: { s: MaintenanceStatus }) {
-  if (s === 'OPEN') return <AlertTriangle style={{ width: 14, height: 14, color: '#c4976a' }} />
-  if (s === 'IN_PROGRESS') return <Clock style={{ width: 14, height: 14, color: '#1a3270' }} />
-  if (s === 'RESOLVED') return <CheckCircle style={{ width: 14, height: 14, color: '#1b5e3b' }} />
-  return <XCircle style={{ width: 14, height: 14, color: '#9e9b96' }} />
-}
+// ── AI severity ────────────────────────────────────────────────────────────
 
-// Severity label
 function severityLabel(s: string): string {
-  if (s === 'low') return 'Faible'
-  if (s === 'medium') return 'Moyen'
-  if (s === 'high') return 'Élevé'
+  if (s === 'low')      return 'Faible'
+  if (s === 'medium')   return 'Moyen'
+  if (s === 'high')     return 'Élevé'
   return 'Critique'
 }
 function severityColor(s: string): string {
-  if (s === 'low') return '#1b5e3b'
-  if (s === 'medium') return '#c4976a'
-  if (s === 'high') return '#9b1c1c'
+  if (s === 'low')    return BAI.tenant
+  if (s === 'medium') return BAI.caramel
+  if (s === 'high')   return BAI.error
   return '#7b0000'
 }
+
+// ── Signaled message helper ────────────────────────────────────────────────
+
+const SIGNALED_RE = /🔧\s*\[PROBLÈME SIGNALÉ\]/i
 
 type StatusFilter = 'ALL' | MaintenanceStatus
 
 export default function Maintenance() {
   const [showForm, setShowForm] = useState(false)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL')
-  const [priorityFilter, setPriorityFilter] = useState<MaintenancePriority | 'ALL'>('ALL')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [form, setForm] = useState<CreateMaintenanceInput>({
     propertyId: '',
@@ -89,7 +151,6 @@ export default function Maintenance() {
 
   const filtered = requests.filter(r => {
     if (statusFilter !== 'ALL' && r.status !== statusFilter) return false
-    if (priorityFilter !== 'ALL' && r.priority !== priorityFilter) return false
     return true
   })
 
@@ -125,25 +186,18 @@ export default function Maintenance() {
   }
 
   const statusOptions: Array<{ value: StatusFilter; label: string }> = [
-    { value: 'ALL', label: 'Tous' },
-    { value: 'OPEN', label: 'Ouvert' },
+    { value: 'ALL',         label: 'Tous' },
+    { value: 'OPEN',        label: 'Ouvert' },
     { value: 'IN_PROGRESS', label: 'En cours' },
-    { value: 'RESOLVED', label: 'Résolu' },
-    { value: 'CLOSED', label: 'Fermé' },
-  ]
-
-  const priorityOptions: Array<{ value: MaintenancePriority | 'ALL'; label: string }> = [
-    { value: 'ALL', label: 'Toutes priorités' },
-    { value: 'URGENT', label: 'Urgent' },
-    { value: 'HIGH', label: 'Élevé' },
-    { value: 'MEDIUM', label: 'Moyen' },
-    { value: 'LOW', label: 'Faible' },
+    { value: 'RESOLVED',    label: 'Résolu' },
+    { value: 'CLOSED',      label: 'Fermé' },
   ]
 
   return (
     <Layout>
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 20px' }}>
-        {/* Header */}
+
+        {/* ── Page Header ─────────────────────────────────────────────────── */}
         <div
           style={{
             display: 'flex',
@@ -184,14 +238,14 @@ export default function Maintenance() {
               {openCount > 0 && (
                 <span
                   style={{
-                    background: '#fef2f2',
-                    border: '1px solid #fca5a5',
+                    background: BAI.errorLight,
+                    border: `1px solid #fca5a5`,
                     borderRadius: 999,
                     padding: '3px 10px',
                     fontFamily: BAI.fontBody,
                     fontSize: 12,
                     fontWeight: 700,
-                    color: '#9b1c1c',
+                    color: BAI.error,
                   }}
                 >
                   {openCount} en attente
@@ -218,6 +272,7 @@ export default function Maintenance() {
               fontWeight: 600,
               cursor: 'pointer',
               whiteSpace: 'nowrap',
+              minHeight: 44,
             }}
           >
             <PlusCircle style={{ width: 16, height: 16 }} />
@@ -225,7 +280,7 @@ export default function Maintenance() {
           </button>
         </div>
 
-        {/* Create form */}
+        {/* ── Create form ─────────────────────────────────────────────────── */}
         {showForm && (
           <form
             onSubmit={handleCreate}
@@ -334,6 +389,7 @@ export default function Maintenance() {
                   fontSize: 13,
                   color: BAI.inkMid,
                   cursor: 'pointer',
+                  minHeight: 44,
                 }}
               >
                 Annuler
@@ -351,6 +407,7 @@ export default function Maintenance() {
                   fontSize: 13,
                   fontWeight: 600,
                   cursor: 'pointer',
+                  minHeight: 44,
                 }}
               >
                 Créer la demande
@@ -359,14 +416,14 @@ export default function Maintenance() {
           </form>
         )}
 
-        {/* Filters */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+        {/* ── Filter bar ──────────────────────────────────────────────────── */}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20, alignItems: 'center' }}>
           {statusOptions.map(opt => (
             <button
               key={opt.value}
               onClick={() => setStatusFilter(opt.value)}
               style={{
-                padding: '6px 14px',
+                padding: '7px 16px',
                 borderRadius: 999,
                 border: statusFilter === opt.value ? 'none' : `1px solid ${BAI.border}`,
                 background: statusFilter === opt.value ? BAI.night : 'transparent',
@@ -375,28 +432,35 @@ export default function Maintenance() {
                 fontSize: 12,
                 fontWeight: 600,
                 cursor: 'pointer',
-                transition: 'all 0.15s',
+                transition: BAI.transition,
+                minHeight: 36,
               }}
             >
               {opt.label}
+              {opt.value !== 'ALL' && (
+                <span
+                  style={{
+                    marginLeft: 6,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 18,
+                    height: 18,
+                    borderRadius: 999,
+                    background: statusFilter === opt.value ? 'rgba(255,255,255,0.20)' : BAI.bgMuted,
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: statusFilter === opt.value ? '#fff' : BAI.inkFaint,
+                  }}
+                >
+                  {requests.filter(r => r.status === opt.value).length}
+                </span>
+              )}
             </button>
           ))}
-          <div style={{ marginLeft: 'auto' }}>
-            <select
-              value={priorityFilter}
-              onChange={e => setPriorityFilter(e.target.value as MaintenancePriority | 'ALL')}
-              style={{ ...inputStyle, width: 'auto', padding: '6px 12px', fontSize: 12 }}
-            >
-              {priorityOptions.map(o => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </div>
         </div>
 
-        {/* Requests list */}
+        {/* ── Request list ────────────────────────────────────────────────── */}
         {isLoading && requests.length === 0 ? (
           <div
             style={{
@@ -423,6 +487,8 @@ export default function Maintenance() {
             {filtered.map(req => {
               const expanded = expandedId === req.id
               const analyzing = isAnalyzing === req.id
+              // Check if request originated from a chat signal
+              const isFromChat = req.description ? SIGNALED_RE.test(req.description) : false
 
               return (
                 <div
@@ -432,100 +498,155 @@ export default function Maintenance() {
                     border: `1px solid ${BAI.border}`,
                     borderRadius: 12,
                     overflow: 'hidden',
+                    boxShadow: BAI.shadowSm,
                   }}
                 >
+                  {/* From chat badge */}
+                  {isFromChat && (
+                    <div
+                      style={{
+                        padding: '6px 16px',
+                        background: BAI.caramelLight,
+                        borderBottom: `1px solid ${BAI.caramelBorder}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                      }}
+                    >
+                      <span style={{ fontSize: 12 }}>🔧</span>
+                      <span
+                        style={{
+                          fontFamily: BAI.fontBody,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: BAI.caramel,
+                          letterSpacing: '0.04em',
+                        }}
+                      >
+                        Signalé par le locataire via la messagerie
+                      </span>
+                    </div>
+                  )}
+
                   {/* Card header */}
                   <div
                     style={{
                       padding: '16px 20px',
                       display: 'flex',
                       alignItems: 'flex-start',
-                      gap: 12,
+                      gap: 14,
                     }}
                   >
-                    {/* Priority badge */}
-                    <span
+                    {/* Category icon circle */}
+                    <div
                       style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: 12,
+                        background: BAI.bgMuted,
+                        border: `1px solid ${BAI.border}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                         flexShrink: 0,
-                        padding: '3px 10px',
-                        borderRadius: 999,
-                        background: priorityBg(req.priority),
-                        border: `1px solid ${priorityColor(req.priority)}30`,
-                        fontFamily: BAI.fontBody,
-                        fontSize: 11,
-                        fontWeight: 700,
-                        color: priorityColor(req.priority),
                       }}
                     >
-                      {MAINTENANCE_PRIORITY_LABELS[req.priority]}
-                    </span>
+                      <CategoryIcon category={req.category} size={20} />
+                    </div>
 
-                    {/* Content */}
+                    {/* Main content */}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                        <p
-                          style={{
-                            fontFamily: BAI.fontBody,
-                            fontSize: 14,
-                            fontWeight: 700,
-                            color: BAI.ink,
-                            margin: 0,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          {req.title}
-                        </p>
-                        <span
-                          style={{
-                            flexShrink: 0,
-                            padding: '2px 8px',
-                            borderRadius: 999,
-                            background: BAI.bgMuted,
-                            fontFamily: BAI.fontBody,
-                            fontSize: 11,
-                            color: BAI.inkMid,
-                          }}
-                        >
-                          {MAINTENANCE_CATEGORY_LABELS[req.category]}
-                        </span>
-                      </div>
+                      {/* Title row */}
                       <div
                         style={{
                           display: 'flex',
                           alignItems: 'center',
-                          gap: 12,
+                          gap: 8,
                           flexWrap: 'wrap',
+                          marginBottom: 6,
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <StatusIcon s={req.status} />
-                          <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid }}>
-                            {MAINTENANCE_STATUS_LABELS[req.status]}
-                          </span>
-                        </div>
-                        {req.property && (
-                          <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>
-                            {req.property.title}
-                          </span>
-                        )}
-                        {req.tenant && (
-                          <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>
-                            · {req.tenant.firstName} {req.tenant.lastName}
-                          </span>
-                        )}
-                        <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint }}>
-                          {new Date(req.createdAt).toLocaleDateString('fr-FR')}
+                        <p
+                          style={{
+                            fontFamily: BAI.fontBody,
+                            fontSize: 15,
+                            fontWeight: 700,
+                            color: BAI.ink,
+                            margin: 0,
+                          }}
+                        >
+                          {req.title}
+                        </p>
+
+                        {/* Status badge */}
+                        <StatusBadge s={req.status} />
+
+                        {/* Priority badge */}
+                        <span
+                          style={{
+                            padding: '2px 8px',
+                            borderRadius: 999,
+                            background: priorityBg(req.priority),
+                            fontFamily: BAI.fontBody,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: priorityColor(req.priority),
+                          }}
+                        >
+                          {MAINTENANCE_PRIORITY_LABELS[req.priority]}
                         </span>
                       </div>
+
+                      {/* Meta row */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 10,
+                          flexWrap: 'wrap',
+                          marginBottom: 8,
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontFamily: BAI.fontBody,
+                            fontSize: 12,
+                            color: BAI.inkMid,
+                            fontWeight: 600,
+                          }}
+                        >
+                          {MAINTENANCE_CATEGORY_LABELS[req.category]}
+                        </span>
+                        {req.property && (
+                          <>
+                            <span style={{ color: BAI.border, fontSize: 10 }}>·</span>
+                            <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>
+                              {req.property.title}
+                            </span>
+                          </>
+                        )}
+                        {req.tenant && (
+                          <>
+                            <span style={{ color: BAI.border, fontSize: 10 }}>·</span>
+                            <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>
+                              {req.tenant.firstName} {req.tenant.lastName}
+                            </span>
+                          </>
+                        )}
+                        <span style={{ color: BAI.border, fontSize: 10 }}>·</span>
+                        <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint }}>
+                          {new Date(req.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
+                      </div>
+
+                      {/* Description */}
                       <p
                         style={{
                           fontFamily: BAI.fontBody,
                           fontSize: 13,
                           color: BAI.inkMid,
-                          margin: '8px 0 0',
-                          lineHeight: 1.5,
+                          margin: 0,
+                          lineHeight: 1.6,
                           overflow: 'hidden',
                           display: '-webkit-box',
                           WebkitLineClamp: 2,
@@ -534,26 +655,96 @@ export default function Maintenance() {
                       >
                         {req.description}
                       </p>
+
+                      {/* Action buttons row */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          flexWrap: 'wrap',
+                          marginTop: 12,
+                        }}
+                      >
+                        {/* AI analyze button */}
+                        <button
+                          onClick={() => {
+                            analyzeWithAI(req.id)
+                            setExpandedId(req.id)
+                          }}
+                          disabled={analyzing}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 5,
+                            padding: '7px 14px',
+                            borderRadius: 8,
+                            border: `1px solid ${BAI.caramelBorder}`,
+                            background: analyzing ? BAI.caramelLight : 'transparent',
+                            fontFamily: BAI.fontBody,
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: BAI.caramel,
+                            cursor: analyzing ? 'wait' : 'pointer',
+                            whiteSpace: 'nowrap',
+                            minHeight: 36,
+                          }}
+                        >
+                          <Sparkles style={{ width: 13, height: 13 }} />
+                          {analyzing ? 'Analyse...' : req.aiAnalysis ? "Ré-analyser avec l'IA" : "Analyser avec l'IA"}
+                        </button>
+
+                        {/* Expand AI result toggle */}
+                        {req.aiAnalysis && (
+                          <button
+                            onClick={() => setExpandedId(expanded ? null : req.id)}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 4,
+                              background: 'none',
+                              border: `1px solid ${BAI.border}`,
+                              borderRadius: 8,
+                              cursor: 'pointer',
+                              fontFamily: BAI.fontBody,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              color: BAI.inkMid,
+                              padding: '7px 14px',
+                              minHeight: 36,
+                            }}
+                          >
+                            {expanded ? (
+                              <ChevronUp style={{ width: 13, height: 13 }} />
+                            ) : (
+                              <ChevronDown style={{ width: 13, height: 13 }} />
+                            )}
+                            {expanded ? "Masquer l'analyse" : "Voir l'analyse IA"}
+                          </button>
+                        )}
+                      </div>
                     </div>
 
-                    {/* Actions */}
-                    <div
-                      style={{
-                        flexShrink: 0,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'flex-end',
-                        gap: 8,
-                      }}
-                    >
-                      {/* Status select */}
+                    {/* Right: status select */}
+                    <div style={{ flexShrink: 0 }}>
                       <select
                         value={req.status}
                         onChange={e =>
                           updateStatus(req.id, { status: e.target.value as MaintenanceStatus })
                         }
                         onClick={e => e.stopPropagation()}
-                        style={{ ...inputStyle, width: 'auto', padding: '4px 8px', fontSize: 11 }}
+                        style={{
+                          padding: '6px 10px',
+                          borderRadius: 8,
+                          border: `1px solid ${BAI.border}`,
+                          background: BAI.bgMuted,
+                          fontFamily: BAI.fontBody,
+                          fontSize: 12,
+                          color: BAI.ink,
+                          outline: 'none',
+                          cursor: 'pointer',
+                          minHeight: 36,
+                        }}
                       >
                         {(Object.keys(MAINTENANCE_STATUS_LABELS) as MaintenanceStatus[]).map(k => (
                           <option key={k} value={k}>
@@ -561,63 +752,10 @@ export default function Maintenance() {
                           </option>
                         ))}
                       </select>
-
-                      {/* AI analyze button */}
-                      <button
-                        onClick={() => {
-                          analyzeWithAI(req.id)
-                          setExpandedId(req.id)
-                        }}
-                        disabled={analyzing}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 5,
-                          padding: '6px 12px',
-                          borderRadius: 8,
-                          border: `1px solid ${BAI.caramel}`,
-                          background: analyzing ? `${BAI.caramel}18` : 'transparent',
-                          fontFamily: BAI.fontBody,
-                          fontSize: 12,
-                          fontWeight: 600,
-                          color: BAI.caramel,
-                          cursor: analyzing ? 'wait' : 'pointer',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        <Sparkles style={{ width: 13, height: 13 }} />
-                        {analyzing ? 'Analyse...' : req.aiAnalysis ? "Ré-analyser" : "Analyser avec l'IA"}
-                      </button>
-
-                      {/* Expand toggle if AI result exists */}
-                      {req.aiAnalysis && (
-                        <button
-                          onClick={() => setExpandedId(expanded ? null : req.id)}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 4,
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            fontFamily: BAI.fontBody,
-                            fontSize: 11,
-                            color: BAI.inkFaint,
-                            padding: 0,
-                          }}
-                        >
-                          {expanded ? (
-                            <ChevronUp style={{ width: 13, height: 13 }} />
-                          ) : (
-                            <ChevronDown style={{ width: 13, height: 13 }} />
-                          )}
-                          {expanded ? 'Masquer' : "Voir l'analyse"}
-                        </button>
-                      )}
                     </div>
                   </div>
 
-                  {/* AI Analysis panel */}
+                  {/* ── AI Analysis panel ──────────────────────────────────────── */}
                   {expanded && req.aiAnalysis && (
                     <div
                       style={{
@@ -675,6 +813,7 @@ export default function Maintenance() {
                             {severityLabel(req.aiAnalysis.severity)}
                           </p>
                         </div>
+
                         {/* Cost */}
                         <div
                           style={{
@@ -772,13 +911,14 @@ export default function Maintenance() {
                                   gap: 6,
                                   padding: '8px 14px',
                                   borderRadius: 8,
-                                  border: `1px solid ${BAI.caramel}`,
-                                  background: `${BAI.caramel}10`,
+                                  border: `1px solid ${BAI.caramelBorder}`,
+                                  background: BAI.caramelLight,
                                   fontFamily: BAI.fontBody,
                                   fontSize: 12,
                                   fontWeight: 600,
                                   color: BAI.caramel,
                                   textDecoration: 'none',
+                                  minHeight: 36,
                                 }}
                               >
                                 <ExternalLink style={{ width: 12, height: 12 }} />

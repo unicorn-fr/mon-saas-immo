@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, User as UserIcon, Loader, Home, FolderOpen, ShieldCheck, X, CalendarCheck } from 'lucide-react'
+import { ArrowLeft, User as UserIcon, Loader, Home, FolderOpen, ShieldCheck, X, CalendarCheck, Wrench } from 'lucide-react'
 import { MessageBubble } from './MessageBubble'
 import { MessageInput } from './MessageInput'
 import { CreateLeaseModal } from './CreateLeaseModal'
@@ -11,7 +11,10 @@ import { useAuth } from '../../hooks/useAuth'
 import { shareApi } from '../../services/dossier.service'
 import { bookingService } from '../../services/booking.service'
 import { propertyService } from '../../services/property.service'
+import { maintenanceService } from '../../services/maintenance.service'
+import { MaintenanceCategory, MAINTENANCE_CATEGORY_LABELS } from '../../types/maintenance.types'
 import { Conversation } from '../../types/message.types'
+import { BAI } from '../../constants/bailio-tokens'
 import toast from 'react-hot-toast'
 
 // SSE replaces polling — kept for fallback reference only
@@ -22,6 +25,237 @@ interface ChatWindowProps {
   onBack?: () => void
 }
 
+// Tenant inline panel for reporting a problem
+const CATEGORIES: Array<{ value: MaintenanceCategory; label: string; emoji: string }> = [
+  { value: 'PLOMBERIE',  label: 'Plomberie',   emoji: '🚿' },
+  { value: 'ELECTRICITE', label: 'Électricité', emoji: '⚡' },
+  { value: 'SERRURERIE', label: 'Serrurerie',  emoji: '🔒' },
+  { value: 'AUTRE',      label: 'Autre',        emoji: '🔨' },
+]
+
+interface ReportPanelProps {
+  propertyId: string | null | undefined
+  onClose: () => void
+  onSubmitSuccess: (category: MaintenanceCategory, description: string) => void
+}
+
+function ReportPanel({ propertyId, onClose, onSubmitSuccess }: ReportPanelProps) {
+  const [description, setDescription] = useState('')
+  const [category, setCategory] = useState<MaintenanceCategory>('AUTRE')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  async function handleSubmit() {
+    if (!description.trim()) {
+      toast.error('Décrivez le problème avant de signaler')
+      return
+    }
+    if (!propertyId) {
+      toast.error('Aucun bien associé à cette conversation')
+      return
+    }
+    setIsSubmitting(true)
+    try {
+      const catLabel = MAINTENANCE_CATEGORY_LABELS[category]
+      const title = `${catLabel} — problème signalé`
+      await maintenanceService.createRequest({
+        propertyId,
+        title,
+        description: description.trim(),
+        category,
+        priority: 'MEDIUM',
+      })
+      toast.success('Problème signalé au propriétaire')
+      onSubmitSuccess(category, description.trim())
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Erreur lors du signalement')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <div
+      style={{
+        borderTop: `1px solid ${BAI.border}`,
+        background: BAI.bgSurface,
+        padding: '16px 16px 12px',
+      }}
+    >
+      {/* Panel header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              background: BAI.caramelLight,
+              border: `1px solid ${BAI.caramelBorder}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 15,
+            }}
+          >
+            🔧
+          </div>
+          <p
+            style={{
+              fontFamily: BAI.fontBody,
+              fontSize: 14,
+              fontWeight: 700,
+              color: BAI.ink,
+              margin: 0,
+            }}
+          >
+            Signaler un problème
+          </p>
+        </div>
+        <button
+          onClick={onClose}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: BAI.inkFaint,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minWidth: 32,
+            minHeight: 32,
+            borderRadius: 6,
+            padding: 4,
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = BAI.bgMuted)}
+          onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+          aria-label="Fermer"
+        >
+          <X style={{ width: 16, height: 16 }} />
+        </button>
+      </div>
+
+      {/* Category picker */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+        {CATEGORIES.map(cat => {
+          const active = category === cat.value
+          return (
+            <button
+              key={cat.value}
+              onClick={() => setCategory(cat.value)}
+              style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 4,
+                padding: '10px 4px',
+                borderRadius: 10,
+                border: active ? `1.5px solid ${BAI.caramel}` : `1px solid ${BAI.border}`,
+                background: active ? BAI.caramelLight : BAI.bgMuted,
+                cursor: 'pointer',
+                minHeight: 44,
+                transition: BAI.transition,
+              }}
+            >
+              <span style={{ fontSize: 18, lineHeight: 1 }}>{cat.emoji}</span>
+              <span
+                style={{
+                  fontFamily: BAI.fontBody,
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: active ? BAI.caramel : BAI.inkMid,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {cat.label}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Description textarea */}
+      <textarea
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        placeholder="Décrivez le problème... (ex: fuite sous l'évier depuis hier matin)"
+        rows={3}
+        style={{
+          width: '100%',
+          padding: '10px 12px',
+          borderRadius: 10,
+          border: `1px solid ${BAI.border}`,
+          background: BAI.bgInput,
+          fontFamily: BAI.fontBody,
+          fontSize: 14,
+          color: BAI.ink,
+          outline: 'none',
+          resize: 'none',
+          boxSizing: 'border-box',
+          marginBottom: 12,
+          lineHeight: 1.5,
+        }}
+      />
+
+      {/* Submit button */}
+      <button
+        onClick={handleSubmit}
+        disabled={isSubmitting || !description.trim()}
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          padding: '11px 0',
+          borderRadius: 10,
+          border: 'none',
+          background: isSubmitting || !description.trim() ? BAI.bgMuted : BAI.caramel,
+          color: isSubmitting || !description.trim() ? BAI.inkFaint : '#ffffff',
+          fontFamily: BAI.fontBody,
+          fontSize: 14,
+          fontWeight: 600,
+          cursor: isSubmitting || !description.trim() ? 'not-allowed' : 'pointer',
+          minHeight: 44,
+          transition: BAI.transition,
+        }}
+      >
+        {isSubmitting ? (
+          <>
+            <Loader style={{ width: 15, height: 15, animation: 'spin 1s linear infinite' }} />
+            Envoi en cours...
+          </>
+        ) : (
+          <>
+            <Wrench style={{ width: 15, height: 15 }} />
+            Signaler
+          </>
+        )}
+      </button>
+
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+    </div>
+  )
+}
+
+// Flag pattern for messages signaled via the button
+const SIGNALED_PATTERN = /\[PROBLÈME SIGNALÉ\]\s*([A-ZÉÈÊËÀÛÎÏÔÙ]+)\s*:/i
+
+function detectSignaledCategory(content: string): string | null {
+  const match = content.match(SIGNALED_PATTERN)
+  if (!match) return null
+  const cat = match[1].toUpperCase()
+  // Map French label back to category key
+  const labelMap: Record<string, string> = {
+    'PLOMBERIE': 'PLOMBERIE',
+    'ÉLECTRICITÉ': 'ELECTRICITE',
+    'ELECTRICITE': 'ELECTRICITE',
+    'SERRURERIE': 'SERRURERIE',
+    'AUTRE': 'AUTRE',
+  }
+  return labelMap[cat] ?? 'AUTRE'
+}
+
 export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
   const { user, isOwner } = useAuth()
   const navigate = useNavigate()
@@ -29,6 +263,7 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
   const [showRdvModal, setShowRdvModal] = useState(false)
   const [showSharePrompt, setShowSharePrompt] = useState(false)
   const [isSharing, setIsSharing] = useState(false)
+  const [showReportPanel, setShowReportPanel] = useState(false)
   const {
     messages,
     isLoadingMessages,
@@ -54,8 +289,10 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
     propertyCity: string
     propertyLatitude?: number | null
     propertyLongitude?: number | null
+    isSignaled?: boolean
   } | null>(null)
   const [dismissedMaintenanceIds, setDismissedMaintenanceIds] = useState<Set<string>>(new Set())
+  const [ownerPanelDecided, setOwnerPanelDecided] = useState<Set<string>>(new Set())
 
   const otherUser = conversation.user1Id === user?.id ? conversation.user2 : conversation.user1
   const otherUserId = conversation.user1Id === user?.id ? conversation.user2Id : conversation.user1Id
@@ -75,6 +312,7 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
       prevMessageCountRef.current = 0
       hasPromptedRef.current = false
       setShowSharePrompt(false)
+      setShowReportPanel(false)
     }
   }, [conversation?.id, fetchMessages])
 
@@ -134,7 +372,33 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
     const lastMsg = messages[messages.length - 1]
     if (!lastMsg || lastMsg.senderId === user?.id) return
     if (dismissedMaintenanceIds.has(lastMsg.id)) return
+    if (ownerPanelDecided.has(lastMsg.id)) return
 
+    // First check for explicit signal flag (certain match)
+    const signaledCategory = detectSignaledCategory(lastMsg.content)
+    if (signaledCategory) {
+      const prop = conversation?.property
+      if (!prop) return
+      setMaintenancePanelInfo({
+        messageId: lastMsg.id,
+        category: signaledCategory,
+        propertyId: prop.id,
+        propertyCity: prop.city,
+        propertyLatitude: null,
+        propertyLongitude: null,
+        isSignaled: true,
+      })
+      propertyService.getPropertyById(prop.id).then(full => {
+        setMaintenancePanelInfo(prev =>
+          prev?.messageId === lastMsg.id
+            ? { ...prev, propertyLatitude: full.latitude ?? null, propertyLongitude: full.longitude ?? null }
+            : prev
+        )
+      }).catch(() => {})
+      return
+    }
+
+    // Fallback: keyword detection
     const category = detectMaintenanceCategory(lastMsg.content)
     if (!category) return
 
@@ -148,6 +412,7 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
       propertyCity: prop.city,
       propertyLatitude: null,
       propertyLongitude: null,
+      isSignaled: false,
     })
 
     propertyService.getPropertyById(prop.id).then(full => {
@@ -157,7 +422,7 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
           : prev
       )
     }).catch(() => {})
-  }, [messages, isOwner, user?.id, conversation?.property, dismissedMaintenanceIds])
+  }, [messages, isOwner, user?.id, conversation?.property, dismissedMaintenanceIds, ownerPanelDecided])
 
   const handleSendMessage = async (content: string, attachments?: string[]) => {
     if (!conversation?.id) return
@@ -178,6 +443,14 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
         setShowSharePrompt(true)
       }
     }
+  }
+
+  const handleReportSubmitSuccess = async (category: MaintenanceCategory, description: string) => {
+    setShowReportPanel(false)
+    const catLabel = MAINTENANCE_CATEGORY_LABELS[category]
+    const shortDesc = description.length > 60 ? description.slice(0, 60) + '…' : description
+    const msgContent = `🔧 [PROBLÈME SIGNALÉ] ${catLabel} : ${shortDesc}`
+    await handleSendMessage(msgContent)
   }
 
   const handleShareDossier = async () => {
@@ -389,18 +662,36 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
                         onDelete={isOwn ? handleDeleteMessage : undefined}
                         onRdvSlotSelect={!isOwner ? handleRdvSlotSelect : undefined}
                       />
-                      {maintenancePanelInfo?.messageId === message.id && !dismissedMaintenanceIds.has(message.id) && (
-                        <MaintenanceDetectedPanel
-                          category={maintenancePanelInfo.category}
-                          propertyId={maintenancePanelInfo.propertyId}
-                          propertyCity={maintenancePanelInfo.propertyCity}
-                          propertyLatitude={maintenancePanelInfo.propertyLatitude}
-                          propertyLongitude={maintenancePanelInfo.propertyLongitude}
-                          onDismiss={() => {
-                            setDismissedMaintenanceIds(prev => new Set([...prev, message.id]))
-                            setMaintenancePanelInfo(null)
-                          }}
-                        />
+
+                      {/* Owner: maintenance panel (signaled or keyword-detected) */}
+                      {isOwner && maintenancePanelInfo?.messageId === message.id && !dismissedMaintenanceIds.has(message.id) && (
+                        maintenancePanelInfo.isSignaled && !ownerPanelDecided.has(message.id) ? (
+                          // Certain match — show confirmation prompt first
+                          <SignaledConfirmPanel
+                            category={maintenancePanelInfo.category}
+                            onYes={() => {
+                              setOwnerPanelDecided(prev => new Set([...prev, message.id]))
+                            }}
+                            onNo={() => {
+                              setOwnerPanelDecided(prev => new Set([...prev, message.id]))
+                              setDismissedMaintenanceIds(prev => new Set([...prev, message.id]))
+                              setMaintenancePanelInfo(null)
+                            }}
+                          />
+                        ) : (
+                          // Show contractor search panel (either after YES or keyword detection)
+                          <MaintenanceDetectedPanel
+                            category={maintenancePanelInfo.category}
+                            propertyId={maintenancePanelInfo.propertyId}
+                            propertyCity={maintenancePanelInfo.propertyCity}
+                            propertyLatitude={maintenancePanelInfo.propertyLatitude}
+                            propertyLongitude={maintenancePanelInfo.propertyLongitude}
+                            onDismiss={() => {
+                              setDismissedMaintenanceIds(prev => new Set([...prev, message.id]))
+                              setMaintenancePanelInfo(null)
+                            }}
+                          />
+                        )
                       )}
                     </div>
                   )
@@ -412,8 +703,49 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
         )}
       </div>
 
-      {/* Input Area */}
-      <MessageInput onSend={handleSendMessage} isSending={isSending} />
+      {/* Tenant report panel — inline above input */}
+      {!isOwner && showReportPanel && (
+        <ReportPanel
+          propertyId={conversation?.property?.id}
+          onClose={() => setShowReportPanel(false)}
+          onSubmitSuccess={handleReportSubmitSuccess}
+        />
+      )}
+
+      {/* Input Area — with report button for tenant */}
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 0 }}>
+        {!isOwner && (
+          <button
+            onClick={() => setShowReportPanel(v => !v)}
+            title="Signaler un problème"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minWidth: 44,
+              minHeight: 44,
+              borderRadius: 0,
+              border: 'none',
+              borderTop: `1px solid ${BAI.border}`,
+              borderRight: `1px solid ${BAI.border}`,
+              background: showReportPanel ? BAI.caramelLight : BAI.bgSurface,
+              color: showReportPanel ? BAI.caramel : BAI.inkFaint,
+              cursor: 'pointer',
+              transition: BAI.transition,
+              flexShrink: 0,
+              fontSize: 18,
+              paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
+              paddingTop: 10,
+            }}
+            aria-label="Signaler un problème"
+          >
+            🔧
+          </button>
+        )}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <MessageInput onSend={handleSendMessage} isSending={isSending} />
+        </div>
+      </div>
 
       {isOwner && (
         <>
@@ -508,6 +840,121 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
         </div>
       )}
 
+    </div>
+  )
+}
+
+// Confirmation panel shown to owner when a message is explicitly flagged
+interface SignaledConfirmPanelProps {
+  category: string
+  onYes: () => void
+  onNo: () => void
+}
+
+const CATEGORY_SPECIALTY_MAP: Record<string, string> = {
+  PLOMBERIE: 'plombier',
+  ELECTRICITE: 'électricien',
+  SERRURERIE: 'serrurier',
+  CHAUFFAGE: 'chauffagiste',
+  AUTRE: 'artisan',
+}
+
+const CATEGORY_LABEL_MAP: Record<string, string> = {
+  PLOMBERIE: 'plomberie',
+  ELECTRICITE: 'électricité',
+  SERRURERIE: 'serrurerie',
+  CHAUFFAGE: 'chauffage',
+  AUTRE: 'maintenance',
+}
+
+function SignaledConfirmPanel({ category, onYes, onNo }: SignaledConfirmPanelProps) {
+  const specialty = CATEGORY_SPECIALTY_MAP[category] ?? 'artisan'
+  const catLabel = CATEGORY_LABEL_MAP[category] ?? 'maintenance'
+
+  return (
+    <div
+      style={{
+        margin: '8px 0 12px 48px',
+        background: BAI.caramelLight,
+        border: `1px solid ${BAI.caramelBorder}`,
+        borderRadius: BAI.radiusLg,
+        padding: '14px 16px',
+        maxWidth: 480,
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+        <Wrench style={{ width: 15, height: 15, color: BAI.caramel, flexShrink: 0 }} />
+        <p
+          style={{
+            fontFamily: BAI.fontBody,
+            fontSize: 13,
+            fontWeight: 700,
+            color: BAI.caramel,
+            margin: 0,
+          }}
+        >
+          Problème signalé par votre locataire
+        </p>
+      </div>
+      <p
+        style={{
+          fontFamily: BAI.fontBody,
+          fontSize: 13,
+          color: BAI.inkMid,
+          margin: '0 0 14px',
+          lineHeight: 1.6,
+        }}
+      >
+        Votre locataire a signalé un problème de{' '}
+        <strong style={{ color: BAI.ink }}>{catLabel}</strong>.
+        Souhaitez-vous trouver un{' '}
+        <strong style={{ color: BAI.ink }}>{specialty}</strong> à proximité ?
+      </p>
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button
+          onClick={onYes}
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+            padding: '10px 0',
+            borderRadius: BAI.radius,
+            border: 'none',
+            background: BAI.caramel,
+            color: '#ffffff',
+            fontFamily: BAI.fontBody,
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: 'pointer',
+            minHeight: BAI.touchMin,
+          }}
+        >
+          Oui, trouver un {specialty}
+        </button>
+        <button
+          onClick={onNo}
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '10px 0',
+            borderRadius: BAI.radius,
+            border: `1px solid ${BAI.caramelBorder}`,
+            background: 'transparent',
+            color: BAI.inkMid,
+            fontFamily: BAI.fontBody,
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: 'pointer',
+            minHeight: BAI.touchMin,
+          }}
+        >
+          Non merci
+        </button>
+      </div>
     </div>
   )
 }

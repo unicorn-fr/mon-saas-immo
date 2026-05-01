@@ -29,7 +29,6 @@ import {
   ChevronUp,
   Info,
   Building2,
-  BarChart3,
   AlertTriangle,
   CheckCircle2,
 } from 'lucide-react'
