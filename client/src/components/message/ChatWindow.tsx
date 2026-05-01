@@ -5,10 +5,12 @@ import { MessageBubble } from './MessageBubble'
 import { MessageInput } from './MessageInput'
 import { CreateLeaseModal } from './CreateLeaseModal'
 import { ProposeRdvModal, type RdvProposal, type RdvSlot } from './ProposeRdvModal'
+import { MaintenanceDetectedPanel, detectMaintenanceCategory } from './MaintenanceDetectedPanel'
 import { useMessages } from '../../hooks/useMessages'
 import { useAuth } from '../../hooks/useAuth'
 import { shareApi } from '../../services/dossier.service'
 import { bookingService } from '../../services/booking.service'
+import { propertyService } from '../../services/property.service'
 import { Conversation } from '../../types/message.types'
 import toast from 'react-hot-toast'
 
@@ -44,6 +46,16 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
   const isNearBottomRef = useRef(true)
   const prevMessageCountRef = useRef(0)
   const hasPromptedRef = useRef(false)
+
+  const [maintenancePanelInfo, setMaintenancePanelInfo] = useState<{
+    messageId: string
+    category: string
+    propertyId: string
+    propertyCity: string
+    propertyLatitude?: number | null
+    propertyLongitude?: number | null
+  } | null>(null)
+  const [dismissedMaintenanceIds, setDismissedMaintenanceIds] = useState<Set<string>>(new Set())
 
   const otherUser = conversation.user1Id === user?.id ? conversation.user2 : conversation.user1
   const otherUserId = conversation.user1Id === user?.id ? conversation.user2Id : conversation.user1Id
@@ -115,6 +127,37 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
       })
     }
   }, [messages])
+
+  // Auto-detect maintenance keywords in the last received message (owner side only)
+  useEffect(() => {
+    if (!isOwner || !messages.length) return
+    const lastMsg = messages[messages.length - 1]
+    if (!lastMsg || lastMsg.senderId === user?.id) return
+    if (dismissedMaintenanceIds.has(lastMsg.id)) return
+
+    const category = detectMaintenanceCategory(lastMsg.content)
+    if (!category) return
+
+    const prop = conversation?.property
+    if (!prop) return
+
+    setMaintenancePanelInfo({
+      messageId: lastMsg.id,
+      category,
+      propertyId: prop.id,
+      propertyCity: prop.city,
+      propertyLatitude: null,
+      propertyLongitude: null,
+    })
+
+    propertyService.getPropertyById(prop.id).then(full => {
+      setMaintenancePanelInfo(prev =>
+        prev?.messageId === lastMsg.id
+          ? { ...prev, propertyLatitude: full.latitude ?? null, propertyLongitude: full.longitude ?? null }
+          : prev
+      )
+    }).catch(() => {})
+  }, [messages, isOwner, user?.id, conversation?.property, dismissedMaintenanceIds])
 
   const handleSendMessage = async (content: string, attachments?: string[]) => {
     if (!conversation?.id) return
@@ -338,14 +381,28 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
                     !previousMessage || previousMessage.senderId !== message.senderId
 
                   return (
-                    <MessageBubble
-                      key={message.id}
-                      message={message}
-                      isOwn={isOwn}
-                      showAvatar={showAvatar}
-                      onDelete={isOwn ? handleDeleteMessage : undefined}
-                      onRdvSlotSelect={!isOwner ? handleRdvSlotSelect : undefined}
-                    />
+                    <div key={message.id}>
+                      <MessageBubble
+                        message={message}
+                        isOwn={isOwn}
+                        showAvatar={showAvatar}
+                        onDelete={isOwn ? handleDeleteMessage : undefined}
+                        onRdvSlotSelect={!isOwner ? handleRdvSlotSelect : undefined}
+                      />
+                      {maintenancePanelInfo?.messageId === message.id && !dismissedMaintenanceIds.has(message.id) && (
+                        <MaintenanceDetectedPanel
+                          category={maintenancePanelInfo.category}
+                          propertyId={maintenancePanelInfo.propertyId}
+                          propertyCity={maintenancePanelInfo.propertyCity}
+                          propertyLatitude={maintenancePanelInfo.propertyLatitude}
+                          propertyLongitude={maintenancePanelInfo.propertyLongitude}
+                          onDismiss={() => {
+                            setDismissedMaintenanceIds(prev => new Set([...prev, message.id]))
+                            setMaintenancePanelInfo(null)
+                          }}
+                        />
+                      )}
+                    </div>
                   )
                 })}
               </div>

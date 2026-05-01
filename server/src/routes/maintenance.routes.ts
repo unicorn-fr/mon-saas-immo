@@ -164,4 +164,126 @@ Pour les platforms, donne 2-3 plateformes françaises réelles et pertinentes po
   }
 })
 
+// Craft categories for Overpass API
+const CRAFT_MAP: Record<string, string[]> = {
+  PLOMBERIE: ['plumber', 'water_well_drilling'],
+  ELECTRICITE: ['electrician'],
+  CHAUFFAGE: ['hvac_technician', 'heating_engineer'],
+  SERRURERIE: ['locksmith'],
+  AUTRE: ['carpenter', 'painter', 'plasterer', 'builder'],
+}
+
+// POST /maintenance/find-contractors
+router.post('/find-contractors', async (req, res) => {
+  try {
+    const { latitude, longitude, category, city } = req.body
+
+    let lat = Number(latitude)
+    let lon = Number(longitude)
+
+    // Fallback: geocode by city using BAN API if no lat/lon
+    if ((!lat || !lon) && city) {
+      try {
+        const geoRes = await fetch(
+          `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(city)}&limit=1&type=municipality`
+        )
+        const geoData = await geoRes.json() as { features?: Array<{ geometry?: { coordinates?: number[] } }> }
+        if (geoData.features?.[0]?.geometry?.coordinates) {
+          lon = geoData.features[0].geometry.coordinates[0]
+          lat = geoData.features[0].geometry.coordinates[1]
+        }
+      } catch { /* use defaults */ }
+    }
+
+    if (!lat || !lon) {
+      return res.status(400).json({ success: false, message: 'Localisation introuvable' })
+    }
+
+    const craftTypes = CRAFT_MAP[category as string] ?? CRAFT_MAP['AUTRE']
+    const craftQuery = craftTypes.map(c => `node["craft"="${c}"](around:8000,${lat},${lon});way["craft"="${c}"](around:8000,${lat},${lon});`).join('\n')
+
+    const overpassQuery = `[out:json][timeout:15];\n(\n${craftQuery}\n);\nout body;\n>;\nout skel qt;`
+
+    const overpassRes = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `data=${encodeURIComponent(overpassQuery)}`,
+      signal: AbortSignal.timeout(16000),
+    })
+
+    const overpassData = await overpassRes.json() as {
+      elements?: Array<{
+        id: number
+        type: string
+        lat?: number
+        lon?: number
+        tags?: Record<string, string>
+      }>
+    }
+
+    const elements = overpassData.elements ?? []
+
+    // Calculate distance in km
+    function haversine(lat1: number, lon1: number, lat2: number, lon2: number): number {
+      const R = 6371
+      const dLat = (lat2 - lat1) * Math.PI / 180
+      const dLon = (lon2 - lon1) * Math.PI / 180
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    }
+
+    const contractors = elements
+      .filter(el => el.tags?.name && el.lat && el.lon)
+      .map(el => {
+        const distance = el.lat && el.lon ? haversine(lat, lon, el.lat, el.lon) : 999
+        return {
+          id: String(el.id),
+          name: el.tags!.name,
+          address: [el.tags!['addr:housenumber'], el.tags!['addr:street'], el.tags!['addr:city']].filter(Boolean).join(' ') || city || 'Adresse non renseignée',
+          phone: el.tags!.phone ?? el.tags!['contact:phone'] ?? null,
+          website: el.tags!.website ?? el.tags!['contact:website'] ?? null,
+          openingHours: el.tags!.opening_hours ?? null,
+          distance: Math.round(distance * 10) / 10,
+        }
+      })
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, 6)
+
+    // Platform suggestions based on category
+    const PLATFORMS: Record<string, Array<{ name: string; url: string; description: string }>> = {
+      PLOMBERIE: [
+        { name: 'MesDépanneurs.fr', url: 'https://www.mesdepanneurs.fr', description: 'Artisans disponibles rapidement' },
+        { name: 'Habitissimo', url: 'https://www.habitissimo.fr', description: 'Devis gratuits en ligne' },
+        { name: 'Allovoisins', url: 'https://www.allovoisins.com', description: 'Services locaux de proximité' },
+      ],
+      ELECTRICITE: [
+        { name: 'MesDépanneurs.fr', url: 'https://www.mesdepanneurs.fr', description: 'Électriciens disponibles 24h/24' },
+        { name: 'Habitissimo', url: 'https://www.habitissimo.fr', description: 'Devis gratuits en ligne' },
+        { name: 'Homki', url: 'https://www.homki.fr', description: 'Artisans certifiés RGE' },
+      ],
+      CHAUFFAGE: [
+        { name: 'MesDépanneurs.fr', url: 'https://www.mesdepanneurs.fr', description: 'Chauffagistes disponibles rapidement' },
+        { name: 'Habitissimo', url: 'https://www.habitissimo.fr', description: 'Devis gratuits en ligne' },
+        { name: 'Papernest', url: 'https://www.papernest.com', description: 'Contrats d\'entretien chaudière' },
+      ],
+      SERRURERIE: [
+        { name: 'MesDépanneurs.fr', url: 'https://www.mesdepanneurs.fr', description: 'Serruriers disponibles 24h/24' },
+        { name: 'Habitissimo', url: 'https://www.habitissimo.fr', description: 'Devis gratuits en ligne' },
+      ],
+      AUTRE: [
+        { name: 'Habitissimo', url: 'https://www.habitissimo.fr', description: 'Devis gratuits en ligne' },
+        { name: 'Houzz', url: 'https://www.houzz.fr', description: 'Professionnels du bâtiment' },
+        { name: 'Allovoisins', url: 'https://www.allovoisins.com', description: 'Services locaux' },
+      ],
+    }
+
+    const platforms = PLATFORMS[category as string] ?? PLATFORMS['AUTRE']
+
+    return res.json({ success: true, data: { contractors, platforms, searchLocation: { lat, lon } } })
+  } catch (err) {
+    console.error('find-contractors error:', err)
+    return res.status(500).json({ success: false, message: 'Erreur lors de la recherche d\'artisans' })
+  }
+})
+
 export default router

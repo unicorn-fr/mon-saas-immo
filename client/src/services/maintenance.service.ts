@@ -31,6 +31,26 @@ class MaintenanceService {
       return res.data.data.request
     } catch (e) { throw new Error(handleApiError(e)) }
   }
+
+  async findContractors(data: {
+    latitude?: number | null
+    longitude?: number | null
+    city: string
+    category: string
+  }): Promise<{
+    contractors: Array<{ id: string; name: string; address: string; phone: string | null; website: string | null; distance: number; openingHours: string | null }>
+    platforms: Array<{ name: string; url: string; description: string }>
+    searchLocation: { lat: number; lon: number }
+  }> {
+    try {
+      const res = await apiClient.post<ApiResponse<{
+        contractors: Array<{ id: string; name: string; address: string; phone: string | null; website: string | null; distance: number; openingHours: string | null }>
+        platforms: Array<{ name: string; url: string; description: string }>
+        searchLocation: { lat: number; lon: number }
+      }>>('/maintenance/find-contractors', data)
+      return res.data.data
+    } catch (e) { throw new Error(handleApiError(e)) }
+  }
 }
 
 export const maintenanceService = new MaintenanceService()

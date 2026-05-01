@@ -3,6 +3,23 @@ import { Expense, CreateExpenseInput, Loan, SaveLoanInput, FinanceSummary } from
 
 interface ApiResponse<T> { success: boolean; message?: string; data: T }
 
+export interface MarketAnalysis {
+  propertyId: string
+  propertyTitle: string
+  rentPerM2: number
+  market: { city: string; avgRentM2: number; minRentM2: number; maxRentM2: number } | null
+  vsMarket: 'below' | 'inline' | 'above'
+  vsMarketPct: number
+  advice: string
+  encadrementStatus: 'compliant' | 'above_limit' | 'not_applicable' | 'unknown'
+  encadrementInfo: string
+  encadrementRef: number | null
+  encadrementMaj: number | null
+  encadrementMin: number | null
+  fiscalAdvice: string
+  annualRevenue: number
+}
+
 class FinanceService {
   async getExpenses(): Promise<Expense[]> {
     try {
@@ -41,6 +58,13 @@ class FinanceService {
     try {
       const res = await apiClient.get<ApiResponse<{ summary: FinanceSummary }>>('/finances/summary')
       return res.data.data.summary
+    } catch (e) { throw new Error(handleApiError(e)) }
+  }
+
+  async getMarketAnalysis(propertyId: string): Promise<MarketAnalysis> {
+    try {
+      const res = await apiClient.get<ApiResponse<{ analysis: MarketAnalysis }>>(`/finances/market-analysis/${propertyId}`)
+      return res.data.data.analysis
     } catch (e) { throw new Error(handleApiError(e)) }
   }
 }
