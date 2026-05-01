@@ -234,7 +234,7 @@ export function PreQualificationModal({
         key="overlay"
         variants={OVERLAY}
         initial="hidden" animate="visible" exit="exit"
-        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/50"
+        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/50"
         onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
       >
         <motion.div
@@ -242,11 +242,11 @@ export function PreQualificationModal({
           variants={PANEL}
           initial="hidden" animate="visible" exit="exit"
           transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-          className="relative w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden"
-          style={{ background: '#ffffff' }}
+          className="relative w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col"
+          style={{ background: '#ffffff', maxHeight: '92vh' }}
         >
-          {/* Header */}
-          <div className="flex items-start justify-between p-5 border-b" style={{ borderColor: '#e4e1db' }}>
+          {/* Header — flex-shrink-0 so it never gets squeezed */}
+          <div className="flex-shrink-0 flex items-start justify-between p-5 border-b" style={{ borderColor: '#e4e1db', background: '#ffffff' }}>
             <div>
               <h2 className="text-base font-semibold" style={{ color: '#0d0c0a', fontFamily: 'DM Sans, system-ui, sans-serif' }}>
                 Postuler · {propertyTitle}
@@ -266,7 +266,8 @@ export function PreQualificationModal({
             </button>
           </div>
 
-          <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
+          {/* Scrollable body — flex-1 + min-h-0 ensures correct scroll within flex parent */}
+          <div className="flex-1 overflow-y-auto min-h-0 rounded-b-2xl">
 
             {/* Verdict banner */}
             <div className={`flex items-center gap-3 px-5 py-3 border-b ${verdictConfig.bg}`} style={{ borderColor: '#e4e1db' }}>
