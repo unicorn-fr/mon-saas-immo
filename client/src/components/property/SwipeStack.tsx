@@ -423,21 +423,20 @@ export function SwipeStack({ properties, onFavorite, isFavorite, onClose }: Swip
         </AnimatePresence>
       </div>
 
-      {/* Bottom labels */}
+      {/* Bottom labels — cliquables */}
       <div style={{
         position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 20,
         padding: '14px 28px max(18px, env(safe-area-inset-bottom))',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        pointerEvents: 'none',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+        <button onClick={handleSwipeLeft} style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'none', border: 'none', cursor: 'pointer', padding: '6px 0' }}>
           <X style={{ width: 16, height: 16, color: 'rgba(252,165,165,0.7)', flexShrink: 0 }} />
           <span style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 15, fontWeight: 700, color: 'rgba(252,165,165,0.7)', letterSpacing: '0.02em' }}>Passer</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+        </button>
+        <button onClick={handleSwipeRight} style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'none', border: 'none', cursor: 'pointer', padding: '6px 0' }}>
           <span style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 15, fontWeight: 700, color: 'rgba(159,212,186,0.7)', letterSpacing: '0.02em' }}>Sauvegarder</span>
           <Heart style={{ width: 16, height: 16, color: 'rgba(159,212,186,0.7)', flexShrink: 0 }} />
-        </div>
+        </button>
       </div>
     </div>
   )
