@@ -453,7 +453,7 @@ export default function Finance() {
                         fontFamily: BAI.fontBody,
                         fontSize: 12,
                       }}
-                      formatter={(v: number) => formatEuro(v)}
+                      formatter={(v: number | undefined) => v != null ? formatEuro(v) : ''}
                     />
                     <Legend
                       wrapperStyle={{ fontFamily: BAI.fontBody, fontSize: 12, paddingTop: 12 }}
