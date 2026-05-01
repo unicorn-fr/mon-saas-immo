@@ -312,6 +312,7 @@ function DocSlot({
     slot.docType === 'TITRE_SEJOUR'      ? 'sejour'  :
     undefined
   ) as 'cni' | 'permis' | 'passport' | 'sejour' | undefined
+  const slotIsVerso = slot.docType.endsWith('_VERSO')
 
   const handleFile = async (file: File, overrideDocType?: string) => {
     const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'application/pdf']
@@ -418,6 +419,8 @@ function DocSlot({
         <CameraCapture
           docType={slot.docType}
           initialFamily={slotFamily}
+          initialIsVerso={slotIsVerso}
+          skipSelector={!slotFamily}
           onComplete={async (captures: CaptureEntry[]) => {
             setShowCamera(false)
             setUploading(true)

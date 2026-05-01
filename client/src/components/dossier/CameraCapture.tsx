@@ -24,8 +24,10 @@ export type DocFamily = 'cni' | 'permis' | 'passport' | 'sejour'
 export interface CaptureEntry { file: File; docType: string }
 
 interface CameraCaptureProps {
-  docType?: string
-  initialFamily?: DocFamily
+  docType?: string          // docType du slot (fallback pour les docs non-identité)
+  initialFamily?: DocFamily // saute le sélecteur et démarre direct en scanning
+  initialIsVerso?: boolean  // démarre côté verso (pour les slots _VERSO)
+  skipSelector?: boolean    // saute le sélecteur sans famille connue (docs non-identité)
   onComplete: (captures: CaptureEntry[]) => void
   onClose: () => void
 }
@@ -143,18 +145,24 @@ function cropGuide(video: HTMLVideoElement, aspect: number): HTMLCanvasElement {
 }
 
 // ── Composant ──────────────────────────────────────────────────────────────────
-export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCaptureProps) {
+export function CameraCapture({
+  docType: slotDocType,
+  initialFamily, initialIsVerso, skipSelector,
+  onComplete, onClose,
+}: CameraCaptureProps) {
+  const startsInScan = !!(initialFamily || skipSelector)
+
   const videoRef    = useRef<HTMLVideoElement>(null)
   const overlayRef  = useRef<HTMLCanvasElement>(null)
   const streamRef   = useRef<MediaStream | null>(null)
   const rafRef      = useRef<number>(0)
   const flashRaf    = useRef(false)
-  const phaseRef    = useRef<Phase>(initialFamily ? 'scanning' : 'selecting')
+  const phaseRef    = useRef<Phase>(startsInScan ? 'scanning' : 'selecting')
   const capturesRef = useRef<CaptureEntry[]>([])
 
-  const [phase,          setPhase]          = useState<Phase>(initialFamily ? 'scanning' : 'selecting')
+  const [phase,          setPhase]          = useState<Phase>(startsInScan ? 'scanning' : 'selecting')
   const [selectedFamily, setSelectedFamily] = useState<DocFamily | null>(initialFamily ?? null)
-  const [isVerso,        setIsVerso]        = useState(false)
+  const [isVerso,        setIsVerso]        = useState(initialIsVerso ?? false)
   const [camReady,       setCamReady]       = useState(false)
   const [camError,       setCamError]       = useState('')
   const [flash,          setFlash]          = useState(false)
@@ -162,12 +170,13 @@ export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCapt
   const [rectoPreview,   setRectoPreview]   = useState('')
 
   const currentDt = useMemo(() => {
-    if (!selectedFamily) return 'CNI_RECTO'
+    // Sans famille identité sélectionnée → utiliser le docType du slot tel quel
+    if (!selectedFamily) return slotDocType ?? 'CNI_RECTO'
     if (selectedFamily === 'cni')      return isVerso ? 'CNI_VERSO'    : 'CNI_RECTO'
     if (selectedFamily === 'permis')   return isVerso ? 'PERMIS_VERSO' : 'PERMIS_RECTO'
     if (selectedFamily === 'passport') return 'PASSEPORT'
     return 'TITRE_SEJOUR'
-  }, [selectedFamily, isVerso])
+  }, [selectedFamily, isVerso, slotDocType])
 
   const needsVerso  = selectedFamily === 'cni' || selectedFamily === 'permis'
   const showFlipBtn = phase === 'confirming' && needsVerso && !isVerso
@@ -209,10 +218,7 @@ export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCapt
   }, [setPhaseSync])
 
   useEffect(() => {
-    if (initialFamily) {
-      setSelectedFamily(initialFamily)
-      startCamera()
-    }
+    if (startsInScan) startCamera()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => () => {
