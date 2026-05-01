@@ -199,75 +199,73 @@ export default function SearchProperties() {
           <div style={{ position: 'absolute', width: 380, height: 110, top: '10%', right: -100, borderRadius: '50%', background: 'rgba(196,151,106,0.12)', filter: 'blur(60px)', pointerEvents: 'none' }} />
           <div style={{ position: 'absolute', width: 280, height: 90, bottom: 0, left: '10%', borderRadius: '50%', background: 'rgba(255,255,255,0.04)', filter: 'blur(50px)', pointerEvents: 'none' }} />
 
-          <div style={{ maxWidth: 980, margin: '0 auto', padding: 'clamp(40px,6vh,64px) clamp(16px,5vw,48px) clamp(32px,5vh,48px)', position: 'relative', zIndex: 2, textAlign: 'center' }}>
+          <div style={{ maxWidth: 980, margin: '0 auto', padding: 'clamp(20px,4vh,64px) clamp(16px,5vw,48px) clamp(20px,3vh,48px)', position: 'relative', zIndex: 2, textAlign: 'center' }}>
 
-            {/* eyebrow pill */}
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
+            {/* eyebrow pill — masquée sur mobile pour gagner de la place */}
+            <span className="hidden sm:inline-flex" style={{
+              alignItems: 'center', gap: 8,
               background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)',
-              borderRadius: 999, padding: '6px 14px', marginBottom: 20,
+              borderRadius: 999, padding: '6px 14px', marginBottom: 16,
               fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: M.caramel,
               fontFamily: M.body,
             }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: M.caramel, display: 'inline-block', flexShrink: 0, boxShadow: `0 0 0 0 rgba(196,151,106,0.6)`, animation: 'pulseDot 1.8s infinite' }} />
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: M.caramel, display: 'inline-block', flexShrink: 0, animation: 'pulseDot 1.8s infinite' }} />
               Recherche propulsée par l'IA
             </span>
 
             <h1 style={{
               fontFamily: "'Cormorant Garamond', Georgia, serif",
               fontStyle: 'italic', fontWeight: 700,
-              fontSize: 'clamp(28px,4.5vw,52px)',
-              color: '#fff', lineHeight: 1.05, margin: '0 0 12px',
+              fontSize: 'clamp(22px,4.5vw,52px)',
+              color: '#fff', lineHeight: 1.1, margin: '0 0 8px',
             }}>
               Décris ton logement <em style={{ color: M.caramel }}>idéal.</em>
             </h1>
-            <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.7)', margin: '0 0 32px', fontFamily: M.body }}>
+            <p className="hidden sm:block" style={{ fontSize: 15, color: 'rgba(255,255,255,0.7)', margin: '0 0 24px', fontFamily: M.body }}>
               Une phrase suffit. L'IA fait le tri parmi tous les biens disponibles.
             </p>
+            <div className="block sm:hidden" style={{ height: 16 }} />
 
-              {/* ── AI Box (reference design) ── */}
+            {/* ── AI Box ── */}
             <div
               style={{
                 background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)',
-                borderRadius: 18, padding: 8, backdropFilter: 'blur(12px)',
+                borderRadius: 14, padding: '6px 6px 6px 8px', backdropFilter: 'blur(12px)',
                 WebkitBackdropFilter: 'blur(12px)',
                 boxShadow: '0 8px 32px rgba(0,0,0,0.3)', transition: 'all .25s',
               }}
-              onFocusCapture={e => { e.currentTarget.style.borderColor = M.caramel; e.currentTarget.style.background = 'rgba(255,255,255,0.09)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(196,151,106,0.18)' }}
-              onBlurCapture={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)' }}
+              onFocusCapture={e => { e.currentTarget.style.borderColor = M.caramel; e.currentTarget.style.boxShadow = '0 8px 32px rgba(196,151,106,0.18)' }}
+              onBlurCapture={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)' }}
             >
-              <form onSubmit={handleNLSearch} style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
-                <div style={{ width: 52, display: 'flex', alignItems: 'center', justifyContent: 'center', color: M.caramel, flexShrink: 0 }}>
-                  <Sparkles className="w-5 h-5" />
-                </div>
-                <textarea
+              <form onSubmit={handleNLSearch} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <Sparkles style={{ width: 18, height: 18, color: M.caramel, flexShrink: 0, marginLeft: 6 }} />
+                <input
+                  type="text"
                   value={nlQuery}
                   onChange={e => setNlQuery(e.target.value)}
-                  placeholder="Ex : T2 à Lyon centre, moins de 800 € par mois, plus de 30 m², avec parking…"
-                  rows={1}
+                  placeholder="T2 Lyon centre, moins de 800 €, avec parking…"
                   style={{
                     flex: 1, background: 'transparent', border: 0, outline: 0,
-                    fontFamily: M.body, color: '#fff', fontSize: 16,
-                    padding: '18px 4px', resize: 'none', minHeight: 52, maxHeight: 120, lineHeight: 1.4,
+                    fontFamily: M.body, color: '#fff', fontSize: 15,
+                    padding: '14px 8px', minWidth: 0,
                   }}
-                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleNLSearch(e as any) } }}
-                  onInput={e => { const t = e.currentTarget; t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 120) + 'px' }}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleNLSearch(e as any) } }}
                 />
                 <button type="submit" disabled={nlLoading} style={{
-                  background: nlLoading ? '#6a6a8a' : M.caramel, color: '#fff', border: 0, borderRadius: 12,
-                  padding: '0 22px', fontFamily: M.body, fontWeight: 600, fontSize: 14,
-                  cursor: nlLoading ? 'not-allowed' : 'pointer',
-                  display: 'inline-flex', alignItems: 'center', gap: 8, transition: 'all .2s', whiteSpace: 'nowrap',
+                  background: nlLoading ? '#6a6a8a' : M.caramel, color: '#fff', border: 0, borderRadius: 10,
+                  padding: '0 18px', height: 44, fontFamily: M.body, fontWeight: 600, fontSize: 14,
+                  cursor: nlLoading ? 'not-allowed' : 'pointer', flexShrink: 0,
+                  display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'all .2s', whiteSpace: 'nowrap',
                 }}>
                   <Search className="w-4 h-4" />
-                  {nlLoading ? '…' : 'Chercher'}
+                  <span className="hidden sm:inline">{nlLoading ? '…' : 'Chercher'}</span>
                 </button>
               </form>
             </div>
 
-            {/* Preset chips */}
+            {/* Preset chips — masqués sur mobile */}
             {nlChips.length === 0 && !nlLoading && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: 18 }}>
+              <div className="hidden sm:flex" style={{ flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: 18 }}>
                 {['Studio Paris 11e < 1 100 €', 'T3 Lyon avec balcon', 'Meublé Bordeaux centre', 'Maison Nantes avec jardin'].map(preset => (
                   <button key={preset} onClick={() => setNlQuery(preset)}
                     style={{
