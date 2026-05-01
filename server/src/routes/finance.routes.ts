@@ -241,6 +241,25 @@ router.get('/market-analysis/:propertyId', async (req, res) => {
   }
 })
 
+// GET /finances/city-market?city=xxx — loyer marché pour n'importe quelle commune française
+router.get('/city-market', async (req, res) => {
+  try {
+    const city = (req.query.city as string | undefined)?.trim()
+    if (!city || city.length < 2) return res.status(400).json({ success: false, message: 'Ville requise' })
+    const market = await findRentalMarketData(city)
+    return res.json({ success: true, data: { market: market ? {
+      avgRentM2: market.avgRentM2,
+      minRentM2: market.minRentM2,
+      maxRentM2: market.maxRentM2,
+      encadrement: market.encadrement,
+      label: market.label,
+    } : null } })
+  } catch (err) {
+    console.error('city-market error:', err)
+    return res.status(500).json({ success: false, message: 'Erreur' })
+  }
+})
+
 // POST /finances/rent-advisor — calcul déterministe, sans API externe
 router.post('/rent-advisor', async (req, res) => {
   try {

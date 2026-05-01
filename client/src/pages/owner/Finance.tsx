@@ -8,10 +8,12 @@ import {
   ExpenseCategory,
   CreateExpenseInput,
 } from '../../types/finance.types'
-import { FRENCH_CITY_PRICES } from '../../data/frenchCityPrices'
+import { apiClient } from '../../services/api.service'
 import {
   AreaChart,
   Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -222,6 +224,9 @@ export default function Finance() {
   const [showExpenseForm, setShowExpenseForm] = useState(false)
   const [showLoanForm, setShowLoanForm] = useState<string | null>(null)
   const [citySearch, setCitySearch] = useState('')
+  const [cityResult, setCityResult] = useState<{ city: string; avgRentM2: number; minRentM2: number; maxRentM2: number; encadrement: boolean; label: string } | null>(null)
+  const [citySearchLoading, setCitySearchLoading] = useState(false)
+  const [citySearchTimer, setCitySearchTimer] = useState<ReturnType<typeof setTimeout> | null>(null)
   const [expenseForm, setExpenseForm] = useState<CreateExpenseInput>(INITIAL_EXPENSE_FORM)
   const [loanForm, setLoanForm] = useState<LoanFormState>(INITIAL_LOAN_FORM)
   const [marketAnalyses, setMarketAnalyses] = useState<Record<string, MarketAnalysis>>({})
@@ -266,9 +271,24 @@ export default function Finance() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, myProperties])
 
-  const filteredCities = FRENCH_CITY_PRICES.filter(
-    (c) => citySearch === '' || c.city.toLowerCase().includes(citySearch.toLowerCase()),
-  ).slice(0, 8)
+  function handleCitySearch(val: string) {
+    setCitySearch(val)
+    setCityResult(null)
+    if (citySearchTimer) clearTimeout(citySearchTimer)
+    if (!val.trim() || val.trim().length < 2) return
+    const t = setTimeout(async () => {
+      setCitySearchLoading(true)
+      try {
+        const res = await apiClient.get<{ success: boolean; data: { market: { avgRentM2: number; minRentM2: number; maxRentM2: number; encadrement: boolean; label: string } | null } }>(
+          `/finances/city-market?city=${encodeURIComponent(val.trim())}`
+        )
+        if (res.data.data.market) setCityResult({ city: val.trim(), ...res.data.data.market })
+        else setCityResult(null)
+      } catch { setCityResult(null) }
+      finally { setCitySearchLoading(false) }
+    }, 500)
+    setCitySearchTimer(t)
+  }
 
   async function handleCreateExpense(e: React.FormEvent) {
     e.preventDefault()
@@ -554,6 +574,29 @@ export default function Finance() {
               )}
             </div>
 
+            {/* Bar chart: revenus vs dépenses par mois */}
+            {chartData.length > 0 && (
+              <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: 24 }}>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: BAI.ink, margin: '0 0 20px', letterSpacing: '0.02em' }}>
+                  Revenus vs Dépenses — mensuel
+                </p>
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }} barCategoryGap="30%">
+                    <CartesianGrid strokeDasharray="3 3" stroke={BAI.border} vertical={false} />
+                    <XAxis dataKey="name" tick={{ fontFamily: BAI.fontBody, fontSize: 11, fill: BAI.inkFaint }} axisLine={false} tickLine={false} />
+                    <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k€`} tick={{ fontFamily: BAI.fontBody, fontSize: 11, fill: BAI.inkFaint }} axisLine={false} tickLine={false} width={45} />
+                    <Tooltip
+                      contentStyle={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 8, fontFamily: BAI.fontBody, fontSize: 12 }}
+                      formatter={(v: number | undefined) => v != null ? formatEuro(v) : ''}
+                    />
+                    <Legend wrapperStyle={{ fontFamily: BAI.fontBody, fontSize: 12, paddingTop: 12 }} />
+                    <Bar dataKey="Revenus" fill={BAI.owner} radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Dépenses" fill={BAI.caramel} radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
             {/* Tax advice + Market prices */}
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
 
@@ -640,99 +683,51 @@ export default function Finance() {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                   <Building2 style={{ width: 16, height: 16, color: BAI.caramel }} />
-                  <p
-                    style={{
-                      fontFamily: BAI.fontBody,
-                      fontSize: 13,
-                      fontWeight: 700,
-                      color: BAI.ink,
-                      margin: 0,
-                    }}
-                  >
-                    Prix du marché / m²
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: BAI.ink, margin: 0 }}>
+                    Loyer moyen du marché
                   </p>
                 </div>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: '0 0 10px' }}>
+                  Toute commune française — données officielles (encadrement des loyers, CLAMEUR, INSEE)
+                </p>
                 <input
-                  placeholder="Rechercher une ville..."
+                  placeholder="Rechercher n'importe quelle ville ou village..."
                   value={citySearch}
-                  onChange={(e) => setCitySearch(e.target.value)}
+                  onChange={(e) => handleCitySearch(e.target.value)}
                   style={{ ...inputStyle, marginBottom: 12, padding: '8px 12px', fontSize: 13 }}
                 />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {filteredCities.map((c) => (
-                    <div
-                      key={c.city}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '7px 0',
-                        borderBottom: `1px solid ${BAI.border}`,
-                      }}
-                    >
-                      <div>
-                        <span
-                          style={{
-                            fontFamily: BAI.fontBody,
-                            fontSize: 13,
-                            fontWeight: 600,
-                            color: BAI.ink,
-                          }}
-                        >
-                          {c.city}
+                {citySearchLoading && (
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: 0 }}>Recherche...</p>
+                )}
+                {!citySearchLoading && citySearch.length >= 2 && !cityResult && !citySearchLoading && (
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: 0 }}>
+                    Aucune donnée disponible pour « {citySearch} »
+                  </p>
+                )}
+                {cityResult && (
+                  <div style={{ background: BAI.bgMuted, borderRadius: 10, padding: '14px 16px' }}>
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '0 0 8px' }}>
+                      {cityResult.label}
+                      {cityResult.encadrement && (
+                        <span style={{ marginLeft: 8, padding: '1px 8px', borderRadius: 999, background: `${BAI.owner}15`, border: `1px solid ${BAI.ownerBorder}`, fontSize: 11, fontWeight: 700, color: BAI.owner }}>
+                          Encadrement des loyers
                         </span>
-                        <span
-                          style={{
-                            fontFamily: BAI.fontBody,
-                            fontSize: 11,
-                            color: BAI.inkFaint,
-                            marginLeft: 6,
-                          }}
-                        >
-                          {c.region}
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span
-                          style={{
-                            fontFamily: BAI.fontBody,
-                            fontSize: 13,
-                            fontWeight: 700,
-                            color: BAI.ink,
-                          }}
-                        >
-                          {c.prixM2.toLocaleString('fr-FR')} €/m²
-                        </span>
-                        <span
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 2,
-                            fontFamily: BAI.fontBody,
-                            fontSize: 11,
-                            fontWeight: 600,
-                            color:
-                              c.trendLabel === 'up'
-                                ? BAI.tenant
-                                : c.trendLabel === 'down'
-                                  ? BAI.error
-                                  : BAI.inkFaint,
-                          }}
-                        >
-                          {c.trendLabel === 'up' ? (
-                            <TrendingUp style={{ width: 12, height: 12 }} />
-                          ) : c.trendLabel === 'down' ? (
-                            <TrendingDown style={{ width: 12, height: 12 }} />
-                          ) : (
-                            <Minus style={{ width: 12, height: 12 }} />
-                          )}
-                          {c.trend > 0 ? '+' : ''}
-                          {c.trend}%
-                        </span>
-                      </div>
+                      )}
+                    </p>
+                    <div style={{ display: 'flex', gap: 0, borderRadius: 8, overflow: 'hidden', border: `1px solid ${BAI.border}` }}>
+                      {[
+                        { label: 'Minimum', value: cityResult.minRentM2 },
+                        { label: 'Moyen', value: cityResult.avgRentM2, highlight: true },
+                        { label: 'Maximum', value: cityResult.maxRentM2 },
+                      ].map((item, i, arr) => (
+                        <div key={item.label} style={{ flex: 1, padding: '10px 12px', background: item.highlight ? `${BAI.owner}08` : BAI.bgSurface, borderRight: i < arr.length - 1 ? `1px solid ${BAI.border}` : 'none', textAlign: 'center' }}>
+                          <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: BAI.inkFaint, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{item.label}</p>
+                          <p style={{ fontFamily: BAI.fontDisplay, fontSize: 18, fontWeight: 700, fontStyle: 'italic', color: item.highlight ? BAI.owner : BAI.ink, margin: 0 }}>{item.value} €/m²</p>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
