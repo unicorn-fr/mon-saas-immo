@@ -325,8 +325,14 @@ export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCapt
             side:           result.side,
           })
           setPhaseSync('confirming')
-        } catch {
-          setRejectReason('Erreur de connexion. Vérifiez votre connexion internet et réessayez.')
+        } catch (err: any) {
+          const serverMsg = err?.response?.data?.message as string | undefined
+          setRejectReason(
+            serverMsg ||
+            (err?.message?.includes('Network') || err?.code === 'ERR_NETWORK'
+              ? 'Erreur réseau. Vérifiez votre connexion et réessayez.'
+              : `Erreur lors de l'analyse (${err?.response?.status ?? 'réseau'}). Réessayez.`)
+          )
           setPhaseSync('error')
         }
       }, 'image/jpeg', 0.95)
