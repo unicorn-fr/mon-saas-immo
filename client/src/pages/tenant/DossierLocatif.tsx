@@ -1091,12 +1091,22 @@ export default function DossierLocatif() {
     ]
   }, [questionnaire.hasGarant])
 
-  // ── Derived ────────────────────────────────────────────────────────────────
-  const totalDocs  = CATEGORIES.reduce((n, c) => n + c.slots.length, 0)
-  const filledDocs = CATEGORIES.reduce(
-    (n, c) => n + c.slots.filter(s => documents.find(d => d.docType === s.docType)).length, 0,
-  )
-  const pct = totalDocs ? Math.round((filledDocs / totalDocs) * 100) : 0
+  // ── Complétude — basée sur les slots pertinents au profil ─────────────────
+  // On compte uniquement les slots REQUIS (required: true) des catégories
+  // dynamiques choisies par le locataire, pas tous les slots mutuellement exclusifs.
+  const pct = useMemo(() => {
+    const relevantSlots = [
+      ...idSlots,
+      ...emploiSlots,
+      ...revenusSlots,
+      ...DOMICILE_SLOTS,
+      ...(questionnaire.hasGarant && questionnaire.hasGarant !== 'non' ? garantSlots : []),
+    ]
+    const required = relevantSlots.filter(s => s.required)
+    if (!required.length) return 0
+    const filled = required.filter(s => documents.some(d => d.docType === s.docType)).length
+    return Math.round((filled / required.length) * 100)
+  }, [idSlots, emploiSlots, revenusSlots, garantSlots, questionnaire.hasGarant, documents])
 
   // ── Card wrapper ───────────────────────────────────────────────────────────
   const stepCard = (children: React.ReactNode) => (
@@ -1133,7 +1143,7 @@ export default function DossierLocatif() {
                   Mon Dossier Locatif
                 </h1>
                 <p style={{ fontSize: 13, color: BAI.inkFaint, margin: 0 }}>
-                  {filledDocs}/{totalDocs} documents · {pct}% complété
+                  {pct}% complété
                 </p>
               </div>
               <button

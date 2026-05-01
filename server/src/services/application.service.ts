@@ -121,7 +121,7 @@ export async function computeMatchScore(
   }
 
   // ── Documents (max 20 pts) ─────────────────────────────────────────────────
-  const required = criteria.requiredDocCategories ?? ['IDENTITE', 'REVENUS', 'SITUATION_PRO']
+  const required = criteria.requiredDocCategories ?? ['IDENTITE', 'REVENUS', 'EMPLOI']
   const present = required.filter((cat) => docCategories.includes(cat))
   const docRatio = required.length > 0 ? present.length / required.length : 1
   const docPoints = Math.round(docRatio * 20)

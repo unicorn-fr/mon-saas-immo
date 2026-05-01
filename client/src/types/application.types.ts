@@ -79,7 +79,7 @@ export const DEFAULT_CRITERIA: SelectionCriteria = {
   minSalaryRatio: 3,
   requiredGuarantor: false,
   acceptedGuarantorTypes: ['physique', 'visale'],
-  requiredDocCategories: ['IDENTITE', 'REVENUS', 'SITUATION_PRO'],
+  requiredDocCategories: ['IDENTITE', 'REVENUS', 'EMPLOI'],
   preferredContractTypes: ['CDI'],
   autoPilot: false,
   minScore: 70,

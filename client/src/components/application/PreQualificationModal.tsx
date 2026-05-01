@@ -98,10 +98,25 @@ export function PreQualificationModal({
   tenantProfileMeta, tenantDocCategories, ownerId, onClose, onSuccess,
 }: Props) {
   const [phase, setPhase] = useState<'check' | 'apply' | 'submitting'>('check')
-  const [hasGuarantor, setHasGuarantor] = useState(false)
-  const [guarantorType, setGuarantorType] = useState('')
   const [coverLetter, setCoverLetter] = useState('')
   const [match, setMatch] = useState<MatchResult | null>(null)
+
+  // Pré-remplir garant depuis le questionnaire du dossier (localStorage) ou les docs uploadés
+  const [hasGuarantor, setHasGuarantor] = useState(() => {
+    try {
+      const q = JSON.parse(localStorage.getItem('dossier_questionnaire_v1') ?? '{}')
+      if (q.hasGarant === 'oui_physique' || q.hasGarant === 'oui_visale') return true
+    } catch { /* ignore */ }
+    return tenantDocCategories.includes('GARANTIES')
+  })
+  const [guarantorType, setGuarantorType] = useState(() => {
+    try {
+      const q = JSON.parse(localStorage.getItem('dossier_questionnaire_v1') ?? '{}')
+      if (q.hasGarant === 'oui_physique') return 'physique'
+      if (q.hasGarant === 'oui_visale')   return 'visale'
+    } catch { /* ignore */ }
+    return ''
+  })
 
   // Compute client-side score instantly
   useEffect(() => {
