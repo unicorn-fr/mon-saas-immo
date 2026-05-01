@@ -158,6 +158,10 @@ model User {
   calendarInvitesReceived CalendarInvite[]    @relation("CalendarInviteReceiver")
   edlSessionsOwned      EdlSession[]          @relation("EdlSessionOwner")
   edlSessionsJoined     EdlSession[]          @relation("EdlSessionTenant")
+  expenses              Expense[]             @relation("OwnerExpenses")
+  loans                 Loan[]                @relation("OwnerLoans")
+  ownedMaintenanceReqs  MaintenanceRequest[]  @relation("OwnerMaintenanceRequests")
+  tenantMaintenanceReqs MaintenanceRequest[]  @relation("TenantMaintenanceRequests")
 
   @@index([email])
   @@index([role])
@@ -268,6 +272,9 @@ model Property {
   visitDateOverrides     VisitDateOverride[]
   applications           Application[]
   calendarInvites        CalendarInvite[]
+  expenses               Expense[]
+  loan                   Loan?
+  maintenanceRequests    MaintenanceRequest[]
 
   @@index([ownerId])
   @@index([city])
@@ -884,4 +891,113 @@ model WaitlistEntry {
   @@index([email])
   @@index([createdAt])
   @@map("waitlist_entries")
+}
+
+// ============================================
+// FINANCES PROPRIÉTAIRE — DÉPENSES & PRÊT
+// ============================================
+
+enum ExpenseCategory {
+  TAXE_FONCIERE
+  ASSURANCE
+  TRAVAUX
+  CHARGES_COPRO
+  AUTRE
+}
+
+enum MaintenanceCategory {
+  PLOMBERIE
+  ELECTRICITE
+  CHAUFFAGE
+  SERRURERIE
+  AUTRE
+}
+
+enum MaintenancePriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum MaintenanceStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model Expense {
+  id          String          @id @default(cuid())
+  propertyId  String
+  ownerId     String
+  category    ExpenseCategory
+  description String
+  amount      Float
+  date        DateTime
+  receiptUrl  String?
+
+  property    Property        @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  owner       User            @relation("OwnerExpenses", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([ownerId])
+  @@index([propertyId])
+  @@index([date])
+  @@index([ownerId, date])
+  @@map("expenses")
+}
+
+model Loan {
+  id             String   @id @default(cuid())
+  propertyId     String   @unique
+  ownerId        String
+  bankName       String?
+  totalAmount    Float
+  monthlyPayment Float
+  interestRate   Float
+  durationMonths Int
+  startDate      DateTime
+
+  property       Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  owner          User     @relation("OwnerLoans", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([ownerId])
+  @@map("loans")
+}
+
+// ============================================
+// MAINTENANCE — SIGNALEMENTS & INTERVENTIONS
+// ============================================
+
+model MaintenanceRequest {
+  id          String              @id @default(cuid())
+  propertyId  String
+  ownerId     String
+  tenantId    String?
+  title       String
+  description String              @db.Text
+  category    MaintenanceCategory
+  priority    MaintenancePriority @default(MEDIUM)
+  status      MaintenanceStatus   @default(OPEN)
+  aiAnalysis  Json?
+
+  property    Property            @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  owner       User                @relation("OwnerMaintenanceRequests", fields: [ownerId], references: [id], onDelete: Cascade)
+  tenant      User?               @relation("TenantMaintenanceRequests", fields: [tenantId], references: [id], onDelete: SetNull)
+
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([ownerId])
+  @@index([propertyId])
+  @@index([status])
+  @@index([priority])
+  @@index([ownerId, status])
+  @@map("maintenance_requests")
 }

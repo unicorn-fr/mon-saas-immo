@@ -34,6 +34,8 @@ import dashboardRoutes from './dashboard.routes.js'
 import waitlistRoutes from './waitlist.routes.js'
 import edlRoutes from './edl.routes.js'
 import ocrRoutes from './ocr.routes.js'
+import financeRoutes from './finance.routes.js'
+import maintenanceRoutes from './maintenance.routes.js'
 
 /**
  * Register all application routes on the Express app.
@@ -77,6 +79,10 @@ export function registerRoutes(app: Application, prefix: string): void {
 
   // ── OCR (Claude Haiku) ──────────────────────────────────────────────────
   app.use(`${prefix}/ocr`, ocrRoutes)
+
+  // ── Finances & Maintenance ──────────────────────────────────────────────
+  app.use(`${prefix}/finances`, financeRoutes)
+  app.use(`${prefix}/maintenance`, maintenanceRoutes)
 
   // ── Administration ──────────────────────────────────────────────────────
   app.use(`${prefix}/admin`, adminRoutes)

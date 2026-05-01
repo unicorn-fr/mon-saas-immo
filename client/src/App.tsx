@@ -33,6 +33,8 @@ import ApplicationManagement from './pages/owner/ApplicationManagement'
 import TenantProfile from './pages/owner/TenantProfile'
 import OwnerSettings from './pages/owner/Settings'
 import Rentabilite from './pages/owner/Rentabilite'
+import Finance from './pages/owner/Finance'
+import Maintenance from './pages/owner/Maintenance'
 
 // Tenant Pages
 import TenantDashboard from './pages/tenant/TenantDashboard'
@@ -227,6 +229,8 @@ function AppRoutes() {
         <Route path="/owner/tenants/:tenantId" element={<TenantProfile />} />
         <Route path="/owner/settings" element={<OwnerSettings />} />
         <Route path="/owner/rentabilite" element={<Rentabilite />} />
+        <Route path="/owner/finances" element={<Finance />} />
+        <Route path="/owner/maintenance" element={<Maintenance />} />
       </Route>
 
       {/* Protected Routes - Tenant Dashboard */}

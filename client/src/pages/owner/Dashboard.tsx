@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useProperties } from '../../hooks/useProperties'
 import { useContractStore } from '../../store/contractStore'
 import { useMessages } from '../../hooks/useMessages'
+import { useFinanceStore } from '../../store/financeStore'
+import { useMaintenanceStore } from '../../store/maintenanceStore'
 import { useAuth } from '../../hooks/useAuth'
 import { bookingService } from '../../services/booking.service'
 import { applicationService } from '../../services/application.service'
@@ -33,6 +35,8 @@ export default function Dashboard() {
   const { statistics, myProperties, fetchMyStatistics, fetchMyProperties, isLoading } = useProperties()
   const { contracts, statistics: contractStats, fetchContracts, fetchStatistics: fetchContractStatistics } = useContractStore()
   const { fetchUnreadCount } = useMessages()
+  const { summary, fetchSummary } = useFinanceStore()
+  const { requests, fetchRequests } = useMaintenanceStore()
   const [pendingApps, setPendingApps] = useState<Application[]>([])
   const [upcomingVisits, setUpcomingVisits] = useState<Booking[]>([])
 
@@ -42,6 +46,8 @@ export default function Dashboard() {
     fetchContracts(undefined, 1, 50)
     fetchContractStatistics()
     fetchUnreadCount()
+    fetchSummary()
+    fetchRequests()
     applicationService.list().then((apps) => {
       setPendingApps(apps.filter((a) => a.status === 'PENDING'))
     }).catch(() => {})
@@ -68,6 +74,7 @@ export default function Dashboard() {
   const drafts            = contractStats?.draft || 0
   const urgentContracts   = contracts.filter((c) => c.status === 'SIGNED_TENANT')
   const estimatedYield    = myProperties.length > 0 && monthlyRevenue > 0 ? ((annualRevenue / (monthlyRevenue * 12 * 20)) * 100).toFixed(1) : '—'
+  const openMaintenance   = requests.filter((r) => r.status === 'OPEN' || r.status === 'IN_PROGRESS').length
 
   const statusBadge: Record<string, { label: string; bg: string; text: string; border: string }> = {
     AVAILABLE: { label: 'Disponible',  bg: '#edf7f2', text: '#1b5e3b', border: '#9fd4ba' },
@@ -231,6 +238,16 @@ export default function Dashboard() {
             </div>
           )}
 
+          {/* ── Maintenance alert ───────────────────────────────────────── */}
+          {openMaintenance > 0 && (
+            <div style={{ background: '#fdf5ec', border: '1px solid #f3c99a', borderRadius: 10, padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: '#92400e', margin: 0, fontWeight: 600 }}>
+                🔧 {openMaintenance} demande{openMaintenance > 1 ? 's' : ''} de maintenance en attente
+              </p>
+              <a href="/owner/maintenance" style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: '#92400e', textDecoration: 'none' }}>Gérer →</a>
+            </div>
+          )}
+
           {/* ── KPI row ─────────────────────────────────────────────────── */}
           <div style={{ marginBottom: 'clamp(16px, 4vw, 32px)' }}
             className="grid grid-cols-2 lg:grid-cols-4 gap-3"
@@ -325,6 +342,29 @@ export default function Dashboard() {
               )
             })}
           </div>
+
+          {/* ── Cash-flow banner ────────────────────────────────────────── */}
+          {summary && (
+            <div style={{
+              background: summary.netCashFlow >= 0 ? '#edf7f2' : '#fef2f2',
+              border: `1px solid ${summary.netCashFlow >= 0 ? '#9fd4ba' : '#fca5a5'}`,
+              borderRadius: 10, padding: '12px 20px',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8,
+              marginTop: 16,
+            }}>
+              <div>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: summary.netCashFlow >= 0 ? '#1b5e3b' : '#9b1c1c', margin: 0 }}>
+                  Cash-flow net (12 mois)
+                </p>
+                <p style={{ fontFamily: BAI.fontDisplay, fontSize: 24, fontWeight: 700, fontStyle: 'italic', color: summary.netCashFlow >= 0 ? '#1b5e3b' : '#9b1c1c', margin: '2px 0 0' }}>
+                  {summary.netCashFlow >= 0 ? '+' : ''}{summary.netCashFlow.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}
+                </p>
+              </div>
+              <a href="/owner/finances" style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: summary.netCashFlow >= 0 ? '#1b5e3b' : '#9b1c1c', textDecoration: 'none' }}>
+                Voir le détail →
+              </a>
+            </div>
+          )}
 
           {/* ── Main grid ───────────────────────────────────────────────── */}
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 lg:gap-8">
