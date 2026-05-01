@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, useMotionValue, useTransform, useAnimation, AnimatePresence } from 'framer-motion'
-import { X, RotateCcw, MapPin, Bed, Bath, Square, Home, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react'
+import { X, RotateCcw, MapPin, Bed, Bath, Square, Home, ExternalLink, ChevronLeft, ChevronRight, Heart } from 'lucide-react'
 import { Property } from '../../types/property.types'
 import { Link } from 'react-router-dom'
 
@@ -220,11 +220,84 @@ function DragCard({
   )
 }
 
+// ── Swipe tutorial overlay ──────────────────────────────────────────────────────
+function SwipeTutorial({ onDone }: { onDone: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      onClick={onDone}
+      style={{
+        position: 'absolute', inset: 0, zIndex: 50,
+        background: 'rgba(0,0,0,0.72)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0,
+        cursor: 'pointer',
+      }}
+    >
+      {/* Labels left / right */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 32, marginBottom: 28 }}>
+        <motion.div
+          animate={{ x: [-6, 0, -6] }}
+          transition={{ repeat: Infinity, duration: 1.8, ease: 'easeInOut' }}
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}
+        >
+          <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(155,28,28,0.35)', border: '2px solid rgba(252,165,165,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <X style={{ width: 22, height: 22, color: '#fca5a5' }} />
+          </div>
+          <span style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 13, fontWeight: 600, color: '#fca5a5', letterSpacing: '0.03em' }}>Passer</span>
+        </motion.div>
+
+        {/* Animated hand */}
+        <motion.div
+          animate={{ x: [-60, 60, -60] }}
+          transition={{ repeat: Infinity, duration: 1.8, ease: 'easeInOut' }}
+          style={{ fontSize: 38, lineHeight: 1, userSelect: 'none' }}
+        >
+          👆
+        </motion.div>
+
+        <motion.div
+          animate={{ x: [6, 0, 6] }}
+          transition={{ repeat: Infinity, duration: 1.8, ease: 'easeInOut' }}
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}
+        >
+          <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(27,94,59,0.35)', border: '2px solid rgba(159,212,186,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Heart style={{ width: 22, height: 22, color: '#9fd4ba' }} />
+          </div>
+          <span style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 13, fontWeight: 600, color: '#9fd4ba', letterSpacing: '0.03em' }}>Sauvegarder</span>
+        </motion.div>
+      </div>
+
+      <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 22, fontStyle: 'italic', fontWeight: 600, color: '#fff', margin: '0 0 6px', textAlign: 'center' }}>
+        Glissez pour explorer
+      </p>
+      <p style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 12, color: 'rgba(255,255,255,0.45)', margin: 0 }}>
+        Touchez pour commencer
+      </p>
+    </motion.div>
+  )
+}
+
 // ── SwipeStack — fullscreen overlay ────────────────────────────────────────────
 export function SwipeStack({ properties, onFavorite, isFavorite, onClose }: SwipeStackProps) {
   const [stackIndex, setStackIndex] = useState(0)
   const [history, setHistory]       = useState<HistoryEntry[]>([])
+  const [showTutorial, setShowTutorial] = useState(false)
   const dragX = useMotionValue(0)
+
+  useEffect(() => {
+    const seen = localStorage.getItem('bailio_swipe_tutored')
+    if (!seen) {
+      setShowTutorial(true)
+      const t = setTimeout(() => {
+        setShowTutorial(false)
+        localStorage.setItem('bailio_swipe_tutored', '1')
+      }, 2800)
+      return () => clearTimeout(t)
+    }
+  }, [])
 
   const current   = properties[stackIndex]
   const next1     = properties[stackIndex + 1]
@@ -306,6 +379,16 @@ export function SwipeStack({ properties, onFavorite, isFavorite, onClose }: Swip
         </button>
       </div>
 
+      {/* Swipe tutorial */}
+      <AnimatePresence>
+        {showTutorial && (
+          <SwipeTutorial onDone={() => {
+            setShowTutorial(false)
+            localStorage.setItem('bailio_swipe_tutored', '1')
+          }} />
+        )}
+      </AnimatePresence>
+
       {/* Card stack — fills entire screen */}
       <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
         {/* Background card 2 */}
@@ -340,23 +423,21 @@ export function SwipeStack({ properties, onFavorite, isFavorite, onClose }: Swip
         </AnimatePresence>
       </div>
 
-      {/* Bottom hint + undo */}
+      {/* Bottom labels */}
       <div style={{
         position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 20,
-        padding: '12px 20px max(16px, env(safe-area-inset-bottom))',
+        padding: '14px 28px max(18px, env(safe-area-inset-bottom))',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        pointerEvents: 'none',
       }}>
-        <p style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 11, color: 'rgba(255,255,255,0.32)', margin: 0, letterSpacing: '0.04em' }}>
-          ← Passer · Sauvegarder →
-        </p>
-        <button onClick={handleUndo} disabled={history.length === 0} style={{
-          display: 'flex', alignItems: 'center', gap: 5,
-          background: 'none', border: 'none', cursor: history.length === 0 ? 'not-allowed' : 'pointer',
-          opacity: history.length === 0 ? 0.25 : 0.65, padding: '4px 0',
-        }}>
-          <RotateCcw style={{ width: 13, height: 13, color: '#fff' }} />
-          <span style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 11, color: '#fff' }}>Annuler</span>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <X style={{ width: 16, height: 16, color: 'rgba(252,165,165,0.7)', flexShrink: 0 }} />
+          <span style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 15, fontWeight: 700, color: 'rgba(252,165,165,0.7)', letterSpacing: '0.02em' }}>Passer</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <span style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 15, fontWeight: 700, color: 'rgba(159,212,186,0.7)', letterSpacing: '0.02em' }}>Sauvegarder</span>
+          <Heart style={{ width: 16, height: 16, color: 'rgba(159,212,186,0.7)', flexShrink: 0 }} />
+        </div>
       </div>
     </div>
   )
