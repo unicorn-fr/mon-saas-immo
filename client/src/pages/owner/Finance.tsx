@@ -1501,16 +1501,7 @@ export default function Finance() {
         )}
         {/* ── TAB: MARKET ── */}
         {activeTab === 'market' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, margin: 0 }}>
-              Comparez votre loyer aux prix de marché officiels (données Préfecture IDF 2024, CLAMEUR, INSEE) pour chaque bien.
-            </p>
-
-            {marketLoading && myProperties.length > 0 && (
-              <div style={{ textAlign: 'center', padding: 40, fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint }}>
-                Analyse du marché en cours...
-              </div>
-            )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
             {myProperties.length === 0 && (
               <div style={{ textAlign: 'center', padding: 40, fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint }}>
@@ -1520,130 +1511,78 @@ export default function Finance() {
 
             {myProperties.map((property) => {
               const analysis = marketAnalyses[property.id]
-              if (!analysis) return (
-                <div key={property.id} style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: 20 }}>
-                  <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.ink, margin: 0 }}>{property.title}</p>
-                  <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '4px 0 0' }}>Chargement de l'analyse...</p>
-                </div>
-              )
 
-              const vsColor = analysis.vsMarket === 'above' ? BAI.tenant : analysis.vsMarket === 'below' ? BAI.caramel : BAI.inkMid
-              const vsIcon = analysis.vsMarket === 'above' ? <TrendingUp style={{ width: 14, height: 14 }} /> : analysis.vsMarket === 'below' ? <TrendingDown style={{ width: 14, height: 14 }} /> : <Minus style={{ width: 14, height: 14 }} />
+              // Verdict simple
+              const verdict = !analysis ? null
+                : analysis.vsMarket === 'above' ? { label: `Loyer au-dessus du marché (+${analysis.vsMarketPct}%)`, color: BAI.tenant, icon: <TrendingUp style={{ width: 16, height: 16 }} /> }
+                : analysis.vsMarket === 'below' ? { label: `Loyer en dessous du marché (${analysis.vsMarketPct}%)`, color: BAI.caramel, icon: <TrendingDown style={{ width: 16, height: 16 }} /> }
+                : { label: 'Loyer dans la moyenne du marché', color: BAI.inkMid, icon: <Minus style={{ width: 16, height: 16 }} /> }
 
-              const encColor = analysis.encadrementStatus === 'compliant' ? BAI.tenant
-                : analysis.encadrementStatus === 'above_limit' ? BAI.error
-                : BAI.inkFaint
-              const encIcon = analysis.encadrementStatus === 'compliant' ? <CheckCircle2 style={{ width: 14, height: 14 }} />
-                : analysis.encadrementStatus === 'above_limit' ? <AlertTriangle style={{ width: 14, height: 14 }} />
-                : null
-
-              // Gauge: position of rentPerM2 within market range
-              const min = analysis.market?.minRentM2 ?? 0
-              const max = analysis.market?.maxRentM2 ?? 100
-              const gaugePos = max > min ? Math.min(100, Math.max(0, ((analysis.rentPerM2 - min) / (max - min)) * 100)) : 50
-              const avgPos = max > min ? Math.min(100, Math.max(0, ((analysis.market!.avgRentM2 - min) / (max - min)) * 100)) : 50
+              const encAlert = analysis?.encadrementStatus === 'above_limit'
 
               return (
-                <div key={property.id} style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: 24 }}>
-                  {/* Header */}
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
-                    <div>
-                      <p style={{ fontFamily: BAI.fontBody, fontSize: 15, fontWeight: 700, color: BAI.ink, margin: 0 }}>{property.title}</p>
-                      <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '3px 0 0' }}>{property.city} · {property.surface} m²</p>
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      {/* vs market badge */}
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 12px', borderRadius: 999, background: `${vsColor}15`, border: `1px solid ${vsColor}30`, fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: vsColor }}>
-                        {vsIcon}
-                        {analysis.vsMarket === 'above' ? `+${analysis.vsMarketPct}% vs marché` : analysis.vsMarket === 'below' ? `${analysis.vsMarketPct}% vs marché` : 'Dans la moyenne'}
-                      </span>
-                      {/* encadrement badge */}
-                      {analysis.encadrementStatus !== 'not_applicable' && analysis.encadrementStatus !== 'unknown' && (
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 12px', borderRadius: 999, background: `${encColor}15`, border: `1px solid ${encColor}30`, fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: encColor }}>
-                          {encIcon}
-                          {analysis.encadrementStatus === 'compliant' ? 'Encadrement ✓' : 'Encadrement dépassé'}
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                <div key={property.id} style={{ background: BAI.bgSurface, border: `1px solid ${encAlert ? BAI.error : BAI.border}`, borderRadius: 12, padding: 20 }}>
 
-                  {/* KPI row */}
-                  <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginBottom: 20 }}>
+                  {/* Top row: bien + verdict */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
                     <div>
-                      <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: 0 }}>Votre loyer /m²</p>
-                      <p style={{ fontFamily: BAI.fontDisplay, fontSize: 24, fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '2px 0 0' }}>{analysis.rentPerM2.toFixed(1)} €</p>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 700, color: BAI.ink, margin: 0 }}>{property.title}</p>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '2px 0 0' }}>{property.city} · {property.surface} m²</p>
                     </div>
-                    {analysis.market && (
-                      <>
-                        <div>
-                          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: 0 }}>Moyenne marché</p>
-                          <p style={{ fontFamily: BAI.fontDisplay, fontSize: 24, fontWeight: 700, fontStyle: 'italic', color: BAI.inkMid, margin: '2px 0 0' }}>{analysis.market.avgRentM2.toFixed(1)} €</p>
-                        </div>
-                        <div>
-                          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: 0 }}>Fourchette</p>
-                          <p style={{ fontFamily: BAI.fontDisplay, fontSize: 24, fontWeight: 700, fontStyle: 'italic', color: BAI.inkMid, margin: '2px 0 0' }}>{analysis.market.minRentM2} – {analysis.market.maxRentM2} €</p>
-                        </div>
-                        <div>
-                          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: 0 }}>Revenu annuel</p>
-                          <p style={{ fontFamily: BAI.fontDisplay, fontSize: 24, fontWeight: 700, fontStyle: 'italic', color: BAI.tenant, margin: '2px 0 0' }}>{formatEuro(analysis.annualRevenue)}</p>
-                        </div>
-                      </>
+                    {verdict && (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 999, background: `${verdict.color}12`, border: `1px solid ${verdict.color}30`, fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: verdict.color }}>
+                        {verdict.icon} {verdict.label}
+                      </span>
+                    )}
+                    {!analysis && (
+                      <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>
+                        {marketLoading ? 'Analyse en cours...' : '—'}
+                      </span>
                     )}
                   </div>
 
-                  {/* Visual gauge */}
-                  {analysis.market && (
-                    <div style={{ marginBottom: 20 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                        <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint }}>{analysis.market.minRentM2} €/m² (min)</span>
-                        <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint }}>{analysis.market.maxRentM2} €/m² (max)</span>
+                  {analysis && (
+                    <>
+                      {/* 3 chiffres essentiels */}
+                      <div style={{ display: 'flex', gap: 0, borderRadius: 10, overflow: 'hidden', border: `1px solid ${BAI.border}`, marginBottom: 14 }}>
+                        {[
+                          { label: 'Votre loyer', value: `${analysis.rentPerM2.toFixed(1)} €/m²`, highlight: true },
+                          { label: 'Moyenne marché', value: analysis.market ? `${analysis.market.avgRentM2.toFixed(1)} €/m²` : '—', highlight: false },
+                          { label: 'Fourchette', value: analysis.market ? `${analysis.market.minRentM2}–${analysis.market.maxRentM2} €/m²` : '—', highlight: false },
+                        ].map((item, i, arr) => (
+                          <div key={item.label} style={{ flex: 1, padding: '12px 16px', background: item.highlight ? `${BAI.owner}08` : BAI.bgSurface, borderRight: i < arr.length - 1 ? `1px solid ${BAI.border}` : 'none' }}>
+                            <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: '0 0 4px' }}>{item.label}</p>
+                            <p style={{ fontFamily: BAI.fontDisplay, fontSize: 20, fontWeight: 700, fontStyle: 'italic', color: item.highlight ? BAI.owner : BAI.ink, margin: 0 }}>{item.value}</p>
+                          </div>
+                        ))}
                       </div>
-                      <div style={{ position: 'relative', height: 10, background: `linear-gradient(to right, ${BAI.ownerLight ?? '#eaf0fb'}, ${BAI.owner})`, borderRadius: 999 }}>
-                        {/* Average marker */}
-                        <div style={{ position: 'absolute', left: `${avgPos}%`, top: -3, width: 2, height: 16, background: BAI.inkMid, borderRadius: 2, transform: 'translateX(-50%)' }} />
-                        {/* Your rent marker */}
-                        <div style={{ position: 'absolute', left: `${gaugePos}%`, top: -5, width: 20, height: 20, background: vsColor, borderRadius: '50%', transform: 'translateX(-50%)', border: '2px solid white', boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }} />
-                      </div>
-                      <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
-                        <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkMid, display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: vsColor, display: 'inline-block' }} /> Votre loyer
-                        </span>
-                        <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkMid, display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <span style={{ width: 8, height: 2, background: BAI.inkMid, display: 'inline-block' }} /> Moyenne marché
-                        </span>
-                      </div>
-                    </div>
-                  )}
 
-                  {/* Encadrement details */}
-                  {analysis.encadrementRef && (
-                    <div style={{ background: BAI.bgMuted, borderRadius: 8, padding: '10px 14px', marginBottom: 14 }}>
-                      <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.ink, margin: '0 0 4px' }}>Encadrement des loyers</p>
-                      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-                        <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid }}>Loyer de référence : <strong>{analysis.encadrementRef} €/m²</strong></span>
-                        {analysis.encadrementMaj && <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid }}>Majoré : <strong>{analysis.encadrementMaj} €/m²</strong></span>}
-                        {analysis.encadrementMin && <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid }}>Minoré : <strong>{analysis.encadrementMin} €/m²</strong></span>}
-                      </div>
-                    </div>
-                  )}
+                      {/* Encadrement alert ou info */}
+                      {analysis.encadrementStatus !== 'not_applicable' && analysis.encadrementStatus !== 'unknown' && (
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 14px', borderRadius: 8, background: encAlert ? BAI.errorLight : `${BAI.tenant}0a`, border: `1px solid ${encAlert ? '#fca5a5' : `${BAI.tenant}30`}`, marginBottom: 12 }}>
+                          {encAlert
+                            ? <AlertTriangle style={{ width: 15, height: 15, color: BAI.error, flexShrink: 0, marginTop: 1 }} />
+                            : <CheckCircle2 style={{ width: 15, height: 15, color: BAI.tenant, flexShrink: 0, marginTop: 1 }} />
+                          }
+                          <div>
+                            <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: encAlert ? BAI.error : BAI.tenant, margin: '0 0 2px' }}>
+                              {encAlert ? 'Loyer au-dessus du plafond légal' : 'Conforme à l\'encadrement des loyers'}
+                            </p>
+                            <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, margin: 0 }}>
+                              {analysis.encadrementInfo}
+                              {analysis.encadrementRef && ` · Réf. ${analysis.encadrementRef} €/m²`}
+                              {analysis.encadrementMaj && ` · Plafond majoré ${analysis.encadrementMaj} €/m²`}
+                            </p>
+                          </div>
+                        </div>
+                      )}
 
-                  {/* Advice cards */}
-                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    <div style={{ flex: 1, minWidth: 220, background: `${BAI.caramel}0d`, border: `1px solid ${BAI.caramel}30`, borderRadius: 8, padding: '10px 14px' }}>
-                      <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.caramel, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                        <BarChart3 style={{ width: 12, height: 12, display: 'inline', marginRight: 4 }} />
-                        Positionnement
+                      {/* Conseil en 1 ligne */}
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, margin: 0, lineHeight: 1.6 }}>
+                        <strong style={{ color: BAI.ink }}>Conseil · </strong>{analysis.advice}
                       </p>
-                      <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.ink, margin: 0, lineHeight: 1.5 }}>{analysis.advice}</p>
-                    </div>
-                    <div style={{ flex: 1, minWidth: 220, background: `${BAI.owner}0d`, border: `1px solid ${BAI.ownerBorder ?? '#b8ccf0'}`, borderRadius: 8, padding: '10px 14px' }}>
-                      <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.owner, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                        <Info style={{ width: 12, height: 12, display: 'inline', marginRight: 4 }} />
-                        Conseil fiscal
-                      </p>
-                      <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.ink, margin: 0, lineHeight: 1.5 }}>{analysis.fiscalAdvice}</p>
-                    </div>
-                  </div>
+                    </>
+                  )}
                 </div>
               )
             })}
