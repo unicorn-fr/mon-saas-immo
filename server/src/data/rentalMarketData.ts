@@ -11,7 +11,19 @@ export interface RentalMarketData {
   encadrementRef?: number    // loyer de référence €/m²
   encadrementMaj?: number    // majoré = ref * 1.2
   encadrementMin?: number    // minoré = ref * 0.8
-  source: 'paris_arrondissement' | 'city' | 'department' | 'region'
+  source: 'paris_arrondissement' | 'city' | 'department' | 'region' | 'api_live'
+  label: string
+}
+
+export interface EncadrementResult {
+  avgRentM2: number
+  minRentM2: number
+  maxRentM2: number
+  encadrement: true
+  encadrementRef: number
+  encadrementMaj: number
+  encadrementMin: number
+  source: string
   label: string
 }
 
@@ -265,6 +277,329 @@ export const DEPARTMENTS: Record<string, RentalMarketData> = {
   '2B':  { avgRentM2: 12, minRentM2: 9,  maxRentM2: 16, encadrement: false, source: 'department', label: 'Haute-Corse' },
 }
 
+// ── Module-level API caches (24h TTL) ───────────────────────────────
+
+interface ApiCache<T> {
+  data: T
+  ts: number
+}
+
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000 // 24h
+
+// Lyon WFS GeoJSON cache
+interface LyonFeatureProperties {
+  valeurs: Record<string, Record<string, Record<string, { loyer_reference: number; loyer_reference_majore: number; loyer_reference_minore: number }>>>
+}
+interface LyonFeature {
+  properties: LyonFeatureProperties
+}
+interface LyonGeoJSON {
+  features: LyonFeature[]
+}
+
+let lyonCache: ApiCache<LyonGeoJSON> | null = null
+
+// Lille cache
+interface EncadrementRow {
+  zone?: string
+  nombre_de_piece: number | string
+  annee_de_construction?: string
+  prix_med: string | number
+  prix_max: string | number
+  prix_min: string | number
+  meuble: boolean | string | number
+}
+
+let lilleCache: ApiCache<EncadrementRow[]> | null = null
+
+// Montpellier cache
+let montpellierCache: ApiCache<EncadrementRow[]> | null = null
+
+// ── Helper ───────────────────────────────────────────────────────────
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100
+}
+
+function parseFloat2(v: string | number): number {
+  if (typeof v === 'number') return v
+  return parseFloat(v.replace(',', '.')) || 0
+}
+
+function isCacheValid<T>(cache: ApiCache<T> | null): cache is ApiCache<T> {
+  return cache !== null && Date.now() - cache.ts < CACHE_TTL_MS
+}
+
+// ── Paris live API ───────────────────────────────────────────────────
+
+interface ParisRecord {
+  ref: number
+  max: number
+  min: number
+  nom_quartier: string
+}
+
+interface ParisApiResponse {
+  results: ParisRecord[]
+}
+
+async function fetchParisEncadrement(
+  rooms: number,
+  furnished: boolean,
+  address?: string
+): Promise<EncadrementResult | null> {
+  const roomsCapped = Math.min(rooms, 4)
+  const meubleTxt = furnished ? 'meublé' : 'non meublé'
+  const where = `piece=${roomsCapped} AND meuble_txt="${meubleTxt}"`
+  const url =
+    `https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/logement-encadrement-des-loyers/records` +
+    `?where=${encodeURIComponent(where)}&limit=50&order_by=nom_quartier`
+
+  const resp = await fetch(url, { signal: AbortSignal.timeout(5000) })
+  if (!resp.ok) return null
+
+  const json = await resp.json() as ParisApiResponse
+  const results = json.results ?? []
+  if (results.length === 0) return null
+
+  // Try to match a neighborhood from the address
+  let matched: ParisRecord[] = results
+  if (address) {
+    const addrLow = address.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    const byQuartier = results.filter(r =>
+      r.nom_quartier &&
+      addrLow.includes(r.nom_quartier.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''))
+    )
+    if (byQuartier.length > 0) matched = byQuartier
+  }
+
+  const avgRef = round2(matched.reduce((s, r) => s + (r.ref ?? 0), 0) / matched.length)
+  const avgMax = round2(matched.reduce((s, r) => s + (r.max ?? 0), 0) / matched.length)
+  const avgMin = round2(matched.reduce((s, r) => s + (r.min ?? 0), 0) / matched.length)
+
+  return {
+    avgRentM2: avgRef,
+    minRentM2: avgMin,
+    maxRentM2: avgMax,
+    encadrement: true,
+    encadrementRef: avgRef,
+    encadrementMaj: avgMax,
+    encadrementMin: avgMin,
+    source: 'Opendata Paris — loyers de référence 2024 (live)',
+    label: 'Paris',
+  }
+}
+
+// ── Lyon live WFS API ────────────────────────────────────────────────
+
+async function fetchLyonGeoJSON(): Promise<LyonGeoJSON | null> {
+  if (isCacheValid(lyonCache)) return lyonCache.data
+
+  const url =
+    'https://data.grandlyon.com/geoserver/metropole-de-lyon/ows' +
+    '?SERVICE=WFS&VERSION=2.0.0&request=GetFeature' +
+    '&typename=metropole-de-lyon:car_care.carencadrmtloyer_2025_2026' +
+    '&outputFormat=application/json&SRSNAME=EPSG:4326&count=500'
+
+  const resp = await fetch(url, { signal: AbortSignal.timeout(5000) })
+  if (!resp.ok) return null
+
+  const data = await resp.json() as LyonGeoJSON
+  lyonCache = { data, ts: Date.now() }
+  return data
+}
+
+async function fetchLyonEncadrement(
+  rooms: number,
+  furnished: boolean
+): Promise<EncadrementResult | null> {
+  const geojson = await fetchLyonGeoJSON()
+  if (!geojson || !geojson.features || geojson.features.length === 0) return null
+
+  const roomKey = rooms >= 4 ? '4 et plus' : String(rooms)
+  const epoqueKey = '1971-1990' // default epoch
+  const meubleKey = furnished ? 'meuble' : 'non meuble'
+
+  const refs: number[] = []
+  const majs: number[] = []
+  const mins: number[] = []
+
+  for (const feature of geojson.features) {
+    const valeurs = feature.properties?.valeurs
+    if (!valeurs) continue
+    const byPiece = valeurs[roomKey]
+    if (!byPiece) continue
+    // Try the default epoch, fall back to first available
+    const byEpoque = byPiece[epoqueKey] ?? Object.values(byPiece)[0]
+    if (!byEpoque) continue
+    const entry = byEpoque[meubleKey]
+    if (!entry) continue
+    if (typeof entry.loyer_reference === 'number') refs.push(entry.loyer_reference)
+    if (typeof entry.loyer_reference_majore === 'number') majs.push(entry.loyer_reference_majore)
+    if (typeof entry.loyer_reference_minore === 'number') mins.push(entry.loyer_reference_minore)
+  }
+
+  if (refs.length === 0) return null
+
+  const avgRef = round2(refs.reduce((s, v) => s + v, 0) / refs.length)
+  const avgMaj = round2(majs.reduce((s, v) => s + v, 0) / (majs.length || 1))
+  const avgMin = round2(mins.reduce((s, v) => s + v, 0) / (mins.length || 1))
+
+  return {
+    avgRentM2: avgRef,
+    minRentM2: avgMin,
+    maxRentM2: avgMaj,
+    encadrement: true,
+    encadrementRef: avgRef,
+    encadrementMaj: avgMaj,
+    encadrementMin: avgMin,
+    source: 'Métropole de Lyon — WFS 2025-2026 (live)',
+    label: 'Lyon',
+  }
+}
+
+// ── Lille static JSON ────────────────────────────────────────────────
+
+async function fetchLilleData(): Promise<EncadrementRow[] | null> {
+  if (isCacheValid(lilleCache)) return lilleCache.data
+
+  const url =
+    'https://static.data.gouv.fr/resources/encadrement-des-loyers-de-lille/20230708-130636/encadrements-lille-2023.json'
+  const resp = await fetch(url, { signal: AbortSignal.timeout(5000) })
+  if (!resp.ok) return null
+
+  const data = await resp.json() as EncadrementRow[]
+  lilleCache = { data, ts: Date.now() }
+  return data
+}
+
+async function fetchLilleEncadrement(
+  rooms: number,
+  furnished: boolean
+): Promise<EncadrementResult | null> {
+  const data = await fetchLilleData()
+  if (!data) return null
+
+  const roomsCapped = Math.min(rooms, 4)
+  const filtered = data.filter(row => {
+    const pieces = typeof row.nombre_de_piece === 'string'
+      ? parseInt(row.nombre_de_piece)
+      : row.nombre_de_piece
+    const meubleMatch = furnished
+      ? row.meuble === true || row.meuble === 1 || row.meuble === 'true' || row.meuble === '1' || row.meuble === 'meublé'
+      : row.meuble === false || row.meuble === 0 || row.meuble === 'false' || row.meuble === '0' || row.meuble === 'non meublé'
+    return pieces === roomsCapped && meubleMatch
+  })
+
+  if (filtered.length === 0) return null
+
+  const avgMed = round2(filtered.reduce((s, r) => s + parseFloat2(r.prix_med), 0) / filtered.length)
+  const avgMax = round2(filtered.reduce((s, r) => s + parseFloat2(r.prix_max), 0) / filtered.length)
+  const avgMin = round2(filtered.reduce((s, r) => s + parseFloat2(r.prix_min), 0) / filtered.length)
+
+  return {
+    avgRentM2: avgMed,
+    minRentM2: avgMin,
+    maxRentM2: avgMax,
+    encadrement: true,
+    encadrementRef: avgMed,
+    encadrementMaj: avgMax,
+    encadrementMin: avgMin,
+    source: 'data.gouv.fr — encadrement Lille 2023',
+    label: 'Lille',
+  }
+}
+
+// ── Montpellier static JSON ──────────────────────────────────────────
+
+async function fetchMontpellierData(): Promise<EncadrementRow[] | null> {
+  if (isCacheValid(montpellierCache)) return montpellierCache.data
+
+  const url =
+    'https://static.data.gouv.fr/resources/encadrement-des-loyers-de-montpellier/20230708-141424/encadrements-montpellier-2023.json'
+  const resp = await fetch(url, { signal: AbortSignal.timeout(5000) })
+  if (!resp.ok) return null
+
+  const data = await resp.json() as EncadrementRow[]
+  montpellierCache = { data, ts: Date.now() }
+  return data
+}
+
+async function fetchMontpellierEncadrement(
+  rooms: number,
+  furnished: boolean
+): Promise<EncadrementResult | null> {
+  const data = await fetchMontpellierData()
+  if (!data) return null
+
+  const roomsCapped = Math.min(rooms, 4)
+  const filtered = data.filter(row => {
+    const pieces = typeof row.nombre_de_piece === 'string'
+      ? parseInt(row.nombre_de_piece)
+      : row.nombre_de_piece
+    const meubleMatch = furnished
+      ? row.meuble === true || row.meuble === 1 || row.meuble === 'true' || row.meuble === '1' || row.meuble === 'meublé'
+      : row.meuble === false || row.meuble === 0 || row.meuble === 'false' || row.meuble === '0' || row.meuble === 'non meublé'
+    return pieces === roomsCapped && meubleMatch
+  })
+
+  if (filtered.length === 0) return null
+
+  const avgMed = round2(filtered.reduce((s, r) => s + parseFloat2(r.prix_med), 0) / filtered.length)
+  const avgMax = round2(filtered.reduce((s, r) => s + parseFloat2(r.prix_max), 0) / filtered.length)
+  const avgMin = round2(filtered.reduce((s, r) => s + parseFloat2(r.prix_min), 0) / filtered.length)
+
+  return {
+    avgRentM2: avgMed,
+    minRentM2: avgMin,
+    maxRentM2: avgMax,
+    encadrement: true,
+    encadrementRef: avgMed,
+    encadrementMaj: avgMax,
+    encadrementMin: avgMin,
+    source: 'data.gouv.fr — encadrement Montpellier 2023',
+    label: 'Montpellier',
+  }
+}
+
+// ── Public encadrement lookup ────────────────────────────────────────
+
+/**
+ * Returns live encadrement data from government APIs.
+ * Returns null if city is not in an encadrement zone or if all APIs fail.
+ */
+export async function findEncadrementData(
+  city: string,
+  rooms: number,
+  furnished: boolean,
+  address?: string
+): Promise<EncadrementResult | null> {
+  const cityNorm = city.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .trim()
+
+  try {
+    if (cityNorm === 'paris' || cityNorm.startsWith('paris ')) {
+      return await fetchParisEncadrement(rooms, furnished, address)
+    }
+    if (cityNorm === 'lyon' || cityNorm === 'villeurbanne') {
+      return await fetchLyonEncadrement(rooms, furnished)
+    }
+    if (cityNorm === 'lille') {
+      return await fetchLilleEncadrement(rooms, furnished)
+    }
+    if (cityNorm === 'montpellier') {
+      return await fetchMontpellierEncadrement(rooms, furnished)
+    }
+  } catch {
+    // API failure — caller will fall back to static data
+    return null
+  }
+
+  // Not an encadrement city handled by live APIs
+  return null
+}
+
 // ── Smart lookup function ────────────────────────────────────────────
 
 function normalize(s: string): string {
@@ -296,15 +631,39 @@ interface GeoApiResponse {
   codeDepartement?: string
 }
 
-// Lookup with cascade: Paris arrondissement → exact city → slug variants → geo API → postal code → null
+// Lookup with cascade: live encadrement API → Paris arrondissement → exact city → slug variants → geo API → postal code → null
 export async function findRentalMarketData(
   city: string,
   address?: string | null,
-  postalCode?: string | null
+  postalCode?: string | null,
+  rooms?: number,
+  furnished?: boolean
 ): Promise<RentalMarketData | null> {
   const combined = `${address ?? ''} ${city} ${postalCode ?? ''}`.trim()
 
-  // 1. Paris arrondissement detection
+  // 1. Live encadrement API — only when rooms + furnished are provided
+  if (rooms !== undefined && furnished !== undefined) {
+    try {
+      const encadrement = await findEncadrementData(city, rooms, furnished, address ?? undefined)
+      if (encadrement) {
+        return {
+          avgRentM2: encadrement.avgRentM2,
+          minRentM2: encadrement.minRentM2,
+          maxRentM2: encadrement.maxRentM2,
+          encadrement: true,
+          encadrementRef: encadrement.encadrementRef,
+          encadrementMaj: encadrement.encadrementMaj,
+          encadrementMin: encadrement.encadrementMin,
+          source: 'api_live',
+          label: encadrement.label,
+        }
+      }
+    } catch {
+      // Fall through to static data
+    }
+  }
+
+  // 2. Paris arrondissement detection
   if (/paris/i.test(city) || /^75\d{3}$/.test(postalCode ?? '')) {
     const arr = parsePariArrondissement(combined) ?? parsePariArrondissement(postalCode ?? '')
     if (arr) return PARIS_ARRONDISSEMENTS[arr]
@@ -312,11 +671,11 @@ export async function findRentalMarketData(
     return DEPARTMENTS['75']
   }
 
-  // 2. Exact city match (normalized)
+  // 3. Exact city match (normalized)
   const cityKey = normalize(city)
   if (CITIES[cityKey]) return CITIES[cityKey]
 
-  // 3. Try slug variants (spaces↔hyphens)
+  // 4. Try slug variants (spaces↔hyphens)
   const slugVariants = [
     cityKey.replace(/\s+/g, '-'),
     cityKey.replace(/-/g, ' '),
@@ -325,7 +684,7 @@ export async function findRentalMarketData(
     if (CITIES[v]) return CITIES[v]
   }
 
-  // 4. Call geo.api.gouv.fr to resolve department code
+  // 5. Call geo.api.gouv.fr to resolve department code
   try {
     const url = `https://geo.api.gouv.fr/communes?nom=${encodeURIComponent(city)}&fields=codeDepartement&boost=population&limit=1`
     const resp = await fetch(url, { signal: AbortSignal.timeout(5000) })
@@ -338,7 +697,7 @@ export async function findRentalMarketData(
     }
   } catch { /* ignore timeout / network errors */ }
 
-  // 5. Fallback: derive department from postal code
+  // 6. Fallback: derive department from postal code
   if (postalCode && postalCode.length >= 2) {
     const deptCode = postalCode.startsWith('20')
       ? (parseInt(postalCode) < 20200 ? '2A' : '2B')
