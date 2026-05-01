@@ -57,6 +57,7 @@ export default function TenantDashboard() {
   const { contracts, fetchContracts, fetchStatistics: fetchContractStatistics } = useContractStore()
   const [applications, setApplications] = useState<Application[]>([])
   const [dossierPercent, setDossierPercent] = useState(0)
+  const [dossierCoveredCats, setDossierCoveredCats] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     fetchBookings()
@@ -67,6 +68,7 @@ export default function TenantDashboard() {
     applicationService.list().then(setApplications).catch(() => {})
     dossierService.getDocuments().then((docs) => {
       setDossierPercent(computeDossierPercent(docs))
+      setDossierCoveredCats(new Set(docs.map((d) => d.category)))
     }).catch(() => {})
   }, [fetchBookings, loadFavorites, fetchUnreadCount, fetchContracts, fetchContractStatistics])
 
@@ -883,82 +885,133 @@ export default function TenantDashboard() {
                   </div>
 
                   <div style={{ padding: 20 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 20, flexWrap: 'wrap' }}>
-                      {/* SVG ring */}
-                      <div style={{ position: 'relative', width: 120, height: 120, flexShrink: 0 }}>
-                        <svg width="120" height="120" viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)' }}>
-                          <circle cx="60" cy="60" r={RING_R} strokeWidth="8" fill="none" stroke={BAI.bgMuted} />
-                          <circle cx="60" cy="60" r={RING_R} strokeWidth="8" fill="none"
-                            style={{
-                              stroke: dossierColor,
-                              strokeDasharray: CIRCUMFERENCE,
-                              strokeDashoffset: ringOffset,
-                              strokeLinecap: 'round',
-                              transition: 'stroke-dashoffset 0.8s cubic-bezier(0.16,1,0.3,1)',
-                            }}
-                          />
-                        </svg>
+                    {dossierPercent >= 100 ? (
+                      <>
+                        {/* Success header */}
                         <div style={{
-                          position: 'absolute', inset: 0,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18,
+                          padding: '12px 14px', borderRadius: 10,
+                          background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`,
                         }}>
-                          <span style={{
-                            fontFamily: "'Cormorant Garamond', Georgia, serif",
-                            fontSize: 32, fontWeight: 700, color: BAI.ink, lineHeight: 1,
-                          }}>
-                            {dossierPercent}%
-                          </span>
+                          <CheckCircle size={16} style={{ color: BAI.tenant, flexShrink: 0 }} />
+                          <div>
+                            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: BAI.tenant }}>
+                              Dossier complet
+                            </p>
+                            <p style={{ margin: 0, fontSize: 11, color: BAI.inkFaint, marginTop: 1 }}>
+                              Toutes les catégories sont renseignées — vous pouvez postuler partout.
+                            </p>
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Right: status + pills */}
-                      <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: 15, fontWeight: 600, color: BAI.ink, marginBottom: 4 }}>
-                          {dossierPercent === 100
-                            ? 'Dossier complet — prêt à candidater !'
-                            : dossierPercent >= 50
-                              ? 'Dossier en bonne voie, continuez !'
-                              : 'Complétez votre dossier pour postuler'}
-                        </p>
-                        <p style={{ fontSize: 12, color: BAI.inkFaint, marginBottom: 16 }}>
-                          {coveredCount} / {REQUIRED_CATEGORIES.length} catégories complètes
-                        </p>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
-                          {([
-                            { id: 'IDENTITE', label: 'Identité',  Icon: CreditCard },
-                            { id: 'EMPLOI',   label: 'Emploi',    Icon: Briefcase },
-                            { id: 'REVENUS',  label: 'Revenus',   Icon: Banknote },
-                            { id: 'DOMICILE', label: 'Domicile',  Icon: Home },
-                          ] as const).map(({ id, label, Icon }, i) => {
-                            const done = i < coveredCount
-                            return (
-                              <Link key={id} to="/dossier" style={{
-                                display: 'flex', alignItems: 'center', gap: 6,
-                                padding: '7px 12px', borderRadius: 8, fontSize: 12, fontWeight: 500,
-                                textDecoration: 'none',
-                                background: done ? BAI.tenantLight : BAI.bgMuted,
-                                border: `1px solid ${done ? BAI.tenantBorder : BAI.borderStrong}`,
-                                color: done ? BAI.tenant : BAI.inkFaint,
+                        {/* Stats row */}
+                        <div className="grid grid-cols-3" style={{ gap: 8, marginBottom: 14 }}>
+                          {[
+                            { label: 'En cours', value: pendingApps.length, color: BAI.caramel, bg: '#fdf5ec', border: '#f3c99a' },
+                            { label: 'Approuvées', value: approvedApps.length, color: BAI.tenant, bg: BAI.tenantLight, border: BAI.tenantBorder },
+                            { label: 'Visites', value: upcomingBookings.length, color: BAI.inkMid, bg: BAI.bgMuted, border: BAI.border },
+                          ].map(({ label, value, color, bg, border }) => (
+                            <div key={label} style={{
+                              textAlign: 'center', padding: '10px 6px', borderRadius: 9,
+                              background: bg, border: `1px solid ${border}`,
+                            }}>
+                              <p style={{
+                                margin: '0 0 2px', fontSize: 22, fontWeight: 700,
+                                fontFamily: BAI.fontDisplay, color,
                               }}>
-                                <Icon size={13} style={{ flexShrink: 0 }} />
-                                <span style={{ flex: 1 }}>{label}</span>
-                                {done && <CheckCircle size={13} style={{ flexShrink: 0 }} />}
-                              </Link>
-                            )
-                          })}
+                                {value}
+                              </p>
+                              <p style={{ margin: 0, fontSize: 10, fontWeight: 600, color: BAI.inkFaint, letterSpacing: '0.06em' }}>
+                                {label}
+                              </p>
+                            </div>
+                          ))}
                         </div>
-                      </div>
-                    </div>
 
-                    {dossierPercent < 100 && (
-                      <Link to="/dossier" style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                        padding: '11px', borderRadius: 10,
-                        background: BAI.tenant, color: '#ffffff',
-                        fontSize: 13, fontWeight: 600, textDecoration: 'none',
-                      }}>
-                        <FolderOpen size={15} /> Compléter mon dossier
-                      </Link>
+                        {/* CTA to search */}
+                        <Link to="/search" style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                          padding: '11px', borderRadius: 10,
+                          background: BAI.night, color: '#ffffff',
+                          fontSize: 13, fontWeight: 600, textDecoration: 'none',
+                        }}>
+                          Rechercher un bien →
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 20, flexWrap: 'wrap' }}>
+                          {/* SVG ring */}
+                          <div style={{ position: 'relative', width: 120, height: 120, flexShrink: 0 }}>
+                            <svg width="120" height="120" viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)' }}>
+                              <circle cx="60" cy="60" r={RING_R} strokeWidth="8" fill="none" stroke={BAI.bgMuted} />
+                              <circle cx="60" cy="60" r={RING_R} strokeWidth="8" fill="none"
+                                style={{
+                                  stroke: dossierColor,
+                                  strokeDasharray: CIRCUMFERENCE,
+                                  strokeDashoffset: ringOffset,
+                                  strokeLinecap: 'round',
+                                  transition: 'stroke-dashoffset 0.8s cubic-bezier(0.16,1,0.3,1)',
+                                }}
+                              />
+                            </svg>
+                            <div style={{
+                              position: 'absolute', inset: 0,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            }}>
+                              <span style={{
+                                fontFamily: "'Cormorant Garamond', Georgia, serif",
+                                fontSize: 32, fontWeight: 700, color: BAI.ink, lineHeight: 1,
+                              }}>
+                                {dossierPercent}%
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Right: status + pills */}
+                          <div style={{ flex: 1 }}>
+                            <p style={{ fontSize: 15, fontWeight: 600, color: BAI.ink, marginBottom: 4 }}>
+                              {dossierPercent >= 50 ? 'Dossier en bonne voie, continuez !' : 'Complétez votre dossier pour postuler'}
+                            </p>
+                            <p style={{ fontSize: 12, color: BAI.inkFaint, marginBottom: 16 }}>
+                              {coveredCount} / {REQUIRED_CATEGORIES.length} catégories complètes
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 8 }}>
+                              {([
+                                { id: 'IDENTITE', label: 'Identité',  Icon: CreditCard },
+                                { id: 'EMPLOI',   label: 'Emploi',    Icon: Briefcase },
+                                { id: 'REVENUS',  label: 'Revenus',   Icon: Banknote },
+                                { id: 'DOMICILE', label: 'Domicile',  Icon: Home },
+                              ] as const).map(({ id, label, Icon }) => {
+                                const done = dossierCoveredCats.has(id)
+                                return (
+                                  <Link key={id} to="/dossier" style={{
+                                    display: 'flex', alignItems: 'center', gap: 6,
+                                    padding: '7px 12px', borderRadius: 8, fontSize: 12, fontWeight: 500,
+                                    textDecoration: 'none',
+                                    background: done ? BAI.tenantLight : BAI.bgMuted,
+                                    border: `1px solid ${done ? BAI.tenantBorder : BAI.borderStrong}`,
+                                    color: done ? BAI.tenant : BAI.inkFaint,
+                                  }}>
+                                    <Icon size={13} style={{ flexShrink: 0 }} />
+                                    <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+                                    {done && <CheckCircle size={13} style={{ flexShrink: 0 }} />}
+                                  </Link>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        </div>
+
+                        <Link to="/dossier" style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                          padding: '11px', borderRadius: 10,
+                          background: BAI.tenant, color: '#ffffff',
+                          fontSize: 13, fontWeight: 600, textDecoration: 'none',
+                        }}>
+                          <FolderOpen size={15} /> Compléter mon dossier
+                        </Link>
+                      </>
                     )}
                   </div>
                 </div>

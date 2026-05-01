@@ -36,7 +36,7 @@ const SERVER_BASE =
   (import.meta.env.VITE_API_URL as string | undefined)?.replace('/api/v1', '') ?? 'http://localhost:5000'
 
 function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw: (id: string) => void; onReapply: (updated: Application) => void }) {
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(app.status === 'REJECTED')
   const [withdrawing, setWithdrawing] = useState(false)
   const [reapplying, setReapplying] = useState(false)
   const [showBooking, setShowBooking] = useState(false)
@@ -283,7 +283,7 @@ function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw:
                   Retirer
                 </button>
               )}
-              {!isRejected && !isWithdrawn && (
+              {!isWithdrawn && (
                 <button
                   onClick={(e) => { e.preventDefault(); setExpanded(!expanded) }}
                   className="inline-flex items-center gap-1.5 transition-colors"
@@ -366,7 +366,7 @@ function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw:
 
       {/* Expandable details (non-rejected, non-withdrawn) */}
       <AnimatePresence>
-        {expanded && !isRejected && !isWithdrawn && (
+        {expanded && !isWithdrawn && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
