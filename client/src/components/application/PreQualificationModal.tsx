@@ -234,7 +234,7 @@ export function PreQualificationModal({
         key="overlay"
         variants={OVERLAY}
         initial="hidden" animate="visible" exit="exit"
-        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/50"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
         onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
       >
         <motion.div
@@ -242,8 +242,8 @@ export function PreQualificationModal({
           variants={PANEL}
           initial="hidden" animate="visible" exit="exit"
           transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-          className="relative w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col"
-          style={{ background: '#ffffff', maxHeight: '92dvh' }}
+          className="relative w-full max-w-lg rounded-2xl shadow-2xl flex flex-col"
+          style={{ background: '#ffffff', maxHeight: 'calc(100dvh - 32px)' }}
         >
           {/* Header — flex-shrink-0 so it never gets squeezed */}
           <div className="flex-shrink-0 flex items-start justify-between p-5 border-b" style={{ borderColor: '#e4e1db', background: '#ffffff' }}>
