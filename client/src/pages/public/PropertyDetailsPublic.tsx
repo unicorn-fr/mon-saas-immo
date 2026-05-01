@@ -93,7 +93,7 @@ export default function PropertyDetailsPublic() {
     if (!isAuthenticated || !id || user?.role !== 'TENANT') return
     Promise.all([
       applicationService.list(id).then((apps) => {
-        const mine = apps.find((a) => a.tenantId === user?.id)
+        const mine = apps.find((a) => a.tenantId === user?.id && a.propertyId === id)
         setMyApplication(mine ?? null)
       }).catch(() => setMyApplication(null)),
       dossierService.getDocuments().then((docs) => {

@@ -264,6 +264,7 @@ class ApplicationService {
       if (propertyId) where.propertyId = propertyId
     } else {
       where.tenantId = userId
+      if (propertyId) where.propertyId = propertyId
     }
 
     return prisma.application.findMany({
