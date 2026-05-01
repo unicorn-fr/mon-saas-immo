@@ -2,6 +2,10 @@ import { Request, Response, NextFunction } from 'express'
 import { propertyService } from '../services/property.service.js'
 import { PropertyType, PropertyStatus } from '@prisma/client'
 import { saveFile } from '../utils/upload.util.js'
+import Anthropic from '@anthropic-ai/sdk'
+import { env } from '../config/env.js'
+
+const anthropic = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY })
 
 class PropertyController {
   /**
@@ -728,113 +732,152 @@ class PropertyController {
         return res.status(400).json({ success: false, message: 'Query is required' })
       }
 
-      const q = query.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      // ── LLM parsing (primary) ──────────────────────────────────────────────
+      if (env.ANTHROPIC_API_KEY) {
+        try {
+          const msg = await anthropic.messages.create({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 512,
+            system: `Tu es un assistant qui extrait des critères de recherche immobilière à partir d'une requête en langage naturel français.
+Retourne UNIQUEMENT un JSON valide, sans markdown, sans explication. Format exact :
+{
+  "filters": {
+    "city": string | null,
+    "type": "APARTMENT"|"HOUSE"|"STUDIO"|"LOFT"|"DUPLEX"|null,
+    "minPrice": number | null,
+    "maxPrice": number | null,
+    "minSurface": number | null,
+    "maxSurface": number | null,
+    "bedrooms": number | null,
+    "furnished": boolean | null,
+    "hasParking": boolean | null,
+    "hasBalcony": boolean | null,
+    "hasElevator": boolean | null,
+    "hasGarden": boolean | null
+  },
+  "chips": [{"label": string, "value": string}]
+}
 
+Règles importantes :
+- T1/F1 = type APARTMENT, bedrooms 0 (studio équivalent)
+- T2/F2 = type APARTMENT, bedrooms 1
+- T3/F3 = type APARTMENT, bedrooms 2
+- T4/F4 = type APARTMENT, bedrooms 3
+- T5+/F5+ = type APARTMENT, bedrooms 4+
+- "studio" = type STUDIO, bedrooms 0
+- "maison", "villa", "pavillon" = type HOUSE
+- "loft" = type LOFT
+- "duplex" = type DUPLEX
+- La ville peut apparaître sans préposition (ex: "T2 Lyon" → city: "Lyon")
+- Un prix seul sans contexte = maxPrice (ex: "800€" → maxPrice 800)
+- "< 800€", "moins de 800", "pas plus de 800" → maxPrice
+- "> 800€", "au moins 800", "à partir de 800" → minPrice
+- Surface en m² : "50m²", "plus de 40m²", "30 à 60m²"
+- "meublé" → furnished true, "vide"/"non meublé" → furnished false
+- "avec parking"/"garage" → hasParking true
+- "avec balcon" → hasBalcony true
+- "avec ascenseur" → hasElevator true
+- "avec jardin"/"terrasse" → hasGarden true
+- Ignore les mots vides : "cherche", "je veux", "trouver", "logement", "bien", "annonce"
+- Les chips sont des labels humains pour afficher les filtres actifs dans l'UI
+- Ne mets dans les chips QUE les filtres extraits (pas les null)
+- city dans les chips avec la première lettre en majuscule
+- Si aucun critère clair n'est détecté, retourne filters tous null et chips vide`,
+            messages: [{ role: 'user', content: query }],
+          })
+
+          const raw = (msg.content[0] as { type: string; text: string }).text.trim()
+          const parsed = JSON.parse(raw) as {
+            filters: Record<string, unknown>
+            chips: { label: string; value: string }[]
+          }
+
+          // Sanitize: remove null values from filters
+          const filters: Record<string, unknown> = {}
+          for (const [k, v] of Object.entries(parsed.filters)) {
+            if (v !== null && v !== undefined) filters[k] = v
+          }
+
+          return res.status(200).json({
+            success: true,
+            data: { filters, chips: parsed.chips ?? [], originalQuery: query },
+          })
+        } catch (llmError) {
+          // LLM failed → fall through to regex fallback
+          console.error('[parseNaturalQuery] LLM error, falling back to regex:', llmError)
+        }
+      }
+
+      // ── Regex fallback ─────────────────────────────────────────────────────
+      const q = query.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
       const filters: Record<string, unknown> = {}
       const chips: { label: string; value: string }[] = []
 
+      // T/F notation (T2, F3, etc.)
+      const tnMatch = q.match(/\b[tf](\d)\b/)
+      if (tnMatch) {
+        const n = parseInt(tnMatch[1])
+        filters.type = n === 1 ? 'STUDIO' : 'APARTMENT'
+        filters.bedrooms = Math.max(0, n - 1)
+        chips.push({ label: 'Type', value: `T${n}` })
+        if (n > 1) chips.push({ label: 'Chambres', value: String(n - 1) })
+      }
+
       // Price
-      const maxPriceMatch = q.match(/(?:moins de|max|maximum|pas plus de|inferieur a|jusqu.a|jusqu a)\s*(\d[\d\s]*)\s*(?:euros?|€|eur)/i)
+      const maxPriceMatch = q.match(/(?:moins de|max(?:imum)?|pas plus de|inf[eé]rieur [aà]|jusqu[' ]?[aà]|<)\s*(\d[\d\s]*)\s*(?:euros?|€|eur)?/i)
+        || q.match(/(\d[\d\s]+)\s*(?:euros?|€|eur)\s*(?:max(?:imum)?|au plus|maxi)/)
       if (maxPriceMatch) {
         filters.maxPrice = parseInt(maxPriceMatch[1].replace(/\s/g, ''))
         chips.push({ label: 'Prix max', value: `${filters.maxPrice}€` })
       }
-      const minPriceMatch = q.match(/(?:plus de|min|minimum|au moins|superieur a|a partir de|depuis)\s*(\d[\d\s]*)\s*(?:euros?|€|eur)/i)
+      const minPriceMatch = q.match(/(?:plus de|min(?:imum)?|au moins|sup[eé]rieur [aà]|[aà] partir de|>)\s*(\d[\d\s]*)\s*(?:euros?|€|eur)?/i)
       if (minPriceMatch) {
         filters.minPrice = parseInt(minPriceMatch[1].replace(/\s/g, ''))
         chips.push({ label: 'Prix min', value: `${filters.minPrice}€` })
       }
 
       // Surface
-      const minSurfaceMatch = q.match(/(?:plus de|au moins|minimum|min|superieur a)\s*(\d+)\s*(?:m2|m²|metres? carres?|m\s*carre)/i)
-        || q.match(/(\d+)\s*(?:m2|m²|metres? carres?|m\s*carre)\s*(?:minimum|min|au moins|ou plus)/i)
-      if (minSurfaceMatch) {
-        filters.minSurface = parseInt(minSurfaceMatch[1])
-        chips.push({ label: 'Surface min', value: `${filters.minSurface}m²` })
-      }
-      const maxSurfaceMatch = q.match(/(?:moins de|maximum|max|pas plus de)\s*(\d+)\s*(?:m2|m²|metres? carres?|m\s*carre)/i)
-        || q.match(/(\d+)\s*(?:m2|m²|metres? carres?|m\s*carre)\s*(?:maximum|max|au plus)/i)
-      if (maxSurfaceMatch) {
-        filters.maxSurface = parseInt(maxSurfaceMatch[1])
-        chips.push({ label: 'Surface max', value: `${filters.maxSurface}m²` })
+      const minSurfMatch = q.match(/(?:plus de|au moins|min(?:imum)?|sup[eé]rieur [aà])\s*(\d+)\s*m/)
+        || q.match(/(\d+)\s*m[2²]\s*(?:min(?:imum)?|au moins|ou plus)/)
+      if (minSurfMatch) { filters.minSurface = parseInt(minSurfMatch[1]); chips.push({ label: 'Surface min', value: `${filters.minSurface}m²` }) }
+      const maxSurfMatch = q.match(/(?:moins de|max(?:imum)?|pas plus de)\s*(\d+)\s*m/)
+        || q.match(/(\d+)\s*m[2²]\s*(?:max(?:imum)?|au plus)/)
+      if (maxSurfMatch) { filters.maxSurface = parseInt(maxSurfMatch[1]); chips.push({ label: 'Surface max', value: `${filters.maxSurface}m²` }) }
+
+      // Bedrooms (if not already set by T/F)
+      if (!filters.bedrooms) {
+        const bedMatch = q.match(/(\d+)\s*(?:chambres?|pi[eè]ces?)\b/)
+        if (bedMatch) { filters.bedrooms = parseInt(bedMatch[1]); chips.push({ label: 'Chambres', value: bedMatch[1] }) }
       }
 
-      // Bedrooms
-      const bedroomsMatch = q.match(/(\d+)\s*(?:chambres?|pieces?|p\b)/)
-      if (bedroomsMatch) {
-        filters.bedrooms = parseInt(bedroomsMatch[1])
-        chips.push({ label: 'Chambres', value: bedroomsMatch[1] })
-      }
-
-      // Type
-      if (/\bstudio\b/.test(q)) {
-        filters.type = 'STUDIO'
-        chips.push({ label: 'Type', value: 'Studio' })
-      } else if (/\bmaison\b/.test(q)) {
-        filters.type = 'HOUSE'
-        chips.push({ label: 'Type', value: 'Maison' })
-      } else if (/\bappartement\b/.test(q)) {
-        filters.type = 'APARTMENT'
-        chips.push({ label: 'Type', value: 'Appartement' })
-      } else if (/\bloft\b/.test(q)) {
-        filters.type = 'LOFT'
-        chips.push({ label: 'Type', value: 'Loft' })
-      } else if (/\bchalet\b/.test(q)) {
-        filters.type = 'CHALET'
-        chips.push({ label: 'Type', value: 'Chalet' })
-      } else if (/\bvilla\b/.test(q)) {
-        filters.type = 'VILLA'
-        chips.push({ label: 'Type', value: 'Villa' })
+      // Type (if not already set)
+      if (!filters.type) {
+        if (/\bstudio\b/.test(q)) { filters.type = 'STUDIO'; chips.push({ label: 'Type', value: 'Studio' }) }
+        else if (/\b(?:maison|villa|pavillon)\b/.test(q)) { filters.type = 'HOUSE'; chips.push({ label: 'Type', value: 'Maison' }) }
+        else if (/\bappartement\b/.test(q)) { filters.type = 'APARTMENT'; chips.push({ label: 'Type', value: 'Appartement' }) }
+        else if (/\bloft\b/.test(q)) { filters.type = 'LOFT'; chips.push({ label: 'Type', value: 'Loft' }) }
+        else if (/\bduplex\b/.test(q)) { filters.type = 'DUPLEX'; chips.push({ label: 'Type', value: 'Duplex' }) }
       }
 
       // Furnished
-      if (/\bmeuble\b/.test(q) && !/\bnon meuble\b/.test(q) && !/\bpas meuble\b/.test(q)) {
-        filters.furnished = true
-        chips.push({ label: 'Meublé', value: 'Oui' })
-      } else if (/\bnon[- ]?meuble\b/.test(q) || /\bpas meuble\b/.test(q) || /\bvide\b/.test(q)) {
-        filters.furnished = false
-        chips.push({ label: 'Meublé', value: 'Non' })
-      }
+      if (/\bmeuble\b/.test(q) && !/\b(?:non|pas)[- ]meuble\b/.test(q)) { filters.furnished = true; chips.push({ label: 'Meublé', value: 'Oui' }) }
+      else if (/\b(?:non|pas)[- ]?meuble\b|\bvide\b/.test(q)) { filters.furnished = false; chips.push({ label: 'Meublé', value: 'Non' }) }
 
-      // Parking
-      if (/\bparking\b|\bgarage\b/.test(q)) {
-        filters.hasParking = true
-        chips.push({ label: 'Parking', value: 'Oui' })
-      }
+      // Amenities
+      if (/\bparking\b|\bgarage\b/.test(q)) { filters.hasParking = true; chips.push({ label: 'Parking', value: 'Oui' }) }
+      if (/\bascenseur\b/.test(q)) { filters.hasElevator = true; chips.push({ label: 'Ascenseur', value: 'Oui' }) }
+      if (/\bjardin\b|\bterrasse\b/.test(q)) { filters.hasGarden = true; chips.push({ label: 'Jardin/Terrasse', value: 'Oui' }) }
+      if (/\bbalcon\b/.test(q)) { filters.hasBalcony = true; chips.push({ label: 'Balcon', value: 'Oui' }) }
 
-      // Elevator
-      if (/\bascenseur\b/.test(q)) {
-        filters.hasElevator = true
-        chips.push({ label: 'Ascenseur', value: 'Oui' })
-      }
-
-      // Garden / Terrace
-      if (/\bjardin\b|\bterrasse\b/.test(q)) {
-        filters.hasGarden = true
-        chips.push({ label: /\bterrasse\b/.test(q) ? 'Terrasse' : 'Jardin', value: 'Oui' })
-      }
-
-      // Balcony
-      if (/\bbalcon\b/.test(q)) {
-        filters.hasBalcony = true
-        chips.push({ label: 'Balcon', value: 'Oui' })
-      }
-
-      // Floor
-      const floorMatch = q.match(/(\d+)(?:er|eme|ème|e)?\s*etage/)
-      if (floorMatch) {
-        filters.floor = parseInt(floorMatch[1])
-        chips.push({ label: 'Étage', value: floorMatch[1] })
-      }
-
-      // City (simple heuristic: "à Paris", "en Lyon", "sur Bordeaux", etc.)
-      const cityMatch = q.match(/\b(?:a|au|en|sur|dans)\s+([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s-]{2,20})(?:\b|$)/)
-      if (cityMatch) {
-        const candidate = cityMatch[1].trim()
-        // Filter out common non-city words
-        const stopWords = ['moins', 'plus', 'minimum', 'maximum', 'moins de', 'plus de', 'centre', 'etage']
-        if (!stopWords.some(sw => candidate.toLowerCase().startsWith(sw))) {
-          filters.city = candidate.charAt(0).toUpperCase() + candidate.slice(1).toLowerCase()
+      // City — with or without preposition
+      const cityWithPrep = q.match(/\b(?:[aà]|au|en|sur|dans|proche)\s+([a-zà-ÿ][a-zà-ÿ\s-]{2,25})(?:\b|$)/)
+      const cityDirect = q.match(/\b([A-ZÀ-Ÿ][a-zà-ÿ]{2,}(?:[-\s][A-ZÀ-Ÿ][a-zà-ÿ]+)?)\b/)
+      const stopWords = new Set(['moins', 'plus', 'minimum', 'maximum', 'centre', 'etage', 'pieces', 'chambres', 'meuble', 'parking', 'studio', 'maison', 'appartement', 'loft', 'duplex', 'ascenseur', 'balcon', 'jardin', 'garage', 'terrasse'])
+      const cityRaw = cityWithPrep?.[1] ?? cityDirect?.[1] ?? null
+      if (cityRaw) {
+        const c = cityRaw.trim()
+        if (!stopWords.has(c.toLowerCase())) {
+          filters.city = c.charAt(0).toUpperCase() + c.slice(1).toLowerCase()
           chips.push({ label: 'Ville', value: filters.city as string })
         }
       }
