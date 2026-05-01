@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, useMotionValue, useTransform, useAnimation, AnimatePresence } from 'framer-motion'
-import { X, RotateCcw, MapPin, Bed, Bath, Square, Home, ExternalLink, ChevronLeft, ChevronRight, Heart } from 'lucide-react'
+import { X, MapPin, Bed, Bath, Square, Home, ExternalLink, ChevronLeft, ChevronRight, Heart } from 'lucide-react'
 import { Property } from '../../types/property.types'
 import { Link } from 'react-router-dom'
 
