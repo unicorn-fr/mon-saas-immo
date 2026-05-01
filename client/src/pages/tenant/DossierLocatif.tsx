@@ -708,7 +708,7 @@ function StepperHeader({ current }: { current: number }) {
 
 // ── Step nav buttons ───────────────────────────────────────────────────────────
 function StepNav({
-  onBack, onContinue, onSkip, isFirst, isLast, saving, continueLabel,
+  onBack, onContinue, onSkip, isFirst, isLast, saving, continueLabel, error,
 }: {
   onBack:         () => void
   onContinue:     () => void
@@ -717,11 +717,22 @@ function StepNav({
   isLast:         boolean
   saving?:        boolean
   continueLabel?: string
+  error?:         string
 }) {
   return (
+    <div style={{ marginTop: 28, paddingTop: 20, borderTop: `1px solid ${BAI.border}` }}>
+      {error && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          padding: '10px 14px', borderRadius: 9, marginBottom: 12,
+          background: '#fef2f2', border: '1px solid #fca5a5',
+        }}>
+          <span style={{ fontSize: 16, flexShrink: 0 }}>⚠</span>
+          <p style={{ margin: 0, fontSize: 12, color: '#9b1c1c', fontFamily: BAI.fontBody, lineHeight: 1.5 }}>{error}</p>
+        </div>
+      )}
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      marginTop: 28, paddingTop: 20, borderTop: `1px solid ${BAI.border}`,
       flexWrap: 'wrap', gap: 10,
     }}>
       <button
@@ -772,6 +783,7 @@ function StepNav({
           }
         </button>
       </div>
+    </div>
     </div>
   )
 }
@@ -827,9 +839,12 @@ export default function DossierLocatif() {
     try { return localStorage.getItem(STORAGE_KEY) === String(TOTAL_STEPS) } catch { return false }
   })
 
+  const [stepError, setStepError] = useState('')
+
   const goToStep = (n: number) => {
     const clamped = Math.max(0, Math.min(TOTAL_STEPS, n))
     setCurrentStep(clamped)
+    setStepError('')
     if (clamped >= TOTAL_STEPS) {
       setShowOverview(true)
       try {
@@ -1142,6 +1157,49 @@ export default function DossierLocatif() {
     return Math.round((filled / required.length) * 100)
   }, [idSlots, emploiSlots, revenusSlots, garantSlots, questionnaire.hasGarant, questionnaire.hasRevenuComplementaire, documents])
 
+  // ── Per-step validation ────────────────────────────────────────────────────
+  const validateCurrentStep = useCallback((): string | null => {
+    if (currentStep === 1) {
+      if (!questionnaire.idKind) return 'Sélectionnez votre type de pièce d\'identité.'
+      const required = idSlots.filter(s => s.required)
+      if (required.some(s => !documents.some(d => d.docType === s.docType)))
+        return 'Importez votre pièce d\'identité avant de continuer.'
+    }
+    if (currentStep === 2) {
+      if (!questionnaire.emploiType) return 'Sélectionnez votre situation professionnelle.'
+      const required = emploiSlots.filter(s => s.required)
+      if (required.some(s => !documents.some(d => d.docType === s.docType)))
+        return 'Importez les justificatifs professionnels requis avant de continuer.'
+      if (['etudiant', 'retraite', 'sans_emploi'].includes(questionnaire.emploiType ?? '')) {
+        if (questionnaire.hasRevenuComplementaire === null)
+          return 'Indiquez si vous avez un revenu salarié complémentaire.'
+      }
+    }
+    if (currentStep === 3) {
+      const required = revenusSlots.filter(s => s.required)
+      if (required.some(s => !documents.some(d => d.docType === s.docType)))
+        return 'Importez tous les justificatifs de revenus requis avant de continuer.'
+    }
+    if (currentStep === 4) {
+      const hasDomicile = DOMICILE_SLOTS.some(s => documents.some(d => d.docType === s.docType))
+      if (!hasDomicile) return 'Importez au moins un justificatif de domicile avant de continuer.'
+    }
+    if (currentStep === 5) {
+      if (!questionnaire.hasGarant) return 'Indiquez si vous avez un garant (ou choisissez "Pas de garant").'
+    }
+    return null
+  }, [currentStep, questionnaire, idSlots, emploiSlots, revenusSlots, documents])
+
+  const tryGoForward = useCallback(async (target: number, beforeNavigate?: () => Promise<boolean>) => {
+    if (beforeNavigate) {
+      const ok = await beforeNavigate()
+      if (!ok) return
+    }
+    const err = validateCurrentStep()
+    if (err) { setStepError(err); return }
+    goToStep(target)
+  }, [validateCurrentStep]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Card wrapper ───────────────────────────────────────────────────────────
   const stepCard = (children: React.ReactNode) => (
     <div style={{
@@ -1176,9 +1234,21 @@ export default function DossierLocatif() {
                 <h1 style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontStyle: 'italic', fontSize: 'clamp(30px,5vw,42px)', color: BAI.ink, margin: '0 0 6px', lineHeight: 1.1 }}>
                   Mon Dossier Locatif
                 </h1>
-                <p style={{ fontSize: 13, color: BAI.inkFaint, margin: 0 }}>
-                  {pct}% complété
-                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                  <p style={{ fontSize: 13, color: BAI.inkFaint, margin: 0 }}>
+                    {pct}% complété
+                  </p>
+                  {pct >= 100 && (
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 5,
+                      fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
+                      background: BAI.tenantLight, color: BAI.tenant, border: `1px solid ${BAI.tenantBorder}`,
+                    }}>
+                      <CheckCircle2 style={{ width: 11, height: 11 }} />
+                      Dossier complet
+                    </span>
+                  )}
+                </div>
               </div>
               <button
                 onClick={() => goToStep(0)}
@@ -1202,38 +1272,120 @@ export default function DossierLocatif() {
               </div>
             )}
 
-            {/* Profile summary */}
-            <div style={{
-              background: BAI.bgSurface, border: `1px solid ${BAI.tenantBorder}`,
-              borderRadius: 12, padding: '18px 20px',
-              boxShadow: BAI.shadowMd, marginBottom: 24,
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {/* Dossier Resume Card */}
+            {(() => {
+              const EMPLOI_LABELS_MAP: Record<string, string> = {
+                cdi: 'Salarié·e CDI', cdd_embauche: 'CDD / En cours d\'embauche',
+                independant: 'Indépendant·e / Auto-entrepreneur',
+                etudiant: 'Étudiant·e', retraite: 'Retraité·e', sans_emploi: 'Sans activité salariée',
+              }
+              const GARANT_LABELS_MAP: Record<string, string> = {
+                oui_physique: 'Garant personnel', oui_visale: 'Visale / CLé',
+                oui_les_deux: 'Garant personnel + Visale', non: 'Pas de garant',
+              }
+              const docCatsPresent = [...new Set(documents.map(d => d.category))]
+              const emploiLabel = EMPLOI_LABELS_MAP[questionnaire.emploiType ?? ''] ?? null
+              const garantLabel = GARANT_LABELS_MAP[questionnaire.hasGarant ?? ''] ?? null
+              const birthStr = user?.birthDate
+                ? `Né·e le ${new Date(user.birthDate).toLocaleDateString('fr-FR')}`
+                : null
+
+              return (
                 <div style={{
-                  width: 40, height: 40, borderRadius: 10,
-                  background: BAI.tenantLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  background: BAI.bgSurface, border: `1px solid ${BAI.tenantBorder}`,
+                  borderRadius: 14, padding: '20px 22px', boxShadow: BAI.shadowMd, marginBottom: 24,
                 }}>
-                  <User style={{ width: 18, height: 18, color: BAI.tenant }} />
+                  {/* Top row: identity */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{
+                        width: 44, height: 44, borderRadius: '50%',
+                        background: BAI.tenantLight, border: `2px solid ${BAI.tenantBorder}`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                      }}>
+                        <User style={{ width: 20, height: 20, color: BAI.tenant }} />
+                      </div>
+                      <div>
+                        <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: BAI.ink, fontFamily: BAI.fontDisplay, fontStyle: 'italic' }}>
+                          {user?.firstName} {user?.lastName ? user.lastName.toUpperCase() : ''}
+                        </p>
+                        <p style={{ margin: 0, fontSize: 12, color: BAI.inkFaint, marginTop: 2 }}>
+                          {birthStr}{user?.birthCity ? ` à ${user.birthCity}` : ''}
+                          {user?.nationality ? ` · ${user.nationality}` : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <a href="/settings" style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                      fontSize: 11, color: BAI.tenant, textDecoration: 'none', fontWeight: 600,
+                      padding: '5px 10px', borderRadius: 7, border: `1px solid ${BAI.tenantBorder}`,
+                      background: BAI.tenantLight, flexShrink: 0,
+                    }}>
+                      Modifier <ArrowRight style={{ width: 11, height: 11 }} />
+                    </a>
+                  </div>
+
+                  <div style={{ height: 1, background: BAI.border, marginBottom: 14 }} />
+
+                  {/* Details grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3" style={{ marginBottom: 14 }}>
+                    <div style={{ padding: '10px 12px', borderRadius: 9, background: BAI.bgMuted, border: `1px solid ${BAI.border}` }}>
+                      <p style={{ margin: '0 0 3px', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.inkFaint }}>Situation</p>
+                      <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: BAI.ink }}>
+                        {emploiLabel ?? <span style={{ color: BAI.inkFaint, fontWeight: 400 }}>Non renseignée</span>}
+                      </p>
+                      {questionnaire.hasRevenuComplementaire && (
+                        <p style={{ margin: '2px 0 0', fontSize: 11, color: BAI.inkFaint }}>+ revenu salarié</p>
+                      )}
+                    </div>
+                    <div style={{ padding: '10px 12px', borderRadius: 9, background: BAI.bgMuted, border: `1px solid ${BAI.border}` }}>
+                      <p style={{ margin: '0 0 3px', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.inkFaint }}>Garant</p>
+                      <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: BAI.ink }}>
+                        {garantLabel ?? <span style={{ color: BAI.inkFaint, fontWeight: 400 }}>Non renseigné</span>}
+                      </p>
+                    </div>
+                    <div style={{ padding: '10px 12px', borderRadius: 9, background: BAI.bgMuted, border: `1px solid ${BAI.border}` }}>
+                      <p style={{ margin: '0 0 3px', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.inkFaint }}>Pièce d'ID</p>
+                      <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: BAI.ink }}>
+                        {questionnaire.idKind === 'cni' && 'CNI française'}
+                        {questionnaire.idKind === 'permis' && 'Permis de conduire'}
+                        {questionnaire.idKind === 'passport' && 'Passeport'}
+                        {questionnaire.idKind === 'sejour' && 'Titre de séjour'}
+                        {!questionnaire.idKind && <span style={{ color: BAI.inkFaint, fontWeight: 400 }}>Non renseignée</span>}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Document chips */}
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {[
+                      { id: 'IDENTITE', label: "Pièce d'ID" },
+                      { id: 'EMPLOI', label: 'Emploi' },
+                      { id: 'REVENUS', label: 'Revenus' },
+                      { id: 'DOMICILE', label: 'Domicile' },
+                      { id: 'GARANTIES', label: 'Garant' },
+                    ].map(cat => {
+                      const present = docCatsPresent.includes(cat.id)
+                      return (
+                        <span key={cat.id} style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 4,
+                          fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 20,
+                          background: present ? BAI.tenantLight : BAI.bgMuted,
+                          color: present ? BAI.tenant : BAI.inkFaint,
+                          border: `1px solid ${present ? BAI.tenantBorder : BAI.border}`,
+                        }}>
+                          {present
+                            ? <CheckCircle2 style={{ width: 10, height: 10 }} />
+                            : <span style={{ width: 10, height: 10, display: 'inline-block', borderRadius: '50%', border: `1.5px solid ${BAI.border}` }} />
+                          }
+                          {cat.label}
+                        </span>
+                      )
+                    })}
+                  </div>
                 </div>
-                <div>
-                  <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: BAI.ink }}>
-                    {user?.firstName} {user?.lastName}
-                  </p>
-                  <p style={{ margin: 0, fontSize: 12, color: BAI.inkFaint, marginTop: 2 }}>
-                    {user?.birthDate ? `Né·e le ${new Date(user.birthDate).toLocaleDateString('fr-FR')}` : ''}
-                    {user?.birthCity ? ` · ${user.birthCity}` : ''}
-                    {user?.nationality ? ` · ${user.nationality}` : ''}
-                  </p>
-                </div>
-              </div>
-              <a href="/settings" style={{
-                display: 'inline-flex', alignItems: 'center', gap: 5,
-                fontSize: 12, color: BAI.tenant, textDecoration: 'none', fontWeight: 500, flexShrink: 0,
-              }}>
-                Modifier <ArrowRight style={{ width: 13, height: 13 }} />
-              </a>
-            </div>
+              )
+            })()}
 
             {/* Documents grid */}
             {loadingDocs ? (
@@ -1420,10 +1572,7 @@ export default function DossierLocatif() {
                 isLast={false}
                 saving={saving}
                 onBack={() => {}}
-                onContinue={async () => {
-                  const ok = await handleSaveProfile()
-                  if (ok) goToStep(1)
-                }}
+                onContinue={() => tryGoForward(1, handleSaveProfile)}
               />
             </>,
           )}
@@ -1564,7 +1713,8 @@ export default function DossierLocatif() {
                 isFirst={false}
                 isLast={false}
                 onBack={() => goToStep(0)}
-                onContinue={() => goToStep(2)}
+                onContinue={() => tryGoForward(2)}
+                error={stepError}
               />
             </>,
           )}
@@ -1675,7 +1825,8 @@ export default function DossierLocatif() {
                 isFirst={false}
                 isLast={false}
                 onBack={() => goToStep(1)}
-                onContinue={() => goToStep(3)}
+                onContinue={() => tryGoForward(3)}
+                error={stepError}
               />
             </>,
           )}
@@ -1738,7 +1889,8 @@ export default function DossierLocatif() {
                 isFirst={false}
                 isLast={false}
                 onBack={() => goToStep(2)}
-                onContinue={() => goToStep(4)}
+                onContinue={() => tryGoForward(4)}
+                error={stepError}
               />
             </>,
           )}
@@ -1792,7 +1944,8 @@ export default function DossierLocatif() {
                 isFirst={false}
                 isLast={false}
                 onBack={() => goToStep(3)}
-                onContinue={() => goToStep(5)}
+                onContinue={() => tryGoForward(5)}
+                error={stepError}
               />
             </>,
           )}
@@ -1864,8 +2017,9 @@ export default function DossierLocatif() {
                 isFirst={false}
                 isLast={true}
                 onBack={() => goToStep(4)}
-                onContinue={() => goToStep(TOTAL_STEPS)}
+                onContinue={() => tryGoForward(TOTAL_STEPS)}
                 onSkip={() => goToStep(TOTAL_STEPS)}
+                error={stepError}
                 continueLabel="Terminer"
               />
             </>,

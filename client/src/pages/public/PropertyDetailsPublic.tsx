@@ -903,6 +903,11 @@ export default function PropertyDetailsPublic() {
             criteria={property.selectionCriteria ?? DEFAULT_CRITERIA}
             tenantProfileMeta={(user?.profileMeta as Record<string, unknown>) ?? null}
             tenantDocCategories={docCategories}
+            tenantFirstName={user?.firstName ?? undefined}
+            tenantLastName={user?.lastName ?? undefined}
+            tenantBirthDate={user?.birthDate ?? undefined}
+            tenantBirthCity={user?.birthCity ?? undefined}
+            tenantNationality={user?.nationality ?? undefined}
             ownerId={property.ownerId}
             onClose={() => setShowPreQualModal(false)}
             onSuccess={() => {
