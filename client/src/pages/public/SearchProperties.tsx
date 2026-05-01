@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, type ElementType } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useProperties } from '../../hooks/useProperties'
 import { useAuth } from '../../hooks/useAuth'
@@ -17,8 +17,12 @@ import {
   AlertCircle,
   Home as HomeIcon,
   Sparkles,
+  Smartphone,
 } from 'lucide-react'
 import { SearchMap } from '../../components/property/SearchMap'
+import { SwipeStack } from '../../components/property/SwipeStack'
+import { SavedSearches } from '../../components/search/SavedSearches'
+import { SearchOnboarding } from '../../components/search/SearchOnboarding'
 
 const M = {
   bg: '#fafaf8', surface: '#ffffff', muted: '#f4f2ee', inputBg: '#f8f7f4',
@@ -39,7 +43,7 @@ interface NLChip {
 export default function SearchProperties() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { isAuthenticated } = useAuth()
-  const { loadFavorites } = useFavoriteStore()
+  const { loadFavorites, toggleFavorite, isFavorite } = useFavoriteStore()
   const {
     properties,
     totalProperties: propertiesTotal,
@@ -52,8 +56,9 @@ export default function SearchProperties() {
 
   // UI State
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '')
-  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid')
+  const [viewMode, setViewMode] = useState<'grid' | 'map' | 'swipe'>('grid')
   const [showFilters, setShowFilters] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<'createdAt' | 'price' | 'views'>('createdAt')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
@@ -119,6 +124,36 @@ export default function SearchProperties() {
     if (sentinelRef.current) observerRef.current.observe(sentinelRef.current)
     return () => observerRef.current?.disconnect()
   }, [handleSentinel])
+
+  // Restore last search on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('bailio_last_search')
+      if (raw) {
+        const { filters: f, chips, nlQuery: q } = JSON.parse(raw)
+        if (f && Object.keys(f).length > 0) {
+          setFilters(f)
+          setNlChips(chips ?? [])
+          setNlQuery(q ?? '')
+        }
+      }
+    } catch {}
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-save last search
+  useEffect(() => {
+    if (Object.keys(filters).length > 0 || nlChips.length > 0) {
+      localStorage.setItem('bailio_last_search', JSON.stringify({ filters, chips: nlChips, nlQuery }))
+    }
+  }, [filters, nlChips, nlQuery])
+
+  // Onboarding: show once
+  useEffect(() => {
+    if (!localStorage.getItem('bailio_onboarded')) {
+      const t = setTimeout(() => setShowOnboarding(true), 800)
+      return () => clearTimeout(t)
+    }
+  }, [])
 
   const resetPage = () => {
     setCurrentPage(1)
@@ -315,6 +350,19 @@ export default function SearchProperties() {
                 </button>
               </div>
             )}
+
+            <SavedSearches
+              currentFilters={filters}
+              currentChips={nlChips}
+              currentNlQuery={nlQuery}
+              hasChips={nlChips.length > 0}
+              onApply={(saved) => {
+                setFilters(saved.filters)
+                setNlChips(saved.chips)
+                setNlQuery(saved.nlQuery)
+                resetPage()
+              }}
+            />
           </div>
         </div>
 
@@ -387,7 +435,8 @@ export default function SearchProperties() {
                     {([
                       { mode: 'grid', Icon: Grid3x3, title: 'Vue grille' },
                       { mode: 'map', Icon: MapIcon, title: 'Vue carte' },
-                    ] as const).map(({ mode, Icon, title }, idx) => (
+                      { mode: 'swipe', Icon: Smartphone, title: 'Mode swipe' },
+                    ] as { mode: 'grid' | 'map' | 'swipe'; Icon: ElementType; title: string }[]).map(({ mode, Icon, title }, idx) => (
                       <button
                         key={mode}
                         onClick={() => setViewMode(mode)}
@@ -533,8 +582,17 @@ export default function SearchProperties() {
                 </div>
               )}
 
+              {/* Swipe View */}
+              {viewMode === 'swipe' && allProperties.length > 0 && (
+                <SwipeStack
+                  properties={allProperties}
+                  onFavorite={async (id) => { await toggleFavorite(id) }}
+                  isFavorite={(id) => isFavorite(id)}
+                />
+              )}
+
               {/* Grid View */}
-              {viewMode !== 'map' && allProperties.length > 0 && (
+              {viewMode !== 'map' && viewMode !== 'swipe' && allProperties.length > 0 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {allProperties.map((property) => (
                     <PropertyCard
@@ -546,7 +604,7 @@ export default function SearchProperties() {
               )}
 
               {/* Infinite scroll sentinel + spinner */}
-              {viewMode !== 'map' && (
+              {viewMode !== 'map' && viewMode !== 'swipe' && (
                 <div ref={sentinelRef} className="flex justify-center items-center py-10">
                   {isLoading && (
                     <div className="animate-spin rounded-full h-8 w-8"
@@ -564,6 +622,15 @@ export default function SearchProperties() {
           </div>
         </div>
       </div>
+
+      {showOnboarding && (
+        <SearchOnboarding
+          onClose={() => {
+            localStorage.setItem('bailio_onboarded', '1')
+            setShowOnboarding(false)
+          }}
+        />
+      )}
     </Layout>
   )
 }
