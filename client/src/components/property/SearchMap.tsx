@@ -126,9 +126,9 @@ export const SearchMap = ({
 
         // Click handler
         marker.on('click', () => {
-          if (onPropertySelect) {
-            onPropertySelect(property)
-          }
+          if (onPropertySelect) onPropertySelect(property)
+          mapInstanceRef.current.setView([property.latitude!, property.longitude!], 15, { animate: true })
+          marker.openPopup()
         })
 
         markersRef.current.push(marker)
@@ -154,7 +154,7 @@ export const SearchMap = ({
 
   if (propertiesWithCoords.length === 0) {
     return (
-      <div className="w-full flex items-center justify-center" style={{ height: 'clamp(300px, 50dvh, 500px)', background: '#f4f2ee' }}>
+      <div className="w-full h-full flex items-center justify-center" style={{ background: '#f4f2ee' }}>
         <div className="text-center">
           <MapPin className="w-16 h-16 mx-auto mb-4" style={{ color: '#ccc9c3' }} />
           <p style={{ color: '#5a5754' }}>
@@ -167,13 +167,13 @@ export const SearchMap = ({
 
   return (
     // isolation: isolate creates a new stacking context — confines Leaflet z-indexes (200–1000+) inside this wrapper
-    <div className="relative w-full" style={{ height: 'clamp(300px, 50dvh, 500px)', isolation: 'isolate' }}>
+    <div className="relative w-full h-full" style={{ isolation: 'isolate' }}>
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-white" style={{ zIndex: 10 }}>
           <Loader className="w-8 h-8 animate-spin" style={{ color: '#1a1a2e' }} />
         </div>
       )}
-      <div ref={mapRef} className="w-full" style={{ height: 'clamp(300px, 50dvh, 500px)' }} />
+      <div ref={mapRef} className="w-full h-full" />
 
       {/* Info overlay — z-index relative to this stacking context only */}
       <div className="absolute top-4 left-4 bg-white rounded-xl shadow-lg p-3" style={{ zIndex: 1001 }}>

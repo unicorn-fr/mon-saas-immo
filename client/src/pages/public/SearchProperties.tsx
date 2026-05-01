@@ -446,14 +446,92 @@ export default function SearchProperties() {
 
               {/* Map View */}
               {viewMode === 'map' && allProperties.length > 0 && (
-                <div className="h-[60dvh] sm:h-[calc(100vh-300px)] overflow-hidden" style={{
-                  borderRadius: 12, border: `1px solid ${M.border}`,
+                <div style={{
+                  borderRadius: 12, border: `1px solid ${M.border}`, overflow: 'hidden',
+                  display: 'flex', flexDirection: 'column',
+                  height: 'calc(100dvh - 200px)', minHeight: 520,
                 }}>
-                  <SearchMap
-                    properties={allProperties}
-                    selectedPropertyId={selectedPropertyId}
-                    onPropertySelect={(property) => setSelectedPropertyId(property?.id || null)}
-                  />
+                  {/* Compact filter bar for map mode */}
+                  <div style={{
+                    display: 'flex', flexWrap: 'wrap', gap: 8, padding: '10px 12px',
+                    borderBottom: `1px solid ${M.border}`, background: M.surface,
+                    alignItems: 'center',
+                  }}>
+                    <input
+                      type="text"
+                      placeholder="Ville…"
+                      value={filters.city ?? ''}
+                      onChange={e => { handleFiltersChange({ ...filters, city: e.target.value || undefined }) }}
+                      style={{
+                        padding: '6px 12px', borderRadius: 8, border: `1px solid ${M.border}`,
+                        background: M.inputBg, color: M.ink, fontFamily: M.body, fontSize: 13,
+                        outline: 'none', minWidth: 110, flex: '1 1 110px', maxWidth: 200,
+                      }}
+                    />
+                    <select
+                      value={filters.type ?? ''}
+                      onChange={e => handleFiltersChange({ ...filters, type: (e.target.value as any) || undefined })}
+                      style={{
+                        padding: '6px 10px', borderRadius: 8, border: `1px solid ${M.border}`,
+                        background: M.inputBg, color: filters.type ? M.ink : M.inkFaint,
+                        fontFamily: M.body, fontSize: 13, outline: 'none', cursor: 'pointer',
+                        flex: '1 1 120px', maxWidth: 180,
+                      }}
+                    >
+                      <option value="">Tous types</option>
+                      <option value="APARTMENT">Appartement</option>
+                      <option value="HOUSE">Maison</option>
+                      <option value="STUDIO">Studio</option>
+                      <option value="LOFT">Loft</option>
+                      <option value="ROOM">Chambre</option>
+                    </select>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, flex: '1 1 180px', maxWidth: 280 }}>
+                      <input
+                        type="number"
+                        placeholder="Prix min"
+                        value={filters.minPrice ?? ''}
+                        onChange={e => handleFiltersChange({ ...filters, minPrice: e.target.value ? Number(e.target.value) : undefined })}
+                        style={{
+                          padding: '6px 10px', borderRadius: 8, border: `1px solid ${M.border}`,
+                          background: M.inputBg, color: M.ink, fontFamily: M.body, fontSize: 13,
+                          outline: 'none', width: '80px', flex: 1,
+                        }}
+                      />
+                      <span style={{ color: M.inkFaint, fontSize: 12 }}>–</span>
+                      <input
+                        type="number"
+                        placeholder="Prix max"
+                        value={filters.maxPrice ?? ''}
+                        onChange={e => handleFiltersChange({ ...filters, maxPrice: e.target.value ? Number(e.target.value) : undefined })}
+                        style={{
+                          padding: '6px 10px', borderRadius: 8, border: `1px solid ${M.border}`,
+                          background: M.inputBg, color: M.ink, fontFamily: M.body, fontSize: 13,
+                          outline: 'none', width: '80px', flex: 1,
+                        }}
+                      />
+                      <span style={{ color: M.inkFaint, fontSize: 12 }}>€</span>
+                    </div>
+                    {hasActiveFilters && (
+                      <button
+                        onClick={handleResetFilters}
+                        style={{
+                          padding: '6px 12px', borderRadius: 8, border: `1px solid ${M.border}`,
+                          background: 'transparent', color: M.danger, fontFamily: M.body, fontSize: 12,
+                          fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
+                        }}
+                      >
+                        Effacer
+                      </button>
+                    )}
+                  </div>
+                  {/* Map — flex-1 to fill remaining space */}
+                  <div style={{ flex: 1, minHeight: 0 }}>
+                    <SearchMap
+                      properties={allProperties}
+                      selectedPropertyId={selectedPropertyId}
+                      onPropertySelect={(property) => setSelectedPropertyId(property?.id || null)}
+                    />
+                  </div>
                 </div>
               )}
 
