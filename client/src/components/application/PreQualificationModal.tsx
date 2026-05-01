@@ -243,7 +243,7 @@ export function PreQualificationModal({
           initial="hidden" animate="visible" exit="exit"
           transition={{ type: 'spring', damping: 28, stiffness: 320 }}
           className="relative w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col"
-          style={{ background: '#ffffff', maxHeight: '92vh' }}
+          style={{ background: '#ffffff', maxHeight: '92dvh' }}
         >
           {/* Header — flex-shrink-0 so it never gets squeezed */}
           <div className="flex-shrink-0 flex items-start justify-between p-5 border-b" style={{ borderColor: '#e4e1db', background: '#ffffff' }}>
@@ -267,7 +267,12 @@ export function PreQualificationModal({
           </div>
 
           {/* Scrollable body — flex-1 + min-h-0 ensures correct scroll within flex parent */}
-          <div className="flex-1 overflow-y-auto min-h-0 rounded-b-2xl">
+          <div
+            className="flex-1 overflow-y-auto min-h-0 rounded-b-2xl"
+            // overscroll-contain: prevent scroll chaining that resets position
+            // WebkitOverflowScrolling: smooth momentum scroll on iOS
+            style={{ overscrollBehavior: 'contain' }}
+          >
 
             {/* Verdict banner */}
             <div className={`flex items-center gap-3 px-5 py-3 border-b ${verdictConfig.bg}`} style={{ borderColor: '#e4e1db' }}>
