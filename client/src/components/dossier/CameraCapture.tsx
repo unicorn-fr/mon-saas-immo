@@ -1,42 +1,25 @@
 /**
- * CameraCapture v12 — Simple guided photo scanner
+ * CameraCapture v13 — Scanner autonome, 0 API externe
  *
- * Flow: camera opens → user frames document in guide → presses shutter
- * → guide zone is auto-cropped → backend OCR extracts data → confirm/reject
- *
- * No live detection, no auto-capture, no blur scoring.
+ * Flow : caméra → cadre guide → bouton photo → recadrage auto → aperçu → confirmer
+ * Aucun appel réseau. Traitement 100 % local (canvas crop).
  */
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import {
   X, RotateCcw, CheckCircle2,
-  Loader2, ShieldOff, RefreshCw,
+  Loader2, ShieldOff,
   CreditCard, Car, BookOpen, FileText, ArrowRight,
 } from 'lucide-react'
 import { BAI } from '../../constants/bailio-tokens'
-import { apiClient as api } from '../../services/api.service'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 type Phase =
-  | 'selecting'   // user picks doc type
-  | 'scanning'    // live camera — user presses shutter
-  | 'processing'  // crop + backend OCR in progress
-  | 'confirming'  // OCR done → show extracted data
-  | 'flip'        // recto ok → prompt for verso
-  | 'rejected'    // backend rejected the image
-  | 'error'       // network / camera error
+  | 'selecting'   // choix du type de document
+  | 'scanning'    // caméra live
+  | 'confirming'  // aperçu du crop → confirmer ou reprendre
+  | 'flip'        // recto ok → invite verso
 
 export type DocFamily = 'cni' | 'permis' | 'passport' | 'sejour'
-
-interface OcrData {
-  nom: string; prenom: string; dob: string
-  nationality: string; documentNumber: string; expiry: string; side: string
-}
-
-interface BackendOcrResult {
-  isIdDocument: boolean; rejectReason: string
-  nom: string; prenom: string; dob: string
-  nationality: string; documentNumber: string; expiry: string; mrz: string; side: string
-}
 
 export interface CaptureEntry { file: File; docType: string }
 
@@ -77,17 +60,9 @@ const DOC_OPTIONS: { family: DocFamily; label: string; sub: string; Icon: React.
   { family: 'sejour',   label: 'Titre de séjour',     sub: 'Recto uniquement',  Icon: FileText   },
 ]
 
-// ── Backend OCR ───────────────────────────────────────────────────────────────
-async function callBackendOcr(imageBlob: Blob, docType: string): Promise<BackendOcrResult> {
-  const formData = new FormData()
-  formData.append('file', imageBlob, 'scan.jpg')
-  formData.append('docType', docType)
-  const res = await api.post('/ocr/extract', formData)
-  return res.data.data as BackendOcrResult
-}
+// ── Utilities ─────────────────────────────────────────────────────────────────
 
-// ── Guide overlay ─────────────────────────────────────────────────────────────
-/** Draw the dark overlay with a rectangular cutout and corner brackets. */
+/** Overlay : masque sombre + découpe rectangulaire + coins en L. */
 function drawGuide(canvas: HTMLCanvasElement, aspect: number, flash: boolean) {
   const W = canvas.width, H = canvas.height
   if (!W || !H) return
@@ -102,7 +77,7 @@ function drawGuide(canvas: HTMLCanvasElement, aspect: number, flash: boolean) {
   const gX = (W - gW) / 2, gY = (H - gH) / 2
   const R = 14
 
-  // Dark mask with guide hole
+  // Masque sombre avec trou
   ctx.save()
   ctx.fillStyle = 'rgba(0,0,0,0.55)'
   ctx.beginPath()
@@ -116,7 +91,7 @@ function drawGuide(canvas: HTMLCanvasElement, aspect: number, flash: boolean) {
   ctx.fill('evenodd')
   ctx.restore()
 
-  // Guide border
+  // Bordure du cadre
   ctx.strokeStyle = CARAMEL
   ctx.lineWidth = 2
   ctx.shadowColor = 'rgba(196,151,106,0.5)'
@@ -131,15 +106,15 @@ function drawGuide(canvas: HTMLCanvasElement, aspect: number, flash: boolean) {
   ctx.stroke()
   ctx.shadowBlur = 0
 
-  // Corner brackets
+  // Coins en L
   const BL = Math.min(gW, gH) * 0.13
   ctx.strokeStyle = CARAMEL
   ctx.lineWidth = 3.5
   ;([
-    [gX,      gY,      1,  1],
-    [gX + gW, gY,     -1,  1],
-    [gX,      gY + gH, 1, -1],
-    [gX + gW, gY + gH,-1, -1],
+    [gX,      gY,       1,  1],
+    [gX + gW, gY,      -1,  1],
+    [gX,      gY + gH,  1, -1],
+    [gX + gW, gY + gH, -1, -1],
   ] as [number, number, number, number][]).forEach(([cx, cy, dx, dy]) => {
     ctx.beginPath()
     ctx.moveTo(cx + dx * BL, cy)
@@ -149,7 +124,7 @@ function drawGuide(canvas: HTMLCanvasElement, aspect: number, flash: boolean) {
   })
 }
 
-/** Crop the guide zone from the video and output at 1200px wide. */
+/** Recadre la zone guide de la vidéo, sortie à 1200 px de large. */
 function cropGuide(video: HTMLVideoElement, aspect: number): HTMLCanvasElement {
   const vW = video.videoWidth, vH = video.videoHeight
   const maxW = vW * GUIDE_FRAC, maxH = vH * GUIDE_FRAC
@@ -167,14 +142,14 @@ function cropGuide(video: HTMLVideoElement, aspect: number): HTMLCanvasElement {
   return out
 }
 
-// ── Component ──────────────────────────────────────────────────────────────────
+// ── Composant ──────────────────────────────────────────────────────────────────
 export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCaptureProps) {
-  const videoRef   = useRef<HTMLVideoElement>(null)
-  const overlayRef = useRef<HTMLCanvasElement>(null)
-  const streamRef  = useRef<MediaStream | null>(null)
-  const rafRef     = useRef<number>(0)
-  const flashRaf   = useRef(false)
-  const phaseRef   = useRef<Phase>(initialFamily ? 'scanning' : 'selecting')
+  const videoRef    = useRef<HTMLVideoElement>(null)
+  const overlayRef  = useRef<HTMLCanvasElement>(null)
+  const streamRef   = useRef<MediaStream | null>(null)
+  const rafRef      = useRef<number>(0)
+  const flashRaf    = useRef(false)
+  const phaseRef    = useRef<Phase>(initialFamily ? 'scanning' : 'selecting')
   const capturesRef = useRef<CaptureEntry[]>([])
 
   const [phase,          setPhase]          = useState<Phase>(initialFamily ? 'scanning' : 'selecting')
@@ -185,10 +160,7 @@ export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCapt
   const [flash,          setFlash]          = useState(false)
   const [previewUrl,     setPreviewUrl]     = useState('')
   const [rectoPreview,   setRectoPreview]   = useState('')
-  const [ocrData,        setOcrData]        = useState<OcrData | null>(null)
-  const [rejectReason,   setRejectReason]   = useState('')
 
-  // currentDt is derived from selected family + isVerso, never stale
   const currentDt = useMemo(() => {
     if (!selectedFamily) return 'CNI_RECTO'
     if (selectedFamily === 'cni')      return isVerso ? 'CNI_VERSO'    : 'CNI_RECTO'
@@ -207,7 +179,7 @@ export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCapt
     setPhase(p)
   }, [])
 
-  // ── Camera ────────────────────────────────────────────────────────────────
+  // ── Caméra ────────────────────────────────────────────────────────────────
   const startCamera = useCallback(async () => {
     streamRef.current?.getTracks().forEach(t => t.stop())
     setCamReady(false)
@@ -231,12 +203,11 @@ export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCapt
           ? "Accès à la caméra refusé. Autorisez l'accès dans les paramètres du navigateur."
           : msg.includes('NotFound')
             ? 'Aucune caméra détectée.'
-            : "Impossible d'accéder à la caméra. Rechargez la page.",
+            : "Impossible d'accéder à la caméra.",
       )
     }
   }, [setPhaseSync])
 
-  // Auto-start when initialFamily provided (skip selector)
   useEffect(() => {
     if (initialFamily) {
       setSelectedFamily(initialFamily)
@@ -244,15 +215,12 @@ export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCapt
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Cleanup
-  useEffect(() => {
-    return () => {
-      streamRef.current?.getTracks().forEach(t => t.stop())
-      cancelAnimationFrame(rafRef.current)
-    }
+  useEffect(() => () => {
+    streamRef.current?.getTracks().forEach(t => t.stop())
+    cancelAnimationFrame(rafRef.current)
   }, [])
 
-  // ── RAF overlay loop (guide frame only) ───────────────────────────────────
+  // ── Overlay RAF ───────────────────────────────────────────────────────────
   const drawLoop = useCallback(() => {
     const cvs = overlayRef.current
     if (cvs && phaseRef.current === 'scanning') {
@@ -278,65 +246,24 @@ export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCapt
     setFlash(true)
     setTimeout(() => { flashRaf.current = false; setFlash(false) }, 180)
 
-    setPhaseSync('processing')
+    // Recadrage local — aucun appel réseau
+    const cropped = cropGuide(video, aspect)
+    const url = URL.createObjectURL(
+      // convertit le canvas en Blob synchrone via toDataURL pour l'aperçu
+      dataURLtoBlob(cropped.toDataURL('image/jpeg', 0.95)),
+    )
+    setPreviewUrl(url)
 
-    setTimeout(() => {
-      const cropped = cropGuide(video, aspect)
-      cropped.toBlob(async blob => {
-        if (!blob) { setPhaseSync('scanning'); return }
-        const url  = URL.createObjectURL(blob)
-        const file = new File([blob], `${currentDt.toLowerCase()}_${Date.now()}.jpg`, { type: 'image/jpeg' })
-        setPreviewUrl(url)
-
-        try {
-          const result = await callBackendOcr(blob, currentDt)
-
-          if (!result.isIdDocument) {
-            // Verso: accept even if backend is unsure (back side has little text)
-            if (isVerso) {
-              capturesRef.current = [
-                ...capturesRef.current.filter(c => c.docType !== currentDt),
-                { file, docType: currentDt },
-              ]
-              setOcrData({ nom: '', prenom: '', dob: '', nationality: '', documentNumber: '', expiry: '', side: 'verso' })
-              setPhaseSync('confirming')
-              return
-            }
-            setRejectReason(
-              result.rejectReason ||
-              "Document non reconnu. Présentez uniquement une pièce d'identité officielle avec photo.",
-            )
-            setPhaseSync('rejected')
-            return
-          }
-
-          capturesRef.current = [
-            ...capturesRef.current.filter(c => c.docType !== currentDt),
-            { file, docType: currentDt },
-          ]
-          if (!isVerso) setRectoPreview(url)
-          setOcrData({
-            nom:            result.nom,
-            prenom:         result.prenom,
-            dob:            result.dob,
-            nationality:    result.nationality,
-            documentNumber: result.documentNumber,
-            expiry:         result.expiry,
-            side:           result.side,
-          })
-          setPhaseSync('confirming')
-        } catch (err: any) {
-          const serverMsg = err?.response?.data?.message as string | undefined
-          setRejectReason(
-            serverMsg ||
-            (err?.message?.includes('Network') || err?.code === 'ERR_NETWORK'
-              ? 'Erreur réseau. Vérifiez votre connexion et réessayez.'
-              : `Erreur lors de l'analyse (${err?.response?.status ?? 'réseau'}). Réessayez.`)
-          )
-          setPhaseSync('error')
-        }
-      }, 'image/jpeg', 0.95)
-    }, 0)
+    cropped.toBlob(blob => {
+      if (!blob) return
+      const file = new File([blob], `${currentDt.toLowerCase()}_${Date.now()}.jpg`, { type: 'image/jpeg' })
+      capturesRef.current = [
+        ...capturesRef.current.filter(c => c.docType !== currentDt),
+        { file, docType: currentDt },
+      ]
+      if (!isVerso) setRectoPreview(url)
+      setPhaseSync('confirming')
+    }, 'image/jpeg', 0.95)
   }, [camReady, aspect, currentDt, isVerso, setPhaseSync])
 
   // ── Handlers ──────────────────────────────────────────────────────────────
@@ -349,8 +276,6 @@ export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCapt
 
   const handleRetry = useCallback(() => {
     setPreviewUrl('')
-    setRejectReason('')
-    setOcrData(null)
     startCamera()
   }, [startCamera])
 
@@ -359,19 +284,11 @@ export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCapt
   const handleStartVerso = useCallback(() => {
     setIsVerso(true)
     setPreviewUrl('')
-    setOcrData(null)
     startCamera()
   }, [startCamera])
 
-  const handleSkipVerso = useCallback(() => { onComplete(capturesRef.current) }, [onComplete])
-  const handleDone      = useCallback(() => { onComplete(capturesRef.current) }, [onComplete])
-
-  // ── Helpers ───────────────────────────────────────────────────────────────
-  const fmt = (iso: string) => {
-    if (!iso || iso.length < 10) return iso
-    const [y, m, d] = iso.split('-')
-    return `${d}/${m}/${y}`
-  }
+  const handleSkipVerso = useCallback(() => onComplete(capturesRef.current), [onComplete])
+  const handleDone      = useCallback(() => onComplete(capturesRef.current), [onComplete])
 
   const familyLabel: Record<DocFamily, string> = {
     cni: "Carte d'identité", permis: 'Permis de conduire',
@@ -391,7 +308,7 @@ export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCapt
       display: 'flex', flexDirection: 'column', fontFamily: BAI.fontBody,
     }}>
 
-      {/* Top bar */}
+      {/* Barre du haut */}
       <div style={{
         position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10,
         padding: '14px 18px',
@@ -399,9 +316,7 @@ export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCapt
         background: 'linear-gradient(to bottom, rgba(0,0,0,0.78), transparent)',
       }}>
         <div>
-          <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: '#fff', fontFamily: BAI.fontBody }}>
-            {topTitle}
-          </p>
+          <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: '#fff' }}>{topTitle}</p>
           {selectedFamily && needsVerso && (
             <div style={{ display: 'flex', gap: 5, marginTop: 4 }}>
               {[1, 2].map(n => (
@@ -414,23 +329,19 @@ export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCapt
             </div>
           )}
         </div>
-        <button
-          onClick={onClose}
-          style={{
-            width: 40, height: 40, borderRadius: '50%',
-            background: 'rgba(255,255,255,0.12)', border: 'none',
-            cursor: 'pointer', display: 'flex', alignItems: 'center',
-            justifyContent: 'center', color: '#fff',
-          }}
-        >
+        <button onClick={onClose} style={{
+          width: 40, height: 40, borderRadius: '50%',
+          background: 'rgba(255,255,255,0.12)', border: 'none',
+          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
+        }}>
           <X size={18} />
         </button>
       </div>
 
-      {/* Main area */}
+      {/* Zone principale */}
       <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
 
-        {/* ── SELECTING ─────────────────────────────────────────────────── */}
+        {/* SELECTING */}
         {phase === 'selecting' && (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '80px 20px 24px', gap: 24 }}>
             <div style={{ textAlign: 'center' }}>
@@ -471,7 +382,7 @@ export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCapt
           </div>
         )}
 
-        {/* ── CAMERA ERROR ──────────────────────────────────────────────── */}
+        {/* ERREUR CAMÉRA */}
         {phase !== 'selecting' && camError && (
           <div style={{ padding: 32, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
             <ShieldOff size={40} color="rgba(255,255,255,0.35)" />
@@ -482,89 +393,40 @@ export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCapt
           </div>
         )}
 
-        {/* ── PROCESSING ────────────────────────────────────────────────── */}
-        {phase === 'processing' && (
-          <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {previewUrl && (
-              <img src={previewUrl} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', padding: '60px 24px', filter: 'brightness(0.3) blur(2px)' }} />
-            )}
-            <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
-              <div style={{ width: 'min(300px,75vw)', height: 'min(190px,47vw)', border: '2px solid rgba(196,151,106,0.4)', borderRadius: 12, position: 'relative', overflow: 'hidden', animation: 'framePulse 1.8s ease-in-out infinite' }}>
-                {([
-                  { top: -1, left: -1, borderRight: 'none', borderBottom: 'none', borderRadius: '8px 0 0 0' },
-                  { top: -1, right: -1, borderLeft: 'none', borderBottom: 'none', borderRadius: '0 8px 0 0' },
-                  { bottom: -1, left: -1, borderRight: 'none', borderTop: 'none', borderRadius: '0 0 0 8px' },
-                  { bottom: -1, right: -1, borderLeft: 'none', borderTop: 'none', borderRadius: '0 0 8px 0' },
-                ] as React.CSSProperties[]).map((s, i) => (
-                  <div key={i} style={{ position: 'absolute', width: 22, height: 22, border: `2.5px solid ${CARAMEL}`, ...s }} />
-                ))}
-                <div style={{ position: 'absolute', left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, rgba(196,151,106,0.9) 30%, #fff 50%, rgba(196,151,106,0.9) 70%, transparent)`, boxShadow: '0 0 14px 3px rgba(196,151,106,0.4)', animation: 'scanLine 1.8s ease-in-out infinite' }} />
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <p style={{ margin: '0 0 4px', color: '#fff', fontSize: 14, fontWeight: 600 }}>Analyse IA en cours…</p>
-                <p style={{ margin: '0 0 16px', color: 'rgba(255,255,255,0.45)', fontSize: 12 }}>Identification du document</p>
-                <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
-                  {[0, 1, 2].map(i => (
-                    <div key={i} style={{ width: 7, height: 7, borderRadius: '50%', background: CARAMEL, animation: `dotBounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── CONFIRMING ────────────────────────────────────────────────── */}
+        {/* CONFIRMING — aperçu du crop */}
         {phase === 'confirming' && (
-          <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '72px 20px 140px', overflowY: 'auto' }}>
+          <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '72px 20px 140px' }}>
             {previewUrl && (
               <img src={previewUrl} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.1) blur(8px)', transform: 'scale(1.1)' }} />
             )}
             <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 360, background: 'rgba(10,12,18,0.97)', border: '1px solid rgba(196,151,106,0.2)', borderRadius: 20, overflow: 'hidden' }}>
+              {/* Miniature du document capturé */}
               {previewUrl && (
-                <div style={{ position: 'relative', height: 90, overflow: 'hidden' }}>
-                  <img src={previewUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.65)' }} />
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, rgba(10,12,18,0.97) 100%)' }} />
-                  <div style={{ position: 'absolute', top: 10, right: 10, background: CARAMEL, borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'checkPop 0.35s cubic-bezier(0.175,0.885,0.32,1.275)' }}>
-                    <CheckCircle2 size={15} color="#fff" strokeWidth={3} />
+                <div style={{ position: 'relative', overflow: 'hidden' }}>
+                  <img src={previewUrl} alt="Document scanné" style={{ width: '100%', display: 'block', maxHeight: 220, objectFit: 'contain', background: '#000' }} />
+                  <div style={{ position: 'absolute', top: 10, right: 10, background: CARAMEL, borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'checkPop 0.35s cubic-bezier(0.175,0.885,0.32,1.275)' }}>
+                    <CheckCircle2 size={17} color="#fff" strokeWidth={3} />
                   </div>
                 </div>
               )}
-              <div style={{ padding: '14px 18px 18px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <div style={{ padding: '16px 18px 18px' }}>
+                <div style={{ marginBottom: 10 }}>
                   <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: CARAMEL, border: '1px solid rgba(196,151,106,0.3)', padding: '3px 10px', borderRadius: 20 }}>
                     {selectedFamily ? familyLabel[selectedFamily] : 'Document'} — {isVerso ? 'Verso' : 'Recto'}
                   </span>
                 </div>
-                <p style={{ margin: '0 0 12px', fontSize: 15, fontWeight: 700, color: '#fff' }}>
-                  {isVerso ? 'Verso capturé' : 'Vérifiez vos informations'}
+                <p style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: '#fff' }}>
+                  Photo prise avec succès
                 </p>
-                {!isVerso && (ocrData?.nom || ocrData?.prenom || ocrData?.dob) ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 0, marginBottom: 4 }}>
-                    {(ocrData.prenom || ocrData.nom) && <DataRow label="Identité" value={[ocrData.prenom, ocrData.nom].filter(Boolean).join(' ')} />}
-                    {ocrData.dob            && <DataRow label="Date de naissance" value={fmt(ocrData.dob)} />}
-                    {ocrData.expiry         && <DataRow label="Expire le"          value={fmt(ocrData.expiry)} />}
-                    {ocrData.documentNumber && <DataRow label="N° document"        value={ocrData.documentNumber} />}
-                  </div>
-                ) : !isVerso ? (
-                  <p style={{ margin: '0 0 8px', fontSize: 12, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, textAlign: 'center' }}>
-                    Aucune donnée extraite. Le document sera vérifié manuellement.
-                  </p>
-                ) : (
-                  <p style={{ margin: '0 0 8px', fontSize: 12, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, textAlign: 'center' }}>
-                    Verso bien enregistré.
-                  </p>
-                )}
-                {!isVerso && (ocrData?.nom || ocrData?.prenom) && (
-                  <p style={{ margin: '10px 0 0', fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.55 }}>
-                    Ces informations sont-elles correctes ?
-                  </p>
-                )}
+                <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.45)', lineHeight: 1.55 }}>
+                  Le document est-il bien lisible et centré dans l'image ?
+                </p>
               </div>
             </div>
           </div>
         )}
 
-        {/* ── FLIP ──────────────────────────────────────────────────────── */}
+        {/* FLIP — invite verso */}
         {phase === 'flip' && (
           <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 28px 160px', gap: 24 }}>
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.94)' }} />
@@ -580,7 +442,7 @@ export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCapt
               </div>
               {rectoPreview && (
                 <div style={{ position: 'relative', display: 'inline-block' }}>
-                  <img src={rectoPreview} alt="Recto" style={{ width: 180, height: 113, objectFit: 'cover', borderRadius: 10, border: `1.5px solid rgba(196,151,106,0.5)`, boxShadow: '0 0 28px rgba(196,151,106,0.12)' }} />
+                  <img src={rectoPreview} alt="Recto" style={{ width: 180, height: 113, objectFit: 'cover', borderRadius: 10, border: `1.5px solid rgba(196,151,106,0.5)` }} />
                   <div style={{ position: 'absolute', top: -10, right: -10, width: 28, height: 28, borderRadius: '50%', background: CARAMEL, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <CheckCircle2 size={16} color="#fff" strokeWidth={3} />
                   </div>
@@ -598,32 +460,7 @@ export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCapt
           </div>
         )}
 
-        {/* ── REJECTED / ERROR ──────────────────────────────────────────── */}
-        {(phase === 'rejected' || phase === 'error') && (
-          <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 28px 140px' }}>
-            {previewUrl && (
-              <img src={previewUrl} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', padding: '60px 24px', filter: 'brightness(0.2) saturate(0.3)' }} />
-            )}
-            <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, textAlign: 'center' }}>
-              <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'rgba(155,28,28,0.2)', border: '2px solid rgba(248,113,113,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <ShieldOff size={32} color="#f87171" />
-              </div>
-              <div>
-                <p style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 700, color: '#fff' }}>
-                  {phase === 'error' ? 'Erreur de lecture' : 'Document non valide'}
-                </p>
-                <p style={{ margin: '0 0 10px', fontSize: 13, color: 'rgba(255,255,255,0.5)', maxWidth: 300, lineHeight: 1.6 }}>{rejectReason}</p>
-                {selectedFamily && (
-                  <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.3)', maxWidth: 300, lineHeight: 1.5 }}>
-                    Attendu : {familyLabel[selectedFamily]} avec photo.
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── SCANNING — live camera ─────────────────────────────────────── */}
+        {/* SCANNING — caméra live */}
         {phase === 'scanning' && (
           <>
             <video ref={videoRef} playsInline muted style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: camReady ? 1 : 0, transition: 'opacity 0.35s' }} />
@@ -635,14 +472,10 @@ export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCapt
             )}
             {flash && <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.75)', zIndex: 5 }} />}
             <canvas ref={overlayRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 2 }} />
-
-            {/* Hint text */}
             {camReady && (
-              <div style={{ position: 'absolute', bottom: 168, left: '50%', transform: 'translateX(-50%)', zIndex: 3, textAlign: 'center', width: '80%' }}>
+              <div style={{ position: 'absolute', bottom: 168, left: '50%', transform: 'translateX(-50%)', zIndex: 3, textAlign: 'center', width: '84%' }}>
                 <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>
-                  {isVerso
-                    ? 'Placez le verso dans le cadre puis appuyez sur le bouton'
-                    : 'Centrez le document dans le cadre puis appuyez sur le bouton'}
+                  {isVerso ? 'Placez le verso dans le cadre' : 'Centrez le document dans le cadre'}
                 </p>
               </div>
             )}
@@ -650,11 +483,11 @@ export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCapt
         )}
       </div>
 
-      {/* Bottom controls */}
+      {/* Contrôles bas */}
       {phase !== 'selecting' && (
         <div style={{ padding: '12px 20px 44px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, background: 'linear-gradient(to top, rgba(0,0,0,0.75), transparent)', minHeight: 120 }}>
 
-          {/* Shutter button (main action) */}
+          {/* Déclencheur */}
           {phase === 'scanning' && (
             <button
               onClick={doCapture}
@@ -672,7 +505,7 @@ export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCapt
             </button>
           )}
 
-          {/* Confirming — recto → flip to verso */}
+          {/* Confirmer recto → verso */}
           {showFlipBtn && (
             <div style={{ display: 'flex', gap: 10, width: '100%', maxWidth: 340 }}>
               <Btn flex secondary onClick={handleRetry}><RotateCcw size={14} /> Reprendre</Btn>
@@ -680,7 +513,7 @@ export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCapt
             </div>
           )}
 
-          {/* Confirming — done */}
+          {/* Confirmer → terminer */}
           {showDoneBtn && (
             <div style={{ display: 'flex', gap: 10, width: '100%', maxWidth: 340 }}>
               <Btn flex secondary onClick={handleRetry}><RotateCcw size={14} /> Reprendre</Btn>
@@ -692,26 +525,18 @@ export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCapt
             </div>
           )}
 
-          {/* Flip screen */}
+          {/* Écran flip */}
           {phase === 'flip' && (
             <div style={{ display: 'flex', gap: 10, width: '100%', maxWidth: 340 }}>
               <Btn flex secondary onClick={handleSkipVerso}>Passer sans le verso</Btn>
               <Btn flex primary onClick={handleStartVerso}>Scanner le verso <ArrowRight size={13} /></Btn>
             </div>
           )}
-
-          {/* Rejected / Error */}
-          {(phase === 'rejected' || phase === 'error') && (
-            <Btn flex primary onClick={handleRetry}><RefreshCw size={14} /> Reprendre</Btn>
-          )}
         </div>
       )}
 
       <style>{`
         @keyframes spin         { to { transform: rotate(360deg) } }
-        @keyframes scanLine     { 0%{top:5%} 48%{top:88%} 52%{top:88%} 100%{top:5%} }
-        @keyframes framePulse   { 0%,100%{border-color:rgba(196,151,106,0.35)} 50%{border-color:rgba(196,151,106,0.9);box-shadow:0 0 20px 4px rgba(196,151,106,0.2)} }
-        @keyframes dotBounce    { 0%,80%,100%{transform:scale(0.7);opacity:0.45} 40%{transform:scale(1.25);opacity:1} }
         @keyframes checkPop     { 0%{transform:scale(0.5);opacity:0} 100%{transform:scale(1);opacity:1} }
         @keyframes rotateBounce { 0%,100%{transform:rotate(-20deg)} 50%{transform:rotate(20deg)} }
       `}</style>
@@ -719,15 +544,14 @@ export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCapt
   )
 }
 
-// ── Sub-components ─────────────────────────────────────────────────────────────
-function DataRow({ label, value }: { label: string; value: string }) {
-  if (!value) return null
-  return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.38)', fontWeight: 500 }}>{label}</span>
-      <span style={{ fontSize: 13, color: '#fff', fontWeight: 600 }}>{value}</span>
-    </div>
-  )
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function dataURLtoBlob(dataURL: string): Blob {
+  const [header, data] = dataURL.split(',')
+  const mime = header.match(/:(.*?);/)![1]
+  const bytes = atob(data)
+  const arr = new Uint8Array(bytes.length)
+  for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i)
+  return new Blob([arr], { type: mime })
 }
 
 function Btn({ children, onClick, flex = false, primary = false, secondary = false }: {
