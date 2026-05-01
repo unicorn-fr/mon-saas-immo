@@ -223,6 +223,17 @@ export default function PropertyDetailsPublic() {
 
         {/* Content */}
         <div className="container mx-auto px-4 py-8">
+
+          {/* Back button */}
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-1.5 mb-5 transition-opacity hover:opacity-70"
+            style={{ fontFamily: M.body, fontSize: 13, fontWeight: 500, color: M.inkMid, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Retour
+          </button>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             {/* Main Content */}
@@ -929,111 +940,6 @@ export default function PropertyDetailsPublic() {
           />
         )}
 
-        {/* ── Barre CTA sticky mobile — visible uniquement < lg ── */}
-        <div
-          className="lg:hidden fixed bottom-0 left-0 right-0 z-30"
-          style={{
-            background: '#ffffff',
-            borderTop: `1px solid ${M.border}`,
-            boxShadow: '0 -4px 24px rgba(13,12,10,0.08)',
-            padding: '12px 16px',
-            paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
-            display: 'flex', alignItems: 'center', gap: 12,
-          }}
-        >
-          {/* Prix */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontFamily: M.display, fontSize: 22, fontWeight: 700, color: M.ink, lineHeight: 1, margin: 0 }}>
-              {Number(property.price).toLocaleString('fr-FR')} €
-            </p>
-            <p style={{ fontFamily: M.body, fontSize: 11, color: M.inkFaint, margin: 0 }}>/ mois</p>
-          </div>
-
-          {/* CTA */}
-          {!isAuthenticated ? (
-            <button
-              onClick={() => navigate('/login')}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-                padding: '0 20px', minHeight: 48, borderRadius: 10,
-                background: M.tenant, color: '#ffffff',
-                fontFamily: M.body, fontWeight: 600, fontSize: 14,
-                border: 'none', cursor: 'pointer', whiteSpace: 'nowrap',
-              }}
-            >
-              <SendHorizonal className="w-4 h-4" />
-              Postuler
-            </button>
-          ) : user?.role === 'TENANT' ? (
-            myApplication?.status === 'APPROVED' ? (
-              <button
-                onClick={() => setShowBookingModal(true)}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '0 20px', minHeight: 48, borderRadius: 10,
-                  background: M.tenant, color: '#ffffff',
-                  fontFamily: M.body, fontWeight: 600, fontSize: 14,
-                  border: 'none', cursor: 'pointer', whiteSpace: 'nowrap',
-                }}
-              >
-                <Calendar className="w-4 h-4" />
-                Réserver
-              </button>
-            ) : myApplication?.status === 'PENDING' ? (
-              <div style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-                padding: '0 16px', minHeight: 48, borderRadius: 10,
-                background: M.warningBg, color: M.warning,
-                fontFamily: M.body, fontWeight: 600, fontSize: 13,
-                border: `1px solid #f6d860`, whiteSpace: 'nowrap',
-              }}>
-                <Clock className="w-4 h-4" />
-                En examen
-              </div>
-            ) : myApplication?.status === 'REJECTED' ? (
-              <div style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-                padding: '0 16px', minHeight: 48, borderRadius: 10,
-                background: M.dangerBg, color: M.danger,
-                fontFamily: M.body, fontWeight: 600, fontSize: 13,
-                border: `1px solid ${M.danger}30`, whiteSpace: 'nowrap',
-              }}>
-                Non retenue
-              </div>
-            ) : (
-              <button
-                onClick={() => setShowPreQualModal(true)}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '0 20px', minHeight: 48, borderRadius: 10,
-                  background: M.tenant, color: '#ffffff',
-                  fontFamily: M.body, fontWeight: 600, fontSize: 14,
-                  border: 'none', cursor: 'pointer', whiteSpace: 'nowrap',
-                }}
-              >
-                <SendHorizonal className="w-4 h-4" />
-                Postuler
-              </button>
-            )
-          ) : (
-            <button
-              onClick={() => setShowContactModal(true)}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-                padding: '0 20px', minHeight: 48, borderRadius: 10,
-                background: M.surface, color: M.ink,
-                fontFamily: M.body, fontWeight: 500, fontSize: 14,
-                border: `1px solid ${M.border}`, cursor: 'pointer', whiteSpace: 'nowrap',
-              }}
-            >
-              <MessageSquare className="w-4 h-4" />
-              Contacter
-            </button>
-          )}
-        </div>
-
-        {/* Espace réservé pour la barre sticky mobile */}
-        <div className="lg:hidden" style={{ height: 80 }} />
       </div>
     </Layout>
   )
