@@ -246,7 +246,7 @@ export function PreQualificationModal({
           style={{ background: '#ffffff', maxHeight: 'calc(100dvh - 32px)' }}
         >
           {/* Header — flex-shrink-0 so it never gets squeezed */}
-          <div className="flex-shrink-0 flex items-start justify-between p-5 border-b" style={{ borderColor: '#e4e1db', background: '#ffffff' }}>
+          <div className="flex-shrink-0 flex items-start justify-between p-5 border-b rounded-t-2xl" style={{ borderColor: '#e4e1db', background: '#ffffff' }}>
             <div>
               <h2 className="text-base font-semibold" style={{ color: '#0d0c0a', fontFamily: 'DM Sans, system-ui, sans-serif' }}>
                 Postuler · {propertyTitle}
