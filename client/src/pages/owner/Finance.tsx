@@ -29,7 +29,11 @@ import {
   ChevronUp,
   Info,
   Building2,
+  BarChart3,
+  AlertTriangle,
+  CheckCircle2,
 } from 'lucide-react'
+import { financeService, MarketAnalysis } from '../../services/finance.service'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -184,7 +188,7 @@ function KpiCard({
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-type ActiveTab = 'summary' | 'expenses' | 'loans'
+type ActiveTab = 'summary' | 'expenses' | 'loans' | 'market'
 
 const INITIAL_EXPENSE_FORM: CreateExpenseInput = {
   propertyId: '',
@@ -221,6 +225,8 @@ export default function Finance() {
   const [citySearch, setCitySearch] = useState('')
   const [expenseForm, setExpenseForm] = useState<CreateExpenseInput>(INITIAL_EXPENSE_FORM)
   const [loanForm, setLoanForm] = useState<LoanFormState>(INITIAL_LOAN_FORM)
+  const [marketAnalyses, setMarketAnalyses] = useState<Record<string, MarketAnalysis>>({})
+  const [marketLoading, setMarketLoading] = useState(false)
 
   const {
     summary,
@@ -244,6 +250,22 @@ export default function Finance() {
     fetchMyProperties()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    if (activeTab !== 'market' || myProperties.length === 0) return
+    const toFetch = myProperties.filter((p) => !marketAnalyses[p.id])
+    if (toFetch.length === 0) return
+    setMarketLoading(true)
+    Promise.allSettled(
+      toFetch.map((p) => financeService.getMarketAnalysis(p.id).then((a) => ({ id: p.id, a })))
+    ).then((results) => {
+      const next: Record<string, MarketAnalysis> = { ...marketAnalyses }
+      results.forEach((r) => { if (r.status === 'fulfilled') next[r.value.id] = r.value.a })
+      setMarketAnalyses(next)
+      setMarketLoading(false)
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, myProperties])
 
   const filteredCities = FRENCH_CITY_PRICES.filter(
     (c) => citySearch === '' || c.city.toLowerCase().includes(citySearch.toLowerCase()),
@@ -358,13 +380,14 @@ export default function Finance() {
           <TabPill id="summary" label="Résumé & Graphiques" />
           <TabPill id="expenses" label="Dépenses" />
           <TabPill id="loans" label="Emprunts" />
+          <TabPill id="market" label="Marché & Loyers" />
         </div>
 
         {/* ── TAB: SUMMARY ── */}
         {activeTab === 'summary' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
-            {/* KPIs */}
+            {/* KPIs row 1 */}
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
               <KpiCard
                 label="Revenus 12 mois"
@@ -379,23 +402,62 @@ export default function Finance() {
                 positive={false}
               />
               <KpiCard
-                label="Remboursement / mois"
-                value={summary ? formatEuro(summary.totalLoanMonthly) : '—'}
-                sub="Total emprunts actifs"
-              />
-              <KpiCard
                 label="Cash-flow net annuel"
                 value={summary ? formatEuro(summary.netCashFlow) : '—'}
-                sub={
-                  summary
-                    ? summary.netCashFlow >= 0
-                      ? '✓ Rentabilité positive'
-                      : '⚠ Déficit à surveiller'
-                    : undefined
-                }
+                sub={summary ? (summary.netCashFlow >= 0 ? '✓ Rentabilité positive' : '⚠ Déficit à surveiller') : undefined}
                 positive={summary ? summary.netCashFlow >= 0 : undefined}
               />
+              <KpiCard
+                label="Taux d'occupation"
+                value={summary ? `${summary.occupancyRate}%` : '—'}
+                sub={summary ? (summary.occupancyRate >= 90 ? '✓ Excellent' : summary.occupancyRate >= 70 ? 'Correct' : '⚠ Vacance élevée') : undefined}
+                positive={summary ? summary.occupancyRate >= 80 : undefined}
+              />
             </div>
+
+            {/* KPIs row 2 — rendements */}
+            {summary && myProperties.length > 0 && (() => {
+              const totalRentAnnual = summary.totalRevenue
+              const totalLoanAnnual = summary.totalLoanMonthly * 12
+              const grossYield = myProperties.reduce((acc, p) => acc + p.price, 0) > 0
+                ? ((totalRentAnnual / myProperties.reduce((acc, p) => acc + p.price, 0)) * 100)
+                : 0
+              const netYield = myProperties.reduce((acc, p) => acc + p.price, 0) > 0
+                ? (((totalRentAnnual - summary.totalExpenses - totalLoanAnnual) / myProperties.reduce((acc, p) => acc + p.price, 0)) * 100)
+                : 0
+              const monthlyLoanCover = summary.totalLoanMonthly > 0
+                ? ((summary.totalRevenue / 12) / summary.totalLoanMonthly * 100)
+                : null
+              return (
+                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                  <KpiCard
+                    label="Rendement brut"
+                    value={grossYield > 0 ? `${grossYield.toFixed(2)}%` : '—'}
+                    sub="Loyers / valeur du parc"
+                    positive={grossYield >= 4}
+                  />
+                  <KpiCard
+                    label="Rendement net"
+                    value={netYield > 0 ? `${netYield.toFixed(2)}%` : '—'}
+                    sub="Après charges & emprunts"
+                    positive={netYield >= 2}
+                  />
+                  <KpiCard
+                    label="Remboursement / mois"
+                    value={formatEuro(summary.totalLoanMonthly)}
+                    sub="Total emprunts actifs"
+                  />
+                  {monthlyLoanCover !== null && (
+                    <KpiCard
+                      label="Couverture emprunt"
+                      value={`${Math.round(monthlyLoanCover)}%`}
+                      sub="Loyers / mensualités"
+                      positive={monthlyLoanCover >= 110}
+                    />
+                  )}
+                </div>
+              )
+            })()}
 
             {/* Area chart */}
             <div
@@ -1437,6 +1499,157 @@ export default function Finance() {
             )}
           </div>
         )}
+        {/* ── TAB: MARKET ── */}
+        {activeTab === 'market' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, margin: 0 }}>
+              Comparez votre loyer aux prix de marché officiels (données Préfecture IDF 2024, CLAMEUR, INSEE) pour chaque bien.
+            </p>
+
+            {marketLoading && myProperties.length > 0 && (
+              <div style={{ textAlign: 'center', padding: 40, fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint }}>
+                Analyse du marché en cours...
+              </div>
+            )}
+
+            {myProperties.length === 0 && (
+              <div style={{ textAlign: 'center', padding: 40, fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint }}>
+                Aucun bien enregistré
+              </div>
+            )}
+
+            {myProperties.map((property) => {
+              const analysis = marketAnalyses[property.id]
+              if (!analysis) return (
+                <div key={property.id} style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: 20 }}>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.ink, margin: 0 }}>{property.title}</p>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '4px 0 0' }}>Chargement de l'analyse...</p>
+                </div>
+              )
+
+              const vsColor = analysis.vsMarket === 'above' ? BAI.tenant : analysis.vsMarket === 'below' ? BAI.caramel : BAI.inkMid
+              const vsIcon = analysis.vsMarket === 'above' ? <TrendingUp style={{ width: 14, height: 14 }} /> : analysis.vsMarket === 'below' ? <TrendingDown style={{ width: 14, height: 14 }} /> : <Minus style={{ width: 14, height: 14 }} />
+
+              const encColor = analysis.encadrementStatus === 'compliant' ? BAI.tenant
+                : analysis.encadrementStatus === 'above_limit' ? BAI.error
+                : BAI.inkFaint
+              const encIcon = analysis.encadrementStatus === 'compliant' ? <CheckCircle2 style={{ width: 14, height: 14 }} />
+                : analysis.encadrementStatus === 'above_limit' ? <AlertTriangle style={{ width: 14, height: 14 }} />
+                : null
+
+              // Gauge: position of rentPerM2 within market range
+              const min = analysis.market?.minRentM2 ?? 0
+              const max = analysis.market?.maxRentM2 ?? 100
+              const gaugePos = max > min ? Math.min(100, Math.max(0, ((analysis.rentPerM2 - min) / (max - min)) * 100)) : 50
+              const avgPos = max > min ? Math.min(100, Math.max(0, ((analysis.market!.avgRentM2 - min) / (max - min)) * 100)) : 50
+
+              return (
+                <div key={property.id} style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: 24 }}>
+                  {/* Header */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
+                    <div>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 15, fontWeight: 700, color: BAI.ink, margin: 0 }}>{property.title}</p>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '3px 0 0' }}>{property.city} · {property.surface} m²</p>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {/* vs market badge */}
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 12px', borderRadius: 999, background: `${vsColor}15`, border: `1px solid ${vsColor}30`, fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: vsColor }}>
+                        {vsIcon}
+                        {analysis.vsMarket === 'above' ? `+${analysis.vsMarketPct}% vs marché` : analysis.vsMarket === 'below' ? `${analysis.vsMarketPct}% vs marché` : 'Dans la moyenne'}
+                      </span>
+                      {/* encadrement badge */}
+                      {analysis.encadrementStatus !== 'not_applicable' && analysis.encadrementStatus !== 'unknown' && (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 12px', borderRadius: 999, background: `${encColor}15`, border: `1px solid ${encColor}30`, fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: encColor }}>
+                          {encIcon}
+                          {analysis.encadrementStatus === 'compliant' ? 'Encadrement ✓' : 'Encadrement dépassé'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* KPI row */}
+                  <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginBottom: 20 }}>
+                    <div>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: 0 }}>Votre loyer /m²</p>
+                      <p style={{ fontFamily: BAI.fontDisplay, fontSize: 24, fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '2px 0 0' }}>{analysis.rentPerM2.toFixed(1)} €</p>
+                    </div>
+                    {analysis.market && (
+                      <>
+                        <div>
+                          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: 0 }}>Moyenne marché</p>
+                          <p style={{ fontFamily: BAI.fontDisplay, fontSize: 24, fontWeight: 700, fontStyle: 'italic', color: BAI.inkMid, margin: '2px 0 0' }}>{analysis.market.avgRentM2.toFixed(1)} €</p>
+                        </div>
+                        <div>
+                          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: 0 }}>Fourchette</p>
+                          <p style={{ fontFamily: BAI.fontDisplay, fontSize: 24, fontWeight: 700, fontStyle: 'italic', color: BAI.inkMid, margin: '2px 0 0' }}>{analysis.market.minRentM2} – {analysis.market.maxRentM2} €</p>
+                        </div>
+                        <div>
+                          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: 0 }}>Revenu annuel</p>
+                          <p style={{ fontFamily: BAI.fontDisplay, fontSize: 24, fontWeight: 700, fontStyle: 'italic', color: BAI.tenant, margin: '2px 0 0' }}>{formatEuro(analysis.annualRevenue)}</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Visual gauge */}
+                  {analysis.market && (
+                    <div style={{ marginBottom: 20 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint }}>{analysis.market.minRentM2} €/m² (min)</span>
+                        <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint }}>{analysis.market.maxRentM2} €/m² (max)</span>
+                      </div>
+                      <div style={{ position: 'relative', height: 10, background: `linear-gradient(to right, ${BAI.ownerLight ?? '#eaf0fb'}, ${BAI.owner})`, borderRadius: 999 }}>
+                        {/* Average marker */}
+                        <div style={{ position: 'absolute', left: `${avgPos}%`, top: -3, width: 2, height: 16, background: BAI.inkMid, borderRadius: 2, transform: 'translateX(-50%)' }} />
+                        {/* Your rent marker */}
+                        <div style={{ position: 'absolute', left: `${gaugePos}%`, top: -5, width: 20, height: 20, background: vsColor, borderRadius: '50%', transform: 'translateX(-50%)', border: '2px solid white', boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }} />
+                      </div>
+                      <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
+                        <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkMid, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: vsColor, display: 'inline-block' }} /> Votre loyer
+                        </span>
+                        <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkMid, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <span style={{ width: 8, height: 2, background: BAI.inkMid, display: 'inline-block' }} /> Moyenne marché
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Encadrement details */}
+                  {analysis.encadrementRef && (
+                    <div style={{ background: BAI.bgMuted, borderRadius: 8, padding: '10px 14px', marginBottom: 14 }}>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.ink, margin: '0 0 4px' }}>Encadrement des loyers</p>
+                      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                        <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid }}>Loyer de référence : <strong>{analysis.encadrementRef} €/m²</strong></span>
+                        {analysis.encadrementMaj && <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid }}>Majoré : <strong>{analysis.encadrementMaj} €/m²</strong></span>}
+                        {analysis.encadrementMin && <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid }}>Minoré : <strong>{analysis.encadrementMin} €/m²</strong></span>}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Advice cards */}
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: 220, background: `${BAI.caramel}0d`, border: `1px solid ${BAI.caramel}30`, borderRadius: 8, padding: '10px 14px' }}>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.caramel, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                        <BarChart3 style={{ width: 12, height: 12, display: 'inline', marginRight: 4 }} />
+                        Positionnement
+                      </p>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.ink, margin: 0, lineHeight: 1.5 }}>{analysis.advice}</p>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 220, background: `${BAI.owner}0d`, border: `1px solid ${BAI.ownerBorder ?? '#b8ccf0'}`, borderRadius: 8, padding: '10px 14px' }}>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.owner, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                        <Info style={{ width: 12, height: 12, display: 'inline', marginRight: 4 }} />
+                        Conseil fiscal
+                      </p>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.ink, margin: 0, lineHeight: 1.5 }}>{analysis.fiscalAdvice}</p>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
       </div>
     </Layout>
   )
