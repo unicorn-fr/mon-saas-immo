@@ -14,8 +14,6 @@ import { NationalitySearch } from '../../components/dossier/NationalitySearch'
 import toast from 'react-hot-toast'
 import { BAI } from '../../constants/bailio-tokens'
 
-// ── Design tokens ──────────────────────────────────────────────────────────────
-
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface Slot {
   docType:  string
@@ -232,7 +230,6 @@ function HelpTooltip({ content }: { content: string }) {
           }}
         >
           {content}
-          {/* Arrow */}
           <div style={{
             position: 'absolute', bottom: -6, left: '50%', transform: 'translateX(-50%)',
             width: 10, height: 6,
@@ -242,6 +239,465 @@ function HelpTooltip({ content }: { content: string }) {
           }} />
         </div>
       )}
+    </div>
+  )
+}
+
+// ── DropZone — standalone sub-component ───────────────────────────────────────
+interface DropZoneProps {
+  label: string
+  doc: TenantDocument | undefined
+  uploading: boolean
+  required?: boolean
+  inputRef: React.RefObject<HTMLInputElement>
+  accept: string
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onDelete: () => void
+  onView: () => void
+}
+
+function DropZone({ label, doc, uploading, required, inputRef, accept, onChange, onDelete, onView }: DropZoneProps) {
+  const [dragging, setDragging] = useState(false)
+
+  if (doc) {
+    return (
+      <div style={{
+        padding: '12px 14px', borderRadius: 10,
+        border: `1px solid ${BAI.tenantBorder}`, background: BAI.tenantLight,
+        display: 'flex', alignItems: 'center', gap: 10,
+      }}>
+        <CheckCircle2 style={{ width: 16, height: 16, color: BAI.tenant, flexShrink: 0 }} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: BAI.tenant, fontFamily: BAI.fontBody }}>{label}</p>
+          <p style={{ margin: 0, fontSize: 11, color: BAI.inkFaint, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: BAI.fontBody }}>{doc.fileName}</p>
+        </div>
+        <button
+          onClick={onView}
+          style={{
+            padding: '4px 10px', borderRadius: 7, border: `1px solid ${BAI.tenantBorder}`,
+            background: BAI.bgSurface, color: BAI.tenant, fontSize: 11,
+            fontFamily: BAI.fontBody, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: 4,
+          }}
+        >
+          <Eye style={{ width: 12, height: 12 }} /> Voir
+        </button>
+        <button
+          onClick={onDelete}
+          style={{
+            padding: '4px 8px', borderRadius: 7, border: `1px solid ${BAI.border}`,
+            background: BAI.bgSurface, color: BAI.error, fontSize: 11,
+            fontFamily: BAI.fontBody, cursor: 'pointer',
+            display: 'flex', alignItems: 'center',
+          }}
+        >
+          <Trash2 style={{ width: 12, height: 12 }} />
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      onDragEnter={() => setDragging(true)}
+      onDragOver={e => { e.preventDefault(); setDragging(true) }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={e => {
+        e.preventDefault(); setDragging(false)
+        const f = e.dataTransfer.files[0]
+        if (f && inputRef.current) {
+          const dt = new DataTransfer(); dt.items.add(f)
+          inputRef.current.files = dt.files
+          inputRef.current.dispatchEvent(new Event('change', { bubbles: true }))
+        }
+      }}
+      style={{
+        border: `1.5px dashed ${dragging ? BAI.tenant : BAI.border}`,
+        borderRadius: 10, padding: '16px 14px',
+        background: dragging ? BAI.tenantLight : BAI.bgMuted,
+        transition: 'all 0.15s', textAlign: 'center',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+      }}
+    >
+      <Upload style={{ width: 18, height: 18, color: BAI.inkFaint }} />
+      <div>
+        <p style={{ margin: '0 0 2px', fontSize: 12, fontWeight: 600, color: BAI.ink, fontFamily: BAI.fontBody }}>
+          {label}
+          {required && <span style={{ color: BAI.caramel, marginLeft: 4 }}>*</span>}
+        </p>
+        <p style={{ margin: 0, fontSize: 11, color: BAI.inkFaint, fontFamily: BAI.fontBody }}>
+          {uploading ? 'Envoi…' : 'Glisser ou cliquer'}
+        </p>
+      </div>
+      <input ref={inputRef} type="file" accept={accept} style={{ display: 'none' }} onChange={onChange} />
+      <button
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+        style={{
+          padding: '6px 14px', borderRadius: 7, border: `1px solid ${BAI.border}`,
+          background: BAI.bgSurface, color: BAI.inkMid, fontSize: 11,
+          fontFamily: BAI.fontBody, cursor: uploading ? 'default' : 'pointer',
+          display: 'flex', alignItems: 'center', gap: 5,
+        }}
+      >
+        <Upload style={{ width: 11, height: 11 }} />
+        Importer
+      </button>
+    </div>
+  )
+}
+
+// ── IdentityDocStep ────────────────────────────────────────────────────────────
+// Defined OUTSIDE the page component to avoid remount on every render.
+interface IdentityDocStepProps {
+  documents: TenantDocument[]
+  onUpload: (file: File, docType: string) => Promise<void>
+  onDelete:  (id: string) => Promise<void>
+  onView:    (doc: TenantDocument) => void
+}
+
+function IdentityDocStep({ documents, onUpload, onDelete, onView }: IdentityDocStepProps) {
+  const [idKind,    setIdKind]    = useState<'id' | 'passport' | 'other' | null>(null)
+  const [subType,   setSubType]   = useState<'cni' | 'permis'>('cni')
+  const [showCam,   setShowCam]   = useState(false)
+  const [uploading, setUploading] = useState(false)
+
+  const rectoRef = useRef<HTMLInputElement>(null)
+  const versoRef = useRef<HTMLInputElement>(null)
+  const passRef  = useRef<HTMLInputElement>(null)
+  const autreRef = useRef<HTMLInputElement>(null)
+
+  // Computed doc types based on subType toggle
+  const rectoType = subType === 'cni' ? 'CNI_RECTO' : 'PERMIS_RECTO'
+  const versoType = subType === 'cni' ? 'CNI_VERSO' : 'PERMIS_VERSO'
+
+  const rectoDoc = documents.find(d => d.docType === rectoType)
+    ?? documents.find(d => d.docType === (subType === 'cni' ? 'PERMIS_RECTO' : 'CNI_RECTO'))
+  const versoDoc = documents.find(d => d.docType === versoType)
+    ?? documents.find(d => d.docType === (subType === 'cni' ? 'PERMIS_VERSO' : 'CNI_VERSO'))
+  const passDoc  = documents.find(d => d.docType === 'PASSEPORT')
+  const autreDoc = documents.find(d => d.docType === 'TITRE_SEJOUR')
+
+  // Auto-select subType from existing docs
+  useEffect(() => {
+    if (documents.find(d => d.docType === 'PERMIS_RECTO' || d.docType === 'PERMIS_VERSO')) {
+      setSubType('permis')
+    }
+  }, [documents])
+
+  // Auto-select idKind from existing docs
+  useEffect(() => {
+    if (documents.find(d => d.docType === 'PASSEPORT')) {
+      setIdKind('passport')
+    } else if (documents.find(d => d.docType === 'TITRE_SEJOUR')) {
+      setIdKind('other')
+    } else if (documents.find(d => ['CNI_RECTO','CNI_VERSO','PERMIS_RECTO','PERMIS_VERSO'].includes(d.docType))) {
+      setIdKind('id')
+    }
+  }, [documents])
+
+  // Shared card button style helper
+  const cardBtnBase: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px',
+    borderRadius: 12, border: `1.5px solid ${BAI.border}`, background: BAI.bgSurface,
+    cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s', width: '100%',
+    fontFamily: BAI.fontBody,
+  }
+
+  // Separator
+  const Separator = () => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+      <div style={{ flex: 1, height: 1, background: BAI.border }} />
+      <span style={{ fontSize: 11, color: BAI.inkFaint, fontFamily: BAI.fontBody }}>ou importer manuellement</span>
+      <div style={{ flex: 1, height: 1, background: BAI.border }} />
+    </div>
+  )
+
+  // Back header
+  const BackHeader = ({ label }: { label: string }) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+      <button
+        onClick={() => { setIdKind(null); setShowCam(false) }}
+        style={{
+          background: 'none', border: 'none', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', gap: 5,
+          color: BAI.inkMid, fontSize: 13, fontFamily: BAI.fontBody, padding: 0,
+        }}
+      >
+        <ArrowLeft style={{ width: 14, height: 14 }} />
+        Retour
+      </button>
+      <span style={{ color: BAI.border }}>·</span>
+      <span style={{ fontSize: 13, fontWeight: 600, color: BAI.ink, fontFamily: BAI.fontBody }}>{label}</span>
+    </div>
+  )
+
+  // ── idKind null → choice screen ───────────────────────────────────────────
+  if (idKind === null) {
+    return (
+      <div>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint, margin: '0 0 16px', lineHeight: 1.6 }}>
+          Sélectionnez le type de document que vous souhaitez ajouter à votre dossier.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+
+          {/* CNI / Permis */}
+          <button
+            onClick={() => setIdKind('id')}
+            style={cardBtnBase}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = BAI.tenant
+              e.currentTarget.style.background = BAI.tenantLight
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = BAI.border
+              e.currentTarget.style.background = BAI.bgSurface
+            }}
+          >
+            <div style={{ width: 44, height: 44, borderRadius: 10, background: BAI.tenantLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <CreditCard style={{ width: 20, height: 20, color: BAI.tenant }} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 700, color: BAI.ink, fontFamily: BAI.fontBody }}>Carte d'identité ou Permis de conduire</p>
+              <p style={{ margin: 0, fontSize: 12, color: BAI.inkFaint, fontFamily: BAI.fontBody }}>CNI française, européenne ou permis EU — recto + verso</p>
+            </div>
+            <ArrowRight style={{ width: 16, height: 16, color: BAI.inkFaint, flexShrink: 0 }} />
+          </button>
+
+          {/* Passeport */}
+          <button
+            onClick={() => setIdKind('passport')}
+            style={cardBtnBase}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = BAI.tenant
+              e.currentTarget.style.background = BAI.tenantLight
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = BAI.border
+              e.currentTarget.style.background = BAI.bgSurface
+            }}
+          >
+            <div style={{ width: 44, height: 44, borderRadius: 10, background: BAI.tenantLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <BookOpen style={{ width: 20, height: 20, color: BAI.tenant }} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 700, color: BAI.ink, fontFamily: BAI.fontBody }}>Passeport</p>
+              <p style={{ margin: 0, fontSize: 12, color: BAI.inkFaint, fontFamily: BAI.fontBody }}>Passeport français ou étranger — page photo uniquement</p>
+            </div>
+            <ArrowRight style={{ width: 16, height: 16, color: BAI.inkFaint, flexShrink: 0 }} />
+          </button>
+
+          {/* Autre */}
+          <button
+            onClick={() => setIdKind('other')}
+            style={cardBtnBase}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = BAI.tenant
+              e.currentTarget.style.background = BAI.tenantLight
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = BAI.border
+              e.currentTarget.style.background = BAI.bgSurface
+            }}
+          >
+            <div style={{ width: 44, height: 44, borderRadius: 10, background: BAI.tenantLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <FileText style={{ width: 20, height: 20, color: BAI.tenant }} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 700, color: BAI.ink, fontFamily: BAI.fontBody }}>Autre document</p>
+              <p style={{ margin: 0, fontSize: 12, color: BAI.inkFaint, fontFamily: BAI.fontBody }}>Titre de séjour, carte de résident…</p>
+            </div>
+            <ArrowRight style={{ width: 16, height: 16, color: BAI.inkFaint, flexShrink: 0 }} />
+          </button>
+
+        </div>
+      </div>
+    )
+  }
+
+  // ── idKind === 'id' ───────────────────────────────────────────────────────
+  if (idKind === 'id') {
+    return (
+      <div>
+        <BackHeader label="Carte d'identité / Permis" />
+
+        {/* Toggle CNI / Permis */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 18, background: BAI.bgMuted, padding: 3, borderRadius: 8, width: 'fit-content' }}>
+          {(['cni', 'permis'] as const).map(t => (
+            <button
+              key={t}
+              onClick={() => setSubType(t)}
+              style={{
+                padding: '6px 16px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                fontSize: 12, fontWeight: 600, fontFamily: BAI.fontBody, transition: 'all 0.15s',
+                background: subType === t ? BAI.bgSurface : 'transparent',
+                color: subType === t ? BAI.ink : BAI.inkFaint,
+                boxShadow: subType === t ? BAI.shadowSm : 'none',
+              }}
+            >
+              {t === 'cni' ? "Carte d'identité" : 'Permis de conduire'}
+            </button>
+          ))}
+        </div>
+
+        {/* Scanner CTA */}
+        <button
+          onClick={() => setShowCam(true)}
+          style={{
+            width: '100%', padding: '14px 20px', borderRadius: 10, border: 'none',
+            background: BAI.night, color: '#fff', fontSize: 13, fontWeight: 700,
+            fontFamily: BAI.fontBody, cursor: 'pointer', marginBottom: 16,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            transition: 'opacity 0.15s',
+          }}
+        >
+          <Camera style={{ width: 16, height: 16 }} />
+          Scanner en direct — recto + verso automatique
+        </button>
+
+        <Separator />
+
+        {/* Recto + Verso drop zones */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <DropZone
+            label={`Recto${subType === 'cni' ? ' (face avant CNI)' : ' (face avant permis)'}`}
+            doc={rectoDoc}
+            uploading={uploading}
+            required
+            inputRef={rectoRef}
+            accept=".pdf,image/jpeg,image/png,image/webp,image/heic"
+            onChange={async e => {
+              const f = e.target.files?.[0]; if (!f) return
+              e.target.value = ''
+              setUploading(true)
+              try { await onUpload(f, rectoType) } finally { setUploading(false) }
+            }}
+            onDelete={() => { if (rectoDoc) onDelete(rectoDoc.id) }}
+            onView={() => { if (rectoDoc) onView(rectoDoc) }}
+          />
+          <DropZone
+            label={`Verso${subType === 'cni' ? ' (bande MRZ)' : ' (catégories)'}`}
+            doc={versoDoc}
+            uploading={uploading}
+            inputRef={versoRef}
+            accept=".pdf,image/jpeg,image/png,image/webp,image/heic"
+            onChange={async e => {
+              const f = e.target.files?.[0]; if (!f) return
+              e.target.value = ''
+              setUploading(true)
+              try { await onUpload(f, versoType) } finally { setUploading(false) }
+            }}
+            onDelete={() => { if (versoDoc) onDelete(versoDoc.id) }}
+            onView={() => { if (versoDoc) onView(versoDoc) }}
+          />
+        </div>
+
+        {showCam && (
+          <CameraCapture
+            initialFamily={subType === 'cni' ? 'cni' : 'permis'}
+            onComplete={async (captures: CaptureEntry[]) => {
+              setShowCam(false)
+              setUploading(true)
+              try {
+                for (const { file, docType: dt } of captures) {
+                  await onUpload(file, dt)
+                }
+              } catch {
+                toast.error("Erreur lors de l'envoi.")
+              } finally {
+                setUploading(false)
+              }
+            }}
+            onClose={() => setShowCam(false)}
+          />
+        )}
+      </div>
+    )
+  }
+
+  // ── idKind === 'passport' ─────────────────────────────────────────────────
+  if (idKind === 'passport') {
+    return (
+      <div>
+        <BackHeader label="Passeport" />
+
+        {/* Scanner CTA */}
+        <button
+          onClick={() => setShowCam(true)}
+          style={{
+            width: '100%', padding: '14px 20px', borderRadius: 10, border: 'none',
+            background: BAI.night, color: '#fff', fontSize: 13, fontWeight: 700,
+            fontFamily: BAI.fontBody, cursor: 'pointer', marginBottom: 16,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            transition: 'opacity 0.15s',
+          }}
+        >
+          <Camera style={{ width: 16, height: 16 }} />
+          Scanner en direct — page photo
+        </button>
+
+        <Separator />
+
+        <DropZone
+          label="Page photo du passeport"
+          doc={passDoc}
+          uploading={uploading}
+          required
+          inputRef={passRef}
+          accept=".pdf,image/jpeg,image/png,image/webp,image/heic"
+          onChange={async e => {
+            const f = e.target.files?.[0]; if (!f) return
+            e.target.value = ''
+            setUploading(true)
+            try { await onUpload(f, 'PASSEPORT') } finally { setUploading(false) }
+          }}
+          onDelete={() => { if (passDoc) onDelete(passDoc.id) }}
+          onView={() => { if (passDoc) onView(passDoc) }}
+        />
+
+        {showCam && (
+          <CameraCapture
+            initialFamily="passport"
+            onComplete={async (captures: CaptureEntry[]) => {
+              setShowCam(false)
+              setUploading(true)
+              try {
+                for (const { file, docType: dt } of captures) {
+                  await onUpload(file, dt)
+                }
+              } catch {
+                toast.error("Erreur lors de l'envoi.")
+              } finally {
+                setUploading(false)
+              }
+            }}
+            onClose={() => setShowCam(false)}
+          />
+        )}
+      </div>
+    )
+  }
+
+  // ── idKind === 'other' ────────────────────────────────────────────────────
+  return (
+    <div>
+      <BackHeader label="Autre document" />
+      <DropZone
+        label="Titre de séjour / Carte de résident"
+        doc={autreDoc}
+        uploading={uploading}
+        required
+        inputRef={autreRef}
+        accept=".pdf,image/jpeg,image/png,image/webp,image/heic"
+        onChange={async e => {
+          const f = e.target.files?.[0]; if (!f) return
+          e.target.value = ''
+          setUploading(true)
+          try { await onUpload(f, 'TITRE_SEJOUR') } finally { setUploading(false) }
+        }}
+        onDelete={() => { if (autreDoc) onDelete(autreDoc.id) }}
+        onView={() => { if (autreDoc) onView(autreDoc) }}
+      />
     </div>
   )
 }
@@ -266,7 +722,6 @@ function DocSlot({
   const isImage = doc && (doc.fileUrl?.match(/\.(jpe?g|png|webp|gif)/i) || doc.fileName?.match(/\.(jpe?g|png|webp|gif)/i))
 
   const handleFile = async (file: File, overrideDocType?: string) => {
-    // Basic client-side guard (10 MB, types)
     const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'application/pdf']
     if (!ALLOWED.includes(file.type)) {
       toast.error('Format non supporté. Utilisez JPG, PNG, WebP ou PDF.')
@@ -303,7 +758,6 @@ function DocSlot({
         borderRadius: 12,
         background: BAI.tenantLight,
       }}>
-        {/* Thumbnail or icon */}
         <div style={{
           width: 48, height: 48, borderRadius: 8, flexShrink: 0, overflow: 'hidden',
           background: BAI.bgMuted, border: `1px solid ${BAI.border}`,
@@ -320,7 +774,6 @@ function DocSlot({
           )}
         </div>
 
-        {/* Info */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
             <CheckCircle2 style={{ width: 13, height: 13, color: BAI.tenant, flexShrink: 0 }} />
@@ -338,7 +791,6 @@ function DocSlot({
 
         <HelpTooltip content={slot.help} />
 
-        {/* Actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
           <button
             onClick={() => onView(doc)}
@@ -430,7 +882,6 @@ function DocSlot({
 
         {/* Drop zone + action buttons */}
         <div style={{ padding: '0 14px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {/* Drop hint */}
           <div style={{
             padding: '10px',
             borderRadius: 8,
@@ -450,9 +901,7 @@ function DocSlot({
             }
           </div>
 
-          {/* Buttons row */}
           <div style={{ display: 'flex', gap: 6 }}>
-            {/* File import */}
             <input
               ref={inputRef} type="file"
               accept=".pdf,image/jpeg,image/png,image/webp,image/heic"
@@ -480,7 +929,6 @@ function DocSlot({
               Importer
             </button>
 
-            {/* Camera button */}
             <button
               onClick={() => setShowCamera(true)}
               disabled={uploading}
@@ -730,8 +1178,6 @@ function StepNav({
 }
 
 // ── FormField — must live outside the page component to keep stable identity ──
-// Defining a component inside another component causes React to remount it on
-// every render (new function reference = new type), which drops focus mid-typing.
 function FormField({
   value, onChange, label, type = 'text', placeholder = '', required = false,
 }: {
@@ -768,7 +1214,6 @@ export default function DossierLocatif() {
   const { user, updateProfile } = useAuth()
 
   // ── Stepper state (persisted) ───────────────────────────────────────────────
-  // Si le guide a déjà été terminé, on va directement en mode vue d'ensemble.
   const guideDone = (() => { try { return localStorage.getItem(GUIDE_DONE_KEY) === '1' } catch { return false } })()
   const [currentStep, setCurrentStep] = useState<number>(() => {
     if (guideDone) return 0
@@ -779,7 +1224,6 @@ export default function DossierLocatif() {
     return 0
   })
   const [showOverview, setShowOverview] = useState<boolean>(() => {
-    // Si guide déjà fait → vue d'ensemble directement
     if (guideDone) return true
     try { return localStorage.getItem(STORAGE_KEY) === String(TOTAL_STEPS) } catch { return false }
   })
@@ -791,7 +1235,7 @@ export default function DossierLocatif() {
       setShowOverview(true)
       try {
         localStorage.setItem(STORAGE_KEY, String(TOTAL_STEPS))
-        localStorage.setItem(GUIDE_DONE_KEY, '1') // ne plus jamais montrer le guide
+        localStorage.setItem(GUIDE_DONE_KEY, '1')
       } catch { /* ignore */ }
     } else {
       setShowOverview(false)
@@ -816,7 +1260,6 @@ export default function DossierLocatif() {
       .finally(() => setLoadingDocs(false))
   }, [])
 
-  // Identity doc types that trigger OCR auto-fill
   const OCR_DOC_TYPES = new Set(['CNI_RECTO', 'PASSEPORT', 'TITRE_SEJOUR'])
 
   const handleUpload = useCallback(async (file: File, category: string, docType: string) => {
@@ -827,7 +1270,6 @@ export default function DossierLocatif() {
     })
     toast.success('Document ajouté')
 
-    // Trigger OCR for identity documents (fire-and-forget, non-blocking)
     if (OCR_DOC_TYPES.has(docType) && file.type.startsWith('image/')) {
       try {
         const fd = new FormData()
@@ -843,7 +1285,6 @@ export default function DossierLocatif() {
           const json = await res.json()
           const d = json.data as Record<string, string | boolean>
 
-          // ── Not an ID document ──────────────────────────────────────────────
           if (d.isIdDocument === false) {
             const reason = String(d.rejectReason || 'Ce document ne semble pas être une pièce d\'identité valide.')
             toast.error(`Document refusé — ${reason}`, { duration: 6000 })
@@ -852,7 +1293,6 @@ export default function DossierLocatif() {
 
           if (d && (d.nom || d.prenom)) {
             setOcrResult(d as Record<string, string>)
-            // Pre-fill only empty fields
             setForm(prev => ({
               firstName:   prev.firstName   || (String(d.prenom ?? '')),
               lastName:    prev.lastName    || (String(d.nom    ?? '')),
@@ -860,12 +1300,10 @@ export default function DossierLocatif() {
               birthCity:   prev.birthCity,
               nationality: prev.nationality || (String(d.nationality ?? '')),
             }))
-            // Recto/verso side detection
             const side = String(d.side ?? 'unknown')
             if (side === 'recto' || side === 'verso' || side === 'unknown') {
               setOcrSide(side as 'recto' | 'verso' | 'unknown')
             }
-            // MRZ validation via mrz package (client-side)
             const mrzRaw = String(d.mrz ?? '')
             if (mrzRaw) {
               try {
@@ -879,7 +1317,6 @@ export default function DossierLocatif() {
                 }
               } catch { /* mrz parse failure is silent */ }
             }
-            // Name verification against registered profile
             const norm = (s: string) => s.trim().toLowerCase()
               .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
               .replace(/[^a-z\s-]/g, '').replace(/\s+/g, ' ')
@@ -1110,7 +1547,7 @@ export default function DossierLocatif() {
   }
 
   // ── STEPPER MODE ───────────────────────────────────────────────────────────
-  const catIndex   = currentStep - 1 // steps 1-5 map to CATEGORIES[0-4]
+  const catIndex   = currentStep - 1
   const currentCat = catIndex >= 0 && catIndex < CATEGORIES.length ? CATEGORIES[catIndex] : null
   const CatIcon    = currentCat?.icon
 
@@ -1158,7 +1595,6 @@ export default function DossierLocatif() {
                 </p>
               </div>
 
-              {/* OCR auto-fill banner (shown after ID doc uploaded + OCR extracted) */}
               {ocrResult && (
                 <div style={{
                   marginBottom: 16, padding: '12px 16px', borderRadius: 10,
@@ -1181,7 +1617,6 @@ export default function DossierLocatif() {
                 </div>
               )}
 
-              {/* Priority: Prénom + Nom */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ marginBottom: 20 }}>
                 <FormField
                   label="Prénom" value={form.firstName} required placeholder="Marie"
@@ -1193,7 +1628,6 @@ export default function DossierLocatif() {
                 />
               </div>
 
-              {/* Divider */}
               <div style={{ height: 1, background: BAI.border, margin: '4px 0 20px' }} />
               <p style={{ fontSize: 12, color: BAI.inkFaint, margin: '0 0 16px', fontStyle: 'italic' }}>
                 Informations complémentaires (recommandées pour un dossier complet)
@@ -1280,7 +1714,7 @@ export default function DossierLocatif() {
                   background: BAI.errorLight, border: `1px solid rgba(155,28,28,0.25)`,
                   display: 'flex', alignItems: 'center', gap: 10,
                 }}>
-                  <span style={{ fontSize: 18, flexShrink: 0 }}>⚠️</span>
+                  <span style={{ fontSize: 18, flexShrink: 0 }}>!</span>
                   <div style={{ flex: 1 }}>
                     <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: BAI.error, fontFamily: BAI.fontBody }}>
                       Vérification d'identité
@@ -1296,6 +1730,13 @@ export default function DossierLocatif() {
                   <Loader2 style={{ width: 20, height: 20, color: BAI.tenant }} className="animate-spin" />
                   <span style={{ fontSize: 13, color: BAI.inkFaint }}>Chargement…</span>
                 </div>
+              ) : currentCat.id === 'IDENTITE' ? (
+                <IdentityDocStep
+                  documents={documents.filter(d => d.category === 'IDENTITE')}
+                  onUpload={(file, docType) => handleUpload(file, 'IDENTITE', docType)}
+                  onDelete={handleDelete}
+                  onView={setViewerDoc}
+                />
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {currentCat.slots.map(slot => (
@@ -1315,7 +1756,7 @@ export default function DossierLocatif() {
               {currentCat.id === 'GARANTIES' && (
                 <div style={{
                   marginTop: 16, padding: '10px 14px', borderRadius: 9,
-                  background: BAI.caramelLight, border: `1px solid #e8c9a0`,
+                  background: BAI.caramelLight, border: `1px solid ${BAI.caramelBorder}`,
                   fontSize: 12, color: BAI.caramel, fontWeight: 500,
                 }}>
                   Cette étape est optionnelle. Un garant est conseillé si vos revenus mensuels sont inférieurs à 3× le montant du loyer.

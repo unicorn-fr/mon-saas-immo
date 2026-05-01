@@ -1,16 +1,13 @@
 /**
- * CameraCapture v8 — Guided ID document scanner
+ * CameraCapture v9 — Guided ID document scanner
  *
- * Changes from v7:
- * - 'selecting' phase: user picks document family INSIDE the scanner
- * - Camera only starts after family selection (no auto-start on mount)
- * - handleStartVerso now calls startCamera() — the v7 camera-freeze bug is fixed
- * - OCR: phase 1 eng only, phase 2 fra only (NOT fra+eng — avoids ~40MB download)
- * - MRZ found in phase 1 → skip phase 2 entirely (passports + CNI verso = fast)
- * - Verso leniency: isVerso === true → accept doc even if isIdDocument === false
- * - capturesRef accumulates both recto and verso with correct docType strings
- * - selectedFamily drives currentDt (computed, not state)
- * - detectedKindRef is a ref (not state) — avoids stale-closure re-renders
+ * Changes from v8:
+ * - initialFamily prop: skip 'selecting' phase, auto-start camera on mount
+ * - Auto-capture: blurScoreInGuide() measures sharpness in guide zone only
+ * - Lock progress arc: 1.4s stable lock before auto-fire
+ * - Side buttons (flip camera / restart) removed from scanning controls
+ * - OCR: multi-signal scoring system (minimum score 4 to accept)
+ * - drawGuide: lockPct param drives border color (green when locked)
  */
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import {
@@ -42,7 +39,8 @@ interface OcrData {
 export interface CaptureEntry { file: File; docType: string }
 
 interface CameraCaptureProps {
-  docType?: string  // kept for backward compat — ignored in v8 (user picks inside)
+  docType?: string         // kept for backward compat — ignored (user picks inside)
+  initialFamily?: DocFamily  // v9: skip selecting phase, auto-start camera
   onComplete: (captures: CaptureEntry[]) => void
   onClose: () => void
 }
@@ -66,10 +64,12 @@ const LABEL: Record<string, string> = {
   TITRE_SEJOUR: 'Titre de séjour',
 }
 
-const BLUR_OK    = 70
-const GUIDE_FRAC = 0.84
-const CARAMEL    = '#c4976a'
-const DARK_BG    = '#0a0c12'
+const BLUR_OK      = 70
+const GUIDE_FRAC   = 0.84
+const CARAMEL      = '#c4976a'
+const DARK_BG      = '#0a0c12'
+const LOCK_THRESHOLD = 80   // blur score nécessaire pour lancer le décompte
+const LOCK_DURATION  = 1400 // ms avant auto-capture
 
 // ── Doc options for the selecting screen ─────────────────────────────────────
 const DOC_OPTIONS: { family: DocFamily; label: string; sub: string; Icon: React.ElementType }[] = [
@@ -81,28 +81,33 @@ const DOC_OPTIONS: { family: DocFamily; label: string; sub: string; Icon: React.
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
 
-/** Laplacian variance — higher = sharper. Pure JS, no OpenCV. */
-function blurScore(video: HTMLVideoElement): number {
-  const W = 200, H = 130
+
+/** Mesure la netteté uniquement dans la zone guide (là où la carte doit être). */
+function blurScoreInGuide(video: HTMLVideoElement, aspect: number): number {
+  const W = 280, H = 180
   const c = document.createElement('canvas')
   c.width = W; c.height = H
   const ctx = c.getContext('2d', { willReadFrequently: true })
   if (!ctx) return 0
-  ctx.drawImage(video, 0, 0, W, H)
+  const vW = video.videoWidth || W, vH = video.videoHeight || H
+  const maxW = vW * GUIDE_FRAC, maxH = vH * GUIDE_FRAC
+  let gW: number, gH: number
+  if (maxW / maxH > aspect) { gH = maxH; gW = gH * aspect }
+  else { gW = maxW; gH = gW / aspect }
+  const gX = (vW - gW) / 2, gY = (vH - gH) / 2
+  ctx.drawImage(video, gX, gY, gW, gH, 0, 0, W, H)
   const { data } = ctx.getImageData(0, 0, W, H)
   const g = new Uint8Array(W * H)
-  for (let i = 0; i < W * H; i++) {
-    g[i] = (data[i * 4] * 77 + data[i * 4 + 1] * 151 + data[i * 4 + 2] * 28) >> 8
-  }
+  for (let i = 0; i < W * H; i++) g[i] = (data[i*4]*77 + data[i*4+1]*151 + data[i*4+2]*28) >> 8
   let sum = 0, sq = 0, n = 0
   for (let y = 1; y < H - 1; y++) {
     for (let x = 1; x < W - 1; x++) {
       const i = y * W + x
-      const v = 4 * g[i] - g[i - 1] - g[i + 1] - g[i - W] - g[i + W]
-      sum += v; sq += v * v; n++
+      const v = 4*g[i] - g[i-1] - g[i+1] - g[i-W] - g[i+W]
+      sum += v; sq += v*v; n++
     }
   }
-  return sq / n - (sum / n) ** 2
+  return sq/n - (sum/n)**2
 }
 
 /** Crop the guide zone from the video frame and output at 1200px wide. */
@@ -128,6 +133,7 @@ function drawGuide(
   aspect: number,
   score: number,
   flash: boolean,
+  lockPct = 0,
 ) {
   const W = canvas.width, H = canvas.height
   if (!W || !H) return
@@ -142,8 +148,11 @@ function drawGuide(
   const gX = (W - gW) / 2, gY = (H - gH) / 2
   const R = 14
 
-  const isSharp = score >= BLUR_OK
-  const borderColor = isSharp ? CARAMEL : 'rgba(255,255,255,0.5)'
+  const isLocked = lockPct > 0
+  const isSharp  = score >= BLUR_OK
+  const borderColor = isLocked
+    ? `rgba(34,197,94,${0.5 + lockPct / 200})`
+    : isSharp ? CARAMEL : 'rgba(255,255,255,0.5)'
 
   // Dark mask with hole
   ctx.save()
@@ -162,8 +171,8 @@ function drawGuide(
   // Guide hole border
   ctx.strokeStyle = borderColor
   ctx.lineWidth = 2.5
-  ctx.shadowColor = isSharp ? CARAMEL : 'transparent'
-  ctx.shadowBlur = isSharp ? 20 : 0
+  ctx.shadowColor = isLocked ? 'rgba(34,197,94,0.8)' : isSharp ? CARAMEL : 'transparent'
+  ctx.shadowBlur  = (isLocked || isSharp) ? 20 : 0
   ctx.beginPath()
   ctx.moveTo(gX + R, gY)
   ctx.lineTo(gX + gW - R, gY); ctx.arcTo(gX + gW, gY, gX + gW, gY + R, R)
@@ -191,8 +200,8 @@ function drawGuide(
     ctx.stroke()
   })
 
-  // Animated scan line inside hole (only when sharp)
-  if (isSharp) {
+  // Animated scan line inside hole (only when sharp and not locked)
+  if (isSharp && !isLocked) {
     const t = (Date.now() % 2000) / 2000
     const sy = gY + gH * 0.05 + t * (gH * 0.83)
     const sg = ctx.createLinearGradient(gX, sy, gX + gW, sy)
@@ -268,18 +277,9 @@ function mrzDate(s: string): string {
 // ── EU Driving License structural detector ────────────────────────────────────
 //
 // STRICT detection: require ≥2 strong signals to avoid false positives.
-// A gift card / terms-and-conditions page with letters A/B or numbered lists
-// must NOT be detected as a driving license.
-//
-// Signals:
-//   +2  "PERMIS DE CONDUIRE" or "DRIVING LICEN(C|S)E" as a phrase
-//   +1  compound EU category code: AM, A1, A2, BE, B1, C1, CE, D1, DE
-//   +1  French license number format (99XX999999)
-//   +1  "PRÉFECTURE" or "PERMIS DE" (shorter phrase)
-// → detected if score ≥ 2
 
-const DL_COMPOUND_RE = /\b(AM|A[12]|B[E1]|C[E1]|D[E1])\b/g  // compound only, never bare A/B/C/D
-const DL_NUMBER_FR   = /\b\d{2}[A-Z]{2}\d{6,10}\b/            // French license number
+const DL_COMPOUND_RE = /\b(AM|A[12]|B[E1]|C[E1]|D[E1])\b/g
+const DL_NUMBER_FR   = /\b\d{2}[A-Z]{2}\d{6,10}\b/
 const DL_PHRASE_RE   = /PERMIS\s+DE\s+CONDUIRE|DRIVING\s+LICEN[CS]E/i
 const DL_SOFT_KW_RE  = /PRÉFECTURE|PREFECTURE|PERMIS\s+DE\b/i
 
@@ -307,7 +307,6 @@ function dateAfterField(text: string, marker: RegExp): string {
 function parseDrivingLicense(text: string): DlResult {
   const up = text.toUpperCase()
 
-  // ── Strict multi-signal detection ──────────────────────────────────────────
   const compoundCount = [...up.matchAll(DL_COMPOUND_RE)].length
   const hasPhrase     = DL_PHRASE_RE.test(text)
   const hasNum        = DL_NUMBER_FR.test(up.replace(/\s/g, ''))
@@ -315,31 +314,23 @@ function parseDrivingLicense(text: string): DlResult {
 
   const score = (hasPhrase ? 2 : 0) + (compoundCount >= 1 ? 1 : 0) + (hasNum ? 1 : 0) + (hasSoftKw ? 1 : 0)
   const detected = score >= 2
-  // Early exit — don't waste time on field extraction if not detected
   if (!detected) return { detected: false, nom: '', prenom: '', dob: '', documentNumber: '', expiry: '' }
 
-  // ── Champ 1 : Nom ──────────────────────────────────────────────────────────
   let nom = ''
-  // Try numbered field first, then NOM: label
   const f1a = text.match(/(?:^|\n)\s*1\s*[.,]?\s*([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-ZÉÈÊËÀÂÔÛÙÎÏÇa-zéèêëàâôûùîïç\-]+)/m)
   const f1b = text.match(/NOM[^A-Za-z]{0,6}([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-Za-z\-]{2,})/i)
   if (f1a) nom = f1a[1].trim()
   else if (f1b) nom = f1b[1].trim()
 
-  // ── Champ 2 : Prénom ───────────────────────────────────────────────────────
   let prenom = ''
   const f2a = text.match(/(?:^|\n)\s*2\s*[.,]?\s*([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-ZÉÈÊËÀÂÔÛÙÎÏÇa-zéèêëàâôûùîïç\-\s,]+)/m)
   const f2b = text.match(/PR[EÉ]NOM[S]?[^A-Za-z]{0,6}([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-Za-z\-\s]{2,})/i)
   if (f2a) prenom = f2a[1].trim().split(/[,\n]/)[0].trim().split(/\s+/)[0]
   else if (f2b) prenom = f2b[1].trim().split(/\s+/)[0]
 
-  // ── Champ 3 : Date de naissance ────────────────────────────────────────────
-  const dob = dateAfterField(text, /(?:^|\n)\s*3\s*[.,]?/m)
-
-  // ── Champ 4b : Date d'expiration ───────────────────────────────────────────
+  const dob    = dateAfterField(text, /(?:^|\n)\s*3\s*[.,]?/m)
   const expiry = dateAfterField(text, /4\s*[Bb]\s*[.,]?/)
 
-  // ── Champ 5 : Numéro du permis ─────────────────────────────────────────────
   let documentNumber = ''
   const f5 = text.match(/(?:^|\n)\s*5\s*[.,]?\s*([A-Z0-9\-]{6,20})/m)
   if (f5) documentNumber = f5[1].trim()
@@ -356,18 +347,16 @@ function parseDrivingLicense(text: string): DlResult {
 function parseCniRecto(text: string): { nom: string; prenom: string; dob: string } {
   let nom = '', prenom = '', dob = ''
 
-  // Nom — try multiple OCR-tolerant patterns
   const nomPatterns = [
     /NOM\s*:?\s*([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-Za-zÉÈÊËÀÂÔÛÙÎÏÇéèêëàâôûùîïç\-]{2,})/i,
     /Nom\s*[:\-]?\s*([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-Za-zÉÈÊËÀÂÔÛÙÎÏÇéèêëàâôûùîïç\-]{2,})/,
-    /^([A-ZÉÈÊËÀÂÔÛÙÎÏÇ]{2,})\s*$/m,   // all-caps line (common on CNI)
+    /^([A-ZÉÈÊËÀÂÔÛÙÎÏÇ]{2,})\s*$/m,
   ]
   for (const re of nomPatterns) {
     const m = text.match(re)
     if (m) { nom = m[1].trim(); break }
   }
 
-  // Prénom — try multiple patterns
   const prenomPatterns = [
     /PR[EÉ]NOM[S]?\s*:?\s*([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-Za-zÉÈÊËÀÂÔÛÙÎÏÇéèêëàâôûùîïç\-\s]{2,})/i,
     /Pr[ée]nom\s*[:\-]?\s*([A-ZÉÈÊËÀÂÔÛÙÎÏÇ][A-Za-zÉÈÊËÀÂÔÛÙÎÏÇéèêëàâôûùîïç\-\s]{2,})/,
@@ -377,7 +366,6 @@ function parseCniRecto(text: string): { nom: string; prenom: string; dob: string
     if (m) { prenom = m[1].trim().split(/\s+/)[0]; break }
   }
 
-  // Date de naissance
   const dobMatch = text.match(/N[EÉ][E]?\s*(?:LE)?\s*:?\s*(\d{2}[.\-/]\d{2}[.\-/]\d{2,4})/i)
     ?? text.match(/Date\s+de\s+naissance\s*:?\s*(\d{2}[.\-/]\d{2}[.\-/]\d{2,4})/i)
   if (dobMatch) {
@@ -388,13 +376,6 @@ function parseCniRecto(text: string): { nom: string; prenom: string; dob: string
     }
   }
   return { nom, prenom, dob }
-}
-
-const DOC_PATTERNS = {
-  cni:     /CARTE\s+NATIONALE|CNI|IDENTIT[EÉ]|CARTE\s+D.IDENTIT/i,
-  passport:/PASSEPORT|PASSPORT/i,
-  sejour:  /TITRE\s+DE\s+S[EÉ]JOUR|R[EÉ]SIDENT|TITRE\s+DE\s+VOYAGE/i,
-  republic:/R[EÉ]PUBLIQUE\s+FRAN[CÇ]|FRENCH\s+REPUBLIC|MINIST[EÈ]RE/i,
 }
 
 // ── OCR result type ───────────────────────────────────────────────────────────
@@ -408,14 +389,10 @@ interface LocalOcrResult {
 
 // ── Main OCR pipeline ─────────────────────────────────────────────────────────
 //
-// v8 changes:
-//   Phase 1 — MRZ: eng only (whitelist, fast)
-//             → if MRZ found → parse and RETURN immediately (skip phase 2)
-//   Phase 2 — Full image: fra only (NOT fra+eng, avoids ~40MB download)
-//             → structural analysis for permis, CNI recto, passeport, titre de séjour
-//
-// isVersoScan flag: if true, accept even if isIdDocument === false
-// (OCR on backs of cards often fails to trigger keywords — leniency is needed)
+// v9 changes:
+//   Phase 2 — Full image: multi-signal scoring system
+//   Minimum score 4 to accept a document as ID
+//   Avoids false positives (gift cards, posters, etc.)
 
 async function localOcrExtract(
   canvas: HTMLCanvasElement,
@@ -466,7 +443,6 @@ async function localOcrExtract(
     }
 
     // ── Verso leniency: if MRZ not found but it's a verso scan ───────────
-    // Skip phase 2 and accept the doc — backs of cards rarely have readable text
     if (isVersoScan) {
       return versoFallback()
     }
@@ -477,9 +453,42 @@ async function localOcrExtract(
     const { data: { text: fullText } } = await w2.recognize(full)
     await w2.terminate()
 
-    // ── Permis de conduire (analyse structurelle EU) ────────────────────────
-    const dl = parseDrivingLicense(fullText)
-    if (dl.detected) {
+    // ── Système de scoring multi-signaux ──────────────────────────────────
+    // Chaque signal apporte des points. Score minimum requis : 4.
+    let ocrScore = 0
+    let detectedKind: LocalOcrResult['docKind'] = 'unknown'
+
+    // Signaux forts (+4) : phrase officielle exacte
+    if (/CARTE\s+NATIONALE\s+D.IDENTIT/i.test(fullText)) { ocrScore += 4; detectedKind = 'cni' }
+    if (/\bPASSEPORT\b|\bPASSPORT\b/i.test(fullText)) { ocrScore += 4; detectedKind = 'passport' }
+    if (/TITRE\s+DE\s+S[EÉ]JOUR/i.test(fullText)) { ocrScore += 4; detectedKind = 'sejour' }
+    if (/PERMIS\s+DE\s+CONDUIRE|DRIVING\s+LICEN[CS]E/i.test(fullText)) { ocrScore += 4; detectedKind = 'permis' }
+
+    // Signaux moyens (+2) : référence gouvernementale
+    if (/R[EÉ]PUBLIQUE\s+FRAN[CÇ]|FRENCH\s+REPUBLIC/i.test(fullText)) ocrScore += 2
+    if (/MINIST[EÈ]RE\s+DE\s+L.INT[EÉ]RIEUR/i.test(fullText)) ocrScore += 2
+    if (/PR[EÉ]FECTURE/i.test(fullText)) ocrScore += 1
+
+    // Signaux faibles (+1) : champs d'identité
+    if (/\bNOM\b\s*[:\-]/i.test(fullText)) ocrScore += 1
+    if (/PR[EÉ]NOM/i.test(fullText)) ocrScore += 1
+    if (/N[EÉ][E]?\s*(LE\b)?/i.test(fullText)) ocrScore += 1
+    if (/DATE\s+DE\s+NAISS/i.test(fullText)) ocrScore += 1
+    if (/NATIONALIT[EÉ]/i.test(fullText)) ocrScore += 1
+
+    // Vérification permis (utilise le parser strict déjà en place)
+    if (detectedKind !== 'permis') {
+      const dl = parseDrivingLicense(fullText)
+      if (dl.detected) { detectedKind = 'permis'; ocrScore = Math.max(ocrScore, 4) }
+    }
+
+    if (ocrScore < 4) {
+      return fail('Document non reconnu. Seules les pièces d\'identité officielles sont acceptées.')
+    }
+
+    // Extraction selon le type détecté
+    if (detectedKind === 'permis') {
+      const dl = parseDrivingLicense(fullText)
       return {
         isIdDocument: true, rejectReason: '', docKind: 'permis',
         nom: dl.nom, prenom: dl.prenom, dob: dl.dob,
@@ -488,26 +497,13 @@ async function localOcrExtract(
       }
     }
 
-    // ── CNI recto, Passeport recto, Titre de séjour ─────────────────────────
-    const isCni      = DOC_PATTERNS.cni.test(fullText)
-    const isPassport = DOC_PATTERNS.passport.test(fullText)
-    const isSejour   = DOC_PATTERNS.sejour.test(fullText)
-    const isRepublic = DOC_PATTERNS.republic.test(fullText)
-
-    if (isCni || isPassport || isSejour || isRepublic) {
-      const kind: LocalOcrResult['docKind'] = isPassport ? 'passport' : isSejour ? 'sejour' : 'cni'
-      const { nom, prenom, dob } = parseCniRecto(fullText)
-      return {
-        isIdDocument: true, rejectReason: '', docKind: kind,
-        nom, prenom, dob,
-        nationality: '', documentNumber: '', expiry: '',
-        side: 'recto',
-      }
+    const { nom, prenom, dob } = parseCniRecto(fullText)
+    return {
+      isIdDocument: true, rejectReason: '', docKind: detectedKind,
+      nom, prenom, dob,
+      nationality: '', documentNumber: '', expiry: '',
+      side: 'recto',
     }
-
-    return fail(
-      'Document non reconnu. Présentez votre CNI, passeport, titre de séjour ou permis de conduire.'
-    )
 
   } catch {
     return fail('Analyse impossible. Vérifiez la luminosité et réessayez.')
@@ -515,7 +511,7 @@ async function localOcrExtract(
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
-export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
+export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCaptureProps) {
   const videoRef    = useRef<HTMLVideoElement>(null)
   const overlayRef  = useRef<HTMLCanvasElement>(null)
   const streamRef   = useRef<MediaStream | null>(null)
@@ -523,12 +519,14 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
   const rafRef      = useRef<number>(0)
   const scoreRaf    = useRef(0)
   const flashRaf    = useRef(false)
-  const phaseRef    = useRef<Phase>('selecting')
+  const phaseRef    = useRef<Phase>(initialFamily ? 'scanning' : 'selecting')
   const capturesRef = useRef<CaptureEntry[]>([])
   const detectedKindRef = useRef<string>('')
+  const lockStartRef    = useRef<number | null>(null)
+  const lockProgressRaf = useRef(0)
 
-  const [phase,          setPhase]          = useState<Phase>('selecting')
-  const [selectedFamily, setSelectedFamily] = useState<DocFamily | null>(null)
+  const [phase,          setPhase]          = useState<Phase>(initialFamily ? 'scanning' : 'selecting')
+  const [selectedFamily, setSelectedFamily] = useState<DocFamily | null>(initialFamily ?? null)
   const [isVerso,        setIsVerso]        = useState(false)
   const [facingMode,     setFacingMode]     = useState<'environment' | 'user'>('environment')
   const [camReady,       setCamReady]       = useState(false)
@@ -539,6 +537,7 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
   const [rectoPreview,   setRectoPreview]   = useState('')
   const [ocrData,        setOcrData]        = useState<OcrData | null>(null)
   const [rejectReason,   setRejectReason]   = useState('')
+  const [lockProgress,   setLockProgress]   = useState(0)
 
   // ── Derived (computed, not state) ────────────────────────────────────────
   const currentDt = useMemo(() => {
@@ -565,7 +564,10 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
     streamRef.current?.getTracks().forEach(t => t.stop())
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
     scoreRaf.current = 0
+    lockStartRef.current = null
+    lockProgressRaf.current = 0
     setCamReady(false); setCamError('')
+    setLockProgress(0)
     setPhaseSync('scanning')
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -590,6 +592,14 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
     }
   }, [setPhaseSync])
 
+  // ── Auto-start camera when initialFamily is provided ─────────────────────
+  useEffect(() => {
+    if (initialFamily) {
+      setSelectedFamily(initialFamily)
+      startCamera(facingMode)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -605,7 +615,7 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
     if (cvs && phaseRef.current === 'scanning') {
       const { offsetWidth: w, offsetHeight: h } = cvs
       if (cvs.width !== w || cvs.height !== h) { cvs.width = w; cvs.height = h }
-      drawGuide(cvs, aspect, scoreRaf.current, flashRaf.current)
+      drawGuide(cvs, aspect, scoreRaf.current, flashRaf.current, lockProgressRaf.current)
     }
     rafRef.current = requestAnimationFrame(drawLoop)
   }, [aspect])
@@ -614,22 +624,6 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
     rafRef.current = requestAnimationFrame(drawLoop)
     return () => cancelAnimationFrame(rafRef.current)
   }, [drawLoop])
-
-  // ── Blur scoring loop ────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!camReady || phase !== 'scanning') return
-    if (timerRef.current) clearInterval(timerRef.current)
-
-    timerRef.current = setInterval(() => {
-      const video = videoRef.current
-      if (!video || phaseRef.current !== 'scanning') return
-      const s = blurScore(video)
-      scoreRaf.current = s
-      setScore(s)
-    }, 500)
-
-    return () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null } }
-  }, [camReady, phase])
 
   // ── OCR verify ───────────────────────────────────────────────────────────
   const doVerify = useCallback(async (file: File, _dt: string, isVersoScan: boolean): Promise<boolean> => {
@@ -668,9 +662,12 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
     }
   }, [setPhaseSync])
 
-  // ── Manual capture ───────────────────────────────────────────────────────
+  // ── Manual/auto capture ──────────────────────────────────────────────────
   const doCapture = useCallback((video: HTMLVideoElement, dt: string, versoScan: boolean) => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
+    lockStartRef.current = null
+    lockProgressRaf.current = 0
+    setLockProgress(0)
     setPhaseSync('processing')
 
     flashRaf.current = true
@@ -686,7 +683,6 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
         setPreviewUrl(url)
         const ok = await doVerify(file, dt, versoScan)
         if (ok) {
-          // Replace any existing entry with the same docType, then push
           capturesRef.current = [
             ...capturesRef.current.filter(c => c.docType !== dt),
             { file, docType: dt },
@@ -697,9 +693,47 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
     }, 0)
   }, [doVerify, setPhaseSync])
 
+  // ── Blur scoring loop with auto-capture ──────────────────────────────────
+  useEffect(() => {
+    if (!camReady || phase !== 'scanning') {
+      lockStartRef.current = null
+      setLockProgress(0)
+      return
+    }
+    if (timerRef.current) clearInterval(timerRef.current)
+
+    timerRef.current = setInterval(() => {
+      const video = videoRef.current
+      if (!video || phaseRef.current !== 'scanning') return
+
+      const s = blurScoreInGuide(video, aspect)
+      scoreRaf.current = s
+      setScore(s)
+
+      if (s >= LOCK_THRESHOLD) {
+        if (!lockStartRef.current) lockStartRef.current = Date.now()
+        const elapsed = Date.now() - lockStartRef.current
+        const progress = Math.min(100, (elapsed / LOCK_DURATION) * 100)
+        lockProgressRaf.current = progress
+        setLockProgress(progress)
+        if (elapsed >= LOCK_DURATION) {
+          lockStartRef.current = null
+          lockProgressRaf.current = 0
+          setLockProgress(0)
+          doCapture(video, currentDt, isVerso)
+        }
+      } else {
+        lockStartRef.current = null
+        lockProgressRaf.current = 0
+        setLockProgress(0)
+      }
+    }, 200)
+
+    return () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null } }
+  }, [camReady, phase, aspect, currentDt, isVerso, doCapture])
+
   // ── Handlers ──────────────────────────────────────────────────────────────
 
-  // v8: selecting phase — user picks family, then camera starts immediately
   const handleSelectFamily = useCallback((family: DocFamily) => {
     setSelectedFamily(family)
     setIsVerso(false)
@@ -729,7 +763,6 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
 
   const handleRectoVerified = () => setPhaseSync('flip')
 
-  // THE CRITICAL BUG FIX: v7 did not call startCamera here, causing camera freeze
   const handleStartVerso = useCallback(() => {
     setIsVerso(true)
     setPreviewUrl('')
@@ -755,9 +788,11 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
   }
 
   const isSharp   = score >= BLUR_OK
-  const statusMsg = isSharp
-    ? 'Conditions optimales — appuyez pour capturer'
-    : 'Centrez votre document dans le cadre'
+  const statusMsg = lockProgress > 0
+    ? `Document détecté — ${Math.round(lockProgress)}%`
+    : isSharp
+      ? 'Centrez puis maintenez immobile'
+      : 'Placez votre document dans le cadre'
 
   const familyLabel: Record<DocFamily, string> = {
     cni: "Carte d'identité", permis: 'Permis de conduire',
@@ -983,7 +1018,6 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             padding: '72px 20px 140px', overflowY: 'auto',
           }}>
-            {/* Blurred document background */}
             {previewUrl && (
               <img src={previewUrl} alt="" style={{
                 position: 'absolute', inset: 0, width: '100%', height: '100%',
@@ -991,13 +1025,11 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
               }} />
             )}
 
-            {/* Result card */}
             <div style={{
               position: 'relative', zIndex: 1, width: '100%', maxWidth: 360,
               background: 'rgba(10,12,18,0.96)', border: '1px solid rgba(196,151,106,0.2)',
               borderRadius: 20, overflow: 'hidden',
             }}>
-              {/* Document thumbnail strip */}
               {previewUrl && (
                 <div style={{ position: 'relative', height: 100, overflow: 'hidden' }}>
                   <img src={previewUrl} alt="Document" style={{
@@ -1007,7 +1039,6 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
                     position: 'absolute', inset: 0,
                     background: 'linear-gradient(to bottom, transparent 40%, rgba(10,12,18,0.96) 100%)',
                   }} />
-                  {/* Success badge on thumbnail */}
                   <div style={{
                     position: 'absolute', top: 10, right: 10,
                     width: 30, height: 30, borderRadius: '50%',
@@ -1020,7 +1051,6 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
               )}
 
               <div style={{ padding: '16px 20px 20px' }}>
-                {/* Label */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                   <span style={{
                     fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
@@ -1033,11 +1063,10 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
                     {isVerso ? 'Verso' : 'Recto'}
                   </span>
                   <span style={{ fontSize: 11, color: 'rgba(196,151,106,0.8)', marginLeft: 'auto' }}>
-                    ✓ Vérifié
+                    Vérifié
                   </span>
                 </div>
 
-                {/* Data rows */}
                 {!isVerso && (ocrData?.nom || ocrData?.prenom || ocrData?.dob || ocrData?.documentNumber) ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
                     {(ocrData?.prenom || ocrData?.nom) && (
@@ -1072,7 +1101,6 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
               position: 'relative', zIndex: 1,
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20,
             }}>
-              {/* Step dots — step 1 done (caramel), step 2 active (white) */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                 <div style={{ width: 22, height: 22, borderRadius: '50%', background: CARAMEL, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <CheckCircle2 size={13} color="#fff" strokeWidth={3} />
@@ -1083,7 +1111,6 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
                 </div>
               </div>
 
-              {/* Recto thumbnail */}
               {rectoPreview && (
                 <div style={{ position: 'relative', display: 'inline-block' }}>
                   <img src={rectoPreview} alt="Recto" style={{
@@ -1101,14 +1128,13 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
                 </div>
               )}
 
-              {/* Flip icon */}
               <div style={{ fontSize: 34, animation: 'rotateBounce 1.8s ease-in-out infinite', color: CARAMEL }}>
                 ↻
               </div>
 
               <div style={{ textAlign: 'center' }}>
                 <p style={{ margin: '0 0 4px', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: CARAMEL, fontFamily: BAI.fontBody }}>
-                  Recto ✓ capturé
+                  Recto capturé
                 </p>
                 <p style={{ margin: '0 0 10px', fontFamily: BAI.fontDisplay, fontSize: 24, fontWeight: 700, fontStyle: 'italic', color: '#fff' }}>
                   Retournez votre document
@@ -1181,6 +1207,36 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
             )}
             <canvas ref={overlayRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 2 }} />
 
+            {/* Lock progress arc — visible quand le document est détecté */}
+            {camReady && lockProgress > 0 && (
+              <div style={{
+                position: 'absolute', top: '50%', left: '50%',
+                transform: 'translate(-50%, -50%)',
+                zIndex: 4, textAlign: 'center',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+                pointerEvents: 'none',
+              }}>
+                <svg width={80} height={80} style={{ transform: 'rotate(-90deg)' }}>
+                  <circle cx={40} cy={40} r={34} fill="none" stroke="rgba(196,151,106,0.2)" strokeWidth={5} />
+                  <circle
+                    cx={40} cy={40} r={34} fill="none"
+                    stroke={CARAMEL} strokeWidth={5}
+                    strokeDasharray={`${2 * Math.PI * 34}`}
+                    strokeDashoffset={`${2 * Math.PI * 34 * (1 - lockProgress / 100)}`}
+                    strokeLinecap="round"
+                    style={{ transition: 'stroke-dashoffset 0.15s linear' }}
+                  />
+                </svg>
+                <p style={{
+                  margin: 0, fontSize: 12, fontWeight: 700, color: '#fff',
+                  letterSpacing: '0.05em', textTransform: 'uppercase',
+                  textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+                }}>
+                  Ne bougez plus…
+                </p>
+              </div>
+            )}
+
             {/* Hint text below guide frame */}
             {camReady && (
               <div style={{
@@ -1202,17 +1258,24 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
               <div style={{
                 position: 'absolute', bottom: 136, left: '50%', transform: 'translateX(-50%)',
                 zIndex: 3, display: 'flex', alignItems: 'center', gap: 6,
-                background: isSharp ? 'rgba(196,151,106,0.15)' : 'rgba(0,0,0,0.55)',
-                border: `1px solid ${isSharp ? 'rgba(196,151,106,0.5)' : 'rgba(255,255,255,0.1)'}`,
+                background: lockProgress > 0
+                  ? 'rgba(34,197,94,0.15)'
+                  : isSharp ? 'rgba(196,151,106,0.15)' : 'rgba(0,0,0,0.55)',
+                border: `1px solid ${lockProgress > 0
+                  ? 'rgba(34,197,94,0.5)'
+                  : isSharp ? 'rgba(196,151,106,0.5)' : 'rgba(255,255,255,0.1)'}`,
                 padding: '6px 16px', borderRadius: 20, whiteSpace: 'nowrap',
                 transition: 'all 0.3s',
               }}>
                 <div style={{
                   width: 6, height: 6, borderRadius: '50%',
-                  background: isSharp ? CARAMEL : 'rgba(255,255,255,0.3)', flexShrink: 0,
+                  background: lockProgress > 0 ? 'rgba(34,197,94,0.9)' : isSharp ? CARAMEL : 'rgba(255,255,255,0.3)',
+                  flexShrink: 0,
                 }} />
                 <span style={{
-                  fontSize: 12, color: isSharp ? CARAMEL : 'rgba(255,255,255,0.5)', fontWeight: 500,
+                  fontSize: 12,
+                  color: lockProgress > 0 ? 'rgba(74,222,128,0.9)' : isSharp ? CARAMEL : 'rgba(255,255,255,0.5)',
+                  fontWeight: 500,
                 }}>
                   {statusMsg}
                 </span>
@@ -1231,12 +1294,9 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
           minHeight: 120,
         }}>
 
-          {/* Scanning controls */}
+          {/* Scanning controls — only the central shutter button */}
           {phase === 'scanning' && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-              <Btn round onClick={handleFlipCamera}>
-                <FlipHorizontal size={19} />
-              </Btn>
               <button
                 onClick={handleManualCapture}
                 disabled={!camReady}
@@ -1255,10 +1315,24 @@ export function CameraCapture({ onComplete, onClose }: CameraCaptureProps) {
                   background: camReady ? CARAMEL : 'rgba(255,255,255,0.22)',
                 }} />
               </button>
-              <Btn round onClick={() => startCamera(facingMode)}>
-                <RotateCcw size={17} />
-              </Btn>
             </div>
+          )}
+
+          {/* Flip camera button — shown separately below shutter */}
+          {phase === 'scanning' && camReady && (
+            <button
+              onClick={handleFlipCamera}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '7px 14px', borderRadius: 20,
+                background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)',
+                color: 'rgba(255,255,255,0.6)', fontSize: 12, fontFamily: BAI.fontBody,
+                cursor: 'pointer',
+              }}
+            >
+              <FlipHorizontal size={13} />
+              Retourner la caméra
+            </button>
           )}
 
           {/* Verified — recto of cni/permis: go to flip */}
@@ -1359,4 +1433,3 @@ function Btn({
     </button>
   )
 }
-
