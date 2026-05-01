@@ -118,8 +118,8 @@ function DragCard({
           ✕ Passer
         </motion.div>
 
-        {/* Info panel — bottom of card */}
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 20px 24px', zIndex: 5 }}>
+        {/* Info panel — bottom of card, with room for action buttons */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 20px 148px', zIndex: 5 }}>
 
           {/* Type badge */}
           <div style={{ marginBottom: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -303,9 +303,9 @@ export function SwipeStack({ properties, onFavorite, isFavorite, onClose }: Swip
         </div>
         <button
           onClick={onClose}
-          style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: '50%', width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+          style={{ background: 'rgba(255,255,255,0.28)', border: '1.5px solid rgba(255,255,255,0.6)', borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 12px rgba(0,0,0,0.35)' }}
         >
-          <X style={{ width: 18, height: 18, color: '#fff' }} />
+          <X style={{ width: 20, height: 20, color: '#ffffff', strokeWidth: 2.5 }} />
         </button>
       </div>
 
