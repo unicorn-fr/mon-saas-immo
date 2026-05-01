@@ -105,15 +105,15 @@ export function PreQualificationModal({
   const [hasGuarantor, setHasGuarantor] = useState(() => {
     try {
       const q = JSON.parse(localStorage.getItem('dossier_questionnaire_v1') ?? '{}')
-      if (q.hasGarant === 'oui_physique' || q.hasGarant === 'oui_visale') return true
+      if (q.hasGarant === 'oui_physique' || q.hasGarant === 'oui_visale' || q.hasGarant === 'oui_les_deux') return true
     } catch { /* ignore */ }
     return tenantDocCategories.includes('GARANTIES')
   })
   const [guarantorType, setGuarantorType] = useState(() => {
     try {
       const q = JSON.parse(localStorage.getItem('dossier_questionnaire_v1') ?? '{}')
-      if (q.hasGarant === 'oui_physique') return 'physique'
-      if (q.hasGarant === 'oui_visale')   return 'visale'
+      if (q.hasGarant === 'oui_physique' || q.hasGarant === 'oui_les_deux') return 'physique'
+      if (q.hasGarant === 'oui_visale') return 'visale'
     } catch { /* ignore */ }
     return ''
   })

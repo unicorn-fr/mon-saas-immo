@@ -34,9 +34,10 @@ interface Category {
 const QUESTIONNAIRE_KEY = 'dossier_questionnaire_v1'
 
 interface DossierQuestionnaire {
-  idKind:     'cni' | 'permis' | 'passport' | 'sejour' | null
-  emploiType: 'cdi' | 'cdd_embauche' | 'independant' | 'etudiant' | 'retraite' | 'sans_emploi' | null
-  hasGarant:  'oui_physique' | 'oui_visale' | 'non' | null
+  idKind:                  'cni' | 'permis' | 'passport' | 'sejour' | null
+  emploiType:              'cdi' | 'cdd_embauche' | 'independant' | 'etudiant' | 'retraite' | 'sans_emploi' | null
+  hasRevenuComplementaire: boolean | null  // étudiant/retraité/sans_emploi with a side salary
+  hasGarant:               'oui_physique' | 'oui_visale' | 'oui_les_deux' | 'non' | null
 }
 
 // ── Questionnaire options ──────────────────────────────────────────────────────
@@ -57,9 +58,10 @@ const EMPLOI_OPTIONS: { value: string; label: string; sub: string; Icon: React.E
 ]
 
 const GARANT_OPTIONS: { value: string; label: string; sub: string; Icon: React.ElementType }[] = [
-  { value: 'oui_physique', label: 'Oui — garant personnel',    sub: 'Parent, proche ou tiers physique',          Icon: ShieldCheck },
-  { value: 'oui_visale',   label: 'Oui — Visale / CLé',         sub: 'Caution Action Logement',                   Icon: Building2 },
-  { value: 'non',          label: 'Pas de garant',              sub: 'Je me porte seul(e) garant de mon dossier', Icon: XCircle },
+  { value: 'oui_physique', label: 'Oui — garant personnel',             sub: 'Parent, proche ou tiers physique',                    Icon: ShieldCheck },
+  { value: 'oui_visale',   label: 'Oui — Visale / CLé',                  sub: 'Caution Action Logement',                             Icon: Building2 },
+  { value: 'oui_les_deux', label: 'Oui — garant physique + Visale',      sub: 'Cumul garant personnel et caution Visale / CLé',       Icon: ShieldCheck },
+  { value: 'non',          label: 'Pas de garant',                       sub: 'Je me porte seul(e) garant de mon dossier',           Icon: XCircle },
 ]
 
 // ── Stepper steps ──────────────────────────────────────────────────────────────
@@ -141,6 +143,14 @@ const TIPS = [
   { icon: Eye,      title: 'Lisibilité avant tout',         body: 'Scannez en haute résolution, sans reflets.' },
   { icon: Shield,   title: 'Un garant augmente vos chances', body: 'Si vos revenus sont < 3× le loyer, joindre un garant peut être décisif.' },
   { icon: BookOpen, title: 'Cohérence des données',         body: 'Nom, adresse et revenus doivent être cohérents.' },
+]
+
+// ── Domicile slots (module-level to be accessible in pct useMemo) ──────────────
+const DOMICILE_SLOTS: Slot[] = [
+  { docType: 'QUITTANCE_LOYER',       label: 'Quittance de loyer',    required: false, help: 'Les 3 dernières quittances de loyer de votre logement actuel.' },
+  { docType: 'TAXE_FONCIERE',         label: 'Taxe foncière',         required: false, help: 'Uniquement si vous êtes propriétaire occupant.' },
+  { docType: 'FACTURE_EDF',           label: 'Facture énergie / eau', required: false, help: 'Facture de moins de 3 mois à votre nom.' },
+  { docType: 'JUSTIFICATIF_DOMICILE', label: 'Autre justificatif',    required: false, help: "Attestation d'hébergement manuscrite signée + CNI de l'hébergeant." },
 ]
 
 // ── QuestionCard — outside the page component ─────────────────────────────────
@@ -836,15 +846,23 @@ export default function DossierLocatif() {
   const [questionnaire, setQuestionnaire] = useState<DossierQuestionnaire>(() => {
     try {
       const saved = localStorage.getItem(QUESTIONNAIRE_KEY)
-      return saved ? (JSON.parse(saved) as DossierQuestionnaire) : { idKind: null, emploiType: null, hasGarant: null }
+      return saved ? (JSON.parse(saved) as DossierQuestionnaire) : { idKind: null, emploiType: null, hasRevenuComplementaire: null, hasGarant: null }
     } catch {
-      return { idKind: null, emploiType: null, hasGarant: null }
+      return { idKind: null, emploiType: null, hasRevenuComplementaire: null, hasGarant: null }
     }
   })
 
   const updateQuestionnaire = useCallback(<K extends keyof DossierQuestionnaire>(key: K, val: string) => {
     setQuestionnaire(prev => {
       const next = { ...prev, [key]: val || null } as DossierQuestionnaire
+      try { localStorage.setItem(QUESTIONNAIRE_KEY, JSON.stringify(next)) } catch { /* ignore */ }
+      return next
+    })
+  }, [])
+
+  const updateQuestionnaireBoolean = useCallback(<K extends keyof DossierQuestionnaire>(key: K, val: boolean) => {
+    setQuestionnaire(prev => {
+      const next = { ...prev, [key]: val } as DossierQuestionnaire
       try { localStorage.setItem(QUESTIONNAIRE_KEY, JSON.stringify(next)) } catch { /* ignore */ }
       return next
     })
@@ -1046,6 +1064,11 @@ export default function DossierLocatif() {
   const revenusSlots = useMemo((): Slot[] => {
     const q = questionnaire.emploiType
     if (!q) return []
+    const complementarySlots: Slot[] = questionnaire.hasRevenuComplementaire ? [
+      { docType: 'BULLETIN_PAIE_1', label: 'Bulletin de salaire M-1 (emploi)', required: true,  help: 'Dernier bulletin de votre activité salariée complémentaire.' },
+      { docType: 'BULLETIN_PAIE_2', label: 'Bulletin de salaire M-2 (emploi)', required: false, help: 'Avant-dernier bulletin.' },
+      { docType: 'CONTRAT_TRAVAIL', label: 'Contrat de travail (emploi)',       required: false, help: 'Contrat de votre activité salariée complémentaire si disponible.' },
+    ] : []
     const MAP: Record<string, Slot[]> = {
       cdi: [
         { docType: 'BULLETIN_PAIE_1', label: 'Bulletin de salaire M-1',    required: true,  help: 'Dernier bulletin de paie.' },
@@ -1064,21 +1087,32 @@ export default function DossierLocatif() {
       ],
       etudiant: [
         { docType: 'AVIS_IMPOSITION', label: "Avis d'imposition (ou des parents)", required: true, help: "Votre propre avis ou celui de vos parents si vous êtes rattaché(e) à leur foyer fiscal." },
+        ...complementarySlots,
       ],
       retraite: [
         { docType: 'JUSTIFICATIF_RETRAITE', label: 'Attestation de pension',   required: true, help: 'Dernière notification CARSAT ou caisse de retraite.' },
         { docType: 'AVIS_IMPOSITION',       label: "Avis d'imposition N-1",    required: true, help: 'Téléchargeable sur impots.gouv.fr.' },
+        ...complementarySlots,
       ],
       sans_emploi: [
         { docType: 'AVIS_IMPOSITION', label: "Avis d'imposition N-1", required: true, help: 'Ou tout justificatif de revenus (CAF, allocation…).' },
+        ...complementarySlots,
       ],
     }
     return MAP[q] ?? []
-  }, [questionnaire.emploiType])
+  }, [questionnaire.emploiType, questionnaire.hasRevenuComplementaire])
 
   const garantSlots = useMemo((): Slot[] => {
     const q = questionnaire.hasGarant
     if (!q || q === 'non') return []
+    if (q === 'oui_les_deux') return [
+      { docType: 'GARANT_VISALE',     label: 'Attestation Visale / CLé',          required: true,  help: 'Attestation Action Logement téléchargeable sur visale.fr ou cle.actionlogement.fr.' },
+      { docType: 'GARANT_CNI',        label: "Pièce d'identité du garant",         required: true,  help: 'CNI ou passeport en cours de validité.' },
+      { docType: 'GARANT_CONTRAT',    label: 'Contrat de travail du garant',       required: false, help: 'Idéalement un CDI confirmé.' },
+      { docType: 'GARANT_PAIE',       label: 'Bulletins de paie du garant',        required: false, help: '3 derniers bulletins.' },
+      { docType: 'GARANT_IMPOSITION', label: "Avis d'imposition du garant",        required: false, help: 'Dernier avis.' },
+      { docType: 'LETTRE_GARANT',     label: "Lettre d'engagement du garant",      required: false, help: "Lettre signée d'engagement." },
+    ]
     if (q === 'oui_visale') return [
       { docType: 'GARANT_VISALE', label: 'Attestation Visale / CLé', required: true, help: 'Attestation Action Logement téléchargeable sur visale.fr ou cle.actionlogement.fr.' },
     ]
@@ -1106,7 +1140,7 @@ export default function DossierLocatif() {
     if (!required.length) return 0
     const filled = required.filter(s => documents.some(d => d.docType === s.docType)).length
     return Math.round((filled / required.length) * 100)
-  }, [idSlots, emploiSlots, revenusSlots, garantSlots, questionnaire.hasGarant, documents])
+  }, [idSlots, emploiSlots, revenusSlots, garantSlots, questionnaire.hasGarant, questionnaire.hasRevenuComplementaire, documents])
 
   // ── Card wrapper ───────────────────────────────────────────────────────────
   const stepCard = (children: React.ReactNode) => (
@@ -1279,13 +1313,6 @@ export default function DossierLocatif() {
     4: 'Justificatif de domicile',
     5: 'Garant',
   }
-
-  const DOMICILE_SLOTS: Slot[] = [
-    { docType: 'QUITTANCE_LOYER',       label: 'Quittance de loyer',    required: false, help: 'Les 3 dernières quittances de loyer de votre logement actuel.' },
-    { docType: 'TAXE_FONCIERE',         label: 'Taxe foncière',         required: false, help: 'Uniquement si vous êtes propriétaire occupant.' },
-    { docType: 'FACTURE_EDF',           label: 'Facture énergie / eau', required: false, help: 'Facture de moins de 3 mois à votre nom.' },
-    { docType: 'JUSTIFICATIF_DOMICILE', label: 'Autre justificatif',    required: false, help: "Attestation d'hébergement manuscrite signée + CNI de l'hébergeant." },
-  ]
 
   return (
     <Layout>
@@ -1595,7 +1622,7 @@ export default function DossierLocatif() {
                     </div>
                   )}
 
-                  {questionnaire.emploiType === 'etudiant' && emploiSlots.length === 0 && (
+                  {questionnaire.emploiType === 'etudiant' && emploiSlots.length === 0 && questionnaire.hasRevenuComplementaire !== true && (
                     <div style={{ padding: '14px 16px', borderRadius: 10, background: BAI.bgMuted, border: `1px solid ${BAI.border}` }}>
                       <p style={{ margin: 0, fontSize: 13, color: BAI.inkMid, fontFamily: BAI.fontBody, lineHeight: 1.6 }}>
                         Pour un dossier étudiant, aucun contrat de travail n'est requis. Vos revenus seront justifiés à l'étape suivante.
@@ -1603,11 +1630,42 @@ export default function DossierLocatif() {
                     </div>
                   )}
 
-                  {questionnaire.emploiType === 'sans_emploi' && (
+                  {questionnaire.emploiType === 'sans_emploi' && questionnaire.hasRevenuComplementaire !== true && (
                     <div style={{ padding: '14px 16px', borderRadius: 10, background: BAI.bgMuted, border: `1px solid ${BAI.border}` }}>
                       <p style={{ margin: 0, fontSize: 13, color: BAI.inkMid, fontFamily: BAI.fontBody, lineHeight: 1.6 }}>
                         Vous pouvez passer directement à l'étape Revenus pour justifier vos ressources (allocations, CAF…).
                       </p>
+                    </div>
+                  )}
+
+                  {questionnaire.emploiType && ['etudiant', 'retraite', 'sans_emploi'].includes(questionnaire.emploiType) && (
+                    <div style={{ marginTop: 16, padding: '16px', borderRadius: 12, border: `1px solid ${BAI.border}`, background: BAI.bgMuted }}>
+                      <p style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 600, fontFamily: BAI.fontBody, color: BAI.ink }}>
+                        Avez-vous également un revenu salarié ?
+                      </p>
+                      <p style={{ margin: '0 0 14px', fontSize: 12, color: BAI.inkFaint, fontFamily: BAI.fontBody, lineHeight: 1.5 }}>
+                        Travail étudiant, job à temps partiel, activité salariée complémentaire…
+                      </p>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        {[
+                          { value: true,  label: "Oui, j'ai un emploi en parallèle" },
+                          { value: false, label: 'Non, pas de revenu salarié' },
+                        ].map(opt => (
+                          <button
+                            key={String(opt.value)}
+                            onClick={() => updateQuestionnaireBoolean('hasRevenuComplementaire', opt.value)}
+                            style={{
+                              flex: 1, padding: '10px 14px', borderRadius: 9, fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600,
+                              border: `1.5px solid ${questionnaire.hasRevenuComplementaire === opt.value ? BAI.tenant : BAI.border}`,
+                              background: questionnaire.hasRevenuComplementaire === opt.value ? BAI.tenantLight : BAI.bgSurface,
+                              color: questionnaire.hasRevenuComplementaire === opt.value ? BAI.tenant : BAI.inkMid,
+                              cursor: 'pointer', transition: 'all 0.15s',
+                            }}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </>
