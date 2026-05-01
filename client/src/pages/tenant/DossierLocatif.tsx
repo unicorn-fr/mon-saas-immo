@@ -305,6 +305,14 @@ function DocSlot({
 
   const isImage = doc && (doc.fileUrl?.match(/\.(jpe?g|png|webp|gif)/i) || doc.fileName?.match(/\.(jpe?g|png|webp|gif)/i))
 
+  const slotFamily = (
+    slot.docType.startsWith('CNI')       ? 'cni'     :
+    slot.docType.startsWith('PERMIS')    ? 'permis'  :
+    slot.docType === 'PASSEPORT'         ? 'passport':
+    slot.docType === 'TITRE_SEJOUR'      ? 'sejour'  :
+    undefined
+  ) as 'cni' | 'permis' | 'passport' | 'sejour' | undefined
+
   const handleFile = async (file: File, overrideDocType?: string) => {
     const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'application/pdf']
     if (!ALLOWED.includes(file.type)) {
@@ -409,6 +417,7 @@ function DocSlot({
       {showCamera && (
         <CameraCapture
           docType={slot.docType}
+          initialFamily={slotFamily}
           onComplete={async (captures: CaptureEntry[]) => {
             setShowCamera(false)
             setUploading(true)

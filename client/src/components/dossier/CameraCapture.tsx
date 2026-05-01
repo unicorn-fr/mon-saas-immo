@@ -81,12 +81,13 @@ const LABEL: Record<string, string> = {
   TITRE_SEJOUR: 'Titre de séjour',
 }
 
-const BLUR_OK        = 70
-const GUIDE_FRAC     = 0.84
-const CARAMEL        = '#c4976a'
-const DARK_BG        = '#0a0c12'
-const LOCK_THRESHOLD = 90    // blur score requis pour démarrer le décompte (strict)
-const LOCK_DURATION  = 1200  // ms à maintenir avant capture auto
+const BLUR_OK             = 70
+const GUIDE_FRAC          = 0.84
+const CARAMEL             = '#c4976a'
+const DARK_BG             = '#0a0c12'
+const LOCK_THRESHOLD      = 90    // blur score requis pour démarrer le décompte (strict)
+const LOCK_DURATION       = 1200  // ms à maintenir avant capture auto
+const PRESENCE_THRESHOLD  = 70   // minimum brightness range in guide zone (card has text = contrast)
 
 // ── Doc options for the selecting screen ─────────────────────────────────────
 const DOC_OPTIONS: { family: DocFamily; label: string; sub: string; Icon: React.ElementType }[] = [
@@ -111,13 +112,13 @@ async function callBackendOcr(
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
 
-/** Mesure la netteté uniquement dans la zone guide (là où la carte doit être). */
-function blurScoreInGuide(video: HTMLVideoElement, aspect: number): number {
+/** Analyse la netteté ET la présence de contenu dans la zone guide. */
+function analyzeGuide(video: HTMLVideoElement, aspect: number): { blur: number; presence: number } {
   const W = 280, H = 180
   const c = document.createElement('canvas')
   c.width = W; c.height = H
   const ctx = c.getContext('2d', { willReadFrequently: true })
-  if (!ctx) return 0
+  if (!ctx) return { blur: 0, presence: 0 }
   const vW = video.videoWidth || W, vH = video.videoHeight || H
   const maxW = vW * GUIDE_FRAC, maxH = vH * GUIDE_FRAC
   let gW: number, gH: number
@@ -127,7 +128,13 @@ function blurScoreInGuide(video: HTMLVideoElement, aspect: number): number {
   ctx.drawImage(video, gX, gY, gW, gH, 0, 0, W, H)
   const { data } = ctx.getImageData(0, 0, W, H)
   const g = new Uint8Array(W * H)
-  for (let i = 0; i < W * H; i++) g[i] = (data[i*4]*77 + data[i*4+1]*151 + data[i*4+2]*28) >> 8
+  let minG = 255, maxG = 0
+  for (let i = 0; i < W * H; i++) {
+    g[i] = (data[i*4]*77 + data[i*4+1]*151 + data[i*4+2]*28) >> 8
+    if (g[i] < minG) minG = g[i]
+    if (g[i] > maxG) maxG = g[i]
+  }
+  // Laplacian variance (blur score)
   let sum = 0, sq = 0, n = 0
   for (let y = 1; y < H - 1; y++) {
     for (let x = 1; x < W - 1; x++) {
@@ -136,7 +143,10 @@ function blurScoreInGuide(video: HTMLVideoElement, aspect: number): number {
       sum += v; sq += v*v; n++
     }
   }
-  return sq/n - (sum/n)**2
+  const blur = n > 0 ? sq/n - (sum/n)**2 : 0
+  // Presence = brightness range: blank surface ≈ 0, card with text ≈ 80-200
+  const presence = maxG - minG
+  return { blur, presence }
 }
 
 /** Crop the guide zone from the video frame and output at 1200px wide. */
@@ -447,11 +457,11 @@ export function CameraCapture({ initialFamily, onComplete, onClose }: CameraCapt
       const video = videoRef.current
       if (!video || phaseRef.current !== 'scanning') return
 
-      const s = blurScoreInGuide(video, aspect)
+      const { blur: s, presence } = analyzeGuide(video, aspect)
       scoreRaf.current = s
       setScore(s)
 
-      if (s >= LOCK_THRESHOLD) {
+      if (s >= LOCK_THRESHOLD && presence >= PRESENCE_THRESHOLD) {
         if (!lockStartRef.current) lockStartRef.current = Date.now()
         const elapsed = Date.now() - lockStartRef.current
         const progress = Math.min(100, (elapsed / LOCK_DURATION) * 100)
