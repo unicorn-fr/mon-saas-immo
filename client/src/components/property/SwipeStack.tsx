@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, useMotionValue, useTransform, useAnimation, AnimatePresence } from 'framer-motion'
-import { Heart, X, RotateCcw, MapPin, Bed, Bath, Square, Home, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react'
+import { X, RotateCcw, MapPin, Bed, Bath, Square, Home, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Property } from '../../types/property.types'
 import { Link } from 'react-router-dom'
 
@@ -118,8 +118,8 @@ function DragCard({
           ✕ Passer
         </motion.div>
 
-        {/* Info panel — bottom of card, with room for action buttons */}
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 20px 148px', zIndex: 5 }}>
+        {/* Info panel — bottom of card */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 20px 72px', zIndex: 5 }}>
 
           {/* Type badge */}
           <div style={{ marginBottom: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -255,9 +255,6 @@ export function SwipeStack({ properties, onFavorite, isFavorite, onClose }: Swip
     dragX.set(0)
   }
 
-  function triggerSwipeRight() { handleSwipeRight(); dragX.set(0) }
-  function triggerSwipeLeft()  { handleSwipeLeft();  dragX.set(0) }
-
   // ── Empty state ───────────────────────────────────────────────────────────────
   if (!current) {
     return (
@@ -343,57 +340,23 @@ export function SwipeStack({ properties, onFavorite, isFavorite, onClose }: Swip
         </AnimatePresence>
       </div>
 
-      {/* Action bar — floating at the bottom */}
+      {/* Bottom hint + undo */}
       <div style={{
         position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 20,
-        padding: '16px 24px max(20px, env(safe-area-inset-bottom))',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
+        padding: '12px 20px max(16px, env(safe-area-inset-bottom))',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
-          {/* Dismiss */}
-          <button onClick={triggerSwipeLeft} style={{
-            width: 62, height: 62, borderRadius: '50%', border: '2px solid rgba(252,165,165,0.6)',
-            background: 'rgba(155,28,28,0.2)', backdropFilter: 'blur(12px)', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 4px 20px rgba(155,28,28,0.25)', transition: 'transform 0.15s',
-          }}
-            onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.1)')}
-            onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
-          >
-            <X style={{ width: 26, height: 26, color: '#fca5a5' }} />
-          </button>
-
-          {/* Undo */}
-          <button onClick={handleUndo} disabled={history.length === 0} style={{
-            width: 46, height: 46, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)',
-            background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', cursor: history.length === 0 ? 'not-allowed' : 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            opacity: history.length === 0 ? 0.35 : 1, transition: 'opacity 0.2s, transform 0.15s',
-          }}
-            onMouseEnter={e => { if (history.length > 0) e.currentTarget.style.transform = 'scale(1.1)' }}
-            onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
-          >
-            <RotateCcw style={{ width: 18, height: 18, color: 'rgba(255,255,255,0.8)' }} />
-          </button>
-
-          {/* Favorite */}
-          <button onClick={triggerSwipeRight} style={{
-            width: 62, height: 62, borderRadius: '50%', border: '2px solid rgba(159,212,186,0.6)',
-            background: isFavorite(current.id) ? 'rgba(27,94,59,0.7)' : 'rgba(27,94,59,0.2)',
-            backdropFilter: 'blur(12px)', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 4px 20px rgba(27,94,59,0.3)', transition: 'transform 0.15s, background 0.2s',
-          }}
-            onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.1)')}
-            onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
-          >
-            <Heart style={{ width: 26, height: 26, color: '#9fd4ba', fill: isFavorite(current.id) ? '#9fd4ba' : 'none' }} />
-          </button>
-        </div>
-
-        <p style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 11, color: 'rgba(255,255,255,0.35)', margin: 0 }}>
-          ← Passer · ↩ Annuler · Sauvegarder →
+        <p style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 11, color: 'rgba(255,255,255,0.32)', margin: 0, letterSpacing: '0.04em' }}>
+          ← Passer · Sauvegarder →
         </p>
+        <button onClick={handleUndo} disabled={history.length === 0} style={{
+          display: 'flex', alignItems: 'center', gap: 5,
+          background: 'none', border: 'none', cursor: history.length === 0 ? 'not-allowed' : 'pointer',
+          opacity: history.length === 0 ? 0.25 : 0.65, padding: '4px 0',
+        }}>
+          <RotateCcw style={{ width: 13, height: 13, color: '#fff' }} />
+          <span style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 11, color: '#fff' }}>Annuler</span>
+        </button>
       </div>
     </div>
   )
