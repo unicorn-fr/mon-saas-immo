@@ -363,9 +363,14 @@ class PropertyController {
         sortOrder,
       } = req.query
 
+      const types = req.query.types
+        ? Array.isArray(req.query.types) ? req.query.types as string[] : [req.query.types as string]
+        : undefined
+
       const filters = {
         city: city as string,
         type: type as PropertyType,
+        types,
         status: status as PropertyStatus,
         minPrice: minPrice ? parseFloat(minPrice as string) : undefined,
         maxPrice: maxPrice ? parseFloat(maxPrice as string) : undefined,
@@ -738,12 +743,13 @@ class PropertyController {
           const msg = await anthropic.messages.create({
             model: 'claude-haiku-4-5-20251001',
             max_tokens: 512,
-            system: `Tu es un assistant qui extrait des critères de recherche immobilière à partir d'une requête en langage naturel français.
-Retourne UNIQUEMENT un JSON valide, sans markdown, sans explication. Format exact :
+            system: `Tu es un moteur de recherche immobilière intelligent pour la France. Analyse la requête et retourne UNIQUEMENT un JSON valide sans markdown.
+
+Format exact :
 {
   "filters": {
     "city": string | null,
-    "type": "APARTMENT"|"HOUSE"|"STUDIO"|"LOFT"|"DUPLEX"|null,
+    "types": string[],
     "minPrice": number | null,
     "maxPrice": number | null,
     "minSurface": number | null,
@@ -758,31 +764,65 @@ Retourne UNIQUEMENT un JSON valide, sans markdown, sans explication. Format exac
   "chips": [{"label": string, "value": string}]
 }
 
-Règles importantes :
-- T1/F1 = type APARTMENT, bedrooms 0 (studio équivalent)
-- T2/F2 = type APARTMENT, bedrooms 1
-- T3/F3 = type APARTMENT, bedrooms 2
-- T4/F4 = type APARTMENT, bedrooms 3
-- T5+/F5+ = type APARTMENT, bedrooms 4+
-- "studio" = type STUDIO, bedrooms 0
-- "maison", "villa", "pavillon" = type HOUSE
-- "loft" = type LOFT
-- "duplex" = type DUPLEX
-- La ville peut apparaître sans préposition (ex: "T2 Lyon" → city: "Lyon")
-- Un prix seul sans contexte = maxPrice (ex: "800€" → maxPrice 800)
-- "< 800€", "moins de 800", "pas plus de 800" → maxPrice
-- "> 800€", "au moins 800", "à partir de 800" → minPrice
-- Surface en m² : "50m²", "plus de 40m²", "30 à 60m²"
-- "meublé" → furnished true, "vide"/"non meublé" → furnished false
-- "avec parking"/"garage" → hasParking true
-- "avec balcon" → hasBalcony true
-- "avec ascenseur" → hasElevator true
-- "avec jardin"/"terrasse" → hasGarden true
-- Ignore les mots vides : "cherche", "je veux", "trouver", "logement", "bien", "annonce"
-- Les chips sont des labels humains pour afficher les filtres actifs dans l'UI
-- Ne mets dans les chips QUE les filtres extraits (pas les null)
-- city dans les chips avec la première lettre en majuscule
-- Si aucun critère clair n'est détecté, retourne filters tous null et chips vide`,
+RÈGLES CRITIQUES :
+
+1. TYPES — toujours un tableau (OR logic) :
+   - T1/F1 → types: ["STUDIO","APARTMENT"], bedrooms: 0
+   - T2/F2 → types: ["APARTMENT"], bedrooms: 1
+   - T3/F3 → types: ["APARTMENT"], bedrooms: 2
+   - T4/F4 → types: ["APARTMENT","HOUSE"], bedrooms: 3
+   - T5+/F5+ → types: ["HOUSE","APARTMENT"], bedrooms: 4
+   - "studio" → types: ["STUDIO","APARTMENT"] (petits appartements inclus)
+   - "appartement" seul → types: ["APARTMENT","STUDIO"] si surface ≤ 35m² probable, sinon ["APARTMENT"]
+   - "appartement" + surface > 40m² → types: ["APARTMENT"]
+   - "maison","villa","pavillon" → types: ["HOUSE","DUPLEX"]
+   - "loft" → types: ["LOFT","APARTMENT"]
+   - "duplex" → types: ["DUPLEX","APARTMENT"]
+   - Aucun type mentionné → types: [] (tableau vide = pas de filtre de type)
+
+2. SURFACE — toujours une fourchette intelligente :
+   - Surface exacte mentionnée (ex: "30m²", "50 mètres carrés") sans "au moins/au plus/minimum/maximum" →
+     minSurface: Math.floor(valeur * 0.8), maxSurface: Math.ceil(valeur * 1.3)
+   - "environ X m²", "autour de X m²" → ±35%
+   - "plus de X m²", "au moins X m²", "minimum X m²" → minSurface: X, maxSurface: null
+   - "moins de X m²", "au plus X m²", "maximum X m²" → minSurface: null, maxSurface: X
+   - "entre X et Y m²" → minSurface: X, maxSurface: Y
+
+3. PRIX — logique intelligente :
+   - Prix seul sans contexte (ex: "800€", "1200 euros") → maxPrice: valeur
+   - "< 800€", "moins de 800", "pas plus de 800", "jusqu'à 800" → maxPrice: valeur
+   - "> 800€", "plus de 800", "au moins 800", "à partir de 800" → minPrice: valeur
+   - "entre 500 et 900€" → minPrice: 500, maxPrice: 900
+   - "800 à 1200€" → minPrice: 800, maxPrice: 1200
+
+4. VILLE :
+   - Extraire la ville même SANS préposition ("T2 Lyon" → city: "Lyon")
+   - Ignorer les arrondissements/quartiers dans le filtre (garder juste la ville : "Paris 11e" → "Paris", "Lyon 6ème" → "Lyon")
+   - Première lettre majuscule, reste minuscule
+
+5. CHAMBRES :
+   - bedrooms = nombre MINIMUM de chambres (logique ≥)
+   - "studio" ou T1/F1 → bedrooms: 0
+   - "2 chambres" → bedrooms: 2
+
+6. CHIPS — labels humains affichés dans l'UI :
+   - Type: "T2 · Appartement" ou "Studio" etc.
+   - Surface: "25–39 m²" (afficher la fourchette calculée)
+   - Prix max: "≤ 800€"
+   - Prix min: "≥ 500€"
+   - Ville: nom avec majuscule
+   - Chambres: "≥ 2 chambres"
+   - Meublé: "Meublé" ou "Vide"
+   - Parking: "Avec parking"
+   - Ne pas ajouter de chip pour types: [] (aucun type)
+
+EXEMPLES :
+- "T2 Lyon" → types:["APARTMENT"], bedrooms:1, city:"Lyon", chips:[{label:"Type",value:"T2 · Appartement"},{label:"Ville",value:"Lyon"},{label:"Chambres",value:"≥ 1 chambre"}]
+- "appartement 30m²" → types:["APARTMENT","STUDIO"], minSurface:24, maxSurface:39, chips:[{label:"Type",value:"Appartement"},{label:"Surface",value:"24–39 m²"}]
+- "studio meublé moins de 700€ Paris" → types:["STUDIO","APARTMENT"], furnished:true, maxPrice:700, city:"Paris", bedrooms:0
+- "maison 3 chambres jardin Bordeaux" → types:["HOUSE","DUPLEX"], bedrooms:3, hasGarden:true, city:"Bordeaux"
+- "F3 moins de 900€ avec parking" → types:["APARTMENT"], bedrooms:2, maxPrice:900, hasParking:true
+- "T4 Lyon moins de 1500 60m²" → types:["APARTMENT","HOUSE"], bedrooms:3, maxPrice:1500, city:"Lyon", minSurface:48, maxSurface:78`,
             messages: [{ role: 'user', content: query }],
           })
 
@@ -792,10 +832,23 @@ Règles importantes :
             chips: { label: string; value: string }[]
           }
 
+          // Ensure types is always an array
+          if (!Array.isArray(parsed.filters.types)) {
+            parsed.filters.types = parsed.filters.type ? [parsed.filters.type] : []
+            delete parsed.filters.type
+          }
+          // Remove empty types array (no filter)
+          if (Array.isArray(parsed.filters.types) && parsed.filters.types.length === 0) {
+            delete parsed.filters.types
+          }
+
           // Sanitize: remove null values from filters
           const filters: Record<string, unknown> = {}
           for (const [k, v] of Object.entries(parsed.filters)) {
-            if (v !== null && v !== undefined) filters[k] = v
+            if (v !== null && v !== undefined) {
+              if (k === 'types' && Array.isArray(v) && v.length === 0) continue // skip empty array
+              filters[k] = v
+            }
           }
 
           return res.status(200).json({
@@ -813,15 +866,7 @@ Règles importantes :
       const filters: Record<string, unknown> = {}
       const chips: { label: string; value: string }[] = []
 
-      // T/F notation (T2, F3, etc.)
-      const tnMatch = q.match(/\b[tf](\d)\b/)
-      if (tnMatch) {
-        const n = parseInt(tnMatch[1])
-        filters.type = n === 1 ? 'STUDIO' : 'APARTMENT'
-        filters.bedrooms = Math.max(0, n - 1)
-        chips.push({ label: 'Type', value: `T${n}` })
-        if (n > 1) chips.push({ label: 'Chambres', value: String(n - 1) })
-      }
+      // T/F notation (T2, F3, etc.) — handled below with type block
 
       // Price
       const maxPriceMatch = q.match(/(?:moins de|max(?:imum)?|pas plus de|inf[eé]rieur [aà]|jusqu[' ]?[aà]|<)\s*(\d[\d\s]*)\s*(?:euros?|€|eur)?/i)
@@ -850,13 +895,31 @@ Règles importantes :
         if (bedMatch) { filters.bedrooms = parseInt(bedMatch[1]); chips.push({ label: 'Chambres', value: bedMatch[1] }) }
       }
 
-      // Type (if not already set)
-      if (!filters.type) {
-        if (/\bstudio\b/.test(q)) { filters.type = 'STUDIO'; chips.push({ label: 'Type', value: 'Studio' }) }
-        else if (/\b(?:maison|villa|pavillon)\b/.test(q)) { filters.type = 'HOUSE'; chips.push({ label: 'Type', value: 'Maison' }) }
-        else if (/\bappartement\b/.test(q)) { filters.type = 'APARTMENT'; chips.push({ label: 'Type', value: 'Appartement' }) }
-        else if (/\bloft\b/.test(q)) { filters.type = 'LOFT'; chips.push({ label: 'Type', value: 'Loft' }) }
-        else if (/\bduplex\b/.test(q)) { filters.type = 'DUPLEX'; chips.push({ label: 'Type', value: 'Duplex' }) }
+      // Type (uses types array for OR logic)
+      if (!filters.types) {
+        const tnMatch = q.match(/\b[tf](\d)\b/)
+        if (tnMatch) {
+          const n = parseInt(tnMatch[1])
+          filters.types = n === 1 ? ['STUDIO', 'APARTMENT'] : n >= 4 ? ['APARTMENT', 'HOUSE'] : ['APARTMENT']
+          filters.bedrooms = Math.max(0, n - 1)
+          chips.push({ label: 'Type', value: `T${n}` })
+          if (n > 1) chips.push({ label: 'Chambres', value: `≥ ${n - 1} chambre${n - 1 > 1 ? 's' : ''}` })
+        } else if (/\bstudio\b/.test(q)) {
+          filters.types = ['STUDIO', 'APARTMENT']
+          chips.push({ label: 'Type', value: 'Studio' })
+        } else if (/\b(?:maison|villa|pavillon)\b/.test(q)) {
+          filters.types = ['HOUSE', 'DUPLEX']
+          chips.push({ label: 'Type', value: 'Maison' })
+        } else if (/\bappartement\b/.test(q)) {
+          filters.types = ['APARTMENT', 'STUDIO']
+          chips.push({ label: 'Type', value: 'Appartement' })
+        } else if (/\bloft\b/.test(q)) {
+          filters.types = ['LOFT', 'APARTMENT']
+          chips.push({ label: 'Type', value: 'Loft' })
+        } else if (/\bduplex\b/.test(q)) {
+          filters.types = ['DUPLEX', 'APARTMENT']
+          chips.push({ label: 'Type', value: 'Duplex' })
+        }
       }
 
       // Furnished

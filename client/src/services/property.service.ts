@@ -28,7 +28,11 @@ class PropertyService {
 
       // Add filters
       if (filters.city) params.append('city', filters.city)
-      if (filters.type) params.append('type', filters.type)
+      if (filters.types && filters.types.length > 0) {
+        filters.types.forEach((t) => params.append('types', t))
+      } else if (filters.type) {
+        params.append('type', filters.type)
+      }
       if (filters.status) params.append('status', filters.status)
       if (filters.minPrice) params.append('minPrice', filters.minPrice.toString())
       if (filters.maxPrice) params.append('maxPrice', filters.maxPrice.toString())

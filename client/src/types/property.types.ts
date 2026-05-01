@@ -183,6 +183,7 @@ export interface UpdatePropertyInput {
 export interface PropertyFilters {
   city?: string
   type?: PropertyType
+  types?: string[]   // OR logic — multi-type depuis la recherche NL
   status?: PropertyStatus
   minPrice?: number
   maxPrice?: number

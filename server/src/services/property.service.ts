@@ -90,6 +90,7 @@ export interface UpdatePropertyInput {
 export interface PropertyFilters {
   city?: string
   type?: PropertyType
+  types?: string[]
   status?: PropertyStatus
   minPrice?: number
   maxPrice?: number
@@ -374,7 +375,9 @@ class PropertyService {
       where.city = { contains: filters.city, mode: 'insensitive' }
     }
 
-    if (filters.type) {
+    if (filters.types && Array.isArray(filters.types) && filters.types.length > 0) {
+      where.OR = filters.types.map((t: string) => ({ type: t as PropertyType }))
+    } else if (filters.type) {
       where.type = filters.type
     }
 
