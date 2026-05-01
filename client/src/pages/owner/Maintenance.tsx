@@ -3,6 +3,7 @@ import { Layout } from '../../components/layout/Layout'
 import { BAI } from '../../constants/bailio-tokens'
 import { useMaintenanceStore } from '../../store/maintenanceStore'
 import { usePropertyStore } from '../../store/propertyStore'
+import { maintenanceService } from '../../services/maintenance.service'
 import {
   MaintenanceCategory,
   MaintenancePriority,
@@ -27,7 +28,29 @@ import {
   Clock,
   AlertTriangle,
   XCircle,
+  MapPin,
+  Phone,
+  Globe,
+  Search,
 } from 'lucide-react'
+import toast from 'react-hot-toast'
+
+interface Contractor {
+  id: string
+  name: string
+  address: string
+  phone: string | null
+  website: string | null
+  distance: number
+  openingHours: string | null
+  rating?: number | null
+  reviewCount?: number | null
+}
+
+interface ContractorResult {
+  contractors: Contractor[]
+  platforms: Array<{ name: string; url: string; description: string }>
+}
 
 // ── Status helpers ──────────────────────────────────────────────────────────
 
@@ -130,6 +153,8 @@ export default function Maintenance() {
   const [showForm, setShowForm] = useState(false)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL')
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [contractorsMap, setContractorsMap] = useState<Record<string, ContractorResult>>({})
+  const [loadingContractors, setLoadingContractors] = useState<string | null>(null)
   const [form, setForm] = useState<CreateMaintenanceInput>({
     propertyId: '',
     title: '',
@@ -161,6 +186,29 @@ export default function Maintenance() {
       setShowForm(false)
       setForm({ propertyId: '', title: '', description: '', category: 'PLOMBERIE', priority: 'MEDIUM' })
     } catch {}
+  }
+
+  async function handleFindContractors(req: { id: string; category: MaintenanceCategory; property?: { title: string; city?: string; latitude?: number | null; longitude?: number | null } }) {
+    if (contractorsMap[req.id]) {
+      // toggle off if already loaded
+      setContractorsMap(m => { const n = { ...m }; delete n[req.id]; return n })
+      return
+    }
+    setLoadingContractors(req.id)
+    try {
+      const result = await maintenanceService.findContractors({
+        category: req.category,
+        city: req.property?.city ?? '',
+        latitude: req.property?.latitude ?? null,
+        longitude: req.property?.longitude ?? null,
+      })
+      setContractorsMap(m => ({ ...m, [req.id]: result }))
+      if (result.contractors.length === 0) toast('Aucun artisan trouvé à proximité — essayez les plateformes ci-dessous.', { icon: 'ℹ️' })
+    } catch (e) {
+      toast.error('Erreur lors de la recherche d\'artisans')
+    } finally {
+      setLoadingContractors(null)
+    }
   }
 
   const inputStyle: React.CSSProperties = {
@@ -884,45 +932,103 @@ export default function Maintenance() {
                         </p>
                       </div>
 
-                      {/* Platforms */}
-                      {req.aiAnalysis.platforms.length > 0 && (
-                        <div>
-                          <p
-                            style={{
-                              fontFamily: BAI.fontBody,
-                              fontSize: 12,
-                              fontWeight: 600,
-                              color: BAI.inkMid,
-                              margin: '0 0 10px',
-                            }}
-                          >
-                            Trouver un artisan
+                      {/* Find contractors button */}
+                      <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${BAI.border}` }}>
+                        <button
+                          onClick={() => handleFindContractors(req)}
+                          disabled={loadingContractors === req.id}
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 7,
+                            padding: '9px 18px', borderRadius: 8, border: 'none',
+                            background: BAI.night, color: '#fff',
+                            fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600,
+                            cursor: loadingContractors === req.id ? 'wait' : 'pointer',
+                            minHeight: 40, opacity: loadingContractors === req.id ? 0.7 : 1,
+                          }}
+                        >
+                          <Search style={{ width: 14, height: 14 }} />
+                          {loadingContractors === req.id
+                            ? 'Recherche en cours...'
+                            : contractorsMap[req.id]
+                              ? 'Masquer les artisans'
+                              : 'Trouver un artisan à proximité'}
+                        </button>
+
+                        {/* Contractor cards */}
+                        {contractorsMap[req.id] && (() => {
+                          const res = contractorsMap[req.id]
+                          return (
+                            <div style={{ marginTop: 16 }}>
+                              {res.contractors.length > 0 ? (
+                                <>
+                                  <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.inkMid, margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                                    {res.contractors.length} artisan{res.contractors.length > 1 ? 's' : ''} à proximité
+                                  </p>
+                                  <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 4 }}>
+                                    {res.contractors.map(c => (
+                                      <div key={c.id} style={{ minWidth: 220, maxWidth: 240, flexShrink: 0, background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 10, padding: 14 }}>
+                                        <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: BAI.ink, margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</p>
+                                        {c.distance != null && (
+                                          <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                            <MapPin style={{ width: 11, height: 11 }} />
+                                            {c.distance < 1 ? `${Math.round(c.distance * 1000)} m` : `${c.distance.toFixed(1)} km`}
+                                          </p>
+                                        )}
+                                        {c.address && (
+                                          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: '0 0 10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.address}</p>
+                                        )}
+                                        <div style={{ display: 'flex', gap: 6 }}>
+                                          {c.phone && (
+                                            <a href={`tel:${c.phone}`} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '7px 10px', borderRadius: 7, background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.owner, minHeight: 36 }}>
+                                              <Phone style={{ width: 12, height: 12 }} /> Appeler
+                                            </a>
+                                          )}
+                                          {c.website && (
+                                            <a href={c.website} target="_blank" rel="noopener noreferrer" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '7px 10px', borderRadius: 7, background: BAI.caramelLight, border: `1px solid ${BAI.caramelBorder}`, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.caramel, minHeight: 36 }}>
+                                              <Globe style={{ width: 12, height: 12 }} /> Site
+                                            </a>
+                                          )}
+                                          {!c.phone && !c.website && (
+                                            <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint }}>Aucun contact disponible</span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </>
+                              ) : (
+                                <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, margin: '0 0 10px' }}>
+                                  Aucun artisan trouvé via OpenStreetMap. Consultez ces plateformes :
+                                </p>
+                              )}
+
+                              {/* Platform links */}
+                              {res.platforms.length > 0 && (
+                                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: res.contractors.length > 0 ? 12 : 0 }}>
+                                  {res.platforms.map(p => (
+                                    <a key={p.name} href={p.url} target="_blank" rel="noopener noreferrer"
+                                      style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 7, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkMid, minHeight: 34 }}>
+                                      <ExternalLink style={{ width: 11, height: 11 }} /> {p.name}
+                                    </a>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })()}
+                      </div>
+
+                      {/* AI platforms (from analysis) */}
+                      {req.aiAnalysis.platforms.length > 0 && !contractorsMap[req.id] && (
+                        <div style={{ marginTop: 12 }}>
+                          <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkMid, margin: '0 0 8px' }}>
+                            Plateformes recommandées par l'IA
                           </p>
-                          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                             {req.aiAnalysis.platforms.map(p => (
-                              <a
-                                key={p.name}
-                                href={p.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: 6,
-                                  padding: '8px 14px',
-                                  borderRadius: 8,
-                                  border: `1px solid ${BAI.caramelBorder}`,
-                                  background: BAI.caramelLight,
-                                  fontFamily: BAI.fontBody,
-                                  fontSize: 12,
-                                  fontWeight: 600,
-                                  color: BAI.caramel,
-                                  textDecoration: 'none',
-                                  minHeight: 36,
-                                }}
-                              >
-                                <ExternalLink style={{ width: 12, height: 12 }} />
-                                {p.name}
+                              <a key={p.name} href={p.url} target="_blank" rel="noopener noreferrer"
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 12px', borderRadius: 8, border: `1px solid ${BAI.caramelBorder}`, background: BAI.caramelLight, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.caramel, minHeight: 36 }}>
+                                <ExternalLink style={{ width: 11, height: 11 }} /> {p.name}
                               </a>
                             ))}
                           </div>
