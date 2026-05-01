@@ -1,13 +1,136 @@
 import { Router } from 'express'
 import { authenticate } from '../middlewares/auth.middleware.js'
 import { prisma } from '../config/database.js'
-import Anthropic from '@anthropic-ai/sdk'
-import { env } from '../config/env.js'
 
 const router = Router()
 router.use(authenticate)
 
-const anthropic = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY })
+// ── Rule-based maintenance analysis (no external AI API needed) ──────────────
+
+interface AiAnalysis {
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  estimatedCost: { min: number; max: number; currency: 'EUR' }
+  advice: string
+  platforms: { name: string; url: string; description: string }[]
+}
+
+const PLATFORMS_BY_CATEGORY: Record<string, AiAnalysis['platforms']> = {
+  PLOMBERIE: [
+    { name: 'MesDépanneurs.fr', url: 'https://www.mesdepanneurs.fr', description: 'Mise en relation plombiers disponibles rapidement' },
+    { name: 'Habitissimo', url: 'https://www.habitissimo.fr', description: 'Devis gratuits artisans locaux' },
+    { name: 'Jemepropose', url: 'https://www.jemepropose.com', description: 'Artisans du bâtiment vérifiés' },
+  ],
+  ELECTRICITE: [
+    { name: 'MesDépanneurs.fr', url: 'https://www.mesdepanneurs.fr', description: 'Électriciens disponibles en urgence' },
+    { name: 'Habitissimo', url: 'https://www.habitissimo.fr', description: 'Devis électriciens certifiés' },
+    { name: 'Voltalis', url: 'https://www.voltalis.com', description: 'Électriciens RGE' },
+  ],
+  SERRURERIE: [
+    { name: 'MesDépanneurs.fr', url: 'https://www.mesdepanneurs.fr', description: 'Serruriers disponibles 24h/24' },
+    { name: 'Habitissimo', url: 'https://www.habitissimo.fr', description: 'Serruriers vérifiés' },
+    { name: 'Lockitane', url: 'https://www.lockitane.fr', description: 'Serruriers professionnels' },
+  ],
+  CHAUFFAGE: [
+    { name: 'MesDépanneurs.fr', url: 'https://www.mesdepanneurs.fr', description: 'Chauffagistes disponibles rapidement' },
+    { name: 'Habitissimo', url: 'https://www.habitissimo.fr', description: 'Devis chauffagistes RGE' },
+    { name: 'Proxiserve', url: 'https://www.proxiserve.fr', description: 'Maintenance chaudières et chauffage' },
+  ],
+  AUTRE: [
+    { name: 'Habitissimo', url: 'https://www.habitissimo.fr', description: 'Devis gratuits tous travaux' },
+    { name: 'Jemepropose', url: 'https://www.jemepropose.com', description: 'Artisans polyvalents vérifiés' },
+    { name: 'Houzz', url: 'https://www.houzz.fr', description: 'Professionnels de la rénovation' },
+  ],
+}
+
+const SEVERITY_KEYWORDS = {
+  critical: ['urgence', 'urgent', 'inondation', 'court-circuit', 'feu', 'gaz', 'explosion', 'danger', 'sécurité', 'bloqué', 'bloquée', 'impossible', 'panne totale', 'pas d\'eau', 'pas d\'électricité', 'pas de chauffage', 'nuit'],
+  high: ['fuite', 'fuite importante', 'panne', 'cassé', 'cassée', 'brisé', 'brisée', 'chaud', 'brûlant', 'odeur', 'humidité', 'moisissure', 'bloqué', 'plus de', 'ne fonctionne pas', 'ne marche pas'],
+  medium: ['fuit', 'goutte', 'grince', 'claque', 'craque', 'lent', 'faible pression', 'difficile', 'usé', 'usée', 'abîmé', 'abîmée'],
+  low: ['bruit', 'esthétique', 'peinture', 'petite', 'petit', 'léger', 'légère'],
+}
+
+const COST_BY_CATEGORY: Record<string, Record<string, { min: number; max: number }>> = {
+  PLOMBERIE: {
+    critical: { min: 300, max: 1500 },
+    high: { min: 150, max: 600 },
+    medium: { min: 80, max: 300 },
+    low: { min: 50, max: 150 },
+  },
+  ELECTRICITE: {
+    critical: { min: 400, max: 2000 },
+    high: { min: 200, max: 800 },
+    medium: { min: 100, max: 400 },
+    low: { min: 60, max: 200 },
+  },
+  SERRURERIE: {
+    critical: { min: 200, max: 600 },
+    high: { min: 150, max: 400 },
+    medium: { min: 100, max: 250 },
+    low: { min: 80, max: 200 },
+  },
+  CHAUFFAGE: {
+    critical: { min: 300, max: 1500 },
+    high: { min: 200, max: 800 },
+    medium: { min: 100, max: 400 },
+    low: { min: 80, max: 250 },
+  },
+  AUTRE: {
+    critical: { min: 200, max: 1000 },
+    high: { min: 100, max: 500 },
+    medium: { min: 60, max: 250 },
+    low: { min: 30, max: 150 },
+  },
+}
+
+const ADVICE_BY_CATEGORY: Record<string, Record<string, string>> = {
+  PLOMBERIE: {
+    critical: 'Coupez immédiatement l\'eau au robinet d\'arrêt général et contactez un plombier en urgence. Éponger l\'eau pour éviter les dégâts des eaux.',
+    high: 'Contactez un plombier qualifié rapidement. Si possible, coupez l\'arrivée d\'eau locale. Prenez des photos des dégâts pour votre assurance.',
+    medium: 'Planifiez une intervention dans les prochains jours. Un plombier pourra diagnostiquer et réparer sans urgence immédiate.',
+    low: 'Intervention non urgente. Vous pouvez planifier à votre convenance dans les prochaines semaines.',
+  },
+  ELECTRICITE: {
+    critical: 'Coupez le disjoncteur général immédiatement et contactez un électricien d\'urgence. Ne touchez à aucun câble. Appelez le 15 ou 18 en cas de danger immédiat.',
+    high: 'Coupez le circuit concerné au tableau électrique et contactez un électricien certifié rapidement. Évitez d\'utiliser les prises défectueuses.',
+    medium: 'Planifiez une intervention avec un électricien qualifié. Évitez de surcharger les circuits en attendant.',
+    low: 'Intervention à planifier dans les prochaines semaines. Un électricien pourra évaluer et corriger le problème.',
+  },
+  SERRURERIE: {
+    critical: 'Si vous êtes bloqué dehors ou si la sécurité est compromise, appelez un serrurier d\'urgence. Votre assurance habitation peut couvrir cette intervention.',
+    high: 'Contactez un serrurier certifié rapidement pour garantir la sécurité du logement. Vérifiez votre couverture assurance.',
+    medium: 'Planifiez l\'intervention dans les prochains jours pour garantir la bonne sécurisation du logement.',
+    low: 'L\'intervention peut être planifiée à votre convenance dans les prochaines semaines.',
+  },
+  CHAUFFAGE: {
+    critical: 'Si vous suspectez une fuite de gaz, ouvrez les fenêtres, évacuez et appelez le 0800 47 33 33 (Gaz). Contactez un chauffagiste d\'urgence pour toute panne totale.',
+    high: 'Contactez un chauffagiste qualifié rapidement. Assurez-vous que la pression de la chaudière est normale (entre 1 et 2 bars).',
+    medium: 'Planifiez un entretien de chaudière dans les prochains jours. Vérifiez que le thermostat et les robinets de radiateurs sont bien ouverts.',
+    low: 'Intervention à planifier lors de l\'entretien annuel de la chaudière.',
+  },
+  AUTRE: {
+    critical: 'Contactez immédiatement un professionnel qualifié. En cas de danger, prévenez les secours (15, 18 ou 112).',
+    high: 'Contactez un artisan qualifié rapidement pour évaluer et résoudre le problème.',
+    medium: 'Planifiez une intervention dans les prochains jours avec un professionnel adapté à la nature du problème.',
+    low: 'Intervention non urgente, à planifier à votre convenance.',
+  },
+}
+
+function analyzeMaintenanceRequest(category: string, title: string, description: string): AiAnalysis {
+  const text = `${title} ${description}`.toLowerCase()
+
+  // Determine severity by keywords
+  let severity: AiAnalysis['severity'] = 'medium'
+  if (SEVERITY_KEYWORDS.critical.some(k => text.includes(k))) severity = 'critical'
+  else if (SEVERITY_KEYWORDS.high.some(k => text.includes(k))) severity = 'high'
+  else if (SEVERITY_KEYWORDS.low.some(k => text.includes(k)) && !SEVERITY_KEYWORDS.medium.some(k => text.includes(k))) severity = 'low'
+
+  const cat = category in COST_BY_CATEGORY ? category : 'AUTRE'
+  const cost = COST_BY_CATEGORY[cat][severity]
+  const advice = ADVICE_BY_CATEGORY[cat][severity]
+  const platforms = PLATFORMS_BY_CATEGORY[cat] ?? PLATFORMS_BY_CATEGORY['AUTRE']
+
+  return { severity, estimatedCost: { ...cost, currency: 'EUR' }, advice, platforms }
+}
 
 // GET /maintenance
 router.get('/', async (req, res) => {
@@ -113,41 +236,7 @@ router.post('/:id/ai-analyze', async (req, res) => {
     })
     if (!existing) return res.status(404).json({ success: false, message: 'Demande introuvable' })
 
-    const message = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 600,
-      messages: [{
-        role: 'user',
-        content: `Tu es un expert en gestion immobilière en France. Analyse ce problème de maintenance signalé dans un logement locatif et retourne UNIQUEMENT un objet JSON valide (sans markdown, sans texte avant/après).
-
-Catégorie: ${existing.category}
-Titre: ${existing.title}
-Description: ${existing.description}
-
-Réponds avec ce format JSON exact:
-{
-  "severity": "low|medium|high|critical",
-  "estimatedCost": { "min": number, "max": number, "currency": "EUR" },
-  "advice": "Conseil pratique en français en 2-3 phrases maximum.",
-  "platforms": [
-    { "name": "Nom plateforme", "url": "https://...", "description": "Description courte en français" }
-  ]
-}
-
-Pour les platforms, donne 2-3 plateformes françaises réelles et pertinentes pour cette catégorie (ex: Habitissimo, MesDépanneurs.fr, Houzz, Costes&Associés, Papernest, etc.).`,
-      }],
-    })
-
-    const content = message.content[0]
-    if (content.type !== 'text') throw new Error('Invalid AI response')
-
-    let aiAnalysis
-    try {
-      const jsonText = content.text.replace(/```json?\n?/g, '').replace(/```/g, '').trim()
-      aiAnalysis = JSON.parse(jsonText)
-    } catch {
-      aiAnalysis = { severity: 'medium', estimatedCost: { min: 100, max: 500, currency: 'EUR' }, advice: 'Contactez un professionnel qualifié pour évaluer et résoudre ce problème.', platforms: [{ name: 'Habitissimo', url: 'https://www.habitissimo.fr', description: 'Plateforme de mise en relation avec des artisans locaux' }] }
-    }
+    const aiAnalysis = analyzeMaintenanceRequest(existing.category, existing.title, existing.description)
 
     const request = await prisma.maintenanceRequest.update({
       where: { id: req.params.id },

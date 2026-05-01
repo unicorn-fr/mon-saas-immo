@@ -2,14 +2,10 @@ import { Router } from 'express'
 import { authenticate, authorize } from '../middlewares/auth.middleware.js'
 import { prisma } from '../config/database.js'
 import { findRentalMarketData } from '../data/rentalMarketData.js'
-import Anthropic from '@anthropic-ai/sdk'
-import { env } from '../config/env.js'
 
 const router = Router()
 router.use(authenticate)
 router.use(authorize('OWNER'))
-
-const anthropic = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY })
 
 // GET /finances/expenses
 router.get('/expenses', async (req, res) => {
@@ -245,7 +241,7 @@ router.get('/market-analysis/:propertyId', async (req, res) => {
   }
 })
 
-// POST /finances/rent-advisor
+// POST /finances/rent-advisor — calcul déterministe, sans API externe
 router.post('/rent-advisor', async (req, res) => {
   try {
     const { city, address, postalCode, surface, bedrooms, furnished, type } = req.body
@@ -253,65 +249,85 @@ router.post('/rent-advisor', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Champs requis manquants (city, surface)' })
     }
 
-    const market = await findRentalMarketData(city, address ?? '', postalCode ?? '')
+    const surf = Number(surface)
+    const rooms = Number(bedrooms) || 1
+    const isfurnished = furnished === true || furnished === 'true'
 
-    let encadrementNote = ''
-    if (market?.encadrement && market.encadrementMaj) {
-      encadrementNote = `Encadrement des loyers applicable : loyer de référence ${market.encadrementRef} €/m², majoré ${market.encadrementMaj} €/m² (${market.label}). Le loyer recommandé doit rester sous le plafond majoré.`
-    } else if (market) {
-      encadrementNote = `${market.label} n'est pas soumise à l'encadrement des loyers.`
+    // Fetch market data (live API if encadrement city, else static)
+    const market = await findRentalMarketData(city, address ?? '', postalCode ?? '', rooms, isfurnished)
+
+    // ── Price calculation ──────────────────────────────────────────────
+    let baseM2: number
+    let minM2: number
+    let maxM2: number
+
+    if (market) {
+      baseM2 = market.avgRentM2
+      minM2  = market.minRentM2
+      maxM2  = market.maxRentM2
+    } else {
+      // National fallback: 12 €/m² average France
+      baseM2 = 12; minM2 = 9; maxM2 = 16
     }
 
-    const marketInfo = market
-      ? `Données marché : loyer moyen ${market.avgRentM2} €/m², fourchette ${market.minRentM2}-${market.maxRentM2} €/m²`
-      : `Données marché : non disponibles pour cette ville — base toi sur les données nationales pour une ville de cette taille`
+    // Adjustments (multiplicative factors)
+    let factor = 1.0
 
-    const prompt = `Tu es un expert en gestion locative française. Voici un bien immobilier :
-- Ville : ${city}, Adresse : ${address ?? 'non précisée'}
-- Surface : ${surface} m², ${bedrooms ?? 1} chambre(s)
-- Type : ${type ?? 'APARTMENT'}, Meublé : ${furnished ? 'oui' : 'non'}
-- ${marketInfo}
-${encadrementNote ? `- ${encadrementNote}` : ''}
+    // Meublé premium: +15-25% vs non meublé
+    if (isfurnished) factor *= 1.18
 
-Donne une recommandation de loyer précise. Réponds UNIQUEMENT en JSON valide :
-{"minRent": number, "maxRent": number, "recommendedRent": number, "reasoning": "string", "encadrementNote": "string or null", "tips": ["string", "string", "string"]}`
+    // Surface: small surfaces command higher €/m²
+    if (surf < 25) factor *= 1.15
+    else if (surf < 40) factor *= 1.08
+    else if (surf > 80) factor *= 0.95
+    else if (surf > 120) factor *= 0.90
 
-    const message = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 600,
-      messages: [{ role: 'user', content: prompt }],
-    })
+    // Type premium
+    if (type === 'LOFT' || type === 'DUPLEX') factor *= 1.10
 
-    const content = message.content[0]
-    if (content.type !== 'text') throw new Error('Invalid AI response')
+    const adjBase = baseM2 * factor
+    const adjMin  = minM2  * factor
+    const adjMax  = maxM2  * factor
 
-    let advice
-    try {
-      const jsonText = content.text.replace(/```json?\n?/g, '').replace(/```/g, '').trim()
-      advice = JSON.parse(jsonText)
-    } catch {
-      // fallback: compute from market data if available
-      const base = market ? market.avgRentM2 * Number(surface) : 800
-      advice = {
-        minRent: Math.round(base * 0.9),
-        maxRent: Math.round(base * 1.15),
-        recommendedRent: Math.round(base),
-        reasoning: 'Estimation basée sur les données de marché locales disponibles.',
-        encadrementNote: encadrementNote || null,
-        tips: [
-          'Comparez avec les annonces similaires sur SeLoger et PAP.',
-          'Un loyer bien positionné réduit la vacance locative.',
-          'Vérifiez les loyers de référence sur le site de votre préfecture.',
-        ],
+    const recommendedRent = Math.round(adjBase * surf)
+    const minRent         = Math.round(adjMin  * surf)
+    const maxRent         = Math.round(adjMax  * surf)
+
+    // ── Encadrement ────────────────────────────────────────────────────
+    let encadrementNote: string | null = null
+    if (market?.encadrement && market.encadrementMaj) {
+      const plafond = Math.round(market.encadrementMaj * factor * surf)
+      if (recommendedRent > plafond) {
+        encadrementNote = `⚠ Attention : à ${city}, l'encadrement des loyers fixe un plafond majoré à ${market.encadrementMaj} €/m² (soit ~${plafond} € pour ${surf} m²). Le loyer recommandé a été ajusté pour rester conforme.`
+      } else {
+        encadrementNote = `✓ Conforme à l'encadrement des loyers de ${city} (plafond majoré ${market.encadrementMaj} €/m² · référence ${market.encadrementRef} €/m²).`
       }
     }
 
-    // If market data was unavailable, signal it
-    if (!market) {
-      advice.encadrementNote = "Données de marché non disponibles pour cette ville. Consultez l'observatoire local des loyers (CLAMEUR, ANIL)."
-    }
+    // ── Reasoning ─────────────────────────────────────────────────────
+    const dataSource = market ? `données officielles ${market.label}` : 'moyenne nationale (données marché non disponibles pour cette ville)'
+    const furnishedStr = isfurnished ? 'meublé (+18%)' : 'non meublé'
+    const reasoning = `Estimation basée sur les ${dataSource} : ${baseM2.toFixed(1)} €/m² moyen, ajusté pour ${furnishedStr}, surface ${surf} m²${surf < 40 ? ' (petite surface, prime appliquée)' : ''}.`
 
-    return res.json({ success: true, data: { advice, marketAvailable: !!market } })
+    // ── Tips contextuals ────────────────────────────────────────────────
+    const tips: string[] = []
+    if (market?.encadrement) tips.push(`Ville soumise à l'encadrement des loyers — mentionnez le loyer de référence (${market.encadrementRef} €/m²) dans le bail.`)
+    else tips.push('Consultez les annonces similaires sur SeLoger et PAP pour valider votre positionnement.')
+
+    if (isfurnished) tips.push('Un logement meublé attire les étudiants et jeunes actifs — soignez les photos et listez précisément le mobilier.')
+    else tips.push('Un loyer légèrement sous la médiane réduit la vacance et fidélise le locataire.')
+
+    if (surf < 30) tips.push('Les studios et T1 se louent vite en centre-ville — privilégiez une plateforme ciblée (PAP, Leboncoin, Studapart).')
+    else if (rooms >= 3) tips.push('Les grands logements attirent les familles — mettez en avant les écoles et transports à proximité.')
+    else tips.push('Comparez avec au moins 5 annonces similaires dans un rayon de 500m avant de fixer définitivement le prix.')
+
+    return res.json({
+      success: true,
+      data: {
+        advice: { minRent, maxRent, recommendedRent, reasoning, encadrementNote, tips },
+        marketAvailable: !!market,
+      },
+    })
   } catch (err) {
     console.error('rent-advisor error:', err)
     return res.status(500).json({ success: false, message: 'Erreur lors de l\'estimation du loyer' })
