@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { useProperties } from '../../hooks/useProperties'
 import { ImageUpload } from '../../components/property/ImageUpload'
+import { RentAdvisor } from '../../components/property/RentAdvisor'
 import { Layout } from '../../components/layout/Layout'
 import { celebrateBig } from '../../utils/celebrate'
 import type { CreatePropertyInput, PropertyType } from '../../types/property.types'
@@ -1060,6 +1061,16 @@ export default function CreatePropertyWizard() {
                     style={{ ...inputStyle, maxWidth: 200 }} placeholder="900"
                   />
                   {errors.price && <p style={{ color: BAI.error, fontSize: 13, marginTop: 4 }}>{errors.price}</p>}
+                  <RentAdvisor
+                    city={state.city}
+                    address={state.address}
+                    postalCode={state.postalCode}
+                    surface={Number(state.surface) || 0}
+                    bedrooms={state.bedrooms}
+                    furnished={state.furnished}
+                    type={state.propertyType as string}
+                    onApplyRent={rent => update({ price: String(rent), deposit: state.deposit || String(rent * 2) })}
+                  />
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>

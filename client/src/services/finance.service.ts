@@ -3,6 +3,25 @@ import { Expense, CreateExpenseInput, Loan, SaveLoanInput, FinanceSummary } from
 
 interface ApiResponse<T> { success: boolean; message?: string; data: T }
 
+export interface RentAdvice {
+  minRent: number
+  maxRent: number
+  recommendedRent: number
+  reasoning: string
+  encadrementNote: string | null
+  tips: string[]
+}
+
+export interface RentAdvisorInput {
+  city: string
+  address: string
+  postalCode: string
+  surface: number
+  bedrooms: number
+  furnished: boolean
+  type: string
+}
+
 export interface MarketAnalysis {
   propertyId: string
   propertyTitle: string
@@ -65,6 +84,13 @@ class FinanceService {
     try {
       const res = await apiClient.get<ApiResponse<{ analysis: MarketAnalysis }>>(`/finances/market-analysis/${propertyId}`)
       return res.data.data.analysis
+    } catch (e) { throw new Error(handleApiError(e)) }
+  }
+
+  async getRentAdvice(input: RentAdvisorInput): Promise<{ advice: RentAdvice; marketAvailable: boolean }> {
+    try {
+      const res = await apiClient.post<ApiResponse<{ advice: RentAdvice; marketAvailable: boolean }>>('/finances/rent-advisor', input)
+      return res.data.data
     } catch (e) { throw new Error(handleApiError(e)) }
   }
 }

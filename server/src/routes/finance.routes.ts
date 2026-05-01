@@ -2,10 +2,14 @@ import { Router } from 'express'
 import { authenticate, authorize } from '../middlewares/auth.middleware.js'
 import { prisma } from '../config/database.js'
 import { findRentalMarketData } from '../data/rentalMarketData.js'
+import Anthropic from '@anthropic-ai/sdk'
+import { env } from '../config/env.js'
 
 const router = Router()
 router.use(authenticate)
 router.use(authorize('OWNER'))
+
+const anthropic = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY })
 
 // GET /finances/expenses
 router.get('/expenses', async (req, res) => {
@@ -238,6 +242,79 @@ router.get('/market-analysis/:propertyId', async (req, res) => {
   } catch (err) {
     console.error(err)
     return res.status(500).json({ success: false, message: 'Erreur serveur' })
+  }
+})
+
+// POST /finances/rent-advisor
+router.post('/rent-advisor', async (req, res) => {
+  try {
+    const { city, address, postalCode, surface, bedrooms, furnished, type } = req.body
+    if (!city || !surface) {
+      return res.status(400).json({ success: false, message: 'Champs requis manquants (city, surface)' })
+    }
+
+    const market = await findRentalMarketData(city, address ?? '', postalCode ?? '')
+
+    let encadrementNote = ''
+    if (market?.encadrement && market.encadrementMaj) {
+      encadrementNote = `Encadrement des loyers applicable : loyer de référence ${market.encadrementRef} €/m², majoré ${market.encadrementMaj} €/m² (${market.label}). Le loyer recommandé doit rester sous le plafond majoré.`
+    } else if (market) {
+      encadrementNote = `${market.label} n'est pas soumise à l'encadrement des loyers.`
+    }
+
+    const marketInfo = market
+      ? `Données marché : loyer moyen ${market.avgRentM2} €/m², fourchette ${market.minRentM2}-${market.maxRentM2} €/m²`
+      : `Données marché : non disponibles pour cette ville — base toi sur les données nationales pour une ville de cette taille`
+
+    const prompt = `Tu es un expert en gestion locative française. Voici un bien immobilier :
+- Ville : ${city}, Adresse : ${address ?? 'non précisée'}
+- Surface : ${surface} m², ${bedrooms ?? 1} chambre(s)
+- Type : ${type ?? 'APARTMENT'}, Meublé : ${furnished ? 'oui' : 'non'}
+- ${marketInfo}
+${encadrementNote ? `- ${encadrementNote}` : ''}
+
+Donne une recommandation de loyer précise. Réponds UNIQUEMENT en JSON valide :
+{"minRent": number, "maxRent": number, "recommendedRent": number, "reasoning": "string", "encadrementNote": "string or null", "tips": ["string", "string", "string"]}`
+
+    const message = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 600,
+      messages: [{ role: 'user', content: prompt }],
+    })
+
+    const content = message.content[0]
+    if (content.type !== 'text') throw new Error('Invalid AI response')
+
+    let advice
+    try {
+      const jsonText = content.text.replace(/```json?\n?/g, '').replace(/```/g, '').trim()
+      advice = JSON.parse(jsonText)
+    } catch {
+      // fallback: compute from market data if available
+      const base = market ? market.avgRentM2 * Number(surface) : 800
+      advice = {
+        minRent: Math.round(base * 0.9),
+        maxRent: Math.round(base * 1.15),
+        recommendedRent: Math.round(base),
+        reasoning: 'Estimation basée sur les données de marché locales disponibles.',
+        encadrementNote: encadrementNote || null,
+        tips: [
+          'Comparez avec les annonces similaires sur SeLoger et PAP.',
+          'Un loyer bien positionné réduit la vacance locative.',
+          'Vérifiez les loyers de référence sur le site de votre préfecture.',
+        ],
+      }
+    }
+
+    // If market data was unavailable, signal it
+    if (!market) {
+      advice.encadrementNote = "Données de marché non disponibles pour cette ville. Consultez l'observatoire local des loyers (CLAMEUR, ANIL)."
+    }
+
+    return res.json({ success: true, data: { advice, marketAvailable: !!market } })
+  } catch (err) {
+    console.error('rent-advisor error:', err)
+    return res.status(500).json({ success: false, message: 'Erreur lors de l\'estimation du loyer' })
   }
 })
 
