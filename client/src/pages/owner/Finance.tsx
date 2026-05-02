@@ -33,6 +33,8 @@ import {
   Building2,
   AlertTriangle,
   CheckCircle2,
+  Search,
+  ExternalLink,
 } from 'lucide-react'
 import { financeService, MarketAnalysis } from '../../services/finance.service'
 
@@ -674,69 +676,174 @@ export default function Finance() {
               <div
                 style={{
                   flex: 1,
-                  minWidth: 280,
+                  minWidth: 300,
                   background: BAI.bgSurface,
                   border: `1px solid ${BAI.border}`,
                   borderRadius: 12,
-                  padding: 20,
+                  padding: 24,
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                  <Building2 style={{ width: 16, height: 16, color: BAI.caramel }} />
-                  <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: BAI.ink, margin: 0 }}>
-                    Loyer moyen du marché
-                  </p>
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <Building2 style={{ width: 18, height: 18, color: BAI.caramel }} />
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 15, fontWeight: 700, color: BAI.ink, margin: 0 }}>
+                      Marché locatif
+                    </p>
+                  </div>
+                  <span style={{
+                    padding: '3px 10px',
+                    borderRadius: 999,
+                    background: BAI.ownerLight,
+                    border: `1px solid ${BAI.ownerBorder}`,
+                    fontFamily: BAI.fontBody,
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: BAI.owner,
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                  }}>
+                    Données officielles
+                  </span>
                 </div>
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: '0 0 10px' }}>
-                  Toute commune française — données officielles (encadrement des loyers, CLAMEUR, INSEE)
-                </p>
-                <input
-                  placeholder="Rechercher n'importe quelle ville ou village..."
-                  value={citySearch}
-                  onChange={(e) => handleCitySearch(e.target.value)}
-                  style={{ ...inputStyle, marginBottom: 12, padding: '8px 12px', fontSize: 13 }}
-                />
+
+                {/* Search input with magnifier */}
+                <div style={{ position: 'relative', marginBottom: 16 }}>
+                  <Search style={{
+                    position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+                    width: 15, height: 15, color: BAI.inkFaint, pointerEvents: 'none',
+                  }} />
+                  <input
+                    placeholder="Ville ou village français..."
+                    value={citySearch}
+                    onChange={(e) => handleCitySearch(e.target.value)}
+                    style={{
+                      ...inputStyle,
+                      paddingLeft: 36,
+                      fontSize: 14,
+                    }}
+                  />
+                </div>
+
                 {citySearchLoading && (
-                  <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: 0 }}>Recherche...</p>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint, margin: 0 }}>Recherche...</p>
                 )}
-                {!citySearchLoading && citySearch.length >= 2 && !cityResult && !citySearchLoading && (
-                  <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: 0 }}>
+                {!citySearchLoading && citySearch.length >= 2 && !cityResult && (
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint, margin: 0 }}>
                     Aucune donnée disponible pour « {citySearch} »
                   </p>
                 )}
+
                 {cityResult && (
-                  <div style={{ background: BAI.bgMuted, borderRadius: 10, padding: '14px 16px' }}>
-                    <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '0 0 8px' }}>
+                  <div>
+                    {/* City name */}
+                    <p style={{
+                      fontFamily: BAI.fontDisplay,
+                      fontSize: 'clamp(22px, 3vw, 28px)',
+                      fontWeight: 700,
+                      fontStyle: 'italic',
+                      color: BAI.ink,
+                      margin: '0 0 10px',
+                    }}>
                       {cityResult.label}
-                      {cityResult.encadrement && (
-                        <span style={{ marginLeft: 8, padding: '1px 8px', borderRadius: 999, background: `${BAI.owner}15`, border: `1px solid ${BAI.ownerBorder}`, fontSize: 11, fontWeight: 700, color: BAI.owner }}>
-                          Encadrement des loyers
-                        </span>
-                      )}
                     </p>
-                    <div style={{ display: 'flex', gap: 0, borderRadius: 8, overflow: 'hidden', border: `1px solid ${BAI.border}` }}>
-                      {[
-                        { label: 'Minimum', value: cityResult.minRentM2 },
-                        { label: 'Moyen', value: cityResult.avgRentM2, highlight: true },
-                        { label: 'Maximum', value: cityResult.maxRentM2 },
-                      ].map((item, i, arr) => (
-                        <div key={item.label} style={{ flex: 1, padding: '10px 12px', background: item.highlight ? `${BAI.owner}08` : BAI.bgSurface, borderRight: i < arr.length - 1 ? `1px solid ${BAI.border}` : 'none', textAlign: 'center' }}>
-                          <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: BAI.inkFaint, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{item.label}</p>
-                          <p style={{ fontFamily: BAI.fontDisplay, fontSize: 18, fontWeight: 700, fontStyle: 'italic', color: item.highlight ? BAI.owner : BAI.ink, margin: 0 }}>{item.value} €/m²</p>
-                        </div>
-                      ))}
+
+                    {/* Encadrement badge */}
+                    {cityResult.encadrement && (
+                      <div style={{ marginBottom: 16 }}>
+                        <span style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          padding: '5px 12px',
+                          borderRadius: 999,
+                          background: BAI.ownerLight,
+                          border: `1px solid ${BAI.ownerBorder}`,
+                          fontFamily: BAI.fontBody,
+                          fontSize: 12,
+                          fontWeight: 700,
+                          color: BAI.owner,
+                        }}>
+                          <CheckCircle2 style={{ width: 13, height: 13 }} />
+                          Encadrement des loyers actif
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Three big number blocks */}
+                    <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+                      {/* MIN */}
+                      <div style={{
+                        flex: 1,
+                        textAlign: 'center',
+                        padding: '14px 10px',
+                        borderRadius: 10,
+                        background: BAI.bgMuted,
+                        border: `1px solid ${BAI.border}`,
+                      }}>
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, color: BAI.inkFaint, margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>MIN</p>
+                        <p style={{ fontFamily: BAI.fontDisplay, fontSize: 20, fontWeight: 700, fontStyle: 'italic', color: BAI.inkMid, margin: '0 0 2px' }}>{cityResult.minRentM2}</p>
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: 0 }}>€/m²</p>
+                      </div>
+
+                      {/* MOY — larger, highlighted */}
+                      <div style={{
+                        flex: 1.4,
+                        textAlign: 'center',
+                        padding: '14px 12px',
+                        borderRadius: 10,
+                        background: BAI.ownerLight,
+                        border: `2px solid ${BAI.ownerBorder}`,
+                      }}>
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, color: BAI.owner, margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>MOY</p>
+                        <p style={{ fontFamily: BAI.fontDisplay, fontSize: 32, fontWeight: 700, fontStyle: 'italic', color: BAI.owner, margin: '0 0 2px', lineHeight: 1 }}>{cityResult.avgRentM2}</p>
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.owner, margin: 0, fontWeight: 600 }}>€/m²</p>
+                      </div>
+
+                      {/* MAX */}
+                      <div style={{
+                        flex: 1,
+                        textAlign: 'center',
+                        padding: '14px 10px',
+                        borderRadius: 10,
+                        background: BAI.bgMuted,
+                        border: `1px solid ${BAI.border}`,
+                      }}>
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, color: BAI.inkFaint, margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>MAX</p>
+                        <p style={{ fontFamily: BAI.fontDisplay, fontSize: 20, fontWeight: 700, fontStyle: 'italic', color: BAI.inkMid, margin: '0 0 2px' }}>{cityResult.maxRentM2}</p>
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: 0 }}>€/m²</p>
+                      </div>
                     </div>
+
+                    {/* Recommendation line */}
+                    <div style={{
+                      padding: '12px 16px',
+                      borderRadius: 10,
+                      background: BAI.bgMuted,
+                      border: `1px solid ${BAI.border}`,
+                      marginBottom: 14,
+                    }}>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: BAI.ink, margin: 0 }}>
+                        Loyer recommandé pour 50 m² :{' '}
+                        <span style={{ color: BAI.owner, fontFamily: BAI.fontDisplay, fontSize: 16, fontStyle: 'italic' }}>
+                          {Math.round(cityResult.avgRentM2 * 50).toLocaleString('fr-FR')} €
+                        </span>
+                      </p>
+                    </div>
+
+                    {/* Source link */}
                     {cityResult.sourceUrl && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 10 }}>
-                        <Info style={{ width: 12, height: 12, color: BAI.inkFaint, flexShrink: 0 }} />
-                        <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint }}>Source :</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Info style={{ width: 13, height: 13, color: BAI.inkFaint, flexShrink: 0 }} />
+                        <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>Source officielle :</span>
                         <a
                           href={cityResult.sourceUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.owner, textDecoration: 'underline', wordBreak: 'break-all' }}
+                          style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.owner, textDecoration: 'underline', display: 'inline-flex', alignItems: 'center', gap: 4 }}
                         >
-                          {cityResult.sourceName ?? cityResult.sourceUrl}
+                          {cityResult.sourceName ?? 'Voir la source'}
+                          <ExternalLink style={{ width: 11, height: 11 }} />
                         </a>
                       </div>
                     )}

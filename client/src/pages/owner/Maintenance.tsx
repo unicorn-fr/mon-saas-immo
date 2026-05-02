@@ -80,12 +80,16 @@ interface Contractor {
   openingHours: string | null
   rating?: number | null
   reviewCount?: number | null
+  lat?: number | null
+  lon?: number | null
+  googleMapsUrl?: string | null
 }
 
 interface ContractorResult {
   contractors: Contractor[]
   platforms: Array<{ name: string; url: string; description: string }>
   searchLocation?: { lat: number; lon: number }
+  googleMapsSearchUrl?: string
 }
 
 type ViewMode = 'liste' | 'carte'
@@ -214,12 +218,10 @@ function MiniMapWithLocation({ lat, lon, contractors, searchLocation }: MiniMapW
           </Popup>
         </Marker>
         {searchLocation && contractors.map((c, i) => {
-          // Approximate contractor positions around search location using distance/index offset
-          // Since the API doesn't return individual lat/lon per contractor, we show a dot near center
-          const offsetLat = searchLocation.lat + (i % 3 - 1) * 0.008 + (Math.floor(i / 3) % 2) * 0.005
-          const offsetLon = searchLocation.lon + (i % 3 - 1) * 0.010 + Math.floor(i / 3) * 0.006
+          const markerLat = c.lat ?? (searchLocation.lat + (i % 3 - 1) * 0.005)
+          const markerLon = c.lon ?? (searchLocation.lon + (i % 5 - 2) * 0.005)
           return (
-            <Marker key={c.id} position={[offsetLat, offsetLon]} icon={contractorIcon}>
+            <Marker key={c.id} position={[markerLat, markerLon]} icon={contractorIcon}>
               <Popup>
                 <div style={{ fontFamily: BAI.fontBody, minWidth: 160 }}>
                   <p style={{ fontSize: 13, fontWeight: 700, color: BAI.ink, margin: '0 0 4px' }}>{c.name}</p>
@@ -236,6 +238,12 @@ function MiniMapWithLocation({ lat, lon, contractors, searchLocation }: MiniMapW
                   {c.website && (
                     <a href={c.website} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: BAI.caramel, display: 'block', marginTop: 2 }}>
                       Site web
+                    </a>
+                  )}
+                  {c.googleMapsUrl && (
+                    <a href={c.googleMapsUrl} target="_blank" rel="noopener noreferrer"
+                       style={{ fontSize: 12, color: '#1a73e8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginTop: 4 }}>
+                      Voir sur Google Maps
                     </a>
                   )}
                 </div>
@@ -407,7 +415,7 @@ function FullMapView({
         ) : (
           <MapContainer
             center={defaultCenter}
-            zoom={validProperties.length === 1 ? 14 : 6}
+            zoom={validProperties.length === 1 ? 14 : 12}
             style={{ height: '100%', width: '100%' }}
             scrollWheelZoom
           >
@@ -453,10 +461,10 @@ function FullMapView({
             {/* Contractor markers */}
             {mapSearchLocation &&
               mapContractors.map((c, i) => {
-                const offsetLat = mapSearchLocation.lat + (i % 3 - 1) * 0.008 + (Math.floor(i / 3) % 2) * 0.005
-                const offsetLon = mapSearchLocation.lon + (i % 3 - 1) * 0.010 + Math.floor(i / 3) * 0.006
+                const markerLat = c.lat ?? (mapSearchLocation.lat + (i % 3 - 1) * 0.005)
+                const markerLon = c.lon ?? (mapSearchLocation.lon + (i % 5 - 2) * 0.005)
                 return (
-                  <Marker key={c.id} position={[offsetLat, offsetLon]} icon={contractorIcon}>
+                  <Marker key={c.id} position={[markerLat, markerLon]} icon={contractorIcon}>
                     <Popup>
                       <div style={{ fontFamily: BAI.fontBody, minWidth: 160 }}>
                         <p style={{ fontSize: 13, fontWeight: 700, color: BAI.ink, margin: '0 0 4px' }}>{c.name}</p>
@@ -486,6 +494,16 @@ function FullMapView({
                               style={{ fontSize: 12, color: BAI.caramel, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none' }}
                             >
                               <Globe style={{ width: 11, height: 11 }} /> Site web
+                            </a>
+                          )}
+                          {c.googleMapsUrl && (
+                            <a
+                              href={c.googleMapsUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ fontSize: 12, color: '#1a73e8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginTop: 4 }}
+                            >
+                              Voir sur Google Maps
                             </a>
                           )}
                         </div>
@@ -648,7 +666,7 @@ export default function Maintenance() {
       setIsSearchingMap(true)
       try {
         const result = await maintenanceService.findContractors({
-          category: category === 'ALL' ? 'AUTRE' : category,
+          category: category === 'ALL' ? 'PLOMBERIE' : category,
           city: property.city,
           latitude: property.latitude,
           longitude: property.longitude,
@@ -1504,6 +1522,24 @@ export default function Maintenance() {
                                       </a>
                                     ))}
                                   </div>
+                                )}
+
+                                {/* Google Maps fallback */}
+                                {res.googleMapsSearchUrl && (
+                                  <a
+                                    href={res.googleMapsSearchUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                                      padding: '8px 16px', borderRadius: 8,
+                                      background: '#1a73e8', color: '#fff',
+                                      fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600,
+                                      textDecoration: 'none', marginTop: 12,
+                                    }}
+                                  >
+                                    Rechercher sur Google Maps
+                                  </a>
                                 )}
                               </div>
                             )

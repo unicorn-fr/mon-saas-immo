@@ -321,6 +321,16 @@ router.post('/find-contractors', async (req, res) => {
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
     }
 
+    const GOOGLE_MAPS_KEYWORDS: Record<string, string> = {
+      PLOMBERIE: 'plombier',
+      ELECTRICITE: 'electricien',
+      SERRURERIE: 'serrurier',
+      CHAUFFAGE: 'chauffagiste',
+      AUTRE: 'artisan',
+    }
+    const googleMapsKeyword = GOOGLE_MAPS_KEYWORDS[category as string] ?? 'artisan'
+    const googleMapsSearchUrl = `https://www.google.com/maps/search/${encodeURIComponent(googleMapsKeyword + ' ' + (city ?? ''))}`
+
     const contractors = elements
       .filter(el => el.tags?.name && el.lat && el.lon)
       .map(el => {
@@ -333,6 +343,9 @@ router.post('/find-contractors', async (req, res) => {
           website: el.tags!.website ?? el.tags!['contact:website'] ?? null,
           openingHours: el.tags!.opening_hours ?? null,
           distance: Math.round(distance * 10) / 10,
+          lat: el.lat,
+          lon: el.lon,
+          googleMapsUrl: `https://www.google.com/maps/search/${encodeURIComponent(el.tags!.name)}/@${el.lat},${el.lon},15z`,
         }
       })
       .sort((a, b) => a.distance - b.distance)
@@ -368,7 +381,7 @@ router.post('/find-contractors', async (req, res) => {
 
     const platforms = PLATFORMS[category as string] ?? PLATFORMS['AUTRE']
 
-    return res.json({ success: true, data: { contractors, platforms, searchLocation: { lat, lon } } })
+    return res.json({ success: true, data: { contractors, platforms, searchLocation: { lat, lon }, googleMapsSearchUrl } })
   } catch (err) {
     console.error('find-contractors error:', err)
     return res.status(500).json({ success: false, message: 'Erreur lors de la recherche d\'artisans' })
