@@ -31,6 +31,7 @@ import {
   ChevronUp,
   Info,
   Building2,
+  MapPin,
   AlertTriangle,
   CheckCircle2,
   Search,
@@ -229,6 +230,8 @@ export default function Finance() {
   const [cityResult, setCityResult] = useState<{ city: string; avgRentM2: number; minRentM2: number; maxRentM2: number; encadrement: boolean; label: string; sourceUrl?: string; sourceName?: string } | null>(null)
   const [citySearchLoading, setCitySearchLoading] = useState(false)
   const [citySearchTimer, setCitySearchTimer] = useState<ReturnType<typeof setTimeout> | null>(null)
+  const [citySuggestions, setCitySuggestions] = useState<Array<{ label: string; city: string }>>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
   const [expenseForm, setExpenseForm] = useState<CreateExpenseInput>(INITIAL_EXPENSE_FORM)
   const [loanForm, setLoanForm] = useState<LoanFormState>(INITIAL_LOAN_FORM)
   const [marketAnalyses, setMarketAnalyses] = useState<Record<string, MarketAnalysis>>({})
@@ -273,22 +276,42 @@ export default function Finance() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, myProperties])
 
+  async function fetchMarketForCity(cityName: string, label: string) {
+    setCitySearchLoading(true)
+    setShowSuggestions(false)
+    try {
+      const res = await apiClient.get<{ success: boolean; data: { market: { avgRentM2: number; minRentM2: number; maxRentM2: number; encadrement: boolean; label: string; sourceUrl?: string; sourceName?: string } | null } }>(
+        `/finances/city-market?city=${encodeURIComponent(cityName)}`
+      )
+      if (res.data.data.market) setCityResult({ city: cityName, ...res.data.data.market, label: res.data.data.market.label || label })
+      else setCityResult(null)
+    } catch { setCityResult(null) }
+    finally { setCitySearchLoading(false) }
+  }
+
   function handleCitySearch(val: string) {
     setCitySearch(val)
     setCityResult(null)
+    setCitySuggestions([])
     if (citySearchTimer) clearTimeout(citySearchTimer)
-    if (!val.trim() || val.trim().length < 2) return
+    if (!val.trim() || val.trim().length < 2) { setShowSuggestions(false); return }
     const t = setTimeout(async () => {
-      setCitySearchLoading(true)
       try {
-        const res = await apiClient.get<{ success: boolean; data: { market: { avgRentM2: number; minRentM2: number; maxRentM2: number; encadrement: boolean; label: string; sourceUrl?: string; sourceName?: string } | null } }>(
-          `/finances/city-market?city=${encodeURIComponent(val.trim())}`
+        // BAN API: autocomplete all French communes
+        const banRes = await fetch(
+          `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(val.trim())}&type=municipality&limit=6&autocomplete=1`
         )
-        if (res.data.data.market) setCityResult({ city: val.trim(), ...res.data.data.market })
-        else setCityResult(null)
-      } catch { setCityResult(null) }
-      finally { setCitySearchLoading(false) }
-    }, 500)
+        const banData = await banRes.json() as {
+          features?: Array<{ properties?: { label?: string; city?: string; name?: string; postcode?: string } }>
+        }
+        const suggestions = (banData.features ?? []).map(f => ({
+          label: [f.properties?.label ?? f.properties?.city ?? f.properties?.name, f.properties?.postcode].filter(Boolean).join(' '),
+          city: f.properties?.city ?? f.properties?.name ?? '',
+        })).filter(s => s.city)
+        setCitySuggestions(suggestions)
+        setShowSuggestions(suggestions.length > 0)
+      } catch { /* silent */ }
+    }, 250)
     setCitySearchTimer(t)
   }
 
@@ -729,148 +752,164 @@ export default function Finance() {
                   </a>
                 </div>
 
-                {/* Search input with magnifier */}
+                {/* Search input with autocomplete */}
                 <div style={{ position: 'relative', marginBottom: 16 }}>
                   <Search style={{
                     position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
                     width: 15, height: 15, color: BAI.inkFaint, pointerEvents: 'none',
                   }} />
                   <input
-                    placeholder="Ville ou village français..."
+                    placeholder="Saisissez une ville ou village français..."
                     value={citySearch}
                     onChange={(e) => handleCitySearch(e.target.value)}
-                    style={{
-                      ...inputStyle,
-                      paddingLeft: 36,
-                      fontSize: 14,
-                    }}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                    onFocus={() => citySuggestions.length > 0 && setShowSuggestions(true)}
+                    style={{ ...inputStyle, paddingLeft: 36, fontSize: 14 }}
                   />
+                  {/* Suggestions dropdown */}
+                  {showSuggestions && citySuggestions.length > 0 && (
+                    <div style={{
+                      position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100,
+                      background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 8,
+                      boxShadow: BAI.shadowMd, marginTop: 4, overflow: 'hidden',
+                    }}>
+                      {citySuggestions.map((s, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onMouseDown={() => {
+                            setCitySearch(s.label)
+                            setCitySuggestions([])
+                            setShowSuggestions(false)
+                            fetchMarketForCity(s.city, s.label)
+                          }}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 8,
+                            width: '100%', padding: '10px 14px', border: 'none',
+                            borderBottom: i < citySuggestions.length - 1 ? `1px solid ${BAI.border}` : 'none',
+                            background: 'transparent', cursor: 'pointer', textAlign: 'left',
+                            fontFamily: BAI.fontBody, fontSize: 13, color: BAI.ink,
+                          }}
+                          onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                        >
+                          <MapPin style={{ width: 13, height: 13, color: BAI.caramel, flexShrink: 0 }} />
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {citySearchLoading && (
-                  <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint, margin: 0 }}>Recherche...</p>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint, margin: '0 0 12px' }}>Recherche en cours...</p>
                 )}
-                {!citySearchLoading && citySearch.length >= 2 && !cityResult && (
-                  <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint, margin: 0 }}>
+                {!citySearchLoading && citySearch.length >= 2 && !cityResult && !showSuggestions && (
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint, margin: '0 0 12px' }}>
                     Aucune donnée disponible pour « {citySearch} »
                   </p>
                 )}
 
-                {cityResult && (
-                  <div>
-                    {/* City name */}
-                    <p style={{
-                      fontFamily: BAI.fontDisplay,
-                      fontSize: 'clamp(22px, 3vw, 28px)',
-                      fontWeight: 700,
-                      fontStyle: 'italic',
-                      color: BAI.ink,
-                      margin: '0 0 10px',
-                    }}>
-                      {cityResult.label}
-                    </p>
-
-                    {/* Encadrement badge */}
-                    {cityResult.encadrement && (
-                      <div style={{ marginBottom: 16 }}>
-                        <span style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 6,
-                          padding: '5px 12px',
-                          borderRadius: 999,
-                          background: BAI.ownerLight,
-                          border: `1px solid ${BAI.ownerBorder}`,
-                          fontFamily: BAI.fontBody,
-                          fontSize: 12,
-                          fontWeight: 700,
-                          color: BAI.owner,
-                        }}>
-                          <CheckCircle2 style={{ width: 13, height: 13 }} />
-                          Encadrement des loyers actif
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Three big number blocks */}
-                    <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-                      {/* MIN */}
-                      <div style={{
-                        flex: 1,
-                        textAlign: 'center',
-                        padding: '14px 10px',
-                        borderRadius: 10,
-                        background: BAI.bgMuted,
-                        border: `1px solid ${BAI.border}`,
-                      }}>
-                        <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, color: BAI.inkFaint, margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>MIN</p>
-                        <p style={{ fontFamily: BAI.fontDisplay, fontSize: 20, fontWeight: 700, fontStyle: 'italic', color: BAI.inkMid, margin: '0 0 2px' }}>{cityResult.minRentM2}</p>
-                        <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: 0 }}>€/m²</p>
-                      </div>
-
-                      {/* MOY — larger, highlighted */}
-                      <div style={{
-                        flex: 1.4,
-                        textAlign: 'center',
-                        padding: '14px 12px',
-                        borderRadius: 10,
-                        background: BAI.ownerLight,
-                        border: `2px solid ${BAI.ownerBorder}`,
-                      }}>
-                        <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, color: BAI.owner, margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>MOY</p>
-                        <p style={{ fontFamily: BAI.fontDisplay, fontSize: 32, fontWeight: 700, fontStyle: 'italic', color: BAI.owner, margin: '0 0 2px', lineHeight: 1 }}>{cityResult.avgRentM2}</p>
-                        <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.owner, margin: 0, fontWeight: 600 }}>€/m²</p>
-                      </div>
-
-                      {/* MAX */}
-                      <div style={{
-                        flex: 1,
-                        textAlign: 'center',
-                        padding: '14px 10px',
-                        borderRadius: 10,
-                        background: BAI.bgMuted,
-                        border: `1px solid ${BAI.border}`,
-                      }}>
-                        <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, color: BAI.inkFaint, margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>MAX</p>
-                        <p style={{ fontFamily: BAI.fontDisplay, fontSize: 20, fontWeight: 700, fontStyle: 'italic', color: BAI.inkMid, margin: '0 0 2px' }}>{cityResult.maxRentM2}</p>
-                        <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: 0 }}>€/m²</p>
-                      </div>
-                    </div>
-
-                    {/* Recommendation line */}
-                    <div style={{
-                      padding: '12px 16px',
-                      borderRadius: 10,
-                      background: BAI.bgMuted,
-                      border: `1px solid ${BAI.border}`,
-                      marginBottom: 14,
-                    }}>
-                      <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: BAI.ink, margin: 0 }}>
-                        Loyer recommandé pour 50 m² :{' '}
-                        <span style={{ color: BAI.owner, fontFamily: BAI.fontDisplay, fontSize: 16, fontStyle: 'italic' }}>
-                          {Math.round(cityResult.avgRentM2 * 50).toLocaleString('fr-FR')} €
-                        </span>
+                {cityResult && (() => {
+                  const furnishedFactor = 1.18
+                  const avgFurnished = Math.round(cityResult.avgRentM2 * furnishedFactor * 10) / 10
+                  const minFurnished = Math.round(cityResult.minRentM2 * furnishedFactor * 10) / 10
+                  const maxFurnished = Math.round(cityResult.maxRentM2 * furnishedFactor * 10) / 10
+                  return (
+                    <div>
+                      {/* City name */}
+                      <p style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(20px,3vw,26px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '0 0 10px' }}>
+                        {cityResult.label}
                       </p>
-                    </div>
 
-                    {/* Source link */}
-                    {cityResult.sourceUrl && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      {/* Encadrement badge */}
+                      {cityResult.encadrement && (
+                        <div style={{ marginBottom: 12 }}>
+                          <a
+                            href={cityResult.sourceUrl ?? 'https://www.encadrementdesloyers.gouv.fr/'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 999, background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.owner }}
+                          >
+                            <CheckCircle2 style={{ width: 13, height: 13 }} />
+                            Encadrement des loyers actif — voir le détail
+                            <ExternalLink style={{ width: 11, height: 11 }} />
+                          </a>
+                        </div>
+                      )}
+
+                      {/* Non-meublé row */}
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.inkFaint, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px' }}>Non meublé</p>
+                      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                        {[
+                          { label: 'Min', value: cityResult.minRentM2, highlight: false },
+                          { label: 'Moyen', value: cityResult.avgRentM2, highlight: true },
+                          { label: 'Max', value: cityResult.maxRentM2, highlight: false },
+                        ].map(item => (
+                          <div key={item.label} style={{ flex: item.highlight ? 1.4 : 1, textAlign: 'center', padding: '12px 8px', borderRadius: 10, background: item.highlight ? BAI.ownerLight : BAI.bgMuted, border: item.highlight ? `2px solid ${BAI.ownerBorder}` : `1px solid ${BAI.border}` }}>
+                            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, color: item.highlight ? BAI.owner : BAI.inkFaint, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{item.label}</p>
+                            <p style={{ fontFamily: BAI.fontDisplay, fontSize: item.highlight ? 28 : 18, fontWeight: 700, fontStyle: 'italic', color: item.highlight ? BAI.owner : BAI.inkMid, margin: '0 0 2px', lineHeight: 1 }}>{item.value}</p>
+                            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: item.highlight ? BAI.owner : BAI.inkFaint, margin: 0 }}>€/m²</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Meublé row */}
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.inkFaint, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px' }}>Meublé <span style={{ color: BAI.caramel, fontSize: 10, fontWeight: 600, textTransform: 'none' }}>(+18% estimé)</span></p>
+                      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                        {[
+                          { label: 'Min', value: minFurnished, highlight: false },
+                          { label: 'Moyen', value: avgFurnished, highlight: true },
+                          { label: 'Max', value: maxFurnished, highlight: false },
+                        ].map(item => (
+                          <div key={item.label} style={{ flex: item.highlight ? 1.4 : 1, textAlign: 'center', padding: '12px 8px', borderRadius: 10, background: item.highlight ? BAI.caramelLight : BAI.bgMuted, border: item.highlight ? `2px solid ${BAI.caramelBorder}` : `1px solid ${BAI.border}` }}>
+                            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, color: item.highlight ? BAI.caramel : BAI.inkFaint, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{item.label}</p>
+                            <p style={{ fontFamily: BAI.fontDisplay, fontSize: item.highlight ? 28 : 18, fontWeight: 700, fontStyle: 'italic', color: item.highlight ? BAI.caramel : BAI.inkMid, margin: '0 0 2px', lineHeight: 1 }}>{item.value}</p>
+                            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: item.highlight ? BAI.caramel : BAI.inkFaint, margin: 0 }}>€/m²</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Exemples concrets */}
+                      <div style={{ padding: '12px 14px', borderRadius: 10, background: BAI.bgMuted, border: `1px solid ${BAI.border}`, marginBottom: 14 }}>
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.inkMid, margin: '0 0 6px' }}>Exemples pour {cityResult.label}</p>
+                        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                          {[30, 50, 70].map(surf => (
+                            <div key={surf} style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.ink }}>
+                              <span style={{ fontWeight: 700 }}>{surf} m²</span>
+                              {' : '}
+                              <span style={{ color: BAI.owner }}>{Math.round(cityResult.avgRentM2 * surf).toLocaleString('fr-FR')} €</span>
+                              {' / '}
+                              <span style={{ color: BAI.caramel }}>{Math.round(avgFurnished * surf).toLocaleString('fr-FR')} €</span>
+                              <span style={{ color: BAI.inkFaint, fontSize: 10 }}> meublé</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Source links */}
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                         <Info style={{ width: 13, height: 13, color: BAI.inkFaint, flexShrink: 0 }} />
-                        <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>Source officielle :</span>
-                        <a
-                          href={cityResult.sourceUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.owner, textDecoration: 'underline', display: 'inline-flex', alignItems: 'center', gap: 4 }}
-                        >
-                          {cityResult.sourceName ?? 'Voir la source'}
-                          <ExternalLink style={{ width: 11, height: 11 }} />
+                        <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>Sources :</span>
+                        {cityResult.sourceUrl && (
+                          <a href={cityResult.sourceUrl} target="_blank" rel="noopener noreferrer"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: BAI.fontBody, fontSize: 12, color: BAI.owner, textDecoration: 'underline' }}>
+                            {cityResult.sourceName ?? 'Données officielles'}
+                            <ExternalLink style={{ width: 10, height: 10 }} />
+                          </a>
+                        )}
+                        <a href="https://www.clameur.fr/" target="_blank" rel="noopener noreferrer"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, textDecoration: 'underline' }}>
+                          CLAMEUR <ExternalLink style={{ width: 10, height: 10 }} />
+                        </a>
+                        <a href="https://www.meilleursagents.com/" target="_blank" rel="noopener noreferrer"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, textDecoration: 'underline' }}>
+                          MeilleursAgents <ExternalLink style={{ width: 10, height: 10 }} />
                         </a>
                       </div>
-                    )}
-                  </div>
-                )}
+                    </div>
+                  )
+                })()}
               </div>
             </div>
           </div>
