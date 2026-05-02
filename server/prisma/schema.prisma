@@ -439,9 +439,10 @@ model Contract {
   updatedAt   DateTime       @updatedAt
 
   // Relations
-  documents   ContractDocument[]
-  payments    Payment[]
-  edlSession  EdlSession?
+  documents        ContractDocument[]
+  payments         Payment[]
+  edlSession       EdlSession?
+  paymentSettings  PaymentSettings?
 
   @@index([propertyId])
   @@index([tenantId])
@@ -847,6 +848,21 @@ model Payment {
   @@map("payments")
 }
 
+// ============================================
+// PARAMÈTRES QUITTANCES (par contrat)
+// ============================================
+
+model PaymentSettings {
+  id          String   @id @default(cuid())
+  contractId  String   @unique
+  contract    Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  dayOfMonth  Int      @default(5)    // Jour du mois pour la génération (1-28)
+  autoSend    Boolean  @default(true) // Envoyer automatiquement au locataire
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("payment_settings")
+}
 
 // ============================================
 // EDL SESSION (État des Lieux Synchrone)

@@ -36,8 +36,11 @@ import {
   CheckCircle2,
   Search,
   ExternalLink,
+  FileText,
+  BarChart2,
 } from 'lucide-react'
 import { financeService, MarketAnalysis } from '../../services/finance.service'
+import toast from 'react-hot-toast'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -46,6 +49,11 @@ const MONTH_LABELS: Record<string, string> = {
   '05': 'Mai', '06': 'Juin', '07': 'Juil', '08': 'Aoû',
   '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Déc',
 }
+
+const MONTH_NAMES_FR = [
+  'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+  'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
+]
 
 function formatMonth(m: string): string {
   const [year, month] = m.split('-')
@@ -56,45 +64,119 @@ function formatEuro(n: number): string {
   return n.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })
 }
 
-// ── Tax regime advisor ────────────────────────────────────────────────────────
+// ── Fiscal Advisor ────────────────────────────────────────────────────────────
 
-interface TaxAdvice {
-  regime: string
-  color: string
+interface FiscalResult {
+  recommended: string
   description: string
-  link: boolean
+  savings: number | null
+  steps: string[]
+  links: { label: string; url: string }[]
 }
 
-function getTaxAdvice(totalRevenue: number, isFurnished: boolean): TaxAdvice {
+interface FiscalForm {
+  hasSociety: 'non' | 'sci_ir' | 'sci_is' | 'sarl_sas' | 'autre'
+  currentRegime: 'unknown' | 'micro_foncier' | 'reel' | 'micro_bic' | 'bic_reel' | 'is'
+  annualRevenue: number
+  realCharges: number
+  isFurnished: boolean
+}
+
+function computeFiscalAdvice(form: FiscalForm): FiscalResult {
+  const { hasSociety, annualRevenue, realCharges, isFurnished } = form
+
+  if (hasSociety === 'sci_is' || hasSociety === 'sarl_sas') {
+    return {
+      recommended: 'IS (Impôt sur les Sociétés)',
+      description: "Votre structure en société est soumise à l'IS. Vous pouvez amortir le bien immobilier et déduire toutes vos charges.",
+      savings: null,
+      steps: [
+        'Tenir une comptabilité en partie double',
+        'Déduire les amortissements (bien + travaux)',
+        'Distribuer les dividendes avec optimisation',
+        'Consulter un expert-comptable pour la liasse fiscale',
+      ],
+      links: [
+        { label: 'Régime IS — impots.gouv.fr', url: 'https://www.impots.gouv.fr/professionnel/limposition-des-benefices' },
+        { label: 'URSSAF — obligations sociales', url: 'https://www.urssaf.fr/portail/home.html' },
+      ],
+    }
+  }
+
   if (isFurnished) {
-    if (totalRevenue < 77700) {
+    const microBicTax = (annualRevenue * 0.5) * 0.30
+    const reelTax = Math.max(0, annualRevenue - realCharges) * 0.30
+    const savings = microBicTax > reelTax ? Math.round(microBicTax - reelTax) : null
+
+    if (annualRevenue > 77700) {
       return {
-        regime: 'LMNP Micro-BIC',
-        color: BAI.owner,
-        description: `Vos revenus meublés (${formatEuro(totalRevenue)}) sont sous le seuil de 77 700 €/an. Le régime micro-BIC avec abattement forfaitaire de 50 % est recommandé.`,
-        link: true,
+        recommended: 'LMNP Réel',
+        description: `Vos revenus meublés (${annualRevenue.toLocaleString('fr-FR')} €) dépassent 77 700 €. Le régime BIC réel s'impose, avec déduction de toutes vos charges et amortissements du bien.`,
+        savings,
+        steps: [
+          'Tenir un livre de comptes',
+          'Amortir le bien sur 20-30 ans',
+          "Déduire intérêts d'emprunt, travaux, assurance",
+          'Déclarer via formulaire 2031',
+        ],
+        links: [
+          { label: 'LMNP Réel — service-public.fr', url: 'https://www.service-public.fr/particuliers/vosdroits/F32744' },
+          { label: 'Simulateur LMNP — anil.org', url: 'https://www.anil.org/outils/simulateurs-en-ligne/lmnp/' },
+        ],
       }
     }
+
     return {
-      regime: 'LMNP Réel',
-      color: BAI.caramel,
-      description: `Au-delà de 77 700 €/an, le régime réel LMNP vous permet de déduire toutes vos charges réelles et amortissements.`,
-      link: true,
+      recommended: realCharges > annualRevenue * 0.5 ? 'LMNP Réel (BIC réel)' : 'LMNP Micro-BIC',
+      description: realCharges > annualRevenue * 0.5
+        ? `Vos charges réelles (${realCharges.toLocaleString('fr-FR')} €) dépassent 50% des revenus. Le BIC réel vous permet de déduire plus que l'abattement forfaitaire de 50%.`
+        : `Avec ${annualRevenue.toLocaleString('fr-FR')} € de revenus et l'abattement de 50%, le Micro-BIC est le régime le plus simple et souvent optimal.`,
+      savings,
+      steps: realCharges > annualRevenue * 0.5
+        ? ['Déclarer au BIC réel (formulaire 2031)', 'Tenir un livre de comptes', 'Déduire charges + amortissements']
+        : ['Déclarer revenus en case 5ND (formulaire 2042 C-PRO)', 'Abattement automatique de 50%', 'Aucune comptabilité complexe requise'],
+      links: [
+        { label: 'LMNP — impots.gouv.fr', url: 'https://www.impots.gouv.fr/particulier/les-revenus-des-locations-meublees' },
+        { label: 'LMNP — service-public.fr', url: 'https://www.service-public.fr/particuliers/vosdroits/F32744' },
+        { label: 'Centre des Impôts — déclarer votre LMNP', url: 'https://www.impots.gouv.fr/particulier/declarer-vos-revenus-en-ligne' },
+      ],
     }
   }
-  if (totalRevenue < 15000) {
+
+  // Non meublé
+  if (annualRevenue > 15000) {
     return {
-      regime: 'Micro-foncier',
-      color: BAI.owner,
-      description: `Vos revenus fonciers (${formatEuro(totalRevenue)}) sont sous le seuil de 15 000 €/an. Le micro-foncier avec abattement de 30 % simplifie votre déclaration.`,
-      link: false,
+      recommended: 'Régime Réel Foncier',
+      description: `Vos revenus fonciers (${annualRevenue.toLocaleString('fr-FR')} €) dépassent 15 000 €. Le régime réel est obligatoire. Vous pouvez déduire toutes vos charges réelles.`,
+      savings: realCharges > annualRevenue * 0.3 ? Math.round((realCharges - annualRevenue * 0.3) * 0.30) : null,
+      steps: [
+        'Remplir le formulaire 2044 (déclaration de revenus fonciers)',
+        "Déduire : travaux, assurance, taxe foncière, intérêts d'emprunt",
+        'Reporter le résultat en case 4BA sur la 2042',
+      ],
+      links: [
+        { label: 'Revenus fonciers réel — impots.gouv.fr', url: 'https://www.impots.gouv.fr/particulier/les-revenus-fonciers' },
+        { label: 'Formulaire 2044 — impots.gouv.fr', url: 'https://www.impots.gouv.fr/sites/default/files/formulaires/2044/2024/2044_3671.pdf' },
+      ],
     }
   }
+
+  const microTax = (annualRevenue * 0.7) * 0.30
+  const reelTaxNm = Math.max(0, annualRevenue - realCharges) * 0.30
   return {
-    regime: 'Régime réel',
-    color: BAI.caramel,
-    description: `Au-delà de 15 000 €/an, le régime réel vous permet de déduire toutes vos charges (travaux, intérêts d'emprunt, taxes...) pour optimiser votre imposition.`,
-    link: true,
+    recommended: realCharges > annualRevenue * 0.3 ? 'Régime Réel Foncier' : 'Micro-foncier',
+    description: realCharges > annualRevenue * 0.3
+      ? `Vos charges réelles (${realCharges.toLocaleString('fr-FR')} €) sont supérieures à l'abattement de 30%. Optez pour le régime réel pour payer moins d'impôts.`
+      : `Avec ${annualRevenue.toLocaleString('fr-FR')} € de revenus et des charges limitées, le micro-foncier (abattement de 30%) est simple et optimal.`,
+    savings: microTax > reelTaxNm ? Math.round(microTax - reelTaxNm) : null,
+    steps: realCharges > annualRevenue * 0.3
+      ? ['Opter pour le régime réel (formulaire 2044)', 'Lister et justifier toutes vos charges', 'Signaler l\'option au fisc avant le 1er février']
+      : ['Déclarer en case 4BE (formulaire 2042)', 'Abattement forfaitaire de 30% appliqué automatiquement', 'Pas de comptabilité requise'],
+    links: [
+      { label: 'Micro-foncier — service-public.fr', url: 'https://www.service-public.fr/particuliers/vosdroits/F1714' },
+      { label: 'Revenus fonciers — impots.gouv.fr', url: 'https://www.impots.gouv.fr/particulier/les-revenus-fonciers' },
+      { label: 'Simulateur impôts — impots.gouv.fr', url: 'https://www.impots.gouv.fr/particulier/outils/simulateur-ir' },
+    ],
   }
 }
 
@@ -122,77 +204,9 @@ const labelStyle: React.CSSProperties = {
   marginBottom: 4,
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
-
-function KpiCard({
-  label,
-  value,
-  sub,
-  positive,
-}: {
-  label: string
-  value: string
-  sub?: string
-  positive?: boolean
-}) {
-  const valueColor =
-    positive === false ? BAI.error : positive === true ? BAI.tenant : BAI.ink
-
-  return (
-    <div
-      style={{
-        background: BAI.bgSurface,
-        border: `1px solid ${BAI.border}`,
-        borderRadius: 12,
-        padding: '20px 24px',
-        flex: 1,
-        minWidth: 180,
-      }}
-    >
-      <p
-        style={{
-          fontFamily: BAI.fontBody,
-          fontSize: 11,
-          fontWeight: 700,
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          color: BAI.inkFaint,
-          margin: '0 0 8px',
-        }}
-      >
-        {label}
-      </p>
-      <p
-        style={{
-          fontFamily: BAI.fontDisplay,
-          fontSize: 28,
-          fontWeight: 700,
-          fontStyle: 'italic',
-          color: valueColor,
-          margin: 0,
-        }}
-      >
-        {value}
-      </p>
-      {sub && (
-        <p
-          style={{
-            fontFamily: BAI.fontBody,
-            fontSize: 12,
-            color: BAI.inkFaint,
-            margin: '4px 0 0',
-          }}
-        >
-          {sub}
-        </p>
-      )}
-    </div>
-  )
-}
-
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-type ActiveTab = 'summary' | 'expenses' | 'loans' | 'market'
+type ActiveTab = 'summary' | 'expenses' | 'loans' | 'market' | 'receipts' | 'fiscal'
 
 const INITIAL_EXPENSE_FORM: CreateExpenseInput = {
   propertyId: '',
@@ -237,6 +251,19 @@ export default function Finance() {
   const [marketAnalyses, setMarketAnalyses] = useState<Record<string, MarketAnalysis>>({})
   const [marketLoading, setMarketLoading] = useState(false)
 
+  // New state for receipts & fiscal tabs
+  const [paymentsByContract, setPaymentsByContract] = useState<Record<string, any[]>>({})
+  const [receiptsLoading, setReceiptsLoading] = useState(false)
+  const [paymentSettings, setPaymentSettings] = useState<Record<string, { dayOfMonth: number; autoSend: boolean }>>({})
+  const [fiscalForm, setFiscalForm] = useState<FiscalForm>({
+    hasSociety: 'non',
+    currentRegime: 'unknown',
+    annualRevenue: 0,
+    realCharges: 0,
+    isFurnished: false,
+  })
+  const [fiscalResult, setFiscalResult] = useState<FiscalResult | null>(null)
+
   const {
     summary,
     expenses,
@@ -276,6 +303,25 @@ export default function Finance() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, myProperties])
 
+  // Receipts tab: fetch payments grouped by contract
+  useEffect(() => {
+    if (activeTab !== 'receipts') return
+    setReceiptsLoading(true)
+    apiClient.get<{ success: boolean; data: { payments: any[] } }>('/payments/by-owner')
+      .then((res) => {
+        const payments: any[] = res.data?.data?.payments ?? []
+        const grouped: Record<string, any[]> = {}
+        payments.forEach((p) => {
+          const cid = p.contractId ?? 'unknown'
+          if (!grouped[cid]) grouped[cid] = []
+          grouped[cid].push(p)
+        })
+        setPaymentsByContract(grouped)
+      })
+      .catch(() => { /* silent */ })
+      .finally(() => setReceiptsLoading(false))
+  }, [activeTab])
+
   async function fetchMarketForCity(cityName: string, label: string) {
     setCitySearchLoading(true)
     setShowSuggestions(false)
@@ -297,7 +343,6 @@ export default function Finance() {
     if (!val.trim() || val.trim().length < 2) { setShowSuggestions(false); return }
     const t = setTimeout(async () => {
       try {
-        // BAN API: autocomplete all French communes
         const banRes = await fetch(
           `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(val.trim())}&type=municipality&limit=6&autocomplete=1`
         )
@@ -343,7 +388,68 @@ export default function Finance() {
     }
   }
 
-  const taxAdvice = summary ? getTaxAdvice(summary.totalRevenue, false) : null
+  async function handleMarkPaid(paymentId: string) {
+    try {
+      await apiClient.put(`/payments/${paymentId}/mark-paid`)
+      toast.success('Paiement marqué comme reçu')
+      // Refresh
+      const res = await apiClient.get<{ success: boolean; data: { payments: any[] } }>('/payments/by-owner')
+      const payments: any[] = res.data?.data?.payments ?? []
+      const grouped: Record<string, any[]> = {}
+      payments.forEach((p) => {
+        const cid = p.contractId ?? 'unknown'
+        if (!grouped[cid]) grouped[cid] = []
+        grouped[cid].push(p)
+      })
+      setPaymentsByContract(grouped)
+    } catch {
+      toast.error('Erreur lors de la mise à jour')
+    }
+  }
+
+  async function handleSendReceipt(paymentId: string) {
+    try {
+      await apiClient.post(`/payments/${paymentId}/send-email`)
+      toast.success('Quittance envoyée par email')
+    } catch {
+      toast.error("Erreur lors de l'envoi de la quittance")
+    }
+  }
+
+  async function handleGeneratePayment(contractId: string) {
+    const now = new Date()
+    try {
+      await apiClient.post('/payments/generate', {
+        contractId,
+        month: now.getMonth() + 1,
+        year: now.getFullYear(),
+      })
+      toast.success('Quittance générée')
+      // Refresh
+      const res = await apiClient.get<{ success: boolean; data: { payments: any[] } }>('/payments/by-owner')
+      const payments: any[] = res.data?.data?.payments ?? []
+      const grouped: Record<string, any[]> = {}
+      payments.forEach((p) => {
+        const cid = p.contractId ?? 'unknown'
+        if (!grouped[cid]) grouped[cid] = []
+        grouped[cid].push(p)
+      })
+      setPaymentsByContract(grouped)
+    } catch {
+      toast.error('Erreur lors de la génération')
+    }
+  }
+
+  async function handleSaveSettings(contractId: string) {
+    const settings = paymentSettings[contractId]
+    if (!settings) return
+    try {
+      await apiClient.put(`/payments/settings/${contractId}`, settings)
+      toast.success('Paramètres enregistrés')
+    } catch {
+      toast.error('Erreur lors de la sauvegarde')
+    }
+  }
 
   const chartData = (summary?.cashFlowByMonth ?? []).map((m) => ({
     name: formatMonth(m.month),
@@ -374,6 +480,19 @@ export default function Finance() {
         {label}
       </button>
     )
+  }
+
+  // Glassmorphism KPI card style
+  const glassKpiStyle: React.CSSProperties = {
+    background: 'rgba(255,255,255,0.8)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    border: '1px solid rgba(228,225,219,0.6)',
+    borderRadius: 16,
+    padding: '24px 28px',
+    boxShadow: '0 4px 24px rgba(13,12,10,0.06)',
+    flex: 1,
+    minWidth: 200,
   }
 
   return (
@@ -425,83 +544,55 @@ export default function Finance() {
           <TabPill id="expenses" label="Dépenses" />
           <TabPill id="loans" label="Emprunts" />
           <TabPill id="market" label="Marché & Loyers" />
+          <TabPill id="receipts" label="Quittances" />
+          <TabPill id="fiscal" label="Conseil Fiscal" />
         </div>
 
         {/* ── TAB: SUMMARY ── */}
         {activeTab === 'summary' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
-            {/* KPIs row 1 */}
+            {/* 3 Glassmorphism KPI cards */}
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-              <KpiCard
-                label="Revenus 12 mois"
-                value={summary ? formatEuro(summary.totalRevenue) : '—'}
-                sub="Loyers encaissés"
-                positive={true}
-              />
-              <KpiCard
-                label="Dépenses 12 mois"
-                value={summary ? formatEuro(summary.totalExpenses) : '—'}
-                sub="Charges & travaux"
-                positive={false}
-              />
-              <KpiCard
-                label="Cash-flow net annuel"
-                value={summary ? formatEuro(summary.netCashFlow) : '—'}
-                sub={summary ? (summary.netCashFlow >= 0 ? '✓ Rentabilité positive' : '⚠ Déficit à surveiller') : undefined}
-                positive={summary ? summary.netCashFlow >= 0 : undefined}
-              />
-              <KpiCard
-                label="Taux d'occupation"
-                value={summary ? `${summary.occupancyRate}%` : '—'}
-                sub={summary ? (summary.occupancyRate >= 90 ? '✓ Excellent' : summary.occupancyRate >= 70 ? 'Correct' : '⚠ Vacance élevée') : undefined}
-                positive={summary ? summary.occupancyRate >= 80 : undefined}
-              />
-            </div>
+              {/* Revenue 12 mois */}
+              <div style={glassKpiStyle}>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 8px' }}>
+                  Revenus 12 mois
+                </p>
+                <p style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(26px,4vw,32px)', fontWeight: 700, fontStyle: 'italic', color: BAI.owner, margin: 0, lineHeight: 1 }}>
+                  {summary ? formatEuro(summary.totalRevenue) : '—'}
+                </p>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '6px 0 0' }}>
+                  Loyers encaissés
+                </p>
+              </div>
 
-            {/* KPIs row 2 — rendements */}
-            {summary && myProperties.length > 0 && (() => {
-              const totalRentAnnual = summary.totalRevenue
-              const totalLoanAnnual = summary.totalLoanMonthly * 12
-              const grossYield = myProperties.reduce((acc, p) => acc + p.price, 0) > 0
-                ? ((totalRentAnnual / myProperties.reduce((acc, p) => acc + p.price, 0)) * 100)
-                : 0
-              const netYield = myProperties.reduce((acc, p) => acc + p.price, 0) > 0
-                ? (((totalRentAnnual - summary.totalExpenses - totalLoanAnnual) / myProperties.reduce((acc, p) => acc + p.price, 0)) * 100)
-                : 0
-              const monthlyLoanCover = summary.totalLoanMonthly > 0
-                ? ((summary.totalRevenue / 12) / summary.totalLoanMonthly * 100)
-                : null
-              return (
-                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-                  <KpiCard
-                    label="Rendement brut"
-                    value={grossYield > 0 ? `${grossYield.toFixed(2)}%` : '—'}
-                    sub="Loyers / valeur du parc"
-                    positive={grossYield >= 4}
-                  />
-                  <KpiCard
-                    label="Rendement net"
-                    value={netYield > 0 ? `${netYield.toFixed(2)}%` : '—'}
-                    sub="Après charges & emprunts"
-                    positive={netYield >= 2}
-                  />
-                  <KpiCard
-                    label="Remboursement / mois"
-                    value={formatEuro(summary.totalLoanMonthly)}
-                    sub="Total emprunts actifs"
-                  />
-                  {monthlyLoanCover !== null && (
-                    <KpiCard
-                      label="Couverture emprunt"
-                      value={`${Math.round(monthlyLoanCover)}%`}
-                      sub="Loyers / mensualités"
-                      positive={monthlyLoanCover >= 110}
-                    />
-                  )}
-                </div>
-              )
-            })()}
+              {/* Cash-flow net */}
+              <div style={glassKpiStyle}>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 8px' }}>
+                  Cash-flow net
+                </p>
+                <p style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(26px,4vw,32px)', fontWeight: 700, fontStyle: 'italic', color: summary ? (summary.netCashFlow >= 0 ? BAI.tenant : BAI.error) : BAI.ink, margin: 0, lineHeight: 1 }}>
+                  {summary ? formatEuro(summary.netCashFlow) : '—'}
+                </p>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '6px 0 0' }}>
+                  {summary ? (summary.netCashFlow >= 0 ? 'Rentabilité positive' : 'Déficit à surveiller') : 'Après charges & emprunts'}
+                </p>
+              </div>
+
+              {/* Taux d'occupation */}
+              <div style={glassKpiStyle}>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 8px' }}>
+                  Taux d'occupation
+                </p>
+                <p style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(26px,4vw,32px)', fontWeight: 700, fontStyle: 'italic', color: summary ? (summary.occupancyRate >= 80 ? BAI.tenant : BAI.caramel) : BAI.ink, margin: 0, lineHeight: 1 }}>
+                  {summary ? `${summary.occupancyRate}%` : '—'}
+                </p>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '6px 0 0' }}>
+                  {summary ? (summary.occupancyRate >= 90 ? 'Excellent' : summary.occupancyRate >= 70 ? 'Correct' : 'Vacance élevée') : 'Biens loués / parc total'}
+                </p>
+              </div>
+            </div>
 
             {/* Area chart */}
             <div
@@ -622,295 +713,219 @@ export default function Finance() {
               </div>
             )}
 
-            {/* Tax advice + Market prices */}
-            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-
-              {/* Tax advice */}
-              {taxAdvice && (
-                <div
-                  style={{
-                    flex: 1,
-                    minWidth: 280,
-                    background: BAI.bgSurface,
-                    border: `1px solid ${BAI.border}`,
-                    borderRadius: 12,
-                    padding: 20,
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                    <Info style={{ width: 16, height: 16, color: BAI.caramel }} />
-                    <p
-                      style={{
-                        fontFamily: BAI.fontBody,
-                        fontSize: 13,
-                        fontWeight: 700,
-                        color: BAI.ink,
-                        margin: 0,
-                      }}
-                    >
-                      Conseil fiscal
-                    </p>
-                  </div>
-                  <span
-                    style={{
-                      display: 'inline-block',
-                      padding: '3px 12px',
-                      borderRadius: 999,
-                      background: `${taxAdvice.color}18`,
-                      border: `1px solid ${taxAdvice.color}40`,
-                      fontFamily: BAI.fontBody,
-                      fontSize: 12,
-                      fontWeight: 700,
-                      color: taxAdvice.color,
-                      marginBottom: 10,
-                    }}
-                  >
-                    {taxAdvice.regime}
-                  </span>
-                  <p
-                    style={{
-                      fontFamily: BAI.fontBody,
-                      fontSize: 13,
-                      color: BAI.inkMid,
-                      margin: '0 0 12px',
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    {taxAdvice.description}
+            {/* Market locatif widget */}
+            <div
+              style={{
+                background: BAI.bgSurface,
+                border: `1px solid ${BAI.border}`,
+                borderRadius: 12,
+                padding: 24,
+              }}
+            >
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <Building2 style={{ width: 18, height: 18, color: BAI.caramel }} />
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 15, fontWeight: 700, color: BAI.ink, margin: 0 }}>
+                    Marché locatif
                   </p>
-                  {taxAdvice.link && (
-                    <a
-                      href="/owner/rentabilite"
-                      style={{
-                        fontFamily: BAI.fontBody,
-                        fontSize: 12,
-                        color: BAI.caramel,
-                        fontWeight: 600,
-                        textDecoration: 'none',
-                      }}
-                    >
-                      → Simuler ma rentabilité complète
-                    </a>
-                  )}
                 </div>
+                <span style={{
+                  padding: '3px 10px',
+                  borderRadius: 999,
+                  background: BAI.ownerLight,
+                  border: `1px solid ${BAI.ownerBorder}`,
+                  fontFamily: BAI.fontBody,
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: BAI.owner,
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                }}>
+                  Données officielles
+                </span>
+              </div>
+
+              {/* Always-visible encadrement links */}
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                <a
+                  href="https://www.encadrementdesloyers.gouv.fr/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: `1px solid ${BAI.ownerBorder}`, background: BAI.ownerLight, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.owner }}
+                >
+                  <ExternalLink style={{ width: 12, height: 12 }} />
+                  Vérifier l'encadrement des loyers
+                </a>
+                <a
+                  href="https://www.anil.org/outils/simulateurs-en-ligne/estimer-votre-loyer/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkMid }}
+                >
+                  <ExternalLink style={{ width: 12, height: 12 }} />
+                  Simulateur ANIL
+                </a>
+              </div>
+
+              {/* Search input with autocomplete */}
+              <div style={{ position: 'relative', marginBottom: 16 }}>
+                <Search style={{
+                  position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+                  width: 15, height: 15, color: BAI.inkFaint, pointerEvents: 'none',
+                }} />
+                <input
+                  placeholder="Saisissez une ville ou village français..."
+                  value={citySearch}
+                  onChange={(e) => handleCitySearch(e.target.value)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                  onFocus={() => citySuggestions.length > 0 && setShowSuggestions(true)}
+                  style={{ ...inputStyle, paddingLeft: 36, fontSize: 14 }}
+                />
+                {/* Suggestions dropdown */}
+                {showSuggestions && citySuggestions.length > 0 && (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100,
+                    background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 8,
+                    boxShadow: BAI.shadowMd, marginTop: 4, overflow: 'hidden',
+                  }}>
+                    {citySuggestions.map((s, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onMouseDown={() => {
+                          setCitySearch(s.label)
+                          setCitySuggestions([])
+                          setShowSuggestions(false)
+                          fetchMarketForCity(s.city, s.label)
+                        }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          width: '100%', padding: '10px 14px', border: 'none',
+                          borderBottom: i < citySuggestions.length - 1 ? `1px solid ${BAI.border}` : 'none',
+                          background: 'transparent', cursor: 'pointer', textAlign: 'left',
+                          fontFamily: BAI.fontBody, fontSize: 13, color: BAI.ink,
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                      >
+                        <MapPin style={{ width: 13, height: 13, color: BAI.caramel, flexShrink: 0 }} />
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {citySearchLoading && (
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint, margin: '0 0 12px' }}>Recherche en cours...</p>
+              )}
+              {!citySearchLoading && citySearch.length >= 2 && !cityResult && !showSuggestions && (
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint, margin: '0 0 12px' }}>
+                  Aucune donnée disponible pour « {citySearch} »
+                </p>
               )}
 
-              {/* Market prices */}
-              <div
-                style={{
-                  flex: 1,
-                  minWidth: 300,
-                  background: BAI.bgSurface,
-                  border: `1px solid ${BAI.border}`,
-                  borderRadius: 12,
-                  padding: 24,
-                }}
-              >
-                {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <Building2 style={{ width: 18, height: 18, color: BAI.caramel }} />
-                    <p style={{ fontFamily: BAI.fontBody, fontSize: 15, fontWeight: 700, color: BAI.ink, margin: 0 }}>
-                      Marché locatif
+              {cityResult && (() => {
+                const furnishedFactor = 1.18
+                const avgFurnished = Math.round(cityResult.avgRentM2 * furnishedFactor * 10) / 10
+                const minFurnished = Math.round(cityResult.minRentM2 * furnishedFactor * 10) / 10
+                const maxFurnished = Math.round(cityResult.maxRentM2 * furnishedFactor * 10) / 10
+                return (
+                  <div>
+                    {/* City name */}
+                    <p style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(20px,3vw,26px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '0 0 10px' }}>
+                      {cityResult.label}
                     </p>
-                  </div>
-                  <span style={{
-                    padding: '3px 10px',
-                    borderRadius: 999,
-                    background: BAI.ownerLight,
-                    border: `1px solid ${BAI.ownerBorder}`,
-                    fontFamily: BAI.fontBody,
-                    fontSize: 10,
-                    fontWeight: 700,
-                    color: BAI.owner,
-                    letterSpacing: '0.06em',
-                    textTransform: 'uppercase',
-                  }}>
-                    Données officielles
-                  </span>
-                </div>
 
-                {/* Always-visible encadrement links */}
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-                  <a
-                    href="https://www.encadrementdesloyers.gouv.fr/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: `1px solid ${BAI.ownerBorder}`, background: BAI.ownerLight, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.owner }}
-                  >
-                    <ExternalLink style={{ width: 12, height: 12 }} />
-                    Vérifier l'encadrement des loyers
-                  </a>
-                  <a
-                    href="https://www.anil.org/outils/simulateurs-en-ligne/estimer-votre-loyer/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkMid }}
-                  >
-                    <ExternalLink style={{ width: 12, height: 12 }} />
-                    Simulateur ANIL
-                  </a>
-                </div>
-
-                {/* Search input with autocomplete */}
-                <div style={{ position: 'relative', marginBottom: 16 }}>
-                  <Search style={{
-                    position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
-                    width: 15, height: 15, color: BAI.inkFaint, pointerEvents: 'none',
-                  }} />
-                  <input
-                    placeholder="Saisissez une ville ou village français..."
-                    value={citySearch}
-                    onChange={(e) => handleCitySearch(e.target.value)}
-                    onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                    onFocus={() => citySuggestions.length > 0 && setShowSuggestions(true)}
-                    style={{ ...inputStyle, paddingLeft: 36, fontSize: 14 }}
-                  />
-                  {/* Suggestions dropdown */}
-                  {showSuggestions && citySuggestions.length > 0 && (
-                    <div style={{
-                      position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100,
-                      background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 8,
-                      boxShadow: BAI.shadowMd, marginTop: 4, overflow: 'hidden',
-                    }}>
-                      {citySuggestions.map((s, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onMouseDown={() => {
-                            setCitySearch(s.label)
-                            setCitySuggestions([])
-                            setShowSuggestions(false)
-                            fetchMarketForCity(s.city, s.label)
-                          }}
-                          style={{
-                            display: 'flex', alignItems: 'center', gap: 8,
-                            width: '100%', padding: '10px 14px', border: 'none',
-                            borderBottom: i < citySuggestions.length - 1 ? `1px solid ${BAI.border}` : 'none',
-                            background: 'transparent', cursor: 'pointer', textAlign: 'left',
-                            fontFamily: BAI.fontBody, fontSize: 13, color: BAI.ink,
-                          }}
-                          onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
-                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    {/* Encadrement badge */}
+                    {cityResult.encadrement && (
+                      <div style={{ marginBottom: 12 }}>
+                        <a
+                          href={cityResult.sourceUrl ?? 'https://www.encadrementdesloyers.gouv.fr/'}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 999, background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.owner }}
                         >
-                          <MapPin style={{ width: 13, height: 13, color: BAI.caramel, flexShrink: 0 }} />
-                          {s.label}
-                        </button>
+                          <CheckCircle2 style={{ width: 13, height: 13 }} />
+                          Encadrement des loyers actif — voir le détail
+                          <ExternalLink style={{ width: 11, height: 11 }} />
+                        </a>
+                      </div>
+                    )}
+
+                    {/* Non-meublé row */}
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.inkFaint, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px' }}>Non meublé</p>
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                      {[
+                        { label: 'Min', value: cityResult.minRentM2, highlight: false },
+                        { label: 'Moyen', value: cityResult.avgRentM2, highlight: true },
+                        { label: 'Max', value: cityResult.maxRentM2, highlight: false },
+                      ].map(item => (
+                        <div key={item.label} style={{ flex: item.highlight ? 1.4 : 1, textAlign: 'center', padding: '12px 8px', borderRadius: 10, background: item.highlight ? BAI.ownerLight : BAI.bgMuted, border: item.highlight ? `2px solid ${BAI.ownerBorder}` : `1px solid ${BAI.border}` }}>
+                          <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, color: item.highlight ? BAI.owner : BAI.inkFaint, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{item.label}</p>
+                          <p style={{ fontFamily: BAI.fontDisplay, fontSize: item.highlight ? 28 : 18, fontWeight: 700, fontStyle: 'italic', color: item.highlight ? BAI.owner : BAI.inkMid, margin: '0 0 2px', lineHeight: 1 }}>{item.value}</p>
+                          <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: item.highlight ? BAI.owner : BAI.inkFaint, margin: 0 }}>€/m²</p>
+                        </div>
                       ))}
                     </div>
-                  )}
-                </div>
 
-                {citySearchLoading && (
-                  <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint, margin: '0 0 12px' }}>Recherche en cours...</p>
-                )}
-                {!citySearchLoading && citySearch.length >= 2 && !cityResult && !showSuggestions && (
-                  <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint, margin: '0 0 12px' }}>
-                    Aucune donnée disponible pour « {citySearch} »
-                  </p>
-                )}
-
-                {cityResult && (() => {
-                  const furnishedFactor = 1.18
-                  const avgFurnished = Math.round(cityResult.avgRentM2 * furnishedFactor * 10) / 10
-                  const minFurnished = Math.round(cityResult.minRentM2 * furnishedFactor * 10) / 10
-                  const maxFurnished = Math.round(cityResult.maxRentM2 * furnishedFactor * 10) / 10
-                  return (
-                    <div>
-                      {/* City name */}
-                      <p style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(20px,3vw,26px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '0 0 10px' }}>
-                        {cityResult.label}
-                      </p>
-
-                      {/* Encadrement badge */}
-                      {cityResult.encadrement && (
-                        <div style={{ marginBottom: 12 }}>
-                          <a
-                            href={cityResult.sourceUrl ?? 'https://www.encadrementdesloyers.gouv.fr/'}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 999, background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.owner }}
-                          >
-                            <CheckCircle2 style={{ width: 13, height: 13 }} />
-                            Encadrement des loyers actif — voir le détail
-                            <ExternalLink style={{ width: 11, height: 11 }} />
-                          </a>
+                    {/* Meublé row */}
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.inkFaint, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px' }}>Meublé <span style={{ color: BAI.caramel, fontSize: 10, fontWeight: 600, textTransform: 'none' }}>(+18% estimé)</span></p>
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                      {[
+                        { label: 'Min', value: minFurnished, highlight: false },
+                        { label: 'Moyen', value: avgFurnished, highlight: true },
+                        { label: 'Max', value: maxFurnished, highlight: false },
+                      ].map(item => (
+                        <div key={item.label} style={{ flex: item.highlight ? 1.4 : 1, textAlign: 'center', padding: '12px 8px', borderRadius: 10, background: item.highlight ? BAI.caramelLight : BAI.bgMuted, border: item.highlight ? `2px solid ${BAI.caramelBorder}` : `1px solid ${BAI.border}` }}>
+                          <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, color: item.highlight ? BAI.caramel : BAI.inkFaint, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{item.label}</p>
+                          <p style={{ fontFamily: BAI.fontDisplay, fontSize: item.highlight ? 28 : 18, fontWeight: 700, fontStyle: 'italic', color: item.highlight ? BAI.caramel : BAI.inkMid, margin: '0 0 2px', lineHeight: 1 }}>{item.value}</p>
+                          <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: item.highlight ? BAI.caramel : BAI.inkFaint, margin: 0 }}>€/m²</p>
                         </div>
-                      )}
+                      ))}
+                    </div>
 
-                      {/* Non-meublé row */}
-                      <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.inkFaint, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px' }}>Non meublé</p>
-                      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-                        {[
-                          { label: 'Min', value: cityResult.minRentM2, highlight: false },
-                          { label: 'Moyen', value: cityResult.avgRentM2, highlight: true },
-                          { label: 'Max', value: cityResult.maxRentM2, highlight: false },
-                        ].map(item => (
-                          <div key={item.label} style={{ flex: item.highlight ? 1.4 : 1, textAlign: 'center', padding: '12px 8px', borderRadius: 10, background: item.highlight ? BAI.ownerLight : BAI.bgMuted, border: item.highlight ? `2px solid ${BAI.ownerBorder}` : `1px solid ${BAI.border}` }}>
-                            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, color: item.highlight ? BAI.owner : BAI.inkFaint, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{item.label}</p>
-                            <p style={{ fontFamily: BAI.fontDisplay, fontSize: item.highlight ? 28 : 18, fontWeight: 700, fontStyle: 'italic', color: item.highlight ? BAI.owner : BAI.inkMid, margin: '0 0 2px', lineHeight: 1 }}>{item.value}</p>
-                            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: item.highlight ? BAI.owner : BAI.inkFaint, margin: 0 }}>€/m²</p>
+                    {/* Exemples concrets */}
+                    <div style={{ padding: '12px 14px', borderRadius: 10, background: BAI.bgMuted, border: `1px solid ${BAI.border}`, marginBottom: 14 }}>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.inkMid, margin: '0 0 6px' }}>Exemples pour {cityResult.label}</p>
+                      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                        {[30, 50, 70].map(surf => (
+                          <div key={surf} style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.ink }}>
+                            <span style={{ fontWeight: 700 }}>{surf} m²</span>
+                            {' : '}
+                            <span style={{ color: BAI.owner }}>{Math.round(cityResult.avgRentM2 * surf).toLocaleString('fr-FR')} €</span>
+                            {' / '}
+                            <span style={{ color: BAI.caramel }}>{Math.round(avgFurnished * surf).toLocaleString('fr-FR')} €</span>
+                            <span style={{ color: BAI.inkFaint, fontSize: 10 }}> meublé</span>
                           </div>
                         ))}
-                      </div>
-
-                      {/* Meublé row */}
-                      <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.inkFaint, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px' }}>Meublé <span style={{ color: BAI.caramel, fontSize: 10, fontWeight: 600, textTransform: 'none' }}>(+18% estimé)</span></p>
-                      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-                        {[
-                          { label: 'Min', value: minFurnished, highlight: false },
-                          { label: 'Moyen', value: avgFurnished, highlight: true },
-                          { label: 'Max', value: maxFurnished, highlight: false },
-                        ].map(item => (
-                          <div key={item.label} style={{ flex: item.highlight ? 1.4 : 1, textAlign: 'center', padding: '12px 8px', borderRadius: 10, background: item.highlight ? BAI.caramelLight : BAI.bgMuted, border: item.highlight ? `2px solid ${BAI.caramelBorder}` : `1px solid ${BAI.border}` }}>
-                            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, color: item.highlight ? BAI.caramel : BAI.inkFaint, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{item.label}</p>
-                            <p style={{ fontFamily: BAI.fontDisplay, fontSize: item.highlight ? 28 : 18, fontWeight: 700, fontStyle: 'italic', color: item.highlight ? BAI.caramel : BAI.inkMid, margin: '0 0 2px', lineHeight: 1 }}>{item.value}</p>
-                            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: item.highlight ? BAI.caramel : BAI.inkFaint, margin: 0 }}>€/m²</p>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Exemples concrets */}
-                      <div style={{ padding: '12px 14px', borderRadius: 10, background: BAI.bgMuted, border: `1px solid ${BAI.border}`, marginBottom: 14 }}>
-                        <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.inkMid, margin: '0 0 6px' }}>Exemples pour {cityResult.label}</p>
-                        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                          {[30, 50, 70].map(surf => (
-                            <div key={surf} style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.ink }}>
-                              <span style={{ fontWeight: 700 }}>{surf} m²</span>
-                              {' : '}
-                              <span style={{ color: BAI.owner }}>{Math.round(cityResult.avgRentM2 * surf).toLocaleString('fr-FR')} €</span>
-                              {' / '}
-                              <span style={{ color: BAI.caramel }}>{Math.round(avgFurnished * surf).toLocaleString('fr-FR')} €</span>
-                              <span style={{ color: BAI.inkFaint, fontSize: 10 }}> meublé</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Source links */}
-                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                        <Info style={{ width: 13, height: 13, color: BAI.inkFaint, flexShrink: 0 }} />
-                        <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>Sources :</span>
-                        {cityResult.sourceUrl && (
-                          <a href={cityResult.sourceUrl} target="_blank" rel="noopener noreferrer"
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: BAI.fontBody, fontSize: 12, color: BAI.owner, textDecoration: 'underline' }}>
-                            {cityResult.sourceName ?? 'Données officielles'}
-                            <ExternalLink style={{ width: 10, height: 10 }} />
-                          </a>
-                        )}
-                        <a href="https://www.clameur.fr/" target="_blank" rel="noopener noreferrer"
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, textDecoration: 'underline' }}>
-                          CLAMEUR <ExternalLink style={{ width: 10, height: 10 }} />
-                        </a>
-                        <a href="https://www.meilleursagents.com/" target="_blank" rel="noopener noreferrer"
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, textDecoration: 'underline' }}>
-                          MeilleursAgents <ExternalLink style={{ width: 10, height: 10 }} />
-                        </a>
                       </div>
                     </div>
-                  )
-                })()}
-              </div>
+
+                    {/* Source links */}
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                      <Info style={{ width: 13, height: 13, color: BAI.inkFaint, flexShrink: 0 }} />
+                      <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>Sources :</span>
+                      {cityResult.sourceUrl && (
+                        <a href={cityResult.sourceUrl} target="_blank" rel="noopener noreferrer"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: BAI.fontBody, fontSize: 12, color: BAI.owner, textDecoration: 'underline' }}>
+                          {cityResult.sourceName ?? 'Données officielles'}
+                          <ExternalLink style={{ width: 10, height: 10 }} />
+                        </a>
+                      )}
+                      <a href="https://www.clameur.fr/" target="_blank" rel="noopener noreferrer"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, textDecoration: 'underline' }}>
+                        CLAMEUR <ExternalLink style={{ width: 10, height: 10 }} />
+                      </a>
+                      <a href="https://www.meilleursagents.com/" target="_blank" rel="noopener noreferrer"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, textDecoration: 'underline' }}>
+                        MeilleursAgents <ExternalLink style={{ width: 10, height: 10 }} />
+                      </a>
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
           </div>
         )}
@@ -1675,6 +1690,7 @@ export default function Finance() {
             )}
           </div>
         )}
+
         {/* ── TAB: MARKET ── */}
         {activeTab === 'market' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -1688,7 +1704,6 @@ export default function Finance() {
             {myProperties.map((property) => {
               const analysis = marketAnalyses[property.id]
 
-              // Verdict simple
               const verdict = !analysis ? null
                 : analysis.vsMarket === 'above' ? { label: `Loyer au-dessus du marché (+${analysis.vsMarketPct}%)`, color: BAI.tenant, icon: <TrendingUp style={{ width: 16, height: 16 }} /> }
                 : analysis.vsMarket === 'below' ? { label: `Loyer en dessous du marché (${analysis.vsMarketPct}%)`, color: BAI.caramel, icon: <TrendingDown style={{ width: 16, height: 16 }} /> }
@@ -1787,6 +1802,52 @@ export default function Finance() {
                         </div>
                       )}
 
+                      {/* Encadrement links */}
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
+                        <a href="https://www.encadrementdesloyers.gouv.fr/" target="_blank" rel="noopener noreferrer"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 12px', borderRadius: 8, border: `1px solid ${BAI.ownerBorder}`, background: BAI.ownerLight, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.owner }}>
+                          <ExternalLink style={{ width: 11, height: 11 }} />
+                          Vérifier l'encadrement des loyers
+                        </a>
+                        {(() => {
+                          const ENCADREMENT_LINKS: Record<string, { label: string; url: string }> = {
+                            'paris': { label: 'Encadrement Paris', url: 'https://www.paris.fr/encadrementdesloyers' },
+                            'lille': { label: 'Encadrement Lille', url: 'https://www.encadrementdesloyers.gouv.fr/' },
+                            'hellemmes': { label: 'Encadrement Hellemmes', url: 'https://www.encadrementdesloyers.gouv.fr/' },
+                            'loos': { label: 'Encadrement Loos', url: 'https://www.encadrementdesloyers.gouv.fr/' },
+                            'lyon': { label: 'Encadrement Lyon Métropole', url: 'https://www.grandlyon.com/services/encadrement-des-loyers.html' },
+                            'bordeaux': { label: 'Encadrement Bordeaux', url: 'https://www.bordeaux-metropole.fr/Missions/Logement-habitat/Encadrement-des-loyers' },
+                            'montpellier': { label: 'Encadrement Montpellier', url: 'https://www.encadrementdesloyers.gouv.fr/' },
+                            'strasbourg': { label: 'Encadrement Strasbourg', url: 'https://www.encadrementdesloyers.gouv.fr/' },
+                            'grenoble': { label: 'Encadrement Grenoble', url: 'https://www.encadrementdesloyers.gouv.fr/' },
+                            'bayonne': { label: 'Encadrement Pays Basque', url: 'https://www.encadrementdesloyers.gouv.fr/' },
+                            'biarritz': { label: 'Encadrement Pays Basque', url: 'https://www.encadrementdesloyers.gouv.fr/' },
+                            'anglet': { label: 'Encadrement Pays Basque', url: 'https://www.encadrementdesloyers.gouv.fr/' },
+                          }
+                          const cityKey = (analysis.market?.city ?? property.city ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                          const cityLink = ENCADREMENT_LINKS[cityKey]
+                          return cityLink ? (
+                            <a href={cityLink.url} target="_blank" rel="noopener noreferrer"
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 12px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkMid }}>
+                              <ExternalLink style={{ width: 11, height: 11 }} />
+                              {cityLink.label}
+                            </a>
+                          ) : null
+                        })()}
+                      </div>
+
+                      {/* Note for large cities */}
+                      {(() => {
+                        const largeCities = ['paris', 'lyon', 'marseille', 'bordeaux', 'montpellier', 'strasbourg', 'nantes', 'toulouse', 'nice', 'grenoble']
+                        const cityNorm = (analysis.market?.city ?? property.city ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                        return largeCities.some(c => cityNorm.includes(c)) ? (
+                          <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '0 0 12px', display: 'flex', gap: 6, alignItems: 'flex-start' }}>
+                            <Info style={{ width: 13, height: 13, flexShrink: 0, marginTop: 1 }} />
+                            Dans les grandes villes, les prix varient significativement selon le quartier. Consultez les sources officielles pour votre adresse exacte.
+                          </p>
+                        ) : null
+                      })()}
+
                       {/* Encadrement alert ou info */}
                       {analysis.encadrementStatus !== 'not_applicable' && analysis.encadrementStatus !== 'unknown' && (
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 14px', borderRadius: 8, background: encAlert ? BAI.errorLight : `${BAI.tenant}0a`, border: `1px solid ${encAlert ? '#fca5a5' : `${BAI.tenant}30`}`, marginBottom: 12 }}>
@@ -1796,7 +1857,7 @@ export default function Finance() {
                           }
                           <div>
                             <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: encAlert ? BAI.error : BAI.tenant, margin: '0 0 2px' }}>
-                              {encAlert ? 'Loyer au-dessus du plafond légal' : 'Conforme à l\'encadrement des loyers'}
+                              {encAlert ? 'Loyer au-dessus du plafond légal' : "Conforme à l'encadrement des loyers"}
                             </p>
                             <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, margin: 0 }}>
                               {analysis.encadrementInfo}
@@ -1816,6 +1877,425 @@ export default function Finance() {
                 </div>
               )
             })}
+          </div>
+        )}
+
+        {/* ── TAB: RECEIPTS ── */}
+        {activeTab === 'receipts' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {/* Header overline */}
+            <div>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 6px' }}>
+                Gestion locative
+              </p>
+              <h2 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(22px,3vw,28px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '0 0 8px' }}>
+                Quittances de loyer
+              </h2>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: 0 }}>
+                Suivez les loyers encaissés et envoyez les quittances à vos locataires.
+              </p>
+            </div>
+
+            {/* Quick link to contracts */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', borderRadius: 12, background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}` }}>
+              <FileText style={{ width: 18, height: 18, color: BAI.owner, flexShrink: 0 }} />
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.owner, margin: 0, flex: 1 }}>
+                La gestion complète des contrats est disponible sur la page Contrats.
+              </p>
+              <a
+                href="/dashboard/owner/contracts"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, background: BAI.owner, color: '#fff', textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, minHeight: 40 }}
+              >
+                Voir les contrats
+                <ExternalLink style={{ width: 13, height: 13 }} />
+              </a>
+            </div>
+
+            {receiptsLoading ? (
+              <div style={{ textAlign: 'center', padding: 48, color: BAI.inkFaint, fontFamily: BAI.fontBody, fontSize: 14 }}>
+                Chargement des paiements...
+              </div>
+            ) : myProperties.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 40, color: BAI.inkFaint, fontFamily: BAI.fontBody, fontSize: 14 }}>
+                Aucun bien enregistré
+              </div>
+            ) : Object.keys(paymentsByContract).length === 0 ? (
+              <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: 40, textAlign: 'center' }}>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint, margin: '0 0 16px' }}>
+                  Aucun paiement enregistré pour le moment.
+                </p>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint, margin: 0 }}>
+                  Les quittances apparaîtront ici une fois vos contrats actifs.
+                </p>
+              </div>
+            ) : (
+              Object.entries(paymentsByContract).map(([contractId, payments]) => {
+                const firstPayment = payments[0]
+                const contractTitle = firstPayment?.contract?.property?.title ?? 'Contrat'
+                const tenantName = [firstPayment?.contract?.tenant?.firstName, firstPayment?.contract?.tenant?.lastName].filter(Boolean).join(' ') || firstPayment?.contract?.tenantId || 'Locataire'
+                const monthlyRent = firstPayment?.amount ?? 0
+                const settings = paymentSettings[contractId] ?? { dayOfMonth: 1, autoSend: false }
+
+                const now = new Date()
+                const currentMonthLabel = `${MONTH_NAMES_FR[now.getMonth()]} ${now.getFullYear()}`
+
+                return (
+                  <div key={contractId} style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, overflow: 'hidden' }}>
+                    {/* Contract header */}
+                    <div style={{ padding: '18px 24px', borderBottom: `1px solid ${BAI.border}`, background: BAI.bgMuted, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+                      <div>
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 15, fontWeight: 700, color: BAI.ink, margin: '0 0 4px' }}>{contractTitle}</p>
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, margin: 0 }}>
+                          {tenantName} · {formatEuro(monthlyRent)}/mois
+                        </p>
+                      </div>
+                      <span style={{ padding: '4px 12px', borderRadius: 999, background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`, fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.tenant }}>
+                        {payments.length} paiement{payments.length > 1 ? 's' : ''}
+                      </span>
+                    </div>
+
+                    {/* Settings row */}
+                    <div style={{ padding: '14px 24px', borderBottom: `1px solid ${BAI.border}`, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkMid, margin: 0 }}>Jour d'échéance :</p>
+                      <select
+                        value={settings.dayOfMonth}
+                        onChange={(e) => setPaymentSettings(prev => ({
+                          ...prev,
+                          [contractId]: { ...settings, dayOfMonth: Number(e.target.value) },
+                        }))}
+                        style={{ ...inputStyle, width: 'auto', padding: '6px 10px', fontSize: 13 }}
+                      >
+                        {Array.from({ length: 28 }, (_, i) => i + 1).map(d => (
+                          <option key={d} value={d}>Le {d} du mois</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => handleSaveSettings(contractId)}
+                        style={{ padding: '7px 16px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: 'transparent', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.inkMid, cursor: 'pointer', minHeight: 36 }}
+                      >
+                        Sauvegarder
+                      </button>
+                    </div>
+
+                    {/* Payments table */}
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                          <tr style={{ background: BAI.bgMuted }}>
+                            {['Mois', 'Montant', 'Statut', 'Actions'].map(h => (
+                              <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.inkFaint, textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {payments.map((payment, idx) => {
+                            const isPending = payment.status === 'PENDING'
+                            const isPaid = payment.status === 'PAID'
+                            const paymentDate = payment.dueDate ? new Date(payment.dueDate) : null
+                            const monthLabel = paymentDate ? `${MONTH_NAMES_FR[paymentDate.getMonth()]} ${paymentDate.getFullYear()}` : '—'
+
+                            return (
+                              <tr key={payment.id} style={{ borderBottom: idx < payments.length - 1 ? `1px solid ${BAI.border}` : 'none' }}>
+                                <td style={{ padding: '12px 16px', fontFamily: BAI.fontBody, fontSize: 13, color: BAI.ink }}>{monthLabel}</td>
+                                <td style={{ padding: '12px 16px', fontFamily: BAI.fontDisplay, fontSize: 16, fontWeight: 700, fontStyle: 'italic', color: BAI.ink }}>
+                                  {formatEuro(payment.amount)}
+                                </td>
+                                <td style={{ padding: '12px 16px' }}>
+                                  <span style={{
+                                    padding: '3px 10px', borderRadius: 999,
+                                    background: isPaid ? BAI.tenantLight : isPending ? BAI.caramelLight : BAI.bgMuted,
+                                    border: `1px solid ${isPaid ? BAI.tenantBorder : isPending ? BAI.caramelBorder : BAI.border}`,
+                                    fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700,
+                                    color: isPaid ? BAI.tenant : isPending ? BAI.caramel : BAI.inkMid,
+                                  }}>
+                                    {isPaid ? 'Payé' : isPending ? 'En attente' : payment.status}
+                                  </span>
+                                </td>
+                                <td style={{ padding: '12px 16px' }}>
+                                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                    {isPending && (
+                                      <button
+                                        onClick={() => handleMarkPaid(payment.id)}
+                                        style={{ padding: '6px 12px', borderRadius: 7, border: 'none', background: BAI.tenant, color: '#fff', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, cursor: 'pointer', minHeight: 32 }}
+                                      >
+                                        Marquer payé
+                                      </button>
+                                    )}
+                                    {isPaid && (
+                                      <>
+                                        <button
+                                          onClick={() => handleSendReceipt(payment.id)}
+                                          style={{ padding: '6px 12px', borderRadius: 7, border: `1px solid ${BAI.ownerBorder}`, background: BAI.ownerLight, color: BAI.owner, fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, cursor: 'pointer', minHeight: 32 }}
+                                        >
+                                          Envoyer quittance
+                                        </button>
+                                        <a
+                                          href={`/api/v1/payments/${payment.id}/receipt`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 7, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, color: BAI.inkMid, fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, textDecoration: 'none', minHeight: 32 }}
+                                        >
+                                          Télécharger
+                                        </a>
+                                      </>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Generate button */}
+                    <div style={{ padding: '14px 24px', borderTop: `1px solid ${BAI.border}`, display: 'flex', justifyContent: 'flex-end' }}>
+                      <button
+                        onClick={() => handleGeneratePayment(contractId)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 18px', borderRadius: 9, border: 'none', background: BAI.night, color: '#fff', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer', minHeight: 44 }}
+                      >
+                        <FileText style={{ width: 15, height: 15 }} />
+                        Générer quittance — {currentMonthLabel}
+                      </button>
+                    </div>
+                  </div>
+                )
+              })
+            )}
+          </div>
+        )}
+
+        {/* ── TAB: FISCAL ── */}
+        {activeTab === 'fiscal' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+
+            {/* Form card */}
+            <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: 'clamp(20px,4vw,32px)' }}>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 6px' }}>
+                Outil personnalisé
+              </p>
+              <h2 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(22px,3vw,28px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '0 0 8px' }}>
+                Optimisation fiscale
+              </h2>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: '0 0 28px', lineHeight: 1.6 }}>
+                Renseignez votre situation pour obtenir une recommandation de régime fiscal adaptée à votre patrimoine locatif.
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
+
+                {/* Société */}
+                <div>
+                  <label style={labelStyle}>Avez-vous créé une société ?</label>
+                  <select
+                    value={fiscalForm.hasSociety}
+                    onChange={(e) => setFiscalForm(f => ({ ...f, hasSociety: e.target.value as FiscalForm['hasSociety'] }))}
+                    style={inputStyle}
+                  >
+                    <option value="non">Non (location en nom propre)</option>
+                    <option value="sci_ir">SCI à l'IR</option>
+                    <option value="sci_is">SCI à l'IS</option>
+                    <option value="sarl_sas">SARL / SAS</option>
+                    <option value="autre">Autre structure</option>
+                  </select>
+                </div>
+
+                {/* Régime actuel */}
+                <div>
+                  <label style={labelStyle}>Régime fiscal actuel ?</label>
+                  <select
+                    value={fiscalForm.currentRegime}
+                    onChange={(e) => setFiscalForm(f => ({ ...f, currentRegime: e.target.value as FiscalForm['currentRegime'] }))}
+                    style={inputStyle}
+                  >
+                    <option value="unknown">Je ne sais pas encore</option>
+                    <option value="micro_foncier">Micro-foncier (30 % abatt.)</option>
+                    <option value="reel">Foncier réel</option>
+                    <option value="micro_bic">Micro-BIC (50 % abatt.)</option>
+                    <option value="bic_reel">BIC réel (amortissements)</option>
+                    <option value="is">IS (société)</option>
+                  </select>
+                </div>
+
+                {/* Revenus annuels */}
+                <div>
+                  <label style={labelStyle}>Revenus locatifs annuels estimés (€)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={fiscalForm.annualRevenue || ''}
+                    onChange={(e) => setFiscalForm(f => ({ ...f, annualRevenue: Number(e.target.value) }))}
+                    placeholder="Ex: 12000"
+                    style={inputStyle}
+                  />
+                </div>
+
+                {/* Charges réelles */}
+                <div>
+                  <label style={labelStyle}>Charges réelles estimées (€)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={fiscalForm.realCharges || ''}
+                    onChange={(e) => setFiscalForm(f => ({ ...f, realCharges: Number(e.target.value) }))}
+                    placeholder="Ex: 3500 — travaux, intérêts, frais gestion..."
+                    style={inputStyle}
+                  />
+                </div>
+
+                {/* Type de location */}
+                <div>
+                  <label style={labelStyle}>Type de location</label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {[
+                      { value: false, label: 'Non meublé' },
+                      { value: true, label: 'Meublé' },
+                    ].map(opt => (
+                      <button
+                        key={String(opt.value)}
+                        type="button"
+                        onClick={() => setFiscalForm(f => ({ ...f, isFurnished: opt.value }))}
+                        style={{
+                          flex: 1,
+                          padding: '10px 12px',
+                          borderRadius: 8,
+                          border: `2px solid ${fiscalForm.isFurnished === opt.value ? BAI.night : BAI.border}`,
+                          background: fiscalForm.isFurnished === opt.value ? BAI.night : 'transparent',
+                          color: fiscalForm.isFurnished === opt.value ? '#fff' : BAI.inkMid,
+                          fontFamily: BAI.fontBody,
+                          fontSize: 13,
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          minHeight: 44,
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Analyze button */}
+              <div style={{ marginTop: 28 }}>
+                <button
+                  onClick={() => {
+                    if (fiscalForm.annualRevenue <= 0) {
+                      toast.error('Veuillez saisir vos revenus locatifs')
+                      return
+                    }
+                    setFiscalResult(computeFiscalAdvice(fiscalForm))
+                  }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: '12px 28px',
+                    borderRadius: 10,
+                    border: 'none',
+                    background: BAI.night,
+                    color: '#fff',
+                    fontFamily: BAI.fontBody,
+                    fontSize: 14,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    minHeight: 48,
+                  }}
+                >
+                  <BarChart2 style={{ width: 18, height: 18 }} />
+                  Analyser mon régime
+                </button>
+              </div>
+            </div>
+
+            {/* Results card */}
+            {fiscalResult && (
+              <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, overflow: 'hidden' }}>
+                {/* Recommended regime header */}
+                <div style={{ padding: '20px 28px', background: BAI.ownerLight, borderBottom: `1px solid ${BAI.ownerBorder}`, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+                  <CheckCircle2 style={{ width: 22, height: 22, color: BAI.owner, flexShrink: 0 }} />
+                  <div>
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.owner, margin: '0 0 4px' }}>
+                      Régime recommandé
+                    </p>
+                    <p style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(20px,3vw,26px)', fontWeight: 700, fontStyle: 'italic', color: BAI.owner, margin: 0 }}>
+                      {fiscalResult.recommended}
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+                  {/* Description */}
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: 0, lineHeight: 1.7 }}>
+                    {fiscalResult.description}
+                  </p>
+
+                  {/* Savings box */}
+                  {fiscalResult.savings !== null && (
+                    <div style={{ padding: '16px 20px', borderRadius: 12, background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`, display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <TrendingUp style={{ width: 20, height: 20, color: BAI.tenant, flexShrink: 0 }} />
+                      <div>
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.tenant, margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                          Économie potentielle estimée
+                        </p>
+                        <p style={{ fontFamily: BAI.fontDisplay, fontSize: 22, fontWeight: 700, fontStyle: 'italic', color: BAI.tenant, margin: 0 }}>
+                          {fiscalResult.savings.toLocaleString('fr-FR')} € / an
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Steps */}
+                  <div>
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.ink, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 14px' }}>
+                      Étapes recommandées
+                    </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {fiscalResult.steps.map((step, idx) => (
+                        <div key={idx} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                          <span style={{ flexShrink: 0, width: 24, height: 24, borderRadius: '50%', background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.owner }}>
+                            {idx + 1}
+                          </span>
+                          <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, margin: '2px 0 0', lineHeight: 1.6 }}>
+                            {step}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Links */}
+                  <div>
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.ink, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 10px' }}>
+                      Ressources officielles
+                    </p>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {fiscalResult.links.map((link, idx) => (
+                        <a
+                          key={idx}
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 999, border: `1px solid ${BAI.ownerBorder}`, background: BAI.ownerLight, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.owner }}
+                        >
+                          {link.label}
+                          <ExternalLink style={{ width: 11, height: 11 }} />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Disclaimer */}
+                  <div style={{ padding: '12px 16px', borderRadius: 10, background: BAI.bgMuted, border: `1px solid ${BAI.border}`, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                    <Info style={{ width: 14, height: 14, color: BAI.inkFaint, flexShrink: 0, marginTop: 1 }} />
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: 0, lineHeight: 1.6 }}>
+                      Ces estimations sont indicatives et basées sur des taux moyens. Consultez un expert-comptable ou un conseiller fiscal pour un conseil personnalisé adapté à votre situation précise.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
