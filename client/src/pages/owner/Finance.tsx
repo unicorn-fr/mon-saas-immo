@@ -224,7 +224,7 @@ export default function Finance() {
   const [showExpenseForm, setShowExpenseForm] = useState(false)
   const [showLoanForm, setShowLoanForm] = useState<string | null>(null)
   const [citySearch, setCitySearch] = useState('')
-  const [cityResult, setCityResult] = useState<{ city: string; avgRentM2: number; minRentM2: number; maxRentM2: number; encadrement: boolean; label: string } | null>(null)
+  const [cityResult, setCityResult] = useState<{ city: string; avgRentM2: number; minRentM2: number; maxRentM2: number; encadrement: boolean; label: string; sourceUrl?: string; sourceName?: string } | null>(null)
   const [citySearchLoading, setCitySearchLoading] = useState(false)
   const [citySearchTimer, setCitySearchTimer] = useState<ReturnType<typeof setTimeout> | null>(null)
   const [expenseForm, setExpenseForm] = useState<CreateExpenseInput>(INITIAL_EXPENSE_FORM)
@@ -279,7 +279,7 @@ export default function Finance() {
     const t = setTimeout(async () => {
       setCitySearchLoading(true)
       try {
-        const res = await apiClient.get<{ success: boolean; data: { market: { avgRentM2: number; minRentM2: number; maxRentM2: number; encadrement: boolean; label: string } | null } }>(
+        const res = await apiClient.get<{ success: boolean; data: { market: { avgRentM2: number; minRentM2: number; maxRentM2: number; encadrement: boolean; label: string; sourceUrl?: string; sourceName?: string } | null } }>(
           `/finances/city-market?city=${encodeURIComponent(val.trim())}`
         )
         if (res.data.data.market) setCityResult({ city: val.trim(), ...res.data.data.market })
@@ -726,6 +726,20 @@ export default function Finance() {
                         </div>
                       ))}
                     </div>
+                    {cityResult.sourceUrl && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 10 }}>
+                        <Info style={{ width: 12, height: 12, color: BAI.inkFaint, flexShrink: 0 }} />
+                        <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint }}>Source :</span>
+                        <a
+                          href={cityResult.sourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.owner, textDecoration: 'underline', wordBreak: 'break-all' }}
+                        >
+                          {cityResult.sourceName ?? cityResult.sourceUrl}
+                        </a>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

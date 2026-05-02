@@ -241,18 +241,37 @@ router.get('/market-analysis/:propertyId', async (req, res) => {
   }
 })
 
+// Derive source URL from market data + city
+function getSourceInfo(market: { source: string; label: string; encadrement: boolean } | null, city: string) {
+  if (!market) return { sourceUrl: 'https://www.clameur.fr/', sourceName: 'CLAMEUR' }
+  const cityLower = city.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  if (market.source === 'paris_arrondissement' || cityLower === 'paris') {
+    return { sourceUrl: 'https://www.encadrementdesloyers.gouv.fr/', sourceName: 'encadrementdesloyers.gouv.fr' }
+  }
+  if (cityLower.includes('lyon')) return { sourceUrl: 'https://data.grandlyon.com/portail/fr/dataset/loyers-de-reference-metropole-de-lyon', sourceName: 'data.grandlyon.com' }
+  if (cityLower.includes('lille')) return { sourceUrl: 'https://www.data.gouv.fr/fr/datasets/encadrement-des-loyers-de-lille/', sourceName: 'data.gouv.fr — Lille' }
+  if (cityLower.includes('montpellier')) return { sourceUrl: 'https://www.data.gouv.fr/fr/datasets/encadrement-des-loyers-de-montpellier/', sourceName: 'data.gouv.fr — Montpellier' }
+  if (cityLower.includes('bordeaux')) return { sourceUrl: 'https://www.encadrementdesloyers.gouv.fr/', sourceName: 'encadrementdesloyers.gouv.fr' }
+  if (cityLower.includes('grenoble')) return { sourceUrl: 'https://www.encadrementdesloyers.gouv.fr/', sourceName: 'encadrementdesloyers.gouv.fr' }
+  if (market.encadrement) return { sourceUrl: 'https://www.encadrementdesloyers.gouv.fr/', sourceName: 'encadrementdesloyers.gouv.fr' }
+  return { sourceUrl: 'https://www.clameur.fr/', sourceName: 'CLAMEUR (Observatoire national des loyers)' }
+}
+
 // GET /finances/city-market?city=xxx — loyer marché pour n'importe quelle commune française
 router.get('/city-market', async (req, res) => {
   try {
     const city = (req.query.city as string | undefined)?.trim()
     if (!city || city.length < 2) return res.status(400).json({ success: false, message: 'Ville requise' })
     const market = await findRentalMarketData(city)
+    const { sourceUrl, sourceName } = getSourceInfo(market, city)
     return res.json({ success: true, data: { market: market ? {
       avgRentM2: market.avgRentM2,
       minRentM2: market.minRentM2,
       maxRentM2: market.maxRentM2,
       encadrement: market.encadrement,
       label: market.label,
+      sourceUrl,
+      sourceName,
     } : null } })
   } catch (err) {
     console.error('city-market error:', err)
@@ -340,10 +359,12 @@ router.post('/rent-advisor', async (req, res) => {
     else if (rooms >= 3) tips.push('Les grands logements attirent les familles — mettez en avant les écoles et transports à proximité.')
     else tips.push('Comparez avec au moins 5 annonces similaires dans un rayon de 500m avant de fixer définitivement le prix.')
 
+    const { sourceUrl, sourceName } = getSourceInfo(market, city)
+
     return res.json({
       success: true,
       data: {
-        advice: { minRent, maxRent, recommendedRent, reasoning, encadrementNote, tips },
+        advice: { minRent, maxRent, recommendedRent, reasoning, encadrementNote, tips, sourceUrl, sourceName },
         marketAvailable: !!market,
       },
     })

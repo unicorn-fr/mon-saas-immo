@@ -240,7 +240,7 @@ router.post('/:id/ai-analyze', async (req, res) => {
 
     const request = await prisma.maintenanceRequest.update({
       where: { id: req.params.id },
-      data: { aiAnalysis },
+      data: { aiAnalysis: aiAnalysis as unknown as Parameters<typeof prisma.maintenanceRequest.update>[0]['data']['aiAnalysis'] },
       include: {
         property: { select: { title: true } },
         tenant: { select: { firstName: true, lastName: true } },

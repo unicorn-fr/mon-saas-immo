@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Sparkles, Loader2, AlertTriangle, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react'
+import { Sparkles, Loader2, AlertTriangle, CheckCircle, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react'
 import { BAI } from '../../constants/bailio-tokens'
 import { financeService, type RentAdvice } from '../../services/finance.service'
 
@@ -286,6 +286,22 @@ export function RentAdvisor({
                   }}>
                     {advice.encadrementNote}
                   </p>
+                </div>
+              )}
+
+              {/* Source link */}
+              {advice.sourceUrl && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 14 }}>
+                  <ExternalLink size={11} style={{ color: BAI.inkFaint, flexShrink: 0 }} />
+                  <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint }}>Source :</span>
+                  <a
+                    href={advice.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.owner, textDecoration: 'underline' }}
+                  >
+                    {advice.sourceName ?? advice.sourceUrl}
+                  </a>
                 </div>
               )}
 

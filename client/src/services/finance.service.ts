@@ -10,6 +10,8 @@ export interface RentAdvice {
   reasoning: string
   encadrementNote: string | null
   tips: string[]
+  sourceUrl?: string
+  sourceName?: string
 }
 
 export interface RentAdvisorInput {
