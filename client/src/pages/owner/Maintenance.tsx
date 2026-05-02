@@ -1,10 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
-import markerIcon from 'leaflet/dist/images/marker-icon.png'
-import markerShadow from 'leaflet/dist/images/marker-shadow.png'
+import { useState, useEffect } from 'react'
 import { Layout } from '../../components/layout/Layout'
 import { BAI } from '../../constants/bailio-tokens'
 import { useMaintenanceStore } from '../../store/maintenanceStore'
@@ -43,30 +37,21 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
-// ── Leaflet icon fix (Vite/webpack bundler issue) ───────────────────────────
-delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconUrl: markerIcon,
-  iconRetinaUrl: markerIcon2x,
-  shadowUrl: markerShadow,
-})
+// ── Google Maps embed helper ─────────────────────────────────────────────────
+const CATEGORY_KEYWORDS: Record<string, string> = {
+  PLOMBERIE:   'plombier',
+  ELECTRICITE: 'électricien',
+  SERRURERIE:  'serrurier',
+  CHAUFFAGE:   'chauffagiste',
+  AUTRE:       'artisan',
+  ALL:         'artisan dépannage',
+}
 
-const propertyIcon = new L.Icon({
-  iconUrl: markerIcon,
-  iconRetinaUrl: markerIcon2x,
-  shadowUrl: markerShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-})
-
-const contractorIcon = L.divIcon({
-  className: '',
-  html: '<div style="width:16px;height:16px;background:#c4976a;border:2px solid white;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.3)"></div>',
-  iconSize: [16, 16],
-  iconAnchor: [8, 8],
-})
+function buildGoogleMapsEmbedUrl(category: string, city: string): string {
+  const kw = CATEGORY_KEYWORDS[category] ?? 'artisan'
+  const q = encodeURIComponent(`${kw} ${city} France`)
+  return `https://maps.google.com/maps?q=${q}&output=embed&hl=fr`
+}
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -191,134 +176,51 @@ function severityColor(s: string): string {
 
 const SIGNALED_RE = /🔧\s*\[PROBLÈME SIGNALÉ\]/i
 
-// ── Mini-map component ─────────────────────────────────────────────────────
+// ── Mini Google Maps embed (replaces Leaflet) ──────────────────────────────
 
-interface MiniMapWithLocationProps {
-  lat: number
-  lon: number
-  searchLocation?: { lat: number; lon: number }
-  contractors: Contractor[]
-}
-
-function MiniMapWithLocation({ lat, lon, contractors, searchLocation }: MiniMapWithLocationProps) {
-  const center: [number, number] = [lat, lon]
+function MiniMapWithLocation({ category, city }: { category: string; city: string }) {
   return (
-    <div style={{ height: 220, borderRadius: 10, overflow: 'hidden', border: `1px solid ${BAI.border}` }}>
-      <MapContainer
-        center={center}
-        zoom={13}
-        style={{ height: '100%', width: '100%' }}
-        scrollWheelZoom={false}
-        attributionControl={false}
-      >
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        <Marker position={center} icon={propertyIcon}>
-          <Popup>
-            <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.ink }}>Votre bien</span>
-          </Popup>
-        </Marker>
-        {searchLocation && contractors.map((c, i) => {
-          const markerLat = c.lat ?? (searchLocation.lat + (i % 3 - 1) * 0.005)
-          const markerLon = c.lon ?? (searchLocation.lon + (i % 5 - 2) * 0.005)
-          return (
-            <Marker key={c.id} position={[markerLat, markerLon]} icon={contractorIcon}>
-              <Popup>
-                <div style={{ fontFamily: BAI.fontBody, minWidth: 160 }}>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: BAI.ink, margin: '0 0 4px' }}>{c.name}</p>
-                  {c.distance != null && (
-                    <p style={{ fontSize: 11, color: BAI.inkFaint, margin: '0 0 4px' }}>
-                      {c.distance < 1 ? `${Math.round(c.distance * 1000)} m` : `${c.distance.toFixed(1)} km`}
-                    </p>
-                  )}
-                  {c.phone && (
-                    <a href={`tel:${c.phone}`} style={{ fontSize: 12, color: BAI.owner, display: 'block', marginTop: 4 }}>
-                      {c.phone}
-                    </a>
-                  )}
-                  {c.website && (
-                    <a href={c.website} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: BAI.caramel, display: 'block', marginTop: 2 }}>
-                      Site web
-                    </a>
-                  )}
-                  {c.googleMapsUrl && (
-                    <a href={c.googleMapsUrl} target="_blank" rel="noopener noreferrer"
-                       style={{ fontSize: 12, color: '#1a73e8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginTop: 4 }}>
-                      Voir sur Google Maps
-                    </a>
-                  )}
-                </div>
-              </Popup>
-            </Marker>
-          )
-        })}
-      </MapContainer>
+    <div style={{ height: 260, borderRadius: 10, overflow: 'hidden', border: `1px solid ${BAI.border}` }}>
+      <iframe
+        key={`${category}-${city}`}
+        src={buildGoogleMapsEmbedUrl(category, city)}
+        style={{ width: '100%', height: '100%', border: 'none' }}
+        allowFullScreen
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+        title="Artisans à proximité"
+      />
     </div>
   )
 }
 
-// ── Full map view ──────────────────────────────────────────────────────────
+// ── Full map view (Google Maps embed) ──────────────────────────────────────
 
 interface FullMapViewProps {
-  properties: Array<{ id: string; title: string; city: string; latitude: number | null; longitude: number | null }>
+  properties: Array<{ id: string; title: string; city: string }>
   categoryFilter: CategoryFilter
   onCategoryChange: (c: CategoryFilter) => void
-  mapContractors: Contractor[]
-  mapSearchLocation: { lat: number; lon: number } | null
-  isSearchingContractors: boolean
-  onPropertyClick: (property: { id: string; title: string; city: string; latitude: number; longitude: number }) => void
 }
 
-function FullMapView({
-  properties,
-  categoryFilter,
-  onCategoryChange,
-  mapContractors,
-  mapSearchLocation,
-  isSearchingContractors,
-  onPropertyClick,
-}: FullMapViewProps) {
-  const validProperties = properties.filter(p => p.latitude != null && p.longitude != null) as Array<{
-    id: string; title: string; city: string; latitude: number; longitude: number
-  }>
-  const missingCount = properties.length - validProperties.length
-
-  const defaultCenter: [number, number] =
-    validProperties.length > 0
-      ? [validProperties[0].latitude, validProperties[0].longitude]
-      : [46.603354, 1.888334] // France center
+function FullMapView({ properties, categoryFilter, onCategoryChange }: FullMapViewProps) {
+  const [selectedCity, setSelectedCity] = useState<string>(properties[0]?.city ?? 'Paris')
 
   const categoryOptions: Array<{ value: CategoryFilter; label: string }> = [
-    { value: 'ALL', label: 'Tous' },
+    { value: 'ALL', label: 'Artisans' },
     { value: 'PLOMBERIE', label: 'Plomberie' },
     { value: 'ELECTRICITE', label: 'Électricité' },
     { value: 'SERRURERIE', label: 'Serrurerie' },
     { value: 'CHAUFFAGE', label: 'Chauffage' },
-    { value: 'AUTRE', label: 'Autre' },
+    { value: 'AUTRE', label: 'Travaux' },
   ]
+
+  const embedSrc = buildGoogleMapsEmbedUrl(categoryFilter, selectedCity)
 
   return (
     <div>
-      {/* Category filter bar */}
-      <div
-        style={{
-          display: 'flex',
-          gap: 8,
-          flexWrap: 'wrap',
-          marginBottom: 16,
-          alignItems: 'center',
-        }}
-      >
-        <span
-          style={{
-            fontFamily: BAI.fontBody,
-            fontSize: 12,
-            fontWeight: 600,
-            color: BAI.inkMid,
-            marginRight: 4,
-          }}
-        >
-          Catégorie :
-        </span>
+      {/* Controls row */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14, alignItems: 'center' }}>
+        {/* Category pills */}
         {categoryOptions.map(opt => (
           <button
             key={opt.value}
@@ -340,214 +242,54 @@ function FullMapView({
             {opt.label}
           </button>
         ))}
-        {isSearchingContractors && (
-          <span
+        {/* Property city selector */}
+        {properties.length > 1 && (
+          <select
+            value={selectedCity}
+            onChange={e => setSelectedCity(e.target.value)}
             style={{
+              padding: '7px 12px',
+              borderRadius: 8,
+              border: `1px solid ${BAI.border}`,
+              background: BAI.bgMuted,
               fontFamily: BAI.fontBody,
               fontSize: 12,
-              color: BAI.caramel,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
+              color: BAI.ink,
+              outline: 'none',
+              cursor: 'pointer',
+              minHeight: 36,
+              marginLeft: 'auto',
             }}
           >
-            <Search style={{ width: 13, height: 13 }} />
-            Recherche en cours...
-          </span>
-        )}
-      </div>
-
-      {/* Missing coordinates warning */}
-      {missingCount > 0 && (
-        <div
-          style={{
-            marginBottom: 12,
-            padding: '10px 14px',
-            borderRadius: 8,
-            background: BAI.caramelLight,
-            border: `1px solid ${BAI.caramelBorder}`,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-          }}
-        >
-          <MapPin style={{ width: 14, height: 14, color: BAI.caramel, flexShrink: 0 }} />
-          <p
-            style={{
-              fontFamily: BAI.fontBody,
-              fontSize: 13,
-              color: BAI.caramel,
-              margin: 0,
-              fontWeight: 600,
-            }}
-          >
-            {missingCount} bien{missingCount > 1 ? 's' : ''} sans coordonnées GPS — éditez-les pour les afficher sur la carte
-          </p>
-        </div>
-      )}
-
-      {/* Map */}
-      <div
-        style={{
-          height: 'clamp(400px, calc(100vh - 320px), 700px)',
-          borderRadius: 12,
-          overflow: 'hidden',
-          border: `1px solid ${BAI.border}`,
-          boxShadow: BAI.shadowMd,
-        }}
-      >
-        {validProperties.length === 0 ? (
-          <div
-            style={{
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: BAI.bgMuted,
-            }}
-          >
-            <MapPin style={{ width: 40, height: 40, color: BAI.border, marginBottom: 12 }} />
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint, margin: 0 }}>
-              Aucun bien avec coordonnées GPS
-            </p>
-          </div>
-        ) : (
-          <MapContainer
-            center={defaultCenter}
-            zoom={validProperties.length === 1 ? 14 : 12}
-            style={{ height: '100%', width: '100%' }}
-            scrollWheelZoom
-          >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution="© OpenStreetMap contributors"
-            />
-
-            {/* Property markers */}
-            {validProperties.map(p => (
-              <Marker
-                key={p.id}
-                position={[p.latitude, p.longitude]}
-                icon={propertyIcon}
-                eventHandlers={{ click: () => onPropertyClick(p) }}
-              >
-                <Popup>
-                  <div style={{ fontFamily: BAI.fontBody, minWidth: 160 }}>
-                    <p style={{ fontSize: 13, fontWeight: 700, color: BAI.ink, margin: '0 0 4px' }}>{p.title}</p>
-                    <p style={{ fontSize: 12, color: BAI.inkFaint, margin: '0 0 8px' }}>{p.city}</p>
-                    <button
-                      onClick={() => onPropertyClick(p)}
-                      style={{
-                        padding: '6px 12px',
-                        borderRadius: 6,
-                        border: 'none',
-                        background: BAI.night,
-                        color: '#fff',
-                        fontFamily: BAI.fontBody,
-                        fontSize: 12,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        width: '100%',
-                      }}
-                    >
-                      Trouver artisans
-                    </button>
-                  </div>
-                </Popup>
-              </Marker>
+            {properties.map(p => (
+              <option key={p.id} value={p.city}>{p.title} — {p.city}</option>
             ))}
-
-            {/* Contractor markers */}
-            {mapSearchLocation &&
-              mapContractors.map((c, i) => {
-                const markerLat = c.lat ?? (mapSearchLocation.lat + (i % 3 - 1) * 0.005)
-                const markerLon = c.lon ?? (mapSearchLocation.lon + (i % 5 - 2) * 0.005)
-                return (
-                  <Marker key={c.id} position={[markerLat, markerLon]} icon={contractorIcon}>
-                    <Popup>
-                      <div style={{ fontFamily: BAI.fontBody, minWidth: 160 }}>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: BAI.ink, margin: '0 0 4px' }}>{c.name}</p>
-                        {c.distance != null && (
-                          <p style={{ fontSize: 11, color: BAI.inkFaint, margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <MapPin style={{ width: 10, height: 10 }} />
-                            {c.distance < 1 ? `${Math.round(c.distance * 1000)} m` : `${c.distance.toFixed(1)} km`}
-                          </p>
-                        )}
-                        {c.address && (
-                          <p style={{ fontSize: 11, color: BAI.inkFaint, margin: '0 0 8px' }}>{c.address}</p>
-                        )}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                          {c.phone && (
-                            <a
-                              href={`tel:${c.phone}`}
-                              style={{ fontSize: 12, color: BAI.owner, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none' }}
-                            >
-                              <Phone style={{ width: 11, height: 11 }} /> {c.phone}
-                            </a>
-                          )}
-                          {c.website && (
-                            <a
-                              href={c.website}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{ fontSize: 12, color: BAI.caramel, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none' }}
-                            >
-                              <Globe style={{ width: 11, height: 11 }} /> Site web
-                            </a>
-                          )}
-                          {c.googleMapsUrl && (
-                            <a
-                              href={c.googleMapsUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{ fontSize: 12, color: '#1a73e8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginTop: 4 }}
-                            >
-                              Voir sur Google Maps
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    </Popup>
-                  </Marker>
-                )
-              })}
-          </MapContainer>
+          </select>
         )}
       </div>
 
-      {/* Contractor count below map */}
-      {mapContractors.length > 0 && (
-        <p
-          style={{
-            fontFamily: BAI.fontBody,
-            fontSize: 13,
-            color: BAI.inkMid,
-            margin: '10px 0 0',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-          }}
-        >
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 20,
-              height: 20,
-              borderRadius: 999,
-              background: BAI.caramel,
-              color: '#fff',
-              fontSize: 11,
-              fontWeight: 700,
-            }}
-          >
-            {mapContractors.length}
-          </span>
-          artisan{mapContractors.length > 1 ? 's' : ''} trouvé{mapContractors.length > 1 ? 's' : ''} à proximité — cliquez sur un marqueur orange pour les détails
-        </p>
-      )}
+      {/* Google Maps iframe */}
+      <div style={{
+        height: 'clamp(420px, calc(100vh - 300px), 700px)',
+        borderRadius: 12,
+        overflow: 'hidden',
+        border: `1px solid ${BAI.border}`,
+        boxShadow: BAI.shadowMd,
+      }}>
+        <iframe
+          key={embedSrc}
+          src={embedSrc}
+          style={{ width: '100%', height: '100%', border: 'none' }}
+          allowFullScreen
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+          title="Recherche artisans Google Maps"
+        />
+      </div>
+
+      <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '10px 0 0' }}>
+        Résultats Google Maps pour « {CATEGORY_KEYWORDS[categoryFilter] ?? 'artisan'} » à {selectedCity}
+      </p>
     </div>
   )
 }
@@ -561,12 +303,7 @@ export default function Maintenance() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [contractorsMap, setContractorsMap] = useState<Record<string, ContractorResult>>({})
   const [loadingContractors, setLoadingContractors] = useState<string | null>(null)
-
-  // Map view state
   const [mapCategoryFilter, setMapCategoryFilter] = useState<CategoryFilter>('ALL')
-  const [mapContractors, setMapContractors] = useState<Contractor[]>([])
-  const [mapSearchLocation, setMapSearchLocation] = useState<{ lat: number; lon: number } | null>(null)
-  const [isSearchingMap, setIsSearchingMap] = useState(false)
 
   const [form, setForm] = useState<CreateMaintenanceInput>({
     propertyId: '',
@@ -659,39 +396,6 @@ export default function Maintenance() {
       }
     }
   }
-
-  // Map: search contractors by category for a given property
-  const handleMapContractorSearch = useCallback(
-    async (property: { id: string; title: string; city: string; latitude: number; longitude: number }, category: CategoryFilter) => {
-      setIsSearchingMap(true)
-      try {
-        const result = await maintenanceService.findContractors({
-          category: category === 'ALL' ? 'PLOMBERIE' : category,
-          city: property.city,
-          latitude: property.latitude,
-          longitude: property.longitude,
-        })
-        setMapContractors(result.contractors)
-        setMapSearchLocation(result.searchLocation ?? { lat: property.latitude, lon: property.longitude })
-      } catch {
-        toast.error("Erreur lors de la recherche d'artisans")
-      } finally {
-        setIsSearchingMap(false)
-      }
-    },
-    []
-  )
-
-  // Map: when category changes, re-search using first valid property (if any)
-  useEffect(() => {
-    if (viewMode !== 'carte') return
-    const firstValid = myProperties.find(p => p.latitude != null && p.longitude != null)
-    if (!firstValid || firstValid.latitude == null || firstValid.longitude == null) return
-    handleMapContractorSearch(
-      { id: firstValid.id, title: firstValid.title, city: firstValid.city, latitude: firstValid.latitude, longitude: firstValid.longitude },
-      mapCategoryFilter
-    )
-  }, [mapCategoryFilter, viewMode]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const inputStyle: React.CSSProperties = {
     width: '100%',
@@ -1010,10 +714,6 @@ export default function Maintenance() {
             properties={myProperties}
             categoryFilter={mapCategoryFilter}
             onCategoryChange={setMapCategoryFilter}
-            mapContractors={mapContractors}
-            mapSearchLocation={mapSearchLocation}
-            isSearchingContractors={isSearchingMap}
-            onPropertyClick={p => handleMapContractorSearch(p, mapCategoryFilter)}
           />
         )}
 
@@ -1093,7 +793,6 @@ export default function Maintenance() {
                   const analyzing = isAnalyzing === req.id
                   const isFromChat = req.description ? SIGNALED_RE.test(req.description) : false
                   const fullProp = myProperties.find(p => req.property?.title && p.title === req.property.title)
-                  const hasCoords = fullProp && fullProp.latitude != null && fullProp.longitude != null
 
                   return (
                     <div
@@ -1437,30 +1136,11 @@ export default function Maintenance() {
                                   Recherche d'artisans en cours...
                                 </p>
                               </div>
-                            ) : hasCoords && fullProp ? (
+                            ) : (
                               <MiniMapWithLocation
-                                lat={fullProp.latitude as number}
-                                lon={fullProp.longitude as number}
-                                contractors={contractorsMap[req.id]?.contractors ?? []}
-                                searchLocation={contractorsMap[req.id]?.searchLocation}
+                                category={req.category}
+                                city={fullProp?.city ?? 'France'}
                               />
-                            ) : !hasCoords && (
-                              <div
-                                style={{
-                                  padding: '12px 16px',
-                                  borderRadius: 10,
-                                  background: BAI.caramelLight,
-                                  border: `1px solid ${BAI.caramelBorder}`,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 8,
-                                }}
-                              >
-                                <MapPin style={{ width: 14, height: 14, color: BAI.caramel, flexShrink: 0 }} />
-                                <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.caramel, margin: 0, fontWeight: 600 }}>
-                                  Ce bien n'a pas de coordonnées GPS — la carte n'est pas disponible
-                                </p>
-                              </div>
                             )}
                           </div>
 

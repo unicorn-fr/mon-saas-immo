@@ -707,6 +707,28 @@ export default function Finance() {
                   </span>
                 </div>
 
+                {/* Always-visible encadrement links */}
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                  <a
+                    href="https://www.encadrementdesloyers.gouv.fr/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: `1px solid ${BAI.ownerBorder}`, background: BAI.ownerLight, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.owner }}
+                  >
+                    <ExternalLink style={{ width: 12, height: 12 }} />
+                    Vérifier l'encadrement des loyers
+                  </a>
+                  <a
+                    href="https://www.anil.org/outils/simulateurs-en-ligne/estimer-votre-loyer/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkMid }}
+                  >
+                    <ExternalLink style={{ width: 12, height: 12 }} />
+                    Simulateur ANIL
+                  </a>
+                </div>
+
                 {/* Search input with magnifier */}
                 <div style={{ position: 'relative', marginBottom: 16 }}>
                   <Search style={{
