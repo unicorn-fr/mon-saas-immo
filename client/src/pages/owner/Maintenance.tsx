@@ -47,9 +47,10 @@ const CATEGORY_KEYWORDS: Record<string, string> = {
   ALL:         'artisan dépannage',
 }
 
-function buildGoogleMapsEmbedUrl(category: string, city: string): string {
+function buildGoogleMapsEmbedUrl(category: string, city: string, address?: string): string {
   const kw = CATEGORY_KEYWORDS[category] ?? 'artisan'
-  const q = encodeURIComponent(`${kw} ${city} France`)
+  const location = address ? `${address}, ${city}` : `${city} France`
+  const q = encodeURIComponent(`${kw} près de ${location}`)
   return `https://maps.google.com/maps?q=${q}&output=embed&hl=fr`
 }
 
@@ -178,12 +179,12 @@ const SIGNALED_RE = /🔧\s*\[PROBLÈME SIGNALÉ\]/i
 
 // ── Mini Google Maps embed (replaces Leaflet) ──────────────────────────────
 
-function MiniMapWithLocation({ category, city }: { category: string; city: string }) {
+function MiniMapWithLocation({ category, city, address }: { category: string; city: string; address?: string }) {
   return (
     <div style={{ height: 260, borderRadius: 10, overflow: 'hidden', border: `1px solid ${BAI.border}` }}>
       <iframe
-        key={`${category}-${city}`}
-        src={buildGoogleMapsEmbedUrl(category, city)}
+        key={`${category}-${city}-${address ?? ''}`}
+        src={buildGoogleMapsEmbedUrl(category, city, address)}
         style={{ width: '100%', height: '100%', border: 'none' }}
         allowFullScreen
         loading="lazy"
@@ -197,13 +198,16 @@ function MiniMapWithLocation({ category, city }: { category: string; city: strin
 // ── Full map view (Google Maps embed) ──────────────────────────────────────
 
 interface FullMapViewProps {
-  properties: Array<{ id: string; title: string; city: string }>
+  properties: Array<{ id: string; title: string; city: string; address?: string }>
   categoryFilter: CategoryFilter
   onCategoryChange: (c: CategoryFilter) => void
 }
 
 function FullMapView({ properties, categoryFilter, onCategoryChange }: FullMapViewProps) {
-  const [selectedCity, setSelectedCity] = useState<string>(properties[0]?.city ?? 'Paris')
+  const [selectedPropId, setSelectedPropId] = useState<string>(properties[0]?.id ?? '')
+  const [hoveredPill, setHoveredPill] = useState<CategoryFilter | null>(null)
+
+  const selectedProp = properties.find(p => p.id === selectedPropId) ?? properties[0]
 
   const categoryOptions: Array<{ value: CategoryFilter; label: string }> = [
     { value: 'ALL', label: 'Artisans' },
@@ -214,39 +218,45 @@ function FullMapView({ properties, categoryFilter, onCategoryChange }: FullMapVi
     { value: 'AUTRE', label: 'Travaux' },
   ]
 
-  const embedSrc = buildGoogleMapsEmbedUrl(categoryFilter, selectedCity)
+  const embedSrc = buildGoogleMapsEmbedUrl(categoryFilter, selectedProp?.city ?? 'Paris', selectedProp?.address)
 
   return (
     <div>
       {/* Controls row */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14, alignItems: 'center' }}>
         {/* Category pills */}
-        {categoryOptions.map(opt => (
-          <button
-            key={opt.value}
-            onClick={() => onCategoryChange(opt.value)}
-            style={{
-              padding: '7px 16px',
-              borderRadius: 999,
-              border: categoryFilter === opt.value ? 'none' : `1px solid ${BAI.border}`,
-              background: categoryFilter === opt.value ? BAI.night : 'transparent',
-              color: categoryFilter === opt.value ? '#fff' : BAI.inkMid,
-              fontFamily: BAI.fontBody,
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer',
-              minHeight: 36,
-              transition: BAI.transition,
-            }}
-          >
-            {opt.label}
-          </button>
-        ))}
-        {/* Property city selector */}
+        {categoryOptions.map(opt => {
+          const isActive = categoryFilter === opt.value
+          const isHovered = hoveredPill === opt.value
+          return (
+            <button
+              key={opt.value}
+              onClick={() => onCategoryChange(opt.value)}
+              onMouseEnter={() => setHoveredPill(opt.value)}
+              onMouseLeave={() => setHoveredPill(null)}
+              style={{
+                padding: '7px 16px',
+                borderRadius: 999,
+                border: isActive ? 'none' : `1px solid ${BAI.border}`,
+                background: isActive ? BAI.night : isHovered ? BAI.bgMuted : 'transparent',
+                color: isActive ? '#fff' : isHovered ? BAI.ink : BAI.inkMid,
+                fontFamily: BAI.fontBody,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                minHeight: 36,
+                transition: BAI.transition,
+              }}
+            >
+              {opt.label}
+            </button>
+          )
+        })}
+        {/* Property selector */}
         {properties.length > 1 && (
           <select
-            value={selectedCity}
-            onChange={e => setSelectedCity(e.target.value)}
+            value={selectedPropId}
+            onChange={e => setSelectedPropId(e.target.value)}
             style={{
               padding: '7px 12px',
               borderRadius: 8,
@@ -262,11 +272,19 @@ function FullMapView({ properties, categoryFilter, onCategoryChange }: FullMapVi
             }}
           >
             {properties.map(p => (
-              <option key={p.id} value={p.city}>{p.title} — {p.city}</option>
+              <option key={p.id} value={p.id}>
+                {p.title} — {p.address ? `${p.address}, ` : ''}{p.city}
+              </option>
             ))}
           </select>
         )}
       </div>
+
+      {/* Location info text */}
+      <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: 5 }}>
+        <MapPin style={{ width: 12, height: 12 }} />
+        Artisans trouvés près de :&nbsp;<strong style={{ color: BAI.ink }}>{selectedProp?.address ? `${selectedProp.address}, ${selectedProp.city}` : selectedProp?.city}</strong>
+      </p>
 
       {/* Google Maps iframe */}
       <div style={{
@@ -288,7 +306,7 @@ function FullMapView({ properties, categoryFilter, onCategoryChange }: FullMapVi
       </div>
 
       <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '10px 0 0' }}>
-        Résultats Google Maps pour « {CATEGORY_KEYWORDS[categoryFilter] ?? 'artisan'} » à {selectedCity}
+        Résultats Google Maps pour « {CATEGORY_KEYWORDS[categoryFilter] ?? 'artisan'} » près de {selectedProp?.address ? `${selectedProp.address}, ${selectedProp.city}` : selectedProp?.city}
       </p>
     </div>
   )
@@ -711,7 +729,7 @@ export default function Maintenance() {
         {/* ── Carte view ─────────────────────────────────────────────────── */}
         {viewMode === 'carte' && (
           <FullMapView
-            properties={myProperties}
+            properties={myProperties.map(p => ({ id: p.id, title: p.title, city: p.city, address: p.address }))}
             categoryFilter={mapCategoryFilter}
             onCategoryChange={setMapCategoryFilter}
           />
@@ -778,13 +796,23 @@ export default function Maintenance() {
                 Chargement...
               </div>
             ) : filtered.length === 0 ? (
-              <div style={{ padding: 60, textAlign: 'center' }}>
-                <Wrench
-                  style={{ width: 40, height: 40, color: BAI.border, margin: '0 auto 12px', display: 'block' }}
-                />
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint, margin: 0 }}>
-                  Aucune demande de maintenance
+              <div style={{ padding: '60px 20px', textAlign: 'center', background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16 }}>
+                <div style={{ width: 64, height: 64, borderRadius: 16, background: BAI.bgMuted, border: `1px solid ${BAI.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                  <Wrench style={{ width: 28, height: 28, color: BAI.inkFaint }} />
+                </div>
+                <p style={{ fontFamily: BAI.fontDisplay, fontSize: 22, fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '0 0 8px' }}>
+                  Aucune demande
                 </p>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint, margin: '0 0 20px' }}>
+                  {statusFilter !== 'ALL' ? 'Aucune demande avec ce statut.' : 'Déclarez un problème pour commencer.'}
+                </p>
+                <button
+                  onClick={() => setShowForm(true)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 22px', borderRadius: 10, border: 'none', background: BAI.night, color: '#fff', fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+                >
+                  <PlusCircle style={{ width: 16, height: 16 }} />
+                  Nouvelle demande
+                </button>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -799,10 +827,12 @@ export default function Maintenance() {
                       key={req.id}
                       style={{
                         background: BAI.bgSurface,
-                        border: `1px solid ${BAI.border}`,
+                        border: `1px solid ${req.priority === 'URGENT' ? '#fca5a5' : BAI.border}`,
+                        borderLeft: req.priority === 'URGENT' ? `4px solid ${BAI.error}` : req.priority === 'HIGH' ? `4px solid ${BAI.caramel}` : `1px solid ${BAI.border}`,
                         borderRadius: 12,
                         overflow: 'hidden',
                         boxShadow: BAI.shadowSm,
+                        transition: BAI.transition,
                       }}
                     >
                       {/* From chat badge */}
@@ -844,9 +874,9 @@ export default function Maintenance() {
                         {/* Category icon circle */}
                         <div
                           style={{
-                            width: 44,
-                            height: 44,
-                            borderRadius: 12,
+                            width: 46,
+                            height: 46,
+                            borderRadius: 14,
                             background: BAI.bgMuted,
                             border: `1px solid ${BAI.border}`,
                             display: 'flex',
@@ -1140,6 +1170,7 @@ export default function Maintenance() {
                               <MiniMapWithLocation
                                 category={req.category}
                                 city={fullProp?.city ?? 'France'}
+                                address={fullProp?.address}
                               />
                             )}
                           </div>

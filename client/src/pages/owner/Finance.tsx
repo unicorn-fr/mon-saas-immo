@@ -475,6 +475,8 @@ export default function Finance() {
           cursor: 'pointer',
           transition: 'all 0.15s',
           minHeight: 44,
+          flexShrink: 0,
+          whiteSpace: 'nowrap',
         }}
       >
         {label}
@@ -492,7 +494,7 @@ export default function Finance() {
     padding: '24px 28px',
     boxShadow: '0 4px 24px rgba(13,12,10,0.06)',
     flex: 1,
-    minWidth: 200,
+    minWidth: 'clamp(180px, 45%, 260px)',
   }
 
   return (
@@ -539,7 +541,7 @@ export default function Finance() {
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 28, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 28, overflowX: 'auto', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
           <TabPill id="summary" label="Résumé & Graphiques" />
           <TabPill id="expenses" label="Dépenses" />
           <TabPill id="loans" label="Emprunts" />
@@ -555,7 +557,7 @@ export default function Finance() {
             {/* 3 Glassmorphism KPI cards */}
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
               {/* Revenue 12 mois */}
-              <div style={glassKpiStyle}>
+              <div style={{ ...glassKpiStyle, borderLeft: `3px solid ${BAI.owner}` }}>
                 <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 8px' }}>
                   Revenus 12 mois
                 </p>
@@ -568,7 +570,7 @@ export default function Finance() {
               </div>
 
               {/* Cash-flow net */}
-              <div style={glassKpiStyle}>
+              <div style={{ ...glassKpiStyle, borderLeft: `3px solid ${summary ? (summary.netCashFlow >= 0 ? BAI.tenant : BAI.error) : BAI.caramel}` }}>
                 <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 8px' }}>
                   Cash-flow net
                 </p>
@@ -581,7 +583,7 @@ export default function Finance() {
               </div>
 
               {/* Taux d'occupation */}
-              <div style={glassKpiStyle}>
+              <div style={{ ...glassKpiStyle, borderLeft: `3px solid ${summary ? (summary.occupancyRate >= 80 ? BAI.tenant : BAI.caramel) : BAI.caramel}` }}>
                 <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 8px' }}>
                   Taux d'occupation
                 </p>
@@ -601,6 +603,7 @@ export default function Finance() {
                 border: `1px solid ${BAI.border}`,
                 borderRadius: 12,
                 padding: 24,
+                boxShadow: '0 1px 3px rgba(13,12,10,0.04)',
               }}
             >
               <p
@@ -692,7 +695,7 @@ export default function Finance() {
 
             {/* Bar chart: revenus vs dépenses par mois */}
             {chartData.length > 0 && (
-              <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: 24 }}>
+              <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(13,12,10,0.04)' }}>
                 <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: BAI.ink, margin: '0 0 20px', letterSpacing: '0.02em' }}>
                   Revenus vs Dépenses — mensuel
                 </p>
@@ -720,6 +723,10 @@ export default function Finance() {
                 border: `1px solid ${BAI.border}`,
                 borderRadius: 12,
                 padding: 24,
+                maxWidth: 680,
+                width: '100%',
+                alignSelf: 'center',
+                boxShadow: '0 1px 3px rgba(13,12,10,0.04)',
               }}
             >
               {/* Header */}
@@ -749,7 +756,7 @@ export default function Finance() {
               {/* Always-visible encadrement links */}
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
                 <a
-                  href="https://www.encadrementdesloyers.gouv.fr/"
+                  href="https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: `1px solid ${BAI.ownerBorder}`, background: BAI.ownerLight, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.owner }}
@@ -758,7 +765,7 @@ export default function Finance() {
                   Vérifier l'encadrement des loyers
                 </a>
                 <a
-                  href="https://www.anil.org/outils/simulateurs-en-ligne/estimer-votre-loyer/"
+                  href="https://www.anil.org/outils/simulateurs-en-ligne/simulateurs-locations/"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkMid }}
@@ -842,7 +849,7 @@ export default function Finance() {
                     {cityResult.encadrement && (
                       <div style={{ marginBottom: 12 }}>
                         <a
-                          href={cityResult.sourceUrl ?? 'https://www.encadrementdesloyers.gouv.fr/'}
+                          href={cityResult.sourceUrl ?? 'https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers'}
                           target="_blank"
                           rel="noopener noreferrer"
                           style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 999, background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.owner }}
@@ -973,6 +980,7 @@ export default function Finance() {
                   border: `1px solid ${BAI.border}`,
                   borderRadius: 12,
                   padding: 20,
+                  boxShadow: '0 1px 3px rgba(13,12,10,0.04)',
                 }}
               >
                 <p
@@ -1123,6 +1131,7 @@ export default function Finance() {
                 border: `1px solid ${BAI.border}`,
                 borderRadius: 12,
                 overflow: 'hidden',
+                boxShadow: '0 1px 3px rgba(13,12,10,0.04)',
               }}
             >
               {expenses.length === 0 ? (
@@ -1276,6 +1285,7 @@ export default function Finance() {
                       border: `1px solid ${BAI.border}`,
                       borderRadius: 12,
                       padding: 20,
+                      boxShadow: '0 1px 3px rgba(13,12,10,0.04)',
                     }}
                   >
                     {/* Property header row */}
@@ -1712,7 +1722,7 @@ export default function Finance() {
               const encAlert = analysis?.encadrementStatus === 'above_limit'
 
               return (
-                <div key={property.id} style={{ background: BAI.bgSurface, border: `1px solid ${encAlert ? BAI.error : BAI.border}`, borderRadius: 12, padding: 20 }}>
+                <div key={property.id} style={{ background: BAI.bgSurface, border: `1px solid ${encAlert ? BAI.error : BAI.border}`, borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(13,12,10,0.04)' }}>
 
                   {/* Top row: bien + verdict */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
@@ -1735,8 +1745,8 @@ export default function Finance() {
                   {analysis && (
                     <>
                       {/* Votre loyer */}
-                      <div style={{ display: 'flex', gap: 0, borderRadius: 10, overflow: 'hidden', border: `1px solid ${BAI.border}`, marginBottom: 14 }}>
-                        <div style={{ flex: 1, padding: '12px 16px', background: `${BAI.owner}08`, borderRight: `1px solid ${BAI.border}` }}>
+                      <div style={{ display: 'flex', gap: 0, borderRadius: 10, overflow: 'hidden', border: `1px solid ${BAI.border}`, marginBottom: 14, flexWrap: 'wrap' }}>
+                        <div style={{ flex: 1, minWidth: 120, padding: '12px 16px', background: `${BAI.owner}08`, borderRight: `1px solid ${BAI.border}` }}>
                           <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: '0 0 4px' }}>Votre loyer</p>
                           <p style={{ fontFamily: BAI.fontDisplay, fontSize: 20, fontWeight: 700, fontStyle: 'italic', color: BAI.owner, margin: 0 }}>{analysis.rentPerM2.toFixed(1)} €/m²</p>
                         </div>
@@ -1747,7 +1757,7 @@ export default function Finance() {
                           const maxM = Math.round(analysis.market.maxRentM2 * f * 10) / 10
                           return (
                             <>
-                              <div style={{ flex: 2, padding: '12px 16px' }}>
+                              <div style={{ flex: 2, minWidth: 160, padding: '12px 16px' }}>
                                 <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.inkFaint, textTransform: 'uppercase', letterSpacing: '0.09em', margin: '0 0 6px' }}>Non meublé</p>
                                 <div style={{ display: 'flex', gap: 16 }}>
                                   {[
@@ -1762,7 +1772,7 @@ export default function Finance() {
                                   ))}
                                 </div>
                               </div>
-                              <div style={{ flex: 2, padding: '12px 16px', borderLeft: `1px solid ${BAI.border}`, background: `${BAI.caramel}06` }}>
+                              <div style={{ flex: 2, minWidth: 160, padding: '12px 16px', borderLeft: `1px solid ${BAI.border}`, background: `${BAI.caramel}06` }}>
                                 <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.caramel, textTransform: 'uppercase', letterSpacing: '0.09em', margin: '0 0 6px' }}>Meublé (+18 %)</p>
                                 <div style={{ display: 'flex', gap: 16 }}>
                                   {[
@@ -1804,25 +1814,25 @@ export default function Finance() {
 
                       {/* Encadrement links */}
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
-                        <a href="https://www.encadrementdesloyers.gouv.fr/" target="_blank" rel="noopener noreferrer"
+                        <a href="https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers" target="_blank" rel="noopener noreferrer"
                           style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 12px', borderRadius: 8, border: `1px solid ${BAI.ownerBorder}`, background: BAI.ownerLight, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.owner }}>
                           <ExternalLink style={{ width: 11, height: 11 }} />
                           Vérifier l'encadrement des loyers
                         </a>
                         {(() => {
                           const ENCADREMENT_LINKS: Record<string, { label: string; url: string }> = {
-                            'paris': { label: 'Encadrement Paris', url: 'https://www.paris.fr/encadrementdesloyers' },
-                            'lille': { label: 'Encadrement Lille', url: 'https://www.encadrementdesloyers.gouv.fr/' },
-                            'hellemmes': { label: 'Encadrement Hellemmes', url: 'https://www.encadrementdesloyers.gouv.fr/' },
-                            'loos': { label: 'Encadrement Loos', url: 'https://www.encadrementdesloyers.gouv.fr/' },
-                            'lyon': { label: 'Encadrement Lyon Métropole', url: 'https://www.grandlyon.com/services/encadrement-des-loyers.html' },
-                            'bordeaux': { label: 'Encadrement Bordeaux', url: 'https://www.bordeaux-metropole.fr/Missions/Logement-habitat/Encadrement-des-loyers' },
-                            'montpellier': { label: 'Encadrement Montpellier', url: 'https://www.encadrementdesloyers.gouv.fr/' },
-                            'strasbourg': { label: 'Encadrement Strasbourg', url: 'https://www.encadrementdesloyers.gouv.fr/' },
-                            'grenoble': { label: 'Encadrement Grenoble', url: 'https://www.encadrementdesloyers.gouv.fr/' },
-                            'bayonne': { label: 'Encadrement Pays Basque', url: 'https://www.encadrementdesloyers.gouv.fr/' },
-                            'biarritz': { label: 'Encadrement Pays Basque', url: 'https://www.encadrementdesloyers.gouv.fr/' },
-                            'anglet': { label: 'Encadrement Pays Basque', url: 'https://www.encadrementdesloyers.gouv.fr/' },
+                            'paris': { label: 'Référence loyer Paris — DRIHL', url: 'https://www.referenceloyer.drihl.ile-de-france.developpement-durable.gouv.fr/paris/' },
+                            'lille': { label: 'Encadrement Lille Métropole', url: 'https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers' },
+                            'hellemmes': { label: 'Encadrement Hellemmes', url: 'https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers' },
+                            'loos': { label: 'Encadrement Loos', url: 'https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers' },
+                            'lyon': { label: 'Encadrement Lyon Métropole', url: 'https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers' },
+                            'bordeaux': { label: 'Encadrement Bordeaux Métropole', url: 'https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers' },
+                            'montpellier': { label: 'Encadrement Montpellier', url: 'https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers' },
+                            'strasbourg': { label: 'Encadrement Strasbourg', url: 'https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers' },
+                            'grenoble': { label: 'Encadrement Grenoble', url: 'https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers' },
+                            'bayonne': { label: 'Encadrement Pays Basque', url: 'https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers' },
+                            'biarritz': { label: 'Encadrement Pays Basque', url: 'https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers' },
+                            'anglet': { label: 'Encadrement Pays Basque', url: 'https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers' },
                           }
                           const cityKey = (analysis.market?.city ?? property.city ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
                           const cityLink = ENCADREMENT_LINKS[cityKey]
@@ -1920,7 +1930,7 @@ export default function Finance() {
                 Aucun bien enregistré
               </div>
             ) : Object.keys(paymentsByContract).length === 0 ? (
-              <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: 40, textAlign: 'center' }}>
+              <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: 40, textAlign: 'center', boxShadow: '0 1px 3px rgba(13,12,10,0.04)' }}>
                 <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint, margin: '0 0 16px' }}>
                   Aucun paiement enregistré pour le moment.
                 </p>
@@ -1940,7 +1950,7 @@ export default function Finance() {
                 const currentMonthLabel = `${MONTH_NAMES_FR[now.getMonth()]} ${now.getFullYear()}`
 
                 return (
-                  <div key={contractId} style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, overflow: 'hidden' }}>
+                  <div key={contractId} style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(13,12,10,0.04)' }}>
                     {/* Contract header */}
                     <div style={{ padding: '18px 24px', borderBottom: `1px solid ${BAI.border}`, background: BAI.bgMuted, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
                       <div>
@@ -2070,7 +2080,7 @@ export default function Finance() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
             {/* Form card */}
-            <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: 'clamp(20px,4vw,32px)' }}>
+            <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: 'clamp(20px,4vw,32px)', boxShadow: '0 1px 3px rgba(13,12,10,0.04)' }}>
               <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 6px' }}>
                 Outil personnalisé
               </p>
@@ -2210,7 +2220,7 @@ export default function Finance() {
 
             {/* Results card */}
             {fiscalResult && (
-              <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, overflow: 'hidden' }}>
+              <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(13,12,10,0.04)' }}>
                 {/* Recommended regime header */}
                 <div style={{ padding: '20px 28px', background: BAI.ownerLight, borderBottom: `1px solid ${BAI.ownerBorder}`, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
                   <CheckCircle2 style={{ width: 22, height: 22, color: BAI.owner, flexShrink: 0 }} />
