@@ -11,8 +11,77 @@ export interface RentalMarketData {
   encadrementRef?: number    // loyer de référence €/m²
   encadrementMaj?: number    // majoré = ref * 1.2
   encadrementMin?: number    // minoré = ref * 0.8
-  source: 'paris_arrondissement' | 'city' | 'department' | 'region' | 'api_live'
+  source: 'paris_arrondissement' | 'city' | 'department' | 'region' | 'api_live' | 'anil_2025'
   label: string
+  sourceUrl?: string
+  sourceName?: string
+  nbObs?: number             // nombre d'observations (qualité ANIL)
+  r2?: number                // coefficient de détermination (qualité ANIL)
+}
+
+// ── ANIL 2025 API (Carte des Loyers officielle) ──────────────────────────────
+// Source: ANIL + SeLoger + leboncoin, données T3 2025, 34 900 communes
+// API: koumoul.com/data-fair (data.gouv.fr dataset)
+interface ANILResult {
+  libgeo: string
+  loypredm2: number
+  lwripm2: number
+  upripm2: number
+  nbobs_com?: number
+  r2_adj?: number
+}
+
+let anilCache: Map<string, RentalMarketData | null> = new Map()
+let anilCacheTime = 0
+const ANIL_TTL = 24 * 3600 * 1000 // 24h
+
+const ANIL_DATASET_ID = 'qgkdrq4knk147b7no6jnktvl' // Appartements 2025
+const ANIL_SOURCE_URL = 'https://www.data.gouv.fr/datasets/carte-des-loyers-indicateurs-de-loyers-dannonce-par-commune-en-2025/'
+const ANIL_SOURCE_NAME = 'Carte des Loyers 2025 — ANIL/SeLoger/leboncoin'
+
+export async function fetchANILRentData(city: string): Promise<RentalMarketData | null> {
+  // Check cache
+  if (Date.now() - anilCacheTime > ANIL_TTL) { anilCache = new Map(); anilCacheTime = Date.now() }
+  const cacheKey = city.toLowerCase().trim()
+  if (anilCache.has(cacheKey)) return anilCache.get(cacheKey) ?? null
+
+  try {
+    const url = `https://koumoul.com/data-fair/api/v1/datasets/${ANIL_DATASET_ID}/lines?q=${encodeURIComponent(city)}&q_fields=libgeo&page_size=10&select=libgeo,loypredm2,lwripm2,upripm2,nbobs_com,r2_adj`
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000) })
+    if (!res.ok) { anilCache.set(cacheKey, null); return null }
+    const data = await res.json() as { results?: ANILResult[] }
+    const results = data.results ?? []
+    if (results.length === 0) { anilCache.set(cacheKey, null); return null }
+
+    // Find best match: prefer exact name match, then highest nbobs_com
+    const cityNorm = city.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    const exact = results.find(r => r.libgeo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === cityNorm)
+    const best = exact ?? results.sort((a, b) => (b.nbobs_com ?? 0) - (a.nbobs_com ?? 0))[0]
+
+    if (!best?.loypredm2) { anilCache.set(cacheKey, null); return null }
+
+    const avg = Math.round(best.loypredm2 * 10) / 10
+    const min = Math.round((best.lwripm2 ?? best.loypredm2 * 0.85) * 10) / 10
+    const max = Math.round((best.upripm2 ?? best.loypredm2 * 1.15) * 10) / 10
+
+    const result: RentalMarketData = {
+      avgRentM2: avg,
+      minRentM2: min,
+      maxRentM2: max,
+      encadrement: false, // ANIL does not provide encadrement — handled separately
+      source: 'anil_2025',
+      label: best.libgeo,
+      sourceUrl: ANIL_SOURCE_URL,
+      sourceName: ANIL_SOURCE_NAME,
+      nbObs: best.nbobs_com,
+      r2: best.r2_adj,
+    }
+    anilCache.set(cacheKey, result)
+    return result
+  } catch {
+    anilCache.set(cacheKey, null)
+    return null
+  }
 }
 
 export interface EncadrementResult {
@@ -663,7 +732,24 @@ export async function findRentalMarketData(
     }
   }
 
-  // 2. Paris arrondissement detection
+  // 2. ANIL 2025 live API — primary source for all French communes
+  try {
+    const anil = await fetchANILRentData(city)
+    if (anil) {
+      // Merge encadrement info from static data if available
+      const staticKey = normalize(city)
+      const staticData = CITIES[staticKey]
+      if (staticData?.encadrement) {
+        anil.encadrement = true
+        anil.encadrementRef = staticData.encadrementRef
+        anil.encadrementMaj = staticData.encadrementMaj
+        anil.encadrementMin = staticData.encadrementMin
+      }
+      return anil
+    }
+  } catch { /* fall through */ }
+
+  // 3. Paris arrondissement detection
   if (/paris/i.test(city) || /^75\d{3}$/.test(postalCode ?? '')) {
     const arr = parsePariArrondissement(combined) ?? parsePariArrondissement(postalCode ?? '')
     if (arr) return PARIS_ARRONDISSEMENTS[arr]

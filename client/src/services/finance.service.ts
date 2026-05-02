@@ -28,7 +28,7 @@ export interface MarketAnalysis {
   propertyId: string
   propertyTitle: string
   rentPerM2: number
-  market: { city: string; avgRentM2: number; minRentM2: number; maxRentM2: number } | null
+  market: { city: string; avgRentM2: number; minRentM2: number; maxRentM2: number; sourceUrl?: string; sourceName?: string; nbObs?: number; r2?: number } | null
   vsMarket: 'below' | 'inline' | 'above'
   vsMarketPct: number
   advice: string

@@ -221,7 +221,7 @@ router.get('/market-analysis/:propertyId', async (req, res) => {
           propertyId: property.id,
           propertyTitle: property.title,
           rentPerM2,
-          market: market ? { city: market.label, avgRentM2: market.avgRentM2, minRentM2: market.minRentM2, maxRentM2: market.maxRentM2, source: market.source } : null,
+          market: market ? { city: market.label, avgRentM2: market.avgRentM2, minRentM2: market.minRentM2, maxRentM2: market.maxRentM2, source: market.source, sourceUrl: market.sourceUrl, sourceName: market.sourceName, nbObs: market.nbObs, r2: market.r2 } : null,
           vsMarket,
           vsMarketPct,
           advice,

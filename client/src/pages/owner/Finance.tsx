@@ -1719,19 +1719,73 @@ export default function Finance() {
 
                   {analysis && (
                     <>
-                      {/* 3 chiffres essentiels */}
+                      {/* Votre loyer */}
                       <div style={{ display: 'flex', gap: 0, borderRadius: 10, overflow: 'hidden', border: `1px solid ${BAI.border}`, marginBottom: 14 }}>
-                        {[
-                          { label: 'Votre loyer', value: `${analysis.rentPerM2.toFixed(1)} €/m²`, highlight: true },
-                          { label: 'Moyenne marché', value: analysis.market ? `${analysis.market.avgRentM2.toFixed(1)} €/m²` : '—', highlight: false },
-                          { label: 'Fourchette', value: analysis.market ? `${analysis.market.minRentM2}–${analysis.market.maxRentM2} €/m²` : '—', highlight: false },
-                        ].map((item, i, arr) => (
-                          <div key={item.label} style={{ flex: 1, padding: '12px 16px', background: item.highlight ? `${BAI.owner}08` : BAI.bgSurface, borderRight: i < arr.length - 1 ? `1px solid ${BAI.border}` : 'none' }}>
-                            <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: '0 0 4px' }}>{item.label}</p>
-                            <p style={{ fontFamily: BAI.fontDisplay, fontSize: 20, fontWeight: 700, fontStyle: 'italic', color: item.highlight ? BAI.owner : BAI.ink, margin: 0 }}>{item.value}</p>
+                        <div style={{ flex: 1, padding: '12px 16px', background: `${BAI.owner}08`, borderRight: `1px solid ${BAI.border}` }}>
+                          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: '0 0 4px' }}>Votre loyer</p>
+                          <p style={{ fontFamily: BAI.fontDisplay, fontSize: 20, fontWeight: 700, fontStyle: 'italic', color: BAI.owner, margin: 0 }}>{analysis.rentPerM2.toFixed(1)} €/m²</p>
+                        </div>
+                        {analysis.market ? (() => {
+                          const f = 1.18
+                          const avgM = Math.round(analysis.market.avgRentM2 * f * 10) / 10
+                          const minM = Math.round(analysis.market.minRentM2 * f * 10) / 10
+                          const maxM = Math.round(analysis.market.maxRentM2 * f * 10) / 10
+                          return (
+                            <>
+                              <div style={{ flex: 2, padding: '12px 16px' }}>
+                                <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.inkFaint, textTransform: 'uppercase', letterSpacing: '0.09em', margin: '0 0 6px' }}>Non meublé</p>
+                                <div style={{ display: 'flex', gap: 16 }}>
+                                  {[
+                                    { label: 'Min', value: analysis.market!.minRentM2 },
+                                    { label: 'Moy', value: analysis.market!.avgRentM2 },
+                                    { label: 'Max', value: analysis.market!.maxRentM2 },
+                                  ].map(item => (
+                                    <div key={item.label}>
+                                      <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: BAI.inkFaint, margin: '0 0 2px' }}>{item.label}</p>
+                                      <p style={{ fontFamily: BAI.fontDisplay, fontSize: 18, fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: 0 }}>{item.value.toFixed(1)}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                              <div style={{ flex: 2, padding: '12px 16px', borderLeft: `1px solid ${BAI.border}`, background: `${BAI.caramel}06` }}>
+                                <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.caramel, textTransform: 'uppercase', letterSpacing: '0.09em', margin: '0 0 6px' }}>Meublé (+18 %)</p>
+                                <div style={{ display: 'flex', gap: 16 }}>
+                                  {[
+                                    { label: 'Min', value: minM },
+                                    { label: 'Moy', value: avgM },
+                                    { label: 'Max', value: maxM },
+                                  ].map(item => (
+                                    <div key={item.label}>
+                                      <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: BAI.inkFaint, margin: '0 0 2px' }}>{item.label}</p>
+                                      <p style={{ fontFamily: BAI.fontDisplay, fontSize: 18, fontWeight: 700, fontStyle: 'italic', color: BAI.caramel, margin: 0 }}>{item.value.toFixed(1)}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </>
+                          )
+                        })() : (
+                          <div style={{ flex: 2, padding: '12px 16px', display: 'flex', alignItems: 'center' }}>
+                            <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint, margin: 0 }}>Données marché non disponibles pour cette ville</p>
                           </div>
-                        ))}
+                        )}
                       </div>
+
+                      {/* Source ANIL */}
+                      {analysis.market?.sourceUrl && (
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 12 }}>
+                          <Info style={{ width: 13, height: 13, color: BAI.inkFaint, flexShrink: 0 }} />
+                          <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>Source :</span>
+                          <a href={analysis.market.sourceUrl} target="_blank" rel="noopener noreferrer"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: BAI.fontBody, fontSize: 12, color: BAI.owner, textDecoration: 'underline' }}>
+                            {analysis.market.sourceName ?? 'Données officielles'}
+                            <ExternalLink style={{ width: 10, height: 10 }} />
+                          </a>
+                          {analysis.market.nbObs !== undefined && analysis.market.nbObs < 30 && (
+                            <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint }}>· {analysis.market.nbObs} observations (données limitées)</span>
+                          )}
+                        </div>
+                      )}
 
                       {/* Encadrement alert ou info */}
                       {analysis.encadrementStatus !== 'not_applicable' && analysis.encadrementStatus !== 'unknown' && (
