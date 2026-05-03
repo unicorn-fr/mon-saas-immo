@@ -41,16 +41,6 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
-// ── Category keywords ────────────────────────────────────────────────────────
-const CATEGORY_KEYWORDS: Record<string, string> = {
-  PLOMBERIE:   'plombier',
-  ELECTRICITE: 'électricien',
-  SERRURERIE:  'serrurier',
-  CHAUFFAGE:   'chauffagiste',
-  AUTRE:       'artisan',
-  ALL:         'artisan dépannage',
-}
-
 // ── Leaflet icon helpers ──────────────────────────────────────────────────────
 
 function makePropertyIcon(): L.DivIcon {
