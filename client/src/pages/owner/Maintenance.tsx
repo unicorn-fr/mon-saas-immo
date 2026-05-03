@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import L from 'leaflet'
 import { Layout } from '../../components/layout/Layout'
 import { BAI } from '../../constants/bailio-tokens'
 import { useMaintenanceStore } from '../../store/maintenanceStore'
@@ -39,7 +41,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
-// ── Google Maps embed helper ─────────────────────────────────────────────────
+// ── Category keywords ────────────────────────────────────────────────────────
 const CATEGORY_KEYWORDS: Record<string, string> = {
   PLOMBERIE:   'plombier',
   ELECTRICITE: 'électricien',
@@ -49,16 +51,45 @@ const CATEGORY_KEYWORDS: Record<string, string> = {
   ALL:         'artisan dépannage',
 }
 
-function buildGoogleMapsEmbedUrl(category: string, city: string, address?: string, lat?: number | null, lng?: number | null): string {
-  const kw = CATEGORY_KEYWORDS[category] ?? 'artisan'
-  if (lat && lng) {
-    // Use coordinates — shows nearby craftsmen centered on exact property location
-    const q = encodeURIComponent(`${kw}`)
-    return `https://maps.google.com/maps?q=${q}&ll=${lat},${lng}&z=14&output=embed&hl=fr`
-  }
-  const location = address ? `${address}, ${city}` : `${city} France`
-  const q = encodeURIComponent(`${kw} près de ${location}`)
-  return `https://maps.google.com/maps?q=${q}&output=embed&hl=fr`
+// ── Leaflet icon helpers ──────────────────────────────────────────────────────
+
+function makePropertyIcon(): L.DivIcon {
+  return L.divIcon({
+    html: `<div style="
+      width:32px;height:32px;border-radius:50% 50% 50% 0;
+      background:#1a3270;border:3px solid #fff;
+      box-shadow:0 2px 8px rgba(0,0,0,0.35);
+      transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;
+    "><span style="transform:rotate(45deg);font-size:14px;line-height:1;">🏠</span></div>`,
+    className: '',
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -34],
+  })
+}
+
+function makeContractorIcon(rank: number, highlight: boolean): L.DivIcon {
+  const bg = highlight ? '#c4976a' : '#5a5754'
+  return L.divIcon({
+    html: `<div style="
+      width:28px;height:28px;border-radius:50%;
+      background:${bg};border:2.5px solid #fff;
+      box-shadow:0 2px 6px rgba(0,0,0,0.3);
+      display:flex;align-items:center;justify-content:center;
+      font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;color:#fff;
+    ">${rank}</div>`,
+    className: '',
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -16],
+  })
+}
+
+// Helper: re-center map when center changes
+function MapRecenter({ lat, lng }: { lat: number; lng: number }) {
+  const map = useMap()
+  useEffect(() => { map.setView([lat, lng], map.getZoom()) }, [lat, lng, map])
+  return null
 }
 
 // ── Emergency craftsmen links per category ─────────────────────────────────
@@ -293,7 +324,7 @@ function ContractorList({
   )
 }
 
-// ── Map + contractors panel (single merged map) ────────────────────────────
+// ── Leaflet map + contractors panel ───────────────────────────────────────────
 
 function MapAndContractors({
   category, city, address, lat, lng, contractors, loadingContractors,
@@ -302,25 +333,65 @@ function MapAndContractors({
   lat?: number | null; lng?: number | null
   contractors: Contractor[]; loadingContractors: boolean
 }) {
-  // Single map: craftsmen search centered on property coords (shows both property area + craftsmen pins)
-  const mapUrl = buildGoogleMapsEmbedUrl(category, city, address, lat, lng)
+  const sorted = [...contractors].sort((a, b) => {
+    const ra = a.rating ?? 0; const rb = b.rating ?? 0
+    if (rb !== ra) return rb - ra
+    return (a.distance ?? 999) - (b.distance ?? 999)
+  })
+  const hasCoords = !!(lat && lng)
+  // Default to Paris centre if no coords
+  const centerLat = lat ?? 48.8566
+  const centerLng = lng ?? 2.3522
 
   return (
     <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-      {/* Map — single iframe */}
+      {/* Leaflet map */}
       <div style={{ flex: '1 1 280px' }}>
         <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: 4 }}>
-          <MapPin style={{ width: 11, height: 11 }} /> {CATEGORY_KEYWORDS[category] ?? 'Artisans'} — {address ? `${address}, ` : ''}{city}
+          <MapPin style={{ width: 11, height: 11 }} /> {address ? `${address}, ` : ''}{city}
         </p>
-        <div style={{ height: 300, borderRadius: 10, overflow: 'hidden', border: `1px solid ${BAI.border}` }}>
-          <iframe
-            key={`map-${category}-${lat}-${lng}-${city}`}
-            src={mapUrl}
-            style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
-            allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"
-            title={`${CATEGORY_KEYWORDS[category] ?? 'Artisans'} à proximité`}
-          />
+        <div style={{ height: 320, borderRadius: 10, overflow: 'hidden', border: `1px solid ${BAI.border}` }}>
+          <MapContainer
+            center={[centerLat, centerLng]}
+            zoom={14}
+            style={{ height: '100%', width: '100%' }}
+            scrollWheelZoom={false}
+          >
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='© <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+            />
+            <MapRecenter lat={centerLat} lng={centerLng} />
+            {/* Property pin */}
+            {hasCoords && (
+              <Marker position={[lat!, lng!]} icon={makePropertyIcon()}>
+                <Popup>
+                  <strong style={{ fontFamily: 'DM Sans,sans-serif' }}>
+                    {address ?? city}
+                  </strong>
+                  <br /><span style={{ fontSize: 12, color: '#5a5754' }}>Votre logement</span>
+                </Popup>
+              </Marker>
+            )}
+            {/* Contractor pins */}
+            {sorted.map((c, i) => c.lat && c.lon ? (
+              <Marker key={c.id} position={[c.lat, c.lon]} icon={makeContractorIcon(i + 1, i === 0)}>
+                <Popup>
+                  <strong style={{ fontFamily: 'DM Sans,sans-serif', fontSize: 13 }}>#{i + 1} {c.name}</strong>
+                  {c.rating != null && <><br /><span style={{ color: '#f59e0b' }}>{'★'.repeat(Math.round(c.rating))}</span> {c.rating.toFixed(1)} {c.reviewCount != null ? `(${c.reviewCount} avis)` : ''}</>}
+                  <br /><span style={{ fontSize: 11, color: '#5a5754' }}>{c.distance < 1 ? `${Math.round(c.distance * 1000)} m` : `${c.distance.toFixed(1)} km`}</span>
+                  {c.phone && <><br /><a href={`tel:${c.phone}`} style={{ fontSize: 12, color: '#1a3270' }}>{c.phone}</a></>}
+                </Popup>
+              </Marker>
+            ) : null)}
+          </MapContainer>
         </div>
+        {!hasCoords && (
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: '6px 0 0', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <AlertTriangle style={{ width: 11, height: 11 }} />
+            Ajoutez les coordonnées GPS du bien pour centrer la carte sur votre logement.
+          </p>
+        )}
       </div>
 
       {/* Contractor ranked list */}
@@ -328,7 +399,7 @@ function MapAndContractors({
         <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 2px' }}>
           Classement — {MAINTENANCE_CATEGORY_LABELS[category as MaintenanceCategory] ?? 'Artisans'}
         </p>
-        <ContractorList category={category} contractors={contractors} loadingContractors={loadingContractors} />
+        <ContractorList category={category} contractors={sorted} loadingContractors={loadingContractors} />
       </div>
     </div>
   )
@@ -358,8 +429,6 @@ function FullMapView({ properties, categoryFilter, onCategoryChange }: FullMapVi
     { value: 'CHAUFFAGE', label: 'Chauffage' },
     { value: 'AUTRE', label: 'Travaux' },
   ]
-
-  const embedSrc = buildGoogleMapsEmbedUrl(categoryFilter, selectedProp?.city ?? 'Paris', selectedProp?.address, selectedProp?.lat, selectedProp?.lng)
 
   // Auto-fetch contractors when property or category changes
   useEffect(() => {
@@ -436,20 +505,50 @@ function FullMapView({ properties, categoryFilter, onCategoryChange }: FullMapVi
 
       {/* Map + contractors side by side */}
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-        {/* Map */}
+        {/* Leaflet map */}
         <div style={{ flex: '2 1 400px' }}>
           <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 5 }}>
             <MapPin style={{ width: 12, height: 12 }} />
             {selectedProp?.address ? `${selectedProp.address}, ${selectedProp.city}` : selectedProp?.city}
           </p>
-          <div style={{ height: 'clamp(380px, calc(100vh - 320px), 640px)', borderRadius: 12, overflow: 'hidden', border: `1px solid ${BAI.border}`, boxShadow: BAI.shadowMd }}>
-            <iframe
-              key={embedSrc}
-              src={embedSrc}
-              style={{ width: '100%', height: '100%', border: 'none' }}
-              allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"
-              title="Recherche artisans Google Maps"
-            />
+          <div style={{ height: 'clamp(380px, calc(100vh - 320px), 600px)', borderRadius: 12, overflow: 'hidden', border: `1px solid ${BAI.border}`, boxShadow: BAI.shadowMd }}>
+            {selectedProp && (
+              <MapContainer
+                center={[selectedProp.lat ?? 48.8566, selectedProp.lng ?? 2.3522]}
+                zoom={13}
+                style={{ height: '100%', width: '100%' }}
+                scrollWheelZoom={true}
+              >
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='© <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+                />
+                <MapRecenter lat={selectedProp.lat ?? 48.8566} lng={selectedProp.lng ?? 2.3522} />
+                {/* Property pin */}
+                {selectedProp.lat && selectedProp.lng && (
+                  <Marker position={[selectedProp.lat, selectedProp.lng]} icon={makePropertyIcon()}>
+                    <Popup>
+                      <strong style={{ fontFamily: 'DM Sans,sans-serif' }}>{selectedProp.title}</strong>
+                      <br /><span style={{ fontSize: 12, color: '#5a5754' }}>{selectedProp.address ?? selectedProp.city}</span>
+                    </Popup>
+                  </Marker>
+                )}
+                {/* Contractor pins */}
+                {[...mapContractors]
+                  .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0) || (a.distance ?? 999) - (b.distance ?? 999))
+                  .map((c, i) => c.lat && c.lon ? (
+                    <Marker key={c.id} position={[c.lat, c.lon]} icon={makeContractorIcon(i + 1, i === 0)}>
+                      <Popup>
+                        <strong style={{ fontFamily: 'DM Sans,sans-serif', fontSize: 13 }}>#{i + 1} {c.name}</strong>
+                        {c.rating != null && <><br /><span style={{ color: '#f59e0b' }}>{'★'.repeat(Math.round(c.rating))}</span> {c.rating.toFixed(1)}</>}
+                        <br /><span style={{ fontSize: 11, color: '#5a5754' }}>{c.distance < 1 ? `${Math.round(c.distance * 1000)} m` : `${c.distance.toFixed(1)} km`}</span>
+                        {c.phone && <><br /><a href={`tel:${c.phone}`} style={{ color: '#1a3270' }}>{c.phone}</a></>}
+                      </Popup>
+                    </Marker>
+                  ) : null)
+                }
+              </MapContainer>
+            )}
           </div>
         </div>
 

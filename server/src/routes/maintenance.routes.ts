@@ -301,24 +301,24 @@ router.post('/:id/ai-analyze', async (req, res) => {
   }
 })
 
-// Name patterns for Overpass name-based search (broader, catches real businesses)
+// Simple name substrings for Overpass regex (no special chars, case-insensitive via ,i)
 const NAME_PATTERNS: Record<string, string> = {
-  PLOMBERIE:   'plombier|plomberie|sanitaire|chauffage.*plomberie|plomberie.*chauffage',
-  ELECTRICITE: 'électricien|electricien|électricité|electricite|elec\\.',
-  CHAUFFAGE:   'chauffagiste|chauffage|climatisation|thermique|pompe.chaleur|pac\\b',
-  SERRURERIE:  'serrurier|serrurerie|dépannage.*serrurerie|ouverture.*porte',
-  AUTRE:       'artisan|menuisier|menuiserie|peintre|peinture|maçon|maconnerie|carreleur|carrelage|plâtrier',
+  PLOMBERIE:   'plomb|sanitaire',
+  ELECTRICITE: 'electri',
+  CHAUFFAGE:   'chauffage|chauffagiste|climatisation|thermique',
+  SERRURERIE:  'serrur',
+  AUTRE:       'artisan|menuisier|peintre|macon|carreleur',
 }
 const CRAFT_TAGS: Record<string, string[]> = {
-  PLOMBERIE:   ['plumber', 'water_well_drilling', 'hvac_technician'],
+  PLOMBERIE:   ['plumber', 'hvac_technician', 'water_well_drilling'],
   ELECTRICITE: ['electrician'],
-  CHAUFFAGE:   ['hvac_technician', 'heating_engineer', 'plumber'],
+  CHAUFFAGE:   ['hvac_technician', 'heating_engineer'],
   SERRURERIE:  ['locksmith', 'key_cutter'],
-  AUTRE:       ['carpenter', 'painter', 'plasterer', 'builder', 'roofer', 'tiler'],
+  AUTRE:       ['carpenter', 'painter', 'plasterer', 'builder', 'roofer'],
 }
 const SHOP_TAGS: Record<string, string[]> = {
   PLOMBERIE:   ['doityourself', 'bathroom_furnishing', 'heating'],
-  ELECTRICITE: ['electronics', 'electrical'],
+  ELECTRICITE: ['electronics'],
   CHAUFFAGE:   ['heating', 'doityourself'],
   SERRURERIE:  ['locksmith', 'security'],
   AUTRE:       ['doityourself', 'hardware'],
@@ -369,24 +369,27 @@ router.post('/find-contractors', async (req, res) => {
 
     const overpassQuery = `[out:json][timeout:25];\n(\n  ${craftParts}\n  ${shopParts}\n  ${nameParts}\n);\nout body;\n>;\nout skel qt;`
 
-    const overpassRes = await fetch('https://overpass-api.de/api/interpreter', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `data=${encodeURIComponent(overpassQuery)}`,
-      signal: AbortSignal.timeout(26000),
-    })
-
-    const overpassData = await overpassRes.json() as {
-      elements?: Array<{
-        id: number
-        type: string
-        lat?: number
-        lon?: number
-        tags?: Record<string, string>
-      }>
+    let elements: Array<{ id: number; type: string; lat?: number; lon?: number; tags?: Record<string, string> }> = []
+    try {
+      const controller = new AbortController()
+      const tid = setTimeout(() => controller.abort(), 25000)
+      const overpassRes = await fetch('https://overpass-api.de/api/interpreter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `data=${encodeURIComponent(overpassQuery)}`,
+        signal: controller.signal,
+      })
+      clearTimeout(tid)
+      const rawText = await overpassRes.text()
+      // Guard against HTML error pages from Overpass
+      if (rawText.trim().startsWith('{')) {
+        const overpassData = JSON.parse(rawText) as { elements?: typeof elements }
+        elements = overpassData.elements ?? []
+      }
+    } catch {
+      // Overpass unavailable or timeout — return empty contractors gracefully
+      elements = []
     }
-
-    const elements = overpassData.elements ?? []
 
     // Calculate distance in km
     function haversine(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -468,7 +471,8 @@ router.post('/find-contractors', async (req, res) => {
     return res.json({ success: true, data: { contractors, platforms, searchLocation: { lat, lon }, googleMapsSearchUrl } })
   } catch (err) {
     console.error('find-contractors error:', err)
-    return res.status(500).json({ success: false, message: 'Erreur lors de la recherche d\'artisans' })
+    // Return empty list rather than crashing — client falls back to platform links
+    return res.json({ success: true, data: { contractors: [], platforms: [], searchLocation: null, googleMapsSearchUrl: '' } })
   }
 })
 
