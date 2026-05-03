@@ -835,7 +835,7 @@ export default function ContractDetails() {
                     <>
                       <div className="flex items-center" style={{ fontSize: 12, color: BAI.tenant, gap: 6, marginBottom: 8 }}>
                         <CheckCircle style={{ width: 13, height: 13 }} />
-                        Signé le {format(new Date(contract.signedByOwner), 'dd MMM yyyy HH:mm', { locale: fr })}
+                        Signé le {contract.signedByOwner ? format(new Date(contract.signedByOwner), 'dd MMM yyyy HH:mm', { locale: fr }) : '—'}
                       </div>
                       {contract.ownerSignature && (
                         <img src={contract.ownerSignature} alt="Signature propriétaire"
@@ -886,7 +886,7 @@ export default function ContractDetails() {
                     <>
                       <div className="flex items-center" style={{ fontSize: 12, color: BAI.tenant, gap: 6, marginBottom: 8 }}>
                         <CheckCircle style={{ width: 13, height: 13 }} />
-                        Signé le {format(new Date(contract.signedByTenant), 'dd MMM yyyy HH:mm', { locale: fr })}
+                        Signé le {contract.signedByTenant ? format(new Date(contract.signedByTenant), 'dd MMM yyyy HH:mm', { locale: fr }) : '—'}
                       </div>
                       {contract.tenantSignature && (
                         <img src={contract.tenantSignature} alt="Signature locataire"
@@ -923,8 +923,8 @@ export default function ContractDetails() {
                   <p style={labelStyle}>Période</p>
                   <div className="flex items-center" style={{ fontWeight: 600, fontSize: 14, color: BAI.ink, gap: 8 }}>
                     <Calendar style={{ width: 15, height: 15, color: BAI.inkFaint }} />
-                    {format(new Date(contract.startDate), 'dd MMM yyyy', { locale: fr })} —{' '}
-                    {format(new Date(contract.endDate), 'dd MMM yyyy', { locale: fr })}
+                    {contract.startDate ? format(new Date(contract.startDate), 'dd MMM yyyy', { locale: fr }) : '—'} —{' '}
+                    {contract.endDate ? format(new Date(contract.endDate), 'dd MMM yyyy', { locale: fr }) : '—'}
                   </div>
                 </div>
               </div>
