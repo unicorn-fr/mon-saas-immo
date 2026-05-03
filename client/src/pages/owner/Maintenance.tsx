@@ -326,24 +326,6 @@ function MapAndContractors({
   )
 }
 
-// ── Legacy MiniMapWithLocation (used by FullMapView only) ─────────────────
-
-function MiniMapWithLocation({ category, city, address, lat, lng }: { category: string; city: string; address?: string; lat?: number | null; lng?: number | null }) {
-  return (
-    <div style={{ borderRadius: 10, overflow: 'hidden', border: `1px solid ${BAI.border}` }}>
-      <iframe
-        key={`${category}-${city}-${address ?? ''}-${lat ?? ''}-${lng ?? ''}`}
-        src={buildGoogleMapsEmbedUrl(category, city, address, lat, lng)}
-        style={{ width: '100%', height: 260, border: 'none', display: 'block' }}
-        allowFullScreen
-        loading="lazy"
-        referrerPolicy="no-referrer-when-downgrade"
-        title="Artisans à proximité"
-      />
-    </div>
-  )
-}
-
 // ── Full map view (Google Maps embed) ──────────────────────────────────────
 
 interface FullMapViewProps {
