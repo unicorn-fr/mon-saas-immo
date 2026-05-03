@@ -301,13 +301,27 @@ router.post('/:id/ai-analyze', async (req, res) => {
   }
 })
 
-// Craft categories for Overpass API
-const CRAFT_MAP: Record<string, string[]> = {
-  PLOMBERIE: ['plumber', 'water_well_drilling'],
+// Name patterns for Overpass name-based search (broader, catches real businesses)
+const NAME_PATTERNS: Record<string, string> = {
+  PLOMBERIE:   'plombier|plomberie|sanitaire|chauffage.*plomberie|plomberie.*chauffage',
+  ELECTRICITE: 'électricien|electricien|électricité|electricite|elec\\.',
+  CHAUFFAGE:   'chauffagiste|chauffage|climatisation|thermique|pompe.chaleur|pac\\b',
+  SERRURERIE:  'serrurier|serrurerie|dépannage.*serrurerie|ouverture.*porte',
+  AUTRE:       'artisan|menuisier|menuiserie|peintre|peinture|maçon|maconnerie|carreleur|carrelage|plâtrier',
+}
+const CRAFT_TAGS: Record<string, string[]> = {
+  PLOMBERIE:   ['plumber', 'water_well_drilling', 'hvac_technician'],
   ELECTRICITE: ['electrician'],
-  CHAUFFAGE: ['hvac_technician', 'heating_engineer'],
-  SERRURERIE: ['locksmith'],
-  AUTRE: ['carpenter', 'painter', 'plasterer', 'builder'],
+  CHAUFFAGE:   ['hvac_technician', 'heating_engineer', 'plumber'],
+  SERRURERIE:  ['locksmith', 'key_cutter'],
+  AUTRE:       ['carpenter', 'painter', 'plasterer', 'builder', 'roofer', 'tiler'],
+}
+const SHOP_TAGS: Record<string, string[]> = {
+  PLOMBERIE:   ['doityourself', 'bathroom_furnishing', 'heating'],
+  ELECTRICITE: ['electronics', 'electrical'],
+  CHAUFFAGE:   ['heating', 'doityourself'],
+  SERRURERIE:  ['locksmith', 'security'],
+  AUTRE:       ['doityourself', 'hardware'],
 }
 
 // POST /maintenance/find-contractors
@@ -336,16 +350,30 @@ router.post('/find-contractors', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Localisation introuvable' })
     }
 
-    const craftTypes = CRAFT_MAP[category as string] ?? CRAFT_MAP['AUTRE']
-    const craftQuery = craftTypes.map(c => `node["craft"="${c}"](around:8000,${lat},${lon});way["craft"="${c}"](around:8000,${lat},${lon});`).join('\n')
+    const radius = 12000
+    const nameRegex = NAME_PATTERNS[category as string] ?? NAME_PATTERNS['AUTRE']
+    const crafts = CRAFT_TAGS[category as string] ?? CRAFT_TAGS['AUTRE']
+    const shops = SHOP_TAGS[category as string] ?? SHOP_TAGS['AUTRE']
 
-    const overpassQuery = `[out:json][timeout:15];\n(\n${craftQuery}\n);\nout body;\n>;\nout skel qt;`
+    // Build a comprehensive Overpass query: craft tags + shop tags + name-based regex
+    const craftParts = crafts.map(c =>
+      `node["craft"="${c}"](around:${radius},${lat},${lon});\n  way["craft"="${c}"](around:${radius},${lat},${lon});`
+    ).join('\n  ')
+    const shopParts = shops.map(s =>
+      `node["shop"="${s}"](around:${radius},${lat},${lon});\n  way["shop"="${s}"](around:${radius},${lat},${lon});`
+    ).join('\n  ')
+    const nameParts = [
+      `node[name~"${nameRegex}",i](around:${radius},${lat},${lon});`,
+      `way[name~"${nameRegex}",i](around:${radius},${lat},${lon});`,
+    ].join('\n  ')
+
+    const overpassQuery = `[out:json][timeout:25];\n(\n  ${craftParts}\n  ${shopParts}\n  ${nameParts}\n);\nout body;\n>;\nout skel qt;`
 
     const overpassRes = await fetch('https://overpass-api.de/api/interpreter', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: `data=${encodeURIComponent(overpassQuery)}`,
-      signal: AbortSignal.timeout(16000),
+      signal: AbortSignal.timeout(26000),
     })
 
     const overpassData = await overpassRes.json() as {
@@ -379,8 +407,10 @@ router.post('/find-contractors', async (req, res) => {
     const googleMapsKeyword = GOOGLE_MAPS_KEYWORDS[category as string] ?? 'artisan'
     const googleMapsSearchUrl = `https://www.google.com/maps/search/${encodeURIComponent(googleMapsKeyword + ' ' + (city ?? ''))}`
 
+    // Deduplicate by name+address, filter elements with a name
+    const seen = new Set<string>()
     const contractors = elements
-      .filter(el => el.tags?.name && el.lat && el.lon)
+      .filter(el => el.tags?.name && (el.lat && el.lon))
       .map(el => {
         const distance = el.lat && el.lon ? haversine(lat, lon, el.lat, el.lon) : 999
         return {
@@ -396,8 +426,14 @@ router.post('/find-contractors', async (req, res) => {
           googleMapsUrl: `https://www.google.com/maps/search/${encodeURIComponent(el.tags!.name)}/@${el.lat},${el.lon},15z`,
         }
       })
+      .filter(c => {
+        const key = c.name.toLowerCase().trim()
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
       .sort((a, b) => a.distance - b.distance)
-      .slice(0, 6)
+      .slice(0, 8)
 
     // Platform suggestions based on category
     const PLATFORMS: Record<string, Array<{ name: string; url: string; description: string }>> = {

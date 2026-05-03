@@ -219,11 +219,81 @@ function severityColor(s: string): string {
 
 const SIGNALED_RE = /🔧\s*\[PROBLÈME SIGNALÉ\]/i
 
-// ── Split map + ranked contractors panel ──────────────────────────────────
+// ── Shared contractor card list ────────────────────────────────────────────
 
-function buildPropertyPinUrl(lat: number, lng: number): string {
-  return `https://maps.google.com/maps?q=${lat},${lng}&z=15&output=embed&hl=fr`
+function ContractorList({
+  category, contractors, loadingContractors,
+}: {
+  category: string; contractors: Contractor[]; loadingContractors: boolean
+}) {
+  const sorted = [...contractors].sort((a, b) => {
+    const ra = a.rating ?? 0; const rb = b.rating ?? 0
+    if (rb !== ra) return rb - ra
+    return (a.distance ?? 999) - (b.distance ?? 999)
+  })
+
+  if (loadingContractors) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '16px 0', color: BAI.inkFaint, fontFamily: BAI.fontBody, fontSize: 13 }}>
+        <div style={{ width: 16, height: 16, border: `2px solid ${BAI.border}`, borderTopColor: BAI.owner, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        Recherche d'artisans en cours...
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {sorted.length === 0 ? (
+        <div style={{ padding: '12px 14px', background: BAI.bgMuted, borderRadius: 10 }}>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint, margin: '0 0 2px' }}>Aucun artisan trouvé dans OpenStreetMap.</p>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: 0 }}>Utilisez les plateformes d'urgence ci-dessous.</p>
+        </div>
+      ) : sorted.map((c, i) => (
+        <div key={c.id} style={{ background: i === 0 ? BAI.ownerLight : BAI.bgSurface, border: `1px solid ${i === 0 ? BAI.ownerBorder : BAI.border}`, borderRadius: 10, padding: '10px 12px', position: 'relative' }}>
+          <div style={{ position: 'absolute', top: 8, right: 10, width: 22, height: 22, borderRadius: 999, background: i === 0 ? BAI.owner : BAI.bgMuted, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: i === 0 ? '#fff' : BAI.inkFaint }}>{i + 1}</div>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: BAI.ink, margin: '0 0 4px', paddingRight: 30, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</p>
+          {c.rating != null && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
+              <div style={{ display: 'flex', gap: 1 }}>
+                {[1,2,3,4,5].map(s => <span key={s} style={{ fontSize: 12, color: s <= Math.round(c.rating!) ? '#f59e0b' : BAI.border }}>★</span>)}
+              </div>
+              <span style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.ink }}>{c.rating.toFixed(1)}</span>
+              {c.reviewCount != null && <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint }}>({c.reviewCount} avis)</span>}
+            </div>
+          )}
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <MapPin style={{ width: 10, height: 10, flexShrink: 0 }} />
+            {c.distance < 1 ? `${Math.round(c.distance * 1000)} m` : `${c.distance.toFixed(1)} km`}
+            {c.address ? ` · ${c.address}` : ''}
+          </p>
+          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+            {c.phone && <a href={`tel:${c.phone}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 9px', borderRadius: 7, background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 600, color: BAI.owner }}><Phone style={{ width: 10, height: 10 }} /> Appeler</a>}
+            {c.googleMapsUrl && <a href={c.googleMapsUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 9px', borderRadius: 7, background: '#e8f0fe', border: '1px solid #aecbfa', textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 600, color: '#1a73e8' }}><ExternalLink style={{ width: 10, height: 10 }} /> Google Maps</a>}
+            {c.website && <a href={c.website} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 9px', borderRadius: 7, background: BAI.caramelLight, border: `1px solid ${BAI.caramelBorder}`, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 600, color: BAI.caramel }}><Globe style={{ width: 10, height: 10 }} /> Site</a>}
+          </div>
+        </div>
+      ))}
+
+      {/* Platform fallback when few results */}
+      {sorted.length < 3 && (
+        <div style={{ marginTop: 4 }}>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: '0 0 6px' }}>Plateformes d'urgence :</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {(EMERGENCY_LINKS[category] ?? EMERGENCY_LINKS['AUTRE']).slice(0, 3).map(link => (
+              <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 10px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: BAI.bgSurface, textDecoration: 'none' }}>
+                <span style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.ink }}>{link.label}</span>
+                {link.badge && <span style={{ padding: '2px 7px', borderRadius: 999, background: BAI.errorLight, border: '1px solid #fca5a5', fontSize: 10, fontWeight: 700, color: BAI.error }}>{link.badge}</span>}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
+
+// ── Map + contractors panel (single merged map) ────────────────────────────
 
 function MapAndContractors({
   category, city, address, lat, lng, contractors, loadingContractors,
@@ -232,95 +302,33 @@ function MapAndContractors({
   lat?: number | null; lng?: number | null
   contractors: Contractor[]; loadingContractors: boolean
 }) {
-  const hasCoords = !!(lat && lng)
-  const craftsmenUrl = buildGoogleMapsEmbedUrl(category, city, address, lat, lng)
-  const sorted = [...contractors].sort((a, b) => {
-    const ra = a.rating ?? 0; const rb = b.rating ?? 0
-    if (rb !== ra) return rb - ra
-    return (a.distance ?? 999) - (b.distance ?? 999)
-  })
+  // Single map: craftsmen search centered on property coords (shows both property area + craftsmen pins)
+  const mapUrl = buildGoogleMapsEmbedUrl(category, city, address, lat, lng)
 
   return (
-    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-      {/* Left: maps */}
-      <div style={{ flex: '1 1 300px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {hasCoords && (
-          <div>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: 4 }}>
-              <MapPin style={{ width: 11, height: 11 }} /> Position du logement
-            </p>
-            <div style={{ height: 160, borderRadius: 10, overflow: 'hidden', border: `1px solid ${BAI.border}` }}>
-              <iframe key={`pin-${lat}-${lng}`} src={buildPropertyPinUrl(lat!, lng!)}
-                style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
-                allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" title="Position du logement" />
-            </div>
-          </div>
-        )}
-        <div>
-          <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: 4 }}>
-            <Search style={{ width: 11, height: 11 }} /> {CATEGORY_KEYWORDS[category] ?? 'Artisans'} à proximité
-          </p>
-          <div style={{ height: hasCoords ? 200 : 260, borderRadius: 10, overflow: 'hidden', border: `1px solid ${BAI.border}` }}>
-            <iframe key={`craftsmen-${category}-${lat}-${lng}-${city}`} src={craftsmenUrl}
-              style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
-              allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" title="Artisans à proximité" />
-          </div>
+    <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+      {/* Map — single iframe */}
+      <div style={{ flex: '1 1 280px' }}>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: 4 }}>
+          <MapPin style={{ width: 11, height: 11 }} /> {CATEGORY_KEYWORDS[category] ?? 'Artisans'} — {address ? `${address}, ` : ''}{city}
+        </p>
+        <div style={{ height: 300, borderRadius: 10, overflow: 'hidden', border: `1px solid ${BAI.border}` }}>
+          <iframe
+            key={`map-${category}-${lat}-${lng}-${city}`}
+            src={mapUrl}
+            style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+            allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"
+            title={`${CATEGORY_KEYWORDS[category] ?? 'Artisans'} à proximité`}
+          />
         </div>
       </div>
 
-      {/* Right: ranked list */}
-      <div style={{ flex: '1 1 220px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {/* Contractor ranked list */}
+      <div style={{ flex: '1 1 220px', display: 'flex', flexDirection: 'column', gap: 6 }}>
         <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 2px' }}>
           Classement — {MAINTENANCE_CATEGORY_LABELS[category as MaintenanceCategory] ?? 'Artisans'}
         </p>
-        {loadingContractors ? (
-          <div style={{ padding: '20px 0', textAlign: 'center', color: BAI.inkFaint, fontFamily: BAI.fontBody, fontSize: 13 }}>Recherche en cours...</div>
-        ) : sorted.length === 0 ? (
-          <div style={{ padding: 14, background: BAI.bgMuted, borderRadius: 10, textAlign: 'center' }}>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint, margin: '0 0 4px' }}>Aucun artisan trouvé.</p>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: 0 }}>Utilisez les liens ci-dessous.</p>
-          </div>
-        ) : sorted.map((c, i) => (
-          <div key={c.id} style={{ background: i === 0 ? BAI.ownerLight : BAI.bgSurface, border: `1px solid ${i === 0 ? BAI.ownerBorder : BAI.border}`, borderRadius: 10, padding: '10px 12px', position: 'relative' }}>
-            <div style={{ position: 'absolute', top: 8, right: 10, width: 22, height: 22, borderRadius: 999, background: i === 0 ? BAI.owner : BAI.bgMuted, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: i === 0 ? '#fff' : BAI.inkFaint }}>{i + 1}</div>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: BAI.ink, margin: '0 0 4px', paddingRight: 30, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</p>
-            {c.rating != null && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
-                <div style={{ display: 'flex', gap: 1 }}>
-                  {[1,2,3,4,5].map(s => <span key={s} style={{ fontSize: 12, color: s <= Math.round(c.rating!) ? '#f59e0b' : BAI.border }}>★</span>)}
-                </div>
-                <span style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.ink }}>{c.rating.toFixed(1)}</span>
-                {c.reviewCount != null && <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint }}>({c.reviewCount} avis)</span>}
-              </div>
-            )}
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              <MapPin style={{ width: 10, height: 10, flexShrink: 0 }} />
-              {c.distance < 1 ? `${Math.round(c.distance * 1000)} m` : `${c.distance.toFixed(1)} km`}
-              {c.address ? ` · ${c.address}` : ''}
-            </p>
-            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-              {c.phone && <a href={`tel:${c.phone}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 9px', borderRadius: 7, background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 600, color: BAI.owner }}><Phone style={{ width: 10, height: 10 }} /> Appeler</a>}
-              {c.googleMapsUrl && <a href={c.googleMapsUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 9px', borderRadius: 7, background: '#e8f0fe', border: '1px solid #aecbfa', textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 600, color: '#1a73e8' }}><ExternalLink style={{ width: 10, height: 10 }} /> Google Maps</a>}
-              {c.website && <a href={c.website} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 9px', borderRadius: 7, background: BAI.caramelLight, border: `1px solid ${BAI.caramelBorder}`, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 600, color: BAI.caramel }}><Globe style={{ width: 10, height: 10 }} /> Site</a>}
-            </div>
-          </div>
-        ))}
-
-        {/* Platform links when few results */}
-        {sorted.length < 3 && (
-          <div style={{ marginTop: 4 }}>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: '0 0 6px' }}>Plateformes d'urgence :</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {(EMERGENCY_LINKS[category] ?? EMERGENCY_LINKS['AUTRE']).slice(0, 2).map(link => (
-                <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer"
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 10px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: BAI.bgSurface, textDecoration: 'none' }}>
-                  <span style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.ink }}>{link.label}</span>
-                  {link.badge && <span style={{ padding: '2px 7px', borderRadius: 999, background: BAI.errorLight, border: '1px solid #fca5a5', fontSize: 10, fontWeight: 700, color: BAI.error }}>{link.badge}</span>}
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
+        <ContractorList category={category} contractors={contractors} loadingContractors={loadingContractors} />
       </div>
     </div>
   )
@@ -337,6 +345,8 @@ interface FullMapViewProps {
 function FullMapView({ properties, categoryFilter, onCategoryChange }: FullMapViewProps) {
   const [selectedPropId, setSelectedPropId] = useState<string>(properties[0]?.id ?? '')
   const [hoveredPill, setHoveredPill] = useState<CategoryFilter | null>(null)
+  const [mapContractors, setMapContractors] = useState<Contractor[]>([])
+  const [mapLoadingContractors, setMapLoadingContractors] = useState(false)
 
   const selectedProp = properties.find(p => p.id === selectedPropId) ?? properties[0]
 
@@ -351,11 +361,25 @@ function FullMapView({ properties, categoryFilter, onCategoryChange }: FullMapVi
 
   const embedSrc = buildGoogleMapsEmbedUrl(categoryFilter, selectedProp?.city ?? 'Paris', selectedProp?.address, selectedProp?.lat, selectedProp?.lng)
 
+  // Auto-fetch contractors when property or category changes
+  useEffect(() => {
+    if (!selectedProp) return
+    setMapContractors([])
+    setMapLoadingContractors(true)
+    maintenanceService.findContractors({
+      category: categoryFilter === 'ALL' ? 'AUTRE' : categoryFilter,
+      city: selectedProp.city,
+      latitude: selectedProp.lat,
+      longitude: selectedProp.lng,
+    }).then(res => {
+      setMapContractors(res.contractors as Contractor[])
+    }).catch(() => {}).finally(() => setMapLoadingContractors(false))
+  }, [selectedPropId, categoryFilter]) // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <div>
       {/* Controls row */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14, alignItems: 'center' }}>
-        {/* Category pills */}
         {categoryOptions.map(opt => {
           const isActive = categoryFilter === opt.value
           const isHovered = hoveredPill === opt.value
@@ -383,7 +407,6 @@ function FullMapView({ properties, categoryFilter, onCategoryChange }: FullMapVi
             </button>
           )
         })}
-        {/* Property selector */}
         {properties.length > 1 && (
           <select
             value={selectedPropId}
@@ -411,34 +434,37 @@ function FullMapView({ properties, categoryFilter, onCategoryChange }: FullMapVi
         )}
       </div>
 
-      {/* Location info text */}
-      <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: 5 }}>
-        <MapPin style={{ width: 12, height: 12 }} />
-        Artisans trouvés près de :&nbsp;<strong style={{ color: BAI.ink }}>{selectedProp?.address ? `${selectedProp.address}, ${selectedProp.city}` : selectedProp?.city}</strong>
-      </p>
+      {/* Map + contractors side by side */}
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+        {/* Map */}
+        <div style={{ flex: '2 1 400px' }}>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 5 }}>
+            <MapPin style={{ width: 12, height: 12 }} />
+            {selectedProp?.address ? `${selectedProp.address}, ${selectedProp.city}` : selectedProp?.city}
+          </p>
+          <div style={{ height: 'clamp(380px, calc(100vh - 320px), 640px)', borderRadius: 12, overflow: 'hidden', border: `1px solid ${BAI.border}`, boxShadow: BAI.shadowMd }}>
+            <iframe
+              key={embedSrc}
+              src={embedSrc}
+              style={{ width: '100%', height: '100%', border: 'none' }}
+              allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"
+              title="Recherche artisans Google Maps"
+            />
+          </div>
+        </div>
 
-      {/* Google Maps iframe */}
-      <div style={{
-        height: 'clamp(420px, calc(100vh - 300px), 700px)',
-        borderRadius: 12,
-        overflow: 'hidden',
-        border: `1px solid ${BAI.border}`,
-        boxShadow: BAI.shadowMd,
-      }}>
-        <iframe
-          key={embedSrc}
-          src={embedSrc}
-          style={{ width: '100%', height: '100%', border: 'none' }}
-          allowFullScreen
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          title="Recherche artisans Google Maps"
-        />
+        {/* Contractor list */}
+        <div style={{ flex: '1 1 240px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 2px' }}>
+            Classement — {categoryFilter === 'ALL' ? 'Artisans' : MAINTENANCE_CATEGORY_LABELS[categoryFilter as MaintenanceCategory] ?? 'Artisans'}
+          </p>
+          <ContractorList
+            category={categoryFilter === 'ALL' ? 'AUTRE' : categoryFilter}
+            contractors={mapContractors}
+            loadingContractors={mapLoadingContractors}
+          />
+        </div>
       </div>
-
-      <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '10px 0 0' }}>
-        Résultats Google Maps pour « {CATEGORY_KEYWORDS[categoryFilter] ?? 'artisan'} » près de {selectedProp?.address ? `${selectedProp.address}, ${selectedProp.city}` : selectedProp?.city}
-      </p>
     </div>
   )
 }
