@@ -37,6 +37,11 @@ import {
   Search,
   ExternalLink,
   FileText,
+  BarChart2,
+  Receipt,
+  Landmark,
+  Calculator,
+  Wallet,
 } from 'lucide-react'
 import { financeService, MarketAnalysis } from '../../services/finance.service'
 import toast from 'react-hot-toast'
@@ -459,43 +464,55 @@ export default function Finance() {
     Net: Math.round(m.net),
   }))
 
-  function TabPill({ id, label }: { id: ActiveTab; label: string }) {
+  function TabPill({ id, label, icon: Icon, badge }: { id: ActiveTab; label: string; icon?: React.ElementType; badge?: number }) {
     const active = activeTab === id
     return (
       <button
         onClick={() => setActiveTab(id)}
         style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 7,
           fontFamily: BAI.fontBody,
           fontSize: 13,
-          fontWeight: 600,
-          padding: '8px 20px',
-          borderRadius: 999,
-          border: active ? 'none' : `1px solid ${BAI.border}`,
-          background: active ? BAI.night : 'transparent',
+          fontWeight: active ? 700 : 500,
+          padding: '9px 18px',
+          borderRadius: 9,
+          border: 'none',
+          background: active ? BAI.owner : 'transparent',
           color: active ? '#fff' : BAI.inkMid,
           cursor: 'pointer',
-          transition: 'all 0.15s',
-          minHeight: 44,
+          transition: BAI.transition,
+          minHeight: 40,
           flexShrink: 0,
           whiteSpace: 'nowrap',
+          position: 'relative',
         }}
       >
+        {Icon && <Icon style={{ width: 14, height: 14, opacity: active ? 1 : 0.7 }} />}
         {label}
+        {badge != null && badge > 0 && (
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: 18, height: 18, borderRadius: 999,
+            background: active ? 'rgba(255,255,255,0.25)' : BAI.caramelLight,
+            color: active ? '#fff' : BAI.caramel,
+            fontSize: 10, fontWeight: 700,
+          }}>{badge}</span>
+        )}
       </button>
     )
   }
 
-  // Glassmorphism KPI card style
-  const glassKpiStyle: React.CSSProperties = {
-    background: 'rgba(255,255,255,0.8)',
-    backdropFilter: 'blur(12px)',
-    WebkitBackdropFilter: 'blur(12px)',
-    border: '1px solid rgba(228,225,219,0.6)',
+  // Clean KPI card style — no glassmorphism
+  const kpiCardStyle: React.CSSProperties = {
+    background: BAI.bgSurface,
+    border: `1px solid ${BAI.border}`,
     borderRadius: 16,
-    padding: '24px 28px',
-    boxShadow: '0 4px 24px rgba(13,12,10,0.06)',
+    padding: '22px 24px',
+    boxShadow: '0 1px 3px rgba(13,12,10,0.04), 0 4px 16px rgba(13,12,10,0.05)',
     flex: 1,
-    minWidth: 'clamp(180px, 45%, 260px)',
+    minWidth: 'clamp(160px, 40%, 240px)',
   }
 
   return (
@@ -503,98 +520,119 @@ export default function Finance() {
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: 'clamp(20px,4vw,32px) clamp(16px,3vw,20px)' }}>
 
         {/* Header */}
-        <div style={{ marginBottom: 32 }}>
-          <p
-            style={{
-              fontFamily: BAI.fontBody,
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              color: BAI.caramel,
-              margin: '0 0 6px',
-            }}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, marginBottom: 28 }}>
+          <div>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 6px' }}>
+              Propriétaire
+            </p>
+            <h1 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(28px,5vw,40px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: 0 }}>
+              Finances
+            </h1>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: '6px 0 0' }}>
+              Pilotez la rentabilité de votre patrimoine locatif
+            </p>
+          </div>
+          <button
+            onClick={() => setActiveTab('expenses')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 10, border: 'none', background: BAI.night, color: '#fff', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', alignSelf: 'flex-end' }}
           >
-            Propriétaire
-          </p>
-          <h1
-            style={{
-              fontFamily: BAI.fontDisplay,
-              fontSize: 'clamp(28px,5vw,38px)',
-              fontWeight: 700,
-              fontStyle: 'italic',
-              color: BAI.ink,
-              margin: 0,
-            }}
-          >
-            Finances
-          </h1>
-          <p
-            style={{
-              fontFamily: BAI.fontBody,
-              fontSize: 14,
-              color: BAI.inkMid,
-              margin: '8px 0 0',
-            }}
-          >
-            Suivi de vos revenus, dépenses et rentabilité
-          </p>
+            <PlusCircle style={{ width: 15, height: 15 }} />
+            Ajouter une dépense
+          </button>
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 28, overflowX: 'auto', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-          <TabPill id="summary" label="Résumé & Graphiques" />
-          <TabPill id="expenses" label="Dépenses" />
-          <TabPill id="loans" label="Emprunts" />
-          <TabPill id="market" label="Marché & Loyers" />
-          <TabPill id="receipts" label="Quittances" />
-          <TabPill id="fiscal" label="Conseil Fiscal" />
+        <div style={{ display: 'flex', gap: 4, marginBottom: 28, overflowX: 'auto', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: 5 }}>
+          <TabPill id="summary"  label="Résumé"    icon={BarChart2} />
+          <TabPill id="expenses" label="Dépenses"  icon={Receipt}   badge={expenses?.length} />
+          <TabPill id="loans"    label="Emprunts"  icon={Landmark} />
+          <TabPill id="market"   label="Marché"    icon={TrendingUp} />
+          <TabPill id="receipts" label="Quittances" icon={FileText} />
+          <TabPill id="fiscal"   label="Fiscal"    icon={Calculator} />
         </div>
 
         {/* ── TAB: SUMMARY ── */}
         {activeTab === 'summary' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
-            {/* 3 Glassmorphism KPI cards */}
-            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-              {/* Revenue 12 mois */}
-              <div style={{ ...glassKpiStyle, borderLeft: `3px solid ${BAI.owner}` }}>
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 8px' }}>
-                  Revenus 12 mois
-                </p>
-                <p style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(26px,4vw,32px)', fontWeight: 700, fontStyle: 'italic', color: BAI.owner, margin: 0, lineHeight: 1 }}>
+            {/* 4 KPI cards — clean, no glassmorphism */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
+
+              {/* Revenus */}
+              <div style={{ ...kpiCardStyle, borderLeft: `4px solid ${BAI.owner}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, margin: 0 }}>Revenus annuels</p>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: BAI.ownerLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <TrendingUp style={{ width: 15, height: 15, color: BAI.owner }} />
+                  </div>
+                </div>
+                <p style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(24px,3.5vw,32px)', fontWeight: 700, fontStyle: 'italic', color: BAI.owner, margin: '0 0 4px', lineHeight: 1 }}>
                   {summary ? formatEuro(summary.totalRevenue) : '—'}
                 </p>
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '6px 0 0' }}>
-                  Loyers encaissés
-                </p>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: 0 }}>Loyers encaissés</p>
               </div>
 
-              {/* Cash-flow net */}
-              <div style={{ ...glassKpiStyle, borderLeft: `3px solid ${summary ? (summary.netCashFlow >= 0 ? BAI.tenant : BAI.error) : BAI.caramel}` }}>
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 8px' }}>
-                  Cash-flow net
+              {/* Charges */}
+              <div style={{ ...kpiCardStyle, borderLeft: `4px solid ${BAI.caramel}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, margin: 0 }}>Charges totales</p>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: BAI.caramelLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Wallet style={{ width: 15, height: 15, color: BAI.caramel }} />
+                  </div>
+                </div>
+                <p style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(24px,3.5vw,32px)', fontWeight: 700, fontStyle: 'italic', color: BAI.caramel, margin: '0 0 4px', lineHeight: 1 }}>
+                  {summary ? formatEuro(summary.totalExpenses) : '—'}
                 </p>
-                <p style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(26px,4vw,32px)', fontWeight: 700, fontStyle: 'italic', color: summary ? (summary.netCashFlow >= 0 ? BAI.tenant : BAI.error) : BAI.ink, margin: 0, lineHeight: 1 }}>
-                  {summary ? formatEuro(summary.netCashFlow) : '—'}
-                </p>
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '6px 0 0' }}>
-                  {summary ? (summary.netCashFlow >= 0 ? 'Rentabilité positive' : 'Déficit à surveiller') : 'Après charges & emprunts'}
-                </p>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: 0 }}>Dépenses & emprunts</p>
               </div>
+
+              {/* Cash-flow net — carte proéminente */}
+              {(() => {
+                const isPos = !summary || summary.netCashFlow >= 0
+                const accent = isPos ? BAI.tenant : BAI.error
+                const accentLight = isPos ? BAI.tenantLight : BAI.errorLight
+                return (
+                  <div style={{ ...kpiCardStyle, borderLeft: `4px solid ${accent}`, background: accentLight }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, margin: 0 }}>Cash-flow net</p>
+                      <div style={{ width: 32, height: 32, borderRadius: 8, background: isPos ? BAI.tenantBorder : '#fca5a5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {isPos ? <TrendingUp style={{ width: 15, height: 15, color: BAI.tenant }} /> : <TrendingDown style={{ width: 15, height: 15, color: BAI.error }} />}
+                      </div>
+                    </div>
+                    <p style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(24px,3.5vw,32px)', fontWeight: 700, fontStyle: 'italic', color: accent, margin: '0 0 4px', lineHeight: 1 }}>
+                      {summary ? formatEuro(summary.netCashFlow) : '—'}
+                    </p>
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, margin: 0, fontWeight: 600 }}>
+                      {summary ? (summary.netCashFlow >= 0 ? '✓ Rentabilité positive' : '⚠ Déficit à surveiller') : 'Après charges & emprunts'}
+                    </p>
+                  </div>
+                )
+              })()}
 
               {/* Taux d'occupation */}
-              <div style={{ ...glassKpiStyle, borderLeft: `3px solid ${summary ? (summary.occupancyRate >= 80 ? BAI.tenant : BAI.caramel) : BAI.caramel}` }}>
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 8px' }}>
-                  Taux d'occupation
-                </p>
-                <p style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(26px,4vw,32px)', fontWeight: 700, fontStyle: 'italic', color: summary ? (summary.occupancyRate >= 80 ? BAI.tenant : BAI.caramel) : BAI.ink, margin: 0, lineHeight: 1 }}>
-                  {summary ? `${summary.occupancyRate}%` : '—'}
-                </p>
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '6px 0 0' }}>
-                  {summary ? (summary.occupancyRate >= 90 ? 'Excellent' : summary.occupancyRate >= 70 ? 'Correct' : 'Vacance élevée') : 'Biens loués / parc total'}
-                </p>
-              </div>
+              {(() => {
+                const rate = summary?.occupancyRate ?? null
+                const qual = rate == null ? null : rate >= 90 ? 'Excellent' : rate >= 70 ? 'Correct' : 'Vacance élevée'
+                const accent = rate == null ? BAI.inkFaint : rate >= 80 ? BAI.tenant : BAI.caramel
+                return (
+                  <div style={{ ...kpiCardStyle, borderLeft: `4px solid ${accent}` }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, margin: 0 }}>Occupation</p>
+                      <div style={{ width: 32, height: 32, borderRadius: 8, background: BAI.bgMuted, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Building2 style={{ width: 15, height: 15, color: accent }} />
+                      </div>
+                    </div>
+                    <p style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(24px,3.5vw,32px)', fontWeight: 700, fontStyle: 'italic', color: accent, margin: '0 0 4px', lineHeight: 1 }}>
+                      {rate != null ? `${rate}%` : '—'}
+                    </p>
+                    {/* Mini progress bar */}
+                    <div style={{ height: 4, background: BAI.border, borderRadius: 99, marginBottom: 4, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${rate ?? 0}%`, background: accent, borderRadius: 99, transition: '0.6s ease' }} />
+                    </div>
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: 0 }}>{qual ?? 'Biens loués / parc total'}</p>
+                  </div>
+                )
+              })()}
             </div>
 
             {/* Area chart */}

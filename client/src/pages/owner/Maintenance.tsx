@@ -1152,31 +1152,51 @@ export default function Maintenance() {
         {/* ── Liste view ─────────────────────────────────────────────────── */}
         {viewMode === 'liste' && (
           <>
-            {/* ── Stats summary bar ──────────────────────────────────────── */}
-            {requests.length > 0 && (
-              <div style={{ display: 'flex', gap: 12, marginBottom: 16, padding: '14px 18px', background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-                {[
-                  { label: 'Ouverts', count: requests.filter(r => r.status === 'OPEN').length, color: BAI.error, bg: BAI.errorLight },
-                  { label: 'En cours', count: requests.filter(r => r.status === 'IN_PROGRESS').length, color: BAI.owner, bg: BAI.ownerLight },
-                  { label: 'Résolus', count: requests.filter(r => r.status === 'RESOLVED' || r.status === 'CLOSED').length, color: BAI.tenant, bg: BAI.tenantLight },
-                ].map(item => (
-                  <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 8, background: item.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span style={{ fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 700, color: item.color }}>{item.count}</span>
-                    </div>
-                    <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid }}>{item.label}</span>
-                  </div>
-                ))}
-                {requests.filter(r => r.priority === 'URGENT' && (r.status === 'OPEN' || r.status === 'IN_PROGRESS')).length > 0 && (
-                  <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 999, background: BAI.errorLight, border: `1px solid #fca5a5` }}>
-                    <AlertTriangle style={{ width: 12, height: 12, color: BAI.error }} />
-                    <span style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.error }}>
-                      {requests.filter(r => r.priority === 'URGENT' && (r.status === 'OPEN' || r.status === 'IN_PROGRESS')).length} urgent{requests.filter(r => r.priority === 'URGENT' && (r.status === 'OPEN' || r.status === 'IN_PROGRESS')).length > 1 ? 's' : ''}
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
+            {/* ── Stat tiles (cliquables → filtre la liste) ──────────────── */}
+            {(() => {
+              const urgentCount = requests.filter(r => r.priority === 'URGENT' && (r.status === 'OPEN' || r.status === 'IN_PROGRESS')).length
+              const openCount2 = requests.filter(r => r.status === 'OPEN').length
+              const inProgressCount = requests.filter(r => r.status === 'IN_PROGRESS').length
+              const resolvedCount = requests.filter(r => r.status === 'RESOLVED' || r.status === 'CLOSED').length
+              const tiles = [
+                { filter: 'OPEN' as StatusFilter,        label: 'Ouverts',   count: openCount2,     accent: BAI.error,  accentLight: BAI.errorLight,  border: '#fca5a5', icon: <AlertTriangle style={{ width: 18, height: 18 }} /> },
+                { filter: 'IN_PROGRESS' as StatusFilter, label: 'En cours',  count: inProgressCount, accent: BAI.owner,  accentLight: BAI.ownerLight,  border: BAI.ownerBorder, icon: <Clock style={{ width: 18, height: 18 }} /> },
+                { filter: 'RESOLVED' as StatusFilter,    label: 'Résolus',   count: resolvedCount,  accent: BAI.tenant, accentLight: BAI.tenantLight, border: BAI.tenantBorder, icon: <CheckCircle style={{ width: 18, height: 18 }} /> },
+                { filter: 'ALL' as StatusFilter,          label: 'Total',     count: requests.length, accent: BAI.inkMid, accentLight: BAI.bgMuted,    border: BAI.border, icon: <Wrench style={{ width: 18, height: 18 }} /> },
+              ]
+              return (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 20 }}>
+                  {tiles.map(tile => {
+                    const active = statusFilter === tile.filter
+                    return (
+                      <button
+                        key={tile.label}
+                        onClick={() => setStatusFilter(tile.filter)}
+                        style={{
+                          display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 6,
+                          padding: '16px 18px', borderRadius: 12, cursor: 'pointer', textAlign: 'left',
+                          border: active ? `2px solid ${tile.accent}` : `1px solid ${tile.border}`,
+                          background: active ? tile.accentLight : BAI.bgSurface,
+                          transition: BAI.transition, outline: 'none',
+                          boxShadow: active ? `0 0 0 3px ${tile.accentLight}` : 'none',
+                        }}
+                      >
+                        <div style={{ color: tile.accent }}>{tile.icon}</div>
+                        <div>
+                          <p style={{ fontFamily: BAI.fontDisplay, fontSize: 28, fontWeight: 700, fontStyle: 'italic', color: tile.accent, margin: 0, lineHeight: 1 }}>{tile.count}</p>
+                          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: active ? tile.accent : BAI.inkFaint, margin: '4px 0 0' }}>{tile.label}</p>
+                        </div>
+                        {tile.filter === 'OPEN' && urgentCount > 0 && (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 999, background: '#fef2f2', border: '1px solid #fca5a5', fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, color: BAI.error }}>
+                            {urgentCount} urgent{urgentCount > 1 ? 's' : ''}
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              )
+            })()}
 
             {/* ── Filter bar ────────────────────────────────────────────── */}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20, alignItems: 'center' }}>
