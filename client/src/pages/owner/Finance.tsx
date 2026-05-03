@@ -42,6 +42,9 @@ import {
   Landmark,
   Calculator,
   Wallet,
+  Download,
+  ShieldCheck,
+  Printer,
 } from 'lucide-react'
 import { financeService, MarketAnalysis } from '../../services/finance.service'
 import toast from 'react-hot-toast'
@@ -457,6 +460,76 @@ export default function Finance() {
     }
   }
 
+  // ── Fiscal report generator ──────────────────────────────────────────────
+  function generateFiscalReport() {
+    const year = new Date().getFullYear() - 1
+    const rev = summary?.totalRevenue ?? 0
+    const exp = summary?.totalExpenses ?? 0
+    const net = summary?.netCashFlow ?? 0
+    const regimeLabels: Record<string, string> = {
+      micro_foncier: 'Micro-foncier (abattement 30 %)',
+      reel: 'Régime réel foncier',
+      micro_bic: 'LMNP Micro-BIC (abattement 50 %)',
+      bic_reel: 'LMNP BIC Réel',
+      is: "SCI à l'IS",
+      unknown: 'Régime non défini',
+    }
+    const regime = regimeLabels[fiscalForm.currentRegime] ?? 'Non défini'
+    const microBase = fiscalForm.currentRegime === 'micro_foncier' ? Math.round(rev * 0.7) : fiscalForm.currentRegime === 'micro_bic' ? Math.round(rev * 0.5) : null
+    const forms = fiscalForm.currentRegime === 'reel' || fiscalForm.currentRegime === 'micro_foncier'
+      ? [{ label: 'Revenus fonciers', ref: '2044 + 2042' }]
+      : fiscalForm.currentRegime === 'micro_bic' || fiscalForm.currentRegime === 'bic_reel'
+      ? [{ label: 'BIC (LMNP)', ref: '2031 + 2042-C' }]
+      : fiscalForm.currentRegime === 'is'
+      ? [{ label: 'Impôt sur les sociétés', ref: '2065' }]
+      : [{ label: 'Déclaration principale', ref: '2042' }]
+    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Rapport fiscal ${year} — Bailio</title>
+    <style>
+      *{box-sizing:border-box}
+      body{font-family:'DM Sans',Arial,sans-serif;max-width:780px;margin:40px auto;padding:0 24px;color:#0d0c0a;line-height:1.6}
+      h1{font-family:Georgia,serif;font-style:italic;font-size:36px;color:#1a3270;margin:0 0 4px}
+      .sub{color:#5a5754;font-size:13px;margin:0 0 32px}
+      .badge{display:inline-block;padding:3px 10px;border-radius:99px;border:1px solid #b8ccf0;background:#eaf0fb;color:#1a3270;font-size:11px;font-weight:700;letter-spacing:0.06em;margin-bottom:32px}
+      .card{background:#f4f2ee;border-radius:12px;padding:20px 24px;margin-bottom:16px}
+      .card h2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#9e9b96;margin:0 0 14px}
+      .row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #e4e1db;font-size:14px}
+      .row:last-child{border-bottom:none}
+      .lbl{color:#5a5754}.val{font-weight:700}
+      .green{color:#1b5e3b}.red{color:#9b1c1c}.blue{color:#1a3270}
+      .links a{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;border:1px solid #e4e1db;background:#fff;color:#1a3270;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:8px}
+      .links a:hover{background:#eaf0fb}
+      .disclaimer{font-size:11px;color:#9e9b96;margin-top:32px;padding-top:16px;border-top:1px solid #e4e1db}
+      @media print{body{margin:20px}.no-print{display:none}}
+    </style></head><body>
+    <p style="color:#c4976a;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin:0 0 8px">Gestion locative · Bailio</p>
+    <h1>Rapport fiscal ${year}</h1>
+    <p class="sub">Généré le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+    <span class="badge">${regime}</span>
+    <div class="card"><h2>Synthèse financière ${year}</h2>
+      <div class="row"><span class="lbl">Revenus fonciers bruts</span><span class="val blue">${rev.toLocaleString('fr-FR')} €</span></div>
+      <div class="row"><span class="lbl">Charges &amp; dépenses</span><span class="val">${exp.toLocaleString('fr-FR')} €</span></div>
+      <div class="row"><span class="lbl">Résultat net</span><span class="val ${net >= 0 ? 'green' : 'red'}">${net >= 0 ? '+' : ''}${net.toLocaleString('fr-FR')} €</span></div>
+      ${microBase != null ? `<div class="row"><span class="lbl">Base imposable (après abattement)</span><span class="val blue">${microBase.toLocaleString('fr-FR')} €</span></div>` : ''}
+    </div>
+    ${myProperties.length > 0 ? `<div class="card"><h2>Patrimoine immobilier</h2>${myProperties.map(p => `<div class="row"><span class="lbl">${p.title} — ${p.city}</span><span class="val">${p.price ? (p.price * 12).toLocaleString('fr-FR') + ' €/an estimé' : 'Loyer à renseigner'}</span></div>`).join('')}</div>` : ''}
+    <div class="card"><h2>Formulaires à déposer</h2>
+      ${forms.map(f => `<div class="row"><span class="lbl">${f.label}</span><span class="val blue">Formulaire ${f.ref}</span></div>`).join('')}
+      <div class="row"><span class="lbl">Date limite de dépôt</span><span class="val">Voir calendrier fiscal impots.gouv.fr</span></div>
+    </div>
+    <div class="links"><h2 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#9e9b96;margin:0 0 12px">Se connecter &amp; déclarer</h2>
+      <a href="https://www.impots.gouv.fr/accueil" target="_blank">🔗 impots.gouv.fr — Espace personnel (déclaration en ligne)</a>
+      <a href="https://www.impots.gouv.fr/portail/formulaire/2044/declaration-des-revenus-fonciers" target="_blank">📄 Formulaire 2044 — Revenus fonciers (régime réel)</a>
+      <a href="https://www.impots.gouv.fr/portail/formulaire/2042/declaration-des-revenus" target="_blank">📄 Formulaire 2042 — Déclaration principale</a>
+      <a href="https://www.impots.gouv.fr/portail/formulaire/2042-c-pro/declaration-complementaire-des-revenus-des-professions-non-salariees" target="_blank">📄 Formulaire 2042-C Pro — LMNP</a>
+      <a href="https://www.anil.org/" target="_blank">ℹ️ ANIL — Agence Nationale pour l'Information sur le Logement</a>
+    </div>
+    <div class="disclaimer">⚠️ Ce rapport est indicatif et généré automatiquement à partir de vos données Bailio. Il ne constitue pas un conseil fiscal. Consultez votre expert-comptable ou le service des impôts pour votre situation personnelle.</div>
+    <script>window.onload=function(){window.print()}</script>
+    </body></html>`
+    const w = window.open('', '_blank')
+    if (w) { w.document.write(html); w.document.close() }
+  }
+
   const chartData = (summary?.cashFlowByMonth ?? []).map((m) => ({
     name: formatMonth(m.month),
     Revenus: Math.round(m.revenue),
@@ -754,6 +827,115 @@ export default function Finance() {
                 </ResponsiveContainer>
               </div>
             )}
+
+            {/* ── Espace Fiscal rapide ──────────────────────────────────── */}
+            {(() => {
+              const year = new Date().getFullYear() - 1
+              const rev = summary?.totalRevenue ?? 0
+              const exp = summary?.totalExpenses ?? 0
+              const net = summary?.netCashFlow ?? 0
+              const regimeBadges: Record<string, { label: string; color: string; bg: string }> = {
+                micro_foncier: { label: 'Micro-foncier', color: BAI.owner, bg: BAI.ownerLight },
+                reel: { label: 'Réel foncier', color: BAI.owner, bg: BAI.ownerLight },
+                micro_bic: { label: 'LMNP Micro-BIC', color: BAI.caramel, bg: BAI.caramelLight },
+                bic_reel: { label: 'LMNP BIC Réel', color: BAI.caramel, bg: BAI.caramelLight },
+                is: { label: "SCI à l'IS", color: BAI.inkMid, bg: BAI.bgMuted },
+                unknown: { label: 'Régime à définir', color: BAI.inkFaint, bg: BAI.bgMuted },
+              }
+              const regime = regimeBadges[fiscalForm.currentRegime] ?? regimeBadges.unknown
+              const microBase = fiscalForm.currentRegime === 'micro_foncier' ? Math.round(rev * 0.7)
+                : fiscalForm.currentRegime === 'micro_bic' ? Math.round(rev * 0.5) : null
+              return (
+                <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.ownerBorder}`, borderLeft: `4px solid ${BAI.owner}`, borderRadius: 12, padding: '20px 24px', boxShadow: '0 1px 3px rgba(13,12,10,0.04)' }}>
+                  {/* Header */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 9, background: BAI.ownerLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Calculator style={{ width: 17, height: 17, color: BAI.owner }} />
+                      </div>
+                      <div>
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkFaint, margin: 0 }}>Administration fiscale</p>
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 15, fontWeight: 700, color: BAI.ink, margin: '2px 0 0' }}>Espace Fiscal — Déclaration {year}</p>
+                      </div>
+                    </div>
+                    <span style={{ padding: '4px 12px', borderRadius: 999, background: regime.bg, border: `1px solid ${regime.color}30`, fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: regime.color }}>
+                      {regime.label}
+                    </span>
+                  </div>
+
+                  {/* Chiffres clés */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 16 }}>
+                    {[
+                      { label: 'Revenus à déclarer', value: formatEuro(rev), color: BAI.owner },
+                      { label: 'Charges déductibles', value: formatEuro(exp), color: BAI.caramel },
+                      { label: 'Résultat net', value: formatEuro(net), color: net >= 0 ? BAI.tenant : BAI.error },
+                      ...(microBase != null ? [{ label: `Base imposable (après abattement)`, value: formatEuro(microBase), color: BAI.owner }] : []),
+                    ].map(item => (
+                      <div key={item.label} style={{ background: BAI.bgMuted, borderRadius: 10, padding: '12px 14px' }}>
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 4px' }}>{item.label}</p>
+                        <p style={{ fontFamily: BAI.fontDisplay, fontSize: 20, fontWeight: 700, fontStyle: 'italic', color: item.color, margin: 0 }}>{item.value}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Liens & actions */}
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <button
+                      onClick={generateFiscalReport}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 9, border: 'none', background: BAI.owner, color: '#fff', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      <Printer style={{ width: 14, height: 14 }} />
+                      Générer mon rapport fiscal
+                    </button>
+                    <a
+                      href="https://www.impots.gouv.fr/accueil"
+                      target="_blank" rel="noopener noreferrer"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 18px', borderRadius: 9, border: `1px solid ${BAI.ownerBorder}`, background: BAI.ownerLight, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.owner }}
+                    >
+                      <ExternalLink style={{ width: 13, height: 13 }} />
+                      Se connecter sur impots.gouv.fr
+                    </a>
+                    <button
+                      onClick={() => setActiveTab('fiscal')}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 18px', borderRadius: 9, border: `1px solid ${BAI.border}`, background: 'transparent', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.inkMid, cursor: 'pointer' }}
+                    >
+                      <Calculator style={{ width: 13, height: 13 }} />
+                      Conseil fiscal détaillé
+                    </button>
+                  </div>
+
+                  {/* Formulaires officiels */}
+                  <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${BAI.border}` }}>
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.inkFaint, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px' }}>Formulaires à compléter</p>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {[
+                        ...(fiscalForm.currentRegime === 'reel' || fiscalForm.currentRegime === 'micro_foncier' ? [
+                          { label: 'Formulaire 2044', url: 'https://www.impots.gouv.fr/portail/formulaire/2044/declaration-des-revenus-fonciers', badge: 'Revenus fonciers' },
+                          { label: 'Formulaire 2042', url: 'https://www.impots.gouv.fr/portail/formulaire/2042/declaration-des-revenus', badge: 'Déclaration principale' },
+                        ] : []),
+                        ...(fiscalForm.currentRegime === 'micro_bic' || fiscalForm.currentRegime === 'bic_reel' ? [
+                          { label: 'Formulaire 2031', url: 'https://www.impots.gouv.fr/portail/formulaire/2031/declaration-de-resultats', badge: 'BIC / LMNP' },
+                          { label: 'Formulaire 2042-C', url: 'https://www.impots.gouv.fr/portail/formulaire/2042-c-pro/declaration-complementaire-des-revenus-des-professions-non-salariees', badge: 'Complémentaire' },
+                        ] : []),
+                        { label: 'Calendrier fiscal', url: 'https://www.impots.gouv.fr/particulier/les-dates-cles-de-votre-calendrier-fiscal', badge: 'Dates limites' },
+                      ].map(f => (
+                        <a key={f.url} href={f.url} target="_blank" rel="noopener noreferrer"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 7, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, textDecoration: 'none' }}>
+                          <Download style={{ width: 11, height: 11, color: BAI.inkFaint }} />
+                          <span style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.ink }}>{f.label}</span>
+                          <span style={{ padding: '1px 6px', borderRadius: 999, background: BAI.ownerLight, fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, color: BAI.owner }}>{f.badge}</span>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: '12px 0 0', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <ShieldCheck style={{ width: 12, height: 12, flexShrink: 0 }} />
+                    Ces chiffres sont indicatifs. Consultez un expert-comptable pour votre déclaration officielle.
+                  </p>
+                </div>
+              )
+            })()}
 
             {/* Market locatif widget */}
             <div
@@ -1750,9 +1932,32 @@ export default function Finance() {
         {activeTab === 'market' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
+            {/* Market header */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, padding: '16px 20px', background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12 }}>
+              <div>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 4px' }}>Analyse comparative</p>
+                <h2 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(20px,3vw,26px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '0 0 4px' }}>Marché locatif</h2>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, margin: 0 }}>
+                  Positionnez vos loyers par rapport au marché · données ANIL 2025 · encadrement légal
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <a href="https://www.ecologie.gouv.fr/politiques-publiques/carte-loyers" target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkMid }}>
+                  <ExternalLink style={{ width: 11, height: 11 }} /> Carte officielle
+                </a>
+                <a href="https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers" target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 8, border: `1px solid ${BAI.ownerBorder}`, background: BAI.ownerLight, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.owner }}>
+                  <ShieldCheck style={{ width: 11, height: 11 }} /> Vérifier encadrement
+                </a>
+              </div>
+            </div>
+
             {myProperties.length === 0 && (
-              <div style={{ textAlign: 'center', padding: 40, fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint }}>
-                Aucun bien enregistré
+              <div style={{ textAlign: 'center', padding: '48px 24px', background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12 }}>
+                <Building2 style={{ width: 36, height: 36, color: BAI.inkFaint, margin: '0 auto 12px' }} />
+                <p style={{ fontFamily: BAI.fontDisplay, fontSize: 22, fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '0 0 6px' }}>Aucun bien enregistré</p>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint, margin: 0 }}>Ajoutez des biens pour voir l'analyse de marché.</p>
               </div>
             )}
 
@@ -1767,24 +1972,30 @@ export default function Finance() {
               const encAlert = analysis?.encadrementStatus === 'above_limit'
 
               return (
-                <div key={property.id} style={{ background: BAI.bgSurface, border: `1px solid ${encAlert ? BAI.error : BAI.border}`, borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(13,12,10,0.04)' }}>
+                <div key={property.id} style={{ background: BAI.bgSurface, border: `1px solid ${encAlert ? '#fca5a5' : BAI.border}`, borderLeft: `4px solid ${encAlert ? BAI.error : verdict ? verdict.color : BAI.border}`, borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(13,12,10,0.04)' }}>
 
                   {/* Top row: bien + verdict */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', padding: '16px 20px', borderBottom: analysis ? `1px solid ${BAI.border}` : 'none' }}>
                     <div>
-                      <p style={{ fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 700, color: BAI.ink, margin: 0 }}>{property.title}</p>
-                      <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '2px 0 0' }}>{property.city} · {property.surface} m²</p>
+                      <p style={{ fontFamily: BAI.fontDisplay, fontSize: 18, fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '0 0 2px' }}>{property.title}</p>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <MapPin style={{ width: 11, height: 11 }} />{property.city}
+                        {property.surface ? ` · ${property.surface} m²` : ''}
+                        {property.price ? ` · ${property.price.toLocaleString('fr-FR')} €/mois` : ''}
+                      </p>
                     </div>
-                    {verdict && (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 999, background: `${verdict.color}12`, border: `1px solid ${verdict.color}30`, fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: verdict.color }}>
-                        {verdict.icon} {verdict.label}
-                      </span>
-                    )}
-                    {!analysis && (
-                      <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>
-                        {marketLoading ? 'Analyse en cours...' : '—'}
-                      </span>
-                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {verdict && (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', borderRadius: 999, background: `${verdict.color}12`, border: `1px solid ${verdict.color}40`, fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: verdict.color }}>
+                          {verdict.icon} {verdict.label}
+                        </span>
+                      )}
+                      {!analysis && (
+                        <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>
+                          {marketLoading ? '⏳ Analyse en cours...' : '—'}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {analysis && (
