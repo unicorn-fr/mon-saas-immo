@@ -6,6 +6,7 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { useAuth } from './hooks/useAuth'
 import { useThemeStore } from './store/themeStore'
 import { ScrollToTop } from './components/ScrollToTop'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
 // Pages
 import Home from './pages/Home'
@@ -251,21 +252,21 @@ function AppRoutes() {
         <Route path="/select-role" element={<SelectRole />} />
       </Route>
 
+      {/* Protected Routes - Create Contract (Owner only) — AVANT /contracts/:id */}
+      <Route element={<ProtectedRoute allowedRoles={['OWNER', 'ADMIN']} />}>
+        <Route path="/contracts/new" element={<ErrorBoundary><CreateContract /></ErrorBoundary>} />
+      </Route>
+
       {/* Protected Routes - All authenticated users */}
       <Route element={<ProtectedRoute />}>
         <Route path="/profile" element={<Profile />} />
         <Route path="/messages" element={<Messages />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/contracts" element={<ContractsList />} />
-        <Route path="/contracts/:id" element={<ContractDetails />} />
+        <Route path="/contracts/:id" element={<ErrorBoundary><ContractDetails /></ErrorBoundary>} />
         <Route path="/contracts/:id/edl" element={<EtatDesLieux />} />
         <Route path="/contracts/:contractId/edl/session" element={<EdlSessionPage />} />
         <Route path="/edl/join" element={<EdlJoin />} />
-      </Route>
-
-      {/* Protected Routes - Create Contract (Owner only) */}
-      <Route element={<ProtectedRoute allowedRoles={['OWNER', 'ADMIN']} />}>
-        <Route path="/contracts/new" element={<CreateContract />} />
       </Route>
 
       {/* Waitlist admin — public route, protégé par ?secret= côté composant */}
