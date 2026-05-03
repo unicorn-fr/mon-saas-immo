@@ -8,10 +8,9 @@ import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/render
 import { Contract, ContractClause } from '../../types/contract.types'
 
 // ─── Typographie & mise en page ───────────────────────────────────────────────
-const FONT   = 'Times-Roman'
-const FONTB  = 'Times-Bold'
-const FONTI  = 'Times-Italic'
-const FONTBI = 'Times-BoldItalic'
+const FONT  = 'Times-Roman'
+const FONTB = 'Times-Bold'
+const FONTI = 'Times-Italic'
 
 const s = StyleSheet.create({
   page: {
