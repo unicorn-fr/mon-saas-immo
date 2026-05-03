@@ -1,800 +1,874 @@
 /**
- * ContractPDF — Bail d'habitation Loi ALUR
- * Structure fidèle au modèle type Smartloc / Décret n°2015-587 du 29 mai 2015
- * Sections I–XI avec sous-sections A/B/C, textes verbatim légaux
- * DA Maison · nuit #1a1a2e · caramel #c4976a
+ * ContractPDF — Bail d'habitation conforme Loi n°89-462 du 6 juillet 1989
+ * Modèle type annexe 1 du décret n°2015-587 du 29 mai 2015 (logement nu)
+ * Style : rédaction notariale — noir sur blanc, aucune couleur décorative
  */
 import type { ReactNode } from 'react'
-import {
-  Document,
-  Page,
-  Text,
-  View,
-  StyleSheet,
-  Image,
-} from '@react-pdf/renderer'
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'
 import { Contract, ContractClause } from '../../types/contract.types'
 
-// ─── Palette ───────────────────────────────────────────────────────────────
-const C = {
-  night:    '#1a1a2e',
-  caramel:  '#c4976a',
-  caramelL: '#fdf5ec',
-  caramelB: '#e8c9a0',
-  tenant:   '#1b5e3b',
-  tenantL:  '#edf7f2',
-  owner:    '#1a3270',
-  ownerL:   '#eaf0fb',
-  ink:      '#0d0c0a',
-  inkMid:   '#5a5754',
-  inkFaint: '#9e9b96',
-  border:   '#e4e1db',
-  muted:    '#f4f2ee',
-  surface:  '#ffffff',
-  warnBg:   '#fdf5ec',
-  warnTx:   '#92400e',
-  errBg:    '#fef2f2',
-  errTx:    '#9b1c1c',
-}
+// ─── Typographie & mise en page ───────────────────────────────────────────────
+const FONT   = 'Times-Roman'
+const FONTB  = 'Times-Bold'
+const FONTI  = 'Times-Italic'
+const FONTBI = 'Times-BoldItalic'
 
 const s = StyleSheet.create({
   page: {
-    paddingTop: 38,
-    paddingBottom: 52,
-    paddingHorizontal: 45,
-    fontSize: 9,
-    fontFamily: 'Helvetica',
-    color: C.ink,
-    lineHeight: 1.6,
-    backgroundColor: C.surface,
+    paddingTop: 55,
+    paddingBottom: 65,
+    paddingHorizontal: 65,
+    fontSize: 9.5,
+    fontFamily: FONT,
+    color: '#000000',
+    lineHeight: 1.55,
+    backgroundColor: '#ffffff',
   },
 
-  // ── En-tête ──────────────────────────────────────────────────────────────
-  titleBlock: { marginBottom: 14, paddingBottom: 10, borderBottomWidth: 2, borderBottomColor: C.night },
-  titleMain: { fontSize: 13, fontFamily: 'Helvetica-Bold', color: C.night, textAlign: 'center', letterSpacing: 0.4, marginBottom: 4 },
-  titleSub:  { fontSize: 7.5, color: C.inkMid, textAlign: 'center', marginBottom: 2 },
-  refRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
-  refLeft: { fontSize: 7, color: C.inkFaint },
-  refRight: { fontSize: 7, fontFamily: 'Helvetica-Bold', color: C.caramel },
-
-  // ── Intro légale ──────────────────────────────────────────────────────────
-  introText: { fontSize: 8, color: C.inkMid, textAlign: 'justify', marginBottom: 5, lineHeight: 1.55 },
-
-  // ── Section I/II/III…  header ─────────────────────────────────────────────
-  secRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 12,
+  // ── En-tête ──────────────────────────────────────────────────────────────────
+  headerCenter: {
+    textAlign: 'center',
     marginBottom: 4,
   },
-  secNum:   { fontSize: 11, fontFamily: 'Helvetica-Bold', color: C.night, width: 32 },
-  secTitle: { fontSize: 10, fontFamily: 'Helvetica-Bold', color: C.night, flex: 1, borderBottomWidth: 1, borderBottomColor: C.caramel, paddingBottom: 2 },
-
-  // ── Sous-section A/B/C… ───────────────────────────────────────────────────
-  subRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 6,
+  mainTitle: {
+    fontSize: 12,
+    fontFamily: FONTB,
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
     marginBottom: 3,
-    paddingLeft: 8,
   },
-  subLetter: { fontSize: 8.5, fontFamily: 'Helvetica-Bold', color: C.inkMid, width: 28 },
-  subTitle:  { fontSize: 8.5, fontFamily: 'Helvetica-Bold', color: C.inkMid, flex: 1 },
+  subTitle: {
+    fontSize: 8.5,
+    fontFamily: FONTI,
+    textAlign: 'center',
+    marginBottom: 2,
+  },
+  refLine: {
+    fontSize: 8,
+    textAlign: 'center',
+    marginBottom: 2,
+  },
+  hRule: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#000000',
+    marginVertical: 10,
+  },
+  hRuleThin: {
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#000000',
+    marginVertical: 6,
+  },
 
-  // ── Corps de texte ────────────────────────────────────────────────────────
-  p:     { fontSize: 9, color: C.ink, textAlign: 'justify', marginBottom: 4, paddingLeft: 8 },
-  pBold: { fontSize: 9, fontFamily: 'Helvetica-Bold', color: C.ink, marginBottom: 4, paddingLeft: 8 },
-  pSmall: { fontSize: 8, color: C.inkMid, textAlign: 'justify', marginBottom: 3, paddingLeft: 8 },
+  // ── Section (I. TITRE) ────────────────────────────────────────────────────────
+  sectionTitle: {
+    fontSize: 10,
+    fontFamily: FONTB,
+    textTransform: 'uppercase',
+    marginTop: 14,
+    marginBottom: 5,
+    letterSpacing: 0.3,
+  },
 
-  // ── Points a) b) / 1° 2° ─────────────────────────────────────────────────
-  ptRow: { flexDirection: 'row', marginBottom: 3, paddingLeft: 16 },
-  ptLabel: { fontSize: 9, fontFamily: 'Helvetica-Bold', color: C.caramel, width: 26 },
-  ptBody: { fontSize: 9, color: C.ink, flex: 1, textAlign: 'justify' },
-  ptBodyBold: { fontSize: 9, fontFamily: 'Helvetica-Bold', color: C.ink, flex: 1 },
+  // ── Sous-section (A. Titre) ────────────────────────────────────────────────────
+  subTitle2: {
+    fontSize: 9.5,
+    fontFamily: FONTB,
+    marginTop: 8,
+    marginBottom: 3,
+    paddingLeft: 0,
+    textDecoration: 'underline',
+  },
 
-  // ── Table récapitulatif financier ─────────────────────────────────────────
-  tableWrap: { marginLeft: 8, marginBottom: 6, borderWidth: 1, borderColor: C.border, borderRadius: 3, overflow: 'hidden' },
-  tableHdr:  { backgroundColor: C.night, paddingVertical: 4, paddingHorizontal: 8 },
-  tableHdrTx: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: C.surface },
-  tableRow:  { flexDirection: 'row', borderBottomWidth: 0.5, borderBottomColor: C.border },
-  tableRowL: { flexDirection: 'row' },
-  tableCell: { flex: 1, padding: '4 8', fontSize: 8.5, color: C.ink },
-  tableCellB: { flex: 1, padding: '4 8', fontSize: 8.5, fontFamily: 'Helvetica-Bold', color: C.ink },
+  // ── Corps ─────────────────────────────────────────────────────────────────────
+  p: {
+    fontSize: 9.5,
+    textAlign: 'justify',
+    marginBottom: 5,
+    fontFamily: FONT,
+  },
+  pBold: {
+    fontSize: 9.5,
+    fontFamily: FONTB,
+    marginBottom: 4,
+  },
+  pItalic: {
+    fontSize: 8.5,
+    fontFamily: FONTI,
+    marginBottom: 4,
+    color: '#333333',
+  },
+  pIndent: {
+    fontSize: 9.5,
+    textAlign: 'justify',
+    marginBottom: 4,
+    paddingLeft: 20,
+    fontFamily: FONT,
+  },
 
-  // ── Grille financière top ─────────────────────────────────────────────────
-  finGrid: { flexDirection: 'row', borderWidth: 1, borderColor: C.caramelB, borderRadius: 4, backgroundColor: C.caramelL, marginBottom: 10, overflow: 'hidden' },
-  finCell: { flex: 1, padding: '8 10', alignItems: 'center', borderRightWidth: 1, borderRightColor: C.caramelB },
-  finCellL: { flex: 1, padding: '8 10', alignItems: 'center' },
-  finAmt: { fontSize: 13, fontFamily: 'Helvetica-Bold', color: C.night },
-  finLbl: { fontSize: 7, color: C.inkMid, marginTop: 2, textAlign: 'center' },
-  finSub: { fontSize: 6, color: C.inkFaint, marginTop: 1 },
+  // ── Ligne de données (label : valeur) ─────────────────────────────────────────
+  fieldRow: {
+    flexDirection: 'row',
+    marginBottom: 4,
+  },
+  fieldLabel: {
+    fontSize: 9.5,
+    fontFamily: FONTB,
+    width: 200,
+    flexShrink: 0,
+  },
+  fieldValue: {
+    fontSize: 9.5,
+    fontFamily: FONT,
+    flex: 1,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#666666',
+    paddingBottom: 1,
+  },
 
-  // ── Cartes parties ────────────────────────────────────────────────────────
-  partiesRow: { flexDirection: 'row', marginBottom: 8 },
-  partyCard: { flex: 1, borderWidth: 1, borderColor: C.border, borderRadius: 4, overflow: 'hidden', marginRight: 8 },
-  partyCardL: { flex: 1, borderWidth: 1, borderColor: C.border, borderRadius: 4, overflow: 'hidden' },
-  partyHeadO: { paddingVertical: 4, paddingHorizontal: 8, backgroundColor: C.owner },
-  partyHeadT: { paddingVertical: 4, paddingHorizontal: 8, backgroundColor: C.tenant },
-  partyHeadTx: { fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: C.surface },
-  partyBody: { padding: 8 },
-  partyName: { fontSize: 9.5, fontFamily: 'Helvetica-Bold', color: C.ink, marginBottom: 2 },
-  partyDetail: { fontSize: 7.5, color: C.inkMid, marginBottom: 1 },
+  // ── Tableau financier ──────────────────────────────────────────────────────────
+  table: {
+    borderWidth: 0.75,
+    borderColor: '#000000',
+    marginVertical: 6,
+  },
+  tableRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#000000',
+  },
+  tableRowLast: {
+    flexDirection: 'row',
+  },
+  tableHeaderRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 0.75,
+    borderBottomColor: '#000000',
+    backgroundColor: '#f0f0f0',
+  },
+  tableCell: {
+    flex: 1,
+    padding: '4 8',
+    fontSize: 9,
+    fontFamily: FONT,
+    borderRightWidth: 0.5,
+    borderRightColor: '#000000',
+  },
+  tableCellLast: {
+    flex: 1,
+    padding: '4 8',
+    fontSize: 9,
+    fontFamily: FONT,
+  },
+  tableCellBold: {
+    flex: 1,
+    padding: '4 8',
+    fontSize: 9,
+    fontFamily: FONTB,
+    borderRightWidth: 0.5,
+    borderRightColor: '#000000',
+  },
+  tableCellBoldLast: {
+    flex: 1,
+    padding: '4 8',
+    fontSize: 9,
+    fontFamily: FONTB,
+  },
+  tableHeader: {
+    flex: 1,
+    padding: '4 8',
+    fontSize: 9,
+    fontFamily: FONTB,
+    borderRightWidth: 0.5,
+    borderRightColor: '#000000',
+    textTransform: 'uppercase',
+  },
+  tableHeaderLast: {
+    flex: 1,
+    padding: '4 8',
+    fontSize: 9,
+    fontFamily: FONTB,
+    textTransform: 'uppercase',
+  },
 
-  // ── Boîtes ────────────────────────────────────────────────────────────────
-  infoBox: { backgroundColor: C.ownerL, borderLeftWidth: 2.5, borderLeftColor: C.owner, borderRadius: 3, padding: 7, marginBottom: 5, marginLeft: 8 },
-  warnBox: { backgroundColor: C.warnBg, borderLeftWidth: 2.5, borderLeftColor: C.caramel, borderRadius: 3, padding: 7, marginBottom: 5, marginLeft: 8 },
-  errBox:  { backgroundColor: C.errBg,  borderLeftWidth: 2.5, borderLeftColor: '#fca5a5', borderRadius: 3, padding: 7, marginBottom: 5, marginLeft: 8 },
+  // ── Encart légal (clause résolutoire etc.) ────────────────────────────────────
+  legalBox: {
+    borderWidth: 0.75,
+    borderColor: '#000000',
+    padding: '8 10',
+    marginVertical: 6,
+  },
+  legalBoxTitle: {
+    fontSize: 9.5,
+    fontFamily: FONTB,
+    textTransform: 'uppercase',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
 
-  // ── Liste à puces (XI Annexes) ────────────────────────────────────────────
-  bulletRow: { flexDirection: 'row', marginBottom: 3, paddingLeft: 16 },
-  bulletDot: { fontSize: 9, color: C.caramel, marginRight: 6 },
-  bulletTx:  { fontSize: 9, color: C.ink, flex: 1 },
+  // ── Signatures ────────────────────────────────────────────────────────────────
+  sigSection: {
+    marginTop: 20,
+  },
+  sigRow: {
+    flexDirection: 'row',
+    marginTop: 8,
+  },
+  sigBlock: {
+    flex: 1,
+    marginRight: 20,
+  },
+  sigBlockLast: {
+    flex: 1,
+  },
+  sigLabel: {
+    fontSize: 9,
+    fontFamily: FONTB,
+    textTransform: 'uppercase',
+    marginBottom: 4,
+  },
+  sigLine: {
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#000000',
+    marginBottom: 4,
+    height: 16,
+  },
+  sigImg: {
+    width: 140,
+    height: 50,
+    objectFit: 'contain',
+    marginBottom: 4,
+  },
+  sigMeta: {
+    fontSize: 7.5,
+    fontFamily: FONTI,
+    color: '#555555',
+    marginBottom: 2,
+  },
 
-  // ── Clauses personnalisées ────────────────────────────────────────────────
-  clauseBox:   { borderWidth: 1, borderColor: C.border, borderRadius: 3, marginBottom: 5 },
-  clauseHead:  { backgroundColor: C.muted, paddingVertical: 4, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center' },
-  clauseBadge: { backgroundColor: C.night, borderRadius: 8, paddingHorizontal: 4, paddingVertical: 1, marginRight: 5 },
-  clauseBadgeTx: { fontSize: 6, color: C.surface, fontFamily: 'Helvetica-Bold' },
-  clauseCustom:  { backgroundColor: C.caramel, borderRadius: 8, paddingHorizontal: 4, paddingVertical: 1, marginLeft: 5 },
-  clauseTitle:   { fontSize: 8.5, fontFamily: 'Helvetica-Bold', color: C.ink },
-  clauseBody:    { padding: 7, fontSize: 8.5, color: C.inkMid, textAlign: 'justify' },
-
-  // ── Signatures (table 2 colonnes) ─────────────────────────────────────────
-  sigRow:     { flexDirection: 'row', marginTop: 16 },
-  sigBox:     { flex: 1, borderWidth: 1, borderColor: C.border, borderRadius: 4, marginRight: 12, overflow: 'hidden' },
-  sigBoxL:    { flex: 1, borderWidth: 1, borderColor: C.border, borderRadius: 4, overflow: 'hidden' },
-  sigHeadO:   { backgroundColor: C.owner, padding: 7 },
-  sigHeadT:   { backgroundColor: C.tenant, padding: 7 },
-  sigHeadTx:  { fontSize: 8, fontFamily: 'Helvetica-Bold', color: C.surface },
-  sigBody:    { padding: 10, minHeight: 100 },
-  sigName:    { fontSize: 9, fontFamily: 'Helvetica-Bold', color: C.ink, marginBottom: 2 },
-  sigEmail:   { fontSize: 7, color: C.inkFaint, marginBottom: 6 },
-  sigDate:    { fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: C.tenant, marginBottom: 3 },
-  sigImg:     { width: 150, height: 55, objectFit: 'contain', marginBottom: 4 },
-  sigEmpty:   { fontSize: 7.5, color: C.inkFaint, fontStyle: 'italic', marginTop: 10, borderTopWidth: 0.5, borderTopColor: C.border, paddingTop: 5 },
-  sigMeta:    { fontSize: 6, color: C.inkFaint, marginTop: 1 },
-  sigMetaOk:  { fontSize: 6, color: C.tenant, marginTop: 1 },
-
-  // ── Séparateur & layout ───────────────────────────────────────────────────
-  divider: { borderTopWidth: 0.5, borderTopColor: C.border, marginVertical: 6 },
-
-  // ── Pied de page ─────────────────────────────────────────────────────────
+  // ── Pied de page fixe ────────────────────────────────────────────────────────
   footer: {
-    position: 'absolute', bottom: 18, left: 45, right: 45,
-    borderTopWidth: 0.5, borderTopColor: C.border, paddingTop: 4,
-    flexDirection: 'row', justifyContent: 'space-between',
+    position: 'absolute',
+    bottom: 22,
+    left: 65,
+    right: 65,
+    borderTopWidth: 0.5,
+    borderTopColor: '#000000',
+    paddingTop: 4,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
-  footerTx:     { fontSize: 6, color: C.inkFaint },
-  footerAccent: { fontSize: 6, color: C.caramel },
+  footerText: {
+    fontSize: 7,
+    fontFamily: FONTI,
+    color: '#444444',
+  },
+  pageNum: {
+    fontSize: 7,
+    fontFamily: FONT,
+    color: '#444444',
+  },
 })
 
-// ─── Helpers ───────────────────────────────────────────────────────────────
-const fmtDate = (d: string) =>
-  new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-const fmtDateS = (d: string) => new Date(d).toLocaleDateString('fr-FR')
-const fmtEUR = (n: number) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n)
-const getDuration = (s: string, e: string) => {
-  const m = Math.round((new Date(e).getTime() - new Date(s).getTime()) / (30.44 * 86400000))
-  const y = Math.floor(m / 12), mo = m % 12
-  if (y > 0 && mo > 0) return `${y} an${y > 1 ? 's' : ''} et ${mo} mois`
-  if (y > 0) return `${y} an${y > 1 ? 's' : ''}`
-  return `${m} mois`
+// ─── Utilitaires ──────────────────────────────────────────────────────────────
+const fmtDate = (d?: string | null): string => {
+  if (!d) return '___________________'
+  const dt = new Date(d)
+  if (isNaN(dt.getTime())) return '___________________'
+  return dt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-// ─── Micro-composants ──────────────────────────────────────────────────────
-const Sec = ({ num, title }: { num: string; title: string }) => (
-  <View style={s.secRow}>
-    <Text style={s.secNum}>{num}</Text>
-    <Text style={s.secTitle}>{title}</Text>
+const fmtEUR = (n?: number | null): string => {
+  if (n == null || isNaN(n)) return '___________________'
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n)
+}
+
+const blank = (label?: string | null, fallback = '___________________'): string =>
+  label?.trim() ? label.trim() : fallback
+
+const getDuration = (s?: string | null, e?: string | null): string => {
+  if (!s || !e) return '___________________'
+  const ms = new Date(e).getTime() - new Date(s).getTime()
+  if (isNaN(ms) || ms <= 0) return '___________________'
+  const totalMonths = Math.round(ms / (30.44 * 86400000))
+  const y = Math.floor(totalMonths / 12)
+  const m = totalMonths % 12
+  const parts: string[] = []
+  if (y > 0) parts.push(`${y} an${y > 1 ? 's' : ''}`)
+  if (m > 0) parts.push(`${m} mois`)
+  return parts.join(' et ') || '___________________'
+}
+
+// ─── Micro-composants ─────────────────────────────────────────────────────────
+const Field = ({ label, value }: { label: string; value: ReactNode }) => (
+  <View style={s.fieldRow}>
+    <Text style={s.fieldLabel}>{label} :</Text>
+    <Text style={s.fieldValue}>{value}</Text>
   </View>
 )
 
-const Sub = ({ letter, title }: { letter: string; title: string }) => (
-  <View style={s.subRow}>
-    <Text style={s.subLetter}>{letter}.</Text>
-    <Text style={s.subTitle}>{title}</Text>
-  </View>
-)
-
-const P = ({ children, bold, small }: { children: ReactNode; bold?: boolean; small?: boolean }) => (
-  <Text style={bold ? s.pBold : small ? s.pSmall : s.p}>{children}</Text>
-)
-
-const Pt = ({ label, children, bold }: { label: string; children: ReactNode; bold?: boolean }) => (
-  <View style={s.ptRow}>
-    <Text style={s.ptLabel}>{label}</Text>
-    <Text style={bold ? s.ptBodyBold : s.ptBody}>{children}</Text>
-  </View>
-)
-
-const Bullet = ({ children }: { children: ReactNode }) => (
-  <View style={s.bulletRow}>
-    <Text style={s.bulletDot}>•</Text>
-    <Text style={s.bulletTx}>{children}</Text>
-  </View>
-)
-
-const Footer = ({ docRef, page }: { docRef: string; page: string }) => (
+const Footer = ({ docRef }: { docRef: string }) => (
   <View style={s.footer} fixed>
-    <Text style={s.footerTx}>Bail habitation · Loi n°89-462 · Loi ALUR 24 mars 2014 · Décret n°2015-587 · Réf. {docRef}</Text>
-    <Text style={s.footerAccent}>{page}</Text>
+    <Text style={s.footerText}>
+      Bail habitation — Loi n°89-462 du 6 juillet 1989 — Loi ALUR du 24 mars 2014 — Décret n°2015-587 — Réf. {docRef}
+    </Text>
+    <Text style={s.pageNum} render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
   </View>
 )
 
-// ─── Composant principal ────────────────────────────────────────────────────
+// ─── Composant principal ──────────────────────────────────────────────────────
 interface ContractPDFProps {
   contract: Contract
   clauses?: ContractClause[]
 }
 
 export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
-  const enabled  = (clauses ?? []).filter(c => c.enabled)
-  const cnt      = (contract.content as Record<string, any>) || {}
-  const sigMeta  = cnt.signatureMetadata || {}
-  const docRef   = (contract.id ?? '').substring(0, 8).toUpperCase() || 'BROUILLON'
-  const total    = contract.monthlyRent + (contract.charges ?? 0)
-  const isMeuble = cnt.meuble === 'Meuble'
-  const zoneTendue     = cnt.zoneTendue === 'Oui'
+  const enabled = (clauses ?? []).filter(c => c.enabled)
+  const cnt     = (contract.content as Record<string, any>) || {}
+  const docRef  = (contract.id ?? '').substring(0, 8).toUpperCase() || 'BROUILLON'
+
+  const isMeuble        = cnt.meuble === 'Meuble'
+  const zoneTendue      = cnt.zoneTendue === 'Oui'
   const encadrementLoyer = cnt.encadrementLoyer === 'Oui'
-  const dpe        = cnt.classeEnergie || ''
-  const dpeWarn    = dpe === 'F' || dpe === 'G'
-  const dom        = cnt.territoireDom === 'Oui'
+  const dpe             = cnt.classeEnergie || ''
+  const dpeWarn         = dpe === 'F' || dpe === 'G'
+  const dom             = cnt.territoireDom === 'Oui'
+  const dureeRef        = isMeuble ? '1 an' : '3 ans'
+  const depositMax      = isMeuble ? 'deux (2) mois de loyer hors charges' : 'un (1) mois de loyer hors charges'
+  const annexeRef       = isMeuble ? '2' : '1'
 
-  const dureeAns   = isMeuble ? '1 an' : '3 ans'
-  const depositMax = isMeuble ? '2 mois de loyer HC' : '1 mois de loyer HC'
-
-  const payMode: Record<string, string> = {
-    virement: 'virement bancaire', Virement_bancaire: 'virement bancaire',
-    prelevement: 'prélèvement automatique', cheque: 'chèque bancaire', especes: 'espèces',
+  const payModes: Record<string, string> = {
+    virement: 'virement bancaire',
+    Virement_bancaire: 'virement bancaire',
+    prelevement: 'prélèvement automatique',
+    cheque: 'chèque bancaire',
+    especes: 'espèces (reçu obligatoire)',
   }
-  const payMethod = payMode[cnt.paymentMethod] || cnt.paymentMethod || 'virement ou prélèvement'
-  const hasCustomPage = enabled.length > 0 || !!contract.terms
+  const payMethod = payModes[cnt.paymentMethod] || cnt.paymentMethod || 'virement bancaire'
 
-  const Watermark = () => (
-    <View style={{ position: 'absolute', top: '40%', left: '8%', opacity: 0.03 }}>
-      <Text style={{ fontSize: 72, fontFamily: 'Helvetica-Bold', color: C.night }}>BAILIO</Text>
-    </View>
-  )
+  const ownerName  = `${blank(contract.owner?.firstName)} ${blank(contract.owner?.lastName)}`
+  const tenantName = `${blank(contract.tenant?.firstName)} ${blank(contract.tenant?.lastName)}`
+  const rent       = contract.monthlyRent ?? 0
+  const charges    = contract.charges ?? 0
+  const deposit    = contract.deposit
+  const totalMens  = rent + charges
+
+  const sigMeta = (cnt.signatureMetadata as Record<string, any>) || {}
+  const hasCustom = enabled.length > 0 || !!contract.terms
 
   return (
     <Document
-      title={`Bail – ${contract.property?.title ?? ''}`}
-      author="Bailio – Plateforme de gestion locative"
-      subject="Contrat de location – Modèle type Décret n°2015-587"
-      keywords="bail, location, ALUR, décret 2015-587"
+      title={`Bail de location — ${contract.property?.address ?? ''} — ${tenantName}`}
+      author="Bailio — Gestion locative"
+      subject="Contrat de location à usage d'habitation principale"
+      keywords="bail, location, loi ALUR, décret 2015-587"
     >
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          PAGE 1 — Titre · Intro · Section I (Parties) · Section II (Objet)
-          ══════════════════════════════════════════════════════════════════════ */}
+      {/* ════════════════════════════════════════════════════════════════════════
+          PAGE 1 — En-tête · Parties · Objet
+          ════════════════════════════════════════════════════════════════════════ */}
       <Page size="A4" style={s.page}>
-        <Watermark />
+        <Footer docRef={docRef} />
 
-        {/* Titre principal */}
-        <View style={s.titleBlock}>
-          <Text style={s.titleMain}>
-            CONTRAT DE LOCATION {isMeuble ? 'OU DE COLOCATION — LOGEMENT MEUBLÉ' : 'OU DE COLOCATION — LOGEMENT NU'} EN RÉSIDENCE PRINCIPALE
-          </Text>
-          <Text style={s.titleSub}>Conforme au contrat type défini à l'annexe {isMeuble ? '2' : '1'} du décret n° 2015-587 du 29 mai 2015.</Text>
-          <Text style={s.titleSub}>Soumis au titre I{isMeuble ? 'er bis' : 'er'} de la loi du 6 juillet 1989 tendant à améliorer les rapports locatifs.</Text>
-          <View style={s.refRow}>
-            <Text style={s.refLeft}>Généré le {new Date().toLocaleDateString('fr-FR')}</Text>
-            <Text style={s.refRight}>Réf. {docRef}</Text>
-          </View>
-        </View>
-
-        {/* Intro légale */}
-        <Text style={s.introText}>
-          Le présent contrat type de location contient uniquement les clauses essentielles dont la législation et la réglementation en vigueur au jour de sa publication imposent la mention par les parties. Il appartient cependant aux parties de s'assurer des dispositions applicables au jour de la conclusion du contrat.
+        {/* ── En-tête ─────────────────────────────────────────────────────── */}
+        <Text style={s.mainTitle}>
+          CONTRAT DE LOCATION {isMeuble ? '— LOGEMENT MEUBLÉ' : '— LOGEMENT NU'}{'\n'}À USAGE DE RÉSIDENCE PRINCIPALE
         </Text>
-        <Text style={s.introText}>
-          Au-delà de ces clauses, les parties sont également soumises à l'ensemble des dispositions légales et réglementaires d'ordre public applicables aux baux d'habitation sans qu'il soit nécessaire de les faire figurer dans le contrat et qui sont rappelées utilement dans la notice d'information jointe.
+        <Text style={s.subTitle}>
+          Conforme au modèle type défini à l'annexe {annexeRef} du décret n°2015-587 du 29 mai 2015{'\n'}
+          Soumis aux dispositions du titre I{isMeuble ? 'er bis' : 'er'} de la loi n°89-462 du 6 juillet 1989
+        </Text>
+        <View style={s.hRule} />
+        <Text style={s.refLine}>Référence : {docRef} — Établi le {new Date().toLocaleDateString('fr-FR')}</Text>
+        <View style={s.hRuleThin} />
+
+        {/* ── Préambule ───────────────────────────────────────────────────── */}
+        <Text style={s.pItalic}>
+          Le présent contrat type de location est conforme aux dispositions légales et réglementaires en vigueur. Il
+          contient les clauses essentielles imposées par la loi. Au-delà de ces clauses, les parties sont soumises à
+          l'ensemble des dispositions d'ordre public applicables aux baux d'habitation, rappelées dans la notice
+          d'information jointe en annexe.
         </Text>
 
-        {/* Grille financière récap */}
-        <View style={s.finGrid}>
-          <View style={s.finCell}>
-            <Text style={s.finAmt}>{fmtEUR(contract.monthlyRent)}</Text>
-            <Text style={s.finLbl}>Loyer HC / mois</Text>
-          </View>
-          {contract.charges != null && (
-            <View style={s.finCell}>
-              <Text style={s.finAmt}>{fmtEUR(contract.charges)}</Text>
-              <Text style={s.finLbl}>Charges / mois</Text>
-            </View>
-          )}
-          <View style={s.finCell}>
-            <Text style={s.finAmt}>{fmtEUR(total)}</Text>
-            <Text style={s.finLbl}>Total mensuel</Text>
-          </View>
-          {contract.deposit != null && (
-            <View style={s.finCellL}>
-              <Text style={s.finAmt}>{fmtEUR(contract.deposit)}</Text>
-              <Text style={s.finLbl}>Dépôt de garantie</Text>
-              <Text style={s.finSub}>max {depositMax}</Text>
-            </View>
-          )}
-        </View>
+        {/* ── I. DÉSIGNATION DES PARTIES ─────────────────────────────────── */}
+        <Text style={s.sectionTitle}>I. — Désignation des parties</Text>
+        <Text style={s.p}>Entre les soussignés :</Text>
 
-        {/* ─── I. DÉSIGNATION DES PARTIES ──────────────────────────────────── */}
-        <Sec num="I." title="DÉSIGNATION DES PARTIES" />
-        <P>Le présent contrat est conclu entre les soussignés :</P>
-        <View style={s.partiesRow}>
-          <View style={s.partyCard}>
-            <View style={s.partyHeadO}><Text style={s.partyHeadTx}>Le bailleur</Text></View>
-            <View style={s.partyBody}>
-              <Text style={s.partyName}>{contract.owner?.firstName} {contract.owner?.lastName}</Text>
-              <Text style={s.partyDetail}>Qualité : {cnt.qualiteBailleur || 'Propriétaire bailleur'}</Text>
-              {cnt.adresseBailleur ? <Text style={s.partyDetail}>Adresse : {cnt.adresseBailleur}</Text> : null}
-              <Text style={s.partyDetail}>{contract.owner?.email}</Text>
-              {contract.owner?.phone ? <Text style={s.partyDetail}>Tél. {contract.owner.phone}</Text> : null}
-              {cnt.siret ? <Text style={s.partyDetail}>SIRET : {cnt.siret}</Text> : null}
-            </View>
+        <Text style={s.subTitle2}>Le bailleur</Text>
+        <Field label="Nom et prénom" value={ownerName} />
+        <Field label="Qualité" value={blank(cnt.qualiteBailleur, 'Propriétaire bailleur')} />
+        {cnt.adresseBailleur && <Field label="Domicile" value={cnt.adresseBailleur} />}
+        <Field label="Adresse électronique" value={blank(contract.owner?.email)} />
+        {contract.owner?.phone && <Field label="Téléphone" value={contract.owner.phone} />}
+        {cnt.siret && <Field label="N° SIRET" value={cnt.siret} />}
+        <Text style={s.p}> </Text>
+
+        <Text style={s.subTitle2}>Le(s) locataire(s)</Text>
+        <Field label="Nom et prénom" value={tenantName} />
+        {cnt.adresseLocataire && <Field label="Domicile actuel" value={cnt.adresseLocataire} />}
+        <Field label="Adresse électronique" value={blank(contract.tenant?.email)} />
+        {contract.tenant?.phone && <Field label="Téléphone" value={contract.tenant.phone} />}
+        {cnt.professionLocataire && <Field label="Profession" value={cnt.professionLocataire} />}
+        <Text style={s.p}> </Text>
+
+        <Text style={s.p}>Il a été convenu et arrêté ce qui suit :</Text>
+
+        {/* ── II. OBJET DU CONTRAT ────────────────────────────────────────── */}
+        <Text style={s.sectionTitle}>II. — Objet du contrat</Text>
+        <Text style={s.p}>
+          Le présent contrat a pour objet la location du logement dont les caractéristiques sont définies ci-après,
+          à usage exclusif d'habitation à titre de résidence principale du locataire.
+        </Text>
+
+        <Text style={s.subTitle2}>A. Consistance du logement</Text>
+        <Field label="Adresse" value={`${blank(contract.property?.address)}, ${blank(contract.property?.postalCode)} ${blank(contract.property?.city)}`} />
+        <Field label="Identifiant fiscal" value={blank(cnt.numeroFiscal)} />
+        <Field label="Type d'habitat" value={blank(cnt.typeHabitat, 'Immeuble collectif')} />
+        <Field label="Régime juridique" value={blank(cnt.regimeJuridique, 'Copropriété')} />
+        <Field label="Période de construction" value={blank(cnt.periodeConstruction)} />
+        <Field label="Surface habitable" value={contract.property?.surface ? `${contract.property.surface} m²` : '___________________'} />
+        <Field label="Nombre de pièces principales" value={contract.property?.bedrooms != null ? String(contract.property.bedrooms + 1) : '___________________'} />
+        <Field label="Autres parties du logement" value={blank(cnt.autresParties, 'Néant')} />
+        <Field label="Éléments d'équipement" value={blank(cnt.equipements)} />
+        <Field label="Mode de chauffage" value={blank(cnt.chauffage, 'Individuel')} />
+        <Field label="Production d'eau chaude sanitaire" value={blank(cnt.ecs, 'Individuelle')} />
+
+        <Text style={s.subTitle2}>B. Destination des locaux</Text>
+        <Text style={s.p}>
+          Les locaux sont loués à usage exclusif d'habitation à titre de résidence principale du locataire, conformément
+          à l'article 2 de la loi n°89-462 du 6 juillet 1989.
+        </Text>
+
+        <Text style={s.subTitle2}>C. Locaux à usage privatif du locataire</Text>
+        <Text style={s.p}>{blank(cnt.locauxPrivatifs, 'Néant')}</Text>
+
+        <Text style={s.subTitle2}>D. Parties communes et équipements collectifs</Text>
+        <Text style={s.p}>{blank(cnt.locauxCommuns, 'Néant')}</Text>
+
+        <Text style={s.subTitle2}>E. Équipement numérique</Text>
+        <Text style={s.p}>{blank(cnt.equipementsNumeriques, 'Raccordement télévision — Raccordement ADSL')}</Text>
+
+        <Text style={s.subTitle2}>F. Performance énergétique (DPE)</Text>
+        <Field label="Classe énergie" value={dpe ? `Classe ${dpe}` : '___________________'} />
+        <Field label="Émissions de gaz à effet de serre" value={cnt.ges ? `Classe ${cnt.ges}` : '___________________'} />
+        {dpeWarn && (
+          <View style={s.legalBox}>
+            <Text style={s.pBold}>
+              AVERTISSEMENT — Logement classé {dpe} (passoire thermique)
+            </Text>
+            <Text style={s.p}>
+              En application de la loi n°2021-1104 du 22 août 2021 portant lutte contre le dérèglement climatique,
+              le présent logement est soumis à une interdiction progressive de location :
+              {dpe === 'G' ? ' à compter du 1er janvier 2025 pour les logements classés G, puis' : ''} à compter du
+              1er janvier {dpe === 'G' ? '2028' : '2028'} pour les logements classés F. Aucune hausse de loyer ne
+              peut être appliquée à la relocation.
+            </Text>
           </View>
-          <View style={s.partyCardL}>
-            <View style={s.partyHeadT}><Text style={s.partyHeadTx}>Le(s) locataire(s)</Text></View>
-            <View style={s.partyBody}>
-              <Text style={s.partyName}>{contract.tenant?.firstName} {contract.tenant?.lastName}</Text>
-              <Text style={s.partyDetail}>{contract.tenant?.email}</Text>
-              {contract.tenant?.phone ? <Text style={s.partyDetail}>Tél. {contract.tenant.phone}</Text> : null}
-              {cnt.adresseLocataire ? <Text style={s.partyDetail}>Adresse actuelle : {cnt.adresseLocataire}</Text> : null}
-              {cnt.professionLocataire ? <Text style={s.partyDetail}>Profession : {cnt.professionLocataire}</Text> : null}
-            </View>
-          </View>
-        </View>
-        <P>Il a été convenu ce qui suit :</P>
+        )}
 
-        {/* ─── II. OBJET DU CONTRAT ─────────────────────────────────────────── */}
-        <Sec num="II." title="Objet du contrat" />
-        <P>Le présent contrat a pour objet la location d'un logement ainsi déterminé :</P>
-
-        <Sub letter="A" title="Consistance du logement" />
-        <P>Adresse du logement : {contract.property?.address ?? '—'}, {contract.property?.postalCode ?? ''} {contract.property?.city ?? ''}</P>
-        <P>Identifiant fiscal du logement : {cnt.numeroFiscal || '________________________________________'}</P>
-        <P>Type d'habitat : {cnt.typeHabitat || 'immeuble collectif'}</P>
-        <P>Régime juridique de l'immeuble : {cnt.regimeJuridique || 'copropriété'}</P>
-        <P>Période de construction : {cnt.periodeConstruction || '________________________________________'}</P>
-        <P>Surface habitable : {contract.property?.surface ?? '____________________'} m²</P>
-        <P>Nombre de pièces principales : {contract.property?.bedrooms != null ? contract.property.bedrooms + 1 : '____________________'}</P>
-        <P>Autres parties du logement : {cnt.autresParties || '________________________________________'}</P>
-        <P>Éléments d'équipements du logement : {cnt.equipements || '________________________________________'}</P>
-        <P>Modalité de production de chauffage : {cnt.chauffage || 'individuel'}</P>
-        <P>Modalité de production d'eau chaude sanitaire : {cnt.ecs || 'individuelle'}</P>
-
-        {/* Rappel DPE avec calendrier légal */}
-        <P>Rappel : un logement décent doit respecter les critères minimaux de performance suivants :</P>
+        <Text style={s.p}>
+          Calendrier légal de performance minimale (France métropolitaine) :
+        </Text>
         {!dom ? (
           <>
-            <Pt label="a)" children="En France métropolitaine :" />
-            <Pt label="i)" children="À compter du 1er janvier 2025, le niveau de performance minimal du logement correspond à la classe F du DPE ;" />
-            <Pt label="ii)" children="À compter du 1er janvier 2028, le niveau de performance minimal du logement correspond à la classe E du DPE ;" />
-            <Pt label="iii)" children="À compter du 1er janvier 2034, le niveau de performance minimal du logement correspond à la classe D du DPE." />
+            <Text style={s.pIndent}>— À compter du 1er janvier 2025 : classe F du DPE ;</Text>
+            <Text style={s.pIndent}>— À compter du 1er janvier 2028 : classe E du DPE ;</Text>
+            <Text style={s.pIndent}>— À compter du 1er janvier 2034 : classe D du DPE.</Text>
           </>
         ) : (
           <>
-            <Pt label="b)" children="En Guadeloupe, Martinique, Guyane, La Réunion et Mayotte :" />
-            <Pt label="i)" children="À compter du 1er janvier 2028, le niveau de performance minimal du logement correspond à la classe F du DPE ;" />
-            <Pt label="ii)" children="À compter du 1er janvier 2031, le niveau de performance minimal du logement correspond à la classe E du DPE." />
+            <Text style={s.pIndent}>— À compter du 1er janvier 2028 : classe F du DPE (DOM) ;</Text>
+            <Text style={s.pIndent}>— À compter du 1er janvier 2031 : classe E du DPE (DOM).</Text>
           </>
         )}
-        <P>Niveau de performance du logement : {dpe ? `Classe ${dpe} — GES : ${cnt.ges || 'NC'}` : '________________________________________'}</P>
-        {dpeWarn && (
-          <View style={s.warnBox}>
-            <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: C.warnTx, marginBottom: 2 }}>⚠ Logement classé {dpe} — Passoire thermique</Text>
-            <Text style={{ fontSize: 7.5, color: C.warnTx }}>Hausse de loyer interdite à la relocation (Loi Climat et Résilience du 22 août 2021). Ce logement sera soumis à l'interdiction de location progressive à partir du 1er janvier {dpe === 'G' ? '2025' : '2028'}.</Text>
-          </View>
-        )}
-
-        <Sub letter="B" title="Destination des locaux" />
-        <P>Les locaux sont loués pour un usage exclusif d'habitation à titre de résidence principale.</P>
-
-        <Sub letter="C" title="Locaux et équipements accessoires de l'immeuble à usage privatif du locataire" />
-        <P>{cnt.locauxPrivatifs || 'Néant'}</P>
-
-        <Sub letter="D" title="Locaux, parties, équipements et accessoires de l'immeuble à usage commun" />
-        <P>{cnt.locauxCommuns || 'Néant'}</P>
-
-        <Sub letter="E" title="Équipement d'accès aux technologies de l'information et de la communication" />
-        <P>{cnt.equipementsNumeriques || 'Raccordement TV · Raccordement ADSL'}</P>
-
-        <Footer docRef={docRef} page="1 / Fin" />
       </Page>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          PAGE 2 — Section III (Durée) · Section IV (Conditions financières)
-          ══════════════════════════════════════════════════════════════════════ */}
+      {/* ════════════════════════════════════════════════════════════════════════
+          PAGE 2 — Durée · Conditions financières
+          ════════════════════════════════════════════════════════════════════════ */}
       <Page size="A4" style={s.page}>
-        <Watermark />
-        <View style={{ marginBottom: 10, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: C.border }}>
-          <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: C.night }}>Réf. {docRef} — {contract.property?.address}, {contract.property?.city}</Text>
-        </View>
+        <Footer docRef={docRef} />
 
-        {/* ─── III. DATE ET DURÉE ───────────────────────────────────────────── */}
-        <Sec num="III." title="Date de prise d'effet et durée du contrat" />
-        <P>La durée du contrat et sa date de prise d'effet sont ainsi définies :</P>
+        {/* ── III. DATE ET DURÉE ──────────────────────────────────────────── */}
+        <Text style={s.sectionTitle}>III. — Date de prise d'effet et durée du contrat</Text>
 
-        <Sub letter="A" title="Date de prise d'effet du contrat" />
-        <P>Date de prise d'effet du contrat : {fmtDate(contract.startDate)}</P>
+        <Text style={s.subTitle2}>A. Date de prise d'effet</Text>
+        <Field label="Date de prise d'effet" value={fmtDate(contract.startDate)} />
 
-        <Sub letter="B" title="Durée du contrat" />
-        <P>Durée du contrat : {getDuration(contract.startDate, contract.endDate)} ({dureeAns} conformément à l'{isMeuble ? 'art. 25-7' : 'art. 10'} loi 89-462)</P>
-        <P>Date d'échéance contractuelle : {fmtDate(contract.endDate)}</P>
-        <P>En l'absence de proposition de renouvellement du contrat, celui-ci est, à son terme, reconduit tacitement pour {isMeuble ? '1 an' : '3 ou 6 ans'} et dans les mêmes conditions. Le locataire peut mettre fin au bail à tout moment, après avoir donné congé. Le bailleur, quant à lui, peut mettre fin au bail à son échéance et après avoir donné congé, soit pour reprendre le logement en vue de l'occuper lui-même ou une personne de sa famille, soit pour le vendre, soit pour un motif sérieux et légitime.</P>
+        <Text style={s.subTitle2}>B. Durée du contrat</Text>
+        <Field label="Durée du contrat" value={`${getDuration(contract.startDate, contract.endDate)} (${dureeRef} — art. ${isMeuble ? '25-7' : '10'} loi 89-462)`} />
+        <Field label="Date d'échéance" value={fmtDate(contract.endDate)} />
 
-        <View style={s.divider} />
+        <Text style={s.pIndent}>
+          À défaut de congé donné dans les délais légaux, le contrat est reconduit tacitement aux mêmes conditions.
+          Le locataire peut résilier le bail à tout moment sous réserve du préavis légal. Le bailleur ne peut donner
+          congé qu'à l'échéance du bail et dans les conditions prévues aux articles 15 et suivants de la loi du
+          6 juillet 1989.
+        </Text>
 
-        {/* ─── IV. CONDITIONS FINANCIÈRES ──────────────────────────────────── */}
-        <Sec num="IV." title="Conditions financières" />
-        <P>Les parties conviennent des conditions financières suivantes :</P>
+        {/* ── IV. CONDITIONS FINANCIÈRES ──────────────────────────────────── */}
+        <Text style={s.sectionTitle}>IV. — Conditions financières</Text>
 
-        <Sub letter="A" title="Loyer" />
+        <Text style={s.subTitle2}>A. Loyer</Text>
 
-        <Pt label="1°" children="Fixation du loyer initial" bold />
-        <Pt label="a)" children={`Montant du loyer mensuel : ${fmtEUR(contract.monthlyRent)}`} />
-        <Pt label="b)" children="Modalités particulières de fixation initiale du loyer applicables dans certaines zones tendues :" />
-        <P>Le loyer du logement objet du présent contrat est soumis au décret fixant annuellement le montant maximum d'évolution des loyers à la relocation : {zoneTendue ? 'OUI' : 'NON'}</P>
-        <P>Le loyer du logement objet du présent contrat est soumis au loyer de référence majoré fixé par arrêté préfectoral : {encadrementLoyer ? 'OUI' : 'NON'}</P>
+        <Text style={s.pBold}>1° Fixation du loyer initial</Text>
+        <Field label="Montant du loyer mensuel" value={`${fmtEUR(rent)} hors charges`} />
+
+        <Text style={s.p}>
+          Fixation du loyer en zone soumise au décret plafonnant les loyers à la relocation :{' '}
+          <Text style={{ fontFamily: FONTB }}>{zoneTendue ? 'OUI' : 'NON'}</Text>
+        </Text>
+        <Text style={s.p}>
+          Loyer soumis à l'encadrement par loyer de référence majoré (arrêté préfectoral) :{' '}
+          <Text style={{ fontFamily: FONTB }}>{encadrementLoyer ? 'OUI' : 'NON'}</Text>
+        </Text>
 
         {(zoneTendue || encadrementLoyer) && (
-          <View style={s.warnBox}>
-            <Text style={{ fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: C.warnTx, marginBottom: 2 }}>Encadrement des loyers — mentions obligatoires (art. 17 loi 89-462)</Text>
-            {cnt.loyerReference && <Text style={{ fontSize: 7.5, color: C.warnTx }}>Loyer de référence : {cnt.loyerReference} €/m²/mois</Text>}
-            {cnt.loyerReferenceMajore && <Text style={{ fontSize: 7.5, color: C.warnTx }}>Loyer de référence majoré : {cnt.loyerReferenceMajore} €/m²/mois</Text>}
-            {cnt.complementLoyer ? <Text style={{ fontSize: 7.5, color: C.warnTx }}>Complément de loyer : {cnt.complementLoyer} €/mois</Text> : <Text style={{ fontSize: 7.5, color: C.warnTx }}>Complément de loyer : Néant</Text>}
+          <View style={s.legalBox}>
+            <Text style={s.legalBoxTitle}>Mentions obligatoires — Encadrement des loyers (art. 17 loi 89-462)</Text>
+            <Field label="Loyer de référence" value={cnt.loyerReference ? `${cnt.loyerReference} €/m²/mois` : '___________________'} />
+            <Field label="Loyer de référence majoré" value={cnt.loyerReferenceMajore ? `${cnt.loyerReferenceMajore} €/m²/mois` : '___________________'} />
+            <Field label="Complément de loyer" value={cnt.complementLoyer ? `${cnt.complementLoyer} €/mois` : 'Néant'} />
+            {cnt.complementLoyerJustif && <Field label="Justification du complément" value={cnt.complementLoyerJustif} />}
             {cnt.dernierLoyer && (
-              <Text style={{ fontSize: 7.5, color: C.warnTx, marginTop: 3 }}>
-                Loyer du dernier locataire : {cnt.dernierLoyer} €/mois{cnt.dernierLoyerDate ? ` (dernier versement : ${cnt.dernierLoyerDate})` : ''}{cnt.dernierIndexDate ? ` — Dernière révision IRL le : ${cnt.dernierIndexDate}` : ''}{cnt.dernierIrlValeur ? ` — Indice IRL alors appliqué : ${cnt.dernierIrlValeur}` : ''}
-              </Text>
+              <>
+                <Field label="Loyer du dernier locataire" value={`${cnt.dernierLoyer} €/mois`} />
+                {cnt.dernierLoyerDate && <Field label="Date du dernier versement" value={cnt.dernierLoyerDate} />}
+                {cnt.dernierIndexDate && <Field label="Date de dernière révision IRL" value={cnt.dernierIndexDate} />}
+                {cnt.dernierIrlValeur && <Field label="Valeur IRL à cette date" value={cnt.dernierIrlValeur} />}
+              </>
             )}
           </View>
         )}
 
-        <Pt label="2°" children="Modalités de révision" bold />
-        <Pt label="a)" children={`Date de révision : ${cnt.dateRevision || '1er du mois suivant l\'anniversaire'}`} />
-        <Pt label="b)" children={`Date ou trimestre de référence de l'IRL : ${cnt.irlTrimestre || '2ème trimestre'} ${cnt.irlAnnee || new Date().getFullYear()}${cnt.irlValeur ? ` — valeur : ${cnt.irlValeur}` : ''}`} />
-        <P>Le loyer sera révisé chaque année à la date indiquée précédemment, en comparant la variation annuelle du dernier indice IRL connu, ou de tout autre indice l'ayant remplacé.</P>
+        <Text style={s.pBold}>2° Révision du loyer</Text>
+        <Text style={s.p}>
+          En application de l'article 17-1 de la loi du 6 juillet 1989, le loyer pourra être révisé chaque année
+          à la date anniversaire du contrat en fonction de la variation de l'Indice de Référence des Loyers (IRL)
+          publié trimestriellement par l'INSEE (indice de référence : {blank(cnt.irlTrimestre, 'dernier IRL publié à la date de signature')}).
+        </Text>
 
-        <Sub letter="B" title="Charges récupérables" />
-        <P>Modalité de règlement des charges récupérables : {cnt.typeCharges === 'forfait' ? 'forfait de charges (sans régularisation)' : 'provisions sur charges avec régularisation annuelle'}</P>
-        <P>Montant de la provision sur charges : {contract.charges != null ? `${fmtEUR(contract.charges)} / mois` : 'Néant'}</P>
-        {cnt.typeCharges !== 'forfait' && contract.charges != null && (
-          <P>Cette provision pour charges pourra être réévaluée à chaque régularisation, à la hausse ou à la baisse, en fonction des charges réelles (décret n°87-713 du 26 août 1987).</P>
+        <Text style={s.pBold}>3° Mode de paiement</Text>
+        <Field label="Mode de paiement" value={payMethod} />
+        <Field label="Échéance de paiement" value={`Le ${blank(cnt.paymentDay, '5')} de chaque mois`} />
+        <Field label="Lieu de paiement" value={blank(cnt.lieuPaiement, 'Virement au compte du bailleur')} />
+
+        <Text style={s.subTitle2}>B. Charges récupérables</Text>
+        <Field label="Régime des charges" value={isMeuble ? 'Forfait de charges — non révisable en cours de bail' : 'Provisions sur charges avec régularisation annuelle'} />
+        <Field label="Montant des charges" value={charges > 0 ? `${fmtEUR(charges)} / mois` : 'Néant'} />
+        {!isMeuble && charges > 0 && (
+          <Text style={s.pIndent}>
+            Une régularisation annuelle des charges sera effectuée sur la base des dépenses réelles. Le bailleur
+            adressera le décompte des charges au locataire dans le délai d'un mois avant la date de régularisation.
+          </Text>
         )}
 
-        <Sub letter="C" title="Souscription par le bailleur d'une assurance MRH pour le compte des colocataires" />
-        <P>{cnt.assuranceBailleurColoc ? 'OUI — voir conditions jointes' : 'NON'}</P>
+        <Text style={s.subTitle2}>C. Dépôt de garantie</Text>
+        <Field label="Montant du dépôt de garantie" value={deposit != null ? fmtEUR(deposit) : 'Néant'} />
+        {deposit != null && (
+          <Text style={s.pIndent}>
+            Le dépôt de garantie, d'un montant maximal de {depositMax}, est versé à la signature du présent contrat.
+            Il sera restitué dans un délai d'un (1) mois à compter de la remise des clés si l'état des lieux de
+            sortie est conforme à l'état des lieux d'entrée, ou de deux (2) mois dans le cas contraire
+            (art. 22 loi 89-462).
+          </Text>
+        )}
 
-        <Sub letter="D" title="Souscription par le bailleur des abonnements privatifs" />
-        <P>{cnt.abonnementsBailleur ? 'OUI — voir conditions jointes' : 'NON'}</P>
-
-        <Sub letter="E" title="Modalités de paiement" />
-        <P>Périodicité du paiement : mensuelle</P>
-        <P>Paiement : à échoir</P>
-        <P>Date ou période de paiement : au plus tard le {cnt.paymentDay || '5'} du mois</P>
-        <P>Lieu de paiement : paiement reçu par le propriétaire ({payMethod})</P>
-
-        {/* Table récapitulatif mensuel */}
-        <View style={s.tableWrap}>
-          <View style={s.tableHdr}>
-            <Text style={s.tableHdrTx}>Récapitulatif des sommes dues chaque mois par le locataire à partir de la première échéance complète</Text>
+        <Text style={s.subTitle2}>D. Récapitulatif financier mensuel</Text>
+        <View style={s.table}>
+          <View style={s.tableHeaderRow}>
+            <Text style={s.tableHeader}>Désignation</Text>
+            <Text style={s.tableHeaderLast}>Montant mensuel</Text>
           </View>
           <View style={s.tableRow}>
-            <Text style={s.tableCell}>Loyer mensuel</Text>
-            <Text style={s.tableCellB}>{fmtEUR(contract.monthlyRent)}</Text>
+            <Text style={s.tableCell}>Loyer hors charges</Text>
+            <Text style={s.tableCellLast}>{fmtEUR(rent)}</Text>
           </View>
           <View style={s.tableRow}>
-            <Text style={s.tableCell}>Provision / forfait de charges</Text>
-            <Text style={s.tableCellB}>{contract.charges != null ? fmtEUR(contract.charges) : '0,00 €'}</Text>
+            <Text style={s.tableCell}>Charges récupérables</Text>
+            <Text style={s.tableCellLast}>{charges > 0 ? fmtEUR(charges) : 'Néant'}</Text>
           </View>
-          <View style={s.tableRowL}>
-            <Text style={[s.tableCellB, { backgroundColor: C.muted }]}>Total</Text>
-            <Text style={[s.tableCellB, { backgroundColor: C.muted }]}>{fmtEUR(total)}</Text>
+          <View style={s.tableRowLast}>
+            <Text style={s.tableCellBold}>TOTAL MENSUEL (charges comprises)</Text>
+            <Text style={s.tableCellBoldLast}>{fmtEUR(totalMens)}</Text>
           </View>
         </View>
 
-        <Footer docRef={docRef} page="2 / Fin" />
+        {deposit != null && (
+          <View style={s.table}>
+            <View style={s.tableRowLast}>
+              <Text style={s.tableCell}>Dépôt de garantie (versé à la signature)</Text>
+              <Text style={s.tableCellLast}>{fmtEUR(deposit)}</Text>
+            </View>
+          </View>
+        )}
       </Page>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          PAGE 3 — V (Travaux) · VI (Garanties) · VII (Solidarité) · VIII (Clause résolutoire)
-          ══════════════════════════════════════════════════════════════════════ */}
+      {/* ════════════════════════════════════════════════════════════════════════
+          PAGE 3 — Travaux · Garanties · Clause résolutoire
+          ════════════════════════════════════════════════════════════════════════ */}
       <Page size="A4" style={s.page}>
-        <Watermark />
-        <View style={{ marginBottom: 10, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: C.border }}>
-          <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: C.night }}>Réf. {docRef} — Travaux · Garanties · Solidarité · Clause résolutoire</Text>
+        <Footer docRef={docRef} />
+
+        {/* ── V. TRAVAUX ───────────────────────────────────────────────────── */}
+        <Text style={s.sectionTitle}>V. — Travaux</Text>
+
+        <Text style={s.subTitle2}>A. Travaux effectués depuis le dernier contrat</Text>
+        <Field label="Travaux réalisés par le bailleur" value={blank(cnt.travauxBailleur, 'Néant')} />
+        {cnt.montantTravauxBailleur && <Field label="Montant des travaux" value={`${cnt.montantTravauxBailleur} €`} />}
+        <Field label="Travaux réalisés par le locataire" value={blank(cnt.travauxLocataire, 'Néant')} />
+
+        <Text style={s.subTitle2}>B. Travaux envisagés au cours du bail</Text>
+        <Text style={s.p}>{blank(cnt.travauxEnvisages, 'Aucun travaux n\'est prévu au cours du bail.')}</Text>
+
+        <Text style={s.subTitle2}>C. Franchise de loyer</Text>
+        <Text style={s.p}>{blank(cnt.franchiseLoyer, 'Aucune franchise de loyer n\'est accordée.')}</Text>
+
+        {/* ── VI. CAUTIONNEMENT ────────────────────────────────────────────── */}
+        <Text style={s.sectionTitle}>VI. — Cautionnement</Text>
+        <Text style={s.p}>
+          {cnt.caution
+            ? `Une caution solidaire est fournie par ${blank(cnt.cautionNom)}. L'acte de cautionnement est annexé au présent contrat.`
+            : 'Aucun acte de cautionnement solidaire n\'est prévu au présent contrat.'}
+        </Text>
+
+        {/* ── VII. CLAUSE DE SOLIDARITÉ ────────────────────────────────────── */}
+        <Text style={s.sectionTitle}>VII. — Solidarité entre colocataires</Text>
+        <Text style={s.p}>
+          En cas de colocation, les colocataires et leur(s) caution(s) sont tenus solidairement au paiement du loyer
+          et des charges dans les conditions prévues à l'article 8-1 de la loi du 6 juillet 1989.
+        </Text>
+
+        {/* ── VIII. CLAUSE RÉSOLUTOIRE ─────────────────────────────────────── */}
+        <Text style={s.sectionTitle}>VIII. — Clause résolutoire</Text>
+        <View style={s.legalBox}>
+          <Text style={s.legalBoxTitle}>Clause résolutoire de plein droit — Article 24 de la loi n°89-462</Text>
+          <Text style={s.p}>
+            Il est expressément convenu que le présent bail sera résilié de plein droit, si bon semble au bailleur,
+            et sans qu'il soit besoin de faire ordonner cette résiliation en justice, dans les cas suivants :
+          </Text>
+          <Text style={s.pIndent}>
+            1° Deux (2) mois après un commandement de payer demeuré infructueux, en cas de non-paiement aux termes
+            convenus de tout ou partie du loyer, des charges récupérables ou du dépôt de garantie ;
+          </Text>
+          <Text style={s.pIndent}>
+            2° Un (1) mois après un commandement demeuré infructueux, en cas de non-souscription par le locataire
+            d'une assurance contre les risques locatifs dans les conditions fixées par les articles L.7-1 et suivants
+            de la loi du 6 juillet 1989 ;
+          </Text>
+          <Text style={s.pIndent}>
+            3° Dès que le trouble de voisinage causé par le locataire a fait l'objet d'une décision de justice
+            passée en force de chose jugée.
+          </Text>
+          <Text style={s.p}>
+            La résiliation du bail est constatée par ordonnance de référé rendue par le juge des contentieux de la
+            protection. Une fois acquis au bailleur le bénéfice de la clause résolutoire, le locataire devra
+            immédiatement quitter les lieux. Dans le cas où il ne satisferait pas à cette obligation, il pourra
+            être contraint de le faire par voie d'huissier.
+          </Text>
+          <Text style={s.p}>
+            Il est précisé que le locataire est tenu au respect de toutes les obligations du présent bail jusqu'à
+            libération effective des lieux, nonobstant l'exécution de la procédure d'expulsion.
+          </Text>
         </View>
 
-        {/* ─── V. TRAVAUX ───────────────────────────────────────────────────── */}
-        <Sec num="V." title="Travaux" />
-
-        <Sub letter="A" title="Travaux bailleur entre deux locataires" />
-        <P>Montant et nature des travaux d'amélioration ou de mise en conformité avec les caractéristiques de décence effectués depuis la fin du dernier contrat de location ou depuis le dernier renouvellement :</P>
-        <P>{cnt.travauxBailleurEntreLocataires || 'NÉANT'}</P>
-        {cnt.montantTravaux && <P>Montant total des travaux : {cnt.montantTravaux} €</P>}
-
-        <Sub letter="B" title="Travaux bailleur en cours de bail" />
-        <P>Majoration du loyer en cours de bail consécutive à des travaux d'amélioration entrepris par le bailleur :</P>
-        <P>{cnt.travauxBailleurCoursDebail || 'NÉANT'}</P>
-
-        <Sub letter="C" title="Travaux locataire en cours de bail" />
-        <P>Diminution de loyer en cours de bail consécutive à des travaux entrepris par le locataire :</P>
-        <P>{cnt.travauxLocataire || 'NÉANT'}</P>
-
-        <View style={s.divider} />
-
-        {/* ─── VI. GARANTIES ────────────────────────────────────────────────── */}
-        <Sec num="VI." title="Garanties" />
-        <P>Montant du dépôt de garantie de l'exécution des obligations du locataire : {contract.deposit != null ? fmtEUR(contract.deposit) : '____________________'}</P>
-        <P>En cas de co-titularité du bail, le dépôt de garantie ne sera restitué en intégralité que lors de la résiliation du contrat, une fois les locaux libérés.</P>
-        <P>Il est enfin rappelé que le dépôt de garantie ne pourra pas être utilisé par le locataire en déduction du dernier loyer.</P>
-        {contract.deposit != null && (
-          <P>Le dépôt de garantie sera restitué dans un délai de 1 mois (état des lieux de sortie conforme) ou 2 mois (différences imputables au locataire) à compter de la remise des clés (art. 22 loi 89-462). Tout retard entraîne une majoration de 10 % du loyer mensuel HC par mois commencé.</P>
-        )}
-
-        <View style={s.divider} />
-
-        {/* ─── VII. CLAUSE DE SOLIDARITÉ ────────────────────────────────────── */}
-        <Sec num="VII." title="Clause de solidarité" />
-        <P>Modalités particulières des obligations en cas de pluralité de locataires :</P>
-        {cnt.clauseSolidarite ? (
-          <P>En cas de pluralité de locataires co-signataires, ceux-ci sont tenus solidairement et indivisiblement de l'ensemble des obligations locatives. La solidarité d'un colocataire sortant cesse à l'entrée de son remplaçant ou, à défaut, six mois après la prise d'effet de son congé (art. 8-1 loi 89-462).</P>
-        ) : (
-          <P>NÉANT</P>
-        )}
-
-        <View style={s.divider} />
-
-        {/* ─── VIII. CLAUSE RÉSOLUTOIRE ─────────────────────────────────────── */}
-        <Sec num="VIII." title="Clause résolutoire" />
-        <P>Modalités de résiliation de plein droit du contrat :</P>
-        <P>Il est prévu que le bail sera résilié immédiatement et de plein droit dans les cas suivants, si bon semble au bailleur :</P>
-        <Pt label="1)" children="six semaines après un commandement demeuré infructueux à défaut de paiement du loyer ou des charges (qu'il s'agisse des provisions ou de la régularisation annuelle) aux termes convenus ou à défaut de versement du dépôt de garantie" />
-        <Pt label="2)" children="un mois après un commandement demeuré infructueux à défaut d'assurance des risques locatifs par le locataire" />
-        <Pt label="3)" children="troubles de voisinage constatés par une décision de justice passée en force de chose jugée." />
-        <P>Une fois acquis au bailleur le bénéfice de la clause résolutoire, le locataire devra immédiatement quitter les lieux sans qu'aucune offre de paiement ou d'exécution de ses obligations ne puisse faire obstacle à la résiliation du contrat. Si le locataire refusait de quitter les locaux, il suffirait d'une simple ordonnance de référé pour constater la résiliation du bail et engager la procédure d'expulsion du locataire.</P>
-        <P>Il est enfin précisé que le locataire est tenu des obligations du présent bail jusqu'à libération effective des lieux sans préjudice des dispositions de l'article 1760 du Code Civil, et ce nonobstant l'expulsion.</P>
-
-        <Footer docRef={docRef} page="3 / Fin" />
-      </Page>
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          PAGE 4 — Section IX (Honoraires) · X (Autres conditions particulières)
-          ══════════════════════════════════════════════════════════════════════ */}
-      <Page size="A4" style={s.page}>
-        <Watermark />
-        <View style={{ marginBottom: 10, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: C.border }}>
-          <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: C.night }}>Réf. {docRef} — Honoraires · Conditions particulières</Text>
-        </View>
-
-        {/* ─── IX. HONORAIRES ───────────────────────────────────────────────── */}
-        <Sec num="IX." title="Honoraires" />
-        {cnt.honoraires ? (
+        {/* ── IX. HONORAIRES ───────────────────────────────────────────────── */}
+        <Text style={s.sectionTitle}>IX. — Honoraires de location</Text>
+        {cnt.honorairesLocataire || cnt.honorairesEdl ? (
           <>
-            <P>Honoraires à la charge du bailleur : {cnt.honorairesBailleur || '—'}</P>
-            <P>Honoraires à la charge du locataire (plafonnés par l'art. 5 loi 89-462) :</P>
-            <Pt label="–" children={`Visite, constitution dossier, rédaction bail : ${cnt.honorairesLocataire || '—'} (plafond : ${(contract.property?.surface ?? 0) * (zoneTendue ? 10 : 12)} €)`} />
-            <Pt label="–" children={`État des lieux : ${cnt.honorairesEdl || '—'} (plafond : ${(contract.property?.surface ?? 0) * 3} €)`} />
+            <Text style={s.pIndent}>
+              — Visite, constitution du dossier et rédaction du bail :{' '}
+              {cnt.honorairesLocataire ? `${cnt.honorairesLocataire} €` : '___________________'}
+              {contract.property?.surface && ` (plafond légal : ${(contract.property.surface * (zoneTendue ? 10 : 12)).toFixed(2)} €)`}
+            </Text>
+            <Text style={s.pIndent}>
+              — État des lieux :{' '}
+              {cnt.honorairesEdl ? `${cnt.honorairesEdl} €` : '___________________'}
+              {contract.property?.surface && ` (plafond légal : ${(contract.property.surface * 3).toFixed(2)} €)`}
+            </Text>
           </>
         ) : (
-          <P>NÉANT</P>
+          <Text style={s.p}>
+            Le présent contrat est conclu sans honoraires à la charge du locataire.
+          </Text>
+        )}
+      </Page>
+
+      {/* ════════════════════════════════════════════════════════════════════════
+          PAGE 4 — Conditions particulières · Annexes
+          ════════════════════════════════════════════════════════════════════════ */}
+      <Page size="A4" style={s.page}>
+        <Footer docRef={docRef} />
+
+        {/* ── X. CONDITIONS PARTICULIÈRES ──────────────────────────────────── */}
+        <Text style={s.sectionTitle}>X. — Conditions particulières</Text>
+
+        <Text style={s.subTitle2}>A. Droit de visite</Text>
+        <Text style={s.p}>
+          Le bailleur ou son mandataire peut accéder aux locaux loués aux jours et heures convenus d'un commun
+          accord avec le locataire, dans la limite de deux heures par visite, cinq jours par semaine entre 8h00
+          et 20h00, hors jours fériés, et uniquement dans les cas suivants : réalisation de travaux, vente du bien,
+          relocation à l'expiration du bail.
+        </Text>
+
+        <Text style={s.subTitle2}>B. Entretien de l'installation de chauffage</Text>
+        <Text style={s.p}>
+          Le locataire est tenu de faire procéder annuellement, par un professionnel qualifié, à l'entretien
+          des installations de chauffage individuel relevant de sa responsabilité (chaudière d'une puissance
+          comprise entre 4 et 400 kW), conformément à l'article R.224-41-11 du Code de l'environnement. Une
+          attestation d'entretien est remise au bailleur sur demande.
+        </Text>
+
+        <Text style={s.subTitle2}>C. Communication électronique</Text>
+        <Text style={s.p}>
+          Conformément à l'article 3 de la loi du 6 juillet 1989, le bailleur et le locataire conviennent
+          que les documents visés par le présent contrat (quittances de loyer, avis d'échéance, état des
+          comptes de charges) pourront être adressés au locataire par voie électronique à l'adresse communiquée
+          ci-dessus. Les actes de procédure demeurent soumis aux règles de signification applicables.
+        </Text>
+
+        <Text style={s.subTitle2}>D. Grille de vétusté</Text>
+        <Text style={s.p}>
+          Les parties conviennent d'appliquer la grille de vétusté établie conformément aux dispositions du
+          décret n°2016-382 du 30 mars 2016. Le coefficient annuel de vétusté retenu est de sept pour cent (7 %)
+          par an à compter de la date de remise en état ou de mise en service des équipements.
+        </Text>
+
+        <Text style={s.subTitle2}>E. Animaux domestiques</Text>
+        <Text style={s.p}>
+          La détention d'animaux domestiques est autorisée dans les locaux, à l'exception des chiens appartenant
+          à la première catégorie au sens de l'article L.211-12 du Code rural et de la pêche maritime.
+          Le locataire demeure responsable de tout dommage causé par son animal.
+        </Text>
+
+        <Text style={s.subTitle2}>F. Assurance multirisque habitation</Text>
+        <Text style={s.p}>
+          Le locataire est tenu de souscrire et de maintenir en vigueur, pendant toute la durée du bail, une
+          assurance multirisque habitation couvrant au minimum les risques locatifs (incendie, dégâts des eaux,
+          explosion), conformément à l'article 7 (g) de la loi du 6 juillet 1989. Une attestation d'assurance
+          est remise au bailleur lors de la remise des clés, puis chaque année à la date anniversaire du contrat
+          sur simple demande. À défaut, le bailleur peut souscrire cette assurance pour le compte du locataire,
+          dont le coût sera récupérable par douzièmes avec le loyer.
+        </Text>
+
+        {contract.terms && (
+          <>
+            <Text style={s.subTitle2}>G. Clauses complémentaires</Text>
+            <Text style={s.p}>{contract.terms}</Text>
+          </>
         )}
 
-        <View style={s.divider} />
+        {/* ── XI. ANNEXES ──────────────────────────────────────────────────── */}
+        <Text style={s.sectionTitle}>XI. — Documents annexés au présent contrat</Text>
+        <Text style={s.pIndent}>— Notice d'information relative aux droits et obligations des locataires et des bailleurs ;</Text>
+        <Text style={s.pIndent}>— État des lieux d'entrée ;</Text>
+        <Text style={s.pIndent}>— Diagnostic de performance énergétique (DPE) ;</Text>
+        <Text style={s.pIndent}>— Constat de risque d'exposition au plomb (CREP) si applicable ;</Text>
+        <Text style={s.pIndent}>— État des risques naturels et technologiques (ERP) ;</Text>
+        {!isMeuble && <Text style={s.pIndent}>— Extraits des règlements de copropriété relatifs à la destination de l'immeuble ;</Text>}
+        {cnt.caution && <Text style={s.pIndent}>— Acte de cautionnement solidaire ;</Text>}
+        <Text style={s.pIndent}>— Grille de vétusté applicable aux relations bailleurs-locataires.</Text>
 
-        {/* ─── X. AUTRES CONDITIONS PARTICULIÈRES ──────────────────────────── */}
-        <Sec num="X." title="Autres conditions particulières" />
-
-        {/* Droit de visite du bailleur */}
-        <Sub letter="" title="Droit de visite du bailleur" />
-        <P>Une fois le congé envoyé par l'une ou l'autre des parties, ou en cas de mise en vente du logement par le propriétaire sans congé donné au locataire, le locataire s'oblige à laisser visiter le bien en sa présence ou non, à raison de 5 créneaux par semaine, de 2 heures en jours ouvrables entre 8h et 20h. Pour chaque semaine, le locataire devra communiquer au bailleur, 2 jours à l'avance, les créneaux et les modalités de récupération des clefs en son absence le cas échéant.</P>
-
-        {/* Modalités de paiement */}
-        <Sub letter="" title="Modalités de paiement" />
-        <P>Le paiement du loyer et des charges se fera par prélèvement ou virement. En cas de colocation via un bail unique avec clause de solidarité, le paiement de l'intégralité du loyer et des charges sera effectué par un des colocataires.</P>
-
-        {/* Entretien des appareils */}
-        <Sub letter="" title="Entretien des appareils de chauffage" />
-        <P>Le locataire devra faire entretenir et nettoyer conformément à la législation en vigueur et au moins une fois l'an les appareils individuels de chauffage, de production d'eau chaude ou de froid (chaudière, chauffe-eau, pompe à chaleur, ballon d'eau chaude, climatisation etc.), à sa charge et à son initiative.</P>
-        <P>Le locataire devra notamment faire procéder au moins une fois l'an à une visite de contrôle, par un professionnel agréé, des chaudières individuelles au fioul, gaz, bois, charbon ou tout autre combustible, dont la puissance est comprise entre 4 et 400 kilowatts. Le bailleur pourra s'il le souhaite demander au locataire de produire des justificatifs de ces visites de contrôle.</P>
-
-        {/* Communication électronique */}
-        <Sub letter="" title="Communication électronique" />
-        <P>Les parties acceptent de communiquer par voie électronique pour les besoins de l'exécution du présent bail. Ce mode de communication s'applique notamment pour la transmission des quittances de loyer et des appels de charges, les échanges courants relatifs à la vie du bail, et tout autre document ne nécessitant pas de formalisme particulier.</P>
-        <P>Les adresses électroniques des parties sont celles mentionnées dans le présent bail. Chaque partie s'engage à informer l'autre sans délai de tout changement d'adresse électronique. Pour les actes nécessitant un formalisme particulier (congés), les parties pourront recourir au courrier recommandé électronique qualifié ou postal.</P>
-
-        {/* Dégradations et vétusté */}
-        <Sub letter="" title="Dégradations du locataire et grille de vétusté" />
-        <P>Le locataire sera tenu responsable de toutes dégradations, usure anormale, pertes ou pannes, concernant les équipements mobiliers ou immobiliers du logement pendant la durée de son occupation.</P>
-        <P>Pour le calcul du préjudice et des dédommagements dus par le locataire au bailleur, les parties acceptent la grille de vétusté en pièce jointe et son principe de calcul. À défaut il sera retenu un coefficient de vétusté annuel de 7 % pour tous les équipements.</P>
-
-        {/* Animaux */}
-        <Sub letter="" title="Détention d'animaux" />
-        <P>La détention d'animaux domestiques est autorisée par le bailleur, à condition qu'elle ne trouble pas la jouissance des voisins ni ne provoque de dégradations aux parties communes. De plus le bailleur interdit la détention dans les locaux loués de chiens de première catégorie telle que définie par l'article L211-12 et suivants du Code rural et de la pêche maritime.</P>
-
-        {/* Assurance habitation */}
-        <Sub letter="" title="Assurance habitation du locataire" />
-        <P>Le bailleur rappelle au locataire qu'il est tenu de s'assurer contre les risques locatifs (notamment dégât des eaux, incendie, explosion) auprès d'une compagnie d'assurance lui proposant un contrat multi-risque habitation.</P>
-        <P>Il devra fournir une attestation correspondante au bailleur lors de l'état des lieux d'entrée, puis à chaque date d'anniversaire du bail. En l'absence de transmission, le bailleur peut résilier le bail ou souscrire un contrat pour le compte du Locataire et lui refacturer les primes correspondantes (art. 7-3 loi 89-462).</P>
-
-        <Footer docRef={docRef} page="4 / Fin" />
+        {/* ── Lieu et date de signature ─────────────────────────────────────── */}
+        <View style={s.hRuleThin} />
+        <Text style={s.p}>
+          Fait à {blank(cnt.lieuSignature, '_____________________')}, le {new Date().toLocaleDateString('fr-FR')},
+          en deux (2) exemplaires originaux, dont un remis à chacune des parties.
+        </Text>
       </Page>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          PAGE 5 — Section XI (Annexes)
-          ══════════════════════════════════════════════════════════════════════ */}
-      <Page size="A4" style={s.page}>
-        <Watermark />
-        <View style={{ marginBottom: 10, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: C.border }}>
-          <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: C.night }}>Réf. {docRef} — Annexes légales</Text>
-        </View>
-
-        {/* ─── XI. ANNEXES ──────────────────────────────────────────────────── */}
-        <Sec num="XI." title="Annexes" />
-        <P>Sont annexées et jointes au contrat de location les pièces suivantes :</P>
-
-        <Bullet children="Une notice d'information relative aux droits et obligations des locataires et des bailleurs (arrêté du 29 mai 2015)" />
-        <Bullet children="Un état des lieux d'entrée (décret n°2016-382 du 30 mars 2016)" />
-        {isMeuble && <Bullet children="Un inventaire détaillé et état du mobilier, signé contradictoirement" />}
-        <Bullet children="La liste des charges récupérables (décret n°87-713 du 26 août 1987)" />
-        <Bullet children="La liste des réparations locatives (décret n°87-712 du 26 août 1987)" />
-        <Bullet children="La grille de vétusté pour calcul des dégradations" />
-        {cnt.caution && <Bullet children="L'acte de cautionnement solidaire avec mentions manuscrites (art. 22-1 loi 89-462)" />}
-        {zoneTendue && <Bullet children="L'arrêté préfectoral fixant les loyers de référence sur la commune (zone d'encadrement des loyers)" />}
-        <Bullet children="Le diagnostic de performance énergétique (DPE) — valable 10 ans" />
-        <Bullet children="L'état des risques et pollutions (ERP) — valable 6 mois" />
-        {cnt.diags?.plomb && <Bullet children="Le constat de risque d'exposition au plomb (CREP)" />}
-        {cnt.diags?.electricite && <Bullet children="Le diagnostic des installations électriques" />}
-        {cnt.diags?.gaz && <Bullet children="Le diagnostic des installations de gaz" />}
-        {cnt.diags?.amiante && <Bullet children="Le diagnostic amiante" />}
-
-        <View style={{ marginTop: 14, borderWidth: 1, borderColor: C.border, borderRadius: 3, padding: 7 }}>
-          <Text style={{ fontSize: 7.5, color: C.inkMid, textAlign: 'justify', lineHeight: 1.6 }}>
-            Rappel — Clauses réputées non écrites (art. 4 loi 89-462) : Sont nulles de plein droit les clauses qui imposent la souscription d'une assurance auprès d'une compagnie désignée, prévoient le paiement de frais de quittance, interdisent les animaux domestiques (hors dangereux), mettent à la charge du locataire des charges non récupérables (taxe foncière, honoraires de gestion), fixent un dépôt de garantie supérieur aux plafonds légaux, ou interdisent les travaux d'adaptation au handicap.
-          </Text>
-        </View>
-
-        {/* Lieu et date de signature (avant la page de signatures) */}
-        <View style={{ marginTop: 20 }}>
-          <Text style={{ fontSize: 9.5, color: C.inkMid, textAlign: 'center' }}>
-            {'Le '}
-            <Text style={{ fontFamily: 'Helvetica-Bold', color: C.ink }}>
-              {contract.signedAt
-                ? fmtDateS(contract.signedAt)
-                : (contract.signedByOwner || contract.signedByTenant)
-                  ? fmtDateS(contract.signedByOwner || contract.signedByTenant || new Date().toISOString())
-                  : '________________________________'}
-            </Text>
-            {' à '}
-            <Text style={{ fontFamily: 'Helvetica-Bold', color: C.ink }}>
-              {contract.property?.city || '________________________________'}
-            </Text>
-          </Text>
-        </View>
-
-        <Footer docRef={docRef} page="5 / Fin" />
-      </Page>
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          PAGE 6 optionnelle — Conditions particulières & clauses libres
-          ══════════════════════════════════════════════════════════════════════ */}
-      {hasCustomPage && (
+      {/* ════════════════════════════════════════════════════════════════════════
+          PAGE CLAUSES PERSONNALISÉES (optionnelle)
+          ════════════════════════════════════════════════════════════════════════ */}
+      {hasCustom && (
         <Page size="A4" style={s.page}>
-          <Watermark />
-          <View style={{ marginBottom: 10, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: C.border }}>
-            <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: C.night }}>Réf. {docRef} — Clauses librement convenues</Text>
-          </View>
-
-          <Sec num="XII." title="Clauses spécifiques librement convenues (art. 4 loi 89-462)" />
-          <P>Les clauses ci-après ont été librement négociées et acceptées d'un commun accord. Elles complètent les dispositions légales sans pouvoir y déroger au détriment du locataire.</P>
-
+          <Footer docRef={docRef} />
+          <Text style={s.sectionTitle}>XII. — Clauses particulières supplémentaires</Text>
+          <Text style={s.pItalic}>
+            Les clauses suivantes ont été librement négociées et convenues entre les parties. Elles ne peuvent
+            déroger aux dispositions d'ordre public de la loi du 6 juillet 1989.
+          </Text>
           {enabled.map((clause, i) => (
-            <View key={clause.id} style={s.clauseBox}>
-              <View style={s.clauseHead}>
-                <View style={s.clauseBadge}><Text style={s.clauseBadgeTx}>{i + 1}</Text></View>
-                <Text style={s.clauseTitle}>{clause.title}</Text>
-                {clause.isCustom && <View style={s.clauseCustom}><Text style={s.clauseBadgeTx}>Clause personnalisée</Text></View>}
-              </View>
-              <Text style={s.clauseBody}>{clause.description}</Text>
+            <View key={clause.id} style={{ marginBottom: 10 }}>
+              <Text style={s.subTitle2}>{i + 1}. {clause.title}</Text>
+              <Text style={s.p}>{clause.description}</Text>
             </View>
           ))}
-
-          {contract.terms && (
-            <View style={s.clauseBox}>
-              <View style={s.clauseHead}><Text style={s.clauseTitle}>Conditions particulières additionnelles</Text></View>
-              <Text style={s.clauseBody}>{contract.terms}</Text>
-            </View>
-          )}
-
-          <Footer docRef={docRef} page="6 / Fin" />
         </Page>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          DERNIÈRE PAGE — Signatures (table 2 colonnes)
-          ══════════════════════════════════════════════════════════════════════ */}
+      {/* ════════════════════════════════════════════════════════════════════════
+          PAGE SIGNATURES
+          ════════════════════════════════════════════════════════════════════════ */}
       <Page size="A4" style={s.page}>
-        <Watermark />
-        <View style={{ marginBottom: 12, paddingBottom: 8, borderBottomWidth: 2, borderBottomColor: C.night }}>
-          <Text style={{ fontSize: 12, fontFamily: 'Helvetica-Bold', color: C.night, textAlign: 'center' }}>SIGNATURES</Text>
-          <Text style={{ fontSize: 8, color: C.inkMid, textAlign: 'center', marginTop: 4 }}>
-            Réf. {docRef} — {contract.property?.address}, {contract.property?.city}
-          </Text>
-        </View>
+        <Footer docRef={docRef} />
 
-        {/* Base légale signature électronique */}
-        <View style={s.infoBox}>
-          <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: C.owner, marginBottom: 2 }}>Valeur juridique des signatures électroniques :</Text>
-          <Text style={{ fontSize: 8, color: C.inkMid, textAlign: 'justify', lineHeight: 1.55 }}>
-            Conformément aux articles 1366 et 1367 du Code civil et au règlement européen eIDAS (UE n°910/2014), les signatures électroniques ci-dessous ont la même valeur probante qu'une signature manuscrite. Chaque signature est horodatée et associée à une empreinte SHA-256 du document signé.
-          </Text>
-        </View>
+        <Text style={s.sectionTitle}>Signatures des parties</Text>
+        <Text style={s.pItalic}>
+          En signant le présent contrat, chaque partie reconnaît en avoir pris connaissance dans son intégralité
+          et en accepter toutes les clauses et conditions.
+        </Text>
+        <View style={s.hRuleThin} />
 
-        {/* Consentement */}
-        <View style={{ padding: 8, backgroundColor: C.muted, borderRadius: 4, marginBottom: 14 }}>
-          <Text style={{ fontSize: 7.5, color: C.inkMid, textAlign: 'justify', lineHeight: 1.6 }}>
-            Les soussignés déclarent avoir pris connaissance de l'intégralité du présent contrat ({hasCustomPage ? 'pages 1 à 6' : 'pages 1 à 5'}) et de la totalité de ses annexes légales, et l'accepter sans réserve. Chaque partie reconnaît avoir reçu un exemplaire du présent acte.
-          </Text>
-        </View>
-
-        {/* Table signatures */}
         <View style={s.sigRow}>
-          <View style={s.sigBox}>
-            <View style={s.sigHeadO}><Text style={s.sigHeadTx}>Le bailleur — Signature et date</Text></View>
-            <View style={s.sigBody}>
-              <Text style={s.sigName}>{contract.owner?.firstName} {contract.owner?.lastName}</Text>
-              <Text style={s.sigEmail}>{contract.owner?.email}</Text>
-              {contract.signedByOwner ? (
-                <>
-                  <Text style={s.sigDate}>✓ Signé électroniquement le {fmtDate(contract.signedByOwner)}</Text>
-                  {contract.ownerSignature && <Image style={s.sigImg} src={contract.ownerSignature} />}
-                  {sigMeta.owner && (
-                    <>
-                      <Text style={s.sigMetaOk}>Horodatage : {new Date(sigMeta.owner.timestamp).toLocaleString('fr-FR')}</Text>
-                      {sigMeta.owner.ip && <Text style={s.sigMeta}>IP : {sigMeta.owner.ip}</Text>}
-                      {sigMeta.owner.contentHash && <Text style={s.sigMeta}>SHA-256 : {sigMeta.owner.contentHash.substring(0, 24)}…</Text>}
-                    </>
-                  )}
-                </>
-              ) : (
-                <Text style={s.sigEmpty}>En attente de signature du bailleur</Text>
-              )}
-            </View>
+          {/* Bailleur */}
+          <View style={s.sigBlock}>
+            <Text style={s.sigLabel}>Le bailleur</Text>
+            <Field label="Nom et prénom" value={ownerName} />
+            {contract.signedByOwner ? (
+              <>
+                <Text style={s.sigMeta}>
+                  Signé électroniquement le {fmtDate(contract.signedByOwner)}
+                </Text>
+                {sigMeta.owner?.ip && <Text style={s.sigMeta}>Adresse IP : {sigMeta.owner.ip}</Text>}
+                {sigMeta.owner?.userAgent && <Text style={s.sigMeta}>Navigateur : {sigMeta.owner.userAgent.substring(0, 60)}</Text>}
+                {contract.ownerSignature && (
+                  <Image src={contract.ownerSignature} style={s.sigImg} />
+                )}
+              </>
+            ) : (
+              <>
+                <Text style={s.sigMeta}>Signature précédée de la mention « Lu et approuvé » :</Text>
+                <View style={s.sigLine} />
+                <View style={s.sigLine} />
+                <View style={s.sigLine} />
+              </>
+            )}
           </View>
 
-          <View style={s.sigBoxL}>
-            <View style={s.sigHeadT}><Text style={s.sigHeadTx}>Le(s) locataire(s) — Signature et date</Text></View>
-            <View style={s.sigBody}>
-              <Text style={s.sigName}>{contract.tenant?.firstName} {contract.tenant?.lastName}</Text>
-              <Text style={s.sigEmail}>{contract.tenant?.email}</Text>
-              {contract.signedByTenant ? (
-                <>
-                  <Text style={s.sigDate}>✓ Signé électroniquement le {fmtDate(contract.signedByTenant)}</Text>
-                  {contract.tenantSignature && <Image style={s.sigImg} src={contract.tenantSignature} />}
-                  {sigMeta.tenant && (
-                    <>
-                      <Text style={s.sigMetaOk}>Horodatage : {new Date(sigMeta.tenant.timestamp).toLocaleString('fr-FR')}</Text>
-                      {sigMeta.tenant.ip && <Text style={s.sigMeta}>IP : {sigMeta.tenant.ip}</Text>}
-                      {sigMeta.tenant.contentHash && <Text style={s.sigMeta}>SHA-256 : {sigMeta.tenant.contentHash.substring(0, 24)}…</Text>}
-                    </>
-                  )}
-                </>
-              ) : (
-                <Text style={s.sigEmpty}>En attente de signature du(des) locataire(s)</Text>
-              )}
-            </View>
+          {/* Locataire */}
+          <View style={s.sigBlockLast}>
+            <Text style={s.sigLabel}>Le(s) locataire(s)</Text>
+            <Field label="Nom et prénom" value={tenantName} />
+            {contract.signedByTenant ? (
+              <>
+                <Text style={s.sigMeta}>
+                  Signé électroniquement le {fmtDate(contract.signedByTenant)}
+                </Text>
+                {sigMeta.tenant?.ip && <Text style={s.sigMeta}>Adresse IP : {sigMeta.tenant.ip}</Text>}
+                {sigMeta.tenant?.userAgent && <Text style={s.sigMeta}>Navigateur : {sigMeta.tenant.userAgent.substring(0, 60)}</Text>}
+                {contract.tenantSignature && (
+                  <Image src={contract.tenantSignature} style={s.sigImg} />
+                )}
+              </>
+            ) : (
+              <>
+                <Text style={s.sigMeta}>Signature précédée de la mention « Lu et approuvé » :</Text>
+                <View style={s.sigLine} />
+                <View style={s.sigLine} />
+                <View style={s.sigLine} />
+              </>
+            )}
           </View>
         </View>
 
-        {/* Mention finale */}
-        <View style={{ marginTop: 14, padding: 7, borderWidth: 1, borderColor: C.border, borderRadius: 4 }}>
-          <Text style={{ fontSize: 6.5, color: C.inkFaint, textAlign: 'justify', lineHeight: 1.6 }}>
-            Document généré par Bailio (bailio.fr). Ce bail est établi conformément au modèle type défini par le Décret n°2015-587 du 29 mai 2015. Réf. {docRef}. Les parties conservent ce document pendant toute la durée du bail et 3 ans après son terme. Bailio n'est pas un cabinet juridique ; en cas de litige, consultez un professionnel du droit.
-          </Text>
-        </View>
-
-        <Footer docRef={docRef} page="Fin" />
+        <View style={{ ...s.hRuleThin, marginTop: 30 }} />
+        <Text style={{ ...s.pItalic, textAlign: 'center', marginTop: 8 }}>
+          Document généré par la plateforme Bailio — bailio.fr{'\n'}
+          Réf. {docRef} — Ce document a valeur contractuelle entre les signataires.
+        </Text>
       </Page>
+
     </Document>
   )
 }
