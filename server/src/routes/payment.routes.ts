@@ -350,4 +350,44 @@ router.get('/:id/receipt', async (req: Request, res: Response) => {
   return res.json({ url: signedUrl, expiresIn: 3600 })
 })
 
+// POST /payments/auto-generate-all
+router.post('/auto-generate-all', authorize('OWNER'), async (req: Request, res: Response) => {
+  try {
+    const ownerId = req.user!.id
+    const now = new Date()
+    const month = now.getMonth() + 1
+    const year = now.getFullYear()
+
+    const contracts = await prisma.contract.findMany({
+      where: { ownerId, status: 'ACTIVE' },
+      include: {
+        paymentSettings: true,
+        property: { select: { title: true, city: true } },
+      },
+    })
+
+    const results: Array<{ contractId: string; propertyTitle: string; status: 'created' | 'already_exists' }> = []
+
+    for (const contract of contracts) {
+      const dayOfMonth = contract.paymentSettings?.dayOfMonth ?? 5
+      const dueDate = new Date(year, month - 1, Math.min(dayOfMonth, 28))
+      try {
+        await prisma.payment.upsert({
+          where: { contractId_month_year: { contractId: contract.id, month, year } },
+          create: { contractId: contract.id, amount: contract.monthlyRent, charges: contract.charges ?? 0, dueDate, month, year, status: 'PENDING' },
+          update: {},
+        })
+        results.push({ contractId: contract.id, propertyTitle: contract.property.title, status: 'created' })
+      } catch {
+        results.push({ contractId: contract.id, propertyTitle: contract.property.title, status: 'already_exists' })
+      }
+    }
+
+    return res.json({ success: true, data: { generated: results.length, results, month, year } })
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return res.status(500).json({ success: false, message: msg })
+  }
+})
+
 export default router

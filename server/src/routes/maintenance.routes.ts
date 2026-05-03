@@ -132,6 +132,54 @@ function analyzeMaintenanceRequest(category: string, title: string, description:
   return { severity, estimatedCost: { ...cost, currency: 'EUR' }, advice, platforms }
 }
 
+// GET /maintenance/by-property — requests grouped by property with stats
+router.get('/by-property', async (req, res) => {
+  try {
+    const userId = req.user!.id
+    const requests = await prisma.maintenanceRequest.findMany({
+      where: { ownerId: userId },
+      include: {
+        property: { select: { id: true, title: true, address: true, city: true, postalCode: true, surface: true, price: true, images: true, furnished: true, type: true } },
+        tenant: { select: { firstName: true, lastName: true } },
+      },
+      orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
+    })
+
+    // Group by propertyId
+    const grouped: Record<string, {
+      property: typeof requests[0]['property']
+      requests: typeof requests
+      stats: { total: number; open: number; inProgress: number; resolved: number; estimatedCostMin: number; estimatedCostMax: number }
+    }> = {}
+
+    for (const r of requests) {
+      if (!r.propertyId) continue
+      if (!grouped[r.propertyId]) {
+        grouped[r.propertyId] = {
+          property: r.property,
+          requests: [],
+          stats: { total: 0, open: 0, inProgress: 0, resolved: 0, estimatedCostMin: 0, estimatedCostMax: 0 },
+        }
+      }
+      grouped[r.propertyId].requests.push(r)
+      grouped[r.propertyId].stats.total++
+      if (r.status === 'OPEN') grouped[r.propertyId].stats.open++
+      if (r.status === 'IN_PROGRESS') grouped[r.propertyId].stats.inProgress++
+      if (r.status === 'RESOLVED' || r.status === 'CLOSED') grouped[r.propertyId].stats.resolved++
+      // Add estimated costs from aiAnalysis if present
+      const ai = r.aiAnalysis as { estimatedCost?: { min: number; max: number } } | null
+      if (ai?.estimatedCost) {
+        grouped[r.propertyId].stats.estimatedCostMin += ai.estimatedCost.min
+        grouped[r.propertyId].stats.estimatedCostMax += ai.estimatedCost.max
+      }
+    }
+
+    return res.json({ success: true, data: { byProperty: Object.values(grouped) } })
+  } catch {
+    return res.status(500).json({ success: false, message: 'Erreur serveur' })
+  }
+})
+
 // GET /maintenance
 router.get('/', async (req, res) => {
   try {
@@ -143,7 +191,7 @@ router.get('/', async (req, res) => {
       requests = await prisma.maintenanceRequest.findMany({
         where: { ownerId: userId },
         include: {
-          property: { select: { title: true } },
+          property: { select: { title: true, address: true, city: true, postalCode: true, surface: true, price: true, images: true, furnished: true, type: true } },
           tenant: { select: { firstName: true, lastName: true } },
         },
         orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
@@ -152,7 +200,7 @@ router.get('/', async (req, res) => {
       requests = await prisma.maintenanceRequest.findMany({
         where: { tenantId: userId },
         include: {
-          property: { select: { title: true } },
+          property: { select: { title: true, address: true, city: true, postalCode: true, surface: true, price: true, images: true, furnished: true, type: true } },
         },
         orderBy: { createdAt: 'desc' },
       })
@@ -195,7 +243,7 @@ router.post('/', async (req, res) => {
     const request = await prisma.maintenanceRequest.create({
       data: { propertyId, ownerId, tenantId, title, description, category, priority: priority || 'MEDIUM' },
       include: {
-        property: { select: { title: true } },
+        property: { select: { title: true, address: true, city: true, postalCode: true, surface: true, price: true, images: true, furnished: true, type: true } },
         tenant: { select: { firstName: true, lastName: true } },
       },
     })
@@ -217,7 +265,7 @@ router.patch('/:id', async (req, res) => {
       where: { id: req.params.id },
       data: { ...(status && { status }), ...(priority && { priority }) },
       include: {
-        property: { select: { title: true } },
+        property: { select: { title: true, address: true, city: true, postalCode: true, surface: true, price: true, images: true, furnished: true, type: true } },
         tenant: { select: { firstName: true, lastName: true } },
       },
     })
@@ -242,7 +290,7 @@ router.post('/:id/ai-analyze', async (req, res) => {
       where: { id: req.params.id },
       data: { aiAnalysis: aiAnalysis as object },
       include: {
-        property: { select: { title: true } },
+        property: { select: { title: true, address: true, city: true, postalCode: true, surface: true, price: true, images: true, furnished: true, type: true } },
         tenant: { select: { firstName: true, lastName: true } },
       },
     })

@@ -4,6 +4,7 @@ import { BAI } from '../../constants/bailio-tokens'
 import { useMaintenanceStore } from '../../store/maintenanceStore'
 import { usePropertyStore } from '../../store/propertyStore'
 import { maintenanceService } from '../../services/maintenance.service'
+import { apiClient } from '../../services/api.service'
 import {
   MaintenanceCategory,
   MaintenancePriority,
@@ -34,6 +35,7 @@ import {
   Search,
   List,
   Map,
+  Building2,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -78,7 +80,7 @@ interface ContractorResult {
   googleMapsSearchUrl?: string
 }
 
-type ViewMode = 'liste' | 'carte'
+type ViewMode = 'liste' | 'carte' | 'bien'
 type StatusFilter = 'ALL' | MaintenanceStatus
 type CategoryFilter = 'ALL' | MaintenanceCategory
 
@@ -312,6 +314,48 @@ function FullMapView({ properties, categoryFilter, onCategoryChange }: FullMapVi
   )
 }
 
+// ── ByProperty group type ──────────────────────────────────────────────────
+
+interface ByPropertyGroup {
+  property: {
+    id: string
+    title: string
+    address: string
+    city: string
+    postalCode: string
+    surface: number
+    price: number
+    images: string[]
+    furnished: boolean
+    type: string
+  } | null
+  requests: Array<{
+    id: string
+    title: string
+    description: string
+    category: MaintenanceCategory
+    priority: MaintenancePriority
+    status: MaintenanceStatus
+    createdAt: string
+    aiAnalysis?: {
+      severity: string
+      estimatedCost: { min: number; max: number }
+      advice?: string
+      platforms: Array<{ name: string; url: string; description: string }>
+    } | null
+    property?: { title: string } | null
+    tenant?: { firstName: string; lastName: string } | null
+  }>
+  stats: {
+    total: number
+    open: number
+    inProgress: number
+    resolved: number
+    estimatedCostMin: number
+    estimatedCostMax: number
+  }
+}
+
 // ── Main component ─────────────────────────────────────────────────────────
 
 export default function Maintenance() {
@@ -322,6 +366,14 @@ export default function Maintenance() {
   const [contractorsMap, setContractorsMap] = useState<Record<string, ContractorResult>>({})
   const [loadingContractors, setLoadingContractors] = useState<string | null>(null)
   const [mapCategoryFilter, setMapCategoryFilter] = useState<CategoryFilter>('ALL')
+
+  // Detail panel
+  const [selectedReqId, setSelectedReqId] = useState<string | null>(null)
+
+  // Par bien view
+  const [byProperty, setByProperty] = useState<ByPropertyGroup[]>([])
+  const [byPropertyLoading, setByPropertyLoading] = useState(false)
+  const [expandedPropertyId, setExpandedPropertyId] = useState<string | null>(null)
 
   const [form, setForm] = useState<CreateMaintenanceInput>({
     propertyId: '',
@@ -339,6 +391,15 @@ export default function Maintenance() {
     fetchRequests()
     fetchMyProperties()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (viewMode !== 'bien') return
+    setByPropertyLoading(true)
+    apiClient.get<{ success: boolean; data: { byProperty: ByPropertyGroup[] } }>('/maintenance/by-property')
+      .then(res => setByProperty(res.data.data.byProperty))
+      .catch(() => {})
+      .finally(() => setByPropertyLoading(false))
+  }, [viewMode]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const openCount = requests.filter(r => r.status === 'OPEN' || r.status === 'IN_PROGRESS').length
 
@@ -365,18 +426,16 @@ export default function Maintenance() {
       setContractorsMap(m => { const n = { ...m }; delete n[req.id]; return n })
       return
     }
-    // Look up full property data from myProperties
     const fullProp = myProperties.find(p => {
-      // match by req property title as fallback
       return req.property?.title && p.title === req.property.title
     })
     setLoadingContractors(req.id)
     try {
       const result = await maintenanceService.findContractors({
         category: req.category,
-        city: fullProp?.city ?? req.property?.city ?? '',
-        latitude: fullProp?.latitude ?? req.property?.latitude ?? null,
-        longitude: fullProp?.longitude ?? req.property?.longitude ?? null,
+        city: fullProp?.city ?? (req.property as { city?: string } | undefined)?.city ?? '',
+        latitude: fullProp?.latitude ?? (req.property as { latitude?: number | null } | undefined)?.latitude ?? null,
+        longitude: fullProp?.longitude ?? (req.property as { longitude?: number | null } | undefined)?.longitude ?? null,
       })
       setContractorsMap(m => ({ ...m, [req.id]: result }))
       if (result.contractors.length === 0)
@@ -395,7 +454,6 @@ export default function Maintenance() {
     if (!alreadyExpanded && !contractorsMap[reqId]) {
       const req = requests.find(r => r.id === reqId)
       if (req) {
-        // Auto-search silently (no toggle, just load)
         const fullProp = myProperties.find(p => req.property?.title && p.title === req.property.title)
         setLoadingContractors(reqId)
         try {
@@ -550,6 +608,7 @@ export default function Maintenance() {
                   gap: 6,
                   padding: '9px 16px',
                   border: 'none',
+                  borderRight: `1px solid ${BAI.border}`,
                   background: viewMode === 'carte' ? BAI.night : 'transparent',
                   color: viewMode === 'carte' ? '#fff' : BAI.inkMid,
                   fontFamily: BAI.fontBody,
@@ -562,6 +621,27 @@ export default function Maintenance() {
               >
                 <Map style={{ width: 15, height: 15 }} />
                 Carte
+              </button>
+              <button
+                onClick={() => setViewMode('bien')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '9px 16px',
+                  border: 'none',
+                  background: viewMode === 'bien' ? BAI.night : 'transparent',
+                  color: viewMode === 'bien' ? '#fff' : BAI.inkMid,
+                  fontFamily: BAI.fontBody,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  minHeight: 44,
+                  transition: BAI.transition,
+                }}
+              >
+                <Building2 style={{ width: 15, height: 15 }} />
+                Par bien
               </button>
             </div>
 
@@ -735,6 +815,96 @@ export default function Maintenance() {
           />
         )}
 
+        {/* ── Par bien view ────────────────────────────────────────────────── */}
+        {viewMode === 'bien' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {byPropertyLoading ? (
+              <div style={{ padding: 60, textAlign: 'center', color: BAI.inkFaint, fontFamily: BAI.fontBody, fontSize: 14 }}>Chargement...</div>
+            ) : byProperty.length === 0 ? (
+              <div style={{ padding: 60, textAlign: 'center', background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16 }}>
+                <p style={{ fontFamily: BAI.fontDisplay, fontSize: 22, fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '0 0 8px' }}>Aucune demande</p>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint, margin: 0 }}>Créez votre première demande de maintenance.</p>
+              </div>
+            ) : byProperty.map(group => {
+              const prop = group.property
+              if (!prop) return null
+              const isExpanded = expandedPropertyId === prop.id
+              const hasOpen = group.stats.open + group.stats.inProgress > 0
+              return (
+                <div key={prop.id} style={{
+                  background: BAI.bgSurface,
+                  border: `1px solid ${hasOpen ? '#fca5a5' : BAI.border}`,
+                  borderLeft: hasOpen ? `4px solid ${BAI.error}` : `1px solid ${BAI.border}`,
+                  borderRadius: 16,
+                  overflow: 'hidden',
+                  boxShadow: BAI.shadowSm,
+                }}>
+                  {/* Header — clickable */}
+                  <div
+                    onClick={() => setExpandedPropertyId(isExpanded ? null : prop.id)}
+                    style={{ padding: '20px 24px', cursor: 'pointer', display: 'flex', gap: 16, alignItems: 'flex-start' }}
+                  >
+                    {prop.images?.[0] ? (
+                      <img src={prop.images[0]} alt={prop.title} style={{ width: 72, height: 72, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
+                    ) : (
+                      <div style={{ width: 72, height: 72, borderRadius: 10, background: BAI.bgMuted, border: `1px solid ${BAI.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Building2 style={{ width: 28, height: 28, color: BAI.inkFaint }} />
+                      </div>
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                        <div>
+                          <p style={{ fontFamily: BAI.fontDisplay, fontSize: 20, fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '0 0 4px' }}>{prop.title}</p>
+                          <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint, margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <MapPin style={{ width: 12, height: 12 }} />{prop.address}, {prop.city}
+                          </p>
+                        </div>
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                          {group.stats.open > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 12px', borderRadius: 999, background: BAI.errorLight, border: '1px solid #fca5a5', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.error }}><AlertTriangle style={{ width: 12, height: 12 }} />{group.stats.open} ouvert{group.stats.open > 1 ? 's' : ''}</span>}
+                          {group.stats.inProgress > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 12px', borderRadius: 999, background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.owner }}><Clock style={{ width: 12, height: 12 }} />{group.stats.inProgress} en cours</span>}
+                          {group.stats.resolved > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 12px', borderRadius: 999, background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`, fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.tenant }}><CheckCircle style={{ width: 12, height: 12 }} />{group.stats.resolved} résolu{group.stats.resolved > 1 ? 's' : ''}</span>}
+                          {isExpanded ? <ChevronUp style={{ width: 16, height: 16, color: BAI.inkFaint }} /> : <ChevronDown style={{ width: 16, height: 16, color: BAI.inkFaint }} />}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 20, marginTop: 10, flexWrap: 'wrap' }}>
+                        <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>{prop.surface} m²</span>
+                        <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>{prop.price?.toLocaleString('fr-FR')} €/mois</span>
+                        {group.stats.estimatedCostMax > 0 && <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.caramel, fontWeight: 600 }}>Coût estimé : {group.stats.estimatedCostMin.toLocaleString('fr-FR')}–{group.stats.estimatedCostMax.toLocaleString('fr-FR')} €</span>}
+                        <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>{group.stats.total} demande{group.stats.total > 1 ? 's' : ''} au total</span>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Expanded list */}
+                  {isExpanded && (
+                    <div style={{ borderTop: `1px solid ${BAI.border}`, background: BAI.bgBase }}>
+                      {group.requests.length === 0 ? (
+                        <p style={{ padding: '20px 24px', fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint, margin: 0 }}>Aucune demande.</p>
+                      ) : group.requests.map((req, i) => (
+                        <div
+                          key={req.id}
+                          onClick={() => setSelectedReqId(req.id)}
+                          style={{ padding: '14px 24px', borderBottom: i < group.requests.length - 1 ? `1px solid ${BAI.border}` : 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, transition: BAI.transition, background: 'transparent' }}
+                          onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                        >
+                          <CategoryIcon category={req.category} size={18} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 700, color: BAI.ink, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{req.title}</p>
+                            <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: 0 }}>{new Date(req.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                          </div>
+                          <StatusBadge s={req.status} />
+                          <span style={{ padding: '2px 8px', borderRadius: 999, background: priorityBg(req.priority), fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: priorityColor(req.priority) }}>{MAINTENANCE_PRIORITY_LABELS[req.priority]}</span>
+                          <ChevronDown style={{ width: 14, height: 14, color: BAI.inkFaint, flexShrink: 0, transform: 'rotate(-90deg)' }} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+
         {/* ── Liste view ─────────────────────────────────────────────────── */}
         {viewMode === 'liste' && (
           <>
@@ -901,12 +1071,16 @@ export default function Maintenance() {
                             }}
                           >
                             <p
+                              onClick={() => setSelectedReqId(req.id)}
                               style={{
                                 fontFamily: BAI.fontBody,
                                 fontSize: 15,
                                 fontWeight: 700,
                                 color: BAI.ink,
                                 margin: 0,
+                                cursor: 'pointer',
+                                textDecoration: 'underline',
+                                textDecorationColor: BAI.border,
                               }}
                             >
                               {req.title}
@@ -1376,6 +1550,159 @@ export default function Maintenance() {
           </>
         )}
       </div>
+
+      {/* ── Detail Panel ────────────────────────────────────────────────── */}
+      {selectedReqId && (() => {
+        const req = requests.find(r => r.id === selectedReqId)
+        if (!req) return null
+        const fullProp = myProperties.find(p => req.property?.title && p.title === req.property.title)
+        const propAny = req.property as (typeof req.property & { address?: string; city?: string; surface?: number; price?: number; images?: string[] }) | null
+
+        return (
+          <>
+            <div
+              onClick={() => setSelectedReqId(null)}
+              style={{ position: 'fixed', inset: 0, background: 'rgba(13,12,10,0.4)', zIndex: 200 }}
+            />
+            <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: 'clamp(320px, 45vw, 580px)', background: BAI.bgBase, zIndex: 201, boxShadow: '-4px 0 32px rgba(13,12,10,0.12)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+              {/* Panel header */}
+              <div style={{ padding: '20px 24px', background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}`, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 4px' }}>Fiche intervention</p>
+                  <h2 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(18px,3vw,22px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{req.title}</h2>
+                </div>
+                <button onClick={() => setSelectedReqId(null)} style={{ padding: 8, borderRadius: 8, border: `1px solid ${BAI.border}`, background: 'transparent', cursor: 'pointer', color: BAI.inkMid, display: 'flex', flexShrink: 0 }}>
+                  <XCircle style={{ width: 18, height: 18 }} />
+                </button>
+              </div>
+
+              {/* Scrollable content */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+                {/* Badges */}
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <StatusBadge s={req.status} />
+                  <span style={{ padding: '3px 10px', borderRadius: 999, background: priorityBg(req.priority), fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: priorityColor(req.priority) }}>{MAINTENANCE_PRIORITY_LABELS[req.priority]}</span>
+                  <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, marginLeft: 'auto' }}>{new Date(req.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                </div>
+
+                {/* Property card */}
+                {propAny && (
+                  <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: '14px 16px' }}>
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 10px' }}>Appartement concerné</p>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                      {fullProp?.images?.[0] ? (
+                        <img src={fullProp.images[0]} alt={propAny.title} style={{ width: 56, height: 56, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
+                      ) : (
+                        <div style={{ width: 56, height: 56, borderRadius: 8, background: BAI.bgMuted, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <Building2 style={{ width: 22, height: 22, color: BAI.inkFaint }} />
+                        </div>
+                      )}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 700, color: BAI.ink, margin: '0 0 2px' }}>{propAny.title}</p>
+                        {propAny.address && <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: 4 }}><MapPin style={{ width: 11, height: 11 }} />{propAny.address}, {propAny.city}</p>}
+                        <div style={{ display: 'flex', gap: 12 }}>
+                          {propAny.surface && <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>{propAny.surface} m²</span>}
+                          {propAny.price && <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.tenant, fontWeight: 600 }}>{propAny.price.toLocaleString('fr-FR')} €/mois</span>}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tenant */}
+                {req.tenant && (
+                  <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 999, background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <span style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: BAI.owner }}>{req.tenant.firstName[0]}{req.tenant.lastName[0]}</span>
+                    </div>
+                    <div>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '0 0 2px' }}>Signalé par le locataire</p>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, color: BAI.ink, margin: 0 }}>{req.tenant.firstName} {req.tenant.lastName}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Description */}
+                <div>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 8px' }}>Description</p>
+                  <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 10, padding: '12px 16px' }}>
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.ink, margin: 0, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{req.description}</p>
+                  </div>
+                </div>
+
+                {/* Map */}
+                {fullProp && (
+                  <div>
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 8px' }}>Artisans à proximité</p>
+                    <MiniMapWithLocation category={req.category} city={fullProp.city} address={fullProp.address} />
+                  </div>
+                )}
+
+                {/* AI Analysis */}
+                {req.aiAnalysis ? (
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                      <Sparkles style={{ width: 15, height: 15, color: BAI.caramel }} />
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: BAI.ink, margin: 0 }}>Analyse IA</p>
+                    </div>
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+                      <div style={{ flex: 1, minWidth: 120, background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 10, padding: '10px 14px' }}>
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: '0 0 4px' }}>Sévérité</p>
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 700, color: severityColor(req.aiAnalysis.severity), margin: 0 }}>{severityLabel(req.aiAnalysis.severity)}</p>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 120, background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 10, padding: '10px 14px' }}>
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: '0 0 4px' }}>Coût estimé</p>
+                        <p style={{ fontFamily: BAI.fontDisplay, fontSize: 16, fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: 0 }}>{req.aiAnalysis.estimatedCost.min.toLocaleString('fr-FR')}–{req.aiAnalysis.estimatedCost.max.toLocaleString('fr-FR')} €</p>
+                      </div>
+                    </div>
+                    {req.aiAnalysis.advice && <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, margin: 0, lineHeight: 1.6 }}><strong style={{ color: BAI.ink }}>Conseil · </strong>{req.aiAnalysis.advice}</p>}
+                  </div>
+                ) : (
+                  <button onClick={() => analyzeWithAI(req.id)} disabled={isAnalyzing === req.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 8, border: `1px solid ${BAI.caramelBorder}`, background: BAI.caramelLight, fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.caramel, cursor: 'pointer' }}>
+                    <Sparkles style={{ width: 14, height: 14 }} />
+                    {isAnalyzing === req.id ? 'Analyse en cours...' : "Analyser avec l'IA"}
+                  </button>
+                )}
+
+                {/* Update status */}
+                <div>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 8px' }}>Statut</p>
+                  <select value={req.status} onChange={e => updateStatus(req.id, { status: e.target.value as MaintenanceStatus })} style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, fontFamily: BAI.fontBody, fontSize: 14, color: BAI.ink, outline: 'none', cursor: 'pointer' }}>
+                    {(Object.keys(MAINTENANCE_STATUS_LABELS) as MaintenanceStatus[]).map(k => (
+                      <option key={k} value={k}>{MAINTENANCE_STATUS_LABELS[k]}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* History — other requests for same property */}
+                {(() => {
+                  const samePropertyReqs = requests.filter(r => r.property?.title === req.property?.title && r.id !== req.id)
+                  if (samePropertyReqs.length === 0) return null
+                  return (
+                    <div>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 10px' }}>Historique — {samePropertyReqs.length} autre{samePropertyReqs.length > 1 ? 's' : ''} intervention{samePropertyReqs.length > 1 ? 's' : ''} sur ce bien</p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {samePropertyReqs.slice(0, 6).map(r => (
+                          <div key={r.id} onClick={() => setSelectedReqId(r.id)} style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 10, padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, transition: BAI.transition }} onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)} onMouseLeave={e => (e.currentTarget.style.background = BAI.bgSurface)}>
+                            <CategoryIcon category={r.category} size={14} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.ink, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.title}</p>
+                              <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: 0 }}>{new Date(r.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                            </div>
+                            <StatusBadge s={r.status} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })()}
+              </div>
+            </div>
+          </>
+        )
+      })()}
     </Layout>
   )
 }
