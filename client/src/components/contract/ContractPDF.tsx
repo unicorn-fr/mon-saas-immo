@@ -1,7 +1,7 @@
 /**
  * ContractPDF — Bail d'habitation Loi ALUR
+ * Conforme au Décret n°2015-587 du 29 mai 2015 (modèle type de bail)
  * DA Maison · nuit #1a1a2e · caramel #c4976a
- * Refonte juriste : compact, lisible, valide devant juridiction française
  */
 import {
   Document,
@@ -68,7 +68,7 @@ const s = StyleSheet.create({
   mastheadRef: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: C.caramel },
   mastheadDate: { fontSize: 7, color: C.inkFaint, marginTop: 2 },
 
-  // Bande caramel "accord des parties"
+  // Bande "accord des parties"
   accordBand: {
     backgroundColor: C.night,
     borderRadius: 4,
@@ -82,7 +82,7 @@ const s = StyleSheet.create({
   accordTitle: { fontSize: 9, fontFamily: 'Helvetica-Bold', color: C.surface },
   accordSub: { fontSize: 7, color: '#9ca3af', marginTop: 1 },
 
-  // Tableau récapitulatif des conditions convenues
+  // Tableau récapitulatif
   tableRow: {
     flexDirection: 'row',
     borderBottomWidth: 0.5,
@@ -103,12 +103,6 @@ const s = StyleSheet.create({
     fontSize: 9,
     color: C.ink,
     fontFamily: 'Helvetica-Bold',
-  },
-  tableValNote: {
-    flex: 1,
-    padding: '5 8',
-    fontSize: 8,
-    color: C.inkMid,
   },
   tableWrap: {
     borderWidth: 1,
@@ -159,6 +153,7 @@ const s = StyleSheet.create({
   // Corps de texte
   body: { fontSize: 8.5, color: C.ink, marginBottom: 3, textAlign: 'justify' },
   bodyBold: { fontSize: 8.5, fontFamily: 'Helvetica-Bold', color: C.ink, marginBottom: 3 },
+  bodySmall: { fontSize: 7.5, color: C.inkMid, marginBottom: 2, textAlign: 'justify' },
   li: { fontSize: 8.5, color: C.ink, marginBottom: 2, paddingLeft: 10 },
 
   // Boîtes info / warn / error
@@ -166,6 +161,15 @@ const s = StyleSheet.create({
     backgroundColor: C.ownerL,
     borderLeftWidth: 2.5,
     borderLeftColor: C.owner,
+    borderRadius: 3,
+    padding: 7,
+    marginBottom: 6,
+    marginTop: 2,
+  },
+  tenantBox: {
+    backgroundColor: C.tenantL,
+    borderLeftWidth: 2.5,
+    borderLeftColor: C.tenant,
     borderRadius: 3,
     padding: 7,
     marginBottom: 6,
@@ -325,6 +329,13 @@ const Li = ({ children }: { children: string }) => (
   </View>
 )
 
+const LiSmall = ({ children }: { children: string }) => (
+  <View style={{ flexDirection: 'row', marginBottom: 2, paddingLeft: 8 }}>
+    <Text style={{ fontSize: 7.5, color: C.caramel, marginRight: 4 }}>–</Text>
+    <Text style={{ fontSize: 7.5, color: C.inkMid, flex: 1 }}>{children}</Text>
+  </View>
+)
+
 const Check = ({ text, note }: { text: string; note?: string }) => (
   <View>
     <View style={s.checkRow}>
@@ -370,7 +381,7 @@ export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
 
   const BailioWatermark = () => (
     <View style={{ position: 'absolute', top: '40%', left: '10%', opacity: 0.04 }}>
-      <Text style={{ fontSize: 72, fontFamily: 'Helvetica-Bold', color: C.night, transform: 'rotate(-35deg)' }}>
+      <Text style={{ fontSize: 72, fontFamily: 'Helvetica-Bold', color: C.night }}>
         BAILIO
       </Text>
     </View>
@@ -380,11 +391,11 @@ export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
     <Document
       title={`Bail – ${contract.property?.title ?? ''}`}
       author="Bailio – Plateforme de gestion locative"
-      subject="Contrat de location Loi ALUR"
-      keywords="bail, location, ALUR, contrat"
+      subject="Contrat de location Loi ALUR – Décret n°2015-587"
+      keywords="bail, location, ALUR, contrat, loi 89-462"
     >
 
-      {/* ═══ PAGE 1 — Parties & Récapitulatif convenu ═════════════════════ */}
+      {/* ═══ PAGE 1 — Parties & Récapitulatif ═════════════════════════════ */}
       <Page size="A4" style={s.page}>
         <BailioWatermark />
 
@@ -393,7 +404,7 @@ export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
           <View style={s.mastheadLeft}>
             <Text style={s.mastheadTitle}>CONTRAT DE LOCATION — {isMeuble ? 'MEUBLÉ' : 'VIDE'}</Text>
             <Text style={s.mastheadSub}>Résidence principale · {typeLabel} · Loi n°89-462 du 6 juillet 1989 modifiée par la Loi ALUR du 24 mars 2014</Text>
-            <Text style={s.mastheadLegal}>Décret n°2015-587 du 29 mai 2015 relatif aux contrats types de location</Text>
+            <Text style={s.mastheadLegal}>Décret n°2015-587 du 29 mai 2015 relatif aux contrats types de location de logement à usage de résidence principale</Text>
           </View>
           <View style={s.mastheadRight}>
             <Text style={s.mastheadRef}>Réf. {docRef}</Text>
@@ -413,7 +424,7 @@ export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
           </View>
         </View>
 
-        {/* Tableau récapitulatif des conditions */}
+        {/* Tableau récapitulatif */}
         <View style={s.tableWrap}>
           {[
             { l: 'Adresse du bien', v: `${contract.property?.address ?? '—'}, ${contract.property?.postalCode ?? ''} ${contract.property?.city ?? ''}` },
@@ -421,13 +432,13 @@ export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
             { l: 'Type de bail', v: typeLabel },
             { l: 'Durée légale', v: dureeLegale },
             { l: 'Prise d\'effet', v: fmtDate(contract.startDate) },
-            { l: 'Échéance', v: fmtDate(contract.endDate) },
+            { l: 'Échéance contractuelle', v: fmtDate(contract.endDate) },
             { l: 'Loyer mensuel hors charges', v: fmtEUR(contract.monthlyRent) },
-            { l: 'Provisions pour charges', v: contract.charges != null ? fmtEUR(contract.charges) : 'Sans charges' },
-            { l: 'Total mensuel TTC', v: fmtEUR(total) },
+            { l: 'Provisions pour charges', v: contract.charges != null ? fmtEUR(contract.charges) : 'Sans charges récupérables' },
+            { l: 'Total mensuel TCC', v: fmtEUR(total) },
             { l: 'Dépôt de garantie', v: contract.deposit != null ? fmtEUR(contract.deposit) + (isMeuble ? '  (max 2 mois HC)' : '  (max 1 mois HC)') : '—' },
-            { l: 'Modalité de paiement', v: `${payMethod} — le ${cnt.paymentDay || '5'} de chaque mois` },
-            { l: 'Révision annuelle (IRL)', v: `${cnt.irlTrimestre || '2ème trimestre'} ${cnt.irlAnnee || new Date().getFullYear()}` },
+            { l: 'Mode de paiement', v: `${payMethod} — le ${cnt.paymentDay || '5'} de chaque mois (terme à échoir)` },
+            { l: 'Révision annuelle (IRL)', v: `${cnt.irlTrimestre || '2ème trimestre'} ${cnt.irlAnnee || new Date().getFullYear()}${cnt.irlValeur ? ` — valeur : ${cnt.irlValeur}` : ''}` },
           ].map((r, i, arr) => (
             <View key={i} style={i < arr.length - 1 ? s.tableRow : s.tableRowLast}>
               <Text style={s.tableLbl}>{r.l}</Text>
@@ -440,27 +451,28 @@ export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
         <View style={s.finGrid}>
           <View style={s.finCell}>
             <Text style={s.finAmt}>{fmtEUR(contract.monthlyRent)}</Text>
-            <Text style={s.finLbl}>Loyer HC</Text>
+            <Text style={s.finLbl}>Loyer HC / mois</Text>
           </View>
           {contract.charges != null && (
             <View style={s.finCell}>
               <Text style={s.finAmt}>{fmtEUR(contract.charges)}</Text>
-              <Text style={s.finLbl}>Charges</Text>
+              <Text style={s.finLbl}>Charges / mois</Text>
             </View>
           )}
           <View style={s.finCell}>
             <Text style={s.finAmt}>{fmtEUR(total)}</Text>
-            <Text style={s.finLbl}>Total / mois</Text>
+            <Text style={s.finLbl}>Total TCC / mois</Text>
           </View>
           {contract.deposit != null && (
             <View style={s.finCellLast}>
               <Text style={s.finAmt}>{fmtEUR(contract.deposit)}</Text>
-              <Text style={s.finLbl}>Dépôt garantie</Text>
+              <Text style={s.finLbl}>Dépôt de garantie</Text>
+              <Text style={s.finSub}>{isMeuble ? 'max 2 mois HC' : 'max 1 mois HC'}</Text>
             </View>
           )}
         </View>
 
-        {/* Parties */}
+        {/* ART. 1 — Parties */}
         <Art num="ART. 1" title="Désignation des parties" />
         <View style={s.partiesRow}>
           <View style={s.partyCard}>
@@ -472,6 +484,7 @@ export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
               <Text style={s.partyDetail}>{contract.owner?.email}</Text>
               {contract.owner?.phone ? <Text style={s.partyDetail}>Tél. {contract.owner.phone}</Text> : null}
               <Text style={s.partyDetail}>Qualité : {cnt.qualiteBailleur || 'Propriétaire bailleur'}</Text>
+              {cnt.siret ? <Text style={s.partyDetail}>SIRET : {cnt.siret}</Text> : null}
             </View>
           </View>
           <View style={s.partyCardRight}>
@@ -483,11 +496,12 @@ export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
               <Text style={s.partyDetail}>{contract.tenant?.email}</Text>
               {contract.tenant?.phone ? <Text style={s.partyDetail}>Tél. {contract.tenant.phone}</Text> : null}
               {cnt.adresseLocataire ? <Text style={s.partyDetail}>Adresse actuelle : {cnt.adresseLocataire}</Text> : null}
+              {cnt.professionLocataire ? <Text style={s.partyDetail}>Profession : {cnt.professionLocataire}</Text> : null}
             </View>
           </View>
         </View>
 
-        {/* Bien loué */}
+        {/* ART. 2 — Bien loué */}
         <Art num="ART. 2" title="Désignation du logement loué" />
         <View style={s.infoBox}>
           <Text style={s.bodyBold}>{contract.property?.title}</Text>
@@ -496,43 +510,43 @@ export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
         <View style={s.row2}>
           <View style={s.col2}>
             <F label="Type de logement" value={cnt.typeLogement || contract.property?.type || '—'} />
-            <F label="Surface (Loi Boutin)" value={`${contract.property?.surface ?? '—'} m²`} bold />
+            <F label="Surface habitable (Loi Boutin)" value={`${contract.property?.surface ?? '—'} m²`} bold />
             <F label="Nbre pièces principales" value={String(contract.property?.bedrooms != null ? contract.property.bedrooms + 1 : '—')} />
+            <F label="Étage" value={cnt.etage || 'Non précisé'} />
           </View>
           <View style={s.col2L}>
-            <F label="Étage" value={cnt.etage || 'Non précisé'} />
-            <F label="Régime juridique" value={cnt.regimeJuridique || 'Copropriété'} />
-            <F label="DPE / GES" value={`${dpe || 'NC'} / ${cnt.ges || 'NC'}`} bold />
+            <F label="Régime juridique de l'immeuble" value={cnt.regimeJuridique || 'Copropriété'} />
+            <F label="Classement énergétique (DPE)" value={`${dpe || 'NC'} — Émissions GES : ${cnt.ges || 'NC'}`} bold />
+            {cnt.annexes ? <F label="Locaux et annexes" value={cnt.annexes} /> : null}
+            {cnt.equipements ? <F label="Équipements fournis" value={cnt.equipements} /> : null}
           </View>
         </View>
-        {cnt.annexes ? <F label="Annexes" value={cnt.annexes} /> : null}
-        {cnt.equipements ? <F label="Équipements" value={cnt.equipements} /> : null}
         {dpeWarn && (
           <View style={s.warnBox}>
-            <Text style={s.warnTitle}>⚠ Logement classé {dpe} — Passoire thermique</Text>
-            <Text style={s.warnTxt}>Restrictions de hausse de loyer applicables (Loi Climat et Résilience du 22 août 2021). Travaux de rénovation à planifier.</Text>
+            <Text style={s.warnTitle}>⚠ Logement classé {dpe} — Passoire thermique (Loi Climat et Résilience du 22 août 2021)</Text>
+            <Text style={s.warnTxt}>Ce logement est soumis à une restriction de hausse de loyer. Des travaux de rénovation énergétique doivent être planifiés. À compter du 1er janvier 2025, les logements G sont interdits à la location pour de nouveaux baux.</Text>
           </View>
         )}
 
         <Footer docRef={docRef} page="1" />
       </Page>
 
-      {/* ═══ PAGE 2 — Durée, finances, obligations ════════════════════════ */}
+      {/* ═══ PAGE 2 — Durée, Finances, IRL, Dépôt ════════════════════════ */}
       <Page size="A4" style={s.page}>
         <BailioWatermark />
 
         <View style={s.masthead}>
           <View style={s.mastheadLeft}>
-            <Text style={s.mastheadTitle}>CONDITIONS DU BAIL — Réf. {docRef}</Text>
-            <Text style={s.mastheadSub}>{contract.property?.address}, {contract.property?.city} · {isMeuble ? 'Meublé' : 'Vide'}</Text>
+            <Text style={s.mastheadTitle}>DURÉE ET CONDITIONS FINANCIÈRES — Réf. {docRef}</Text>
+            <Text style={s.mastheadSub}>{contract.property?.address}, {contract.property?.city} · {isMeuble ? 'Bail meublé' : 'Bail vide'}</Text>
           </View>
           <View style={s.mastheadRight}>
             <Text style={s.mastheadRef}>{fmtDateS(contract.startDate)} → {fmtDateS(contract.endDate)}</Text>
           </View>
         </View>
 
-        {/* Art 3 — Durée */}
-        <Art num="ART. 3" title="Durée et prise d'effet" />
+        {/* ART. 3 — Durée */}
+        <Art num="ART. 3" title="Durée du contrat et prise d'effet" />
         <View style={s.row2}>
           <View style={s.col2}>
             <F label="Prise d'effet" value={fmtDate(contract.startDate)} bold />
@@ -541,34 +555,52 @@ export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
           </View>
           <View style={s.col2L}>
             <F label="Durée légale minimale" value={dureeLegale} />
-            <F label="Reconduction" value="Tacite, à l'expiration, pour même durée" />
+            <F label="Reconduction" value="Tacite, à l'expiration, par périodes identiques" />
           </View>
         </View>
-        <View style={s.infoBox}>
-          <Text style={s.bodyBold}>Préavis locataire (art. 15 loi 89-462) :</Text>
-          <Li>{isMeuble ? '1 mois — logement meublé' : '3 mois — logement vide (droit commun)'}</Li>
-          {!isMeuble && <Li>1 mois en zone tendue, mutation, perte d'emploi, premier emploi, raisons médicales, bénéficiaire RSA/AAH</Li>}
-          <Text style={[s.bodyBold, { marginTop: 3 }]}>Préavis bailleur :</Text>
-          <Li>6 mois avant l'échéance — motifs limitatifs : reprise pour habiter, vente, motif légitime et sérieux</Li>
-        </View>
         <Text style={s.body}>
-          Congé par lettre recommandée avec AR, acte de commissaire de justice, ou remise en main propre contre récépissé.
+          Le présent contrat est conclu pour une durée de {getDuration(contract.startDate, contract.endDate)}, prenant effet le {fmtDate(contract.startDate)}. À l'échéance, il est reconduit tacitement pour des périodes de même durée, sauf congé donné dans les formes et délais légaux.
         </Text>
+
+        <Text style={s.subTitle}>Congé du locataire (art. 15 loi 89-462)</Text>
+        <Text style={s.body}>
+          Le locataire peut donner congé à tout moment, sous réserve du respect d'un préavis de :
+        </Text>
+        {isMeuble ? (
+          <Li>1 mois pour les logements meublés</Li>
+        ) : (
+          <>
+            <Li>3 mois en droit commun, par lettre recommandée avec avis de réception ou par acte de commissaire de justice</Li>
+            <Li>1 mois dans les zones d'urbanisation continue de plus de 50 000 habitants (zone tendue), ou en cas de mutation professionnelle, perte d'emploi involontaire, obtention du premier emploi, état de santé justifié par certificat médical, perception du RSA ou de l'AAH</Li>
+          </>
+        )}
+
+        <Text style={s.subTitle}>Congé du bailleur (art. 15 loi 89-462)</Text>
+        <Text style={s.body}>
+          Le bailleur peut donner congé 6 mois avant l'échéance du bail pour trois motifs exclusifs : reprise du logement pour l'habiter personnellement ou pour un proche, vente du logement, ou motif légitime et sérieux (notamment inexécution des obligations du locataire). Le congé est donné par lettre recommandée avec avis de réception ou acte de commissaire de justice.
+        </Text>
+
+        {!isMeuble && (
+          <View style={s.infoBox}>
+            <Text style={s.bodyBold}>Droit de préemption du locataire en cas de vente (art. 15-II loi 89-462) :</Text>
+            <Text style={s.bodySmall}>Lorsque le congé est donné pour vendre le logement, le locataire bénéficie d'un droit de préemption pendant les deux premiers mois du délai de préavis.</Text>
+          </View>
+        )}
 
         <View style={s.divider} />
 
-        {/* Art 4 — Finances */}
-        <Art num="ART. 4" title="Conditions financières convenues" />
+        {/* ART. 4 — Conditions financières */}
+        <Art num="ART. 4" title="Loyer et conditions financières" />
         <View style={s.row2}>
           <View style={s.col2}>
-            <F label="Loyer mensuel HC (convenu)" value={fmtEUR(contract.monthlyRent)} bold />
-            <F label="Provisions charges" value={contract.charges != null ? fmtEUR(contract.charges) + ' / mois (régul. annuelle)' : 'Sans charges récupérables'} />
-            <F label="Total mensuel TCC" value={fmtEUR(total)} bold />
+            <F label="Loyer mensuel hors charges (convenu)" value={fmtEUR(contract.monthlyRent)} bold />
+            <F label="Provisions pour charges récupérables" value={contract.charges != null ? fmtEUR(contract.charges) + ' / mois' : 'Sans charges — forfait ou nul'} />
+            <F label="Total mensuel toutes charges comprises" value={fmtEUR(total)} bold />
           </View>
           <View style={s.col2L}>
-            <F label="Dépôt de garantie" value={contract.deposit != null ? fmtEUR(contract.deposit) : '—'} bold />
-            <F label="Plafond légal" value={isMeuble ? '2 mois HC' : '1 mois HC'} />
-            <F label="Échéance paiement" value={`Le ${cnt.paymentDay || '5'} de chaque mois (terme à échoir)`} />
+            <F label="Dépôt de garantie" value={contract.deposit != null ? fmtEUR(contract.deposit) : 'Aucun'} bold />
+            <F label="Plafond légal du dépôt" value={isMeuble ? '2 mois de loyer HC' : '1 mois de loyer HC'} />
+            <F label="Terme du paiement" value={`Le ${cnt.paymentDay || '5'} de chaque mois — terme à échoir`} />
           </View>
         </View>
         <F label="Modalité de paiement" value={payMethod} />
@@ -577,124 +609,265 @@ export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
           <View style={s.warnBox}>
             <Text style={s.warnTitle}>Zone soumise à l'encadrement des loyers (art. 17 loi 89-462)</Text>
             <Text style={s.warnTxt}>
-              Loyer de référence : {cnt.loyerReference || 'voir arrêté préfectoral'} €/m²/mois
-              {cnt.loyerReferenceMajore ? ` · Majoré (+20 %) : ${cnt.loyerReferenceMajore} €/m²/mois` : ''}
-              {cnt.complementLoyer ? ` · Complément de loyer justifié : ${cnt.complementLoyer} €` : ''}
+              Loyer de référence applicable : {cnt.loyerReference || 'voir arrêté préfectoral en vigueur'} €/m²/mois
+              {cnt.loyerReferenceMajore ? ` · Loyer de référence majoré (+20 %) : ${cnt.loyerReferenceMajore} €/m²/mois` : ''}
+              {cnt.complementLoyer ? ` · Complément de loyer librement convenu et justifié : ${cnt.complementLoyer} €/mois` : ''}
             </Text>
           </View>
         )}
 
-        <Text style={s.subTitle}>Révision annuelle — IRL (art. 17-1 loi 89-462)</Text>
         <Text style={s.body}>
-          À chaque date anniversaire selon variation de l'IRL publié par l'INSEE. Indice de référence : {cnt.irlTrimestre || '2ème trimestre'} {cnt.irlAnnee || new Date().getFullYear()}{cnt.irlValeur ? ` (valeur : ${cnt.irlValeur})` : ''}.
-          Formule : Loyer révisé = Loyer actuel × (Nouvel IRL / Ancien IRL). La révision n'est pas automatique. Pas d'effet rétroactif au-delà d'un an.
+          Le loyer est payable par {payMethod} le {cnt.paymentDay || '5'} de chaque mois à terme à échoir. Le bailleur est tenu de délivrer quittance au locataire qui en fait la demande, sans frais (art. 21 loi 89-462).
+        </Text>
+
+        <Text style={s.subTitle}>Révision annuelle du loyer — Indice de Référence des Loyers (art. 17-1 loi 89-462)</Text>
+        <Text style={s.body}>
+          Le loyer est révisé une fois par an, à chaque date anniversaire du bail, selon la variation de l'Indice de Référence des Loyers (IRL) publié par l'INSEE. L'indice de référence retenu est celui du {cnt.irlTrimestre || '2ème trimestre'} {cnt.irlAnnee || new Date().getFullYear()}{cnt.irlValeur ? ` (valeur : ${cnt.irlValeur})` : ''}.
+        </Text>
+        <Text style={s.body}>
+          Formule légale : <Text style={{ fontFamily: 'Helvetica-Bold' }}>Loyer révisé = Loyer actuel × (Dernier IRL publié / IRL de référence)</Text>. La révision n'est pas automatique : elle doit être demandée par le bailleur. Elle ne peut avoir d'effet rétroactif sur plus d'une année.
         </Text>
 
         <Text style={s.subTitle}>Dépôt de garantie (art. 22 loi 89-462)</Text>
         <Text style={s.body}>
-          Restitution : 1 mois si état des lieux conforme ; 2 mois en cas de différences. Retard : majoration de 10 % du loyer HC par mois commencé. Ne produit pas d'intérêts.
+          Le dépôt de garantie de {contract.deposit != null ? fmtEUR(contract.deposit) : '—'} est versé à la signature. Il sera restitué dans un délai d'un mois (état des lieux de sortie conforme à l'entrée) ou de deux mois (différences imputables au locataire) à compter de la remise des clés. Tout retard au-delà de ces délais entraîne une majoration de 10 % du loyer mensuel HC par mois commencé (art. 22 al. 8 loi 89-462). Le dépôt de garantie ne produit pas d'intérêts au profit du locataire.
         </Text>
 
-        <Text style={s.subTitle}>Charges récupérables (décret n°87-713)</Text>
+        <Text style={s.subTitle}>Charges récupérables (décret n°87-713 du 26 août 1987)</Text>
         <Text style={s.body}>
-          Provisions de {contract.charges != null ? fmtEUR(contract.charges) : '0 €'}/mois. Régularisation annuelle sur justificatifs. Décompte par nature transmis au locataire au moins 1 mois avant. Justificatifs disponibles 6 mois.
+          Les provisions pour charges de {contract.charges != null ? fmtEUR(contract.charges) : '0 €'}/mois font l'objet d'une régularisation annuelle sur justificatifs. Le bailleur communique au locataire, au moins un mois avant la date de régularisation, le décompte des charges par nature, le montant des réparations effectuées dans les parties communes et le cas échéant les éléments de calcul du chauffage collectif. Les justificatifs sont tenus à la disposition du locataire pendant six mois après envoi du décompte.
         </Text>
-
-        <View style={s.divider} />
-
-        {/* Art 5 — Obligations condensées */}
-        <Art num="ART. 5" title="Clause résolutoire (art. 24 loi 89-462)" />
-        <Text style={s.body}>Le bail est résilié de plein droit, après constatation par le juge, en cas de :</Text>
-        <Li>Défaut de paiement du loyer ou des charges, 2 mois après commandement infructueux</Li>
-        <Li>Défaut de paiement du dépôt de garantie à la remise des clés</Li>
-        <Li>Défaut d'assurance habitation, 1 mois après mise en demeure</Li>
-        <Li>Troubles de voisinage constatés par décision de justice passée en force de chose jugée</Li>
-
-        <View style={s.divider} />
-
-        <Art num="ART. 6" title="Obligations du bailleur (art. 6, 6-1 loi 89-462)" />
-        <Li>Délivrer un logement décent conforme au décret n°2002-120 (surface min. 9 m², hauteur 2,20 m)</Li>
-        <Li>Garantir la jouissance paisible et l'absence de vices cachés</Li>
-        <Li>Effectuer les réparations autres que locatives nécessaires au maintien en état</Li>
-        <Li>Remettre gratuitement une quittance de loyer sur demande (art. 21)</Li>
-        <Li>Respecter la procédure légale pour toute récupération du logement</Li>
-
-        <View style={s.divider} />
-
-        <Art num="ART. 7" title="Obligations du locataire (art. 7, 7-1 loi 89-462)" />
-        <Li>Payer le loyer et les charges aux termes et conditions convenus</Li>
-        <Li>User paisiblement des locaux selon la destination (résidence principale)</Li>
-        <Li>Prendre en charge l'entretien courant et les réparations locatives (décret n°87-712)</Li>
-        <Li>Souscrire et maintenir une assurance habitation (risques locatifs) — justifier annuellement</Li>
-        <Li>Ne pas transformer les locaux sans accord écrit du bailleur</Li>
-        <Li>Ne pas céder le bail ni sous-louer sans accord écrit du bailleur</Li>
 
         <Footer docRef={docRef} page="2" />
       </Page>
 
-      {/* ═══ PAGE 3 — Annexes obligatoires & clauses interdites ══════════ */}
+      {/* ═══ PAGE 3 — Destination, Obligations, Assurance ════════════════ */}
       <Page size="A4" style={s.page}>
         <BailioWatermark />
 
         <View style={s.masthead}>
           <View style={s.mastheadLeft}>
-            <Text style={s.mastheadTitle}>ANNEXES LÉGALES & CLAUSES INTERDITES — Réf. {docRef}</Text>
+            <Text style={s.mastheadTitle}>OBLIGATIONS DES PARTIES — Réf. {docRef}</Text>
+            <Text style={s.mastheadSub}>Usage, entretien, assurance et obligations légales réciproques</Text>
           </View>
         </View>
 
-        <Art num="ART. 8" title="Annexes obligatoires (art. 3 loi 89-462)" />
-        <Text style={s.body}>Documents devant impérativement être annexés au bail :</Text>
-        <Text style={s.subTitle}>Pour tous les baux :</Text>
-        <Check text="Notice d'information — droits et obligations des locataires et des bailleurs" note="Arrêté du 29 mai 2015 — Obligatoire depuis le 1er août 2015" />
-        <Check text="État des lieux d'entrée contradictoire" note="Décret n°2016-382 — Signé par les deux parties — Annexé au bail" />
-        <Check text="État des risques et pollutions (ERP)" note="Valable 6 mois — Zones PPR, sols pollués, radon, sismicité" />
-        <Check text="Diagnostic de performance énergétique (DPE)" note="Valable 10 ans — Obligatoire depuis le 1er juillet 2007" />
-
-        <Text style={s.subTitle}>Selon l'âge et les caractéristiques du bien :</Text>
-        <Check text="Constat de risque d'exposition au plomb (CREP)" note="Immeubles avant le 1er janvier 1949 — 1 an si positif, illimité si négatif" />
-        <Check text="Diagnostic électricité" note="Installations > 15 ans — Valable 6 ans" />
-        <Check text="Diagnostic gaz" note="Installations > 15 ans — Valable 6 ans" />
-        <Check text="Diagnostic amiante" note="Permis de construire antérieur au 1er juillet 1997" />
-        <Check text="Diagnostic bruit" note="Zones de bruit (aéroports, grandes infrastructures)" />
-        {isMeuble && <Check text="Inventaire et état du mobilier" note="Contradictoire, signé — Obligatoire pour les baux meublés" />}
-        {zoneTendue && <Check text="Loyer de référence et loyer de référence majoré" note="Arrêté préfectoral en vigueur dans la commune" />}
-
-        <View style={s.divider} />
-
-        <Art num="ART. 9" title="État des lieux (décret n°2016-382 du 30 mars 2016)" />
+        {/* ART. 5 — Destination des locaux */}
+        <Art num="ART. 5" title="Destination et usage des locaux loués" />
         <Text style={s.body}>
-          État des lieux contradictoire établi lors de la remise des clés (entrée) et de la restitution (sortie), selon le modèle réglementaire, signé par les deux parties et annexé au bail. Les différences imputables au locataire peuvent être déduites du dépôt de garantie après application de la grille de vétusté. L'usure normale n'est pas imputable.
+          Le présent logement est loué exclusivement à usage de résidence principale du locataire et de sa famille, au sens de l'article 2 de la loi n°89-462. Le locataire s'interdit d'y exercer toute activité commerciale, artisanale, libérale ou de quelque nature professionnelle que ce soit, sans accord écrit préalable du bailleur.
         </Text>
-
-        <View style={s.divider} />
-
-        <Art num="ART. 10" title="Clauses réputées non écrites (art. 4 loi 89-462)" />
-        <View style={s.errBox}>
-          <Text style={s.errTitle}>AVERTISSEMENT — Ces clauses sont nulles de plein droit si elles figurent au bail</Text>
+        <Text style={s.body}>
+          Le locataire peut héberger toute personne de son choix, sous réserve que cet hébergement ne constitue pas une sous-location déguisée. Il peut également exercer une activité professionnelle au domicile dès lors qu'elle n'engendre pas de réception de clientèle ni de livraison de marchandises, et sous réserve de l'accord du bailleur et du règlement de copropriété.
+        </Text>
+        <View style={s.infoBox}>
+          <Text style={s.bodyBold}>Droit à la tranquillité et à la jouissance paisible :</Text>
+          <Text style={s.bodySmall}>Le locataire bénéficie d'un droit à la jouissance paisible du logement, garanti par le bailleur. En contrepartie, il s'oblige à ne pas troubler la tranquillité du voisinage et à respecter les règles de copropriété ou du règlement intérieur de l'immeuble.</Text>
         </View>
-        <Li>Interdire d'héberger des personnes ne vivant pas habituellement avec le locataire</Li>
-        <Li>Imposer la souscription d'une assurance auprès d'une compagnie désignée</Li>
-        <Li>Facturer des frais d'établissement de quittance, d'état des lieux ou d'encaissement</Li>
-        <Li>Prévoir des frais de relance ou de mise en demeure</Li>
-        <Li>Interdire la détention d'animaux de compagnie (hors dangereux — loi du 6 janvier 1999)</Li>
-        <Li>Prévoir la responsabilité collective des locataires pour dégradation de parties communes</Li>
-        <Li>Imposer le paiement exclusivement par prélèvement automatique</Li>
-        <Li>Interdire les travaux d'adaptation au handicap ou à la perte d'autonomie</Li>
-        <Li>Fixer un dépôt de garantie supérieur aux plafonds légaux (1 ou 2 mois HC)</Li>
-        <Li>Mettre à la charge du locataire des charges non récupérables (taxe foncière, honoraires de gestion...)</Li>
-        <Li>Exiger des documents personnels non autorisés (chèques en blanc, photocopie ID conservée...)</Li>
 
         <View style={s.divider} />
 
-        <Art num="ART. 11" title="Solidarité et cession de bail (art. 8, 8-1 loi 89-462)" />
+        {/* ART. 6 — Obligations du bailleur */}
+        <Art num="ART. 6" title="Obligations du bailleur (art. 6 et 6-1 loi 89-462)" />
         <Text style={s.body}>
-          En cas de pluralité de locataires : solidarité et indivisibilité de toutes les obligations. La solidarité d'un locataire sortant cesse à l'entrée d'un nouveau ou au plus tard 6 mois après son congé. Toute cession de bail ou sous-location est interdite sans accord écrit et préalable du bailleur. Le loyer de sous-location ne peut excéder le loyer principal.
+          Le bailleur est tenu de remettre au locataire un logement décent, ne laissant pas apparaître de risques manifestes pouvant porter atteinte à la sécurité physique ou à la santé, répondant à un critère de performance énergétique minimale et doté des éléments le rendant conforme à l'usage d'habitation (décret n°2002-120 du 30 janvier 2002 : surface ≥ 9 m², hauteur ≥ 2,20 m, installations de chauffage, eau courante, évacuation des eaux usées, aération, éclairage naturel).
         </Text>
+        <Text style={s.subTitle}>Obligations principales :</Text>
+        <Li>Garantir au locataire la jouissance paisible du logement pendant toute la durée du bail</Li>
+        <Li>Garantir les vices ou défauts cachés de nature à empêcher l'usage normal du logement</Li>
+        <Li>Effectuer toutes les réparations autres que locatives nécessaires au maintien en état et à l'entretien normal des locaux (art. 1720 C. civ.), notamment les grosses réparations au sens de l'article 606 du Code civil (gros murs, voûtes, poutres, toitures, murs de soutènement, clôtures)</Li>
+        <Li>Remettre gratuitement quittance au locataire qui en fait la demande (art. 21 loi 89-462)</Li>
+        <Li>Ne pas s'opposer aux aménagements réalisés par le locataire dès lors qu'ils ne constituent pas une transformation de la chose louée</Li>
+        <Li>Respecter la procédure légale d'information en cas de vente du bien (droit de préemption, préavis)</Li>
+        <Li>En cas de travaux imposés par l'état du bien et excédant 21 jours, verser une indemnité au locataire (art. 1724 C. civ.)</Li>
+
+        <View style={s.divider} />
+
+        {/* ART. 7 — Obligations du locataire */}
+        <Art num="ART. 7" title="Obligations du locataire (art. 7 et 7-1 loi 89-462)" />
+        <Text style={s.body}>
+          Le locataire est tenu des obligations légales suivantes, dont le non-respect peut entraîner la résiliation judiciaire du bail :
+        </Text>
+        <Text style={s.subTitle}>Obligations principales :</Text>
+        <Li>Payer le loyer et les charges aux termes convenus dans le présent bail</Li>
+        <Li>User paisiblement des locaux loués selon leur destination</Li>
+        <Li>Répondre des dégradations et pertes survenues pendant la durée du bail, à moins de prouver qu'elles ont eu lieu par cas de force majeure, faute du bailleur ou fait d'un tiers</Li>
+        <Li>Prendre en charge l'entretien courant du logement, des équipements mentionnés au bail et les menues réparations (décret n°87-712 du 26 août 1987)</Li>
+        <Li>Laisser exécuter dans les lieux loués les travaux d'amélioration des parties communes ou privatives et les travaux nécessaires au maintien en état des locaux</Li>
+        <Li>Ne pas transformer les locaux et équipements loués sans l'accord écrit du bailleur</Li>
+        <Li>Permettre l'accès au logement pour les travaux urgents ou nécessaires, après information préalable d'au moins 24 heures, sauf urgence</Li>
+        <Li>Justifier annuellement d'une assurance couvrant les risques locatifs</Li>
+        <Li>Ne pas céder le contrat de location ni sous-louer le logement sans l'accord écrit et préalable du bailleur</Li>
+
+        <Text style={s.subTitle}>Travaux d'adaptation au handicap (art. 7-1 loi 89-462) :</Text>
+        <Text style={s.body}>
+          Le locataire peut demander au bailleur l'autorisation d'effectuer à ses frais des travaux d'adaptation du logement liés à une perte d'autonomie ou à un handicap. Sauf motif sérieux et légitime, le bailleur ne peut s'y opposer. À l'issue du bail, le locataire n'est pas tenu de remettre les lieux en état si les travaux ont été régulièrement effectués.
+        </Text>
+
+        <View style={s.divider} />
+
+        {/* ART. 8 — Assurance */}
+        <Art num="ART. 8" title="Assurance habitation (art. 7 g) et art. 7-3 loi 89-462)" />
+        <Text style={s.body}>
+          Le locataire est tenu de s'assurer contre les risques dont il doit répondre en sa qualité de locataire (risques locatifs : incendie, explosion, dégâts des eaux) et d'en justifier lors de la remise des clés puis à chaque renouvellement annuel du bail, par la remise d'une attestation d'assurance.
+        </Text>
+        <Text style={s.body}>
+          À défaut de production de l'attestation dans un délai d'un mois suivant une mise en demeure, le bailleur peut contracter une assurance pour le compte du locataire. Les primes correspondantes sont récupérables auprès du locataire par dixièmes dans les mêmes conditions que le loyer.
+        </Text>
+        <View style={s.tenantBox}>
+          <Text style={s.bodyBold}>En cas de sinistre :</Text>
+          <Text style={s.bodySmall}>Le locataire doit déclarer tout sinistre à son assureur dans les délais contractuels et informer immédiatement le bailleur. Le bailleur peut, en cas de défaillance du locataire, exercer un recours subrogatoire contre l'assureur du locataire (art. L. 121-12 Code des assurances).</Text>
+        </View>
 
         <Footer docRef={docRef} page="3" />
       </Page>
 
-      {/* ═══ PAGE 4 (optionnelle) — Clauses spécifiques ═════════════════ */}
+      {/* ═══ PAGE 4 — Travaux, Clause résolutoire, Sous-location ════════ */}
+      <Page size="A4" style={s.page}>
+        <BailioWatermark />
+
+        <View style={s.masthead}>
+          <View style={s.mastheadLeft}>
+            <Text style={s.mastheadTitle}>TRAVAUX, RÉSILIATION ET DISPOSITIONS DIVERSES — Réf. {docRef}</Text>
+          </View>
+        </View>
+
+        {/* ART. 9 — Travaux */}
+        <Art num="ART. 9" title="Travaux (art. 1724, 6, 7 loi 89-462 et décrets 87-712, 87-713)" />
+        <Text style={s.subTitle}>Travaux à la charge du bailleur :</Text>
+        <Text style={s.body}>
+          Sont à la charge exclusive du bailleur les travaux et réparations autres que locatifs : grosses réparations (art. 606 C. civ. : gros murs, voûtes, poutres, toitures entières, murs de soutènement), mise aux normes de décence, remplacement de chaudière, de tableau électrique vétuste, ravalement de façade. Ces travaux ne peuvent entraîner de majoration de loyer que dans les conditions prévues par l'article 17-1 loi 89-462 (travaux d'économie d'énergie dans les logements classés E, F ou G).
+        </Text>
+        <Text style={s.body}>
+          Si les travaux du bailleur durent plus de 21 jours, le locataire a droit à une réduction du loyer proportionnelle à la durée et à la surface privée d'usage (art. 1724 C. civ.).
+        </Text>
+
+        <Text style={s.subTitle}>Travaux à la charge du locataire (décret n°87-712) :</Text>
+        <Text style={s.body}>
+          Sont à la charge du locataire les réparations locatives et l'entretien courant : entretien des revêtements de sol et murs (petites réparations), nettoyage et entretien des installations sanitaires (remplacement des joints, abattants de WC, flexibles de douche), entretien de la robinetterie, graissage des serrures et paumelles, remplacement des ampoules, fusibles, piles et petits équipements. Le locataire supporte également les dégâts causés par son défaut d'entretien.
+        </Text>
+        <Text style={s.body}>
+          Tout travaux de transformation des lieux nécessite l'accord préalable et écrit du bailleur. À défaut, le bailleur peut exiger la remise en état à la charge du locataire ou, à son choix, conserver les transformations sans indemnité.
+        </Text>
+
+        <View style={s.divider} />
+
+        {/* ART. 10 — Clause résolutoire */}
+        <Art num="ART. 10" title="Clause résolutoire de plein droit (art. 24 loi 89-462)" />
+        <View style={s.errBox}>
+          <Text style={s.errTitle}>CLAUSE RÉSOLUTOIRE — RÉSILIATION DE PLEIN DROIT</Text>
+          <Text style={s.errTxt}>Le présent bail est résilié de plein droit, après constatation judiciaire, dans les cas suivants :</Text>
+        </View>
+        <Li>Non-paiement du loyer ou des charges à leur terme, après commandement de payer demeuré infructueux pendant au moins deux mois (art. 24 al. 1 loi 89-462)</Li>
+        <Li>Non-paiement du dépôt de garantie lors de la remise des clés</Li>
+        <Li>Défaut d'assurance habitation, un mois après mise en demeure restée sans effet</Li>
+        <Li>Troubles de voisinage constatés par décision de justice définitive passée en force de chose jugée</Li>
+        <Text style={s.body}>
+          La résiliation est constatée par le tribunal judiciaire, qui peut accorder des délais de paiement au locataire (art. 24 al. 6 loi 89-462). La commission de coordination des actions de prévention des expulsions locatives (CCAPEX) est informée par le bailleur dès le premier impayé. En cas de résiliation, les frais d'huissier et de procédure sont à la charge du locataire défaillant.
+        </Text>
+
+        <View style={s.divider} />
+
+        {/* ART. 11 — Sous-location */}
+        <Art num="ART. 11" title="Sous-location et cession de bail (art. 8 et 8-1 loi 89-462)" />
+        <Text style={s.body}>
+          Toute sous-location, totale ou partielle, est strictement interdite sans accord préalable et écrit du bailleur sur le principe et le montant du loyer. En cas de sous-location autorisée, le loyer appliqué au sous-locataire ne peut excéder le loyer principal. La cession du bail est également soumise à l'accord écrit du bailleur.
+        </Text>
+        <Text style={s.body}>
+          Le locataire peut cependant héberger librement toute personne de son choix (famille, amis) dès lors que cet hébergement ne constitue pas une sous-location déguisée (absence de rémunération). La sous-location via des plateformes de location saisonnière (type Airbnb) est formellement interdite sans accord écrit du bailleur et, pour les résidences principales, dans la limite maximale de 120 nuits par an (art. L. 631-7 CCH).
+        </Text>
+
+        <View style={s.divider} />
+
+        {/* ART. 12 — Solidarité */}
+        <Art num="ART. 12" title="Solidarité et indivisibilité (art. 8-1 et 22-1 loi 89-462)" />
+        <Text style={s.body}>
+          En cas de pluralité de locataires co-signataires du présent bail, ceux-ci sont tenus solidairement et indivisiblement de l'ensemble des obligations locatives (paiement du loyer, des charges, restitution du logement en bon état). La solidarité d'un colocataire sortant cesse à la date d'entrée de son remplaçant ou, à défaut, six mois après la date d'effet de son congé.
+        </Text>
+        {cnt.caution && (
+          <>
+            <Text style={s.subTitle}>Cautionnement (art. 22-1 loi 89-462) :</Text>
+            <Text style={s.body}>
+              Un acte de cautionnement {cnt.typeCaution === 'solidaire' ? 'solidaire' : 'simple'} est annexé au présent bail. La caution s'engage à rembourser au bailleur les sommes dues par le locataire en cas de défaillance de ce dernier, dans les conditions définies dans ledit acte.
+            </Text>
+          </>
+        )}
+
+        <View style={s.divider} />
+
+        {/* ART. 13 — Élection de domicile */}
+        <Art num="ART. 13" title="Élection de domicile et juridiction compétente" />
+        <Text style={s.body}>
+          Pour l'exécution des présentes et de leurs suites, les parties font élection de domicile : le bailleur en son adresse déclarée ci-dessus, le locataire dans le logement objet du présent bail. Tout litige relatif à l'exécution du présent contrat relève de la compétence exclusive du Tribunal judiciaire du lieu de situation du bien loué.
+        </Text>
+
+        <Footer docRef={docRef} page="4" />
+      </Page>
+
+      {/* ═══ PAGE 5 — Annexes légales & Clauses interdites ══════════════ */}
+      <Page size="A4" style={s.page}>
+        <BailioWatermark />
+
+        <View style={s.masthead}>
+          <View style={s.mastheadLeft}>
+            <Text style={s.mastheadTitle}>ANNEXES OBLIGATOIRES & CLAUSES INTERDITES — Réf. {docRef}</Text>
+          </View>
+        </View>
+
+        <Art num="ART. 14" title="Annexes obligatoires devant être jointes au bail (art. 3 loi 89-462)" />
+        <Text style={s.body}>Les documents suivants doivent impérativement être annexés au présent contrat de location, à peine d'inopposabilité des clauses correspondantes :</Text>
+
+        <Text style={s.subTitle}>Documents obligatoires pour tous les baux :</Text>
+        <Check text="Notice d'information relative aux droits et obligations des locataires et des bailleurs" note="Arrêté du 29 mai 2015 — Obligatoire depuis le 1er août 2015 — Modèle officiel DGALN" />
+        <Check text="État des lieux d'entrée contradictoire (modèle réglementaire, décret n°2016-382)" note="Signé par les deux parties ou établi par huissier en cas de désaccord — Frais partagés par moitié" />
+        <Check text="État des risques et pollutions (ERP)" note="Informations relatives aux risques naturels et technologiques — Valable 6 mois — Art. L. 125-5 C. envir." />
+        <Check text="Diagnostic de performance énergétique (DPE)" note="Valable 10 ans — Obligatoire depuis le 1er juillet 2007 — Art. L. 134-1 CCH" />
+        <Check text="Attestation d'assurance habitation du locataire" note="Risques locatifs couverts — Obligatoire à la remise des clés, puis annuellement" />
+
+        <Text style={s.subTitle}>Documents complémentaires selon les caractéristiques du bien :</Text>
+        <Check text="Constat de risque d'exposition au plomb (CREP)" note="Immeubles construits avant le 1er janvier 1949 — Durée : 1 an si positif, illimitée si négatif" />
+        <Check text="Diagnostic amiante" note="Permis de construire antérieur au 1er juillet 1997 — Parties privatives" />
+        <Check text="Diagnostic des installations électriques" note="Installations intérieures de plus de 15 ans — Valable 6 ans" />
+        <Check text="Diagnostic des installations de gaz naturel" note="Installations de plus de 15 ans — Valable 6 ans" />
+        <Check text="Information sur la nuisance sonore aérienne (arrêté préfectoral)" note="Zones de bruit définies autour des aérodromes" />
+        {isMeuble && <Check text="Inventaire détaillé et état du mobilier (contradictoire, signé par les deux parties)" note="Obligatoire pour les baux meublés — Décret n°2015-587, annexe II" />}
+        {zoneTendue && <Check text="Arrêté préfectoral fixant les loyers de référence et les loyers de référence majorés" note="Zone d'encadrement des loyers applicable sur la commune" />}
+        {cnt.caution && <Check text="Acte de cautionnement solidaire ou simple" note="Si garant : acte séparé signé par la caution, avec mentions manuscrites obligatoires (art. 22-1 loi 89-462)" />}
+
+        <View style={s.divider} />
+
+        <Art num="ART. 15" title="État des lieux (décret n°2016-382 du 30 mars 2016)" />
+        <Text style={s.body}>
+          Un état des lieux est établi contradictoirement et amiablement à la remise des clés (entrée) et à leur restitution (sortie), selon le modèle réglementaire défini par le décret n°2016-382, signé par les deux parties et annexé au présent bail. En cas de désaccord, il peut être établi par un huissier de justice dont les frais sont partagés par moitié entre le bailleur et le locataire.
+        </Text>
+        <Text style={s.body}>
+          L'état des lieux de sortie est comparé à l'état des lieux d'entrée. Seules les dégradations au-delà de la vétusté normale (grille de vétusté applicable) peuvent être imputées au locataire et déduites du dépôt de garantie. L'usure normale des matériaux n'est jamais à la charge du locataire.
+        </Text>
+
+        <View style={s.divider} />
+
+        <Art num="ART. 16" title="Clauses réputées non écrites (art. 4 loi 89-462)" />
+        <View style={s.errBox}>
+          <Text style={s.errTitle}>AVERTISSEMENT LÉGAL — Les clauses suivantes sont nulles de plein droit si elles figurent au bail</Text>
+          <Text style={s.errTxt}>Leur présence au contrat ne lie pas le locataire et peut engager la responsabilité du bailleur.</Text>
+        </View>
+        <LiSmall>Interdire d'héberger des personnes ne vivant pas habituellement avec le locataire</LiSmall>
+        <LiSmall>Imposer la souscription d'une assurance auprès d'une compagnie désignée par le bailleur</LiSmall>
+        <LiSmall>Prévoir le paiement de frais d'établissement de quittance, de rédaction d'état des lieux ou d'encaissement de loyer</LiSmall>
+        <LiSmall>Mettre à la charge du locataire des frais de relance ou de mise en demeure</LiSmall>
+        <LiSmall>Interdire la détention d'animaux de compagnie (hors animaux dangereux — loi du 6 janvier 1999)</LiSmall>
+        <LiSmall>Prévoir la responsabilité collective des locataires en cas de dégradation des parties communes</LiSmall>
+        <LiSmall>Imposer le paiement du loyer exclusivement par prélèvement automatique</LiSmall>
+        <LiSmall>Interdire les travaux d'adaptation du logement au handicap ou à la perte d'autonomie</LiSmall>
+        <LiSmall>Fixer un dépôt de garantie supérieur aux plafonds légaux (1 ou 2 mois HC selon le type)</LiSmall>
+        <LiSmall>Mettre à la charge du locataire la taxe foncière, les honoraires de gestion locative ou d'autres charges non récupérables</LiSmall>
+        <LiSmall>Exiger des documents personnels non autorisés par l'article 22-2 (chèques en blanc, documents discriminatoires)</LiSmall>
+        <LiSmall>Prévoir une clause de solidarité entre des locataires successifs pour des dettes antérieures à leur entrée</LiSmall>
+
+        <Footer docRef={docRef} page="5" />
+      </Page>
+
+      {/* ═══ PAGE 6 (optionnelle) — Clauses spécifiques ═════════════════ */}
       {hasClausesPage && (
         <Page size="A4" style={s.page}>
           <BailioWatermark />
@@ -702,15 +875,15 @@ export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
           <View style={s.masthead}>
             <View style={s.mastheadLeft}>
               <Text style={s.mastheadTitle}>CLAUSES SPÉCIFIQUES CONVENUES — Réf. {docRef}</Text>
-              <Text style={s.mastheadSub}>Clauses librement négociées et acceptées par les deux parties</Text>
+              <Text style={s.mastheadSub}>Clauses librement négociées, acceptées par les deux parties — art. 4 loi 89-462</Text>
             </View>
           </View>
 
           {enabled.length > 0 && (
             <>
-              <Art num="ART. 12" title="Clauses spécifiques convenues entre les parties" />
+              <Art num="ART. 17" title="Clauses spécifiques convenues entre les parties" />
               <Text style={s.body}>
-                Les clauses ci-après ont été librement négociées et acceptées d'un commun accord. Elles complètent les dispositions légales sans pouvoir y déroger au détriment du locataire (art. 4 loi 89-462).
+                Les clauses ci-après ont été librement négociées et acceptées d'un commun accord par le bailleur et le locataire. Elles complètent les dispositions légales sans pouvoir y déroger au détriment du locataire (art. 4 loi 89-462). Elles sont réputées non écrites si elles contreviennent à l'ordre public locatif.
               </Text>
               {enabled.map((clause, i) => (
                 <View key={clause.id} style={s.clauseBox}>
@@ -721,7 +894,7 @@ export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
                     <Text style={s.clauseTitle}>{clause.title}</Text>
                     {clause.isCustom && (
                       <View style={s.clauseCustomBadge}>
-                        <Text style={s.clauseBadgeTx}>Personnalisée</Text>
+                        <Text style={s.clauseBadgeTx}>Clause personnalisée</Text>
                       </View>
                     )}
                   </View>
@@ -733,14 +906,14 @@ export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
 
           {contract.terms && (
             <>
-              <Art num={enabled.length > 0 ? 'ART. 13' : 'ART. 12'} title="Conditions particulières" />
+              <Art num={enabled.length > 0 ? 'ART. 18' : 'ART. 17'} title="Conditions particulières" />
               <View style={s.clauseBox}>
                 <Text style={s.clauseBody}>{contract.terms}</Text>
               </View>
             </>
           )}
 
-          <Footer docRef={docRef} page="4" />
+          <Footer docRef={docRef} page="6" />
         </Page>
       )}
 
@@ -750,16 +923,23 @@ export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
 
         <View style={s.masthead}>
           <View style={s.mastheadLeft}>
-            <Text style={s.mastheadTitle}>SIGNATURES — Réf. {docRef}</Text>
-            <Text style={s.mastheadSub}>Consentement des parties et valeur juridique de la signature électronique</Text>
+            <Text style={s.mastheadTitle}>SIGNATURES ET CONSENTEMENT DES PARTIES — Réf. {docRef}</Text>
+            <Text style={s.mastheadSub}>Valeur juridique des signatures — art. 1366 et 1367 C. civ. — Règlement eIDAS n°910/2014</Text>
           </View>
         </View>
 
         {/* Base légale signature électronique */}
         <View style={s.infoBox}>
-          <Text style={s.bodyBold}>Valeur juridique des signatures électroniques :</Text>
+          <Text style={s.bodyBold}>Valeur probante des signatures électroniques :</Text>
           <Text style={s.body}>
-            Conformes à l'article 1367 du Code civil et au règlement eIDAS (UE n°910/2014). Chaque signature est horodatée et associée à une empreinte SHA-256 du document, constituant une preuve électronique opposable aux tiers avec la même valeur probante qu'un écrit sur support papier (art. 1366 C. civ.).
+            Conformément aux articles 1366 et 1367 du Code civil et au règlement européen eIDAS (UE n°910/2014), les signatures électroniques apposées ci-après ont la même valeur probante qu'une signature manuscrite. Chaque signature est horodatée, associée à une empreinte cryptographique SHA-256 du document signé, et constitue une preuve électronique opposable aux tiers.
+          </Text>
+        </View>
+
+        {/* Déclaration de connaissance */}
+        <View style={{ marginBottom: 10, padding: 8, backgroundColor: C.muted, borderRadius: 4 }}>
+          <Text style={{ fontSize: 8, color: C.inkMid, textAlign: 'justify' }}>
+            Les soussignés déclarent avoir pris connaissance de l'intégralité du présent contrat de location (pages 1 à {hasClausesPage ? '6' : '5'}) et de toutes ses annexes légales, et l'accepter sans réserve. Chaque partie reconnaît avoir reçu un exemplaire du présent acte. En apposant leur signature ci-dessous, les parties expriment leur consentement exprès, libre, éclairé et irrévocable aux termes du présent contrat, conformément aux articles 1366 et 1367 du Code civil français.
           </Text>
         </View>
 
@@ -778,9 +958,7 @@ export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
                   ? fmtDate(contract.signedByOwner || contract.signedByTenant || new Date().toISOString())
                   : '___________________________'}
             </Text>
-          </Text>
-          <Text style={{ fontSize: 8, color: C.inkFaint, marginTop: 3 }}>
-            En deux exemplaires originaux, dont un remis à chacune des parties
+            {', en deux exemplaires originaux'}
           </Text>
         </View>
 
@@ -803,9 +981,9 @@ export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
                   {sigMeta.owner && (
                     <>
                       <Text style={s.sigMetaOk}>Horodatage : {new Date(sigMeta.owner.timestamp).toLocaleString('fr-FR')}</Text>
-                      {sigMeta.owner.ip && <Text style={s.sigMeta}>IP : {sigMeta.owner.ip}</Text>}
+                      {sigMeta.owner.ip && <Text style={s.sigMeta}>Adresse IP : {sigMeta.owner.ip}</Text>}
                       {sigMeta.owner.contentHash && (
-                        <Text style={s.sigMeta}>SHA-256 : {sigMeta.owner.contentHash.substring(0, 20)}…</Text>
+                        <Text style={s.sigMeta}>Empreinte SHA-256 : {sigMeta.owner.contentHash.substring(0, 24)}…</Text>
                       )}
                     </>
                   )}
@@ -833,9 +1011,9 @@ export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
                   {sigMeta.tenant && (
                     <>
                       <Text style={s.sigMetaOk}>Horodatage : {new Date(sigMeta.tenant.timestamp).toLocaleString('fr-FR')}</Text>
-                      {sigMeta.tenant.ip && <Text style={s.sigMeta}>IP : {sigMeta.tenant.ip}</Text>}
+                      {sigMeta.tenant.ip && <Text style={s.sigMeta}>Adresse IP : {sigMeta.tenant.ip}</Text>}
                       {sigMeta.tenant.contentHash && (
-                        <Text style={s.sigMeta}>SHA-256 : {sigMeta.tenant.contentHash.substring(0, 20)}…</Text>
+                        <Text style={s.sigMeta}>Empreinte SHA-256 : {sigMeta.tenant.contentHash.substring(0, 24)}…</Text>
                       )}
                     </>
                   )}
@@ -847,10 +1025,10 @@ export const ContractPDF = ({ contract, clauses }: ContractPDFProps) => {
           </View>
         </View>
 
-        {/* Clause de consentement */}
-        <View style={{ marginTop: 14, padding: 8, backgroundColor: C.muted, borderRadius: 4 }}>
-          <Text style={{ fontSize: 7.5, color: C.inkMid, textAlign: 'justify' }}>
-            Les soussignés déclarent avoir pris connaissance de l'intégralité du présent contrat et de ses annexes, et l'accepter sans réserve. Chaque partie reconnaît avoir reçu un exemplaire original du présent acte. La signature électronique apposée ci-dessus vaut consentement exprès et irrévocable aux termes du présent contrat conformément aux articles 1366 et 1367 du Code civil français et au règlement eIDAS (UE n°910/2014).
+        {/* Mention légale finale */}
+        <View style={{ marginTop: 16, padding: 7, borderWidth: 1, borderColor: C.border, borderRadius: 4 }}>
+          <Text style={{ fontSize: 7, color: C.inkFaint, textAlign: 'justify', lineHeight: 1.6 }}>
+            Document généré par Bailio (bailio.fr) — Plateforme de gestion locative. Ce bail a été établi conformément au modèle type défini par le Décret n°2015-587 du 29 mai 2015 pris en application de la Loi n°89-462 du 6 juillet 1989 tendant à améliorer les rapports locatifs, modifiée par la Loi ALUR du 24 mars 2014. Référence interne : {docRef}. Les parties sont invitées à conserver ce document pendant toute la durée du bail et pendant trois ans après son terme.
           </Text>
         </View>
 

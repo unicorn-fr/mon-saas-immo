@@ -35,6 +35,7 @@ import OwnerSettings from './pages/owner/Settings'
 import Rentabilite from './pages/owner/Rentabilite'
 import Finance from './pages/owner/Finance'
 import Maintenance from './pages/owner/Maintenance'
+import Quittances from './pages/owner/Quittances'
 
 // Tenant Pages
 import TenantDashboard from './pages/tenant/TenantDashboard'
@@ -231,6 +232,7 @@ function AppRoutes() {
         <Route path="/owner/rentabilite" element={<Rentabilite />} />
         <Route path="/owner/finances" element={<Finance />} />
         <Route path="/owner/maintenance" element={<Maintenance />} />
+        <Route path="/owner/quittances" element={<Quittances />} />
       </Route>
 
       {/* Protected Routes - Tenant Dashboard */}

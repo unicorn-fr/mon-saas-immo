@@ -194,10 +194,13 @@ router.put('/:id/mark-paid', authorize('OWNER'), async (req: Request, res: Respo
       include: {
         contract: {
           include: {
-            tenant: { select: { firstName: true, lastName: true } },
+            paymentSettings: true,
+            owner: { select: { firstName: true, lastName: true } },
+            tenant: { select: { firstName: true, lastName: true, email: true } },
             property: {
               select: {
                 address: true, city: true, postalCode: true,
+                ownerId: true,
                 owner: { select: { firstName: true, lastName: true } },
               },
             },
@@ -245,7 +248,60 @@ router.put('/:id/mark-paid', authorize('OWNER'), async (req: Request, res: Respo
       data: { receiptCloudinaryId: cloudinaryPublicId },
     })
 
-    return res.json({ ...updated, message: 'Loyer marqué comme payé et quittance générée' })
+    // Auto-envoi si activé dans les paramètres
+    if (payment.contract.paymentSettings?.autoSend && payment.contract.tenant.email) {
+      try {
+        const MONTHS_AUTO = ['Janvier','Février','Mars','Avril','Mai','Juin',
+          'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+        const autoReceiptUrl = generateSignedUrl(cloudinaryPublicId)
+        const autoMonthLabel = MONTHS_AUTO[payment.month - 1]
+        const autoTotal = (payment.amount + payment.charges).toFixed(2)
+        const autoTenant = payment.contract.tenant
+        const autoOwner = payment.contract.owner
+        const autoProp = payment.contract.property
+        const autoOwnerName = `${autoOwner.firstName} ${autoOwner.lastName}`
+        const autoPropAddress = `${autoProp.address}, ${autoProp.city}`
+
+        const autoHtml = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#fafaf8;font-family:'DM Sans',system-ui,sans-serif">
+  <div style="max-width:560px;margin:40px auto;background:#fff;border:1px solid #e4e1db;border-radius:12px;overflow:hidden">
+    <div style="background:#1a1a2e;padding:28px 32px">
+      <p style="color:#c4976a;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin:0 0 4px">Bailio</p>
+      <h1 style="color:#fff;font-size:22px;font-weight:700;margin:0">Votre quittance de loyer</h1>
+    </div>
+    <div style="padding:28px 32px">
+      <p style="color:#0d0c0a;font-size:15px;line-height:1.6;margin:0 0 16px">Bonjour ${autoTenant.firstName},</p>
+      <p style="color:#5a5754;font-size:14px;line-height:1.6;margin:0 0 24px">
+        Votre propriétaire <strong>${autoOwnerName}</strong> vous transmet votre quittance de loyer pour
+        <strong>${autoMonthLabel} ${payment.year}</strong> concernant le bien situé au <strong>${autoPropAddress}</strong>.
+      </p>
+      <div style="background:#f4f2ee;border-radius:8px;padding:16px 20px;margin:0 0 24px">
+        <p style="color:#9e9b96;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 4px">Montant total</p>
+        <p style="color:#1a1a2e;font-size:28px;font-weight:700;margin:0">${autoTotal} €</p>
+        <p style="color:#5a5754;font-size:13px;margin:4px 0 0">Loyer ${payment.amount.toFixed(2)} € + Charges ${payment.charges.toFixed(2)} €</p>
+      </div>
+      <a href="${autoReceiptUrl}" style="display:inline-block;background:#1a1a2e;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600">Télécharger la quittance (PDF)</a>
+      <p style="color:#9e9b96;font-size:12px;margin:24px 0 0">Ce lien est valable 1 heure. — Bailio · plateforme de gestion locative</p>
+    </div>
+  </div>
+</body>
+</html>`
+
+        await sendEmail({
+          to: autoTenant.email,
+          subject: `Quittance de loyer — ${autoMonthLabel} ${payment.year}`,
+          html: autoHtml,
+        })
+        console.log(`[payment] auto-send quittance → ${autoTenant.email}`)
+      } catch (autoErr: any) {
+        console.error('[payment] auto-send failed (non-bloquant):', autoErr.message)
+      }
+    }
+
+    const autoSent = payment.contract.paymentSettings?.autoSend && !!payment.contract.tenant.email
+    return res.json({ ...updated, message: 'Loyer marqué comme payé et quittance générée', autoSent })
   } catch (err: any) {
     console.error('[payment] mark-paid error:', err)
     return res.status(500).json({ error: err.message })
