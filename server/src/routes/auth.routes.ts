@@ -1,9 +1,10 @@
-import { Router } from 'express'
+import { Router, Request, Response } from 'express'
 import { authController } from '../controllers/auth.controller.js'
 import { authenticate } from '../middlewares/auth.middleware.js'
 import * as totpController from '../controllers/totp.controller.js'
 import { loginRateLimiter, emailRateLimiter } from '../middlewares/security.middleware.js'
 import { requireOpenRegistrations } from '../middlewares/launchMode.middleware.js'
+import { prisma } from '../config/database.js'
 
 const router = Router()
 
@@ -116,5 +117,49 @@ router.post('/totp/enable', authenticate, totpController.enable)
 
 // POST /api/v1/auth/totp/disable - Disable 2FA (protected)
 router.post('/totp/disable', authenticate, totpController.disable)
+
+// GET /auth/fiscal-settings — get current user's fiscal settings
+router.get('/fiscal-settings', authenticate, async (req: Request, res: Response) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.id },
+      select: { fiscalSettings: true },
+    })
+    return res.json({ success: true, data: { fiscalSettings: user?.fiscalSettings ?? null } })
+  } catch {
+    return res.status(500).json({ success: false, message: 'Erreur serveur' })
+  }
+})
+
+// PUT /auth/fiscal-settings — save current user's fiscal settings
+router.put('/fiscal-settings', authenticate, async (req: Request, res: Response) => {
+  try {
+    const { hasSociety, currentRegime, annualRevenue, realCharges, isFurnished, savedAt } = req.body
+    // Basic validation
+    const validRegimes = ['unknown', 'micro_foncier', 'reel', 'micro_bic', 'bic_reel', 'is']
+    const validSocieties = ['non', 'sci_ir', 'sci_is', 'sarl_sas', 'autre']
+    if (currentRegime && !validRegimes.includes(currentRegime)) {
+      return res.status(400).json({ success: false, message: 'Régime invalide' })
+    }
+    if (hasSociety && !validSocieties.includes(hasSociety)) {
+      return res.status(400).json({ success: false, message: 'Structure invalide' })
+    }
+    const fiscalSettings = {
+      hasSociety: hasSociety ?? 'non',
+      currentRegime: currentRegime ?? 'unknown',
+      annualRevenue: Number(annualRevenue) || 0,
+      realCharges: Number(realCharges) || 0,
+      isFurnished: Boolean(isFurnished),
+      savedAt: savedAt ?? new Date().toISOString(),
+    }
+    await prisma.user.update({
+      where: { id: req.user!.id },
+      data: { fiscalSettings: fiscalSettings as object },
+    })
+    return res.json({ success: true, data: { fiscalSettings } })
+  } catch {
+    return res.status(500).json({ success: false, message: 'Erreur serveur' })
+  }
+})
 
 export default router

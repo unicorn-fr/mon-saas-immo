@@ -49,11 +49,51 @@ const CATEGORY_KEYWORDS: Record<string, string> = {
   ALL:         'artisan dépannage',
 }
 
-function buildGoogleMapsEmbedUrl(category: string, city: string, address?: string): string {
+function buildGoogleMapsEmbedUrl(category: string, city: string, address?: string, lat?: number | null, lng?: number | null): string {
   const kw = CATEGORY_KEYWORDS[category] ?? 'artisan'
+  if (lat && lng) {
+    // Use coordinates — shows nearby craftsmen centered on exact property location
+    const q = encodeURIComponent(`${kw}`)
+    return `https://maps.google.com/maps?q=${q}&ll=${lat},${lng}&z=14&output=embed&hl=fr`
+  }
   const location = address ? `${address}, ${city}` : `${city} France`
   const q = encodeURIComponent(`${kw} près de ${location}`)
   return `https://maps.google.com/maps?q=${q}&output=embed&hl=fr`
+}
+
+// ── Emergency craftsmen links per category ─────────────────────────────────
+
+const EMERGENCY_LINKS: Record<string, Array<{ label: string; url: string; badge?: string }>> = {
+  PLOMBERIE: [
+    { label: 'MesDépanneurs — Plomberie', url: 'https://www.mesdepanneurs.fr/plomberie', badge: 'Urgence 24h' },
+    { label: 'Depanneo — Plombier', url: 'https://www.depanneo.com/plombier/', badge: '7j/7' },
+    { label: 'Dépanneurs.fr', url: 'https://www.depanneurs.fr/demande-devis?service=plomberie' },
+    { label: 'Pages Jaunes — Plombiers', url: 'https://www.pagesjaunes.fr/annuaire/chercherlespros?quoiqui=plombier' },
+  ],
+  ELECTRICITE: [
+    { label: 'MesDépanneurs — Électricité', url: 'https://www.mesdepanneurs.fr/electricite', badge: 'Urgence 24h' },
+    { label: 'Depanneo — Électricien', url: 'https://www.depanneo.com/electricien/', badge: '7j/7' },
+    { label: 'Dépanneurs.fr', url: 'https://www.depanneurs.fr/demande-devis?service=electricite' },
+    { label: 'Pages Jaunes — Électriciens', url: 'https://www.pagesjaunes.fr/annuaire/chercherlespros?quoiqui=electricien' },
+  ],
+  SERRURERIE: [
+    { label: 'MesDépanneurs — Serrurerie', url: 'https://www.mesdepanneurs.fr/serrurerie', badge: 'Urgence 24h' },
+    { label: 'Depanneo — Serrurier', url: 'https://www.depanneo.com/serrurier/', badge: '7j/7' },
+    { label: 'Dépanneurs.fr', url: 'https://www.depanneurs.fr/demande-devis?service=serrurerie' },
+    { label: 'Pages Jaunes — Serruriers', url: 'https://www.pagesjaunes.fr/annuaire/chercherlespros?quoiqui=serrurier' },
+  ],
+  CHAUFFAGE: [
+    { label: 'MesDépanneurs — Chauffage', url: 'https://www.mesdepanneurs.fr/chauffage', badge: 'Urgence 24h' },
+    { label: 'Depanneo — Chauffagiste', url: 'https://www.depanneo.com/chauffagiste/', badge: '7j/7' },
+    { label: "ENGIE Dépan'Express", url: 'https://particuliers.engie.fr/electricite-gaz/depan-express.html' },
+    { label: 'Pages Jaunes — Chauffagistes', url: 'https://www.pagesjaunes.fr/annuaire/chercherlespros?quoiqui=chauffagiste' },
+  ],
+  AUTRE: [
+    { label: 'MesDépanneurs.fr', url: 'https://www.mesdepanneurs.fr/', badge: 'Urgence 24h' },
+    { label: 'Depanneo', url: 'https://www.depanneo.com/', badge: '7j/7' },
+    { label: 'Habitissimo', url: 'https://www.habitissimo.fr/' },
+    { label: 'Pages Jaunes — Artisans', url: 'https://www.pagesjaunes.fr/annuaire/chercherlespros?quoiqui=artisan' },
+  ],
 }
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -181,13 +221,13 @@ const SIGNALED_RE = /🔧\s*\[PROBLÈME SIGNALÉ\]/i
 
 // ── Mini Google Maps embed (replaces Leaflet) ──────────────────────────────
 
-function MiniMapWithLocation({ category, city, address }: { category: string; city: string; address?: string }) {
+function MiniMapWithLocation({ category, city, address, lat, lng }: { category: string; city: string; address?: string; lat?: number | null; lng?: number | null }) {
   return (
-    <div style={{ height: 260, borderRadius: 10, overflow: 'hidden', border: `1px solid ${BAI.border}` }}>
+    <div style={{ borderRadius: 10, overflow: 'hidden', border: `1px solid ${BAI.border}` }}>
       <iframe
-        key={`${category}-${city}-${address ?? ''}`}
-        src={buildGoogleMapsEmbedUrl(category, city, address)}
-        style={{ width: '100%', height: '100%', border: 'none' }}
+        key={`${category}-${city}-${address ?? ''}-${lat ?? ''}-${lng ?? ''}`}
+        src={buildGoogleMapsEmbedUrl(category, city, address, lat, lng)}
+        style={{ width: '100%', height: 260, border: 'none', display: 'block' }}
         allowFullScreen
         loading="lazy"
         referrerPolicy="no-referrer-when-downgrade"
@@ -200,7 +240,7 @@ function MiniMapWithLocation({ category, city, address }: { category: string; ci
 // ── Full map view (Google Maps embed) ──────────────────────────────────────
 
 interface FullMapViewProps {
-  properties: Array<{ id: string; title: string; city: string; address?: string }>
+  properties: Array<{ id: string; title: string; city: string; address?: string; lat?: number | null; lng?: number | null }>
   categoryFilter: CategoryFilter
   onCategoryChange: (c: CategoryFilter) => void
 }
@@ -220,7 +260,7 @@ function FullMapView({ properties, categoryFilter, onCategoryChange }: FullMapVi
     { value: 'AUTRE', label: 'Travaux' },
   ]
 
-  const embedSrc = buildGoogleMapsEmbedUrl(categoryFilter, selectedProp?.city ?? 'Paris', selectedProp?.address)
+  const embedSrc = buildGoogleMapsEmbedUrl(categoryFilter, selectedProp?.city ?? 'Paris', selectedProp?.address, selectedProp?.lat, selectedProp?.lng)
 
   return (
     <div>
@@ -809,7 +849,7 @@ export default function Maintenance() {
         {/* ── Carte view ─────────────────────────────────────────────────── */}
         {viewMode === 'carte' && (
           <FullMapView
-            properties={myProperties.map(p => ({ id: p.id, title: p.title, city: p.city, address: p.address }))}
+            properties={myProperties.map(p => ({ id: p.id, title: p.title, city: p.city, address: p.address, lat: p.latitude, lng: p.longitude }))}
             categoryFilter={mapCategoryFilter}
             onCategoryChange={setMapCategoryFilter}
           />
@@ -1345,8 +1385,25 @@ export default function Maintenance() {
                                 category={req.category}
                                 city={fullProp?.city ?? 'France'}
                                 address={fullProp?.address}
+                                lat={fullProp?.latitude}
+                                lng={fullProp?.longitude}
                               />
                             )}
+                          </div>
+
+                          {/* Emergency links */}
+                          <div style={{ marginTop: 14 }}>
+                            <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.inkFaint, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 10px' }}>Trouver un artisan</p>
+                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                              {(EMERGENCY_LINKS[req.category] ?? EMERGENCY_LINKS['AUTRE']).map(link => (
+                                <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer"
+                                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 11px', borderRadius: 7, border: `1px solid ${BAI.border}`, background: BAI.bgSurface, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.ink }}>
+                                  {link.badge && <span style={{ padding: '2px 6px', borderRadius: 999, background: BAI.errorLight, border: '1px solid #fca5a5', fontSize: 10, fontWeight: 700, color: BAI.error }}>{link.badge}</span>}
+                                  {link.label}
+                                  <ExternalLink style={{ width: 10, height: 10, color: BAI.inkFaint }} />
+                                </a>
+                              ))}
+                            </div>
                           </div>
 
                           {/* Contractor cards */}
@@ -1636,9 +1693,26 @@ export default function Maintenance() {
                 {fullProp && (
                   <div>
                     <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 8px' }}>Artisans à proximité</p>
-                    <MiniMapWithLocation category={req.category} city={fullProp.city} address={fullProp.address} />
+                    <MiniMapWithLocation category={req.category} city={fullProp.city} address={fullProp.address} lat={fullProp.latitude} lng={fullProp.longitude} />
                   </div>
                 )}
+
+                {/* Emergency links */}
+                <div>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 10px' }}>Trouver un artisan rapidement</p>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {(EMERGENCY_LINKS[req.category] ?? EMERGENCY_LINKS['AUTRE']).map(link => (
+                      <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: BAI.bgSurface, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.ink }}>
+                        {link.badge && (
+                          <span style={{ padding: '2px 7px', borderRadius: 999, background: BAI.errorLight, border: '1px solid #fca5a5', fontSize: 10, fontWeight: 700, color: BAI.error }}>{link.badge}</span>
+                        )}
+                        {link.label}
+                        <ExternalLink style={{ width: 11, height: 11, color: BAI.inkFaint }} />
+                      </a>
+                    ))}
+                  </div>
+                </div>
 
                 {/* AI Analysis */}
                 {req.aiAnalysis ? (

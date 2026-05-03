@@ -37,7 +37,6 @@ import {
   Search,
   ExternalLink,
   FileText,
-  BarChart2,
 } from 'lucide-react'
 import { financeService, MarketAnalysis } from '../../services/finance.service'
 import toast from 'react-hot-toast'
@@ -121,7 +120,7 @@ function computeFiscalAdvice(form: FiscalForm): FiscalResult {
         ],
         links: [
           { label: 'LMNP Réel — service-public.fr', url: 'https://www.service-public.fr/particuliers/vosdroits/F32744' },
-          { label: 'Simulateur LMNP — anil.org', url: 'https://www.anil.org/outils/simulateurs-en-ligne/lmnp/' },
+          { label: 'LMNP — anil.org', url: 'https://www.anil.org/outils/outils-de-calcul/revision-de-loyer/' },
         ],
       }
     }
@@ -263,6 +262,8 @@ export default function Finance() {
     isFurnished: false,
   })
   const [fiscalResult, setFiscalResult] = useState<FiscalResult | null>(null)
+  const [fiscalSaving, setFiscalSaving] = useState(false)
+  const [fiscalSaved, setFiscalSaved] = useState(false)
 
   const {
     summary,
@@ -753,25 +754,31 @@ export default function Finance() {
                 </span>
               </div>
 
-              {/* Always-visible encadrement links */}
+              {/* Official rent map links */}
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
                 <a
                   href="https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  target="_blank" rel="noopener noreferrer"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: `1px solid ${BAI.ownerBorder}`, background: BAI.ownerLight, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.owner }}
                 >
                   <ExternalLink style={{ width: 12, height: 12 }} />
                   Vérifier l'encadrement des loyers
                 </a>
                 <a
-                  href="https://www.anil.org/outils/simulateurs-en-ligne/simulateurs-locations/"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="https://www.ecologie.gouv.fr/politiques-publiques/carte-loyers"
+                  target="_blank" rel="noopener noreferrer"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkMid }}
                 >
                   <ExternalLink style={{ width: 12, height: 12 }} />
-                  Simulateur ANIL
+                  Carte des loyers officielle — Ministère
+                </a>
+                <a
+                  href="https://www.observatoires-des-loyers.org/"
+                  target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkMid }}
+                >
+                  <ExternalLink style={{ width: 12, height: 12 }} />
+                  Observatoires des loyers
                 </a>
               </div>
 
@@ -1798,7 +1805,7 @@ export default function Finance() {
 
                       {/* Source ANIL */}
                       {analysis.market?.sourceUrl && (
-                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 12 }}>
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
                           <Info style={{ width: 13, height: 13, color: BAI.inkFaint, flexShrink: 0 }} />
                           <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>Source :</span>
                           <a href={analysis.market.sourceUrl} target="_blank" rel="noopener noreferrer"
@@ -1811,6 +1818,21 @@ export default function Finance() {
                           )}
                         </div>
                       )}
+
+                      {/* Official map links */}
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
+                        <a href="https://www.ecologie.gouv.fr/politiques-publiques/carte-loyers" target="_blank" rel="noopener noreferrer"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: BAI.fontBody, fontSize: 12, color: BAI.owner, textDecoration: 'underline' }}>
+                          Carte officielle des loyers par commune (Ministère)
+                          <ExternalLink style={{ width: 10, height: 10 }} />
+                        </a>
+                        <span style={{ color: BAI.inkFaint, fontSize: 11 }}>·</span>
+                        <a href="https://www.observatoires-des-loyers.org/" target="_blank" rel="noopener noreferrer"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, textDecoration: 'underline' }}>
+                          Réseau des observatoires nationaux
+                          <ExternalLink style={{ width: 10, height: 10 }} />
+                        </a>
+                      </div>
 
                       {/* Encadrement links */}
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
@@ -2079,197 +2101,119 @@ export default function Finance() {
         {activeTab === 'fiscal' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
-            {/* Form card */}
-            <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: 'clamp(20px,4vw,32px)', boxShadow: '0 1px 3px rgba(13,12,10,0.04)' }}>
-              <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 6px' }}>
-                Outil personnalisé
-              </p>
-              <h2 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(22px,3vw,28px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '0 0 8px' }}>
-                Optimisation fiscale
-              </h2>
-              <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: '0 0 28px', lineHeight: 1.6 }}>
-                Renseignez votre situation pour obtenir une recommandation de régime fiscal adaptée à votre patrimoine locatif.
-              </p>
+            {/* Header */}
+            <div>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 4px' }}>Outil personnalisé</p>
+              <h2 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(24px,4vw,32px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '0 0 8px' }}>Optimisation fiscale</h2>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: 0 }}>Renseignez votre situation pour obtenir un conseil personnalisé et sauvegarder votre profil fiscal.</p>
+            </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
+            {/* Section A — Form card */}
+            <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: '28px 32px' }}>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: BAI.ink, margin: '0 0 20px', letterSpacing: '0.02em' }}>Votre situation</p>
 
-                {/* Société */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginBottom: 20 }}>
                 <div>
-                  <label style={labelStyle}>Avez-vous créé une société ?</label>
-                  <select
-                    value={fiscalForm.hasSociety}
-                    onChange={(e) => setFiscalForm(f => ({ ...f, hasSociety: e.target.value as FiscalForm['hasSociety'] }))}
-                    style={inputStyle}
-                  >
-                    <option value="non">Non (location en nom propre)</option>
+                  <label style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkMid, display: 'block', marginBottom: 6 }}>Structure juridique</label>
+                  <select value={fiscalForm.hasSociety} onChange={e => setFiscalForm(f => ({ ...f, hasSociety: e.target.value as typeof fiscalForm.hasSociety }))} style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, fontFamily: BAI.fontBody, fontSize: 14, color: BAI.ink, outline: 'none', cursor: 'pointer' }}>
+                    <option value="non">En nom propre (particulier)</option>
                     <option value="sci_ir">SCI à l'IR</option>
                     <option value="sci_is">SCI à l'IS</option>
-                    <option value="sarl_sas">SARL / SAS</option>
+                    <option value="sarl_sas">SARL / SAS / EURL</option>
                     <option value="autre">Autre structure</option>
                   </select>
                 </div>
-
-                {/* Régime actuel */}
                 <div>
-                  <label style={labelStyle}>Régime fiscal actuel ?</label>
-                  <select
-                    value={fiscalForm.currentRegime}
-                    onChange={(e) => setFiscalForm(f => ({ ...f, currentRegime: e.target.value as FiscalForm['currentRegime'] }))}
-                    style={inputStyle}
-                  >
+                  <label style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkMid, display: 'block', marginBottom: 6 }}>Régime fiscal actuel</label>
+                  <select value={fiscalForm.currentRegime} onChange={e => setFiscalForm(f => ({ ...f, currentRegime: e.target.value as typeof fiscalForm.currentRegime }))} style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, fontFamily: BAI.fontBody, fontSize: 14, color: BAI.ink, outline: 'none', cursor: 'pointer' }}>
                     <option value="unknown">Je ne sais pas encore</option>
                     <option value="micro_foncier">Micro-foncier (30 % abatt.)</option>
                     <option value="reel">Foncier réel</option>
-                    <option value="micro_bic">Micro-BIC (50 % abatt.)</option>
-                    <option value="bic_reel">BIC réel (amortissements)</option>
-                    <option value="is">IS (société)</option>
+                    <option value="micro_bic">Micro-BIC LMNP (50 % abatt.)</option>
+                    <option value="bic_reel">BIC réel LMNP (amortissements)</option>
+                    <option value="is">IS (impôt sociétés)</option>
                   </select>
                 </div>
-
-                {/* Revenus annuels */}
                 <div>
-                  <label style={labelStyle}>Revenus locatifs annuels estimés (€)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={fiscalForm.annualRevenue || ''}
-                    onChange={(e) => setFiscalForm(f => ({ ...f, annualRevenue: Number(e.target.value) }))}
-                    placeholder="Ex: 12000"
-                    style={inputStyle}
-                  />
+                  <label style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkMid, display: 'block', marginBottom: 6 }}>Revenus locatifs annuels estimés (€)</label>
+                  <input type="number" min="0" value={fiscalForm.annualRevenue || ''} onChange={e => setFiscalForm(f => ({ ...f, annualRevenue: Number(e.target.value) }))} placeholder="Ex: 12 000" style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, fontFamily: BAI.fontBody, fontSize: 14, color: BAI.ink, outline: 'none', boxSizing: 'border-box' }} />
                 </div>
-
-                {/* Charges réelles */}
                 <div>
-                  <label style={labelStyle}>Charges réelles estimées (€)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={fiscalForm.realCharges || ''}
-                    onChange={(e) => setFiscalForm(f => ({ ...f, realCharges: Number(e.target.value) }))}
-                    placeholder="Ex: 3500 — travaux, intérêts, frais gestion..."
-                    style={inputStyle}
-                  />
-                </div>
-
-                {/* Type de location */}
-                <div>
-                  <label style={labelStyle}>Type de location</label>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    {[
-                      { value: false, label: 'Non meublé' },
-                      { value: true, label: 'Meublé' },
-                    ].map(opt => (
-                      <button
-                        key={String(opt.value)}
-                        type="button"
-                        onClick={() => setFiscalForm(f => ({ ...f, isFurnished: opt.value }))}
-                        style={{
-                          flex: 1,
-                          padding: '10px 12px',
-                          borderRadius: 8,
-                          border: `2px solid ${fiscalForm.isFurnished === opt.value ? BAI.night : BAI.border}`,
-                          background: fiscalForm.isFurnished === opt.value ? BAI.night : 'transparent',
-                          color: fiscalForm.isFurnished === opt.value ? '#fff' : BAI.inkMid,
-                          fontFamily: BAI.fontBody,
-                          fontSize: 13,
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          minHeight: 44,
-                          transition: 'all 0.15s',
-                        }}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
+                  <label style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkMid, display: 'block', marginBottom: 6 }}>Charges réelles annuelles (€)</label>
+                  <input type="number" min="0" value={fiscalForm.realCharges || ''} onChange={e => setFiscalForm(f => ({ ...f, realCharges: Number(e.target.value) }))} placeholder="Travaux, intérêts, frais de gestion..." style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, fontFamily: BAI.fontBody, fontSize: 14, color: BAI.ink, outline: 'none', boxSizing: 'border-box' }} />
                 </div>
               </div>
 
-              {/* Analyze button */}
-              <div style={{ marginTop: 28 }}>
+              {/* Furnished toggle */}
+              <div style={{ marginBottom: 24 }}>
+                <label style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkMid, display: 'block', marginBottom: 8 }}>Type de location</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {[{ value: false, label: 'Non meublé' }, { value: true, label: 'Meublé (LMNP/LMP)' }].map(opt => (
+                    <button key={String(opt.value)} type="button" onClick={() => setFiscalForm(f => ({ ...f, isFurnished: opt.value }))}
+                      style={{ padding: '9px 20px', borderRadius: 8, border: fiscalForm.isFurnished === opt.value ? 'none' : `1px solid ${BAI.border}`, background: fiscalForm.isFurnished === opt.value ? BAI.night : 'transparent', color: fiscalForm.isFurnished === opt.value ? '#fff' : BAI.inkMid, fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer', minHeight: 40 }}>
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <button
                   onClick={() => {
-                    if (fiscalForm.annualRevenue <= 0) {
-                      toast.error('Veuillez saisir vos revenus locatifs')
-                      return
-                    }
-                    setFiscalResult(computeFiscalAdvice(fiscalForm))
+                    const result = computeFiscalAdvice(fiscalForm)
+                    setFiscalResult(result)
                   }}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    padding: '12px 28px',
-                    borderRadius: 10,
-                    border: 'none',
-                    background: BAI.night,
-                    color: '#fff',
-                    fontFamily: BAI.fontBody,
-                    fontSize: 14,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    minHeight: 48,
-                  }}
+                  style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: BAI.night, color: '#fff', fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, cursor: 'pointer', minHeight: 44 }}
                 >
-                  <BarChart2 style={{ width: 18, height: 18 }} />
                   Analyser mon régime
+                </button>
+                <button
+                  onClick={async () => {
+                    setFiscalSaving(true)
+                    try {
+                      await apiClient.put('/auth/fiscal-settings', { ...fiscalForm, savedAt: new Date().toISOString() })
+                      setFiscalSaved(true)
+                      setTimeout(() => setFiscalSaved(false), 3000)
+                    } catch { /* silent */ }
+                    finally { setFiscalSaving(false) }
+                  }}
+                  style={{ padding: '10px 22px', borderRadius: 10, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, color: BAI.inkMid, fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, cursor: 'pointer', minHeight: 44 }}
+                >
+                  {fiscalSaved ? '✓ Profil sauvegardé' : fiscalSaving ? 'Sauvegarde...' : 'Sauvegarder mon profil fiscal'}
                 </button>
               </div>
             </div>
 
-            {/* Results card */}
+            {/* Result card */}
             {fiscalResult && (
-              <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(13,12,10,0.04)' }}>
-                {/* Recommended regime header */}
-                <div style={{ padding: '20px 28px', background: BAI.ownerLight, borderBottom: `1px solid ${BAI.ownerBorder}`, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-                  <CheckCircle2 style={{ width: 22, height: 22, color: BAI.owner, flexShrink: 0 }} />
-                  <div>
-                    <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.owner, margin: '0 0 4px' }}>
-                      Régime recommandé
-                    </p>
-                    <p style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(20px,3vw,26px)', fontWeight: 700, fontStyle: 'italic', color: BAI.owner, margin: 0 }}>
-                      {fiscalResult.recommended}
-                    </p>
-                  </div>
+              <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, overflow: 'hidden' }}>
+                {/* Result header */}
+                <div style={{ padding: '20px 28px', background: BAI.ownerLight, borderBottom: `1px solid ${BAI.ownerBorder}` }}>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.owner, margin: '0 0 4px' }}>Régime recommandé</p>
+                  <p style={{ fontFamily: BAI.fontDisplay, fontSize: 26, fontWeight: 700, fontStyle: 'italic', color: BAI.owner, margin: 0 }}>{fiscalResult.recommended}</p>
                 </div>
-
                 <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: 0, lineHeight: 1.7 }}>{fiscalResult.description}</p>
 
-                  {/* Description */}
-                  <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: 0, lineHeight: 1.7 }}>
-                    {fiscalResult.description}
-                  </p>
-
-                  {/* Savings box */}
-                  {fiscalResult.savings !== null && (
-                    <div style={{ padding: '16px 20px', borderRadius: 12, background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`, display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <TrendingUp style={{ width: 20, height: 20, color: BAI.tenant, flexShrink: 0 }} />
+                  {fiscalResult.savings !== null && fiscalResult.savings > 0 && (
+                    <div style={{ background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`, borderRadius: 10, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <TrendingDown style={{ width: 20, height: 20, color: BAI.tenant, flexShrink: 0 }} />
                       <div>
-                        <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.tenant, margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                          Économie potentielle estimée
-                        </p>
-                        <p style={{ fontFamily: BAI.fontDisplay, fontSize: 22, fontWeight: 700, fontStyle: 'italic', color: BAI.tenant, margin: 0 }}>
-                          {fiscalResult.savings.toLocaleString('fr-FR')} € / an
-                        </p>
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.tenant, fontWeight: 700, margin: '0 0 2px' }}>Économie potentielle estimée</p>
+                        <p style={{ fontFamily: BAI.fontDisplay, fontSize: 22, fontWeight: 700, fontStyle: 'italic', color: BAI.tenant, margin: 0 }}>{fiscalResult.savings.toLocaleString('fr-FR')} €/an</p>
                       </div>
                     </div>
                   )}
 
                   {/* Steps */}
                   <div>
-                    <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.ink, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 14px' }}>
-                      Étapes recommandées
-                    </p>
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.inkFaint, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 12px' }}>Étapes à suivre</p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                      {fiscalResult.steps.map((step, idx) => (
-                        <div key={idx} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                          <span style={{ flexShrink: 0, width: 24, height: 24, borderRadius: '50%', background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.owner }}>
-                            {idx + 1}
-                          </span>
-                          <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, margin: '2px 0 0', lineHeight: 1.6 }}>
-                            {step}
-                          </p>
+                      {fiscalResult.steps.map((step, i) => (
+                        <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                          <div style={{ width: 24, height: 24, borderRadius: 999, background: BAI.night, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+                          <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.ink, margin: 0, lineHeight: 1.6 }}>{step}</p>
                         </div>
                       ))}
                     </div>
@@ -2277,35 +2221,108 @@ export default function Finance() {
 
                   {/* Links */}
                   <div>
-                    <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.ink, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 10px' }}>
-                      Ressources officielles
-                    </p>
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.inkFaint, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 10px' }}>Ressources officielles</p>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      {fiscalResult.links.map((link, idx) => (
-                        <a
-                          key={idx}
-                          href={link.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 999, border: `1px solid ${BAI.ownerBorder}`, background: BAI.ownerLight, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.owner }}
-                        >
-                          {link.label}
-                          <ExternalLink style={{ width: 11, height: 11 }} />
+                      {fiscalResult.links.map(link => (
+                        <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkMid }}>
+                          {link.label} <ExternalLink style={{ width: 11, height: 11 }} />
                         </a>
                       ))}
                     </div>
                   </div>
 
-                  {/* Disclaimer */}
-                  <div style={{ padding: '12px 16px', borderRadius: 10, background: BAI.bgMuted, border: `1px solid ${BAI.border}`, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                    <Info style={{ width: 14, height: 14, color: BAI.inkFaint, flexShrink: 0, marginTop: 1 }} />
-                    <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: 0, lineHeight: 1.6 }}>
-                      Ces estimations sont indicatives et basées sur des taux moyens. Consultez un expert-comptable ou un conseiller fiscal pour un conseil personnalisé adapté à votre situation précise.
-                    </p>
-                  </div>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: 0, fontStyle: 'italic' }}>
+                    Ces estimations sont indicatives (TMI 30% supposé). Consultez un expert-comptable pour un conseil personnalisé.
+                  </p>
                 </div>
               </div>
             )}
+
+            {/* Section B — All regimes comparison table */}
+            <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: '24px 28px' }}>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: BAI.ink, margin: '0 0 4px', letterSpacing: '0.02em' }}>Tous les régimes fiscaux</p>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, margin: '0 0 20px' }}>Comparez les options disponibles selon votre situation.</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {[
+                  {
+                    name: 'Micro-foncier', condition: 'Revenus fonciers < 15 000 €/an · Location nue', badge: 'Non meublé',
+                    avantages: ['Déclaration simplifiée (case 4BE)', 'Abattement automatique 30%', 'Aucune comptabilité'],
+                    inconvenients: ['Pas de déduction de charges réelles si > 30%', 'Exclusion si revenus > 15 000 €'],
+                    color: BAI.owner,
+                  },
+                  {
+                    name: 'Foncier Réel', condition: 'Tous revenus fonciers · Location nue', badge: 'Non meublé',
+                    avantages: ['Déduction charges réelles (travaux, intérêts, taxe foncière)', 'Déficit reportable sur 10 ans', 'Optimal si charges > 30% revenus'],
+                    inconvenients: ['Déclaration 2044 obligatoire', 'Comptabilité des charges'],
+                    color: BAI.owner,
+                  },
+                  {
+                    name: 'LMNP Micro-BIC', condition: 'Revenus meublés < 77 700 €/an', badge: 'Meublé',
+                    avantages: ['Abattement 50% automatique', 'Simplicité de déclaration', 'Amortissement du bien exclu mais offset par abattement'],
+                    inconvenients: ['Si charges réelles > 50%, sous-optimal', "Pas d'amortissement"],
+                    color: BAI.caramel,
+                  },
+                  {
+                    name: 'LMNP BIC Réel', condition: 'Revenus meublés · Tout montant', badge: 'Meublé',
+                    avantages: ['Amortissement du bien sur 20-30 ans', 'Déduction charges réelles', 'Résultat fiscal souvent nul ou déficitaire'],
+                    inconvenients: ['Liasse fiscale 2031 obligatoire', 'Expert-comptable recommandé'],
+                    color: BAI.caramel,
+                  },
+                  {
+                    name: "SCI à l'IS", condition: 'Revenus via société · SCI/SARL/SAS', badge: 'Société',
+                    avantages: ["Taux IS 15% jusqu'à 42 500 €", 'Amortissement du bien', 'Séparation patrimoine pro/perso'],
+                    inconvenients: ['Double imposition sur dividendes', "Plus-value à la revente imposée à l'IS (sans abattement)", 'Comptabilité obligatoire'],
+                    color: BAI.inkMid,
+                  },
+                ].map(regime => (
+                  <div key={regime.name} style={{ border: `1px solid ${BAI.border}`, borderLeft: `4px solid ${regime.color}`, borderRadius: 10, padding: '14px 18px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 700, color: BAI.ink, margin: 0 }}>{regime.name}</p>
+                      <span style={{ padding: '2px 9px', borderRadius: 999, background: `${regime.color}15`, border: `1px solid ${regime.color}40`, fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: regime.color }}>{regime.badge}</span>
+                    </div>
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '0 0 10px' }}>{regime.condition}</p>
+                    <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+                      <div style={{ flex: 1, minWidth: 180 }}>
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.tenant, margin: '0 0 4px' }}>✓ Avantages</p>
+                        {regime.avantages.map((a, i) => <p key={i} style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, margin: '0 0 2px' }}>· {a}</p>)}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 180 }}>
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.error, margin: '0 0 4px' }}>✗ Inconvénients</p>
+                        {regime.inconvenients.map((inc, i) => <p key={i} style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, margin: '0 0 2px' }}>· {inc}</p>)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Section C — 2025 news */}
+            <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: '24px 28px' }}>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: BAI.ink, margin: '0 0 4px' }}>Actualités fiscales 2025</p>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, margin: '0 0 16px' }}>Les changements qui vous concernent cette année.</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {[
+                  { title: 'IRL T1 2025 : +1,10 %', desc: "L'indice de référence des loyers du 1er trimestre 2025 s'établit à +1,10%. Vous pouvez réviser votre loyer en conséquence.", url: 'https://www.anil.org/outils/outils-de-calcul/revision-de-loyer/', badge: 'IRL' },
+                  { title: 'Encadrement des loyers élargi', desc: "28 agglomérations sont désormais soumises à l'encadrement des loyers en 2025. Vérifiez si votre bien est concerné.", url: 'https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers', badge: 'Encadrement' },
+                  { title: 'DPE obligatoire pour les locations', desc: 'Les logements classés G sont interdits à la location depuis le 1er janvier 2025 (surfaces > 141 m² en 2023, toutes surfaces en 2025).', url: 'https://www.service-public.fr/particuliers/vosdroits/F16096', badge: 'DPE' },
+                  { title: 'Location meublée : seuil Micro-BIC relevé', desc: 'Le seuil du régime Micro-BIC pour la location meublée (LMNP) est maintenu à 77 700 €/an pour 2025 avec abattement de 50%.', url: 'https://www.impots.gouv.fr/particulier/les-revenus-des-locations-meublees', badge: 'LMNP' },
+                ].map(news => (
+                  <a key={news.url} href={news.url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', gap: 12, padding: '12px 16px', borderRadius: 10, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, textDecoration: 'none', transition: 'background 0.15s' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = BAI.bgSurface)}
+                    onMouseLeave={e => (e.currentTarget.style.background = BAI.bgMuted)}
+                  >
+                    <span style={{ padding: '2px 9px', borderRadius: 999, background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, color: BAI.owner, whiteSpace: 'nowrap', alignSelf: 'flex-start' }}>{news.badge}</span>
+                    <div>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: BAI.ink, margin: '0 0 4px' }}>{news.title}</p>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, margin: 0, lineHeight: 1.5 }}>{news.desc}</p>
+                    </div>
+                    <ExternalLink style={{ width: 13, height: 13, color: BAI.inkFaint, flexShrink: 0, alignSelf: 'center' }} />
+                  </a>
+                ))}
+              </div>
+            </div>
+
           </div>
         )}
 

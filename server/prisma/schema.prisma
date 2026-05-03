@@ -133,6 +133,9 @@ model User {
   updatedAt         DateTime  @updatedAt
   lastLoginAt       DateTime?
 
+  // Fiscal settings (owner tax simulator — persisted per user)
+  fiscalSettings    Json?     // { hasSociety, currentRegime, annualRevenue, realCharges, isFurnished, savedAt }
+
   // Relations
   ownedProperties       Property[]            @relation("PropertyOwner")
   bookings              Booking[]             @relation("BookingTenant")
