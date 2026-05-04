@@ -456,11 +456,9 @@ export default function Finance() {
       <div class="row"><span class="lbl">Date limite de dépôt</span><span class="val">Voir calendrier fiscal impots.gouv.fr</span></div>
     </div>
     <div class="links"><h2 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#9e9b96;margin:0 0 12px">Se connecter &amp; déclarer</h2>
-      <a href="https://www.impots.gouv.fr/accueil" target="_blank">🔗 impots.gouv.fr — Espace personnel (déclaration en ligne)</a>
-      <a href="https://www.impots.gouv.fr/portail/formulaire/2044/declaration-des-revenus-fonciers" target="_blank">📄 Formulaire 2044 — Revenus fonciers (régime réel)</a>
-      <a href="https://www.impots.gouv.fr/portail/formulaire/2042/declaration-des-revenus" target="_blank">📄 Formulaire 2042 — Déclaration principale</a>
-      <a href="https://www.impots.gouv.fr/portail/formulaire/2042-c-pro/declaration-complementaire-des-revenus-des-professions-non-salariees" target="_blank">📄 Formulaire 2042-C Pro — LMNP</a>
-      <a href="https://www.anil.org/" target="_blank">ℹ️ ANIL — Agence Nationale pour l'Information sur le Logement</a>
+      <a href="https://www.impots.gouv.fr/particulier/declarer-mes-revenus" target="_blank">🔗 impots.gouv.fr — Déclaration en ligne</a>
+      <a href="https://www.impots.gouv.fr/sites/default/files/formulaires/2044/2024/2044_3671.pdf" target="_blank">📄 Formulaire 2044 — Revenus fonciers (régime réel)</a>
+      <a href="https://www.impots.gouv.fr/particulier/les-revenus-des-locations-meublees" target="_blank">📄 LMNP — Locations meublées (2042-C Pro)</a>
     </div>
     <div class="disclaimer">⚠️ Ce rapport est indicatif et généré automatiquement à partir de vos données Bailio. Il ne constitue pas un conseil fiscal. Consultez votre expert-comptable ou le service des impôts pour votre situation personnelle.</div>
     <script>window.onload=function(){window.print()}</script>
@@ -707,114 +705,31 @@ export default function Finance() {
               </div>
             </div>
 
-            {/* ── Espace Fiscal rapide ──────────────────────────────────── */}
-            {(() => {
-              const year = new Date().getFullYear() - 1
-              const rev = summary?.totalRevenue ?? 0
-              const exp = summary?.totalExpenses ?? 0
-              const net = summary?.netCashFlow ?? 0
-              const regimeBadges: Record<string, { label: string; color: string; bg: string }> = {
-                micro_foncier: { label: 'Micro-foncier', color: BAI.owner, bg: BAI.ownerLight },
-                reel: { label: 'Réel foncier', color: BAI.owner, bg: BAI.ownerLight },
-                micro_bic: { label: 'LMNP Micro-BIC', color: BAI.caramel, bg: BAI.caramelLight },
-                bic_reel: { label: 'LMNP BIC Réel', color: BAI.caramel, bg: BAI.caramelLight },
-                is: { label: "SCI à l'IS", color: BAI.inkMid, bg: BAI.bgMuted },
-                unknown: { label: 'Régime à définir', color: BAI.inkFaint, bg: BAI.bgMuted },
-              }
-              const regime = regimeBadges[fiscalForm.currentRegime] ?? regimeBadges.unknown
-              const microBase = fiscalForm.currentRegime === 'micro_foncier' ? Math.round(rev * 0.7)
-                : fiscalForm.currentRegime === 'micro_bic' ? Math.round(rev * 0.5) : null
-              return (
-                <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.ownerBorder}`, borderLeft: `4px solid ${BAI.owner}`, borderRadius: 12, padding: '20px 24px', boxShadow: '0 1px 3px rgba(13,12,10,0.04)' }}>
-                  {/* Header */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ width: 36, height: 36, borderRadius: 9, background: BAI.ownerLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Calculator style={{ width: 17, height: 17, color: BAI.owner }} />
-                      </div>
-                      <div>
-                        <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkFaint, margin: 0 }}>Administration fiscale</p>
-                        <p style={{ fontFamily: BAI.fontBody, fontSize: 15, fontWeight: 700, color: BAI.ink, margin: '2px 0 0' }}>Espace Fiscal — Déclaration {year}</p>
-                      </div>
-                    </div>
-                    <span style={{ padding: '4px 12px', borderRadius: 999, background: regime.bg, border: `1px solid ${regime.color}30`, fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: regime.color }}>
-                      {regime.label}
-                    </span>
+            {/* ── Aperçu fiscal — renvoi vers l'onglet Fiscal ──────────── */}
+            {summary && (
+              <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.ownerBorder}`, borderLeft: `4px solid ${BAI.owner}`, borderRadius: 12, padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, boxShadow: '0 1px 3px rgba(13,12,10,0.04)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: BAI.ownerLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Calculator style={{ width: 18, height: 18, color: BAI.owner }} />
                   </div>
-
-                  {/* Chiffres clés */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 16 }}>
-                    {[
-                      { label: 'Revenus à déclarer', value: formatEuro(rev), color: BAI.owner },
-                      { label: 'Charges déductibles', value: formatEuro(exp), color: BAI.caramel },
-                      { label: 'Résultat net', value: formatEuro(net), color: net >= 0 ? BAI.tenant : BAI.error },
-                      ...(microBase != null ? [{ label: `Base imposable (après abattement)`, value: formatEuro(microBase), color: BAI.owner }] : []),
-                    ].map(item => (
-                      <div key={item.label} style={{ background: BAI.bgMuted, borderRadius: 10, padding: '12px 14px' }}>
-                        <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 4px' }}>{item.label}</p>
-                        <p style={{ fontFamily: BAI.fontDisplay, fontSize: 20, fontWeight: 700, fontStyle: 'italic', color: item.color, margin: 0 }}>{item.value}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Liens & actions */}
-                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-                    <button
-                      onClick={generateFiscalReport}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 9, border: 'none', background: BAI.owner, color: '#fff', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
-                    >
-                      <Printer style={{ width: 14, height: 14 }} />
-                      Générer mon rapport fiscal
-                    </button>
-                    <a
-                      href="https://www.impots.gouv.fr/accueil"
-                      target="_blank" rel="noopener noreferrer"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 18px', borderRadius: 9, border: `1px solid ${BAI.ownerBorder}`, background: BAI.ownerLight, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.owner }}
-                    >
-                      <ExternalLink style={{ width: 13, height: 13 }} />
-                      Se connecter sur impots.gouv.fr
-                    </a>
-                    <button
-                      onClick={() => setActiveTab('fiscal')}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 18px', borderRadius: 9, border: `1px solid ${BAI.border}`, background: 'transparent', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.inkMid, cursor: 'pointer' }}
-                    >
-                      <Calculator style={{ width: 13, height: 13 }} />
-                      Conseil fiscal détaillé
-                    </button>
-                  </div>
-
-                  {/* Formulaires officiels */}
-                  <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${BAI.border}` }}>
-                    <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.inkFaint, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px' }}>Formulaires à compléter</p>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      {[
-                        ...(fiscalForm.currentRegime === 'reel' || fiscalForm.currentRegime === 'micro_foncier' ? [
-                          { label: 'Formulaire 2044', url: 'https://www.impots.gouv.fr/portail/formulaire/2044/declaration-des-revenus-fonciers', badge: 'Revenus fonciers' },
-                          { label: 'Formulaire 2042', url: 'https://www.impots.gouv.fr/portail/formulaire/2042/declaration-des-revenus', badge: 'Déclaration principale' },
-                        ] : []),
-                        ...(fiscalForm.currentRegime === 'micro_bic' || fiscalForm.currentRegime === 'bic_reel' ? [
-                          { label: 'Formulaire 2031', url: 'https://www.impots.gouv.fr/portail/formulaire/2031/declaration-de-resultats', badge: 'BIC / LMNP' },
-                          { label: 'Formulaire 2042-C', url: 'https://www.impots.gouv.fr/portail/formulaire/2042-c-pro/declaration-complementaire-des-revenus-des-professions-non-salariees', badge: 'Complémentaire' },
-                        ] : []),
-                        { label: 'Calendrier fiscal', url: 'https://www.impots.gouv.fr/particulier/les-dates-cles-de-votre-calendrier-fiscal', badge: 'Dates limites' },
-                      ].map(f => (
-                        <a key={f.url} href={f.url} target="_blank" rel="noopener noreferrer"
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 7, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, textDecoration: 'none' }}>
-                          <Download style={{ width: 11, height: 11, color: BAI.inkFaint }} />
-                          <span style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.ink }}>{f.label}</span>
-                          <span style={{ padding: '1px 6px', borderRadius: 999, background: BAI.ownerLight, fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, color: BAI.owner }}>{f.badge}</span>
-                        </a>
-                      ))}
+                  <div>
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkFaint, margin: 0 }}>Déclaration {new Date().getFullYear() - 1}</p>
+                    <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', marginTop: 4 }}>
+                      <span style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid }}>Revenus : <strong style={{ color: BAI.owner }}>{formatEuro(summary.totalRevenue)}</strong></span>
+                      <span style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid }}>Charges : <strong style={{ color: BAI.caramel }}>{formatEuro(summary.totalExpenses)}</strong></span>
+                      <span style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid }}>Net : <strong style={{ color: summary.netCashFlow >= 0 ? BAI.tenant : BAI.error }}>{formatEuro(summary.netCashFlow)}</strong></span>
                     </div>
                   </div>
-
-                  <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: '12px 0 0', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <ShieldCheck style={{ width: 12, height: 12, flexShrink: 0 }} />
-                    Ces chiffres sont indicatifs. Consultez un expert-comptable pour votre déclaration officielle.
-                  </p>
                 </div>
-              )
-            })()}
+                <button
+                  onClick={() => setActiveTab('fiscal')}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 9, border: 'none', background: BAI.owner, color: '#fff', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                >
+                  <Calculator style={{ width: 14, height: 14 }} />
+                  Gérer ma déclaration fiscale
+                </button>
+              </div>
+            )}
 
             {/* Market locatif widget */}
             <div
@@ -2209,10 +2124,10 @@ export default function Finance() {
               {/* Form links */}
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {[
-                  { label: 'Formulaire 2044', url: 'https://www.impots.gouv.fr/portail/formulaire/2044/declaration-des-revenus-fonciers', badge: 'Foncier nu' },
-                  { label: 'Formulaire 2042', url: 'https://www.impots.gouv.fr/portail/formulaire/2042/declaration-des-revenus', badge: 'Principale' },
-                  { label: '2042-C Pro', url: 'https://www.impots.gouv.fr/portail/formulaire/2042-c-pro/declaration-complementaire-des-revenus-des-professions-non-salariees', badge: 'LMNP' },
-                  { label: 'Formulaire 2031', url: 'https://www.impots.gouv.fr/portail/formulaire/2031/declaration-des-revenus-industriels-et-commerciaux', badge: 'BIC Réel' },
+                  { label: 'Formulaire 2044 (PDF)', url: 'https://www.impots.gouv.fr/sites/default/files/formulaires/2044/2024/2044_3671.pdf', badge: 'Foncier nu' },
+                  { label: 'Déclaration en ligne', url: 'https://www.impots.gouv.fr/particulier/declarer-mes-revenus', badge: 'Principale' },
+                  { label: 'LMNP — locations meublées', url: 'https://www.impots.gouv.fr/particulier/les-revenus-des-locations-meublees', badge: 'LMNP' },
+                  { label: 'BIC — bénéfices industriels', url: 'https://www.impots.gouv.fr/professionnel/les-bic-benefices-industriels-et-commerciaux', badge: 'BIC Réel' },
                 ].map(form => (
                   <a key={form.url} href={form.url} target="_blank" rel="noopener noreferrer"
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 13px', borderRadius: 8, border: `1px solid ${BAI.ownerBorder}`, background: '#fff', textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.owner }}>
