@@ -1933,8 +1933,6 @@ export default function Finance() {
 
                       {/* Liens sources data zoomés sur l'adresse */}
                       {(() => {
-                        const addr = [property.address, property.city].filter(Boolean).join(', ')
-                        const addrEnc = encodeURIComponent(addr)
                         const cityEnc = encodeURIComponent(property.city ?? '')
 
                         const smartLinks = [

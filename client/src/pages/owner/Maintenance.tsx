@@ -954,7 +954,7 @@ function GroupedByPropertyView({
                             color: priorityColor(req.priority),
                           }}
                         >
-                          {MAINTENANCE_PRIORITY_LABELS[req.priority]}
+                          {MAINTENANCE_PRIORITY_LABELS[req.priority as MaintenancePriority]}
                         </span>
                         <ChevronDown
                           style={{
@@ -1418,14 +1418,13 @@ export default function Maintenance() {
                 style={{
                   padding: '6px 14px',
                   borderRadius: 8,
-                  border: 'none',
+                  border: !groupByProperty ? 'none' : `1px solid ${BAI.border}`,
                   background: !groupByProperty ? BAI.night : 'transparent',
                   color: !groupByProperty ? '#fff' : BAI.inkMid,
                   fontFamily: BAI.fontBody,
                   fontSize: 12,
                   fontWeight: 600,
                   cursor: 'pointer',
-                  border: !groupByProperty ? 'none' : `1px solid ${BAI.border}`,
                 }}
               >
                 Par demande
