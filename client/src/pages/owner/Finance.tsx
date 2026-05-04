@@ -45,7 +45,7 @@ import {
   ShieldCheck,
   Printer,
 } from 'lucide-react'
-import { financeService, MarketAnalysis } from '../../services/finance.service'
+import { financeService, MarketAnalysis, FiscalData } from '../../services/finance.service'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -262,6 +262,8 @@ export default function Finance() {
   const [fiscalResult, setFiscalResult] = useState<FiscalResult | null>(null)
   const [fiscalSaving, setFiscalSaving] = useState(false)
   const [fiscalSaved, setFiscalSaved] = useState(false)
+  const [fiscalData, setFiscalData] = useState<FiscalData | null>(null)
+  const [fiscalDataLoading, setFiscalDataLoading] = useState(false)
 
   const {
     summary,
@@ -311,6 +313,25 @@ export default function Finance() {
       realCharges: Math.round(summary.totalExpenses),
     }))
   }, [summary?.totalRevenue, summary?.totalExpenses])
+
+  // Fetch real fiscal data when user opens the fiscal tab
+  useEffect(() => {
+    if (activeTab !== 'fiscal' || fiscalData) return
+    setFiscalDataLoading(true)
+    financeService.getFiscalData()
+      .then(data => {
+        setFiscalData(data)
+        // Override form with precise API data
+        setFiscalForm(f => ({
+          ...f,
+          annualRevenue: data.summary.totalRevenusBruts,
+          realCharges: data.summary.totalChargesDeductibles,
+        }))
+      })
+      .catch(() => {})
+      .finally(() => setFiscalDataLoading(false))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab])
 
   async function fetchMarketForCity(cityName: string, label: string) {
     setCitySearchLoading(true)
@@ -2125,56 +2146,88 @@ export default function Finance() {
               <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: 0 }}>Renseignez votre situation pour obtenir un conseil personnalisé et sauvegarder votre profil fiscal.</p>
             </div>
 
-            {/* Pre-filled documents section */}
-            {summary && (
-              <div style={{ background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, borderRadius: 16, padding: '24px 28px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
-                  <div>
-                    <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.owner, margin: '0 0 4px' }}>Données importées automatiquement</p>
-                    <p style={{ fontFamily: BAI.fontDisplay, fontSize: 20, fontWeight: 700, fontStyle: 'italic', color: BAI.owner, margin: 0 }}>Votre récapitulatif fiscal {new Date().getFullYear() - 1}</p>
-                  </div>
-                  <button
-                    onClick={generateFiscalReport}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 10, border: 'none', background: BAI.owner, color: '#fff', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer', minHeight: 44 }}
-                  >
-                    <Printer style={{ width: 15, height: 15 }} />
-                    Générer le rapport
-                  </button>
+            {/* Pre-filled documents section — real fiscal data */}
+            <div style={{ background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, borderRadius: 16, padding: '24px 28px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
+                <div>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.owner, margin: '0 0 4px' }}>
+                    {fiscalDataLoading ? 'Calcul en cours...' : 'Données réelles importées'}
+                  </p>
+                  <p style={{ fontFamily: BAI.fontDisplay, fontSize: 20, fontWeight: 700, fontStyle: 'italic', color: BAI.owner, margin: 0 }}>
+                    Récapitulatif fiscal {new Date().getFullYear() - 1}
+                  </p>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 16 }}>
-                  {[
-                    { label: 'Revenus locatifs bruts', value: formatEuro(summary.totalRevenue), note: 'Loyers encaissés', color: BAI.owner },
-                    { label: 'Charges déductibles', value: formatEuro(summary.totalExpenses), note: 'Dépenses + emprunts', color: BAI.caramel },
-                    { label: 'Résultat net imposable', value: formatEuro(Math.max(0, summary.netCashFlow)), note: 'Avant abattement', color: summary.netCashFlow >= 0 ? BAI.tenant : BAI.error },
-                    { label: 'Nombre de biens', value: String(myProperties.length), note: 'Patrimoine déclaré', color: BAI.inkMid },
-                  ].map(item => (
-                    <div key={item.label} style={{ background: '#fff', border: `1px solid ${BAI.ownerBorder}`, borderRadius: 10, padding: '14px 16px' }}>
-                      <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: '0 0 4px' }}>{item.label}</p>
-                      <p style={{ fontFamily: BAI.fontDisplay, fontSize: 20, fontWeight: 700, fontStyle: 'italic', color: item.color, margin: '0 0 2px' }}>{item.value}</p>
-                      <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: 0 }}>{item.note}</p>
-                    </div>
-                  ))}
-                </div>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {[
-                    { label: 'Formulaire 2044 — Revenus fonciers', url: 'https://www.impots.gouv.fr/portail/formulaire/2044/declaration-des-revenus-fonciers', badge: 'Nu' },
-                    { label: 'Formulaire 2042 — Déclaration principale', url: 'https://www.impots.gouv.fr/portail/formulaire/2042/declaration-des-revenus', badge: 'Tous' },
-                    { label: 'Formulaire 2042-C Pro — LMNP', url: 'https://www.impots.gouv.fr/portail/formulaire/2042-c-pro/declaration-complementaire-des-revenus-des-professions-non-salariees', badge: 'Meublé' },
-                    { label: 'Formulaire 2031 — BIC Réel LMNP', url: 'https://www.impots.gouv.fr/portail/formulaire/2031/declaration-des-revenus-industriels-et-commerciaux', badge: 'LMNP Réel' },
-                  ].map(form => (
-                    <a key={form.url} href={form.url} target="_blank" rel="noopener noreferrer"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, border: `1px solid ${BAI.ownerBorder}`, background: '#fff', textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.owner }}>
-                      <Download style={{ width: 12, height: 12 }} />
-                      {form.label}
-                      <span style={{ padding: '1px 7px', borderRadius: 99, background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, fontSize: 10, color: BAI.owner }}>{form.badge}</span>
-                    </a>
-                  ))}
-                </div>
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: '12px 0 0', fontStyle: 'italic' }}>
-                  Les données ci-dessus sont pré-remplies depuis vos informations Bailio. Renseignez votre profil fiscal ci-dessous pour un conseil personnalisé.
-                </p>
+                <button
+                  onClick={generateFiscalReport}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 10, border: 'none', background: BAI.owner, color: '#fff', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer', minHeight: 44 }}
+                >
+                  <Printer style={{ width: 15, height: 15 }} />
+                  Générer le rapport PDF
+                </button>
               </div>
-            )}
+
+              {/* KPI grid — uses API data when available, fallback to summary */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10, marginBottom: 16 }}>
+                {[
+                  { label: 'Revenus bruts', value: formatEuro(fiscalData?.summary.totalRevenusBruts ?? summary?.totalRevenue ?? 0), note: 'Loyers encaissés', color: BAI.owner },
+                  { label: 'Charges déductibles', value: formatEuro(fiscalData?.summary.totalChargesDeductibles ?? summary?.totalExpenses ?? 0), note: 'Dépenses réelles', color: BAI.caramel },
+                  { label: 'Intérêts d\'emprunt', value: formatEuro(fiscalData?.summary.totalInteretsEmprunt ?? 0), note: 'Ligne 420 — 2044', color: BAI.inkMid },
+                  { label: 'Revenu net foncier', value: formatEuro(fiscalData?.summary.revenuNetFoncier ?? Math.max(0, summary?.netCashFlow ?? 0)), note: 'Case 4BA — 2042', color: (fiscalData?.summary.revenuNetFoncier ?? 0) >= 0 ? BAI.tenant : BAI.error },
+                ].map(item => (
+                  <div key={item.label} style={{ background: '#fff', border: `1px solid ${BAI.ownerBorder}`, borderRadius: 10, padding: '12px 14px' }}>
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: BAI.inkFaint, margin: '0 0 4px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{item.label}</p>
+                    <p style={{ fontFamily: BAI.fontDisplay, fontSize: 18, fontWeight: 700, fontStyle: 'italic', color: item.color, margin: '0 0 2px' }}>{item.value}</p>
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: BAI.inkFaint, margin: 0 }}>{item.note}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Form 2044 pre-filled lines */}
+              {fiscalData && (
+                <div style={{ background: '#fff', border: `1px solid ${BAI.ownerBorder}`, borderRadius: 10, padding: '14px 16px', marginBottom: 14 }}>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.owner, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 10px' }}>
+                    Formulaire 2044 — Lignes pré-remplies
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 6 }}>
+                    {[
+                      { ligne: '110', label: 'Revenus bruts fonciers', value: fiscalData.form2044.ligne110 },
+                      { ligne: '220', label: 'Total charges déductibles', value: fiscalData.form2044.ligne220 },
+                      { ligne: '420', label: 'Intérêts et frais d\'emprunt', value: fiscalData.form2044.ligne420 },
+                      { ligne: '430', label: 'Primes d\'assurance', value: fiscalData.form2044.ligne430 },
+                      { ligne: '440', label: 'Frais de gestion', value: fiscalData.form2044.ligne440 },
+                      { ligne: '240', label: 'Résultat net foncier', value: fiscalData.form2044.ligne240 },
+                    ].map(row => (
+                      <div key={row.ligne} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', background: BAI.bgMuted, borderRadius: 6 }}>
+                        <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid }}>
+                          <strong style={{ color: BAI.owner, marginRight: 6 }}>{row.ligne}</strong>{row.label}
+                        </span>
+                        <strong style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.ink }}>{formatEuro(row.value)}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Form links */}
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {[
+                  { label: 'Formulaire 2044', url: 'https://www.impots.gouv.fr/portail/formulaire/2044/declaration-des-revenus-fonciers', badge: 'Foncier nu' },
+                  { label: 'Formulaire 2042', url: 'https://www.impots.gouv.fr/portail/formulaire/2042/declaration-des-revenus', badge: 'Principale' },
+                  { label: '2042-C Pro', url: 'https://www.impots.gouv.fr/portail/formulaire/2042-c-pro/declaration-complementaire-des-revenus-des-professions-non-salariees', badge: 'LMNP' },
+                  { label: 'Formulaire 2031', url: 'https://www.impots.gouv.fr/portail/formulaire/2031/declaration-des-revenus-industriels-et-commerciaux', badge: 'BIC Réel' },
+                ].map(form => (
+                  <a key={form.url} href={form.url} target="_blank" rel="noopener noreferrer"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 13px', borderRadius: 8, border: `1px solid ${BAI.ownerBorder}`, background: '#fff', textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.owner }}>
+                    <Download style={{ width: 12, height: 12 }} />
+                    {form.label}
+                    <span style={{ padding: '1px 7px', borderRadius: 99, background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, fontSize: 10, color: BAI.owner }}>{form.badge}</span>
+                  </a>
+                ))}
+              </div>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: '10px 0 0', fontStyle: 'italic' }}>
+                Données calculées à partir de vos loyers, charges et emprunts enregistrés dans Bailio. Complétez votre profil fiscal ci-dessous pour un conseil personnalisé.
+              </p>
+            </div>
 
             {/* Section A — Form card */}
             <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: '28px 32px' }}>
