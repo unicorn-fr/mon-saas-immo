@@ -17,7 +17,7 @@ export async function getOrCreateStripeCustomer(userId: string): Promise<string>
 
   const customer = await stripe.customers.create({
     email: user.email,
-    name: `${user.firstName} ${user.lastName}`,
+    name: `${user.firstName} ${user.lastName}`.trim(),
     metadata: { userId },
   })
 
@@ -37,9 +37,10 @@ export async function createCheckoutSession(
   successUrl: string,
   cancelUrl: string
 ) {
+  if (!stripe) throw new Error('Stripe non configuré')
   const customerId = await getOrCreateStripeCustomer(userId)
 
-  const session = await stripe!.checkout.sessions.create({
+  const session = await stripe.checkout.sessions.create({
     customer: customerId,
     mode: 'subscription',
     line_items: [{ price: priceId, quantity: 1 }],
@@ -52,6 +53,10 @@ export async function createCheckoutSession(
     allow_promotion_codes: true,
     billing_address_collection: 'auto',
     payment_method_types: ['card'],
+    // TVA française automatique
+    automatic_tax: { enabled: true },
+    customer_update: { address: 'auto' },
+    locale: 'fr',
   })
 
   return session
@@ -59,9 +64,10 @@ export async function createCheckoutSession(
 
 // ─── CRÉER SESSION PORTAIL CLIENT ────────────────────────────────────────────
 export async function createPortalSession(userId: string, returnUrl: string) {
+  if (!stripe) throw new Error('Stripe non configuré')
   const customerId = await getOrCreateStripeCustomer(userId)
 
-  const session = await stripe!.billingPortal.sessions.create({
+  const session = await stripe.billingPortal.sessions.create({
     customer: customerId,
     return_url: returnUrl,
   })
@@ -78,12 +84,14 @@ export async function syncSubscriptionFromStripe(stripeSubId: string) {
 
   const priceId = sub.items.data[0]?.price.id
   const plan = mapPriceIdToPlan(priceId)
+  const billingCycle = sub.items.data[0]?.price.recurring?.interval === 'year' ? 'ANNUAL' : 'MONTHLY'
 
   await prisma.subscription.updateMany({
     where: { stripeCustomerId: sub.customer as string },
     data: {
       stripeSubscriptionId: sub.id,
       plan,
+      billingCycle,
       status: mapStripeStatus(sub.status),
       currentPeriodEnd: new Date(sub.current_period_end * 1000),
       cancelAtPeriodEnd: sub.cancel_at_period_end,
@@ -92,23 +100,46 @@ export async function syncSubscriptionFromStripe(stripeSubId: string) {
   })
 }
 
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
-function mapPriceIdToPlan(priceId: string): PlanType {
-  const mapping: Record<string, PlanType> = {
-    // Plan Starter (UI) → PRO en base
-    [env.STRIPE_STARTER_MONTHLY_PRICE_ID]: 'PRO',
-    [env.STRIPE_STARTER_ANNUAL_PRICE_ID]:  'PRO',
-    // Plan Pro (UI) → EXPERT en base
-    [env.STRIPE_PRO_MONTHLY_PRICE_ID]:     'EXPERT',
-    [env.STRIPE_PRO_ANNUAL_PRICE_ID]:      'EXPERT',
-    // Aliases legacy
-    [env.STRIPE_EXPERT_MONTHLY_PRICE_ID]:  'EXPERT',
-    [env.STRIPE_EXPERT_ANNUAL_PRICE_ID]:   'EXPERT',
-  }
-  return mapping[priceId] ?? 'FREE'
+// ─── ABONNEMENT COURANT (avec features du plan) ───────────────────────────────
+export async function getUserSubscription(userId: string) {
+  const sub = await prisma.subscription.findUnique({
+    where: { userId },
+    select: {
+      plan: true,
+      status: true,
+      billingCycle: true,
+      currentPeriodEnd: true,
+      cancelAtPeriodEnd: true,
+      trialEndsAt: true,
+      stripeCustomerId: true,
+      stripeSubscriptionId: true,
+    },
+  })
+  return sub ?? { plan: 'FREE' as PlanType, status: 'ACTIVE' as const }
 }
 
-function mapStripeStatus(status: string): 'TRIALING' | 'ACTIVE' | 'PAST_DUE' | 'CANCELED' | 'UNPAID' {
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+export function mapPriceIdToPlan(priceId: string | undefined): PlanType {
+  if (!priceId) return 'FREE'
+  const mapping: Record<string, PlanType> = {
+    // Solo
+    [env.STRIPE_SOLO_MONTHLY_PRICE_ID]: 'SOLO',
+    [env.STRIPE_SOLO_ANNUAL_PRICE_ID]:  'SOLO',
+    // Pro
+    [env.STRIPE_PRO_MONTHLY_PRICE_ID]:  'PRO',
+    [env.STRIPE_PRO_ANNUAL_PRICE_ID]:   'PRO',
+    // Expert
+    [env.STRIPE_EXPERT_MONTHLY_PRICE_ID]: 'EXPERT',
+    [env.STRIPE_EXPERT_ANNUAL_PRICE_ID]:  'EXPERT',
+  }
+  // Filtrer les clés vides
+  const filtered = Object.fromEntries(
+    Object.entries(mapping).filter(([k]) => k && k.length > 0)
+  )
+  return filtered[priceId] ?? 'FREE'
+}
+
+export function mapStripeStatus(status: string): 'TRIALING' | 'ACTIVE' | 'PAST_DUE' | 'CANCELED' | 'UNPAID' {
   const mapping: Record<string, 'TRIALING' | 'ACTIVE' | 'PAST_DUE' | 'CANCELED' | 'UNPAID'> = {
     trialing:           'TRIALING',
     active:             'ACTIVE',

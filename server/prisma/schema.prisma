@@ -165,6 +165,9 @@ model User {
   loans                 Loan[]                @relation("OwnerLoans")
   ownedMaintenanceReqs  MaintenanceRequest[]  @relation("OwnerMaintenanceRequests")
   tenantMaintenanceReqs MaintenanceRequest[]  @relation("TenantMaintenanceRequests")
+  rentPaymentsAsLandlord RentPayment[]        @relation("LandlordRentPayments")
+  rentPaymentsAsTenant   RentPayment[]        @relation("TenantRentPayments")
+  aiUsageTracking        AiUsageTracking[]
 
   @@index([email])
   @@index([role])
@@ -446,6 +449,7 @@ model Contract {
   payments         Payment[]
   edlSession       EdlSession?
   paymentSettings  PaymentSettings?
+  rentPayments     RentPayment[]
 
   @@index([propertyId])
   @@index([tenantId])
@@ -782,6 +786,7 @@ model AuditLog {
 
 enum PlanType {
   FREE
+  SOLO
   PRO
   EXPERT
 }
@@ -865,6 +870,101 @@ model PaymentSettings {
   updatedAt   DateTime @updatedAt
 
   @@map("payment_settings")
+}
+
+// ============================================
+// PAIEMENTS LOYERS SEPA (Stripe/Lemonway)
+// ============================================
+
+enum RentPaymentStatus {
+  PENDING     // Prélèvement prévu
+  PROCESSING  // En cours de traitement
+  SUCCEEDED   // Prélevé avec succès
+  FAILED      // Échec (provision insuffisante, etc.)
+  REFUNDED    // Remboursé
+}
+
+model RentPayment {
+  id                    String            @id @default(cuid())
+  contractId            String
+  contract              Contract          @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  landlordId            String
+  landlord              User              @relation("LandlordRentPayments", fields: [landlordId], references: [id])
+  tenantId              String
+  tenant                User              @relation("TenantRentPayments", fields: [tenantId], references: [id])
+
+  // Montants (en centimes)
+  rentAmountCents       Int
+  chargesAmountCents    Int               @default(0)
+  totalAmountCents      Int
+
+  // Frais Bailio
+  platformFeeBps        Int               // 80 = 0.8% (Pro), 60 = 0.6% (Expert)
+  platformFeeCents      Int
+  stripeCostCents       Int?              // Coût réel Stripe SEPA (0.35% + 0.10€, plafonné 5€)
+  netRevenueCents       Int?              // platformFee - stripeCost
+
+  // Statut
+  status                RentPaymentStatus @default(PENDING)
+  failureReason         String?
+  retryCount            Int               @default(0)
+
+  // PSP
+  pspProvider           String            @default("stripe") // "stripe" | "lemonway"
+  pspPaymentIntentId    String?
+  pspMandateId          String?
+
+  // Dates
+  scheduledDate         DateTime          // Date prévue du prélèvement
+  dueDate               DateTime          // Date d'échéance du loyer
+  periodMonth           Int               // 1-12
+  periodYear            Int
+  processedAt           DateTime?
+
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  @@index([landlordId])
+  @@index([tenantId])
+  @@index([status])
+  @@index([scheduledDate])
+  @@map("rent_payments")
+}
+
+// ============================================
+// SUIVI USAGE IA (quota mensuel par plan)
+// ============================================
+
+model AiUsageTracking {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  usageType   String   // "dossier_analysis" | "assistant_message"
+  usageCount  Int      @default(0)
+  periodMonth Int
+  periodYear  Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, usageType, periodMonth, periodYear])
+  @@index([userId, periodMonth, periodYear])
+  @@map("ai_usage_tracking")
+}
+
+// ============================================
+// STRIPE EVENTS (idempotence webhooks)
+// ============================================
+
+model StripeEvent {
+  id          String    @id                   // Stripe event ID (evt_...)
+  type        String
+  processed   Boolean   @default(false)
+  processedAt DateTime?
+  payload     Json
+  createdAt   DateTime  @default(now())
+
+  @@index([processed])
+  @@map("stripe_events")
 }
 
 // ============================================

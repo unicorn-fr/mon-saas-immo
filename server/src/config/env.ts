@@ -57,15 +57,19 @@ const envSchema = z.object({
   // Stripe — abonnements et paiements
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
-  // Plan Starter (UI) = PRO en base
-  STRIPE_STARTER_MONTHLY_PRICE_ID: z.string().optional(),
-  STRIPE_STARTER_ANNUAL_PRICE_ID: z.string().optional(),
-  // Plan Pro (UI) = EXPERT en base
-  // Plan Pro (UI) = EXPERT en base (anciennement STRIPE_PRO_* → alias legacy)
+  // Plans Stripe (4 tiers : Solo, Pro, Expert)
+  STRIPE_SOLO_MONTHLY_PRICE_ID: z.string().optional(),
+  STRIPE_SOLO_ANNUAL_PRICE_ID: z.string().optional(),
   STRIPE_PRO_MONTHLY_PRICE_ID: z.string().optional(),
   STRIPE_PRO_ANNUAL_PRICE_ID: z.string().optional(),
   STRIPE_EXPERT_MONTHLY_PRICE_ID: z.string().optional(),
   STRIPE_EXPERT_ANNUAL_PRICE_ID: z.string().optional(),
+  // Aliases legacy (ancien "Starter" → maintenant SOLO)
+  STRIPE_STARTER_MONTHLY_PRICE_ID: z.string().optional(),
+  STRIPE_STARTER_ANNUAL_PRICE_ID: z.string().optional(),
+  // Feature flags paiements
+  SEPA_PAYMENTS_ENABLED: z.string().optional(),
+  CARD_PAYMENTS_ENABLED: z.string().optional(),
 
   // Waitlist
   NOTIFY_SECRET: z.string().optional(),
@@ -120,12 +124,16 @@ const data: any = parsedEnv.success ? parsedEnv.data : {
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
   STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
   STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+  STRIPE_SOLO_MONTHLY_PRICE_ID: process.env.STRIPE_SOLO_MONTHLY_PRICE_ID || process.env.STRIPE_STARTER_MONTHLY_PRICE_ID,
+  STRIPE_SOLO_ANNUAL_PRICE_ID: process.env.STRIPE_SOLO_ANNUAL_PRICE_ID || process.env.STRIPE_STARTER_ANNUAL_PRICE_ID,
   STRIPE_STARTER_MONTHLY_PRICE_ID: process.env.STRIPE_STARTER_MONTHLY_PRICE_ID,
   STRIPE_STARTER_ANNUAL_PRICE_ID: process.env.STRIPE_STARTER_ANNUAL_PRICE_ID,
   STRIPE_PRO_MONTHLY_PRICE_ID: process.env.STRIPE_PRO_MONTHLY_PRICE_ID,
   STRIPE_PRO_ANNUAL_PRICE_ID: process.env.STRIPE_PRO_ANNUAL_PRICE_ID,
   STRIPE_EXPERT_MONTHLY_PRICE_ID: process.env.STRIPE_EXPERT_MONTHLY_PRICE_ID,
   STRIPE_EXPERT_ANNUAL_PRICE_ID: process.env.STRIPE_EXPERT_ANNUAL_PRICE_ID,
+  SEPA_PAYMENTS_ENABLED: process.env.SEPA_PAYMENTS_ENABLED,
+  CARD_PAYMENTS_ENABLED: process.env.CARD_PAYMENTS_ENABLED,
   NOTIFY_SECRET: process.env.NOTIFY_SECRET,
   LAUNCH_DATE: process.env.LAUNCH_DATE,
   LAUNCH_MODE: (process.env.LAUNCH_MODE as 'waitlist' | 'live') || 'live',
@@ -183,12 +191,15 @@ export const env = {
 
   STRIPE_SECRET_KEY: data.STRIPE_SECRET_KEY || '',
   STRIPE_WEBHOOK_SECRET: data.STRIPE_WEBHOOK_SECRET || '',
-  STRIPE_STARTER_MONTHLY_PRICE_ID: data.STRIPE_STARTER_MONTHLY_PRICE_ID || '',
-  STRIPE_STARTER_ANNUAL_PRICE_ID: data.STRIPE_STARTER_ANNUAL_PRICE_ID || '',
+  // Solo (alias: STARTER pour compatibilité backward)
+  STRIPE_SOLO_MONTHLY_PRICE_ID: data.STRIPE_SOLO_MONTHLY_PRICE_ID || data.STRIPE_STARTER_MONTHLY_PRICE_ID || '',
+  STRIPE_SOLO_ANNUAL_PRICE_ID: data.STRIPE_SOLO_ANNUAL_PRICE_ID || data.STRIPE_STARTER_ANNUAL_PRICE_ID || '',
   STRIPE_PRO_MONTHLY_PRICE_ID: data.STRIPE_PRO_MONTHLY_PRICE_ID || '',
   STRIPE_PRO_ANNUAL_PRICE_ID: data.STRIPE_PRO_ANNUAL_PRICE_ID || '',
   STRIPE_EXPERT_MONTHLY_PRICE_ID: data.STRIPE_EXPERT_MONTHLY_PRICE_ID || '',
   STRIPE_EXPERT_ANNUAL_PRICE_ID: data.STRIPE_EXPERT_ANNUAL_PRICE_ID || '',
+  SEPA_PAYMENTS_ENABLED: data.SEPA_PAYMENTS_ENABLED === 'true',
+  CARD_PAYMENTS_ENABLED: false as false, // NE JAMAIS mettre true pour les loyers
 
   NOTIFY_SECRET: data.NOTIFY_SECRET || '',
   LAUNCH_DATE: data.LAUNCH_DATE || '2026-06-01T00:00:00Z',

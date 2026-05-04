@@ -21,10 +21,105 @@ if (env.STRIPE_SECRET_KEY) {
 
 export { stripe }
 
+// ─── PLANS — Features granulaires ────────────────────────────────────────────
+// Valeurs numériques null = illimité, 0 = désactivé
 export const PLANS = {
-  FREE:   { maxProperties: 3,        hasAI: false, hasSignature: false, hasAnalytics: false },
-  PRO:    { maxProperties: 50,       hasAI: true,  hasSignature: true,  hasAnalytics: true  },
-  EXPERT: { maxProperties: Infinity, hasAI: true,  hasSignature: true,  hasAnalytics: true  },
+  FREE: {
+    maxProperties: 1,
+    sepaRateBps: null as null,
+    features: {
+      quittancesAuto: false,
+      quittancesManual: true,
+      signatureElectronic: false,
+      signatureLimitPerYear: 0,
+      sepaPayment: false,
+      aiDossierAnalysis: false,
+      aiDossierLimitPerMonth: 0,
+      aiAssistant: true,
+      relancesAuto: false,
+      analyticsFonciers: false,
+      rapportFiscal: false,
+      encadrementLoyers: false,
+      multiEntities: false,
+      apiAccess: false,
+      prioritySupport: false,
+      exportComptable: false as false,
+    },
+  },
+  SOLO: {
+    maxProperties: 1,
+    sepaRateBps: null as null,
+    features: {
+      quittancesAuto: true,
+      quittancesManual: true,
+      signatureElectronic: true,
+      signatureLimitPerYear: 1,
+      sepaPayment: false,
+      aiDossierAnalysis: false,
+      aiDossierLimitPerMonth: 0,
+      aiAssistant: true,
+      relancesAuto: true,
+      analyticsFonciers: false,
+      rapportFiscal: false,
+      encadrementLoyers: false,
+      multiEntities: false,
+      apiAccess: false,
+      prioritySupport: false,
+      exportComptable: false as false,
+    },
+  },
+  PRO: {
+    maxProperties: 5,
+    sepaRateBps: 80, // 0.8%
+    features: {
+      quittancesAuto: true,
+      quittancesManual: true,
+      signatureElectronic: true,
+      signatureLimitPerYear: null as null, // illimité
+      sepaPayment: true,
+      aiDossierAnalysis: true,
+      aiDossierLimitPerMonth: 10,
+      aiAssistant: true,
+      relancesAuto: true,
+      analyticsFonciers: true,
+      rapportFiscal: true,
+      encadrementLoyers: true,
+      multiEntities: false,
+      apiAccess: false,
+      prioritySupport: false,
+      exportComptable: 'basic' as 'basic',
+    },
+  },
+  EXPERT: {
+    maxProperties: Infinity,
+    sepaRateBps: 60, // 0.6%
+    features: {
+      quittancesAuto: true,
+      quittancesManual: true,
+      signatureElectronic: true,
+      signatureLimitPerYear: null as null,
+      sepaPayment: true,
+      aiDossierAnalysis: true,
+      aiDossierLimitPerMonth: null as null, // illimité
+      aiAssistant: true,
+      relancesAuto: true,
+      analyticsFonciers: true,
+      rapportFiscal: true,
+      encadrementLoyers: true,
+      multiEntities: true,
+      apiAccess: true,
+      prioritySupport: true,
+      exportComptable: 'advanced' as 'advanced',
+    },
+  },
 } as const
 
 export type PlanType = keyof typeof PLANS
+
+// Ordre pour comparaisons (FREE < SOLO < PRO < EXPERT)
+export const PLAN_ORDER: Record<PlanType, number> = {
+  FREE: 0,
+  SOLO: 1,
+  PRO: 2,
+  EXPERT: 3,
+}

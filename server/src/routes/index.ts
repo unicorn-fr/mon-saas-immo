@@ -36,6 +36,7 @@ import edlRoutes from './edl.routes.js'
 import ocrRoutes from './ocr.routes.js'
 import financeRoutes from './finance.routes.js'
 import maintenanceRoutes from './maintenance.routes.js'
+import sepaRoutes from './sepa.routes.js'
 
 /**
  * Register all application routes on the Express app.
@@ -70,6 +71,7 @@ export function registerRoutes(app: Application, prefix: string): void {
   // ── Billing ─────────────────────────────────────────────────────────────
   app.use(`${prefix}/stripe`, stripeRoutes)
   app.use(`${prefix}/payments`, paymentRoutes)
+  app.use(`${prefix}/sepa`, sepaRoutes)
 
   // ── Aggregation ─────────────────────────────────────────────────────────
   app.use(`${prefix}/dashboard`, dashboardRoutes)

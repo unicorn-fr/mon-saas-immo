@@ -4,6 +4,7 @@ import {
   createCheckoutSession,
   createPortalSession,
   syncSubscriptionFromStripe,
+  mapStripeStatus,
 } from '../services/stripe.service.js'
 import { stripe } from '../lib/stripe.js'
 import { prisma } from '../config/database.js'
@@ -16,6 +17,7 @@ const router = Router()
 // POST /stripe/checkout — démarre une souscription
 router.post('/checkout', authenticate, async (req: Request, res: Response) => {
   try {
+    if (!stripe) return res.status(503).json({ error: 'Stripe non configuré' })
     const { priceId } = req.body
     if (!priceId) return res.status(400).json({ error: 'priceId requis' })
 
@@ -27,18 +29,21 @@ router.post('/checkout', authenticate, async (req: Request, res: Response) => {
     )
 
     return res.json({ url: session.url })
-  } catch (err: any) {
-    return res.status(500).json({ error: err.message })
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Erreur interne'
+    return res.status(500).json({ error: msg })
   }
 })
 
 // POST /stripe/portal — accès au portail client Stripe
 router.post('/portal', authenticate, async (req: Request, res: Response) => {
   try {
+    if (!stripe) return res.status(503).json({ error: 'Stripe non configuré' })
     const session = await createPortalSession(req.user!.id, `${env.FRONTEND_URL}/dashboard`)
     return res.json({ url: session.url })
-  } catch (err: any) {
-    return res.status(500).json({ error: err.message })
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Erreur interne'
+    return res.status(500).json({ error: msg })
   }
 })
 
@@ -56,7 +61,7 @@ router.get('/subscription', authenticate, async (req: Request, res: Response) =>
 
 export default router
 
-// ─── WEBHOOK HANDLER (raw body — à monter AVANT express.json dans app.ts) ────
+// ─── WEBHOOK HANDLER (raw body — monté AVANT express.json dans app.ts) ────────
 
 export async function stripeWebhookHandler(req: Request, res: Response) {
   if (!stripe) return res.status(503).json({ error: 'Stripe non configuré' })
@@ -67,10 +72,27 @@ export async function stripeWebhookHandler(req: Request, res: Response) {
   let event
   try {
     event = stripe.webhooks.constructEvent(req.body, sig, env.STRIPE_WEBHOOK_SECRET)
-  } catch (err: any) {
-    console.error('[Stripe webhook] Signature invalide:', err.message)
-    return res.status(400).send(`Webhook Error: ${err.message}`)
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Signature invalide'
+    console.error('[Stripe webhook] Signature invalide:', msg)
+    return res.status(400).send(`Webhook Error: ${msg}`)
   }
+
+  // ── Idempotence : ignorer les événements déjà traités ──────────────────────
+  const existingEvent = await prisma.stripeEvent.findUnique({
+    where: { id: event.id },
+    select: { processed: true },
+  })
+  if (existingEvent?.processed) {
+    return res.json({ received: true, skipped: 'already_processed' })
+  }
+
+  // Enregistrer l'événement (upsert au cas où il y aurait une race condition)
+  await prisma.stripeEvent.upsert({
+    where: { id: event.id },
+    create: { id: event.id, type: event.type, payload: event as object },
+    update: {},
+  })
 
   try {
     switch (event.type) {
@@ -86,27 +108,51 @@ export async function stripeWebhookHandler(req: Request, res: Response) {
         })
         break
 
-      case 'invoice.payment_failed':
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object as { customer: string; customer_email?: string }
         await prisma.subscription.updateMany({
-          where: { stripeCustomerId: (event.data.object as any).customer as string },
+          where: { stripeCustomerId: invoice.customer },
           data: { status: 'PAST_DUE' },
         })
+        console.log(`[Stripe] Paiement échoué — customer=${invoice.customer}`)
         break
+      }
 
-      case 'invoice.payment_succeeded':
+      case 'invoice.payment_succeeded': {
+        const invoice = event.data.object as { customer: string }
         await prisma.subscription.updateMany({
-          where: { stripeCustomerId: (event.data.object as any).customer as string },
+          where: { stripeCustomerId: invoice.customer },
           data: { status: 'ACTIVE' },
         })
         break
+      }
+
+      case 'checkout.session.completed': {
+        const session = event.data.object as {
+          mode: string
+          subscription?: string
+          customer?: string
+          metadata?: { userId?: string }
+        }
+        if (session.mode === 'subscription' && session.subscription) {
+          await syncSubscriptionFromStripe(session.subscription)
+        }
+        break
+      }
 
       default:
         break
     }
+
+    // Marquer comme traité
+    await prisma.stripeEvent.update({
+      where: { id: event.id },
+      data: { processed: true, processedAt: new Date() },
+    })
+
+    return res.json({ received: true })
   } catch (err) {
     console.error('[Stripe webhook] Erreur traitement:', err)
     return res.status(500).send('Erreur interne')
   }
-
-  return res.json({ received: true })
 }

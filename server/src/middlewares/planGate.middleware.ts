@@ -1,14 +1,12 @@
 import { Request, Response, NextFunction } from 'express'
 import { prisma } from '../config/database.js'
-import { PLANS, PlanType } from '../lib/stripe.js'
-
-const PLAN_ORDER: Record<PlanType, number> = { FREE: 0, PRO: 1, EXPERT: 2 }
+import { PLANS, PLAN_ORDER, PlanType } from '../lib/stripe.js'
 
 /**
  * Middleware — vérifie que l'utilisateur a au minimum le plan requis.
  * Usage : router.post('/sign', authenticate, requirePlan('PRO'), signContract)
  */
-export function requirePlan(minPlan: 'PRO' | 'EXPERT') {
+export function requirePlan(minPlan: 'SOLO' | 'PRO' | 'EXPERT') {
   return async (req: Request, res: Response, next: NextFunction) => {
     const sub = await prisma.subscription.findUnique({
       where: { userId: req.user!.id },
@@ -50,11 +48,13 @@ export async function checkPropertyLimit(req: Request, res: Response, next: Next
     })
 
     if (currentCount >= maxProperties) {
+      const upgradeRequired = plan === 'FREE' ? 'SOLO' : plan === 'SOLO' ? 'PRO' : 'EXPERT'
       return res.status(403).json({
         error: 'PROPERTY_LIMIT_REACHED',
         currentCount,
         maxAllowed: maxProperties,
-        requiredPlan: plan === 'FREE' ? 'PRO' : 'EXPERT',
+        requiredPlan: upgradeRequired,
+        upgradeUrl: '/pricing',
       })
     }
   }
