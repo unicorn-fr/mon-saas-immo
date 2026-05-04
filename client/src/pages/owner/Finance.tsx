@@ -625,125 +625,66 @@ export default function Finance() {
               })()}
             </div>
 
-            {/* Area chart */}
-            <div
-              style={{
-                background: BAI.bgSurface,
-                border: `1px solid ${BAI.border}`,
-                borderRadius: 12,
-                padding: 24,
-                boxShadow: '0 1px 3px rgba(13,12,10,0.04)',
-              }}
-            >
-              <p
-                style={{
-                  fontFamily: BAI.fontBody,
-                  fontSize: 13,
-                  fontWeight: 700,
-                  color: BAI.ink,
-                  margin: '0 0 20px',
-                  letterSpacing: '0.02em',
-                }}
-              >
-                Flux financiers — 12 derniers mois
-              </p>
-              {chartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={260}>
-                  <AreaChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="gradRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={BAI.owner} stopOpacity={0.18} />
-                        <stop offset="95%" stopColor={BAI.owner} stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="gradExpenses" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={BAI.caramel} stopOpacity={0.18} />
-                        <stop offset="95%" stopColor={BAI.caramel} stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke={BAI.border} />
-                    <XAxis
-                      dataKey="name"
-                      tick={{ fontFamily: BAI.fontBody, fontSize: 11, fill: BAI.inkFaint }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k€`}
-                      tick={{ fontFamily: BAI.fontBody, fontSize: 11, fill: BAI.inkFaint }}
-                      axisLine={false}
-                      tickLine={false}
-                      width={45}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        background: BAI.bgSurface,
-                        border: `1px solid ${BAI.border}`,
-                        borderRadius: 8,
-                        fontFamily: BAI.fontBody,
-                        fontSize: 12,
-                      }}
-                      formatter={(v: number | undefined) => v != null ? formatEuro(v) : ''}
-                    />
-                    <Legend
-                      wrapperStyle={{ fontFamily: BAI.fontBody, fontSize: 12, paddingTop: 12 }}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="Revenus"
-                      stroke={BAI.owner}
-                      fill="url(#gradRevenue)"
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="Dépenses"
-                      stroke={BAI.caramel}
-                      fill="url(#gradExpenses)"
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              ) : (
-                <div
-                  style={{
-                    height: 180,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: BAI.inkFaint,
-                    fontFamily: BAI.fontBody,
-                    fontSize: 14,
-                  }}
-                >
-                  {isLoading ? 'Chargement...' : 'Aucune donnée disponible pour le moment'}
-                </div>
-              )}
-            </div>
+            {/* Graphiques côte à côte */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: 16 }}>
+              {/* Area chart */}
+              <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(13,12,10,0.04)' }}>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: BAI.ink, margin: '0 0 20px', letterSpacing: '0.02em' }}>
+                  Flux financiers — 12 mois
+                </p>
+                {chartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <AreaChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="gradRevenue" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={BAI.owner} stopOpacity={0.18} />
+                          <stop offset="95%" stopColor={BAI.owner} stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="gradExpenses" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={BAI.caramel} stopOpacity={0.18} />
+                          <stop offset="95%" stopColor={BAI.caramel} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke={BAI.border} />
+                      <XAxis dataKey="name" tick={{ fontFamily: BAI.fontBody, fontSize: 10, fill: BAI.inkFaint }} axisLine={false} tickLine={false} />
+                      <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k€`} tick={{ fontFamily: BAI.fontBody, fontSize: 10, fill: BAI.inkFaint }} axisLine={false} tickLine={false} width={40} />
+                      <Tooltip contentStyle={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 8, fontFamily: BAI.fontBody, fontSize: 12 }} formatter={(v: number | undefined) => v != null ? formatEuro(v) : ''} />
+                      <Legend wrapperStyle={{ fontFamily: BAI.fontBody, fontSize: 11, paddingTop: 8 }} />
+                      <Area type="monotone" dataKey="Revenus" stroke={BAI.owner} fill="url(#gradRevenue)" strokeWidth={2} dot={false} />
+                      <Area type="monotone" dataKey="Dépenses" stroke={BAI.caramel} fill="url(#gradExpenses)" strokeWidth={2} dot={false} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div style={{ height: 180, display: 'flex', alignItems: 'center', justifyContent: 'center', color: BAI.inkFaint, fontFamily: BAI.fontBody, fontSize: 14 }}>
+                    {isLoading ? 'Chargement...' : 'Aucune donnée disponible'}
+                  </div>
+                )}
+              </div>
 
-            {/* Bar chart: revenus vs dépenses par mois */}
-            {chartData.length > 0 && (
+              {/* Bar chart: revenus vs dépenses par mois */}
               <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(13,12,10,0.04)' }}>
                 <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: BAI.ink, margin: '0 0 20px', letterSpacing: '0.02em' }}>
                   Revenus vs Dépenses — mensuel
                 </p>
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }} barCategoryGap="30%">
-                    <CartesianGrid strokeDasharray="3 3" stroke={BAI.border} vertical={false} />
-                    <XAxis dataKey="name" tick={{ fontFamily: BAI.fontBody, fontSize: 11, fill: BAI.inkFaint }} axisLine={false} tickLine={false} />
-                    <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k€`} tick={{ fontFamily: BAI.fontBody, fontSize: 11, fill: BAI.inkFaint }} axisLine={false} tickLine={false} width={45} />
-                    <Tooltip
-                      contentStyle={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 8, fontFamily: BAI.fontBody, fontSize: 12 }}
-                      formatter={(v: number | undefined) => v != null ? formatEuro(v) : ''}
-                    />
-                    <Legend wrapperStyle={{ fontFamily: BAI.fontBody, fontSize: 12, paddingTop: 12 }} />
-                    <Bar dataKey="Revenus" fill={BAI.owner} radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="Dépenses" fill={BAI.caramel} radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+                {chartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }} barCategoryGap="30%">
+                      <CartesianGrid strokeDasharray="3 3" stroke={BAI.border} vertical={false} />
+                      <XAxis dataKey="name" tick={{ fontFamily: BAI.fontBody, fontSize: 10, fill: BAI.inkFaint }} axisLine={false} tickLine={false} />
+                      <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k€`} tick={{ fontFamily: BAI.fontBody, fontSize: 10, fill: BAI.inkFaint }} axisLine={false} tickLine={false} width={40} />
+                      <Tooltip contentStyle={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 8, fontFamily: BAI.fontBody, fontSize: 12 }} formatter={(v: number | undefined) => v != null ? formatEuro(v) : ''} />
+                      <Legend wrapperStyle={{ fontFamily: BAI.fontBody, fontSize: 11, paddingTop: 8 }} />
+                      <Bar dataKey="Revenus" fill={BAI.owner} radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="Dépenses" fill={BAI.caramel} radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div style={{ height: 180, display: 'flex', alignItems: 'center', justifyContent: 'center', color: BAI.inkFaint, fontFamily: BAI.fontBody, fontSize: 14 }}>
+                    {isLoading ? 'Chargement...' : 'Aucune donnée disponible'}
+                  </div>
+                )}
               </div>
-            )}
+            </div>
 
             {/* ── Espace Fiscal rapide ──────────────────────────────────── */}
             {(() => {
@@ -1969,70 +1910,65 @@ export default function Finance() {
                         )}
                       </div>
 
-                      {/* Source ANIL */}
-                      {analysis.market?.sourceUrl && (
-                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
-                          <Info style={{ width: 13, height: 13, color: BAI.inkFaint, flexShrink: 0 }} />
-                          <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>Source :</span>
-                          <a href={analysis.market.sourceUrl} target="_blank" rel="noopener noreferrer"
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: BAI.fontBody, fontSize: 12, color: BAI.owner, textDecoration: 'underline' }}>
-                            {analysis.market.sourceName ?? 'Données officielles'}
-                            <ExternalLink style={{ width: 10, height: 10 }} />
-                          </a>
-                          {analysis.market.nbObs !== undefined && analysis.market.nbObs < 30 && (
-                            <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint }}>· {analysis.market.nbObs} observations (données limitées)</span>
-                          )}
-                        </div>
-                      )}
+                      {/* Liens sources data zoomés sur l'adresse */}
+                      {(() => {
+                        const addr = [property.address, property.city].filter(Boolean).join(', ')
+                        const addrEnc = encodeURIComponent(addr)
+                        const cityEnc = encodeURIComponent(property.city ?? '')
 
-                      {/* Official map links */}
-                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
-                        <a href="https://www.ecologie.gouv.fr/politiques-publiques/carte-loyers" target="_blank" rel="noopener noreferrer"
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: BAI.fontBody, fontSize: 12, color: BAI.owner, textDecoration: 'underline' }}>
-                          Carte officielle des loyers par commune (Ministère)
-                          <ExternalLink style={{ width: 10, height: 10 }} />
-                        </a>
-                        <span style={{ color: BAI.inkFaint, fontSize: 11 }}>·</span>
-                        <a href="https://www.observatoires-des-loyers.org/" target="_blank" rel="noopener noreferrer"
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, textDecoration: 'underline' }}>
-                          Réseau des observatoires nationaux
-                          <ExternalLink style={{ width: 10, height: 10 }} />
-                        </a>
-                      </div>
+                        const smartLinks = [
+                          {
+                            label: 'Carte des loyers — data.gouv.fr',
+                            url: `https://www.data.gouv.fr/fr/datasets/carte-des-loyers-indicateurs-de-loyers-dannonces-par-commune-en-2023/`,
+                            badge: 'Open Data',
+                            desc: 'Loyers médians par commune',
+                          },
+                          {
+                            label: 'DVF — Demandes de valeurs foncières',
+                            url: `https://dvf.data.gouv.fr/?lng=2.3522&lat=48.8566&zoom=15&commune=${property.city ? encodeURIComponent(property.city) : ''}`,
+                            badge: 'Transactions',
+                            desc: 'Ventes immobilières dans le quartier',
+                          },
+                          {
+                            label: 'Meilleurs Agents — Estimation',
+                            url: `https://www.meilleursagents.com/prix-immobilier/${cityEnc.toLowerCase()}/`,
+                            badge: 'Estimation',
+                            desc: 'Prix m² et tendances quartier',
+                          },
+                          {
+                            label: 'Se Loger — Biens similaires',
+                            url: `https://www.seloger.com/list.htm?projects=2&types=${property.furnished ? '9' : '1'}&natures=1&price=0/max&surface=${Math.max(0, (property.surface ?? 30) - 15)}/${(property.surface ?? 30) + 15}&places=${cityEnc}`,
+                            badge: 'Concurrence',
+                            desc: 'Loyers comparables en ce moment',
+                          },
+                          {
+                            label: 'Observatoire des loyers (OLL)',
+                            url: `https://www.observatoires-des-loyers.org/`,
+                            badge: 'Officiel',
+                            desc: 'Données officielles ANIL/DHUP',
+                          },
+                        ]
 
-                      {/* Encadrement links */}
-                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
-                        <a href="https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers" target="_blank" rel="noopener noreferrer"
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 12px', borderRadius: 8, border: `1px solid ${BAI.ownerBorder}`, background: BAI.ownerLight, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.owner }}>
-                          <ExternalLink style={{ width: 11, height: 11 }} />
-                          Vérifier l'encadrement des loyers
-                        </a>
-                        {(() => {
-                          const ENCADREMENT_LINKS: Record<string, { label: string; url: string }> = {
-                            'paris': { label: 'Référence loyer Paris — DRIHL', url: 'https://www.referenceloyer.drihl.ile-de-france.developpement-durable.gouv.fr/paris/' },
-                            'lille': { label: 'Encadrement Lille Métropole', url: 'https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers' },
-                            'hellemmes': { label: 'Encadrement Hellemmes', url: 'https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers' },
-                            'loos': { label: 'Encadrement Loos', url: 'https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers' },
-                            'lyon': { label: 'Encadrement Lyon Métropole', url: 'https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers' },
-                            'bordeaux': { label: 'Encadrement Bordeaux Métropole', url: 'https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers' },
-                            'montpellier': { label: 'Encadrement Montpellier', url: 'https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers' },
-                            'strasbourg': { label: 'Encadrement Strasbourg', url: 'https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers' },
-                            'grenoble': { label: 'Encadrement Grenoble', url: 'https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers' },
-                            'bayonne': { label: 'Encadrement Pays Basque', url: 'https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers' },
-                            'biarritz': { label: 'Encadrement Pays Basque', url: 'https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers' },
-                            'anglet': { label: 'Encadrement Pays Basque', url: 'https://www.service-public.gouv.fr/simulateur/calcul/encadrementDesLoyers' },
-                          }
-                          const cityKey = (analysis.market?.city ?? property.city ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-                          const cityLink = ENCADREMENT_LINKS[cityKey]
-                          return cityLink ? (
-                            <a href={cityLink.url} target="_blank" rel="noopener noreferrer"
-                              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 12px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkMid }}>
-                              <ExternalLink style={{ width: 11, height: 11 }} />
-                              {cityLink.label}
-                            </a>
-                          ) : null
-                        })()}
-                      </div>
+                        return (
+                          <div style={{ marginBottom: 12 }}>
+                            <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.inkFaint, textTransform: 'uppercase', letterSpacing: '0.09em', margin: '0 0 8px' }}>
+                              Sources · données réelles autour de {property.city}
+                            </p>
+                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                              {smartLinks.map(link => (
+                                <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer"
+                                  title={link.desc}
+                                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 11px', borderRadius: 8, border: `1px solid ${BAI.ownerBorder}`, background: BAI.ownerLight, textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 600, color: BAI.owner }}
+                                >
+                                  <ExternalLink style={{ width: 10, height: 10 }} />
+                                  {link.label}
+                                  <span style={{ padding: '1px 6px', borderRadius: 99, background: '#fff', border: `1px solid ${BAI.ownerBorder}`, fontSize: 9, fontWeight: 700, color: BAI.owner }}>{link.badge}</span>
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        )
+                      })()}
 
                       {/* Note for large cities */}
                       {(() => {
@@ -2124,6 +2060,47 @@ export default function Finance() {
                           </p>
                         </div>
                       )}
+
+                      {/* Recommandation loyer */}
+                      {analysis?.market && property.surface && property.price != null && (() => {
+                        const myRentM2 = analysis.rentPerM2
+                        const avgM2 = analysis.market!.avgRentM2
+                        const majM2 = analysis.encadrementMaj ?? null
+                        const diff = myRentM2 - avgM2
+                        const diffPct = Math.round((diff / avgM2) * 100)
+                        const optimalM2 = majM2 ? Math.min(avgM2 * 1.05, majM2) : avgM2 * 1.05
+                        const optimalRent = Math.round(optimalM2 * property.surface)
+                        const currentRent = property.price
+                        const rentDiff = optimalRent - currentRent
+
+                        const isSignificant = Math.abs(rentDiff) > 30
+                        if (!isSignificant) return null
+
+                        const shouldIncrease = rentDiff > 0
+                        return (
+                          <div style={{ padding: '14px 18px', borderRadius: 10, background: shouldIncrease ? BAI.tenantLight : '#fdf5ec', border: `1px solid ${shouldIncrease ? BAI.tenantBorder : '#f3c99a'}`, marginBottom: 14 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                              {shouldIncrease
+                                ? <TrendingUp style={{ width: 16, height: 16, color: BAI.tenant }} />
+                                : <TrendingDown style={{ width: 16, height: 16, color: BAI.caramel }} />
+                              }
+                              <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: shouldIncrease ? BAI.tenant : BAI.caramel, margin: 0 }}>
+                                {shouldIncrease ? 'Loyer potentiellement sous-évalué' : 'Loyer au-dessus du marché courant'}
+                              </p>
+                            </div>
+                            <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, margin: '0 0 8px' }}>
+                              Loyer actuel : <strong style={{ color: BAI.ink }}>{currentRent.toLocaleString('fr-FR')} €/mois</strong> ·
+                              Loyer optimal estimé : <strong style={{ color: shouldIncrease ? BAI.tenant : BAI.caramel }}>{optimalRent.toLocaleString('fr-FR')} €/mois</strong>
+                            </p>
+                            <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: 0 }}>
+                              {shouldIncrease
+                                ? `Vous pourriez augmenter votre loyer de +${rentDiff.toLocaleString('fr-FR')} €/mois (+${diffPct > 0 ? diffPct : Math.abs(diffPct)}%) en restant dans la fourchette marché${majM2 ? ' et sous le plafond légal' : ''}.`
+                                : `Votre loyer est supérieur de ${Math.abs(diffPct)}% à la moyenne du marché. Cela peut rallonger les délais de location.`
+                              }
+                            </p>
+                          </div>
+                        )
+                      })()}
 
                       {/* Conseil en 1 ligne */}
                       <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, margin: 0, lineHeight: 1.6 }}>
