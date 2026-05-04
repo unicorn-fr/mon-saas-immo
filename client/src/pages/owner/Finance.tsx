@@ -57,11 +57,6 @@ const MONTH_LABELS: Record<string, string> = {
   '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Déc',
 }
 
-const MONTH_NAMES_FR = [
-  'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-  'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
-]
-
 function formatMonth(m: string): string {
   const [year, month] = m.split('-')
   return `${MONTH_LABELS[month] ?? month} ${year.slice(2)}`
@@ -213,7 +208,7 @@ const labelStyle: React.CSSProperties = {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-type ActiveTab = 'summary' | 'expenses' | 'loans' | 'market' | 'receipts' | 'fiscal'
+type ActiveTab = 'summary' | 'expenses' | 'loans' | 'market' | 'fiscal'
 
 const INITIAL_EXPENSE_FORM: CreateExpenseInput = {
   propertyId: '',
@@ -258,10 +253,7 @@ export default function Finance() {
   const [marketAnalyses, setMarketAnalyses] = useState<Record<string, MarketAnalysis>>({})
   const [marketLoading, setMarketLoading] = useState(false)
 
-  // New state for receipts & fiscal tabs
-  const [paymentsByContract, setPaymentsByContract] = useState<Record<string, any[]>>({})
-  const [receiptsLoading, setReceiptsLoading] = useState(false)
-  const [paymentSettings, setPaymentSettings] = useState<Record<string, { dayOfMonth: number; autoSend: boolean }>>({})
+  // State for fiscal tab
   const [fiscalForm, setFiscalForm] = useState<FiscalForm>({
     hasSociety: 'non',
     currentRegime: 'unknown',
@@ -312,24 +304,15 @@ export default function Finance() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, myProperties])
 
-  // Receipts tab: fetch payments grouped by contract
+  // Auto-populate fiscal form from real data when summary loads
   useEffect(() => {
-    if (activeTab !== 'receipts') return
-    setReceiptsLoading(true)
-    apiClient.get<{ success: boolean; data: { payments: any[] } }>('/payments/by-owner')
-      .then((res) => {
-        const payments: any[] = res.data?.data?.payments ?? []
-        const grouped: Record<string, any[]> = {}
-        payments.forEach((p) => {
-          const cid = p.contractId ?? 'unknown'
-          if (!grouped[cid]) grouped[cid] = []
-          grouped[cid].push(p)
-        })
-        setPaymentsByContract(grouped)
-      })
-      .catch(() => { /* silent */ })
-      .finally(() => setReceiptsLoading(false))
-  }, [activeTab])
+    if (!summary) return
+    setFiscalForm(f => ({
+      ...f,
+      annualRevenue: Math.round(summary.totalRevenue),
+      realCharges: Math.round(summary.totalExpenses),
+    }))
+  }, [summary?.totalRevenue, summary?.totalExpenses])
 
   async function fetchMarketForCity(cityName: string, label: string) {
     setCitySearchLoading(true)
@@ -394,69 +377,6 @@ export default function Finance() {
       setShowLoanForm(null)
     } catch {
       // toast shown in store
-    }
-  }
-
-  async function handleMarkPaid(paymentId: string) {
-    try {
-      await apiClient.put(`/payments/${paymentId}/mark-paid`)
-      toast.success('Paiement marqué comme reçu')
-      // Refresh
-      const res = await apiClient.get<{ success: boolean; data: { payments: any[] } }>('/payments/by-owner')
-      const payments: any[] = res.data?.data?.payments ?? []
-      const grouped: Record<string, any[]> = {}
-      payments.forEach((p) => {
-        const cid = p.contractId ?? 'unknown'
-        if (!grouped[cid]) grouped[cid] = []
-        grouped[cid].push(p)
-      })
-      setPaymentsByContract(grouped)
-    } catch {
-      toast.error('Erreur lors de la mise à jour')
-    }
-  }
-
-  async function handleSendReceipt(paymentId: string) {
-    try {
-      await apiClient.post(`/payments/${paymentId}/send-email`)
-      toast.success('Quittance envoyée par email')
-    } catch {
-      toast.error("Erreur lors de l'envoi de la quittance")
-    }
-  }
-
-  async function handleGeneratePayment(contractId: string) {
-    const now = new Date()
-    try {
-      await apiClient.post('/payments/generate', {
-        contractId,
-        month: now.getMonth() + 1,
-        year: now.getFullYear(),
-      })
-      toast.success('Quittance générée')
-      // Refresh
-      const res = await apiClient.get<{ success: boolean; data: { payments: any[] } }>('/payments/by-owner')
-      const payments: any[] = res.data?.data?.payments ?? []
-      const grouped: Record<string, any[]> = {}
-      payments.forEach((p) => {
-        const cid = p.contractId ?? 'unknown'
-        if (!grouped[cid]) grouped[cid] = []
-        grouped[cid].push(p)
-      })
-      setPaymentsByContract(grouped)
-    } catch {
-      toast.error('Erreur lors de la génération')
-    }
-  }
-
-  async function handleSaveSettings(contractId: string) {
-    const settings = paymentSettings[contractId]
-    if (!settings) return
-    try {
-      await apiClient.put(`/payments/settings/${contractId}`, settings)
-      toast.success('Paramètres enregistrés')
-    } catch {
-      toast.error('Erreur lors de la sauvegarde')
     }
   }
 
@@ -620,7 +540,6 @@ export default function Finance() {
           <TabPill id="expenses" label="Dépenses"  icon={Receipt}   badge={expenses?.length} />
           <TabPill id="loans"    label="Emprunts"  icon={Landmark} />
           <TabPill id="market"   label="Marché"    icon={TrendingUp} />
-          <TabPill id="receipts" label="Quittances" icon={FileText} />
           <TabPill id="fiscal"   label="Fiscal"    icon={Calculator} />
         </div>
 
@@ -2149,6 +2068,65 @@ export default function Finance() {
                         </div>
                       )}
 
+                      {/* Visual rent vs encadrement bar */}
+                      {(analysis.encadrementRef || analysis.encadrementMaj) && (
+                        <div style={{ marginBottom: 14 }}>
+                          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.inkFaint, textTransform: 'uppercase', letterSpacing: '0.09em', margin: '0 0 10px' }}>
+                            Positionnement du loyer
+                          </p>
+                          {(() => {
+                            const myRent = analysis.rentPerM2
+                            const refVal = analysis.encadrementRef ?? 0
+                            const majVal = analysis.encadrementMaj ?? refVal * 1.2
+                            const maxBar = Math.max(myRent, majVal) * 1.15
+                            const toPercent = (v: number) => Math.min(100, Math.round((v / maxBar) * 100))
+                            const isOver = myRent > majVal
+                            return (
+                              <div style={{ position: 'relative', height: 48 }}>
+                                {/* Background track */}
+                                <div style={{ position: 'absolute', left: 0, top: 20, right: 0, height: 8, background: BAI.bgMuted, borderRadius: 99 }} />
+                                {/* Compliant zone (ref to maj) */}
+                                <div style={{
+                                  position: 'absolute', top: 20, height: 8, borderRadius: 99,
+                                  left: `${toPercent(refVal * 0.7)}%`,
+                                  width: `${toPercent(majVal) - toPercent(refVal * 0.7)}%`,
+                                  background: `${BAI.tenant}30`,
+                                }} />
+                                {/* Ref marker */}
+                                {refVal > 0 && (
+                                  <>
+                                    <div style={{ position: 'absolute', left: `${toPercent(refVal)}%`, top: 16, width: 2, height: 16, background: BAI.inkFaint, transform: 'translateX(-50%)' }} />
+                                    <span style={{ position: 'absolute', left: `${toPercent(refVal)}%`, top: 34, transform: 'translateX(-50%)', fontFamily: BAI.fontBody, fontSize: 10, color: BAI.inkFaint, whiteSpace: 'nowrap' }}>Réf {refVal} €/m²</span>
+                                  </>
+                                )}
+                                {/* Maj marker */}
+                                {majVal > 0 && (
+                                  <>
+                                    <div style={{ position: 'absolute', left: `${toPercent(majVal)}%`, top: 16, width: 2, height: 16, background: isOver ? BAI.error : BAI.tenant, transform: 'translateX(-50%)' }} />
+                                    <span style={{ position: 'absolute', left: `${toPercent(majVal)}%`, top: 34, transform: 'translateX(-50%)', fontFamily: BAI.fontBody, fontSize: 10, color: isOver ? BAI.error : BAI.tenant, whiteSpace: 'nowrap', fontWeight: 700 }}>Plafond {majVal} €/m²</span>
+                                  </>
+                                )}
+                                {/* My rent dot */}
+                                <div style={{
+                                  position: 'absolute', left: `${toPercent(myRent)}%`, top: 14, width: 20, height: 20,
+                                  borderRadius: '50%', transform: 'translateX(-50%)',
+                                  background: isOver ? BAI.error : BAI.owner,
+                                  border: '3px solid #fff',
+                                  boxShadow: `0 0 0 2px ${isOver ? BAI.error : BAI.owner}`,
+                                  zIndex: 2,
+                                }} />
+                              </div>
+                            )
+                          })()}
+                          <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '18px 0 0' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                              <span style={{ width: 10, height: 10, borderRadius: '50%', background: encAlert ? BAI.error : BAI.owner, display: 'inline-block' }} />
+                              Votre loyer : <strong style={{ color: BAI.ink }}>{analysis.rentPerM2.toFixed(1)} €/m²</strong>
+                            </span>
+                          </p>
+                        </div>
+                      )}
+
                       {/* Conseil en 1 ligne */}
                       <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, margin: 0, lineHeight: 1.6 }}>
                         <strong style={{ color: BAI.ink }}>Conseil · </strong>{analysis.advice}
@@ -2158,191 +2136,6 @@ export default function Finance() {
                 </div>
               )
             })}
-          </div>
-        )}
-
-        {/* ── TAB: RECEIPTS ── */}
-        {activeTab === 'receipts' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            {/* Header overline */}
-            <div>
-              <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 6px' }}>
-                Gestion locative
-              </p>
-              <h2 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(22px,3vw,28px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '0 0 8px' }}>
-                Quittances de loyer
-              </h2>
-              <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: 0 }}>
-                Suivez les loyers encaissés et envoyez les quittances à vos locataires.
-              </p>
-            </div>
-
-            {/* Quick link to contracts */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', borderRadius: 12, background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}` }}>
-              <FileText style={{ width: 18, height: 18, color: BAI.owner, flexShrink: 0 }} />
-              <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.owner, margin: 0, flex: 1 }}>
-                La gestion complète des contrats est disponible sur la page Contrats.
-              </p>
-              <a
-                href="/dashboard/owner/contracts"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, background: BAI.owner, color: '#fff', textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, minHeight: 40 }}
-              >
-                Voir les contrats
-                <ExternalLink style={{ width: 13, height: 13 }} />
-              </a>
-            </div>
-
-            {receiptsLoading ? (
-              <div style={{ textAlign: 'center', padding: 48, color: BAI.inkFaint, fontFamily: BAI.fontBody, fontSize: 14 }}>
-                Chargement des paiements...
-              </div>
-            ) : myProperties.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 40, color: BAI.inkFaint, fontFamily: BAI.fontBody, fontSize: 14 }}>
-                Aucun bien enregistré
-              </div>
-            ) : Object.keys(paymentsByContract).length === 0 ? (
-              <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: 40, textAlign: 'center', boxShadow: '0 1px 3px rgba(13,12,10,0.04)' }}>
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint, margin: '0 0 16px' }}>
-                  Aucun paiement enregistré pour le moment.
-                </p>
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint, margin: 0 }}>
-                  Les quittances apparaîtront ici une fois vos contrats actifs.
-                </p>
-              </div>
-            ) : (
-              Object.entries(paymentsByContract).map(([contractId, payments]) => {
-                const firstPayment = payments[0]
-                const contractTitle = firstPayment?.contract?.property?.title ?? 'Contrat'
-                const tenantName = [firstPayment?.contract?.tenant?.firstName, firstPayment?.contract?.tenant?.lastName].filter(Boolean).join(' ') || firstPayment?.contract?.tenantId || 'Locataire'
-                const monthlyRent = firstPayment?.amount ?? 0
-                const settings = paymentSettings[contractId] ?? { dayOfMonth: 1, autoSend: false }
-
-                const now = new Date()
-                const currentMonthLabel = `${MONTH_NAMES_FR[now.getMonth()]} ${now.getFullYear()}`
-
-                return (
-                  <div key={contractId} style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(13,12,10,0.04)' }}>
-                    {/* Contract header */}
-                    <div style={{ padding: '18px 24px', borderBottom: `1px solid ${BAI.border}`, background: BAI.bgMuted, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-                      <div>
-                        <p style={{ fontFamily: BAI.fontBody, fontSize: 15, fontWeight: 700, color: BAI.ink, margin: '0 0 4px' }}>{contractTitle}</p>
-                        <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, margin: 0 }}>
-                          {tenantName} · {formatEuro(monthlyRent)}/mois
-                        </p>
-                      </div>
-                      <span style={{ padding: '4px 12px', borderRadius: 999, background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`, fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.tenant }}>
-                        {payments.length} paiement{payments.length > 1 ? 's' : ''}
-                      </span>
-                    </div>
-
-                    {/* Settings row */}
-                    <div style={{ padding: '14px 24px', borderBottom: `1px solid ${BAI.border}`, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-                      <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkMid, margin: 0 }}>Jour d'échéance :</p>
-                      <select
-                        value={settings.dayOfMonth}
-                        onChange={(e) => setPaymentSettings(prev => ({
-                          ...prev,
-                          [contractId]: { ...settings, dayOfMonth: Number(e.target.value) },
-                        }))}
-                        style={{ ...inputStyle, width: 'auto', padding: '6px 10px', fontSize: 13 }}
-                      >
-                        {Array.from({ length: 28 }, (_, i) => i + 1).map(d => (
-                          <option key={d} value={d}>Le {d} du mois</option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={() => handleSaveSettings(contractId)}
-                        style={{ padding: '7px 16px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: 'transparent', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.inkMid, cursor: 'pointer', minHeight: 36 }}
-                      >
-                        Sauvegarder
-                      </button>
-                    </div>
-
-                    {/* Payments table */}
-                    <div style={{ overflowX: 'auto' }}>
-                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead>
-                          <tr style={{ background: BAI.bgMuted }}>
-                            {['Mois', 'Montant', 'Statut', 'Actions'].map(h => (
-                              <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.inkFaint, textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>{h}</th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {payments.map((payment, idx) => {
-                            const isPending = payment.status === 'PENDING'
-                            const isPaid = payment.status === 'PAID'
-                            const paymentDate = payment.dueDate ? new Date(payment.dueDate) : null
-                            const monthLabel = paymentDate ? `${MONTH_NAMES_FR[paymentDate.getMonth()]} ${paymentDate.getFullYear()}` : '—'
-
-                            return (
-                              <tr key={payment.id} style={{ borderBottom: idx < payments.length - 1 ? `1px solid ${BAI.border}` : 'none' }}>
-                                <td style={{ padding: '12px 16px', fontFamily: BAI.fontBody, fontSize: 13, color: BAI.ink }}>{monthLabel}</td>
-                                <td style={{ padding: '12px 16px', fontFamily: BAI.fontDisplay, fontSize: 16, fontWeight: 700, fontStyle: 'italic', color: BAI.ink }}>
-                                  {formatEuro(payment.amount)}
-                                </td>
-                                <td style={{ padding: '12px 16px' }}>
-                                  <span style={{
-                                    padding: '3px 10px', borderRadius: 999,
-                                    background: isPaid ? BAI.tenantLight : isPending ? BAI.caramelLight : BAI.bgMuted,
-                                    border: `1px solid ${isPaid ? BAI.tenantBorder : isPending ? BAI.caramelBorder : BAI.border}`,
-                                    fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700,
-                                    color: isPaid ? BAI.tenant : isPending ? BAI.caramel : BAI.inkMid,
-                                  }}>
-                                    {isPaid ? 'Payé' : isPending ? 'En attente' : payment.status}
-                                  </span>
-                                </td>
-                                <td style={{ padding: '12px 16px' }}>
-                                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                                    {isPending && (
-                                      <button
-                                        onClick={() => handleMarkPaid(payment.id)}
-                                        style={{ padding: '6px 12px', borderRadius: 7, border: 'none', background: BAI.tenant, color: '#fff', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, cursor: 'pointer', minHeight: 32 }}
-                                      >
-                                        Marquer payé
-                                      </button>
-                                    )}
-                                    {isPaid && (
-                                      <>
-                                        <button
-                                          onClick={() => handleSendReceipt(payment.id)}
-                                          style={{ padding: '6px 12px', borderRadius: 7, border: `1px solid ${BAI.ownerBorder}`, background: BAI.ownerLight, color: BAI.owner, fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, cursor: 'pointer', minHeight: 32 }}
-                                        >
-                                          Envoyer quittance
-                                        </button>
-                                        <a
-                                          href={`/api/v1/payments/${payment.id}/receipt`}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 7, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, color: BAI.inkMid, fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, textDecoration: 'none', minHeight: 32 }}
-                                        >
-                                          Télécharger
-                                        </a>
-                                      </>
-                                    )}
-                                  </div>
-                                </td>
-                              </tr>
-                            )
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* Generate button */}
-                    <div style={{ padding: '14px 24px', borderTop: `1px solid ${BAI.border}`, display: 'flex', justifyContent: 'flex-end' }}>
-                      <button
-                        onClick={() => handleGeneratePayment(contractId)}
-                        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 18px', borderRadius: 9, border: 'none', background: BAI.night, color: '#fff', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer', minHeight: 44 }}
-                      >
-                        <FileText style={{ width: 15, height: 15 }} />
-                        Générer quittance — {currentMonthLabel}
-                      </button>
-                    </div>
-                  </div>
-                )
-              })
-            )}
           </div>
         )}
 
@@ -2356,6 +2149,57 @@ export default function Finance() {
               <h2 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(24px,4vw,32px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '0 0 8px' }}>Optimisation fiscale</h2>
               <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: 0 }}>Renseignez votre situation pour obtenir un conseil personnalisé et sauvegarder votre profil fiscal.</p>
             </div>
+
+            {/* Pre-filled documents section */}
+            {summary && (
+              <div style={{ background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, borderRadius: 16, padding: '24px 28px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
+                  <div>
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.owner, margin: '0 0 4px' }}>Données importées automatiquement</p>
+                    <p style={{ fontFamily: BAI.fontDisplay, fontSize: 20, fontWeight: 700, fontStyle: 'italic', color: BAI.owner, margin: 0 }}>Votre récapitulatif fiscal {new Date().getFullYear() - 1}</p>
+                  </div>
+                  <button
+                    onClick={generateFiscalReport}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 10, border: 'none', background: BAI.owner, color: '#fff', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer', minHeight: 44 }}
+                  >
+                    <Printer style={{ width: 15, height: 15 }} />
+                    Générer le rapport
+                  </button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 16 }}>
+                  {[
+                    { label: 'Revenus locatifs bruts', value: formatEuro(summary.totalRevenue), note: 'Loyers encaissés', color: BAI.owner },
+                    { label: 'Charges déductibles', value: formatEuro(summary.totalExpenses), note: 'Dépenses + emprunts', color: BAI.caramel },
+                    { label: 'Résultat net imposable', value: formatEuro(Math.max(0, summary.netCashFlow)), note: 'Avant abattement', color: summary.netCashFlow >= 0 ? BAI.tenant : BAI.error },
+                    { label: 'Nombre de biens', value: String(myProperties.length), note: 'Patrimoine déclaré', color: BAI.inkMid },
+                  ].map(item => (
+                    <div key={item.label} style={{ background: '#fff', border: `1px solid ${BAI.ownerBorder}`, borderRadius: 10, padding: '14px 16px' }}>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: '0 0 4px' }}>{item.label}</p>
+                      <p style={{ fontFamily: BAI.fontDisplay, fontSize: 20, fontWeight: 700, fontStyle: 'italic', color: item.color, margin: '0 0 2px' }}>{item.value}</p>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: 0 }}>{item.note}</p>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {[
+                    { label: 'Formulaire 2044 — Revenus fonciers', url: 'https://www.impots.gouv.fr/portail/formulaire/2044/declaration-des-revenus-fonciers', badge: 'Nu' },
+                    { label: 'Formulaire 2042 — Déclaration principale', url: 'https://www.impots.gouv.fr/portail/formulaire/2042/declaration-des-revenus', badge: 'Tous' },
+                    { label: 'Formulaire 2042-C Pro — LMNP', url: 'https://www.impots.gouv.fr/portail/formulaire/2042-c-pro/declaration-complementaire-des-revenus-des-professions-non-salariees', badge: 'Meublé' },
+                    { label: 'Formulaire 2031 — BIC Réel LMNP', url: 'https://www.impots.gouv.fr/portail/formulaire/2031/declaration-des-revenus-industriels-et-commerciaux', badge: 'LMNP Réel' },
+                  ].map(form => (
+                    <a key={form.url} href={form.url} target="_blank" rel="noopener noreferrer"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, border: `1px solid ${BAI.ownerBorder}`, background: '#fff', textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.owner }}>
+                      <Download style={{ width: 12, height: 12 }} />
+                      {form.label}
+                      <span style={{ padding: '1px 7px', borderRadius: 99, background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, fontSize: 10, color: BAI.owner }}>{form.badge}</span>
+                    </a>
+                  ))}
+                </div>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: '12px 0 0', fontStyle: 'italic' }}>
+                  Les données ci-dessus sont pré-remplies depuis vos informations Bailio. Renseignez votre profil fiscal ci-dessous pour un conseil personnalisé.
+                </p>
+              </div>
+            )}
 
             {/* Section A — Form card */}
             <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: '28px 32px' }}>
