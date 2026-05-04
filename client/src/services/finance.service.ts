@@ -41,6 +41,43 @@ export interface MarketAnalysis {
   annualRevenue: number
 }
 
+export interface FiscalData {
+  year: number
+  summary: {
+    totalRevenusBruts: number
+    totalChargesDeductibles: number
+    totalInteretsEmprunt: number
+    totalAutresCharges: number
+    revenuNetFoncier: number
+  }
+  properties: Array<{
+    id: string
+    title: string
+    address: string
+    revenus: number
+    charges: number
+  }>
+  form2044: {
+    ligne110: number
+    ligne220: number
+    ligne420: number
+    ligne430: number
+    ligne440: number
+    ligne240: number
+  }
+  form2042: {
+    case4BA: number
+    case4BC: number
+    case4BE: number
+  }
+  loans: Array<{
+    bankName: string
+    totalAmount: number
+    interestRate: number
+    annualInterests: number
+  }>
+}
+
 class FinanceService {
   async getExpenses(): Promise<Expense[]> {
     try {
@@ -92,6 +129,14 @@ class FinanceService {
   async getRentAdvice(input: RentAdvisorInput): Promise<{ advice: RentAdvice; marketAvailable: boolean }> {
     try {
       const res = await apiClient.post<ApiResponse<{ advice: RentAdvice; marketAvailable: boolean }>>('/finances/rent-advisor', input)
+      return res.data.data
+    } catch (e) { throw new Error(handleApiError(e)) }
+  }
+
+  async getFiscalData(year?: number): Promise<FiscalData> {
+    try {
+      const query = year ? `?year=${year}` : ''
+      const res = await apiClient.get<ApiResponse<FiscalData>>(`/finances/fiscal-data${query}`)
       return res.data.data
     } catch (e) { throw new Error(handleApiError(e)) }
   }
