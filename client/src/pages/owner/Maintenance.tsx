@@ -6,7 +6,6 @@ import { BAI } from '../../constants/bailio-tokens'
 import { useMaintenanceStore } from '../../store/maintenanceStore'
 import { usePropertyStore } from '../../store/propertyStore'
 import { maintenanceService } from '../../services/maintenance.service'
-import { apiClient } from '../../services/api.service'
 import {
   MaintenanceCategory,
   MaintenancePriority,
@@ -141,7 +140,7 @@ interface ContractorResult {
   googleMapsSearchUrl?: string
 }
 
-type ViewMode = 'liste' | 'carte' | 'bien'
+type ViewMode = 'liste' | 'carte'
 type StatusFilter = 'ALL' | MaintenanceStatus
 type CategoryFilter = 'ALL' | MaintenanceCategory
 
@@ -558,46 +557,425 @@ function FullMapView({ properties, categoryFilter, onCategoryChange }: FullMapVi
   )
 }
 
-// ── ByProperty group type ──────────────────────────────────────────────────
+// ── GroupedByPropertyView component ────────────────────────────────────────
 
-interface ByPropertyGroup {
-  property: {
-    id: string
-    title: string
-    address: string
-    city: string
-    postalCode: string
-    surface: number
-    price: number
-    images: string[]
-    furnished: boolean
-    type: string
-  } | null
-  requests: Array<{
-    id: string
-    title: string
-    description: string
-    category: MaintenanceCategory
-    priority: MaintenancePriority
-    status: MaintenanceStatus
-    createdAt: string
-    aiAnalysis?: {
-      severity: string
-      estimatedCost: { min: number; max: number }
-      advice?: string
-      platforms: Array<{ name: string; url: string; description: string }>
-    } | null
-    property?: { title: string } | null
-    tenant?: { firstName: string; lastName: string } | null
-  }>
-  stats: {
-    total: number
-    open: number
-    inProgress: number
-    resolved: number
-    estimatedCostMin: number
-    estimatedCostMax: number
-  }
+function GroupedByPropertyView({
+  requests,
+  myProperties,
+  setSelectedReqId,
+  expandedPropertyId,
+  setExpandedPropertyId,
+}: {
+  requests: any[]
+  myProperties: any[]
+  setSelectedReqId: (id: string) => void
+  expandedPropertyId: string | null
+  setExpandedPropertyId: (id: string | null) => void
+}) {
+  // Group requests by property
+  const groups = myProperties
+    .map(prop => {
+      const propReqs = requests.filter(r => r.property?.title === prop.title)
+      return {
+        property: prop,
+        requests: propReqs,
+        stats: {
+          total: propReqs.length,
+          open: propReqs.filter(r => r.status === 'OPEN').length,
+          inProgress: propReqs.filter(r => r.status === 'IN_PROGRESS').length,
+          resolved: propReqs.filter(r => r.status === 'RESOLVED' || r.status === 'CLOSED').length,
+          estimatedCostMin: 0,
+          estimatedCostMax: 0,
+        },
+      }
+    })
+    .filter(g => g.requests.length > 0)
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {groups.length === 0 ? (
+        <div
+          style={{
+            padding: 60,
+            textAlign: 'center',
+            background: BAI.bgSurface,
+            border: `1px solid ${BAI.border}`,
+            borderRadius: 16,
+          }}
+        >
+          <p
+            style={{
+              fontFamily: BAI.fontDisplay,
+              fontSize: 22,
+              fontWeight: 700,
+              fontStyle: 'italic',
+              color: BAI.ink,
+              margin: '0 0 8px',
+            }}
+          >
+            Aucune demande
+          </p>
+          <p
+            style={{
+              fontFamily: BAI.fontBody,
+              fontSize: 14,
+              color: BAI.inkFaint,
+              margin: 0,
+            }}
+          >
+            Créez votre première demande de maintenance.
+          </p>
+        </div>
+      ) : (
+        groups.map(group => {
+          const prop = group.property
+          if (!prop) return null
+          const isExpanded = expandedPropertyId === prop.id
+          const hasOpen = group.stats.open + group.stats.inProgress > 0
+          return (
+            <div
+              key={prop.id}
+              style={{
+                background: BAI.bgSurface,
+                border: `1px solid ${hasOpen ? '#fca5a5' : BAI.border}`,
+                borderLeft: hasOpen
+                  ? `4px solid ${BAI.error}`
+                  : `1px solid ${BAI.border}`,
+                borderRadius: 16,
+                overflow: 'hidden',
+                boxShadow: BAI.shadowSm,
+              }}
+            >
+              {/* Header — clickable */}
+              <div
+                onClick={() =>
+                  setExpandedPropertyId(isExpanded ? null : prop.id)
+                }
+                style={{
+                  padding: '20px 24px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  gap: 16,
+                  alignItems: 'flex-start',
+                }}
+              >
+                {prop.images?.[0] ? (
+                  <img
+                    src={prop.images[0]}
+                    alt={prop.title}
+                    style={{
+                      width: 72,
+                      height: 72,
+                      borderRadius: 10,
+                      objectFit: 'cover',
+                      flexShrink: 0,
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: 72,
+                      height: 72,
+                      borderRadius: 10,
+                      background: BAI.bgMuted,
+                      border: `1px solid ${BAI.border}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Hammer style={{
+                      width: 28,
+                      height: 28,
+                      color: BAI.inkFaint,
+                    }} />
+                  </div>
+                )}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      justifyContent: 'space-between',
+                      gap: 12,
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <div>
+                      <p
+                        style={{
+                          fontFamily: BAI.fontDisplay,
+                          fontSize: 20,
+                          fontWeight: 700,
+                          fontStyle: 'italic',
+                          color: BAI.ink,
+                          margin: '0 0 4px',
+                        }}
+                      >
+                        {prop.title}
+                      </p>
+                      <p
+                        style={{
+                          fontFamily: BAI.fontBody,
+                          fontSize: 13,
+                          color: BAI.inkFaint,
+                          margin: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}
+                      >
+                        <MapPin style={{ width: 12, height: 12 }} />
+                        {prop.address}, {prop.city}
+                      </p>
+                    </div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: 8,
+                        flexWrap: 'wrap',
+                        alignItems: 'center',
+                      }}
+                    >
+                      {group.stats.open > 0 && (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            padding: '4px 12px',
+                            borderRadius: 999,
+                            background: BAI.errorLight,
+                            border: '1px solid #fca5a5',
+                            fontFamily: BAI.fontBody,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            color: BAI.error,
+                          }}
+                        >
+                          <AlertTriangle style={{ width: 12, height: 12 }} />
+                          {group.stats.open} ouvert{group.stats.open > 1 ? 's' : ''}
+                        </span>
+                      )}
+                      {group.stats.inProgress > 0 && (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            padding: '4px 12px',
+                            borderRadius: 999,
+                            background: BAI.ownerLight,
+                            border: `1px solid ${BAI.ownerBorder}`,
+                            fontFamily: BAI.fontBody,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            color: BAI.owner,
+                          }}
+                        >
+                          <Clock style={{ width: 12, height: 12 }} />
+                          {group.stats.inProgress} en cours
+                        </span>
+                      )}
+                      {group.stats.resolved > 0 && (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            padding: '4px 12px',
+                            borderRadius: 999,
+                            background: BAI.tenantLight,
+                            border: `1px solid ${BAI.tenantBorder}`,
+                            fontFamily: BAI.fontBody,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            color: BAI.tenant,
+                          }}
+                        >
+                          <CheckCircle style={{ width: 12, height: 12 }} />
+                          {group.stats.resolved} résolu
+                          {group.stats.resolved > 1 ? 's' : ''}
+                        </span>
+                      )}
+                      {isExpanded ? (
+                        <ChevronUp
+                          style={{ width: 16, height: 16, color: BAI.inkFaint }}
+                        />
+                      ) : (
+                        <ChevronDown
+                          style={{ width: 16, height: 16, color: BAI.inkFaint }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: 20,
+                      marginTop: 10,
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: BAI.fontBody,
+                        fontSize: 12,
+                        color: BAI.inkFaint,
+                      }}
+                    >
+                      {prop.surface} m²
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: BAI.fontBody,
+                        fontSize: 12,
+                        color: BAI.inkFaint,
+                      }}
+                    >
+                      {prop.price?.toLocaleString('fr-FR')} €/mois
+                    </span>
+                    {group.stats.estimatedCostMax > 0 && (
+                      <span
+                        style={{
+                          fontFamily: BAI.fontBody,
+                          fontSize: 12,
+                          color: BAI.caramel,
+                          fontWeight: 600,
+                        }}
+                      >
+                        Coût estimé :{' '}
+                        {group.stats.estimatedCostMin.toLocaleString('fr-FR')}–
+                        {group.stats.estimatedCostMax.toLocaleString('fr-FR')} €
+                      </span>
+                    )}
+                    <span
+                      style={{
+                        fontFamily: BAI.fontBody,
+                        fontSize: 12,
+                        color: BAI.inkFaint,
+                      }}
+                    >
+                      {group.stats.total} demande
+                      {group.stats.total > 1 ? 's' : ''} au total
+                    </span>
+                  </div>
+                </div>
+              </div>
+              {/* Expanded list */}
+              {isExpanded && (
+                <div
+                  style={{
+                    borderTop: `1px solid ${BAI.border}`,
+                    background: BAI.bgBase,
+                  }}
+                >
+                  {group.requests.length === 0 ? (
+                    <p
+                      style={{
+                        padding: '20px 24px',
+                        fontFamily: BAI.fontBody,
+                        fontSize: 14,
+                        color: BAI.inkFaint,
+                        margin: 0,
+                      }}
+                    >
+                      Aucune demande.
+                    </p>
+                  ) : (
+                    group.requests.map((req, i) => (
+                      <div
+                        key={req.id}
+                        onClick={() => setSelectedReqId(req.id)}
+                        style={{
+                          padding: '14px 24px',
+                          borderBottom:
+                            i < group.requests.length - 1
+                              ? `1px solid ${BAI.border}`
+                              : 'none',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 12,
+                          transition: BAI.transition,
+                          background: 'transparent',
+                        }}
+                        onMouseEnter={e =>
+                          (e.currentTarget.style.background = BAI.bgMuted)
+                        }
+                        onMouseLeave={e =>
+                          (e.currentTarget.style.background = 'transparent')
+                        }
+                      >
+                        <CategoryIcon category={req.category} size={18} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p
+                            style={{
+                              fontFamily: BAI.fontBody,
+                              fontSize: 14,
+                              fontWeight: 700,
+                              color: BAI.ink,
+                              margin: '0 0 2px',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {req.title}
+                          </p>
+                          <p
+                            style={{
+                              fontFamily: BAI.fontBody,
+                              fontSize: 12,
+                              color: BAI.inkFaint,
+                              margin: 0,
+                            }}
+                          >
+                            {new Date(req.createdAt).toLocaleDateString(
+                              'fr-FR',
+                              {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                              }
+                            )}
+                          </p>
+                        </div>
+                        <StatusBadge s={req.status} />
+                        <span
+                          style={{
+                            padding: '2px 8px',
+                            borderRadius: 999,
+                            background: priorityBg(req.priority),
+                            fontFamily: BAI.fontBody,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: priorityColor(req.priority),
+                          }}
+                        >
+                          {MAINTENANCE_PRIORITY_LABELS[req.priority]}
+                        </span>
+                        <ChevronDown
+                          style={{
+                            width: 14,
+                            height: 14,
+                            color: BAI.inkFaint,
+                            flexShrink: 0,
+                            transform: 'rotate(-90deg)',
+                          }}
+                        />
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })
+      )}
+    </div>
+  )
 }
 
 // ── Main component ─────────────────────────────────────────────────────────
@@ -610,13 +988,12 @@ export default function Maintenance() {
   const [contractorsMap, setContractorsMap] = useState<Record<string, ContractorResult>>({})
   const [loadingContractors, setLoadingContractors] = useState<string | null>(null)
   const [mapCategoryFilter, setMapCategoryFilter] = useState<CategoryFilter>('ALL')
+  const [groupByProperty, setGroupByProperty] = useState(false)
 
   // Detail panel
   const [selectedReqId, setSelectedReqId] = useState<string | null>(null)
 
-  // Par bien view
-  const [byProperty, setByProperty] = useState<ByPropertyGroup[]>([])
-  const [byPropertyLoading, setByPropertyLoading] = useState(false)
+  // Grouped view
   const [expandedPropertyId, setExpandedPropertyId] = useState<string | null>(null)
 
   const [form, setForm] = useState<CreateMaintenanceInput>({
@@ -635,15 +1012,6 @@ export default function Maintenance() {
     fetchRequests()
     fetchMyProperties()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (viewMode !== 'bien') return
-    setByPropertyLoading(true)
-    apiClient.get<{ success: boolean; data: { byProperty: ByPropertyGroup[] } }>('/maintenance/by-property')
-      .then(res => setByProperty(res.data.data.byProperty))
-      .catch(() => {})
-      .finally(() => setByPropertyLoading(false))
-  }, [viewMode]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const openCount = requests.filter(r => r.status === 'OPEN' || r.status === 'IN_PROGRESS').length
 
@@ -811,107 +1179,71 @@ export default function Maintenance() {
             </p>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {/* View toggle */}
-            <div
-              style={{
-                display: 'flex',
-                borderRadius: 10,
-                border: `1px solid ${BAI.border}`,
-                overflow: 'hidden',
-                background: BAI.bgMuted,
-              }}
-            >
-              <button
-                onClick={() => setViewMode('liste')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  padding: '9px 16px',
-                  border: 'none',
-                  borderRight: `1px solid ${BAI.border}`,
-                  background: viewMode === 'liste' ? BAI.night : 'transparent',
-                  color: viewMode === 'liste' ? '#fff' : BAI.inkMid,
-                  fontFamily: BAI.fontBody,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  minHeight: 44,
-                  transition: BAI.transition,
-                }}
-              >
-                <List style={{ width: 15, height: 15 }} />
-                Liste
-              </button>
-              <button
-                onClick={() => setViewMode('carte')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  padding: '9px 16px',
-                  border: 'none',
-                  borderRight: `1px solid ${BAI.border}`,
-                  background: viewMode === 'carte' ? BAI.night : 'transparent',
-                  color: viewMode === 'carte' ? '#fff' : BAI.inkMid,
-                  fontFamily: BAI.fontBody,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  minHeight: 44,
-                  transition: BAI.transition,
-                }}
-              >
-                <Map style={{ width: 15, height: 15 }} />
-                Carte
-              </button>
-              <button
-                onClick={() => setViewMode('bien')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  padding: '9px 16px',
-                  border: 'none',
-                  background: viewMode === 'bien' ? BAI.night : 'transparent',
-                  color: viewMode === 'bien' ? '#fff' : BAI.inkMid,
-                  fontFamily: BAI.fontBody,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  minHeight: 44,
-                  transition: BAI.transition,
-                }}
-              >
-                <Building2 style={{ width: 15, height: 15 }} />
-                Par bien
-              </button>
-            </div>
+          <button
+            onClick={() => setShowForm(v => !v)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '10px 20px',
+              borderRadius: 10,
+              border: 'none',
+              background: BAI.night,
+              color: '#fff',
+              fontFamily: BAI.fontBody,
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              minHeight: 44,
+            }}
+          >
+            <PlusCircle style={{ width: 16, height: 16 }} />
+            Nouvelle demande
+          </button>
+        </div>
 
+        {/* ── View mode tabs ────────────────────────────────────────────────── */}
+        <div
+          style={{
+            display: 'flex',
+            gap: 4,
+            marginBottom: 20,
+            background: BAI.bgSurface,
+            border: `1px solid ${BAI.border}`,
+            borderRadius: 12,
+            padding: 5,
+            width: 'fit-content',
+          }}
+        >
+          {[
+            { mode: 'liste' as ViewMode, label: 'Liste', icon: <List style={{ width: 14, height: 14 }} /> },
+            { mode: 'carte' as ViewMode, label: 'Carte & Artisans', icon: <Map style={{ width: 14, height: 14 }} /> },
+          ].map(({ mode, label, icon }) => (
             <button
-              onClick={() => setShowForm(v => !v)}
+              key={mode}
+              onClick={() => setViewMode(mode)}
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 8,
-                padding: '10px 20px',
-                borderRadius: 10,
+                gap: 7,
+                padding: '9px 18px',
+                borderRadius: 9,
                 border: 'none',
-                background: BAI.night,
-                color: '#fff',
+                background: viewMode === mode ? BAI.owner : 'transparent',
+                color: viewMode === mode ? '#fff' : BAI.inkMid,
                 fontFamily: BAI.fontBody,
-                fontSize: 14,
-                fontWeight: 600,
+                fontSize: 13,
+                fontWeight: viewMode === mode ? 700 : 500,
                 cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                minHeight: 44,
+                transition: BAI.transition,
+                minHeight: 40,
               }}
             >
-              <PlusCircle style={{ width: 16, height: 16 }} />
-              Nouvelle demande
+              {icon}
+              {label}
             </button>
-          </div>
+          ))}
         </div>
 
         {/* ── Create form ─────────────────────────────────────────────────── */}
@@ -1059,101 +1391,75 @@ export default function Maintenance() {
           />
         )}
 
-        {/* ── Par bien view ────────────────────────────────────────────────── */}
-        {viewMode === 'bien' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {byPropertyLoading ? (
-              <div style={{ padding: 60, textAlign: 'center', color: BAI.inkFaint, fontFamily: BAI.fontBody, fontSize: 14 }}>Chargement...</div>
-            ) : byProperty.length === 0 ? (
-              <div style={{ padding: 60, textAlign: 'center', background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16 }}>
-                <p style={{ fontFamily: BAI.fontDisplay, fontSize: 22, fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '0 0 8px' }}>Aucune demande</p>
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint, margin: 0 }}>Créez votre première demande de maintenance.</p>
-              </div>
-            ) : byProperty.map(group => {
-              const prop = group.property
-              if (!prop) return null
-              const isExpanded = expandedPropertyId === prop.id
-              const hasOpen = group.stats.open + group.stats.inProgress > 0
-              return (
-                <div key={prop.id} style={{
-                  background: BAI.bgSurface,
-                  border: `1px solid ${hasOpen ? '#fca5a5' : BAI.border}`,
-                  borderLeft: hasOpen ? `4px solid ${BAI.error}` : `1px solid ${BAI.border}`,
-                  borderRadius: 16,
-                  overflow: 'hidden',
-                  boxShadow: BAI.shadowSm,
-                }}>
-                  {/* Header — clickable */}
-                  <div
-                    onClick={() => setExpandedPropertyId(isExpanded ? null : prop.id)}
-                    style={{ padding: '20px 24px', cursor: 'pointer', display: 'flex', gap: 16, alignItems: 'flex-start' }}
-                  >
-                    {prop.images?.[0] ? (
-                      <img src={prop.images[0]} alt={prop.title} style={{ width: 72, height: 72, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
-                    ) : (
-                      <div style={{ width: 72, height: 72, borderRadius: 10, background: BAI.bgMuted, border: `1px solid ${BAI.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <Building2 style={{ width: 28, height: 28, color: BAI.inkFaint }} />
-                      </div>
-                    )}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                        <div>
-                          <p style={{ fontFamily: BAI.fontDisplay, fontSize: 20, fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '0 0 4px' }}>{prop.title}</p>
-                          <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint, margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <MapPin style={{ width: 12, height: 12 }} />{prop.address}, {prop.city}
-                          </p>
-                        </div>
-                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                          {group.stats.open > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 12px', borderRadius: 999, background: BAI.errorLight, border: '1px solid #fca5a5', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.error }}><AlertTriangle style={{ width: 12, height: 12 }} />{group.stats.open} ouvert{group.stats.open > 1 ? 's' : ''}</span>}
-                          {group.stats.inProgress > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 12px', borderRadius: 999, background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.owner }}><Clock style={{ width: 12, height: 12 }} />{group.stats.inProgress} en cours</span>}
-                          {group.stats.resolved > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 12px', borderRadius: 999, background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`, fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: BAI.tenant }}><CheckCircle style={{ width: 12, height: 12 }} />{group.stats.resolved} résolu{group.stats.resolved > 1 ? 's' : ''}</span>}
-                          {isExpanded ? <ChevronUp style={{ width: 16, height: 16, color: BAI.inkFaint }} /> : <ChevronDown style={{ width: 16, height: 16, color: BAI.inkFaint }} />}
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', gap: 20, marginTop: 10, flexWrap: 'wrap' }}>
-                        <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>{prop.surface} m²</span>
-                        <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>{prop.price?.toLocaleString('fr-FR')} €/mois</span>
-                        {group.stats.estimatedCostMax > 0 && <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.caramel, fontWeight: 600 }}>Coût estimé : {group.stats.estimatedCostMin.toLocaleString('fr-FR')}–{group.stats.estimatedCostMax.toLocaleString('fr-FR')} €</span>}
-                        <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>{group.stats.total} demande{group.stats.total > 1 ? 's' : ''} au total</span>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Expanded list */}
-                  {isExpanded && (
-                    <div style={{ borderTop: `1px solid ${BAI.border}`, background: BAI.bgBase }}>
-                      {group.requests.length === 0 ? (
-                        <p style={{ padding: '20px 24px', fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint, margin: 0 }}>Aucune demande.</p>
-                      ) : group.requests.map((req, i) => (
-                        <div
-                          key={req.id}
-                          onClick={() => setSelectedReqId(req.id)}
-                          style={{ padding: '14px 24px', borderBottom: i < group.requests.length - 1 ? `1px solid ${BAI.border}` : 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, transition: BAI.transition, background: 'transparent' }}
-                          onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
-                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                        >
-                          <CategoryIcon category={req.category} size={18} />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 700, color: BAI.ink, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{req.title}</p>
-                            <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: 0 }}>{new Date(req.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-                          </div>
-                          <StatusBadge s={req.status} />
-                          <span style={{ padding: '2px 8px', borderRadius: 999, background: priorityBg(req.priority), fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: priorityColor(req.priority) }}>{MAINTENANCE_PRIORITY_LABELS[req.priority]}</span>
-                          <ChevronDown style={{ width: 14, height: 14, color: BAI.inkFaint, flexShrink: 0, transform: 'rotate(-90deg)' }} />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        )}
-
         {/* ── Liste view ─────────────────────────────────────────────────── */}
         {viewMode === 'liste' && (
           <>
-            {/* ── Stat tiles (cliquables → filtre la liste) ──────────────── */}
-            {(() => {
+            {/* Toggle groupBy */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                marginBottom: 16,
+                justifyContent: 'flex-end',
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: BAI.fontBody,
+                  fontSize: 12,
+                  color: BAI.inkMid,
+                }}
+              >
+                Vue :
+              </span>
+              <button
+                onClick={() => setGroupByProperty(false)}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 8,
+                  border: 'none',
+                  background: !groupByProperty ? BAI.night : 'transparent',
+                  color: !groupByProperty ? '#fff' : BAI.inkMid,
+                  fontFamily: BAI.fontBody,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  border: !groupByProperty ? 'none' : `1px solid ${BAI.border}`,
+                }}
+              >
+                Par demande
+              </button>
+              <button
+                onClick={() => setGroupByProperty(true)}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 8,
+                  border: groupByProperty ? 'none' : `1px solid ${BAI.border}`,
+                  background: groupByProperty ? BAI.night : 'transparent',
+                  color: groupByProperty ? '#fff' : BAI.inkMid,
+                  fontFamily: BAI.fontBody,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Par bien
+              </button>
+            </div>
+
+            {groupByProperty ? (
+              <GroupedByPropertyView
+                requests={requests}
+                myProperties={myProperties}
+                setSelectedReqId={setSelectedReqId}
+                expandedPropertyId={expandedPropertyId}
+                setExpandedPropertyId={setExpandedPropertyId}
+              />
+            ) : (
+              <>
+                {/* ── Stat tiles (cliquables → filtre la liste) ──────────────── */}
+                {(() => {
               const urgentCount = requests.filter(r => r.priority === 'URGENT' && (r.status === 'OPEN' || r.status === 'IN_PROGRESS')).length
               const openCount2 = requests.filter(r => r.status === 'OPEN').length
               const inProgressCount = requests.filter(r => r.status === 'IN_PROGRESS').length
@@ -1811,6 +2117,8 @@ export default function Maintenance() {
                   )
                 })}
               </div>
+            )}
+              </>
             )}
           </>
         )}
