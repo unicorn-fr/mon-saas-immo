@@ -36,7 +36,6 @@ import {
   CheckCircle2,
   Search,
   ExternalLink,
-  FileText,
   BarChart2,
   Receipt,
   Landmark,
@@ -47,7 +46,6 @@ import {
   Printer,
 } from 'lucide-react'
 import { financeService, MarketAnalysis } from '../../services/finance.service'
-import toast from 'react-hot-toast'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
