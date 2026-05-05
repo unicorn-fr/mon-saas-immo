@@ -71,8 +71,14 @@ export default function Pricing() {
     try {
       const res = await apiClient.post<{ url: string }>('/stripe/checkout', { priceId })
       window.location.href = res.data.url
-    } catch {
-      toast.error('Une erreur est survenue. Réessaie dans un instant.')
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
+        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+        ?? (err as { message?: string })?.message
+        ?? 'Erreur inconnue'
+      toast.error(`Erreur : ${msg}`, { duration: 6000 })
+      console.error('[Pricing checkout]', err)
     } finally {
       setLoadingPlan(null)
     }
