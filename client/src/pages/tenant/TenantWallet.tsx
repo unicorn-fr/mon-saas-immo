@@ -5,6 +5,7 @@ import { loadStripe } from '@stripe/stripe-js'
 import { BAI } from '../../constants/bailio-tokens'
 import { Layout } from '../../components/layout/Layout'
 import { connectService, type WalletPayment, type SepaMandate } from '../../services/connect.service'
+import { apiClient } from '../../services/api.service'
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? '')
 
@@ -167,7 +168,7 @@ function SepaSetupModal({ contractId, onSuccess, onClose }: {
             sepa_debit: { iban: cleanIban },
             billing_details: {
               name: holderName.trim(),
-              email: holderEmail.trim() || undefined,
+              email: holderEmail.trim() || null,
             },
           },
         }
