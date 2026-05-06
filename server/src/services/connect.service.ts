@@ -216,7 +216,8 @@ export async function confirmSepaMandate(setupIntentId: string): Promise<void> {
   const pm = setupIntent.payment_method as import('stripe').Stripe.PaymentMethod | null
   const sepaDetails = pm?.sepa_debit
 
-  const { contractId } = setupIntent.metadata
+  const contractId = setupIntent.metadata?.contractId
+  if (!contractId) throw new Error('contractId manquant dans les metadata du SetupIntent')
 
   await prisma.sepaMandate.update({
     where: { contractId },

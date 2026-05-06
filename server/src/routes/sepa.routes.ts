@@ -42,7 +42,7 @@ router.post('/mandate', requireFeature('sepa_payment'), async (req: Request, res
   // Vérifier que le contrat appartient bien au propriétaire
   const contract = await prisma.contract.findFirst({
     where: { id: contractId, ownerId: req.user!.id },
-    select: { id: true, tenantId: true, rentAmount: true },
+    select: { id: true, tenantId: true, monthlyRent: true },
   })
   if (!contract) return res.status(404).json({ error: 'Contrat non trouvé' })
 
