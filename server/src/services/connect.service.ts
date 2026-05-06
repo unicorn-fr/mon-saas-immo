@@ -42,11 +42,24 @@ export async function createConnectOnboardingLink(
       type: 'express',
       country: 'FR',
       email: user.email,
+      // Propriétaire = particulier qui reçoit des loyers
+      // On ne demande que "transfers" (recevoir des virements)
+      // Pas sepa_debit_payments : les owners ne débitent pas directement → évite les questions "secteur d'activité"
       capabilities: {
-        sepa_debit_payments: { requested: true },
         transfers: { requested: true },
       },
       business_type: 'individual',
+      // Pré-remplir les infos pour réduire les questions posées (style Vinted)
+      individual: {
+        email: user.email,
+        first_name: user.firstName ?? undefined,
+        last_name: user.lastName ?? undefined,
+      },
+      // Description minimaliste — Stripe n'affiche pas de champ "secteur"
+      business_profile: {
+        product_description: 'Perception de loyers entre particuliers via la plateforme Bailio',
+        url: 'https://bailio.fr',
+      },
       metadata: { userId },
       settings: {
         payouts: {
@@ -63,12 +76,15 @@ export async function createConnectOnboardingLink(
     })
   }
 
-  // Créer le lien d'onboarding
+  // Créer le lien d'onboarding — uniquement les champs strictement requis (KYC identité + IBAN)
   const accountLink = await stripe.accountLinks.create({
     account: accountId,
     refresh_url: refreshUrl,
     return_url: returnUrl,
     type: 'account_onboarding',
+    collection_options: {
+      fields: 'currently_due', // Seulement ce qui est obligatoire → pas de secteur d'activité
+    },
   })
 
   return accountLink.url

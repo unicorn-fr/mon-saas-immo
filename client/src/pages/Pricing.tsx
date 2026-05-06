@@ -45,7 +45,7 @@ function FeatureCell({ value }: { value: boolean | string }) {
 export default function Pricing() {
   const [billing, setBilling] = useState<'annual' | 'monthly'>('annual') // annuel par défaut
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const navigate = useNavigate()
 
   const handleCta = async (planId: PlanId) => {
@@ -56,6 +56,12 @@ export default function Pricing() {
 
     const plan = PLANS.find(p => p.id === planId)!
     const priceId = plan.priceIds?.[billing]
+
+    // Les abonnements sont réservés aux propriétaires
+    if (isAuthenticated && user?.role === 'TENANT') {
+      toast.error('Les abonnements sont réservés aux propriétaires. En tant que locataire, l\'accès à la plateforme est gratuit.', { duration: 5000 })
+      return
+    }
 
     if (!isAuthenticated) {
       navigate(`/register?plan=${planId}&billing=${billing}`)
