@@ -55,11 +55,7 @@ export async function createConnectOnboardingLink(
         first_name: user.firstName ?? undefined,
         last_name: user.lastName ?? undefined,
       },
-      // Description minimaliste — Stripe n'affiche pas de champ "secteur"
-      business_profile: {
-        product_description: 'Perception de loyers entre particuliers via la plateforme Bailio',
-        url: 'https://bailio.fr',
-      },
+      // Pas de business_profile.url ni product_description → évite les champs "site web" et "secteur"
       metadata: { userId },
       settings: {
         payouts: {
