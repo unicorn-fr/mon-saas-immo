@@ -168,7 +168,7 @@ function SepaSetupModal({ contractId, onSuccess, onClose }: {
             sepa_debit: { iban: cleanIban },
             billing_details: {
               name: holderName.trim(),
-              email: holderEmail.trim() || null,
+              email: holderEmail.trim(),
             },
           },
         }
