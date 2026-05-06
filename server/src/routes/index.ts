@@ -37,6 +37,7 @@ import ocrRoutes from './ocr.routes.js'
 import financeRoutes from './finance.routes.js'
 import maintenanceRoutes from './maintenance.routes.js'
 import sepaRoutes from './sepa.routes.js'
+import connectRoutes from './connect.routes.js'
 
 /**
  * Register all application routes on the Express app.
@@ -72,6 +73,7 @@ export function registerRoutes(app: Application, prefix: string): void {
   app.use(`${prefix}/stripe`, stripeRoutes)
   app.use(`${prefix}/payments`, paymentRoutes)
   app.use(`${prefix}/sepa`, sepaRoutes)
+  app.use(`${prefix}/connect`, connectRoutes)
 
   // ── Aggregation ─────────────────────────────────────────────────────────
   app.use(`${prefix}/dashboard`, dashboardRoutes)
