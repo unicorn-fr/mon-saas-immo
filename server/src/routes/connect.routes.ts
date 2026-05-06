@@ -39,8 +39,8 @@ router.use(authenticate)
 // PROPRIÉTAIRE — Compte Connect (portefeuille)
 // ══════════════════════════════════════════════════════
 
-// POST /connect/onboard — Démarre l'onboarding Stripe Connect Express
-router.post('/onboard', authorize('OWNER'), requirePlan('PRO'), async (req: Request, res: Response) => {
+// POST /connect/onboard — Démarre l'onboarding Stripe Connect Express (tous plans OWNER)
+router.post('/onboard', authorize('OWNER', 'ADMIN'), async (req: Request, res: Response) => {
   try {
     const baseUrl = env.FRONTEND_URL
     const url = await createConnectOnboardingLink(
@@ -56,7 +56,7 @@ router.post('/onboard', authorize('OWNER'), requirePlan('PRO'), async (req: Requ
 })
 
 // GET /connect/status — Statut du compte Connect du propriétaire
-router.get('/status', authorize('OWNER'), async (req: Request, res: Response) => {
+router.get('/status', authorize('OWNER', 'ADMIN'), async (req: Request, res: Response) => {
   try {
     const status = await getConnectAccountStatus(req.user!.id)
     return res.json({ success: true, data: status })
@@ -67,7 +67,7 @@ router.get('/status', authorize('OWNER'), async (req: Request, res: Response) =>
 })
 
 // POST /connect/dashboard-link — Lien vers le tableau de bord Stripe du propriétaire
-router.post('/dashboard-link', authorize('OWNER'), async (req: Request, res: Response) => {
+router.post('/dashboard-link', authorize('OWNER', 'ADMIN'), async (req: Request, res: Response) => {
   try {
     const url = await createConnectDashboardLink(req.user!.id)
     return res.json({ success: true, data: { url } })
@@ -78,7 +78,7 @@ router.post('/dashboard-link', authorize('OWNER'), async (req: Request, res: Res
 })
 
 // GET /connect/wallet — Historique des loyers reçus (propriétaire)
-router.get('/wallet', authorize('OWNER'), async (req: Request, res: Response) => {
+router.get('/wallet', authorize('OWNER', 'ADMIN'), async (req: Request, res: Response) => {
   try {
     const payments = await prisma.rentPayment.findMany({
       where: { landlordId: req.user!.id },
