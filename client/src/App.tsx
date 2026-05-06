@@ -37,6 +37,7 @@ import Rentabilite from './pages/owner/Rentabilite'
 import Finance from './pages/owner/Finance'
 import Maintenance from './pages/owner/Maintenance'
 import Quittances from './pages/owner/Quittances'
+import OwnerWallet from './pages/owner/Wallet'
 
 // Tenant Pages
 import TenantDashboard from './pages/tenant/TenantDashboard'
@@ -47,6 +48,7 @@ import DossierLocatif from './pages/tenant/DossierLocatif'
 import DossierShareManager from './pages/tenant/DossierShareManager'
 import PrivacyCenter from './pages/tenant/PrivacyCenter'
 import TenantSettings from './pages/tenant/Settings'
+import TenantWallet from './pages/tenant/TenantWallet'
 
 // Shared Pages
 import Messages from './pages/Messages'
@@ -234,6 +236,7 @@ function AppRoutes() {
         <Route path="/owner/finances" element={<Finance />} />
         <Route path="/owner/maintenance" element={<Maintenance />} />
         <Route path="/owner/quittances" element={<Quittances />} />
+        <Route path="/owner/wallet" element={<OwnerWallet />} />
       </Route>
 
       {/* Protected Routes - Tenant Dashboard */}
@@ -246,6 +249,7 @@ function AppRoutes() {
         <Route path="/dossier/partages" element={<DossierShareManager />} />
         <Route path="/privacy" element={<PrivacyCenter />} />
         <Route path="/tenant/settings" element={<TenantSettings />} />
+        <Route path="/tenant/wallet" element={<TenantWallet />} />
       </Route>
 
       <Route element={<ProtectedRoute />}>
