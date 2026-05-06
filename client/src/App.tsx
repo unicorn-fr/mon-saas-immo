@@ -273,13 +273,13 @@ function AppRoutes() {
         <Route path="/edl/join" element={<EdlJoin />} />
       </Route>
 
-      {/* Waitlist admin — public route, protégé par ?secret= côté composant */}
-      <Route path="/admin/waitlist" element={<WaitlistAdmin />} />
+      {/* Waitlist admin — protégé ADMIN/SUPER_ADMIN */}
 
       {/* Protected Routes - Admin Dashboard */}
       <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN']} />}>
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/users" element={<UsersManagement />} />
+        <Route path="/admin/waitlist" element={<WaitlistAdmin />} />
       </Route>
 
       {/* Super Admin — Cerveau Central (full dark mode layout) */}

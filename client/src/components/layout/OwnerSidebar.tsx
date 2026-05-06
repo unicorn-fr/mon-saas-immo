@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 import { NavLink, Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Home, ClipboardList, Calendar, FileText,
-  MessageSquare, Plus, Settings, TrendingUp, Wrench, Receipt, Wallet,
+  MessageSquare, Plus, Settings, TrendingUp, Wrench, Receipt, Wallet, BarChart2,
 } from 'lucide-react'
 import { useSidebarStore } from '../../store/sidebarStore'
 import { useMessages } from '../../hooks/useMessages'
@@ -187,6 +187,7 @@ export function OwnerSidebar() {
 
         <SectionLabel label="Gestion" compact={compact} />
         <NavItem to="/owner/finances" icon={TrendingUp} label="Finances" onClick={closeMobile} compact={compact} />
+        <NavItem to="/owner/rentabilite" icon={BarChart2} label="Rentabilité" onClick={closeMobile} compact={compact} />
         <NavItem to="/owner/quittances" icon={Receipt} label="Quittances" onClick={closeMobile} compact={compact} />
         <NavItem to="/owner/maintenance" icon={Wrench} label="Maintenance" onClick={closeMobile} compact={compact} />
         <NavItem to="/owner/wallet" icon={Wallet} label="Portefeuille" onClick={closeMobile} compact={compact} />

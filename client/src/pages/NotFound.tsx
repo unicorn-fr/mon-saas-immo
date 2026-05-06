@@ -1,8 +1,15 @@
 import { Link } from 'react-router-dom'
 import { ArrowLeft, Home } from 'lucide-react'
 import { BAI } from '../constants/bailio-tokens'
+import { useAuth } from '../hooks/useAuth'
 
 export default function NotFound() {
+  const { user } = useAuth()
+  const dashboardLink = user?.role === 'OWNER' ? '/dashboard/owner'
+    : user?.role === 'TENANT' ? '/dashboard/tenant'
+    : user?.role === 'ADMIN' ? '/admin'
+    : '/'
+
   return (
     <div
       className="min-h-screen flex items-center justify-center p-6"
@@ -85,7 +92,7 @@ export default function NotFound() {
           </Link>
 
           <Link
-            to="/dashboard"
+            to={dashboardLink}
             className="inline-flex items-center gap-1.5 transition-colors"
             style={{ fontFamily: BAI.fontBody, fontSize: '13px', color: BAI.inkMid, textDecoration: 'none' }}
             onMouseEnter={(e) => (e.currentTarget.style.color = BAI.ink)}
