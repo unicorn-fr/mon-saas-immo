@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CreditCard, CheckCircle, Clock, AlertCircle, Trash2, Building2 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { loadStripe } from '@stripe/stripe-js'
 import { BAI } from '../../constants/bailio-tokens'
 import { Layout } from '../../components/layout/Layout'
 import { connectService, type WalletPayment, type SepaMandate } from '../../services/connect.service'
-import { apiClient } from '../../services/api.service'
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? '')
 
 const MONTHS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
 
@@ -109,54 +111,82 @@ function PaymentRow({ p }: { p: WalletPayment }) {
   )
 }
 
-// ─── Modal Setup SEPA ─────────────────────────────────────────────────────────
+// ─── Modal Setup SEPA — flow Stripe.js officiel ───────────────────────────────
+// Flow :
+// 1. Backend crée un SetupIntent → retourne clientSecret + setupIntentId
+// 2. Stripe.js confirme le SetupIntent avec l'IBAN (sécurisé, jamais envoyé au backend)
+// 3. Backend met à jour la DB avec le mandat confirmé (/mandate/confirm)
 function SepaSetupModal({ contractId, onSuccess, onClose }: {
   contractId: string
   onSuccess: () => void
   onClose: () => void
 }) {
-  const [step, setStep] = useState<'loading' | 'form' | 'done' | 'error'>('loading')
-  const [iban, setIban] = useState('')
+  const [step, setStep] = useState<'loading' | 'form' | 'confirming' | 'done' | 'error'>('loading')
   const [holderName, setHolderName] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [clientSecret, setClientSecret] = useState('')
+  const [holderEmail, setHolderEmail] = useState('')
+  const [iban, setIban] = useState('')
+  const [ibanError, setIbanError] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
+  const clientSecretRef = useRef('')
+  const setupIntentIdRef = useRef('')
 
   useEffect(() => {
     connectService.setupMandate(contractId)
-      .then(({ clientSecret: cs }) => { setClientSecret(cs); setStep('form') })
+      .then(({ clientSecret, setupIntentId }) => {
+        clientSecretRef.current = clientSecret
+        setupIntentIdRef.current = setupIntentId
+        setStep('form')
+      })
       .catch(err => { setErrorMsg(err.message); setStep('error') })
   }, [contractId])
 
-  async function handleSubmit() {
-    if (!iban.trim() || !holderName.trim()) {
-      toast.error('Veuillez saisir votre IBAN et votre nom')
-      return
-    }
-    // Validation IBAN basique (France = 27 chars, commence par FR)
-    const cleanIban = iban.replace(/\s/g, '').toUpperCase()
-    if (cleanIban.length < 14 || cleanIban.length > 34) {
-      toast.error('IBAN invalide')
-      return
-    }
+  function validateIban(value: string) {
+    const clean = value.replace(/\s/g, '').toUpperCase()
+    if (clean.length < 14 || clean.length > 34) return 'IBAN invalide (longueur incorrecte)'
+    if (!/^[A-Z]{2}[0-9]{2}/.test(clean)) return 'IBAN invalide (doit commencer par 2 lettres + 2 chiffres)'
+    return ''
+  }
 
-    setSubmitting(true)
+  async function handleSubmit() {
+    const cleanIban = iban.replace(/\s/g, '').toUpperCase()
+    const err = validateIban(cleanIban)
+    if (err) { setIbanError(err); return }
+    if (!holderName.trim()) { toast.error('Veuillez saisir le nom du titulaire'); return }
+
+    setStep('confirming')
     try {
-      // Confirmer le SetupIntent directement via API Stripe (sans Stripe.js)
-      // En production, utiliser Stripe.js Elements pour sécuriser la saisie IBAN
-      await apiClient.post('/connect/mandate/confirm', {
-        contractId,
-        clientSecret,
-        iban: cleanIban,
-        holderName,
-      })
+      const stripe = await stripePromise
+      if (!stripe) throw new Error('Stripe non disponible — vérifiez VITE_STRIPE_PUBLISHABLE_KEY')
+
+      // Confirmer le SetupIntent avec l'IBAN directement via Stripe.js
+      // L'IBAN ne transite JAMAIS par nos serveurs — PCI compliant
+      const { error: stripeError, setupIntent } = await stripe.confirmSepaDebitSetup(
+        clientSecretRef.current,
+        {
+          payment_method: {
+            sepa_debit: { iban: cleanIban },
+            billing_details: {
+              name: holderName.trim(),
+              email: holderEmail.trim() || undefined,
+            },
+          },
+        }
+      )
+
+      if (stripeError) throw new Error(stripeError.message ?? 'Erreur Stripe')
+      if (setupIntent?.status !== 'processing' && setupIntent?.status !== 'succeeded') {
+        throw new Error(`Statut inattendu : ${setupIntent?.status}`)
+      }
+
+      // Informer le backend que le mandat est confirmé (mise à jour DB)
+      await connectService.confirmMandate(setupIntentIdRef.current)
+
       setStep('done')
-      setTimeout(() => { onSuccess(); onClose() }, 1500)
+      setTimeout(() => { onSuccess(); onClose() }, 2000)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Erreur lors de la configuration'
       toast.error(msg)
-    } finally {
-      setSubmitting(false)
+      setStep('form')
     }
   }
 
@@ -164,10 +194,12 @@ function SepaSetupModal({ contractId, onSuccess, onClose }: {
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(13,12,10,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 20, padding: '32px 28px', maxWidth: 460, width: '100%', boxShadow: '0 8px 40px rgba(13,12,10,0.15)' }}>
 
-        {step === 'loading' && (
+        {(step === 'loading' || step === 'confirming') && (
           <div style={{ textAlign: 'center', padding: 32 }}>
             <div style={{ width: 32, height: 32, border: `3px solid ${BAI.border}`, borderTopColor: BAI.tenant, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid }}>Initialisation du mandat SEPA...</p>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid }}>
+              {step === 'loading' ? 'Initialisation...' : 'Confirmation en cours...'}
+            </p>
           </div>
         )}
 
@@ -179,14 +211,14 @@ function SepaSetupModal({ contractId, onSuccess, onClose }: {
             <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: BAI.ink, margin: '0 0 8px' }}>
               Configurer mon IBAN
             </h2>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, lineHeight: 1.6, margin: '0 0 24px' }}>
-              Votre loyer sera prélevé automatiquement chaque mois. Vous serez notifié 3 jours avant chaque prélèvement. Vous pouvez révoquer ce mandat à tout moment.
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, lineHeight: 1.6, margin: '0 0 22px' }}>
+              Votre loyer sera prélevé automatiquement chaque mois. Vous pouvez révoquer ce mandat à tout moment.
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
                 <label style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkMid, display: 'block', marginBottom: 6 }}>
-                  Titulaire du compte
+                  Titulaire du compte *
                 </label>
                 <input
                   type="text"
@@ -198,20 +230,33 @@ function SepaSetupModal({ contractId, onSuccess, onClose }: {
               </div>
               <div>
                 <label style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkMid, display: 'block', marginBottom: 6 }}>
-                  IBAN
+                  Email (optionnel)
+                </label>
+                <input
+                  type="email"
+                  value={holderEmail}
+                  onChange={e => setHolderEmail(e.target.value)}
+                  placeholder="prenom@exemple.fr"
+                  style={{ width: '100%', padding: '11px 14px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, fontFamily: BAI.fontBody, fontSize: 14, color: BAI.ink, outline: 'none', boxSizing: 'border-box' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkMid, display: 'block', marginBottom: 6 }}>
+                  IBAN *
                 </label>
                 <input
                   type="text"
                   value={iban}
-                  onChange={e => setIban(e.target.value.toUpperCase())}
+                  onChange={e => { setIban(e.target.value.toUpperCase()); setIbanError('') }}
                   placeholder="FR76 3000 4000 0500 0000 0000 000"
-                  style={{ width: '100%', padding: '11px 14px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, fontFamily: 'monospace', fontSize: 14, color: BAI.ink, outline: 'none', letterSpacing: '0.05em', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '11px 14px', borderRadius: 8, border: `1px solid ${ibanError ? BAI.error : BAI.border}`, background: BAI.bgMuted, fontFamily: 'monospace', fontSize: 14, color: BAI.ink, outline: 'none', letterSpacing: '0.05em', boxSizing: 'border-box' }}
                 />
+                {ibanError && <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.error, margin: '4px 0 0' }}>{ibanError}</p>}
               </div>
             </div>
 
             <div style={{ marginTop: 16, padding: '12px 14px', background: BAI.bgMuted, borderRadius: 8, fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, lineHeight: 1.5 }}>
-              En confirmant, vous autorisez Bailio et Stripe à initier des débits SEPA sur ce compte. Vous disposez d'un droit de remboursement dans les 8 semaines suivant la date de débit.
+              En confirmant, vous autorisez Bailio et Stripe à initier des débits SEPA. Votre IBAN est transmis directement à Stripe de manière sécurisée et ne transite pas par nos serveurs. Droit de remboursement sous 8 semaines.
             </div>
 
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
@@ -220,10 +265,9 @@ function SepaSetupModal({ contractId, onSuccess, onClose }: {
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={submitting}
-                style={{ flex: 2, padding: '11px', borderRadius: 10, border: 'none', background: BAI.tenant, color: '#fff', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: submitting ? 0.7 : 1 }}
+                style={{ flex: 2, padding: '11px', borderRadius: 10, border: 'none', background: BAI.tenant, color: '#fff', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
               >
-                {submitting ? 'Configuration...' : 'Confirmer le mandat SEPA'}
+                Confirmer le mandat SEPA
               </button>
             </div>
           </>

@@ -89,6 +89,12 @@ class ConnectService {
     } catch (e) { throw new Error(handleApiError(e)) }
   }
 
+  async confirmMandate(setupIntentId: string): Promise<void> {
+    try {
+      await apiClient.post('/connect/mandate/confirm', { setupIntentId })
+    } catch (e) { throw new Error(handleApiError(e)) }
+  }
+
   async getMandate(contractId: string): Promise<SepaMandate | null> {
     try {
       const res = await apiClient.get<ApiResponse<SepaMandate | null>>(`/connect/mandate/${contractId}`)
