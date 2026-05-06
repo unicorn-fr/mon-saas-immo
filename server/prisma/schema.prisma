@@ -167,7 +167,12 @@ model User {
   tenantMaintenanceReqs MaintenanceRequest[]  @relation("TenantMaintenanceRequests")
   rentPaymentsAsLandlord RentPayment[]        @relation("LandlordRentPayments")
   rentPaymentsAsTenant   RentPayment[]        @relation("TenantRentPayments")
+  sepaMandates           SepaMandate[]        @relation("TenantSepaMandates")
   aiUsageTracking        AiUsageTracking[]
+
+  // Stripe Connect (propriétaires — pour recevoir les loyers)
+  stripeAccountId        String?              @unique
+  stripeAccountStatus    String?              // 'pending' | 'active' | 'restricted'
 
   @@index([email])
   @@index([role])
@@ -450,6 +455,7 @@ model Contract {
   edlSession       EdlSession?
   paymentSettings  PaymentSettings?
   rentPayments     RentPayment[]
+  sepaMandate      SepaMandate?
 
   @@index([propertyId])
   @@index([tenantId])
@@ -949,6 +955,37 @@ model AiUsageTracking {
   @@unique([userId, usageType, periodMonth, periodYear])
   @@index([userId, periodMonth, periodYear])
   @@map("ai_usage_tracking")
+}
+
+// ============================================
+// SEPA MANDATES (mandats de prélèvement locataires)
+// ============================================
+
+model SepaMandate {
+  id        String @id @default(cuid())
+
+  contractId String   @unique
+  contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  tenantId String
+  tenant   User   @relation("TenantSepaMandates", fields: [tenantId], references: [id])
+
+  stripeSetupIntentId   String?
+  stripePaymentMethodId String?
+  stripeMandateId       String?
+
+  ibanLast4  String?
+  bankName   String?
+  holderName String?
+
+  isActive  Boolean   @default(false)
+  revokedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("sepa_mandates")
 }
 
 // ============================================
