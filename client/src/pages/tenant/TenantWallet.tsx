@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { CreditCard, CheckCircle, Clock, AlertCircle, Trash2, Building2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { BAI } from '../../constants/bailio-tokens'
-import Layout from '../../components/layout/Layout'
+import { Layout } from '../../components/layout/Layout'
 import { connectService, type WalletPayment, type SepaMandate } from '../../services/connect.service'
 import { apiClient } from '../../services/api.service'
 

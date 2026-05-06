@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { BAI } from '../../constants/bailio-tokens'
-import Layout from '../../components/layout/Layout'
+import { Layout } from '../../components/layout/Layout'
 import { connectService, type ConnectStatus, type WalletPayment, type WalletSummary } from '../../services/connect.service'
 
 const MONTHS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
