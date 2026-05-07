@@ -657,31 +657,7 @@ export default function ContractDetails() {
                         Signer le contrat
                       </button>
 
-                      {/* YouSign stub — signature électronique certifiée eIDAS */}
-                      <button
-                        onClick={() => toast('Intégration YouSign bientôt disponible — utilisez la signature intégrée ci-dessus en attendant.', { icon: '🔏' })}
-                        disabled={actionLoading}
-                        title="Signature certifiée eIDAS via YouSign — bientôt disponible"
-                        style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 7,
-                          padding: '10px 18px', borderRadius: 8,
-                          background: BAI.bgSurface, color: BAI.inkMid,
-                          border: `1px solid ${BAI.border}`, cursor: 'pointer',
-                          fontFamily: BAI.fontBody, fontWeight: 500, fontSize: 13,
-                          opacity: actionLoading ? 0.4 : 1,
-                        }}
-                      >
-                        <ShieldCheck style={{ width: 15, height: 15, color: BAI.caramel }} />
-                        YouSign
-                        <span style={{
-                          fontSize: 10, fontWeight: 700,
-                          background: BAI.caramelLight, color: BAI.caramel,
-                          border: `1px solid #e8c99a`, borderRadius: 4,
-                          padding: '1px 5px', letterSpacing: '0.04em',
-                        }}>
-                          BIENTÔT
-                        </span>
-                      </button>
+                      {/* YouSign stub hidden — integrated signature is sufficient */}
                     </>
                   )}
 

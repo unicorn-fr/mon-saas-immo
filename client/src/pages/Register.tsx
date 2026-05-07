@@ -229,6 +229,7 @@ export default function Register() {
 
   const [formData, setFormData] = useState({
     email: '', password: '', confirmPassword: '',
+    firstName: '', lastName: '', role: '' as 'OWNER' | 'TENANT' | '',
   })
   const [registeredEmail, setRegisteredEmail] = useState('')
   const [error, setError] = useState('')
@@ -270,8 +271,11 @@ export default function Register() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError('')
-    if (!formData.email || !formData.password) {
+    if (!formData.email || !formData.password || !formData.firstName || !formData.lastName) {
       setError('Veuillez remplir tous les champs'); return
+    }
+    if (!formData.role) {
+      setError('Veuillez choisir votre profil (locataire ou propriétaire)'); return
     }
     if (!validatePassword(formData.password)) {
       setError('Le mot de passe ne respecte pas les critères de sécurité'); return
@@ -280,13 +284,12 @@ export default function Register() {
       setError('Les mots de passe ne correspondent pas'); return
     }
     try {
-      const prefix = formData.email.split('@')[0] || 'utilisateur'
       await register({
         email: formData.email,
         password: formData.password,
-        firstName: prefix,
-        lastName: prefix,
-        role: 'TENANT',
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        role: formData.role,
       })
       setRegisteredEmail(formData.email)
       setScreen('verify_code')
@@ -522,6 +525,54 @@ export default function Register() {
           )}
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+            {/* Choix du rôle */}
+            <div>
+              <label style={{ ...font, fontWeight: 500, fontSize: '13px', color: '#0d0c0a', display: 'block', marginBottom: '8px' }}>Je suis</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                {([
+                  { value: 'TENANT', label: 'Locataire', desc: 'Je cherche un logement', emoji: '🏠' },
+                  { value: 'OWNER', label: 'Propriétaire', desc: 'Je loue mon bien', emoji: '🔑' },
+                ] as const).map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setFormData(p => ({ ...p, role: opt.value }))}
+                    style={{
+                      padding: '12px 10px', borderRadius: '10px', textAlign: 'center', cursor: 'pointer',
+                      border: formData.role === opt.value ? '2px solid #1a1a2e' : '1.5px solid #e4e1db',
+                      background: formData.role === opt.value ? 'rgba(26,26,46,0.04)' : '#f8f7f4',
+                      fontFamily: "'DM Sans', system-ui, sans-serif",
+                      transition: 'border-color 0.15s, background 0.15s',
+                    }}
+                  >
+                    <div style={{ fontSize: '20px', marginBottom: '4px' }}>{opt.emoji}</div>
+                    <div style={{ fontWeight: 600, fontSize: '13px', color: '#0d0c0a' }}>{opt.label}</div>
+                    <div style={{ fontSize: '11px', color: '#9e9b96', marginTop: '2px' }}>{opt.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Prénom + Nom */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div>
+                <label style={{ ...font, fontWeight: 500, fontSize: '13px', color: '#0d0c0a', display: 'block', marginBottom: '6px' }}>Prénom</label>
+                <input id="firstName" name="firstName" type="text" placeholder="Jean"
+                  value={formData.firstName} onChange={handleChange}
+                  onFocus={() => onFocus('firstName')} onBlur={() => onBlur('firstName')}
+                  disabled={isLoading} required style={inp(focused['firstName'])}
+                  autoComplete="given-name" />
+              </div>
+              <div>
+                <label style={{ ...font, fontWeight: 500, fontSize: '13px', color: '#0d0c0a', display: 'block', marginBottom: '6px' }}>Nom</label>
+                <input id="lastName" name="lastName" type="text" placeholder="Dupont"
+                  value={formData.lastName} onChange={handleChange}
+                  onFocus={() => onFocus('lastName')} onBlur={() => onBlur('lastName')}
+                  disabled={isLoading} required style={inp(focused['lastName'])}
+                  autoComplete="family-name" />
+              </div>
+            </div>
 
             {/* Email */}
             <div>

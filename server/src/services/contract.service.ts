@@ -668,13 +668,17 @@ class ContractService {
   /**
    * Get contract documents
    */
-  async getContractDocuments(contractId: string) {
+  async getContractDocuments(contractId: string, userId: string) {
     const contract = await prisma.contract.findUnique({
       where: { id: contractId },
     })
 
     if (!contract) {
       throw new Error('Contract not found')
+    }
+
+    if (contract.ownerId !== userId && contract.tenantId !== userId) {
+      throw new Error('Unauthorized')
     }
 
     const documents = await prisma.contractDocument.findMany({

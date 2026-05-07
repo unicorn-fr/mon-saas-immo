@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { CreditCard, CheckCircle, Clock, AlertCircle, Trash2, Building2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { loadStripe } from '@stripe/stripe-js'
 import { BAI } from '../../constants/bailio-tokens'
@@ -8,6 +9,22 @@ import { connectService, type WalletPayment, type SepaMandate } from '../../serv
 import { apiClient } from '../../services/api.service'
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? '')
+
+const stripeErrorToFR = (code?: string, message?: string): string => {
+  const map: Record<string, string> = {
+    'invalid_bank_account_iban': 'IBAN invalide. Vérifiez votre numéro de compte.',
+    'payment_method_invalid_parameter': 'Paramètre de paiement invalide.',
+    'sepa_unsupported_account': 'Ce compte SEPA n\'est pas supporté.',
+    'insufficient_funds': 'Fonds insuffisants.',
+    'bank_account_declined': 'La banque a refusé l\'opération.',
+    'debit_not_authorized': 'Débit non autorisé par votre banque.',
+    'mandate_reference_invalid': 'Référence de mandat invalide.',
+  }
+  if (code && map[code]) return map[code]
+  if (message?.toLowerCase().includes('iban')) return 'IBAN invalide. Vérifiez votre numéro de compte.'
+  if (message?.toLowerCase().includes('invalid')) return 'Données invalides. Vérifiez vos informations.'
+  return 'Une erreur est survenue. Veuillez réessayer ou contacter le support.'
+}
 
 const MONTHS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
 
@@ -174,7 +191,7 @@ function SepaSetupModal({ contractId, onSuccess, onClose }: {
         }
       )
 
-      if (stripeError) throw new Error(stripeError.message ?? 'Erreur Stripe')
+      if (stripeError) throw new Error(stripeErrorToFR(stripeError.code, stripeError.message))
       if (setupIntent?.status !== 'processing' && setupIntent?.status !== 'succeeded') {
         throw new Error(`Statut inattendu : ${setupIntent?.status}`)
       }
@@ -199,7 +216,7 @@ function SepaSetupModal({ contractId, onSuccess, onClose }: {
           <div style={{ textAlign: 'center', padding: 32 }}>
             <div style={{ width: 32, height: 32, border: `3px solid ${BAI.border}`, borderTopColor: BAI.tenant, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
             <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid }}>
-              {step === 'loading' ? 'Initialisation...' : 'Confirmation en cours...'}
+              {step === 'loading' ? 'Préparation de votre mandat...' : 'Confirmation en cours...'}
             </p>
           </div>
         )}
@@ -372,6 +389,12 @@ export default function TenantWallet() {
               <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: '48px 24px', textAlign: 'center' }}>
                 <Building2 style={{ width: 32, height: 32, color: BAI.inkFaint, margin: '0 auto 12px' }} />
                 <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint }}>Aucun bail actif. Le prélèvement automatique sera disponible une fois votre bail signé.</p>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, marginTop: 8 }}>
+                  Votre bail n'est pas encore actif.{' '}
+                  <Link to="/contracts" style={{ color: BAI.caramel, fontWeight: 600, textDecoration: 'none' }}>
+                    Consulter mes contrats →
+                  </Link>
+                </p>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 32 }}>

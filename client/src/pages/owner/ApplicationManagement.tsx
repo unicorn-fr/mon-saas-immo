@@ -616,7 +616,7 @@ export default function ApplicationManagement() {
             <div>
               <p
                 className="uppercase tracking-widest mb-1"
-                style={{ fontSize: 10, color: BAI.inkFaint, letterSpacing: '0.12em' }}
+                style={{ fontSize: 10, color: BAI.caramel, letterSpacing: '0.12em' }}
               >
                 Propriétaire
               </p>

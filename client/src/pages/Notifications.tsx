@@ -6,6 +6,8 @@ import { Notification, NOTIFICATION_TYPES } from '../types/notification.types'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { Layout } from '../components/layout/Layout'
+import { BAI } from '../constants/bailio-tokens'
+import toast from 'react-hot-toast'
 
 type FilterMode = 'all' | 'unread'
 
@@ -45,21 +47,19 @@ export default function Notifications() {
       await markAllAsRead()
     } catch (error) {
       console.error('Failed to mark all as read:', error)
+      toast.error('Impossible de marquer les notifications comme lues')
     } finally {
       setActionLoading(null)
     }
   }
 
   const handleDeleteAll = async () => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer toutes les notifications ?')) {
-      return
-    }
-
     setActionLoading('delete-all')
     try {
       await deleteAllNotifications()
     } catch (error) {
       console.error('Failed to delete all notifications:', error)
+      toast.error('Impossible de supprimer les notifications')
     } finally {
       setActionLoading(null)
     }
@@ -72,6 +72,7 @@ export default function Notifications() {
       await deleteNotification(notificationId)
     } catch (error) {
       console.error('Failed to delete notification:', error)
+      toast.error('Impossible de supprimer la notification')
     } finally {
       setActionLoading(null)
     }
@@ -83,23 +84,39 @@ export default function Notifications() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-[#f5f5f7] py-8">
+      <div className="min-h-screen py-8" style={{ background: BAI.bgBase }}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Header */}
           <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-start justify-between mb-4">
               <div>
-                <h1 className="text-2xl font-bold text-[#0d0c0a] mb-1 flex items-center gap-3" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-                  <div className="w-10 h-10 bg-[#e8f0fe] rounded-xl flex items-center justify-center">
-                    <Bell className="w-5 h-5 text-[#1a1a2e]" />
-                  </div>
+                <p style={{
+                  fontFamily: BAI.fontBody,
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: BAI.caramel,
+                  margin: '0 0 4px',
+                }}>
+                  Compte
+                </p>
+                <h1 style={{
+                  fontFamily: BAI.fontDisplay,
+                  fontSize: 'clamp(26px, 4vw, 40px)',
+                  fontWeight: 700,
+                  fontStyle: 'italic',
+                  color: BAI.ink,
+                  margin: '0 0 6px',
+                  lineHeight: 1.1,
+                }}>
                   Notifications
                 </h1>
-                <p className="text-[#515154] text-sm pl-[52px]">
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: 0 }}>
                   {notificationsTotal} notification{notificationsTotal > 1 ? 's' : ''}
                   {unreadCount > 0 && (
-                    <span className="ml-2 text-[#1a1a2e] font-semibold">
+                    <span style={{ marginLeft: 8, color: BAI.night, fontWeight: 600 }}>
                       · {unreadCount} non lue{unreadCount > 1 ? 's' : ''}
                     </span>
                   )}
@@ -108,12 +125,24 @@ export default function Notifications() {
 
               {/* Actions */}
               {notifications.length > 0 && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-shrink-0 mt-2">
                   {unreadCount > 0 && (
                     <button
                       onClick={handleMarkAllAsRead}
                       disabled={actionLoading === 'mark-all'}
-                      className="px-4 py-2 text-sm font-semibold text-[#1a1a2e] hover:bg-[#eaf0fb] rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2"
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
+                      style={{
+                        fontFamily: BAI.fontBody,
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: BAI.night,
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: actionLoading === 'mark-all' ? 'not-allowed' : 'pointer',
+                        minHeight: BAI.touchMin,
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = BAI.ownerLight)}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                     >
                       {actionLoading === 'mark-all' ? (
                         <Loader className="w-4 h-4 animate-spin" />
@@ -126,7 +155,19 @@ export default function Notifications() {
                   <button
                     onClick={handleDeleteAll}
                     disabled={actionLoading === 'delete-all'}
-                    className="px-4 py-2 text-sm font-semibold text-red-500 hover:bg-red-50 rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
+                    style={{
+                      fontFamily: BAI.fontBody,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: BAI.error,
+                      background: 'transparent',
+                      border: 'none',
+                      cursor: actionLoading === 'delete-all' ? 'not-allowed' : 'pointer',
+                      minHeight: BAI.touchMin,
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.background = BAI.errorLight)}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
                     {actionLoading === 'delete-all' ? (
                       <Loader className="w-4 h-4 animate-spin" />
@@ -140,31 +181,59 @@ export default function Notifications() {
             </div>
 
             {/* Filters */}
-            <div className="inline-flex items-center gap-1 bg-white rounded-xl p-1 border border-[#d2d2d7] shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+            <div
+              className="inline-flex items-center gap-1 p-1"
+              style={{
+                background: BAI.bgSurface,
+                border: `1px solid ${BAI.border}`,
+                borderRadius: 12,
+                boxShadow: BAI.shadowSm,
+              }}
+            >
               <button
                 onClick={() => setFilterMode('all')}
-                className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                  filterMode === 'all'
-                    ? 'bg-[#1a1a2e] text-white shadow-sm'
-                    : 'text-[#515154] hover:text-[#0d0c0a] hover:bg-[#f5f5f7]'
-                }`}
+                className="px-4 py-1.5 rounded-lg text-sm font-semibold transition-all"
+                style={{
+                  fontFamily: BAI.fontBody,
+                  fontWeight: 600,
+                  fontSize: 13,
+                  background: filterMode === 'all' ? BAI.night : 'transparent',
+                  color: filterMode === 'all' ? '#ffffff' : BAI.inkMid,
+                  border: 'none',
+                  cursor: 'pointer',
+                  minHeight: 32,
+                }}
               >
                 Toutes
               </button>
               <button
                 onClick={() => setFilterMode('unread')}
-                className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${
-                  filterMode === 'unread'
-                    ? 'bg-[#1a1a2e] text-white shadow-sm'
-                    : 'text-[#515154] hover:text-[#0d0c0a] hover:bg-[#f5f5f7]'
-                }`}
+                className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition-all"
+                style={{
+                  fontFamily: BAI.fontBody,
+                  fontWeight: 600,
+                  fontSize: 13,
+                  background: filterMode === 'unread' ? BAI.night : 'transparent',
+                  color: filterMode === 'unread' ? '#ffffff' : BAI.inkMid,
+                  border: 'none',
+                  cursor: 'pointer',
+                  minHeight: 32,
+                }}
               >
                 Non lues
                 {unreadCount > 0 && (
                   <span
-                    className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full ${
-                      filterMode === 'unread' ? 'bg-white text-[#1a1a2e]' : 'bg-[#1a1a2e] text-white'
-                    }`}
+                    className="flex items-center justify-center"
+                    style={{
+                      minWidth: 20,
+                      height: 20,
+                      padding: '0 6px',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      borderRadius: 999,
+                      background: filterMode === 'unread' ? '#ffffff' : BAI.night,
+                      color: filterMode === 'unread' ? BAI.night : '#ffffff',
+                    }}
                   >
                     {unreadCount}
                   </span>
@@ -176,20 +245,38 @@ export default function Notifications() {
           {/* Content */}
           {isLoading && notifications.length === 0 ? (
             <div className="flex items-center justify-center py-16">
-              <Loader className="w-7 h-7 text-[#1a1a2e] animate-spin" />
+              <Loader className="w-7 h-7 animate-spin" style={{ color: BAI.night }} />
             </div>
           ) : notifications.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-[#d2d2d7] shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_16px_rgba(0,0,0,0.05)] p-12 text-center">
-              <div className="w-14 h-14 bg-[#f5f5f7] border border-[#d2d2d7] rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Bell className="w-7 h-7 text-[#86868b]" />
+            <div
+              className="p-12 text-center"
+              style={{
+                background: BAI.bgSurface,
+                border: `1px solid ${BAI.border}`,
+                borderRadius: 16,
+                boxShadow: BAI.shadowMd,
+              }}
+            >
+              <div
+                className="w-14 h-14 flex items-center justify-center mx-auto mb-4"
+                style={{
+                  background: BAI.bgMuted,
+                  border: `1px solid ${BAI.border}`,
+                  borderRadius: 16,
+                }}
+              >
+                <Bell className="w-7 h-7" style={{ color: BAI.inkFaint }} />
               </div>
-              <h3 className="text-lg font-bold text-[#0d0c0a] mb-2" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+              <h3
+                className="text-lg mb-2"
+                style={{ fontFamily: BAI.fontBody, fontWeight: 700, color: BAI.ink }}
+              >
                 {filterMode === 'unread' ? 'Aucune notification non lue' : 'Aucune notification'}
               </h3>
-              <p className="text-sm text-[#515154]">
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid }}>
                 {filterMode === 'unread'
                   ? 'Vous êtes à jour ! Toutes vos notifications ont été lues.'
-                  : 'Vous n\'avez pas encore de notifications.'}
+                  : "Vous n'avez pas encore de notifications."}
               </p>
             </div>
           ) : (
@@ -197,19 +284,35 @@ export default function Notifications() {
               {notifications.map((notification) => {
                 const config = getNotificationConfig(notification.type)
                 const isDeleting = actionLoading === notification.id
+                const isUnread = !notification.isRead
 
                 return (
                   <button
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
                     disabled={isDeleting}
-                    className={`w-full p-5 bg-white rounded-2xl border transition-all text-left group ${
-                      !notification.isRead
-                        ? 'border-[#aacfff] bg-[#e8f0fe]/30'
-                        : 'border-[#d2d2d7] hover:border-[#b0b0b8]'
-                    } shadow-[0_1px_3px_rgba(0,0,0,0.06)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.10)] ${
-                      isDeleting ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
+                    className="w-full text-left group transition-all"
+                    style={{
+                      padding: 20,
+                      background: isUnread ? `${BAI.ownerLight}66` : BAI.bgSurface,
+                      border: `1px solid ${isUnread ? BAI.ownerBorder : BAI.border}`,
+                      borderRadius: 16,
+                      boxShadow: BAI.shadowSm,
+                      cursor: isDeleting ? 'not-allowed' : 'pointer',
+                      opacity: isDeleting ? 0.5 : 1,
+                      display: 'block',
+                      width: '100%',
+                    }}
+                    onMouseEnter={e => {
+                      if (!isDeleting) {
+                        e.currentTarget.style.boxShadow = BAI.shadowLg
+                        e.currentTarget.style.borderColor = isUnread ? BAI.ownerBorder : BAI.borderStrong
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.boxShadow = BAI.shadowSm
+                      e.currentTarget.style.borderColor = isUnread ? BAI.ownerBorder : BAI.border
+                    }}
                   >
                     <div className="flex items-start gap-4">
                       {/* Icon */}
@@ -220,18 +323,47 @@ export default function Notifications() {
                       {/* Content */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between mb-1.5">
-                          <h4 className={`text-sm font-semibold ${!notification.isRead ? 'text-[#0d0c0a]' : 'text-[#515154]'}`}>
+                          <h4 style={{
+                            fontFamily: BAI.fontBody,
+                            fontSize: 14,
+                            fontWeight: 600,
+                            color: isUnread ? BAI.ink : BAI.inkMid,
+                            margin: 0,
+                          }}>
                             {notification.title}
                           </h4>
                           <div className="flex items-center gap-2 flex-shrink-0 ml-4">
-                            {!notification.isRead && (
-                              <div className="w-2 h-2 bg-[#1a1a2e] rounded-full" title="Non lu" />
+                            {isUnread && (
+                              <div
+                                className="w-2 h-2 rounded-full"
+                                title="Non lu"
+                                style={{ background: BAI.night }}
+                              />
                             )}
                             <button
                               onClick={(e) => handleDelete(notification.id, e)}
                               disabled={isDeleting}
-                              className="p-1.5 text-[#86868b] hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 opacity-0 group-hover:opacity-100"
                               title="Supprimer"
+                              className="opacity-0 group-hover:opacity-100 transition-all p-1.5 rounded-lg disabled:opacity-50"
+                              style={{
+                                color: BAI.inkFaint,
+                                background: 'transparent',
+                                border: 'none',
+                                cursor: isDeleting ? 'not-allowed' : 'pointer',
+                                minWidth: 32,
+                                minHeight: 32,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                              onMouseEnter={e => {
+                                e.currentTarget.style.color = BAI.error
+                                e.currentTarget.style.background = BAI.errorLight
+                              }}
+                              onMouseLeave={e => {
+                                e.currentTarget.style.color = BAI.inkFaint
+                                e.currentTarget.style.background = 'transparent'
+                              }}
                             >
                               {isDeleting ? (
                                 <Loader className="w-3.5 h-3.5 animate-spin" />
@@ -241,8 +373,10 @@ export default function Notifications() {
                             </button>
                           </div>
                         </div>
-                        <p className="text-sm text-[#515154] mb-1.5">{notification.message}</p>
-                        <p className="text-xs text-[#86868b]">
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: '0 0 6px' }}>
+                          {notification.message}
+                        </p>
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: 0 }}>
                           {format(new Date(notification.createdAt), 'PPPp', { locale: fr })}
                         </p>
                       </div>
@@ -255,7 +389,10 @@ export default function Notifications() {
 
           {/* Results Count */}
           {notifications.length > 0 && (
-            <div className="mt-6 text-center text-sm text-[#86868b]">
+            <div
+              className="mt-6 text-center"
+              style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint }}
+            >
               Affichage de {notifications.length} sur {notificationsTotal} notification
               {notificationsTotal > 1 ? 's' : ''}
             </div>

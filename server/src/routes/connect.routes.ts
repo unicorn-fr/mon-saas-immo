@@ -173,8 +173,15 @@ router.post('/mandate/confirm', async (req: Request, res: Response) => {
     const { setupIntentId } = req.body
     if (!setupIntentId) return res.status(400).json({ success: false, message: 'setupIntentId requis' })
 
-    const mandate = await confirmSepaMandate(setupIntentId)
-    return res.json({ success: true, data: mandate })
+    // Verify the setupIntent belongs to a contract where this user is the tenant
+    const mandate = await prisma.sepaMandate.findFirst({
+      where: { stripeSetupIntentId: setupIntentId, tenantId: req.user!.id },
+      select: { id: true },
+    })
+    if (!mandate) return res.status(403).json({ success: false, message: 'Accès refusé' })
+
+    const confirmedMandate = await confirmSepaMandate(setupIntentId)
+    return res.json({ success: true, data: confirmedMandate })
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Erreur interne'
     return res.status(400).json({ success: false, message: msg })
@@ -239,7 +246,7 @@ router.delete('/mandate/:contractId', async (req: Request, res: Response) => {
 })
 
 // GET /connect/payments — Historique des loyers payés (locataire)
-router.get('/payments', async (req: Request, res: Response) => {
+router.get('/payments', authorize('TENANT', 'ADMIN'), async (req: Request, res: Response) => {
   try {
     const payments = await prisma.rentPayment.findMany({
       where: { tenantId: req.user!.id },

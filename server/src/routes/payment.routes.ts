@@ -12,15 +12,30 @@ router.use(authenticate)
 // ─── LISTE DES PAIEMENTS D'UN CONTRAT ────────────────────────────────────────
 // GET /payments?contractId=xxx
 router.get('/', async (req: Request, res: Response) => {
-  const { contractId } = req.query
-  if (!contractId) return res.status(400).json({ error: 'contractId requis' })
+  try {
+    const { contractId } = req.query
+    if (!contractId) return res.status(400).json({ error: 'contractId requis' })
 
-  const payments = await prisma.payment.findMany({
-    where: { contractId: contractId as string },
-    orderBy: [{ year: 'desc' }, { month: 'desc' }],
-  })
+    // Verify ownership — only owner or tenant of this contract can read payments
+    const contract = await prisma.contract.findFirst({
+      where: {
+        id: contractId as string,
+        OR: [{ ownerId: req.user!.id }, { tenantId: req.user!.id }],
+      },
+      select: { id: true },
+    })
+    if (!contract) return res.status(403).json({ error: 'Accès refusé' })
 
-  return res.json(payments)
+    const payments = await prisma.payment.findMany({
+      where: { contractId: contractId as string },
+      orderBy: [{ year: 'desc' }, { month: 'desc' }],
+    })
+
+    return res.json(payments)
+  } catch (err: any) {
+    console.error('[payment] list error:', err)
+    return res.status(500).json({ error: err.message })
+  }
 })
 
 // ─── TOUS LES PAIEMENTS DU PROPRIÉTAIRE CONNECTÉ ─────────────────────────────
@@ -211,6 +226,11 @@ router.put('/:id/mark-paid', authorize('OWNER'), async (req: Request, res: Respo
 
     if (!payment) return res.status(404).json({ error: 'Paiement introuvable' })
     if (payment.status === 'PAID') return res.status(400).json({ error: 'Déjà marqué comme payé' })
+
+    // Verify this payment belongs to a contract owned by this user
+    if (payment.contract.property.ownerId !== req.user!.id) {
+      return res.status(403).json({ error: 'Accès refusé' })
+    }
 
     const paidDate = req.body.paidDate ? new Date(req.body.paidDate) : new Date()
 

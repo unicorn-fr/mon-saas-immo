@@ -4,6 +4,7 @@ import { useProperties } from '../../hooks/useProperties'
 import { useFavoriteStore } from '../../store/favoriteStore'
 import { PropertyCard } from '../../components/property/PropertyCard'
 import { Layout } from '../../components/layout/Layout'
+import { BAI } from '../../constants/bailio-tokens'
 
 type ViewMode = 'grid' | 'list'
 type SortBy = 'date' | 'price-asc' | 'price-desc'
@@ -59,7 +60,7 @@ export default function Favorites() {
           <div className="mb-8">
             <p
               className="uppercase tracking-widest mb-1"
-              style={{ fontSize: 10, color: '#9e9b96', letterSpacing: '0.12em' }}
+              style={{ fontSize: 10, color: BAI.caramel, letterSpacing: '0.12em' }}
             >
               Espace locataire
             </p>
@@ -69,7 +70,7 @@ export default function Favorites() {
                   fontFamily: "'Cormorant Garamond', Georgia, serif",
                   fontWeight: 700,
                   fontStyle: 'italic',
-                  fontSize: 40,
+                  fontSize: 'clamp(26px, 4vw, 40px)',
                   color: '#0d0c0a',
                   lineHeight: 1,
                 }}

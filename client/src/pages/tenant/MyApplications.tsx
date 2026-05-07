@@ -10,6 +10,7 @@ import {
   Trash2, ChevronDown, ChevronUp, ArrowUpRight, SendHorizonal,
   XCircle, RefreshCw,
 } from 'lucide-react'
+import { BAI } from '../../constants/bailio-tokens'
 import { applicationService } from '../../services/application.service'
 import type { Application, ApplicationStatus } from '../../types/application.types'
 import { Layout } from '../../components/layout/Layout'
@@ -478,7 +479,7 @@ export default function MyApplications() {
           <div className="mb-8">
             <p
               className="uppercase tracking-widest mb-1"
-              style={{ fontSize: 10, color: '#9e9b96', fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '0.12em' }}
+              style={{ fontSize: 10, color: BAI.caramel, fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '0.12em' }}
             >
               Espace locataire
             </p>
@@ -488,7 +489,7 @@ export default function MyApplications() {
                   fontFamily: "'Cormorant Garamond', Georgia, serif",
                   fontWeight: 700,
                   fontStyle: 'italic',
-                  fontSize: 'clamp(28px, 7vw, 40px)',
+                  fontSize: 'clamp(26px, 4vw, 40px)',
                   color: '#0d0c0a',
                   lineHeight: 1,
                 }}

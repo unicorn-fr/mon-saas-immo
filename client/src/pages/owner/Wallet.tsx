@@ -11,6 +11,28 @@ import { connectService, type ConnectStatus, type WalletPayment, type WalletSumm
 
 const MONTHS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
 
+const STRIPE_REQUIREMENT_LABELS: Record<string, string> = {
+  'individual.verification.document': 'Pièce d\'identité',
+  'individual.verification.additional_document': 'Justificatif de domicile',
+  'individual.dob.day': 'Date de naissance',
+  'individual.dob.month': 'Date de naissance',
+  'individual.dob.year': 'Date de naissance',
+  'individual.first_name': 'Prénom',
+  'individual.last_name': 'Nom de famille',
+  'individual.address.line1': 'Adresse postale',
+  'individual.address.postal_code': 'Code postal',
+  'individual.address.city': 'Ville',
+  'individual.phone': 'Numéro de téléphone',
+  'individual.ssn_last_4': 'Numéro de sécurité sociale',
+  'individual.id_number': 'Numéro d\'identité',
+  'external_account': 'Coordonnées bancaires (IBAN)',
+  'business_profile.url': 'Site web',
+  'tos_acceptance.date': 'Acceptation des conditions d\'utilisation',
+  'tos_acceptance.ip': 'Acceptation des conditions d\'utilisation',
+}
+
+const getRequirementLabel = (key: string) => STRIPE_REQUIREMENT_LABELS[key] ?? key
+
 function formatEuro(cents: number) {
   return (cents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })
 }
@@ -221,7 +243,7 @@ export default function OwnerWallet() {
                   </p>
                   <ul style={{ margin: 0, paddingLeft: 16 }}>
                     {connectStatus.requirements.slice(0, 5).map(r => (
-                      <li key={r} style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.error }}>{r}</li>
+                      <li key={r} style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.error }}>{getRequirementLabel(r)}</li>
                     ))}
                   </ul>
                 </div>

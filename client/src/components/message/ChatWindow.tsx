@@ -321,9 +321,10 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
     if (!conversation?.id) return
 
     const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? ''
-    const eventSource = new EventSource(`${API_URL}/messages/stream`, {
-      withCredentials: true,
-    })
+    const token = localStorage.getItem('accessToken') ?? ''
+    const eventSource = new EventSource(
+      `${API_URL}/messages/stream?token=${encodeURIComponent(token)}`
+    )
 
     eventSource.addEventListener('new_message', (e: MessageEvent) => {
       const newMsg = JSON.parse(e.data as string) as {

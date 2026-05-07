@@ -408,10 +408,13 @@ class ContractController {
         return res.status(400).json({ success: false, message: 'Contract ID is required' })
       }
 
-      const documents = await contractService.getContractDocuments(contractId)
+      const documents = await contractService.getContractDocuments(contractId, userId)
 
       return res.status(200).json({ success: true, data: { documents } })
     } catch (error) {
+      if (error instanceof Error && error.message === 'Unauthorized') {
+        return res.status(403).json({ success: false, message: 'Unauthorized' })
+      }
       if (error instanceof Error && error.message.includes('not found')) {
         return res.status(404).json({ success: false, message: 'Contract not found' })
       }

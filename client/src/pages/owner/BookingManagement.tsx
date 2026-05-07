@@ -21,6 +21,7 @@ import { VisitSlotsManager } from '../../components/booking/VisitSlotsManager'
 import { BookingStatus } from '../../types/booking.types'
 import { Layout } from '../../components/layout/Layout'
 import { BAI } from '../../constants/bailio-tokens'
+import toast from 'react-hot-toast'
 
 type ViewMode = 'list' | 'calendar'
 
@@ -120,6 +121,7 @@ export const BookingManagement = () => {
       await confirmBooking(id)
     } catch (err) {
       console.error('Failed to confirm booking:', err)
+      toast.error('Impossible de confirmer la visite. Veuillez réessayer.')
     } finally {
       setActionLoading(null)
     }
@@ -137,6 +139,7 @@ export const BookingManagement = () => {
       setCancelModalBookingId(null)
     } catch (err) {
       console.error('Failed to cancel booking:', err)
+      toast.error('Impossible d\'annuler la visite. Veuillez réessayer.')
     } finally {
       setActionLoading(null)
     }
@@ -181,7 +184,7 @@ export const BookingManagement = () => {
           <div className="mb-8">
             <p
               className="uppercase tracking-widest mb-1"
-              style={{ fontSize: 10, color: BAI.inkFaint, letterSpacing: '0.12em' }}
+              style={{ fontSize: 10, color: BAI.caramel, letterSpacing: '0.12em' }}
             >
               Propriétaire
             </p>

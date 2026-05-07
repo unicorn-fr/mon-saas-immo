@@ -18,6 +18,29 @@ router.get('/proxy', async (req, res) => {
 
   // Cloudinary / remote URL stored in DB → fetch and proxy
   if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+    // Validate URL to prevent SSRF — only allow Cloudinary
+    try {
+      const url = new URL(filePath)
+      const allowedHosts = ['res.cloudinary.com', 'cloudinary.com']
+      if (!allowedHosts.some(h => url.hostname === h || url.hostname.endsWith('.' + h))) {
+        return res.status(400).json({ success: false, message: 'Domaine non autorisé' })
+      }
+      // Block private IP ranges
+      const hostname = url.hostname
+      if (
+        hostname === 'localhost' ||
+        hostname.startsWith('127.') ||
+        hostname.startsWith('10.') ||
+        hostname.startsWith('192.168.') ||
+        hostname.startsWith('169.254.') ||
+        /^172\.(1[6-9]|2\d|3[01])\./.test(hostname)
+      ) {
+        return res.status(400).json({ success: false, message: 'Domaine non autorisé' })
+      }
+    } catch {
+      return res.status(400).json({ success: false, message: 'URL invalide' })
+    }
+
     try {
       const fetchRes = await fetch(filePath)
       if (!fetchRes.ok) return res.status(fetchRes.status).json({ success: false, message: 'Fichier inaccessible' })

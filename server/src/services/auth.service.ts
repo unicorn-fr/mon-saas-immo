@@ -783,6 +783,8 @@ class AuthService {
         emailVerified: true, phoneVerified: true,
         birthDate: true, birthCity: true, nationality: true,
         documentExpiry: true,
+        nationalNumber: true,
+        documentNumber: true,
         profileMeta: true,
         createdAt: true, updatedAt: true,
       },

@@ -14,6 +14,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react'
+import { BAI } from '../../constants/bailio-tokens'
 import { useBookings } from '../../hooks/useBookings'
 import { BookingCard } from '../../components/booking/BookingCard'
 import { CancelBookingModal } from '../../components/booking/CancelBookingModal'
@@ -316,7 +317,7 @@ export const MyBookings = () => {
           <div className="mb-8">
             <p
               className="uppercase tracking-widest mb-1"
-              style={{ fontSize: 10, color: '#9e9b96', letterSpacing: '0.12em' }}
+              style={{ fontSize: 10, color: BAI.caramel, letterSpacing: '0.12em' }}
             >
               Espace locataire
             </p>

@@ -361,6 +361,21 @@ export default function ContractsList() {
                   Créer mon premier contrat
                 </Link>
               )}
+              {user?.role === 'OWNER' && activeTab === 'actifs' && (
+                <Link
+                  to="/contracts/new"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 8,
+                    padding: '10px 20px', borderRadius: 8,
+                    background: BAI.night, color: '#ffffff',
+                    fontFamily: BAI.fontBody, fontWeight: 500, fontSize: 13,
+                    textDecoration: 'none',
+                  }}
+                >
+                  <Plus style={{ width: 15, height: 15 }} />
+                  Créer un contrat
+                </Link>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

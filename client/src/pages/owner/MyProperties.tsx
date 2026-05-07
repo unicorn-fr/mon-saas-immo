@@ -57,7 +57,7 @@ export default function MyProperties() {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDelete = async (id: string, title: string) => {
-    if (!window.confirm(`Etes-vous sur de vouloir supprimer "${title}" ?`)) return
+    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer "${title}" ?`)) return
     setDeletingId(id)
     try {
       await deleteProperty(id)
@@ -315,7 +315,7 @@ export default function MyProperties() {
         {/* ── Page Header ── */}
         <div style={{ background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}` }}>
           <div className="container mx-auto px-4 py-8">
-            <div className="flex items-start justify-between">
+            <div className="flex items-start justify-between flex-wrap gap-4">
               <div>
                 {/* Overline */}
                 <p
@@ -325,7 +325,7 @@ export default function MyProperties() {
                     fontWeight: 500,
                     letterSpacing: '0.12em',
                     textTransform: 'uppercase',
-                    color: BAI.inkFaint,
+                    color: BAI.caramel,
                     marginBottom: 6,
                   }}
                 >
@@ -335,7 +335,7 @@ export default function MyProperties() {
                 <h1
                   style={{
                     fontFamily: "'Cormorant Garamond', Georgia, serif",
-                    fontSize: 40,
+                    fontSize: 'clamp(26px, 4vw, 40px)',
                     fontWeight: 700,
                     fontStyle: 'italic',
                     color: BAI.ink,

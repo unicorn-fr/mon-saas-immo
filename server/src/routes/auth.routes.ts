@@ -13,7 +13,7 @@ const router = Router()
  */
 
 // POST /api/v1/auth/register — bloqué en mode waitlist
-router.post('/register', requireOpenRegistrations, authController.register.bind(authController))
+router.post('/register', requireOpenRegistrations, emailRateLimiter, authController.register.bind(authController))
 
 // POST /api/v1/auth/login - Login user (brute-force protected: 10 attempts / 15 min)
 router.post('/login', loginRateLimiter, authController.login.bind(authController))

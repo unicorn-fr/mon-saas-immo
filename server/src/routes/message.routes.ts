@@ -2,6 +2,8 @@ import { Router, Request, Response } from 'express'
 import { messageController } from '../controllers/message.controller.js'
 import { authenticate } from '../middlewares/auth.middleware.js'
 import { sseManager } from '../lib/sseManager.js'
+import { verifyAccessToken } from '../utils/jwt.util.js'
+import { authService } from '../services/auth.service.js'
 
 const router = Router()
 
@@ -23,9 +25,28 @@ router.delete('/:id', messageController.deleteMessage.bind(messageController))
 router.get('/unread-count', messageController.getUnreadCount.bind(messageController))
 router.get('/search', messageController.searchMessages.bind(messageController))
 
-// SSE — connexion temps réel (remplace le polling 5s)
-// Le token JWT peut être passé dans le header Authorization OU dans ?token=xxx
-router.get('/stream', authenticate, (req: Request, res: Response) => {
+// SSE — EventSource ne peut pas envoyer Authorization header → auth via query token
+router.get('/stream', async (req: Request, res: Response) => {
+  // Auth: header Authorization OR ?token= query param (for EventSource)
+  const authHeader = req.headers.authorization
+  const headerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null
+  const queryToken = req.query.token as string | undefined
+  const token = headerToken ?? queryToken
+
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'Authentication required' })
+  }
+
+  try {
+    const decoded = verifyAccessToken(token)
+    const user = await authService.getUserById(decoded.userId)
+    if (!user) return res.status(401).json({ success: false, message: 'User not found' })
+
+    req.user = { id: user.id, email: user.email, role: user.role as 'TENANT' | 'OWNER' | 'ADMIN' | 'SUPER_ADMIN' }
+  } catch {
+    return res.status(401).json({ success: false, message: 'Token invalide' })
+  }
+
   res.setHeader('Content-Type', 'text/event-stream')
   res.setHeader('Cache-Control', 'no-cache, no-transform')
   res.setHeader('Connection', 'keep-alive')

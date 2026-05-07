@@ -643,7 +643,7 @@ export default function CreatePropertyWizard() {
       await propertyService.publishProperty(property.id)
       localStorage.removeItem(DRAFT_KEY)
       celebrateBig()
-      navigate('/dashboard/owner')
+      navigate(`/properties/${property.id}`)
     } catch (err) {
       setErrors({ general: err instanceof Error ? err.message : 'Erreur lors de la création' })
     }

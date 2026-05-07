@@ -176,6 +176,7 @@ function AppRoutes() {
   return (
     <>
     <ScrollToTop />
+    <ErrorBoundary>
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<Home />} />
@@ -301,6 +302,7 @@ function AppRoutes() {
       {/* 404 */}
       <Route path="*" element={<NotFound />} />
     </Routes>
+    </ErrorBoundary>
     </>
   )
 }
