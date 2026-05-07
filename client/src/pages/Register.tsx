@@ -6,7 +6,6 @@ import { useAuthStore } from '../store/authStore'
 import { apiClient } from '../services/api.service'
 import { celebrateBig } from '../utils/celebrate'
 import { BailioLogo } from '../components/BailioLogo'
-import GoogleSignInButton from '../components/auth/GoogleSignInButton'
 import toast from 'react-hot-toast'
 
 const ROLE_PATHS: Record<string, string> = {
@@ -252,20 +251,6 @@ export default function Register() {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
     if (error) setError('')
-  }
-
-  const handleGoogleSuccess = async (idToken: string) => {
-    try {
-      const { user: u } = await googleLogin(idToken)
-      const paths: Record<string, string> = {
-        OWNER: '/dashboard/owner', TENANT: '/dashboard/tenant',
-        SUPER_ADMIN: '/super-admin', ADMIN: '/admin',
-      }
-      navigate(paths[u.role] ?? '/', { replace: true })
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Inscription Google échouée.'
-      toast.error(msg)
-    }
   }
 
   const handleSubmit = async (e: FormEvent) => {

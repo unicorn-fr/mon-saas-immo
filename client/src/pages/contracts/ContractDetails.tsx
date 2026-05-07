@@ -36,7 +36,6 @@ import {
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import toast from 'react-hot-toast'
 import { celebrateBig, celebrateSmall } from '../../utils/celebrate'
 
 
