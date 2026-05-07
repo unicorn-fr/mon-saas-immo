@@ -49,6 +49,7 @@ import DossierShareManager from './pages/tenant/DossierShareManager'
 import PrivacyCenter from './pages/tenant/PrivacyCenter'
 import TenantSettings from './pages/tenant/Settings'
 import TenantWallet from './pages/tenant/TenantWallet'
+import TenantMaintenance from './pages/tenant/Maintenance'
 
 // Shared Pages
 import Messages from './pages/Messages'
@@ -251,6 +252,7 @@ function AppRoutes() {
         <Route path="/privacy" element={<PrivacyCenter />} />
         <Route path="/tenant/settings" element={<TenantSettings />} />
         <Route path="/tenant/wallet" element={<TenantWallet />} />
+        <Route path="/tenant/maintenance" element={<TenantMaintenance />} />
       </Route>
 
       <Route element={<ProtectedRoute />}>

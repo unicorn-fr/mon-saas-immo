@@ -236,6 +236,12 @@ export default function OwnerWallet() {
                 </div>
               )}
 
+              {connectStatus?.status === 'pending' && (
+                <p style={{ fontSize: 13, color: BAI.inkMid, marginTop: 8, lineHeight: 1.6, fontFamily: BAI.fontBody }}>
+                  La vérification prend généralement 1 à 3 jours ouvrables. Vous serez notifié par email dès qu'elle sera terminée.
+                </p>
+              )}
+
               {connectStatus?.requirements && connectStatus.requirements.length > 0 && (
                 <div style={{ marginTop: 16, padding: '12px 16px', background: BAI.errorLight, border: `1px solid #fca5a5`, borderRadius: 10 }}>
                   <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.error, margin: '0 0 4px' }}>

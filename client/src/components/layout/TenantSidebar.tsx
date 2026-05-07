@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 import { NavLink, Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Search, Heart, Calendar,
-  FolderOpen, SendHorizonal, FileText, MessageSquare, X, LogOut, Settings, Wallet,
+  FolderOpen, SendHorizonal, FileText, MessageSquare, X, LogOut, Settings, Wallet, Wrench,
 } from 'lucide-react'
 import { useSidebarStore } from '../../store/sidebarStore'
 import { useMessages } from '../../hooks/useMessages'
@@ -189,6 +189,7 @@ export function TenantSidebar() {
         <SectionLabel label="Mon logement" compact={compact} />
         <NavItem to="/contracts" icon={FileText} label="Mon contrat" onClick={closeMobile} compact={compact} />
         <NavItem to="/tenant/wallet" icon={Wallet} label="Paiements" onClick={closeMobile} compact={compact} />
+        <NavItem to="/tenant/maintenance" icon={Wrench} label="Maintenance" onClick={closeMobile} compact={compact} />
 
         <SectionLabel label="Communication" compact={compact} />
         <NavItem to="/messages" icon={MessageSquare} label="Messages" badge={unreadCount} onClick={closeMobile} compact={compact} />

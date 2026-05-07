@@ -1,6 +1,6 @@
 import { useState, FormEvent, useRef, KeyboardEvent, ClipboardEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { AlertCircle, CheckCircle, ArrowRight, UserPlus } from 'lucide-react'
+import { AlertCircle, CheckCircle } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useAuthStore } from '../store/authStore'
 import { apiClient } from '../services/api.service'
@@ -368,7 +368,7 @@ export default function Register() {
             >← Accueil</Link>
           </div>
 
-          <div style={{ width: '100%', maxWidth: '380px', padding: '64px 32px 48px' }}>
+          <div style={{ width: '100%', maxWidth: '400px', padding: '64px 32px 48px' }}>
 
             {/* Mobile logo */}
             <div className="flex md:hidden" style={{ justifyContent: 'center', marginBottom: '28px' }}>
@@ -379,43 +379,59 @@ export default function Register() {
             </div>
 
             <div style={{ marginBottom: '28px' }}>
-              <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '36px', color: '#0d0c0a', margin: '0 0 6px', lineHeight: 1.1 }}>
+              <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '34px', color: '#0d0c0a', margin: '0 0 6px', lineHeight: 1.1 }}>
                 Créer un compte
               </h1>
               <p style={{ fontSize: '14px', color: '#5a5754', margin: 0 }}>
-                Rejoignez la plateforme en quelques minutes.
+                Commencez par choisir votre profil.
               </p>
             </div>
 
-            {/* Google */}
-            <GoogleSignInButton onSuccess={handleGoogleSuccess} text="signup_with" />
-
-            {/* Séparateur */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '16px 0' }}>
-              <div style={{ flex: 1, height: 1, background: '#e4e1db' }} />
-              <span style={{ fontSize: 12, color: '#9e9b96' }}>ou</span>
-              <div style={{ flex: 1, height: 1, background: '#e4e1db' }} />
+            {/* Role picker — first and most prominent */}
+            <div style={{ marginBottom: '24px' }}>
+              <p style={{ fontSize: '12px', fontWeight: 600, color: '#5a5754', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 10px' }}>
+                Je suis
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                {([
+                  { value: 'TENANT' as const, label: 'Locataire', desc: 'Je cherche un logement', emoji: '🏠' },
+                  { value: 'OWNER' as const, label: 'Propriétaire', desc: 'Je loue mon bien', emoji: '🔑' },
+                ]).map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      setFormData(p => ({ ...p, role: opt.value }))
+                      setScreen('form')
+                    }}
+                    style={{
+                      padding: '20px 12px', borderRadius: '12px', textAlign: 'center', cursor: 'pointer',
+                      border: '1.5px solid #e4e1db',
+                      background: '#f8f7f4',
+                      fontFamily: "'DM Sans', system-ui, sans-serif",
+                      transition: 'border-color 0.15s, background 0.15s, box-shadow 0.15s',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
+                    }}
+                    onMouseEnter={e => {
+                      const b = e.currentTarget as HTMLButtonElement
+                      b.style.borderColor = '#1a1a2e'
+                      b.style.background = 'rgba(26,26,46,0.04)'
+                      b.style.boxShadow = '0 4px 16px rgba(26,26,46,0.10)'
+                    }}
+                    onMouseLeave={e => {
+                      const b = e.currentTarget as HTMLButtonElement
+                      b.style.borderColor = '#e4e1db'
+                      b.style.background = '#f8f7f4'
+                      b.style.boxShadow = 'none'
+                    }}
+                  >
+                    <span style={{ fontSize: '28px', lineHeight: 1 }}>{opt.emoji}</span>
+                    <span style={{ fontWeight: 700, fontSize: '15px', color: '#0d0c0a' }}>{opt.label}</span>
+                    <span style={{ fontSize: '12px', color: '#9e9b96' }}>{opt.desc}</span>
+                  </button>
+                ))}
+              </div>
             </div>
-
-            {/* Email CTA */}
-            <button
-              type="button"
-              onClick={() => setScreen('form')}
-              style={{
-                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                padding: '13px 16px', background: '#ffffff', color: '#0d0c0a',
-                border: '1px solid #ccc9c3', borderRadius: '10px',
-                fontSize: '14px', fontWeight: 500,
-                fontFamily: "'DM Sans', system-ui, sans-serif",
-                cursor: 'pointer', transition: 'border-color 0.15s, background 0.15s',
-              }}
-              onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = '#f4f2ee'; b.style.borderColor = '#9e9b96' }}
-              onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = '#ffffff'; b.style.borderColor = '#ccc9c3' }}
-            >
-              <UserPlus style={{ width: '16px', height: '16px', color: '#5a5754', flexShrink: 0 }} />
-              Créer un compte avec un email
-              <ArrowRight style={{ width: '14px', height: '14px', color: '#9e9b96', marginLeft: 'auto' }} />
-            </button>
 
             <p style={{ textAlign: 'center', fontSize: '13px', color: '#9e9b96', marginTop: '28px', marginBottom: 0 }}>
               Vous avez déjà un compte ?{' '}
@@ -510,7 +526,7 @@ export default function Register() {
           {/* Heading */}
           <div style={{ marginBottom: '24px' }}>
             <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '34px', color: '#0d0c0a', margin: '0 0 6px', lineHeight: 1.1 }}>
-              Créer votre compte
+              Créer votre compte {formData.role === 'OWNER' ? 'propriétaire' : 'locataire'}
             </h1>
             <p style={{ fontSize: '14px', color: '#5a5754', margin: 0 }}>
               Rejoignez la plateforme en quelques minutes.
