@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useSidebarStore } from '../../store/sidebarStore'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { BailioLogo } from '../BailioLogo'
 import { BAI } from '../../constants/bailio-tokens'
 import { useMessages } from '../../hooks/useMessages'
@@ -50,9 +50,16 @@ export const Header = () => {
   const location = useLocation()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showMobilePublicMenu, setShowMobilePublicMenu] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const { toggle: toggleSidebar } = useSidebarStore()
   const { unreadCount } = useMessages()
   usePageTitle(user?.role)
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 30)
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const hasSidebar = isAuthenticated && (user?.role === 'OWNER' || user?.role === 'TENANT')
 
@@ -93,11 +100,15 @@ export const Header = () => {
 
         {/* Hamburger mobile — flottant à gauche */}
         <button onClick={toggleSidebar}
-          className="md:hidden flex items-center justify-center rounded-xl transition-colors"
+          className="md:hidden flex items-center justify-center transition-colors"
           style={{
             position: 'absolute', top: 8, left: 12,
             minWidth: 44, minHeight: 44,
-            background: '#ffffff', border: `1px solid ${BAI.border}`,
+            background: 'rgba(255,255,255,0.85)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            borderRadius: 14,
+            border: '1px solid rgba(255,255,255,0.5)',
             color: BAI.inkFaint, pointerEvents: 'auto',
             boxShadow: '0 2px 8px rgba(13,12,10,0.08)',
           }}
@@ -112,11 +123,13 @@ export const Header = () => {
             position: 'absolute',
             top: 8,
             right: 'clamp(12px, 3vw, 16px)',
-            background: '#ffffff',
-            border: `1px solid ${BAI.border}`,
-            borderRadius: 16,
+            background: 'rgba(255,255,255,0.85)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            borderRadius: 20,
+            border: '1px solid rgba(255,255,255,0.5)',
             padding: '4px 6px',
-            boxShadow: '0 2px 12px rgba(13,12,10,0.08), 0 1px 3px rgba(13,12,10,0.05)',
+            boxShadow: '0 4px 24px rgba(13,12,10,0.10)',
             pointerEvents: 'auto',
           }}>
 
@@ -186,10 +199,11 @@ export const Header = () => {
             {showUserMenu && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
-                <div className="absolute right-0 mt-2 rounded-2xl py-1.5 z-20 overflow-hidden"
+                <div className="absolute right-0 mt-2 py-1.5 z-20 overflow-hidden"
                   style={{
                     background: '#ffffff',
                     border: `1px solid ${BAI.border}`,
+                    borderRadius: 20,
                     boxShadow: '0 20px 60px rgba(13,12,10,0.12), 0 4px 16px rgba(13,12,10,0.06)',
                     width: 'min(240px, calc(100vw - 32px))',
                   }}>
@@ -271,10 +285,13 @@ export const Header = () => {
     {/* ── Barre de navigation ── */}
     <header style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-      background: '#ffffff',
-      borderBottom: `1px solid ${BAI.border}`,
-      height: 56,
+      height: 60,
       display: 'flex', alignItems: 'center',
+      backdropFilter: scrolled ? 'blur(20px) saturate(180%)' : 'none',
+      WebkitBackdropFilter: scrolled ? 'blur(20px) saturate(180%)' : 'none',
+      background: scrolled ? 'rgba(26, 26, 46, 0.82)' : 'transparent',
+      borderBottom: scrolled ? '1px solid rgba(255,255,255,0.08)' : 'none',
+      transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
       overflow: 'hidden',
     }}>
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 16px', width: '100%', boxSizing: 'border-box' }}>
@@ -285,7 +302,7 @@ export const Header = () => {
             <BailioLogo size={22} />
             <span style={{
               fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700,
-              fontStyle: 'italic', color: '#1a3270', letterSpacing: '-0.01em', lineHeight: 1,
+              fontStyle: 'italic', color: 'rgba(255,255,255,0.95)', letterSpacing: '-0.01em', lineHeight: 1,
               whiteSpace: 'nowrap',
             }}>
               Bailio<span style={{ color: BAI.caramel }}>.</span>
@@ -304,12 +321,12 @@ export const Header = () => {
                 return (
                   <Link key={to} to={to}
                     style={{
-                      color: isActive ? BAI.ink : BAI.inkMid,
+                      color: isActive ? BAI.caramel : 'rgba(255,255,255,0.70)',
                       fontFamily: 'var(--font-body)', fontSize: 13.5, fontWeight: 500,
                       textDecoration: 'none', position: 'relative', paddingBottom: 2,
                     }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = BAI.ink }}
-                    onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.color = BAI.inkMid }}>
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#ffffff' }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = isActive ? BAI.caramel : 'rgba(255,255,255,0.70)' }}>
                     {label}
                     {isActive && (
                       <span style={{ position: 'absolute', left: 0, right: 0, bottom: -18, height: 2, background: BAI.caramel, borderRadius: 2 }} />
@@ -387,15 +404,22 @@ export const Header = () => {
             ) : (
               <>
                 <Link to="/login"
-                  style={{ padding: '8px 14px', borderRadius: 8, fontSize: 13.5, fontWeight: 500, color: BAI.inkMid, textDecoration: 'none' }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = BAI.ink }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = BAI.inkMid }}>
+                  style={{
+                    padding: '7px 18px', borderRadius: 24, fontSize: 13.5, fontWeight: 500,
+                    color: 'rgba(255,255,255,0.85)', textDecoration: 'none',
+                    border: '1px solid rgba(255,255,255,0.2)', background: 'transparent',
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = '#ffffff'; (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(255,255,255,0.45)' }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = 'rgba(255,255,255,0.85)'; (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(255,255,255,0.2)' }}>
                   Se connecter
                 </Link>
                 <Link to="/register"
-                  style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13.5, fontWeight: 600, background: BAI.night, color: '#fff', textDecoration: 'none' }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = BAI.nightHover }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = BAI.night }}>
+                  style={{
+                    padding: '7px 18px', borderRadius: 24, fontSize: 13.5, fontWeight: 600,
+                    background: BAI.caramel, color: '#fff', textDecoration: 'none',
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.opacity = '0.88' }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.opacity = '1' }}>
                   S'inscrire
                 </Link>
               </>
@@ -449,12 +473,12 @@ export const Header = () => {
                 style={{
                   display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
                   gap: 5, width: 40, height: 40, borderRadius: 8,
-                  border: `1px solid ${BAI.border}`, background: 'transparent', cursor: 'pointer', padding: 0,
+                  border: '1px solid rgba(255,255,255,0.25)', background: 'transparent', cursor: 'pointer', padding: 0,
                 }}
                 aria-label="Menu">
-                <span style={{ display: 'block', width: 18, height: 1.5, background: BAI.ink, borderRadius: 2, transition: 'all .25s', transform: showMobilePublicMenu ? 'rotate(45deg) translateY(6.5px)' : 'none' }} />
-                <span style={{ display: 'block', width: 18, height: 1.5, background: BAI.ink, borderRadius: 2, transition: 'all .25s', opacity: showMobilePublicMenu ? 0 : 1 }} />
-                <span style={{ display: 'block', width: 18, height: 1.5, background: BAI.ink, borderRadius: 2, transition: 'all .25s', transform: showMobilePublicMenu ? 'rotate(-45deg) translateY(-6.5px)' : 'none' }} />
+                <span style={{ display: 'block', width: 18, height: 1.5, background: 'rgba(255,255,255,0.90)', borderRadius: 2, transition: 'all .25s', transform: showMobilePublicMenu ? 'rotate(45deg) translateY(6.5px)' : 'none' }} />
+                <span style={{ display: 'block', width: 18, height: 1.5, background: 'rgba(255,255,255,0.90)', borderRadius: 2, transition: 'all .25s', opacity: showMobilePublicMenu ? 0 : 1 }} />
+                <span style={{ display: 'block', width: 18, height: 1.5, background: 'rgba(255,255,255,0.90)', borderRadius: 2, transition: 'all .25s', transform: showMobilePublicMenu ? 'rotate(-45deg) translateY(-6.5px)' : 'none' }} />
               </button>
             )}
           </div>
@@ -540,8 +564,7 @@ export const Header = () => {
       </div>
     )}
 
-    {/* Spacer */}
-    <div aria-hidden style={{ height: 56, flexShrink: 0 }} />
+    {/* Pas de spacer — le header est transparent en overlay sur le hero */}
     </>
   )
 }

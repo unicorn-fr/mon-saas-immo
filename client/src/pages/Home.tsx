@@ -354,6 +354,16 @@ export default function Home() {
         <div style={{ position: 'absolute', width: 340, height: 100, top: '12%', right: -80, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', filter: 'blur(40px)', animation: 'cloud1 22s ease-in-out infinite', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', width: 260, height: 80, top: '48%', left: '50%', borderRadius: '50%', background: 'rgba(255,255,255,0.04)', filter: 'blur(40px)', animation: 'cloud2 28s ease-in-out infinite', pointerEvents: 'none' }} />
 
+        {/* Grid SVG */}
+        <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.06, pointerEvents: 'none', zIndex: 0 }}>
+          <defs>
+            <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+              <path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="0.5"/>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#grid)"/>
+        </svg>
+
         {/* Skyline SVG */}
         <svg viewBox="0 0 1400 160" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 160, opacity: 0.18, pointerEvents: 'none', zIndex: 1 }}>
           <g fill="#ffffff">
@@ -387,6 +397,9 @@ export default function Home() {
               Plateforme ouverte · Inscription gratuite
             </span>
 
+            {/* Caramel glow */}
+            <div style={{ position: 'absolute', width: 400, height: 200, top: '30%', left: '5%', borderRadius: '50%', background: 'rgba(196,151,106,0.12)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
+
             <h1 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(42px,7vw,80px)', lineHeight: 1.02, letterSpacing: '-0.02em', color: '#fff', margin: '0 0 22px', maxWidth: '16ch' }}>
               La clé de ta <em style={{ color: T.caramel }}>prochaine location.</em>
             </h1>
@@ -399,7 +412,7 @@ export default function Home() {
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 40 }}>
               <Link
                 to="/register?role=OWNER"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '14px 26px', borderRadius: 8, fontFamily: T.fontBody, fontSize: 15, fontWeight: 600, background: T.caramel, color: '#fff', textDecoration: 'none', transition: 'all .2s' }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '14px 26px', borderRadius: 28, fontFamily: T.fontBody, fontSize: 15, fontWeight: 600, background: T.caramel, color: '#fff', textDecoration: 'none', transition: 'all .2s' }}
                 onMouseEnter={e => { e.currentTarget.style.background = T.caramelHover; e.currentTarget.style.transform = 'translateY(-1px)' }}
                 onMouseLeave={e => { e.currentTarget.style.background = T.caramel; e.currentTarget.style.transform = 'translateY(0)' }}
               >
@@ -407,7 +420,7 @@ export default function Home() {
               </Link>
               <Link
                 to="/search"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '14px 26px', borderRadius: 8, fontFamily: T.fontBody, fontSize: 15, fontWeight: 600, background: 'rgba(255,255,255,0.08)', color: '#fff', border: '1px solid rgba(255,255,255,0.18)', textDecoration: 'none', transition: 'all .2s' }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '14px 26px', borderRadius: 28, fontFamily: T.fontBody, fontSize: 15, fontWeight: 600, background: 'rgba(255,255,255,0.08)', color: '#fff', border: '1px solid rgba(255,255,255,0.18)', textDecoration: 'none', transition: 'all .2s' }}
                 onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.14)' }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)' }}
               >
@@ -450,7 +463,7 @@ export default function Home() {
       </section>
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────── */}
-      <section style={{ padding: 'clamp(72px,12vh,130px) 0', background: T.bgBase }}>
+      <section style={{ padding: 'clamp(72px,12vh,130px) 0', background: 'linear-gradient(135deg, #f4f2ee 0%, #ede9e3 100%)' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
           <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.caramel, margin: '0 0 14px' }}>
             Comment ça marche
@@ -464,7 +477,7 @@ export default function Home() {
 
           <div className="steps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
             {STEPS.map(step => (
-              <div key={step.n} style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 12, padding: '36px 28px 28px', position: 'relative' }}>
+              <div key={step.n} style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.6)', borderRadius: 20, padding: '36px 28px 28px', position: 'relative', boxShadow: '0 4px 24px rgba(13,12,10,0.06)' }}>
                 <div style={{ position: 'absolute', top: -18, left: 28, width: 44, height: 44, borderRadius: '50%', background: T.night, color: '#fff', fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
                   {step.n}
                 </div>
@@ -514,11 +527,11 @@ export default function Home() {
           <div className="feat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 20 }}>
             {FEATURES.map(feat => (
               <div key={feat.title}
-                style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 12, padding: 28, transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', cursor: 'default' }}
-                onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-2px)'; el.style.boxShadow = T.shadowHover; el.style.borderColor = '#e8ccaa' }}
+                style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 20, padding: 28, transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', cursor: 'default' }}
+                onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-2px)'; el.style.boxShadow = '0 12px 40px rgba(13,12,10,0.12)'; el.style.borderColor = '#e8ccaa' }}
                 onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = 'none'; el.style.borderColor = T.border }}
               >
-                <div style={{ width: 48, height: 48, borderRadius: 12, background: '#fdf5ec', color: T.caramelHover, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+                <div style={{ width: 48, height: 48, borderRadius: 16, background: '#fdf5ec', color: T.caramelHover, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
                   {feat.icon}
                 </div>
                 <h4 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, margin: '0 0 10px', color: T.ink }}>{feat.title}</h4>
@@ -546,7 +559,7 @@ export default function Home() {
             {/* Chercher */}
             <Link to="/search" style={{ textDecoration: 'none', display: 'block' }}>
               <div
-                style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 16, padding: 28, height: '100%', boxSizing: 'border-box', transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', position: 'relative', overflow: 'hidden' }}
+                style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 24, padding: 28, height: '100%', boxSizing: 'border-box', transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', position: 'relative', overflow: 'hidden' }}
                 onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-3px)'; el.style.boxShadow = '0 8px 24px rgba(13,12,10,0.1)'; el.style.borderColor = '#e8ccaa' }}
                 onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = 'none'; el.style.borderColor = T.border }}
               >
@@ -565,7 +578,7 @@ export default function Home() {
             {/* Propriétaires */}
             <Link to="/proprietaires" style={{ textDecoration: 'none', display: 'block' }}>
               <div
-                style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 16, padding: 28, height: '100%', boxSizing: 'border-box', transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', position: 'relative', overflow: 'hidden' }}
+                style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 24, padding: 28, height: '100%', boxSizing: 'border-box', transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', position: 'relative', overflow: 'hidden' }}
                 onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-3px)'; el.style.boxShadow = '0 8px 24px rgba(13,12,10,0.1)'; el.style.borderColor = '#b8ccf0' }}
                 onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = 'none'; el.style.borderColor = T.border }}
               >
@@ -584,7 +597,7 @@ export default function Home() {
             {/* Locataires */}
             <Link to="/locataires" style={{ textDecoration: 'none', display: 'block' }}>
               <div
-                style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 16, padding: 28, height: '100%', boxSizing: 'border-box', transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', position: 'relative', overflow: 'hidden' }}
+                style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 24, padding: 28, height: '100%', boxSizing: 'border-box', transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', position: 'relative', overflow: 'hidden' }}
                 onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-3px)'; el.style.boxShadow = '0 8px 24px rgba(13,12,10,0.1)'; el.style.borderColor = '#9fd4ba' }}
                 onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = 'none'; el.style.borderColor = T.border }}
               >
@@ -603,7 +616,7 @@ export default function Home() {
             {/* Tarifs */}
             <Link to="/pricing" style={{ textDecoration: 'none', display: 'block' }}>
               <div
-                style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 16, padding: 28, height: '100%', boxSizing: 'border-box', transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', position: 'relative', overflow: 'hidden' }}
+                style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 24, padding: 28, height: '100%', boxSizing: 'border-box', transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', position: 'relative', overflow: 'hidden' }}
                 onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-3px)'; el.style.boxShadow = '0 8px 24px rgba(13,12,10,0.1)'; el.style.borderColor = '#e8ccaa' }}
                 onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = 'none'; el.style.borderColor = T.border }}
               >
@@ -622,7 +635,7 @@ export default function Home() {
             {/* À propos */}
             <Link to="/a-propos" style={{ textDecoration: 'none', display: 'block' }}>
               <div
-                style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 16, padding: 28, height: '100%', boxSizing: 'border-box', transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', position: 'relative', overflow: 'hidden' }}
+                style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 24, padding: 28, height: '100%', boxSizing: 'border-box', transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', position: 'relative', overflow: 'hidden' }}
                 onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-3px)'; el.style.boxShadow = '0 8px 24px rgba(13,12,10,0.1)'; el.style.borderColor = '#ccc9c3' }}
                 onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = 'none'; el.style.borderColor = T.border }}
               >
@@ -641,7 +654,7 @@ export default function Home() {
             {/* FAQ — bonus */}
             <Link to="/faq" style={{ textDecoration: 'none', display: 'block' }}>
               <div
-                style={{ background: T.night, border: `1px solid rgba(255,255,255,0.08)`, borderRadius: 16, padding: 28, height: '100%', boxSizing: 'border-box', transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', position: 'relative', overflow: 'hidden' }}
+                style={{ background: T.night, border: `1px solid rgba(255,255,255,0.08)`, borderRadius: 24, padding: 28, height: '100%', boxSizing: 'border-box', transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', position: 'relative', overflow: 'hidden' }}
                 onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-3px)'; el.style.boxShadow = '0 8px 24px rgba(13,12,10,0.2)' }}
                 onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = 'none' }}
               >
@@ -672,7 +685,7 @@ export default function Home() {
 
           <div className="testi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24 }}>
             {TESTIMONIALS.map(t => (
-              <div key={t.name} style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 12, padding: 28 }}>
+              <div key={t.name} style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 20, padding: 28 }}>
                 {/* Quote mark */}
                 <svg width="32" height="24" viewBox="0 0 32 24" fill={T.caramel} style={{ marginBottom: 18, opacity: 0.5 }}>
                   <path d="M0 24V14C0 6 4 1 12 0V5C7 6.5 5 9 5 13H10V24H0ZM18 24V14C18 6 22 1 30 0V5C25 6.5 23 9 23 13H28V24H18Z"/>
@@ -696,7 +709,7 @@ export default function Home() {
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <div className="cta-grid" style={{ display: 'flex', gap: 20 }}>
             {/* Owners */}
-            <div className="cta-split-card" style={{ flex: 1, background: T.night, borderRadius: 20, padding: '48px 44px', display: 'flex', flexDirection: 'column' }}>
+            <div className="cta-split-card" style={{ flex: 1, background: T.night, borderRadius: 32, padding: '48px 44px', display: 'flex', flexDirection: 'column' }}>
               <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: T.caramel, textTransform: 'uppercase', marginBottom: 16 }}>Propriétaires</p>
               <h3 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 36, color: '#f5f4f0', lineHeight: 1.2, margin: '0 0 24px', letterSpacing: '-0.02em' }}>
                 Louez vite,<br />louez bien.
@@ -711,7 +724,7 @@ export default function Home() {
               <div style={{ marginTop: 'auto' }}>
                 <Link
                   to="/register?role=OWNER"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: T.fontBody, fontWeight: 600, fontSize: 14, color: T.night, background: '#f5f4f0', borderRadius: 10, padding: '12px 24px', textDecoration: 'none', transition: 'opacity .15s' }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: T.fontBody, fontWeight: 600, fontSize: 14, color: T.night, background: '#f5f4f0', borderRadius: 24, padding: '12px 24px', textDecoration: 'none', transition: 'opacity .15s' }}
                   onMouseEnter={e => { e.currentTarget.style.opacity = '0.85' }}
                   onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
                 >
@@ -721,7 +734,7 @@ export default function Home() {
             </div>
 
             {/* Tenants */}
-            <div className="cta-split-card" style={{ flex: 1, background: T.caramel, borderRadius: 20, padding: '48px 44px', display: 'flex', flexDirection: 'column' }}>
+            <div className="cta-split-card" style={{ flex: 1, background: T.caramel, borderRadius: 32, padding: '48px 44px', display: 'flex', flexDirection: 'column' }}>
               <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.70)', textTransform: 'uppercase', marginBottom: 16 }}>Locataires</p>
               <h3 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 36, color: '#fff', lineHeight: 1.2, margin: '0 0 24px', letterSpacing: '-0.02em' }}>
                 Trouvez votre<br />prochain chez-vous.
@@ -736,7 +749,7 @@ export default function Home() {
               <div style={{ marginTop: 'auto' }}>
                 <Link
                   to="/register?role=TENANT"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: T.fontBody, fontWeight: 600, fontSize: 14, color: T.caramel, background: '#ffffff', borderRadius: 10, padding: '12px 24px', textDecoration: 'none', transition: 'opacity .15s' }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: T.fontBody, fontWeight: 600, fontSize: 14, color: T.caramel, background: '#ffffff', borderRadius: 24, padding: '12px 24px', textDecoration: 'none', transition: 'opacity .15s' }}
                   onMouseEnter={e => { e.currentTarget.style.opacity = '0.85' }}
                   onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
                 >
@@ -762,7 +775,7 @@ export default function Home() {
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <Link
               to="/register"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '14px 26px', borderRadius: 8, fontFamily: T.fontBody, fontSize: 15, fontWeight: 600, background: T.caramel, color: '#fff', textDecoration: 'none', transition: 'all .2s' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '14px 26px', borderRadius: 28, fontFamily: T.fontBody, fontSize: 15, fontWeight: 600, background: T.caramel, color: '#fff', textDecoration: 'none', transition: 'all .2s' }}
               onMouseEnter={e => { e.currentTarget.style.background = T.caramelHover; e.currentTarget.style.transform = 'translateY(-1px)' }}
               onMouseLeave={e => { e.currentTarget.style.background = T.caramel; e.currentTarget.style.transform = 'translateY(0)' }}
             >
@@ -770,7 +783,7 @@ export default function Home() {
             </Link>
             <Link
               to="/pricing"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '14px 26px', borderRadius: 8, fontFamily: T.fontBody, fontSize: 15, fontWeight: 600, background: 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,0.3)', textDecoration: 'none', transition: 'all .2s' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '14px 26px', borderRadius: 28, fontFamily: T.fontBody, fontSize: 15, fontWeight: 600, background: 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,0.3)', textDecoration: 'none', transition: 'all .2s' }}
               onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)' }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
             >
