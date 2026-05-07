@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Layout } from '../../components/layout/Layout'
 import { BAI } from '../../constants/bailio-tokens'
-import { TrendingUp, Calculator, BarChart3, ChevronDown } from 'lucide-react'
+import { TrendingUp, Calculator, ChevronDown } from 'lucide-react'
 
 // ── IRL DATA (INSEE - trimestres récents) ────────────────────────────────────
 const IRL_DATA: Record<string, number> = {
@@ -196,85 +196,6 @@ function RegularisationCharges() {
   )
 }
 
-// ── Tool 3: Simulateur de rentabilité ────────────────────────────────────────
-function SimulateurRentabilite() {
-  const [prixAchat, setPrixAchat] = useState('')
-  const [fraisNotaire, setFraisNotaire] = useState('8')
-  const [travaux, setTravaux] = useState('')
-  const [loyerMensuel, setLoyerMensuel] = useState('')
-  const [chargesAnnuelles, setChargesAnnuelles] = useState('')
-  const [taxeFonciere, setTaxeFonciere] = useState('')
-
-  const prix = parseFloat(prixAchat) || 0
-  const frais = (parseFloat(fraisNotaire) || 0) / 100
-  const trav = parseFloat(travaux) || 0
-  const loyer = parseFloat(loyerMensuel) || 0
-  const charges = parseFloat(chargesAnnuelles) || 0
-  const taxe = parseFloat(taxeFonciere) || 0
-
-  const investissementTotal = prix * (1 + frais) + trav
-  const loyerAnnuel = loyer * 12
-  const rentaBrute = investissementTotal > 0 ? (loyerAnnuel / investissementTotal) * 100 : 0
-  const rentaNette = investissementTotal > 0 ? ((loyerAnnuel - charges - taxe) / investissementTotal) * 100 : 0
-  const cashflowMensuel = loyer - (charges + taxe) / 12
-  const canCalc = prix > 0 && loyer > 0
-
-  return (
-    <Card title="Simulateur de rentabilité" icon={BarChart3} color="#1b5e3b">
-      <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, marginBottom: 20, lineHeight: 1.6 }}>
-        Calculez la rentabilité brute et nette de votre investissement locatif.
-      </p>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>
-        <InputRow label="Prix d'achat (€)">
-          <input type="number" min="0" step="1000" value={prixAchat}
-            onChange={e => setPrixAchat(e.target.value)}
-            placeholder="Ex: 180 000" style={inputStyle} />
-        </InputRow>
-        <InputRow label="Frais de notaire (%)" hint="~8% ancien, ~3% neuf">
-          <input type="number" min="0" max="15" step="0.5" value={fraisNotaire}
-            onChange={e => setFraisNotaire(e.target.value)}
-            style={inputStyle} />
-        </InputRow>
-        <InputRow label="Travaux (€)">
-          <input type="number" min="0" step="500" value={travaux}
-            onChange={e => setTravaux(e.target.value)}
-            placeholder="Ex: 15 000" style={inputStyle} />
-        </InputRow>
-        <InputRow label="Loyer mensuel HC (€)">
-          <input type="number" min="0" step="10" value={loyerMensuel}
-            onChange={e => setLoyerMensuel(e.target.value)}
-            placeholder="Ex: 750" style={inputStyle} />
-        </InputRow>
-        <InputRow label="Charges annuelles (€)" hint="Copropriété, gestion, assurance...">
-          <input type="number" min="0" step="100" value={chargesAnnuelles}
-            onChange={e => setChargesAnnuelles(e.target.value)}
-            placeholder="Ex: 1 200" style={inputStyle} />
-        </InputRow>
-        <InputRow label="Taxe foncière annuelle (€)">
-          <input type="number" min="0" step="50" value={taxeFonciere}
-            onChange={e => setTaxeFonciere(e.target.value)}
-            placeholder="Ex: 800" style={inputStyle} />
-        </InputRow>
-      </div>
-
-      {canCalc && (
-        <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10, marginTop: 8 }}>
-            <ResultBox label="Investissement total" value={`${investissementTotal.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} €`} />
-            <ResultBox label="Rentabilité brute" value={`${rentaBrute.toFixed(2)} %`} highlight={rentaBrute >= 5} />
-            <ResultBox label="Rentabilité nette" value={`${rentaNette.toFixed(2)} %`} highlight={rentaNette >= 4} />
-            <ResultBox label="Cash-flow mensuel" value={`${cashflowMensuel > 0 ? '+' : ''}${cashflowMensuel.toFixed(0)} €`} highlight={cashflowMensuel > 0} />
-          </div>
-          <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, marginTop: 12 }}>
-            Cette simulation est indicative et ne tient pas compte de la fiscalité (IR, PS, amortissement en LMNP...). Consultez un conseiller fiscal pour une analyse complète.
-          </p>
-        </>
-      )}
-    </Card>
-  )
-}
-
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function Outils() {
   return (
@@ -283,7 +204,7 @@ export default function Outils() {
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <div style={{ marginBottom: 36 }}>
             <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 4px' }}>
-              Outils
+              Outils du bailleur
             </p>
             <h1 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(26px, 4vw, 40px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '0 0 4px', lineHeight: 1.15 }}>
               Calculateurs
@@ -295,7 +216,6 @@ export default function Outils() {
 
           <RevisionIRL />
           <RegularisationCharges />
-          <SimulateurRentabilite />
         </div>
       </div>
     </Layout>

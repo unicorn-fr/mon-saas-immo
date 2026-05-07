@@ -397,6 +397,7 @@ export default function Quittances() {
   const [openSettings, setOpenSettings] = useState<string | null>(null) // contractId
   const [markingPaid, setMarkingPaid] = useState<string | null>(null)   // paymentId
   const [actionLoading, setActionLoading] = useState<string | null>(null) // paymentId
+  const [generatingAll, setGeneratingAll] = useState(false)
 
   // ── Fetch data ───────────────────────────────────────────────────────────────
 
@@ -507,6 +508,19 @@ export default function Quittances() {
     })
   }
 
+  async function handleGenerateAll() {
+    setGeneratingAll(true)
+    try {
+      await apiClient.post('/payments/auto-generate-all')
+      toast.success('Paiements du mois générés')
+      await fetchPayments()
+    } catch {
+      toast.error('Impossible de générer les paiements du mois')
+    } finally {
+      setGeneratingAll(false)
+    }
+  }
+
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
@@ -520,36 +534,75 @@ export default function Quittances() {
         }}
       >
         {/* ── Header ── */}
-        <div style={{ marginBottom: 32 }}>
-          <p
+        <div
+          className="flex items-start justify-between flex-wrap gap-4"
+          style={{ marginBottom: 32 }}
+        >
+          <div>
+            <p
+              style={{
+                fontFamily: BAI.fontBody,
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                color: BAI.caramel,
+                marginBottom: 6,
+              }}
+            >
+              Gestion locative
+            </p>
+            <h1
+              style={{
+                fontFamily: BAI.fontDisplay,
+                fontSize: 'clamp(28px, 5vw, 40px)',
+                fontWeight: 700,
+                fontStyle: 'italic',
+                color: BAI.ink,
+                margin: 0,
+                lineHeight: 1.15,
+              }}
+            >
+              Quittances de loyer
+            </h1>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, marginTop: 8 }}>
+              Gérez les paiements, générez et envoyez les quittances à vos locataires.
+            </p>
+          </div>
+
+          {/* Générer le mois en cours */}
+          <button
+            onClick={handleGenerateAll}
+            disabled={generatingAll}
             style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
               fontFamily: BAI.fontBody,
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              color: BAI.caramel,
-              marginBottom: 6,
-            }}
-          >
-            Gestion locative
-          </p>
-          <h1
-            style={{
-              fontFamily: BAI.fontDisplay,
-              fontSize: 'clamp(28px, 5vw, 40px)',
-              fontWeight: 700,
-              fontStyle: 'italic',
+              fontSize: 13,
+              fontWeight: 600,
               color: BAI.ink,
-              margin: 0,
-              lineHeight: 1.15,
+              background: BAI.bgSurface,
+              border: `1px solid ${BAI.border}`,
+              borderRadius: 10,
+              padding: '10px 18px',
+              cursor: generatingAll ? 'not-allowed' : 'pointer',
+              minHeight: 44,
+              opacity: generatingAll ? 0.7 : 1,
+              transition: BAI.transition,
+              flexShrink: 0,
+              alignSelf: 'flex-end',
             }}
           >
-            Quittances de loyer
-          </h1>
-          <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, marginTop: 8 }}>
-            Gérez les paiements, générez et envoyez les quittances à vos locataires.
-          </p>
+            <RefreshCw
+              size={15}
+              style={{
+                color: BAI.caramel,
+                animation: generatingAll ? 'spin 1s linear infinite' : 'none',
+              }}
+            />
+            {generatingAll ? 'Génération…' : 'Générer le mois en cours'}
+          </button>
         </div>
 
         {/* ── Stats Bar ── */}
