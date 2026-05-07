@@ -220,8 +220,7 @@ function VerifyCodeScreen({ email, onBack }: { email: string; onBack: () => void
    3. verify_code → Saisie du code à 6 chiffres
 ═══════════════════════════════════════════════════════════════════════════ */
 export default function Register() {
-  const { register, googleLogin, isLoading } = useAuth()
-  const navigate = useNavigate()
+  const { register, isLoading } = useAuth()
 
   type Screen = 'welcome' | 'form' | 'verify_code'
   const [screen, setScreen] = useState<Screen>('welcome')
