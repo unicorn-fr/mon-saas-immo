@@ -311,7 +311,10 @@ const Footer = ({ docRef }: { docRef: string }) => (
     <Text style={s.footerText}>
       Bail habitation — Loi n°89-462 du 6 juillet 1989 — Loi ALUR du 24 mars 2014 — Décret n°2015-587 — Réf. {docRef}
     </Text>
-    <Text style={s.pageNum} render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+      <Text style={{ ...s.footerText, color: '#999999' }}>bailio.fr</Text>
+      <Text style={s.pageNum} render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
+    </View>
   </View>
 )
 
