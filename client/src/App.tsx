@@ -38,6 +38,9 @@ import Finance from './pages/owner/Finance'
 import Maintenance from './pages/owner/Maintenance'
 import Quittances from './pages/owner/Quittances'
 import OwnerWallet from './pages/owner/Wallet'
+import MesLocataires from './pages/owner/MesLocataires'
+import Documents from './pages/owner/Documents'
+import Outils from './pages/owner/Outils'
 
 // Tenant Pages
 import TenantDashboard from './pages/tenant/TenantDashboard'
@@ -239,6 +242,9 @@ function AppRoutes() {
         <Route path="/owner/maintenance" element={<Maintenance />} />
         <Route path="/owner/quittances" element={<Quittances />} />
         <Route path="/owner/wallet" element={<OwnerWallet />} />
+        <Route path="/owner/locataires" element={<MesLocataires />} />
+        <Route path="/owner/documents" element={<Documents />} />
+        <Route path="/owner/outils" element={<Outils />} />
       </Route>
 
       {/* Protected Routes - Tenant Dashboard */}

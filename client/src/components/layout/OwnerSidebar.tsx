@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 import { NavLink, Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Home, ClipboardList, Calendar, FileText,
-  MessageSquare, Plus, Settings, TrendingUp, Wrench, Receipt, Wallet, BarChart2,
+  MessageSquare, Plus, Settings, TrendingUp, Wrench, Receipt, Wallet, BarChart2, Users, FolderOpen, Calculator,
 } from 'lucide-react'
 import { useSidebarStore } from '../../store/sidebarStore'
 import { useMessages } from '../../hooks/useMessages'
@@ -176,11 +176,13 @@ export function OwnerSidebar() {
         <NavItem to="/properties/new" icon={Plus} label="Ajouter un bien" onClick={closeMobile} compact={compact} />
 
         <SectionLabel label="Locataires" compact={compact} />
+        <NavItem to="/owner/locataires" icon={Users} label="Mes locataires" onClick={closeMobile} compact={compact} />
         <NavItem to="/applications/manage" icon={ClipboardList} label="Candidatures" badge={pendingAppsCount} onClick={closeMobile} compact={compact} />
         <NavItem to="/bookings/manage" icon={Calendar} label="Visites" onClick={closeMobile} compact={compact} />
 
         <SectionLabel label="Administration" compact={compact} />
         <NavItem to="/contracts" icon={FileText} label="Contrats" onClick={closeMobile} compact={compact} />
+        <NavItem to="/owner/documents" icon={FolderOpen} label="Documents" onClick={closeMobile} compact={compact} />
 
         <SectionLabel label="Communication" compact={compact} />
         <NavItem to="/messages" icon={MessageSquare} label="Messages" badge={unreadCount} onClick={closeMobile} compact={compact} />
@@ -188,6 +190,7 @@ export function OwnerSidebar() {
         <SectionLabel label="Gestion" compact={compact} />
         <NavItem to="/owner/finances" icon={TrendingUp} label="Finances" onClick={closeMobile} compact={compact} />
         <NavItem to="/owner/rentabilite" icon={BarChart2} label="Rentabilité" onClick={closeMobile} compact={compact} />
+        <NavItem to="/owner/outils" icon={Calculator} label="Outils" onClick={closeMobile} compact={compact} />
         <NavItem to="/owner/quittances" icon={Receipt} label="Quittances" onClick={closeMobile} compact={compact} />
         <NavItem to="/owner/maintenance" icon={Wrench} label="Maintenance" onClick={closeMobile} compact={compact} />
         <NavItem to="/owner/wallet" icon={Wallet} label="Portefeuille" onClick={closeMobile} compact={compact} />
