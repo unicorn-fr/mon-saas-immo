@@ -1,7 +1,8 @@
-import { Router } from 'express'
+import { Router, Request, Response } from 'express'
 import { documentController } from '../controllers/document.controller.js'
-import { authenticate } from '../middlewares/auth.middleware.js'
+import { authenticate, authorize } from '../middlewares/auth.middleware.js'
 import { uploadFile } from '../utils/upload.util.js'
+import { sendEmail } from '../utils/email.util.js'
 import path from 'path'
 import fs from 'fs'
 import { env } from '../config/env.js'
@@ -108,5 +109,42 @@ router.put(
   '/:id/status',
   documentController.updateStatus.bind(documentController)
 )
+
+// POST /api/v1/documents/send-letter — Send a document/letter by email (OWNER only)
+router.post('/send-letter', authorize('OWNER'), async (req: Request, res: Response) => {
+  const { to, subject, content, tenantName } = req.body as {
+    to?: string
+    subject?: string
+    content?: string
+    tenantName?: string
+  }
+
+  if (!to || !subject || !content) {
+    return res.status(400).json({ success: false, message: 'Les champs to, subject et content sont obligatoires' })
+  }
+
+  const recipientLabel = tenantName ? tenantName : to
+
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#ffffff;font-family:'Times New Roman',Times,serif;color:#000000;">
+  <div style="max-width:680px;margin:40px auto;padding:40px 48px;background:#ffffff;">
+    ${tenantName ? `<p style="margin:0 0 24px;font-size:16px;">À l'attention de ${recipientLabel},</p>` : ''}
+    <div style="font-size:16px;line-height:1.8;">
+      ${content.split('\n').map((line: string) => line.trim() === '' ? '<br>' : `<p style="margin:0 0 8px;">${line}</p>`).join('')}
+    </div>
+  </div>
+</body>
+</html>`
+
+  const sent = await sendEmail({ to, subject, html })
+
+  if (!sent) {
+    return res.status(500).json({ success: false, message: "Échec de l'envoi de l'email" })
+  }
+
+  return res.status(200).json({ success: true, message: 'Email envoyé' })
+})
 
 export default router
