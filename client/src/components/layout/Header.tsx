@@ -55,11 +55,15 @@ export const Header = () => {
   const { unreadCount } = useMessages()
   usePageTitle(user?.role)
 
+  const isHomePage = location.pathname === '/'
+
   useEffect(() => {
+    if (!isHomePage) { setScrolled(true); return }
     const handleScroll = () => setScrolled(window.scrollY > 30)
+    setScrolled(window.scrollY > 30)
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  }, [isHomePage])
 
   const hasSidebar = isAuthenticated && (user?.role === 'OWNER' || user?.role === 'TENANT')
 
@@ -564,7 +568,8 @@ export const Header = () => {
       </div>
     )}
 
-    {/* Pas de spacer — le header est transparent en overlay sur le hero */}
+    {/* Spacer uniquement sur les pages hors home (header overlay sur hero) */}
+    {!isHomePage && <div aria-hidden style={{ height: 60, flexShrink: 0 }} />}
     </>
   )
 }
