@@ -289,14 +289,11 @@ export const Header = () => {
     {/* ── Barre de navigation ── */}
     <header style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-      height: 60,
+      height: 64,
       display: 'flex', alignItems: 'center',
-      backdropFilter: scrolled ? 'blur(20px) saturate(180%)' : 'none',
-      WebkitBackdropFilter: scrolled ? 'blur(20px) saturate(180%)' : 'none',
-      background: scrolled ? 'rgba(26, 26, 46, 0.82)' : 'transparent',
-      borderBottom: scrolled ? '1px solid rgba(255,255,255,0.08)' : 'none',
-      transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
-      overflow: 'hidden',
+      background: scrolled ? 'rgba(10,10,18,0.97)' : 'transparent',
+      borderBottom: scrolled ? '1px solid rgba(196,151,106,0.18)' : 'none',
+      transition: 'background 0.3s ease, border-color 0.3s ease',
     }}>
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 16px', width: '100%', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', width: '100%', minWidth: 0 }}>
@@ -318,23 +315,30 @@ export const Header = () => {
             <nav style={{
               position: 'absolute', left: '50%', top: '50%',
               transform: 'translate(-50%, -50%)',
-              alignItems: 'center', gap: 24,
+              display: 'flex', alignItems: 'center', gap: 4,
             }} className="hidden md:flex">
               {NAV_LINKS.map(({ to, label, exact }) => {
                 const isActive = exact ? location.pathname === to : location.pathname === to || location.pathname.startsWith(to + '/')
                 return (
                   <Link key={to} to={to}
                     style={{
-                      color: isActive ? BAI.caramel : 'rgba(255,255,255,0.70)',
-                      fontFamily: 'var(--font-body)', fontSize: 13.5, fontWeight: 500,
-                      textDecoration: 'none', position: 'relative', paddingBottom: 2,
+                      color: isActive ? '#fff' : 'rgba(255,255,255,0.58)',
+                      fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: isActive ? 600 : 400,
+                      textDecoration: 'none', padding: '6px 12px', borderRadius: 8,
+                      background: isActive ? 'rgba(196,151,106,0.18)' : 'transparent',
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      transition: 'color 0.15s, background 0.15s',
                     }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#ffffff' }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = isActive ? BAI.caramel : 'rgba(255,255,255,0.70)' }}>
+                    onMouseEnter={(e) => {
+                      const el = e.currentTarget as HTMLElement
+                      if (!isActive) { el.style.color = '#fff'; el.style.background = 'rgba(255,255,255,0.07)' }
+                    }}
+                    onMouseLeave={(e) => {
+                      const el = e.currentTarget as HTMLElement
+                      if (!isActive) { el.style.color = 'rgba(255,255,255,0.58)'; el.style.background = 'transparent' }
+                    }}>
+                    {isActive && <span style={{ width: 4, height: 4, borderRadius: '50%', background: BAI.caramel, flexShrink: 0 }} />}
                     {label}
-                    {isActive && (
-                      <span style={{ position: 'absolute', left: 0, right: 0, bottom: -18, height: 2, background: BAI.caramel, borderRadius: 2 }} />
-                    )}
                   </Link>
                 )
               })}
@@ -569,7 +573,7 @@ export const Header = () => {
     )}
 
     {/* Spacer uniquement sur les pages hors home (header overlay sur hero) */}
-    {!isHomePage && <div aria-hidden style={{ height: 60, flexShrink: 0 }} />}
+    {!isHomePage && <div aria-hidden style={{ height: 64, flexShrink: 0 }} />}
     </>
   )
 }
