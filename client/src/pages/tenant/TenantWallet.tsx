@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { CreditCard, CheckCircle, Clock, AlertCircle, Trash2, Building2 } from 'lucide-react'
+import { CreditCard, CheckCircle, Clock, AlertCircle, Trash2, Building2, Banknote, CalendarDays, ShieldCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { loadStripe } from '@stripe/stripe-js'
@@ -39,6 +39,99 @@ interface ContractInfo {
   status: string
 }
 
+// Prochain jour de prélèvement (1er du mois suivant)
+function nextDebitDate(): string {
+  const now = new Date()
+  const next = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+  return next.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+function TenantAccountCard({ contracts, mandates, totalPaid }: {
+  contracts: ContractInfo[]
+  mandates: Record<string, SepaMandate | null>
+  totalPaid: number
+}) {
+  const activeCount = contracts.filter(c => mandates[c.id]?.isActive).length
+  const totalMonthly = contracts.reduce((s, c) => s + c.monthlyRent, 0)
+
+  return (
+    <div style={{
+      background: BAI.night, borderRadius: 20, padding: 'clamp(24px,4vw,36px)',
+      marginBottom: 24, position: 'relative', overflow: 'hidden',
+    }}>
+      {/* Motif décoratif */}
+      <div style={{ position: 'absolute', top: -50, right: -50, width: 180, height: 180, borderRadius: '50%', background: 'rgba(27,94,59,0.12)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: -30, left: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(196,151,106,0.06)', pointerEvents: 'none' }} />
+
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(196,151,106,0.15)', border: '1px solid rgba(196,151,106,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Banknote style={{ width: 20, height: 20, color: BAI.caramel }} />
+            </div>
+            <div>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', margin: 0 }}>
+                Compte Bailio
+              </p>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.85)', margin: 0 }}>
+                Locataire · Prélèvements SEPA
+              </p>
+            </div>
+          </div>
+          {activeCount > 0 && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 99, background: 'rgba(22,163,74,0.15)', border: '1px solid rgba(22,163,74,0.3)', color: '#4ade80', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600 }}>
+              <ShieldCheck style={{ width: 13, height: 13 }} /> {activeCount} mandat{activeCount > 1 ? 's' : ''} actif{activeCount > 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
+
+        {contracts.length > 0 ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 20 }}>
+            <div>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 6px' }}>
+                Loyer mensuel
+              </p>
+              <p style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(30px,5vw,44px)', fontWeight: 700, fontStyle: 'italic', color: BAI.caramel, margin: 0, lineHeight: 1.1 }}>
+                {formatEuro(totalMonthly * 100)}
+              </p>
+            </div>
+            {activeCount > 0 && (
+              <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', paddingLeft: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                  <CalendarDays style={{ width: 13, height: 13, color: 'rgba(255,255,255,0.35)' }} />
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0 }}>
+                    Prochain prélèvement
+                  </p>
+                </div>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 16, fontWeight: 700, color: 'rgba(255,255,255,0.85)', margin: '0 0 3px' }}>
+                  {nextDebitDate()}
+                </p>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: 'rgba(255,255,255,0.35)', margin: 0 }}>
+                  Automatique · aucune action requise
+                </p>
+              </div>
+            )}
+            {totalPaid > 0 && (
+              <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', paddingLeft: 20 }}>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 6px' }}>
+                  Total payé
+                </p>
+                <p style={{ fontFamily: BAI.fontDisplay, fontSize: 24, fontWeight: 700, color: 'rgba(255,255,255,0.7)', margin: 0 }}>
+                  {formatEuro(totalPaid)}
+                </p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.45)', lineHeight: 1.6 }}>
+            Aucun bail actif pour le moment. Le prélèvement automatique sera disponible dès que votre bail sera signé.
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function MandateCard({
   contract,
   mandate,
@@ -51,34 +144,37 @@ function MandateCard({
   onRevoke: () => void
 }) {
   return (
-    <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 14, padding: '20px 22px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+    <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: '22px 24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 14 }}>
         <div>
-          <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: BAI.ink, margin: '0 0 3px' }}>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 700, color: BAI.ink, margin: '0 0 3px' }}>
             {contract.property.title}
           </p>
-          <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '0 0 10px' }}>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '0 0 12px' }}>
             {contract.property.address}, {contract.property.city}
           </p>
-          <p style={{ fontFamily: BAI.fontDisplay, fontSize: 20, fontWeight: 700, color: BAI.owner, margin: 0 }}>
-            {formatEuro(contract.monthlyRent * 100)} <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, fontWeight: 400 }}>/mois</span>
-          </p>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <p style={{ fontFamily: BAI.fontDisplay, fontSize: 24, fontWeight: 700, color: BAI.ink, margin: 0 }}>
+              {formatEuro(contract.monthlyRent * 100)}
+            </p>
+            <span style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint }}>/mois</span>
+          </div>
         </div>
 
         {mandate?.isActive ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 99, background: '#f0fdf4', color: '#16a34a', fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 600 }}>
-              <CheckCircle style={{ width: 12, height: 12 }} /> Prélèvement actif
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 99, background: '#f0fdf4', color: '#16a34a', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600 }}>
+              <CheckCircle style={{ width: 13, height: 13 }} /> Prélèvement actif
             </span>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, margin: 0 }}>
-              IBAN se terminant par ···{mandate.ibanLast4}
+            <p style={{ fontFamily: 'monospace', fontSize: 13, color: BAI.inkMid, margin: 0, background: BAI.bgMuted, padding: '4px 10px', borderRadius: 6 }}>
+              ···· {mandate.ibanLast4}
             </p>
             {mandate.holderName && (
               <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: 0 }}>{mandate.holderName}</p>
             )}
             <button
               onClick={onRevoke}
-              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: `1px solid #fca5a5`, background: BAI.errorLight, color: BAI.error, fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 13px', borderRadius: 8, border: `1px solid #fca5a5`, background: BAI.errorLight, color: BAI.error, fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
             >
               <Trash2 style={{ width: 12, height: 12 }} /> Révoquer
             </button>
@@ -86,10 +182,10 @@ function MandateCard({
         ) : (
           <button
             onClick={onSetup}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 20px', borderRadius: 10, border: 'none', background: BAI.tenant, color: '#fff', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 22px', borderRadius: 10, border: 'none', background: BAI.night, color: '#fff', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
           >
             <CreditCard style={{ width: 14, height: 14 }} />
-            Configurer le prélèvement automatique
+            Configurer le prélèvement
           </button>
         )}
       </div>
@@ -105,13 +201,16 @@ function PaymentRow({ p }: { p: WalletPayment }) {
     SUCCEEDED: 'Prélevé', PROCESSING: 'En cours', PENDING: 'Prévu', FAILED: 'Échoué', REFUNDED: 'Remboursé',
   }
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', padding: '14px 20px', borderBottom: `1px solid ${BAI.border}`, gap: 12 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', padding: '16px 22px', borderBottom: `1px solid ${BAI.border}`, gap: 12 }}
+      onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
+      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+    >
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
           <span style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.ink }}>
             {MONTHS[p.periodMonth - 1]} {p.periodYear}
           </span>
-          <span style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, color: statusColors[p.status], background: p.status === 'SUCCEEDED' ? '#f0fdf4' : BAI.bgMuted, padding: '2px 7px', borderRadius: 99 }}>
+          <span style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, color: statusColors[p.status], background: p.status === 'SUCCEEDED' ? '#f0fdf4' : BAI.bgMuted, padding: '2px 8px', borderRadius: 99 }}>
             {statusLabels[p.status]}
           </span>
         </div>
@@ -119,21 +218,17 @@ function PaymentRow({ p }: { p: WalletPayment }) {
           {p.contract.property.title}
         </span>
         {p.failureReason && (
-          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.error, margin: '2px 0 0' }}>{p.failureReason}</p>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.error, margin: '3px 0 0' }}>{p.failureReason}</p>
         )}
       </div>
-      <p style={{ fontFamily: BAI.fontDisplay, fontSize: 18, fontWeight: 700, color: BAI.ink, margin: 0, textAlign: 'right' }}>
+      <p style={{ fontFamily: BAI.fontDisplay, fontSize: 20, fontWeight: 700, color: BAI.ink, margin: 0, textAlign: 'right' }}>
         {formatEuro(p.totalAmountCents)}
       </p>
     </div>
   )
 }
 
-// ─── Modal Setup SEPA — flow Stripe.js officiel ───────────────────────────────
-// Flow :
-// 1. Backend crée un SetupIntent → retourne clientSecret + setupIntentId
-// 2. Stripe.js confirme le SetupIntent avec l'IBAN (sécurisé, jamais envoyé au backend)
-// 3. Backend met à jour la DB avec le mandat confirmé (/mandate/confirm)
+// ─── Modal Setup SEPA ────────────────────────────────────────────────────────
 function SepaSetupModal({ contractId, onSuccess, onClose }: {
   contractId: string
   onSuccess: () => void
@@ -176,8 +271,6 @@ function SepaSetupModal({ contractId, onSuccess, onClose }: {
       const stripe = await stripePromise
       if (!stripe) throw new Error('Stripe non disponible — vérifiez VITE_STRIPE_PUBLISHABLE_KEY')
 
-      // Confirmer le SetupIntent avec l'IBAN directement via Stripe.js
-      // L'IBAN ne transite JAMAIS par nos serveurs — PCI compliant
       const { error: stripeError, setupIntent } = await stripe.confirmSepaDebitSetup(
         clientSecretRef.current,
         {
@@ -196,9 +289,7 @@ function SepaSetupModal({ contractId, onSuccess, onClose }: {
         throw new Error(`Statut inattendu : ${setupIntent?.status}`)
       }
 
-      // Informer le backend que le mandat est confirmé (mise à jour DB)
       await connectService.confirmMandate(setupIntentIdRef.current)
-
       setStep('done')
       setTimeout(() => { onSuccess(); onClose() }, 2000)
     } catch (err: unknown) {
@@ -209,14 +300,14 @@ function SepaSetupModal({ contractId, onSuccess, onClose }: {
   }
 
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(13,12,10,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 20, padding: '32px 28px', maxWidth: 460, width: '100%', boxShadow: '0 8px 40px rgba(13,12,10,0.15)' }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(13,12,10,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 20, padding: '32px 30px', maxWidth: 480, width: '100%', boxShadow: '0 12px 48px rgba(13,12,10,0.18)' }}>
 
         {(step === 'loading' || step === 'confirming') && (
-          <div style={{ textAlign: 'center', padding: 32 }}>
-            <div style={{ width: 32, height: 32, border: `3px solid ${BAI.border}`, borderTopColor: BAI.tenant, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
+          <div style={{ textAlign: 'center', padding: '40px 0' }}>
+            <div style={{ width: 36, height: 36, border: `3px solid ${BAI.border}`, borderTopColor: BAI.night, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
             <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid }}>
-              {step === 'loading' ? 'Préparation de votre mandat...' : 'Confirmation en cours...'}
+              {step === 'loading' ? 'Préparation du mandat...' : 'Validation en cours...'}
             </p>
           </div>
         )}
@@ -226,14 +317,14 @@ function SepaSetupModal({ contractId, onSuccess, onClose }: {
             <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 6px' }}>
               Prélèvement automatique
             </p>
-            <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: BAI.ink, margin: '0 0 8px' }}>
+            <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 24, color: BAI.ink, margin: '0 0 8px' }}>
               Configurer mon IBAN
             </h2>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, lineHeight: 1.6, margin: '0 0 22px' }}>
-              Votre loyer sera prélevé automatiquement chaque mois. Vous pouvez révoquer ce mandat à tout moment.
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, lineHeight: 1.6, margin: '0 0 24px' }}>
+              Votre loyer sera prélevé automatiquement le 1er de chaque mois. Ce mandat est révocable à tout moment.
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
                 <label style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkMid, display: 'block', marginBottom: 6 }}>
                   Titulaire du compte *
@@ -243,19 +334,19 @@ function SepaSetupModal({ contractId, onSuccess, onClose }: {
                   value={holderName}
                   onChange={e => setHolderName(e.target.value)}
                   placeholder="Prénom Nom"
-                  style={{ width: '100%', padding: '11px 14px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, fontFamily: BAI.fontBody, fontSize: 14, color: BAI.ink, outline: 'none', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '12px 14px', borderRadius: 9, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, fontFamily: BAI.fontBody, fontSize: 14, color: BAI.ink, outline: 'none', boxSizing: 'border-box' }}
                 />
               </div>
               <div>
                 <label style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkMid, display: 'block', marginBottom: 6 }}>
-                  Email (optionnel)
+                  Email <span style={{ color: BAI.inkFaint, fontWeight: 400 }}>(optionnel)</span>
                 </label>
                 <input
                   type="email"
                   value={holderEmail}
                   onChange={e => setHolderEmail(e.target.value)}
                   placeholder="prenom@exemple.fr"
-                  style={{ width: '100%', padding: '11px 14px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, fontFamily: BAI.fontBody, fontSize: 14, color: BAI.ink, outline: 'none', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '12px 14px', borderRadius: 9, border: `1px solid ${BAI.border}`, background: BAI.bgMuted, fontFamily: BAI.fontBody, fontSize: 14, color: BAI.ink, outline: 'none', boxSizing: 'border-box' }}
                 />
               </div>
               <div>
@@ -267,23 +358,26 @@ function SepaSetupModal({ contractId, onSuccess, onClose }: {
                   value={iban}
                   onChange={e => { setIban(e.target.value.toUpperCase()); setIbanError('') }}
                   placeholder="FR76 3000 4000 0500 0000 0000 000"
-                  style={{ width: '100%', padding: '11px 14px', borderRadius: 8, border: `1px solid ${ibanError ? BAI.error : BAI.border}`, background: BAI.bgMuted, fontFamily: 'monospace', fontSize: 14, color: BAI.ink, outline: 'none', letterSpacing: '0.05em', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '12px 14px', borderRadius: 9, border: `1px solid ${ibanError ? BAI.error : BAI.border}`, background: BAI.bgMuted, fontFamily: 'monospace', fontSize: 14, color: BAI.ink, outline: 'none', letterSpacing: '0.06em', boxSizing: 'border-box' }}
                 />
-                {ibanError && <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.error, margin: '4px 0 0' }}>{ibanError}</p>}
+                {ibanError && <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.error, margin: '5px 0 0' }}>{ibanError}</p>}
               </div>
             </div>
 
-            <div style={{ marginTop: 16, padding: '12px 14px', background: BAI.bgMuted, borderRadius: 8, fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, lineHeight: 1.5 }}>
-              En confirmant, vous autorisez Bailio et Stripe à initier des débits SEPA. Votre IBAN est transmis directement à Stripe de manière sécurisée et ne transite pas par nos serveurs. Droit de remboursement sous 8 semaines.
+            <div style={{ marginTop: 18, padding: '12px 14px', background: BAI.bgMuted, borderRadius: 9, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <ShieldCheck style={{ width: 14, height: 14, color: BAI.inkFaint, flexShrink: 0, marginTop: 1 }} />
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, lineHeight: 1.5, margin: 0 }}>
+                En confirmant, vous autorisez Bailio et Stripe à initier des débits SEPA sur ce compte. Votre IBAN est transmis directement à Stripe — il ne transite jamais par nos serveurs. Remboursement possible sous 8 semaines.
+              </p>
             </div>
 
-            <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-              <button onClick={onClose} style={{ flex: 1, padding: '11px', borderRadius: 10, border: `1px solid ${BAI.border}`, background: 'transparent', color: BAI.inkMid, fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+            <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
+              <button onClick={onClose} style={{ flex: 1, padding: '12px', borderRadius: 10, border: `1px solid ${BAI.border}`, background: 'transparent', color: BAI.inkMid, fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                 Annuler
               </button>
               <button
                 onClick={handleSubmit}
-                style={{ flex: 2, padding: '11px', borderRadius: 10, border: 'none', background: BAI.tenant, color: '#fff', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                style={{ flex: 2, padding: '12px', borderRadius: 10, border: 'none', background: BAI.night, color: '#fff', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
               >
                 Confirmer le mandat SEPA
               </button>
@@ -292,18 +386,22 @@ function SepaSetupModal({ contractId, onSuccess, onClose }: {
         )}
 
         {step === 'done' && (
-          <div style={{ textAlign: 'center', padding: '16px 0' }}>
-            <CheckCircle style={{ width: 48, height: 48, color: '#16a34a', margin: '0 auto 16px' }} />
-            <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: BAI.ink, margin: '0 0 8px' }}>Mandat configuré !</h2>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid }}>Votre loyer sera prélevé automatiquement chaque mois.</p>
+          <div style={{ textAlign: 'center', padding: '24px 0' }}>
+            <div style={{ width: 60, height: 60, borderRadius: '50%', background: '#f0fdf4', border: '2px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+              <CheckCircle style={{ width: 28, height: 28, color: '#16a34a' }} />
+            </div>
+            <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 24, color: BAI.ink, margin: '0 0 8px' }}>Mandat configuré !</h2>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: 0 }}>Votre loyer sera prélevé automatiquement le 1er de chaque mois.</p>
           </div>
         )}
 
         {step === 'error' && (
-          <div style={{ textAlign: 'center', padding: '16px 0' }}>
-            <AlertCircle style={{ width: 40, height: 40, color: BAI.error, margin: '0 auto 12px' }} />
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.error }}>{errorMsg}</p>
-            <button onClick={onClose} style={{ marginTop: 16, padding: '10px 24px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: 'transparent', color: BAI.inkMid, fontFamily: BAI.fontBody, fontSize: 13, cursor: 'pointer' }}>
+          <div style={{ textAlign: 'center', padding: '24px 0' }}>
+            <div style={{ width: 54, height: 54, borderRadius: '50%', background: BAI.errorLight, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <AlertCircle style={{ width: 26, height: 26, color: BAI.error }} />
+            </div>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.error, marginBottom: 20 }}>{errorMsg}</p>
+            <button onClick={onClose} style={{ padding: '10px 28px', borderRadius: 9, border: `1px solid ${BAI.border}`, background: 'transparent', color: BAI.inkMid, fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
               Fermer
             </button>
           </div>
@@ -336,7 +434,6 @@ export default function TenantWallet() {
       setContracts(activeContracts)
       setPayments(paymentsData)
 
-      // Charger les mandats de chaque contrat
       const mandateResults = await Promise.all(
         activeContracts.map(async (c: ContractInfo) => {
           const m = await connectService.getMandate(c.id).catch(() => null)
@@ -362,42 +459,49 @@ export default function TenantWallet() {
     }
   }
 
+  const totalPaid = payments.filter(p => p.status === 'SUCCEEDED').reduce((s, p) => s + p.totalAmountCents, 0)
+
   return (
     <Layout>
-      <div style={{ maxWidth: 840, margin: '0 auto', padding: 'clamp(20px,5vw,40px)' }}>
+      <div style={{ maxWidth: 820, margin: '0 auto', padding: 'clamp(20px,5vw,40px)' }}>
 
         <div style={{ marginBottom: 32 }}>
           <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 4px' }}>
-            Mes paiements
+            Mon espace paiement
           </p>
           <h1 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(28px,5vw,40px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '0 0 8px' }}>
             Payer mon loyer
           </h1>
           <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: 0 }}>
-            Configurez un prélèvement automatique mensuel. Plus de virement à faire — votre loyer est prélevé le même jour chaque mois.
+            Prélèvement automatique SEPA — votre loyer est prélevé le 1er de chaque mois, sans action de votre part.
           </p>
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 64 }}>
-            <div style={{ width: 32, height: 32, border: `3px solid ${BAI.border}`, borderTopColor: BAI.tenant, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
+          <div style={{ textAlign: 'center', padding: 80 }}>
+            <div style={{ width: 36, height: 36, border: `3px solid ${BAI.border}`, borderTopColor: BAI.night, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
           </div>
         ) : (
           <>
-            {/* Contrats actifs */}
+            {/* Carte compte Bailio */}
+            <TenantAccountCard contracts={contracts} mandates={mandates} totalPaid={totalPaid} />
+
+            {/* Baux actifs */}
             {contracts.length === 0 ? (
-              <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: '48px 24px', textAlign: 'center' }}>
-                <Building2 style={{ width: 32, height: 32, color: BAI.inkFaint, margin: '0 auto 12px' }} />
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint }}>Aucun bail actif. Le prélèvement automatique sera disponible une fois votre bail signé.</p>
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, marginTop: 8 }}>
-                  Votre bail n'est pas encore actif.{' '}
+              <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: '52px 24px', textAlign: 'center' }}>
+                <div style={{ width: 52, height: 52, borderRadius: 14, background: BAI.bgMuted, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                  <Building2 style={{ width: 24, height: 24, color: BAI.inkFaint }} />
+                </div>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: '0 0 8px', fontWeight: 600 }}>Aucun bail actif</p>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint, margin: 0 }}>
+                  Le prélèvement automatique est disponible dès que votre bail est signé.{' '}
                   <Link to="/contracts" style={{ color: BAI.caramel, fontWeight: 600, textDecoration: 'none' }}>
-                    Consulter mes contrats →
+                    Voir mes contrats →
                   </Link>
                 </p>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 32 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 28 }}>
                 {contracts.map(c => (
                   <MandateCard
                     key={c.id}
@@ -412,13 +516,22 @@ export default function TenantWallet() {
 
             {/* Historique */}
             <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, overflow: 'hidden' }}>
-              <div style={{ padding: '18px 20px', borderBottom: `1px solid ${BAI.border}`, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Clock style={{ width: 16, height: 16, color: BAI.tenant }} />
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, color: BAI.ink, margin: 0 }}>Historique des prélèvements</p>
+              <div style={{ padding: '18px 22px', borderBottom: `1px solid ${BAI.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 30, height: 30, borderRadius: 8, background: BAI.bgMuted, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Clock style={{ width: 15, height: 15, color: BAI.inkMid }} />
+                  </div>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, color: BAI.ink, margin: 0 }}>
+                    Historique des prélèvements
+                  </p>
+                </div>
+                {payments.length > 0 && (
+                  <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>{payments.length} transaction{payments.length > 1 ? 's' : ''}</span>
+                )}
               </div>
               {payments.length === 0 ? (
-                <div style={{ padding: '32px 24px', textAlign: 'center' }}>
-                  <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint }}>Aucun prélèvement enregistré.</p>
+                <div style={{ padding: '40px 24px', textAlign: 'center' }}>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint }}>Aucun prélèvement enregistré pour le moment.</p>
                 </div>
               ) : (
                 payments.map(p => <PaymentRow key={p.id} p={p} />)
