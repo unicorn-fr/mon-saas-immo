@@ -291,11 +291,11 @@ export const Header = () => {
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
       height: 64,
       display: 'flex', alignItems: 'center',
-      background: scrolled ? 'rgba(255,255,255,0.10)' : 'transparent',
-      backdropFilter: scrolled ? 'blur(20px) saturate(180%)' : 'none',
-      WebkitBackdropFilter: scrolled ? 'blur(20px) saturate(180%)' : 'none',
-      borderBottom: scrolled ? '1px solid rgba(255,255,255,0.14)' : 'none',
-      transition: 'background 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease',
+      background: scrolled ? 'rgba(10,10,20,0.55)' : 'rgba(0,0,0,0.12)',
+      backdropFilter: 'blur(18px) saturate(160%)',
+      WebkitBackdropFilter: 'blur(18px) saturate(160%)',
+      borderBottom: scrolled ? '1px solid rgba(255,255,255,0.10)' : 'none',
+      transition: 'background 0.3s ease, border-color 0.3s ease',
     }}>
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 16px', width: '100%', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', width: '100%', minWidth: 0 }}>
