@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Layout } from '../../components/layout/Layout'
 import { BAI } from '../../constants/bailio-tokens'
 import { TrendingUp, Calculator, ChevronDown } from 'lucide-react'
+import { apiClient } from '../../services/api.service'
 
 // ── IRL DATA (INSEE - trimestres récents) ────────────────────────────────────
 const IRL_DATA: Record<string, number> = {
@@ -21,8 +22,6 @@ const IRL_DATA: Record<string, number> = {
   '2021-T2': 127.77,
   '2021-T1': 127.22,
 }
-
-const IRL_QUARTERS = Object.keys(IRL_DATA).sort().reverse()
 
 // ── Shared components ─────────────────────────────────────────────────────────
 function Card({ children, title, icon: Icon, color }: { children: React.ReactNode; title: string; icon: React.ElementType; color: string }) {
@@ -90,12 +89,30 @@ function ResultBox({ label, value, highlight = false }: { label: string; value: 
 
 // ── Tool 1: Révision de loyer IRL ─────────────────────────────────────────────
 function RevisionIRL() {
-  const [currentRent, setCurrentRent] = useState('')
-  const [refQuarter, setRefQuarter] = useState(IRL_QUARTERS[4] ?? '')
-  const [newQuarter, setNewQuarter] = useState(IRL_QUARTERS[0] ?? '')
+  const [irlData, setIrlData] = useState<Record<string, number>>(IRL_DATA)
+  const [irlLive, setIrlLive] = useState(false)
+  const irlQuarters = Object.keys(irlData).sort().reverse()
 
-  const irlRef = IRL_DATA[refQuarter] ?? 0
-  const irlNew = IRL_DATA[newQuarter] ?? 0
+  useEffect(() => {
+    apiClient.get('/irl/current')
+      .then(res => {
+        const items = res.data.data as Array<{ period: string; value: number }>
+        if (Array.isArray(items) && items.length > 0) {
+          const map: Record<string, number> = {}
+          items.forEach(({ period, value }) => { map[period] = value })
+          setIrlData(map)
+          setIrlLive(true)
+        }
+      })
+      .catch(() => { /* fallback — keep hardcoded data */ })
+  }, [])
+
+  const [currentRent, setCurrentRent] = useState('')
+  const [refQuarter, setRefQuarter] = useState(irlQuarters[4] ?? '')
+  const [newQuarter, setNewQuarter] = useState(irlQuarters[0] ?? '')
+
+  const irlRef = irlData[refQuarter] ?? 0
+  const irlNew = irlData[newQuarter] ?? 0
   const rent = parseFloat(currentRent) || 0
   const newRent = irlRef > 0 ? (rent * irlNew) / irlRef : 0
   const diff = newRent - rent
@@ -104,6 +121,17 @@ function RevisionIRL() {
 
   return (
     <Card title="Révision de loyer (IRL)" icon={TrendingUp} color="#1a3270">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <span style={{
+          fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 600,
+          color: irlLive ? BAI.tenant : BAI.inkFaint,
+          padding: '2px 8px', borderRadius: 20,
+          background: irlLive ? BAI.tenantLight : BAI.bgMuted,
+          border: `1px solid ${irlLive ? BAI.tenantBorder : BAI.border}`,
+        }}>
+          {irlLive ? '(live INSEE)' : '(données 2024)'}
+        </span>
+      </div>
       <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, marginBottom: 20, lineHeight: 1.6 }}>
         Calculez le nouveau loyer selon l'Indice de Référence des Loyers publié par l'INSEE. La révision est plafonnée à la variation de l'IRL entre le trimestre de référence du bail et le dernier IRL publié.
       </p>
@@ -117,7 +145,7 @@ function RevisionIRL() {
         <InputRow label="IRL de référence (bail)" hint={`Valeur : ${irlRef}`}>
           <div style={{ position: 'relative' }}>
             <select value={refQuarter} onChange={e => setRefQuarter(e.target.value)} style={selectStyle}>
-              {IRL_QUARTERS.map(q => <option key={q} value={q}>{q} — {IRL_DATA[q]}</option>)}
+              {irlQuarters.map(q => <option key={q} value={q}>{q} — {irlData[q]}</option>)}
             </select>
             <ChevronDown className="w-4 h-4" style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: BAI.inkFaint, pointerEvents: 'none' }} />
           </div>
@@ -125,7 +153,7 @@ function RevisionIRL() {
         <InputRow label="Nouvel IRL (dernier publié)" hint={`Valeur : ${irlNew}`}>
           <div style={{ position: 'relative' }}>
             <select value={newQuarter} onChange={e => setNewQuarter(e.target.value)} style={selectStyle}>
-              {IRL_QUARTERS.map(q => <option key={q} value={q}>{q} — {IRL_DATA[q]}</option>)}
+              {irlQuarters.map(q => <option key={q} value={q}>{q} — {irlData[q]}</option>)}
             </select>
             <ChevronDown className="w-4 h-4" style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: BAI.inkFaint, pointerEvents: 'none' }} />
           </div>

@@ -12,6 +12,7 @@ export interface RentAdvisorProps {
   furnished: boolean
   type: string
   onApplyRent: (rent: number) => void
+  onEncadrementChange?: (encadrementMaj: number | null) => void
 }
 
 type Status = 'idle' | 'loading' | 'success' | 'error'
@@ -25,6 +26,7 @@ export function RentAdvisor({
   furnished,
   type,
   onApplyRent,
+  onEncadrementChange,
 }: RentAdvisorProps) {
   const [status, setStatus] = useState<Status>('idle')
   const [advice, setAdvice] = useState<RentAdvice | null>(null)
@@ -53,6 +55,7 @@ export function RentAdvisor({
       setMarketAvailable(result.marketAvailable)
       setStatus('success')
       setExpanded(true)
+      onEncadrementChange?.(result.advice.encadrementMaj ?? null)
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : 'Erreur lors de l\'estimation')
       setStatus('error')

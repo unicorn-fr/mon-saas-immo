@@ -4,7 +4,7 @@ import { useWindowWidth } from '../../hooks/useWindowWidth'
 import {
   Check, ChevronLeft, ChevronRight, Home, Building2,
   Warehouse, Layers, Box, BedDouble, Car, Store,
-  MapPin, Loader2, Info,
+  MapPin, Loader2, Info, AlertCircle,
 } from 'lucide-react'
 import { useProperties } from '../../hooks/useProperties'
 import { ImageUpload } from '../../components/property/ImageUpload'
@@ -489,6 +489,7 @@ export default function CreatePropertyWizard() {
   const [banQuery, setBanQuery] = useState(loadDraft().address || '')
   const [banResults, setBanResults] = useState<BanFeature[]>([])
   const [banLoading, setBanLoading] = useState(false)
+  const [encadrementMaj, setEncadrementMaj] = useState<number | null>(null)
   const banTimer = useRef<ReturnType<typeof setTimeout>>()
 
   // Save draft on each state change
@@ -508,7 +509,7 @@ export default function CreatePropertyWizard() {
       setBanLoading(true)
       try {
         const res = await fetch(
-          `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(banQuery)}&limit=6&type=housenumber`
+          `https://data.geopf.fr/geocodage/search/?q=${encodeURIComponent(banQuery)}&limit=5&type=housenumber,street`
         )
         const json = await res.json()
         setBanResults(json.features || [])
@@ -1070,6 +1071,7 @@ export default function CreatePropertyWizard() {
                     furnished={state.furnished}
                     type={state.propertyType as string}
                     onApplyRent={rent => update({ price: String(rent), deposit: state.deposit || String(rent * 2) })}
+                    onEncadrementChange={setEncadrementMaj}
                   />
                 </div>
 
@@ -1195,6 +1197,19 @@ export default function CreatePropertyWizard() {
                   />
                   {errors.description && <p style={{ color: BAI.error, fontSize: 13, marginTop: 4 }}>{errors.description}</p>}
                 </div>
+
+                {encadrementMaj !== null && Number(state.price) > encadrementMaj * 1.01 && (
+                  <div style={{
+                    background: BAI.errorLight, border: '1px solid #fca5a5',
+                    borderRadius: 10, padding: 14,
+                    display: 'flex', alignItems: 'flex-start', gap: 10,
+                  }}>
+                    <AlertCircle size={16} style={{ color: BAI.error, flexShrink: 0, marginTop: 1 }} />
+                    <p style={{ fontSize: 13, color: BAI.error, margin: 0, fontFamily: BAI.fontBody, lineHeight: 1.5 }}>
+                      Loyer supérieur au plafond légal ({encadrementMaj} €/m²). Ce montant peut être contesté par le locataire (loi ALUR).
+                    </p>
+                  </div>
+                )}
 
                 {errors.general && (
                   <div style={{ background: BAI.errorLight, border: '1px solid #fca5a5', borderRadius: 10, padding: '12px 14px' }}>
