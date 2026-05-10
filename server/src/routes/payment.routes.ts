@@ -216,7 +216,7 @@ router.put('/:id/mark-paid', authorize('OWNER'), async (req: Request, res: Respo
               select: {
                 address: true, city: true, postalCode: true,
                 ownerId: true,
-                owner: { select: { firstName: true, lastName: true, email: true, phone: true } },
+                owner: { select: { firstName: true, lastName: true, email: true, phone: true, address: true } },
               },
             },
           },
@@ -249,7 +249,7 @@ router.put('/:id/mark-paid', authorize('OWNER'), async (req: Request, res: Respo
       landlord: {
         firstName: payment.contract.property.owner.firstName,
         lastName:  payment.contract.property.owner.lastName,
-        address:   payment.contract.property.address,
+        address:   payment.contract.property.owner.address || payment.contract.property.address,
         phone:     payment.contract.property.owner.phone ?? undefined,
         email:     payment.contract.property.owner.email ?? undefined,
       },

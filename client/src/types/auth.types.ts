@@ -20,6 +20,8 @@ export interface User {
   documentExpiry: string | null
   // Flexible AI-extracted metadata from ALL scanned documents
   profileMeta: Record<string, Record<string, unknown>> | null
+  // Owner personal address (used on rent receipts)
+  address: string | null
   createdAt: string
   updatedAt: string
 }

@@ -130,6 +130,7 @@ class AuthService {
     lastName?: string
     phone?: string
     bio?: string
+    address?: string
     // Identity document fields
     birthDate?: string
     birthCity?: string

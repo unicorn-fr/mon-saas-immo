@@ -79,4 +79,9 @@ export const contractService = {
     const response = await api.get('/contracts/statistics')
     return response.data.data.statistics
   },
+
+  async sendWithYousign(contractId: string): Promise<{ ownerLink: string; tenantLink: string; requestId: string }> {
+    const response = await api.post(`/contracts/${contractId}/send-yousign`)
+    return response.data.data
+  },
 }

@@ -38,6 +38,7 @@ import financeRoutes from './finance.routes.js'
 import maintenanceRoutes from './maintenance.routes.js'
 import sepaRoutes from './sepa.routes.js'
 import connectRoutes from './connect.routes.js'
+import yousignWebhookRouter from './yousign.webhook.routes.js'
 
 /**
  * Register all application routes on the Express app.
@@ -87,6 +88,9 @@ export function registerRoutes(app: Application, prefix: string): void {
   // ── Finances & Maintenance ──────────────────────────────────────────────
   app.use(`${prefix}/finances`, financeRoutes)
   app.use(`${prefix}/maintenance`, maintenanceRoutes)
+
+  // ── Webhooks (sans authenticate) ────────────────────────────────────────────
+  app.use(`${prefix}/webhooks/yousign`, yousignWebhookRouter)
 
   // ── Administration ──────────────────────────────────────────────────────
   app.use(`${prefix}/admin`, adminRoutes)

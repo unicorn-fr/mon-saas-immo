@@ -96,6 +96,7 @@ model User {
   phone             String?
   avatar            String?
   bio               String?   @db.Text
+  address           String?   // Adresse personnelle du bailleur (obligatoire art. 21 loi 89-462)
 
   // Identity document data (extracted by AI scanner)
   birthDate         String?   // date de naissance (DD/MM/YY)
@@ -435,12 +436,20 @@ model Contract {
   // Documents
   pdfUrl          String?
 
-  // Signatures
+  // Signatures (mode SIMPLE — canvas)
   ownerSignature  String?       @db.Text  // Base64 signature image
   tenantSignature String?       @db.Text  // Base64 signature image
   signedByOwner   DateTime?
   signedByTenant  DateTime?
   signedAt        DateTime?               // When both parties have signed
+
+  // Yousign — signature électronique eIDAS qualifiée
+  signingMode         String?   @default("SIMPLE")  // "SIMPLE" | "YOUSIGN"
+  yousignRequestId    String?   // ID de la demande Yousign
+  yousignOwnerLink    String?   // Lien de signature Yousign pour le bailleur
+  yousignTenantLink   String?   // Lien de signature Yousign pour le locataire
+  yousignSignedPdfUrl String?   // URL PDF signé téléchargé depuis Yousign
+  yousignCompletedAt  DateTime? // Date de completion Yousign
 
   // Additional Terms
   terms           String?       @db.Text

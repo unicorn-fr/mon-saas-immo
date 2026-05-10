@@ -723,7 +723,7 @@ class AuthService {
   async updateProfile(
     userId: string,
     data: {
-      firstName?: string; lastName?: string; phone?: string; bio?: string; role?: string
+      firstName?: string; lastName?: string; phone?: string; address?: string; bio?: string; role?: string
       // Identity document fields
       birthDate?: string; birthCity?: string; nationality?: string
       nationalNumber?: string; documentNumber?: string; documentExpiry?: string
@@ -747,6 +747,7 @@ class AuthService {
         ...(data.firstName      !== undefined && { firstName:      data.firstName }),
         ...(data.lastName       !== undefined && { lastName:       data.lastName }),
         ...(data.phone          !== undefined && { phone:          data.phone || null }),
+        ...(data.address        !== undefined && { address:        data.address || null }),
         ...(data.bio            !== undefined && { bio:            data.bio || null }),
         ...(data.birthDate      !== undefined && { birthDate:      data.birthDate || null }),
         ...(data.birthCity      !== undefined && { birthCity:      data.birthCity || null }),
@@ -759,7 +760,7 @@ class AuthService {
       },
       select: {
         id: true, email: true, firstName: true, lastName: true,
-        role: true, avatar: true, phone: true, bio: true,
+        role: true, avatar: true, phone: true, address: true, bio: true,
         emailVerified: true, phoneVerified: true,
         birthDate: true, birthCity: true, nationality: true,
         nationalNumber: true, documentNumber: true, documentExpiry: true,
@@ -779,7 +780,7 @@ class AuthService {
       where: { id: userId },
       select: {
         id: true, email: true, firstName: true, lastName: true,
-        role: true, avatar: true, phone: true, bio: true,
+        role: true, avatar: true, phone: true, address: true, bio: true,
         emailVerified: true, phoneVerified: true,
         birthDate: true, birthCity: true, nationality: true,
         documentExpiry: true,

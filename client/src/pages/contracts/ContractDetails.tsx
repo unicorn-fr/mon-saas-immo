@@ -3,6 +3,8 @@ import { BAI } from '../../constants/bailio-tokens'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useContractStore } from '../../store/contractStore'
 import { useAuth } from '../../hooks/useAuth'
+import { contractService } from '../../services/contract.service'
+import toast from 'react-hot-toast'
 import { ContractClause } from '../../types/contract.types'
 import { SignaturePad } from '../../components/contract/SignaturePad'
 import { ContractPDF } from '../../components/contract/ContractPDF'
@@ -33,6 +35,7 @@ import {
   X,
   Check,
   Circle,
+  ExternalLink,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -93,6 +96,7 @@ export default function ContractDetails() {
   const [cancelReason, setCancelReason] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
   const [initialLoaded, setInitialLoaded] = useState(false)
+  const [yousignLoading, setYousignLoading] = useState(false)
   useEffect(() => {
     if (id) {
       fetchContractById(id).then(() => setInitialLoaded(true))
@@ -200,6 +204,22 @@ export default function ContractDetails() {
       celebrateSmall()
     } finally {
       setActionLoading(false)
+    }
+  }
+
+  const handleSendYousign = async () => {
+    setYousignLoading(true)
+    try {
+      const result = await contractService.sendWithYousign(contract.id)
+      toast.success('Contrat envoyé via Yousign')
+      if (result.ownerLink) {
+        window.open(result.ownerLink, '_blank', 'noopener,noreferrer')
+      }
+      await fetchContractById(contract.id)
+    } catch {
+      toast.error('Erreur lors de l\'envoi via Yousign')
+    } finally {
+      setYousignLoading(false)
     }
   }
 
@@ -620,22 +640,167 @@ export default function ContractDetails() {
               </div>
             )}
 
+            {/* Yousign signature links — shown when contract is in YOUSIGN mode and awaiting signatures */}
+            {contract.signingMode === 'YOUSIGN' && ['SENT', 'SIGNED_OWNER', 'SIGNED_TENANT'].includes(contract.status) && (
+              <div style={{
+                ...cardStyle,
+                border: `1px solid ${BAI.ownerBorder}`,
+                background: BAI.ownerLight,
+              }}>
+                <div className="flex items-center gap-3" style={{ marginBottom: 16 }}>
+                  <div style={{
+                    width: 38, height: 38, borderRadius: 9,
+                    background: BAI.owner, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}>
+                    <ShieldCheck style={{ width: 18, height: 18, color: '#ffffff' }} />
+                  </div>
+                  <div>
+                    <h3 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 18, color: BAI.ink, margin: 0 }}>
+                      Signature électronique Yousign
+                    </h3>
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 5,
+                      fontSize: 11, fontWeight: 600,
+                      background: BAI.ownerLight, color: BAI.owner,
+                      border: `1px solid ${BAI.ownerBorder}`,
+                      borderRadius: 20, padding: '2px 8px', marginTop: 4,
+                    }}>
+                      <ShieldCheck style={{ width: 11, height: 11 }} />
+                      Signature eIDAS qualifiée
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  {isOwner && contract.yousignOwnerLink && (
+                    <a
+                      href={contract.yousignOwnerLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 8,
+                        padding: '11px 20px', borderRadius: 9,
+                        background: BAI.night, color: '#ffffff',
+                        fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13,
+                        textDecoration: 'none', minHeight: 44,
+                      }}
+                    >
+                      <PenTool style={{ width: 14, height: 14 }} />
+                      Signer via Yousign
+                      <ExternalLink style={{ width: 13, height: 13, opacity: 0.7 }} />
+                    </a>
+                  )}
+                  {isTenant && contract.yousignTenantLink && (
+                    <a
+                      href={contract.yousignTenantLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 8,
+                        padding: '11px 20px', borderRadius: 9,
+                        background: BAI.tenant, color: '#ffffff',
+                        fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13,
+                        textDecoration: 'none', minHeight: 44,
+                      }}
+                    >
+                      <PenTool style={{ width: 14, height: 14 }} />
+                      Signer via Yousign
+                      <ExternalLink style={{ width: 13, height: 13, opacity: 0.7 }} />
+                    </a>
+                  )}
+                </div>
+                <p style={{ fontSize: 12, color: BAI.inkMid, marginTop: 12, fontStyle: 'italic' }}>
+                  Vous serez redirigé vers la plateforme Yousign pour apposer votre signature électronique certifiée.
+                </p>
+              </div>
+            )}
+
+            {/* Yousign completed — signed PDF download */}
+            {contract.signingMode === 'YOUSIGN' && contract.status === 'COMPLETED' && (
+              <div style={{
+                ...cardStyle,
+                border: `1px solid ${BAI.tenantBorder}`,
+                background: BAI.tenantLight,
+              }}>
+                <div className="flex items-center gap-3" style={{ marginBottom: 14 }}>
+                  <CheckCircle style={{ width: 22, height: 22, color: BAI.tenant, flexShrink: 0 }} />
+                  <div>
+                    <p style={{ fontWeight: 700, fontSize: 15, color: BAI.tenant, margin: 0 }}>Signé via Yousign</p>
+                    {contract.yousignCompletedAt && (
+                      <p style={{ fontSize: 12, color: BAI.inkFaint, margin: '2px 0 0' }}>
+                        {format(new Date(contract.yousignCompletedAt), 'dd MMM yyyy HH:mm', { locale: fr })}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {contract.yousignSignedPdfUrl && (
+                  <a
+                    href={contract.yousignSignedPdfUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 8,
+                      padding: '10px 18px', borderRadius: 9,
+                      background: BAI.tenant, color: '#ffffff',
+                      fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13,
+                      textDecoration: 'none', minHeight: 44,
+                    }}
+                  >
+                    <Download style={{ width: 14, height: 14 }} />
+                    Télécharger le PDF signé
+                    <ExternalLink style={{ width: 12, height: 12, opacity: 0.7 }} />
+                  </a>
+                )}
+              </div>
+            )}
+
             {/* Action Buttons Bar */}
             {!isTerminal && (canSend || canSign || canActivate || canTerminate || canDelete || canCancel) && (
               <div style={cardStyle}>
                 <div className="flex flex-wrap gap-3">
                   {canSend && (
-                    <button
-                      onClick={() => { setPreSendChecks({ property: false, clauses: false, dossier: false }); setShowPreSendChecklist(true) }}
-                      disabled={actionLoading}
-                      style={{ ...btnPrimary, opacity: actionLoading ? 0.5 : 1 }}
-                    >
-                      <Send style={{ width: 15, height: 15 }} />
-                      Envoyer au locataire
-                    </button>
+                    <>
+                      <button
+                        onClick={() => { setPreSendChecks({ property: false, clauses: false, dossier: false }); setShowPreSendChecklist(true) }}
+                        disabled={actionLoading || yousignLoading}
+                        style={{ ...btnPrimary, opacity: actionLoading || yousignLoading ? 0.5 : 1 }}
+                      >
+                        <Send style={{ width: 15, height: 15 }} />
+                        Envoyer au locataire
+                      </button>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <button
+                          onClick={handleSendYousign}
+                          disabled={actionLoading || yousignLoading}
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 7,
+                            padding: '10px 18px', borderRadius: 10,
+                            background: BAI.night, color: '#ffffff',
+                            fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13,
+                            border: 'none', cursor: actionLoading || yousignLoading ? 'not-allowed' : 'pointer',
+                            opacity: actionLoading || yousignLoading ? 0.5 : 1,
+                          }}
+                        >
+                          {yousignLoading ? (
+                            <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff' }} className="animate-spin" />
+                          ) : (
+                            <ShieldCheck style={{ width: 15, height: 15 }} />
+                          )}
+                          Signature Yousign
+                          <span style={{
+                            fontSize: 10, fontWeight: 700,
+                            background: '#f0fdf4', color: '#16a34a',
+                            border: '1px solid #bbf7d0',
+                            borderRadius: 20, padding: '2px 7px',
+                            letterSpacing: '0.04em',
+                          }}>
+                            Légalement opposable
+                          </span>
+                        </button>
+                      </div>
+                    </>
                   )}
 
-                  {canSign && !tenantSignBlocked && (
+                  {canSign && !tenantSignBlocked && contract.signingMode !== 'YOUSIGN' && (
                     <>
                       <button
                         onClick={() => {
@@ -655,8 +820,6 @@ export default function ContractDetails() {
                         <PenTool style={{ width: 15, height: 15 }} />
                         Signer le contrat
                       </button>
-
-                      {/* YouSign stub hidden — integrated signature is sufficient */}
                     </>
                   )}
 

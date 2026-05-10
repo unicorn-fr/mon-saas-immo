@@ -41,6 +41,13 @@ export interface Contract {
   // Additional terms
   terms?: string
 
+  // Yousign e-signature
+  signingMode?: string          // 'SIMPLE' | 'YOUSIGN'
+  yousignOwnerLink?: string
+  yousignTenantLink?: string
+  yousignSignedPdfUrl?: string
+  yousignCompletedAt?: string
+
   // Timestamps
   createdAt: string
   updatedAt: string

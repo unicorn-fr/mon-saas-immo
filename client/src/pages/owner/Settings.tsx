@@ -31,6 +31,7 @@ import {
   Phone,
   CheckCircle,
   XCircle,
+  MapPin,
 } from 'lucide-react'
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
@@ -309,6 +310,7 @@ export default function OwnerSettings() {
   const [lastName, setLastName] = useState(user?.lastName ?? '')
   const [phone, setPhone] = useState((user as { phone?: string })?.phone ?? '')
   const [bio, setBio] = useState((user as { bio?: string })?.bio ?? '')
+  const [address, setAddress] = useState((user as { address?: string | null })?.address ?? '')
   const [focusedInput, setFocusedInput] = useState<string | null>(null)
 
   // ── Security tab state ──
@@ -334,6 +336,7 @@ export default function OwnerSettings() {
     setLastName(user?.lastName ?? '')
     setPhone((user as { phone?: string })?.phone ?? '')
     setBio((user as { bio?: string })?.bio ?? '')
+    setAddress((user as { address?: string | null })?.address ?? '')
   }, [user?.firstName, user?.lastName])
 
   // Warn on tab close when dirty
@@ -404,8 +407,8 @@ export default function OwnerSettings() {
   async function handleProfileSave() {
     setProfileSaving(true)
     try {
-      await authService.updateProfile({ firstName, lastName, phone, bio })
-      updateProfile({ firstName, lastName })
+      await authService.updateProfile({ firstName, lastName, phone, bio, address })
+      updateProfile({ firstName, lastName, address })
       setEditingProfile(false)
       toast.success('Profil mis à jour')
     } catch {
@@ -420,6 +423,7 @@ export default function OwnerSettings() {
     setLastName(user?.lastName ?? '')
     setPhone((user as { phone?: string })?.phone ?? '')
     setBio((user as { bio?: string })?.bio ?? '')
+    setAddress((user as { address?: string | null })?.address ?? '')
     setEditingProfile(false)
   }
 
@@ -692,6 +696,56 @@ export default function OwnerSettings() {
                         </div>
                       </div>
 
+                      {/* Address */}
+                      <div>
+                        <label style={{ fontSize: '12px', fontWeight: 500, color: BAI.inkMid, display: 'block', marginBottom: '6px' }}>
+                          Adresse personnelle
+                        </label>
+                        {!address && (
+                          <div
+                            className="flex items-center gap-2"
+                            style={{
+                              marginBottom: '6px',
+                              padding: '5px 10px',
+                              borderRadius: '6px',
+                              background: BAI.caramelLight,
+                              border: `1px solid ${BAI.caramel}`,
+                              display: 'inline-flex',
+                            }}
+                          >
+                            <MapPin size={12} style={{ color: BAI.caramel, flexShrink: 0 }} />
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: BAI.caramel }}>
+                              Adresse manquante — vos quittances utilisent l'adresse du bien
+                            </span>
+                          </div>
+                        )}
+                        <div style={{ position: 'relative' }}>
+                          <MapPin
+                            size={14}
+                            style={{
+                              position: 'absolute',
+                              left: '12px',
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                              color: BAI.inkFaint,
+                              pointerEvents: 'none',
+                            }}
+                          />
+                          <input
+                            type="text"
+                            value={address}
+                            onChange={e => setAddress(e.target.value)}
+                            onFocus={() => setFocusedInput('address')}
+                            onBlur={() => setFocusedInput(null)}
+                            style={{ ...getInputStyle('address'), paddingLeft: '36px' }}
+                            placeholder="12 rue de la Paix, 75001 Paris"
+                          />
+                        </div>
+                        <p style={{ fontSize: '11px', color: BAI.inkFaint, marginTop: '4px' }}>
+                          Utilisée sur vos quittances de loyer (art. 21 loi 89-462)
+                        </p>
+                      </div>
+
                       {/* Bio */}
                       <div>
                         <label style={{ fontSize: '12px', fontWeight: 500, color: BAI.inkMid, display: 'block', marginBottom: '6px' }}>
@@ -894,6 +948,38 @@ export default function OwnerSettings() {
                         >
                           <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: BAI.inkFaint, marginBottom: '3px' }}>Téléphone</p>
                           <p style={{ fontSize: '14px', color: BAI.ink }}>{(user as { phone?: string }).phone}</p>
+                        </div>
+                      )}
+                      {(user as { address?: string | null })?.address ? (
+                        <div
+                          style={{
+                            background: BAI.bgMuted,
+                            border: `1px solid ${BAI.border}`,
+                            borderRadius: '10px',
+                            padding: '14px 16px',
+                          }}
+                        >
+                          <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: BAI.inkFaint, marginBottom: '3px' }}>Adresse personnelle</p>
+                          <div className="flex items-center gap-2">
+                            <MapPin size={13} style={{ color: BAI.inkFaint, flexShrink: 0 }} />
+                            <p style={{ fontSize: '14px', color: BAI.ink }}>{(user as { address?: string | null }).address}</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div
+                          className="flex items-center gap-2"
+                          style={{
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            background: BAI.caramelLight,
+                            border: `1px solid ${BAI.caramel}`,
+                            display: 'inline-flex',
+                          }}
+                        >
+                          <MapPin size={12} style={{ color: BAI.caramel, flexShrink: 0 }} />
+                          <span style={{ fontSize: '12px', fontWeight: 600, color: BAI.caramel }}>
+                            Adresse manquante — vos quittances utilisent l'adresse du bien
+                          </span>
                         </div>
                       )}
                       {(user as { bio?: string })?.bio && (

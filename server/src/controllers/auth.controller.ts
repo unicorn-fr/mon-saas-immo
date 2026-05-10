@@ -372,7 +372,7 @@ class AuthController {
       }
 
       const {
-        firstName, lastName, phone, bio,
+        firstName, lastName, phone, address, bio,
         birthDate, birthCity, nationality, nationalNumber, documentNumber, documentExpiry,
         profileMeta,
       } = req.body
@@ -380,8 +380,9 @@ class AuthController {
       const user = await authService.updateProfile(userId, {
         firstName:      firstName      ? sanitizeInput(firstName)      : undefined,
         lastName:       lastName       ? sanitizeInput(lastName)       : undefined,
-        phone:          phone          !== undefined ? sanitizeInput(phone) : undefined,
-        bio:            bio            !== undefined ? bio.trim()           : undefined,
+        phone:          phone          !== undefined ? sanitizeInput(phone)   : undefined,
+        address:        address        !== undefined ? sanitizeInput(address) : undefined,
+        bio:            bio            !== undefined ? bio.trim()             : undefined,
         birthDate:      birthDate      !== undefined ? sanitizeInput(birthDate)      : undefined,
         birthCity:      birthCity      !== undefined ? sanitizeInput(birthCity)      : undefined,
         nationality:    nationality    !== undefined ? sanitizeInput(nationality)    : undefined,
