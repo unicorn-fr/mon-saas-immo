@@ -210,13 +210,13 @@ router.put('/:id/mark-paid', authorize('OWNER'), async (req: Request, res: Respo
         contract: {
           include: {
             paymentSettings: true,
-            owner: { select: { firstName: true, lastName: true } },
+            owner: { select: { firstName: true, lastName: true, email: true, phone: true } },
             tenant: { select: { firstName: true, lastName: true, email: true } },
             property: {
               select: {
                 address: true, city: true, postalCode: true,
                 ownerId: true,
-                owner: { select: { firstName: true, lastName: true } },
+                owner: { select: { firstName: true, lastName: true, email: true, phone: true } },
               },
             },
           },
@@ -244,11 +244,14 @@ router.put('/:id/mark-paid', authorize('OWNER'), async (req: Request, res: Respo
     const pdfBuffer = await generateReceiptPDF({
       receiptNumber,
       month: MONTHS[payment.month - 1],
+      monthNumber: payment.month,
       year: payment.year,
       landlord: {
         firstName: payment.contract.property.owner.firstName,
         lastName:  payment.contract.property.owner.lastName,
         address:   payment.contract.property.address,
+        phone:     payment.contract.property.owner.phone ?? undefined,
+        email:     payment.contract.property.owner.email ?? undefined,
       },
       tenant:   payment.contract.tenant,
       property: payment.contract.property,
@@ -273,7 +276,8 @@ router.put('/:id/mark-paid', authorize('OWNER'), async (req: Request, res: Respo
       try {
         const MONTHS_AUTO = ['Janvier','Février','Mars','Avril','Mai','Juin',
           'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
-        const autoReceiptUrl = generateSignedUrl(cloudinaryPublicId)
+        // URL valable 7 jours pour l'email (le locataire doit pouvoir accéder au PDF)
+        const autoReceiptUrl = generateSignedUrl(cloudinaryPublicId, 604800)
         const autoMonthLabel = MONTHS_AUTO[payment.month - 1]
         const autoTotal = (payment.amount + payment.charges).toFixed(2)
         const autoTenant = payment.contract.tenant
@@ -303,7 +307,7 @@ router.put('/:id/mark-paid', authorize('OWNER'), async (req: Request, res: Respo
         <p style="color:#5a5754;font-size:13px;margin:4px 0 0">Loyer ${payment.amount.toFixed(2)} € + Charges ${payment.charges.toFixed(2)} €</p>
       </div>
       <a href="${autoReceiptUrl}" style="display:inline-block;background:#1a1a2e;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600">Télécharger la quittance (PDF)</a>
-      <p style="color:#9e9b96;font-size:12px;margin:24px 0 0">Ce lien est valable 1 heure. — Bailio · plateforme de gestion locative</p>
+      <p style="color:#9e9b96;font-size:12px;margin:24px 0 0">Ce lien est valable 7 jours. — Bailio · plateforme de gestion locative</p>
     </div>
   </div>
 </body>
@@ -359,7 +363,8 @@ router.post('/:id/send-email', authorize('OWNER'), async (req: Request, res: Res
     const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin',
       'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 
-    const receiptUrl = generateSignedUrl(payment.receiptCloudinaryId)
+    // URL valable 7 jours pour l'email
+    const receiptUrl = generateSignedUrl(payment.receiptCloudinaryId, 604800)
     const monthLabel = MONTHS[payment.month - 1]
     const total = (payment.amount + payment.charges).toFixed(2)
     const tenant = payment.contract.tenant
@@ -387,7 +392,7 @@ router.post('/:id/send-email', authorize('OWNER'), async (req: Request, res: Res
         <p style="color:#5a5754;font-size:13px;margin:4px 0 0">Loyer ${payment.amount.toFixed(2)} € + Charges ${payment.charges.toFixed(2)} €</p>
       </div>
       <a href="${receiptUrl}" style="display:inline-block;background:#1a1a2e;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600">Télécharger la quittance (PDF)</a>
-      <p style="color:#9e9b96;font-size:12px;margin:24px 0 0">Ce lien est valable 1 heure. — Bailio · plateforme de gestion locative</p>
+      <p style="color:#9e9b96;font-size:12px;margin:24px 0 0">Ce lien est valable 7 jours. — Bailio · plateforme de gestion locative</p>
     </div>
   </div>
 </body>

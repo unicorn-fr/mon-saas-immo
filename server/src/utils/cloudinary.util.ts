@@ -109,14 +109,14 @@ export async function deleteFromCloudinary(secureUrl: string): Promise<void> {
 
 /**
  * Generate a signed URL for a private Cloudinary asset.
- * Expires after 1 hour.
+ * Expires after 1 hour (default) or custom duration in seconds.
  */
-export function generateSignedUrl(publicId: string): string {
+export function generateSignedUrl(publicId: string, expiresInSeconds = 3600): string {
   configure()
   return cloudinary.url(publicId, {
     type: 'authenticated',
     sign_url: true,
-    expires_at: Math.floor(Date.now() / 1000) + 3600,
+    expires_at: Math.floor(Date.now() / 1000) + expiresInSeconds,
     secure: true,
   })
 }

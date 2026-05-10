@@ -181,14 +181,23 @@ function SettingsPanel({ contractId, settings, onClose, onSaved }: SettingsPanel
         </button>
       </div>
 
+      {/* Info légale */}
+      <div style={{ background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, borderRadius: 8, padding: '10px 14px', marginBottom: 16 }}>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.owner, lineHeight: 1.5, margin: 0 }}>
+          <strong>Art. 21 loi 89-462 :</strong> Le bailleur est obligé de délivrer une quittance gratuitement
+          au locataire qui en fait la demande. La quittance est automatiquement générée dès que vous marquez
+          un paiement comme reçu.
+        </p>
+      </div>
+
       {/* Toggle autoSend */}
       <div className="flex items-center justify-between mb-4">
         <div>
           <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 500, color: BAI.ink }}>
-            Envoi automatique
+            Envoi automatique par email
           </p>
           <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, marginTop: 2 }}>
-            Envoie la quittance au locataire chaque mois
+            La quittance PDF est envoyée au locataire dès que vous la marquez comme reçue
           </p>
         </div>
         <button
@@ -229,8 +238,11 @@ function SettingsPanel({ contractId, settings, onClose, onSaved }: SettingsPanel
           htmlFor={`day-${contractId}`}
           style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 500, color: BAI.ink, display: 'block', marginBottom: 6 }}
         >
-          Jour d'envoi dans le mois
+          Jour d'échéance du loyer
         </label>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, marginBottom: 8, marginTop: -2 }}>
+          Date à laquelle le loyer est dû chaque mois (ex : le 5 = loyer dû le 5 de chaque mois)
+        </p>
         <select
           id={`day-${contractId}`}
           value={dayOfMonth}
@@ -713,6 +725,25 @@ export default function Quittances() {
                 Réessayer
               </button>
             </div>
+          </div>
+        )}
+
+        {/* ── Rappel légal ── */}
+        {!loading && !error && groups.length > 0 && (
+          <div style={{
+            background: BAI.bgSurface,
+            border: `1px solid ${BAI.border}`,
+            borderRadius: 10,
+            padding: '12px 18px',
+            marginBottom: 20,
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 10,
+          }}>
+            <CheckCircle size={14} style={{ color: BAI.tenant, flexShrink: 0, marginTop: 2 }} />
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, lineHeight: 1.6, margin: 0 }}>
+              <strong style={{ color: BAI.ink }}>Conformité loi ALUR :</strong> Chaque quittance est générée automatiquement dès marquage « payé » et contient les mentions obligatoires (art. 21 loi du 6 juillet 1989) : loyer et charges séparés, période du 1er au dernier jour du mois, date de paiement reçu, coordonnées bailleur et locataire. Le PDF est archivé sécurisé et accessible 7 jours par email.
+            </p>
           </div>
         )}
 
