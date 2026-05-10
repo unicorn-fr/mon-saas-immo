@@ -144,7 +144,7 @@ class ContractService {
       where: {
         propertyId: data.propertyId,
         status: {
-          in: [ContractStatus.ACTIVE, ContractStatus.DRAFT, ContractStatus.SENT, ContractStatus.COMPLETED],
+          in: [ContractStatus.ACTIVE, ContractStatus.DRAFT, ContractStatus.SENT, ContractStatus.COMPLETED, ContractStatus.SIGNED_OWNER, ContractStatus.SIGNED_TENANT],
         },
         OR: [
           {
@@ -156,7 +156,7 @@ class ContractService {
     })
 
     if (overlappingContract) {
-      throw new Error('A contract already exists for this property during this period')
+      throw new Error('Un contrat existe déjà pour ce bien sur cette période (brouillon, en signature ou actif). Veuillez d\'abord annuler ou archiver le contrat existant.')
     }
 
     const contract = await prisma.contract.create({

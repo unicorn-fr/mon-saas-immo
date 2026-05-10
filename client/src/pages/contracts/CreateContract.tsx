@@ -10,6 +10,7 @@ import { DEFAULT_CLAUSES } from '../../data/loiAlurClauses'
 import { PDFDownloadLink } from '@react-pdf/renderer'
 import { ContractPDF } from '../../components/contract/ContractPDF'
 import { Layout } from '../../components/layout/Layout'
+import { applicationService } from '../../services/application.service'
 import {
   ArrowLeft,
   ArrowRight,
@@ -25,6 +26,7 @@ import {
   ChevronDown,
   ChevronUp,
   X,
+  FileText,
 } from 'lucide-react'
 
 
@@ -45,6 +47,9 @@ export default function CreateContract() {
   // Step 1: Property & Tenant
   const [propertyId, setPropertyId] = useState('')
   const [tenantEmail, setTenantEmail] = useState('')
+  const [propertyApplicants, setPropertyApplicants] = useState<
+    { id: string; name: string; email: string; avatar?: string; status: string }[]
+  >([])
 
   // Step 2: Juridical fields
   const [startDate, setStartDate] = useState('')
@@ -84,6 +89,29 @@ export default function CreateContract() {
       setDeposit(selectedProperty.deposit?.toString() || '')
     }
   }, [selectedProperty])
+
+  // Fetch applicants (PENDING + APPROVED) for the selected property
+  useEffect(() => {
+    if (!propertyId) {
+      setPropertyApplicants([])
+      return
+    }
+    applicationService.list(propertyId).then((apps) => {
+      const filtered = apps
+        .filter((a) => a.status === 'PENDING' || a.status === 'APPROVED')
+        .filter((a) => a.tenant)
+        .map((a) => ({
+          id: a.id,
+          name: `${a.tenant!.firstName} ${a.tenant!.lastName}`,
+          email: a.tenant!.email,
+          avatar: undefined as string | undefined,
+          status: a.status,
+        }))
+      setPropertyApplicants(filtered)
+    }).catch(() => {
+      setPropertyApplicants([])
+    })
+  }, [propertyId])
 
   const toggleClause = (id: string) => {
     setClauses((prev) =>
@@ -450,8 +478,8 @@ export default function CreateContract() {
                     </div>
                   ) : null}
 
-                  {/* Picker contacts messagerie */}
-                  {messagingContacts.length > 0 && !selectedContact && (
+                  {/* Picker contacts messagerie + candidats */}
+                  {(messagingContacts.length > 0 || propertyApplicants.length > 0) && !selectedContact && (
                     <div style={{ marginBottom: 12 }}>
                       <button
                         type="button"
@@ -468,15 +496,27 @@ export default function CreateContract() {
                       >
                         <span className="flex items-center gap-2">
                           <MessageSquare style={{ width: 14, height: 14, color: BAI.owner }} />
-                          Choisir depuis mes contacts messagerie
-                          <span style={{
-                            fontSize: 10, fontWeight: 700, fontFamily: BAI.fontBody,
-                            background: BAI.ownerLight, color: BAI.owner,
-                            border: `1px solid ${BAI.ownerBorder}`, borderRadius: 20,
-                            padding: '1px 7px',
-                          }}>
-                            {messagingContacts.length}
-                          </span>
+                          Choisir depuis mes contacts
+                          {messagingContacts.length > 0 && (
+                            <span style={{
+                              fontSize: 10, fontWeight: 700, fontFamily: BAI.fontBody,
+                              background: BAI.ownerLight, color: BAI.owner,
+                              border: `1px solid ${BAI.ownerBorder}`, borderRadius: 20,
+                              padding: '1px 7px',
+                            }}>
+                              {messagingContacts.length} messagerie
+                            </span>
+                          )}
+                          {propertyApplicants.length > 0 && (
+                            <span style={{
+                              fontSize: 10, fontWeight: 700, fontFamily: BAI.fontBody,
+                              background: BAI.tenantLight, color: BAI.tenant,
+                              border: `1px solid ${BAI.tenantBorder}`, borderRadius: 20,
+                              padding: '1px 7px',
+                            }}>
+                              {propertyApplicants.length} candidat{propertyApplicants.length > 1 ? 's' : ''}
+                            </span>
+                          )}
                         </span>
                         {showContactPicker
                           ? <ChevronUp style={{ width: 14, height: 14, color: BAI.inkFaint }} />
@@ -491,50 +531,132 @@ export default function CreateContract() {
                           overflow: 'hidden', background: BAI.bgSurface,
                           boxShadow: '0 4px 16px rgba(13,12,10,0.08)',
                         }}>
-                          {messagingContacts.map((contact) => (
-                            <button
-                              key={contact.id}
-                              type="button"
-                              onClick={() => {
-                                setSelectedContact({ name: contact.name, email: contact.email, avatar: contact.avatar })
-                                setTenantEmail(contact.email)
-                                setShowContactPicker(false)
-                                setErrors((e) => ({ ...e, tenantEmail: '' }))
-                              }}
-                              style={{
-                                width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-                                padding: '10px 14px', textAlign: 'left',
-                                background: 'none', border: 'none',
-                                borderBottom: `1px solid ${BAI.border}`,
-                                cursor: 'pointer', fontFamily: BAI.fontBody,
-                              }}
-                              onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
-                              onMouseLeave={e => (e.currentTarget.style.background = 'none')}
-                            >
-                              {contact.avatar ? (
-                                <img src={contact.avatar} alt={contact.name}
-                                  style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
-                              ) : (
-                                <div style={{
-                                  width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
-                                  background: BAI.ownerLight, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          {/* Section candidats à ce logement */}
+                          {propertyApplicants.length > 0 && (
+                            <>
+                              <div style={{
+                                padding: '7px 14px',
+                                background: BAI.tenantLight,
+                                borderBottom: `1px solid ${BAI.tenantBorder}`,
+                                display: 'flex', alignItems: 'center', gap: 6,
+                              }}>
+                                <FileText style={{ width: 12, height: 12, color: BAI.tenant }} />
+                                <span style={{
+                                  fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                                  letterSpacing: '0.1em', color: BAI.tenant, fontFamily: BAI.fontBody,
                                 }}>
-                                  <User style={{ width: 14, height: 14, color: BAI.owner }} />
-                                </div>
-                              )}
-                              <div className="flex-1 min-w-0">
-                                <p style={{ fontWeight: 500, fontSize: 13, color: BAI.ink }}>{contact.name}</p>
-                                <p style={{ fontSize: 11, color: BAI.inkFaint }} className="truncate">{contact.email}</p>
+                                  Candidats à ce logement
+                                </span>
                               </div>
-                            </button>
-                          ))}
+                              {propertyApplicants.map((applicant) => (
+                                <button
+                                  key={applicant.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedContact({ name: applicant.name, email: applicant.email, avatar: applicant.avatar })
+                                    setTenantEmail(applicant.email)
+                                    setShowContactPicker(false)
+                                    setErrors((e) => ({ ...e, tenantEmail: '' }))
+                                  }}
+                                  style={{
+                                    width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                                    padding: '10px 14px', textAlign: 'left',
+                                    background: 'none', border: 'none',
+                                    borderBottom: `1px solid ${BAI.border}`,
+                                    cursor: 'pointer', fontFamily: BAI.fontBody,
+                                  }}
+                                  onMouseEnter={e => (e.currentTarget.style.background = BAI.tenantLight)}
+                                  onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                                >
+                                  <div style={{
+                                    width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+                                    background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  }}>
+                                    <User style={{ width: 14, height: 14, color: BAI.tenant }} />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p style={{ fontWeight: 500, fontSize: 13, color: BAI.ink }}>{applicant.name}</p>
+                                    <p style={{ fontSize: 11, color: BAI.inkFaint }} className="truncate">{applicant.email}</p>
+                                  </div>
+                                  <span style={{
+                                    fontSize: 10, fontWeight: 700, fontFamily: BAI.fontBody,
+                                    flexShrink: 0,
+                                    background: applicant.status === 'APPROVED' ? BAI.tenantLight : BAI.caramelLight,
+                                    color: applicant.status === 'APPROVED' ? BAI.tenant : BAI.caramel,
+                                    border: `1px solid ${applicant.status === 'APPROVED' ? BAI.tenantBorder : BAI.caramelBorder}`,
+                                    borderRadius: 20, padding: '2px 8px',
+                                  }}>
+                                    {applicant.status === 'APPROVED' ? 'Approuvé' : 'En attente'}
+                                  </span>
+                                </button>
+                              ))}
+                            </>
+                          )}
+
+                          {/* Section contacts messagerie */}
+                          {messagingContacts.length > 0 && (
+                            <>
+                              <div style={{
+                                padding: '7px 14px',
+                                background: BAI.ownerLight,
+                                borderBottom: `1px solid ${BAI.ownerBorder}`,
+                                display: 'flex', alignItems: 'center', gap: 6,
+                              }}>
+                                <MessageSquare style={{ width: 12, height: 12, color: BAI.owner }} />
+                                <span style={{
+                                  fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                                  letterSpacing: '0.1em', color: BAI.owner, fontFamily: BAI.fontBody,
+                                }}>
+                                  Contacts messagerie
+                                </span>
+                              </div>
+                              {messagingContacts.map((contact) => (
+                                <button
+                                  key={contact.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedContact({ name: contact.name, email: contact.email, avatar: contact.avatar })
+                                    setTenantEmail(contact.email)
+                                    setShowContactPicker(false)
+                                    setErrors((e) => ({ ...e, tenantEmail: '' }))
+                                  }}
+                                  style={{
+                                    width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                                    padding: '10px 14px', textAlign: 'left',
+                                    background: 'none', border: 'none',
+                                    borderBottom: `1px solid ${BAI.border}`,
+                                    cursor: 'pointer', fontFamily: BAI.fontBody,
+                                  }}
+                                  onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
+                                  onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                                >
+                                  {contact.avatar ? (
+                                    <img src={contact.avatar} alt={contact.name}
+                                      style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                                  ) : (
+                                    <div style={{
+                                      width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+                                      background: BAI.ownerLight, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    }}>
+                                      <User style={{ width: 14, height: 14, color: BAI.owner }} />
+                                    </div>
+                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <p style={{ fontWeight: 500, fontSize: 13, color: BAI.ink }}>{contact.name}</p>
+                                    <p style={{ fontSize: 11, color: BAI.inkFaint }} className="truncate">{contact.email}</p>
+                                  </div>
+                                </button>
+                              ))}
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
                   )}
 
                   {/* Séparateur */}
-                  {messagingContacts.length > 0 && !selectedContact && (
+                  {(messagingContacts.length > 0 || propertyApplicants.length > 0) && !selectedContact && (
                     <div className="flex items-center gap-3" style={{ marginBottom: 12 }}>
                       <div style={{ flex: 1, height: 1, background: BAI.border }} />
                       <span style={{ fontSize: 11, color: BAI.inkFaint }}>ou saisir manuellement</span>
@@ -553,7 +675,7 @@ export default function CreateContract() {
                         style={inputStyle(!!errors.tenantEmail)}
                       />
                       <p style={{ fontSize: 11, color: BAI.inkFaint, marginTop: 4 }}>
-                        Le locataire doit avoir un compte avec cet email sur la plateforme
+                        Si le locataire n'a pas encore de compte Bailio, il en créera un lors de la signature.
                       </p>
                     </>
                   )}

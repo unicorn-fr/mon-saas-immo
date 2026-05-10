@@ -1,6 +1,7 @@
 import { BookingStatus, Prisma } from '@prisma/client'
 import { prisma } from '../config/database.js'
 import { notificationService } from './notification.service.js'
+import { sendEmail } from '../utils/email.util.js'
 
 export interface CreateBookingInput {
   propertyId: string
@@ -61,6 +62,18 @@ class BookingService {
     ])
     const hasAccess = approvedApp?.status === 'APPROVED' || invite !== null
     if (!hasAccess) throw new Error('Vous devez avoir une candidature approuvée pour réserver une visite')
+
+    // Check if this tenant already has an active booking for this property
+    const existingTenantBooking = await prisma.booking.findFirst({
+      where: {
+        propertyId: data.propertyId,
+        tenantId: data.tenantId,
+        status: { in: ['PENDING', 'CONFIRMED'] },
+      },
+    })
+    if (existingTenantBooking) {
+      throw new Error('Vous avez déjà une visite en attente ou confirmée pour ce bien')
+    }
 
     // Check if the date/time slot is already booked
     const existingBooking = await prisma.booking.findFirst({
@@ -133,6 +146,21 @@ class BookingService {
     // Notify property owner of new booking request
     const tenantName = `${booking.tenant.firstName} ${booking.tenant.lastName}`
     notificationService.notifyNewBooking(booking.property.owner.id, booking.id, booking.property.title, tenantName).catch(() => {})
+
+    // Send email to owner
+    const ownerEmail = booking.property.owner.email
+    const visitDateStr = new Date(booking.visitDate).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    sendEmail({
+      to: ownerEmail,
+      subject: `Nouvelle demande de visite — ${booking.property.title}`,
+      html: `
+        <p>Bonjour,</p>
+        <p><strong>${tenantName}</strong> souhaite visiter votre bien <strong>${booking.property.title}</strong>.</p>
+        <p>Date souhaitée : <strong>${visitDateStr}</strong> à <strong>${booking.visitTime}</strong></p>
+        <p>Connectez-vous à votre espace Bailio pour confirmer ou refuser cette visite.</p>
+        <p>— L'équipe Bailio</p>
+      `,
+    }).catch(() => {})
 
     return booking
   }
