@@ -291,9 +291,11 @@ export const Header = () => {
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
       height: 64,
       display: 'flex', alignItems: 'center',
-      background: scrolled ? 'rgba(10,10,18,0.97)' : 'transparent',
-      borderBottom: scrolled ? '1px solid rgba(196,151,106,0.18)' : 'none',
-      transition: 'background 0.3s ease, border-color 0.3s ease',
+      background: scrolled ? 'rgba(255,255,255,0.10)' : 'transparent',
+      backdropFilter: scrolled ? 'blur(20px) saturate(180%)' : 'none',
+      WebkitBackdropFilter: scrolled ? 'blur(20px) saturate(180%)' : 'none',
+      borderBottom: scrolled ? '1px solid rgba(255,255,255,0.14)' : 'none',
+      transition: 'background 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease',
     }}>
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 16px', width: '100%', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', width: '100%', minWidth: 0 }}>
@@ -413,6 +415,7 @@ export const Header = () => {
               <>
                 <Link to="/login"
                   style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     padding: '7px 18px', borderRadius: 24, fontSize: 13.5, fontWeight: 500,
                     color: 'rgba(255,255,255,0.85)', textDecoration: 'none',
                     border: '1px solid rgba(255,255,255,0.2)', background: 'transparent',
@@ -423,6 +426,7 @@ export const Header = () => {
                 </Link>
                 <Link to="/register"
                   style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     padding: '7px 18px', borderRadius: 24, fontSize: 13.5, fontWeight: 600,
                     background: BAI.caramel, color: '#fff', textDecoration: 'none',
                   }}
