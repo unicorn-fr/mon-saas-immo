@@ -5,7 +5,8 @@ import { BAI } from '../../constants/bailio-tokens'
 import {
   FileText, Download, Copy, Check, AlertTriangle, TrendingUp,
   UserX, Wrench, Key, FileCheck, ChevronDown, ChevronUp, Send,
-  Loader2, Users,
+  Loader2, Users, ShieldAlert, Scale, Home, ReceiptText, Building2,
+  ClipboardList, Hammer, Bell, ArrowLeftRight,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { apiClient } from '../../services/api.service'
@@ -352,6 +353,567 @@ Merci de bien vouloir me transmettre ces pièces dans un délai de [DÉLAI] jour
 Sans retour de votre part dans ce délai, je me verrai dans l'obligation d'étudier d'autres candidatures.
 
 Restant disponible pour tout renseignement complémentaire,
+
+Cordialement,
+
+[Votre Prénom Nom]
+[Téléphone]
+[Email]`,
+  },
+
+  // ── CAUTION & GARANTIE ───────────────────────────────────────────────────────
+  {
+    id: 'appel-caution',
+    title: 'Appel à la caution',
+    category: 'Caution',
+    description: 'Mise en demeure du garant en cas de défaillance du locataire',
+    icon: ShieldAlert,
+    color: '#7c3aed',
+    content: `[Votre Prénom Nom]
+[Votre Adresse]
+[Code Postal Ville]
+
+Lettre recommandée avec accusé de réception
+
+[Ville], le [DATE]
+
+[Prénom Nom du garant]
+[Adresse du garant]
+
+Objet : Mise en demeure — Appel en garantie
+
+Madame, Monsieur,
+
+Je me permets de vous contacter en votre qualité de caution solidaire du locataire [Prénom Nom du locataire], occupant le logement situé au [ADRESSE DU BIEN].
+
+En vertu de l'acte de cautionnement solidaire signé le [DATE DE L'ACTE DE CAUTION], vous vous êtes engagé(e) à répondre solidairement des obligations locatives de ce dernier.
+
+Or, à ce jour, [Prénom Nom du locataire] accuse un retard de paiement portant sur les loyers suivants :
+
+- Loyer de [MOIS 1] : [MONTANT] €
+- Loyer de [MOIS 2] : [MONTANT] € (le cas échéant)
+TOTAL DÛ : [MONTANT TOTAL] €
+
+Malgré mes relances auprès du locataire, demeurées sans effet, je me vois dans l'obligation de vous mettre en demeure de régler la somme de [MONTANT TOTAL] € dans un délai de QUINZE (15) JOURS à compter de la réception de la présente.
+
+À défaut de règlement dans ce délai, je me verrai contraint(e) d'engager toutes voies de recours à l'encontre de votre débiteur principal et de votre personne conjointement.
+
+Je reste à votre disposition pour tout renseignement.
+
+Cordialement,
+
+[Votre Prénom Nom]
+[Téléphone]
+[Email]`,
+  },
+  {
+    id: 'recu-depot-garantie',
+    title: 'Reçu du dépôt de garantie',
+    category: 'Caution',
+    description: 'Attestation de réception du dépôt de garantie à la remise des clés',
+    icon: ReceiptText,
+    color: '#1b5e3b',
+    content: `[Votre Prénom Nom]
+[Votre Adresse]
+[Code Postal Ville]
+
+[Ville], le [DATE]
+
+REÇU DU DÉPÔT DE GARANTIE
+
+Je soussigné(e), [Votre Prénom Nom], propriétaire bailleur,
+
+Atteste avoir reçu de [Prénom Nom du locataire],
+
+La somme de [MONTANT EN CHIFFRES] euros ([MONTANT EN LETTRES] €),
+
+À titre de dépôt de garantie pour le logement situé au [ADRESSE COMPLÈTE DU BIEN].
+
+Ce dépôt de garantie représente [UN / DEUX] mois de loyer hors charges, conformément au contrat de bail conclu le [DATE DU BAIL].
+
+Cette somme sera restituée dans les conditions et délais prévus par la loi du 6 juillet 1989, déduction faite, le cas échéant, des sommes dues par le locataire au titre des dégradations ou loyers impayés constatés à la fin du bail.
+
+Fait à [Ville], le [DATE]
+
+Signature du bailleur :
+
+_______________________
+[Votre Prénom Nom]`,
+  },
+  {
+    id: 'remboursement-depot',
+    title: 'Remboursement dépôt de garantie (avec retenue)',
+    category: 'Caution',
+    description: 'Restitution partielle du dépôt de garantie avec justification des retenues',
+    icon: ArrowLeftRight,
+    color: '#92400e',
+    content: `[Votre Prénom Nom]
+[Votre Adresse]
+[Code Postal Ville]
+
+[Ville], le [DATE]
+
+[Prénom Nom du locataire]
+[Nouvelle adresse du locataire]
+
+Objet : Restitution du dépôt de garantie — Logement situé au [ADRESSE DU BIEN]
+
+Madame, Monsieur,
+
+Suite à la fin de votre bail et à la remise des clés intervenue le [DATE DE REMISE DES CLÉS], je vous restitue le dépôt de garantie déduction faite des sommes suivantes, justifiées par les pièces jointes au présent courrier :
+
+DÉPÔT DE GARANTIE INITIAL : [MONTANT INITIAL] €
+
+RETENUES OPÉRÉES :
+- [Motif 1 — ex: Remplacement de [équipement] endommagé] : [MONTANT] €
+- [Motif 2 — ex: Loyer/charges du mois de [mois] impayé] : [MONTANT] €
+- [Motif 3] : [MONTANT] €
+TOTAL DES RETENUES : [TOTAL RETENUES] €
+
+SOMME RESTITUÉE : [MONTANT INITIAL - TOTAL RETENUES] €
+
+[Si solde négatif :] Le dépôt de garantie étant insuffisant pour couvrir l'ensemble des sommes dues, je vous adresse une facture complémentaire de [COMPLÉMENT] € dont je vous demande le règlement dans les meilleurs délais.
+
+Vous trouverez ci-joint les devis et factures justifiant les retenues opérées.
+
+Cordialement,
+
+[Votre Prénom Nom]`,
+  },
+
+  // ── CONGÉS ────────────────────────────────────────────────────────────────────
+  {
+    id: 'conge-habiter',
+    title: 'Congé pour reprise personnelle',
+    category: 'Fin de bail',
+    description: 'Notification de congé pour habiter le logement (art. 15 loi 89-462)',
+    icon: Home,
+    color: '#1a3270',
+    content: `[Votre Prénom Nom]
+[Votre Adresse]
+[Code Postal Ville]
+
+Lettre recommandée avec accusé de réception
+
+[Ville], le [DATE]
+
+[Prénom Nom du locataire]
+[Adresse du logement]
+
+Objet : Congé pour reprise — Article 15 de la loi du 6 juillet 1989
+
+Madame, Monsieur,
+
+Par la présente lettre recommandée avec accusé de réception, je vous notifie le congé du logement que vous occupez situé au [ADRESSE COMPLÈTE DU BIEN], conformément à l'article 15 de la loi n° 89-462 du 6 juillet 1989.
+
+Ce congé est motivé par la reprise du logement à des fins d'occupation personnelle. Le logement sera destiné à être habité par [moi-même / mon conjoint(e) / ma conjointe / mon/ma partenaire de PACS / mon ascendant(e) / mon descendant(e)], [PRÉNOM NOM], qui se trouve dans la nécessité de se loger à titre de résidence principale.
+
+Votre bail arrivant à échéance le [DATE D'ÉCHÉANCE DU BAIL], ce congé prendra effet à cette date. Vous disposez d'un préavis de SIX (6) MOIS pour un logement loué vide, ou TROIS (3) MOIS pour un logement meublé, à compter de la réception du présent courrier.
+
+Vous devrez libérer les lieux et remettre les clés au plus tard le [DATE DE LIBÉRATION].
+
+Je reste à votre disposition pour organiser l'état des lieux de sortie à une date convenant aux deux parties.
+
+Veuillez agréer, Madame, Monsieur, l'expression de mes salutations distinguées.
+
+[Votre Prénom Nom]`,
+  },
+  {
+    id: 'conge-vendre',
+    title: 'Congé pour vendre',
+    category: 'Fin de bail',
+    description: 'Notification de vente avec droit de préemption du locataire (art. 15-II)',
+    icon: Building2,
+    color: '#6b21a8',
+    content: `[Votre Prénom Nom]
+[Votre Adresse]
+[Code Postal Ville]
+
+Lettre recommandée avec accusé de réception
+
+[Ville], le [DATE]
+
+[Prénom Nom du locataire]
+[Adresse du logement]
+
+Objet : Congé pour vente — Article 15-II de la loi du 6 juillet 1989
+
+Madame, Monsieur,
+
+Par la présente lettre recommandée avec accusé de réception, je vous notifie le congé du logement que vous occupez situé au [ADRESSE COMPLÈTE DU BIEN], conformément aux dispositions de l'article 15-II de la loi n° 89-462 du 6 juillet 1989.
+
+Ce congé est motivé par la mise en vente du logement et de ses dépendances.
+
+En application de la loi précitée, ce congé vaut offre de vente à votre profit. Le prix de vente est fixé à [PRIX EN CHIFFRES] euros ([PRIX EN LETTRES]), avec les conditions suivantes : [PRÉCISER LES CONDITIONS DE PAIEMENT].
+
+Vous disposez d'un délai de DEUX (2) MOIS à compter de la réception du présent courrier pour faire connaître votre décision. Si vous souhaitez acquérir le bien, vous devrez réaliser la vente dans les deux mois suivant votre acceptation (quatre mois en cas de recours à un prêt immobilier).
+
+À défaut de réponse de votre part dans ce délai, l'offre deviendra caduque.
+
+Votre bail arrivant à échéance le [DATE D'ÉCHÉANCE], vous devrez libérer les lieux au plus tard le [DATE DE LIBÉRATION], soit à l'issue d'un préavis de SIX (6) MOIS.
+
+Sont reproduits ci-après les cinq premiers alinéas de l'article 15-II de la loi du 6 juillet 1989, conformément aux obligations légales.
+
+Veuillez agréer, Madame, Monsieur, l'expression de mes salutations distinguées.
+
+[Votre Prénom Nom]`,
+  },
+  {
+    id: 'conge-motif-serieux',
+    title: 'Congé pour motif légitime et sérieux',
+    category: 'Fin de bail',
+    description: 'Résiliation pour manquement grave aux obligations locatives',
+    icon: Scale,
+    color: BAI.error,
+    content: `[Votre Prénom Nom]
+[Votre Adresse]
+[Code Postal Ville]
+
+Lettre recommandée avec accusé de réception
+
+[Ville], le [DATE]
+
+[Prénom Nom du locataire]
+[Adresse du logement]
+
+Objet : Congé pour motif légitime et sérieux — Article 15 de la loi du 6 juillet 1989
+
+Madame, Monsieur,
+
+Par la présente lettre recommandée avec accusé de réception, je vous notifie le congé du logement que vous occupez situé au [ADRESSE COMPLÈTE DU BIEN], conformément à l'article 15 de la loi n° 89-462 du 6 juillet 1989.
+
+Ce congé est fondé sur un motif légitime et sérieux tenant aux manquements suivants à vos obligations contractuelles :
+
+[DÉTAILLER LES MANQUEMENTS, ex :]
+- Non-paiement répété des loyers aux échéances convenues, malgré les relances effectuées en date du [DATE] et du [DATE]
+- Troubles de voisinage persistants signalés par [PRÉCISER]
+- Sous-location non autorisée constatée le [DATE]
+- Dégradations importantes du logement constatées lors de la visite du [DATE]
+
+Votre bail arrivant à échéance le [DATE D'ÉCHÉANCE DU BAIL], ce congé prendra effet à cette date. Vous devrez libérer les lieux au plus tard le [DATE DE LIBÉRATION], dans le respect d'un préavis de SIX (6) MOIS pour un logement vide, ou TROIS (3) MOIS pour un logement meublé.
+
+Je vous rappelle que vous êtes tenu(e) de restituer le logement dans l'état dans lequel il vous a été remis, conformément à l'état des lieux d'entrée.
+
+Veuillez agréer, Madame, Monsieur, l'expression de mes salutations distinguées.
+
+[Votre Prénom Nom]`,
+  },
+
+  // ── ATTESTATIONS ──────────────────────────────────────────────────────────────
+  {
+    id: 'attestation-loyer',
+    title: 'Attestation de loyer',
+    category: 'Attestations',
+    description: "Attestation pour le locataire (CAF, employeur, banque...)",
+    icon: FileCheck,
+    color: '#0e7490',
+    content: `[Votre Prénom Nom]
+[Votre Adresse]
+[Code Postal Ville]
+
+[Ville], le [DATE]
+
+ATTESTATION DE LOYER
+
+Je soussigné(e), [Votre Prénom Nom], agissant en qualité de propriétaire bailleur,
+
+Certifie sur l'honneur que [Prénom Nom du locataire] est locataire du logement situé au [ADRESSE COMPLÈTE DU BIEN] depuis le [DATE D'ENTRÉE DANS LES LIEUX].
+
+Détail du loyer en vigueur :
+• Loyer mensuel hors charges : [MONTANT LOYER HC] €
+• Charges locatives : [MONTANT CHARGES] €
+• TOTAL MENSUEL CHARGES COMPRISES : [MONTANT TOTAL] €
+
+Le locataire est à jour de ses paiements au [DATE] : ☑ OUI  ☐ NON
+[Si NON : montant de la dette — [MONTANT DETTE] €]
+
+Cette attestation est délivrée à la demande de l'intéressé(e) pour servir et valoir ce que de droit.
+
+Fait à [Ville], le [DATE]
+
+Signature du bailleur :
+
+_______________________
+[Votre Prénom Nom]`,
+  },
+  {
+    id: 'accord-dematerialisation',
+    title: "Accord dématérialisation des quittances",
+    category: 'Attestations',
+    description: "Convention pour l'envoi des quittances par voie électronique",
+    icon: FileText,
+    color: BAI.inkMid,
+    content: `[Votre Prénom Nom]
+[Votre Adresse]
+[Code Postal Ville]
+
+[Ville], le [DATE]
+
+[Prénom Nom du locataire]
+[Adresse du logement]
+
+Objet : Accord pour la transmission dématérialisée des quittances de loyer
+
+Madame, Monsieur,
+
+Conformément aux dispositions de la loi n° 89-462 du 6 juillet 1989 et dans un souci de simplification administrative, je vous propose de vous adresser vos quittances de loyer mensuelles par voie électronique, à l'adresse email suivante : [EMAIL DU LOCATAIRE].
+
+Cette transmission dématérialisée présente les avantages suivants :
+• Réception immédiate à chaque début de mois
+• Conservation numérique sécurisée
+• Accès disponible depuis votre espace Bailio
+
+Si vous acceptez cette modalité de transmission, je vous invite à me retourner le présent document signé, ou à confirmer votre accord par email.
+
+Vous conservez à tout moment la possibilité de revenir à une transmission papier sur simple demande de votre part.
+
+Cordialement,
+
+[Votre Prénom Nom]
+
+---
+
+✂ À retourner signé au bailleur
+
+Je soussigné(e), [Prénom Nom du locataire], locataire du logement situé au [ADRESSE DU BIEN], accepte de recevoir mes quittances de loyer par voie électronique à l'adresse : [EMAIL DU LOCATAIRE].
+
+Fait à [Ville], le [DATE]          Signature : _______________`,
+  },
+
+  // ── CONTENTIEUX ───────────────────────────────────────────────────────────────
+  {
+    id: 'reparation-degradations',
+    title: 'Demande de réparation — dégradations',
+    category: 'Contentieux',
+    description: 'Mise en demeure du locataire de réparer les dégradations constatées',
+    icon: Hammer,
+    color: BAI.error,
+    content: `[Votre Prénom Nom]
+[Votre Adresse]
+[Code Postal Ville]
+
+Lettre recommandée avec accusé de réception
+
+[Ville], le [DATE]
+
+[Prénom Nom du locataire]
+[Adresse du logement]
+
+Objet : Demande de remise en état — Dégradations locatives
+
+Madame, Monsieur,
+
+À l'occasion de [ma visite du logement / l'état des lieux de sortie] réalisée le [DATE], j'ai constaté les dégradations suivantes dans le logement situé au [ADRESSE DU BIEN], qui excèdent la simple usure normale résultant d'un usage conforme :
+
+[LISTER LES DÉGRADATIONS :]
+1. [Description de la dégradation 1 — pièce, équipement concerné]
+2. [Description de la dégradation 2]
+3. [Description de la dégradation 3]
+
+Conformément à l'article 7 de la loi du 6 juillet 1989, vous êtes tenu(e) de répondre des dégradations et pertes survenues pendant la durée du contrat, sauf si vous pouvez prouver qu'elles ont eu lieu par cas de force majeure, par la faute du bailleur ou par le fait d'un tiers.
+
+Je vous demande, par la présente, de procéder à la remise en état du logement dans un délai de [DÉLAI] jours à compter de la réception de ce courrier, ou de me régler la somme estimée à [MONTANT ESTIMÉ] euros correspondant au coût de remise en état.
+
+À défaut, je procéderai à ces réparations à vos frais et engagerai toutes voies de recours pour obtenir remboursement.
+
+Veuillez agréer, Madame, Monsieur, l'expression de mes salutations distinguées.
+
+[Votre Prénom Nom]`,
+  },
+  {
+    id: 'contestation-facture-prestataire',
+    title: 'Contestation de facture prestataire',
+    category: 'Contentieux',
+    description: 'Contestation d\'une facture abusive ou non conforme au devis',
+    icon: AlertTriangle,
+    color: '#92400e',
+    content: `[Votre Prénom Nom]
+[Votre Adresse]
+[Code Postal Ville]
+
+Lettre recommandée avec accusé de réception
+
+[Ville], le [DATE]
+
+[Nom de l'entreprise prestataire]
+[Adresse du prestataire]
+
+Objet : Contestation de la facture n° [NUMÉRO DE FACTURE] du [DATE DE LA FACTURE]
+
+Madame, Monsieur,
+
+J'ai bien reçu votre facture n° [NUMÉRO] d'un montant de [MONTANT FACTURÉ] € relative à [DESCRIPTION DES TRAVAUX/PRESTATIONS] réalisés dans mon bien situé au [ADRESSE DU BIEN].
+
+Après vérification, je constate que cette facture ne correspond pas aux conditions initialement acceptées pour les raisons suivantes :
+
+[PRÉCISER LES MOTIFS :]
+• Le devis accepté le [DATE DU DEVIS] s'élevait à [MONTANT DU DEVIS] € — soit un dépassement injustifié de [ÉCART] €
+• [Les travaux suivants n'ont pas été réalisés / ont été réalisés de façon incomplète] : [DÉTAIL]
+• [Des postes supplémentaires ont été facturés sans accord préalable de ma part]
+
+En conséquence, je conteste le montant de cette facture et vous propose de régler la somme de [MONTANT ACCEPTÉ] €, correspondant aux prestations effectivement réalisées et conformes au devis.
+
+Je vous invite à me faire parvenir une facture rectificative dans un délai de QUINZE (15) JOURS. À défaut, je me verrai contraint(e) de saisir les autorités compétentes.
+
+Cordialement,
+
+[Votre Prénom Nom]`,
+  },
+  {
+    id: 'litige-retard-travaux',
+    title: 'Litige — retard de travaux',
+    category: 'Contentieux',
+    description: 'Mise en demeure d\'un artisan pour dépassement du délai convenu',
+    icon: Wrench,
+    color: '#92400e',
+    content: `[Votre Prénom Nom]
+[Votre Adresse]
+[Code Postal Ville]
+
+Lettre recommandée avec accusé de réception
+
+[Ville], le [DATE]
+
+[Nom de l'entreprise]
+[Adresse de l'entreprise]
+
+Objet : Mise en demeure — Retard dans l'exécution des travaux
+
+Madame, Monsieur,
+
+Suite au devis accepté le [DATE DU DEVIS] pour la réalisation de [DESCRIPTION DES TRAVAUX] dans mon bien situé au [ADRESSE DU BIEN], vos équipes devaient intervenir du [DATE DÉBUT PRÉVUE] au [DATE FIN PRÉVUE].
+
+Or, à ce jour, les travaux [n'ont pas débuté / ne sont pas achevés / présentent les malfaçons suivantes : DÉTAIL].
+
+Ce retard me cause un préjudice direct [logement inoccupé / locataire pénalisé / loyers perdus] depuis le [DATE], représentant une perte évaluée à [MONTANT] €.
+
+Je vous mets en demeure par la présente d'achever les travaux conformément au devis dans un délai de [DÉLAI] JOURS à compter de la réception de ce courrier.
+
+Passé ce délai, je me réserve le droit :
+• De faire appel à une autre entreprise pour finaliser les travaux à vos frais
+• De déduire les pénalités de retard de votre règlement
+• D'engager toute procédure judiciaire en réparation du préjudice subi
+
+Cordialement,
+
+[Votre Prénom Nom]`,
+  },
+
+  // ── GESTION ───────────────────────────────────────────────────────────────────
+  {
+    id: 'notification-changement-proprio',
+    title: 'Notification de changement de propriétaire',
+    category: 'Gestion',
+    description: 'Information du locataire suite à la vente du bien',
+    icon: Bell,
+    color: BAI.owner,
+    content: `[Nouveau propriétaire — Prénom Nom]
+[Adresse du nouveau propriétaire]
+[Code Postal Ville]
+
+[Ville], le [DATE]
+
+[Prénom Nom du locataire]
+[Adresse du logement]
+
+Objet : Notification de changement de propriétaire — Logement situé au [ADRESSE DU BIEN]
+
+Madame, Monsieur,
+
+Je me permets de vous informer qu'à compter du [DATE DE TRANSFERT DE PROPRIÉTÉ], j'ai acquis le logement que vous occupez situé au [ADRESSE COMPLÈTE DU BIEN].
+
+Par conséquent, je suis désormais votre nouveau bailleur. Votre contrat de bail est maintenu sans modification dans tous ses termes et conditions, conformément aux dispositions de l'article 1743 du Code civil.
+
+À compter de cette date, vos loyers devront être réglés à l'ordre de [Votre Prénom Nom / NOM DE LA SOCIÉTÉ] et adressés à :
+
+[NOM DU NOUVEAU PROPRIÉTAIRE / SOCIÉTÉ DE GESTION]
+[Adresse de règlement]
+[IBAN si virement] : [IBAN]
+
+Je vous confirme que votre dépôt de garantie d'un montant de [MONTANT DU DÉPÔT] € a bien été transféré dans le cadre de cette transaction.
+
+Je reste à votre disposition pour toute question et vous souhaite une bonne continuation dans votre logement.
+
+Cordialement,
+
+[Votre Prénom Nom]
+[Téléphone]
+[Email]`,
+  },
+  {
+    id: 'checklist-sortie',
+    title: 'Checklist remise des clés',
+    category: 'Gestion',
+    description: 'Document récapitulatif pour l\'état des lieux de sortie et remise des clés',
+    icon: ClipboardList,
+    color: '#0e7490',
+    content: `CHECKLIST ÉTAT DES LIEUX DE SORTIE ET REMISE DES CLÉS
+
+Logement situé au : [ADRESSE DU BIEN]
+Locataire sortant : [Prénom Nom du locataire]
+Date de l'état des lieux : [DATE]
+Heure : [HEURE]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CLÉS ET ACCÈS REMIS
+☐ Clés de la porte d'entrée : [NOMBRE] clé(s)
+☐ Clés de la boîte aux lettres : [NOMBRE] clé(s)
+☐ Badges/télécommandes de garage : [NOMBRE]
+☐ Vignette interphone : ☐ OUI  ☐ NON
+☐ Clés de cave/débarras : [NOMBRE]
+☐ Autres : [PRÉCISER]
+
+COMPTEURS RELEVÉS À LA SORTIE
+☐ Électricité — Index : [INDEX]
+☐ Gaz — Index : [INDEX]
+☐ Eau froide — Index : [INDEX]
+☐ Eau chaude — Index : [INDEX]
+
+DOCUMENTS REMIS PAR LE LOCATAIRE
+☐ Attestation d'assurance habitation (résiliation)
+☐ Justificatif de changement d'adresse
+☐ Coordonnées pour restitution du dépôt de garantie
+
+NOTES ET OBSERVATIONS
+[ESPACE POUR COMMENTAIRES]
+
+SIGNATURES
+Propriétaire : _____________________    Date : [DATE]
+Locataire : _____________________       Date : [DATE]`,
+  },
+  {
+    id: 'prolongation-bail-deces',
+    title: 'Prolongation de bail suite à un décès',
+    category: 'Gestion',
+    description: 'Information sur le maintien du bail au profit des proches du locataire décédé',
+    icon: FileText,
+    color: BAI.inkMid,
+    content: `[Votre Prénom Nom]
+[Votre Adresse]
+[Code Postal Ville]
+
+[Ville], le [DATE]
+
+[Prénom Nom du bénéficiaire du transfert]
+[Adresse du logement]
+
+Objet : Transmission du bail suite au décès de [Prénom Nom du locataire décédé]
+
+Madame, Monsieur,
+
+Je vous adresse mes sincères condoléances suite au décès de [Prénom Nom du locataire] survenu le [DATE DU DÉCÈS].
+
+En application de l'article 14 de la loi n° 89-462 du 6 juillet 1989, le bail consenti à [Prénom Nom du locataire] pour le logement situé au [ADRESSE DU BIEN] est de plein droit transféré à votre bénéfice en votre qualité de [conjoint(e) survivant(e) / partenaire de PACS / concubin(e) notoire / ascendant(e) / descendant(e) / personne à charge].
+
+Le contrat se poursuit dans les mêmes conditions jusqu'à son terme naturel. Vos obligations et droits sont identiques à ceux qui prévalaient pour le locataire initial.
+
+Je vous invite à me confirmer :
+• Votre intention de poursuivre ce bail : ☐ OUI  ☐ NON
+• Vos nouvelles coordonnées si différentes
+• Votre RIB pour la mise à jour du mandat de prélèvement le cas échéant
+
+Restant à votre disposition pour toute formalité complémentaire.
 
 Cordialement,
 

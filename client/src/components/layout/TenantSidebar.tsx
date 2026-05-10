@@ -190,6 +190,7 @@ export function TenantSidebar() {
         <NavItem to="/contracts" icon={FileText} label="Mon contrat" onClick={closeMobile} compact={compact} />
         <NavItem to="/tenant/wallet" icon={Wallet} label="Paiements" onClick={closeMobile} compact={compact} />
         <NavItem to="/tenant/maintenance" icon={Wrench} label="Maintenance" onClick={closeMobile} compact={compact} />
+        <NavItem to="/tenant/documents" icon={FileText} label="Courriers types" onClick={closeMobile} compact={compact} />
 
         <SectionLabel label="Communication" compact={compact} />
         <NavItem to="/messages" icon={MessageSquare} label="Messages" badge={unreadCount} onClick={closeMobile} compact={compact} />

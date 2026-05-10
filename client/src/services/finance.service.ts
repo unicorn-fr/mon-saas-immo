@@ -9,6 +9,7 @@ export interface RentAdvice {
   recommendedRent: number
   reasoning: string
   encadrementNote: string | null
+  encadrementMaj?: number | null
   tips: string[]
   sourceUrl?: string
   sourceName?: string

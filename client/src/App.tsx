@@ -53,6 +53,7 @@ import PrivacyCenter from './pages/tenant/PrivacyCenter'
 import TenantSettings from './pages/tenant/Settings'
 import TenantWallet from './pages/tenant/TenantWallet'
 import TenantMaintenance from './pages/tenant/Maintenance'
+import TenantDocuments from './pages/tenant/Documents'
 
 // Shared Pages
 import Messages from './pages/Messages'
@@ -259,6 +260,7 @@ function AppRoutes() {
         <Route path="/tenant/settings" element={<TenantSettings />} />
         <Route path="/tenant/wallet" element={<TenantWallet />} />
         <Route path="/tenant/maintenance" element={<TenantMaintenance />} />
+        <Route path="/tenant/documents" element={<TenantDocuments />} />
       </Route>
 
       <Route element={<ProtectedRoute />}>
