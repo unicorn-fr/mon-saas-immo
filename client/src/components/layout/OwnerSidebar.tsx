@@ -7,8 +7,9 @@ import { useEffect, useState } from 'react'
 import { NavLink, Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Home, ClipboardList, Calendar, FileText,
-  MessageSquare, Plus, Settings, TrendingUp, Wrench, Receipt, Wallet, BarChart2, Users, FolderOpen, Calculator,
+  MessageSquare, Plus, Settings, TrendingUp, Wrench, Receipt, BarChart2, Users, FolderOpen, Calculator, Zap,
 } from 'lucide-react'
+import { usePlan } from '../../hooks/usePlan'
 import { useSidebarStore } from '../../store/sidebarStore'
 import { useMessages } from '../../hooks/useMessages'
 import { applicationService } from '../../services/application.service'
@@ -119,12 +120,16 @@ export function OwnerSidebar() {
   const [pendingAppsCount, setPendingAppsCount] = useState(0)
   const windowWidth = useWindowWidth()
   const isTabletCompact = windowWidth >= BAI.bpMd && windowWidth < BAI.bpLg
+  const { plan: currentPlan } = usePlan()
 
   useEffect(() => {
     fetchUnreadCount()
     applicationService.list()
       .then((apps) => setPendingAppsCount(apps.filter((a) => a.status === 'PENDING').length))
       .catch(() => {})
+    // Poll unread badge every 30s so it stays fresh on any page
+    const timer = setInterval(() => fetchUnreadCount(), 30_000)
+    return () => clearInterval(timer)
   }, [fetchUnreadCount])
 
   const closeMobile = () => setMobileOpen(false)
@@ -193,10 +198,20 @@ export function OwnerSidebar() {
         <NavItem to="/owner/outils" icon={Calculator} label="Outils" onClick={closeMobile} compact={compact} />
         <NavItem to="/owner/quittances" icon={Receipt} label="Quittances" onClick={closeMobile} compact={compact} />
         <NavItem to="/owner/maintenance" icon={Wrench} label="Maintenance" onClick={closeMobile} compact={compact} />
-        <NavItem to="/owner/wallet" icon={Wallet} label="Portefeuille" onClick={closeMobile} compact={compact} />
 
         <SectionLabel label="Compte" compact={compact} />
+        <NavItem to="/owner/abonnement" icon={Zap} label="Abonnement" onClick={closeMobile} compact={compact} />
         <NavItem to="/owner/settings" icon={Settings} label="Paramètres" onClick={closeMobile} compact={compact} />
+        {!compact && currentPlan === 'FREE' && (
+          <div style={{ margin: '12px 10px 6px', padding: '10px 12px', borderRadius: 10, background: `${BAI.caramel}18`, border: `1px solid ${BAI.caramel}40` }}>
+            <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: BAI.caramel, fontFamily: BAI.fontBody }}>
+              Plan Gratuit — listing seulement
+            </p>
+            <NavLink to="/owner/abonnement" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: BAI.caramel, fontWeight: 600, textDecoration: 'none', fontFamily: BAI.fontBody }}>
+              <Zap style={{ width: 11, height: 11 }} /> Passer au Pro →
+            </NavLink>
+          </div>
+        )}
       </nav>
 
     </div>

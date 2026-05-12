@@ -104,7 +104,7 @@ export default function SearchProperties() {
   // Fetch on filter/sort/page change
   useEffect(() => {
     if (searchQuery.trim()) {
-      searchProperties(searchQuery, { page: currentPage, limit: itemsPerPage, sortBy, sortOrder })
+      searchProperties(searchQuery, { page: currentPage, limit: itemsPerPage, sortBy, sortOrder }, filters)
     } else {
       fetchProperties(filters, { page: currentPage, limit: itemsPerPage, sortBy, sortOrder })
     }
@@ -265,8 +265,7 @@ export default function SearchProperties() {
             <div
               style={{
                 background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)',
-                borderRadius: 14, padding: '6px 6px 6px 8px', backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
+                borderRadius: 14, padding: '6px 6px 6px 8px',
                 boxShadow: '0 8px 32px rgba(0,0,0,0.3)', transition: 'all .25s',
               }}
               onFocusCapture={e => { e.currentTarget.style.borderColor = M.caramel; e.currentTarget.style.boxShadow = '0 8px 32px rgba(196,151,106,0.18)' }}

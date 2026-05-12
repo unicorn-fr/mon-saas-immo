@@ -60,7 +60,7 @@ export const BookingManagement = () => {
     cancelBooking,
   } = useBookings()
 
-  const { properties, fetchProperties } = useProperties()
+  const { myProperties: properties, fetchMyProperties: fetchProperties } = useProperties()
 
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [selectedProperty, setSelectedProperty] = useState<string>('all')
@@ -278,7 +278,7 @@ export const BookingManagement = () => {
 
           {/* Statistics */}
           {statistics && (
-            <div className="grid grid-cols-3 gap-3 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
               {statCards.map(({ label, value, icon, bg, border, color }) => (
                 <div
                   key={label}

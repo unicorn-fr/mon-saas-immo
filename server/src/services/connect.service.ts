@@ -283,7 +283,7 @@ export async function collectRentPayment(rentPaymentId: string): Promise<void> {
   const sepaRateBps = PLANS[plan].sepaRateBps
   if (!sepaRateBps) throw new Error('Ce plan ne supporte pas SEPA')
 
-  const fees = calculatePlatformFee(rentPayment.totalAmountCents, plan as 'PRO' | 'EXPERT')
+  const fees = calculatePlatformFee(rentPayment.totalAmountCents, plan)
 
   // PaymentIntent avec Destination Charge
   // → Bailio collecte le total, Stripe reverse (total - commission) au propriétaire
@@ -311,7 +311,7 @@ export async function collectRentPayment(rentPaymentId: string): Promise<void> {
       periodYear: rentPayment.periodYear.toString(),
     },
     description: `Loyer ${rentPayment.periodMonth}/${rentPayment.periodYear} — contrat ${rentPayment.contractId.slice(-6)}`,
-  })
+  }, { idempotencyKey: `rent-${rentPaymentId}` })
 
   // Mettre à jour en base
   await prisma.rentPayment.update({

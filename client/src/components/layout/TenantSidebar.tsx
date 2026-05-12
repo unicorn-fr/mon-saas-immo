@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 import { NavLink, Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Search, Heart, Calendar,
-  FolderOpen, SendHorizonal, FileText, MessageSquare, X, LogOut, Settings, Wallet, Wrench,
+  FolderOpen, SendHorizonal, FileText, MessageSquare, X, LogOut, Settings, Wrench,
 } from 'lucide-react'
 import { useSidebarStore } from '../../store/sidebarStore'
 import { useMessages } from '../../hooks/useMessages'
@@ -125,6 +125,9 @@ export function TenantSidebar() {
         setDossierPercent(Math.round((covered / REQUIRED_CATEGORIES.length) * 100))
       })
       .catch(() => {})
+    // Poll unread badge every 30s so it stays fresh on any page
+    const timer = setInterval(() => fetchUnreadCount(), 30_000)
+    return () => clearInterval(timer)
   }, [fetchUnreadCount])
 
   const initials = `${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}`.toUpperCase()
@@ -188,7 +191,6 @@ export function TenantSidebar() {
 
         <SectionLabel label="Mon logement" compact={compact} />
         <NavItem to="/contracts" icon={FileText} label="Mon contrat" onClick={closeMobile} compact={compact} />
-        <NavItem to="/tenant/wallet" icon={Wallet} label="Paiements" onClick={closeMobile} compact={compact} />
         <NavItem to="/tenant/maintenance" icon={Wrench} label="Maintenance" onClick={closeMobile} compact={compact} />
         <NavItem to="/tenant/documents" icon={FileText} label="Courriers types" onClick={closeMobile} compact={compact} />
 

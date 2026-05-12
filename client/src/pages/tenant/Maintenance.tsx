@@ -44,6 +44,7 @@ export default function TenantMaintenance() {
   const [showForm, setShowForm] = useState(false)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [category, setCategory] = useState('AUTRE')
   const [submitting, setSubmitting] = useState(false)
 
   const fetchRequests = async () => {
@@ -68,7 +69,8 @@ export default function TenantMaintenance() {
     setSubmitting(true)
     try {
       const contractRes = await apiClient.get('/contracts?status=ACTIVE')
-      const contracts = contractRes.data.data ?? []
+      const raw = contractRes.data.data
+      const contracts = Array.isArray(raw) ? raw : (raw?.contracts ?? [])
       if (contracts.length === 0) {
         toast.error('Aucun bail actif trouvé. Vous devez avoir un bail actif pour signaler un problème.')
         return
@@ -79,7 +81,7 @@ export default function TenantMaintenance() {
         propertyId,
         title: title.trim(),
         description: description.trim(),
-        category: 'AUTRE',
+        category,
         priority: 'MEDIUM',
       })
       toast.success('Demande envoyée à votre propriétaire')
@@ -139,6 +141,25 @@ export default function TenantMaintenance() {
                 Décrire le problème
               </h2>
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div>
+                  <label style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.ink, display: 'block', marginBottom: 6 }}>
+                    Catégorie *
+                  </label>
+                  <select
+                    value={category}
+                    onChange={e => setCategory(e.target.value)}
+                    style={{
+                      width: '100%', padding: '10px 14px',
+                      border: `1px solid ${BAI.border}`, borderRadius: 8,
+                      fontFamily: BAI.fontBody, fontSize: 14, color: BAI.ink,
+                      background: BAI.bgBase, outline: 'none', boxSizing: 'border-box',
+                    }}
+                  >
+                    {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
+                      <option key={key} value={key}>{CATEGORY_ICONS[key]} {label}</option>
+                    ))}
+                  </select>
+                </div>
                 <div>
                   <label style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.ink, display: 'block', marginBottom: 6 }}>
                     Sujet *

@@ -23,7 +23,7 @@ const STEPS = [
   {
     n: '04',
     title: 'Signe et emménage.',
-    desc: "Bail électronique conforme loi ALUR, état des lieux guidé depuis ton téléphone, prélèvement SEPA mis en place. Tu peux te concentrer sur les cartons.",
+    desc: "Bail électronique conforme loi ALUR, état des lieux guidé depuis ton téléphone. Tu vires ton loyer directement à ton propriétaire et tu reçois ta quittance automatiquement.",
   },
 ]
 

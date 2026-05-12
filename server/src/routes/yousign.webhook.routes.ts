@@ -13,10 +13,13 @@ router.post('/', async (req: Request, res: Response) => {
     const signature = (req.headers['x-yousign-signature-256'] as string) ?? ''
     const rawBody = JSON.stringify(req.body)
 
-    if (process.env.YOUSIGN_WEBHOOK_SECRET && signature) {
-      const valid = verifyWebhookSignature(rawBody, signature.replace('sha256=', ''))
+    if (!process.env.YOUSIGN_WEBHOOK_SECRET) {
+      // En développement local sans secret configuré, on accepte mais on loggue
+      console.warn('[yousign-webhook] YOUSIGN_WEBHOOK_SECRET non configuré — signature non vérifiée')
+    } else {
+      const valid = signature && verifyWebhookSignature(rawBody, signature.replace('sha256=', ''))
       if (!valid) {
-        console.warn('[yousign-webhook] Signature invalide — ignoré')
+        console.warn('[yousign-webhook] Signature invalide — rejeté')
         return res.status(401).json({ error: 'Signature invalide' })
       }
     }

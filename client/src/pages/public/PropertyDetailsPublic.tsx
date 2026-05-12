@@ -317,8 +317,8 @@ export default function PropertyDetailsPublic() {
                       <Heart
                         className="w-4 h-4 transition-colors"
                         style={{
-                          color: isFavorite(id || '') ? '#e53e3e' : M.inkMid,
-                          fill: isFavorite(id || '') ? '#e53e3e' : 'none',
+                          color: isFavorite(id || '') ? '#9b1c1c' : M.inkMid,
+                          fill: isFavorite(id || '') ? '#9b1c1c' : 'none',
                         }}
                       />
                     </button>
@@ -845,7 +845,7 @@ export default function PropertyDetailsPublic() {
 
                 {/* Secondary: contact button */}
                 <button
-                  onClick={() => setShowContactModal(true)}
+                  onClick={() => isAuthenticated ? setShowContactModal(true) : navigate('/login')}
                   className="w-full flex items-center justify-center gap-2 px-4 py-3 transition-colors"
                   style={{
                     background: M.surface,

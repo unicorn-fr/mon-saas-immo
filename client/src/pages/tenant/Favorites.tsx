@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Heart, Loader, Search, Grid, List } from 'lucide-react'
 import { useProperties } from '../../hooks/useProperties'
 import { useFavoriteStore } from '../../store/favoriteStore'
@@ -250,8 +251,8 @@ export default function Favorites() {
                   : 'Aucune propriété ne correspond à votre recherche.'}
               </p>
               {favoriteProperties.length === 0 && (
-                <a
-                  href="/search"
+                <Link
+                  to="/search"
                   className="inline-flex items-center gap-2 transition-opacity hover:opacity-80"
                   style={{
                     background: '#1b5e3b',
@@ -261,11 +262,12 @@ export default function Favorites() {
                     fontSize: 13,
                     fontWeight: 500,
                     fontFamily: "'DM Sans', system-ui, sans-serif",
+                    textDecoration: 'none',
                   }}
                 >
                   <Search className="w-4 h-4" />
                   Explorer les propriétés
-                </a>
+                </Link>
               )}
             </div>
           ) : (

@@ -291,7 +291,7 @@ export default function AdminDashboard() {
                 {activity.users.slice(0, 5).map((user) => (
                   <Link
                     key={user.id}
-                    to={`/admin/users/${user.id}`}
+                    to={`/admin/users?userId=${user.id}`}
                     className="flex items-center justify-between p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors"
                   >
                     <div>

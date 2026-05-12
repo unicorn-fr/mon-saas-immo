@@ -21,6 +21,7 @@ import {
 import { Layout } from '../../components/layout/Layout'
 import { StatusChangeModal } from '../../components/property/StatusChangeModal'
 import { BAI } from '../../constants/bailio-tokens'
+import toast from 'react-hot-toast'
 
 type TabKey = 'tous' | 'disponibles' | 'en-location' | 'hors-marche'
 
@@ -57,6 +58,11 @@ export default function MyProperties() {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDelete = async (id: string, title: string) => {
+    const property = myProperties.find(p => p.id === id)
+    if (property?.status === 'OCCUPIED') {
+      window.alert(`Impossible de supprimer "${title}" : ce bien est actuellement en location. Résiliez d'abord le bail.`)
+      return
+    }
     if (!window.confirm(`Êtes-vous sûr de vouloir supprimer "${title}" ?`)) return
     setDeletingId(id)
     try {
@@ -72,15 +78,20 @@ export default function MyProperties() {
       const now = new Date()
       const oneYearLater = new Date(now)
       oneYearLater.setFullYear(oneYearLater.getFullYear() + 1)
-      await createContract({
-        propertyId: statusModalProperty.id,
-        tenantId,
-        startDate: now.toISOString().split('T')[0],
-        endDate: oneYearLater.toISOString().split('T')[0],
-        monthlyRent: statusModalProperty.price,
-        charges: statusModalProperty.charges || undefined,
-        deposit: statusModalProperty.deposit || undefined,
-      })
+      try {
+        await createContract({
+          propertyId: statusModalProperty.id,
+          tenantId,
+          startDate: now.toISOString().split('T')[0],
+          endDate: oneYearLater.toISOString().split('T')[0],
+          monthlyRent: statusModalProperty.price,
+          charges: statusModalProperty.charges || undefined,
+          deposit: statusModalProperty.deposit || undefined,
+        })
+      } catch (e: any) {
+        toast.error(e?.message ?? 'Erreur lors de la création du contrat')
+        return
+      }
     }
     await changePropertyStatus(statusModalProperty.id, status)
   }

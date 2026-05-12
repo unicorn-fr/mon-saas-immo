@@ -327,7 +327,11 @@ class AuthService {
   async verifyEmailWithCodeAndLogin(email: string, code: string): Promise<AuthResponse> {
     const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } })
     if (!user) throw new Error('Compte introuvable')
-    if (user.emailVerified) throw new Error('Email déjà vérifié')
+    // If already verified, issue tokens directly (idempotent)
+    if (user.emailVerified) {
+      const { accessToken, refreshToken } = await this.generateTokens(user.id)
+      return { accessToken, refreshToken, user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName, role: user.role, avatar: user.avatar, emailVerified: user.emailVerified } }
+    }
 
     const record = await prisma.verificationToken.findFirst({
       where: { userId: user.id, type: 'EMAIL_VERIFY', token: code },

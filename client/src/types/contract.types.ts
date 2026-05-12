@@ -118,6 +118,8 @@ export interface ContractStatistics {
   active: number
   draft: number
   sent: number
+  signedOwner: number
+  signedTenant: number
   completed: number
   terminated: number
   expired: number

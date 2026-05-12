@@ -96,10 +96,10 @@ export default function TenantDashboard() {
 
   // ── Calculs contrat actif ─────────────────────────────────────────────────
   const activeCnt        = (activeContract?.content as Record<string, any>) || {}
-  const _rawPaymentDay   = activeCnt.paymentDay ? Number(activeCnt.paymentDay) : (activeContract ? new Date(activeContract.startDate).getDate() : 1)
-  const paymentDay       = Number.isFinite(_rawPaymentDay) ? _rawPaymentDay : 1
+  const _rawPaymentDay   = activeCnt.paymentDay ? Number(activeCnt.paymentDay) : 1
+  const paymentDay       = Number.isFinite(_rawPaymentDay) && _rawPaymentDay >= 1 ? _rawPaymentDay : 1
   const nextPaymentDate  = activeContract ? computeNextPaymentDate(paymentDay) : null
-  const daysUntilPayment = nextPaymentDate ? differenceInDays(nextPaymentDate, new Date()) : null
+  const daysUntilPayment = nextPaymentDate ? Math.max(0, differenceInDays(nextPaymentDate, new Date())) : null
   const daysUntilEnd     = activeContract ? differenceInDays(new Date(activeContract.endDate), new Date()) : null
   const monthsUntilEnd   = daysUntilEnd !== null ? Math.max(0, Math.floor(daysUntilEnd / 30.44)) : null
   const activeRent       = activeContract?.monthlyRent ?? 0
@@ -793,8 +793,8 @@ export default function TenantDashboard() {
               },
               {
                 to: '/my-applications',
-                label: 'Candida-',
-                sublabel: 'tures',
+                label: 'Dossiers',
+                sublabel: '',
                 value: activeApps.length,
                 sub: pendingApps.length > 0
                   ? `${pendingApps.length} en attente`
@@ -1181,7 +1181,7 @@ export default function TenantDashboard() {
 
                   {isLoadingBookings ? (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40 }}>
-                      <Loader2 size={24} style={{ color: BAI.inkFaint, animation: 'spin 0.8s linear infinite' }} />
+                      <Loader2 size={24} className="animate-spin" style={{ color: BAI.inkFaint }} />
                     </div>
                   ) : upcomingBookings.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '36px 24px' }}>

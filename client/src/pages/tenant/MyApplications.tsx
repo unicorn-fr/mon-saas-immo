@@ -28,7 +28,7 @@ const STATUS_LABEL: Record<ApplicationStatus, string> = {
 
 const STATUS_STYLE: Record<ApplicationStatus, React.CSSProperties> = {
   PENDING:   { background: '#fdf5ec', color: '#92400e', border: '1px solid #e8c99a' },
-  APPROVED:  { background: '#fdf5ec', color: '#c4976a', border: '1px solid #f3c99a' },
+  APPROVED:  { background: '#edf7f2', color: '#1b5e3b', border: '1px solid #9fd4ba' },
   REJECTED:  { background: '#fef2f2', color: '#9b1c1c', border: '1px solid #fca5a5' },
   WITHDRAWN: { background: '#f4f2ee', color: '#9e9b96', border: '1px solid #ccc9c3' },
 }
@@ -156,7 +156,7 @@ function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw:
           {/* Property image — 100px mobile (full width), 64px sm+ (fixed) */}
           {prop.images && prop.images[0] ? (
             <img
-              src={`${SERVER_BASE}${prop.images[0]}`}
+              src={prop.images[0].startsWith('http') ? prop.images[0] : `${SERVER_BASE}${prop.images[0]}`}
               alt={prop.title}
               className="w-full sm:w-16 sm:flex-shrink-0 object-cover"
               style={{
@@ -460,8 +460,9 @@ export default function MyApplications() {
     setApps((prev) => prev.filter((a) => a.id !== id))
   }
 
-  function handleReapply(updated: Application) {
-    setApps((prev) => prev.map((a) => a.id === updated.id ? updated : a))
+  function handleReapply(_updated: Application) {
+    // Reload the full list: reapply creates a new entity with a new ID
+    load()
   }
 
   const activeApps = apps.filter(a => a.status === 'PENDING' || a.status === 'APPROVED')

@@ -316,17 +316,28 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
     }
   }, [conversation?.id, fetchMessages])
 
-  // SSE — connexion temps réel (remplace le polling 5s)
+  // SSE — connexion temps réel avec fallback polling si le SSE échoue
   useEffect(() => {
     if (!conversation?.id) return
 
     const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? ''
+    // Re-read token at mount time to pick up any refreshed token
     const token = localStorage.getItem('accessToken') ?? ''
     const eventSource = new EventSource(
       `${API_URL}/messages/stream?token=${encodeURIComponent(token)}`
     )
 
+    let errorCount = 0
+    let fallbackTimer: ReturnType<typeof setInterval> | null = null
+
+    const startFallback = () => {
+      if (fallbackTimer) return
+      console.warn('[SSE] Fallback polling activé (SSE indisponible)')
+      fallbackTimer = setInterval(() => pollMessages(conversation.id), 8000)
+    }
+
     eventSource.addEventListener('new_message', (e: MessageEvent) => {
+      errorCount = 0
       const newMsg = JSON.parse(e.data as string) as {
         conversationId: string
         id: string
@@ -335,17 +346,20 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
         createdAt: string
       }
       if (newMsg.conversationId === conversation.id) {
-        // Déclenche un re-fetch léger pour récupérer le message complet
         pollMessages(conversation.id)
       }
     })
 
     eventSource.onerror = () => {
-      // La reconnexion automatique est gérée par le navigateur (EventSource)
-      console.warn('[SSE] Connexion perdue, reconnexion automatique...')
+      errorCount++
+      console.warn(`[SSE] Erreur #${errorCount} — reconnexion navigateur en cours...`)
+      if (errorCount >= 3) startFallback()
     }
 
-    return () => eventSource.close()
+    return () => {
+      eventSource.close()
+      if (fallbackTimer) clearInterval(fallbackTimer)
+    }
   }, [conversation?.id, pollMessages])
 
   useEffect(() => {

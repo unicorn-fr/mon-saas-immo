@@ -936,9 +936,9 @@ export default function TenantSettings() {
               <button
                 disabled={deleteConfirmText !== 'SUPPRIMER'}
                 onClick={() => {
-                  toast.error('La suppression de compte sera bientôt disponible')
                   setShowDeleteDialog(false)
                   setDeleteConfirmText('')
+                  navigate('/privacy')
                 }}
                 className="flex-1 font-semibold px-4 py-2.5 text-sm text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{ background: BAI.error, borderRadius: '8px', fontFamily: BAI.fontBody, border: 'none', cursor: 'pointer' }}

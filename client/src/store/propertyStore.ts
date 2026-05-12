@@ -38,7 +38,7 @@ interface PropertyState {
 interface PropertyActions {
   // Fetch properties
   fetchProperties: (filters?: PropertyFilters, pagination?: PropertyPagination) => Promise<void>
-  searchProperties: (query: string, pagination?: PropertyPagination) => Promise<void>
+  searchProperties: (query: string, pagination?: PropertyPagination, filters?: PropertyFilters) => Promise<void>
   fetchPropertyById: (id: string, includeOwner?: boolean) => Promise<void>
 
   // My properties (owner)
@@ -119,11 +119,11 @@ export const usePropertyStore = create<PropertyStore>((set) => ({
   /**
    * Search properties by text
    */
-  searchProperties: async (query, pagination = { page: 1, limit: 20 }) => {
+  searchProperties: async (query, pagination = { page: 1, limit: 20 }, filters = {}) => {
     set({ isLoading: true, error: null })
 
     try {
-      const response = await propertyService.searchProperties(query, pagination)
+      const response = await propertyService.searchProperties(query, pagination, filters)
 
       set({
         properties: response.properties,

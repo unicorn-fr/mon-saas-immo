@@ -52,7 +52,7 @@ const STEPS = [
   {
     n: '3',
     title: 'Signe et encaisse.',
-    desc: 'Bail conforme loi ALUR signé électroniquement. SEPA mis en place, quittances automatiques, état des lieux guidé. C\'est tout.',
+    desc: 'Bail conforme loi ALUR signé électroniquement. Quittances automatiques, état des lieux guidé, suivi des loyers intégré. C\'est tout.',
   },
 ]
 
@@ -86,8 +86,8 @@ const FEATURES = [
     ),
   },
   {
-    title: 'Encaissement SEPA.',
-    desc: 'Prélèvement le 5 du mois, virement sur ton compte le 7, quittance envoyée dans la foulée. Si un paiement pose problème, tu es prévenu avant.',
+    title: 'Suivi des loyers.',
+    desc: 'Le locataire te vire directement. Tu marques reçu en 1 clic, la quittance part automatiquement. Si un paiement est en retard, tu es prévenu.',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="24" height="24"><path d="M2 9V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4"/><path d="M2 13v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4"/><line x1="6" x2="6.01" y1="11" y2="11"/><line x1="10" x2="10.01" y1="11" y2="11"/></svg>
     ),
@@ -463,7 +463,7 @@ export default function Home() {
       </section>
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────── */}
-      <section style={{ padding: 'clamp(72px,12vh,130px) 0', background: 'linear-gradient(135deg, #f4f2ee 0%, #ede9e3 100%)' }}>
+      <section style={{ padding: 'clamp(72px,12vh,130px) 0', background: '#f4f2ee' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
           <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.caramel, margin: '0 0 14px' }}>
             Comment ça marche
@@ -477,7 +477,7 @@ export default function Home() {
 
           <div className="steps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
             {STEPS.map(step => (
-              <div key={step.n} style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.6)', borderRadius: 20, padding: '36px 28px 28px', position: 'relative', boxShadow: '0 4px 24px rgba(13,12,10,0.06)' }}>
+              <div key={step.n} style={{ background: '#ffffff', border: '1px solid #e4e1db', borderRadius: 20, padding: '36px 28px 28px', position: 'relative', boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)' }}>
                 <div style={{ position: 'absolute', top: -18, left: 28, width: 44, height: 44, borderRadius: '50%', background: T.night, color: '#fff', fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
                   {step.n}
                 </div>

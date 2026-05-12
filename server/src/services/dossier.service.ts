@@ -29,6 +29,12 @@ export interface ProfileData {
   employerName?: string
   contractType?: string
   netSalary?: number | null
+  questionnaire?: {
+    idKind?: string | null
+    emploiType?: string | null
+    hasRevenuComplementaire?: boolean | null
+    hasGarant?: string | null
+  }
 }
 
 export interface CreateTenantDocumentInput {
@@ -502,7 +508,7 @@ class DossierService {
     })
     const existingMeta = (current?.profileMeta as Record<string, unknown>) ?? {}
 
-    const profileMeta = {
+    const profileMeta: Record<string, unknown> = {
       ...existingMeta,
       _composed: {
         address: data.address,
@@ -510,6 +516,12 @@ class DossierService {
         contractType: data.contractType,
         netSalary: data.netSalary ?? null,
       },
+    }
+    if (data.questionnaire !== undefined) {
+      profileMeta._questionnaire = {
+        ...((existingMeta._questionnaire as Record<string, unknown>) ?? {}),
+        ...data.questionnaire,
+      }
     }
 
     return prisma.user.update({

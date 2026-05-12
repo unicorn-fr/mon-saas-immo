@@ -1,12 +1,11 @@
 import { Request, Response, NextFunction } from 'express'
 import { prisma } from '../config/database.js'
 import { PLANS, PlanType } from '../lib/stripe.js'
-import { env } from '../config/env.js'
 
 export type Feature =
   | 'quittances_auto'
+  | 'quittances_manual'
   | 'signature_electronic'
-  | 'sepa_payment'
   | 'ai_dossier_analysis'
   | 'ai_assistant'
   | 'relances_auto'
@@ -16,21 +15,23 @@ export type Feature =
   | 'multi_entities'
   | 'api_access'
   | 'priority_support'
+  | 'contract_creation'
 
 // Plan minimum requis par feature (pour le message d'upgrade)
 const FEATURE_MIN_PLAN: Record<Feature, PlanType> = {
-  quittances_auto:      'SOLO',
-  signature_electronic: 'SOLO',
-  relances_auto:        'SOLO',
-  sepa_payment:         'PRO',
+  quittances_manual:    'PRO',
+  quittances_auto:      'PRO',
+  signature_electronic: 'PRO',
+  relances_auto:        'PRO',
   ai_dossier_analysis:  'PRO',
   analytics_fonciers:   'PRO',
   rapport_fiscal:       'PRO',
   encadrement_loyers:   'PRO',
-  multi_entities:       'EXPERT',
-  api_access:           'EXPERT',
-  priority_support:     'EXPERT',
-  ai_assistant:         'FREE', // gratuit pour tous
+  contract_creation:    'PRO',
+  multi_entities:       'PRO',
+  api_access:           'PRO',
+  priority_support:     'PRO',
+  ai_assistant:         'PRO',
 }
 
 // ─── Vérification programmatique (utilisable dans les services) ───────────────
@@ -49,9 +50,9 @@ export async function checkFeatureAccess(
 
   // Map feature → clé dans PLANS
   const featureKeyMap: Record<Feature, keyof typeof planFeatures> = {
+    quittances_manual:    'quittancesManual',
     quittances_auto:      'quittancesAuto',
     signature_electronic: 'signatureElectronic',
-    sepa_payment:         'sepaPayment',
     ai_dossier_analysis:  'aiDossierAnalysis',
     ai_assistant:         'aiAssistant',
     relances_auto:        'relancesAuto',
@@ -61,6 +62,7 @@ export async function checkFeatureAccess(
     multi_entities:       'multiEntities',
     api_access:           'apiAccess',
     priority_support:     'prioritySupport',
+    contract_creation:    'contractCreation',
   }
 
   const featureKey = featureKeyMap[feature]
@@ -69,7 +71,7 @@ export async function checkFeatureAccess(
   if (!hasFeature) {
     return {
       allowed: false,
-      reason: `Feature "${feature}" non disponible dans le plan ${plan}.`,
+      reason: `Cette fonctionnalité est réservée au plan Pro. Passez à Pro pour y accéder.`,
       upgradeRequired: FEATURE_MIN_PLAN[feature],
     }
   }
@@ -94,18 +96,10 @@ export async function checkFeatureAccess(
       if (currentUsage >= limit) {
         return {
           allowed: false,
-          reason: `Quota IA atteint : ${currentUsage}/${limit} analyses ce mois. Passez en Expert pour un quota illimité.`,
-          upgradeRequired: 'EXPERT',
+          reason: `Quota IA atteint : ${currentUsage}/${limit} analyses ce mois.`,
+          upgradeRequired: 'PRO',
         }
       }
-    }
-  }
-
-  // ── Vérification SEPA activé globalement ────────────────────────────────
-  if (feature === 'sepa_payment' && !env.SEPA_PAYMENTS_ENABLED) {
-    return {
-      allowed: false,
-      reason: 'Paiement SEPA en cours d\'activation. Disponible très prochainement.',
     }
   }
 
@@ -127,7 +121,7 @@ export function requireFeature(feature: Feature) {
         error: 'feature_not_available',
         message: access.reason,
         upgrade_required: access.upgradeRequired,
-        upgrade_url: '/pricing',
+        upgrade_url: '/owner/abonnement',
       })
     }
 

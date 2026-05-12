@@ -107,9 +107,6 @@ export default function Pricing() {
     <div style={{ backgroundColor: BAI.bgBase, fontFamily: BAI.fontBody, color: BAI.ink, minHeight: '100vh' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=DM+Sans:wght@400;500;600;700&display=swap');
-        @media (max-width: 1024px) {
-          .pricing-grid { grid-template-columns: repeat(2, 1fr) !important; }
-        }
         @media (max-width: 640px) {
           .pricing-grid { grid-template-columns: 1fr !important; max-width: 420px !important; margin-left: auto !important; margin-right: auto !important; }
           .feat-table { display: none !important; }
@@ -162,7 +159,7 @@ export default function Pricing() {
       <section style={{ padding: '0 clamp(16px,5vw,48px) 64px', maxWidth: 1200, margin: '0 auto' }}>
         <div
           className="pricing-grid"
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, alignItems: 'start' }}
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 20, alignItems: 'start', maxWidth: 800, margin: '0 auto' }}
         >
           {PLANS.map(plan => {
             const saving = getSaving(plan)
@@ -260,20 +257,11 @@ export default function Pricing() {
                   </p>
                 )}
 
-                {/* Limite biens + SEPA */}
+                {/* Limite biens */}
                 <div style={{ padding: '10px 12px', background: BAI.bgMuted, borderRadius: 8, marginBottom: 16 }}>
-                  <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.ink, margin: '0 0 2px' }}>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.ink, margin: 0 }}>
                     {plan.propertyLimit === null ? 'Biens illimités' : `${plan.propertyLimit} bien${plan.propertyLimit > 1 ? 's' : ''} maximum`}
                   </p>
-                  {plan.sepaRatePct ? (
-                    <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkMid, margin: 0 }}>
-                      SEPA loyers automatiques ({plan.sepaRatePct} commission)
-                    </p>
-                  ) : (
-                    <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: 0 }}>
-                      Pas de paiement SEPA
-                    </p>
-                  )}
                 </div>
 
                 {/* Features list */}
@@ -290,9 +278,9 @@ export default function Pricing() {
           })}
         </div>
 
-        {/* ── Ligne de déclenchement Solo→Pro ── */}
+        {/* ── Bannière Pro ── */}
         <div style={{
-          marginTop: 24,
+          marginTop: 24, maxWidth: 800, margin: '24px auto 0',
           padding: '16px 24px',
           background: BAI.ownerLight,
           border: `1px solid ${BAI.ownerBorder}`,
@@ -304,9 +292,7 @@ export default function Pricing() {
         }}>
           <Zap style={{ width: 18, height: 18, color: BAI.owner, flexShrink: 0 }} />
           <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.ink, margin: 0, flex: 1 }}>
-            <strong>Pro vs Solo :</strong> pour 5 € de plus par mois — 5 biens au lieu d'1, SEPA automatique, analyse IA et analytics.
-            {' '}
-            <span style={{ color: BAI.inkMid }}>Le Solo est pensé pour 1 bien et 0 automatisation SEPA.</span>
+            <strong>Pro à 9,90 €/mois</strong> — biens illimités, bail ALUR, signature eIDAS, quittances auto, analyse IA. Tout inclus, sans surprise.
           </p>
           <button
             onClick={() => handleCta('pro')}
@@ -324,9 +310,9 @@ export default function Pricing() {
         </h2>
         <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, overflow: 'hidden' }}>
           {/* Header */}
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', borderBottom: `1px solid ${BAI.border}` }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', borderBottom: `1px solid ${BAI.border}` }}>
             <div style={{ padding: '16px 20px' }} />
-            {(['Gratuit', 'Solo', 'Pro', 'Expert'] as const).map((name, i) => (
+            {(['Gratuit', 'Pro'] as const).map((name) => (
               <div key={name} style={{
                 padding: '16px 12px', textAlign: 'center',
                 background: name === 'Pro' ? '#f0fdf4' : 'transparent',
@@ -334,7 +320,7 @@ export default function Pricing() {
               }}>
                 <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: BAI.ink, margin: '0 0 2px' }}>{name}</p>
                 <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: 0 }}>
-                  {[0, 4.90, 9.90, 24.90][i] === 0 ? 'Gratuit' : `${[0, 4.90, 9.90, 24.90][i].toFixed(2).replace('.', ',')} €/mois`}
+                  {name === 'Gratuit' ? 'Gratuit' : '9,90 €/mois'}
                 </p>
               </div>
             ))}
@@ -345,7 +331,7 @@ export default function Pricing() {
               key={row.label}
               style={{
                 display: 'grid',
-                gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr',
+                gridTemplateColumns: '2fr 1fr 1fr',
                 borderBottom: idx < FEATURE_TABLE.length - 1 ? `1px solid ${BAI.border}` : 'none',
                 background: idx % 2 === 0 ? BAI.bgSurface : BAI.bgBase,
               }}
@@ -358,7 +344,7 @@ export default function Pricing() {
                   </span>
                 )}
               </div>
-              {(['free', 'solo', 'pro', 'expert'] as const).map(planId => (
+              {(['free', 'pro'] as const).map(planId => (
                 <div key={planId} style={{
                   padding: '12px 12px', textAlign: 'center',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',

@@ -1,9 +1,11 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { loadStripe } from '@stripe/stripe-js'
 import { BAI } from '../../constants/bailio-tokens'
 import { useNavigate } from 'react-router-dom'
 import { Layout } from '../../components/layout/Layout'
 import { useAuth } from '../../hooks/useAuth'
 import { authService } from '../../services/auth.service'
+import { apiClient } from '../../services/api.service'
 import ChangePasswordModal from '../../components/auth/ChangePasswordModal'
 import toast from 'react-hot-toast'
 import {
@@ -32,6 +34,8 @@ import {
   CheckCircle,
   XCircle,
   MapPin,
+  ShieldCheck,
+  Clock,
 } from 'lucide-react'
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
@@ -317,6 +321,41 @@ export default function OwnerSettings() {
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState('')
   const [deleteSaving, setDeleteSaving] = useState(false)
+
+  // ── Stripe Identity ──
+  const [identityStatus, setIdentityStatus] = useState<string | null>(null)
+  const [identityVerified, setIdentityVerified] = useState(false)
+  const [identityLoading, setIdentityLoading] = useState(false)
+
+  const loadIdentityStatus = useCallback(async () => {
+    try {
+      const res = await apiClient.get<{ status: string | null; isVerified: boolean }>('/stripe/identity-status')
+      setIdentityStatus(res.data.status)
+      setIdentityVerified(res.data.isVerified)
+    } catch { /* ignore */ }
+  }, [])
+
+  const handleIdentityVerify = async () => {
+    setIdentityLoading(true)
+    try {
+      const res = await apiClient.post<{ clientSecret: string }>('/stripe/identity-verify')
+      const stripeInstance = await loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? '')
+      if (!stripeInstance) { toast.error('Stripe non disponible'); return }
+      const { error } = await stripeInstance.verifyIdentity(res.data.clientSecret)
+      if (error) {
+        toast.error(error.message ?? 'Vérification annulée')
+      } else {
+        setIdentityStatus('processing')
+        toast.success('Vérification soumise — vous serez notifié par email sous 24h.')
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Erreur')
+    } finally {
+      setIdentityLoading(false)
+    }
+  }
+
+  useEffect(() => { loadIdentityStatus() }, [loadIdentityStatus])
 
   // ── Notifications tab state ──
   const [notifPrefs, setNotifPrefs] = useState<NotifPrefs>(loadNotifPrefs)
@@ -1089,6 +1128,92 @@ export default function OwnerSettings() {
               ════════════════════════════════════════ */}
               {activeTab === 'security' && (
                 <div className="flex flex-col gap-4">
+                  {/* Vérification d'identité Stripe Identity */}
+                  <div style={cardStyle}>
+                    <div className="flex items-start justify-between gap-4" style={{ marginBottom: '12px' }}>
+                      <div>
+                        <h2 style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontSize: '22px', color: BAI.ink, marginBottom: '4px' }}>
+                          Vérification d'identité
+                        </h2>
+                        <p style={{ fontSize: '13px', color: BAI.inkMid }}>
+                          Vérifiez votre identité pour inspirer confiance aux locataires et accéder à toutes les fonctionnalités Pro.
+                        </p>
+                      </div>
+                      {identityVerified ? (
+                        <span
+                          className="flex items-center gap-1.5 shrink-0"
+                          style={{
+                            background: '#edf7f2',
+                            border: '1px solid #9fd4ba',
+                            borderRadius: '20px',
+                            padding: '4px 12px',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            color: '#1b5e3b',
+                            fontFamily: BAI.fontBody,
+                          }}
+                        >
+                          <ShieldCheck size={13} /> Vérifié
+                        </span>
+                      ) : identityStatus === 'processing' ? (
+                        <span
+                          className="flex items-center gap-1.5 shrink-0"
+                          style={{
+                            background: '#fdf5ec',
+                            border: `1px solid #f3c99a`,
+                            borderRadius: '20px',
+                            padding: '4px 12px',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            color: '#92400e',
+                            fontFamily: BAI.fontBody,
+                          }}
+                        >
+                          <Clock size={13} /> En cours
+                        </span>
+                      ) : (
+                        <span
+                          className="flex items-center gap-1.5 shrink-0"
+                          style={{
+                            background: BAI.bgMuted,
+                            border: `1px solid ${BAI.border}`,
+                            borderRadius: '20px',
+                            padding: '4px 12px',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            color: BAI.inkMid,
+                            fontFamily: BAI.fontBody,
+                          }}
+                        >
+                          <Shield size={13} /> Non vérifié
+                        </span>
+                      )}
+                    </div>
+
+                    {!identityVerified && (
+                      <button
+                        onClick={handleIdentityVerify}
+                        disabled={identityLoading || identityStatus === 'processing'}
+                        className="flex items-center gap-2"
+                        style={{
+                          background: identityLoading || identityStatus === 'processing' ? BAI.inkFaint : BAI.night,
+                          border: 'none',
+                          borderRadius: '8px',
+                          padding: '9px 18px',
+                          color: '#ffffff',
+                          fontSize: '14px',
+                          fontFamily: BAI.fontBody,
+                          cursor: identityLoading || identityStatus === 'processing' ? 'not-allowed' : 'pointer',
+                          fontWeight: 500,
+                          marginTop: '4px',
+                        }}
+                      >
+                        <ShieldCheck size={14} />
+                        {identityLoading ? 'Chargement…' : identityStatus === 'processing' ? 'Vérification en cours…' : 'Vérifier mon identité'}
+                      </button>
+                    )}
+                  </div>
+
                   {/* Password */}
                   <div style={cardStyle}>
                     <h2 style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontSize: '22px', color: BAI.ink, marginBottom: '4px' }}>

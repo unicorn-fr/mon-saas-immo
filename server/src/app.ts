@@ -125,6 +125,12 @@ const POLLING_PATHS = [
   '/notifications',
 ]
 
+const WEBHOOK_PATHS = [
+  '/stripe/webhook',
+  '/webhooks/yousign',
+  '/webhooks/connect',
+]
+
 const limiter = rateLimit({
   windowMs: env.RATE_LIMIT.WINDOW_MS,
   // 500 req / window for production — enough for intensive authenticated usage
@@ -134,8 +140,10 @@ const limiter = rateLimit({
   legacyHeaders: false,
   skip: (req) => {
     // Always skip polling endpoints — they are authenticated and high-frequency
+    // Always skip webhook endpoints — they are called by Stripe/Yousign servers
     const apiPath = req.path.replace(/^\/v\d+/, '') // strip /v1 prefix
     return POLLING_PATHS.some((p) => apiPath.endsWith(p) || apiPath.includes(p))
+      || WEBHOOK_PATHS.some((p) => apiPath.endsWith(p))
   },
 })
 app.use('/api', limiter)

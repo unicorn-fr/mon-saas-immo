@@ -635,17 +635,19 @@ class ContractService {
    * Get contract statistics for owner
    */
   async getOwnerStatistics(ownerId: string) {
-    const [total, active, draft, sent, completed, terminated, expired] = await Promise.all([
+    const [total, active, draft, sent, signedOwner, signedTenant, completed, terminated, expired] = await Promise.all([
       prisma.contract.count({ where: { ownerId } }),
       prisma.contract.count({ where: { ownerId, status: ContractStatus.ACTIVE } }),
       prisma.contract.count({ where: { ownerId, status: ContractStatus.DRAFT } }),
       prisma.contract.count({ where: { ownerId, status: ContractStatus.SENT } }),
+      prisma.contract.count({ where: { ownerId, status: ContractStatus.SIGNED_OWNER } }),
+      prisma.contract.count({ where: { ownerId, status: ContractStatus.SIGNED_TENANT } }),
       prisma.contract.count({ where: { ownerId, status: ContractStatus.COMPLETED } }),
       prisma.contract.count({ where: { ownerId, status: ContractStatus.TERMINATED } }),
       prisma.contract.count({ where: { ownerId, status: ContractStatus.EXPIRED } }),
     ])
 
-    return { total, active, draft, sent, completed, terminated, expired }
+    return { total, active, draft, sent, signedOwner, signedTenant, completed, terminated, expired }
   }
 
   /**

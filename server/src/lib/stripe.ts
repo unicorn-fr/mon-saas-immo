@@ -21,21 +21,21 @@ if (env.STRIPE_SECRET_KEY) {
 
 export { stripe }
 
-// ─── PLANS — Features granulaires ────────────────────────────────────────────
+// ─── PLANS — 2 tiers : FREE (listing) · PRO 9,90€ (tout inclus) ──────────────
 // Valeurs numériques null = illimité, 0 = désactivé
+// SOLO et EXPERT sont aliasés vers FREE et PRO pour compatibilité DB
 export const PLANS = {
   FREE: {
     maxProperties: 1,
-    sepaRateBps: null as null,
     features: {
       quittancesAuto: false,
-      quittancesManual: true,
-      signatureElectronic: false,
+      quittancesManual: false,     // PRO only
+      signatureElectronic: false,  // PRO only
       signatureLimitPerYear: 0,
       sepaPayment: false,
-      aiDossierAnalysis: false,
+      aiDossierAnalysis: false,    // PRO only
       aiDossierLimitPerMonth: 0,
-      aiAssistant: true,
+      aiAssistant: false,
       relancesAuto: false,
       analyticsFonciers: false,
       rapportFiscal: false,
@@ -44,63 +44,20 @@ export const PLANS = {
       apiAccess: false,
       prioritySupport: false,
       exportComptable: false as false,
+      contractCreation: false,     // PRO only
     },
   },
+  // SOLO est un alias de PRO (plan retiré du marché)
   SOLO: {
-    maxProperties: 1,
-    sepaRateBps: null as null,
-    features: {
-      quittancesAuto: true,
-      quittancesManual: true,
-      signatureElectronic: true,
-      signatureLimitPerYear: 1,
-      sepaPayment: false,
-      aiDossierAnalysis: false,
-      aiDossierLimitPerMonth: 0,
-      aiAssistant: true,
-      relancesAuto: true,
-      analyticsFonciers: false,
-      rapportFiscal: false,
-      encadrementLoyers: false,
-      multiEntities: false,
-      apiAccess: false,
-      prioritySupport: false,
-      exportComptable: false as false,
-    },
-  },
-  PRO: {
-    maxProperties: 5,
-    sepaRateBps: 80, // 0.8%
-    features: {
-      quittancesAuto: true,
-      quittancesManual: true,
-      signatureElectronic: true,
-      signatureLimitPerYear: null as null, // illimité
-      sepaPayment: true,
-      aiDossierAnalysis: true,
-      aiDossierLimitPerMonth: 10,
-      aiAssistant: true,
-      relancesAuto: true,
-      analyticsFonciers: true,
-      rapportFiscal: true,
-      encadrementLoyers: true,
-      multiEntities: false,
-      apiAccess: false,
-      prioritySupport: false,
-      exportComptable: 'basic' as 'basic',
-    },
-  },
-  EXPERT: {
-    maxProperties: Infinity,
-    sepaRateBps: 60, // 0.6%
+    maxProperties: null as null, // illimité
     features: {
       quittancesAuto: true,
       quittancesManual: true,
       signatureElectronic: true,
       signatureLimitPerYear: null as null,
-      sepaPayment: true,
+      sepaPayment: false,
       aiDossierAnalysis: true,
-      aiDossierLimitPerMonth: null as null, // illimité
+      aiDossierLimitPerMonth: null as null,
       aiAssistant: true,
       relancesAuto: true,
       analyticsFonciers: true,
@@ -110,16 +67,62 @@ export const PLANS = {
       apiAccess: true,
       prioritySupport: true,
       exportComptable: 'advanced' as 'advanced',
+      contractCreation: true,
+    },
+  },
+  PRO: {
+    maxProperties: null as null, // illimité
+    features: {
+      quittancesAuto: true,
+      quittancesManual: true,
+      signatureElectronic: true,
+      signatureLimitPerYear: null as null,
+      sepaPayment: false,
+      aiDossierAnalysis: true,
+      aiDossierLimitPerMonth: null as null,
+      aiAssistant: true,
+      relancesAuto: true,
+      analyticsFonciers: true,
+      rapportFiscal: true,
+      encadrementLoyers: true,
+      multiEntities: true,
+      apiAccess: true,
+      prioritySupport: true,
+      exportComptable: 'advanced' as 'advanced',
+      contractCreation: true,
+    },
+  },
+  // EXPERT est un alias de PRO (plan retiré du marché)
+  EXPERT: {
+    maxProperties: null as null,
+    features: {
+      quittancesAuto: true,
+      quittancesManual: true,
+      signatureElectronic: true,
+      signatureLimitPerYear: null as null,
+      sepaPayment: false,
+      aiDossierAnalysis: true,
+      aiDossierLimitPerMonth: null as null,
+      aiAssistant: true,
+      relancesAuto: true,
+      analyticsFonciers: true,
+      rapportFiscal: true,
+      encadrementLoyers: true,
+      multiEntities: true,
+      apiAccess: true,
+      prioritySupport: true,
+      exportComptable: 'advanced' as 'advanced',
+      contractCreation: true,
     },
   },
 } as const
 
 export type PlanType = keyof typeof PLANS
 
-// Ordre pour comparaisons (FREE < SOLO < PRO < EXPERT)
+// Ordre pour comparaisons (FREE < SOLO = PRO = EXPERT)
 export const PLAN_ORDER: Record<PlanType, number> = {
   FREE: 0,
   SOLO: 1,
-  PRO: 2,
-  EXPERT: 3,
+  PRO: 1,
+  EXPERT: 1,
 }

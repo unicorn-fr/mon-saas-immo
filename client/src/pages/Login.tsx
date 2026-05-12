@@ -81,7 +81,12 @@ export default function Login() {
 
   const handleGoogleSuccess = async (idToken: string) => {
     try {
-      const { user: u } = await googleLogin(idToken)
+      const { user: u, isNewUser } = await googleLogin(idToken)
+      // New Google users have role TENANT by default — redirect to role selection
+      if (isNewUser) {
+        navigate('/select-role')
+        return
+      }
       redirectByRole(u.role)
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Connexion Google échouée.'

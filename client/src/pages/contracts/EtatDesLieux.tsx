@@ -49,6 +49,7 @@ export default function EtatDesLieux() {
 
   const [edlType, setEdlType] = useState<EDLType>('ENTREE')
   const [edl, setEdl] = useState<EDLData | null>(null)
+  const [isDirty, setIsDirty] = useState(false)
   const [expandedRooms, setExpandedRooms] = useState<Set<string>>(new Set(['entree']))
   const [saving, setSaving] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -73,6 +74,7 @@ export default function EtatDesLieux() {
       } else {
         setEdl(prefillEDLFromContract(edlType, contract))
       }
+      setIsDirty(false)
     }
   }, [contract, edlType])
 
@@ -111,7 +113,14 @@ export default function EtatDesLieux() {
     })
   }
 
+  const handleSwitchType = (type: EDLType) => {
+    if (type === edlType) return
+    if (isDirty && !confirm('Vous avez des modifications non sauvegardées. Changer de type d\'état des lieux les perdra. Continuer ?')) return
+    setEdlType(type)
+  }
+
   const updateElement = (roomId: string, elementId: string, field: 'etat' | 'observation', value: string) => {
+    setIsDirty(true)
     setEdl(prev => {
       if (!prev) return prev
       return {
@@ -129,6 +138,7 @@ export default function EtatDesLieux() {
   }
 
   const updateCompteur = (index: number, field: 'numero' | 'releve', value: string) => {
+    setIsDirty(true)
     setEdl(prev => {
       if (!prev) return prev
       return {
@@ -139,6 +149,7 @@ export default function EtatDesLieux() {
   }
 
   const updateCle = (index: number, field: 'quantite' | 'description', value: string | number) => {
+    setIsDirty(true)
     setEdl(prev => {
       if (!prev) return prev
       return {
@@ -161,7 +172,7 @@ export default function EtatDesLieux() {
       const { useContractStore } = await import('../../store/contractStore')
       const store = useContractStore.getState()
       await store.updateContract(contract.id, { content: updatedContent })
-
+      setIsDirty(false)
       toast.success(`Etat des lieux ${edlType === 'ENTREE' ? 'd\'entree' : 'de sortie'} sauvegarde`)
     } catch {
       toast.error('Erreur lors de la sauvegarde')
@@ -351,7 +362,7 @@ export default function EtatDesLieux() {
                 border: `1px solid ${BAI.border}`,
               }}>
                 <button
-                  onClick={() => setEdlType('ENTREE')}
+                  onClick={() => handleSwitchType('ENTREE')}
                   style={{
                     padding: '8px 18px', borderRadius: 7, fontSize: 13, fontWeight: 500,
                     fontFamily: BAI.fontBody, cursor: 'pointer', border: 'none',
@@ -364,7 +375,7 @@ export default function EtatDesLieux() {
                   Entrée
                 </button>
                 <button
-                  onClick={() => setEdlType('SORTIE')}
+                  onClick={() => handleSwitchType('SORTIE')}
                   style={{
                     padding: '8px 18px', borderRadius: 7, fontSize: 13, fontWeight: 500,
                     fontFamily: BAI.fontBody, cursor: 'pointer', border: 'none',

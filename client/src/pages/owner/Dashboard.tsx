@@ -70,10 +70,10 @@ export default function Dashboard() {
   const occupiedProps     = statistics?.occupiedProperties || 0
   const availableProps    = statistics?.availableProperties || 0
   const occupancyRate     = totalProps > 0 ? Math.round((occupiedProps / totalProps) * 100) : 0
-  const pendingSignatures = (contractStats?.sent || 0) + (contractStats?.completed || 0)
+  const pendingSignatures = (contractStats?.sent || 0) + (contractStats?.signedOwner || 0) + (contractStats?.signedTenant || 0)
   const drafts            = contractStats?.draft || 0
   const urgentContracts   = contracts.filter((c) => c.status === 'SIGNED_TENANT')
-  const estimatedYield    = myProperties.length > 0 && monthlyRevenue > 0 ? ((annualRevenue / (monthlyRevenue * 12 * 20)) * 100).toFixed(1) : '—'
+  const estimatedYield    = annualRevenue > 0 ? annualRevenue : null
   const openMaintenance   = requests.filter((r) => r.status === 'OPEN' || r.status === 'IN_PROGRESS').length
 
   const statusBadge: Record<string, { label: string; bg: string; text: string; border: string }> = {
@@ -244,7 +244,7 @@ export default function Dashboard() {
               <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: '#92400e', margin: 0, fontWeight: 600 }}>
                 🔧 {openMaintenance} demande{openMaintenance > 1 ? 's' : ''} de maintenance en attente
               </p>
-              <a href="/owner/maintenance" style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: '#92400e', textDecoration: 'none' }}>Gérer →</a>
+              <Link to="/owner/maintenance" style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: '#92400e', textDecoration: 'none' }}>Gérer →</Link>
             </div>
           )}
 
@@ -268,11 +268,11 @@ export default function Dashboard() {
                 to: '/properties/owner/me',
               },
               {
-                label: 'Rendement',
-                sublabel: 'estimé',
-                value: monthlyRevenue > 0 ? `${estimatedYield}%` : '—',
-                sub: 'Brut annuel',
-                to: '/applications/manage',
+                label: 'Revenus',
+                sublabel: 'annuels',
+                value: estimatedYield ? `${estimatedYield.toLocaleString('fr-FR')} €` : '—',
+                sub: 'Loyers + charges',
+                to: '/owner/finances',
               },
               {
                 label: 'Candidatures',
@@ -360,9 +360,9 @@ export default function Dashboard() {
                   {summary.netCashFlow >= 0 ? '+' : ''}{summary.netCashFlow.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}
                 </p>
               </div>
-              <a href="/owner/finances" style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: summary.netCashFlow >= 0 ? '#1b5e3b' : '#9b1c1c', textDecoration: 'none' }}>
+              <Link to="/owner/finances" style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: summary.netCashFlow >= 0 ? '#1b5e3b' : '#9b1c1c', textDecoration: 'none' }}>
                 Voir le détail →
-              </a>
+              </Link>
             </div>
           )}
 
@@ -535,7 +535,7 @@ export default function Dashboard() {
                             <div style={{ flex: 1, minWidth: 0 }}>
                               {/* Tenant — clickable */}
                               <button
-                                onClick={() => navigate(`/owner/tenants/${visit.tenantId}`)}
+                                onClick={() => visit.tenantId && navigate(`/owner/tenants/${visit.tenantId}`)}
                                 style={{
                                   background: 'none', border: 'none', padding: 0, cursor: 'pointer',
                                   fontSize: 14, fontWeight: 600, color: BAI.owner, textAlign: 'left',

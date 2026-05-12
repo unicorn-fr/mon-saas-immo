@@ -59,6 +59,61 @@ router.get('/subscription', authenticate, async (req: Request, res: Response) =>
   return res.json(sub ?? { plan: 'FREE', status: 'ACTIVE' })
 })
 
+// POST /stripe/identity-verify — démarre une session de vérification d'identité
+router.post('/identity-verify', authenticate, async (req: Request, res: Response) => {
+  try {
+    if (!stripe) return res.status(503).json({ error: 'Stripe non configuré' })
+
+    const userId = req.user!.id
+
+    // Créer une VerificationSession Stripe Identity
+    const session = await stripe.identity.verificationSessions.create({
+      type: 'document',
+      metadata: { userId },
+      options: {
+        document: {
+          allowed_types: ['driving_license', 'id_card', 'passport'],
+          require_id_number: false,
+          require_live_capture: true,
+          require_matching_selfie: true,
+        },
+      },
+    })
+
+    // Sauvegarder l'ID de session
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        stripeIdentitySessionId: session.id,
+        stripeIdentityStatus: 'requires_input',
+      },
+    })
+
+    return res.json({ clientSecret: session.client_secret, sessionId: session.id })
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Erreur interne'
+    console.error('[Stripe Identity]', msg)
+    return res.status(500).json({ error: msg })
+  }
+})
+
+// GET /stripe/identity-status — statut de vérification d'identité
+router.get('/identity-status', authenticate, async (req: Request, res: Response) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.id },
+      select: { stripeIdentityStatus: true, stripeIdentitySessionId: true, isVerifiedOwner: true },
+    })
+    return res.json({
+      status: user?.stripeIdentityStatus ?? null,
+      isVerified: user?.isVerifiedOwner ?? false,
+    })
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Erreur interne'
+    return res.status(500).json({ error: msg })
+  }
+})
+
 export default router
 
 // ─── WEBHOOK HANDLER (raw body — monté AVANT express.json dans app.ts) ────────
@@ -124,6 +179,46 @@ export async function stripeWebhookHandler(req: Request, res: Response) {
           where: { stripeCustomerId: invoice.customer },
           data: { status: 'ACTIVE' },
         })
+        break
+      }
+
+      case 'identity.verification_session.verified': {
+        const vs = event.data.object as { id: string; metadata?: { userId?: string } }
+        const userId = vs.metadata?.userId
+        if (userId) {
+          await prisma.user.update({
+            where: { id: userId },
+            data: {
+              stripeIdentityStatus: 'verified',
+              isVerifiedOwner: true,
+            },
+          })
+          console.log(`[Stripe Identity] Vérifié: userId=${userId}`)
+        }
+        break
+      }
+
+      case 'identity.verification_session.canceled': {
+        const vs = event.data.object as { id: string; metadata?: { userId?: string } }
+        const userId = vs.metadata?.userId
+        if (userId) {
+          await prisma.user.update({
+            where: { id: userId },
+            data: { stripeIdentityStatus: 'canceled' },
+          })
+        }
+        break
+      }
+
+      case 'identity.verification_session.requires_input': {
+        const vs = event.data.object as { id: string; metadata?: { userId?: string } }
+        const userId = vs.metadata?.userId
+        if (userId) {
+          await prisma.user.update({
+            where: { id: userId },
+            data: { stripeIdentityStatus: 'requires_input' },
+          })
+        }
         break
       }
 

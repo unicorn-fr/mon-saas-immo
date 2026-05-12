@@ -88,9 +88,9 @@ const STEPS: WizardStep[] = [
       { key: 'netSalary',    label: 'Salaire net mensuel (€)',type: 'number', required: false, placeholder: '2 500' },
     ],
     uploads: [
-      { docType: 'CONTRAT_TRAVAIL',    category: 'EMPLOI', label: 'Contrat de travail',       hint: 'CDI, CDD, alternance…',         required: true  },
-      { docType: 'KBIS',               category: 'EMPLOI', label: 'Kbis (si indépendant)',     hint: 'Extrait < 3 mois',              required: false },
-      { docType: 'ATTESTATION_EMPLOI', category: 'EMPLOI', label: 'Attestation employeur',     hint: 'Sur papier à en-tête',          required: false },
+      { docType: 'CONTRAT_TRAVAIL',   category: 'EMPLOI', label: 'Contrat de travail',       hint: 'CDI, CDD, alternance…',         required: true  },
+      { docType: 'KBIS_EXTRAIT',      category: 'EMPLOI', label: 'Kbis (si indépendant)',     hint: 'Extrait < 3 mois',              required: false },
+      { docType: 'PROMESSE_EMBAUCHE', category: 'EMPLOI', label: 'Attestation employeur',     hint: 'Sur papier à en-tête',          required: false },
     ],
   },
   {
@@ -100,10 +100,10 @@ const STEPS: WizardStep[] = [
     icon: TrendingUp,
     fields: [],
     uploads: [
-      { docType: 'BULLETIN_1',        category: 'REVENUS', label: 'Bulletin de salaire M-1',       hint: 'Le mois le plus récent',  required: true  },
-      { docType: 'BULLETIN_2',        category: 'REVENUS', label: 'Bulletin de salaire M-2',       hint: 'Avant-dernier mois',      required: true  },
-      { docType: 'BULLETIN_3',        category: 'REVENUS', label: 'Bulletin de salaire M-3',       hint: 'Il y a 3 mois',           required: false },
-      { docType: 'AVIS_IMPOSITION_1', category: 'REVENUS', label: "Avis d'imposition N-1",         hint: 'Dernier avis reçu',       required: true  },
+      { docType: 'BULLETIN_PAIE_1', category: 'REVENUS', label: 'Bulletin de salaire M-1',       hint: 'Le mois le plus récent',  required: true  },
+      { docType: 'BULLETIN_PAIE_2', category: 'REVENUS', label: 'Bulletin de salaire M-2',       hint: 'Avant-dernier mois',      required: true  },
+      { docType: 'BULLETIN_PAIE_3', category: 'REVENUS', label: 'Bulletin de salaire M-3',       hint: 'Il y a 3 mois',           required: false },
+      { docType: 'AVIS_IMPOSITION', category: 'REVENUS', label: "Avis d'imposition N-1",         hint: 'Dernier avis reçu',       required: true  },
     ],
     note: 'Vos bulletins sont chiffrés AES-256. Seuls les propriétaires que vous choisissez y ont accès.',
   },
@@ -115,7 +115,7 @@ const STEPS: WizardStep[] = [
     fields: [],
     uploads: [
       { docType: 'JUSTIFICATIF_DOMICILE', category: 'DOMICILE', label: 'Justificatif de domicile', hint: 'Facture EDF, eau, Internet…', required: true  },
-      { docType: 'QUITTANCE_1',           category: 'DOMICILE', label: 'Quittance de loyer',        hint: 'La plus récente (optionnel)', required: false },
+      { docType: 'QUITTANCE_LOYER',       category: 'DOMICILE', label: 'Quittance de loyer',        hint: 'La plus récente (optionnel)', required: false },
     ],
   },
   {
@@ -125,9 +125,9 @@ const STEPS: WizardStep[] = [
     icon: Shield,
     fields: [],
     uploads: [
-      { docType: 'ATTESTATION_VISALE',   category: 'GARANTIES', label: 'Attestation Visale',      hint: 'Garantie Action Logement', required: false },
-      { docType: 'ACTE_CAUTION',         category: 'GARANTIES', label: 'Acte de cautionnement',   hint: 'Signé par le garant',      required: false },
-      { docType: 'ASSURANCE_HABITATION', category: 'GARANTIES', label: 'Assurance habitation',    hint: 'Attestation valide',       required: false },
+      { docType: 'GARANT_VISALE',  category: 'GARANTIES', label: 'Attestation Visale / CLé', hint: 'Garantie Action Logement', required: false },
+      { docType: 'GARANT_CNI',    category: 'GARANTIES', label: "Pièce d'identité du garant", hint: 'CNI ou passeport garant', required: false },
+      { docType: 'LETTRE_GARANT', category: 'GARANTIES', label: "Lettre d'engagement garant", hint: 'Signé par le garant',     required: false },
     ],
     note: 'Cette étape est entièrement optionnelle. Elle renforce significativement votre dossier.',
   },

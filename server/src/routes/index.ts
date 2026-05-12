@@ -36,8 +36,6 @@ import edlRoutes from './edl.routes.js'
 import ocrRoutes from './ocr.routes.js'
 import financeRoutes from './finance.routes.js'
 import maintenanceRoutes from './maintenance.routes.js'
-import sepaRoutes from './sepa.routes.js'
-import connectRoutes from './connect.routes.js'
 import yousignWebhookRouter from './yousign.webhook.routes.js'
 import irlRouter from './irl.routes.js'
 import georisquesRouter from './georisques.routes.js'
@@ -75,9 +73,6 @@ export function registerRoutes(app: Application, prefix: string): void {
   // ── Billing ─────────────────────────────────────────────────────────────
   app.use(`${prefix}/stripe`, stripeRoutes)
   app.use(`${prefix}/payments`, paymentRoutes)
-  app.use(`${prefix}/sepa`, sepaRoutes)
-  app.use(`${prefix}/connect`, connectRoutes)
-
   // ── Aggregation ─────────────────────────────────────────────────────────
   app.use(`${prefix}/dashboard`, dashboardRoutes)
 

@@ -96,7 +96,9 @@ function ApplicationCard({
 }) {
   const [expanded, setExpanded] = useState(false)
   const [loading, setLoading] = useState(false)
-  const tenant = app.tenant!
+
+  if (!app.tenant) return null
+  const tenant = app.tenant
 
   async function decide(status: 'APPROVED' | 'REJECTED') {
     setLoading(true)
@@ -537,9 +539,13 @@ export default function ApplicationManagement() {
   useEffect(() => { load() }, [])
 
   async function handleDecision(id: string, status: 'APPROVED' | 'REJECTED') {
-    await applicationService.updateStatus(id, status)
-    toast.success(status === 'APPROVED' ? 'Candidature approuvée !' : 'Candidature refusée.')
-    setApplications((prev) => prev.map((a) => a.id === id ? { ...a, status } : a))
+    try {
+      await applicationService.updateStatus(id, status)
+      toast.success(status === 'APPROVED' ? 'Candidature approuvée !' : 'Candidature refusée.')
+      setApplications((prev) => prev.map((a) => a.id === id ? { ...a, status } : a))
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Erreur lors de la mise à jour de la candidature')
+    }
   }
 
   async function handleUnreject(id: string) {
@@ -557,7 +563,8 @@ export default function ApplicationManagement() {
   const groups = useMemo(() => {
     const map = new Map<string, { property: PropertyInfo; apps: Application[] }>()
     for (const app of filtered) {
-      const prop = app.property!
+      if (!app.property) continue
+      const prop = app.property
       if (!map.has(prop.id)) {
         map.set(prop.id, {
           property: { id: prop.id, title: prop.title, price: prop.price, city: prop.city, images: prop.images },
@@ -655,7 +662,7 @@ export default function ApplicationManagement() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
             {[
               {
                 label: 'En attente',

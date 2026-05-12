@@ -37,7 +37,7 @@ const CONTRACT_STATUS: Record<string, { label: string; color: string; bg: string
 function Initials({ firstName, lastName }: { firstName: string; lastName: string }) {
   const initials = `${firstName[0] ?? ''}${lastName[0] ?? ''}`.toUpperCase()
   const colors = ['#1a3270', '#1b5e3b', '#c4976a', '#6b46c1', '#0e7490', '#b45309']
-  const idx = (firstName.charCodeAt(0) + lastName.charCodeAt(0)) % colors.length
+  const idx = ((firstName.charCodeAt(0) || 0) + (lastName.charCodeAt(0) || 0)) % colors.length
   return (
     <div style={{
       width: 48, height: 48, borderRadius: '50%',
@@ -64,7 +64,20 @@ export default function MesLocataires() {
           ['ACTIVE', 'COMPLETED', 'SIGNED_OWNER', 'SIGNED_TENANT'].includes(c.status) &&
           c.tenant
         )
-        const mapped: Tenant[] = active.map((c: any) => ({
+        // Deduplicate by tenantId — keep the ACTIVE contract when multiple exist
+        const priorityOrder = ['ACTIVE', 'SIGNED_TENANT', 'SIGNED_OWNER', 'COMPLETED']
+        const byTenant = new Map<string, any>()
+        for (const c of active) {
+          const existing = byTenant.get(c.tenantId)
+          if (!existing) {
+            byTenant.set(c.tenantId, c)
+          } else {
+            const existingPrio = priorityOrder.indexOf(existing.status) === -1 ? 999 : priorityOrder.indexOf(existing.status)
+            const newPrio = priorityOrder.indexOf(c.status) === -1 ? 999 : priorityOrder.indexOf(c.status)
+            if (newPrio < existingPrio) byTenant.set(c.tenantId, c)
+          }
+        }
+        const mapped: Tenant[] = [...byTenant.values()].map((c: any) => ({
           id: c.tenantId,
           contractId: c.id,
           firstName: c.tenant?.firstName ?? '',

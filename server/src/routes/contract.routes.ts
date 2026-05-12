@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { contractController } from '../controllers/contract.controller.js'
 import { authenticate, authorize } from '../middlewares/auth.middleware.js'
 import { requirePlan } from '../middlewares/planGate.middleware.js'
+import { requireFeature } from '../middlewares/featureGate.middleware.js'
 import { prisma } from '../config/database.js'
 import { generateSignedUrl } from '../utils/cloudinary.util.js'
 
@@ -18,10 +19,11 @@ router.get('/statistics', contractController.getStatistics.bind(contractControll
 // GET /api/v1/contracts - Get all contracts (filtered by user role)
 router.get('/', contractController.getContracts.bind(contractController))
 
-// POST /api/v1/contracts - Create new contract (owner only)
+// POST /api/v1/contracts - Create new contract (owner only, PRO plan required)
 router.post(
   '/',
   authorize('OWNER'),
+  requireFeature('contract_creation'),
   contractController.createContract.bind(contractController)
 )
 

@@ -13,6 +13,12 @@ export interface ProfileSaveData {
   employerName?: string
   contractType?: string
   netSalary?: number | null
+  questionnaire?: {
+    idKind?: string | null
+    emploiType?: string | null
+    hasRevenuComplementaire?: boolean | null
+    hasGarant?: string | null
+  }
 }
 
 export interface TenantDocument {

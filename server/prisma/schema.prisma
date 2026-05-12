@@ -120,10 +120,14 @@ model User {
   tenantScoreAt     DateTime? // dernière mise à jour du score
 
   // Trust & Anti-Fraud
-  trustScore        Int       @default(50)   // 0-100 : calculé dynamiquement
-  isVerifiedOwner   Boolean   @default(false) // Vérifié manuellement par admin (badge premium)
-  reportCount       Int       @default(0)    // Nombre de signalements reçus
-  isBanned          Boolean   @default(false) // Banni suite à fraude confirmée
+  trustScore            Int       @default(50)   // 0-100 : calculé dynamiquement
+  isVerifiedOwner       Boolean   @default(false) // Vérifié manuellement par admin (badge premium)
+  reportCount           Int       @default(0)    // Nombre de signalements reçus
+  isBanned              Boolean   @default(false) // Banni suite à fraude confirmée
+
+  // Stripe Identity — vérification d'identité
+  stripeIdentityStatus  String?   // 'requires_input' | 'processing' | 'verified' | 'canceled'
+  stripeIdentitySessionId String? // VerificationSession ID Stripe
 
   // 2FA — TOTP (Google Authenticator / Authy)
   totpSecret        String?

@@ -47,6 +47,21 @@ export const SearchFilters = ({ filters, onFiltersChange, onReset }: SearchFilte
       </div>
 
       <div className="space-y-6">
+        {/* Ville */}
+        <div>
+          <label className="block text-sm font-semibold mb-2" style={{ color: '#0d0c0a' }}>
+            Ville
+          </label>
+          <input
+            type="text"
+            value={filters.city ?? ''}
+            onChange={(e) => handleChange('city', e.target.value || undefined)}
+            placeholder="Ex : Paris, Lyon..."
+            className="w-full rounded-lg px-3 py-2 text-sm outline-none"
+            style={{ background: '#f8f7f4', border: '1px solid #e4e1db', color: '#0d0c0a' }}
+          />
+        </div>
+
         {/* Property Type */}
         <div>
           <label className="block text-sm font-medium mb-2" style={{ color: '#5a5754' }}>

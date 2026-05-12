@@ -247,6 +247,12 @@ class BookingService {
       if (filters.dateTo) where.visitDate.lte = filters.dateTo
     }
 
+    // Auto-complete past CONFIRMED bookings before fetching
+    await prisma.booking.updateMany({
+      where: { status: 'CONFIRMED', visitDate: { lt: new Date() } },
+      data: { status: 'COMPLETED' },
+    })
+
     const [bookings, total] = await Promise.all([
       prisma.booking.findMany({
         where,
@@ -638,9 +644,19 @@ class BookingService {
       },
     })
 
-    // Filter out booked slots
-    const bookedTimes = bookings.map((b) => b.visitTime)
-    const availableSlots = uniqueSlots.filter((slot) => !bookedTimes.includes(slot))
+    // Filter out slots that overlap with existing bookings (using duration awareness)
+    const availableSlots = uniqueSlots.filter((slot) => {
+      const [slotH, slotM] = slot.split(':').map(Number)
+      const slotStart = slotH * 60 + slotM
+      const slotEnd = slotStart + slotDuration
+      for (const b of bookings) {
+        const [bH, bM] = b.visitTime.split(':').map(Number)
+        const bStart = bH * 60 + bM
+        const bEnd = bStart + (b.duration ?? slotDuration)
+        if (slotStart < bEnd && slotEnd > bStart) return false // overlaps
+      }
+      return true
+    })
 
     return availableSlots
   }

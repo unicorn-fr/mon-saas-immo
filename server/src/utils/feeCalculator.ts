@@ -12,9 +12,10 @@ const STRIPE_SEPA_FIXED = 10     // 0,10€ en centimes
 const STRIPE_SEPA_CAP = 500      // 5,00€ en centimes (LE plafond qui nous sauve)
 
 // Taux par plan
-const PLATFORM_FEE_BPS: Record<'PRO' | 'EXPERT', number> = {
+const PLATFORM_FEE_BPS: Record<string, number> = {
   PRO:    80, // 0,8%
   EXPERT: 60, // 0,6%
+  SOLO:   80, // même taux que PRO (fallback)
 }
 
 export function calculateStripeSepaCost(amountCents: number): number {
@@ -34,7 +35,7 @@ export interface FeeBreakdown {
 
 export function calculatePlatformFee(
   amountCents: number,
-  planId: 'PRO' | 'EXPERT'
+  planId: string
 ): FeeBreakdown {
   const feeRateBps = PLATFORM_FEE_BPS[planId]
   const platformFeeCents = Math.round(amountCents * feeRateBps / 10000)
@@ -59,7 +60,7 @@ export function calculatePlatformFee(
  * Pro  : ~38€ minimum (en pratique, tout loyer SEPA réaliste est rentable)
  * Expert: ~45€ minimum
  */
-export function breakEvenRent(planId: 'PRO' | 'EXPERT'): number {
+export function breakEvenRent(planId: string): number {
   const feeRateBps = PLATFORM_FEE_BPS[planId]
   // platformFee = amount * rate; stripeCost = amount * 0.35% + 10¢
   // Profit quand: amount * rate > amount * 0.35% + 10¢

@@ -233,7 +233,7 @@ export const MyBookings = () => {
           price: a.property.price,
           images: a.property.images ?? [],
           visitDuration: 30,
-          visitAvailabilitySlots: [], // slots chargés dynamiquement via getAvailableSlots
+          visitAvailabilitySlots: a.property.visitAvailabilitySlots ?? [],
         },
         owner: { id: a.property.ownerId ?? '', firstName: 'le', lastName: 'propriétaire' },
       }))
@@ -570,17 +570,60 @@ export const MyBookings = () => {
                     </Link>
                   )}
                 </div>
-              ) : (
-                bookings.map((booking) => (
-                  <BookingCard
-                    key={booking.id}
-                    booking={booking}
-                    viewMode="tenant"
-                    onCancel={handleCancelBooking}
-                    isLoading={actionLoading === booking.id}
-                  />
+              ) : (() => {
+                const today = new Date()
+                today.setHours(0, 0, 0, 0)
+
+                const groups: { label: string; color: string; items: typeof bookings }[] = [
+                  {
+                    label: 'À venir',
+                    color: '#1b5e3b',
+                    items: bookings.filter(b =>
+                      b.status === 'CONFIRMED' && new Date(b.visitDate) >= today
+                    ),
+                  },
+                  {
+                    label: 'En attente de confirmation',
+                    color: '#92400e',
+                    items: bookings.filter(b => b.status === 'PENDING'),
+                  },
+                  {
+                    label: 'Passées',
+                    color: '#9e9b96',
+                    items: bookings.filter(b =>
+                      (b.status === 'COMPLETED') ||
+                      (b.status === 'CONFIRMED' && new Date(b.visitDate) < today)
+                    ),
+                  },
+                  {
+                    label: 'Annulées',
+                    color: '#9b1c1c',
+                    items: bookings.filter(b => b.status === 'CANCELLED'),
+                  },
+                ].filter(g => g.items.length > 0)
+
+                return groups.map(group => (
+                  <div key={group.label}>
+                    <p style={{
+                      fontFamily: "'DM Sans', system-ui, sans-serif",
+                      fontSize: 11, fontWeight: 700, letterSpacing: '0.10em',
+                      textTransform: 'uppercase', color: group.color,
+                      margin: '16px 0 8px', paddingLeft: 2,
+                    }}>
+                      {group.label} ({group.items.length})
+                    </p>
+                    {group.items.map(booking => (
+                      <BookingCard
+                        key={booking.id}
+                        booking={booking}
+                        viewMode="tenant"
+                        onCancel={handleCancelBooking}
+                        isLoading={actionLoading === booking.id}
+                      />
+                    ))}
+                  </div>
                 ))
-              )}
+              })()}
             </div>
           )}
 

@@ -23,6 +23,7 @@ const STATUSES: { value: Status; label: string; color: string; bg: string; icon:
   { value: 'OPEN', label: 'Non traité', color: BAI.error, bg: BAI.errorLight, icon: AlertCircle },
   { value: 'IN_PROGRESS', label: 'En cours', color: '#92400e', bg: '#fdf5ec', icon: Clock },
   { value: 'RESOLVED', label: 'Résolu', color: '#1b5e3b', bg: '#edf7f2', icon: CheckCircle },
+  { value: 'CLOSED', label: 'Fermé', color: BAI.inkFaint, bg: BAI.bgMuted, icon: CheckCircle },
 ]
 
 interface MaintenanceRequest {

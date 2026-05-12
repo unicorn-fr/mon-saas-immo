@@ -227,6 +227,7 @@ export const MessageInput = ({
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
             rows={1}
+            maxLength={4000}
             disabled={isSending}
             className="w-full px-3 py-2.5 rounded-xl focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
             style={{

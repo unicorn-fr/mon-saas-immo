@@ -352,13 +352,20 @@ function DocSlot({
   }
 
   if (doc) {
+    const docStatus = (doc as any).status as 'UPLOADED' | 'VALIDATED' | 'REJECTED' | undefined
+    const isValidated = docStatus === 'VALIDATED'
+    const isRejected  = docStatus === 'REJECTED'
+    const statusColor = isValidated ? BAI.tenant : isRejected ? '#9b1c1c' : BAI.caramel
+    const statusBg    = isValidated ? BAI.tenantLight : isRejected ? '#fef2f2' : BAI.caramelLight
+    const statusBorder = isValidated ? BAI.tenantBorder : isRejected ? '#fca5a5' : '#e8c9a0'
+
     return (
       <div style={{
         display: 'flex', alignItems: 'center', gap: 12,
         padding: '12px 14px',
-        border: `1px solid ${BAI.tenantBorder}`,
+        border: `1px solid ${statusBorder}`,
         borderRadius: 12,
-        background: BAI.tenantLight,
+        background: statusBg,
       }}>
         <div style={{
           width: 48, height: 48, borderRadius: 8, flexShrink: 0, overflow: 'hidden',
@@ -378,16 +385,26 @@ function DocSlot({
 
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
-            <CheckCircle2 style={{ width: 13, height: 13, color: BAI.tenant, flexShrink: 0 }} />
-            <span style={{ fontSize: 13, fontWeight: 600, color: BAI.tenant, fontFamily: BAI.fontBody }}>
+            <CheckCircle2 style={{ width: 13, height: 13, color: statusColor, flexShrink: 0 }} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: statusColor, fontFamily: BAI.fontBody }}>
               {slot.label}
             </span>
+            {isRejected && (
+              <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 20, background: '#fef2f2', color: '#9b1c1c', border: '1px solid #fca5a5' }}>
+                Refusé
+              </span>
+            )}
+            {isValidated && (
+              <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 20, background: BAI.tenantLight, color: BAI.tenant, border: `1px solid ${BAI.tenantBorder}` }}>
+                Vérifié
+              </span>
+            )}
           </div>
           <p style={{
             fontSize: 11, color: BAI.inkFaint, fontFamily: BAI.fontBody, margin: 0,
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
-            {doc.fileName}
+            {isRejected && (doc as any).note ? `Motif : ${(doc as any).note}` : doc.fileName}
           </p>
         </div>
 
@@ -857,8 +874,13 @@ export default function DossierLocatif() {
     }
   }
 
-  // ── Questionnaire state (persisted) ────────────────────────────────────────
+  // ── Questionnaire state (persisted locally + server) ───────────────────────
   const [questionnaire, setQuestionnaire] = useState<DossierQuestionnaire>(() => {
+    // Prefer server data from profileMeta if available, fallback to localStorage
+    const serverQ = (user?.profileMeta as Record<string, Record<string, unknown>> | null)?._questionnaire as DossierQuestionnaire | undefined
+    if (serverQ && (serverQ.idKind || serverQ.emploiType || serverQ.hasGarant)) {
+      return { idKind: null, emploiType: null, hasRevenuComplementaire: null, hasGarant: null, ...serverQ }
+    }
     try {
       const saved = localStorage.getItem(QUESTIONNAIRE_KEY)
       return saved ? (JSON.parse(saved) as DossierQuestionnaire) : { idKind: null, emploiType: null, hasRevenuComplementaire: null, hasGarant: null }
@@ -867,18 +889,29 @@ export default function DossierLocatif() {
     }
   })
 
+  // Debounce server sync for questionnaire
+  const syncQTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const syncQuestionnaireToServer = useCallback((next: DossierQuestionnaire) => {
+    if (syncQTimeout.current) clearTimeout(syncQTimeout.current)
+    syncQTimeout.current = setTimeout(() => {
+      dossierService.saveProfile({ questionnaire: next }).catch(() => { /* silent — localStorage is fallback */ })
+    }, 1500)
+  }, [])
+
   const updateQuestionnaire = useCallback(<K extends keyof DossierQuestionnaire>(key: K, val: string) => {
     setQuestionnaire(prev => {
       const next = { ...prev, [key]: val || null } as DossierQuestionnaire
       try { localStorage.setItem(QUESTIONNAIRE_KEY, JSON.stringify(next)) } catch { /* ignore */ }
+      syncQuestionnaireToServer(next)
       return next
     })
-  }, [])
+  }, [syncQuestionnaireToServer])
 
   const updateQuestionnaireBoolean = useCallback(<K extends keyof DossierQuestionnaire>(key: K, val: boolean) => {
     setQuestionnaire(prev => {
       const next = { ...prev, [key]: val } as DossierQuestionnaire
       try { localStorage.setItem(QUESTIONNAIRE_KEY, JSON.stringify(next)) } catch { /* ignore */ }
+      syncQuestionnaireToServer(next)
       return next
     })
   }, [])
@@ -901,6 +934,10 @@ export default function DossierLocatif() {
       .then(setDocuments)
       .catch(() => toast.error('Impossible de charger vos documents'))
       .finally(() => setLoadingDocs(false))
+  }, [])
+
+  useEffect(() => {
+    return () => { if (syncQTimeout.current) clearTimeout(syncQTimeout.current) }
   }, [])
 
   const OCR_DOC_TYPES = new Set(['CNI_RECTO', 'PASSEPORT', 'TITRE_SEJOUR'])
@@ -982,7 +1019,7 @@ export default function DossierLocatif() {
         // OCR failure is silent — user fills manually
       }
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user?.firstName, user?.lastName]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDelete = useCallback(async (id: string) => {
     await dossierService.deleteDocument(id)

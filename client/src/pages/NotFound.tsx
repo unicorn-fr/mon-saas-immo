@@ -8,6 +8,7 @@ export default function NotFound() {
   const dashboardLink = user?.role === 'OWNER' ? '/dashboard/owner'
     : user?.role === 'TENANT' ? '/dashboard/tenant'
     : user?.role === 'ADMIN' ? '/admin'
+    : user?.role === 'SUPER_ADMIN' ? '/super-admin/dashboard'
     : '/'
 
   return (

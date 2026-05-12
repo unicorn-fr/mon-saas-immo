@@ -69,7 +69,8 @@ class PropertyService {
    */
   async searchProperties(
     query: string,
-    pagination: PropertyPagination = { page: 1, limit: 20 }
+    pagination: PropertyPagination = { page: 1, limit: 20 },
+    filters: PropertyFilters = {}
   ): Promise<PropertyListResponse> {
     try {
       const params = new URLSearchParams()
@@ -78,6 +79,17 @@ class PropertyService {
       params.append('limit', pagination.limit.toString())
       if (pagination.sortBy) params.append('sortBy', pagination.sortBy)
       if (pagination.sortOrder) params.append('sortOrder', pagination.sortOrder)
+      // Pass active sidebar filters alongside the text query
+      if (filters.city) params.append('city', filters.city)
+      if (filters.type) params.append('type', filters.type)
+      if (filters.minPrice !== undefined) params.append('minPrice', String(filters.minPrice))
+      if (filters.maxPrice !== undefined) params.append('maxPrice', String(filters.maxPrice))
+      if (filters.minSurface !== undefined) params.append('minSurface', String(filters.minSurface))
+      if (filters.maxSurface !== undefined) params.append('maxSurface', String(filters.maxSurface))
+      if (filters.bedrooms !== undefined) params.append('bedrooms', String(filters.bedrooms))
+      if (filters.bathrooms !== undefined) params.append('bathrooms', String(filters.bathrooms))
+      if (filters.furnished !== undefined) params.append('furnished', String(filters.furnished))
+      if (filters.amenities?.length) params.append('amenities', filters.amenities.join(','))
 
       const response = await apiClient.get<ApiResponse<PropertyListResponse>>(
         `/properties/search?${params.toString()}`

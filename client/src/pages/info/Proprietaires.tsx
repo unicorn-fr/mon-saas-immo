@@ -39,7 +39,7 @@ const FEATURES_3 = [
   {
     icon: <IconDollar />,
     title: 'Encaissement auto.',
-    desc: 'Prélèvement SEPA le 5 du mois, virement sur ton compte le 7. Quittance envoyée au locataire dans la foulée. Zéro intervention de ta part.',
+    desc: 'Ton locataire te verse le loyer directement. Tu le marques comme reçu en 1 clic, la quittance part automatiquement. Zéro paperasse.',
   },
 ]
 
@@ -51,7 +51,7 @@ const KPI_CARDS = [
 ]
 
 const ACTIVITY = [
-  { dot: '✓', bg: BAI.tenantLight, col: BAI.tenant, title: 'Loyer encaissé automatiquement', sub: 'SEPA · Le 5 du mois' },
+  { dot: '✓', bg: BAI.tenantLight, col: BAI.tenant, title: 'Loyer reçu · Quittance envoyée', sub: 'Mai 2026' },
   { dot: '✉', bg: BAI.ownerLight,  col: BAI.owner,  title: 'Nouvelle candidature reçue',       sub: 'Dossier à consulter' },
   { dot: '📄', bg: BAI.ownerLight, col: BAI.owner,  title: 'Bail signé électroniquement',      sub: 'Conforme loi ALUR' },
 ]

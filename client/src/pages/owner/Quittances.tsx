@@ -480,13 +480,16 @@ export default function Quittances() {
   }
 
   async function handleDownload(paymentId: string) {
+    // Open window synchronously inside click handler to avoid popup blockers
+    const win = window.open('', '_blank', 'noopener,noreferrer')
     setActionLoading(paymentId)
     try {
       const res = await apiClient.get(`/payments/${paymentId}/receipt`)
       const url: string = res.data.url ?? res.data.data?.url
       if (!url) throw new Error('URL manquante')
-      window.open(url, '_blank', 'noopener,noreferrer')
+      if (win) { win.location.href = url } else { window.open(url, '_blank', 'noopener,noreferrer') }
     } catch {
+      win?.close()
       toast.error('Impossible de télécharger la quittance')
     } finally {
       setActionLoading(null)

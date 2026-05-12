@@ -15,7 +15,7 @@ const fontDisplay: React.CSSProperties = { fontFamily: "'Cormorant Garamond', Ge
 const ROLE_PATHS: Record<string, string> = {
   OWNER: '/dashboard/owner',
   TENANT: '/dashboard/tenant',
-  ADMIN: '/admin/dashboard',
+  ADMIN: '/admin',
   SUPER_ADMIN: '/super-admin/dashboard',
 }
 

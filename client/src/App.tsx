@@ -37,10 +37,10 @@ import Rentabilite from './pages/owner/Rentabilite'
 import Finance from './pages/owner/Finance'
 import Maintenance from './pages/owner/Maintenance'
 import Quittances from './pages/owner/Quittances'
-import OwnerWallet from './pages/owner/Wallet'
 import MesLocataires from './pages/owner/MesLocataires'
 import Documents from './pages/owner/Documents'
 import Outils from './pages/owner/Outils'
+import Abonnement from './pages/owner/Abonnement'
 
 // Tenant Pages
 import TenantDashboard from './pages/tenant/TenantDashboard'
@@ -51,7 +51,6 @@ import DossierLocatif from './pages/tenant/DossierLocatif'
 import DossierShareManager from './pages/tenant/DossierShareManager'
 import PrivacyCenter from './pages/tenant/PrivacyCenter'
 import TenantSettings from './pages/tenant/Settings'
-import TenantWallet from './pages/tenant/TenantWallet'
 import TenantMaintenance from './pages/tenant/Maintenance'
 import TenantDocuments from './pages/tenant/Documents'
 
@@ -242,10 +241,10 @@ function AppRoutes() {
         <Route path="/owner/finances" element={<Finance />} />
         <Route path="/owner/maintenance" element={<Maintenance />} />
         <Route path="/owner/quittances" element={<Quittances />} />
-        <Route path="/owner/wallet" element={<OwnerWallet />} />
         <Route path="/owner/locataires" element={<MesLocataires />} />
         <Route path="/owner/documents" element={<Documents />} />
         <Route path="/owner/outils" element={<Outils />} />
+        <Route path="/owner/abonnement" element={<Abonnement />} />
       </Route>
 
       {/* Protected Routes - Tenant Dashboard */}
@@ -258,7 +257,6 @@ function AppRoutes() {
         <Route path="/dossier/partages" element={<DossierShareManager />} />
         <Route path="/privacy" element={<PrivacyCenter />} />
         <Route path="/tenant/settings" element={<TenantSettings />} />
-        <Route path="/tenant/wallet" element={<TenantWallet />} />
         <Route path="/tenant/maintenance" element={<TenantMaintenance />} />
         <Route path="/tenant/documents" element={<TenantDocuments />} />
       </Route>
