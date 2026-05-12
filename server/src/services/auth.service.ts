@@ -51,7 +51,7 @@ class AuthService {
   /**
    * Register a new user
    */
-  async register(data: RegisterInput): Promise<AuthResponse> {
+  async register(data: RegisterInput): Promise<{ user: AuthResponse['user'] }> {
     const { email, password, firstName, lastName, role, phone } = data
 
     // Validate email format
@@ -98,28 +98,6 @@ class AuthService {
       },
     })
 
-    // Generate tokens
-    const jwtPayload: JwtPayload = {
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-    }
-
-    const accessToken = generateAccessToken(jwtPayload)
-    const refreshToken = generateRefreshToken(jwtPayload)
-
-    // Store refresh token in database
-    const expiresAt = new Date()
-    expiresAt.setDate(expiresAt.getDate() + 7) // 7 days
-
-    await prisma.refreshToken.create({
-      data: {
-        token: refreshToken,
-        userId: user.id,
-        expiresAt,
-      },
-    })
-
     // Send verification email (or auto-verify if no email provider configured)
     const emailConfigured = !!(env.SMTP_HOST || env.RESEND_API_KEY)
     if (!emailConfigured) {
@@ -146,11 +124,7 @@ class AuthService {
       await sendEmail({ to: user.email, ...tpl })
     }
 
-    return {
-      user,
-      accessToken,
-      refreshToken,
-    }
+    return { user }
   }
 
   /**
@@ -329,7 +303,12 @@ class AuthService {
     if (!user) throw new Error('Compte introuvable')
     // If already verified, issue tokens directly (idempotent)
     if (user.emailVerified) {
-      const { accessToken, refreshToken } = await this.generateTokens(user.id)
+      const jwtPayload: JwtPayload = { userId: user.id, email: user.email, role: user.role }
+      const accessToken = generateAccessToken(jwtPayload)
+      const refreshToken = generateRefreshToken(jwtPayload)
+      const expiresAt = new Date()
+      expiresAt.setDate(expiresAt.getDate() + 7)
+      await prisma.refreshToken.create({ data: { token: refreshToken, userId: user.id, expiresAt } })
       return { accessToken, refreshToken, user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName, role: user.role, avatar: user.avatar, emailVerified: user.emailVerified } }
     }
 

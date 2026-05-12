@@ -222,7 +222,7 @@ function VerifyCodeScreen({ email, onBack }: { email: string; onBack: () => void
 export default function Register() {
   const { register, isLoading } = useAuth()
 
-  type Screen = 'welcome' | 'form' | 'verify_code'
+  type Screen = 'welcome' | 'form' | 'verify_code' | 'waitlist'
   const [screen, setScreen] = useState<Screen>('welcome')
 
   const [formData, setFormData] = useState({
@@ -278,11 +278,57 @@ export default function Register() {
       setRegisteredEmail(formData.email)
       setScreen('verify_code')
     } catch (err) {
+      const code = (err as { code?: string })?.code
+      if (code === 'REGISTRATIONS_CLOSED') {
+        setScreen('waitlist')
+        return
+      }
       const msg = err instanceof Error ? err.message : 'Échec de l\'inscription. Veuillez réessayer.'
       setError(msg)
       toast.error(msg, { duration: 5000 })
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
+  }
+
+  /* ── Écran liste d'attente ───────────────────────────────────────────── */
+  if (screen === 'waitlist') {
+    return (
+      <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafaf8', padding: '24px', ...font }}>
+        <div style={{ maxWidth: 440, width: '100%', textAlign: 'center' }}>
+          <Link to="/" style={{ display: 'inline-block', marginBottom: '32px' }}>
+            <BailioLogo size={36} />
+          </Link>
+          <div style={{ background: '#fdf5ec', border: '1px solid #f3c99a', borderRadius: '12px', padding: '12px 16px', marginBottom: '24px', fontSize: '13px', color: '#92400e', fontWeight: 500 }}>
+            Bailio est en accès anticipé
+          </div>
+          <h1 style={{ ...fontDisplay, fontSize: '32px', fontWeight: 700, fontStyle: 'italic', color: '#0d0c0a', marginBottom: '12px' }}>
+            Rejoignez la liste d'attente
+          </h1>
+          <p style={{ fontSize: '14px', color: '#5a5754', marginBottom: '32px', lineHeight: 1.6 }}>
+            Bailio ouvre progressivement. Laissez-nous votre email et nous vous préviendrons dès que votre accès est disponible.
+          </p>
+          <a
+            href="mailto:contact@bailio.fr?subject=Liste d'attente Bailio"
+            style={{
+              display: 'inline-block',
+              background: '#1a1a2e',
+              color: '#ffffff',
+              borderRadius: '8px',
+              padding: '12px 28px',
+              fontSize: '14px',
+              fontWeight: 600,
+              textDecoration: 'none',
+              marginBottom: '16px',
+            }}
+          >
+            M'inscrire sur la liste d'attente
+          </a>
+          <p style={{ fontSize: '13px', color: '#9e9b96' }}>
+            <Link to="/" style={{ color: '#c4976a', textDecoration: 'none' }}>← Retour à l'accueil</Link>
+          </p>
+        </div>
+      </div>
+    )
   }
 
   /* ── Écran saisie du code ─────────────────────────────────────────────── */

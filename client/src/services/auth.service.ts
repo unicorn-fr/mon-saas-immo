@@ -16,15 +16,15 @@ class AuthService {
   /**
    * Register new user
    */
-  async register(data: RegisterData): Promise<AuthResponse> {
+  async register(data: RegisterData): Promise<void> {
     try {
-      const response = await apiClient.post<ApiResponse<AuthResponse>>(
-        '/auth/register',
-        data
-      )
-      return response.data.data
+      await apiClient.post('/auth/register', data)
     } catch (error) {
-      throw new Error(handleApiError(error))
+      const code = (error as { response?: { data?: { code?: string } } })?.response?.data?.code
+      const message = handleApiError(error)
+      const err = new Error(message) as Error & { code?: string }
+      err.code = code
+      throw err
     }
   }
 
