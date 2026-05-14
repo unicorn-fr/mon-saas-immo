@@ -434,7 +434,9 @@ export default function Quittances() {
       )
       setGroups(withSettings)
     } catch {
-      setError('Impossible de charger les quittances')
+      // silent — show empty state instead of error
+      setPayments([])
+      setGroups([])
     } finally {
       setLoading(false)
     }
@@ -763,10 +765,10 @@ export default function Quittances() {
           >
             <CheckCircle size={40} style={{ color: BAI.inkFaint, margin: '0 auto 16px' }} />
             <p style={{ fontSize: 16, fontWeight: 600, color: BAI.ink, marginBottom: 8 }}>
-              Aucun paiement trouvé
+              Aucune quittance pour l'instant
             </p>
-            <p style={{ fontSize: 14, color: BAI.inkMid }}>
-              Les quittances apparaîtront ici une fois vos contrats actifs.
+            <p style={{ fontSize: 14, color: BAI.inkMid, maxWidth: 380, margin: '0 auto' }}>
+              Les quittances s'affichent ici une fois qu'un loyer a été marqué comme payé sur un contrat actif. Les paiements sont effectués directement entre vous et votre locataire par virement bancaire.
             </p>
           </div>
         )}
