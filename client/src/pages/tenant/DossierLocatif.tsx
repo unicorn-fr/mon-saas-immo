@@ -879,7 +879,7 @@ export default function DossierLocatif() {
     // Prefer server data from profileMeta if available, fallback to localStorage
     const serverQ = (user?.profileMeta as Record<string, Record<string, unknown>> | null)?._questionnaire as DossierQuestionnaire | undefined
     if (serverQ && (serverQ.idKind || serverQ.emploiType || serverQ.hasGarant)) {
-      return { idKind: null, emploiType: null, hasRevenuComplementaire: null, hasGarant: null, ...serverQ }
+      return Object.assign({ idKind: null, emploiType: null, hasRevenuComplementaire: null, hasGarant: null }, serverQ)
     }
     try {
       const saved = localStorage.getItem(QUESTIONNAIRE_KEY)
