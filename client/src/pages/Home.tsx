@@ -446,7 +446,7 @@ export default function Home() {
       </section>
 
       {/* ── STATS ────────────────────────────────────────────────────── */}
-      <section style={{ borderBottom: `1px solid ${T.border}`, padding: 'clamp(48px,8vh,80px) 0' }}>
+      <section style={{ background: T.bgBase, borderBottom: `1px solid ${T.border}`, padding: 'clamp(48px,8vh,80px) 0' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
           <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 32 }}>
             {STATS.map((stat, i) => (
