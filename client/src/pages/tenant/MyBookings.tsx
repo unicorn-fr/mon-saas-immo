@@ -452,37 +452,27 @@ export const MyBookings = () => {
               >
                 <button
                   onClick={() => setViewMode('list')}
-                  className="px-4 text-sm font-medium transition-all"
-                  style={
-                    viewMode === 'list'
-                      ? {
-                          background: '#ffffff',
-                          color: '#1b5e3b',
-                          borderRadius: 8,
-                          boxShadow: '0 1px 3px rgba(13,12,10,0.08)',
-                          fontFamily: "'DM Sans', system-ui, sans-serif",
-                          minHeight: 36,
-                        }
-                      : { color: '#9e9b96', fontFamily: "'DM Sans', system-ui, sans-serif", minHeight: 36 }
-                  }
+                  style={{
+                    padding: '6px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                    fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 13, fontWeight: 500,
+                    whiteSpace: 'nowrap', minHeight: 36, transition: 'all 0.15s',
+                    ...(viewMode === 'list'
+                      ? { background: '#ffffff', color: '#1b5e3b', boxShadow: '0 1px 3px rgba(13,12,10,0.08)' }
+                      : { background: 'transparent', color: '#9e9b96' }),
+                  }}
                 >
                   Liste
                 </button>
                 <button
                   onClick={() => setViewMode('calendar')}
-                  className="px-4 text-sm font-medium transition-all"
-                  style={
-                    viewMode === 'calendar'
-                      ? {
-                          background: '#ffffff',
-                          color: '#1b5e3b',
-                          borderRadius: 8,
-                          boxShadow: '0 1px 3px rgba(13,12,10,0.08)',
-                          fontFamily: "'DM Sans', system-ui, sans-serif",
-                          minHeight: 36,
-                        }
-                      : { color: '#9e9b96', fontFamily: "'DM Sans', system-ui, sans-serif", minHeight: 36 }
-                  }
+                  style={{
+                    padding: '6px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                    fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 13, fontWeight: 500,
+                    whiteSpace: 'nowrap', minHeight: 36, transition: 'all 0.15s',
+                    ...(viewMode === 'calendar'
+                      ? { background: '#ffffff', color: '#1b5e3b', boxShadow: '0 1px 3px rgba(13,12,10,0.08)' }
+                      : { background: 'transparent', color: '#9e9b96' }),
+                  }}
                 >
                   Calendrier
                 </button>
@@ -608,19 +598,25 @@ export const MyBookings = () => {
                       fontFamily: "'DM Sans', system-ui, sans-serif",
                       fontSize: 11, fontWeight: 700, letterSpacing: '0.10em',
                       textTransform: 'uppercase', color: group.color,
-                      margin: '16px 0 8px', paddingLeft: 2,
+                      margin: '16px 0 12px', paddingLeft: 2,
                     }}>
                       {group.label} ({group.items.length})
                     </p>
-                    {group.items.map(booking => (
-                      <BookingCard
-                        key={booking.id}
-                        booking={booking}
-                        viewMode="tenant"
-                        onCancel={handleCancelBooking}
-                        isLoading={actionLoading === booking.id}
-                      />
-                    ))}
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                      gap: 16,
+                    }}>
+                      {group.items.map(booking => (
+                        <BookingCard
+                          key={booking.id}
+                          booking={booking}
+                          viewMode="tenant"
+                          onCancel={handleCancelBooking}
+                          isLoading={actionLoading === booking.id}
+                        />
+                      ))}
+                    </div>
                   </div>
                 ))
               })()}

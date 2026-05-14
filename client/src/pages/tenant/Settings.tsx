@@ -30,6 +30,8 @@ import {
   Trash2,
   CreditCard,
   Building2,
+  HelpCircle,
+  LifeBuoy,
 } from 'lucide-react'
 
 // ─── Bailio Design Tokens ─────────────────────────────────────────────────────
@@ -157,7 +159,7 @@ function NotifRow({ icon, label, checked, onChange }: {
 
 // ─── Tabs config ──────────────────────────────────────────────────────────────
 
-type TabId = 'profil' | 'notifications' | 'securite' | 'confidentialite' | 'abonnement' | 'bank'
+type TabId = 'profil' | 'notifications' | 'securite' | 'confidentialite' | 'abonnement' | 'bank' | 'aide'
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode; description: string }[] = [
   { id: 'profil',          label: 'Mon profil',         icon: <User size={16} />,        description: 'Informations personnelles' },
@@ -166,6 +168,7 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode; description: stri
   { id: 'confidentialite', label: 'Confidentialité',    icon: <Shield size={16} />,      description: 'RGPD et données' },
   { id: 'abonnement',      label: 'Abonnement',         icon: <CreditCard size={16} />,  description: 'Plan et facturation' },
   { id: 'bank',            label: 'Compte bancaire',    icon: <Building2 size={16} />,   description: 'Coordonnées bancaires' },
+  { id: 'aide',            label: 'Aide',               icon: <HelpCircle size={16} />,  description: 'Guide et support' },
 ]
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -1036,6 +1039,64 @@ export default function TenantSettings() {
                     <span>Découvrir les plans premium</span>
                     <ChevronRight size={14} />
                   </button>
+                </div>
+              )}
+
+              {/* ── AIDE ───────────────────────────────────────────────────── */}
+              {activeTab === 'aide' && (
+                <div className="flex flex-col gap-5">
+
+                  {/* Restart tour */}
+                  <div style={cardStyle}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <LifeBuoy size={16} style={{ color: BAI.inkMid }} />
+                      <h2 style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontSize: '22px', color: BAI.ink }}>
+                        Guide de démarrage
+                      </h2>
+                    </div>
+                    <p style={{ fontSize: '13px', color: BAI.inkMid, marginBottom: '20px', lineHeight: 1.6 }}>
+                      Redécouvrez toutes les fonctionnalités de Bailio grâce au guide interactif étape par étape.
+                    </p>
+                    <button
+                      onClick={() => {
+                        if (user?.id) {
+                          localStorage.removeItem(`bailio_tour_done_v1_${user.id}`)
+                          window.location.href = '/dashboard/tenant'
+                        }
+                      }}
+                      className="flex items-center gap-2 transition-colors"
+                      style={{ background: BAI.night, border: 'none', borderRadius: '8px', padding: '0.65rem 1.25rem', color: '#ffffff', fontSize: '14px', fontFamily: BAI.fontBody, cursor: 'pointer', fontWeight: 600 }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#2d2d4e')}
+                      onMouseLeave={e => (e.currentTarget.style.background = BAI.night)}
+                    >
+                      <CheckCircle size={15} />
+                      Reprendre le guide de démarrage
+                    </button>
+                  </div>
+
+                  {/* Support */}
+                  <div style={cardStyle}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <MessageSquare size={16} style={{ color: BAI.inkMid }} />
+                      <h2 style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontSize: '22px', color: BAI.ink }}>
+                        Contacter le support
+                      </h2>
+                    </div>
+                    <p style={{ fontSize: '13px', color: BAI.inkMid, marginBottom: '20px', lineHeight: 1.6 }}>
+                      Une question ou un problème ? Notre équipe répond généralement sous 24h.
+                    </p>
+                    <a
+                      href="mailto:contact@bailio.fr"
+                      className="flex items-center gap-2 transition-colors"
+                      style={{ display: 'inline-flex', background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: '8px', padding: '0.65rem 1.25rem', color: BAI.ink, fontSize: '14px', fontFamily: BAI.fontBody, cursor: 'pointer', fontWeight: 500, textDecoration: 'none' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
+                      onMouseLeave={e => (e.currentTarget.style.background = BAI.bgSurface)}
+                    >
+                      <Mail size={15} />
+                      contact@bailio.fr
+                    </a>
+                  </div>
+
                 </div>
               )}
 

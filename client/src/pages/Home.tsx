@@ -292,7 +292,7 @@ export default function Home() {
   }
 
   return (
-    <div style={{ backgroundColor: T.bgBase, fontFamily: T.fontBody, color: T.ink, minHeight: '100vh' }}>
+    <div style={{ backgroundColor: T.night, fontFamily: T.fontBody, color: T.ink, minHeight: '100vh' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=DM+Sans:wght@400;500;600;700&display=swap');
         @keyframes pulse-dot { 0%{box-shadow:0 0 0 0 rgba(196,151,106,0.6)} 70%{box-shadow:0 0 0 10px rgba(196,151,106,0)} 100%{box-shadow:0 0 0 0 rgba(196,151,106,0)} }

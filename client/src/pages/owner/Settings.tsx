@@ -64,7 +64,7 @@ const inputStyle: React.CSSProperties = {
 
 // ─── Tab definitions ──────────────────────────────────────────────────────────
 
-type TabId = 'profile' | 'notifications' | 'security' | 'preferences' | 'subscription'
+type TabId = 'profile' | 'notifications' | 'security' | 'preferences' | 'subscription' | 'aide'
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: 'profile', label: 'Mon profil', icon: <User size={15} /> },
@@ -72,6 +72,7 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: 'security', label: 'Sécurité', icon: <Shield size={15} /> },
   { id: 'preferences', label: 'Préférences', icon: <Sliders size={15} /> },
   { id: 'subscription', label: 'Abonnement', icon: <CreditCard size={15} /> },
+  { id: 'aide', label: 'Aide', icon: <CheckCircle size={15} /> },
 ]
 
 // ─── Notification Preferences ─────────────────────────────────────────────────
@@ -1515,6 +1516,62 @@ export default function OwnerSettings() {
                     </span>
                     <ChevronRight size={15} />
                   </button>
+                </div>
+              )}
+
+              {/* ════════════════════════════════════════
+                  AIDE
+              ════════════════════════════════════════ */}
+              {activeTab === 'aide' && (
+                <div className="flex flex-col gap-4">
+                  <div style={cardStyle}>
+                    <h2 style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontSize: '22px', color: BAI.ink, marginBottom: '4px' }}>
+                      Guide de démarrage
+                    </h2>
+                    <p style={{ fontSize: '13px', color: BAI.inkMid, marginBottom: '20px' }}>
+                      Relancez le tour interactif qui vous présente toutes les fonctionnalités de Bailio, étape par étape.
+                    </p>
+                    <button
+                      onClick={() => {
+                        if (user?.id) {
+                          localStorage.removeItem(`bailio_tour_done_v1_${user.id}`)
+                          window.location.href = '/dashboard/owner'
+                        }
+                      }}
+                      className="flex items-center gap-2"
+                      style={{
+                        background: BAI.night, border: 'none', borderRadius: '8px',
+                        padding: '10px 20px', color: '#ffffff',
+                        fontSize: '14px', fontFamily: BAI.fontBody, fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <CheckCircle size={15} />
+                      Reprendre le guide de démarrage
+                    </button>
+                  </div>
+
+                  <div style={cardStyle}>
+                    <h2 style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontSize: '22px', color: BAI.ink, marginBottom: '4px' }}>
+                      Support
+                    </h2>
+                    <p style={{ fontSize: '13px', color: BAI.inkMid, marginBottom: '20px' }}>
+                      Une question, un bug ou une suggestion ? Notre équipe vous répond.
+                    </p>
+                    <a
+                      href="mailto:contact@bailio.fr"
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '8px',
+                        background: BAI.bgMuted, border: `1px solid ${BAI.border}`,
+                        borderRadius: '8px', padding: '10px 20px',
+                        color: BAI.ink, fontSize: '14px', fontFamily: BAI.fontBody,
+                        fontWeight: 500, textDecoration: 'none',
+                      }}
+                    >
+                      <Mail size={15} />
+                      Contacter le support
+                    </a>
+                  </div>
                 </div>
               )}
 
