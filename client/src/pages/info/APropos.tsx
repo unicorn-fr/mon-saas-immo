@@ -113,17 +113,17 @@ export default function APropos() {
             <div style={{
               width: 'clamp(100px,14vw,148px)',
               aspectRatio: '1',
-              background: `linear-gradient(135deg, #fdf5ec, #e8ccaa)`,
               borderRadius: 16,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              overflow: 'hidden',
               flexShrink: 0,
+              border: `1px solid ${BAI.border}`,
+              boxShadow: '0 4px 16px rgba(13,12,10,0.08)',
             }}>
-              <span style={{
-                fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-                fontSize: 'clamp(48px,7vw,80px)', color: '#b07f54', lineHeight: 1,
-              }}>
-                E
-              </span>
+              <img
+                src="/enzo1.jpeg"
+                alt="Enzo, fondateur de Bailio"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
             </div>
 
             {/* Bio */}

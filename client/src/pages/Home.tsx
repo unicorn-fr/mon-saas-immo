@@ -105,23 +105,20 @@ const TESTIMONIALS = [
   {
     quote: 'J\'ai mis mon studio en location sans passer par une agence pour la première fois. Le dossier était déjà vérifié, j\'ai juste eu à choisir. Les quittances partent toutes seules.',
     name: 'Camille L.',
-    role: 'Propriétaire · Paris',
-    initials: 'CL',
-    bg: '#1a3270',
+    role: 'Propriétaire',
+    photo: 'https://i.pravatar.cc/80?img=47',
   },
   {
     quote: 'J\'ai postulé depuis mon téléphone, envoyé mon dossier une seule fois pour trois biens différents. Le bail a été signé en ligne. Je n\'ai rien eu à imprimer.',
     name: 'Théo M.',
-    role: 'Locataire · Lyon',
-    initials: 'TM',
-    bg: '#1b5e3b',
+    role: 'Locataire',
+    photo: 'https://i.pravatar.cc/80?img=12',
   },
   {
     quote: 'Deux biens en gestion, plus un seul rendez-vous d\'agence. Tout passe par le tableau de bord — candidatures, loyers, quittances. Je récupère du temps.',
     name: 'Sophie R.',
-    role: 'Propriétaire · Bordeaux',
-    initials: 'SR',
-    bg: '#1a3270',
+    role: 'Propriétaire',
+    photo: 'https://i.pravatar.cc/80?img=49',
   },
 ]
 
@@ -692,7 +689,7 @@ export default function Home() {
                 </svg>
                 <p style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontSize: 20, lineHeight: 1.4, color: T.ink, margin: '0 0 24px' }}>{t.quote}</p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: t.bg, color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 13, flexShrink: 0 }}>{t.initials}</div>
+                  <img src={t.photo} alt={t.name} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: `2px solid ${T.border}` }} />
                   <div>
                     <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: T.ink }}>{t.name}</p>
                     <p style={{ margin: 0, fontSize: 12, color: T.inkFaint }}>{t.role}</p>

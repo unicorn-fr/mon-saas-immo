@@ -6,6 +6,7 @@ import { useAuthStore } from '../store/authStore'
 import { apiClient } from '../services/api.service'
 import { celebrateBig } from '../utils/celebrate'
 import { BailioLogo } from '../components/BailioLogo'
+import GoogleSignInButton from '../components/auth/GoogleSignInButton'
 import toast from 'react-hot-toast'
 
 const ROLE_PATHS: Record<string, string> = {
@@ -220,7 +221,17 @@ function VerifyCodeScreen({ email, onBack }: { email: string; onBack: () => void
    3. verify_code → Saisie du code à 6 chiffres
 ═══════════════════════════════════════════════════════════════════════════ */
 export default function Register() {
-  const { register, isLoading } = useAuth()
+  const navigate = useNavigate()
+  const { register, googleLogin, isLoading } = useAuth()
+
+  const handleGoogleSuccess = async (idToken: string) => {
+    try {
+      const { isNewUser } = await googleLogin(idToken)
+      navigate(isNewUser ? '/select-role' : '/dashboard/tenant')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Connexion Google échouée.')
+    }
+  }
 
   type Screen = 'welcome' | 'form' | 'verify_code' | 'waitlist'
   const [screen, setScreen] = useState<Screen>('welcome')
@@ -415,6 +426,18 @@ export default function Register() {
               <p style={{ fontSize: '14px', color: '#5a5754', margin: 0 }}>
                 Commencez par choisir votre profil.
               </p>
+            </div>
+
+            {/* Google sign-in */}
+            <div style={{ marginBottom: '20px' }}>
+              <GoogleSignInButton onSuccess={handleGoogleSuccess} text="signup_with" />
+            </div>
+
+            {/* Divider */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+              <div style={{ flex: 1, height: '1px', background: '#e4e1db' }} />
+              <span style={{ fontSize: '12px', color: '#9e9b96', fontFamily: "'DM Sans', system-ui, sans-serif", whiteSpace: 'nowrap' }}>ou créer un compte avec un email</span>
+              <div style={{ flex: 1, height: '1px', background: '#e4e1db' }} />
             </div>
 
             {/* Role picker — first and most prominent */}
