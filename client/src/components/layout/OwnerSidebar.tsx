@@ -34,10 +34,10 @@ function SectionLabel({ label, compact }: { label: string; compact?: boolean }) 
 }
 
 function NavItem({
-  to, icon: Icon, label, badge, end, onClick, compact,
+  to, icon: Icon, label, badge, end, onClick, compact, id,
 }: {
   to: string; icon: React.ElementType; label: string
-  badge?: number; end?: boolean; onClick?: () => void; compact?: boolean
+  badge?: number; end?: boolean; onClick?: () => void; compact?: boolean; id?: string
 }) {
   const location = useLocation()
   const active = end ? location.pathname === to : location.pathname.startsWith(to)
@@ -46,6 +46,7 @@ function NavItem({
     <NavLink
       to={to}
       end={end}
+      id={id}
       onClick={onClick}
       title={compact ? label : undefined}
       aria-current={active ? 'page' : undefined}
@@ -174,33 +175,33 @@ export function OwnerSidebar() {
       {/* Navigation */}
       <nav role="navigation" aria-label="Navigation principale" className="flex-1 overflow-y-auto py-1 scrollbar-thin">
         <SectionLabel label="Vue d'ensemble" compact={compact} />
-        <NavItem to="/dashboard/owner" icon={LayoutDashboard} label="Tableau de bord" end onClick={closeMobile} compact={compact} />
+        <NavItem to="/dashboard/owner" icon={LayoutDashboard} label="Tableau de bord" end onClick={closeMobile} compact={compact} id="tour-owner-dashboard" />
 
         <SectionLabel label="Mon parc" compact={compact} />
-        <NavItem to="/properties/owner/me" icon={Home} label="Mes biens" onClick={closeMobile} compact={compact} />
+        <NavItem to="/properties/owner/me" icon={Home} label="Mes biens" onClick={closeMobile} compact={compact} id="tour-owner-properties" />
         <NavItem to="/properties/new" icon={Plus} label="Ajouter un bien" onClick={closeMobile} compact={compact} />
 
         <SectionLabel label="Locataires" compact={compact} />
         <NavItem to="/owner/locataires" icon={Users} label="Mes locataires" onClick={closeMobile} compact={compact} />
-        <NavItem to="/applications/manage" icon={ClipboardList} label="Candidatures" badge={pendingAppsCount} onClick={closeMobile} compact={compact} />
-        <NavItem to="/bookings/manage" icon={Calendar} label="Visites" onClick={closeMobile} compact={compact} />
+        <NavItem to="/applications/manage" icon={ClipboardList} label="Candidatures" badge={pendingAppsCount} onClick={closeMobile} compact={compact} id="tour-owner-applications" />
+        <NavItem to="/bookings/manage" icon={Calendar} label="Visites" onClick={closeMobile} compact={compact} id="tour-owner-visits" />
 
         <SectionLabel label="Administration" compact={compact} />
-        <NavItem to="/contracts" icon={FileText} label="Contrats" onClick={closeMobile} compact={compact} />
+        <NavItem to="/contracts" icon={FileText} label="Contrats" onClick={closeMobile} compact={compact} id="tour-owner-contracts" />
         <NavItem to="/owner/documents" icon={FolderOpen} label="Documents" onClick={closeMobile} compact={compact} />
 
         <SectionLabel label="Communication" compact={compact} />
-        <NavItem to="/messages" icon={MessageSquare} label="Messages" badge={unreadCount} onClick={closeMobile} compact={compact} />
+        <NavItem to="/messages" icon={MessageSquare} label="Messages" badge={unreadCount} onClick={closeMobile} compact={compact} id="tour-owner-messages" />
 
         <SectionLabel label="Gestion" compact={compact} />
-        <NavItem to="/owner/finances" icon={TrendingUp} label="Finances" onClick={closeMobile} compact={compact} />
+        <NavItem to="/owner/finances" icon={TrendingUp} label="Finances" onClick={closeMobile} compact={compact} id="tour-owner-finances" />
         <NavItem to="/owner/rentabilite" icon={BarChart2} label="Rentabilité" onClick={closeMobile} compact={compact} />
         <NavItem to="/owner/outils" icon={Calculator} label="Outils" onClick={closeMobile} compact={compact} />
-        <NavItem to="/owner/quittances" icon={Receipt} label="Quittances" onClick={closeMobile} compact={compact} />
+        <NavItem to="/owner/quittances" icon={Receipt} label="Quittances" onClick={closeMobile} compact={compact} id="tour-owner-quittances" />
         <NavItem to="/owner/maintenance" icon={Wrench} label="Maintenance" onClick={closeMobile} compact={compact} />
 
         <SectionLabel label="Compte" compact={compact} />
-        <NavItem to="/owner/abonnement" icon={Zap} label="Abonnement" onClick={closeMobile} compact={compact} />
+        <NavItem to="/owner/abonnement" icon={Zap} label="Abonnement" onClick={closeMobile} compact={compact} id="tour-owner-subscription" />
         <NavItem to="/owner/settings" icon={Settings} label="Paramètres" onClick={closeMobile} compact={compact} />
         {!compact && currentPlan === 'FREE' && (
           <div style={{ margin: '12px 10px 6px', padding: '10px 12px', borderRadius: 10, background: `${BAI.caramel}18`, border: `1px solid ${BAI.caramel}40` }}>

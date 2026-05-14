@@ -38,10 +38,10 @@ function SectionLabel({ label, compact }: { label: string; compact?: boolean }) 
 }
 
 function NavItem({
-  to, icon: Icon, label, badge, end, onClick, compact,
+  to, icon: Icon, label, badge, end, onClick, compact, id,
 }: {
   to: string; icon: React.ElementType; label: string
-  badge?: number; end?: boolean; onClick?: () => void; compact?: boolean
+  badge?: number; end?: boolean; onClick?: () => void; compact?: boolean; id?: string
 }) {
   const location = useLocation()
   const active = end ? location.pathname === to : location.pathname.startsWith(to)
@@ -50,6 +50,7 @@ function NavItem({
     <NavLink
       to={to}
       end={end}
+      id={id}
       onClick={onClick}
       title={compact ? label : undefined}
       aria-current={active ? 'page' : undefined}
@@ -178,28 +179,28 @@ export function TenantSidebar() {
       {/* Navigation */}
       <nav role="navigation" aria-label="Navigation principale" className="flex-1 overflow-y-auto py-1.5 scrollbar-thin">
         <SectionLabel label="Vue d'ensemble" compact={compact} />
-        <NavItem to="/dashboard/tenant" icon={LayoutDashboard} label="Tableau de bord" end onClick={closeMobile} compact={compact} />
+        <NavItem to="/dashboard/tenant" icon={LayoutDashboard} label="Tableau de bord" end onClick={closeMobile} compact={compact} id="tour-tenant-dashboard" />
 
         <SectionLabel label="Ma recherche" compact={compact} />
-        <NavItem to="/search" icon={Search} label="Rechercher" onClick={closeMobile} compact={compact} />
+        <NavItem to="/search" icon={Search} label="Rechercher" onClick={closeMobile} compact={compact} id="tour-tenant-search" />
         <NavItem to="/favorites" icon={Heart} label="Favoris" onClick={closeMobile} compact={compact} />
         <NavItem to="/my-bookings" icon={Calendar} label="Mes visites" onClick={closeMobile} compact={compact} />
 
         <SectionLabel label="Mon dossier" compact={compact} />
-        <NavItem to="/dossier" icon={FolderOpen} label="Dossier locatif" end onClick={closeMobile} compact={compact} />
-        <NavItem to="/my-applications" icon={SendHorizonal} label="Candidatures" badge={pendingAppsCount} onClick={closeMobile} compact={compact} />
+        <NavItem to="/dossier" icon={FolderOpen} label="Dossier locatif" end onClick={closeMobile} compact={compact} id="tour-tenant-dossier" />
+        <NavItem to="/my-applications" icon={SendHorizonal} label="Candidatures" badge={pendingAppsCount} onClick={closeMobile} compact={compact} id="tour-tenant-applications" />
 
         <SectionLabel label="Mon logement" compact={compact} />
-        <NavItem to="/contracts" icon={FileText} label="Mon contrat" onClick={closeMobile} compact={compact} />
-        <NavItem to="/tenant/payments" icon={CreditCard} label="Paiements" onClick={closeMobile} compact={compact} />
+        <NavItem to="/contracts" icon={FileText} label="Mon contrat" onClick={closeMobile} compact={compact} id="tour-tenant-contracts" />
+        <NavItem to="/tenant/payments" icon={CreditCard} label="Paiements" onClick={closeMobile} compact={compact} id="tour-tenant-payments" />
         <NavItem to="/tenant/maintenance" icon={Wrench} label="Maintenance" onClick={closeMobile} compact={compact} />
         <NavItem to="/tenant/documents" icon={FileText} label="Courriers types" onClick={closeMobile} compact={compact} />
 
         <SectionLabel label="Communication" compact={compact} />
-        <NavItem to="/messages" icon={MessageSquare} label="Messages" badge={unreadCount} onClick={closeMobile} compact={compact} />
+        <NavItem to="/messages" icon={MessageSquare} label="Messages" badge={unreadCount} onClick={closeMobile} compact={compact} id="tour-tenant-messages" />
 
         <SectionLabel label="Compte" compact={compact} />
-        <NavItem to="/tenant/settings" icon={Settings} label="Paramètres" onClick={closeMobile} compact={compact} />
+        <NavItem to="/tenant/settings" icon={Settings} label="Paramètres" onClick={closeMobile} compact={compact} id="tour-tenant-settings" />
       </nav>
 
       {/* Dossier progress — masqué en mode compact, cliquable */}

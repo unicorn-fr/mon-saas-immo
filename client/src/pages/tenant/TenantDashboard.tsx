@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import OnboardingTour from '../../components/onboarding/OnboardingTour'
 import {
   Calendar, MessageSquare, Search, Home, Clock, MapPin,
   CheckCircle, FileText, PenTool, FolderOpen, SendHorizonal,
@@ -257,6 +258,7 @@ export default function TenantDashboard() {
   if (activeContract) {
     return (
       <Layout>
+        <OnboardingTour role="TENANT" />
         <div style={{ background: BAI.bgBase, minHeight: '100vh', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-8">
 
@@ -632,6 +634,7 @@ export default function TenantDashboard() {
   // ── VUE RECHERCHE (pas de bail actif) ─────────────────────────────────────
   return (
     <Layout>
+      <OnboardingTour role="TENANT" />
       <div style={{ background: BAI.bgBase, minHeight: '100vh', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-8">
 

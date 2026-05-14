@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import OnboardingTour from '../../components/onboarding/OnboardingTour'
 import { useProperties } from '../../hooks/useProperties'
 import { useContractStore } from '../../store/contractStore'
 import { useMessages } from '../../hooks/useMessages'
@@ -157,6 +158,7 @@ export default function Dashboard() {
   // ── Main render ───────────────────────────────────────────────────────────
   return (
     <Layout>
+      <OnboardingTour role="OWNER" />
       <div style={{ background: 'linear-gradient(135deg, #fafaf8 0%, #f4f0eb 100%)', minHeight: '100vh', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-4 lg:py-8">
 
