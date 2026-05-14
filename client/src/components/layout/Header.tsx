@@ -291,9 +291,9 @@ export const Header = () => {
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
       height: 64,
       display: 'flex', alignItems: 'center',
-      background: scrolled ? '#1a1a2e' : 'transparent',
+      background: '#1a1a2e',
       borderBottom: scrolled ? '1px solid rgba(255,255,255,0.08)' : 'none',
-      transition: 'background 0.25s ease, border-color 0.25s ease',
+      transition: 'border-color 0.25s ease',
     }}>
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 16px', width: '100%', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', width: '100%', minWidth: 0 }}>
