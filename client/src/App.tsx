@@ -44,6 +44,7 @@ import Abonnement from './pages/owner/Abonnement'
 
 // Tenant Pages
 import TenantDashboard from './pages/tenant/TenantDashboard'
+import TenantPayments from './pages/tenant/TenantPayments'
 import MyBookings from './pages/tenant/MyBookings'
 import MyApplications from './pages/tenant/MyApplications'
 import Favorites from './pages/tenant/Favorites'
@@ -259,6 +260,7 @@ function AppRoutes() {
         <Route path="/tenant/settings" element={<TenantSettings />} />
         <Route path="/tenant/maintenance" element={<TenantMaintenance />} />
         <Route path="/tenant/documents" element={<TenantDocuments />} />
+        <Route path="/tenant/payments" element={<TenantPayments />} />
       </Route>
 
       <Route element={<ProtectedRoute />}>

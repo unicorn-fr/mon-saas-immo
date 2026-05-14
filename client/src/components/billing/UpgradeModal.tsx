@@ -30,9 +30,9 @@ interface UpgradeModalProps {
 }
 
 const PLAN_ID_MAP: Record<string, PlanId> = {
-  SOLO: 'solo',
+  SOLO: 'pro',
   PRO: 'pro',
-  EXPERT: 'expert',
+  EXPERT: 'pro',
 }
 
 const PLAN_LABELS: Record<string, string> = {

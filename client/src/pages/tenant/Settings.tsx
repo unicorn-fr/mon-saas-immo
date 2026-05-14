@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Layout } from '../../components/layout/Layout'
 import { useAuth } from '../../hooks/useAuth'
 import { authService } from '../../services/auth.service'
+import { apiClient } from '../../services/api.service'
 import ChangePasswordModal from '../../components/auth/ChangePasswordModal'
 import toast from 'react-hot-toast'
 import {
@@ -28,6 +29,7 @@ import {
   Loader2,
   Trash2,
   CreditCard,
+  Building2,
 } from 'lucide-react'
 
 // ─── Bailio Design Tokens ─────────────────────────────────────────────────────
@@ -155,7 +157,7 @@ function NotifRow({ icon, label, checked, onChange }: {
 
 // ─── Tabs config ──────────────────────────────────────────────────────────────
 
-type TabId = 'profil' | 'notifications' | 'securite' | 'confidentialite' | 'abonnement'
+type TabId = 'profil' | 'notifications' | 'securite' | 'confidentialite' | 'abonnement' | 'bank'
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode; description: string }[] = [
   { id: 'profil',          label: 'Mon profil',         icon: <User size={16} />,        description: 'Informations personnelles' },
@@ -163,6 +165,7 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode; description: stri
   { id: 'securite',        label: 'Sécurité',           icon: <Lock size={16} />,        description: 'Mot de passe et accès' },
   { id: 'confidentialite', label: 'Confidentialité',    icon: <Shield size={16} />,      description: 'RGPD et données' },
   { id: 'abonnement',      label: 'Abonnement',         icon: <CreditCard size={16} />,  description: 'Plan et facturation' },
+  { id: 'bank',            label: 'Compte bancaire',    icon: <Building2 size={16} />,   description: 'Coordonnées bancaires' },
 ]
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -194,6 +197,17 @@ export default function TenantSettings() {
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
+
+  // ── Bank state ──
+  const [bankData, setBankData] = useState({
+    iban: user?.iban ?? '',
+    bic: user?.bic ?? '',
+    bankName: user?.bankName ?? '',
+    bankHolder: user?.bankHolder ?? '',
+  })
+  const [isSavingBank, setIsSavingBank] = useState(false)
+
+  const formatIban = (iban: string) => iban.replace(/(.{4})/g, '$1 ').trim()
 
   // Intercept browser close when dirty
   const isDirty = notifDirty
@@ -269,6 +283,24 @@ export default function TenantSettings() {
       toast.error(err instanceof Error ? err.message : "Erreur lors de l'envoi de l'email")
     } finally {
       setIsResendingVerification(false)
+    }
+  }
+
+  async function handleBankSave() {
+    setIsSavingBank(true)
+    try {
+      const payload = {
+        iban: bankData.iban.replace(/\s/g, '').toUpperCase(),
+        bic: bankData.bic.trim().toUpperCase(),
+        bankName: bankData.bankName.trim(),
+        bankHolder: bankData.bankHolder.trim(),
+      }
+      await apiClient.patch('/auth/profile', payload)
+      toast.success('Coordonnées bancaires enregistrées')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde')
+    } finally {
+      setIsSavingBank(false)
     }
   }
 
@@ -839,6 +871,131 @@ export default function TenantSettings() {
                       <FileText size={14} />
                       Exporter mes données
                     </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── COMPTE BANCAIRE ────────────────────────────────────────── */}
+              {activeTab === 'bank' && (
+                <div className="flex flex-col gap-5">
+
+                  {/* Info box */}
+                  <div style={{ background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`, borderRadius: '12px', padding: '1rem' }} className="flex items-start gap-3">
+                    <Building2 size={16} style={{ color: BAI.tenant, flexShrink: 0, marginTop: 2 }} />
+                    <p style={{ fontSize: '13px', color: BAI.tenant, fontFamily: BAI.fontBody, margin: 0 }}>
+                      Vos coordonnées bancaires sont partagées avec votre bailleur pour faciliter le remboursement de votre dépôt de garantie.
+                    </p>
+                  </div>
+
+                  {/* Form */}
+                  <div style={cardStyle}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <CreditCard size={16} style={{ color: BAI.inkMid }} />
+                      <h2 style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontSize: '22px', color: BAI.ink }}>
+                        Coordonnées bancaires
+                      </h2>
+                    </div>
+                    <p style={{ fontSize: '13px', color: BAI.inkMid, marginBottom: '20px' }}>
+                      Ces informations permettent à votre bailleur de vous rembourser facilement.
+                    </p>
+
+                    <div className="space-y-4">
+
+                      {/* IBAN */}
+                      <div>
+                        <label className="block text-sm font-semibold mb-1.5" style={{ color: BAI.inkMid, fontFamily: BAI.fontBody }}>
+                          IBAN
+                        </label>
+                        <input
+                          type="text"
+                          value={bankData.iban}
+                          onChange={e => setBankData(prev => ({ ...prev, iban: e.target.value }))}
+                          placeholder="FR76 3000 6000 0112 3456 7890 189"
+                          style={inputStyle}
+                          onFocus={onFocusInput}
+                          onBlur={onBlurInput}
+                          disabled={isSavingBank}
+                        />
+                        {bankData.iban && (
+                          <p style={{ fontSize: '12px', color: BAI.inkFaint, marginTop: '4px', fontFamily: BAI.fontBody }}>
+                            Aperçu : {formatIban(bankData.iban.replace(/\s/g, '').toUpperCase())}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* BIC */}
+                      <div>
+                        <label className="block text-sm font-semibold mb-1.5" style={{ color: BAI.inkMid, fontFamily: BAI.fontBody }}>
+                          BIC / SWIFT
+                        </label>
+                        <input
+                          type="text"
+                          value={bankData.bic}
+                          onChange={e => setBankData(prev => ({ ...prev, bic: e.target.value }))}
+                          placeholder="BNPAFRPPXXX"
+                          style={inputStyle}
+                          onFocus={onFocusInput}
+                          onBlur={onBlurInput}
+                          disabled={isSavingBank}
+                        />
+                      </div>
+
+                      {/* Bank name */}
+                      <div>
+                        <label className="block text-sm font-semibold mb-1.5" style={{ color: BAI.inkMid, fontFamily: BAI.fontBody }}>
+                          Nom de la banque
+                        </label>
+                        <input
+                          type="text"
+                          value={bankData.bankName}
+                          onChange={e => setBankData(prev => ({ ...prev, bankName: e.target.value }))}
+                          placeholder="BNP Paribas"
+                          style={inputStyle}
+                          onFocus={onFocusInput}
+                          onBlur={onBlurInput}
+                          disabled={isSavingBank}
+                        />
+                      </div>
+
+                      {/* Bank holder */}
+                      <div>
+                        <label className="block text-sm font-semibold mb-1.5" style={{ color: BAI.inkMid, fontFamily: BAI.fontBody }}>
+                          Titulaire du compte <span style={{ color: BAI.inkFaint, fontWeight: 400 }}>(optionnel)</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={bankData.bankHolder}
+                          onChange={e => setBankData(prev => ({ ...prev, bankHolder: e.target.value }))}
+                          placeholder="Prénom Nom"
+                          style={inputStyle}
+                          onFocus={onFocusInput}
+                          onBlur={onBlurInput}
+                          disabled={isSavingBank}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end mt-5">
+                      <button
+                        onClick={handleBankSave}
+                        disabled={isSavingBank}
+                        className="inline-flex items-center gap-2 text-white"
+                        style={{
+                          background: BAI.night,
+                          border: 'none',
+                          borderRadius: '8px',
+                          padding: '0.625rem 1.5rem',
+                          fontSize: '14px',
+                          fontFamily: BAI.fontBody,
+                          cursor: isSavingBank ? 'not-allowed' : 'pointer',
+                          fontWeight: 500,
+                          opacity: isSavingBank ? 0.7 : 1,
+                        }}
+                      >
+                        {isSavingBank ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                        {isSavingBank ? 'Enregistrement…' : 'Enregistrer'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}

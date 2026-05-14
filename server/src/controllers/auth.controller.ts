@@ -375,6 +375,7 @@ class AuthController {
         firstName, lastName, phone, address, bio,
         birthDate, birthCity, nationality, nationalNumber, documentNumber, documentExpiry,
         profileMeta,
+        iban, bic, bankName, bankHolder,
       } = req.body
 
       const user = await authService.updateProfile(userId, {
@@ -393,6 +394,11 @@ class AuthController {
         profileMeta:    (profileMeta && typeof profileMeta === 'object' && !Array.isArray(profileMeta))
                           ? profileMeta as Record<string, unknown>
                           : undefined,
+        // Bank details — IBAN/BIC normalised to uppercase, no whitespace
+        iban:       iban       !== undefined ? iban.replace(/\s+/g, '').toUpperCase()       : undefined,
+        bic:        bic        !== undefined ? bic.replace(/\s+/g, '').toUpperCase()        : undefined,
+        bankName:   bankName   !== undefined ? sanitizeInput(bankName)                      : undefined,
+        bankHolder: bankHolder !== undefined ? sanitizeInput(bankHolder)                    : undefined,
       })
 
       return res.status(200).json({

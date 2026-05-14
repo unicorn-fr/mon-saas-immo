@@ -74,6 +74,44 @@ router.get('/by-owner', authorize('OWNER'), async (req: Request, res: Response) 
   }
 })
 
+// ─── TOUS LES PAIEMENTS DU LOCATAIRE CONNECTÉ ────────────────────────────────
+// GET /payments/by-tenant
+router.get('/by-tenant', authorize('TENANT'), async (req: Request, res: Response) => {
+  try {
+    const payments = await prisma.payment.findMany({
+      where: {
+        contract: {
+          tenantId: req.user!.id,
+          status: { in: ['ACTIVE', 'SIGNED_OWNER', 'SIGNED_TENANT', 'COMPLETED'] },
+        },
+      },
+      include: {
+        contract: {
+          select: {
+            id: true,
+            monthlyRent: true,
+            charges: true,
+            startDate: true,
+            status: true,
+            property: { select: { title: true, address: true } },
+            owner: {
+              select: {
+                id: true, firstName: true, lastName: true, avatar: true,
+                iban: true, bic: true, bankName: true, bankHolder: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+    return res.json({ success: true, data: payments })
+  } catch (err) {
+    console.error('[payment] by-tenant error:', err)
+    return res.status(500).json({ success: false, message: 'Erreur serveur' })
+  }
+})
+
 // ─── PARAMÈTRES QUITTANCES — GET ─────────────────────────────────────────────
 // GET /payments/settings/:contractId
 router.get('/settings/:contractId', authorize('OWNER'), async (req: Request, res: Response) => {

@@ -42,6 +42,10 @@ export interface AuthResponse {
     role: UserRole
     avatar: string | null
     emailVerified: boolean
+    iban?: string | null
+    bic?: string | null
+    bankName?: string | null
+    bankHolder?: string | null
   }
   accessToken: string
   refreshToken: string
@@ -712,6 +716,8 @@ class AuthService {
       nationalNumber?: string; documentNumber?: string; documentExpiry?: string
       // Flexible AI-extracted metadata (JSON — merged, not overwritten)
       profileMeta?: Record<string, unknown>
+      // Bank details
+      iban?: string; bic?: string; bankName?: string; bankHolder?: string
     }
   ) {
     // profileMeta: deep-merge existing JSON with incoming data
@@ -740,6 +746,10 @@ class AuthService {
         ...(data.documentExpiry !== undefined && { documentExpiry: data.documentExpiry || null }),
         ...(data.role           !== undefined && { role: data.role as UserRole }),
         ...(mergedMeta          !== undefined && { profileMeta:    mergedMeta as Prisma.InputJsonValue }),
+        ...(data.iban       !== undefined && { iban:       data.iban       || null }),
+        ...(data.bic        !== undefined && { bic:        data.bic        || null }),
+        ...(data.bankName   !== undefined && { bankName:   data.bankName   || null }),
+        ...(data.bankHolder !== undefined && { bankHolder: data.bankHolder || null }),
       },
       select: {
         id: true, email: true, firstName: true, lastName: true,
@@ -748,6 +758,7 @@ class AuthService {
         birthDate: true, birthCity: true, nationality: true,
         nationalNumber: true, documentNumber: true, documentExpiry: true,
         profileMeta: true,
+        iban: true, bic: true, bankName: true, bankHolder: true,
         createdAt: true, updatedAt: true,
       },
     })

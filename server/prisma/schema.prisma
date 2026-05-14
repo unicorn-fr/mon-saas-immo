@@ -106,6 +106,12 @@ model User {
   documentNumber    String?   // numéro CNI / passeport / titre de séjour
   documentExpiry    String?   // date de validité du document
 
+  // Coordonnées bancaires (partagées entre locataire ↔ bailleur)
+  iban        String?   // IBAN complet
+  bic         String?   // BIC / SWIFT
+  bankName    String?   // Nom de la banque
+  bankHolder  String?   // Titulaire du compte (si différent du prénom+nom)
+
   // Flexible AI-extracted metadata from all scanned documents (JSON)
   profileMeta       Json?     // { IDENTITE: {...}, BULLETIN: {...}, REVENUS_FISCAUX: {...}, ... }
 
@@ -170,9 +176,6 @@ model User {
   loans                 Loan[]                @relation("OwnerLoans")
   ownedMaintenanceReqs  MaintenanceRequest[]  @relation("OwnerMaintenanceRequests")
   tenantMaintenanceReqs MaintenanceRequest[]  @relation("TenantMaintenanceRequests")
-  rentPaymentsAsLandlord RentPayment[]        @relation("LandlordRentPayments")
-  rentPaymentsAsTenant   RentPayment[]        @relation("TenantRentPayments")
-  sepaMandates           SepaMandate[]        @relation("TenantSepaMandates")
   aiUsageTracking        AiUsageTracking[]
 
   // Stripe Connect (propriétaires — pour recevoir les loyers)
@@ -467,9 +470,6 @@ model Contract {
   payments         Payment[]
   edlSession       EdlSession?
   paymentSettings  PaymentSettings?
-  rentPayments     RentPayment[]
-  sepaMandate      SepaMandate?
-
   @@index([propertyId])
   @@index([tenantId])
   @@index([ownerId])
@@ -891,64 +891,6 @@ model PaymentSettings {
   @@map("payment_settings")
 }
 
-// ============================================
-// PAIEMENTS LOYERS SEPA (Stripe/Lemonway)
-// ============================================
-
-enum RentPaymentStatus {
-  PENDING     // Prélèvement prévu
-  PROCESSING  // En cours de traitement
-  SUCCEEDED   // Prélevé avec succès
-  FAILED      // Échec (provision insuffisante, etc.)
-  REFUNDED    // Remboursé
-}
-
-model RentPayment {
-  id                    String            @id @default(cuid())
-  contractId            String
-  contract              Contract          @relation(fields: [contractId], references: [id], onDelete: Cascade)
-  landlordId            String
-  landlord              User              @relation("LandlordRentPayments", fields: [landlordId], references: [id])
-  tenantId              String
-  tenant                User              @relation("TenantRentPayments", fields: [tenantId], references: [id])
-
-  // Montants (en centimes)
-  rentAmountCents       Int
-  chargesAmountCents    Int               @default(0)
-  totalAmountCents      Int
-
-  // Frais Bailio
-  platformFeeBps        Int               // 80 = 0.8% (Pro), 60 = 0.6% (Expert)
-  platformFeeCents      Int
-  stripeCostCents       Int?              // Coût réel Stripe SEPA (0.35% + 0.10€, plafonné 5€)
-  netRevenueCents       Int?              // platformFee - stripeCost
-
-  // Statut
-  status                RentPaymentStatus @default(PENDING)
-  failureReason         String?
-  retryCount            Int               @default(0)
-
-  // PSP
-  pspProvider           String            @default("stripe") // "stripe" | "lemonway"
-  pspPaymentIntentId    String?
-  pspMandateId          String?
-
-  // Dates
-  scheduledDate         DateTime          // Date prévue du prélèvement
-  dueDate               DateTime          // Date d'échéance du loyer
-  periodMonth           Int               // 1-12
-  periodYear            Int
-  processedAt           DateTime?
-
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
-
-  @@index([landlordId])
-  @@index([tenantId])
-  @@index([status])
-  @@index([scheduledDate])
-  @@map("rent_payments")
-}
 
 // ============================================
 // SUIVI USAGE IA (quota mensuel par plan)
@@ -970,36 +912,6 @@ model AiUsageTracking {
   @@map("ai_usage_tracking")
 }
 
-// ============================================
-// SEPA MANDATES (mandats de prélèvement locataires)
-// ============================================
-
-model SepaMandate {
-  id        String @id @default(cuid())
-
-  contractId String   @unique
-  contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
-
-  tenantId String
-  tenant   User   @relation("TenantSepaMandates", fields: [tenantId], references: [id])
-
-  stripeSetupIntentId   String?
-  stripePaymentMethodId String?
-  stripeMandateId       String?
-
-  ibanLast4  String?
-  bankName   String?
-  holderName String?
-
-  isActive  Boolean   @default(false)
-  revokedAt DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([tenantId])
-  @@map("sepa_mandates")
-}
 
 // ============================================
 // STRIPE EVENTS (idempotence webhooks)

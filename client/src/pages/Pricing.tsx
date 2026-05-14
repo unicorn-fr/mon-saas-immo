@@ -164,7 +164,7 @@ export default function Pricing() {
           {PLANS.map(plan => {
             const saving = getSaving(plan)
             const isHighlight = plan.highlight
-            const isDimmed = plan.dimmed
+            const isDimmed = false
 
             return (
               <div
