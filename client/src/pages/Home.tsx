@@ -347,44 +347,14 @@ export default function Home() {
 
       {/* ── HERO ─────────────────────────────────────────────────────── */}
       <section className="hero-section" style={{ position: 'relative', background: T.night, color: '#fff', overflow: 'hidden', padding: 'clamp(70px,12vh,130px) 0 clamp(90px,14vh,160px)' }}>
-        {/* Animated clouds */}
-        <div style={{ position: 'absolute', width: 340, height: 100, top: '12%', right: -80, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', filter: 'blur(40px)', animation: 'cloud1 22s ease-in-out infinite', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', width: 260, height: 80, top: '48%', left: '50%', borderRadius: '50%', background: 'rgba(255,255,255,0.04)', filter: 'blur(40px)', animation: 'cloud2 28s ease-in-out infinite', pointerEvents: 'none' }} />
-
-        {/* Grid SVG */}
-        <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.06, pointerEvents: 'none', zIndex: 0 }}>
-          <defs>
-            <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
-              <path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="0.5"/>
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#grid)"/>
-        </svg>
-
-        {/* Skyline SVG */}
-        <svg viewBox="0 0 1400 160" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 160, opacity: 0.18, pointerEvents: 'none', zIndex: 1 }}>
-          <g fill="#ffffff">
-            <rect x="0" y="100" width="60" height="60"/><rect x="70" y="70" width="40" height="90"/>
-            <rect x="115" y="90" width="80" height="70"/><rect x="200" y="50" width="55" height="110"/>
-            <polygon points="255,50 285,30 285,160 255,160"/><rect x="290" y="80" width="70" height="80"/>
-            <rect x="365" y="35" width="55" height="125"/><rect x="425" y="100" width="90" height="60"/>
-            <rect x="520" y="55" width="45" height="105"/><rect x="570" y="82" width="70" height="78"/>
-            <rect x="645" y="45" width="40" height="115"/><rect x="690" y="95" width="95" height="65"/>
-            <rect x="790" y="60" width="55" height="100"/><rect x="850" y="30" width="50" height="130"/>
-            <polygon points="900,30 925,15 925,160 900,160"/><rect x="930" y="75" width="65" height="85"/>
-            <rect x="1000" y="50" width="45" height="110"/><rect x="1050" y="92" width="85" height="68"/>
-            <rect x="1140" y="40" width="50" height="120"/><rect x="1195" y="68" width="60" height="92"/>
-            <rect x="1260" y="95" width="80" height="65"/><rect x="1345" y="55" width="55" height="105"/>
-          </g>
-          <g fill="#c4976a" opacity="0.7">
-            <rect x="78" y="80" width="4" height="6"/><rect x="90" y="95" width="4" height="6"/><rect x="78" y="115" width="4" height="6"/>
-            <rect x="210" y="65" width="4" height="6"/><rect x="225" y="80" width="4" height="6"/>
-            <rect x="375" y="50" width="4" height="6"/><rect x="395" y="70" width="4" height="6"/>
-            <rect x="530" y="70" width="4" height="6"/><rect x="655" y="60" width="4" height="6"/>
-            <rect x="800" y="75" width="4" height="6"/><rect x="860" y="50" width="4" height="6"/>
-            <rect x="1010" y="65" width="4" height="6"/><rect x="1150" y="55" width="4" height="6"/>
-          </g>
-        </svg>
+        {/* Warm ambient glow — haut gauche */}
+        <div style={{ position: 'absolute', width: 600, height: 400, top: '-10%', left: '-8%', borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.14) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+        {/* Ambient glow — bas droite */}
+        <div style={{ position: 'absolute', width: 500, height: 350, bottom: '-5%', right: '-6%', borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.10) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+        {/* Subtle blue shift centre */}
+        <div style={{ position: 'absolute', width: 700, height: 300, top: '30%', left: '20%', borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(90,80,160,0.12) 0%, transparent 65%)', filter: 'blur(60px)', pointerEvents: 'none', zIndex: 0, animation: 'cloud2 32s ease-in-out infinite' }} />
+        {/* Fade-out vers le bas pour transition douce */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 120, background: 'linear-gradient(to bottom, transparent, rgba(13,12,10,0.18))', pointerEvents: 'none', zIndex: 1 }} />
 
         <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)', position: 'relative', zIndex: 3 }}>
           <div>
@@ -455,36 +425,6 @@ export default function Home() {
                 <p style={{ fontFamily: T.fontBody, fontSize: 13, color: T.inkMid, margin: 0 }}>{stat.label}</p>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── FOUNDER NOTE ─────────────────────────────────────────────────────────────── */}
-      <section style={{ padding: 'clamp(56px,8vh,96px) 0', background: T.bgSurface, borderBottom: `1px solid ${T.border}` }}>
-        <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
-          <div style={{ display: 'flex', gap: 'clamp(24px,5vw,64px)', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-            {/* Photo */}
-            <div style={{ flexShrink: 0 }}>
-              <div style={{ width: 88, height: 88, borderRadius: '50%', overflow: 'hidden', border: `3px solid ${T.border}` }}>
-                <img src="/enzo1.jpeg" alt="Enzo, fondateur" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-            </div>
-            {/* Text */}
-            <div style={{ flex: 1, minWidth: 260 }}>
-              <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.caramel, margin: '0 0 14px' }}>
-                Un mot du fondateur
-              </p>
-              <blockquote style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontSize: 'clamp(20px,2.5vw,26px)', lineHeight: 1.45, color: T.ink, margin: '0 0 20px', fontWeight: 600 }}>
-                "J'ai cherché un appart pendant trois mois. À chaque agence, un dossier différent à refaire from scratch, des frais que personne ne justifiait, et un silence radio après la visite. Je me suis dit qu'on pouvait faire mieux."
-              </blockquote>
-              <p style={{ fontSize: 15, color: T.inkMid, lineHeight: 1.7, margin: '0 0 20px', maxWidth: '52ch' }}>
-                Bailio n'est pas une startup qui veut perturber l'immobilier. C'est un outil simple, fait pour que deux personnes — un propriétaire et un locataire — puissent se faire confiance sans avoir besoin d'un tiers qui prend sa part.
-              </p>
-              <div>
-                <p style={{ fontSize: 14, fontWeight: 600, color: T.ink, margin: 0 }}>Enzo</p>
-                <p style={{ fontSize: 12, color: T.inkFaint, margin: '2px 0 0' }}>Fondateur de Bailio · Marseille</p>
-              </div>
-            </div>
           </div>
         </div>
       </section>

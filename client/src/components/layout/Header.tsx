@@ -296,11 +296,11 @@ export const Header = () => {
       height: 64,
       display: 'flex', alignItems: 'center',
       background: scrolled
-        ? 'rgba(8,8,25,0.38)'
-        : 'rgba(8,8,25,0.10)',
+        ? 'rgba(255,255,255,0.18)'
+        : 'rgba(255,255,255,0.06)',
       backdropFilter: 'blur(32px) saturate(180%)',
       WebkitBackdropFilter: 'blur(32px) saturate(180%)',
-      borderBottom: '1px solid rgba(255,255,255,0.07)',
+      borderBottom: '1px solid rgba(255,255,255,0.12)',
       borderRadius: '0 0 16px 16px',
       transition: 'background 0.3s ease',
     }}>
@@ -584,7 +584,7 @@ export const Header = () => {
     )}
 
     {/* Spacer uniquement sur les pages hors home (header overlay sur hero) */}
-    {!isHomePage && <div aria-hidden style={{ height: 64, flexShrink: 0 }} />}
+    {!isHomePage && <div aria-hidden style={{ height: 64, flexShrink: 0, background: 'transparent' }} />}
     </>
   )
 }
