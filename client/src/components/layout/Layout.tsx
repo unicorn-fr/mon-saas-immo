@@ -13,9 +13,11 @@ interface LayoutProps {
   showHeader?: boolean
   /** Affiche le footer Bailio — true par défaut sur les pages publiques (sans sidebar) */
   showFooter?: boolean
+  /** Surcharge le fond de la page (outer wrapper + spacer header). Utile pour les pages avec hero sombre. */
+  bodyBackground?: string
 }
 
-export const Layout = ({ children, showHeader = true, showFooter }: LayoutProps) => {
+export const Layout = ({ children, showHeader = true, showFooter, bodyBackground }: LayoutProps) => {
   const { isAuthenticated, user } = useAuth()
 
   const hasSidebar =
@@ -33,7 +35,7 @@ export const Layout = ({ children, showHeader = true, showFooter }: LayoutProps)
     // Par défaut : footer visible sur toutes les pages publiques
     const displayFooter = showFooter !== false
     return (
-      <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-base)', fontFamily: 'var(--font-body)' }}>
+      <div className="min-h-screen flex flex-col" style={{ background: bodyBackground || 'var(--bg-base)', fontFamily: 'var(--font-body)' }}>
         {showHeader && <Header />}
         <main id="main-content" className="flex-1">{children}</main>
         {displayFooter && <Footer />}

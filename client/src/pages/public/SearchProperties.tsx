@@ -225,11 +225,10 @@ export default function SearchProperties() {
   })
 
   return (
-    <Layout>
-      <div style={{ background: '#1a1a2e', fontFamily: M.body }} className="min-h-screen">
+    <Layout bodyBackground="#1a1a2e">
 
         {/* ── Dark hero search ───────────────────────────────────────────── */}
-        <div style={{ background: '#1a1a2e', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ background: '#1a1a2e', fontFamily: M.body, position: 'relative', overflow: 'hidden' }}>
           {/* ambient clouds */}
           <div style={{ position: 'absolute', width: 380, height: 110, top: '10%', right: -100, borderRadius: '50%', background: 'rgba(196,151,106,0.12)', filter: 'blur(60px)', pointerEvents: 'none' }} />
           <div style={{ position: 'absolute', width: 280, height: 90, bottom: 0, left: '10%', borderRadius: '50%', background: 'rgba(255,255,255,0.04)', filter: 'blur(50px)', pointerEvents: 'none' }} />
@@ -365,7 +364,8 @@ export default function SearchProperties() {
           </div>
         </div>
 
-        {/* Content */}
+        {/* Results — fond clair */}
+        <div style={{ background: M.bg, fontFamily: M.body }}>
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col lg:flex-row gap-6">
 
