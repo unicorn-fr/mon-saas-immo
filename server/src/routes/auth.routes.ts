@@ -99,6 +99,23 @@ router.post(
   authController.verifyPhone.bind(authController)
 )
 
+// PATCH /api/v1/auth/change-role - Switch between OWNER and TENANT
+router.patch('/change-role', authenticate, async (req: Request, res: Response) => {
+  const { role } = req.body
+  if (!['OWNER', 'TENANT'].includes(role)) {
+    return res.status(400).json({ success: false, message: 'Rôle invalide. Valeurs acceptées : OWNER, TENANT.' })
+  }
+  if (req.user!.role === role) {
+    return res.status(400).json({ success: false, message: 'Vous avez déjà ce rôle.' })
+  }
+  const updated = await prisma.user.update({
+    where: { id: req.user!.id },
+    data: { role },
+    select: { id: true, role: true, email: true, firstName: true, lastName: true },
+  })
+  return res.status(200).json({ success: true, data: updated, message: 'Rôle mis à jour.' })
+})
+
 /**
  * TOTP / 2FA routes
  */

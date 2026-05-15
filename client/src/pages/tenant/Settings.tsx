@@ -32,6 +32,7 @@ import {
   Building2,
   HelpCircle,
   LifeBuoy,
+  ArrowLeftRight,
 } from 'lucide-react'
 
 // ─── Bailio Design Tokens ─────────────────────────────────────────────────────
@@ -170,6 +171,85 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode; description: stri
   { id: 'bank',            label: 'Compte bancaire',    icon: <Building2 size={16} />,   description: 'Coordonnées bancaires' },
   { id: 'aide',            label: 'Aide',               icon: <HelpCircle size={16} />,  description: 'Guide et support' },
 ]
+
+// ─── Role Change Card ─────────────────────────────────────────────────────────
+
+function RoleChangeCard({ currentRole, user, updateProfile }: {
+  currentRole: 'OWNER' | 'TENANT'
+  user: { id: string } | null
+  updateProfile: (data: Record<string, unknown>) => void
+}) {
+  const [confirm, setConfirm] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const targetRole = currentRole === 'OWNER' ? 'TENANT' : 'OWNER'
+  const targetLabel = targetRole === 'TENANT' ? 'Locataire' : 'Propriétaire'
+
+  async function handleSwitch() {
+    if (!user) return
+    setLoading(true)
+    try {
+      await apiClient.patch('/auth/change-role', { role: targetRole })
+      updateProfile({ role: targetRole } as Record<string, unknown>)
+      toast.success(`Rôle changé en ${targetLabel}. Redirection…`)
+      setTimeout(() => {
+        window.location.href = targetRole === 'OWNER' ? '/dashboard/owner' : '/dashboard/tenant'
+      }, 1200)
+    } catch {
+      toast.error('Erreur lors du changement de rôle.')
+    } finally {
+      setLoading(false)
+      setConfirm(false)
+    }
+  }
+
+  return (
+    <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: '12px', padding: '1.5rem', boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)' }}>
+      <div className="flex items-center gap-2 mb-1">
+        <ArrowLeftRight size={16} style={{ color: BAI.inkMid }} />
+        <h2 style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontSize: '22px', color: BAI.ink, margin: 0 }}>
+          Changer de rôle
+        </h2>
+      </div>
+      <p style={{ fontSize: '13px', color: BAI.inkMid, marginBottom: '16px', lineHeight: 1.6 }}>
+        Vous êtes actuellement inscrit en tant que <strong>{currentRole === 'OWNER' ? 'Propriétaire' : 'Locataire'}</strong>.
+        Vous pouvez basculer vers un compte <strong>{targetLabel}</strong> avec la même adresse email — vos données sont conservées.
+      </p>
+
+      {!confirm ? (
+        <button
+          onClick={() => setConfirm(true)}
+          style={{ background: BAI.bgMuted, border: `1px solid ${BAI.border}`, borderRadius: '8px', padding: '8px 16px', fontSize: '14px', fontFamily: BAI.fontBody, fontWeight: 500, color: BAI.ink, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          onMouseEnter={e => (e.currentTarget.style.background = BAI.border)}
+          onMouseLeave={e => (e.currentTarget.style.background = BAI.bgMuted)}
+        >
+          <ArrowLeftRight size={14} />
+          Passer en compte {targetLabel}
+        </button>
+      ) : (
+        <div style={{ background: '#fdf5ec', border: '1px solid #f3c99a', borderRadius: '10px', padding: '14px 16px' }}>
+          <p style={{ fontSize: '13px', color: '#92400e', marginBottom: '12px', fontWeight: 500 }}>
+            Confirmer le passage en compte {targetLabel} ?
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={handleSwitch}
+              disabled={loading}
+              style={{ background: BAI.night, border: 'none', borderRadius: '7px', padding: '7px 16px', color: '#fff', fontSize: '13px', fontFamily: BAI.fontBody, fontWeight: 600, cursor: 'pointer' }}
+            >
+              {loading ? 'En cours…' : `Oui, passer en ${targetLabel}`}
+            </button>
+            <button
+              onClick={() => setConfirm(false)}
+              style={{ background: 'transparent', border: `1px solid #f3c99a`, borderRadius: '7px', padding: '7px 14px', color: '#92400e', fontSize: '13px', fontFamily: BAI.fontBody, cursor: 'pointer' }}
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -1045,6 +1125,9 @@ export default function TenantSettings() {
               {/* ── AIDE ───────────────────────────────────────────────────── */}
               {activeTab === 'aide' && (
                 <div className="flex flex-col gap-5">
+
+                  {/* Role change */}
+                  <RoleChangeCard currentRole="TENANT" user={user} updateProfile={updateProfile as (data: Record<string, unknown>) => void} />
 
                   {/* Restart tour */}
                   <div style={cardStyle}>

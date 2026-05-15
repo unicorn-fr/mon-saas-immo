@@ -97,6 +97,7 @@ import Contact from './pages/info/Contact'
 import Support from './pages/info/Support'
 import Presse from './pages/info/Presse'
 import APropos from './pages/info/APropos'
+import CompleteProfile from './pages/CompleteProfile'
 import Proprietaires from './pages/info/Proprietaires'
 import Locataires from './pages/info/Locataires'
 import Pricing from './pages/Pricing'
@@ -208,6 +209,7 @@ function AppRoutes() {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/auth/verify" element={<VerifyMagicLink />} />
+      <Route path="/complete-profile" element={<CompleteProfile />} />
 
       {/* Legal & Info Pages */}
       <Route path="/mentions-legales" element={<MentionsLegales />} />
