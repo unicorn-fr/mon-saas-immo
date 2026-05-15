@@ -87,7 +87,7 @@ const FEATURES = [
   },
   {
     title: 'Suivi des loyers.',
-    desc: 'Le locataire te vire directement. Tu marques reçu en 1 clic, la quittance part automatiquement. Si un paiement est en retard, tu es prévenu.',
+    desc: 'Le locataire vire directement sur ton compte. Tu cliques « reçu », la quittance part automatiquement par email. En retard ? Une relance douce est envoyée. Tu restes le patron.',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="24" height="24"><path d="M2 9V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4"/><path d="M2 13v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4"/><line x1="6" x2="6.01" y1="11" y2="11"/><line x1="10" x2="10.01" y1="11" y2="11"/></svg>
     ),
@@ -103,21 +103,21 @@ const FEATURES = [
 
 const TESTIMONIALS = [
   {
-    quote: 'J\'ai mis mon studio en location sans passer par une agence pour la première fois. Le dossier était déjà vérifié, j\'ai juste eu à choisir. Les quittances partent toutes seules.',
+    quote: "J'ai loué mon F2 en 11 jours. Pas une seule visite d'agence, pas un seul fax. Le locataire a signé depuis son téléphone un mardi soir.",
     name: 'Camille L.',
-    role: 'Propriétaire',
+    role: 'Propriétaire — Paris 11e',
     photo: 'https://i.pravatar.cc/80?img=47',
   },
   {
-    quote: 'J\'ai postulé depuis mon téléphone, envoyé mon dossier une seule fois pour trois biens différents. Le bail a été signé en ligne. Je n\'ai rien eu à imprimer.',
+    quote: "Mon dossier, je l'ai constitué une fois. J'ai postulé à 4 apparts en 20 minutes. Aucune agence ne m'a demandé de le recopier à la main.",
     name: 'Théo M.',
-    role: 'Locataire',
+    role: 'Locataire — Toulouse',
     photo: 'https://i.pravatar.cc/80?img=12',
   },
   {
-    quote: 'Deux biens en gestion, plus un seul rendez-vous d\'agence. Tout passe par le tableau de bord — candidatures, loyers, quittances. Je récupère du temps.',
+    quote: "Deux biens, deux locataires stables depuis 18 mois. Je passe 10 minutes par mois sur Bailio. Avant, c'était un métier à part entière.",
     name: 'Sophie R.',
-    role: 'Propriétaire',
+    role: 'Propriétaire — Bordeaux',
     photo: 'https://i.pravatar.cc/80?img=49',
   },
 ]
@@ -402,7 +402,7 @@ export default function Home() {
             </h1>
 
             <p style={{ fontSize: 'clamp(15px,1.3vw,17px)', color: 'rgba(255,255,255,0.78)', lineHeight: 1.6, maxWidth: 560, margin: '0 0 40px' }}>
-              Publie ton bien, reçois des dossiers analysés, signe le bail en ligne. Locataire : postule en un clic, dossier numérique, rien à imprimer. Sans frais d'agence des deux côtés.
+              J'ai payé deux mois de loyer en frais d'agence pour un T2. Ce n'était pas normal — alors j'ai construit Bailio. Propriétaire : ton annonce en 8 min, ton bail signé électroniquement. Locataire : ton dossier constitué une fois, réutilisé partout. Zéro intermédiaire, zéro commission.
             </p>
 
             {/* CTAs */}
@@ -459,6 +459,36 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── FOUNDER NOTE ─────────────────────────────────────────────────────────────── */}
+      <section style={{ padding: 'clamp(56px,8vh,96px) 0', background: T.bgSurface, borderBottom: `1px solid ${T.border}` }}>
+        <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
+          <div style={{ display: 'flex', gap: 'clamp(24px,5vw,64px)', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+            {/* Photo */}
+            <div style={{ flexShrink: 0 }}>
+              <div style={{ width: 88, height: 88, borderRadius: '50%', overflow: 'hidden', border: `3px solid ${T.border}` }}>
+                <img src="/enzo1.jpeg" alt="Enzo, fondateur" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+            </div>
+            {/* Text */}
+            <div style={{ flex: 1, minWidth: 260 }}>
+              <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.caramel, margin: '0 0 14px' }}>
+                Un mot du fondateur
+              </p>
+              <blockquote style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontSize: 'clamp(20px,2.5vw,26px)', lineHeight: 1.45, color: T.ink, margin: '0 0 20px', fontWeight: 600 }}>
+                "J'ai cherché un appart pendant trois mois. À chaque agence, un dossier différent à refaire from scratch, des frais que personne ne justifiait, et un silence radio après la visite. Je me suis dit qu'on pouvait faire mieux."
+              </blockquote>
+              <p style={{ fontSize: 15, color: T.inkMid, lineHeight: 1.7, margin: '0 0 20px', maxWidth: '52ch' }}>
+                Bailio n'est pas une startup qui veut perturber l'immobilier. C'est un outil simple, fait pour que deux personnes — un propriétaire et un locataire — puissent se faire confiance sans avoir besoin d'un tiers qui prend sa part.
+              </p>
+              <div>
+                <p style={{ fontSize: 14, fontWeight: 600, color: T.ink, margin: 0 }}>Enzo</p>
+                <p style={{ fontSize: 12, color: T.inkFaint, margin: '2px 0 0' }}>Fondateur de Bailio · Marseille</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── HOW IT WORKS ─────────────────────────────────────────────── */}
       <section style={{ padding: 'clamp(72px,12vh,130px) 0', background: '#f4f2ee' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
@@ -469,7 +499,7 @@ export default function Home() {
             Trois étapes. <em style={{ color: T.caramel }}>Pas une de plus.</em>
           </h2>
           <p style={{ fontSize: 16, color: T.inkMid, lineHeight: 1.65, maxWidth: '56ch', margin: '0 0 56px' }}>
-            Tu publies un bien ou tu cherches un logement — dans les deux cas, Bailio supprime tout ce qui ne sert à rien : les intermédiaires, les formulaires papier, les allers-retours inutiles.
+            Pas de formation requise, pas de jargon juridique. Tu es propriétaire ou locataire — Bailio s'adapte à toi, pas l'inverse.
           </p>
 
           <div className="steps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>

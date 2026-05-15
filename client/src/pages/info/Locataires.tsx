@@ -36,7 +36,7 @@ const DOSSIER_DOCS = [
 
 export default function Locataires() {
   return (
-    <div style={{ backgroundColor: BAI.bgBase, fontFamily: BAI.fontBody, color: BAI.ink, minHeight: '100vh' }}>
+    <div style={{ backgroundColor: BAI.night, fontFamily: BAI.fontBody, color: BAI.ink, minHeight: '100vh' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=DM+Sans:wght@400;500;600;700&display=swap');
         @keyframes pulse-dot {

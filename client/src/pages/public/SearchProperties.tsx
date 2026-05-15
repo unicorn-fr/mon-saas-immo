@@ -226,7 +226,7 @@ export default function SearchProperties() {
 
   return (
     <Layout>
-      <div style={{ background: M.bg, fontFamily: M.body }} className="min-h-screen">
+      <div style={{ background: '#1a1a2e', fontFamily: M.body }} className="min-h-screen">
 
         {/* ── Dark hero search ───────────────────────────────────────────── */}
         <div style={{ background: '#1a1a2e', position: 'relative', overflow: 'hidden' }}>

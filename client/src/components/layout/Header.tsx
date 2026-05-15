@@ -289,23 +289,22 @@ export const Header = () => {
     {/* ── Barre de navigation ── */}
     <header style={{
       position: 'fixed',
-      top: 10,
-      left: 16,
-      right: 16,
+      top: 0,
+      left: 0,
+      right: 0,
       zIndex: 100,
-      height: 56,
+      height: 64,
       display: 'flex', alignItems: 'center',
       background: scrolled
-        ? 'rgba(20,18,40,0.75)'
-        : 'rgba(255,255,255,0.07)',
-      backdropFilter: 'blur(28px) saturate(200%)',
-      WebkitBackdropFilter: 'blur(28px) saturate(200%)',
-      border: '1px solid rgba(255,255,255,0.13)',
-      borderRadius: 16,
-      boxShadow: '0 4px 32px rgba(0,0,0,0.18)',
-      transition: 'background 0.3s ease, box-shadow 0.3s ease',
+        ? 'rgba(8,8,25,0.38)'
+        : 'rgba(8,8,25,0.10)',
+      backdropFilter: 'blur(32px) saturate(180%)',
+      WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+      borderBottom: '1px solid rgba(255,255,255,0.07)',
+      borderRadius: '0 0 16px 16px',
+      transition: 'background 0.3s ease',
     }}>
-      <div style={{ padding: '0 20px', width: '100%', boxSizing: 'border-box' }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 16px', width: '100%', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', width: '100%', minWidth: 0 }}>
 
           {/* Logo */}
