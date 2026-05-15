@@ -56,14 +56,16 @@ export const Header = () => {
   usePageTitle(user?.role)
 
   const isHomePage = location.pathname === '/'
+  // Pages dont le hero de départ est sombre — le header démarre transparent + texte blanc
+  const isDarkHeroPage = ['/', '/search', '/proprietaires', '/locataires'].includes(location.pathname)
 
   useEffect(() => {
-    if (!isHomePage) { setScrolled(true); return }
-    const handleScroll = () => setScrolled(window.scrollY > 30)
-    setScrolled(window.scrollY > 30)
+    if (!isDarkHeroPage) { setScrolled(true); return }
+    const handleScroll = () => setScrolled(window.scrollY > 60)
+    setScrolled(window.scrollY > 60)
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [isHomePage])
+  }, [isDarkHeroPage])
 
   const hasSidebar = isAuthenticated && (user?.role === 'OWNER' || user?.role === 'TENANT')
 
@@ -296,13 +298,13 @@ export const Header = () => {
       height: 64,
       display: 'flex', alignItems: 'center',
       background: scrolled
-        ? 'rgba(248,247,244,0.88)'
-        : 'rgba(255,255,255,0.06)',
-      backdropFilter: 'blur(18px) saturate(160%)',
-      WebkitBackdropFilter: 'blur(18px) saturate(160%)',
-      borderBottom: scrolled ? '1px solid rgba(13,12,10,0.08)' : '1px solid rgba(255,255,255,0.12)',
+        ? 'rgba(250,250,248,0.42)'
+        : 'rgba(255,255,255,0.05)',
+      backdropFilter: 'blur(28px) saturate(180%)',
+      WebkitBackdropFilter: 'blur(28px) saturate(180%)',
+      borderBottom: scrolled ? '1px solid rgba(13,12,10,0.07)' : '1px solid rgba(255,255,255,0.10)',
       borderRadius: '0 0 16px 16px',
-      transition: 'background 0.3s ease, border-color 0.3s ease',
+      transition: 'background 0.4s ease, border-color 0.4s ease',
     }}>
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 16px', width: '100%', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', width: '100%', minWidth: 0 }}>
