@@ -50,7 +50,7 @@ export const Header = () => {
   const location = useLocation()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showMobilePublicMenu, setShowMobilePublicMenu] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
+  const [_scrolled, setScrolled] = useState(false)
   const { toggle: toggleSidebar } = useSidebarStore()
   const { unreadCount } = useMessages()
   usePageTitle(user?.role)
@@ -297,12 +297,11 @@ export const Header = () => {
       zIndex: 100,
       height: 64,
       display: 'flex', alignItems: 'center',
-      background: 'rgba(255,255,255,0.10)',
-      backdropFilter: 'blur(36px) saturate(200%)',
-      WebkitBackdropFilter: 'blur(36px) saturate(200%)',
-      borderBottom: '1px solid rgba(255,255,255,0.14)',
+      background: 'rgba(250,249,247,0.78)',
+      backdropFilter: 'blur(20px) saturate(180%)',
+      WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+      borderBottom: `1px solid rgba(13,12,10,0.07)`,
       borderRadius: '0 0 16px 16px',
-      transition: 'color 0.35s ease',
     }}>
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 16px', width: '100%', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', width: '100%', minWidth: 0 }}>
@@ -313,10 +312,9 @@ export const Header = () => {
             <span style={{
               fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700,
               fontStyle: 'italic',
-              color: scrolled ? BAI.ink : 'rgba(255,255,255,0.95)',
+              color: BAI.ink,
               letterSpacing: '-0.01em', lineHeight: 1,
               whiteSpace: 'nowrap',
-              transition: 'color 0.3s ease',
             }}>
               Bailio<span style={{ color: BAI.caramel }}>.</span>
             </span>
@@ -334,28 +332,20 @@ export const Header = () => {
                 return (
                   <Link key={to} to={to}
                     style={{
-                      color: scrolled
-                        ? (isActive ? BAI.ink : BAI.inkMid)
-                        : (isActive ? '#fff' : 'rgba(255,255,255,0.62)'),
+                      color: isActive ? BAI.ink : BAI.inkMid,
                       fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: isActive ? 600 : 400,
                       textDecoration: 'none', padding: '6px 12px', borderRadius: 8,
-                      background: isActive ? (scrolled ? BAI.bgMuted : 'rgba(196,151,106,0.18)') : 'transparent',
+                      background: isActive ? BAI.bgMuted : 'transparent',
                       display: 'flex', alignItems: 'center', gap: 6,
                       transition: 'color 0.15s, background 0.15s',
                     }}
                     onMouseEnter={(e) => {
                       const el = e.currentTarget as HTMLElement
-                      if (!isActive) {
-                        el.style.color = scrolled ? BAI.ink : '#fff'
-                        el.style.background = scrolled ? BAI.bgMuted : 'rgba(255,255,255,0.07)'
-                      }
+                      if (!isActive) { el.style.color = BAI.ink; el.style.background = BAI.bgMuted }
                     }}
                     onMouseLeave={(e) => {
                       const el = e.currentTarget as HTMLElement
-                      if (!isActive) {
-                        el.style.color = scrolled ? BAI.inkMid : 'rgba(255,255,255,0.62)'
-                        el.style.background = 'transparent'
-                      }
+                      if (!isActive) { el.style.color = BAI.inkMid; el.style.background = 'transparent' }
                     }}>
                     {isActive && <span style={{ width: 4, height: 4, borderRadius: '50%', background: BAI.caramel, flexShrink: 0 }} />}
                     {label}
@@ -435,12 +425,11 @@ export const Header = () => {
                   style={{
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     padding: '7px 18px', borderRadius: 24, fontSize: 13.5, fontWeight: 500,
-                    color: scrolled ? BAI.inkMid : 'rgba(255,255,255,0.85)', textDecoration: 'none',
-                    border: scrolled ? `1px solid ${BAI.border}` : '1px solid rgba(255,255,255,0.2)', background: 'transparent',
-                    transition: 'color 0.3s ease, border-color 0.3s ease',
+                    color: BAI.inkMid, textDecoration: 'none',
+                    border: `1px solid ${BAI.border}`, background: 'transparent',
                   }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = scrolled ? BAI.ink : '#ffffff'; (e.currentTarget as HTMLAnchorElement).style.borderColor = scrolled ? BAI.borderStrong : 'rgba(255,255,255,0.45)' }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = scrolled ? BAI.inkMid : 'rgba(255,255,255,0.85)'; (e.currentTarget as HTMLAnchorElement).style.borderColor = scrolled ? BAI.border : 'rgba(255,255,255,0.2)' }}>
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = BAI.ink; (e.currentTarget as HTMLAnchorElement).style.borderColor = BAI.borderStrong }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = BAI.inkMid; (e.currentTarget as HTMLAnchorElement).style.borderColor = BAI.border }}>
                   Se connecter
                 </Link>
                 <Link to="/register"
@@ -504,14 +493,13 @@ export const Header = () => {
                 style={{
                   display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
                   gap: 5, width: 40, height: 40, borderRadius: 8,
-                  border: scrolled ? `1px solid ${BAI.border}` : '1px solid rgba(255,255,255,0.25)',
+                  border: `1px solid ${BAI.border}`,
                   background: 'transparent', cursor: 'pointer', padding: 0,
-                  transition: 'border-color 0.3s ease',
                 }}
                 aria-label="Menu">
-                <span style={{ display: 'block', width: 18, height: 1.5, background: scrolled ? BAI.ink : 'rgba(255,255,255,0.90)', borderRadius: 2, transition: 'all .25s', transform: showMobilePublicMenu ? 'rotate(45deg) translateY(6.5px)' : 'none' }} />
-                <span style={{ display: 'block', width: 18, height: 1.5, background: scrolled ? BAI.ink : 'rgba(255,255,255,0.90)', borderRadius: 2, transition: 'all .25s', opacity: showMobilePublicMenu ? 0 : 1 }} />
-                <span style={{ display: 'block', width: 18, height: 1.5, background: scrolled ? BAI.ink : 'rgba(255,255,255,0.90)', borderRadius: 2, transition: 'all .25s', transform: showMobilePublicMenu ? 'rotate(-45deg) translateY(-6.5px)' : 'none' }} />
+                <span style={{ display: 'block', width: 18, height: 1.5, background: BAI.ink, borderRadius: 2, transition: 'all .25s', transform: showMobilePublicMenu ? 'rotate(45deg) translateY(6.5px)' : 'none' }} />
+                <span style={{ display: 'block', width: 18, height: 1.5, background: BAI.ink, borderRadius: 2, transition: 'all .25s', opacity: showMobilePublicMenu ? 0 : 1 }} />
+                <span style={{ display: 'block', width: 18, height: 1.5, background: BAI.ink, borderRadius: 2, transition: 'all .25s', transform: showMobilePublicMenu ? 'rotate(-45deg) translateY(-6.5px)' : 'none' }} />
               </button>
             )}
           </div>
