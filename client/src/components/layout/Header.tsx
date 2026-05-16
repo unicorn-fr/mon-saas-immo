@@ -297,14 +297,12 @@ export const Header = () => {
       zIndex: 100,
       height: 64,
       display: 'flex', alignItems: 'center',
-      background: scrolled
-        ? 'rgba(250,250,248,0.42)'
-        : 'rgba(255,255,255,0.05)',
-      backdropFilter: 'blur(28px) saturate(180%)',
-      WebkitBackdropFilter: 'blur(28px) saturate(180%)',
-      borderBottom: scrolled ? '1px solid rgba(13,12,10,0.07)' : '1px solid rgba(255,255,255,0.10)',
+      background: 'rgba(255,255,255,0.10)',
+      backdropFilter: 'blur(36px) saturate(200%)',
+      WebkitBackdropFilter: 'blur(36px) saturate(200%)',
+      borderBottom: '1px solid rgba(255,255,255,0.14)',
       borderRadius: '0 0 16px 16px',
-      transition: 'background 0.4s ease, border-color 0.4s ease',
+      transition: 'color 0.35s ease',
     }}>
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 16px', width: '100%', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', width: '100%', minWidth: 0 }}>
