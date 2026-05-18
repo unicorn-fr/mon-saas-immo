@@ -59,7 +59,7 @@ export default function MesLocataires() {
   useEffect(() => {
     apiClient.get('/contracts')
       .then(res => {
-        const contracts = res.data.data ?? []
+        const contracts = res.data.data?.contracts ?? []
         const active = contracts.filter((c: any) =>
           ['ACTIVE', 'COMPLETED', 'SIGNED_OWNER', 'SIGNED_TENANT'].includes(c.status) &&
           c.tenant

@@ -22,6 +22,7 @@ interface CalendarProps {
   onDateSelect?: (date: Date) => void
   selectedDate?: Date | null
   minDate?: Date
+  viewMode?: 'owner' | 'tenant'
 }
 
 // ─── Couleurs par statut ──────────────────────────────────────────────────────
@@ -304,13 +305,11 @@ export const Calendar = ({
   bookings,
   onDateSelect,
   selectedDate = null,
+  viewMode = 'owner',
 }: CalendarProps) => {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
-
-  // Detect owner vs tenant from booking data
-  const viewMode: 'owner' | 'tenant' = bookings[0]?.property?.owner ? 'owner' : 'tenant'
 
   const monthStart = startOfMonth(currentMonth)
   const monthEnd = endOfMonth(currentMonth)
@@ -436,7 +435,7 @@ export const Calendar = ({
       </div>
 
       {/* ── Grille mensuelle ──────────────────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gridAutoRows: 'minmax(96px, auto)' }}>
         {/* Padding jours précédents */}
         {paddingDays.map((_, i) => (
           <div

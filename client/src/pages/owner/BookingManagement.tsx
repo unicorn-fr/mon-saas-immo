@@ -480,6 +480,7 @@ export const BookingManagement = () => {
               selectedDate={selectedDate}
               onDateSelect={setSelectedDate}
               minDate={new Date(new Date().setMonth(new Date().getMonth() - 6))}
+              viewMode="owner"
             />
           ) : (
             <div className="space-y-4">
@@ -512,16 +513,18 @@ export const BookingManagement = () => {
                   </p>
                 </div>
               ) : (
-                filteredBookings.map((booking) => (
-                  <BookingCard
-                    key={booking.id}
-                    booking={booking}
-                    viewMode="owner"
-                    onConfirm={handleConfirmBooking}
-                    onCancel={handleCancelBooking}
-                    isLoading={actionLoading === booking.id}
-                  />
-                ))
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
+                  {filteredBookings.map((booking) => (
+                    <BookingCard
+                      key={booking.id}
+                      booking={booking}
+                      viewMode="owner"
+                      onConfirm={handleConfirmBooking}
+                      onCancel={handleCancelBooking}
+                      isLoading={actionLoading === booking.id}
+                    />
+                  ))}
+                </div>
               )}
             </div>
           )}
