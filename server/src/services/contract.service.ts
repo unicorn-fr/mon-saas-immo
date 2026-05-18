@@ -1,6 +1,7 @@
 import { PrismaClient, ContractStatus, Contract } from '@prisma/client'
 import { createHash } from 'crypto'
 import { messageService } from './message.service.js'
+import { notificationService } from './notification.service.js'
 
 const prisma = new PrismaClient()
 
@@ -502,17 +503,27 @@ class ContractService {
       include: contractIncludes,
     })
 
-    // Notify the other party
+    // Notify the other party that they need to sign
     const otherUserId = isOwner ? contract.tenantId : contract.ownerId
     await prisma.notification.create({
       data: {
         userId: otherUserId,
         type: 'contract_signed',
-        title: 'Contrat signé',
-        message: `${isOwner ? 'Le propriétaire' : 'Le locataire'} a signé le contrat.`,
+        title: isOwner ? 'Le bail vous attend' : 'Le propriétaire a signé',
+        message: isOwner
+          ? `Le propriétaire a signé le bail. Il attend maintenant votre signature.`
+          : `Le locataire a signé le bail. À vous de signer pour finaliser la location.`,
         actionUrl: `/contracts/${contractId}`,
       },
     })
+
+    // Si les deux ont signé → notifier les deux que c'est COMPLETED
+    if (updatedContract.status === ContractStatus.COMPLETED) {
+      const propertyTitle = (updatedContract as any).property?.title ?? 'votre logement'
+      notificationService.notifyContractCompleted(
+        contract.ownerId, contract.tenantId, contractId, propertyTitle
+      ).catch(() => {})
+    }
 
     return updatedContract
   }
@@ -548,6 +559,12 @@ class ContractService {
       where: { id: contract.propertyId },
       data: { status: 'OCCUPIED' },
     })
+
+    // Notifier le locataire que le contrat est maintenant actif
+    const propertyTitle = contract.property?.title ?? 'votre logement'
+    notificationService.notifyContractActivated(
+      contract.tenantId, contractId, propertyTitle
+    ).catch(() => {})
 
     return updatedContract
   }

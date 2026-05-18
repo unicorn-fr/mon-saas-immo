@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { authenticate } from '../middlewares/auth.middleware.js'
 import { prisma } from '../config/database.js'
+import { notificationService } from '../services/notification.service.js'
 
 const router = Router()
 router.use(authenticate)
@@ -240,6 +241,7 @@ router.post('/', async (req, res) => {
       tenantId = userId
     }
 
+    const requester = await prisma.user.findUnique({ where: { id: userId }, select: { firstName: true, lastName: true } })
     const request = await prisma.maintenanceRequest.create({
       data: { propertyId, ownerId, tenantId, title, description, category, priority: priority || 'MEDIUM' },
       include: {
@@ -247,6 +249,16 @@ router.post('/', async (req, res) => {
         tenant: { select: { firstName: true, lastName: true } },
       },
     })
+
+    // Notifier le destinataire (propriétaire si c'est un locataire qui soumet, et vice-versa)
+    const requesterName = requester ? `${requester.firstName} ${requester.lastName}` : 'Un utilisateur'
+    const recipientId = role === 'TENANT' ? ownerId : (tenantId ?? null)
+    if (recipientId) {
+      notificationService.notifyMaintenanceNew(
+        recipientId, request.id, (request.property as any).title, requesterName, title
+      ).catch(() => {})
+    }
+
     return res.status(201).json({ success: true, data: { request } })
   } catch {
     return res.status(500).json({ success: false, message: 'Erreur serveur' })
@@ -266,9 +278,17 @@ router.patch('/:id', async (req, res) => {
       data: { ...(status && { status }), ...(priority && { priority }) },
       include: {
         property: { select: { title: true, address: true, city: true, postalCode: true, surface: true, price: true, images: true, furnished: true, type: true } },
-        tenant: { select: { firstName: true, lastName: true } },
+        tenant: { select: { id: true, firstName: true, lastName: true } },
       },
     })
+
+    // Si un locataire est associé et que le statut a changé, le notifier
+    if (status && request.tenantId) {
+      notificationService.notifyMaintenanceUpdated(
+        request.tenantId, request.id, (request.property as any).title, status
+      ).catch(() => {})
+    }
+
     return res.json({ success: true, data: { request } })
   } catch {
     return res.status(500).json({ success: false, message: 'Erreur serveur' })

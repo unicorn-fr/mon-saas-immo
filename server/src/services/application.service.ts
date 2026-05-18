@@ -1,5 +1,6 @@
 import { ApplicationStatus } from '@prisma/client'
 import { prisma } from '../config/database.js'
+import { notificationService } from './notification.service.js'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -240,17 +241,27 @@ class ApplicationService {
 
     // Upsert if previously rejected or withdrawn
     if (existing) {
-      return prisma.application.update({
+      const updated = await prisma.application.update({
         where: { id: existing.id },
         data: appData,
-        include: { tenant: { select: { id: true, firstName: true, lastName: true, email: true } }, property: { select: { id: true, title: true, price: true, city: true } } },
+        include: { tenant: { select: { id: true, firstName: true, lastName: true } }, property: { select: { id: true, title: true, price: true, city: true, ownerId: true } } },
       })
+      notificationService.notifyApplicationReceived(
+        updated.property.ownerId, updated.id, updated.property.title,
+        `${updated.tenant.firstName} ${updated.tenant.lastName}`, updated.score
+      ).catch(() => {})
+      return updated
     }
 
-    return prisma.application.create({
+    const created = await prisma.application.create({
       data: appData,
-      include: { tenant: { select: { id: true, firstName: true, lastName: true, email: true } }, property: { select: { id: true, title: true, price: true, city: true } } },
+      include: { tenant: { select: { id: true, firstName: true, lastName: true } }, property: { select: { id: true, title: true, price: true, city: true, ownerId: true } } },
     })
+    notificationService.notifyApplicationReceived(
+      created.property.ownerId, created.id, created.property.title,
+      `${created.tenant.firstName} ${created.tenant.lastName}`, created.score
+    ).catch(() => {})
+    return created
   }
 
   /**
@@ -323,6 +334,13 @@ class ApplicationService {
         create: { propertyId: app.propertyId, ownerId, tenantId: app.tenantId },
         update: {},
       })
+    }
+
+    // Notify tenant of decision
+    if (status === 'APPROVED' || status === 'REJECTED') {
+      notificationService.notifyApplicationStatus(
+        updated.tenant.id, updated.id, updated.property.title, status
+      ).catch(() => {})
     }
 
     return updated
