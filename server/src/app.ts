@@ -71,9 +71,7 @@ app.use(
     crossOriginEmbedderPolicy: false, // allow PDF/image loads
     crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' }, // required for Google Sign-In popups
     hsts: {
-      maxAge: 31536000, // 1 year
-      includeSubDomains: true,
-      preload: true,
+      maxAge: 15552000, // 6 mois — sans preload ni includeSubDomains pour éviter le blocage HSTS sur réseaux avec proxy SSL
     },
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
     noSniff: true,
