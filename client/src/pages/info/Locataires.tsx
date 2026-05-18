@@ -1,8 +1,10 @@
+import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Check } from 'lucide-react'
 import { BAI } from '../../constants/bailio-tokens'
 import { Header } from '../../components/layout/Header'
 import Footer from '../../components/layout/Footer'
+import { useDarkSection } from '../../hooks/useDarkSection'
 
 const STEPS = [
   {
@@ -35,6 +37,8 @@ const DOSSIER_DOCS = [
 ]
 
 export default function Locataires() {
+  const heroRef = useRef<HTMLElement>(null)
+  useDarkSection(heroRef)
   return (
     <div style={{ backgroundColor: BAI.night, fontFamily: BAI.fontBody, color: BAI.ink, minHeight: '100vh' }}>
       <style>{`
@@ -60,7 +64,7 @@ export default function Locataires() {
       <Header />
 
       {/* ── HERO dark ── */}
-      <section className="loc-hero-sec" style={{ background: BAI.night, color: '#fff', padding: '80px 0 100px', overflow: 'hidden' }}>
+      <section ref={heroRef} className="loc-hero-sec" style={{ background: BAI.night, color: '#fff', padding: '80px 0 100px', overflow: 'hidden' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
           <div className="hero-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'center' }}>
 

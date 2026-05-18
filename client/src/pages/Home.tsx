@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import Footer from '../components/layout/Footer'
+import { useDarkSection } from '../hooks/useDarkSection'
 import {
   ArrowRight,
   Building2,
@@ -272,6 +273,8 @@ function FeaturedCarousel({ properties, loading }: { properties: Property[]; loa
 
 export default function Home() {
   const { isAuthenticated, user } = useAuth()
+  const heroRef = useRef<HTMLElement>(null)
+  useDarkSection(heroRef)
 
   const [featuredProperties, setFeaturedProperties] = useState<Property[]>([])
   const [loadingProperties, setLoadingProperties] = useState(true)
@@ -346,15 +349,20 @@ export default function Home() {
       <Header />
 
       {/* ── HERO ─────────────────────────────────────────────────────── */}
-      <section className="hero-section" style={{ position: 'relative', background: T.night, color: '#fff', overflow: 'hidden', padding: 'clamp(70px,12vh,130px) 0 clamp(90px,14vh,160px)' }}>
-        {/* Warm ambient glow — haut gauche */}
-        <div style={{ position: 'absolute', width: 600, height: 400, top: '-10%', left: '-8%', borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.14) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-        {/* Ambient glow — bas droite */}
-        <div style={{ position: 'absolute', width: 500, height: 350, bottom: '-5%', right: '-6%', borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.10) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-        {/* Subtle blue shift centre */}
-        <div style={{ position: 'absolute', width: 700, height: 300, top: '30%', left: '20%', borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(90,80,160,0.12) 0%, transparent 65%)', filter: 'blur(60px)', pointerEvents: 'none', zIndex: 0, animation: 'cloud2 32s ease-in-out infinite' }} />
-        {/* Fade-out vers le bas pour transition douce */}
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 120, background: 'linear-gradient(to bottom, transparent, rgba(13,12,10,0.18))', pointerEvents: 'none', zIndex: 1 }} />
+      <section ref={heroRef} className="hero-section" style={{ position: 'relative', background: T.night, color: '#fff', overflow: 'hidden', padding: 'clamp(70px,12vh,130px) 0 clamp(90px,14vh,160px)' }}>
+
+        {/* Lumière chaude — coin supérieur droit (fenêtre au soleil) */}
+        <div style={{ position: 'absolute', top: -120, right: -80, width: 700, height: 600, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.28) 0%, rgba(196,151,106,0.06) 45%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+        {/* Lumière secondaire — bas gauche */}
+        <div style={{ position: 'absolute', bottom: -80, left: -60, width: 500, height: 400, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.14) 0%, transparent 65%)', pointerEvents: 'none', zIndex: 0 }} />
+        {/* Profondeur bleutée — centre droit */}
+        <div style={{ position: 'absolute', top: '20%', right: '8%', width: 600, height: 400, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(60,60,120,0.35) 0%, transparent 65%)', filter: 'blur(40px)', pointerEvents: 'none', zIndex: 0 }} />
+        {/* Texture grain — donne du matériau */}
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`, opacity: 0.03, pointerEvents: 'none', zIndex: 0 }} />
+        {/* Filet doré diagonal — identité visuelle */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(135deg, rgba(196,151,106,0.06) 0%, transparent 40%, rgba(196,151,106,0.04) 100%)', pointerEvents: 'none', zIndex: 0 }} />
+        {/* Fondu vers la section suivante */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 100, background: 'linear-gradient(to bottom, transparent, rgba(26,26,46,0.5))', pointerEvents: 'none', zIndex: 1 }} />
 
         <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)', position: 'relative', zIndex: 3 }}>
           <div>

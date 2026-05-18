@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, type ElementType } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useDarkSection } from '../../hooks/useDarkSection'
 import { useProperties } from '../../hooks/useProperties'
 import { useAuth } from '../../hooks/useAuth'
 import { useFavoriteStore } from '../../store/favoriteStore'
@@ -43,6 +44,8 @@ interface NLChip {
 export default function SearchProperties() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { isAuthenticated } = useAuth()
+  const heroRef = useRef<HTMLDivElement>(null)
+  useDarkSection(heroRef)
   const { loadFavorites, toggleFavorite, isFavorite } = useFavoriteStore()
   const {
     properties,
@@ -228,7 +231,7 @@ export default function SearchProperties() {
     <Layout bodyBackground="#1a1a2e">
 
         {/* ── Dark hero search ───────────────────────────────────────────── */}
-        <div style={{ background: '#1a1a2e', fontFamily: M.body, position: 'relative', overflow: 'hidden' }}>
+        <div ref={heroRef} style={{ background: '#1a1a2e', fontFamily: M.body, position: 'relative', overflow: 'hidden' }}>
           {/* ambient clouds */}
           <div style={{ position: 'absolute', width: 380, height: 110, top: '10%', right: -100, borderRadius: '50%', background: 'rgba(196,151,106,0.12)', filter: 'blur(60px)', pointerEvents: 'none' }} />
           <div style={{ position: 'absolute', width: 280, height: 90, bottom: 0, left: '10%', borderRadius: '50%', background: 'rgba(255,255,255,0.04)', filter: 'blur(50px)', pointerEvents: 'none' }} />

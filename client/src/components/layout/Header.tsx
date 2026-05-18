@@ -11,10 +11,11 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useSidebarStore } from '../../store/sidebarStore'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { BailioLogo } from '../BailioLogo'
 import { BAI } from '../../constants/bailio-tokens'
 import { useMessages } from '../../hooks/useMessages'
+import { useHeaderStore } from '../../store/headerStore'
 
 // Titre de page selon le pathname
 function usePageTitle(_role: string | undefined) {
@@ -50,22 +51,13 @@ export const Header = () => {
   const location = useLocation()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showMobilePublicMenu, setShowMobilePublicMenu] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
   const { toggle: toggleSidebar } = useSidebarStore()
   const { unreadCount } = useMessages()
   usePageTitle(user?.role)
 
   const isHomePage = location.pathname === '/'
-  // Pages dont le hero de départ est sombre — le header démarre transparent + texte blanc
-  const isDarkHeroPage = ['/', '/search', '/proprietaires', '/locataires'].includes(location.pathname)
-
-  useEffect(() => {
-    if (!isDarkHeroPage) { setScrolled(true); return }
-    const handleScroll = () => setScrolled(window.scrollY > 60)
-    setScrolled(window.scrollY > 60)
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [isDarkHeroPage])
+  // isDark vient du store — mis à jour par useDarkSection dans chaque page hero sombre
+  const isDark = useHeaderStore((s) => s.isDark)
 
   const hasSidebar = isAuthenticated && (user?.role === 'OWNER' || user?.role === 'TENANT')
 
@@ -300,7 +292,7 @@ export const Header = () => {
       background: 'rgba(255,255,255,0.07)',
       backdropFilter: 'blur(10px)',
       WebkitBackdropFilter: 'blur(10px)',
-      borderBottom: scrolled
+      borderBottom: !isDark
         ? '1px solid rgba(13,12,10,0.06)'
         : '1px solid rgba(255,255,255,0.10)',
       borderRadius: '0 0 16px 16px',
@@ -315,7 +307,7 @@ export const Header = () => {
             <span style={{
               fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700,
               fontStyle: 'italic',
-              color: scrolled ? BAI.ink : '#fff',
+              color: !isDark ? BAI.ink : '#fff',
               letterSpacing: '-0.01em', lineHeight: 1,
               whiteSpace: 'nowrap',
               transition: 'color 0.3s ease',
@@ -336,13 +328,13 @@ export const Header = () => {
                 return (
                   <Link key={to} to={to}
                     style={{
-                      color: scrolled
+                      color: !isDark
                         ? (isActive ? BAI.ink : BAI.inkMid)
                         : (isActive ? '#fff' : 'rgba(255,255,255,0.65)'),
                       fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: isActive ? 600 : 400,
                       textDecoration: 'none', padding: '6px 12px', borderRadius: 8,
                       background: isActive
-                        ? (scrolled ? BAI.bgMuted : 'rgba(255,255,255,0.10)')
+                        ? (!isDark ? BAI.bgMuted : 'rgba(255,255,255,0.10)')
                         : 'transparent',
                       display: 'flex', alignItems: 'center', gap: 6,
                       transition: 'color 0.3s, background 0.3s',
@@ -350,14 +342,14 @@ export const Header = () => {
                     onMouseEnter={(e) => {
                       const el = e.currentTarget as HTMLElement
                       if (!isActive) {
-                        el.style.color = scrolled ? BAI.ink : '#fff'
-                        el.style.background = scrolled ? BAI.bgMuted : 'rgba(255,255,255,0.10)'
+                        el.style.color = !isDark ? BAI.ink : '#fff'
+                        el.style.background = !isDark ? BAI.bgMuted : 'rgba(255,255,255,0.10)'
                       }
                     }}
                     onMouseLeave={(e) => {
                       const el = e.currentTarget as HTMLElement
                       if (!isActive) {
-                        el.style.color = scrolled ? BAI.inkMid : 'rgba(255,255,255,0.65)'
+                        el.style.color = !isDark ? BAI.inkMid : 'rgba(255,255,255,0.65)'
                         el.style.background = 'transparent'
                       }
                     }}>
@@ -439,18 +431,18 @@ export const Header = () => {
                   style={{
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     padding: '7px 18px', borderRadius: 24, fontSize: 13.5, fontWeight: 500,
-                    color: scrolled ? BAI.inkMid : 'rgba(255,255,255,0.85)', textDecoration: 'none',
-                    border: scrolled ? `1px solid ${BAI.border}` : '1px solid rgba(255,255,255,0.22)',
+                    color: !isDark ? BAI.inkMid : 'rgba(255,255,255,0.85)', textDecoration: 'none',
+                    border: !isDark ? `1px solid ${BAI.border}` : '1px solid rgba(255,255,255,0.22)',
                     background: 'transparent',
                     transition: 'color 0.3s, border-color 0.3s',
                   }}
                   onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLAnchorElement).style.color = scrolled ? BAI.ink : '#fff'
-                    ;(e.currentTarget as HTMLAnchorElement).style.borderColor = scrolled ? BAI.borderStrong : 'rgba(255,255,255,0.5)'
+                    (e.currentTarget as HTMLAnchorElement).style.color = !isDark ? BAI.ink : '#fff'
+                    ;(e.currentTarget as HTMLAnchorElement).style.borderColor = !isDark ? BAI.borderStrong : 'rgba(255,255,255,0.5)'
                   }}
                   onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLAnchorElement).style.color = scrolled ? BAI.inkMid : 'rgba(255,255,255,0.85)'
-                    ;(e.currentTarget as HTMLAnchorElement).style.borderColor = scrolled ? BAI.border : 'rgba(255,255,255,0.22)'
+                    (e.currentTarget as HTMLAnchorElement).style.color = !isDark ? BAI.inkMid : 'rgba(255,255,255,0.85)'
+                    ;(e.currentTarget as HTMLAnchorElement).style.borderColor = !isDark ? BAI.border : 'rgba(255,255,255,0.22)'
                   }}>
                   Se connecter
                 </Link>
@@ -515,14 +507,14 @@ export const Header = () => {
                 style={{
                   display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
                   gap: 5, width: 40, height: 40, borderRadius: 8,
-                  border: scrolled ? `1px solid ${BAI.border}` : '1px solid rgba(255,255,255,0.22)',
+                  border: !isDark ? `1px solid ${BAI.border}` : '1px solid rgba(255,255,255,0.22)',
                   background: 'transparent', cursor: 'pointer', padding: 0,
                   transition: 'border-color 0.3s',
                 }}
                 aria-label="Menu">
-                <span style={{ display: 'block', width: 18, height: 1.5, background: scrolled ? BAI.ink : '#fff', borderRadius: 2, transition: 'all .25s', transform: showMobilePublicMenu ? 'rotate(45deg) translateY(6.5px)' : 'none' }} />
-                <span style={{ display: 'block', width: 18, height: 1.5, background: scrolled ? BAI.ink : '#fff', borderRadius: 2, transition: 'all .25s', opacity: showMobilePublicMenu ? 0 : 1 }} />
-                <span style={{ display: 'block', width: 18, height: 1.5, background: scrolled ? BAI.ink : '#fff', borderRadius: 2, transition: 'all .25s', transform: showMobilePublicMenu ? 'rotate(-45deg) translateY(-6.5px)' : 'none' }} />
+                <span style={{ display: 'block', width: 18, height: 1.5, background: !isDark ? BAI.ink : '#fff', borderRadius: 2, transition: 'all .25s', transform: showMobilePublicMenu ? 'rotate(45deg) translateY(6.5px)' : 'none' }} />
+                <span style={{ display: 'block', width: 18, height: 1.5, background: !isDark ? BAI.ink : '#fff', borderRadius: 2, transition: 'all .25s', opacity: showMobilePublicMenu ? 0 : 1 }} />
+                <span style={{ display: 'block', width: 18, height: 1.5, background: !isDark ? BAI.ink : '#fff', borderRadius: 2, transition: 'all .25s', transform: showMobilePublicMenu ? 'rotate(-45deg) translateY(-6.5px)' : 'none' }} />
               </button>
             )}
           </div>

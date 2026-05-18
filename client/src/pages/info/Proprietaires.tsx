@@ -1,8 +1,10 @@
+import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Check } from 'lucide-react'
 import { Header } from '../../components/layout/Header'
 import Footer from '../../components/layout/Footer'
 import { BAI } from '../../constants/bailio-tokens'
+import { useDarkSection } from '../../hooks/useDarkSection'
 
 /* ─── Icons ─────────────────────────────────────────────────────────────── */
 const IconStar = () => (
@@ -60,6 +62,8 @@ const BAR_HEIGHTS = [55, 62, 58, 71, 75, 80, 88]
 
 /* ─── Component ─────────────────────────────────────────────────────────── */
 export default function Proprietaires() {
+  const heroRef = useRef<HTMLDivElement>(null)
+  useDarkSection(heroRef)
   return (
     <div style={{ backgroundColor: BAI.night, fontFamily: BAI.fontBody, color: BAI.ink, minHeight: '100vh' }}>
       <style>{`
@@ -168,7 +172,7 @@ export default function Proprietaires() {
       <Header />
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      <section className="prop-hero-sec" style={{
+      <section ref={heroRef} className="prop-hero-sec" style={{
         position: 'relative',
         background: BAI.night,
         color: '#fff',
