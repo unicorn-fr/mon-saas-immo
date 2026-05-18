@@ -358,21 +358,26 @@ export default function Home() {
       {/* ── HERO ─────────────────────────────────────────────────────── */}
       <section ref={heroRef} className="hero-section" style={{ position: 'relative', background: T.night, color: '#fff', overflow: 'hidden', padding: 'clamp(70px,12vh,130px) 0 clamp(90px,14vh,160px)', paddingBottom: 'clamp(90px,14vh,160px)' }}>
 
-        {/* Lumière chaude — coin supérieur droit (fenêtre au soleil) */}
-        <div style={{ position: 'absolute', top: -120, right: -80, width: 700, height: 600, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.28) 0%, rgba(196,151,106,0.06) 45%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-        {/* Lumière secondaire — bas gauche */}
-        <div style={{ position: 'absolute', bottom: -80, left: -60, width: 500, height: 400, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.14) 0%, transparent 65%)', pointerEvents: 'none', zIndex: 0 }} />
-        {/* Profondeur bleutée — centre droit */}
-        <div style={{ position: 'absolute', top: '20%', right: '8%', width: 600, height: 400, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(60,60,120,0.35) 0%, transparent 65%)', filter: 'blur(40px)', pointerEvents: 'none', zIndex: 0 }} />
-        {/* Texture grain — donne du matériau */}
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`, opacity: 0.03, pointerEvents: 'none', zIndex: 0 }} />
-        {/* Filet doré diagonal — identité visuelle */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(135deg, rgba(196,151,106,0.06) 0%, transparent 40%, rgba(196,151,106,0.04) 100%)', pointerEvents: 'none', zIndex: 0 }} />
-        {/* Fondu vers la section suivante */}
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 100, background: 'linear-gradient(to bottom, transparent, rgba(26,26,46,0.5))', pointerEvents: 'none', zIndex: 1 }} />
+        {/* ── Atmosphère hero : cercles flous colorés ── */}
+        {/* Soleil caramel — coin haut droit, fort */}
+        <div style={{ position: 'absolute', top: -160, right: -100, width: 800, height: 700, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.42) 0%, rgba(196,151,106,0.12) 40%, transparent 68%)', filter: 'blur(30px)', pointerEvents: 'none', zIndex: 0 }} />
+        {/* Violet profond — centre haut */}
+        <div style={{ position: 'absolute', top: '-5%', left: '30%', width: 700, height: 500, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(110,70,200,0.28) 0%, transparent 65%)', filter: 'blur(70px)', pointerEvents: 'none', zIndex: 0 }} />
+        {/* Ambre chaud — bas gauche */}
+        <div style={{ position: 'absolute', bottom: -60, left: -80, width: 600, height: 500, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(220,130,50,0.22) 0%, transparent 65%)', filter: 'blur(60px)', pointerEvents: 'none', zIndex: 0 }} />
+        {/* Rosé — milieu gauche */}
+        <div style={{ position: 'absolute', top: '40%', left: '5%', width: 350, height: 280, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(200,90,120,0.16) 0%, transparent 70%)', filter: 'blur(50px)', pointerEvents: 'none', zIndex: 0 }} />
+        {/* Sarcelle — bas droit */}
+        <div style={{ position: 'absolute', bottom: '10%', right: '15%', width: 300, height: 250, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(40,180,160,0.14) 0%, transparent 70%)', filter: 'blur(55px)', pointerEvents: 'none', zIndex: 0 }} />
+        {/* Grain — matériau */}
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`, opacity: 0.04, pointerEvents: 'none', zIndex: 0 }} />
+        {/* Filet doré diagonal */}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(196,151,106,0.07) 0%, transparent 45%, rgba(196,151,106,0.05) 100%)', pointerEvents: 'none', zIndex: 0 }} />
+        {/* Fondu bas */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 120, background: 'linear-gradient(to bottom, transparent, rgba(26,26,46,0.55))', pointerEvents: 'none', zIndex: 1 }} />
 
         {/* A) Architectural door/arch sketch — right side */}
-        <svg aria-hidden style={{ position: 'absolute', right: 'clamp(3%,8vw,10%)', top: '8%', width: 'clamp(80px,14vw,200px)', opacity: 0.13, zIndex: 1, pointerEvents: 'none' }} viewBox="0 0 140 210" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg aria-hidden style={{ position: 'absolute', right: 'clamp(3%,8vw,10%)', top: '6%', width: 'clamp(100px,16vw,240px)', opacity: 0.32, zIndex: 1, pointerEvents: 'none', filter: 'drop-shadow(0 0 18px rgba(196,151,106,0.35))' }} viewBox="0 0 140 210" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M18,205 L18,82 Q18,18 70,18 Q122,18 122,82 L122,205" stroke="#c4976a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
           <path d="M32,205 L32,86 Q32,34 70,34 Q108,34 108,86 L108,205" stroke="#c4976a" strokeWidth="1.5" strokeLinecap="round"/>
           <circle cx="70" cy="125" r="9" stroke="#c4976a" strokeWidth="1.5"/>
@@ -382,13 +387,13 @@ export default function Home() {
         </svg>
 
         {/* B) Circular stamp/seal element */}
-        <div aria-hidden style={{ position: 'absolute', right: 'clamp(2%,5vw,7%)', bottom: '18%', width: 'clamp(64px,9vw,110px)', height: 'clamp(64px,9vw,110px)', zIndex: 1, pointerEvents: 'none', transform: 'rotate(12deg)' }}>
+        <div aria-hidden style={{ position: 'absolute', right: 'clamp(2%,5vw,7%)', bottom: '14%', width: 'clamp(80px,11vw,140px)', height: 'clamp(80px,11vw,140px)', zIndex: 2, pointerEvents: 'none', transform: 'rotate(12deg)', filter: 'drop-shadow(0 0 12px rgba(196,151,106,0.25))' }}>
           <svg viewBox="0 0 110 110" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%' }}>
-            <circle cx="55" cy="55" r="48" stroke="rgba(196,151,106,0.30)" strokeWidth="1.5" strokeDasharray="3 4"/>
-            <circle cx="55" cy="55" r="40" stroke="rgba(196,151,106,0.18)" strokeWidth="1"/>
+            <circle cx="55" cy="55" r="48" stroke="rgba(196,151,106,0.55)" strokeWidth="1.5" strokeDasharray="3 4"/>
+            <circle cx="55" cy="55" r="40" stroke="rgba(196,151,106,0.30)" strokeWidth="1"/>
             <path id="seal-text-path" d="M55,55 m-36,0 a36,36 0 1,1 72,0 a36,36 0 1,1 -72,0" fill="none"/>
             <text
-              fill="rgba(196,151,106,0.55)"
+              fill="rgba(196,151,106,0.80)"
               fontSize="8.5"
               letterSpacing="0.25em"
               fontFamily="DM Sans, system-ui, sans-serif"
@@ -495,8 +500,10 @@ export default function Home() {
       <section style={{ padding: 'clamp(60px,8vh,100px) 0', background: T.night, position: 'relative', overflow: 'hidden' }}>
         {/* Decorative large quote mark */}
         <div aria-hidden style={{ position: 'absolute', top: -20, left: 'clamp(16px,6vw,80px)', fontFamily: T.fontDisplay, fontSize: 'clamp(180px,20vw,280px)', fontStyle: 'italic', fontWeight: 700, color: 'rgba(196,151,106,0.08)', lineHeight: 1, pointerEvents: 'none', userSelect: 'none' }}>"</div>
-        {/* Warm glow */}
-        <div style={{ position: 'absolute', top: -60, right: -40, width: 400, height: 300, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        {/* Atmospheric orbs */}
+        <div aria-hidden style={{ position: 'absolute', top: -80, right: -60, width: 480, height: 360, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.22) 0%, transparent 65%)', filter: 'blur(40px)', pointerEvents: 'none' }} />
+        <div aria-hidden style={{ position: 'absolute', bottom: -60, left: -40, width: 380, height: 300, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(100,80,180,0.18) 0%, transparent 65%)', filter: 'blur(50px)', pointerEvents: 'none' }} />
+        <div aria-hidden style={{ position: 'absolute', top: '40%', left: '45%', width: 300, height: 200, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(60,160,140,0.12) 0%, transparent 70%)', filter: 'blur(45px)', pointerEvents: 'none' }} />
         <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)', position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', gap: 'clamp(20px,4vw,48px)', alignItems: 'flex-start' }}>
             <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 8 }}>
@@ -782,7 +789,10 @@ export default function Home() {
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <div className="cta-grid" style={{ display: 'flex', gap: 20 }}>
             {/* Owners */}
-            <div className="cta-split-card" style={{ flex: 1, background: T.night, borderRadius: 32, padding: '48px 44px', display: 'flex', flexDirection: 'column' }}>
+            <div className="cta-split-card" style={{ flex: 1, background: T.night, borderRadius: 32, padding: '48px 44px', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
+              {/* Atmospheric orbs inside dark card */}
+              <div aria-hidden style={{ position: 'absolute', top: -60, right: -40, width: 300, height: 240, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.25) 0%, transparent 65%)', filter: 'blur(40px)', pointerEvents: 'none', zIndex: 0 }} />
+              <div aria-hidden style={{ position: 'absolute', bottom: -40, left: -30, width: 240, height: 180, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(80,60,160,0.18) 0%, transparent 65%)', filter: 'blur(35px)', pointerEvents: 'none', zIndex: 0 }} />
               <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: T.caramel, textTransform: 'uppercase', marginBottom: 16 }}>Propriétaires</p>
               <h3 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 36, color: '#f5f4f0', lineHeight: 1.2, margin: '0 0 24px', letterSpacing: '-0.02em' }}>
                 Louez vite,<br />louez bien.
@@ -835,8 +845,12 @@ export default function Home() {
       </section>
 
       {/* ── CTA STRIP ────────────────────────────────────────────────── */}
-      <section style={{ background: T.night, padding: 'clamp(48px,8vh,80px) 0' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 32 }}>
+      <section style={{ background: T.night, padding: 'clamp(48px,8vh,80px) 0', position: 'relative', overflow: 'hidden' }}>
+        {/* Atmospheric orbs */}
+        <div aria-hidden style={{ position: 'absolute', top: -80, left: '10%', width: 400, height: 320, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.20) 0%, transparent 65%)', filter: 'blur(50px)', pointerEvents: 'none' }} />
+        <div aria-hidden style={{ position: 'absolute', bottom: -60, right: '5%', width: 350, height: 280, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(80,60,200,0.15) 0%, transparent 65%)', filter: 'blur(45px)', pointerEvents: 'none' }} />
+        <div aria-hidden style={{ position: 'absolute', top: '20%', right: '35%', width: 200, height: 160, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(60,160,130,0.10) 0%, transparent 70%)', filter: 'blur(35px)', pointerEvents: 'none' }} />
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 32, position: 'relative', zIndex: 1 }}>
           <div>
             <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(28px,4vw,42px)', color: '#fff', margin: '0 0 10px', lineHeight: 1.1 }}>
               Prêt à <em style={{ color: T.caramel }}>commencer ?</em>
