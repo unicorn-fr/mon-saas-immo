@@ -348,8 +348,15 @@ export default function Home() {
 
       <Header />
 
+      {/* Grain texture overlay — gives material feel */}
+      <div aria-hidden style={{
+        position: 'fixed', inset: 0, zIndex: 9998, pointerEvents: 'none',
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)' opacity='1'/%3E%3C/svg%3E")`,
+        opacity: 0.028,
+      }} />
+
       {/* ── HERO ─────────────────────────────────────────────────────── */}
-      <section ref={heroRef} className="hero-section" style={{ position: 'relative', background: T.night, color: '#fff', overflow: 'hidden', padding: 'clamp(70px,12vh,130px) 0 clamp(90px,14vh,160px)' }}>
+      <section ref={heroRef} className="hero-section" style={{ position: 'relative', background: T.night, color: '#fff', overflow: 'hidden', padding: 'clamp(70px,12vh,130px) 0 clamp(90px,14vh,160px)', paddingBottom: 'clamp(90px,14vh,160px)' }}>
 
         {/* Lumière chaude — coin supérieur droit (fenêtre au soleil) */}
         <div style={{ position: 'absolute', top: -120, right: -80, width: 700, height: 600, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.28) 0%, rgba(196,151,106,0.06) 45%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
@@ -364,6 +371,36 @@ export default function Home() {
         {/* Fondu vers la section suivante */}
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 100, background: 'linear-gradient(to bottom, transparent, rgba(26,26,46,0.5))', pointerEvents: 'none', zIndex: 1 }} />
 
+        {/* A) Architectural door/arch sketch — right side */}
+        <svg aria-hidden style={{ position: 'absolute', right: 'clamp(3%,8vw,10%)', top: '8%', width: 'clamp(80px,14vw,200px)', opacity: 0.13, zIndex: 1, pointerEvents: 'none' }} viewBox="0 0 140 210" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18,205 L18,82 Q18,18 70,18 Q122,18 122,82 L122,205" stroke="#c4976a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M32,205 L32,86 Q32,34 70,34 Q108,34 108,86 L108,205" stroke="#c4976a" strokeWidth="1.5" strokeLinecap="round"/>
+          <circle cx="70" cy="125" r="9" stroke="#c4976a" strokeWidth="1.5"/>
+          <path d="M65,134 L65,152 L75,152 L75,134" stroke="#c4976a" strokeWidth="1.5" strokeLinecap="round"/>
+          <path d="M4,205 L136,205" stroke="#c4976a" strokeWidth="2" strokeLinecap="round"/>
+          <path d="M50,18 Q70,8 90,18" stroke="#c4976a" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="4 3"/>
+        </svg>
+
+        {/* B) Circular stamp/seal element */}
+        <div aria-hidden style={{ position: 'absolute', right: 'clamp(2%,5vw,7%)', bottom: '18%', width: 'clamp(64px,9vw,110px)', height: 'clamp(64px,9vw,110px)', zIndex: 1, pointerEvents: 'none', transform: 'rotate(12deg)' }}>
+          <svg viewBox="0 0 110 110" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%' }}>
+            <circle cx="55" cy="55" r="48" stroke="rgba(196,151,106,0.30)" strokeWidth="1.5" strokeDasharray="3 4"/>
+            <circle cx="55" cy="55" r="40" stroke="rgba(196,151,106,0.18)" strokeWidth="1"/>
+            <path id="seal-text-path" d="M55,55 m-36,0 a36,36 0 1,1 72,0 a36,36 0 1,1 -72,0" fill="none"/>
+            <text
+              fill="rgba(196,151,106,0.55)"
+              fontSize="8.5"
+              letterSpacing="0.25em"
+              fontFamily="DM Sans, system-ui, sans-serif"
+              fontWeight="600"
+            >
+              <textPath href="#seal-text-path" startOffset="5%">BAILIO · FRANCE · 0€ FRAIS ·</textPath>
+            </text>
+            <text x="55" y="50" textAnchor="middle" fill="rgba(196,151,106,0.65)" fontFamily="'Cormorant Garamond', Georgia, serif" fontStyle="italic" fontWeight="700" fontSize="15">Zéro</text>
+            <text x="55" y="68" textAnchor="middle" fill="rgba(196,151,106,0.65)" fontFamily="'Cormorant Garamond', Georgia, serif" fontStyle="italic" fontWeight="700" fontSize="15">agence</text>
+          </svg>
+        </div>
+
         <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)', position: 'relative', zIndex: 3 }}>
           <div>
             {/* Badge */}
@@ -376,7 +413,13 @@ export default function Home() {
             <div style={{ position: 'absolute', width: 400, height: 200, top: '30%', left: '5%', borderRadius: '50%', background: 'rgba(196,151,106,0.12)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
 
             <h1 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(42px,7vw,80px)', lineHeight: 1.02, letterSpacing: '-0.02em', color: '#fff', margin: '0 0 22px', maxWidth: '16ch' }}>
-              La clé de ta <em style={{ color: T.caramel }}>prochaine location.</em>
+              La clé de ta{' '}
+              <span style={{ position: 'relative', display: 'inline-block' }}>
+                <em style={{ color: T.caramel }}>prochaine location.</em>
+                <svg aria-hidden viewBox="0 0 320 12" preserveAspectRatio="none" style={{ position: 'absolute', bottom: -6, left: 0, width: '100%', height: 12, overflow: 'visible' }}>
+                  <path d="M2,8 C50,3 100,12 160,7 C220,2 270,10 318,6" fill="none" stroke="#c4976a" strokeWidth="3" strokeLinecap="round" opacity="0.7"/>
+                </svg>
+              </span>
             </h1>
 
             <p style={{ fontSize: 'clamp(15px,1.3vw,17px)', color: 'rgba(255,255,255,0.78)', lineHeight: 1.6, maxWidth: 560, margin: '0 0 40px' }}>
@@ -421,18 +464,63 @@ export default function Home() {
           </div>
 
         </div>
+
+        {/* D) Organic wave — transition hero → stats */}
+        <div aria-hidden style={{ position: 'absolute', bottom: -2, left: 0, right: 0, zIndex: 4, lineHeight: 0 }}>
+          <svg viewBox="0 0 1440 64" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style={{ display: 'block', width: '100%', height: 64 }}>
+            <path d="M0,32 C120,60 280,8 480,32 C660,52 800,12 1000,32 C1160,48 1320,18 1440,28 L1440,64 L0,64 Z" fill="#fafaf8"/>
+          </svg>
+        </div>
       </section>
 
       {/* ── STATS ────────────────────────────────────────────────────── */}
-      <section style={{ background: T.bgBase, borderBottom: `1px solid ${T.border}`, padding: 'clamp(48px,8vh,80px) 0' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
-          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 32 }}>
+      <section style={{ background: T.bgBase, padding: 'clamp(56px,8vh,96px) 0 clamp(48px,8vh,80px)', position: 'relative' }}>
+        {/* Dot grid background */}
+        <div aria-hidden style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(196,151,106,0.18) 1px, transparent 1px)', backgroundSize: '28px 28px', opacity: 0.5, pointerEvents: 'none' }} />
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)', position: 'relative', zIndex: 1 }}>
+          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0 }}>
             {STATS.map((stat, i) => (
-              <div key={stat.label} style={{ textAlign: 'center', padding: '0 clamp(8px,2vw,24px)', borderRight: i < STATS.length - 1 ? `1px solid ${T.border}` : 'none' }}>
-                <p style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(32px,5vw,48px)', lineHeight: 1, color: T.ink, margin: '0 0 8px', letterSpacing: '-0.02em' }}>{stat.value}</p>
-                <p style={{ fontFamily: T.fontBody, fontSize: 13, color: T.inkMid, margin: 0 }}>{stat.label}</p>
+              <div key={stat.label} style={{ padding: 'clamp(16px,3vw,32px)', borderRight: i < STATS.length - 1 ? `1px solid ${T.border}` : 'none', position: 'relative' }}>
+                {/* Decorative accent mark */}
+                <div style={{ width: 28, height: 3, background: T.caramel, borderRadius: 2, marginBottom: 16, opacity: 0.7 }} />
+                <p style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(36px,5vw,60px)', lineHeight: 0.95, color: T.ink, margin: '0 0 10px', letterSpacing: '-0.02em', display: 'block' }}>{stat.value}</p>
+                <p style={{ fontFamily: T.fontBody, fontSize: 12.5, color: T.inkMid, margin: 0, lineHeight: 1.5, maxWidth: '18ch' }}>{stat.label}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── MANIFESTO QUOTE ── */}
+      <section style={{ padding: 'clamp(60px,8vh,100px) 0', background: T.night, position: 'relative', overflow: 'hidden' }}>
+        {/* Decorative large quote mark */}
+        <div aria-hidden style={{ position: 'absolute', top: -20, left: 'clamp(16px,6vw,80px)', fontFamily: T.fontDisplay, fontSize: 'clamp(180px,20vw,280px)', fontStyle: 'italic', fontWeight: 700, color: 'rgba(196,151,106,0.08)', lineHeight: 1, pointerEvents: 'none', userSelect: 'none' }}>"</div>
+        {/* Warm glow */}
+        <div style={{ position: 'absolute', top: -60, right: -40, width: 400, height: 300, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)', position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'flex', gap: 'clamp(20px,4vw,48px)', alignItems: 'flex-start' }}>
+            <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 8 }}>
+              <div style={{ width: 3, height: 'clamp(40px,6vh,80px)', background: `linear-gradient(to bottom, ${T.caramel}, transparent)`, borderRadius: 2 }} />
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: T.caramel, margin: '6px 0' }} />
+              <div style={{ width: 3, height: 'clamp(40px,6vh,80px)', background: `linear-gradient(to bottom, transparent, ${T.caramel})`, borderRadius: 2 }} />
+            </div>
+            <div>
+              <blockquote style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3.5vw,42px)', lineHeight: 1.25, color: '#fff', margin: '0 0 28px', letterSpacing: '-0.01em' }}>
+                "L'immobilier ne devrait pas coûter plus cher que le loyer lui-même. J'ai construit Bailio pour que ça change."
+              </blockquote>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(196,151,106,0.2)', border: '1px solid rgba(196,151,106,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 16, color: T.caramel }}>E</div>
+                <div>
+                  <p style={{ fontFamily: T.fontBody, fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.9)', margin: 0 }}>Enzo, fondateur</p>
+                  <p style={{ fontFamily: T.fontBody, fontSize: 12, color: 'rgba(255,255,255,0.45)', margin: '2px 0 0' }}>Bailio · Paris, 2024</p>
+                </div>
+                {/* Hand-drawn underline accent */}
+                <svg aria-hidden style={{ marginLeft: 'auto', opacity: 0.35 }} width="60" height="20" viewBox="0 0 60 20" fill="none">
+                  <path d="M2,10 C15,5 30,15 50,8 L58,10" stroke="#c4976a" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M10,16 C25,12 40,18 55,14" stroke="#c4976a" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -450,11 +538,21 @@ export default function Home() {
             Pas de formation requise, pas de jargon juridique. Tu es propriétaire ou locataire — Bailio s'adapte à toi, pas l'inverse.
           </p>
 
-          <div className="steps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+          <div className="steps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, position: 'relative' }}>
+            {/* Dashed connector */}
+            <div aria-hidden className="hidden md:block" style={{ position: 'absolute', top: 4, left: '16.7%', right: '16.7%', height: 2, zIndex: 0 }}>
+              <svg width="100%" height="2" style={{ overflow: 'visible' }}>
+                <line x1="0" y1="1" x2="100%" y2="1" stroke={T.caramel} strokeWidth="1.5" strokeDasharray="8 6" opacity="0.35"/>
+              </svg>
+            </div>
             {STEPS.map(step => (
-              <div key={step.n} style={{ background: '#ffffff', border: '1px solid #e4e1db', borderRadius: 20, padding: '36px 28px 28px', position: 'relative', boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)' }}>
-                <div style={{ position: 'absolute', top: -18, left: 28, width: 44, height: 44, borderRadius: '50%', background: T.night, color: '#fff', fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {step.n}
+              <div key={step.n} style={{ background: '#ffffff', border: `1px solid ${T.border}`, borderRadius: 20, padding: '36px 28px 28px', position: 'relative', boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)', zIndex: 1 }}>
+                {/* Number circle — slightly hand-drawn with SVG */}
+                <div style={{ position: 'absolute', top: -20, left: 24 }}>
+                  <svg width="46" height="46" viewBox="0 0 46 46" fill="none">
+                    <path d="M23,2 C33,2 44,10 44,23 C44,36 34,44 23,44 C12,44 2,35 2,23 C2,11 12,2 23,2" stroke={T.night} strokeWidth="2.5" fill={T.night} strokeLinecap="round"/>
+                  </svg>
+                  <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 20, color: '#fff', lineHeight: 1 }}>{step.n}</span>
                 </div>
                 <h3 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 24, margin: '10px 0 10px', color: T.ink }}>{step.title}</h3>
                 <p style={{ fontSize: 14, color: T.inkMid, lineHeight: 1.65, margin: 0 }}>{step.desc}</p>
