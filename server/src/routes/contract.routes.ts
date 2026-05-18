@@ -3,6 +3,7 @@ import { contractController } from '../controllers/contract.controller.js'
 import { authenticate, authorize } from '../middlewares/auth.middleware.js'
 import { requirePlan } from '../middlewares/planGate.middleware.js'
 import { requireFeature } from '../middlewares/featureGate.middleware.js'
+import { requireIdentityVerified } from '../middlewares/identity.middleware.js'
 import { prisma } from '../config/database.js'
 import { generateSignedUrl } from '../utils/cloudinary.util.js'
 
@@ -23,6 +24,7 @@ router.get('/', contractController.getContracts.bind(contractController))
 router.post(
   '/',
   authorize('OWNER'),
+  requireIdentityVerified,
   requireFeature('contract_creation'),
   contractController.createContract.bind(contractController)
 )

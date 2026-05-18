@@ -14,8 +14,9 @@ import {
   Home, Plus, Eye,
   ArrowRight, MapPin, FileText, PenLine,
   AlertTriangle, CalendarCheck, Users,
-  ClipboardList, Zap, ArrowUpRight, Clock,
+  ClipboardList, Zap, ArrowUpRight, Clock, ShieldAlert,
 } from 'lucide-react'
+import { apiClient } from '../../services/api.service'
 import type { Application } from '../../types/application.types'
 import type { Booking } from '../../types/booking.types'
 import { format, isAfter, parseISO } from 'date-fns'
@@ -40,6 +41,7 @@ export default function Dashboard() {
   const { requests, fetchRequests } = useMaintenanceStore()
   const [pendingApps, setPendingApps] = useState<Application[]>([])
   const [upcomingVisits, setUpcomingVisits] = useState<Booking[]>([])
+  const [identityVerified, setIdentityVerified] = useState(true) // assume verified until loaded
 
   useEffect(() => {
     fetchMyStatistics()
@@ -52,6 +54,9 @@ export default function Dashboard() {
     applicationService.list().then((apps) => {
       setPendingApps(apps.filter((a) => a.status === 'PENDING'))
     }).catch(() => {})
+    apiClient.get<{ isVerified: boolean }>('/stripe/identity-status')
+      .then(res => setIdentityVerified(res.data.isVerified))
+      .catch(() => {})
     // Load upcoming confirmed visits
     const today = new Date().toISOString().split('T')[0]
     bookingService.getBookings({ status: 'CONFIRMED', dateFrom: today }, { page: 1, limit: 10 })
@@ -187,6 +192,18 @@ export default function Dashboard() {
               <Plus size={15} /> Nouveau bien
             </Link>
           </div>
+
+          {/* ── Bannière vérification identité ───────────────────────── */}
+          {!identityVerified && (
+            <div style={{ background: '#fef2f2', border: `1px solid #fca5a5`, borderLeft: `3px solid ${BAI.error}`, borderRadius: 12, padding: '12px 16px', display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', marginBottom: 20 }}>
+              <ShieldAlert size={15} style={{ color: BAI.error, flexShrink: 0 }} />
+              <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: BAI.error }}>Vérification d'identité requise</span>
+              <span style={{ fontSize: 13, color: BAI.error, flex: '1 1 200px' }}>Vous devez vérifier votre identité avant de pouvoir publier un bien ou créer un bail.</span>
+              <Link to="/verify-identity" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, background: BAI.error, color: '#fff', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>
+                Vérifier maintenant <ArrowRight size={13} />
+              </Link>
+            </div>
+          )}
 
           {/* ── Alertes ─────────────────────────────────────────────────── */}
           {(urgentContracts.length > 0 || pendingApps.length > 0 || drafts > 0) && (

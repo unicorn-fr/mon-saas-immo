@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { propertyController } from '../controllers/property.controller.js'
 import { authenticate, authorize, optionalAuthenticate } from '../middlewares/auth.middleware.js'
 import { checkPropertyLimit } from '../middlewares/planGate.middleware.js'
+import { requireIdentityVerified } from '../middlewares/identity.middleware.js'
 import { uploadFile } from '../utils/upload.util.js'
 
 const router = Router()
@@ -34,6 +35,7 @@ router.post(
   '/',
   authenticate,
   authorize('OWNER'),
+  requireIdentityVerified,
   checkPropertyLimit,
   propertyController.createProperty.bind(propertyController)
 )

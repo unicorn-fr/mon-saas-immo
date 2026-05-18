@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { applicationController } from '../controllers/application.controller.js'
 import { authenticate } from '../middlewares/auth.middleware.js'
+import { requireIdentityVerified } from '../middlewares/identity.middleware.js'
 
 const router = Router()
 
@@ -11,7 +12,7 @@ router.get('/prequalify/:propertyId', applicationController.prequalify.bind(appl
 
 // CRUD
 router.get('/',    applicationController.list.bind(applicationController))
-router.post('/',   applicationController.create.bind(applicationController))
+router.post('/',   requireIdentityVerified, applicationController.create.bind(applicationController))
 router.get('/:id', applicationController.getOne.bind(applicationController))
 
 // Owner decision

@@ -5,8 +5,9 @@ import {
   Calendar, MessageSquare, Search, Home, Clock, MapPin,
   CheckCircle, FileText, PenTool, FolderOpen, SendHorizonal,
   ChevronRight, ArrowRight, Loader2, Star, CreditCard, Briefcase, Banknote,
-  Building2, Key, TrendingUp, ExternalLink,
+  Building2, Key, TrendingUp, ExternalLink, ShieldAlert,
 } from 'lucide-react'
+import { apiClient } from '../../services/api.service'
 import { useAuth } from '../../hooks/useAuth'
 import { useBookings } from '../../hooks/useBookings'
 import { useFavoriteStore } from '../../store/favoriteStore'
@@ -59,6 +60,7 @@ export default function TenantDashboard() {
   const [applications, setApplications] = useState<Application[]>([])
   const [dossierPercent, setDossierPercent] = useState(0)
   const [dossierCoveredCats, setDossierCoveredCats] = useState<Set<string>>(new Set())
+  const [identityVerified, setIdentityVerified] = useState(true)
 
   useEffect(() => {
     fetchBookings()
@@ -71,6 +73,9 @@ export default function TenantDashboard() {
       setDossierPercent(computeDossierPercent(docs))
       setDossierCoveredCats(new Set(docs.map((d) => d.category)))
     }).catch(() => {})
+    apiClient.get<{ isVerified: boolean }>('/stripe/identity-status')
+      .then(res => setIdentityVerified(res.data.isVerified))
+      .catch(() => {})
   }, [fetchBookings, loadFavorites, fetchUnreadCount, fetchContracts, fetchContractStatistics])
 
   // ── Données dérivées ──────────────────────────────────────────────────────
@@ -661,6 +666,18 @@ export default function TenantDashboard() {
               <Search size={15} /> Chercher un logement
             </Link>
           </div>
+
+          {/* ── Bannière vérification identité ───────────────────────── */}
+          {!identityVerified && (
+            <div style={{ background: '#fef2f2', border: `1px solid #fca5a5`, borderLeft: `3px solid ${BAI.error}`, borderRadius: 12, padding: '12px 16px', display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', marginBottom: 20 }}>
+              <ShieldAlert size={15} style={{ color: BAI.error, flexShrink: 0 }} />
+              <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: BAI.error }}>Vérification d'identité requise</span>
+              <span style={{ fontSize: 13, color: BAI.error, flex: '1 1 200px' }}>Vous devez vérifier votre identité avant de pouvoir postuler à une location.</span>
+              <Link to="/verify-identity" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, background: BAI.error, color: '#fff', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>
+                Vérifier maintenant <ArrowRight size={13} />
+              </Link>
+            </div>
+          )}
 
           {/* ── Alerte signature : bannière pleine largeur imposante ─── */}
           {pendingSignatureContracts.map((c) => {

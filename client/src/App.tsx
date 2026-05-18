@@ -98,6 +98,7 @@ import Support from './pages/info/Support'
 import Presse from './pages/info/Presse'
 import APropos from './pages/info/APropos'
 import CompleteProfile from './pages/CompleteProfile'
+import VerifyIdentity from './pages/VerifyIdentity'
 import Proprietaires from './pages/info/Proprietaires'
 import Locataires from './pages/info/Locataires'
 import Pricing from './pages/Pricing'
@@ -210,6 +211,7 @@ function AppRoutes() {
       <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/auth/verify" element={<VerifyMagicLink />} />
       <Route path="/complete-profile" element={<CompleteProfile />} />
+      <Route path="/verify-identity" element={<VerifyIdentity />} />
 
       {/* Legal & Info Pages */}
       <Route path="/mentions-legales" element={<MentionsLegales />} />

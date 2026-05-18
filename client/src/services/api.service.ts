@@ -69,6 +69,16 @@ apiClient.interceptors.response.use(
       _retry?: boolean
     }
 
+    // If 403 with IDENTITY_REQUIRED, redirect to verification page
+    if (error.response?.status === 403) {
+      const data = error.response.data as { code?: string } | undefined
+      if (data?.code === 'IDENTITY_REQUIRED') {
+        const returnTo = encodeURIComponent(window.location.pathname + window.location.search)
+        window.location.href = `/verify-identity?redirect=${returnTo}`
+        return Promise.reject(error)
+      }
+    }
+
     // If 401 and not already retried, try to refresh token
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
