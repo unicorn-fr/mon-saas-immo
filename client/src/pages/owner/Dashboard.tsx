@@ -673,6 +673,80 @@ export default function Dashboard() {
                   )}
                 </div>
 
+                {/* ── Locataires actifs (vue consolidée) ─────────────────── */}
+                {activeContracts.length > 0 && (
+                  <div style={cardBase}>
+                    <div style={{ padding: '16px 20px', borderBottom: `1px solid ${BAI.border}` }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint }}>
+                          Locataires actifs
+                        </span>
+                        <Link to="/owner/tenants" style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 500, color: BAI.owner, textDecoration: 'none' }}>
+                          Tout voir <ArrowRight size={12} />
+                        </Link>
+                      </div>
+                      <div style={{ borderTop: `1px solid ${BAI.border}` }} />
+                    </div>
+                    <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {activeContracts.slice(0, 5).map((contract) => (
+                        <button
+                          key={contract.id}
+                          onClick={() => navigate(`/contracts/${contract.id}`)}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 12,
+                            padding: '12px 14px', textAlign: 'left',
+                            background: BAI.bgSurface, border: `1px solid ${BAI.border}`,
+                            borderRadius: 10, cursor: 'pointer',
+                            transition: 'border-color 0.15s, box-shadow 0.15s',
+                            minHeight: 44, touchAction: 'manipulation',
+                          }}
+                          onMouseEnter={(e) => {
+                            (e.currentTarget as HTMLElement).style.borderColor = BAI.ownerBorder
+                            ;(e.currentTarget as HTMLElement).style.boxShadow = `0 2px 8px rgba(26,50,112,0.08)`
+                          }}
+                          onMouseLeave={(e) => {
+                            (e.currentTarget as HTMLElement).style.borderColor = BAI.border
+                            ;(e.currentTarget as HTMLElement).style.boxShadow = 'none'
+                          }}
+                        >
+                          {/* Avatar locataire */}
+                          <div style={{
+                            width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
+                            background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+                            fontSize: 15, color: BAI.owner,
+                          }}>
+                            {contract.tenant?.firstName?.[0]?.toUpperCase() ?? '?'}
+                          </div>
+
+                          {/* Infos locataire */}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ fontSize: 13, fontWeight: 700, color: BAI.ink, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {contract.tenant?.firstName} {contract.tenant?.lastName}
+                            </p>
+                            <p style={{ fontSize: 11, color: BAI.inkMid, margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {contract.property?.title}
+                              {contract.property?.city ? ` · ${contract.property.city}` : ''}
+                            </p>
+                          </div>
+
+                          {/* Loyer */}
+                          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                            <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 16, color: BAI.ink, margin: 0, lineHeight: 1 }}>
+                              {Number(contract.monthlyRent).toLocaleString('fr-FR')} €
+                            </p>
+                            <p style={{ fontSize: 9, color: BAI.inkFaint, margin: '2px 0 0', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em' }}>/ mois</p>
+                          </div>
+
+                          {/* Chevron */}
+                          <ArrowUpRight size={14} style={{ color: BAI.inkFaint, flexShrink: 0 }} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* ── Contrats récents ───────────────────────────────────── */}
                 <div style={cardBase}>
                   <div style={{ padding: '16px 20px', borderBottom: `1px solid ${BAI.border}` }}>

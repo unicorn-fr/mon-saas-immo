@@ -996,9 +996,12 @@ export default function Documents() {
     const fetchContracts = async () => {
       setLoadingContracts(true)
       try {
+        // Inclure ACTIVE et COMPLETED (les deux ont les deux signatures)
         const res = await apiClient.get('/contracts?status=ACTIVE')
-        const data = res.data.data as Contract[]
-        setContracts(Array.isArray(data) ? data : [])
+        const activeContracts = (res.data.data?.contracts ?? []) as Contract[]
+        const res2 = await apiClient.get('/contracts?status=COMPLETED')
+        const completedContracts = (res2.data.data?.contracts ?? []) as Contract[]
+        setContracts([...activeContracts, ...completedContracts])
       } catch {
         toast.error('Impossible de charger les contrats actifs')
         setContracts([])

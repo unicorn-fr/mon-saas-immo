@@ -71,6 +71,11 @@ export interface Contract {
     lastName: string
     email: string
     phone?: string
+    address?: string
+    monthlyIncome?: number
+    employmentType?: string
+    tenantScore?: number
+    profileMeta?: Record<string, any>
   }
   owner?: {
     id: string
@@ -78,7 +83,13 @@ export interface Contract {
     lastName: string
     email: string
     phone?: string
+    address?: string
+    iban?: string
+    bic?: string
+    bankName?: string
+    bankHolder?: string
   }
+  applicationId?: string
 }
 
 export interface CreateContractInput {

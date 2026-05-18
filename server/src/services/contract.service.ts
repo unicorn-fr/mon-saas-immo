@@ -66,7 +66,11 @@ const contractIncludes = {
       lastName: true,
       email: true,
       phone: true,
+      address: true,
+      monthlyIncome: true,
+      employmentType: true,
       tenantScore: true,
+      profileMeta: true,
     },
   },
   owner: {
@@ -76,6 +80,11 @@ const contractIncludes = {
       lastName: true,
       email: true,
       phone: true,
+      address: true,
+      iban: true,
+      bic: true,
+      bankName: true,
+      bankHolder: true,
     },
   },
 }
@@ -120,6 +129,15 @@ class ContractService {
 
     if (tenant.role !== 'TENANT') {
       throw new Error('L\'utilisateur trouvé n\'a pas le rôle locataire.')
+    }
+
+    // Vérifier que le profil du propriétaire est complet (adresse obligatoire art. 21 loi 89-462)
+    const owner = await prisma.user.findUnique({
+      where: { id: data.ownerId },
+      select: { id: true, firstName: true, lastName: true, address: true },
+    })
+    if (!owner?.address?.trim()) {
+      throw new Error('PROFIL_INCOMPLET_OWNER:Votre adresse personnelle est obligatoire (loi du 6 juillet 1989, art. 21) pour générer un contrat de location. Renseignez-la dans votre profil.')
     }
 
     // Vérifier que le dossier du locataire est complet (score ≥ 75 — IDENTITE + EMPLOI + REVENUS)

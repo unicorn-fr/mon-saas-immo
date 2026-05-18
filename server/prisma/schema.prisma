@@ -98,6 +98,10 @@ model User {
   bio               String?   @db.Text
   address           String?   // Adresse personnelle du bailleur (obligatoire art. 21 loi 89-462)
 
+  // Profil emploi/revenus locataire (minimum légal avant signature de bail)
+  monthlyIncome     Float?    // Revenus mensuels nets déclarés
+  employmentType    String?   // "CDI" | "CDD" | "freelance" | "étudiant" | "retraité" | "autre"
+
   // Identity document data (extracted by AI scanner)
   birthDate         String?   // date de naissance (DD/MM/YY)
   birthCity         String?   // ville de naissance
@@ -420,10 +424,14 @@ model Contract {
   property    Property       @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
   tenantId    String
-  tenant      User           @relation("ContractTenant", fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant      User           @relation("ContractTenant", fields: [tenantId], references: [id], onDelete: Restrict)
 
   ownerId     String
-  owner       User           @relation("ContractOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  owner       User           @relation("ContractOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+
+  // Lien facultatif vers la candidature d'origine (traçabilité)
+  applicationId String?      @unique
+  application   Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
 
   status      ContractStatus @default(DRAFT)
 
@@ -700,6 +708,9 @@ model Application {
   // Timestamps
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
+
+  // Contrat issu de cette candidature (1-1 facultatif)
+  contract      Contract?
 
   // Each tenant can only have one active application per property
   @@unique([propertyId, tenantId])
