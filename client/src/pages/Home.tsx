@@ -302,7 +302,7 @@ export default function Home() {
         @keyframes cloud1 { 0%,100%{transform:translateX(0)} 50%{transform:translateX(-60px)} }
         @keyframes cloud2 { 0%,100%{transform:translateX(0)} 50%{transform:translateX(50px)} }
         @media (max-width: 768px) {
-          .hero-section      { padding: 32px 0 40px !important; }
+          .hero-section      { padding: calc(env(safe-area-inset-top, 0px) + 88px) 0 40px !important; }
           .hero-trust        { display: none !important; }
           .stats-grid        { grid-template-columns: repeat(2, 1fr) !important; gap: 16px !important; }
           .steps-grid        { grid-template-columns: 1fr !important; }
