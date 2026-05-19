@@ -308,13 +308,10 @@ export const Header = () => {
             </span>
           </Link>
 
-          {/* Nav desktop centrée — PAS de display:flex en inline (Tailwind gère hidden/flex) */}
+          {/* Nav desktop centrée — display géré uniquement par Tailwind (hidden md:flex) */}
           {!isAuthenticated && (
-            <nav style={{
-              position: 'absolute', left: '50%', top: '50%',
-              transform: 'translate(-50%, -50%)',
-              display: 'flex', alignItems: 'center', gap: 4,
-            }} className="hidden md:flex">
+            <nav className="hidden md:flex items-center gap-1"
+              style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
               {NAV_LINKS.map(({ to, label, exact }) => {
                 const isActive = exact ? location.pathname === to : location.pathname === to || location.pathname.startsWith(to + '/')
                 return (
