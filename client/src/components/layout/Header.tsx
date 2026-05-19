@@ -286,14 +286,9 @@ export const Header = () => {
       paddingTop: 'env(safe-area-inset-top, 0px)',
       height: 'calc(64px + env(safe-area-inset-top, 0px))',
       display: 'flex', alignItems: 'flex-end',
-      background: 'rgba(255,255,255,0.07)',
-      backdropFilter: 'blur(10px)',
-      WebkitBackdropFilter: 'blur(10px)',
-      borderBottom: !isDark
-        ? '1px solid rgba(13,12,10,0.06)'
-        : '1px solid rgba(255,255,255,0.10)',
-      borderRadius: '0 0 16px 16px',
-      transition: 'border-color 0.3s ease',
+      background: isDark ? 'rgba(13,12,10,0.92)' : BAI.bgSurface,
+      borderBottom: isDark ? '1px solid rgba(255,255,255,0.08)' : `1px solid ${BAI.border}`,
+      transition: 'background 0.3s ease, border-color 0.3s ease',
     }}>
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 16px 0', width: '100%', boxSizing: 'border-box', height: 64, display: 'flex', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', width: '100%', minWidth: 0 }}>
