@@ -100,7 +100,9 @@ export const Header = () => {
         <button onClick={toggleSidebar}
           className="md:hidden flex items-center justify-center transition-colors"
           style={{
-            position: 'absolute', top: 8, left: 12,
+            position: 'absolute',
+            top: 'calc(env(safe-area-inset-top, 0px) + 8px)',
+            left: 12,
             minWidth: 44, minHeight: 44,
             background: 'rgba(255,255,255,0.85)',
             backdropFilter: 'blur(12px)',
@@ -119,7 +121,7 @@ export const Header = () => {
           className="flex items-center gap-1"
           style={{
             position: 'absolute',
-            top: 8,
+            top: 'calc(env(safe-area-inset-top, 0px) + 8px)',
             right: 'clamp(12px, 3vw, 16px)',
             background: 'rgba(255,255,255,0.85)',
             backdropFilter: 'blur(12px)',
@@ -287,8 +289,9 @@ export const Header = () => {
       left: 0,
       right: 0,
       zIndex: 100,
-      height: 64,
-      display: 'flex', alignItems: 'center',
+      paddingTop: 'env(safe-area-inset-top, 0px)',
+      height: 'calc(64px + env(safe-area-inset-top, 0px))',
+      display: 'flex', alignItems: 'flex-end',
       background: 'rgba(255,255,255,0.07)',
       backdropFilter: 'blur(10px)',
       WebkitBackdropFilter: 'blur(10px)',
@@ -298,7 +301,7 @@ export const Header = () => {
       borderRadius: '0 0 16px 16px',
       transition: 'border-color 0.3s ease',
     }}>
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 16px', width: '100%', boxSizing: 'border-box' }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 16px 0', width: '100%', boxSizing: 'border-box', height: 64, display: 'flex', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', width: '100%', minWidth: 0 }}>
 
           {/* Logo */}
@@ -601,7 +604,7 @@ export const Header = () => {
     )}
 
     {/* Spacer uniquement sur les pages hors home (header overlay sur hero) */}
-    {!isHomePage && <div aria-hidden style={{ height: 64, flexShrink: 0, background: 'transparent' }} />}
+    {!isHomePage && <div aria-hidden style={{ height: 'calc(64px + env(safe-area-inset-top, 0px))', flexShrink: 0, background: 'transparent' }} />}
     </>
   )
 }

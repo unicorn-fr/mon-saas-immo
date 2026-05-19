@@ -67,7 +67,7 @@ export const Layout = ({ children, showHeader = true, showFooter, bodyBackground
       {/* Colonne droite */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {showHeader && <Header />}
-        <main id="main-content" className="flex-1 overflow-y-auto pb-16 md:pb-0 pt-16">
+        <main id="main-content" className="flex-1 overflow-y-auto pb-16 md:pb-0" style={{ paddingTop: 'calc(64px + env(safe-area-inset-top, 0px))' }}>
           {children}
         </main>
       </div>
