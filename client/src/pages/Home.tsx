@@ -302,7 +302,7 @@ export default function Home() {
         @keyframes cloud1 { 0%,100%{transform:translateX(0)} 50%{transform:translateX(-60px)} }
         @keyframes cloud2 { 0%,100%{transform:translateX(0)} 50%{transform:translateX(50px)} }
         @media (max-width: 768px) {
-          .hero-section      { padding: calc(env(safe-area-inset-top, 0px) + 88px) 0 40px !important; }
+
           .hero-trust        { display: none !important; }
           .stats-grid        { grid-template-columns: repeat(2, 1fr) !important; gap: 16px !important; }
           .steps-grid        { grid-template-columns: 1fr !important; }
@@ -356,7 +356,7 @@ export default function Home() {
       }} />
 
       {/* ── HERO ─────────────────────────────────────────────────────── */}
-      <section ref={heroRef} className="hero-section" style={{ position: 'relative', background: T.night, color: '#fff', overflow: 'hidden', padding: 'clamp(70px,12vh,130px) 0 clamp(90px,14vh,160px)', paddingBottom: 'clamp(90px,14vh,160px)' }}>
+      <section ref={heroRef} className="hero-section" style={{ position: 'relative', background: T.night, color: '#fff', overflow: 'hidden', paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 88px), clamp(70px,12vh,130px))', paddingBottom: 'clamp(90px,14vh,160px)', paddingLeft: 0, paddingRight: 0 }}>
 
         {/* ── Atmosphère hero : cercles flous colorés ── */}
         {/* Soleil caramel — coin haut droit, fort */}
