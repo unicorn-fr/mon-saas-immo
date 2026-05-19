@@ -67,7 +67,8 @@ export const Layout = ({ children, showHeader = true, showFooter, bodyBackground
       {/* Colonne droite */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {showHeader && <Header />}
-        <main id="main-content" className="flex-1 overflow-y-auto pb-16 md:pb-0" style={{ paddingTop: 'calc(64px + env(safe-area-inset-top, 0px))' }}>
+        {/* mobile: pas de paddingTop (topbar en flux), desktop: espace pour la bulle flottante */}
+        <main id="main-content" className="flex-1 overflow-y-auto pb-16 md:pb-0 md:pt-16">
           {children}
         </main>
       </div>

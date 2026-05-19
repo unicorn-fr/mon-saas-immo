@@ -82,7 +82,7 @@ export const Header = () => {
 
   const initials = `${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}`.toUpperCase() || '?'
 
-  // ── DASHBOARD TOPBAR — sticky, enrichi ───────────────────────────────────
+  // ── DASHBOARD HEADER ─────────────────────────────────────────────────────
   if (hasSidebar) {
     const settingsLink = user?.role === 'OWNER' ? '/owner/settings' : '/tenant/settings'
     const ownerLinks = [
@@ -91,180 +91,174 @@ export const Header = () => {
       { to: '/pricing',         icon: <CreditCard className="w-4 h-4" />,     label: 'Mon abonnement' },
     ]
 
-    return (
-      <header
-        className="z-40 pointer-events-none"
-        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 0 }}>
-
-        {/* Hamburger mobile — flottant à gauche */}
-        <button onClick={toggleSidebar}
-          className="md:hidden flex items-center justify-center transition-colors"
+    const ProfileDropdown = () => showUserMenu ? (
+      <>
+        <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
+        <div className="absolute right-0 mt-2 py-1.5 z-20 overflow-hidden"
           style={{
-            position: 'absolute',
-            top: 'calc(env(safe-area-inset-top, 0px) + 8px)',
-            left: 12,
-            minWidth: 44, minHeight: 44,
-            background: 'rgba(255,255,255,0.85)',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            borderRadius: 14,
-            border: '1px solid rgba(255,255,255,0.5)',
-            color: BAI.inkFaint, pointerEvents: 'auto',
-            boxShadow: '0 2px 8px rgba(13,12,10,0.08)',
-          }}
-          aria-label="Menu">
-          <Menu className="w-5 h-5" />
-        </button>
-
-        {/* Bulle flottante — droite */}
-        <div
-          className="flex items-center gap-1"
-          style={{
-            position: 'absolute',
-            top: 'calc(env(safe-area-inset-top, 0px) + 8px)',
-            right: 'clamp(12px, 3vw, 16px)',
-            background: 'rgba(255,255,255,0.85)',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
+            background: '#ffffff',
+            border: `1px solid ${BAI.border}`,
             borderRadius: 20,
-            border: '1px solid rgba(255,255,255,0.5)',
-            padding: '4px 6px',
-            boxShadow: '0 4px 24px rgba(13,12,10,0.10)',
-            pointerEvents: 'auto',
+            boxShadow: '0 20px 60px rgba(13,12,10,0.12), 0 4px 16px rgba(13,12,10,0.06)',
+            width: 'min(240px, calc(100vw - 32px))',
           }}>
-
-          {/* Super Admin badge */}
-          {user?.role === 'SUPER_ADMIN' && (
-            <Link to="/super-admin"
-              className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold"
-              style={{ background: 'rgba(0,180,216,0.10)', color: '#00b4d8', border: '1px solid rgba(0,180,216,0.25)' }}>
-              <Terminal className="w-3 h-3" />
-              <span className="hidden sm:inline">Admin</span>
-            </Link>
-          )}
-
-          {/* Messages avec badge — masqués sur mobile */}
-          <Link to="/messages"
-            className="relative hidden sm:flex items-center justify-center rounded-lg transition-colors"
-            style={{ color: BAI.inkFaint, minWidth: 36, minHeight: 36 }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted; (e.currentTarget as HTMLElement).style.color = BAI.inkMid }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = BAI.inkFaint }}
-            title="Messages">
-            <MessageSquare className="w-4 h-4" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] flex items-center justify-center rounded-full text-[9px] font-bold text-white px-0.5"
-                style={{ background: BAI.caramel }}>
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </Link>
-
-          {/* Notifications — masquées sur mobile */}
-          <Link to="/notifications"
-            className="hidden sm:flex items-center justify-center rounded-lg transition-colors"
-            style={{ color: BAI.inkFaint, minWidth: 36, minHeight: 36 }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted; (e.currentTarget as HTMLElement).style.color = BAI.inkMid }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = BAI.inkFaint }}
-            title="Notifications">
-            <Bell className="w-4 h-4" />
-          </Link>
-
-          {/* Séparateur — masqué sur mobile */}
-          <div className="hidden sm:block w-px h-5 mx-0.5" style={{ background: BAI.border }} />
-
-          {/* Profil dropdown */}
-          <div className="relative">
-            <button onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-2 pl-1.5 pr-2.5 rounded-xl transition-all"
-              style={{
-                minHeight: 44,
-                background: showUserMenu ? BAI.bgMuted : 'transparent',
-                border: 'none',
-              }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
-              onMouseLeave={(e) => { if (!showUserMenu) (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
-              {user?.avatar ? (
-                <img src={user.avatar} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
-              ) : (
-                <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
-                  style={{ background: threadColor }}>
-                  {initials}
-                </div>
-              )}
-              <span className="text-[12px] font-medium hidden sm:block" style={{ color: BAI.ink, fontFamily: 'var(--font-body)', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {user?.firstName}
-              </span>
+          <div className="px-4 py-3 flex items-center gap-3" style={{ borderBottom: `1px solid ${BAI.border}` }}>
+            {user?.avatar
+              ? <img src={user.avatar} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+              : <div className="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-bold text-white flex-shrink-0" style={{ background: threadColor }}>{initials}</div>
+            }
+            <div className="min-w-0">
+              <p className="text-[13px] font-semibold truncate" style={{ color: BAI.ink, fontFamily: 'var(--font-body)' }}>{user?.firstName} {user?.lastName}</p>
+              <p className="text-[11px] truncate" style={{ color: BAI.inkFaint }}>{user?.email}</p>
+            </div>
+          </div>
+          <div className="px-4 pt-2 pb-1">
+            <span className="inline-block text-[10px] px-2 py-0.5 rounded-full font-semibold"
+              style={{ background: `${threadColor}18`, color: threadColor }}>
+              {user?.role === 'OWNER' ? 'Propriétaire' : user?.role === 'TENANT' ? 'Locataire' : user?.role}
+            </span>
+          </div>
+          <div className="py-1">
+            {ownerLinks.map(({ to, icon, label }) => (
+              <Link key={to} to={to}
+                className="flex items-center gap-3 px-4 transition-colors"
+                style={{ color: BAI.inkMid, fontFamily: 'var(--font-body)', fontSize: 14, minHeight: 44, display: 'flex', alignItems: 'center' }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted; (e.currentTarget as HTMLElement).style.color = BAI.ink }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = BAI.inkMid }}
+                onClick={() => setShowUserMenu(false)}>
+                <span style={{ color: BAI.inkFaint }}>{icon}</span>{label}
+              </Link>
+            ))}
+          </div>
+          <div className="pt-1" style={{ borderTop: `1px solid ${BAI.border}` }}>
+            <button onClick={handleLogout}
+              className="flex items-center gap-3 px-4 w-full transition-colors"
+              style={{ color: '#9b1c1c', fontFamily: 'var(--font-body)', fontSize: 14, minHeight: 44, background: 'none', border: 'none', cursor: 'pointer' }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#fef2f2' }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
+              <LogOut className="w-4 h-4" /> Déconnexion
             </button>
-
-            {showUserMenu && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
-                <div className="absolute right-0 mt-2 py-1.5 z-20 overflow-hidden"
-                  style={{
-                    background: '#ffffff',
-                    border: `1px solid ${BAI.border}`,
-                    borderRadius: 20,
-                    boxShadow: '0 20px 60px rgba(13,12,10,0.12), 0 4px 16px rgba(13,12,10,0.06)',
-                    width: 'min(240px, calc(100vw - 32px))',
-                  }}>
-
-                  {/* Profil header */}
-                  <div className="px-4 py-3 flex items-center gap-3" style={{ borderBottom: `1px solid ${BAI.border}` }}>
-                    {user?.avatar ? (
-                      <img src={user.avatar} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
-                    ) : (
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-bold text-white flex-shrink-0"
-                        style={{ background: threadColor }}>
-                        {initials}
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <p className="text-[13px] font-semibold truncate" style={{ color: BAI.ink, fontFamily: 'var(--font-body)' }}>
-                        {user?.firstName} {user?.lastName}
-                      </p>
-                      <p className="text-[11px] truncate" style={{ color: BAI.inkFaint }}>{user?.email}</p>
-                    </div>
-                  </div>
-
-                  {/* Role badge */}
-                  <div className="px-4 pt-2 pb-1">
-                    <span className="inline-block text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                      style={{ background: `${threadColor}18`, color: threadColor }}>
-                      {user?.role === 'OWNER' ? 'Propriétaire' : user?.role === 'TENANT' ? 'Locataire' : user?.role}
-                    </span>
-                  </div>
-
-                  {/* Links */}
-                  <div className="py-1">
-                    {ownerLinks.map(({ to, icon, label }) => (
-                      <Link key={to} to={to}
-                        className="flex items-center gap-3 px-4 transition-colors"
-                        style={{ color: BAI.inkMid, fontFamily: 'var(--font-body)', fontSize: 14, minHeight: 44, display: 'flex', alignItems: 'center' }}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted; (e.currentTarget as HTMLElement).style.color = BAI.ink }}
-                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = BAI.inkMid }}
-                        onClick={() => setShowUserMenu(false)}>
-                        <span style={{ color: BAI.inkFaint }}>{icon}</span>
-                        {label}
-                      </Link>
-                    ))}
-                  </div>
-
-                  {/* Logout */}
-                  <div className="pt-1" style={{ borderTop: `1px solid ${BAI.border}` }}>
-                    <button onClick={handleLogout}
-                      className="flex items-center gap-3 px-4 w-full transition-colors"
-                      style={{ color: '#9b1c1c', fontFamily: 'var(--font-body)', fontSize: 14, minHeight: 44, background: 'none', border: 'none', cursor: 'pointer' }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#fef2f2' }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
-                      <LogOut className="w-4 h-4" /> Déconnexion
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
           </div>
         </div>
-      </header>
+      </>
+    ) : null
+
+    return (
+      <>
+        {/* ── Mobile topbar — en flux, prend sa place naturellement ── */}
+        <header
+          className="md:hidden flex-shrink-0"
+          style={{
+            background: BAI.bgSurface,
+            borderBottom: `1px solid ${BAI.border}`,
+            boxShadow: '0 1px 4px rgba(13,12,10,0.06)',
+            paddingTop: 'env(safe-area-inset-top, 0px)',
+          }}>
+          <div style={{
+            height: 52,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '0 12px',
+          }}>
+            {/* Hamburger */}
+            <button onClick={toggleSidebar} aria-label="Menu"
+              style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10, border: `1px solid ${BAI.border}`, background: 'transparent', color: BAI.inkMid, cursor: 'pointer', flexShrink: 0 }}>
+              <Menu className="w-5 h-5" />
+            </button>
+
+            {/* Logo centré */}
+            <Link to={getDashboardLink()} style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
+              <BailioLogo size={18} />
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: 17, fontWeight: 700, fontStyle: 'italic', color: BAI.ink, whiteSpace: 'nowrap' }}>
+                Bailio<span style={{ color: BAI.caramel }}>.</span>
+              </span>
+            </Link>
+
+            {/* Actions droite */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+              {/* Messages */}
+              <Link to="/messages"
+                style={{ position: 'relative', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10, border: `1px solid ${BAI.border}`, color: BAI.inkFaint, textDecoration: 'none' }}>
+                <MessageSquare className="w-4 h-4" />
+                {unreadCount > 0 && (
+                  <span style={{ position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: '50%', background: BAI.caramel }} />
+                )}
+              </Link>
+              {/* Avatar / profil */}
+              <div style={{ position: 'relative' }}>
+                <button onClick={() => setShowUserMenu(!showUserMenu)}
+                  style={{ width: 40, height: 40, borderRadius: 10, border: `1px solid ${BAI.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: 'transparent', overflow: 'hidden', padding: 0 }}>
+                  {user?.avatar
+                    ? <img src={user.avatar} alt="" style={{ width: 40, height: 40, objectFit: 'cover' }} />
+                    : <div style={{ width: 40, height: 40, background: threadColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700 }}>{initials}</div>
+                  }
+                </button>
+                <ProfileDropdown />
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* ── Desktop/Tablet — bulle flottante (inchangée) ── */}
+        <header
+          className="hidden md:block z-40 pointer-events-none"
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 0 }}>
+
+          {/* Bulle flottante droite */}
+          <div className="flex items-center gap-1"
+            style={{
+              position: 'absolute', top: 8, right: 'clamp(12px, 3vw, 16px)',
+              background: 'rgba(255,255,255,0.92)',
+              borderRadius: 20,
+              border: `1px solid ${BAI.border}`,
+              padding: '4px 6px',
+              boxShadow: BAI.shadowMd,
+              pointerEvents: 'auto',
+            }}>
+            {user?.role === 'SUPER_ADMIN' && (
+              <Link to="/super-admin"
+                className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold"
+                style={{ background: 'rgba(0,180,216,0.10)', color: '#00b4d8', border: '1px solid rgba(0,180,216,0.25)' }}>
+                <Terminal className="w-3 h-3" /> Admin
+              </Link>
+            )}
+            <Link to="/messages" className="relative flex items-center justify-center rounded-lg transition-colors"
+              style={{ color: BAI.inkFaint, minWidth: 36, minHeight: 36 }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
+              title="Messages">
+              <MessageSquare className="w-4 h-4" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] flex items-center justify-center rounded-full text-[9px] font-bold text-white px-0.5"
+                  style={{ background: BAI.caramel }}>{unreadCount > 9 ? '9+' : unreadCount}</span>
+              )}
+            </Link>
+            <Link to="/notifications" className="flex items-center justify-center rounded-lg transition-colors"
+              style={{ color: BAI.inkFaint, minWidth: 36, minHeight: 36 }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
+              title="Notifications">
+              <Bell className="w-4 h-4" />
+            </Link>
+            <div className="w-px h-5 mx-0.5" style={{ background: BAI.border }} />
+            <div className="relative">
+              <button onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center gap-2 pl-1.5 pr-2.5 rounded-xl"
+                style={{ minHeight: 44, background: showUserMenu ? BAI.bgMuted : 'transparent', border: 'none', cursor: 'pointer' }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
+                onMouseLeave={(e) => { if (!showUserMenu) (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
+                {user?.avatar
+                  ? <img src={user.avatar} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
+                  : <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0" style={{ background: threadColor }}>{initials}</div>
+                }
+                <span className="text-[12px] font-medium" style={{ color: BAI.ink, fontFamily: 'var(--font-body)', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {user?.firstName}
+                </span>
+              </button>
+              <ProfileDropdown />
+            </div>
+          </div>
+        </header>
+      </>
     )
   }
 
