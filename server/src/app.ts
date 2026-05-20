@@ -30,8 +30,8 @@ app.get('/health', (_req: Request, res: Response) => {
 const allowedOrigins = new Set([
   'https://bailio.fr',
   'https://www.bailio.fr',
-  'http://localhost:5173',
-  'http://localhost:3000',
+  // localhost uniquement en développement — jamais en production
+  ...(env.NODE_ENV !== 'production' ? ['http://localhost:5173', 'http://localhost:3000'] : []),
   ...env.CORS_ORIGIN.split(',').map((o: string) => o.trim()).filter(Boolean),
 ])
 

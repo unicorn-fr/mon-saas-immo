@@ -5,7 +5,11 @@ import { sendEmail } from '../utils/email.util.js'
 import { env } from '../config/env.js'
 
 const router = Router()
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } })
+const imageFileFilter: multer.Options['fileFilter'] = (_req, file, cb) => {
+  const allowed = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp'])
+  cb(null, allowed.has(file.mimetype))
+}
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 }, fileFilter: imageFileFilter })
 
 function escapeHtml(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -28,8 +32,8 @@ router.post('/', optionalAuthenticate, upload.single('screenshot'), async (req: 
   const hasScreenshot = !!req.file
   const ts = new Date().toISOString()
 
-  // Log to server console
-  console.log('[BUG REPORT]', JSON.stringify({ userId, type, title, description, url, userAgent, hasScreenshot, ts }, null, 2))
+  // Log métadonnées uniquement — la description libre n'est pas loggée (peut contenir des données sensibles)
+  console.log('[BUG REPORT]', JSON.stringify({ userId, type, title, url, hasScreenshot, ts }, null, 2))
 
   // Send email to admin(s)
   const recipients = env.ADMIN_EMAILS.length ? env.ADMIN_EMAILS : [env.EMAIL_FROM]

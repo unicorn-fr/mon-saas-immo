@@ -47,7 +47,7 @@ router.post('/google', authController.googleAuth.bind(authController))
 router.post('/magic-link', emailRateLimiter, authController.sendMagicLink.bind(authController))
 
 // POST /api/v1/auth/magic-link/verify — vérifie le token magic link
-router.post('/magic-link/verify', authController.verifyMagicLink.bind(authController))
+router.post('/magic-link/verify', loginRateLimiter, authController.verifyMagicLink.bind(authController))
 
 // POST /api/v1/auth/resend-verification-public - Renvoyer le lien (sans être connecté)
 router.post(
@@ -120,8 +120,8 @@ router.patch('/change-role', authenticate, async (req: Request, res: Response) =
  * TOTP / 2FA routes
  */
 
-// POST /api/v1/auth/totp/verify - Verify code during login (public)
-router.post('/totp/verify', totpController.verify)
+// POST /api/v1/auth/totp/verify - Verify code during login (public) — rate limité pour éviter bruteforce TOTP
+router.post('/totp/verify', loginRateLimiter, totpController.verify)
 
 // GET /api/v1/auth/totp/status - Get 2FA status (protected)
 router.get('/totp/status', authenticate, totpController.status)

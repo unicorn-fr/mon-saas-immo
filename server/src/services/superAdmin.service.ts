@@ -356,10 +356,20 @@ class SuperAdminService {
 
     const skip = (page - 1) * limit
 
-    // Use tagged template ($queryRaw) — table name validated above, pagination params are typed numbers
+    // Colonnes sensibles masquées par table — jamais retournées même au super-admin
+    const MASKED_COLUMNS: Record<string, string[]> = {
+      users: ['password', 'totpSecret', 'iban', 'bic', 'nationalNumber', 'documentNumber', 'bankHolder'],
+      refresh_tokens: ['token'],
+      verification_tokens: ['token'],
+    }
+    const masked = MASKED_COLUMNS[table] ?? []
+    const maskedSelect = masked.length > 0
+      ? `SELECT *, ${masked.map(c => `'[MASQUÉ]' AS "${c}"`).join(', ')} FROM "${table}"`
+      : `SELECT * FROM "${table}"`
+
     const tableId = table as string // already whitelisted
     const rows = await prisma.$queryRawUnsafe(
-      `SELECT * FROM "${tableId}" ORDER BY "createdAt" DESC NULLS LAST LIMIT $1 OFFSET $2`,
+      `${maskedSelect} ORDER BY "createdAt" DESC NULLS LAST LIMIT $1 OFFSET $2`,
       Number(limit),
       Number(skip)
     )

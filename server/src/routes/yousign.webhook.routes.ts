@@ -14,8 +14,12 @@ router.post('/', async (req: Request, res: Response) => {
     const rawBody = JSON.stringify(req.body)
 
     if (!process.env.YOUSIGN_WEBHOOK_SECRET) {
-      // En développement local sans secret configuré, on accepte mais on loggue
-      console.warn('[yousign-webhook] YOUSIGN_WEBHOOK_SECRET non configuré — signature non vérifiée')
+      const isProduction = process.env.NODE_ENV === 'production'
+      if (isProduction) {
+        console.error('[yousign-webhook] YOUSIGN_WEBHOOK_SECRET absent en production — requête rejetée')
+        return res.status(500).json({ error: 'Configuration serveur incomplète' })
+      }
+      console.warn('[yousign-webhook] YOUSIGN_WEBHOOK_SECRET non configuré — signature non vérifiée (dev uniquement)')
     } else {
       const valid = signature && verifyWebhookSignature(rawBody, signature.replace('sha256=', ''))
       if (!valid) {

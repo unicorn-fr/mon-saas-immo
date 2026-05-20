@@ -770,17 +770,17 @@ class AuthService {
    * Get user by ID (for auth middleware)
    */
   async getUserById(userId: string) {
+    // Données minimales pour le contexte de session — pas de champs sensibles (iban, nationalNumber, documentNumber)
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
         id: true, email: true, firstName: true, lastName: true,
         role: true, avatar: true, phone: true, address: true, bio: true,
         emailVerified: true, phoneVerified: true,
-        birthDate: true, birthCity: true, nationality: true,
-        documentExpiry: true,
-        nationalNumber: true,
-        documentNumber: true,
+        nationality: true,
         profileMeta: true,
+        stripeIdentityStatus: true,
+        isBanned: true,
         createdAt: true, updatedAt: true,
       },
     })

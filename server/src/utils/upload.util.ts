@@ -16,7 +16,8 @@ const storage = multer.memoryStorage()
 // Allowed MIME types for image uploads
 const ALLOWED_IMAGE_TYPES = new Set([
   'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif',
-  'image/svg+xml', 'image/heic', 'image/heif',
+  // 'image/svg+xml' retiré — les SVG peuvent contenir du JS embarqué et s'exécuter dans le navigateur
+  'image/heic', 'image/heif',
 ])
 
 // Allowed MIME types for generic file uploads (dossier, contracts, documents)

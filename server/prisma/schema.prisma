@@ -143,6 +143,13 @@ model User {
   totpSecret        String?
   totpEnabled       Boolean   @default(false)
 
+  // RGPD — Consentements et droits
+  tosAcceptedAt     DateTime? // Date d'acceptation des CGU (preuve légale)
+  tosVersion        String?   // Version des CGU acceptées (ex: "2026-01")
+  marketingConsent  Boolean   @default(false) // Consentement emails marketing (art. 7 RGPD)
+  marketingConsentAt DateTime?               // Date du consentement marketing
+  deletionRequestedAt DateTime?              // Demande de suppression en attente (art. 17 RGPD — délai 30j)
+
   // Timestamps
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
@@ -421,7 +428,7 @@ model Contract {
   id          String         @id @default(uuid())
 
   propertyId  String
-  property    Property       @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  property    Property       @relation(fields: [propertyId], references: [id], onDelete: Restrict) // Baux conservés 5 ans après expiration (obligation légale)
 
   tenantId    String
   tenant      User           @relation("ContractTenant", fields: [tenantId], references: [id], onDelete: Restrict)
@@ -556,6 +563,7 @@ model TenantDocument {
 
   @@index([userId])
   @@index([category])
+  @@index([userId, status])  // Filtrage statut dossier locataire
   @@index([expiresAt])
   @@map("tenant_documents")
 }
@@ -623,6 +631,9 @@ model Notification {
 
   @@index([userId])
   @@index([isRead])
+  @@index([userId, isRead])           // Badge compteur non-lus
+  @@index([userId, createdAt])        // Liste paginée
+  @@index([userId, isRead, createdAt]) // Liste filtrée non-lus
   @@index([createdAt])
   @@map("notifications")
 }
@@ -867,7 +878,7 @@ enum PaymentStatus {
 model Payment {
   id                  String        @id @default(cuid())
   contractId          String
-  contract            Contract      @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  contract            Contract      @relation(fields: [contractId], references: [id], onDelete: Restrict) // Paiements conservés avec le contrat — données légales
   amount              Float         // loyer en euros
   charges             Float         @default(0)
   dueDate             DateTime      // date d'échéance
@@ -1088,6 +1099,7 @@ model MaintenanceRequest {
 
   @@index([ownerId])
   @@index([propertyId])
+  @@index([tenantId])    // Requêtes dashboard locataire
   @@index([status])
   @@index([priority])
   @@index([ownerId, status])

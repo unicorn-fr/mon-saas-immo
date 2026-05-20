@@ -97,7 +97,8 @@ router.get('/by-tenant', authorize('TENANT'), async (req: Request, res: Response
             owner: {
               select: {
                 id: true, firstName: true, lastName: true, avatar: true,
-                iban: true, bic: true, bankName: true, bankHolder: true,
+                // IBAN masqué — disponible uniquement via /api/v1/payments/owner-iban/:contractId
+                bankName: true, bankHolder: true,
               },
             },
           },
