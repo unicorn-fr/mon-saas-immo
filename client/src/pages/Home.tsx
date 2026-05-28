@@ -1,19 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, Navigate } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
+import { useProperties } from '../hooks/useProperties'
+import { useFavoriteStore } from '../store/favoriteStore'
+import { PropertyCard } from '../components/property/PropertyCard'
+import { Header } from '../components/layout/Header'
 import Footer from '../components/layout/Footer'
 import { useDarkSection } from '../hooks/useDarkSection'
-import {
-  ArrowRight,
-  Building2,
-  MapPin,
-  Bed,
-  Maximize2,
-  Check,
-} from 'lucide-react'
-import { useAuth } from '../hooks/useAuth'
-import { propertyService } from '../services/property.service'
+import { Search, SlidersHorizontal, ArrowRight, Building2 } from 'lucide-react'
 import { Property } from '../types/property.types'
-import { Header } from '../components/layout/Header'
 
 const T = {
   bgBase:      '#fafaf8',
@@ -24,270 +19,99 @@ const T = {
   inkFaint:    '#9e9b96',
   night:       '#1a1a2e',
   caramel:     '#c4976a',
-  caramelHover:'#b07f54',
   border:      '#e4e1db',
-  shadow:      '0 1px 2px rgba(13,12,10,0.05), 0 4px 16px rgba(13,12,10,0.06)',
-  shadowHover: '0 4px 8px rgba(13,12,10,0.08), 0 12px 32px rgba(13,12,10,0.10)',
   fontDisplay: "'Cormorant Garamond', Georgia, serif",
   fontBody:    "'DM Sans', system-ui, sans-serif",
 } as const
 
-const STATS = [
-  { value: '0 €',    label: "Frais d'agence, pour les deux parties" },
-  { value: '9,99 €', label: 'Par mois — plan Starter, zéro commission sur le loyer' },
-  { value: '8 min',  label: 'Pour publier une annonce complète' },
-  { value: '96 k€',  label: 'De garantie loyers impayés (option)' },
+const PROPERTY_TYPES = [
+  { value: '', label: 'Tous types' },
+  { value: 'APARTMENT', label: 'Appartement' },
+  { value: 'HOUSE', label: 'Maison' },
+  { value: 'STUDIO', label: 'Studio' },
+  { value: 'DUPLEX', label: 'Duplex' },
+  { value: 'LOFT', label: 'Loft' },
 ]
 
-const STEPS = [
-  {
-    n: '1',
-    title: 'Publie ton annonce.',
-    desc: 'Tu remplis les informations du bien, tu téléverses tes photos. En huit minutes, l\'annonce est en ligne et visible par les candidats.',
-  },
-  {
-    n: '2',
-    title: 'Reçois les candidatures.',
-    desc: 'Chaque dossier arrive avec une analyse de solvabilité — taux d\'effort, stabilité pro, garant. Tu compares, tu choisis.',
-  },
-  {
-    n: '3',
-    title: 'Signe et encaisse.',
-    desc: 'Bail conforme loi ALUR signé électroniquement. Quittances automatiques, état des lieux guidé, suivi des loyers intégré. C\'est tout.',
-  },
+const PRICE_RANGES = [
+  { value: '', label: 'Tous prix' },
+  { value: '0-500', label: '< 500 €' },
+  { value: '500-800', label: '500 – 800 €' },
+  { value: '800-1200', label: '800 – 1 200 €' },
+  { value: '1200-2000', label: '1 200 – 2 000 €' },
+  { value: '2000-', label: '> 2 000 €' },
 ]
-
-const FEATURES = [
-  {
-    title: 'Zéro frais d\'agence.',
-    desc: 'Ni côté propriétaire, ni côté locataire. Un abonnement fixe à partir de 9,99 €/mois — jamais de commission prélevée sur le loyer, jamais de surprise.',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="24" height="24"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-    ),
-  },
-  {
-    title: 'Dossiers analysés.',
-    desc: 'Chaque candidature arrive avec une analyse de cohérence : taux d\'effort, stabilité professionnelle, présence d\'un garant. Tu compares en un coup d\'œil.',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="24" height="24"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-    ),
-  },
-  {
-    title: 'Bail 100 % en ligne.',
-    desc: 'Conforme loi ALUR, signé via une solution certifiée eIDAS. Même valeur probante qu\'un bail papier, accessible à vie dans ton espace. Les quittances partent automatiquement.',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="24" height="24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
-    ),
-  },
-  {
-    title: 'État des lieux guidé.',
-    desc: 'Pièce par pièce, photo par photo, depuis ton téléphone. Horodaté, signé des deux côtés, archivé. À la sortie, on compare automatiquement avec l\'entrée.',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="24" height="24"><path d="m9 12 2 2 4-4"/><path d="M5 7c0-1.1.9-2 2-2h10a2 2 0 0 1 2 2v12H5z"/><path d="M22 19H2"/></svg>
-    ),
-  },
-  {
-    title: 'Suivi des loyers.',
-    desc: 'Le locataire vire directement sur ton compte. Tu cliques « reçu », la quittance part automatiquement par email. En retard ? Une relance douce est envoyée. Tu restes le patron.',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="24" height="24"><path d="M2 9V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4"/><path d="M2 13v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4"/><line x1="6" x2="6.01" y1="11" y2="11"/><line x1="10" x2="10.01" y1="11" y2="11"/></svg>
-    ),
-  },
-  {
-    title: 'Garantie loyers (option).',
-    desc: 'Jusqu\'à 96 000 € par sinistre, procédure juridique incluse, en partenariat avec un assureur agréé. Activable en un clic depuis ton tableau de bord.',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="24" height="24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-    ),
-  },
-]
-
-const TESTIMONIALS = [
-  {
-    quote: "J'ai loué mon F2 en 11 jours. Pas une seule visite d'agence, pas un seul fax. Le locataire a signé depuis son téléphone un mardi soir.",
-    name: 'Camille L.',
-    role: 'Propriétaire — Paris 11e',
-    photo: 'https://i.pravatar.cc/80?img=47',
-  },
-  {
-    quote: "Mon dossier, je l'ai constitué une fois. J'ai postulé à 4 apparts en 20 minutes. Aucune agence ne m'a demandé de le recopier à la main.",
-    name: 'Théo M.',
-    role: 'Locataire — Toulouse',
-    photo: 'https://i.pravatar.cc/80?img=12',
-  },
-  {
-    quote: "Deux biens, deux locataires stables depuis 18 mois. Je passe 10 minutes par mois sur Bailio. Avant, c'était un métier à part entière.",
-    name: 'Sophie R.',
-    role: 'Propriétaire — Bordeaux',
-    photo: 'https://i.pravatar.cc/80?img=49',
-  },
-]
-
-const OWNER_BENEFITS = [
-  'Publiez gratuitement',
-  'Sélection des dossiers simplifiée',
-  'Bail généré automatiquement',
-  'Zéro frais d\'agence',
-]
-
-const TENANT_BENEFITS = [
-  'Accès à toutes les annonces',
-  'Dossier numérique sécurisé',
-  'Candidature en un clic',
-  'Signature électronique incluse',
-]
-
-function FeaturedCarousel({ properties, loading }: { properties: Property[]; loading: boolean }) {
-  const carouselRef = useRef<HTMLDivElement>(null)
-  const isDragging = useRef(false)
-  const startX = useRef(0)
-  const scrollLeft = useRef(0)
-  const didDrag = useRef(false)
-
-  const onMouseDown = (e: React.MouseEvent) => {
-    const el = carouselRef.current
-    if (!el) return
-    isDragging.current = true
-    didDrag.current = false
-    startX.current = e.pageX - el.offsetLeft
-    scrollLeft.current = el.scrollLeft
-    el.style.cursor = 'grabbing'
-    el.style.userSelect = 'none'
-  }
-
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging.current || !carouselRef.current) return
-    e.preventDefault()
-    const x = e.pageX - carouselRef.current.offsetLeft
-    const walk = (x - startX.current) * 1.2
-    if (Math.abs(walk) > 4) didDrag.current = true
-    carouselRef.current.scrollLeft = scrollLeft.current - walk
-  }
-
-  const onMouseUp = () => {
-    isDragging.current = false
-    if (carouselRef.current) {
-      carouselRef.current.style.cursor = 'grab'
-      carouselRef.current.style.userSelect = ''
-    }
-  }
-
-  const onLinkClick = (e: React.MouseEvent) => {
-    if (didDrag.current) e.preventDefault()
-  }
-
-  if (loading) {
-    return (
-      <div className="props-carousel">
-        {[1, 2, 3].map(n => (
-          <div key={n} className="props-carousel-item" style={{ background: T.bgSurface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: 'hidden' }}>
-            <div style={{ height: 240, background: T.border }} />
-            <div style={{ padding: 20 }}>
-              <div style={{ height: 18, background: T.border, borderRadius: 4, marginBottom: 12, width: '70%' }} />
-              <div style={{ height: 14, background: T.border, borderRadius: 4, width: '50%' }} />
-            </div>
-          </div>
-        ))}
-      </div>
-    )
-  }
-
-  if (properties.length === 0) {
-    return (
-      <div style={{ textAlign: 'center', padding: '64px 0', color: T.inkFaint }}>
-        <Building2 size={48} style={{ opacity: 0.3, margin: '0 auto 12px', display: 'block' }} />
-        <p style={{ fontFamily: T.fontBody, fontSize: 15 }}>Aucun bien disponible pour le moment.</p>
-      </div>
-    )
-  }
-
-  return (
-    <div
-      className="props-carousel"
-      ref={carouselRef}
-      onMouseDown={onMouseDown}
-      onMouseMove={onMouseMove}
-      onMouseUp={onMouseUp}
-      onMouseLeave={onMouseUp}
-      style={{ cursor: 'grab' }}
-    >
-      {properties.map(property => (
-        <div key={property.id} className="props-carousel-item">
-          <Link
-            to={`/property/${property.id}`}
-            style={{ textDecoration: 'none', display: 'block' }}
-            onClick={onLinkClick}
-          >
-            <article
-              style={{ background: T.bgSurface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: 'hidden', boxShadow: T.shadow, transition: 'transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s cubic-bezier(0.16,1,0.3,1)' }}
-              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.transform = 'translateY(-4px)'; el.style.boxShadow = T.shadowHover }}
-              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = T.shadow }}
-            >
-              {/* Image 1:1 */}
-              <div style={{ position: 'relative', paddingBottom: '100%', overflow: 'hidden', background: T.bgMuted }}>
-                {property.images?.[0] ? (
-                  <img
-                    src={property.images[0]} alt={property.title}
-                    draggable={false}
-                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-                    onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
-                  />
-                ) : (
-                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Building2 size={40} color={T.inkFaint} />
-                  </div>
-                )}
-                {/* Gradient */}
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(13,12,10,0.62) 0%, rgba(13,12,10,0.18) 45%, transparent 70%)', pointerEvents: 'none' }} />
-                {/* Type badge */}
-                <div style={{ position: 'absolute', top: 12, left: 12, background: 'rgba(255,255,255,0.96)', borderRadius: 20, padding: '4px 10px', fontFamily: T.fontBody, fontWeight: 600, fontSize: 11, color: T.ink }}>
-                  {property.type}
-                </div>
-                {/* Price */}
-                <div style={{ position: 'absolute', bottom: 12, left: 14 }}>
-                  <span style={{ fontFamily: T.fontDisplay, fontWeight: 700, fontSize: 22, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
-                    {Number(property.price).toLocaleString('fr-FR')} €
-                  </span>
-                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.82)', marginLeft: 4 }}>/mois</span>
-                </div>
-              </div>
-              {/* Info */}
-              <div style={{ padding: '14px 16px 16px', fontFamily: T.fontBody }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6 }}>
-                  <MapPin size={12} color={T.caramel} />
-                  <span style={{ fontSize: 11, fontWeight: 600, color: T.caramel, letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>{property.city}</span>
-                </div>
-                <p style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 18, color: T.ink, margin: '0 0 12px', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{property.title}</p>
-                <div style={{ display: 'flex', gap: 0, fontSize: 12, color: T.inkMid, paddingTop: 12, borderTop: `1px solid ${T.border}` }}>
-                  <span style={{ flex: 1, display: 'inline-flex', alignItems: 'center', gap: 5 }}><Bed size={13} color={T.inkFaint} />{property.bedrooms} ch.</span>
-                  <span style={{ flex: 1, display: 'inline-flex', alignItems: 'center', gap: 5, borderLeft: `1px solid ${T.border}`, paddingLeft: 12 }}><Maximize2 size={13} color={T.inkFaint} />{property.surface} m²</span>
-                </div>
-              </div>
-            </article>
-          </Link>
-        </div>
-      ))}
-    </div>
-  )
-}
 
 export default function Home() {
   const { isAuthenticated, user } = useAuth()
   const heroRef = useRef<HTMLElement>(null)
   useDarkSection(heroRef)
 
-  const [featuredProperties, setFeaturedProperties] = useState<Property[]>([])
-  const [loadingProperties, setLoadingProperties] = useState(true)
+  const {
+    properties: storeProperties,
+    totalProperties,
+    hasMore: storeHasMore,
+    isLoading,
+    fetchProperties,
+  } = useProperties()
+  const { loadFavorites } = useFavoriteStore()
+
+  const [city, setCity] = useState('')
+  const [type, setType] = useState('')
+  const [priceRange, setPriceRange] = useState('')
+  const [allProperties, setAllProperties] = useState<Property[]>([])
+  const [page, setPage] = useState(1)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const LIMIT = 12
 
   useEffect(() => {
-    propertyService
-      .getProperties({ status: 'AVAILABLE' }, { page: 1, limit: 12 })
-      .then((data) => {
-        setFeaturedProperties(data.properties?.slice(0, 12) ?? [])
+    if (isAuthenticated) loadFavorites()
+  }, [isAuthenticated])
+
+  const buildFilters = () => {
+    const filters: Record<string, unknown> = { status: 'AVAILABLE' }
+    if (city.trim()) filters.city = city.trim()
+    if (type) filters.type = type
+    if (priceRange) {
+      const [min, max] = priceRange.split('-')
+      if (min) filters.minPrice = Number(min)
+      if (max) filters.maxPrice = Number(max)
+    }
+    return filters
+  }
+
+  useEffect(() => {
+    setAllProperties([])
+    setPage(1)
+    fetchProperties(buildFilters(), { page: 1, limit: LIMIT })
+  }, [type, priceRange])
+
+  useEffect(() => {
+    if (page === 1) {
+      setAllProperties(storeProperties)
+    } else {
+      setAllProperties(prev => {
+        const ids = new Set(prev.map(p => p.id))
+        return [...prev, ...storeProperties.filter(p => !ids.has(p.id))]
       })
-      .catch(() => setFeaturedProperties([]))
-      .finally(() => setLoadingProperties(false))
-  }, [])
+    }
+  }, [storeProperties])
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    setAllProperties([])
+    setPage(1)
+    fetchProperties(buildFilters(), { page: 1, limit: LIMIT })
+  }
+
+  const handleLoadMore = async () => {
+    if (loadingMore || !storeHasMore) return
+    setLoadingMore(true)
+    const next = page + 1
+    setPage(next)
+    await fetchProperties(buildFilters(), { page: next, limit: LIMIT })
+    setLoadingMore(false)
+  }
 
   if (isAuthenticated && user) {
     if (user.role === 'OWNER')  return <Navigate to="/dashboard/owner"  replace />
@@ -295,588 +119,219 @@ export default function Home() {
   }
 
   return (
-    <div style={{ backgroundColor: T.night, fontFamily: T.fontBody, color: T.ink, minHeight: '100vh' }}>
+    <div style={{ backgroundColor: T.bgBase, fontFamily: T.fontBody, color: T.ink, minHeight: '100vh' }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=DM+Sans:wght@400;500;600;700&display=swap');
-        @keyframes pulse-dot { 0%{box-shadow:0 0 0 0 rgba(196,151,106,0.6)} 70%{box-shadow:0 0 0 10px rgba(196,151,106,0)} 100%{box-shadow:0 0 0 0 rgba(196,151,106,0)} }
-        @keyframes cloud1 { 0%,100%{transform:translateX(0)} 50%{transform:translateX(-60px)} }
-        @keyframes cloud2 { 0%,100%{transform:translateX(0)} 50%{transform:translateX(50px)} }
-        @media (max-width: 768px) {
-
-          .hero-trust        { display: none !important; }
-          .stats-grid        { grid-template-columns: repeat(2, 1fr) !important; gap: 16px !important; }
-          .steps-grid        { grid-template-columns: 1fr !important; }
-          .feat-grid         { grid-template-columns: 1fr !important; }
-          .testi-grid        { grid-template-columns: 1fr !important; }
-          .cta-grid          { flex-direction: column !important; }
-          .footer-grid       { grid-template-columns: repeat(2, 1fr) !important; }
-          .footer-brand      { grid-column: span 2 !important; }
-          .cta-split-card    { padding: 28px 20px !important; }
-          .carousel-arrows   { display: none !important; }
-        }
-        @media (max-width: 480px) {
-          .stats-grid  { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
-          .stats-grid > div { border-right: none !important; border-bottom: 1px solid #e4e1db; padding-bottom: 16px !important; }
-          .cta-grid    { gap: 12px !important; }
-        }
-        @media (min-width: 1024px) {
-          .feat-grid   { grid-template-columns: repeat(3, 1fr) !important; }
-          .testi-grid  { grid-template-columns: repeat(3, 1fr) !important; }
-          .footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr !important; }
-        }
-        .props-carousel {
-          display: flex;
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,700&family=DM+Sans:wght@400;500;600;700&display=swap');
+        .home-input:focus { outline: none; border-color: ${T.caramel} !important; }
+        .home-select:focus { outline: none; border-color: ${T.caramel} !important; }
+        .prop-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
           gap: 20px;
-          overflow-x: auto;
-          -webkit-overflow-scrolling: touch;
-          scrollbar-width: none;
-          padding-bottom: 8px;
         }
-        .props-carousel::-webkit-scrollbar { display: none; }
-        .props-carousel-item {
-          flex: 0 0 clamp(260px, 72vw, 320px);
-        }
-        @media (pointer: coarse) {
-          .props-carousel {
-            scroll-snap-type: x proximity;
-          }
-          .props-carousel-item {
-            scroll-snap-align: start;
-          }
+        @media (max-width: 640px) {
+          .hero-filters { flex-direction: column !important; }
+          .hero-filters select { width: 100% !important; }
         }
       `}</style>
 
       <Header />
 
-      {/* Grain texture overlay — gives material feel */}
-      <div aria-hidden style={{
-        position: 'fixed', inset: 0, zIndex: 9998, pointerEvents: 'none',
-        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)' opacity='1'/%3E%3C/svg%3E")`,
-        opacity: 0.028,
-      }} />
+      {/* ── HERO compact ── */}
+      <section
+        ref={heroRef}
+        style={{
+          background: T.night,
+          paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 80px), clamp(72px,11vh,120px))',
+          paddingBottom: 'clamp(40px,6vh,64px)',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Ambiance orbs */}
+        <div aria-hidden style={{ position: 'absolute', top: -100, right: -60, width: 600, height: 500, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.30) 0%, transparent 65%)', filter: 'blur(40px)', pointerEvents: 'none' }} />
+        <div aria-hidden style={{ position: 'absolute', bottom: -40, left: -60, width: 400, height: 300, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(100,70,200,0.18) 0%, transparent 65%)', filter: 'blur(50px)', pointerEvents: 'none' }} />
 
-      {/* ── HERO ─────────────────────────────────────────────────────── */}
-      <section ref={heroRef} className="hero-section" style={{ position: 'relative', background: T.night, color: '#fff', overflow: 'hidden', paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 88px), clamp(70px,12vh,130px))', paddingBottom: 'clamp(90px,14vh,160px)', paddingLeft: 0, paddingRight: 0 }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 clamp(16px,5vw,40px)', position: 'relative', zIndex: 1 }}>
+          {/* Titre court */}
+          <h1 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(32px,5vw,56px)', color: '#fff', margin: '0 0 8px', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
+            Trouvez votre prochain logement.
+          </h1>
+          <p style={{ fontFamily: T.fontBody, fontSize: 15, color: 'rgba(255,255,255,0.60)', margin: '0 0 28px' }}>
+            Annonces entre particuliers · Zéro frais d'agence
+          </p>
 
-        {/* ── Atmosphère hero : cercles flous colorés ── */}
-        {/* Soleil caramel — coin haut droit, fort */}
-        <div style={{ position: 'absolute', top: -160, right: -100, width: 800, height: 700, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.42) 0%, rgba(196,151,106,0.12) 40%, transparent 68%)', filter: 'blur(30px)', pointerEvents: 'none', zIndex: 0 }} />
-        {/* Violet profond — centre haut */}
-        <div style={{ position: 'absolute', top: '-5%', left: '30%', width: 700, height: 500, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(110,70,200,0.28) 0%, transparent 65%)', filter: 'blur(70px)', pointerEvents: 'none', zIndex: 0 }} />
-        {/* Ambre chaud — bas gauche */}
-        <div style={{ position: 'absolute', bottom: -60, left: -80, width: 600, height: 500, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(220,130,50,0.22) 0%, transparent 65%)', filter: 'blur(60px)', pointerEvents: 'none', zIndex: 0 }} />
-        {/* Rosé — milieu gauche */}
-        <div style={{ position: 'absolute', top: '40%', left: '5%', width: 350, height: 280, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(200,90,120,0.16) 0%, transparent 70%)', filter: 'blur(50px)', pointerEvents: 'none', zIndex: 0 }} />
-        {/* Sarcelle — bas droit */}
-        <div style={{ position: 'absolute', bottom: '10%', right: '15%', width: 300, height: 250, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(40,180,160,0.14) 0%, transparent 70%)', filter: 'blur(55px)', pointerEvents: 'none', zIndex: 0 }} />
-        {/* Grain — matériau */}
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`, opacity: 0.04, pointerEvents: 'none', zIndex: 0 }} />
-        {/* Filet doré diagonal */}
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(196,151,106,0.07) 0%, transparent 45%, rgba(196,151,106,0.05) 100%)', pointerEvents: 'none', zIndex: 0 }} />
-        {/* Fondu bas */}
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 120, background: 'linear-gradient(to bottom, transparent, rgba(26,26,46,0.55))', pointerEvents: 'none', zIndex: 1 }} />
+          {/* Barre de recherche */}
+          <form onSubmit={handleSearch}>
+            <div style={{ display: 'flex', gap: 8, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: '8px 8px 8px 16px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <Search size={16} color="rgba(255,255,255,0.45)" style={{ flexShrink: 0 }} />
+              <input
+                className="home-input"
+                type="text"
+                placeholder="Ville, code postal…"
+                value={city}
+                onChange={e => setCity(e.target.value)}
+                style={{ flex: 1, minWidth: 140, background: 'transparent', border: 'none', outline: 'none', fontFamily: T.fontBody, fontSize: 15, color: '#fff', padding: '6px 0' }}
+              />
+              <div className="hero-filters" style={{ display: 'flex', gap: 8 }}>
+                <select
+                  className="home-select"
+                  value={type}
+                  onChange={e => setType(e.target.value)}
+                  style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, fontFamily: T.fontBody, fontSize: 13, color: '#fff', padding: '8px 12px', cursor: 'pointer' }}
+                >
+                  {PROPERTY_TYPES.map(opt => (
+                    <option key={opt.value} value={opt.value} style={{ background: T.night }}>{opt.label}</option>
+                  ))}
+                </select>
+                <select
+                  className="home-select"
+                  value={priceRange}
+                  onChange={e => setPriceRange(e.target.value)}
+                  style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, fontFamily: T.fontBody, fontSize: 13, color: '#fff', padding: '8px 12px', cursor: 'pointer' }}
+                >
+                  {PRICE_RANGES.map(opt => (
+                    <option key={opt.value} value={opt.value} style={{ background: T.night }}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+              <button
+                type="submit"
+                style={{ background: T.caramel, border: 'none', borderRadius: 10, padding: '10px 20px', fontFamily: T.fontBody, fontSize: 14, fontWeight: 600, color: '#fff', cursor: 'pointer', flexShrink: 0, transition: 'opacity .15s' }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+                onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+              >
+                Rechercher
+              </button>
+            </div>
+          </form>
 
-        {/* A) Architectural door/arch sketch — right side */}
-        <svg aria-hidden style={{ position: 'absolute', right: 'clamp(3%,8vw,10%)', top: '6%', width: 'clamp(100px,16vw,240px)', opacity: 0.32, zIndex: 1, pointerEvents: 'none', filter: 'drop-shadow(0 0 18px rgba(196,151,106,0.35))' }} viewBox="0 0 140 210" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M18,205 L18,82 Q18,18 70,18 Q122,18 122,82 L122,205" stroke="#c4976a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M32,205 L32,86 Q32,34 70,34 Q108,34 108,86 L108,205" stroke="#c4976a" strokeWidth="1.5" strokeLinecap="round"/>
-          <circle cx="70" cy="125" r="9" stroke="#c4976a" strokeWidth="1.5"/>
-          <path d="M65,134 L65,152 L75,152 L75,134" stroke="#c4976a" strokeWidth="1.5" strokeLinecap="round"/>
-          <path d="M4,205 L136,205" stroke="#c4976a" strokeWidth="2" strokeLinecap="round"/>
-          <path d="M50,18 Q70,8 90,18" stroke="#c4976a" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="4 3"/>
-        </svg>
-
-        {/* B) Circular stamp/seal element */}
-        <div aria-hidden style={{ position: 'absolute', right: 'clamp(2%,5vw,7%)', bottom: '14%', width: 'clamp(80px,11vw,140px)', height: 'clamp(80px,11vw,140px)', zIndex: 2, pointerEvents: 'none', transform: 'rotate(12deg)', filter: 'drop-shadow(0 0 12px rgba(196,151,106,0.25))' }}>
-          <svg viewBox="0 0 110 110" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%' }}>
-            <circle cx="55" cy="55" r="48" stroke="rgba(196,151,106,0.55)" strokeWidth="1.5" strokeDasharray="3 4"/>
-            <circle cx="55" cy="55" r="40" stroke="rgba(196,151,106,0.30)" strokeWidth="1"/>
-            <path id="seal-text-path" d="M55,55 m-36,0 a36,36 0 1,1 72,0 a36,36 0 1,1 -72,0" fill="none"/>
-            <text
-              fill="rgba(196,151,106,0.80)"
-              fontSize="8.5"
-              letterSpacing="0.25em"
-              fontFamily="DM Sans, system-ui, sans-serif"
-              fontWeight="600"
+          {/* Liens rapides */}
+          <div style={{ display: 'flex', gap: 20, marginTop: 20, flexWrap: 'wrap' }}>
+            <Link to="/search" style={{ fontFamily: T.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.50)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'color .15s' }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.85)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.50)')}
             >
-              <textPath href="#seal-text-path" startOffset="5%">BAILIO · FRANCE · 0€ FRAIS ·</textPath>
-            </text>
-            <text x="55" y="50" textAnchor="middle" fill="rgba(196,151,106,0.65)" fontFamily="'Cormorant Garamond', Georgia, serif" fontStyle="italic" fontWeight="700" fontSize="15">Zéro</text>
-            <text x="55" y="68" textAnchor="middle" fill="rgba(196,151,106,0.65)" fontFamily="'Cormorant Garamond', Georgia, serif" fontStyle="italic" fontWeight="700" fontSize="15">agence</text>
-          </svg>
-        </div>
-
-        <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)', position: 'relative', zIndex: 3 }}>
-          <div>
-            {/* Badge */}
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: 'rgba(196,151,106,0.12)', border: '1px solid rgba(196,151,106,0.35)', color: T.caramel, padding: '6px 14px', borderRadius: 999, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 28 }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.caramel, animation: 'pulse-dot 2s infinite', display: 'inline-block' }} />
-              Plateforme ouverte · Inscription gratuite
-            </span>
-
-            {/* Caramel glow */}
-            <div style={{ position: 'absolute', width: 400, height: 200, top: '30%', left: '5%', borderRadius: '50%', background: 'rgba(196,151,106,0.12)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
-
-            <h1 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(42px,7vw,80px)', lineHeight: 1.02, letterSpacing: '-0.02em', color: '#fff', margin: '0 0 22px', maxWidth: '16ch' }}>
-              La clé de ta{' '}
-              <span style={{ position: 'relative', display: 'inline-block' }}>
-                <em style={{ color: T.caramel }}>prochaine location.</em>
-                <svg aria-hidden viewBox="0 0 320 12" preserveAspectRatio="none" style={{ position: 'absolute', bottom: -6, left: 0, width: '100%', height: 12, overflow: 'visible' }}>
-                  <path d="M2,8 C50,3 100,12 160,7 C220,2 270,10 318,6" fill="none" stroke="#c4976a" strokeWidth="3" strokeLinecap="round" opacity="0.7"/>
-                </svg>
-              </span>
-            </h1>
-
-            <p style={{ fontSize: 'clamp(15px,1.3vw,17px)', color: 'rgba(255,255,255,0.78)', lineHeight: 1.6, maxWidth: 560, margin: '0 0 40px' }}>
-              J'ai payé deux mois de loyer en frais d'agence pour un T2. Ce n'était pas normal — alors j'ai construit Bailio. Propriétaire : ton annonce en 8 min, ton bail signé électroniquement. Locataire : ton dossier constitué une fois, réutilisé partout. Zéro intermédiaire, zéro commission.
-            </p>
-
-            {/* CTAs */}
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 40 }}>
-              <Link
-                to="/register?role=OWNER"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '14px 26px', borderRadius: 28, fontFamily: T.fontBody, fontSize: 15, fontWeight: 600, background: T.caramel, color: '#fff', textDecoration: 'none', transition: 'all .2s' }}
-                onMouseEnter={e => { e.currentTarget.style.background = T.caramelHover; e.currentTarget.style.transform = 'translateY(-1px)' }}
-                onMouseLeave={e => { e.currentTarget.style.background = T.caramel; e.currentTarget.style.transform = 'translateY(0)' }}
-              >
-                Publier mon annonce <ArrowRight size={16} />
-              </Link>
-              <Link
-                to="/search"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '14px 26px', borderRadius: 28, fontFamily: T.fontBody, fontSize: 15, fontWeight: 600, background: 'rgba(255,255,255,0.08)', color: '#fff', border: '1px solid rgba(255,255,255,0.18)', textDecoration: 'none', transition: 'all .2s' }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.14)' }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)' }}
-              >
-                Chercher un logement
-              </Link>
-            </div>
-
-            {/* Trust badges */}
-            <div className="trust-badges hero-trust" style={{ display: 'flex', gap: 32, color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 500, letterSpacing: '0.03em', flexWrap: 'wrap' }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <Check size={14} color={T.caramel} strokeWidth={2.5} />
-                Gratuit pour les locataires, toujours
-              </span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <Check size={14} color={T.caramel} strokeWidth={2.5} />
-                Conforme loi ALUR
-              </span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <Check size={14} color={T.caramel} strokeWidth={2.5} />
-                Données hébergées en France
-              </span>
-            </div>
+              <SlidersHorizontal size={12} /> Recherche avancée & carte
+            </Link>
+            <Link to="/register?role=OWNER" style={{ fontFamily: T.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.50)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'color .15s' }}
+              onMouseEnter={e => (e.currentTarget.style.color = T.caramel)}
+              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.50)')}
+            >
+              <ArrowRight size={12} /> Publier une annonce
+            </Link>
           </div>
-
         </div>
 
-        {/* D) Organic wave — transition hero → stats */}
-        <div aria-hidden style={{ position: 'absolute', bottom: -2, left: 0, right: 0, zIndex: 4, lineHeight: 0 }}>
-          <svg viewBox="0 0 1440 64" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style={{ display: 'block', width: '100%', height: 64 }}>
-            <path d="M0,32 C120,60 280,8 480,32 C660,52 800,12 1000,32 C1160,48 1320,18 1440,28 L1440,64 L0,64 Z" fill="#fafaf8"/>
+        {/* Wave transition */}
+        <div aria-hidden style={{ position: 'absolute', bottom: -2, left: 0, right: 0, lineHeight: 0 }}>
+          <svg viewBox="0 0 1440 40" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style={{ display: 'block', width: '100%', height: 40 }}>
+            <path d="M0,20 C240,40 480,0 720,20 C960,40 1200,8 1440,20 L1440,40 L0,40 Z" fill={T.bgBase}/>
           </svg>
         </div>
       </section>
 
-      {/* ── STATS ────────────────────────────────────────────────────── */}
-      <section style={{ background: T.bgBase, padding: 'clamp(56px,8vh,96px) 0 clamp(48px,8vh,80px)', position: 'relative' }}>
-        {/* Dot grid background */}
-        <div aria-hidden style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(196,151,106,0.18) 1px, transparent 1px)', backgroundSize: '28px 28px', opacity: 0.5, pointerEvents: 'none' }} />
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)', position: 'relative', zIndex: 1 }}>
-          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0 }}>
-            {STATS.map((stat, i) => (
-              <div key={stat.label} style={{ padding: 'clamp(16px,3vw,32px)', borderRight: i < STATS.length - 1 ? `1px solid ${T.border}` : 'none', position: 'relative' }}>
-                {/* Decorative accent mark */}
-                <div style={{ width: 28, height: 3, background: T.caramel, borderRadius: 2, marginBottom: 16, opacity: 0.7 }} />
-                <p style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(36px,5vw,60px)', lineHeight: 0.95, color: T.ink, margin: '0 0 10px', letterSpacing: '-0.02em', display: 'block' }}>{stat.value}</p>
-                <p style={{ fontFamily: T.fontBody, fontSize: 12.5, color: T.inkMid, margin: 0, lineHeight: 1.5, maxWidth: '18ch' }}>{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* ── LISTINGS ── */}
+      <section style={{ maxWidth: 1280, margin: '0 auto', padding: 'clamp(32px,5vh,56px) clamp(16px,5vw,40px) 80px' }}>
 
-      {/* ── MANIFESTO QUOTE ── */}
-      <section style={{ padding: 'clamp(60px,8vh,100px) 0', background: T.night, position: 'relative', overflow: 'hidden' }}>
-        {/* Decorative large quote mark */}
-        <div aria-hidden style={{ position: 'absolute', top: -20, left: 'clamp(16px,6vw,80px)', fontFamily: T.fontDisplay, fontSize: 'clamp(180px,20vw,280px)', fontStyle: 'italic', fontWeight: 700, color: 'rgba(196,151,106,0.08)', lineHeight: 1, pointerEvents: 'none', userSelect: 'none' }}>"</div>
-        {/* Atmospheric orbs */}
-        <div aria-hidden style={{ position: 'absolute', top: -80, right: -60, width: 480, height: 360, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.22) 0%, transparent 65%)', filter: 'blur(40px)', pointerEvents: 'none' }} />
-        <div aria-hidden style={{ position: 'absolute', bottom: -60, left: -40, width: 380, height: 300, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(100,80,180,0.18) 0%, transparent 65%)', filter: 'blur(50px)', pointerEvents: 'none' }} />
-        <div aria-hidden style={{ position: 'absolute', top: '40%', left: '45%', width: 300, height: 200, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(60,160,140,0.12) 0%, transparent 70%)', filter: 'blur(45px)', pointerEvents: 'none' }} />
-        <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)', position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', gap: 'clamp(20px,4vw,48px)', alignItems: 'flex-start' }}>
-            <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 8 }}>
-              <div style={{ width: 3, height: 'clamp(40px,6vh,80px)', background: `linear-gradient(to bottom, ${T.caramel}, transparent)`, borderRadius: 2 }} />
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: T.caramel, margin: '6px 0' }} />
-              <div style={{ width: 3, height: 'clamp(40px,6vh,80px)', background: `linear-gradient(to bottom, transparent, ${T.caramel})`, borderRadius: 2 }} />
-            </div>
-            <div>
-              <blockquote style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3.5vw,42px)', lineHeight: 1.25, color: '#fff', margin: '0 0 28px', letterSpacing: '-0.01em' }}>
-                "L'immobilier ne devrait pas coûter plus cher que le loyer lui-même. J'ai construit Bailio pour que ça change."
-              </blockquote>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(196,151,106,0.2)', border: '1px solid rgba(196,151,106,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 16, color: T.caramel }}>E</div>
-                <div>
-                  <p style={{ fontFamily: T.fontBody, fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.9)', margin: 0 }}>Enzo, fondateur</p>
-                  <p style={{ fontFamily: T.fontBody, fontSize: 12, color: 'rgba(255,255,255,0.45)', margin: '2px 0 0' }}>Bailio · Paris, 2024</p>
-                </div>
-                {/* Hand-drawn underline accent */}
-                <svg aria-hidden style={{ marginLeft: 'auto', opacity: 0.35 }} width="60" height="20" viewBox="0 0 60 20" fill="none">
-                  <path d="M2,10 C15,5 30,15 50,8 L58,10" stroke="#c4976a" strokeWidth="2" strokeLinecap="round"/>
-                  <path d="M10,16 C25,12 40,18 55,14" stroke="#c4976a" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── HOW IT WORKS ─────────────────────────────────────────────── */}
-      <section style={{ padding: 'clamp(72px,12vh,130px) 0', background: '#f4f2ee' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
-          <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.caramel, margin: '0 0 14px' }}>
-            Comment ça marche
-          </p>
-          <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(32px,5vw,56px)', lineHeight: 1.05, letterSpacing: '-0.015em', color: T.ink, margin: '0 0 16px', maxWidth: '18ch' }}>
-            Trois étapes. <em style={{ color: T.caramel }}>Pas une de plus.</em>
-          </h2>
-          <p style={{ fontSize: 16, color: T.inkMid, lineHeight: 1.65, maxWidth: '56ch', margin: '0 0 56px' }}>
-            Pas de formation requise, pas de jargon juridique. Tu es propriétaire ou locataire — Bailio s'adapte à toi, pas l'inverse.
-          </p>
-
-          <div className="steps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, position: 'relative' }}>
-            {/* Dashed connector */}
-            <div aria-hidden className="hidden md:block" style={{ position: 'absolute', top: 4, left: '16.7%', right: '16.7%', height: 2, zIndex: 0 }}>
-              <svg width="100%" height="2" style={{ overflow: 'visible' }}>
-                <line x1="0" y1="1" x2="100%" y2="1" stroke={T.caramel} strokeWidth="1.5" strokeDasharray="8 6" opacity="0.35"/>
-              </svg>
-            </div>
-            {STEPS.map(step => (
-              <div key={step.n} style={{ background: '#ffffff', border: `1px solid ${T.border}`, borderRadius: 20, padding: '36px 28px 28px', position: 'relative', boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)', zIndex: 1 }}>
-                {/* Number circle — slightly hand-drawn with SVG */}
-                <div style={{ position: 'absolute', top: -20, left: 24 }}>
-                  <svg width="46" height="46" viewBox="0 0 46 46" fill="none">
-                    <path d="M23,2 C33,2 44,10 44,23 C44,36 34,44 23,44 C12,44 2,35 2,23 C2,11 12,2 23,2" stroke={T.night} strokeWidth="2.5" fill={T.night} strokeLinecap="round"/>
-                  </svg>
-                  <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 20, color: '#fff', lineHeight: 1 }}>{step.n}</span>
-                </div>
-                <h3 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 24, margin: '10px 0 10px', color: T.ink }}>{step.title}</h3>
-                <p style={{ fontSize: 14, color: T.inkMid, lineHeight: 1.65, margin: 0 }}>{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── FEATURED PROPERTIES ──────────────────────────────────────── */}
-      <section style={{ padding: 'clamp(72px,12vh,130px) 0', background: T.bgMuted }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 20, marginBottom: 40 }}>
-            <div>
-              <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.caramel, margin: '0 0 10px' }}>À la une cette semaine</p>
-              <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(28px,4vw,44px)', lineHeight: 1.1, color: T.ink, margin: 0 }}>
-                Des biens triés <em style={{ color: T.caramel }}>sur le volet.</em>
-              </h2>
-            </div>
-            <Link to="/search" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: T.fontBody, fontWeight: 500, fontSize: 14, color: T.inkMid, textDecoration: 'none', border: `1px solid ${T.border}`, borderRadius: 8, padding: '9px 18px', transition: 'all .2s' }}
-              onMouseEnter={e => { e.currentTarget.style.color = T.ink; e.currentTarget.style.borderColor = T.ink }}
-              onMouseLeave={e => { e.currentTarget.style.color = T.inkMid; e.currentTarget.style.borderColor = T.border }}
-            >
-              Voir tous les biens <ArrowRight size={14} />
-            </Link>
-          </div>
-
-          <FeaturedCarousel properties={featuredProperties} loading={loadingProperties} />
-        </div>
-      </section>
-
-      {/* ── FEATURES ─────────────────────────────────────────────────── */}
-      <section style={{ padding: 'clamp(72px,12vh,130px) 0', background: T.bgBase }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
-          <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.caramel, margin: '0 0 14px' }}>
-            Pourquoi Bailio
-          </p>
-          <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(32px,5vw,56px)', lineHeight: 1.05, letterSpacing: '-0.015em', color: T.ink, margin: '0 0 16px', maxWidth: '18ch' }}>
-            Moins d'intermédiaires. <em style={{ color: T.caramel }}>Plus de confiance.</em>
-          </h2>
-          <p style={{ fontSize: 16, color: T.inkMid, lineHeight: 1.65, maxWidth: '56ch', margin: '0 0 56px' }}>
-            Louer en France est une corvée. Les agences coûtent cher, les dossiers se perdent, les bails s'impriment en triple. Bailio a été conçu pour que propriétaires et locataires se fassent confiance sans avoir besoin d'un intermédiaire payant.
-          </p>
-
-          <div className="feat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 20 }}>
-            {FEATURES.map(feat => (
-              <div key={feat.title}
-                style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 20, padding: 28, transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', cursor: 'default' }}
-                onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-2px)'; el.style.boxShadow = '0 12px 40px rgba(13,12,10,0.12)'; el.style.borderColor = '#e8ccaa' }}
-                onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = 'none'; el.style.borderColor = T.border }}
-              >
-                <div style={{ width: 48, height: 48, borderRadius: 16, background: '#fdf5ec', color: T.caramelHover, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
-                  {feat.icon}
-                </div>
-                <h4 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, margin: '0 0 10px', color: T.ink }}>{feat.title}</h4>
-                <p style={{ fontSize: 14, color: T.inkMid, lineHeight: 1.65, margin: 0 }}>{feat.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── PAGES OVERVIEW ───────────────────────────────────────────── */}
-      <section style={{ padding: 'clamp(72px,12vh,130px) 0', background: T.bgMuted }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
-          <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.caramel, margin: '0 0 14px' }}>
-            Explorer Bailio
-          </p>
-          <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(32px,5vw,52px)', lineHeight: 1.05, color: T.ink, margin: '0 0 16px' }}>
-            Tout ce que tu peux <em style={{ color: T.caramel }}>faire ici.</em>
-          </h2>
-          <p style={{ fontSize: 16, color: T.inkMid, lineHeight: 1.65, maxWidth: '52ch', margin: '0 0 52px' }}>
-            De la recherche de logement à la signature du bail, en passant par la tarification et nos valeurs — tout est là.
-          </p>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px,100%),1fr))', gap: 20 }}>
-            {/* Chercher */}
-            <Link to="/search" style={{ textDecoration: 'none', display: 'block' }}>
-              <div
-                style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 24, padding: 28, height: '100%', boxSizing: 'border-box', transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', position: 'relative', overflow: 'hidden' }}
-                onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-3px)'; el.style.boxShadow = '0 8px 24px rgba(13,12,10,0.1)'; el.style.borderColor = '#e8ccaa' }}
-                onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = 'none'; el.style.borderColor = T.border }}
-              >
-                <div style={{ width: 48, height: 48, borderRadius: 12, background: '#edf7f2', color: '#1b5e3b', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18 }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="22" height="22"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                </div>
-                <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#1b5e3b', margin: '0 0 6px' }}>Chercher</p>
-                <h3 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: T.ink, margin: '0 0 10px', lineHeight: 1.2 }}>Trouver un logement.</h3>
-                <p style={{ fontSize: 14, color: T.inkMid, lineHeight: 1.65, margin: '0 0 20px' }}>Des annonces entre particuliers, une recherche classique ou en langage naturel propulsée par l'IA. Filtre, carte, infini.</p>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 600, color: '#1b5e3b', fontFamily: T.fontBody }}>
-                  Lancer la recherche <ArrowRight size={14} />
-                </span>
-              </div>
-            </Link>
-
-            {/* Propriétaires */}
-            <Link to="/proprietaires" style={{ textDecoration: 'none', display: 'block' }}>
-              <div
-                style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 24, padding: 28, height: '100%', boxSizing: 'border-box', transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', position: 'relative', overflow: 'hidden' }}
-                onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-3px)'; el.style.boxShadow = '0 8px 24px rgba(13,12,10,0.1)'; el.style.borderColor = '#b8ccf0' }}
-                onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = 'none'; el.style.borderColor = T.border }}
-              >
-                <div style={{ width: 48, height: 48, borderRadius: 12, background: '#eaf0fb', color: '#1a3270', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18 }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="22" height="22"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                </div>
-                <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#1a3270', margin: '0 0 6px' }}>Propriétaires</p>
-                <h3 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: T.ink, margin: '0 0 10px', lineHeight: 1.2 }}>Louer sans agence.</h3>
-                <p style={{ fontSize: 14, color: T.inkMid, lineHeight: 1.65, margin: '0 0 20px' }}>Annonce en 8 min, candidatures vérifiées et scorées, bail signé électroniquement, loyers encaissés automatiquement. À partir de 9,99 €/mois, sans commission sur le loyer.</p>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 600, color: '#1a3270', fontFamily: T.fontBody }}>
-                  En savoir plus <ArrowRight size={14} />
-                </span>
-              </div>
-            </Link>
-
-            {/* Locataires */}
-            <Link to="/locataires" style={{ textDecoration: 'none', display: 'block' }}>
-              <div
-                style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 24, padding: 28, height: '100%', boxSizing: 'border-box', transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', position: 'relative', overflow: 'hidden' }}
-                onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-3px)'; el.style.boxShadow = '0 8px 24px rgba(13,12,10,0.1)'; el.style.borderColor = '#9fd4ba' }}
-                onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = 'none'; el.style.borderColor = T.border }}
-              >
-                <div style={{ width: 48, height: 48, borderRadius: 12, background: '#edf7f2', color: '#1b5e3b', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18 }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="22" height="22"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                </div>
-                <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#1b5e3b', margin: '0 0 6px' }}>Locataires</p>
-                <h3 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: T.ink, margin: '0 0 10px', lineHeight: 1.2 }}>Louer plus vite.</h3>
-                <p style={{ fontSize: 14, color: T.inkMid, lineHeight: 1.65, margin: '0 0 20px' }}>Dossier numérique constitué une fois pour toutes, candidature en un clic, messagerie directe, bail signé depuis ton téléphone. 100 % gratuit, pour toujours.</p>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 600, color: '#1b5e3b', fontFamily: T.fontBody }}>
-                  Découvrir <ArrowRight size={14} />
-                </span>
-              </div>
-            </Link>
-
-            {/* Tarifs */}
-            <Link to="/pricing" style={{ textDecoration: 'none', display: 'block' }}>
-              <div
-                style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 24, padding: 28, height: '100%', boxSizing: 'border-box', transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', position: 'relative', overflow: 'hidden' }}
-                onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-3px)'; el.style.boxShadow = '0 8px 24px rgba(13,12,10,0.1)'; el.style.borderColor = '#e8ccaa' }}
-                onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = 'none'; el.style.borderColor = T.border }}
-              >
-                <div style={{ width: 48, height: 48, borderRadius: 12, background: '#fdf5ec', color: T.caramel, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18 }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="22" height="22"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                </div>
-                <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.caramel, margin: '0 0 6px' }}>Tarifs</p>
-                <h3 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: T.ink, margin: '0 0 10px', lineHeight: 1.2 }}>Un prix juste.</h3>
-                <p style={{ fontSize: 14, color: T.inkMid, lineHeight: 1.65, margin: '0 0 20px' }}>À partir de 9,99 €/mois pour le propriétaire — zéro commission sur le loyer. Locataire : 0 € — toujours. Comparatif avec les agences inclus.</p>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 600, color: T.caramel, fontFamily: T.fontBody }}>
-                  Voir les tarifs <ArrowRight size={14} />
-                </span>
-              </div>
-            </Link>
-
-            {/* À propos */}
-            <Link to="/a-propos" style={{ textDecoration: 'none', display: 'block' }}>
-              <div
-                style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 24, padding: 28, height: '100%', boxSizing: 'border-box', transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', position: 'relative', overflow: 'hidden' }}
-                onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-3px)'; el.style.boxShadow = '0 8px 24px rgba(13,12,10,0.1)'; el.style.borderColor = '#ccc9c3' }}
-                onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = 'none'; el.style.borderColor = T.border }}
-              >
-                <div style={{ width: 48, height: 48, borderRadius: 12, background: T.bgMuted, color: T.inkMid, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18 }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="22" height="22"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                </div>
-                <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.inkMid, margin: '0 0 6px' }}>À propos</p>
-                <h3 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: T.ink, margin: '0 0 10px', lineHeight: 1.2 }}>Pourquoi Bailio.</h3>
-                <p style={{ fontSize: 14, color: T.inkMid, lineHeight: 1.65, margin: '0 0 20px' }}>Tutoiement, aucune commission cachée, données hébergées en France. Nos principes, notre mission, ce qui nous distingue des agences.</p>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 600, color: T.inkMid, fontFamily: T.fontBody }}>
-                  Notre histoire <ArrowRight size={14} />
-                </span>
-              </div>
-            </Link>
-
-            {/* FAQ — bonus */}
-            <Link to="/faq" style={{ textDecoration: 'none', display: 'block' }}>
-              <div
-                style={{ background: T.night, border: `1px solid rgba(255,255,255,0.08)`, borderRadius: 24, padding: 28, height: '100%', boxSizing: 'border-box', transition: 'all .25s cubic-bezier(0.16,1,0.3,1)', position: 'relative', overflow: 'hidden' }}
-                onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-3px)'; el.style.boxShadow = '0 8px 24px rgba(13,12,10,0.2)' }}
-                onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = 'none' }}
-              >
-                <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(196,151,106,0.15)', color: T.caramel, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18 }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="22" height="22"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
-                </div>
-                <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.caramel, margin: '0 0 6px' }}>FAQ</p>
-                <h3 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: '#fff', margin: '0 0 10px', lineHeight: 1.2 }}>Les vraies réponses.</h3>
-                <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.60)', lineHeight: 1.65, margin: '0 0 20px' }}>Sécurité juridique, tarifs, fonctionnement — les questions les plus posées. On répond en clair, sans jargon.</p>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 600, color: T.caramel, fontFamily: T.fontBody }}>
-                  Lire la FAQ <ArrowRight size={14} />
-                </span>
-              </div>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── TESTIMONIALS ─────────────────────────────────────────────── */}
-      <section style={{ padding: 'clamp(72px,12vh,130px) 0', background: T.bgMuted }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
-          <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.caramel, margin: '0 0 14px', textAlign: 'center' }}>
-            Ce qu'ils en disent
-          </p>
-          <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(28px,4vw,48px)', lineHeight: 1.1, color: T.ink, margin: '0 auto 56px', textAlign: 'center', maxWidth: '22ch' }}>
-            Des propriétaires <em style={{ color: T.caramel }}>sereins.</em><br />Des locataires <em style={{ color: T.caramel }}>respectés.</em>
-          </h2>
-
-          <div className="testi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24 }}>
-            {TESTIMONIALS.map(t => (
-              <div key={t.name} style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 20, padding: 28 }}>
-                {/* Quote mark */}
-                <svg width="32" height="24" viewBox="0 0 32 24" fill={T.caramel} style={{ marginBottom: 18, opacity: 0.5 }}>
-                  <path d="M0 24V14C0 6 4 1 12 0V5C7 6.5 5 9 5 13H10V24H0ZM18 24V14C18 6 22 1 30 0V5C25 6.5 23 9 23 13H28V24H18Z"/>
-                </svg>
-                <p style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontSize: 20, lineHeight: 1.4, color: T.ink, margin: '0 0 24px' }}>{t.quote}</p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <img src={t.photo} alt={t.name} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: `2px solid ${T.border}` }} />
-                  <div>
-                    <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: T.ink }}>{t.name}</p>
-                    <p style={{ margin: 0, fontSize: 12, color: T.inkFaint }}>{t.role}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── CTA SPLIT ────────────────────────────────────────────────── */}
-      <section style={{ padding: 'clamp(48px,8vh,80px) clamp(16px,4vw,24px)', background: T.bgBase }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-          <div className="cta-grid" style={{ display: 'flex', gap: 20 }}>
-            {/* Owners */}
-            <div className="cta-split-card" style={{ flex: 1, background: T.night, borderRadius: 32, padding: '48px 44px', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
-              {/* Atmospheric orbs inside dark card */}
-              <div aria-hidden style={{ position: 'absolute', top: -60, right: -40, width: 300, height: 240, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.25) 0%, transparent 65%)', filter: 'blur(40px)', pointerEvents: 'none', zIndex: 0 }} />
-              <div aria-hidden style={{ position: 'absolute', bottom: -40, left: -30, width: 240, height: 180, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(80,60,160,0.18) 0%, transparent 65%)', filter: 'blur(35px)', pointerEvents: 'none', zIndex: 0 }} />
-              <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: T.caramel, textTransform: 'uppercase', marginBottom: 16 }}>Propriétaires</p>
-              <h3 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 36, color: '#f5f4f0', lineHeight: 1.2, margin: '0 0 24px', letterSpacing: '-0.02em' }}>
-                Louez vite,<br />louez bien.
-              </h3>
-              <ul style={{ listStyle: 'none', margin: '0 0 32px', padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {OWNER_BENEFITS.map(b => (
-                  <li key={b} style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: T.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.70)' }}>
-                    <Check size={14} color={T.caramel} strokeWidth={2.5} />{b}
-                  </li>
-                ))}
-              </ul>
-              <div style={{ marginTop: 'auto' }}>
-                <Link
-                  to="/register?role=OWNER"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: T.fontBody, fontWeight: 600, fontSize: 14, color: T.night, background: '#f5f4f0', borderRadius: 24, padding: '12px 24px', textDecoration: 'none', transition: 'opacity .15s' }}
-                  onMouseEnter={e => { e.currentTarget.style.opacity = '0.85' }}
-                  onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
-                >
-                  Mettre en location <ArrowRight size={15} />
-                </Link>
-              </div>
-            </div>
-
-            {/* Tenants */}
-            <div className="cta-split-card" style={{ flex: 1, background: T.caramel, borderRadius: 32, padding: '48px 44px', display: 'flex', flexDirection: 'column' }}>
-              <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.70)', textTransform: 'uppercase', marginBottom: 16 }}>Locataires</p>
-              <h3 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 36, color: '#fff', lineHeight: 1.2, margin: '0 0 24px', letterSpacing: '-0.02em' }}>
-                Trouvez votre<br />prochain chez-vous.
-              </h3>
-              <ul style={{ listStyle: 'none', margin: '0 0 32px', padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {TENANT_BENEFITS.map(b => (
-                  <li key={b} style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: T.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.80)' }}>
-                    <Check size={14} color="#fff" strokeWidth={2.5} />{b}
-                  </li>
-                ))}
-              </ul>
-              <div style={{ marginTop: 'auto' }}>
-                <Link
-                  to="/register?role=TENANT"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: T.fontBody, fontWeight: 600, fontSize: 14, color: T.caramel, background: '#ffffff', borderRadius: 24, padding: '12px 24px', textDecoration: 'none', transition: 'opacity .15s' }}
-                  onMouseEnter={e => { e.currentTarget.style.opacity = '0.85' }}
-                  onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
-                >
-                  Trouver un bien <ArrowRight size={15} />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── CTA STRIP ────────────────────────────────────────────────── */}
-      <section style={{ background: T.night, padding: 'clamp(48px,8vh,80px) 0', position: 'relative', overflow: 'hidden' }}>
-        {/* Atmospheric orbs */}
-        <div aria-hidden style={{ position: 'absolute', top: -80, left: '10%', width: 400, height: 320, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.20) 0%, transparent 65%)', filter: 'blur(50px)', pointerEvents: 'none' }} />
-        <div aria-hidden style={{ position: 'absolute', bottom: -60, right: '5%', width: 350, height: 280, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(80,60,200,0.15) 0%, transparent 65%)', filter: 'blur(45px)', pointerEvents: 'none' }} />
-        <div aria-hidden style={{ position: 'absolute', top: '20%', right: '35%', width: 200, height: 160, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(60,160,130,0.10) 0%, transparent 70%)', filter: 'blur(35px)', pointerEvents: 'none' }} />
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 32, position: 'relative', zIndex: 1 }}>
+        {/* En-tête résultats */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(28px,4vw,42px)', color: '#fff', margin: '0 0 10px', lineHeight: 1.1 }}>
-              Prêt à <em style={{ color: T.caramel }}>commencer ?</em>
+            <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3vw,32px)', color: T.ink, margin: 0 }}>
+              {isLoading && allProperties.length === 0
+                ? 'Chargement…'
+                : totalProperties > 0
+                  ? `${totalProperties} bien${totalProperties > 1 ? 's' : ''} disponible${totalProperties > 1 ? 's' : ''}`
+                  : 'Aucun bien trouvé'
+              }
             </h2>
-            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 15, margin: 0 }}>
-              Inscription gratuite. Propriétaires : première annonce publiée en huit minutes. Locataires : dossier numérique, candidature en un clic.
+            {(city || type || priceRange) && (
+              <p style={{ fontFamily: T.fontBody, fontSize: 13, color: T.inkFaint, margin: '4px 0 0' }}>
+                {[city, PROPERTY_TYPES.find(t => t.value === type)?.label, PRICE_RANGES.find(p => p.value === priceRange)?.label]
+                  .filter(Boolean).join(' · ')}
+              </p>
+            )}
+          </div>
+          <Link
+            to="/search"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: T.fontBody, fontSize: 13, fontWeight: 500, color: T.inkMid, textDecoration: 'none', border: `1px solid ${T.border}`, borderRadius: 8, padding: '8px 16px', transition: 'all .15s' }}
+            onMouseEnter={e => { e.currentTarget.style.color = T.ink; e.currentTarget.style.borderColor = T.ink }}
+            onMouseLeave={e => { e.currentTarget.style.color = T.inkMid; e.currentTarget.style.borderColor = T.border }}
+          >
+            <SlidersHorizontal size={13} /> Filtres avancés
+          </Link>
+        </div>
+
+        {/* Grille */}
+        {isLoading && allProperties.length === 0 ? (
+          <div className="prop-grid">
+            {[...Array(9)].map((_, i) => (
+              <div key={i} style={{ background: T.bgSurface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: 'hidden' }}>
+                <div style={{ height: 220, background: T.bgMuted }} />
+                <div style={{ padding: 16 }}>
+                  <div style={{ height: 16, background: T.bgMuted, borderRadius: 4, marginBottom: 10, width: '65%' }} />
+                  <div style={{ height: 13, background: T.bgMuted, borderRadius: 4, width: '45%' }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : allProperties.length === 0 && !isLoading ? (
+          <div style={{ textAlign: 'center', padding: '80px 0', color: T.inkFaint }}>
+            <Building2 size={48} style={{ opacity: 0.25, margin: '0 auto 16px', display: 'block' }} />
+            <p style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontSize: 22, color: T.inkMid, marginBottom: 8 }}>Aucun bien pour ces critères.</p>
+            <p style={{ fontSize: 14, marginBottom: 24 }}>Essayez de modifier ou de supprimer vos filtres.</p>
+            <button
+              onClick={() => { setCity(''); setType(''); setPriceRange('') }}
+              style={{ background: T.night, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', fontFamily: T.fontBody, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+            >
+              Effacer les filtres
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="prop-grid">
+              {allProperties.map(property => (
+                <PropertyCard key={property.id} property={property} />
+              ))}
+            </div>
+
+            {/* Charger plus */}
+            {storeHasMore && (
+              <div style={{ textAlign: 'center', marginTop: 48 }}>
+                <button
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
+                  style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 10, padding: '12px 32px', fontFamily: T.fontBody, fontSize: 14, fontWeight: 600, color: T.ink, cursor: loadingMore ? 'default' : 'pointer', opacity: loadingMore ? 0.6 : 1, transition: 'all .15s' }}
+                  onMouseEnter={e => { if (!loadingMore) e.currentTarget.style.borderColor = T.ink }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = T.border }}
+                >
+                  {loadingMore ? 'Chargement…' : 'Voir plus de biens'}
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </section>
+
+      {/* ── Mini CTA ── */}
+      <section style={{ background: T.night, padding: 'clamp(40px,6vh,64px) clamp(16px,5vw,40px)' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 24 }}>
+          <div>
+            <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3vw,32px)', color: '#fff', margin: '0 0 8px' }}>
+              Vous êtes propriétaire ?
+            </h2>
+            <p style={{ fontFamily: T.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.55)', margin: 0 }}>
+              Publiez votre bien en 8 minutes · Zéro commission sur le loyer
             </p>
           </div>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <Link
-              to="/register"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '14px 26px', borderRadius: 28, fontFamily: T.fontBody, fontSize: 15, fontWeight: 600, background: T.caramel, color: '#fff', textDecoration: 'none', transition: 'all .2s' }}
-              onMouseEnter={e => { e.currentTarget.style.background = T.caramelHover; e.currentTarget.style.transform = 'translateY(-1px)' }}
-              onMouseLeave={e => { e.currentTarget.style.background = T.caramel; e.currentTarget.style.transform = 'translateY(0)' }}
-            >
-              Créer mon compte <ArrowRight size={16} />
-            </Link>
-            <Link
-              to="/pricing"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '14px 26px', borderRadius: 28, fontFamily: T.fontBody, fontSize: 15, fontWeight: 600, background: 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,0.3)', textDecoration: 'none', transition: 'all .2s' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)' }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
-            >
-              Voir les tarifs
-            </Link>
-          </div>
+          <Link
+            to="/register?role=OWNER"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: T.caramel, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 24px', fontFamily: T.fontBody, fontSize: 14, fontWeight: 600, textDecoration: 'none', flexShrink: 0, transition: 'opacity .15s' }}
+            onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+            onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+          >
+            Publier mon annonce <ArrowRight size={15} />
+          </Link>
         </div>
       </section>
 
