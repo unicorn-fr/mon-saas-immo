@@ -1,8 +1,7 @@
-import { PrismaClient, ApplicationStatus } from '@prisma/client'
+import { ApplicationStatus } from '@prisma/client'
+import { prisma } from '../config/database.js'
 import { sendEmail } from '../utils/email.util.js'
 import { computeMatchScore } from './application.service.js'
-
-const prisma = new PrismaClient()
 
 // Retention durations by document category (ms)
 const RETENTION: Record<string, number> = {

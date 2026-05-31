@@ -2,29 +2,34 @@ import { Response } from 'express'
 
 /**
  * Manages Server-Sent Event connections by userId.
- * Each user can have one active SSE connection at a time.
+ * Supports multiple simultaneous connections per user (multi-tab).
  */
 class SSEManager {
-  private connections = new Map<string, Response>()
+  private connections = new Map<string, Set<Response>>()
 
   add(userId: string, res: Response) {
-    const existing = this.connections.get(userId)
-    if (existing && !existing.destroyed) {
-      existing.end()
+    if (!this.connections.has(userId)) {
+      this.connections.set(userId, new Set())
     }
-    this.connections.set(userId, res)
+    this.connections.get(userId)!.add(res)
   }
 
-  remove(userId: string) {
-    this.connections.delete(userId)
+  remove(userId: string, res: Response) {
+    const conns = this.connections.get(userId)
+    if (!conns) return
+    conns.delete(res)
+    if (conns.size === 0) this.connections.delete(userId)
   }
 
   send(userId: string, event: string, data: unknown) {
-    const res = this.connections.get(userId)
-    if (res && !res.destroyed) {
-      res.write(`event: ${event}\n`)
-      res.write(`data: ${JSON.stringify(data)}\n\n`)
+    const conns = this.connections.get(userId)
+    if (!conns) return
+    const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`
+    for (const res of conns) {
+      if (!res.destroyed) res.write(payload)
+      else conns.delete(res)
     }
+    if (conns.size === 0) this.connections.delete(userId)
   }
 
   broadcast(userIds: string[], event: string, data: unknown) {
@@ -32,8 +37,12 @@ class SSEManager {
   }
 
   isConnected(userId: string): boolean {
-    const res = this.connections.get(userId)
-    return !!res && !res.destroyed
+    const conns = this.connections.get(userId)
+    if (!conns || conns.size === 0) return false
+    for (const res of conns) {
+      if (!res.destroyed) return true
+    }
+    return false
   }
 }
 

@@ -16,6 +16,9 @@ router.get('/sessions/by-contract/:contractId', authenticate, edlController.getB
 // Récupérer session par ID
 router.get('/sessions/:id', authenticate, edlController.getSession.bind(edlController))
 
+// QR code de la session (PNG base64 + PIN + joinUrl)
+router.get('/sessions/:id/qr', authenticate, edlController.getQrCode.bind(edlController))
+
 // SSE — EventSource ne peut pas envoyer Authorization header → auth via query token
 router.get('/sessions/:id/stream', edlController.streamSession.bind(edlController))
 

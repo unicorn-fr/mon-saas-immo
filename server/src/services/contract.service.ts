@@ -1,9 +1,8 @@
-import { PrismaClient, ContractStatus, Contract } from '@prisma/client'
+import { ContractStatus, Contract } from '@prisma/client'
 import { createHash } from 'crypto'
+import { prisma } from '../config/database.js'
 import { messageService } from './message.service.js'
 import { notificationService } from './notification.service.js'
-
-const prisma = new PrismaClient()
 
 export interface CreateContractInput {
   propertyId: string
@@ -99,50 +98,41 @@ class ContractService {
       throw new Error('End date must be after start date')
     }
 
-    const property = await prisma.property.findUnique({
-      where: { id: data.propertyId },
-    })
+    // Resolve tenant lookup before parallel fetch
+    const tenantLookup: { id: string } | { email: string } = data.tenantId.includes('@')
+      ? { email: data.tenantId }
+      : { id: data.tenantId }
 
-    if (!property) {
-      throw new Error('Property not found')
-    }
+    // Parallel fetch: property, tenant, owner, overlap check — all independent
+    const [property, tenant, owner, overlappingContractEarly] = await Promise.all([
+      prisma.property.findUnique({ where: { id: data.propertyId } }),
+      prisma.user.findUnique({
+        where: tenantLookup,
+        select: { id: true, role: true, firstName: true, lastName: true, email: true, tenantScore: true },
+      }),
+      prisma.user.findUnique({
+        where: { id: data.ownerId },
+        select: { id: true, firstName: true, lastName: true, address: true },
+      }),
+      prisma.contract.findFirst({
+        where: {
+          propertyId: data.propertyId,
+          status: {
+            in: [ContractStatus.ACTIVE, ContractStatus.DRAFT, ContractStatus.SENT, ContractStatus.COMPLETED, ContractStatus.SIGNED_OWNER, ContractStatus.SIGNED_TENANT],
+          },
+          OR: [{ startDate: { lte: data.endDate }, endDate: { gte: data.startDate } }],
+        },
+      }),
+    ])
 
-    if (property.ownerId !== data.ownerId) {
-      throw new Error('Unauthorized: You do not own this property')
-    }
+    if (!property) throw new Error('Property not found')
+    if (property.ownerId !== data.ownerId) throw new Error('Unauthorized: You do not own this property')
+    if (!tenant) throw new Error('Aucun locataire trouvé avec cet email. Vérifiez que le locataire a bien un compte sur la plateforme.')
+    if (tenant.role !== 'TENANT') throw new Error("L'utilisateur trouvé n'a pas le rôle locataire.")
+    if (!owner?.address?.trim()) throw new Error('PROFIL_INCOMPLET_OWNER:Votre adresse personnelle est obligatoire (loi du 6 juillet 1989, art. 21) pour générer un contrat de location. Renseignez-la dans votre profil.')
+    if (overlappingContractEarly) throw new Error("Un contrat existe déjà pour ce bien sur cette période (brouillon, en signature ou actif). Veuillez d'abord annuler ou archiver le contrat existant.")
 
-    // Resolve tenant: support both UUID and email
-    let tenantLookup: { id: string } | { email: string }
-    if (data.tenantId.includes('@')) {
-      tenantLookup = { email: data.tenantId }
-    } else {
-      tenantLookup = { id: data.tenantId }
-    }
-
-    const tenant = await prisma.user.findUnique({
-      where: tenantLookup,
-      select: { id: true, role: true, firstName: true, lastName: true, email: true, tenantScore: true },
-    })
-
-    if (!tenant) {
-      throw new Error('Aucun locataire trouvé avec cet email. Vérifiez que le locataire a bien un compte sur la plateforme.')
-    }
-
-    if (tenant.role !== 'TENANT') {
-      throw new Error('L\'utilisateur trouvé n\'a pas le rôle locataire.')
-    }
-
-    // Vérifier que le profil du propriétaire est complet (adresse obligatoire art. 21 loi 89-462)
-    const owner = await prisma.user.findUnique({
-      where: { id: data.ownerId },
-      select: { id: true, firstName: true, lastName: true, address: true },
-    })
-    if (!owner?.address?.trim()) {
-      throw new Error('PROFIL_INCOMPLET_OWNER:Votre adresse personnelle est obligatoire (loi du 6 juillet 1989, art. 21) pour générer un contrat de location. Renseignez-la dans votre profil.')
-    }
-
-    // Vérifier que le dossier du locataire est complet (score ≥ 75 — IDENTITE + EMPLOI + REVENUS)
-    // Calcul à la volée sur les documents réels
+    // Vérifier que le dossier du locataire est complet (score ≥ 75)
     const tenantDocsForContract = await prisma.tenantDocument.findMany({
       where: { userId: tenant.id },
       select: { category: true, status: true },
@@ -159,24 +149,7 @@ class ContractService {
       throw new Error(`DOSSIER_INCOMPLET:Le dossier de ${tenant.firstName} ${tenant.lastName} est incomplet (score : ${tenantDossierScore}/100). Les pièces d'identité, justificatifs d'emploi et de revenus sont obligatoires pour générer un contrat.`)
     }
 
-    const overlappingContract = await prisma.contract.findFirst({
-      where: {
-        propertyId: data.propertyId,
-        status: {
-          in: [ContractStatus.ACTIVE, ContractStatus.DRAFT, ContractStatus.SENT, ContractStatus.COMPLETED, ContractStatus.SIGNED_OWNER, ContractStatus.SIGNED_TENANT],
-        },
-        OR: [
-          {
-            startDate: { lte: data.endDate },
-            endDate: { gte: data.startDate },
-          },
-        ],
-      },
-    })
-
-    if (overlappingContract) {
-      throw new Error('Un contrat existe déjà pour ce bien sur cette période (brouillon, en signature ou actif). Veuillez d\'abord annuler ou archiver le contrat existant.')
-    }
+    // Overlap check already done in the parallel batch above (overlappingContractEarly)
 
     const contract = await prisma.contract.create({
       data: {
@@ -369,24 +342,29 @@ class ContractService {
     })
     const existingFromDossierCategories = new Set(existingContractDocs.map((d) => d.category))
 
-    for (const doc of docsToImport) {
-      const contractCategory = dossierCategoryMap[doc.category]
-      if (!contractCategory) continue
-      if (existingFromDossierCategories.has(contractCategory)) continue
-
-      await prisma.contractDocument.create({
-        data: {
-          contractId,
-          uploadedById: contract.tenantId,
-          category: contractCategory,
-          status: 'UPLOADED',
-          fileName: doc.fileName,
-          fileUrl: doc.fileUrl,
-          fileSize: doc.fileSize,
-          mimeType: doc.mimeType,
-          fromDossier: true,
-        },
+    type DocCreateInput = {
+      contractId: string; uploadedById: string; category: string; status: 'UPLOADED';
+      fileName: string; fileUrl: string; fileSize: number; mimeType: string; fromDossier: boolean
+    }
+    const docsToCreate: DocCreateInput[] = docsToImport
+      .filter((doc) => {
+        const contractCategory = dossierCategoryMap[doc.category]
+        return !!contractCategory && !existingFromDossierCategories.has(contractCategory)
       })
+      .map((doc) => ({
+        contractId,
+        uploadedById: contract.tenantId,
+        category: dossierCategoryMap[doc.category],
+        status: 'UPLOADED' as const,
+        fileName: doc.fileName,
+        fileUrl: doc.fileUrl,
+        fileSize: doc.fileSize ?? 0,
+        mimeType: doc.mimeType ?? 'application/octet-stream',
+        fromDossier: true,
+      }))
+
+    if (docsToCreate.length > 0) {
+      await prisma.contractDocument.createMany({ data: docsToCreate })
     }
 
     // Create notification for tenant

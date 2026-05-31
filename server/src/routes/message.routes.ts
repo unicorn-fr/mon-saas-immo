@@ -62,7 +62,7 @@ router.get('/stream', async (req: Request, res: Response) => {
 
   req.on('close', () => {
     clearInterval(heartbeat)
-    sseManager.remove(req.user!.id)
+    sseManager.remove(req.user!.id, res)
   })
 })
 

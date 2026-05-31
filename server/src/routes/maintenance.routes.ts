@@ -139,6 +139,7 @@ router.get('/by-property', async (req, res) => {
     const userId = req.user!.id
     const requests = await prisma.maintenanceRequest.findMany({
       where: { ownerId: userId },
+      take: 500, // cap to avoid unbounded queries
       include: {
         property: { select: { id: true, title: true, address: true, city: true, postalCode: true, surface: true, price: true, images: true, furnished: true, type: true } },
         tenant: { select: { firstName: true, lastName: true } },
@@ -186,27 +187,40 @@ router.get('/', async (req, res) => {
   try {
     const userId = req.user!.id
     const role = req.user!.role
+    const page = Math.max(1, parseInt(String(req.query.page ?? '1'), 10))
+    const limit = Math.min(50, Math.max(1, parseInt(String(req.query.limit ?? '20'), 10)))
 
-    let requests
-    if (role === 'OWNER' || role === 'ADMIN' || role === 'SUPER_ADMIN') {
-      requests = await prisma.maintenanceRequest.findMany({
-        where: { ownerId: userId },
-        include: {
-          property: { select: { title: true, address: true, city: true, postalCode: true, surface: true, price: true, images: true, furnished: true, type: true } },
-          tenant: { select: { firstName: true, lastName: true } },
-        },
-        orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
-      })
-    } else {
-      requests = await prisma.maintenanceRequest.findMany({
-        where: { tenantId: userId },
-        include: {
-          property: { select: { title: true, address: true, city: true, postalCode: true, surface: true, price: true, images: true, furnished: true, type: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-      })
+    const baseInclude = {
+      property: { select: { title: true, address: true, city: true, postalCode: true, surface: true, price: true, images: true, furnished: true, type: true } },
     }
-    return res.json({ success: true, data: { requests } })
+
+    let requests, total
+    if (role === 'OWNER' || role === 'ADMIN' || role === 'SUPER_ADMIN') {
+      const where = { ownerId: userId }
+      ;[requests, total] = await Promise.all([
+        prisma.maintenanceRequest.findMany({
+          where,
+          include: { ...baseInclude, tenant: { select: { firstName: true, lastName: true } } },
+          orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
+          take: limit,
+          skip: (page - 1) * limit,
+        }),
+        prisma.maintenanceRequest.count({ where }),
+      ])
+    } else {
+      const where = { tenantId: userId }
+      ;[requests, total] = await Promise.all([
+        prisma.maintenanceRequest.findMany({
+          where,
+          include: baseInclude,
+          orderBy: { createdAt: 'desc' },
+          take: limit,
+          skip: (page - 1) * limit,
+        }),
+        prisma.maintenanceRequest.count({ where }),
+      ])
+    }
+    return res.json({ success: true, data: { requests, total, page, limit } })
   } catch {
     return res.status(500).json({ success: false, message: 'Erreur serveur' })
   }

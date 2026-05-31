@@ -1,6 +1,5 @@
-import { PrismaClient, Notification } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { Notification } from '@prisma/client'
+import { prisma } from '../config/database.js'
 
 interface CreateNotificationInput {
   userId: string

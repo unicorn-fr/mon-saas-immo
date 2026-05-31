@@ -312,9 +312,11 @@ model Property {
   @@index([type])
   @@index([price])
   @@index([createdAt])
-  @@index([ownerId, status])     // Dashboard propriétaire
-  @@index([city, status])        // Recherche par ville
-  @@index([status, createdAt])   // Listing public trié
+  @@index([ownerId, status])            // Dashboard propriétaire
+  @@index([city, status])               // Recherche par ville
+  @@index([status, createdAt])          // Listing public trié par date
+  @@index([status, price])              // Listing filtré par prix
+  @@index([city, status, price])        // Recherche combinée ville + budget
   @@map("properties")
 }
 
@@ -1099,9 +1101,10 @@ model MaintenanceRequest {
 
   @@index([ownerId])
   @@index([propertyId])
-  @@index([tenantId])    // Requêtes dashboard locataire
+  @@index([tenantId])
   @@index([status])
   @@index([priority])
   @@index([ownerId, status])
+  @@index([ownerId, propertyId])  // Vue groupée par bien (maintenance.routes.ts)
   @@map("maintenance_requests")
 }

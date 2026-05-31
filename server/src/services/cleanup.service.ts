@@ -3,12 +3,10 @@
  * Documents with expiresAt < now() are removed from DB + disk.
  */
 import cron from 'node-cron'
-import { PrismaClient } from '@prisma/client'
 import fs from 'fs'
 import path from 'path'
 import { env } from '../config/env.js'
-
-const prisma = new PrismaClient()
+import { prisma } from '../config/database.js'
 
 async function deleteExpiredDocuments() {
   const now = new Date()
@@ -19,22 +17,26 @@ async function deleteExpiredDocuments() {
 
   if (expired.length === 0) return
 
-  for (const doc of expired) {
-    // Delete physical file if stored locally
-    try {
-      const relativePath = doc.fileUrl.startsWith('/uploads/')
-        ? doc.fileUrl.replace('/uploads/', '')
-        : null
-      if (relativePath) {
-        const filePath = path.join(env.UPLOAD_DIR, relativePath)
-        if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
+  // Delete physical files in parallel, then batch-delete DB rows
+  await Promise.allSettled(
+    expired.map(async (doc) => {
+      try {
+        const relativePath = doc.fileUrl.startsWith('/uploads/')
+          ? doc.fileUrl.replace('/uploads/', '')
+          : null
+        if (relativePath) {
+          const filePath = path.join(env.UPLOAD_DIR, relativePath)
+          if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
+        }
+      } catch {
+        // File may already be gone — non-fatal
       }
-    } catch {
-      // File may already be gone — non-fatal
-    }
+    })
+  )
 
-    await prisma.tenantDocument.delete({ where: { id: doc.id } })
-  }
+  await prisma.tenantDocument.deleteMany({
+    where: { id: { in: expired.map((d) => d.id) } },
+  })
 
   console.log(`[Cleanup] ${expired.length} expired document(s) deleted at ${now.toISOString()}`)
 }

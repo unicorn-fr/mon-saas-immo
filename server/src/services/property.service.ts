@@ -247,11 +247,8 @@ class PropertyService {
       throw new Error('Property not found')
     }
 
-    // Increment view count
-    await prisma.property.update({
-      where: { id },
-      data: { views: { increment: 1 } },
-    })
+    // Increment view count — fire-and-forget (non-bloquant)
+    prisma.property.update({ where: { id }, data: { views: { increment: 1 } } }).catch(() => {})
 
     return property
   }

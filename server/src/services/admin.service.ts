@@ -1,6 +1,5 @@
-import { PrismaClient, UserRole, PropertyStatus, BookingStatus, ContractStatus } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { UserRole, PropertyStatus, BookingStatus, ContractStatus } from '@prisma/client'
+import { prisma } from '../config/database.js'
 
 interface PlatformStatistics {
   users: {

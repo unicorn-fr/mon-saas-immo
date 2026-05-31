@@ -4,12 +4,10 @@
  *   - deleteAccount: permanent erasure of account + all data (art. 17 RGPD)
  *   - getAccessLog: list of owners who viewed the tenant's dossier
  */
-import { PrismaClient } from '@prisma/client'
 import fs from 'fs'
 import path from 'path'
 import { env } from '../config/env.js'
-
-const prisma = new PrismaClient()
+import { prisma } from '../config/database.js'
 
 export class PrivacyService {
   /**

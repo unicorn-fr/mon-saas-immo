@@ -3,6 +3,7 @@ import { prisma } from '../config/database.js'
 /**
  * Génère les entrées Payment PENDING pour tous les baux actifs.
  * À exécuter le 1er de chaque mois. Idempotent (upsert).
+ * Les quittances sont envoyées automatiquement lors du mark-paid (payment.routes.ts).
  */
 export async function generateMonthlyPayments() {
   const now = new Date()
@@ -14,33 +15,32 @@ export async function generateMonthlyPayments() {
     select: { id: true, monthlyRent: true, charges: true, endDate: true },
   })
 
-  let created = 0
-  let skipped = 0
-
-  for (const contract of activeContracts) {
+  const eligible = activeContracts.filter((c) => {
+    if (!c.endDate) return true
     const dueDate = new Date(year, month - 1, 1)
-    if (contract.endDate && dueDate > contract.endDate) {
-      skipped++
-      continue
-    }
+    return dueDate <= c.endDate
+  })
 
-    await prisma.payment.upsert({
-      where: { contractId_month_year: { contractId: contract.id, month, year } },
-      create: {
-        contractId: contract.id,
-        amount: contract.monthlyRent,
-        charges: contract.charges ?? 0,
-        dueDate,
-        month,
-        year,
-        status: 'PENDING',
-      },
-      update: {},
-    })
+  // Run all upserts in parallel — idempotent, safe
+  await Promise.all(
+    eligible.map((contract) =>
+      prisma.payment.upsert({
+        where: { contractId_month_year: { contractId: contract.id, month, year } },
+        create: {
+          contractId: contract.id,
+          amount: contract.monthlyRent,
+          charges: contract.charges ?? 0,
+          dueDate: new Date(year, month - 1, 1),
+          month,
+          year,
+          status: 'PENDING',
+        },
+        update: {},
+      })
+    )
+  )
 
-    created++
-  }
-
-  console.log(`[generateMonthlyPayments] ${created} créés, ${skipped} ignorés`)
-  return { created, skipped }
+  const skipped = activeContracts.length - eligible.length
+  console.log(`[generateMonthlyPayments] ${eligible.length} créés/mis à jour, ${skipped} ignorés (bail expiré)`)
+  return { created: eligible.length, skipped }
 }

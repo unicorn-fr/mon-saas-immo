@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express'
+import QRCode from 'qrcode'
 import { edlService, addSseClient, removeSseClient, broadcastEdlUpdate } from '../services/edl.service.js'
 import { verifyAccessToken } from '../utils/jwt.util.js'
+import { env } from '../config/env.js'
 
 
 class EdlController {
@@ -84,6 +86,29 @@ class EdlController {
       if (!signatureBase64) return res.status(400).json({ success: false, message: 'signatureBase64 requis' })
       const result = await edlService.signSession(req.params.id, userId, signatureBase64)
       return res.json({ success: true, data: result })
+    } catch (e) {
+      if (e instanceof Error) return res.status(400).json({ success: false, message: e.message })
+      next(e)
+    }
+  }
+
+  /** GET /api/v1/edl/sessions/:id/qr — Génère le QR code de la session (PNG base64) */
+  async getQrCode(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.id
+      if (!userId) return res.status(401).json({ success: false, message: 'Non authentifié' })
+
+      const session = await edlService.getSession(req.params.id, userId)
+      const frontendUrl = env.FRONTEND_URL || 'http://localhost:5173'
+      const joinUrl = `${frontendUrl}/edl/join?pin=${session.pin}`
+
+      const qrDataUrl = await QRCode.toDataURL(joinUrl, {
+        width: 300,
+        margin: 2,
+        color: { dark: '#1a1a2e', light: '#ffffff' },
+      })
+
+      return res.json({ success: true, data: { qr: qrDataUrl, pin: session.pin, joinUrl } })
     } catch (e) {
       if (e instanceof Error) return res.status(400).json({ success: false, message: e.message })
       next(e)
