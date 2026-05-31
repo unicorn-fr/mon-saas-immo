@@ -276,8 +276,6 @@ export const Header = () => {
   const isSticky = scrolled || !isHomePage
 
   // ── Glass morphism tokens ──────────────────────────────────────────────────
-  const glassHeaderBg    = isSticky ? 'rgba(250,250,248,0.82)' : 'rgba(15,12,26,0.18)'
-  const glassHeaderBlur  = 'blur(22px) saturate(190%)'
   const glassNavPillBg   = isSticky ? 'rgba(255,255,255,0.62)' : 'rgba(255,255,255,0.08)'
   const glassNavPillBdr  = isSticky ? 'rgba(255,255,255,0.80)' : 'rgba(255,255,255,0.22)'
   const navTextColor     = isSticky ? BAI.inkMid : 'rgba(255,255,255,0.88)'
@@ -307,47 +305,18 @@ export const Header = () => {
 
   return (
     <>
-    {/* ── Barre de navigation glass ── */}
+    {/* ── Navigation flottante — pas de barre pleine largeur, uniquement les éléments arrondis ── */}
     <header style={{
       position: 'fixed',
       top: 0, left: 0, right: 0,
       zIndex: 1000,
       height: 64,
       display: 'flex', alignItems: 'center',
-      background: glassHeaderBg,
-      backdropFilter: glassHeaderBlur,
-      WebkitBackdropFilter: glassHeaderBlur,
-      borderBottom: `1px solid ${isSticky ? 'rgba(255,255,255,0.60)' : 'rgba(255,255,255,0.10)'}`,
-      boxShadow: isSticky
-        ? 'inset 0 1px 0 rgba(255,255,255,0.95), 0 1px 0 rgba(13,12,10,0.06), 0 4px 24px rgba(13,12,10,0.08), 0 12px 40px rgba(13,12,10,0.03)'
-        : 'inset 0 1px 0 rgba(255,255,255,0.18), 0 2px 20px rgba(0,0,0,0.10)',
-      transition: 'background 0.38s ease, border-color 0.38s ease, box-shadow 0.38s ease',
+      background: 'transparent',
+      pointerEvents: 'none',
     }}>
-
-      {/* Orbes décoratifs — sans backdropFilter (évite l'artefact carré sur fond clair) */}
-      <div aria-hidden style={{
-        position: 'absolute', top: -24, left: '18%', width: 86, height: 86,
-        borderRadius: '50%',
-        background: 'radial-gradient(circle at 32% 28%, rgba(196,151,106,0.28) 0%, rgba(196,151,106,0.04) 65%, transparent 100%)',
-        border: '1px solid rgba(255,255,255,0.20)',
-        boxShadow: 'inset 0 2px 0 rgba(255,255,255,0.40), 0 4px 16px rgba(196,151,106,0.12)',
-        pointerEvents: 'none',
-        opacity: isSticky ? 0 : 0.55,
-        transition: 'opacity 0.38s',
-      }} />
-      <div aria-hidden style={{
-        position: 'absolute', top: -10, right: '22%', width: 50, height: 50,
-        borderRadius: '50%',
-        background: 'radial-gradient(circle at 35% 25%, rgba(255,255,255,0.18) 0%, rgba(196,151,106,0.06) 60%, transparent 100%)',
-        border: '1px solid rgba(255,255,255,0.18)',
-        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35)',
-        pointerEvents: 'none',
-        opacity: isSticky ? 0 : 0.40,
-        transition: 'opacity 0.38s',
-      }} />
-
       {/* Conteneur interne — height: 64 pour que top:50% de la nav pill soit exact */}
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,3vw,32px)', width: '100%', height: 64, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, position: 'relative' }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,3vw,32px)', width: '100%', height: 64, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, position: 'relative', pointerEvents: 'auto' }}>
 
         {/* Logo */}
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 7, textDecoration: 'none', flexShrink: 0 }}>
@@ -393,6 +362,7 @@ export const Header = () => {
                 padding: '7px 14px', borderRadius: 40, border: 'none',
                 background: 'transparent', cursor: 'pointer',
                 fontFamily: BAI.fontBody, fontSize: 13.5, fontWeight: 500,
+                lineHeight: 1,
                 color: navTextColor, transition: 'color 0.2s, background 0.2s',
               }}
                 onMouseEnter={(e) => {
@@ -440,7 +410,7 @@ export const Header = () => {
 
             {/* Propriétaires */}
             <Link to="/proprietaires"
-              style={{ padding: '7px 14px', borderRadius: 40, fontFamily: BAI.fontBody, fontSize: 13.5, fontWeight: 500, color: navTextColor, textDecoration: 'none', transition: 'color 0.2s, background 0.2s' }}
+              style={{ display: 'inline-flex', alignItems: 'center', padding: '7px 14px', borderRadius: 40, fontFamily: BAI.fontBody, fontSize: 13.5, fontWeight: 500, color: navTextColor, textDecoration: 'none', transition: 'color 0.2s, background 0.2s', lineHeight: 1 }}
               onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = navTextHover; el.style.background = isSticky ? 'rgba(13,12,10,0.05)' : 'rgba(255,255,255,0.12)' }}
               onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = navTextColor; el.style.background = 'transparent' }}>
               Propriétaires
@@ -448,7 +418,7 @@ export const Header = () => {
 
             {/* Estimer */}
             <Link to="/estimer"
-              style={{ padding: '7px 14px', borderRadius: 40, fontFamily: BAI.fontBody, fontSize: 13.5, fontWeight: 500, color: navTextColor, textDecoration: 'none', transition: 'color 0.2s, background 0.2s' }}
+              style={{ display: 'inline-flex', alignItems: 'center', padding: '7px 14px', borderRadius: 40, fontFamily: BAI.fontBody, fontSize: 13.5, fontWeight: 500, color: navTextColor, textDecoration: 'none', transition: 'color 0.2s, background 0.2s', lineHeight: 1 }}
               onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = navTextHover; el.style.background = isSticky ? 'rgba(13,12,10,0.05)' : 'rgba(255,255,255,0.12)' }}
               onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = navTextColor; el.style.background = 'transparent' }}>
               Estimer
@@ -456,7 +426,7 @@ export const Header = () => {
 
             {/* Guide */}
             <Link to="/guide"
-              style={{ padding: '7px 14px', borderRadius: 40, fontFamily: BAI.fontBody, fontSize: 13.5, fontWeight: 500, color: navTextColor, textDecoration: 'none', transition: 'color 0.2s, background 0.2s' }}
+              style={{ display: 'inline-flex', alignItems: 'center', padding: '7px 14px', borderRadius: 40, fontFamily: BAI.fontBody, fontSize: 13.5, fontWeight: 500, color: navTextColor, textDecoration: 'none', transition: 'color 0.2s, background 0.2s', lineHeight: 1 }}
               onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = navTextHover; el.style.background = isSticky ? 'rgba(13,12,10,0.05)' : 'rgba(255,255,255,0.12)' }}
               onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = navTextColor; el.style.background = 'transparent' }}>
               Guide
@@ -641,11 +611,9 @@ export const Header = () => {
               style={{
                 display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
                 gap: 5, width: 40, height: 40, borderRadius: 12,
-                background: isSticky ? 'rgba(255,255,255,0.60)' : 'rgba(255,255,255,0.10)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                border: isSticky ? '1px solid rgba(255,255,255,0.72)' : '1px solid rgba(255,255,255,0.25)',
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.55)',
+                background: isSticky ? BAI.bgSurface : 'rgba(255,255,255,0.12)',
+                border: isSticky ? `1px solid ${BAI.border}` : '1px solid rgba(255,255,255,0.30)',
+                boxShadow: isSticky ? '0 1px 4px rgba(13,12,10,0.08)' : 'inset 0 1px 0 rgba(255,255,255,0.35)',
                 cursor: 'pointer', padding: 0,
               }}
               aria-label="Menu">
