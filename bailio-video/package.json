@@ -9,10 +9,13 @@
     "@remotion/cli": "4.0.469",
     "@remotion/google-fonts": "^4.0.469",
     "@remotion/tailwind-v4": "4.0.469",
+    "@remotion/three": "^4.0.469",
+    "@types/three": "^0.184.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "remotion": "4.0.469",
-    "tailwindcss": "4.0.0"
+    "tailwindcss": "4.0.0",
+    "three": "^0.184.0"
   },
   "devDependencies": {
     "@remotion/eslint-config-flat": "4.0.469",

@@ -7,24 +7,34 @@ import Footer from '../../components/layout/Footer'
 
 const VIDEOS = [
   {
-    id: 'youtube',
-    label: 'YouTube / LinkedIn',
+    id: 'showcase',
+    label: 'Showcase 3D + Voix off',
     format: '16:9 — 1920×1080',
     duration: '62 secondes',
-    size: '6.8 MB',
+    size: '10.7 MB',
+    src: '/videos/bailio-showcase.mp4',
+    icon: <Monitor size={18} />,
+    description: 'Présentation 3D du site avec UI mockups, effets After Effects, voix off française (edge-tts). Téléphone 3D, browser tilt, cartes flottantes, voice-over Denise.',
+  },
+  {
+    id: 'youtube',
+    label: 'Branding YouTube / LinkedIn',
+    format: '16:9 — 1920×1080',
+    duration: '62 secondes',
+    size: '10.9 MB',
     src: '/videos/bailio-youtube.mp4',
     icon: <Monitor size={18} />,
-    description: 'Vidéo de marque complète — présentation toutes fonctionnalités, "Disponible maintenant".',
+    description: 'Vidéo de marque cinématique — motion design, typographie éditoriale, transitions fluides, logo SVG animé.',
   },
   {
     id: 'vertical',
     label: 'TikTok / Instagram Reels',
     format: '9:16 — 1080×1920',
     duration: '30 secondes',
-    size: '3.4 MB',
+    size: '4.7 MB',
     src: '/videos/bailio-vertical.mp4',
     icon: <Smartphone size={18} />,
-    description: 'Version verticale courte et percutante — optimisée pour les réseaux sociaux mobiles.',
+    description: 'Version verticale courte et percutante — "Disponible maintenant", 0 € de frais, optimisée mobile.',
   },
 ]
 
