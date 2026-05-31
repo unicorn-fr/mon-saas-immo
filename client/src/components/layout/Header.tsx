@@ -378,18 +378,23 @@ export const Header = () => {
                 Location <ChevronDown size={13} style={{ opacity: 0.7 }} />
               </button>
 
-              {/* Dropdown — verre dépoli */}
+              {/* Dropdown — verre dépoli. top:100% + paddingTop:10 = pont invisible qui évite le gap mouseLeave */}
               {locationDropdownOpen && (
                 <div style={{
-                  position: 'absolute', top: 'calc(100% + 10px)', left: '50%',
+                  position: 'absolute', top: '100%', left: '50%',
                   transform: 'translateX(-40%)',
-                  background: 'rgba(252,251,249,0.90)',
+                  paddingTop: 10,
+                  background: 'transparent',
+                  minWidth: 230, zIndex: 10,
+                }}>
+                <div style={{
+                  background: 'rgba(252,251,249,0.95)',
                   backdropFilter: 'blur(24px) saturate(200%)',
                   WebkitBackdropFilter: 'blur(24px) saturate(200%)',
                   border: '1px solid rgba(255,255,255,0.72)',
                   borderRadius: 16,
                   boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.95), 0 8px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.06)',
-                  minWidth: 230, zIndex: 10, paddingTop: 8, paddingBottom: 8,
+                  paddingTop: 8, paddingBottom: 8,
                   overflow: 'hidden',
                 }}>
                   {LOCATION_DROPDOWN.map((item, i) =>
@@ -404,6 +409,7 @@ export const Header = () => {
                       </Link>
                     )
                   )}
+                </div>
                 </div>
               )}
             </div>

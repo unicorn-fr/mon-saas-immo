@@ -75,6 +75,14 @@ export default function Login() {
         navigate('/verify-email', { state: { email }, replace: true })
         return
       }
+      if (msg === 'Network Error' || msg.includes('ECONNREFUSED') || msg.includes('timeout')) {
+        setError('Impossible de contacter le serveur. Vérifiez que le serveur est bien démarré (npm run dev).')
+        return
+      }
+      if (msg.includes('Too Many') || msg.includes('429')) {
+        setError('Trop de tentatives. Réessayez dans 15 minutes.')
+        return
+      }
       setError('Identifiants incorrects. Vérifiez votre email et mot de passe.')
     }
   }

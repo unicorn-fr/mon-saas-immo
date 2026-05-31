@@ -126,14 +126,15 @@ export function TenantSidebar() {
   const Content = ({ compact = false }: { compact?: boolean }) => (
     <div className="flex flex-col h-full" style={{ fontFamily: BAI.fontBody }}>
 
-      {/* Logo */}
+      {/* Logo + bouton fermer (mobile uniquement) */}
       <div style={{
         padding: compact ? '20px 0 16px' : '20px 20px 16px',
         borderBottom: `1px solid ${BAI.nightBorder}`,
         marginBottom: 8,
         flexShrink: 0,
         display: 'flex',
-        justifyContent: compact ? 'center' : 'flex-start',
+        alignItems: 'center',
+        justifyContent: compact ? 'center' : 'space-between',
       }}>
         {compact ? (
           <Link to="/" style={{
@@ -144,18 +145,34 @@ export function TenantSidebar() {
             b
           </Link>
         ) : (
-          <Link to="/" onClick={closeMobile} className="hover:opacity-75 transition-opacity block" style={{ textDecoration: 'none' }}>
-            <span style={{
-              fontFamily: BAI.fontDisplay, fontStyle: 'italic',
-              fontWeight: 700, fontSize: 24, color: BAI.caramel,
-              letterSpacing: '-0.02em', lineHeight: 1, display: 'block',
-            }}>
-              bailio
-            </span>
-            <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: BAI.fontBody, margin: '4px 0 0' }}>
-              Espace locataire
-            </p>
-          </Link>
+          <>
+            <Link to="/" onClick={closeMobile} className="hover:opacity-75 transition-opacity block" style={{ textDecoration: 'none' }}>
+              <span style={{
+                fontFamily: BAI.fontDisplay, fontStyle: 'italic',
+                fontWeight: 700, fontSize: 24, color: BAI.caramel,
+                letterSpacing: '-0.02em', lineHeight: 1, display: 'block',
+              }}>
+                bailio
+              </span>
+              <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: BAI.fontBody, margin: '4px 0 0' }}>
+                Espace locataire
+              </p>
+            </Link>
+            {/* Bouton ✕ visible uniquement dans le drawer mobile */}
+            <button
+              onClick={closeMobile}
+              className="md:hidden"
+              aria-label="Fermer le menu"
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                background: 'rgba(255,255,255,0.07)',
+                border: '1px solid rgba(255,255,255,0.14)',
+                cursor: 'pointer',
+              }}>
+              <X size={16} color="rgba(255,255,255,0.70)" />
+            </button>
+          </>
         )}
       </div>
 
