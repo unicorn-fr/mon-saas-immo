@@ -1,231 +1,285 @@
-import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion'
-import { B } from '../components/tokens'
-import { Reveal, WordReveal, LineDraw } from '../components/Reveal'
-import { BailioLogo } from '../components/BailioLogo'
-import { FeatureScene } from '../components/FeatureScene'
+import { AbsoluteFill, Img, interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion'
+import { B, IMGS } from '../components/tokens'
+import { Reveal, WordReveal, LineDraw, Orb, Dot, Ring } from '../components/Reveal'
+import { BailioLogo, LogoMark } from '../components/BailioLogo'
 
-// ─── Scene boundaries (frames at 30fps) ──────────────────────────────────────
+/* ─── Timings (frames @30fps) ─────────────────────────────────────────────── */
 const S = {
-  intro:      0,    // 0–3s   : orbe + logo
-  tagline:    90,   // 3–9s   : "La location réinventée"
-  feat1:      270,  // 9–15s  : Publiez en 8 minutes
-  feat2:      450,  // 15–21s : Candidatures en ligne
-  feat3:      630,  // 21–27s : Bail signé électroniquement
-  feat4:      810,  // 27–33s : Quittances automatiques
-  split:      990,  // 33–39s : Pour tous
-  zeroCom:    1170, // 39–46s : 0 € de frais d'agence
-  available:  1380, // 46–56s : DISPONIBLE MAINTENANT
-  outro:      1680, // 56–62s : bailio.fr
-} as const
-
-// ─── Dot particle (decorative) ───────────────────────────────────────────────
-function Particle({ x, y, delay, size = 3 }: { x: number; y: number; delay: number; size?: number }) {
-  const frame = useCurrentFrame()
-  const { fps } = useVideoConfig()
-  const opacity = interpolate(
-    spring({ frame: frame - delay, fps, config: { damping: 20, stiffness: 40 } }),
-    [0, 1], [0, 0.4]
-  )
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        left: x,
-        top: y,
-        width: size,
-        height: size,
-        borderRadius: '50%',
-        background: B.caramel,
-        opacity,
-      }}
-    />
-  )
+  intro:     0,    //  0 – 3s   logo reveal
+  tagline:   90,   //  3 – 9s   headline
+  feat1:     280,  //  9 – 15s  Publiez en 8 min
+  feat2:     460,  // 15 – 21s  Candidatures
+  feat3:     640,  // 21 – 27s  Bail électronique
+  feat4:     820,  // 27 – 33s  Quittances
+  split:     1000, // 33 – 39s  Propriétaire / Locataire
+  zero:      1180, // 39 – 46s  0 €
+  available: 1390, // 46 – 56s  Disponible maintenant
+  outro:     1690, // 56 – 62s  bailio.fr
 }
 
-// ─── Orb (ambient light) ─────────────────────────────────────────────────────
-function Orb({ cx, cy, r, color, startFrame }: { cx: number; cy: number; r: number; color: string; startFrame: number }) {
+/* ─── Cross-dissolve transition ───────────────────────────────────────────── */
+function Fade({ at, len = 22 }: { at: number; len?: number }) {
   const frame = useCurrentFrame()
-  const local = frame - startFrame
-  const opacity = interpolate(local, [0, 40], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
-  const scale = interpolate(local, [0, 60], [0.6, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        left: cx - r,
-        top: cy - r,
-        width: r * 2,
-        height: r * 2,
-        borderRadius: '50%',
-        background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
-        filter: 'blur(60px)',
-        opacity,
-        transform: `scale(${scale})`,
-        pointerEvents: 'none',
-      }}
-    />
+  const op = interpolate(
+    frame - at,
+    [0, len * 0.4, len * 0.6, len],
+    [0, 1, 1, 0],
+    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
   )
+  return <AbsoluteFill style={{ background: B.night, opacity: op, zIndex: 50, pointerEvents: 'none' }} />
 }
 
-// ─── Scene: Intro ─────────────────────────────────────────────────────────────
-function SceneIntro() {
+/* ─── Full-bleed background image ─────────────────────────────────────────── */
+function BgImg({ src, opacity = 0.18, startFrame = 0 }: { src: string; opacity?: number; startFrame?: number }) {
+  const frame = useCurrentFrame()
+  const op = interpolate(frame - startFrame, [0, 35], [0, opacity], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
   return (
-    <AbsoluteFill style={{ background: B.night, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <Orb cx={1400} cy={200} r={500} color="rgba(196,151,106,0.30)" startFrame={0} />
-      <Orb cx={300} cy={900} r={380} color="rgba(196,151,106,0.12)" startFrame={10} />
-      {/* Particles */}
-      {[
-        [260,180,5], [520,320,12], [1640,160,8], [1700,480,3], [800,80,15],
-        [1200,900,6], [400,700,18], [1500,820,9], [960,200,20], [1100,600,2],
-      ].map(([x, y, d], i) => (
-        <Particle key={i} x={x as number} y={y as number} delay={d as number} size={2 + (i % 3)} />
-      ))}
-      <BailioLogo startFrame={20} size={96} />
+    <AbsoluteFill>
+      <Img src={src} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', opacity: op }} />
+      {/* Night overlay so text stays readable */}
+      <div style={{ position: 'absolute', inset: 0, background: `rgba(26,26,46,0.78)` }} />
     </AbsoluteFill>
   )
 }
 
-// ─── Scene: Tagline ──────────────────────────────────────────────────────────
+/* ─── Scene 1: Intro ─────────────────────────────────────────────────────── */
+function SceneIntro() {
+  const frame = useCurrentFrame()
+  const op = interpolate(frame, [0, 20], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  return (
+    <AbsoluteFill style={{ background: B.night, opacity: op }}>
+      <BgImg src={IMGS.paris} opacity={0.20} startFrame={8} />
+      <Orb x={1400} y={200} r={520} color="rgba(196,151,106,0.35)" start={5} />
+      <Orb x={250}  y={880} r={380} color="rgba(196,151,106,0.15)" start={15} />
+      <Ring x={960} y={540} r={320} start={12} />
+      <Ring x={960} y={540} r={500} start={22} />
+      {/* Decorative dots */}
+      {[[240,160,0],[560,300,8],[1660,150,5],[1720,500,10],[800,70,18],[1200,920,6],[440,720,14]].map(([x,y,d],i) => (
+        <Dot key={i} x={x} y={y} start={d} size={2+(i%3)} opacity={0.45} />
+      ))}
+      {/* Centered logo */}
+      <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0 }}>
+        <BailioLogo startFrame={22} size={90} />
+        <Reveal startFrame={55} direction="up" distance={16} style={{ marginTop: 28 }}>
+          <p style={{ fontFamily: B.body, fontSize: 18, color: 'rgba(250,250,248,0.40)', letterSpacing: '0.22em', textTransform: 'uppercase', textAlign: 'center' }}>
+            Location entre particuliers
+          </p>
+        </Reveal>
+      </AbsoluteFill>
+    </AbsoluteFill>
+  )
+}
+
+/* ─── Scene 2: Tagline ───────────────────────────────────────────────────── */
 function SceneTagline() {
   const frame = useCurrentFrame()
   const local = frame - S.tagline
-  const bgOpacity = interpolate(local, [0, 18], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
-
+  const bgOp = interpolate(local, [0, 18], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
   return (
-    <AbsoluteFill
-      style={{
-        background: B.night,
-        opacity: bgOpacity,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '0 160px',
-      }}
-    >
-      <Orb cx={960} cy={200} r={600} color="rgba(196,151,106,0.18)" startFrame={S.tagline} />
+    <AbsoluteFill style={{ background: B.night, opacity: bgOp }}>
+      <BgImg src={IMGS.apartment} opacity={0.16} startFrame={S.tagline} />
+      <Orb x={960} y={160} r={600} color="rgba(196,151,106,0.20)" start={S.tagline} />
+      <Ring x={1700} y={850} r={240} start={S.tagline + 10} />
+      <Dot x={160} y={200} start={S.tagline + 5} size={5} opacity={0.4} />
+      <Dot x={1750} y={300} start={S.tagline + 8} size={3} opacity={0.35} />
 
-      <Reveal startFrame={S.tagline + 8} direction="up" distance={16}>
-        <p style={{ fontFamily: B.body, fontSize: 14, fontWeight: 700, letterSpacing: '0.20em', textTransform: 'uppercase', color: B.caramel, marginBottom: 32, textAlign: 'center' }}>
-          Bailio
-        </p>
-      </Reveal>
+      <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 180px' }}>
 
-      <WordReveal
-        text="La location immobilière réinventée."
-        startFrame={S.tagline + 16}
-        stagger={4}
-        style={{ justifyContent: 'center', textAlign: 'center', maxWidth: 1200 }}
-        wordStyle={{
-          fontFamily: B.display,
-          fontStyle: 'italic',
-          fontWeight: 700,
-          fontSize: 108,
-          color: B.cream,
-          lineHeight: 1.08,
-          letterSpacing: '-0.03em',
-        }}
-      />
+        {/* Overline */}
+        <Reveal startFrame={S.tagline + 8} direction="up" distance={14} style={{ marginBottom: 28 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <LogoMark size={28} color={B.caramel} />
+            <p style={{ fontFamily: B.body, fontSize: 14, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: B.caramel, margin: 0 }}>
+              Bailio
+            </p>
+          </div>
+        </Reveal>
 
-      <LineDraw startFrame={S.tagline + 56} color={`${B.caramel}80`} duration={30} width={200} height={2} />
+        {/* Big headline — word by word */}
+        <WordReveal
+          text="La location immobilière réinventée."
+          startFrame={S.tagline + 18}
+          stagger={5}
+          style={{ justifyContent: 'center', textAlign: 'center', maxWidth: 1300, marginBottom: 0 }}
+          wordStyle={{
+            fontFamily: B.display, fontStyle: 'italic', fontWeight: 700,
+            fontSize: 106, color: B.cream, lineHeight: 1.12, letterSpacing: '-0.025em',
+          }}
+        />
 
-      <Reveal startFrame={S.tagline + 70} direction="up" distance={20} style={{ marginTop: 36, textAlign: 'center' }}>
-        <p style={{ fontFamily: B.body, fontSize: 24, color: 'rgba(250,250,248,0.55)', lineHeight: 1.6, maxWidth: 700, margin: 0 }}>
-          Propriétaires et locataires, directement connectés. Sans intermédiaire.
-        </p>
-      </Reveal>
+        {/* Separator line */}
+        <div style={{ marginTop: 36, marginBottom: 32 }}>
+          <LineDraw startFrame={S.tagline + 60} width={200} color="rgba(196,151,106,0.70)" />
+        </div>
+
+        {/* Subtitle */}
+        <Reveal startFrame={S.tagline + 68} direction="up" distance={18}>
+          <p style={{ fontFamily: B.body, fontSize: 24, color: 'rgba(250,250,248,0.58)', lineHeight: 1.65, textAlign: 'center', maxWidth: 720, margin: 0 }}>
+            Propriétaires et locataires, connectés directement.<br />Sans agence. Sans commission.
+          </p>
+        </Reveal>
+      </AbsoluteFill>
     </AbsoluteFill>
   )
 }
 
-// ─── Icons SVG ───────────────────────────────────────────────────────────────
-const IconAnnonce = () => (
-  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={B.caramel} strokeWidth="1.5" strokeLinecap="round">
-    <rect x="3" y="3" width="18" height="18" rx="3"/>
-    <path d="M3 9h18M9 21V9"/>
-  </svg>
-)
-const IconCandidature = () => (
-  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={B.caramel} strokeWidth="1.5" strokeLinecap="round">
-    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-    <circle cx="9" cy="7" r="4"/>
-    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-  </svg>
-)
-const IconBail = () => (
-  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={B.caramel} strokeWidth="1.5" strokeLinecap="round">
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-    <polyline points="14 2 14 8 20 8"/>
-    <line x1="16" y1="13" x2="8" y2="13"/>
-    <line x1="16" y1="17" x2="8" y2="17"/>
-    <polyline points="10 9 9 9 8 9"/>
-  </svg>
-)
-const IconQuittance = () => (
-  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={B.caramel} strokeWidth="1.5" strokeLinecap="round">
-    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-    <line x1="1" y1="10" x2="23" y2="10"/>
-  </svg>
-)
+/* ─── Generic Feature scene ─────────────────────────────────────────────── */
+function SceneFeature({
+  start, tag, headline, sub, img, lightBg = false,
+  iconSvg,
+}: {
+  start: number; tag: string; headline: string; sub: string
+  img: string; lightBg?: boolean; iconSvg: React.ReactNode
+}) {
+  const frame = useCurrentFrame()
+  const local = frame - start
+  const bgOp = interpolate(local, [0, 18], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const { fps } = useVideoConfig()
 
-// ─── Scene: Split (pour tous) ────────────────────────────────────────────────
+  const bg    = lightBg ? '#f0ede8' : B.night
+  const fg    = lightBg ? B.ink    : B.cream
+  const fgSub = lightBg ? B.inkMid : 'rgba(250,250,248,0.60)'
+  const _imgOp = lightBg ? 0.10 : 0.18; void _imgOp
+
+  /* Image panel slides in from right */
+  const imgP = spring({ frame: Math.max(0, local - 12), fps, config: { damping: 22, stiffness: 55 } })
+  const imgX = interpolate(imgP, [0, 1], [120, 0])
+  const imgOpa = interpolate(local - 12, [0, 20], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+
+  return (
+    <AbsoluteFill style={{ background: bg, opacity: bgOp, display: 'flex' }}>
+      {/* Left: text content */}
+      <div style={{ flex: '0 0 52%', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 80px 0 100px', gap: 0, position: 'relative', zIndex: 2 }}>
+        <Orb x={-80} y={540} r={450} color={lightBg ? 'rgba(196,151,106,0.10)' : 'rgba(196,151,106,0.25)'} start={start} />
+
+        {/* Icon badge */}
+        <Reveal startFrame={start + 6} direction="scale" style={{ marginBottom: 28 }}>
+          <div style={{
+            width: 72, height: 72, borderRadius: 20,
+            background: lightBg ? 'rgba(196,151,106,0.14)' : 'rgba(196,151,106,0.16)',
+            border: '1.5px solid rgba(196,151,106,0.35)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            {iconSvg}
+          </div>
+        </Reveal>
+
+        {/* Tag */}
+        <Reveal startFrame={start + 10} direction="up" distance={14} style={{ marginBottom: 18 }}>
+          <p style={{ fontFamily: B.body, fontSize: 13, fontWeight: 700, letterSpacing: '0.20em', textTransform: 'uppercase', color: B.caramel, margin: 0 }}>
+            {tag}
+          </p>
+        </Reveal>
+
+        {/* Headline */}
+        <WordReveal
+          text={headline}
+          startFrame={start + 18}
+          stagger={4}
+          style={{ marginBottom: 0 }}
+          wordStyle={{
+            fontFamily: B.display, fontStyle: 'italic', fontWeight: 700,
+            fontSize: 68, color: fg, lineHeight: 1.12, letterSpacing: '-0.02em',
+          }}
+        />
+
+        {/* Line */}
+        <div style={{ marginTop: 24, marginBottom: 24 }}>
+          <LineDraw startFrame={start + 36} width={90} color="rgba(196,151,106,0.65)" />
+        </div>
+
+        {/* Sub */}
+        <Reveal startFrame={start + 42} direction="up" distance={14}>
+          <p style={{ fontFamily: B.body, fontSize: 20, color: fgSub, lineHeight: 1.65, maxWidth: 480, margin: 0 }}>
+            {sub}
+          </p>
+        </Reveal>
+      </div>
+
+      {/* Right: image panel */}
+      <div style={{
+        flex: '0 0 48%', position: 'relative', overflow: 'hidden',
+        opacity: imgOpa, transform: `translateX(${imgX}px)`,
+      }}>
+        <Img src={img} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }} />
+        {/* Gradient overlay on left edge to blend with text side */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: `linear-gradient(to right, ${bg} 0%, transparent 28%)`,
+        }} />
+        <div style={{ position: 'absolute', inset: 0, background: lightBg ? 'rgba(240,237,232,0.15)' : 'rgba(26,26,46,0.32)' }} />
+      </div>
+
+      {/* Decorative dots */}
+      <Dot x={80} y={80} start={start + 4} size={4} opacity={0.4} />
+      <Dot x={1820} y={920} start={start + 8} size={3} opacity={0.3} />
+    </AbsoluteFill>
+  )
+}
+
+/* ─── Scene: Split (Pour tous) ───────────────────────────────────────────── */
 function SceneSplit() {
   const frame = useCurrentFrame()
   const local = frame - S.split
   const { fps } = useVideoConfig()
+  const bgOp = interpolate(local, [0, 18], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
-  const leftX = interpolate(
-    spring({ frame: local, fps, config: { damping: 18, stiffness: 60 } }),
-    [0, 1], [-400, 0]
-  )
-  const rightX = interpolate(
-    spring({ frame: local, fps, config: { damping: 18, stiffness: 60 } }),
-    [0, 1], [400, 0]
-  )
-  const opacity = interpolate(local, [0, 20], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const leftP = spring({ frame: Math.max(0, local - 4), fps, config: { damping: 20, stiffness: 55 } })
+  const leftX = interpolate(leftP, [0, 1], [-100, 0])
+  const rightP = spring({ frame: Math.max(0, local - 4), fps, config: { damping: 20, stiffness: 55 } })
+  const rightX = interpolate(rightP, [0, 1], [100, 0])
 
   return (
-    <AbsoluteFill style={{ background: B.night, opacity, display: 'flex' }}>
+    <AbsoluteFill style={{ background: B.night, opacity: bgOp, display: 'flex' }}>
+      <BgImg src={IMGS.interior} opacity={0.12} startFrame={S.split} />
+      {/* Divider */}
+      <div style={{ position: 'absolute', left: '50%', top: '10%', width: 1, height: '80%', background: 'rgba(196,151,106,0.30)', transform: 'translateX(-0.5px)' }} />
+      <Dot x={957} y={80} start={S.split + 5} size={6} opacity={0.55} />
+      <Dot x={957} y={960} start={S.split + 5} size={6} opacity={0.55} />
+
       {/* Left — Propriétaire */}
-      <div style={{
-        flex: 1,
-        borderRight: `1px solid rgba(196,151,106,0.2)`,
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        transform: `translateX(${leftX}px)`,
-        padding: '0 80px',
-      }}>
-        <Reveal startFrame={S.split + 15} direction="up">
-          <p style={{ fontFamily: B.body, fontSize: 13, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#1a3270', marginBottom: 20 }}>Propriétaire</p>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 80px', transform: `translateX(${leftX}px)` }}>
+        <div style={{ marginBottom: 28 }}>
+          <LogoMark size={52} color="rgba(26,50,112,0.9)" />
+        </div>
+        <Reveal startFrame={S.split + 16} direction="up" style={{ marginBottom: 12 }}>
+          <p style={{ fontFamily: B.body, fontSize: 13, fontWeight: 700, letterSpacing: '0.20em', textTransform: 'uppercase', color: '#5b78c4', margin: 0, textAlign: 'center' }}>
+            Propriétaire
+          </p>
         </Reveal>
-        <Reveal startFrame={S.split + 22} direction="up">
-          <h2 style={{ fontFamily: B.display, fontStyle: 'italic', fontWeight: 700, fontSize: 64, color: B.cream, lineHeight: 1.1, textAlign: 'center', margin: '0 0 24px' }}>
-            Publiez, gérez, encaissez.
-          </h2>
-        </Reveal>
-        <Reveal startFrame={S.split + 32} direction="up">
-          <p style={{ fontFamily: B.body, fontSize: 20, color: 'rgba(250,250,248,0.55)', textAlign: 'center', lineHeight: 1.6 }}>
-            Annonce, candidatures, bail, quittances. Tout en ligne.
+        <WordReveal
+          text="Publiez, gérez, encaissez."
+          startFrame={S.split + 24}
+          stagger={4}
+          style={{ justifyContent: 'center', marginBottom: 24 }}
+          wordStyle={{ fontFamily: B.display, fontStyle: 'italic', fontWeight: 700, fontSize: 56, color: B.cream, lineHeight: 1.12, letterSpacing: '-0.02em' }}
+        />
+        <Reveal startFrame={S.split + 44} direction="up" distance={14}>
+          <p style={{ fontFamily: B.body, fontSize: 18, color: 'rgba(250,250,248,0.55)', textAlign: 'center', lineHeight: 1.6, maxWidth: 380 }}>
+            Annonce, candidatures, bail, quittances — tout en ligne.
           </p>
         </Reveal>
       </div>
 
       {/* Right — Locataire */}
-      <div style={{
-        flex: 1,
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        transform: `translateX(${rightX}px)`,
-        padding: '0 80px',
-      }}>
-        <Reveal startFrame={S.split + 15} direction="up">
-          <p style={{ fontFamily: B.body, fontSize: 13, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#1b5e3b', marginBottom: 20 }}>Locataire</p>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 80px', transform: `translateX(${rightX}px)` }}>
+        <div style={{ marginBottom: 28 }}>
+          <LogoMark size={52} color="rgba(27,94,59,0.9)" />
+        </div>
+        <Reveal startFrame={S.split + 16} direction="up" style={{ marginBottom: 12 }}>
+          <p style={{ fontFamily: B.body, fontSize: 13, fontWeight: 700, letterSpacing: '0.20em', textTransform: 'uppercase', color: '#55a87a', margin: 0, textAlign: 'center' }}>
+            Locataire
+          </p>
         </Reveal>
-        <Reveal startFrame={S.split + 22} direction="up">
-          <h2 style={{ fontFamily: B.display, fontStyle: 'italic', fontWeight: 700, fontSize: 64, color: B.cream, lineHeight: 1.1, textAlign: 'center', margin: '0 0 24px' }}>
-            Trouvez, postulez, emménagez.
-          </h2>
-        </Reveal>
-        <Reveal startFrame={S.split + 32} direction="up">
-          <p style={{ fontFamily: B.body, fontSize: 20, color: 'rgba(250,250,248,0.55)', textAlign: 'center', lineHeight: 1.6 }}>
+        <WordReveal
+          text="Trouvez, postulez, emménagez."
+          startFrame={S.split + 24}
+          stagger={4}
+          style={{ justifyContent: 'center', marginBottom: 24 }}
+          wordStyle={{ fontFamily: B.display, fontStyle: 'italic', fontWeight: 700, fontSize: 56, color: B.cream, lineHeight: 1.12, letterSpacing: '-0.02em' }}
+        />
+        <Reveal startFrame={S.split + 44} direction="up" distance={14}>
+          <p style={{ fontFamily: B.body, fontSize: 18, color: 'rgba(250,250,248,0.55)', textAlign: 'center', lineHeight: 1.6, maxWidth: 380 }}>
             Des annonces de particuliers. Zéro frais d'agence.
           </p>
         </Reveal>
@@ -234,303 +288,206 @@ function SceneSplit() {
   )
 }
 
-// ─── Scene: 0€ de frais ───────────────────────────────────────────────────────
-function SceneZeroFrais() {
+/* ─── Scene: 0 € ─────────────────────────────────────────────────────────── */
+function SceneZero() {
   const frame = useCurrentFrame()
-  const local = frame - S.zeroCom
+  const local = frame - S.zero
   const { fps } = useVideoConfig()
+  const bgOp = interpolate(local, [0, 18], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
-  const bgOpacity = interpolate(local, [0, 18], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
-  const bigScale = interpolate(
-    spring({ frame: local - 10, fps, config: { damping: 22, stiffness: 50 } }),
-    [0, 1], [0.6, 1]
-  )
-  const bigOpacity = interpolate(local - 10, [0, 20], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const bigP = spring({ frame: Math.max(0, local - 14), fps, config: { damping: 24, stiffness: 45 } })
+  const bigScale = interpolate(bigP, [0, 1], [0.55, 1])
+  const bigOp = interpolate(local - 14, [0, 18], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
   return (
-    <AbsoluteFill style={{ background: '#f4f2ee', opacity: bgOpacity, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-      <Orb cx={1700} cy={150} r={500} color="rgba(196,151,106,0.20)" startFrame={S.zeroCom} />
+    <AbsoluteFill style={{ background: '#f0ede8', opacity: bgOp }}>
+      <Orb x={1750} y={100} r={520} color="rgba(196,151,106,0.22)" start={S.zero} />
+      <Orb x={100}  y={1000} r={380} color="rgba(196,151,106,0.12)" start={S.zero + 10} />
+      <Ring x={960} y={540} r={280} start={S.zero + 8} />
+      <Dot x={200}  y={200} start={S.zero}     size={5} opacity={0.3} />
+      <Dot x={1700} y={880} start={S.zero + 6} size={4} opacity={0.25} />
+      <Dot x={1820} y={200} start={S.zero + 3} size={3} opacity={0.3} />
 
-      <Reveal startFrame={S.zeroCom + 5} direction="up">
-        <p style={{ fontFamily: B.body, fontSize: 14, fontWeight: 700, letterSpacing: '0.20em', textTransform: 'uppercase', color: B.caramel, marginBottom: 28 }}>La différence Bailio</p>
-      </Reveal>
+      <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 160px' }}>
+        <Reveal startFrame={S.zero + 5} direction="up" distance={14} style={{ marginBottom: 32, display: 'flex', alignItems: 'center', gap: 14 }}>
+          <LogoMark size={30} color={B.caramel} />
+          <p style={{ fontFamily: B.body, fontSize: 14, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: B.caramel, margin: 0 }}>
+            La différence Bailio
+          </p>
+        </Reveal>
 
-      <div style={{ opacity: bigOpacity, transform: `scale(${bigScale})` }}>
-        <span style={{
-          fontFamily: B.display,
-          fontStyle: 'italic',
-          fontWeight: 700,
-          fontSize: 220,
-          color: B.night,
-          lineHeight: 0.9,
-          letterSpacing: '-0.04em',
-          display: 'block',
-          textAlign: 'center',
-        }}>
-          0 €
-        </span>
-      </div>
+        <div style={{ opacity: bigOp, transform: `scale(${bigScale})` }}>
+          <span style={{
+            fontFamily: B.display, fontStyle: 'italic', fontWeight: 700,
+            fontSize: 210, color: B.night, lineHeight: 0.9, letterSpacing: '-0.04em',
+            display: 'block', textAlign: 'center',
+          }}>
+            0 €
+          </span>
+        </div>
 
-      <Reveal startFrame={S.zeroCom + 30} direction="up" distance={24} style={{ textAlign: 'center' }}>
-        <p style={{ fontFamily: B.body, fontSize: 26, color: B.inkMid, marginTop: 28, letterSpacing: '0.04em' }}>
-          de frais d'agence — pour tout le monde.
-        </p>
-      </Reveal>
+        <div style={{ marginTop: 28, marginBottom: 24 }}>
+          <LineDraw startFrame={S.zero + 32} width={160} color="rgba(196,151,106,0.80)" />
+        </div>
 
-      <LineDraw startFrame={S.zeroCom + 44} color={`${B.caramel}90`} duration={28} width={160} height={2} />
+        <Reveal startFrame={S.zero + 38} direction="up" distance={20}>
+          <p style={{ fontFamily: B.body, fontSize: 26, color: B.inkMid, textAlign: 'center', letterSpacing: '0.02em', lineHeight: 1.5, margin: 0 }}>
+            de frais d'agence — pour tout le monde.
+          </p>
+        </Reveal>
+
+        <Reveal startFrame={S.zero + 52} direction="up" distance={14} style={{ marginTop: 20 }}>
+          <p style={{ fontFamily: B.body, fontSize: 16, color: B.inkFaint, textAlign: 'center', letterSpacing: '0.06em' }}>
+            Ni pour le locataire. Ni pour le propriétaire.
+          </p>
+        </Reveal>
+      </AbsoluteFill>
     </AbsoluteFill>
   )
 }
 
-// ─── Scene: DISPONIBLE MAINTENANT ────────────────────────────────────────────
+/* ─── Scene: Disponible maintenant ──────────────────────────────────────── */
 function SceneAvailable() {
   const frame = useCurrentFrame()
   const local = frame - S.available
   const { fps } = useVideoConfig()
+  const bgOp = interpolate(local, [0, 18], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
-  const bgOpacity = interpolate(local, [0, 20], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const lineW = interpolate(local - 4, [0, 35], [0, 1920], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
-  const lineProgress = spring({ frame: local - 5, fps, config: { damping: 25, stiffness: 35 } })
-  const lineWidth = interpolate(lineProgress, [0, 1], [0, 1920])
+  const mainP = spring({ frame: Math.max(0, local - 22), fps, config: { damping: 22, stiffness: 48 } })
+  const mainY = interpolate(mainP, [0, 1], [70, 0])
+  const mainOp = interpolate(local - 22, [0, 18], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
-  const textProgress = spring({ frame: local - 20, fps, config: { damping: 20, stiffness: 50 } })
-  const textY = interpolate(textProgress, [0, 1], [80, 0])
-  const textOpacity = interpolate(local - 20, [0, 20], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const subP = spring({ frame: Math.max(0, local - 55), fps, config: { damping: 18, stiffness: 62 } })
+  const subY = interpolate(subP, [0, 1], [32, 0])
+  const subOp = interpolate(local - 55, [0, 18], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
-  const subProgress = spring({ frame: local - 50, fps, config: { damping: 18, stiffness: 60 } })
-  const subY = interpolate(subProgress, [0, 1], [40, 0])
-  const subOpacity = interpolate(local - 50, [0, 20], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
-
-  const pulseOpacity = interpolate(
-    Math.sin((local * Math.PI) / 30),
-    [-1, 1], [0.4, 1]
-  )
+  const pulse = 0.5 + 0.5 * Math.sin((local * Math.PI) / 36)
 
   return (
-    <AbsoluteFill style={{ background: B.night, opacity: bgOpacity }}>
-      <Orb cx={960} cy={540} r={700} color="rgba(196,151,106,0.22)" startFrame={S.available} />
+    <AbsoluteFill style={{ background: B.night, opacity: bgOp }}>
+      <BgImg src={IMGS.apartment} opacity={0.14} startFrame={S.available} />
+      <Orb x={960} y={540} r={700} color="rgba(196,151,106,0.24)" start={S.available} />
+      <Ring x={960} y={540} r={420} start={S.available + 10} />
+      <Ring x={960} y={540} r={600} start={S.available + 20} />
+      <Dot x={180} y={160} start={S.available + 5} size={5} opacity={0.40} />
+      <Dot x={1740} y={200} start={S.available + 8} size={4} opacity={0.35} />
+      <Dot x={200}  y={900} start={S.available + 3} size={3} opacity={0.30} />
+      <Dot x={1800} y={850} start={S.available + 6} size={5} opacity={0.35} />
 
-      {/* Top line */}
-      <div style={{ position: 'absolute', top: 200, left: 0, height: 1, width: lineWidth, background: `rgba(196,151,106,0.5)` }} />
+      {/* Animated lines */}
+      <div style={{ position: 'absolute', top: 172, left: 0, height: 1, width: lineW, background: 'rgba(196,151,106,0.45)' }} />
+      <div style={{ position: 'absolute', bottom: 172, left: 0, height: 1, width: lineW, background: 'rgba(196,151,106,0.45)' }} />
 
-      {/* Main text */}
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-        <div style={{ opacity: textOpacity, transform: `translateY(${textY}px)` }}>
-          <span style={{
-            fontFamily: B.display,
-            fontStyle: 'italic',
-            fontWeight: 700,
-            fontSize: 160,
-            color: B.cream,
-            lineHeight: 0.92,
-            letterSpacing: '-0.04em',
-            display: 'block',
-            textAlign: 'center',
-          }}>
+      <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        {/* Main reveal */}
+        <div style={{ opacity: mainOp, transform: `translateY(${mainY}px)`, textAlign: 'center' }}>
+          <span style={{ fontFamily: B.display, fontStyle: 'italic', fontWeight: 700, fontSize: 148, color: B.cream, display: 'block', lineHeight: 0.92, letterSpacing: '-0.04em' }}>
             Disponible
           </span>
-          <span style={{
-            fontFamily: B.display,
-            fontStyle: 'italic',
-            fontWeight: 700,
-            fontSize: 160,
-            color: B.caramel,
-            lineHeight: 0.92,
-            letterSpacing: '-0.04em',
-            display: 'block',
-            textAlign: 'center',
-          }}>
+          <span style={{ fontFamily: B.display, fontStyle: 'italic', fontWeight: 700, fontSize: 148, color: B.caramel, display: 'block', lineHeight: 0.92, letterSpacing: '-0.04em' }}>
             maintenant.
           </span>
         </div>
 
-        {/* Sub */}
-        <div style={{ opacity: subOpacity, transform: `translateY(${subY}px)`, marginTop: 56 }}>
-          <p style={{
-            fontFamily: B.body,
-            fontSize: 24,
-            color: 'rgba(250,250,248,0.55)',
-            textAlign: 'center',
-            letterSpacing: '0.02em',
-          }}>
+        {/* Separator */}
+        <div style={{ marginTop: 44, marginBottom: 40 }}>
+          <LineDraw startFrame={S.available + 44} width={160} color="rgba(196,151,106,0.65)" />
+        </div>
+
+        {/* Sub + URL */}
+        <div style={{ opacity: subOp, transform: `translateY(${subY}px)`, textAlign: 'center' }}>
+          <p style={{ fontFamily: B.body, fontSize: 22, color: 'rgba(250,250,248,0.55)', margin: '0 0 16px', letterSpacing: '0.03em' }}>
             Créez votre compte gratuitement sur
           </p>
           <p style={{
-            fontFamily: B.display,
-            fontStyle: 'italic',
-            fontSize: 38,
-            color: B.caramel,
-            textAlign: 'center',
-            opacity: pulseOpacity,
-            marginTop: 8,
+            fontFamily: B.display, fontStyle: 'italic', fontSize: 42, color: B.caramel,
+            margin: 0, opacity: 0.65 + 0.35 * pulse, letterSpacing: '-0.01em',
           }}>
             bailio.fr
           </p>
         </div>
-      </div>
-
-      {/* Bottom line */}
-      <div style={{ position: 'absolute', bottom: 200, left: 0, height: 1, width: lineWidth, background: `rgba(196,151,106,0.5)` }} />
+      </AbsoluteFill>
     </AbsoluteFill>
   )
 }
 
-// ─── Scene: Outro ────────────────────────────────────────────────────────────
+/* ─── Scene: Outro ───────────────────────────────────────────────────────── */
 function SceneOutro() {
   const frame = useCurrentFrame()
   const local = frame - S.outro
-  const { fps } = useVideoConfig()
-
-  const bgOpacity = interpolate(local, [0, 20], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
-
-  const pulseOpacity = interpolate(
-    Math.sin((local * Math.PI) / 40),
-    [-1, 1], [0.6, 1]
-  )
-
-  const urlProgress = spring({ frame: local - 30, fps, config: { damping: 16, stiffness: 50 } })
-  const urlScale = interpolate(urlProgress, [0, 1], [0.85, 1])
-  const urlOpacity = interpolate(local - 30, [0, 20], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const bgOp = interpolate(local, [0, 18], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const pulse = 0.55 + 0.45 * Math.sin((local * Math.PI) / 44)
 
   return (
-    <AbsoluteFill style={{
-      background: B.night,
-      opacity: bgOpacity,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 0,
-    }}>
-      <Orb cx={960} cy={540} r={600} color="rgba(196,151,106,0.25)" startFrame={S.outro} />
+    <AbsoluteFill style={{ background: B.night, opacity: bgOp }}>
+      <Orb x={960} y={540} r={600} color="rgba(196,151,106,0.28)" start={S.outro} />
+      <Ring x={960} y={540} r={360} start={S.outro + 8} />
+      <Dot x={300}  y={200} start={S.outro + 4} size={4} opacity={0.35} />
+      <Dot x={1620} y={180} start={S.outro + 7} size={3} opacity={0.30} />
+      <Dot x={200}  y={880} start={S.outro + 3} size={5} opacity={0.30} />
+      <Dot x={1740} y={860} start={S.outro + 5} size={4} opacity={0.30} />
 
-      <BailioLogo startFrame={S.outro + 8} size={120} />
+      <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0 }}>
+        <BailioLogo startFrame={S.outro + 10} size={108} />
 
-      <div style={{ opacity: urlOpacity, transform: `scale(${urlScale})`, marginTop: 40 }}>
-        <p style={{
-          fontFamily: B.body,
-          fontSize: 22,
-          fontWeight: 500,
-          color: 'rgba(250,250,248,0.45)',
-          letterSpacing: '0.12em',
-          textAlign: 'center',
-        }}>
-          bailio.fr
-        </p>
-      </div>
+        <Reveal startFrame={S.outro + 36} direction="up" distance={14} style={{ marginTop: 36 }}>
+          <p style={{ fontFamily: B.body, fontSize: 18, color: 'rgba(250,250,248,0.35)', letterSpacing: '0.22em', textTransform: 'uppercase', textAlign: 'center' }}>
+            Location entre particuliers, simplement.
+          </p>
+        </Reveal>
 
-      {/* Tagline fade */}
-      <Reveal startFrame={S.outro + 50} direction="up" distance={12} style={{ marginTop: 40 }}>
-        <p style={{
-          fontFamily: B.body,
-          fontSize: 16,
-          color: 'rgba(250,250,248,0.30)',
-          letterSpacing: '0.16em',
-          textTransform: 'uppercase',
-          textAlign: 'center',
-          opacity: pulseOpacity,
-        }}>
-          Location entre particuliers, simplement.
-        </p>
-      </Reveal>
+        <Reveal startFrame={S.outro + 50} direction="up" distance={10} style={{ marginTop: 20 }}>
+          <p style={{ fontFamily: B.body, fontSize: 22, color: B.caramel, letterSpacing: '0.10em', opacity: pulse }}>
+            bailio.fr
+          </p>
+        </Reveal>
+      </AbsoluteFill>
     </AbsoluteFill>
   )
 }
 
-// ─── Transition overlay ───────────────────────────────────────────────────────
-function SceneTransition({ at, duration = 18 }: { at: number; duration?: number }) {
-  const frame = useCurrentFrame()
-  const local = frame - at
-  const opacity = interpolate(
-    local,
-    [0, duration * 0.35, duration * 0.65, duration],
-    [0, 0.9, 0.9, 0],
-    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
-  )
-  return (
-    <AbsoluteFill style={{ background: B.night, opacity, pointerEvents: 'none' }} />
-  )
-}
+/* ─── SVG Icons ──────────────────────────────────────────────────────────── */
+const ic = (path: React.ReactNode) => (
+  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={B.caramel} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{path}</svg>
+)
+const IconAnnonce    = () => ic(<><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></>)
+const IconCandidature= () => ic(<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></>)
+const IconBail       = () => ic(<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></>)
+const IconQuittance  = () => ic(<><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></>)
 
-// ─── Main composition ─────────────────────────────────────────────────────────
+/* ─── Main composition ────────────────────────────────────────────────────── */
 export function BailioMain() {
   const frame = useCurrentFrame()
 
-  const showIntro    = frame < S.tagline + 10
-  const showTagline  = frame >= S.tagline - 4 && frame < S.feat1 + 10
-  const showFeat1    = frame >= S.feat1 - 4 && frame < S.feat2 + 10
-  const showFeat2    = frame >= S.feat2 - 4 && frame < S.feat3 + 10
-  const showFeat3    = frame >= S.feat3 - 4 && frame < S.feat4 + 10
-  const showFeat4    = frame >= S.feat4 - 4 && frame < S.split + 10
-  const showSplit    = frame >= S.split - 4 && frame < S.zeroCom + 10
-  const showZero     = frame >= S.zeroCom - 4 && frame < S.available + 10
-  const showAvail    = frame >= S.available - 4 && frame < S.outro + 10
-  const showOutro    = frame >= S.outro - 4
+  const show = (from: number, to: number) => frame >= from - 6 && frame < to + 6
 
   return (
-    <AbsoluteFill style={{ background: B.night, fontFamily: B.body }}>
-      {showIntro    && <SceneIntro />}
-      {showTagline  && <SceneTagline />}
-      {showFeat1    && (
-        <FeatureScene
-          startFrame={S.feat1}
-          tag="Annonce"
-          headline="Publiez en 8 minutes."
-          sub="Photos, description, loyer — votre bien est en ligne immédiatement."
-          icon={<IconAnnonce />}
-        />
-      )}
-      {showFeat2    && (
-        <FeatureScene
-          startFrame={S.feat2}
-          tag="Candidatures"
-          headline="Choisissez votre locataire."
-          sub="Recevez les dossiers, comparez les profils, répondez en un clic."
-          icon={<IconCandidature />}
-        />
-      )}
-      {showFeat3    && (
-        <FeatureScene
-          startFrame={S.feat3}
-          tag="Bail électronique"
-          headline="Signez en ligne, c'est légal."
-          sub="Signature eIDAS certifiée. Votre contrat a la même valeur qu'un acte notarié."
-          lightBg
-          icon={<IconBail />}
-        />
-      )}
-      {showFeat4    && (
-        <FeatureScene
-          startFrame={S.feat4}
-          tag="Quittances"
-          headline="Automatiques chaque mois."
-          sub="Bailio génère et envoie vos quittances de loyer sans que vous n'ayez rien à faire."
-          lightBg
-          icon={<IconQuittance />}
-        />
-      )}
-      {showSplit    && <SceneSplit />}
-      {showZero     && <SceneZeroFrais />}
-      {showAvail    && <SceneAvailable />}
-      {showOutro    && <SceneOutro />}
+    <AbsoluteFill style={{ background: B.night }}>
 
-      {/* Smooth transitions between scenes */}
-      <SceneTransition at={S.tagline - 8} />
-      <SceneTransition at={S.feat1 - 8} />
-      <SceneTransition at={S.feat2 - 8} />
-      <SceneTransition at={S.feat3 - 8} />
-      <SceneTransition at={S.feat4 - 8} />
-      <SceneTransition at={S.split - 8} />
-      <SceneTransition at={S.zeroCom - 8} />
-      <SceneTransition at={S.available - 8} />
-      <SceneTransition at={S.outro - 8} />
+      {/* Scenes */}
+      {show(S.intro,     S.tagline)   && <SceneIntro />}
+      {show(S.tagline,   S.feat1)     && <SceneTagline />}
+      {show(S.feat1,     S.feat2) && <SceneFeature start={S.feat1} tag="Annonce" headline="Publiez en 8 minutes." sub="Photos, description, loyer — votre bien est en ligne immédiatement." img={IMGS.interior} iconSvg={<IconAnnonce />} />}
+      {show(S.feat2,     S.feat3) && <SceneFeature start={S.feat2} tag="Candidatures" headline="Choisissez votre locataire." sub="Recevez les dossiers, comparez les profils, répondez en un clic." img={IMGS.handshake} iconSvg={<IconCandidature />} />}
+      {show(S.feat3,     S.feat4) && <SceneFeature start={S.feat3} tag="Bail électronique" headline="Signez en ligne. C'est légal." sub="Signature eIDAS certifiée — même valeur juridique qu'un acte notarié." img={IMGS.contract} lightBg iconSvg={<IconBail />} />}
+      {show(S.feat4,     S.split) && <SceneFeature start={S.feat4} tag="Quittances" headline="Automatiques chaque mois." sub="Bailio génère et envoie vos quittances sans que vous n'ayez rien à faire." img={IMGS.keys} lightBg iconSvg={<IconQuittance />} />}
+      {show(S.split,     S.zero)      && <SceneSplit />}
+      {show(S.zero,      S.available) && <SceneZero />}
+      {show(S.available, S.outro)     && <SceneAvailable />}
+      {frame >= S.outro - 6           && <SceneOutro />}
+
+      {/* Cross-dissolve transitions */}
+      <Fade at={S.tagline   - 10} />
+      <Fade at={S.feat1     - 10} />
+      <Fade at={S.feat2     - 10} />
+      <Fade at={S.feat3     - 10} />
+      <Fade at={S.feat4     - 10} />
+      <Fade at={S.split     - 10} />
+      <Fade at={S.zero      - 10} />
+      <Fade at={S.available - 10} />
+      <Fade at={S.outro     - 10} />
     </AbsoluteFill>
   )
 }

@@ -105,7 +105,7 @@ export function FeatureScene({
       />
 
       {/* Line */}
-      <LineDraw startFrame={startFrame + 22} color={`${accent}70`} duration={25} width={120} height={2} />
+      <LineDraw startFrame={startFrame + 22} color={`${accent}70`} duration={25} width={120} />
 
       {/* Sub */}
       <Reveal startFrame={startFrame + 28} direction="up" distance={16} style={{ marginTop: 28, textAlign: 'center' }}>
