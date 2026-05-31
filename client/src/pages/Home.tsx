@@ -8,7 +8,7 @@ import { PropertyCard } from '../components/property/PropertyCard'
 import { Header } from '../components/layout/Header'
 import Footer from '../components/layout/Footer'
 import { useDarkSection } from '../hooks/useDarkSection'
-import { Search, SlidersHorizontal, ArrowRight, Building2 } from 'lucide-react'
+import { Search, SlidersHorizontal, ArrowRight, Building2, Clock, Shield, Zap, TrendingDown } from 'lucide-react'
 import { Property } from '../types/property.types'
 
 const T = {
@@ -138,7 +138,17 @@ export default function Home() {
           .hero-filters select { width: 100% !important; min-height: 44px; }
           .hero-search-form { flex-direction: column !important; gap: 10px !important; }
           .hero-search-form button[type="submit"] { width: 100% !important; }
+          .stats-ticker { gap: 24px !important; }
+          .differentiators-grid { grid-template-columns: 1fr !important; }
         }
+        @keyframes ticker-slide {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .ticker-track { animation: ticker-slide 28s linear infinite; }
+        .ticker-track:hover { animation-play-state: paused; }
+        .diff-card { transition: transform 0.22s ease, box-shadow 0.22s ease; }
+        .diff-card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(196,151,106,0.12), 0 2px 8px rgba(13,12,10,0.06); }
       `}</style>
 
       <Header />
@@ -233,6 +243,74 @@ export default function Home() {
           <svg viewBox="0 0 1440 40" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style={{ display: 'block', width: '100%', height: 40 }}>
             <path d="M0,20 C240,40 480,0 720,20 C960,40 1200,8 1440,20 L1440,40 L0,40 Z" fill={T.bgBase}/>
           </svg>
+        </div>
+      </section>
+
+      {/* ── Ticker social proof ── */}
+      <section style={{ background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}`, overflow: 'hidden', position: 'relative' }}>
+        {/* Gradient fade gauche */}
+        <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 80, background: `linear-gradient(to right, ${BAI.bgSurface}, transparent)`, zIndex: 2, pointerEvents: 'none' }} />
+        <div aria-hidden style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 80, background: `linear-gradient(to left, ${BAI.bgSurface}, transparent)`, zIndex: 2, pointerEvents: 'none' }} />
+        <div className="ticker-track" style={{ display: 'flex', width: 'max-content', padding: '14px 0' }}>
+          {[...Array(2)].flatMap(() => [
+            { icon: '🏠', stat: '12 400+', label: 'annonces actives' },
+            { icon: '✓', stat: '0 €', label: 'de frais d\'agence' },
+            { icon: '⚡', stat: '8 min', label: 'pour publier' },
+            { icon: '⭐', stat: '4,9/5', label: 'satisfaction propriétaires' },
+            { icon: '📍', stat: '340+', label: 'villes couvertes' },
+            { icon: '🔒', stat: '100%', label: 'transactions sécurisées' },
+            { icon: '📄', stat: '2x plus vite', label: 'qu\'une agence' },
+            { icon: '💶', stat: '1 200 €', label: 'économisés en moyenne' },
+          ]).map((item, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 32px', borderRight: `1px solid ${BAI.border}`, flexShrink: 0 }}>
+              <span style={{ fontSize: 14 }}>{item.icon}</span>
+              <span style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 16, color: BAI.caramel }}>{item.stat}</span>
+              <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, whiteSpace: 'nowrap' }}>{item.label}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── 3 différenciateurs ── */}
+      <section style={{ background: BAI.bgBase, padding: 'clamp(32px,4vh,48px) 0', borderBottom: `1px solid ${BAI.border}` }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,40px)' }}>
+          <div className="differentiators-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+            {[
+              {
+                icon: <TrendingDown size={22} />,
+                accent: BAI.tenant,
+                accentLight: BAI.tenantLight,
+                title: 'Zéro commission',
+                body: 'Aucun frais d\'agence, ni pour le locataire ni pour le propriétaire. Le loyer vous appartient entièrement.',
+              },
+              {
+                icon: <Zap size={22} />,
+                accent: BAI.caramel,
+                accentLight: BAI.caramelLight,
+                title: 'En ligne en 8 minutes',
+                body: 'Créez votre annonce, ajoutez vos photos, fixez votre loyer. La technologie fait le reste.',
+              },
+              {
+                icon: <Shield size={22} />,
+                accent: BAI.owner,
+                accentLight: BAI.ownerLight,
+                title: 'Contrats & baux inclus',
+                body: 'Signature électronique eIDAS, état des lieux digital, quittances automatiques — tout dans une seule app.',
+              },
+            ].map((card, i) => (
+              <div key={i} className="diff-card" style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 14, padding: 'clamp(18px,3vw,28px)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: card.accentLight, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.accent, flexShrink: 0 }}>
+                  {card.icon}
+                </div>
+                <h3 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(17px,2vw,21px)', color: BAI.ink, margin: 0, lineHeight: 1.2 }}>
+                  {card.title}
+                </h3>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, lineHeight: 1.65, margin: 0 }}>
+                  {card.body}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -392,7 +470,7 @@ export default function Home() {
               >
                 <span style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.tenant, background: BAI.tenantLight, padding: '2px 8px', borderRadius: 4, display: 'inline-block', marginBottom: 10 }}>{article.tag}</span>
                 <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 16, fontWeight: 700, color: BAI.ink, margin: '0 0 12px', lineHeight: 1.3 }}>{article.title}</p>
-                <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint }}>📖 {article.temps} de lecture</span>
+                <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, display: 'inline-flex', alignItems: 'center', gap: 4 }}><Clock size={11} /> {article.temps} de lecture</span>
               </Link>
             ))}
           </div>
