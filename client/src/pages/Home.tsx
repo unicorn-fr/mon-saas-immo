@@ -8,7 +8,7 @@ import { PropertyCard } from '../components/property/PropertyCard'
 import { Header } from '../components/layout/Header'
 import Footer from '../components/layout/Footer'
 import { useDarkSection } from '../hooks/useDarkSection'
-import { Search, SlidersHorizontal, ArrowRight, Building2, Clock, Shield, Zap, TrendingDown } from 'lucide-react'
+import { Search, SlidersHorizontal, ArrowRight, Building2, Clock, TrendingDown, Zap, Shield } from 'lucide-react'
 import { Property } from '../types/property.types'
 
 const T = {
@@ -37,10 +37,44 @@ const PROPERTY_TYPES = [
 const PRICE_RANGES = [
   { value: '', label: 'Tous prix' },
   { value: '0-500', label: '< 500 €' },
-  { value: '500-800', label: '500 – 800 €' },
-  { value: '800-1200', label: '800 – 1 200 €' },
-  { value: '1200-2000', label: '1 200 – 2 000 €' },
+  { value: '500-800', label: '500 - 800 €' },
+  { value: '800-1200', label: '800 - 1 200 €' },
+  { value: '1200-2000', label: '1 200 - 2 000 €' },
   { value: '2000-', label: '> 2 000 €' },
+]
+
+/* Guide articles data */
+const GUIDE_ARTICLES = [
+  {
+    tag: 'DOSSIER',
+    title: 'Comment préparer un dossier locatif solide',
+    desc: 'Identité, bulletins de salaire, avis d\'imposition : tout ce que les propriétaires veulent voir, dans le bon ordre.',
+    temps: '5 min',
+    slug: 'dossier-locatif',
+    image: 'https://picsum.photos/seed/rental-dossier-documents/800/500',
+    featured: true,
+  },
+  {
+    tag: 'JURIDIQUE',
+    title: 'Comprendre le bail : les points clés',
+    temps: '8 min',
+    slug: 'comprendre-bail',
+    featured: false,
+  },
+  {
+    tag: 'VISITE',
+    title: 'Visite : 20 questions à poser',
+    temps: '4 min',
+    slug: 'questions-visite',
+    featured: false,
+  },
+  {
+    tag: 'PROPRIÉTAIRE',
+    title: 'Fixer le bon loyer pour son bien',
+    temps: '6 min',
+    slug: 'fixer-loyer',
+    featured: false,
+  },
 ]
 
 export default function Home() {
@@ -82,7 +116,6 @@ export default function Home() {
   }
 
   useEffect(() => {
-    // Wait for auth to settle — avoid fetching for users who will be redirected
     if (authLoading) return
     if (isAuthenticated && (user?.role === 'OWNER' || user?.role === 'TENANT')) return
     setAllProperties([])
@@ -138,8 +171,6 @@ export default function Home() {
           .hero-filters select { width: 100% !important; min-height: 44px; }
           .hero-search-form { flex-direction: column !important; gap: 10px !important; }
           .hero-search-form button[type="submit"] { width: 100% !important; }
-          .stats-ticker { gap: 24px !important; }
-          .differentiators-grid { grid-template-columns: 1fr !important; }
         }
         @keyframes ticker-slide {
           0%   { transform: translateX(0); }
@@ -147,13 +178,43 @@ export default function Home() {
         }
         .ticker-track { animation: ticker-slide 28s linear infinite; }
         .ticker-track:hover { animation-play-state: paused; }
-        .diff-card { transition: transform 0.22s ease, box-shadow 0.22s ease; }
-        .diff-card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(196,151,106,0.12), 0 2px 8px rgba(13,12,10,0.06); }
+
+        /* Differentiators zig-zag */
+        .diff-row {
+          display: grid;
+          grid-template-columns: 3fr 2fr;
+          gap: 0;
+          border-bottom: 1px solid ${T.border};
+          padding: clamp(28px,4vh,48px) 0;
+        }
+        .diff-row.reverse { grid-template-columns: 2fr 3fr; }
+        .diff-row:last-child { border-bottom: none; }
+        @media (max-width: 768px) {
+          .diff-row, .diff-row.reverse { grid-template-columns: 1fr !important; gap: 20px; }
+          .diff-row.reverse .diff-icon-col { order: -1; }
+        }
+
+        /* Guide editorial grid */
+        .guide-grid {
+          display: grid;
+          grid-template-columns: 2fr 1fr;
+          grid-template-rows: auto auto;
+          gap: 16px;
+        }
+        .guide-featured { grid-row: 1 / 3; }
+        @media (max-width: 768px) {
+          .guide-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
+          .guide-featured { grid-row: auto; }
+        }
+
+        /* Hover states */
+        .guide-small-card:hover { border-color: ${T.caramel} !important; }
+        .guide-featured-card:hover .guide-featured-overlay { opacity: 1 !important; }
       `}</style>
 
       <Header />
 
-      {/* ── HERO compact ── */}
+      {/* ── HERO ── */}
       <section
         ref={heroRef}
         style={{
@@ -168,22 +229,31 @@ export default function Home() {
         <div aria-hidden style={{ position: 'absolute', top: -100, right: -60, width: 600, height: 500, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.25) 0%, transparent 65%)', filter: 'blur(40px)', pointerEvents: 'none' }} />
 
         <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 clamp(16px,5vw,40px)', position: 'relative', zIndex: 1 }}>
-          {/* Titre court */}
-          <h1 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(32px,5vw,56px)', color: '#fff', margin: '0 0 8px', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
-            Trouvez votre prochain logement.
-          </h1>
-          <p style={{ fontFamily: T.fontBody, fontSize: 15, color: 'rgba(255,255,255,0.60)', margin: '0 0 28px' }}>
-            Annonces entre particuliers · Zéro frais d'agence
+          {/* Overline */}
+          <p style={{ fontFamily: T.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: T.caramel, margin: '0 0 12px' }}>
+            Nouvelle façon de louer
           </p>
 
-          {/* Barre de recherche */}
+          <h1 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(32px,5vw,56px)', color: '#fff', margin: '0 0 10px', lineHeight: 1.1, letterSpacing: '-0.02em', paddingBottom: 2 }}>
+            Trouvez votre prochain logement.
+          </h1>
+
+          <p style={{ fontFamily: T.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.55)', margin: '0 0 6px' }}>
+            Annonces entre particuliers, zéro frais d'agence
+          </p>
+          {/* Social proof inline */}
+          <p style={{ fontFamily: T.fontBody, fontSize: 12, color: 'rgba(255,255,255,0.38)', margin: '0 0 28px', letterSpacing: '0.01em' }}>
+            12 400 annonces &nbsp;·&nbsp; 0 € de frais &nbsp;·&nbsp; 340 villes
+          </p>
+
+          {/* Search bar */}
           <form onSubmit={handleSearch}>
             <div className="hero-search-form" style={{ display: 'flex', gap: 8, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: '8px 8px 8px 16px', alignItems: 'center', flexWrap: 'wrap' }}>
               <Search size={16} color="rgba(255,255,255,0.45)" style={{ flexShrink: 0 }} />
               <input
                 className="home-input"
                 type="text"
-                placeholder="Ville, code postal…"
+                placeholder="Ville, code postal..."
                 value={city}
                 onChange={e => setCity(e.target.value)}
                 style={{ flex: 1, minWidth: 140, background: 'transparent', border: 'none', outline: 'none', fontFamily: T.fontBody, fontSize: 15, color: '#fff', padding: '6px 0' }}
@@ -221,13 +291,13 @@ export default function Home() {
             </div>
           </form>
 
-          {/* Liens rapides */}
+          {/* Quick links */}
           <div style={{ display: 'flex', gap: 20, marginTop: 20, flexWrap: 'wrap' }}>
             <Link to="/search" style={{ fontFamily: T.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.50)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'color .15s' }}
               onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.85)')}
               onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.50)')}
             >
-              <SlidersHorizontal size={12} /> Recherche avancée & carte
+              <SlidersHorizontal size={12} /> Recherche avancée &amp; carte
             </Link>
             <Link to="/register?role=OWNER" style={{ fontFamily: T.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.50)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'color .15s' }}
               onMouseEnter={e => (e.currentTarget.style.color = T.caramel)}
@@ -248,22 +318,20 @@ export default function Home() {
 
       {/* ── Ticker social proof ── */}
       <section style={{ background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}`, overflow: 'hidden', position: 'relative' }}>
-        {/* Gradient fade gauche */}
         <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 80, background: `linear-gradient(to right, ${BAI.bgSurface}, transparent)`, zIndex: 2, pointerEvents: 'none' }} />
         <div aria-hidden style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 80, background: `linear-gradient(to left, ${BAI.bgSurface}, transparent)`, zIndex: 2, pointerEvents: 'none' }} />
         <div className="ticker-track" style={{ display: 'flex', width: 'max-content', padding: '14px 0' }}>
           {[...Array(2)].flatMap(() => [
-            { icon: '🏠', stat: '12 400+', label: 'annonces actives' },
-            { icon: '✓', stat: '0 €', label: 'de frais d\'agence' },
-            { icon: '⚡', stat: '8 min', label: 'pour publier' },
-            { icon: '⭐', stat: '4,9/5', label: 'satisfaction propriétaires' },
-            { icon: '📍', stat: '340+', label: 'villes couvertes' },
-            { icon: '🔒', stat: '100%', label: 'transactions sécurisées' },
-            { icon: '📄', stat: '2x plus vite', label: 'qu\'une agence' },
-            { icon: '💶', stat: '1 200 €', label: 'économisés en moyenne' },
+            { stat: '12 400+', label: 'annonces actives' },
+            { stat: '0 €', label: 'de frais d\'agence' },
+            { stat: '8 min', label: 'pour publier' },
+            { stat: '4,9/5', label: 'satisfaction propriétaires' },
+            { stat: '340+', label: 'villes couvertes' },
+            { stat: '100%', label: 'transactions sécurisées' },
+            { stat: '2x plus vite', label: 'qu\'une agence' },
+            { stat: '1 200 €', label: 'économisés en moyenne' },
           ]).map((item, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 32px', borderRight: `1px solid ${BAI.border}`, flexShrink: 0 }}>
-              <span style={{ fontSize: 14 }}>{item.icon}</span>
               <span style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 16, color: BAI.caramel }}>{item.stat}</span>
               <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, whiteSpace: 'nowrap' }}>{item.label}</span>
             </div>
@@ -271,51 +339,87 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 3 différenciateurs ── */}
-      <section style={{ background: BAI.bgBase, padding: 'clamp(32px,4vh,48px) 0', borderBottom: `1px solid ${BAI.border}` }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,40px)' }}>
-          <div className="differentiators-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
-            {[
-              {
-                icon: <TrendingDown size={22} />,
-                accent: BAI.tenant,
-                accentLight: BAI.tenantLight,
-                title: 'Zéro commission',
-                body: 'Aucun frais d\'agence, ni pour le locataire ni pour le propriétaire. Le loyer vous appartient entièrement.',
-              },
-              {
-                icon: <Zap size={22} />,
-                accent: BAI.caramel,
-                accentLight: BAI.caramelLight,
-                title: 'En ligne en 8 minutes',
-                body: 'Créez votre annonce, ajoutez vos photos, fixez votre loyer. La technologie fait le reste.',
-              },
-              {
-                icon: <Shield size={22} />,
-                accent: BAI.owner,
-                accentLight: BAI.ownerLight,
-                title: 'Contrats & baux inclus',
-                body: 'Signature électronique eIDAS, état des lieux digital, quittances automatiques — tout dans une seule app.',
-              },
-            ].map((card, i) => (
-              <div key={i} className="diff-card" style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 14, padding: 'clamp(18px,3vw,28px)', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: card.accentLight, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.accent, flexShrink: 0 }}>
-                  {card.icon}
+      {/* ── Differentiators: zig-zag asymmetrique ── */}
+      <section style={{ background: BAI.bgBase, padding: 'clamp(24px,3vh,40px) 0 0' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 clamp(16px,5vw,40px)' }}>
+          {[
+            {
+              icon: <TrendingDown size={28} color={BAI.tenant} />,
+              accentLight: BAI.tenantLight,
+              accent: BAI.tenant,
+              title: 'Zéro commission',
+              body: 'Aucun frais d\'agence, ni pour le locataire ni pour le propriétaire. Le loyer vous appartient entièrement.',
+              stat: '0 €',
+              statLabel: 'de frais, sur chaque transaction',
+              reverse: false,
+            },
+            {
+              icon: <Zap size={28} color={BAI.caramel} />,
+              accentLight: BAI.caramelLight,
+              accent: BAI.caramel,
+              title: 'En ligne en 8 minutes',
+              body: 'Remplissez les informations essentielles, ajoutez vos photos, fixez votre loyer. La technologie fait le reste.',
+              stat: '8 min',
+              statLabel: 'de la création à la publication',
+              reverse: true,
+            },
+            {
+              icon: <Shield size={28} color={BAI.owner} />,
+              accentLight: BAI.ownerLight,
+              accent: BAI.owner,
+              title: 'Contrats et baux inclus',
+              body: 'Signature électronique eIDAS, état des lieux digital, quittances automatiques, tout dans une seule app.',
+              stat: '1 200 €',
+              statLabel: 'économisés en moyenne par an',
+              reverse: false,
+            },
+          ].map((item, i) => (
+            <div key={i} className={`diff-row${item.reverse ? ' reverse' : ''}`}>
+              {/* Icon + title col */}
+              <div
+                className="diff-icon-col"
+                style={{
+                  display: 'flex', alignItems: 'flex-start', gap: 20,
+                  order: item.reverse ? 2 : 1,
+                  padding: item.reverse ? '0 0 0 clamp(20px,4vw,60px)' : '0 clamp(20px,4vw,60px) 0 0',
+                }}
+              >
+                <div style={{ width: 56, height: 56, borderRadius: 14, background: item.accentLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {item.icon}
                 </div>
-                <h3 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(17px,2vw,21px)', color: BAI.ink, margin: 0, lineHeight: 1.2 }}>
-                  {card.title}
-                </h3>
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, lineHeight: 1.65, margin: 0 }}>
-                  {card.body}
+                <div>
+                  <h3 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(20px,2.5vw,28px)', color: BAI.ink, margin: '0 0 8px', lineHeight: 1.15, paddingBottom: 2 }}>
+                    {item.title}
+                  </h3>
+                </div>
+              </div>
+              {/* Text + stat col */}
+              <div
+                style={{
+                  order: item.reverse ? 1 : 2,
+                  paddingTop: 4,
+                }}
+              >
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, lineHeight: 1.7, margin: '0 0 16px' }}>
+                  {item.body}
+                </p>
+                <p style={{ margin: 0 }}>
+                  <span style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(24px,3vw,32px)', color: item.accent, lineHeight: 1 }}>
+                    {item.stat}
+                  </span>
+                  {' '}
+                  <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>
+                    {item.statLabel}
+                  </span>
                 </p>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* ── Villes populaires ── */}
-      <section style={{ background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}`, padding: '24px 0' }}>
+      {/* ── Popular cities ── */}
+      <section style={{ background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}`, borderTop: `1px solid ${BAI.border}`, padding: '24px 0', marginTop: 'clamp(24px,3vh,40px)' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,40px)' }}>
           <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkFaint, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>Rechercher par ville</p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -346,12 +450,12 @@ export default function Home() {
       {/* ── LISTINGS ── */}
       <section style={{ maxWidth: 1280, margin: '0 auto', padding: 'clamp(32px,5vh,56px) clamp(16px,5vw,40px) 80px' }}>
 
-        {/* En-tête résultats */}
+        {/* Header results */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3vw,32px)', color: T.ink, margin: 0 }}>
               {(authLoading || (isLoading && allProperties.length === 0))
-                ? 'Chargement…'
+                ? 'Chargement...'
                 : totalProperties > 0
                   ? `${totalProperties} bien${totalProperties > 1 ? 's' : ''} disponible${totalProperties > 1 ? 's' : ''}`
                   : 'Aucun bien trouvé'
@@ -374,7 +478,7 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* Grille */}
+        {/* Grid */}
         {(authLoading || (isLoading && allProperties.length === 0)) ? (
           <div className="prop-grid">
             {[...Array(9)].map((_, i) => (
@@ -407,7 +511,6 @@ export default function Home() {
               ))}
             </div>
 
-            {/* Charger plus */}
             {storeHasMore && (
               <div style={{ textAlign: 'center', marginTop: 48 }}>
                 <button
@@ -417,7 +520,7 @@ export default function Home() {
                   onMouseEnter={e => { if (!loadingMore) e.currentTarget.style.borderColor = T.ink }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = T.border }}
                 >
-                  {loadingMore ? 'Chargement…' : 'Voir plus de biens'}
+                  {loadingMore ? 'Chargement...' : 'Voir plus de biens'}
                 </button>
               </div>
             )}
@@ -425,15 +528,15 @@ export default function Home() {
         )}
       </section>
 
-      {/* ── Mini CTA ── */}
+      {/* ── Owner CTA strip ── */}
       <section style={{ background: T.night, padding: 'clamp(40px,6vh,64px) clamp(16px,5vw,40px)' }}>
         <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 24 }}>
           <div>
-            <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3vw,32px)', color: '#fff', margin: '0 0 8px' }}>
-              Vous êtes propriétaire ?
+            <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3vw,32px)', color: '#fff', margin: '0 0 8px', paddingBottom: 2 }}>
+              Vous etes proprietaire ?
             </h2>
             <p style={{ fontFamily: T.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.55)', margin: 0 }}>
-              Publiez votre bien en 8 minutes · Zéro commission sur le loyer
+              Publiez votre bien en 8 minutes, zero commission sur le loyer
             </p>
           </div>
           <Link
@@ -447,30 +550,63 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Guide immobilier ── */}
+      {/* ── Guide editorial: 1 featured + 3 small ── */}
       <section style={{ background: BAI.bgMuted, padding: 'clamp(40px,5vh,64px) 0' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,40px)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
-            <div>
-              <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, marginBottom: 4 }}>Ressources</p>
-              <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3vw,30px)', color: BAI.ink, margin: 0 }}>Le guide de la location</h2>
-            </div>
-            <Link to="/guide" style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.caramel, fontWeight: 600, textDecoration: 'none' }}>Tous les articles →</Link>
+            <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3vw,30px)', color: BAI.ink, margin: 0, paddingBottom: 2 }}>Le guide de la location</h2>
+            <Link to="/guide" style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.caramel, fontWeight: 600, textDecoration: 'none' }}>Tous les articles</Link>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
-            {[
-              { tag: 'DOSSIER', title: 'Comment préparer un dossier locatif solide', temps: '5 min', slug: 'dossier-locatif' },
-              { tag: 'JURIDIQUE', title: 'Comprendre le bail : les points clés', temps: '8 min', slug: 'comprendre-bail' },
-              { tag: 'VISITE', title: 'Visite : 20 questions à poser', temps: '4 min', slug: 'questions-visite' },
-              { tag: 'PROPRIÉTAIRE', title: 'Fixer le bon loyer pour son bien', temps: '6 min', slug: 'fixer-loyer' },
-            ].map(article => (
-              <Link key={article.slug} to={`/guide/${article.slug}`} style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: '20px', textDecoration: 'none', display: 'block', transition: 'border-color 0.15s' }}
-                onMouseEnter={e => (e.currentTarget.style.borderColor = BAI.caramel)}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = BAI.border)}
+
+          <div className="guide-grid">
+            {/* Featured article */}
+            {(() => {
+              const featured = GUIDE_ARTICLES.find(a => a.featured)!
+              return (
+                <Link
+                  to={`/guide/${featured.slug}`}
+                  className="guide-featured guide-featured-card"
+                  style={{ textDecoration: 'none', display: 'block', position: 'relative', borderRadius: 14, overflow: 'hidden', border: `1px solid ${BAI.border}` }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = BAI.caramel)}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor = BAI.border)}
+                >
+                  <img
+                    src={featured.image ?? 'https://picsum.photos/seed/rental-dossier-documents/800/500'}
+                    alt={featured.title}
+                    style={{ width: '100%', height: '100%', minHeight: 320, objectFit: 'cover', display: 'block' }}
+                    loading="lazy"
+                  />
+                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(13,12,10,0.88) 0%, rgba(13,12,10,0.40) 60%, transparent 100%)', padding: 'clamp(16px,3vw,28px)' }}>
+                    <span style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.caramel, background: 'rgba(196,151,106,0.15)', border: '1px solid rgba(196,151,106,0.35)', padding: '2px 8px', borderRadius: 4, display: 'inline-block', marginBottom: 10 }}>{featured.tag}</span>
+                    <h3 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(18px,2.5vw,24px)', color: '#fff', margin: '0 0 8px', lineHeight: 1.25, paddingBottom: 1 }}>
+                      {featured.title}
+                    </h3>
+                    {featured.desc && (
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.75)', margin: '0 0 10px', lineHeight: 1.5 }}>
+                        {featured.desc}
+                      </p>
+                    )}
+                    <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: 'rgba(255,255,255,0.55)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                      <Clock size={11} /> {featured.temps} de lecture
+                    </span>
+                  </div>
+                </Link>
+              )
+            })()}
+
+            {/* 3 small articles */}
+            {GUIDE_ARTICLES.filter(a => !a.featured).map(article => (
+              <Link
+                key={article.slug}
+                to={`/guide/${article.slug}`}
+                className="guide-small-card"
+                style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: '20px', textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 10, transition: 'border-color 0.15s' }}
               >
-                <span style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.tenant, background: BAI.tenantLight, padding: '2px 8px', borderRadius: 4, display: 'inline-block', marginBottom: 10 }}>{article.tag}</span>
-                <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 16, fontWeight: 700, color: BAI.ink, margin: '0 0 12px', lineHeight: 1.3 }}>{article.title}</p>
-                <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, display: 'inline-flex', alignItems: 'center', gap: 4 }}><Clock size={11} /> {article.temps} de lecture</span>
+                <span style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.tenant, background: BAI.tenantLight, padding: '2px 8px', borderRadius: 4, display: 'inline-block', alignSelf: 'flex-start' }}>{article.tag}</span>
+                <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 17, fontWeight: 700, color: BAI.ink, margin: 0, lineHeight: 1.3, paddingBottom: 1 }}>{article.title}</p>
+                <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 'auto' }}>
+                  <Clock size={11} /> {article.temps} de lecture
+                </span>
               </Link>
             ))}
           </div>

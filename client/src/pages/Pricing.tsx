@@ -175,25 +175,28 @@ export default function Pricing() {
                 style={{
                   background: BAI.bgSurface,
                   border: isHighlight
-                    ? '2px solid #16a34a'
+                    ? `2px solid ${BAI.caramel}`
                     : isDimmed
                     ? `1px dashed ${BAI.border}`
                     : `1px solid ${BAI.border}`,
+                  borderTop: isHighlight ? `3px solid ${BAI.caramel}` : undefined,
                   borderRadius: 16,
-                  padding: '28px 24px 24px',
+                  padding: isHighlight ? '32px 24px 28px' : '28px 24px 24px',
                   position: 'relative',
                   opacity: isDimmed ? 0.88 : 1,
                   boxShadow: isHighlight
-                    ? '0 4px 24px rgba(22,163,74,0.12), 0 1px 4px rgba(13,12,10,0.06)'
+                    ? `0 4px 24px rgba(196,151,106,0.18), 0 1px 4px rgba(13,12,10,0.06)`
                     : '0 1px 3px rgba(13,12,10,0.04)',
-                  transition: 'box-shadow 0.2s',
+                  transform: isHighlight ? 'scale(1.03)' : 'none',
+                  transition: 'box-shadow 0.2s, transform 0.2s',
+                  zIndex: isHighlight ? 1 : 0,
                 }}
               >
-                {/* Badge meilleur rapport */}
+                {/* Badge populaire */}
                 {plan.badge && (
                   <div style={{
                     position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
-                    background: '#16a34a', color: '#fff',
+                    background: BAI.caramel, color: '#fff',
                     fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.05em',
                     padding: '5px 14px', borderRadius: 999, whiteSpace: 'nowrap',
                   }}>
@@ -244,7 +247,8 @@ export default function Pricing() {
                     border: plan.ctaStyle === 'primary' ? 'none'
                       : plan.ctaStyle === 'ghost' ? `1px solid ${BAI.border}`
                       : `1px solid ${BAI.border}`,
-                    background: plan.ctaStyle === 'primary' ? BAI.owner
+                    background: plan.ctaStyle === 'primary'
+                      ? (isHighlight ? BAI.caramel : BAI.owner)
                       : 'transparent',
                     color: plan.ctaStyle === 'primary' ? '#fff' : BAI.inkMid,
                     opacity: loadingPlan === plan.id ? 0.7 : 1,
@@ -256,7 +260,7 @@ export default function Pricing() {
                 {/* Essai gratuit */}
                 {plan.trialDays && (
                   <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, textAlign: 'center', margin: '-14px 0 16px' }}>
-                    {plan.trialDays} jours gratuits — sans CB
+                    {plan.trialDays} jours gratuits, sans CB
                   </p>
                 )}
 
@@ -295,7 +299,7 @@ export default function Pricing() {
         }}>
           <Zap style={{ width: 18, height: 18, color: BAI.owner, flexShrink: 0 }} />
           <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.ink, margin: 0, flex: 1 }}>
-            <strong>Pro à 9,90 €/mois</strong> — biens illimités, bail ALUR, signature eIDAS, quittances auto, analyse IA. Tout inclus, sans surprise.
+            <strong>Pro à 9,90 €/mois</strong> : biens illimités, bail ALUR, signature eIDAS, quittances auto, analyse IA. Tout inclus, sans surprise.
           </p>
           <button
             onClick={() => handleCta('pro')}
@@ -405,7 +409,7 @@ export default function Pricing() {
             onClick={() => handleCta('pro')}
             style={{ padding: '13px 32px', borderRadius: 10, border: 'none', background: BAI.caramel, color: '#fff', fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
           >
-            Commencer avec Pro — 9,90 €/mois
+            Commencer avec Pro, 9,90 €/mois
           </button>
           <Link
             to="/register"
