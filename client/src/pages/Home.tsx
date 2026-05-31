@@ -8,7 +8,7 @@ import { PropertyCard } from '../components/property/PropertyCard'
 import { Header } from '../components/layout/Header'
 import Footer from '../components/layout/Footer'
 import { useDarkSection } from '../hooks/useDarkSection'
-import { Search, SlidersHorizontal, ArrowRight, Building2, Clock, TrendingDown, Zap, Shield } from 'lucide-react'
+import { Search, SlidersHorizontal, ArrowRight, Building2, Clock } from 'lucide-react'
 import { Property } from '../types/property.types'
 
 const T = {
@@ -166,35 +166,24 @@ export default function Home() {
           grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
           gap: 20px;
         }
+        /* ── Mobile hero ── */
         @media (max-width: 640px) {
           .hero-filters { flex-direction: column !important; }
-          .hero-filters select { width: 100% !important; min-height: 44px; }
-          .hero-search-form { flex-direction: column !important; gap: 10px !important; }
-          .hero-search-form button[type="submit"] { width: 100% !important; }
+          .hero-filters select { width: 100% !important; min-height: 48px; font-size: 15px !important; }
+          .hero-search-form { flex-direction: column !important; gap: 8px !important; padding: 12px !important; }
+          .hero-search-form button[type="submit"] { width: 100% !important; padding: 14px !important; font-size: 15px !important; border-radius: 12px !important; }
+          .hero-search-form input { font-size: 16px !important; padding: 8px 0 !important; } /* 16px évite le zoom iOS */
         }
+
+        /* ── Ticker ── */
         @keyframes ticker-slide {
           0%   { transform: translateX(0); }
           100% { transform: translateX(-50%); }
         }
-        .ticker-track { animation: ticker-slide 28s linear infinite; }
+        .ticker-track { animation: ticker-slide 32s linear infinite; }
         .ticker-track:hover { animation-play-state: paused; }
 
-        /* Differentiators zig-zag */
-        .diff-row {
-          display: grid;
-          grid-template-columns: 3fr 2fr;
-          gap: 0;
-          border-bottom: 1px solid ${T.border};
-          padding: clamp(28px,4vh,48px) 0;
-        }
-        .diff-row.reverse { grid-template-columns: 2fr 3fr; }
-        .diff-row:last-child { border-bottom: none; }
-        @media (max-width: 768px) {
-          .diff-row, .diff-row.reverse { grid-template-columns: 1fr !important; gap: 20px; }
-          .diff-row.reverse .diff-icon-col { order: -1; }
-        }
-
-        /* Guide editorial grid */
+        /* ── Guide editorial grid ── */
         .guide-grid {
           display: grid;
           grid-template-columns: 2fr 1fr;
@@ -202,14 +191,36 @@ export default function Home() {
           gap: 16px;
         }
         .guide-featured { grid-row: 1 / 3; }
+
+        /* Mobile : colonne unique, featured en premier, 3 petits en grille 2 col */
         @media (max-width: 768px) {
-          .guide-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
-          .guide-featured { grid-row: auto; }
+          .guide-grid {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto auto;
+          }
+          .guide-featured {
+            grid-row: auto;
+            grid-column: 1 / -1; /* pleine largeur */
+          }
+        }
+        @media (max-width: 480px) {
+          .guide-grid { grid-template-columns: 1fr; }
         }
 
-        /* Hover states */
+        /* Hover states desktop */
         .guide-small-card:hover { border-color: ${T.caramel} !important; }
-        .guide-featured-card:hover .guide-featured-overlay { opacity: 1 !important; }
+
+        /* ── Villes chips mobile ── */
+        @media (max-width: 640px) {
+          .villes-grid { gap: 8px !important; }
+          .ville-chip { padding: 10px 14px !important; }
+        }
+
+        /* ── Listings CTA strip mobile ── */
+        @media (max-width: 640px) {
+          .owner-cta-strip { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
+          .owner-cta-strip a { width: 100% !important; justify-content: center !important; }
+        }
       `}</style>
 
       <Header />
@@ -338,90 +349,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Differentiators: zig-zag asymmetrique ── */}
-      <section style={{ background: BAI.bgBase, padding: 'clamp(24px,3vh,40px) 0 0' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 clamp(16px,5vw,40px)' }}>
-          {[
-            {
-              icon: <TrendingDown size={28} color={BAI.tenant} />,
-              accentLight: BAI.tenantLight,
-              accent: BAI.tenant,
-              title: 'Aucun frais d\'agence',
-              body: 'Ni pour le locataire, ni pour le propriétaire. Vous vous connectez directement, le loyer vous appartient entièrement.',
-              stat: '0 €',
-              statLabel: 'de commission sur chaque transaction',
-              reverse: false,
-            },
-            {
-              icon: <Zap size={28} color={BAI.caramel} />,
-              accentLight: BAI.caramelLight,
-              accent: BAI.caramel,
-              title: 'En ligne en 8 minutes',
-              body: 'Remplissez les informations essentielles, ajoutez vos photos, fixez votre loyer. La technologie fait le reste.',
-              stat: '8 min',
-              statLabel: 'de la création à la publication',
-              reverse: true,
-            },
-            {
-              icon: <Shield size={28} color={BAI.owner} />,
-              accentLight: BAI.ownerLight,
-              accent: BAI.owner,
-              title: 'Contrats et baux inclus',
-              body: 'Signature électronique eIDAS, état des lieux digital, quittances automatiques — tout dans une seule application.',
-              stat: 'eIDAS',
-              statLabel: 'signature électronique certifiée',
-              reverse: false,
-            },
-          ].map((item, i) => (
-            <div key={i} className={`diff-row${item.reverse ? ' reverse' : ''}`}>
-              {/* Icon + title col */}
-              <div
-                className="diff-icon-col"
-                style={{
-                  display: 'flex', alignItems: 'flex-start', gap: 20,
-                  order: item.reverse ? 2 : 1,
-                  padding: item.reverse ? '0 0 0 clamp(20px,4vw,60px)' : '0 clamp(20px,4vw,60px) 0 0',
-                }}
-              >
-                <div style={{ width: 56, height: 56, borderRadius: 14, background: item.accentLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  {item.icon}
-                </div>
-                <div>
-                  <h3 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(20px,2.5vw,28px)', color: BAI.ink, margin: '0 0 8px', lineHeight: 1.15, paddingBottom: 2 }}>
-                    {item.title}
-                  </h3>
-                </div>
-              </div>
-              {/* Text + stat col */}
-              <div
-                style={{
-                  order: item.reverse ? 1 : 2,
-                  paddingTop: 4,
-                }}
-              >
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, lineHeight: 1.7, margin: '0 0 16px' }}>
-                  {item.body}
-                </p>
-                <p style={{ margin: 0 }}>
-                  <span style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(24px,3vw,32px)', color: item.accent, lineHeight: 1 }}>
-                    {item.stat}
-                  </span>
-                  {' '}
-                  <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>
-                    {item.statLabel}
-                  </span>
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* ── Popular cities ── */}
       <section style={{ background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}`, borderTop: `1px solid ${BAI.border}`, padding: '24px 0', marginTop: 'clamp(24px,3vh,40px)' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,40px)' }}>
           <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkFaint, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>Rechercher par ville</p>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <div className="villes-grid" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {[
               { name: 'Paris', slug: 'paris' },
               { name: 'Lyon', slug: 'lyon' },
@@ -430,7 +363,7 @@ export default function Home() {
               { name: 'Toulouse', slug: 'toulouse' },
               { name: 'Nantes', slug: 'nantes' },
             ].map(ville => (
-              <Link key={ville.slug} to={`/location/${ville.slug}`} style={{
+              <Link key={ville.slug} to={`/location/${ville.slug}`} className="ville-chip" style={{
                 display: 'inline-flex', flexDirection: 'column', alignItems: 'center',
                 padding: '12px 20px', background: BAI.bgMuted, borderRadius: 10,
                 border: `1px solid ${BAI.border}`, textDecoration: 'none', transition: 'border-color 0.15s',
@@ -529,7 +462,7 @@ export default function Home() {
 
       {/* ── Owner CTA strip ── */}
       <section style={{ background: T.night, padding: 'clamp(40px,6vh,64px) clamp(16px,5vw,40px)' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 24 }}>
+        <div className="owner-cta-strip" style={{ maxWidth: 900, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 24 }}>
           <div>
             <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3vw,32px)', color: '#fff', margin: '0 0 8px', paddingBottom: 2 }}>
               Vous etes proprietaire ?
