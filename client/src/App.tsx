@@ -23,6 +23,7 @@ import NotFound from './pages/NotFound'
 import SearchProperties from './pages/public/SearchProperties'
 import PropertyDetailsPublic from './pages/public/PropertyDetailsPublic'
 import Guide from './pages/public/Guide'
+import GuideArticle from './pages/public/GuideArticle'
 import LocationVille from './pages/public/LocationVille'
 import Estimer from './pages/public/Estimer'
 
@@ -194,7 +195,7 @@ function AppRoutes() {
       <Route path="/search" element={<SearchProperties />} />
       <Route path="/property/:id" element={<PropertyDetailsPublic />} />
       <Route path="/guide" element={<Guide />} />
-      <Route path="/guide/:slug" element={<Guide />} />
+      <Route path="/guide/:slug" element={<GuideArticle />} />
       <Route path="/location/:ville" element={<LocationVille />} />
       <Route path="/estimer" element={<Estimer />} />
 
