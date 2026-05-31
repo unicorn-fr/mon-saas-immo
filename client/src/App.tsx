@@ -101,6 +101,7 @@ import FAQ from './pages/info/FAQ'
 import Contact from './pages/info/Contact'
 import Support from './pages/info/Support'
 import Presse from './pages/info/Presse'
+import Videos from './pages/info/Videos'
 import APropos from './pages/info/APropos'
 import CompleteProfile from './pages/CompleteProfile'
 import VerifyIdentity from './pages/VerifyIdentity'
@@ -231,6 +232,7 @@ function AppRoutes() {
       <Route path="/contact" element={<Contact />} />
       <Route path="/support" element={<Support />} />
       <Route path="/presse" element={<Presse />} />
+      <Route path="/videos" element={<Videos />} />
       <Route path="/a-propos" element={<APropos />} />
       <Route path="/proprietaires" element={<Proprietaires />} />
       <Route path="/locataires" element={<Locataires />} />
