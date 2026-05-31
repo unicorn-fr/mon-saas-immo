@@ -6,32 +6,15 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Link, useLocation } from 'react-router-dom'
 import {
-  LayoutDashboard, Home, ClipboardList, Calendar, FileText,
-  MessageSquare, Plus, Settings, TrendingUp, Wrench, Receipt, BarChart2, Users, FolderOpen, Calculator, Zap,
+  Home, ClipboardList, Calendar, FileText,
+  MessageSquare, Plus, Settings, Receipt,
 } from 'lucide-react'
-import { usePlan } from '../../hooks/usePlan'
 import { useSidebarStore } from '../../store/sidebarStore'
 import { useMessages } from '../../hooks/useMessages'
 import { applicationService } from '../../services/application.service'
 import { BAI } from '../../constants/bailio-tokens'
 import { useWindowWidth } from '../../hooks/useWindowWidth'
 
-function SectionLabel({ label, compact }: { label: string; compact?: boolean }) {
-  if (compact) return <div style={{ height: 16 }} />
-  return (
-    <p style={{
-      fontFamily: BAI.fontBody,
-      fontSize: '9px',
-      fontWeight: 700,
-      letterSpacing: '0.12em',
-      textTransform: 'uppercase',
-      color: 'rgba(255,255,255,0.35)',
-      margin: '16px 16px 4px',
-    }}>
-      {label}
-    </p>
-  )
-}
 
 function NavItem({
   to, icon: Icon, label, badge, end, onClick, compact, id,
@@ -121,8 +104,6 @@ export function OwnerSidebar() {
   const [pendingAppsCount, setPendingAppsCount] = useState(0)
   const windowWidth = useWindowWidth()
   const isTabletCompact = windowWidth >= BAI.bpMd && windowWidth < BAI.bpLg
-  const { plan: currentPlan } = usePlan()
-
   useEffect(() => {
     fetchUnreadCount()
     applicationService.list()
@@ -174,45 +155,35 @@ export function OwnerSidebar() {
 
       {/* Navigation */}
       <nav role="navigation" aria-label="Navigation principale" className="flex-1 overflow-y-auto py-1 scrollbar-thin">
-        <SectionLabel label="Vue d'ensemble" compact={compact} />
-        <NavItem to="/dashboard/owner" icon={LayoutDashboard} label="Tableau de bord" end onClick={closeMobile} compact={compact} id="tour-owner-dashboard" />
-
-        <SectionLabel label="Mon parc" compact={compact} />
-        <NavItem to="/properties/owner/me" icon={Home} label="Mes biens" onClick={closeMobile} compact={compact} id="tour-owner-properties" />
-        <NavItem to="/properties/new" icon={Plus} label="Ajouter un bien" onClick={closeMobile} compact={compact} />
-
-        <SectionLabel label="Locataires" compact={compact} />
-        <NavItem to="/owner/locataires" icon={Users} label="Mes locataires" onClick={closeMobile} compact={compact} />
+        <NavItem to="/properties/owner/me" icon={Home} label="Mes annonces" onClick={closeMobile} compact={compact} id="tour-owner-properties" />
+        {!compact && (
+          <NavLink
+            to="/properties/new"
+            onClick={closeMobile}
+            style={{
+              display: 'block',
+              fontFamily: BAI.fontBody,
+              fontSize: 12,
+              color: BAI.caramel,
+              textDecoration: 'none',
+              padding: '2px 13px 8px 36px',
+              opacity: 0.85,
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1' }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.85' }}
+          >
+            + Ajouter
+          </NavLink>
+        )}
+        {compact && (
+          <NavItem to="/properties/new" icon={Plus} label="Ajouter" onClick={closeMobile} compact={compact} />
+        )}
         <NavItem to="/applications/manage" icon={ClipboardList} label="Candidatures" badge={pendingAppsCount} onClick={closeMobile} compact={compact} id="tour-owner-applications" />
         <NavItem to="/bookings/manage" icon={Calendar} label="Visites" onClick={closeMobile} compact={compact} id="tour-owner-visits" />
-
-        <SectionLabel label="Administration" compact={compact} />
-        <NavItem to="/contracts" icon={FileText} label="Contrats" onClick={closeMobile} compact={compact} id="tour-owner-contracts" />
-        <NavItem to="/owner/documents" icon={FolderOpen} label="Documents" onClick={closeMobile} compact={compact} />
-
-        <SectionLabel label="Communication" compact={compact} />
         <NavItem to="/messages" icon={MessageSquare} label="Messages" badge={unreadCount} onClick={closeMobile} compact={compact} id="tour-owner-messages" />
-
-        <SectionLabel label="Gestion" compact={compact} />
-        <NavItem to="/owner/finances" icon={TrendingUp} label="Finances" onClick={closeMobile} compact={compact} id="tour-owner-finances" />
-        <NavItem to="/owner/rentabilite" icon={BarChart2} label="Rentabilité" onClick={closeMobile} compact={compact} />
-        <NavItem to="/owner/outils" icon={Calculator} label="Outils" onClick={closeMobile} compact={compact} />
+        <NavItem to="/contracts" icon={FileText} label="Contrats & Baux" onClick={closeMobile} compact={compact} id="tour-owner-contracts" />
         <NavItem to="/owner/quittances" icon={Receipt} label="Quittances" onClick={closeMobile} compact={compact} id="tour-owner-quittances" />
-        <NavItem to="/owner/maintenance" icon={Wrench} label="Maintenance" onClick={closeMobile} compact={compact} />
-
-        <SectionLabel label="Compte" compact={compact} />
-        <NavItem to="/owner/abonnement" icon={Zap} label="Abonnement" onClick={closeMobile} compact={compact} id="tour-owner-subscription" />
         <NavItem to="/owner/settings" icon={Settings} label="Paramètres" onClick={closeMobile} compact={compact} />
-        {!compact && currentPlan === 'FREE' && (
-          <div style={{ margin: '12px 10px 6px', padding: '10px 12px', borderRadius: 10, background: `${BAI.caramel}18`, border: `1px solid ${BAI.caramel}40` }}>
-            <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: BAI.caramel, fontFamily: BAI.fontBody }}>
-              Plan Gratuit — listing seulement
-            </p>
-            <NavLink to="/owner/abonnement" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: BAI.caramel, fontWeight: 600, textDecoration: 'none', fontFamily: BAI.fontBody }}>
-              <Zap style={{ width: 11, height: 11 }} /> Passer au Pro →
-            </NavLink>
-          </div>
-        )}
       </nav>
 
     </div>

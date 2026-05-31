@@ -6,8 +6,8 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Link, useLocation } from 'react-router-dom'
 import {
-  LayoutDashboard, Search, Heart, Calendar,
-  FolderOpen, SendHorizonal, FileText, MessageSquare, X, LogOut, Settings, Wrench, CreditCard,
+  Search, Calendar,
+  FolderOpen, SendHorizonal, FileText, MessageSquare, X, LogOut, Settings,
 } from 'lucide-react'
 import { useSidebarStore } from '../../store/sidebarStore'
 import { useMessages } from '../../hooks/useMessages'
@@ -19,23 +19,6 @@ import { BAI } from '../../constants/bailio-tokens'
 import { useWindowWidth } from '../../hooks/useWindowWidth'
 
 const REQUIRED_CATEGORIES = ['IDENTITE', 'EMPLOI', 'REVENUS', 'DOMICILE'] as const
-
-function SectionLabel({ label, compact }: { label: string; compact?: boolean }) {
-  if (compact) return <div style={{ height: 16 }} />
-  return (
-    <p className="px-4 pt-5 pb-1 select-none"
-      style={{
-        fontFamily: BAI.fontBody,
-        fontSize: '10px',
-        fontWeight: 500,
-        letterSpacing: '0.14em',
-        textTransform: 'uppercase' as const,
-        color: 'rgba(255,255,255,0.35)',
-      }}>
-      {label}
-    </p>
-  )
-}
 
 function NavItem({
   to, icon: Icon, label, badge, end, onClick, compact, id,
@@ -178,28 +161,12 @@ export function TenantSidebar() {
 
       {/* Navigation */}
       <nav role="navigation" aria-label="Navigation principale" className="flex-1 overflow-y-auto py-1.5 scrollbar-thin">
-        <SectionLabel label="Vue d'ensemble" compact={compact} />
-        <NavItem to="/dashboard/tenant" icon={LayoutDashboard} label="Tableau de bord" end onClick={closeMobile} compact={compact} id="tour-tenant-dashboard" />
-
-        <SectionLabel label="Ma recherche" compact={compact} />
         <NavItem to="/search" icon={Search} label="Rechercher" onClick={closeMobile} compact={compact} id="tour-tenant-search" />
-        <NavItem to="/favorites" icon={Heart} label="Favoris" onClick={closeMobile} compact={compact} />
-        <NavItem to="/my-bookings" icon={Calendar} label="Mes visites" onClick={closeMobile} compact={compact} />
-
-        <SectionLabel label="Mon dossier" compact={compact} />
-        <NavItem to="/dossier" icon={FolderOpen} label="Dossier locatif" end onClick={closeMobile} compact={compact} id="tour-tenant-dossier" />
         <NavItem to="/my-applications" icon={SendHorizonal} label="Candidatures" badge={pendingAppsCount} onClick={closeMobile} compact={compact} id="tour-tenant-applications" />
-
-        <SectionLabel label="Mon logement" compact={compact} />
-        <NavItem to="/contracts" icon={FileText} label="Mon contrat" onClick={closeMobile} compact={compact} id="tour-tenant-contracts" />
-        <NavItem to="/tenant/payments" icon={CreditCard} label="Paiements" onClick={closeMobile} compact={compact} id="tour-tenant-payments" />
-        <NavItem to="/tenant/maintenance" icon={Wrench} label="Maintenance" onClick={closeMobile} compact={compact} />
-        <NavItem to="/tenant/documents" icon={FileText} label="Courriers types" onClick={closeMobile} compact={compact} />
-
-        <SectionLabel label="Communication" compact={compact} />
+        <NavItem to="/my-bookings" icon={Calendar} label="Mes visites" onClick={closeMobile} compact={compact} />
         <NavItem to="/messages" icon={MessageSquare} label="Messages" badge={unreadCount} onClick={closeMobile} compact={compact} id="tour-tenant-messages" />
-
-        <SectionLabel label="Compte" compact={compact} />
+        <NavItem to="/contracts" icon={FileText} label="Mon bail" onClick={closeMobile} compact={compact} id="tour-tenant-contracts" />
+        <NavItem to="/dossier" icon={FolderOpen} label="Mon dossier" end onClick={closeMobile} compact={compact} id="tour-tenant-dossier" />
         <NavItem to="/tenant/settings" icon={Settings} label="Paramètres" onClick={closeMobile} compact={compact} id="tour-tenant-settings" />
       </nav>
 
