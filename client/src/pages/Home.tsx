@@ -43,36 +43,36 @@ const PRICE_RANGES = [
   { value: '2000-', label: '> 2 000 €' },
 ]
 
-/* Guide articles data */
+/* Guide articles data — slugs alignés avec GuideArticle.tsx */
 const GUIDE_ARTICLES = [
   {
     tag: 'DOSSIER',
-    title: 'Comment préparer un dossier locatif solide',
-    desc: 'Identité, bulletins de salaire, avis d\'imposition : tout ce que les propriétaires veulent voir, dans le bon ordre.',
+    title: 'Comment rédiger un dossier locatif solide',
+    desc: 'Les pièces indispensables, les erreurs à éviter et les conseils pour maximiser vos chances face à des dizaines de candidats.',
     temps: '5 min',
-    slug: 'dossier-locatif',
-    image: 'https://picsum.photos/seed/rental-dossier-documents/800/500',
+    slug: 'dossier-locatif-solide',
+    image: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=800&q=80',
     featured: true,
   },
   {
     tag: 'JURIDIQUE',
-    title: 'Comprendre le bail : les points clés',
+    title: 'Comprendre le bail : tout ce que dit la loi',
     temps: '8 min',
-    slug: 'comprendre-bail',
+    slug: 'comprendre-bail-loi',
     featured: false,
   },
   {
     tag: 'VISITE',
-    title: 'Visite : 20 questions à poser',
+    title: 'Visite appartement : 20 questions à poser',
     temps: '4 min',
-    slug: 'questions-visite',
+    slug: 'visite-appartement-questions',
     featured: false,
   },
   {
     tag: 'PROPRIÉTAIRE',
     title: 'Fixer le bon loyer pour son bien',
     temps: '6 min',
-    slug: 'fixer-loyer',
+    slug: 'fixer-bon-loyer',
     featured: false,
   },
 ]
@@ -241,9 +241,8 @@ export default function Home() {
           <p style={{ fontFamily: T.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.55)', margin: '0 0 6px' }}>
             Annonces entre particuliers, zéro frais d'agence
           </p>
-          {/* Social proof inline */}
           <p style={{ fontFamily: T.fontBody, fontSize: 12, color: 'rgba(255,255,255,0.38)', margin: '0 0 28px', letterSpacing: '0.01em' }}>
-            12 400 annonces &nbsp;·&nbsp; 0 € de frais &nbsp;·&nbsp; 340 villes
+            0 € de frais d'agence &nbsp;·&nbsp; Bail signé en ligne &nbsp;·&nbsp; Entre particuliers
           </p>
 
           {/* Search bar */}
@@ -322,14 +321,14 @@ export default function Home() {
         <div aria-hidden style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 80, background: `linear-gradient(to left, ${BAI.bgSurface}, transparent)`, zIndex: 2, pointerEvents: 'none' }} />
         <div className="ticker-track" style={{ display: 'flex', width: 'max-content', padding: '14px 0' }}>
           {[...Array(2)].flatMap(() => [
-            { stat: '12 400+', label: 'annonces actives' },
             { stat: '0 €', label: 'de frais d\'agence' },
-            { stat: '8 min', label: 'pour publier' },
-            { stat: '4,9/5', label: 'satisfaction propriétaires' },
-            { stat: '340+', label: 'villes couvertes' },
-            { stat: '100%', label: 'transactions sécurisées' },
-            { stat: '2x plus vite', label: 'qu\'une agence' },
-            { stat: '1 200 €', label: 'économisés en moyenne' },
+            { stat: '8 min', label: 'pour publier une annonce' },
+            { stat: 'eIDAS', label: 'signature électronique certifiée' },
+            { stat: 'loi ALUR', label: 'bail conforme' },
+            { stat: '100%', label: 'gestion en ligne' },
+            { stat: 'Entre particuliers', label: 'sans intermédiaire' },
+            { stat: 'Gratuit', label: 'pour créer un compte' },
+            { stat: 'Illimité', label: 'candidatures reçues' },
           ]).map((item, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 32px', borderRight: `1px solid ${BAI.border}`, flexShrink: 0 }}>
               <span style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 16, color: BAI.caramel }}>{item.stat}</span>
@@ -347,10 +346,10 @@ export default function Home() {
               icon: <TrendingDown size={28} color={BAI.tenant} />,
               accentLight: BAI.tenantLight,
               accent: BAI.tenant,
-              title: 'Zéro commission',
-              body: 'Aucun frais d\'agence, ni pour le locataire ni pour le propriétaire. Le loyer vous appartient entièrement.',
+              title: 'Aucun frais d\'agence',
+              body: 'Ni pour le locataire, ni pour le propriétaire. Vous vous connectez directement, le loyer vous appartient entièrement.',
               stat: '0 €',
-              statLabel: 'de frais, sur chaque transaction',
+              statLabel: 'de commission sur chaque transaction',
               reverse: false,
             },
             {
@@ -368,9 +367,9 @@ export default function Home() {
               accentLight: BAI.ownerLight,
               accent: BAI.owner,
               title: 'Contrats et baux inclus',
-              body: 'Signature électronique eIDAS, état des lieux digital, quittances automatiques, tout dans une seule app.',
-              stat: '1 200 €',
-              statLabel: 'économisés en moyenne par an',
+              body: 'Signature électronique eIDAS, état des lieux digital, quittances automatiques — tout dans une seule application.',
+              stat: 'eIDAS',
+              statLabel: 'signature électronique certifiée',
               reverse: false,
             },
           ].map((item, i) => (
@@ -424,12 +423,12 @@ export default function Home() {
           <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkFaint, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>Rechercher par ville</p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {[
-              { name: 'Paris', count: '2 400+', slug: 'paris' },
-              { name: 'Lyon', count: '890+', slug: 'lyon' },
-              { name: 'Marseille', count: '650+', slug: 'marseille' },
-              { name: 'Bordeaux', count: '420+', slug: 'bordeaux' },
-              { name: 'Toulouse', count: '510+', slug: 'toulouse' },
-              { name: 'Nantes', count: '380+', slug: 'nantes' },
+              { name: 'Paris', slug: 'paris' },
+              { name: 'Lyon', slug: 'lyon' },
+              { name: 'Marseille', slug: 'marseille' },
+              { name: 'Bordeaux', slug: 'bordeaux' },
+              { name: 'Toulouse', slug: 'toulouse' },
+              { name: 'Nantes', slug: 'nantes' },
             ].map(ville => (
               <Link key={ville.slug} to={`/location/${ville.slug}`} style={{
                 display: 'inline-flex', flexDirection: 'column', alignItems: 'center',
@@ -440,7 +439,7 @@ export default function Home() {
                 onMouseLeave={e => (e.currentTarget.style.borderColor = BAI.border)}
               >
                 <span style={{ fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 14, color: BAI.ink }}>{ville.name}</span>
-                <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint }}>{ville.count} annonces</span>
+                <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint }}>Voir les annonces</span>
               </Link>
             ))}
           </div>
