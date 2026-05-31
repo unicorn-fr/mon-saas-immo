@@ -239,121 +239,102 @@ export default function PropertyDetailsPublic() {
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-5">
 
-              {/* Image Gallery */}
-              <div style={{ ...cardStyle, overflow: 'hidden' }}>
-                <div className="relative" style={{ aspectRatio: '16/9', background: M.muted }}>
-                  <img
-                    src={images[selectedImage]}
-                    alt={`${property.title} - Image ${selectedImage + 1}`}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none'
-                    }}
-                  />
-
-                  {/* Prev / Next arrows */}
-                  {images.length > 1 && (
-                    <>
-                      <button
-                        onClick={() => setSelectedImage((prev) => (prev - 1 + images.length) % images.length)}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full transition-colors"
-                        style={{ background: M.surface, border: `1px solid ${M.border}` }}
-                      >
-                        <ChevronLeft className="w-4 h-4" style={{ color: M.ink }} />
-                      </button>
-                      <button
-                        onClick={() => setSelectedImage((prev) => (prev + 1) % images.length)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full transition-colors"
-                        style={{ background: M.surface, border: `1px solid ${M.border}` }}
-                      >
-                        <ChevronRight className="w-4 h-4" style={{ color: M.ink }} />
-                      </button>
-                    </>
-                  )}
-
-                  {/* Image counter pill */}
-                  <div
-                    className="absolute bottom-3 right-3 text-white text-xs px-3 py-1 rounded-full font-medium"
-                    style={{ background: 'rgba(13,12,10,0.60)', fontFamily: M.body }}
-                  >
-                    {selectedImage + 1} / {images.length}
+              {/* Image Gallery — SeLoger-style grid */}
+              <div style={{ borderRadius: 12, overflow: 'hidden', background: M.muted, position: 'relative' }}>
+                {images.length === 1 ? (
+                  /* Single image: full width */
+                  <div style={{ position: 'relative', aspectRatio: '16/9' }}>
+                    <img src={images[0]} alt={property.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} onError={(e) => { e.currentTarget.style.display = 'none' }} />
                   </div>
-
-                  {/* Action Buttons Overlay */}
-                  <div className="absolute top-3 right-3 flex gap-2">
-                    <div className="relative">
-                      <button
-                        onClick={handleShare}
-                        className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
-                        style={{ background: M.surface, border: `1px solid ${M.border}` }}
-                      >
-                        <Share2 className="w-4 h-4" style={{ color: M.inkMid }} />
-                      </button>
-
-                      {showShareMenu && (
-                        <div
-                          className="absolute right-0 mt-2 w-48 p-2 z-10 rounded-xl"
-                          style={{ background: M.surface, border: `1px solid ${M.border}`, boxShadow: '0 4px 16px rgba(13,12,10,0.10)' }}
-                        >
-                          <button
-                            onClick={handleCopyLink}
-                            className="w-full text-left px-3 py-2 rounded-lg text-sm transition-colors"
-                            style={{ color: M.inkMid }}
-                            onMouseEnter={(e) => (e.currentTarget.style.background = M.muted)}
-                            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                          >
-                            Copier le lien
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    <button
-                      onClick={handleFavoriteToggle}
-                      className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
-                      style={{ background: M.surface, border: `1px solid ${M.border}` }}
-                      title={isFavorite(id || '') ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                ) : (
+                  /* Multi-image: main + grid */
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '200px 200px', gap: 3 }}>
+                    {/* Main photo spans both rows */}
+                    <div
+                      style={{ gridRow: '1 / 3', position: 'relative', cursor: 'pointer', overflow: 'hidden' }}
+                      onClick={() => setSelectedImage(0)}
                     >
-                      <Heart
-                        className="w-4 h-4 transition-colors"
-                        style={{
-                          color: isFavorite(id || '') ? '#9b1c1c' : M.inkMid,
-                          fill: isFavorite(id || '') ? '#9b1c1c' : 'none',
-                        }}
+                      <img
+                        src={images[selectedImage]}
+                        alt={property.title}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s ease' }}
+                        onError={(e) => { e.currentTarget.style.display = 'none' }}
+                        onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.03)')}
+                        onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
                       />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Thumbnails */}
-                {images.length > 1 && (
-                  <div className="p-4 grid grid-cols-6 gap-2">
-                    {images.map((img, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setSelectedImage(index)}
-                        className="aspect-square overflow-hidden transition-all"
-                        style={{
-                          borderRadius: '8px',
-                          border: selectedImage === index
-                            ? `2px solid ${M.night}`
-                            : `1px solid ${M.border}`,
-                          outline: selectedImage === index ? `3px solid ${M.night}20` : 'none',
-                          outlineOffset: '1px',
-                        }}
+                      {/* Nav arrows */}
+                      {images.length > 1 && (
+                        <>
+                          <button
+                            onClick={e => { e.stopPropagation(); setSelectedImage(prev => (prev - 1 + images.length) % images.length) }}
+                            style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
+                          >
+                            <ChevronLeft style={{ width: 16, height: 16, color: M.ink }} />
+                          </button>
+                          <button
+                            onClick={e => { e.stopPropagation(); setSelectedImage(prev => (prev + 1) % images.length) }}
+                            style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
+                          >
+                            <ChevronRight style={{ width: 16, height: 16, color: M.ink }} />
+                          </button>
+                        </>
+                      )}
+                      {/* Counter */}
+                      <div style={{ position: 'absolute', bottom: 10, left: 12, background: 'rgba(13,12,10,0.55)', borderRadius: 20, padding: '3px 10px', fontSize: 12, color: '#fff', fontFamily: M.body, fontWeight: 500 }}>
+                        {selectedImage + 1} / {images.length}
+                      </div>
+                    </div>
+                    {/* Side thumbnails — up to 4 */}
+                    {images.slice(1, 5).map((img, i) => (
+                      <div
+                        key={i}
+                        onClick={() => setSelectedImage(i + 1)}
+                        style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer' }}
                       >
                         <img
                           src={img}
-                          alt={`Thumbnail ${index + 1}`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none'
-                          }}
+                          alt={`Photo ${i + 2}`}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s ease', opacity: selectedImage === i + 1 ? 1 : 0.85 }}
+                          onError={(e) => { e.currentTarget.style.display = 'none' }}
+                          onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.05)')}
+                          onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
                         />
-                      </button>
+                        {/* Last thumb overlay: "+N photos" */}
+                        {i === 3 && images.length > 5 && (
+                          <div style={{ position: 'absolute', inset: 0, background: 'rgba(13,12,10,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <span style={{ color: '#fff', fontFamily: M.body, fontWeight: 600, fontSize: 15 }}>+{images.length - 5} photos</span>
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 )}
+
+                {/* Action buttons (share + fav) */}
+                <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 8 }}>
+                  <div style={{ position: 'relative' }}>
+                    <button
+                      onClick={handleShare}
+                      style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.92)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.12)' }}
+                    >
+                      <Share2 style={{ width: 15, height: 15, color: M.inkMid }} />
+                    </button>
+                    {showShareMenu && (
+                      <div style={{ position: 'absolute', right: 0, top: 44, width: 160, background: M.surface, border: `1px solid ${M.border}`, borderRadius: 10, padding: 6, boxShadow: '0 4px 16px rgba(13,12,10,0.10)', zIndex: 10 }}>
+                        <button onClick={handleCopyLink} style={{ width: '100%', textAlign: 'left', padding: '8px 12px', borderRadius: 7, fontSize: 13, color: M.inkMid, background: 'none', border: 'none', cursor: 'pointer', fontFamily: M.body }}>
+                          Copier le lien
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={handleFavoriteToggle}
+                    title={isFavorite(id || '') ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                    style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.92)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.12)' }}
+                  >
+                    <Heart style={{ width: 15, height: 15, color: isFavorite(id || '') ? '#e11d48' : M.inkMid, fill: isFavorite(id || '') ? '#e11d48' : 'none' }} />
+                  </button>
+                </div>
               </div>
 
               {/* Title, Type & Price */}
@@ -376,11 +357,12 @@ export default function PropertyDetailsPublic() {
                     <h1
                       className="mb-2"
                       style={{
-                        fontFamily: M.body,
-                        fontSize: '20px',
-                        fontWeight: 600,
+                        fontFamily: M.display,
+                        fontStyle: 'italic',
+                        fontSize: '28px',
+                        fontWeight: 700,
                         color: M.ink,
-                        lineHeight: 1.3,
+                        lineHeight: 1.2,
                       }}
                     >
                       {property.title}
@@ -401,9 +383,10 @@ export default function PropertyDetailsPublic() {
                   <span
                     style={{
                       fontFamily: M.display,
-                      fontSize: '36px',
+                      fontStyle: 'italic',
+                      fontSize: '38px',
                       fontWeight: 700,
-                      color: M.ink,
+                      color: M.caramel,
                       lineHeight: 1,
                       whiteSpace: 'nowrap',
                     }}
@@ -413,6 +396,11 @@ export default function PropertyDetailsPublic() {
                   <span style={{ fontFamily: M.body, fontSize: '14px', color: M.inkFaint, whiteSpace: 'nowrap' }}>
                     / mois
                   </span>
+                  {property.charges && property.charges > 0 && (
+                    <span style={{ fontFamily: M.body, fontSize: '13px', color: M.inkFaint, whiteSpace: 'nowrap', marginLeft: 4 }}>
+                      + {Number(property.charges).toLocaleString('fr-FR')} € ch.
+                    </span>
+                  )}
                 </div>
 
                 {/* Feature pills */}
@@ -660,9 +648,10 @@ export default function PropertyDetailsPublic() {
                     <span
                       style={{
                         fontFamily: M.display,
+                        fontStyle: 'italic',
                         fontSize: '32px',
                         fontWeight: 700,
-                        color: M.ink,
+                        color: M.caramel,
                         lineHeight: 1,
                       }}
                     >

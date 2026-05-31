@@ -148,9 +148,8 @@ export default function Home() {
           overflow: 'hidden',
         }}
       >
-        {/* Ambiance orbs */}
-        <div aria-hidden style={{ position: 'absolute', top: -100, right: -60, width: 600, height: 500, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.30) 0%, transparent 65%)', filter: 'blur(40px)', pointerEvents: 'none' }} />
-        <div aria-hidden style={{ position: 'absolute', bottom: -40, left: -60, width: 400, height: 300, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(100,70,200,0.18) 0%, transparent 65%)', filter: 'blur(50px)', pointerEvents: 'none' }} />
+        {/* Ambiance orb */}
+        <div aria-hidden style={{ position: 'absolute', top: -100, right: -60, width: 600, height: 500, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.25) 0%, transparent 65%)', filter: 'blur(40px)', pointerEvents: 'none' }} />
 
         <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 clamp(16px,5vw,40px)', position: 'relative', zIndex: 1 }}>
           {/* Titre court */}
