@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, Navigate } from 'react-router-dom'
+import { BAI } from '../constants/bailio-tokens'
 import { useAuth } from '../hooks/useAuth'
 import { useProperties } from '../hooks/useProperties'
 import { useFavoriteStore } from '../store/favoriteStore'
@@ -230,6 +231,35 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── Villes populaires ── */}
+      <section style={{ background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}`, padding: '24px 0' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,40px)' }}>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkFaint, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>Rechercher par ville</p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            {[
+              { name: 'Paris', count: '2 400+', slug: 'paris' },
+              { name: 'Lyon', count: '890+', slug: 'lyon' },
+              { name: 'Marseille', count: '650+', slug: 'marseille' },
+              { name: 'Bordeaux', count: '420+', slug: 'bordeaux' },
+              { name: 'Toulouse', count: '510+', slug: 'toulouse' },
+              { name: 'Nantes', count: '380+', slug: 'nantes' },
+            ].map(ville => (
+              <Link key={ville.slug} to={`/location/${ville.slug}`} style={{
+                display: 'inline-flex', flexDirection: 'column', alignItems: 'center',
+                padding: '12px 20px', background: BAI.bgMuted, borderRadius: 10,
+                border: `1px solid ${BAI.border}`, textDecoration: 'none', transition: 'border-color 0.15s',
+              }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = BAI.caramel)}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = BAI.border)}
+              >
+                <span style={{ fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 14, color: BAI.ink }}>{ville.name}</span>
+                <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint }}>{ville.count} annonces</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── LISTINGS ── */}
       <section style={{ maxWidth: 1280, margin: '0 auto', padding: 'clamp(32px,5vh,56px) clamp(16px,5vw,40px) 80px' }}>
 
@@ -331,6 +361,36 @@ export default function Home() {
           >
             Publier mon annonce <ArrowRight size={15} />
           </Link>
+        </div>
+      </section>
+
+      {/* ── Guide immobilier ── */}
+      <section style={{ background: BAI.bgMuted, padding: 'clamp(40px,5vh,64px) 0' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,40px)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
+            <div>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, marginBottom: 4 }}>Ressources</p>
+              <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3vw,30px)', color: BAI.ink, margin: 0 }}>Le guide de la location</h2>
+            </div>
+            <Link to="/guide" style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.caramel, fontWeight: 600, textDecoration: 'none' }}>Tous les articles →</Link>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
+            {[
+              { tag: 'DOSSIER', title: 'Comment préparer un dossier locatif solide', temps: '5 min', slug: 'dossier-locatif' },
+              { tag: 'JURIDIQUE', title: 'Comprendre le bail : les points clés', temps: '8 min', slug: 'comprendre-bail' },
+              { tag: 'VISITE', title: 'Visite : 20 questions à poser', temps: '4 min', slug: 'questions-visite' },
+              { tag: 'PROPRIÉTAIRE', title: 'Fixer le bon loyer pour son bien', temps: '6 min', slug: 'fixer-loyer' },
+            ].map(article => (
+              <Link key={article.slug} to={`/guide/${article.slug}`} style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: '20px', textDecoration: 'none', display: 'block', transition: 'border-color 0.15s' }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = BAI.caramel)}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = BAI.border)}
+              >
+                <span style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.tenant, background: BAI.tenantLight, padding: '2px 8px', borderRadius: 4, display: 'inline-block', marginBottom: 10 }}>{article.tag}</span>
+                <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 16, fontWeight: 700, color: BAI.ink, margin: '0 0 12px', lineHeight: 1.3 }}>{article.title}</p>
+                <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint }}>📖 {article.temps} de lecture</span>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 

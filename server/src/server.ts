@@ -20,6 +20,7 @@ import { connectRedis } from './utils/cache.js'
 import { checkRequiredEnvVars } from './utils/checkEnv.js'
 import cron from 'node-cron'
 import { generateMonthlyPayments } from './jobs/generateMonthlyPayments.js'
+import { checkSearchAlerts } from './jobs/checkSearchAlerts.js'
 
 checkRequiredEnvVars()
 
@@ -74,6 +75,14 @@ setImmediate(async () => {
     console.log('[cron] Génération des loyers mensuels...')
     await generateMonthlyPayments().catch((err: Error) =>
       console.error('[cron] generateMonthlyPayments error:', err)
+    )
+  })
+
+  // Cron toutes les 30 min : vérification des alertes de recherche
+  cron.schedule('*/30 * * * *', async () => {
+    console.log('[cron] Vérification des alertes de recherche...')
+    await checkSearchAlerts().catch((err: Error) =>
+      console.error('[cron] checkSearchAlerts error:', err)
     )
   })
 

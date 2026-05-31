@@ -188,6 +188,7 @@ model User {
   ownedMaintenanceReqs  MaintenanceRequest[]  @relation("OwnerMaintenanceRequests")
   tenantMaintenanceReqs MaintenanceRequest[]  @relation("TenantMaintenanceRequests")
   aiUsageTracking        AiUsageTracking[]
+  searchAlerts           SearchAlert[]
 
   // Stripe Connect (propriétaires — pour recevoir les loyers)
   stripeAccountId        String?              @unique
@@ -606,6 +607,37 @@ model Favorite {
   @@index([userId])
   @@index([propertyId])
   @@map("favorites")
+}
+
+model SearchAlert {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name          String   // Ex: "Studio Paris 500-800€"
+  active        Boolean  @default(true)
+
+  // Filtres de recherche (même structure que PropertyFilters)
+  city          String?
+  type          String?  // APARTMENT, HOUSE, STUDIO, etc.
+  minPrice      Float?
+  maxPrice      Float?
+  minSurface    Float?
+  maxSurface    Float?
+  rooms         Int?
+  furnished     Boolean?
+
+  // Tracking nouveaux biens
+  lastNotifiedAt DateTime?
+  newCount       Int      @default(0)  // Biens non vus depuis dernière visite
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([userId, active])
+  @@index([active])
+  @@map("search_alerts")
 }
 
 model Notification {

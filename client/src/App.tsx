@@ -22,6 +22,9 @@ import NotFound from './pages/NotFound'
 // Public Pages
 import SearchProperties from './pages/public/SearchProperties'
 import PropertyDetailsPublic from './pages/public/PropertyDetailsPublic'
+import Guide from './pages/public/Guide'
+import LocationVille from './pages/public/LocationVille'
+import Estimer from './pages/public/Estimer'
 
 // Owner Pages
 import Dashboard from './pages/owner/Dashboard'
@@ -54,6 +57,7 @@ import PrivacyCenter from './pages/tenant/PrivacyCenter'
 import TenantSettings from './pages/tenant/Settings'
 import TenantMaintenance from './pages/tenant/Maintenance'
 import TenantDocuments from './pages/tenant/Documents'
+import SearchAlerts from './pages/tenant/SearchAlerts'
 
 // Shared Pages
 import Messages from './pages/Messages'
@@ -189,6 +193,10 @@ function AppRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/search" element={<SearchProperties />} />
       <Route path="/property/:id" element={<PropertyDetailsPublic />} />
+      <Route path="/guide" element={<Guide />} />
+      <Route path="/guide/:slug" element={<Guide />} />
+      <Route path="/location/:ville" element={<LocationVille />} />
+      <Route path="/estimer" element={<Estimer />} />
 
       {/* Auth Routes - Redirect to home if already authenticated */}
       <Route
@@ -264,6 +272,7 @@ function AppRoutes() {
         <Route path="/tenant/settings" element={<TenantSettings />} />
         <Route path="/tenant/maintenance" element={<TenantMaintenance />} />
         <Route path="/tenant/documents" element={<TenantDocuments />} />
+        <Route path="/mes-alertes" element={<SearchAlerts />} />
         <Route path="/tenant/payments" element={<TenantPayments />} />
       </Route>
 

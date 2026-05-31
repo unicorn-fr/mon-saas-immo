@@ -39,6 +39,7 @@ import maintenanceRoutes from './maintenance.routes.js'
 import yousignWebhookRouter from './yousign.webhook.routes.js'
 import irlRouter from './irl.routes.js'
 import georisquesRouter from './georisques.routes.js'
+import alertRoutes from './alert.routes.js'
 
 /**
  * Register all application routes on the Express app.
@@ -85,6 +86,9 @@ export function registerRoutes(app: Application, prefix: string): void {
   // ── Finances & Maintenance ──────────────────────────────────────────────
   app.use(`${prefix}/finances`, financeRoutes)
   app.use(`${prefix}/maintenance`, maintenanceRoutes)
+
+  // ── Alertes de recherche ─────────────────────────────────────────────────
+  app.use(`${prefix}/alerts`, alertRoutes)
 
   // ── Données publiques ────────────────────────────────────────────────────
   app.use(`${prefix}/irl`, irlRouter)

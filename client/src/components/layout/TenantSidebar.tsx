@@ -6,7 +6,7 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Link, useLocation } from 'react-router-dom'
 import {
-  Search, Calendar,
+  Search, Calendar, Bell,
   FolderOpen, SendHorizonal, FileText, MessageSquare, X, LogOut, Settings,
 } from 'lucide-react'
 import { useSidebarStore } from '../../store/sidebarStore'
@@ -162,6 +162,7 @@ export function TenantSidebar() {
       {/* Navigation */}
       <nav role="navigation" aria-label="Navigation principale" className="flex-1 overflow-y-auto py-1.5 scrollbar-thin">
         <NavItem to="/search" icon={Search} label="Rechercher" onClick={closeMobile} compact={compact} id="tour-tenant-search" />
+        <NavItem to="/mes-alertes" icon={Bell} label="Mes alertes" onClick={closeMobile} compact={compact} />
         <NavItem to="/my-applications" icon={SendHorizonal} label="Candidatures" badge={pendingAppsCount} onClick={closeMobile} compact={compact} id="tour-tenant-applications" />
         <NavItem to="/my-bookings" icon={Calendar} label="Mes visites" onClick={closeMobile} compact={compact} />
         <NavItem to="/messages" icon={MessageSquare} label="Messages" badge={unreadCount} onClick={closeMobile} compact={compact} id="tour-tenant-messages" />
