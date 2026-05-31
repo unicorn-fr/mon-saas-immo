@@ -1,16 +1,33 @@
 import { Request, Response, NextFunction } from 'express'
 import { waitlistService } from '../services/waitlist.service.js'
 import { env } from '../config/env.js'
+import { timingSafeEqual } from 'crypto'
 
 // ── Shared bearer middleware ──────────────────────────────────────────────────
 
 export function requireNotifySecret(req: Request, res: Response, next: NextFunction): void {
   const authHeader = req.headers['authorization']
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
-  if (!env.NOTIFY_SECRET || !token || token !== env.NOTIFY_SECRET) {
+  const secret = env.NOTIFY_SECRET
+
+  if (!secret || !token) {
     res.status(401).json({ success: false, message: 'Non autorisé' })
     return
   }
+
+  // Timing-safe comparison to prevent timing attacks
+  try {
+    const a = Buffer.from(token)
+    const b = Buffer.from(secret)
+    if (a.length !== b.length || !timingSafeEqual(a, b)) {
+      res.status(401).json({ success: false, message: 'Non autorisé' })
+      return
+    }
+  } catch {
+    res.status(401).json({ success: false, message: 'Non autorisé' })
+    return
+  }
+
   next()
 }
 

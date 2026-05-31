@@ -222,7 +222,7 @@ export default function PropertyDetailsPublic() {
         )}
 
         {/* Content */}
-        <div className="container mx-auto px-4 py-8">
+        <div className="pdp-main-container container mx-auto px-4 py-8">
 
           {/* Back button */}
           <button
@@ -233,6 +233,17 @@ export default function PropertyDetailsPublic() {
             <ChevronLeft className="w-4 h-4" />
             Retour
           </button>
+
+          <style>{`
+            @media (max-width: 640px) {
+              .pdp-gallery-grid { grid-template-columns: 1fr !important; grid-template-rows: auto !important; }
+              .pdp-gallery-thumbs { display: none !important; }
+              .pdp-gallery-main { grid-row: auto !important; aspect-ratio: 16/9; }
+              .pdp-mobile-cta-bar { display: flex !important; }
+              .pdp-sidebar { display: none !important; }
+              .pdp-main-container { padding-bottom: 88px !important; }
+            }
+          `}</style>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -247,10 +258,11 @@ export default function PropertyDetailsPublic() {
                     <img src={images[0]} alt={property.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} onError={(e) => { e.currentTarget.style.display = 'none' }} />
                   </div>
                 ) : (
-                  /* Multi-image: main + grid */
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '200px 200px', gap: 3 }}>
-                    {/* Main photo spans both rows */}
+                  /* Multi-image: main + grid (2-col desktop, single col mobile) */
+                  <div className="pdp-gallery-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '200px 200px', gap: 3 }}>
+                    {/* Main photo spans both rows on desktop, full width on mobile */}
                     <div
+                      className="pdp-gallery-main"
                       style={{ gridRow: '1 / 3', position: 'relative', cursor: 'pointer', overflow: 'hidden' }}
                       onClick={() => setSelectedImage(0)}
                     >
@@ -284,10 +296,11 @@ export default function PropertyDetailsPublic() {
                         {selectedImage + 1} / {images.length}
                       </div>
                     </div>
-                    {/* Side thumbnails — up to 4 */}
+                    {/* Side thumbnails — up to 4, hidden on mobile */}
                     {images.slice(1, 5).map((img, i) => (
                       <div
                         key={i}
+                        className="pdp-gallery-thumbs"
                         onClick={() => setSelectedImage(i + 1)}
                         style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer' }}
                       >
@@ -379,12 +392,12 @@ export default function PropertyDetailsPublic() {
                 </div>
 
                 {/* Price */}
-                <div className="flex items-baseline gap-1 mt-2" style={{ flexWrap: 'nowrap' }}>
+                <div className="flex items-baseline gap-1 mt-2" style={{ flexWrap: 'wrap' }}>
                   <span
                     style={{
                       fontFamily: M.display,
                       fontStyle: 'italic',
-                      fontSize: '38px',
+                      fontSize: 'clamp(28px, 7vw, 38px)',
                       fontWeight: 700,
                       color: M.caramel,
                       lineHeight: 1,
@@ -636,8 +649,8 @@ export default function PropertyDetailsPublic() {
               </div>
             </div>
 
-            {/* Sidebar */}
-            <div className="space-y-4">
+            {/* Sidebar — masquée sur mobile, remplacée par la barre sticky en bas */}
+            <div className="pdp-sidebar space-y-4">
 
               {/* Sticky Contact / CTA Card */}
               <div style={{ ...cardStyle, position: 'sticky', top: '96px' }} className="p-6">
@@ -928,6 +941,65 @@ export default function PropertyDetailsPublic() {
             }}
           />
         )}
+
+      {/* ── Barre CTA sticky mobile (visible uniquement sur mobile via CSS) ── */}
+      <div
+        className="pdp-mobile-cta-bar"
+        style={{
+          display: 'none', // overridé par @media max-width:640px { display: flex }
+          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 500,
+          background: 'rgba(252,251,249,0.95)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          borderTop: `1px solid ${M.border}`,
+          padding: 'clamp(12px,3vw,16px) clamp(12px,4vw,20px)',
+          paddingBottom: 'calc(clamp(12px,3vw,16px) + env(safe-area-inset-bottom, 0px))',
+          alignItems: 'center', gap: 12,
+          boxShadow: '0 -4px 20px rgba(13,12,10,0.08)',
+        }}
+      >
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: M.display, fontStyle: 'italic', fontSize: 22, fontWeight: 700, color: M.caramel, lineHeight: 1 }}>
+            {Number(property.price).toLocaleString('fr-FR')} €
+          </div>
+          <div style={{ fontFamily: M.body, fontSize: 12, color: M.inkFaint }}>/ mois CC</div>
+        </div>
+        <button
+          onClick={() => isAuthenticated ? (user?.role === 'TENANT' ? setShowPreQualModal(true) : undefined) : navigate('/login')}
+          style={{
+            flexShrink: 0,
+            background: M.tenant,
+            color: '#fff',
+            border: 'none',
+            borderRadius: 10,
+            padding: '13px 20px',
+            fontFamily: M.body,
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: 6,
+            boxShadow: '0 2px 12px rgba(27,94,59,0.30)',
+          }}
+        >
+          <SendHorizonal style={{ width: 15, height: 15 }} />
+          Postuler
+        </button>
+        <button
+          onClick={() => isAuthenticated ? setShowContactModal(true) : navigate('/login')}
+          style={{
+            flexShrink: 0,
+            background: M.surface,
+            color: M.ink,
+            border: `1px solid ${M.border}`,
+            borderRadius: 10,
+            padding: '13px 14px',
+            cursor: 'pointer',
+            display: 'flex', alignItems: 'center',
+          }}
+        >
+          <MessageSquare style={{ width: 16, height: 16 }} />
+        </button>
+      </div>
 
       </div>
     </Layout>

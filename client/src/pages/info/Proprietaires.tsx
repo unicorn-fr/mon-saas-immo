@@ -241,12 +241,10 @@ export default function Proprietaires() {
 
             {/* Right — calcul rapide card */}
             <div style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.12)',
+              background: 'rgba(255,255,255,0.07)',
+              border: '1px solid rgba(255,255,255,0.14)',
               borderRadius: 16,
-              padding: 28,
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
+              padding: 'clamp(18px, 4vw, 28px)',
             }}>
               <p style={{
                 fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em',
@@ -383,7 +381,7 @@ export default function Proprietaires() {
                   </p>
                   <p style={{
                     fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-                    fontSize: 28, margin: 0, color: BAI.ink,
+                    fontSize: 'clamp(20px, 4vw, 28px)', margin: 0, color: BAI.ink,
                   }}>
                     {kpi.value}
                   </p>

@@ -17,8 +17,8 @@ router.get('/', propertyController.getProperties.bind(propertyController))
 // GET /api/v1/properties/search - Search properties
 router.get('/search', propertyController.searchProperties.bind(propertyController))
 
-// POST /api/v1/properties/parse-query - Parse natural language query → filters
-router.post('/parse-query', propertyController.parseNaturalQuery.bind(propertyController))
+// POST /api/v1/properties/parse-query - Parse natural language query → filters (auth required to protect Anthropic quota)
+router.post('/parse-query', authenticate, propertyController.parseNaturalQuery.bind(propertyController))
 
 // GET /api/v1/properties/advanced-search - Advanced search with filters
 router.get('/advanced-search', propertyController.advancedSearch.bind(propertyController))

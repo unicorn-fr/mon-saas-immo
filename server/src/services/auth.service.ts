@@ -102,9 +102,13 @@ class AuthService {
       },
     })
 
-    // Send verification email (or auto-verify if no email provider configured)
+    // Send verification email (auto-verify only in dev if no email provider configured)
     const emailConfigured = !!(env.SMTP_HOST || env.RESEND_API_KEY)
     if (!emailConfigured) {
+      if (env.IS_PRODUCTION) {
+        // In production, email verification is mandatory — fail loudly
+        throw new Error('Email provider not configured in production')
+      }
       await prisma.user.update({
         where: { id: user.id },
         data: { emailVerified: true, emailVerifiedAt: new Date() },

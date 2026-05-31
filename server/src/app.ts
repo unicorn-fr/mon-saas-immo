@@ -19,7 +19,7 @@ const app: Application = express()
 // Must respond even if DB/Redis/env are broken
 // ============================================
 app.get('/health', (_req: Request, res: Response) => {
-  res.status(200).json({ status: 'ok', ts: Date.now() })
+  res.status(200).json({ status: 'ok' })
 })
 
 // ============================================
@@ -65,19 +65,30 @@ app.use(
         objectSrc: ["'none'"],
         mediaSrc: ["'self'"],
         frameSrc: ["'self'", 'https://accounts.google.com'],
+        workerSrc: ["'self'"],
+        baseUri: ["'self'"],        // Blocks <base href> injection attacks
+        formAction: ["'self'"],
         upgradeInsecureRequests: [],
       },
     },
     crossOriginEmbedderPolicy: false, // allow PDF/image loads
     crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' }, // required for Google Sign-In popups
     hsts: {
-      maxAge: 15552000, // 6 mois — sans preload ni includeSubDomains pour éviter le blocage HSTS sur réseaux avec proxy SSL
+      maxAge: 31536000,       // 1 an (requis pour HSTS preload list)
+      includeSubDomains: true,
+      preload: true,
     },
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
     noSniff: true,
     xssFilter: true,
   })
 )
+
+// Restrict browser features — geolocation/camera/mic disabled by default
+app.use((_req, res, next) => {
+  res.setHeader('Permissions-Policy', 'geolocation=(), camera=(), microphone=(), payment=(self)')
+  next()
+})
 
 // Trust proxy (required for rate-limit behind Railway/Render/Vercel reverse proxy)
 app.set('trust proxy', 1)

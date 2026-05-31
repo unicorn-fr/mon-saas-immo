@@ -343,11 +343,12 @@ class SuperAdminService {
   // ─────────────────────────────────────────────
 
   async getTableList() {
+    // Must stay in sync with ALLOWED_TABLES in security.middleware.ts
+    // refresh_tokens and verification_tokens are intentionally excluded (sensitive tokens)
     return [
       'users', 'properties', 'bookings', 'contracts', 'contract_documents',
       'tenant_documents', 'conversations', 'messages', 'notifications',
-      'favorites', 'audit_logs', 'refresh_tokens', 'verification_tokens',
-      'visit_availability_slots', 'visit_date_overrides',
+      'favorites', 'audit_logs', 'visit_availability_slots', 'visit_date_overrides',
     ]
   }
 

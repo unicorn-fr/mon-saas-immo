@@ -7,6 +7,7 @@ import { isTotpEnabled } from '../services/totp.service.js'
 import { prisma } from '../config/database.js'
 import { comparePassword } from '../utils/password.util.js'
 import { verifyFirebasePhoneToken } from '../utils/firebase.util.js'
+import { generatePreAuthToken } from '../utils/jwt.util.js'
 
 class AuthController {
   /**
@@ -112,16 +113,18 @@ class AuthController {
       // Check if user exists and has TOTP enabled BEFORE full login
       const userCheck = await prisma.user.findUnique({
         where: { email: email.toLowerCase().trim() },
-        select: { id: true, password: true, totpEnabled: true },
+        select: { id: true, email: true, password: true, totpEnabled: true },
       })
       if (userCheck && userCheck.password) {
         const pwValid = await comparePassword(password, userCheck.password)
         if (pwValid && userCheck.totpEnabled) {
-          // Password is correct but TOTP is required — don't issue tokens yet
+          // Password correct but TOTP required — issue a short-lived pre-auth token
+          // instead of exposing userId directly (prevents TOTP bruteforce on arbitrary users)
+          const preAuthToken = generatePreAuthToken(userCheck.id, userCheck.email ?? '')
           return res.status(200).json({
             success: true,
             totpRequired: true,
-            userId: userCheck.id,
+            preAuthToken,
           })
         }
       }

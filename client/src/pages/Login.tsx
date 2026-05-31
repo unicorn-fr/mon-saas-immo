@@ -171,7 +171,7 @@ export default function Login() {
             </div>
 
             <div style={{ marginBottom: '28px' }}>
-              <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '36px', color: '#0d0c0a', margin: '0 0 6px', lineHeight: 1.1 }}>
+              <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(26px, 8vw, 36px)', color: '#0d0c0a', margin: '0 0 6px', lineHeight: 1.1 }}>
                 Bienvenue
               </h1>
               <p style={{ fontSize: '14px', color: '#5a5754', margin: 0 }}>
@@ -297,7 +297,7 @@ export default function Login() {
 
           {/* Heading */}
           <div style={{ marginBottom: '28px' }}>
-            <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '36px', color: '#0d0c0a', margin: '0 0 6px', lineHeight: 1.1 }}>
+            <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(26px, 8vw, 36px)', color: '#0d0c0a', margin: '0 0 6px', lineHeight: 1.1 }}>
               Connexion par email
             </h1>
             <p style={{ fontSize: '14px', color: '#5a5754', margin: 0 }}>

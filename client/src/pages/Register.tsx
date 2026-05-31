@@ -140,7 +140,7 @@ function VerifyCodeScreen({ email, onBack }: { email: string; onBack: () => void
         </p>
 
         {/* Code boxes */}
-        <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', gap: 'clamp(6px, 2vw, 10px)', justifyContent: 'center', marginBottom: '20px' }}>
           {digits.map((d, i) => (
             <input
               key={i}
@@ -153,13 +153,14 @@ function VerifyCodeScreen({ email, onBack }: { email: string; onBack: () => void
               onKeyDown={e => handleKey(i, e)}
               onPaste={handlePaste}
               style={{
-                width: '48px', height: '56px', textAlign: 'center',
-                fontSize: '24px', fontWeight: 700, color: '#0d0c0a',
+                width: 'clamp(38px, 10vw, 48px)', height: 'clamp(44px, 12vw, 56px)', textAlign: 'center',
+                fontSize: 'clamp(18px, 5vw, 24px)', fontWeight: 700, color: '#0d0c0a',
                 background: '#f8f7f4',
                 border: `2px solid ${codeError ? '#fca5a5' : d ? '#1a1a2e' : '#e4e1db'}`,
                 borderRadius: '10px', outline: 'none',
                 fontFamily: "'DM Sans', system-ui, sans-serif",
                 transition: 'border-color 0.15s',
+                boxSizing: 'border-box',
               }}
               onFocus={e => { e.currentTarget.style.borderColor = '#1a1a2e' }}
               onBlur={e => { e.currentTarget.style.borderColor = codeError ? '#fca5a5' : d ? '#1a1a2e' : '#e4e1db' }}
@@ -624,7 +625,7 @@ export default function Register() {
             </div>
 
             {/* Prénom + Nom */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(140px, 100%), 1fr))', gap: '10px' }}>
               <div>
                 <label style={{ ...font, fontWeight: 500, fontSize: '13px', color: '#0d0c0a', display: 'block', marginBottom: '6px' }}>Prénom</label>
                 <input id="firstName" name="firstName" type="text" placeholder="Jean"

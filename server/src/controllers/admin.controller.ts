@@ -84,10 +84,11 @@ class AdminController {
       const { role } = req.body
 
       if (!role || !Object.values(UserRole).includes(role)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid role',
-        })
+        return res.status(400).json({ success: false, message: 'Invalid role' })
+      }
+      // Seul un SUPER_ADMIN peut créer un autre SUPER_ADMIN
+      if (role === 'SUPER_ADMIN') {
+        return res.status(403).json({ success: false, message: 'Attribution du rôle SUPER_ADMIN non autorisée' })
       }
 
       const user = await adminService.updateUserRole(id, role)

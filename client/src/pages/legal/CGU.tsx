@@ -36,7 +36,7 @@ export default function CGU() {
             style={{
               fontFamily: BAI.fontDisplay,
               fontStyle: 'italic',
-              fontSize: '40px',
+              fontSize: 'clamp(26px, 7vw, 40px)',
               fontWeight: 600,
               color: '#ffffff',
               lineHeight: 1.15,
@@ -274,21 +274,69 @@ export default function CGU() {
           </section>
 
           <section>
-            <h2
-              style={{
-                fontFamily: BAI.fontDisplay,
-                fontStyle: 'italic',
-                fontSize: '26px',
-                fontWeight: 700,
-                color: BAI.ink,
-                marginBottom: '12px',
-              }}
-            >
-              8. Modification des CGU
+            <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: '26px', fontWeight: 700, color: BAI.ink, marginBottom: '12px' }}>
+              8. Statut juridique de la plateforme — Non-application de la loi Hoguet
+            </h2>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: '15px', color: BAI.inkMid, lineHeight: 1.7, marginBottom: '12px' }}>
+              <strong style={{ color: BAI.ink }}>Bailio n'est pas un agent immobilier</strong> et n'exerce
+              pas d'activités soumises à la loi n°70-9 du 2 janvier 1970 dite « loi Hoguet ».
+              Bailio n'est pas titulaire d'une carte professionnelle d'agent immobilier (carte T ou carte G)
+              et n'en a pas besoin pour les activités qu'elle exerce.
+            </p>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: '15px', color: BAI.inkMid, lineHeight: 1.7, marginBottom: '12px' }}>
+              Bailio est une <strong style={{ color: BAI.ink }}>plateforme d'intermédiation numérique</strong> au
+              sens de l'article L.111-7 du Code de la consommation et du règlement européen 2022/2065
+              (Digital Services Act). Elle met en relation directe des particuliers (propriétaires et locataires)
+              sans intervenir dans la négociation ni détenir de fonds.
+            </p>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: '15px', color: BAI.inkMid, lineHeight: 1.7 }}>
+              Les contrats de bail sont conclus <strong style={{ color: BAI.ink }}>directement entre le propriétaire et le locataire</strong>,
+              sans que Bailio ne soit partie au contrat. L'outil de génération de bail est fourni à titre
+              d'aide à la rédaction et ne constitue pas un acte de mandataire au sens de la loi Hoguet.
+            </p>
+          </section>
+
+          <section>
+            <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: '26px', fontWeight: 700, color: BAI.ink, marginBottom: '12px' }}>
+              9. Médiation de la consommation
+            </h2>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: '15px', color: BAI.inkMid, lineHeight: 1.7, marginBottom: '12px' }}>
+              Conformément aux articles L.616-1 et R.616-1 du Code de la consommation, Bailio propose
+              un dispositif de médiation de la consommation. En cas de litige non résolu avec le service client,
+              l'utilisateur peut saisir gratuitement le médiateur compétent.
+            </p>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: '15px', color: BAI.inkMid, lineHeight: 1.7 }}>
+              Coordonnées du service client : <strong style={{ color: BAI.ink }}>contact@bailio.fr</strong>.
+              La Commission européenne met à disposition une plateforme de règlement en ligne des litiges (RLL)
+              accessible à l'adresse <strong style={{ color: BAI.ink }}>ec.europa.eu/consumers/odr</strong>.
+            </p>
+          </section>
+
+          <section>
+            <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: '26px', fontWeight: 700, color: BAI.ink, marginBottom: '12px' }}>
+              10. Protection des données personnelles (RGPD)
+            </h2>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: '15px', color: BAI.inkMid, lineHeight: 1.7, marginBottom: '12px' }}>
+              Bailio collecte et traite des données personnelles en qualité de responsable de traitement
+              au sens du RGPD (Règlement UE 2016/679). Les données collectées sont nécessaires au
+              fonctionnement du service (création de compte, mise en relation, contrats, paiements).
+            </p>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: '15px', color: BAI.inkMid, lineHeight: 1.7 }}>
+              Vous disposez des droits d'accès, rectification, suppression, portabilité et opposition.
+              Pour exercer ces droits : <strong style={{ color: BAI.ink }}>privacy@bailio.fr</strong>.
+              Pour plus d'informations, consultez notre{' '}
+              <a href="/politique-confidentialite" style={{ color: BAI.caramel }}>Politique de confidentialité</a>.
+            </p>
+          </section>
+
+          <section>
+            <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: '26px', fontWeight: 700, color: BAI.ink, marginBottom: '12px' }}>
+              11. Modification des CGU
             </h2>
             <p style={{ fontFamily: BAI.fontBody, fontSize: '15px', color: BAI.inkMid, lineHeight: 1.7 }}>
               Bailio se réserve le droit de modifier les présentes CGU à tout moment.
               Les utilisateurs seront informés par email de toute modification substantielle.
+              La poursuite de l'utilisation du service après notification vaut acceptation des nouvelles CGU.
             </p>
           </section>
 

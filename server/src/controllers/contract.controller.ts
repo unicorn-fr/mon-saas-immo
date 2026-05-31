@@ -102,7 +102,12 @@ class ContractController {
       if (req.body.charges !== undefined) updateData.charges = parseFloat(req.body.charges)
       if (req.body.deposit !== undefined) updateData.deposit = parseFloat(req.body.deposit)
       if (req.body.terms !== undefined) updateData.terms = req.body.terms
-      if (req.body.status) updateData.status = req.body.status
+      if (req.body.status) {
+        if (!Object.values(ContractStatus).includes(req.body.status)) {
+          return res.status(400).json({ success: false, message: 'Statut de contrat invalide' })
+        }
+        updateData.status = req.body.status as ContractStatus
+      }
       if (req.body.content !== undefined) updateData.content = req.body.content
       if (req.body.customClauses !== undefined) updateData.customClauses = req.body.customClauses
 

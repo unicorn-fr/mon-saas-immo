@@ -10,6 +10,7 @@
  */
 import { Request, Response, NextFunction } from 'express'
 import { env } from '../config/env.js'
+import { timingSafeEqual } from 'crypto'
 
 export function requireOpenRegistrations(
   req: Request,
@@ -21,10 +22,14 @@ export function requireOpenRegistrations(
     return next()
   }
 
-  // Bypass par secret header
+  // Bypass par secret header (comparaison timing-safe)
   const headerSecret = req.headers['x-admin-secret'] as string | undefined
-  if (env.ADMIN_SECRET && headerSecret === env.ADMIN_SECRET) {
-    return next()
+  if (env.ADMIN_SECRET && headerSecret) {
+    try {
+      const a = Buffer.from(headerSecret)
+      const b = Buffer.from(env.ADMIN_SECRET)
+      if (a.length === b.length && timingSafeEqual(a, b)) return next()
+    } catch { /* fall through */ }
   }
 
   // Bypass par email whitelist

@@ -43,6 +43,10 @@ export const authenticate = async (
       throw new AppError(401, 'User not found')
     }
 
+    if ((user as any).isBanned) {
+      throw new AppError(403, 'Compte suspendu. Contactez le support.')
+    }
+
     // Attach user to request
     req.user = {
       id: user.id,
@@ -74,7 +78,7 @@ export const optionalAuthenticate = async (
     if (token) {
       const decoded = verifyAccessToken(token)
       const user = await authService.getUserById(decoded.userId)
-      if (user) {
+      if (user && !(user as any).isBanned) {
         req.user = {
           id: user.id,
           email: user.email,

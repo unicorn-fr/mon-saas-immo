@@ -32,6 +32,17 @@ export const loginRateLimiter = rateLimit({
 })
 
 /**
+ * Account creation — 5 registrations per hour per IP.
+ */
+export const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: { success: false, message: 'Trop de créations de compte. Réessayez dans une heure.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+
+/**
  * Forgot-password / resend-email — 5 per hour per IP.
  */
 export const emailRateLimiter = rateLimit({

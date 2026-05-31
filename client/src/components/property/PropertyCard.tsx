@@ -141,7 +141,7 @@ export const PropertyCard = ({ property, variant = 'default', showStats = false 
           aria-label={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'}
           style={{
             position: 'absolute', top: 8, right: 8,
-            width: 32, height: 32, borderRadius: '50%',
+            width: 40, height: 40, borderRadius: '50%',
             background: 'rgba(255,255,255,0.92)',
             border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer', transition: 'transform 0.15s',
@@ -150,7 +150,7 @@ export const PropertyCard = ({ property, variant = 'default', showStats = false 
           onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)' }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)' }}
         >
-          <Heart size={14} fill={fav ? '#e11d48' : 'none'} color={fav ? '#e11d48' : BAI.inkMid} />
+          <Heart size={15} fill={fav ? '#e11d48' : 'none'} color={fav ? '#e11d48' : BAI.inkMid} />
         </button>
 
         {/* Nb photos — bottom right */}

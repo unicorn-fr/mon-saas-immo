@@ -43,8 +43,9 @@ function FeatureCell({ value }: { value: boolean | string }) {
 
 // ─── Pricing Page ─────────────────────────────────────────────────────────────
 export default function Pricing() {
-  const [billing, setBilling] = useState<'annual' | 'monthly'>('annual') // annuel par défaut
+  const [billing, setBilling] = useState<'annual' | 'monthly'>('annual')
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
+  const [showTable, setShowTable] = useState(false)
   const { isAuthenticated, user } = useAuth()
   const navigate = useNavigate()
 
@@ -110,6 +111,8 @@ export default function Pricing() {
         @media (max-width: 640px) {
           .pricing-grid { grid-template-columns: 1fr !important; max-width: 420px !important; margin-left: auto !important; margin-right: auto !important; }
           .feat-table { display: none !important; }
+          .feat-table.open { display: block !important; }
+          .feat-table-toggle { display: flex !important; }
         }
       `}</style>
 
@@ -303,8 +306,25 @@ export default function Pricing() {
         </div>
       </section>
 
+      {/* Bouton pour afficher le tableau sur mobile */}
+      <div className="feat-table-toggle" style={{ display: 'none', justifyContent: 'center', padding: '0 16px 24px' }}>
+        <button
+          onClick={() => setShowTable(v => !v)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '12px 24px', borderRadius: 40,
+            background: BAI.bgSurface, border: `1px solid ${BAI.border}`,
+            fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 500,
+            color: BAI.inkMid, cursor: 'pointer',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+          }}
+        >
+          {showTable ? '↑ Masquer' : '↓ Voir la comparaison détaillée'}
+        </button>
+      </div>
+
       {/* ── TABLEAU DE COMPARAISON ── */}
-      <section className="feat-table" style={{ padding: '0 clamp(16px,5vw,48px) 80px', maxWidth: 1200, margin: '0 auto' }}>
+      <section className={`feat-table${showTable ? ' open' : ''}`} style={{ padding: '0 clamp(16px,5vw,48px) 80px', maxWidth: 1200, margin: '0 auto' }}>
         <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 28, color: BAI.ink, textAlign: 'center', marginBottom: 32 }}>
           Comparaison détaillée
         </h2>

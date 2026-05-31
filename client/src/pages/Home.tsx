@@ -44,7 +44,7 @@ const PRICE_RANGES = [
 ]
 
 export default function Home() {
-  const { isAuthenticated, user } = useAuth()
+  const { isAuthenticated, user, isLoading: authLoading } = useAuth()
   const heroRef = useRef<HTMLElement>(null)
   useDarkSection(heroRef)
 
@@ -82,10 +82,13 @@ export default function Home() {
   }
 
   useEffect(() => {
+    // Wait for auth to settle — avoid fetching for users who will be redirected
+    if (authLoading) return
+    if (isAuthenticated && (user?.role === 'OWNER' || user?.role === 'TENANT')) return
     setAllProperties([])
     setPage(1)
-    fetchProperties(buildFilters(), { page: 1, limit: LIMIT })
-  }, [type, priceRange])
+    fetchProperties(buildFilters(), { page: 1, limit: LIMIT }).catch(() => {})
+  }, [type, priceRange, authLoading])
 
   useEffect(() => {
     if (page === 1) {
@@ -102,7 +105,7 @@ export default function Home() {
     e.preventDefault()
     setAllProperties([])
     setPage(1)
-    fetchProperties(buildFilters(), { page: 1, limit: LIMIT })
+    fetchProperties(buildFilters(), { page: 1, limit: LIMIT }).catch(() => {})
   }
 
   const handleLoadMore = async () => {
@@ -110,7 +113,7 @@ export default function Home() {
     setLoadingMore(true)
     const next = page + 1
     setPage(next)
-    await fetchProperties(buildFilters(), { page: next, limit: LIMIT })
+    await fetchProperties(buildFilters(), { page: next, limit: LIMIT }).catch(() => {})
     setLoadingMore(false)
   }
 
@@ -132,7 +135,9 @@ export default function Home() {
         }
         @media (max-width: 640px) {
           .hero-filters { flex-direction: column !important; }
-          .hero-filters select { width: 100% !important; }
+          .hero-filters select { width: 100% !important; min-height: 44px; }
+          .hero-search-form { flex-direction: column !important; gap: 10px !important; }
+          .hero-search-form button[type="submit"] { width: 100% !important; }
         }
       `}</style>
 
@@ -163,7 +168,7 @@ export default function Home() {
 
           {/* Barre de recherche */}
           <form onSubmit={handleSearch}>
-            <div style={{ display: 'flex', gap: 8, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: '8px 8px 8px 16px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div className="hero-search-form" style={{ display: 'flex', gap: 8, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: '8px 8px 8px 16px', alignItems: 'center', flexWrap: 'wrap' }}>
               <Search size={16} color="rgba(255,255,255,0.45)" style={{ flexShrink: 0 }} />
               <input
                 className="home-input"
@@ -178,7 +183,7 @@ export default function Home() {
                   className="home-select"
                   value={type}
                   onChange={e => setType(e.target.value)}
-                  style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, fontFamily: T.fontBody, fontSize: 13, color: '#fff', padding: '8px 12px', cursor: 'pointer' }}
+                  style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, fontFamily: T.fontBody, fontSize: 13, color: '#fff', padding: '10px 12px', minHeight: 44, cursor: 'pointer' }}
                 >
                   {PROPERTY_TYPES.map(opt => (
                     <option key={opt.value} value={opt.value} style={{ background: T.night }}>{opt.label}</option>
@@ -188,7 +193,7 @@ export default function Home() {
                   className="home-select"
                   value={priceRange}
                   onChange={e => setPriceRange(e.target.value)}
-                  style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, fontFamily: T.fontBody, fontSize: 13, color: '#fff', padding: '8px 12px', cursor: 'pointer' }}
+                  style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, fontFamily: T.fontBody, fontSize: 13, color: '#fff', padding: '10px 12px', minHeight: 44, cursor: 'pointer' }}
                 >
                   {PRICE_RANGES.map(opt => (
                     <option key={opt.value} value={opt.value} style={{ background: T.night }}>{opt.label}</option>
@@ -197,7 +202,7 @@ export default function Home() {
               </div>
               <button
                 type="submit"
-                style={{ background: T.caramel, border: 'none', borderRadius: 10, padding: '10px 20px', fontFamily: T.fontBody, fontSize: 14, fontWeight: 600, color: '#fff', cursor: 'pointer', flexShrink: 0, transition: 'opacity .15s' }}
+                style={{ background: T.caramel, border: 'none', borderRadius: 10, padding: '10px 20px', minHeight: 44, fontFamily: T.fontBody, fontSize: 14, fontWeight: 600, color: '#fff', cursor: 'pointer', flexShrink: 0, transition: 'opacity .15s' }}
                 onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
                 onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
               >
@@ -267,7 +272,7 @@ export default function Home() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3vw,32px)', color: T.ink, margin: 0 }}>
-              {isLoading && allProperties.length === 0
+              {(authLoading || (isLoading && allProperties.length === 0))
                 ? 'Chargement…'
                 : totalProperties > 0
                   ? `${totalProperties} bien${totalProperties > 1 ? 's' : ''} disponible${totalProperties > 1 ? 's' : ''}`
@@ -292,7 +297,7 @@ export default function Home() {
         </div>
 
         {/* Grille */}
-        {isLoading && allProperties.length === 0 ? (
+        {(authLoading || (isLoading && allProperties.length === 0)) ? (
           <div className="prop-grid">
             {[...Array(9)].map((_, i) => (
               <div key={i} style={{ background: T.bgSurface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: 'hidden' }}>
@@ -304,7 +309,7 @@ export default function Home() {
               </div>
             ))}
           </div>
-        ) : allProperties.length === 0 && !isLoading ? (
+        ) : allProperties.length === 0 && !isLoading && !authLoading ? (
           <div style={{ textAlign: 'center', padding: '80px 0', color: T.inkFaint }}>
             <Building2 size={48} style={{ opacity: 0.25, margin: '0 auto 16px', display: 'block' }} />
             <p style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontSize: 22, color: T.inkMid, marginBottom: 8 }}>Aucun bien pour ces critères.</p>

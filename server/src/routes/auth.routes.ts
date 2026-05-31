@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express'
 import { authController } from '../controllers/auth.controller.js'
 import { authenticate } from '../middlewares/auth.middleware.js'
 import * as totpController from '../controllers/totp.controller.js'
-import { loginRateLimiter, emailRateLimiter } from '../middlewares/security.middleware.js'
+import { loginRateLimiter, emailRateLimiter, registerLimiter } from '../middlewares/security.middleware.js'
 import { requireOpenRegistrations } from '../middlewares/launchMode.middleware.js'
 import { prisma } from '../config/database.js'
 
@@ -12,8 +12,8 @@ const router = Router()
  * Public routes
  */
 
-// POST /api/v1/auth/register — bloqué en mode waitlist
-router.post('/register', requireOpenRegistrations, emailRateLimiter, authController.register.bind(authController))
+// POST /api/v1/auth/register — bloqué en mode waitlist, rate-limité
+router.post('/register', requireOpenRegistrations, registerLimiter, emailRateLimiter, authController.register.bind(authController))
 
 // POST /api/v1/auth/login - Login user (brute-force protected: 10 attempts / 15 min)
 router.post('/login', loginRateLimiter, authController.login.bind(authController))
@@ -34,11 +34,11 @@ router.post(
 // POST /api/v1/auth/verify-email - Verify email with token (legacy)
 router.post('/verify-email', authController.verifyEmail.bind(authController))
 
-// POST /api/v1/auth/verify-email-code - Verify email with 6-digit code
-router.post('/verify-email-code', authController.verifyEmailCode.bind(authController))
+// POST /api/v1/auth/verify-email-code - Verify email with 6-digit code (bruteforce-protected)
+router.post('/verify-email-code', loginRateLimiter, authController.verifyEmailCode.bind(authController))
 
-// POST /api/v1/auth/reset-password - Reset password with token
-router.post('/reset-password', authController.resetPassword.bind(authController))
+// POST /api/v1/auth/reset-password - Reset password with token (bruteforce-protected)
+router.post('/reset-password', loginRateLimiter, authController.resetPassword.bind(authController))
 
 // POST /api/v1/auth/google - Google OAuth login (waitlist check inside service for new users only)
 router.post('/google', authController.googleAuth.bind(authController))

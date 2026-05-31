@@ -61,7 +61,7 @@ export default function MentionsLegales() {
             style={{
               fontFamily: BAI.fontDisplay,
               fontStyle: 'italic',
-              fontSize: '40px',
+              fontSize: 'clamp(26px, 7vw, 40px)',
               fontWeight: 600,
               color: '#ffffff',
               lineHeight: 1.15,
@@ -118,8 +118,9 @@ export default function MentionsLegales() {
           <section>
             <SectionH2>2. Hébergement</SectionH2>
             <Body>
-              Le site est hébergé par OVH SAS, 2 Rue Kellermann, 59100 Roubaix, France.
-              Téléphone : 1007.
+              Le site est hébergé par Railway Corp., 340 S Lemon Ave, Suite 4133,
+              Walnut CA 91789, États-Unis. Site : railway.app.
+              Les données sont stockées en Europe (région EU West).
             </Body>
           </section>
 
@@ -144,10 +145,20 @@ export default function MentionsLegales() {
           </section>
 
           <section>
-            <SectionH2>5. Droit applicable</SectionH2>
+            <SectionH2>5. Statut de la plateforme</SectionH2>
+            <Body>
+              Bailio est une plateforme d'intermédiation numérique au sens de l'article L.111-7
+              du Code de la consommation. Bailio n'est pas un agent immobilier et n'exerce pas
+              d'activités soumises à la loi Hoguet du 2 janvier 1970. Les transactions et contrats
+              sont conclus directement entre les utilisateurs ; Bailio n'est pas partie à ces actes.
+            </Body>
+          </section>
+
+          <section>
+            <SectionH2>6. Droit applicable</SectionH2>
             <Body>
               Les présentes mentions légales sont soumises au droit français. En cas de litige,
-              les tribunaux français seront seuls compétents.
+              et à défaut de résolution amiable, les tribunaux français seront seuls compétents.
             </Body>
           </section>
 

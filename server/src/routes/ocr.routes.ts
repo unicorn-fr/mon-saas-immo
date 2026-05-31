@@ -49,7 +49,7 @@ router.post(
         return res.status(400).json({ success: false, message: 'Aucun fichier reçu.' })
       }
 
-      const userId  = (req as any).user?.userId as string
+      const userId  = req.user?.id ?? 'unknown'
       const docType = (req.body?.docType as string) || 'DOCUMENT'
 
       if (!checkOcrRate(userId)) {

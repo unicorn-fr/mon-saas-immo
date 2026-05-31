@@ -312,17 +312,18 @@ export default function SearchProperties() {
         @media (max-width: 768px) {
           .sl-sidebar { display: none; }
           .sl-sidebar.open { display: block !important; position: fixed; inset: 0; z-index: 200; overflow-y: auto; border-radius: 0; }
+          .sl-desktop-filter { display: none !important; }
         }
       `}</style>
 
-      {/* ── Barre de recherche style SeLoger ── */}
+      {/* ── Barre de recherche ── */}
       <div style={{
         background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}`,
-        padding: '12px clamp(12px,3vw,32px)', display: 'flex', gap: 10,
+        padding: '10px clamp(12px,3vw,32px)', display: 'flex', gap: 8,
         alignItems: 'center', flexWrap: 'wrap', position: 'sticky', top: 0, zIndex: 100,
       }}>
-        {/* Champ ville */}
-        <div style={{ position: 'relative', flex: '1 1 200px', maxWidth: 320 }}>
+        {/* Champ ville — pleine largeur mobile */}
+        <div style={{ position: 'relative', flex: '1 1 180px', minWidth: 0 }}>
           <Search size={15} color={BAI.inkFaint} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
           <input
             className="sl-input"
@@ -330,7 +331,7 @@ export default function SearchProperties() {
             placeholder="Ville, quartier, code postal…"
             style={{
               width: '100%', paddingLeft: 32, paddingRight: city ? 28 : 12,
-              paddingTop: 10, paddingBottom: 10, borderRadius: 8,
+              paddingTop: 10, paddingBottom: 10, borderRadius: 8, minHeight: 44,
               border: `1px solid ${BAI.border}`, background: BAI.bgInput,
               fontFamily: BAI.fontBody, fontSize: 14, color: BAI.ink,
               outline: 'none', boxSizing: 'border-box',
@@ -343,23 +344,23 @@ export default function SearchProperties() {
           )}
         </div>
 
-        {/* Type */}
+        {/* Type — masqué sur mobile */}
         <select
-          className="sl-select"
+          className="sl-select sl-desktop-filter"
           value={filters.type ?? ''}
           onChange={e => handleFiltersChange({ ...filters, type: (e.target.value as any) || undefined })}
           style={{
             flex: '0 0 auto', background: BAI.bgInput, border: `1px solid ${BAI.border}`,
-            borderRadius: 8, padding: '10px 12px', fontFamily: BAI.fontBody, fontSize: 14,
+            borderRadius: 8, padding: '10px 12px', minHeight: 44, fontFamily: BAI.fontBody, fontSize: 14,
             color: filters.type ? BAI.ink : BAI.inkFaint, cursor: 'pointer', outline: 'none',
           }}
         >
           {TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
         </select>
 
-        {/* Budget */}
+        {/* Budget — masqué sur mobile */}
         <select
-          className="sl-select"
+          className="sl-select sl-desktop-filter"
           value={BUDGETS.find(b => {
             if (!b.value) return false
             const [min, max] = b.value.split('-')
@@ -373,21 +374,21 @@ export default function SearchProperties() {
           }}
           style={{
             flex: '0 0 auto', background: BAI.bgInput, border: `1px solid ${BAI.border}`,
-            borderRadius: 8, padding: '10px 12px', fontFamily: BAI.fontBody, fontSize: 14,
+            borderRadius: 8, padding: '10px 12px', minHeight: 44, fontFamily: BAI.fontBody, fontSize: 14,
             color: (filters.minPrice || filters.maxPrice) ? BAI.ink : BAI.inkFaint, cursor: 'pointer', outline: 'none',
           }}
         >
           {BUDGETS.map(b => <option key={b.value} value={b.value}>{b.label}</option>)}
         </select>
 
-        {/* Tri */}
+        {/* Tri — masqué sur mobile */}
         <select
-          className="sl-select"
+          className="sl-select sl-desktop-filter"
           value={`${sortBy}-${sortOrder}`}
           onChange={e => { const [sb, so] = e.target.value.split('-'); setSortBy(sb as any); setSortOrder(so as any) }}
           style={{
             flex: '0 0 auto', background: BAI.bgInput, border: `1px solid ${BAI.border}`,
-            borderRadius: 8, padding: '10px 12px', fontFamily: BAI.fontBody, fontSize: 14,
+            borderRadius: 8, padding: '10px 12px', minHeight: 44, fontFamily: BAI.fontBody, fontSize: 14,
             color: BAI.inkMid, cursor: 'pointer', outline: 'none',
           }}
         >
@@ -397,11 +398,11 @@ export default function SearchProperties() {
           <option value="price-desc">Prix ↓</option>
         </select>
 
-        {/* Vues */}
-        <div style={{ display: 'flex', border: `1px solid ${BAI.border}`, borderRadius: 8, overflow: 'hidden', background: BAI.bgSurface, flexShrink: 0 }}>
+        {/* Toggle vue — masqué sur mobile */}
+        <div className="sl-desktop-filter" style={{ display: 'flex', border: `1px solid ${BAI.border}`, borderRadius: 8, overflow: 'hidden', background: BAI.bgSurface, flexShrink: 0 }}>
           {([{ mode: 'grid', Icon: Grid3x3 }, { mode: 'map', Icon: MapIcon }] as { mode: 'grid' | 'map'; Icon: ElementType }[]).map(({ mode, Icon }, i) => (
             <button key={mode} onClick={() => setViewMode(mode)} style={{
-              padding: '10px 14px', background: viewMode === mode ? BAI.night : 'transparent',
+              padding: '10px 14px', minHeight: 44, background: viewMode === mode ? BAI.night : 'transparent',
               color: viewMode === mode ? '#fff' : BAI.inkFaint,
               border: 'none', borderLeft: i > 0 ? `1px solid ${BAI.border}` : 'none',
               cursor: 'pointer', display: 'flex', alignItems: 'center',
@@ -411,13 +412,16 @@ export default function SearchProperties() {
           ))}
         </div>
 
-        {/* Filtres mobile */}
+        {/* Bouton filtres — visible uniquement sur mobile (flex conditionnel React) */}
         <button
-          onClick={() => setShowMobileFilters(v => !v)}
-          className="sl-mobile-filter-btn"
+          onClick={() => {
+            setShowMobileFilters(v => !v)
+            if (!showMobileFilters) document.body.style.overflow = 'hidden'
+            else document.body.style.overflow = ''
+          }}
+          className="sl-mobile-filter-btn flex md:hidden items-center"
           style={{
-            display: 'none', // montré uniquement sur mobile via media query inverse
-            alignItems: 'center', gap: 6, padding: '10px 14px',
+            gap: 6, padding: '10px 14px', minHeight: 44,
             background: hasActive ? BAI.caramelLight : BAI.bgInput,
             border: `1px solid ${hasActive ? BAI.caramel : BAI.border}`,
             borderRadius: 8, fontFamily: BAI.fontBody, fontSize: 14,
@@ -428,7 +432,7 @@ export default function SearchProperties() {
         </button>
 
         {hasActive && (
-          <button onClick={handleReset} style={{ fontSize: 13, color: BAI.caramel, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, flexShrink: 0 }}>
+          <button onClick={handleReset} style={{ fontSize: 13, color: BAI.caramel, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, flexShrink: 0, minHeight: 44 }}>
             Effacer
           </button>
         )}
@@ -455,7 +459,7 @@ export default function SearchProperties() {
           <div className="sl-sidebar open" style={{ padding: 20, background: BAI.bgBase }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
               <span style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 20 }}>Filtres</span>
-              <button onClick={() => setShowMobileFilters(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+              <button onClick={() => { setShowMobileFilters(false); document.body.style.overflow = '' }} style={{ background: 'none', border: 'none', cursor: 'pointer', minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <X size={20} color={BAI.inkMid} />
               </button>
             </div>
@@ -476,7 +480,7 @@ export default function SearchProperties() {
 
           {/* Carte */}
           {viewMode === 'map' && (
-            <div style={{ borderRadius: 12, border: `1px solid ${BAI.border}`, overflow: 'hidden', height: 'calc(100vh - 160px)', minHeight: 500 }}>
+            <div style={{ borderRadius: 12, border: `1px solid ${BAI.border}`, overflow: 'hidden', height: 'calc(100vh - 160px)', minHeight: 'min(500px, 70vh)' }}>
               <SearchMap
                 properties={allProperties}
                 selectedPropertyId={selectedPropertyId}

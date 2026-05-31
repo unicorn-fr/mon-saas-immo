@@ -62,7 +62,7 @@ class DossierController {
         return res.status(400).json({ success: false, message: 'Le fichier ne doit pas depasser 5 Mo' })
       }
 
-      console.log(`[uploadDocument] userId=${userId} category=${category} docType=${docType} size=${req.file.size} mime=${req.file.mimetype}`)
+      console.log(`[uploadDocument] category=${category} size=${req.file.size} mime=${req.file.mimetype}`)
 
       let fileUrl: string
       try {

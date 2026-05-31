@@ -74,6 +74,34 @@ export const verifyRefreshToken = (token: string): JwtPayload => {
 }
 
 /**
+ * Generate Pre-Auth Token (very short-lived, single-use indicator for TOTP step)
+ * Issued after password check succeeds but before TOTP verification.
+ */
+export const generatePreAuthToken = (userId: string, email: string): string => {
+  return jwt.sign(
+    { userId, email, purpose: 'totp-step' },
+    env.JWT_SECRET,
+    { expiresIn: '5m', issuer: 'immo-particuliers', audience: 'immo-particuliers-totp' }
+  )
+}
+
+/**
+ * Verify a Pre-Auth Token (TOTP step)
+ */
+export const verifyPreAuthToken = (token: string): { userId: string; email: string } => {
+  try {
+    const decoded = jwt.verify(token, env.JWT_SECRET, {
+      issuer: 'immo-particuliers',
+      audience: 'immo-particuliers-totp',
+    }) as { userId: string; email: string; purpose: string }
+    if (decoded.purpose !== 'totp-step') throw new Error('Invalid token purpose')
+    return { userId: decoded.userId, email: decoded.email }
+  } catch {
+    throw new Error('Invalid or expired pre-auth token')
+  }
+}
+
+/**
  * Decode token without verification (for debugging)
  */
 export const decodeToken = (token: string): JwtPayload | null => {

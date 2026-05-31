@@ -823,7 +823,7 @@ EXEMPLES :
 - "maison 3 chambres jardin Bordeaux" → types:["HOUSE","DUPLEX"], bedrooms:3, hasGarden:true, city:"Bordeaux"
 - "F3 moins de 900€ avec parking" → types:["APARTMENT"], bedrooms:2, maxPrice:900, hasParking:true
 - "T4 Lyon moins de 1500 60m²" → types:["APARTMENT","HOUSE"], bedrooms:3, maxPrice:1500, city:"Lyon", minSurface:48, maxSurface:78`,
-            messages: [{ role: 'user', content: query }],
+            messages: [{ role: 'user', content: `<query>${query.slice(0, 500)}</query>` }],
           })
 
           const raw = (msg.content[0] as { type: string; text: string }).text.trim()

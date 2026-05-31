@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import * as totpService from '../services/totp.service.js'
 import { prisma } from '../config/database.js'
-import { generateAccessToken, generateRefreshToken } from '../utils/jwt.util.js'
+import { generateAccessToken, generateRefreshToken, verifyPreAuthToken } from '../utils/jwt.util.js'
 
 /**
  * GET /api/v1/auth/totp/setup
@@ -65,14 +65,29 @@ export async function disable(req: Request, res: Response) {
 /**
  * POST /api/v1/auth/totp/verify
  * Verify TOTP code during login (called after password check)
- * Body: { userId: "...", token: "123456" }
+ * Body: { preAuthToken: "...", token: "123456" }
+ * The preAuthToken is a short-lived JWT issued by /auth/login when TOTP is required.
+ * This prevents bruteforce on arbitrary userIds.
  */
 export async function verify(req: Request, res: Response) {
   try {
-    const { userId, token } = req.body
-    if (!userId || !token) {
-      return res.status(400).json({ success: false, message: 'userId et token requis' })
+    const { preAuthToken, token } = req.body
+    if (!preAuthToken || !token) {
+      return res.status(400).json({ success: false, message: 'preAuthToken et token requis' })
     }
+
+    let userId: string
+    try {
+      const payload = verifyPreAuthToken(preAuthToken)
+      userId = payload.userId
+    } catch {
+      return res.status(401).json({ success: false, message: 'Session expirée, veuillez vous reconnecter' })
+    }
+
+    if (!/^\d{6}$/.test(token)) {
+      return res.status(400).json({ success: false, message: 'Code TOTP invalide (6 chiffres)' })
+    }
+
     const valid = await totpService.verifyTotpForLogin(userId, token)
     if (!valid) {
       return res.status(401).json({ success: false, message: 'Code TOTP incorrect' })
