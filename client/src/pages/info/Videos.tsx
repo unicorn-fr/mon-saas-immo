@@ -7,34 +7,48 @@ import Footer from '../../components/layout/Footer'
 
 const VIDEOS = [
   {
-    id: 'showcase',
-    label: 'Showcase 3D + Voix off',
-    format: '16:9 — 1920×1080',
+    id: 'showcase4k',
+    label: 'Showcase 3D + Voix off — 4K',
+    format: '4K UHD — 3840×2160',
     duration: '62 secondes',
-    size: '10.7 MB',
-    src: '/videos/bailio-showcase.mp4',
+    size: '22 MB',
+    src: '/videos/bailio-showcase-4k.mp4',
     icon: <Monitor size={18} />,
-    description: 'Présentation 3D du site avec UI mockups, effets After Effects, voix off française (edge-tts). Téléphone 3D, browser tilt, cartes flottantes, voice-over Denise.',
+    badge: '4K',
+    description: 'Résolution maximale 3840×2160. Téléphone 3D, browser tilt, cartes flottantes, voix off française, light sweep, scanlines. Idéal YouTube 4K.',
   },
   {
-    id: 'youtube',
-    label: 'Branding YouTube / LinkedIn',
+    id: 'main4k',
+    label: 'Branding cinématique — 4K',
+    format: '4K UHD — 3840×2160',
+    duration: '62 secondes',
+    size: '25 MB',
+    src: '/videos/bailio-main-4k.mp4',
+    icon: <Monitor size={18} />,
+    badge: '4K',
+    description: 'Motion design éditorial en 4K UHD — logo SVG, typographie Cormorant, transitions spring, orbes et particules à pleine résolution.',
+  },
+  {
+    id: 'showcase',
+    label: 'Showcase 3D + Voix off — 1080p',
     format: '16:9 — 1920×1080',
     duration: '62 secondes',
-    size: '10.9 MB',
-    src: '/videos/bailio-youtube.mp4',
+    size: '10 MB',
+    src: '/videos/bailio-showcase.mp4',
     icon: <Monitor size={18} />,
-    description: 'Vidéo de marque cinématique — motion design, typographie éditoriale, transitions fluides, logo SVG animé.',
+    badge: null,
+    description: 'Version 1080p — preview rapide ou export réseaux sociaux standard.',
   },
   {
     id: 'vertical',
     label: 'TikTok / Instagram Reels',
     format: '9:16 — 1080×1920',
     duration: '30 secondes',
-    size: '4.7 MB',
+    size: '4.5 MB',
     src: '/videos/bailio-vertical.mp4',
     icon: <Smartphone size={18} />,
-    description: 'Version verticale courte et percutante — "Disponible maintenant", 0 € de frais, optimisée mobile.',
+    badge: null,
+    description: 'Format vertical optimisé mobile — "Disponible maintenant", 0 € de frais, lien en bio.',
   },
 ]
 
@@ -90,6 +104,11 @@ export default function Videos() {
               >
                 {v.icon}
                 {v.label}
+                {v.badge && (
+                  <span style={{ background: BAI.caramel, color: '#fff', fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, borderRadius: 4, padding: '1px 6px', letterSpacing: '0.06em' }}>
+                    {v.badge}
+                  </span>
+                )}
               </button>
             ))}
           </div>
