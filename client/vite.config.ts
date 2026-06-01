@@ -2,6 +2,55 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
+import fs from 'fs'
+import type { Plugin } from 'vite'
+
+/**
+ * Plugin qui ajoute le support des HTTP Range Requests pour les fichiers vidéo.
+ * Sans ça, Vite ne peut pas streamer les MP4 — le navigateur attend le
+ * fichier entier avant de démarrer la lecture.
+ */
+function videoStreamPlugin(): Plugin {
+  return {
+    name: 'video-stream',
+    configureServer(server) {
+      server.middlewares.use('/videos', (req, res, next) => {
+        const fileName = (req.url ?? '').replace(/^\//, '').split('?')[0]
+        if (!fileName.endsWith('.mp4')) { next(); return }
+
+        const filePath = path.join(__dirname, 'public', 'videos', fileName)
+        if (!fs.existsSync(filePath)) { next(); return }
+
+        const stat  = fs.statSync(filePath)
+        const total = stat.size
+        const range = req.headers['range']
+
+        if (range) {
+          const [startStr, endStr] = range.replace(/bytes=/, '').split('-')
+          const start = parseInt(startStr, 10)
+          const end   = endStr ? parseInt(endStr, 10) : Math.min(start + 1024 * 1024 - 1, total - 1)
+          const chunk = end - start + 1
+
+          res.writeHead(206, {
+            'Content-Range':  `bytes ${start}-${end}/${total}`,
+            'Accept-Ranges':  'bytes',
+            'Content-Length': chunk,
+            'Content-Type':   'video/mp4',
+            'Cache-Control':  'no-cache',
+          })
+          fs.createReadStream(filePath, { start, end }).pipe(res)
+        } else {
+          res.writeHead(200, {
+            'Content-Length': total,
+            'Content-Type':   'video/mp4',
+            'Accept-Ranges':  'bytes',
+          })
+          fs.createReadStream(filePath).pipe(res)
+        }
+      })
+    },
+  }
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -11,6 +60,7 @@ export default defineConfig({
     include: ['src/tests/**/*.test.ts'],
   },
   plugins: [
+    videoStreamPlugin(),
     react(),
     VitePWA({
       registerType: 'autoUpdate',

@@ -119,17 +119,30 @@ export default function Videos() {
               key={current.src}
               controls
               autoPlay={false}
-              preload="metadata"
+              preload="none"
+              playsInline
               style={{
                 width: '100%',
                 display: 'block',
-                maxHeight: 540,
+                maxHeight: 580,
                 objectFit: 'contain',
                 background: BAI.night,
               }}
             >
               <source src={current.src} type="video/mp4" />
+              Votre navigateur ne supporte pas la lecture vidéo.
             </video>
+            {/* Badge résolution */}
+            {current.badge && (
+              <div style={{
+                position: 'absolute', top: 14, right: 14,
+                background: BAI.caramel, color: '#fff',
+                fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700,
+                borderRadius: 6, padding: '3px 10px', letterSpacing: '0.08em',
+              }}>
+                {current.badge}
+              </div>
+            )}
           </div>
 
           {/* Meta + download */}
