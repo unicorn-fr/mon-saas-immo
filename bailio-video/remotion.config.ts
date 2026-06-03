@@ -11,3 +11,5 @@ import { enableTailwind } from '@remotion/tailwind-v4';
 Config.setVideoImageFormat("jpeg");
 Config.setOverwriteOutput(true);
 Config.overrideWebpackConfig(enableTailwind);
+// Enable WebGL software renderer (SwiftShader) for Three.js in headless mode
+Config.setChromiumOpenGlRenderer('swiftshader');

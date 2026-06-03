@@ -3,19 +3,29 @@ import { Composition } from 'remotion'
 import { BailioMain }     from './compositions/BailioMain'
 import { BailioVertical } from './compositions/BailioVertical'
 import { BailioShowcase } from './compositions/BailioShowcase'
+import { BailioMain4K as BailioMain4KNative } from './compositions/BailioMain4K'
 import { Wrap4K }         from './components/Wrap4K'
 
-/* ── 4K wrappers ─────────────────────────────────────────────────────────── */
-const BailioMain4K     = () => <Wrap4K><BailioMain /></Wrap4K>
-const BailioShowcase4K = () => <Wrap4K><BailioShowcase /></Wrap4K>
+/* ── 4K wrappers (scale-up) ──────────────────────────────────────────────── */
+const BailioMain4KScaled = () => <Wrap4K><BailioMain /></Wrap4K>
+const BailioShowcase4K   = () => <Wrap4K><BailioShowcase /></Wrap4K>
 
 export const RemotionRoot: React.FC = () => {
   return (
     <>
-      {/* ── 4K (3840×2160) ─────────────────────────────────────────────── */}
+      {/* ── 4K natif Three.js (3840×2160) ──────────────────────────────── */}
       <Composition
         id="BailioMain4K"
-        component={BailioMain4K}
+        component={BailioMain4KNative}
+        durationInFrames={1860}
+        fps={30}
+        width={3840}
+        height={2160}
+      />
+      {/* ── 4K scale-up (3840×2160) ────────────────────────────────────── */}
+      <Composition
+        id="BailioMain4KScaled"
+        component={BailioMain4KScaled}
         durationInFrames={1860}
         fps={30}
         width={3840}
