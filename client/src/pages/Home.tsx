@@ -159,20 +159,76 @@ export default function Home() {
     <div style={{ backgroundColor: T.bgBase, fontFamily: T.fontBody, color: T.ink, minHeight: '100vh' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,700&family=DM+Sans:wght@400;500;600;700&display=swap');
-        .home-input:focus { outline: none; border-color: ${T.caramel} !important; }
-        .home-select:focus { outline: none; border-color: ${T.caramel} !important; }
+        .home-input:focus { outline: none; }
+        .home-select:focus { outline: none; }
+
+        /* ── Property grid ── */
         .prop-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
           gap: 20px;
         }
-        /* ── Mobile hero ── */
-        @media (max-width: 640px) {
-          .hero-filters { flex-direction: column !important; }
-          .hero-filters select { width: 100% !important; min-height: 48px; font-size: 15px !important; }
-          .hero-search-form { flex-direction: column !important; gap: 8px !important; padding: 12px !important; }
-          .hero-search-form button[type="submit"] { width: 100% !important; padding: 14px !important; font-size: 15px !important; border-radius: 12px !important; }
-          .hero-search-form input { font-size: 16px !important; padding: 8px 0 !important; } /* 16px évite le zoom iOS */
+        @media (max-width: 480px) {
+          .prop-grid { grid-template-columns: 1fr; gap: 14px; }
+        }
+
+        /* ── Hero search ── */
+        .hero-search-wrap {
+          background: rgba(255,255,255,0.07);
+          border: 1px solid rgba(255,255,255,0.12);
+          border-radius: 16px;
+          padding: 6px 6px 6px 16px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: nowrap;
+        }
+        .hero-search-input {
+          flex: 1;
+          min-width: 0;
+          background: transparent;
+          border: none;
+          outline: none;
+          font-family: ${T.fontBody};
+          font-size: 16px; /* 16px = pas de zoom iOS */
+          color: #fff;
+          padding: 8px 0;
+        }
+        .hero-search-input::placeholder { color: rgba(255,255,255,0.40); }
+        .hero-filters-row {
+          display: flex;
+          gap: 8px;
+          margin-top: 10px;
+        }
+        .hero-filters-row select {
+          flex: 1;
+          background: rgba(255,255,255,0.08);
+          border: 1px solid rgba(255,255,255,0.14);
+          border-radius: 10px;
+          font-family: ${T.fontBody};
+          font-size: 14px;
+          color: #fff;
+          padding: 11px 10px;
+          min-height: 44px;
+          cursor: pointer;
+          -webkit-appearance: none;
+        }
+        .hero-search-btn {
+          background: ${T.caramel};
+          border: none;
+          border-radius: 10px;
+          padding: 0 20px;
+          height: 44px;
+          font-family: ${T.fontBody};
+          font-size: 14px;
+          font-weight: 600;
+          color: #fff;
+          cursor: pointer;
+          flex-shrink: 0;
+          white-space: nowrap;
+        }
+        @media (max-width: 500px) {
+          .hero-search-btn { padding: 0 14px; font-size: 13px; }
         }
 
         /* ── Ticker ── */
@@ -183,6 +239,24 @@ export default function Home() {
         .ticker-track { animation: ticker-slide 32s linear infinite; }
         .ticker-track:hover { animation-play-state: paused; }
 
+        /* ── Villes — scroll horizontal sur mobile ── */
+        .villes-scroll {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+        @media (max-width: 640px) {
+          .villes-scroll {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            padding-bottom: 4px;
+          }
+          .villes-scroll::-webkit-scrollbar { display: none; }
+          .ville-chip { flex-shrink: 0; }
+        }
+
         /* ── Guide editorial grid ── */
         .guide-grid {
           display: grid;
@@ -191,35 +265,38 @@ export default function Home() {
           gap: 16px;
         }
         .guide-featured { grid-row: 1 / 3; }
-
-        /* Mobile : colonne unique, featured en premier, 3 petits en grille 2 col */
         @media (max-width: 768px) {
-          .guide-grid {
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: auto auto auto;
-          }
-          .guide-featured {
-            grid-row: auto;
-            grid-column: 1 / -1; /* pleine largeur */
-          }
+          .guide-grid { grid-template-columns: 1fr 1fr; grid-template-rows: auto; }
+          .guide-featured { grid-row: auto; grid-column: 1 / -1; }
         }
         @media (max-width: 480px) {
           .guide-grid { grid-template-columns: 1fr; }
         }
-
-        /* Hover states desktop */
         .guide-small-card:hover { border-color: ${T.caramel} !important; }
 
-        /* ── Villes chips mobile ── */
+        /* featured image height responsive */
+        .guide-featured-img { width: 100%; object-fit: cover; display: block; }
+        @media (min-width: 769px) { .guide-featured-img { height: 100%; min-height: 340px; } }
+        @media (max-width: 768px) { .guide-featured-img { height: 220px; } }
+        @media (max-width: 480px) { .guide-featured-img { height: 180px; } }
+
+        /* ── CTA strip mobile ── */
         @media (max-width: 640px) {
-          .villes-grid { gap: 8px !important; }
-          .ville-chip { padding: 10px 14px !important; }
+          .owner-cta-strip { flex-direction: column !important; align-items: stretch !important; gap: 16px !important; }
+          .owner-cta-btn { width: 100% !important; justify-content: center !important; }
         }
 
-        /* ── Listings CTA strip mobile ── */
-        @media (max-width: 640px) {
-          .owner-cta-strip { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
-          .owner-cta-strip a { width: 100% !important; justify-content: center !important; }
+        /* ── Quick links mobile ── */
+        .hero-quick-links { display: flex; gap: 16px; margin-top: 20px; flex-wrap: wrap; }
+        @media (max-width: 480px) {
+          .hero-quick-links { gap: 12px; }
+          .hero-quick-links a { font-size: 12px !important; min-height: 36px; }
+        }
+
+        /* ── Résultats header mobile ── */
+        @media (max-width: 480px) {
+          .results-header { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
+          .results-header a { align-self: flex-start; }
         }
       `}</style>
 
@@ -256,60 +333,59 @@ export default function Home() {
             0 € de frais d'agence &nbsp;·&nbsp; Bail signé en ligne &nbsp;·&nbsp; Entre particuliers
           </p>
 
-          {/* Search bar */}
+          {/* Search bar — ligne ville + bouton, filtres en dessous */}
           <form onSubmit={handleSearch}>
-            <div className="hero-search-form" style={{ display: 'flex', gap: 8, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: '8px 8px 8px 16px', alignItems: 'center', flexWrap: 'wrap' }}>
+            {/* Ligne principale : icône + input + bouton */}
+            <div className="hero-search-wrap">
               <Search size={16} color="rgba(255,255,255,0.45)" style={{ flexShrink: 0 }} />
               <input
-                className="home-input"
+                className="hero-search-input"
                 type="text"
+                inputMode="search"
+                autoComplete="off"
                 placeholder="Ville, code postal..."
                 value={city}
                 onChange={e => setCity(e.target.value)}
-                style={{ flex: 1, minWidth: 140, background: 'transparent', border: 'none', outline: 'none', fontFamily: T.fontBody, fontSize: 15, color: '#fff', padding: '6px 0' }}
               />
-              <div className="hero-filters" style={{ display: 'flex', gap: 8 }}>
-                <select
-                  className="home-select"
-                  value={type}
-                  onChange={e => setType(e.target.value)}
-                  style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, fontFamily: T.fontBody, fontSize: 13, color: '#fff', padding: '10px 12px', minHeight: 44, cursor: 'pointer' }}
-                >
-                  {PROPERTY_TYPES.map(opt => (
-                    <option key={opt.value} value={opt.value} style={{ background: T.night }}>{opt.label}</option>
-                  ))}
-                </select>
-                <select
-                  className="home-select"
-                  value={priceRange}
-                  onChange={e => setPriceRange(e.target.value)}
-                  style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, fontFamily: T.fontBody, fontSize: 13, color: '#fff', padding: '10px 12px', minHeight: 44, cursor: 'pointer' }}
-                >
-                  {PRICE_RANGES.map(opt => (
-                    <option key={opt.value} value={opt.value} style={{ background: T.night }}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
-              <button
-                type="submit"
-                style={{ background: T.caramel, border: 'none', borderRadius: 10, padding: '10px 20px', minHeight: 44, fontFamily: T.fontBody, fontSize: 14, fontWeight: 600, color: '#fff', cursor: 'pointer', flexShrink: 0, transition: 'opacity .15s' }}
-                onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
-                onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-              >
+              <button type="submit" className="hero-search-btn">
                 Rechercher
               </button>
+            </div>
+
+            {/* Filtres type + budget — ligne séparée, toujours visible */}
+            <div className="hero-filters-row">
+              <select
+                className="home-select"
+                value={type}
+                onChange={e => setType(e.target.value)}
+              >
+                {PROPERTY_TYPES.map(opt => (
+                  <option key={opt.value} value={opt.value} style={{ background: T.night }}>{opt.label}</option>
+                ))}
+              </select>
+              <select
+                className="home-select"
+                value={priceRange}
+                onChange={e => setPriceRange(e.target.value)}
+              >
+                {PRICE_RANGES.map(opt => (
+                  <option key={opt.value} value={opt.value} style={{ background: T.night }}>{opt.label}</option>
+                ))}
+              </select>
             </div>
           </form>
 
           {/* Quick links */}
-          <div style={{ display: 'flex', gap: 20, marginTop: 20, flexWrap: 'wrap' }}>
-            <Link to="/search" style={{ fontFamily: T.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.50)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'color .15s' }}
+          <div className="hero-quick-links">
+            <Link to="/search"
+              style={{ fontFamily: T.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.50)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, minHeight: 44 }}
               onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.85)')}
               onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.50)')}
             >
-              <SlidersHorizontal size={12} /> Recherche avancée &amp; carte
+              <SlidersHorizontal size={12} /> Carte &amp; filtres avancés
             </Link>
-            <Link to="/register?role=OWNER" style={{ fontFamily: T.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.50)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'color .15s' }}
+            <Link to="/register?role=OWNER"
+              style={{ fontFamily: T.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.50)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, minHeight: 44 }}
               onMouseEnter={e => (e.currentTarget.style.color = T.caramel)}
               onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.50)')}
             >
@@ -354,7 +430,7 @@ export default function Home() {
       <section style={{ background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}`, borderTop: `1px solid ${BAI.border}`, padding: '24px 0', marginTop: 'clamp(24px,3vh,40px)' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,40px)' }}>
           <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkFaint, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>Rechercher par ville</p>
-          <div className="villes-grid" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <div className="villes-scroll">
             {[
               { name: 'Paris', slug: 'paris' },
               { name: 'Lyon', slug: 'lyon' },
@@ -383,7 +459,7 @@ export default function Home() {
       <section style={{ maxWidth: 1280, margin: '0 auto', padding: 'clamp(32px,5vh,56px) clamp(16px,5vw,40px) 80px' }}>
 
         {/* Header results */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
+        <div className="results-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3vw,32px)', color: T.ink, margin: 0 }}>
               {(authLoading || (isLoading && allProperties.length === 0))
@@ -465,15 +541,16 @@ export default function Home() {
         <div className="owner-cta-strip" style={{ maxWidth: 900, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 24 }}>
           <div>
             <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3vw,32px)', color: '#fff', margin: '0 0 8px', paddingBottom: 2 }}>
-              Vous etes proprietaire ?
+              Vous êtes propriétaire ?
             </h2>
             <p style={{ fontFamily: T.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.55)', margin: 0 }}>
-              Publiez votre bien en 8 minutes, zero commission sur le loyer
+              Publiez votre bien en 8 minutes — zéro commission sur le loyer
             </p>
           </div>
           <Link
             to="/register?role=OWNER"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: T.caramel, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 24px', fontFamily: T.fontBody, fontSize: 14, fontWeight: 600, textDecoration: 'none', flexShrink: 0, transition: 'opacity .15s' }}
+            className="owner-cta-btn"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: T.caramel, color: '#fff', border: 'none', borderRadius: 10, padding: '14px 24px', fontFamily: T.fontBody, fontSize: 14, fontWeight: 600, textDecoration: 'none', flexShrink: 0, transition: 'opacity .15s', minHeight: 48 }}
             onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
             onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
           >
@@ -483,7 +560,7 @@ export default function Home() {
       </section>
 
       {/* ── Guide editorial: 1 featured + 3 small ── */}
-      <section style={{ background: BAI.bgMuted, padding: 'clamp(40px,5vh,64px) 0' }}>
+      <section style={{ background: BAI.bgMuted, padding: 'clamp(32px,5vh,64px) 0 calc(clamp(32px,5vh,64px) + env(safe-area-inset-bottom, 0px))' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,40px)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
             <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3vw,30px)', color: BAI.ink, margin: 0, paddingBottom: 2 }}>Le guide de la location</h2>
@@ -505,7 +582,7 @@ export default function Home() {
                   <img
                     src={featured.image ?? 'https://picsum.photos/seed/rental-dossier-documents/800/500'}
                     alt={featured.title}
-                    style={{ width: '100%', height: '100%', minHeight: 320, objectFit: 'cover', display: 'block' }}
+                    className="guide-featured-img"
                     loading="lazy"
                   />
                   <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(13,12,10,0.88) 0%, rgba(13,12,10,0.40) 60%, transparent 100%)', padding: 'clamp(16px,3vw,28px)' }}>
