@@ -927,6 +927,7 @@ model Payment {
 
   @@unique([contractId, month, year])
   @@index([contractId, status])
+  @@index([contractId, year, month])
   @@index([dueDate, status])
   @@map("payments")
 }

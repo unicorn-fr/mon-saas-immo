@@ -71,6 +71,12 @@ const envSchema = z.object({
   SEPA_PAYMENTS_ENABLED: z.string().optional(),
   CARD_PAYMENTS_ENABLED: z.string().optional(),
 
+  // Yousign — signature électronique eIDAS
+  YOUSIGN_API_KEY: z.string().optional(),
+  YOUSIGN_WEBHOOK_SECRET: z.string().optional(),
+  YOUSIGN_SANDBOX: z.string().optional(),
+  YOUSIGN_API_URL: z.string().optional(),
+
   // Waitlist
   NOTIFY_SECRET: z.string().optional(),
   LAUNCH_DATE: z.string().optional(),
@@ -210,4 +216,9 @@ export const env = {
     .split(',')
     .map((e: string) => e.trim().toLowerCase())
     .filter(Boolean) as string[],
+
+  YOUSIGN_API_KEY:        data.YOUSIGN_API_KEY || '',
+  YOUSIGN_WEBHOOK_SECRET: data.YOUSIGN_WEBHOOK_SECRET || '',
+  YOUSIGN_SANDBOX:        data.YOUSIGN_SANDBOX !== 'false',
+  YOUSIGN_API_URL:        data.YOUSIGN_API_URL || '',
 }

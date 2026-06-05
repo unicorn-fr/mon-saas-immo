@@ -33,25 +33,16 @@ export const authenticate = async (
       throw new AppError(401, 'Authentication required')
     }
 
-    // Verify token using our utility
+    // Verify token — payload contient id, email, role (signés cryptographiquement)
     const decoded = verifyAccessToken(token)
 
-    // Verify user still exists
-    const user = await authService.getUserById(decoded.userId)
-
-    if (!user) {
-      throw new AppError(401, 'User not found')
-    }
-
-    if ((user as any).isBanned) {
-      throw new AppError(403, 'Compte suspendu. Contactez le support.')
-    }
-
-    // Attach user to request
+    // Attach user from JWT payload — pas de DB call sur chaque requête.
+    // Les tokens sont invalidés à la déconnexion via rotation des refresh tokens.
+    // Pour les cas critiques (ban, changement de rôle), les tokens expirent en 15min.
     req.user = {
-      id: user.id,
-      email: user.email,
-      role: user.role as 'TENANT' | 'OWNER' | 'ADMIN' | 'SUPER_ADMIN',
+      id: decoded.userId,
+      email: decoded.email ?? '',
+      role: decoded.role as 'TENANT' | 'OWNER' | 'ADMIN' | 'SUPER_ADMIN',
     }
 
     next()
