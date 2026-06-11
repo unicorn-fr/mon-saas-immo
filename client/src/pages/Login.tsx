@@ -1,5 +1,5 @@
 import { useState, FormEvent } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { AlertCircle, ArrowRight, Mail } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
@@ -43,12 +43,15 @@ function inputStyle(focused: boolean): React.CSSProperties {
 export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { login, googleLogin } = useAuth()
+  const [searchParams] = useSearchParams()
+  const { login, googleLogin, setAuthFromPopup } = useAuth()
+
+  const prefillEmail = searchParams.get('email') ?? ''
 
   type Screen = 'welcome' | 'email_login'
-  const [screen, setScreen] = useState<Screen>('welcome')
+  const [screen, setScreen] = useState<Screen>(prefillEmail ? 'email_login' : 'welcome')
 
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(prefillEmail)
   const [password, setPassword] = useState('')
   const [focusedField, setFocusedField] = useState('')
   const [error, setError] = useState('')
@@ -98,14 +101,17 @@ export default function Login() {
     }
   }
 
-  const handleGoogleSuccess = async (idToken: string) => {
+  const handleGoogleSuccess = async (token: string) => {
     try {
-      const { user: u, isNewUser } = await googleLogin(idToken)
-      // New Google users have role TENANT by default — redirect to role selection
-      if (isNewUser) {
-        navigate('/select-role')
+      if (token.startsWith('__popup_result__')) {
+        const data = JSON.parse(token.slice('__popup_result__'.length))
+        setAuthFromPopup(data)
+        if (data.isNewUser) { navigate('/select-role'); return }
+        redirectByRole(data.user?.role)
         return
       }
+      const { user: u, isNewUser } = await googleLogin(token)
+      if (isNewUser) { navigate('/select-role'); return }
       redirectByRole(u.role)
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Connexion Google échouée.'

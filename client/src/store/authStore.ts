@@ -11,7 +11,7 @@ import {
 
 interface AuthActions {
   login: (credentials: LoginCredentials) => Promise<User>
-  register: (data: RegisterData) => Promise<void>
+  register: (data: RegisterData) => Promise<{ emailVerified: boolean }>
   logout: () => Promise<void>
   updateProfile: (data: {
     firstName?: string; lastName?: string; phone?: string; bio?: string; address?: string; role?: string
@@ -20,6 +20,7 @@ interface AuthActions {
     profileMeta?: Record<string, Record<string, unknown>>
   }) => Promise<User>
   googleLogin: (idToken: string, role?: string) => Promise<{ user: User; isNewUser: boolean }>
+  setAuthFromPopup: (data: { user: User; accessToken: string; refreshToken: string; isNewUser: boolean }) => void
   setUser: (user: User) => void
   setTokens: (accessToken: string, refreshToken: string) => void
   clearAuth: () => void
@@ -84,10 +85,9 @@ export const useAuthStore = create<AuthStore>()(
         set({ isLoading: true, error: null })
 
         try {
-          // Register only — tokens are NOT stored here.
-          // Authentication happens after email verification (OTP).
-          await authService.register(data)
+          const result = await authService.register(data)
           set({ isLoading: false, error: null })
+          return result
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : 'Registration failed'
@@ -168,6 +168,18 @@ export const useAuthStore = create<AuthStore>()(
             ...initialState,
           })
         }
+      },
+
+      setAuthFromPopup: (data) => {
+        setApiTokens(data.accessToken, data.refreshToken)
+        set({
+          user: data.user,
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+        })
       },
 
       /**

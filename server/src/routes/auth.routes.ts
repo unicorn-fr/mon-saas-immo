@@ -40,8 +40,14 @@ router.post('/verify-email-code', loginRateLimiter, authController.verifyEmailCo
 // POST /api/v1/auth/reset-password - Reset password with token (bruteforce-protected)
 router.post('/reset-password', loginRateLimiter, authController.resetPassword.bind(authController))
 
-// POST /api/v1/auth/google - Google OAuth login (waitlist check inside service for new users only)
+// POST /api/v1/auth/google - Google OAuth login (id_token flow — GSI button)
 router.post('/google', authController.googleAuth.bind(authController))
+
+// GET /api/v1/auth/google/redirect — démarre le flux OAuth redirect (popup)
+router.get('/google/redirect', authController.googleRedirect.bind(authController))
+
+// GET /api/v1/auth/google/callback — reçoit le code, crée l'utilisateur, renvoie les tokens via postMessage
+router.get('/google/callback', authController.googleCallback.bind(authController))
 
 // POST /api/v1/auth/magic-link — envoie un magic link (5 tentatives / heure)
 router.post('/magic-link', emailRateLimiter, authController.sendMagicLink.bind(authController))

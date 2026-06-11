@@ -9,6 +9,17 @@ import { comparePassword } from '../utils/password.util.js'
 import { verifyFirebasePhoneToken } from '../utils/firebase.util.js'
 import { generatePreAuthToken } from '../utils/jwt.util.js'
 
+function googlePopupHtml(payload: { result?: unknown; error?: string }): string {
+  const data = payload.result
+    ? JSON.stringify({ type: 'GOOGLE_AUTH_SUCCESS', ...(payload.result as object) })
+    : JSON.stringify({ type: 'GOOGLE_AUTH_ERROR', error: payload.error })
+  return `<!DOCTYPE html><html><body><script>
+    try { window.opener && window.opener.postMessage(${data}, '*'); }
+    catch(e) {}
+    window.close();
+  </script></body></html>`
+}
+
 class AuthController {
   /**
    * POST /api/v1/auth/register
@@ -577,6 +588,64 @@ class AuthController {
       next(error)
     }
   }
+  /**
+   * GET /api/v1/auth/google/redirect
+   * Démarre le flux OAuth redirect — ouvre une popup vers Google
+   */
+  async googleRedirect(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { OAuth2Client } = await import('google-auth-library')
+      const clientId = (await import('../config/env.js')).env.GOOGLE_CLIENT_ID
+      const clientSecret = (await import('../config/env.js')).env.GOOGLE_CLIENT_SECRET
+      if (!clientId || !clientSecret) {
+        return res.status(500).send('Google OAuth non configuré')
+      }
+      const role = (req.query.role as string) || 'TENANT'
+      const redirectUri = `${req.protocol}://${req.get('host')}/api/v1/auth/google/callback`
+      const client = new OAuth2Client(clientId, clientSecret, redirectUri)
+      const url = client.generateAuthUrl({
+        access_type: 'offline',
+        scope: ['email', 'profile'],
+        state: role,
+        prompt: 'select_account',
+      })
+      return res.redirect(url)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  /**
+   * GET /api/v1/auth/google/callback
+   * Reçoit le code Google, authentifie l'utilisateur, renvoie les tokens via postMessage
+   */
+  async googleCallback(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { OAuth2Client } = await import('google-auth-library')
+      const { env } = await import('../config/env.js')
+      const code = req.query.code as string
+      const role = (req.query.state as string) || 'TENANT'
+
+      if (!code) {
+        return res.send(googlePopupHtml({ error: 'Code OAuth manquant' }))
+      }
+
+      const redirectUri = `${req.protocol}://${req.get('host')}/api/v1/auth/google/callback`
+      const client = new OAuth2Client(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET, redirectUri)
+      const { tokens } = await client.getToken(code)
+      const idToken = tokens.id_token
+      if (!idToken) {
+        return res.send(googlePopupHtml({ error: 'Token Google invalide' }))
+      }
+
+      const result = await authService.googleAuth(idToken, role)
+      return res.send(googlePopupHtml({ result }))
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Erreur Google OAuth'
+      return res.send(googlePopupHtml({ error: msg }))
+    }
+  }
+
   /**
    * POST /api/v1/auth/magic-link — envoie un magic link par email
    */

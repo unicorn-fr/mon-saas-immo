@@ -16,9 +16,10 @@ class AuthService {
   /**
    * Register new user
    */
-  async register(data: RegisterData): Promise<void> {
+  async register(data: RegisterData): Promise<{ emailVerified: boolean }> {
     try {
-      await apiClient.post('/auth/register', data)
+      const res = await apiClient.post<{ success: boolean; data: { user: { emailVerified: boolean } } }>('/auth/register', data)
+      return { emailVerified: res.data.data?.user?.emailVerified ?? false }
     } catch (error) {
       const code = (error as { response?: { data?: { code?: string } } })?.response?.data?.code
       const message = handleApiError(error)

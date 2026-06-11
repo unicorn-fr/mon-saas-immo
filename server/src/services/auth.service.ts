@@ -102,17 +102,27 @@ class AuthService {
       },
     })
 
-    // Send verification email — auto-verify in dev if no provider OR if email delivery fails
+    // En production : vérification email obligatoire
+    // En dev : auto-vérification immédiate (pas de blocage)
     const emailConfigured = !!(env.SMTP_HOST || env.RESEND_API_KEY)
-    if (!emailConfigured) {
-      if (env.IS_PRODUCTION) {
-        throw new Error('Email provider not configured in production')
-      }
+    if (!emailConfigured && env.IS_PRODUCTION) {
+      throw new Error('Email provider not configured in production')
+    }
+
+    if (!env.IS_PRODUCTION) {
+      // Dev : auto-vérification directe, pas besoin d'entrer un code
       await prisma.user.update({
         where: { id: user.id },
         data: { emailVerified: true, emailVerifiedAt: new Date() },
       })
       user.emailVerified = true
+      // Envoyer l'email en arrière-plan si possible (non bloquant)
+      if (emailConfigured) {
+        const code = Math.floor(100000 + Math.random() * 900000).toString()
+        console.log(`\n[dev] ═══ Code de vérification pour ${user.email} : ${code} ═══\n`)
+        const tpl = emailVerificationTemplate({ firstName: user.firstName, code })
+        sendEmail({ to: user.email, ...tpl }).catch(() => {})
+      }
     } else {
       const code = Math.floor(100000 + Math.random() * 900000).toString()
       const tokenExpiresAt = new Date()
@@ -128,22 +138,7 @@ class AuthService {
       })
 
       const tpl = emailVerificationTemplate({ firstName: user.firstName, code })
-      const sent = await sendEmail({ to: user.email, ...tpl })
-
-      // Toujours loguer en dev pour faciliter les tests
-      if (!env.IS_PRODUCTION) {
-        console.log(`\n[dev] ═══ Code de vérification pour ${user.email} : ${code} ═══\n`)
-      }
-
-      // En dev, si l'email échoue, auto-vérifier pour ne pas bloquer le développement
-      if (!sent && !env.IS_PRODUCTION) {
-        console.warn('[dev] Email non envoyé — auto-vérification activée')
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { emailVerified: true, emailVerifiedAt: new Date() },
-        })
-        user.emailVerified = true
-      }
+      await sendEmail({ to: user.email, ...tpl })
     }
 
     return { user }
