@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../hooks/useAuth'
@@ -8,26 +8,17 @@ import { PropertyCard } from '../components/property/PropertyCard'
 import { Header } from '../components/layout/Header'
 import Footer from '../components/layout/Footer'
 import { useDarkSection } from '../hooks/useDarkSection'
-import { Search, ArrowRight, MapPin, Home as HomeIcon, Building2, TrendingUp, Shield, Clock, ChevronRight } from 'lucide-react'
+import {
+  Search, ArrowRight, MapPin, Building2, TrendingUp, Shield,
+  Clock, ChevronRight, Check, FolderOpen, Send, FileSignature, Euro,
+} from 'lucide-react'
 import { Property } from '../types/property.types'
 import { BAI } from '../constants/bailio-tokens'
 
-// ─── Design tokens locaux (dark hero) ─────────────────────────────────────────
+// ─── Fond hero commun ─────────────────────────────────────────────────────────
+const HERO_BG = '#0a0d1a'
 
-const H = {
-  bg:      'linear-gradient(145deg, #0a0d14 0%, #111827 50%, #0f1419 100%)',
-  glass:   'rgba(255,255,255,0.07)',
-  glassHover: 'rgba(255,255,255,0.11)',
-  border:  'rgba(255,255,255,0.12)',
-  borderFocus: 'rgba(196,151,106,0.6)',
-  caramel: '#c4976a',
-  white:   '#ffffff',
-  white70: 'rgba(255,255,255,0.70)',
-  white45: 'rgba(255,255,255,0.45)',
-  white25: 'rgba(255,255,255,0.25)',
-  font:    "'DM Sans', system-ui, sans-serif",
-  display: "'Cormorant Garamond', Georgia, serif",
-} as const
+// ─── Données statiques ────────────────────────────────────────────────────────
 
 const PROPERTY_TYPES = [
   { value: '', label: 'Tout type' },
@@ -71,7 +62,7 @@ const GUIDE_ARTICLES = [
   { tag: 'PROPRIÉTAIRE', title: 'Fixer le bon loyer pour son bien', temps: '6 min', slug: 'fixer-bon-loyer', featured: false },
 ]
 
-// ─── Composant SearchBox (SeLoger style + verre) ───────────────────────────────
+// ─── SearchBox ────────────────────────────────────────────────────────────────
 
 interface SearchBoxProps {
   city: string; setCity: (v: string) => void
@@ -102,18 +93,16 @@ function SearchBox({ city, setCity, type, setType, priceRange, setPriceRange }: 
       className="hero-searchbox"
       initial={{ opacity: 0, y: 20, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.45, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.45, delay: 0.30, ease: [0.22, 1, 0.36, 1] }}
       style={{
-        backdropFilter: 'blur(28px) saturate(1.4)',
-        WebkitBackdropFilter: 'blur(28px) saturate(1.4)',
         background: 'rgba(255,255,255,0.06)',
         border: '1px solid rgba(255,255,255,0.14)',
-        borderRadius: 20,
+        borderRadius: 16,
         padding: 8,
         display: 'flex',
         gap: 0,
         alignItems: 'stretch',
-        boxShadow: '0 8px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08)',
+        boxShadow: '0 8px 40px rgba(0,0,0,0.30)',
       }}
     >
       {/* Location */}
@@ -123,12 +112,12 @@ function SearchBox({ city, setCity, type, setType, priceRange, setPriceRange }: 
         alignItems: 'center',
         gap: 10,
         padding: '12px 16px',
-        borderRadius: 13,
-        background: focused === 'city' ? 'rgba(255,255,255,0.10)' : 'transparent',
+        borderRadius: 10,
+        background: focused === 'city' ? 'rgba(255,255,255,0.08)' : 'transparent',
         transition: 'background 0.2s',
         cursor: 'text',
       }}>
-        <MapPin size={16} color={focused === 'city' ? H.caramel : H.white45} style={{ flexShrink: 0, transition: 'color 0.2s' }} />
+        <MapPin size={15} color={focused === 'city' ? BAI.caramel : 'rgba(255,255,255,0.40)'} style={{ flexShrink: 0, transition: 'color 0.2s' }} />
         <input
           type="text"
           placeholder="Ville, code postal…"
@@ -138,7 +127,7 @@ function SearchBox({ city, setCity, type, setType, priceRange, setPriceRange }: 
           onBlur={() => setFocused(null)}
           style={{
             background: 'transparent', border: 'none', outline: 'none',
-            fontFamily: H.font, fontSize: 15, color: H.white,
+            fontFamily: BAI.fontBody, fontSize: 15, color: '#ffffff',
             width: '100%', minWidth: 0,
           }}
         />
@@ -155,12 +144,12 @@ function SearchBox({ city, setCity, type, setType, priceRange, setPriceRange }: 
         onBlur={() => setFocused(null)}
         style={{
           flex: 1,
-          background: focused === 'type' ? 'rgba(255,255,255,0.10)' : 'transparent',
+          background: focused === 'type' ? 'rgba(255,255,255,0.08)' : 'transparent',
           border: 'none', outline: 'none',
-          fontFamily: H.font, fontSize: 14,
-          color: type ? H.white : H.white45,
+          fontFamily: BAI.fontBody, fontSize: 14,
+          color: type ? '#ffffff' : 'rgba(255,255,255,0.45)',
           padding: '12px 14px',
-          borderRadius: 13,
+          borderRadius: 10,
           cursor: 'pointer',
           appearance: 'none',
           WebkitAppearance: 'none',
@@ -182,12 +171,12 @@ function SearchBox({ city, setCity, type, setType, priceRange, setPriceRange }: 
         onBlur={() => setFocused(null)}
         style={{
           flex: 1,
-          background: focused === 'budget' ? 'rgba(255,255,255,0.10)' : 'transparent',
+          background: focused === 'budget' ? 'rgba(255,255,255,0.08)' : 'transparent',
           border: 'none', outline: 'none',
-          fontFamily: H.font, fontSize: 14,
-          color: priceRange ? H.white : H.white45,
+          fontFamily: BAI.fontBody, fontSize: 14,
+          color: priceRange ? '#ffffff' : 'rgba(255,255,255,0.45)',
           padding: '12px 14px',
-          borderRadius: 13,
+          borderRadius: 10,
           cursor: 'pointer',
           appearance: 'none',
           WebkitAppearance: 'none',
@@ -205,13 +194,12 @@ function SearchBox({ city, setCity, type, setType, priceRange, setPriceRange }: 
         whileTap={{ scale: 0.97 }}
         style={{
           display: 'flex', alignItems: 'center', gap: 8,
-          background: H.caramel,
-          border: 'none', borderRadius: 14,
+          background: BAI.caramel,
+          border: 'none', borderRadius: 10,
           padding: '0 24px', height: 52, flexShrink: 0,
-          fontFamily: H.font, fontSize: 15, fontWeight: 700,
+          fontFamily: BAI.fontBody, fontSize: 15, fontWeight: 700,
           color: '#fff', cursor: 'pointer',
-          boxShadow: '0 2px 12px rgba(196,151,106,0.4)',
-          transition: 'box-shadow 0.2s',
+          boxShadow: '0 2px 12px rgba(196,151,106,0.40)',
           whiteSpace: 'nowrap',
         }}
       >
@@ -317,18 +305,33 @@ export default function Home() {
 
         /* ── Hero search responsive ── */
         @media (max-width: 700px) {
-          .hero-searchbox { flex-direction: column !important; border-radius: 16px !important; padding: 6px !important; }
+          .hero-searchbox { flex-direction: column !important; border-radius: 14px !important; padding: 6px !important; }
           .hero-sep { display: none !important; }
-          .hero-searchbox select, .hero-searchbox input { border-radius: 10px !important; background: rgba(255,255,255,0.09) !important; }
+          .hero-searchbox select, .hero-searchbox input { border-radius: 8px !important; background: rgba(255,255,255,0.08) !important; }
         }
 
-        /* ── Cities scroll mobile ── */
-        .cities-scroll { display: flex; gap: 10px; flex-wrap: wrap; }
-        @media (max-width: 640px) {
-          .cities-scroll { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 4px; }
-          .cities-scroll::-webkit-scrollbar { display: none; }
-          .city-chip { flex-shrink: 0; }
+        /* ── Bento grid ── */
+        .bento-grid {
+          display: grid;
+          grid-template-columns: 2fr 1fr 1fr;
+          grid-template-rows: auto auto;
+          gap: 16px;
+          margin-top: 40px;
         }
+        .bento-card-tall { grid-row: 1 / 3; }
+        .bento-card-wide { grid-column: 2 / 4; }
+        @media (max-width: 768px) {
+          .bento-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
+          .bento-card-tall { grid-row: auto; }
+          .bento-card-wide { grid-column: auto; }
+        }
+
+        /* ── Feature sections ── */
+        .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(32px,5vw,80px); align-items: center; }
+        @media (max-width: 768px) { .feature-grid { grid-template-columns: 1fr; gap: 32px; } }
+
+        /* ── Cities grid ── */
+        .cities-grid { display: flex; flex-wrap: wrap; gap: 10px; }
 
         /* ── Guide grid ── */
         .guide-grid { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: auto auto; gap: 16px; }
@@ -340,37 +343,25 @@ export default function Home() {
         @media (max-width: 768px) { .guide-featured-img { height: 220px; } }
         @media (max-width: 480px) { .guide-featured-img { height: 180px; } }
 
-        /* ── CTA strip mobile ── */
-        @media (max-width: 640px) {
-          .owner-cta-strip { flex-direction: column !important; align-items: stretch !important; }
-          .owner-cta-btn { width: 100% !important; justify-content: center !important; }
-        }
-
         /* ── Results header mobile ── */
         @media (max-width: 480px) {
           .results-header { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
           .results-header a { align-self: flex-start; }
-        }
-
-        /* ── Stat chips mobile ── */
-        @media (max-width: 640px) {
-          .hero-stats { gap: 8px !important; }
-          .hero-stat-chip { padding: 6px 12px !important; font-size: 12px !important; }
         }
       `}</style>
 
       <Header />
 
       {/* ══════════════════════════════════════════════════════════════════════
-          HERO — full viewport, fond sombre, glassmorphisme
+          1. HERO — full viewport, Hyperbeat-style
       ══════════════════════════════════════════════════════════════════════ */}
       <section
         ref={heroRef}
         style={{
-          background: H.bg,
+          background: HERO_BG,
           minHeight: '100dvh',
-          paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 80px), 96px)',
-          paddingBottom: 'clamp(48px,8vh,80px)',
+          paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 80px), 100px)',
+          paddingBottom: 'clamp(48px,8vh,96px)',
           position: 'relative',
           overflow: 'hidden',
           display: 'flex',
@@ -378,152 +369,567 @@ export default function Home() {
           justifyContent: 'center',
         }}
       >
-        {/* Ambient glows */}
-        <div aria-hidden style={{ position: 'absolute', top: -120, right: -80, width: 700, height: 600, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.18) 0%, transparent 65%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
-        <div aria-hidden style={{ position: 'absolute', bottom: -60, left: -100, width: 500, height: 400, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(26,50,112,0.20) 0%, transparent 65%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
+        {/* Ambient glows — sans backdrop-filter */}
+        <div aria-hidden style={{ position: 'absolute', top: -80, right: -60, width: 600, height: 500, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.16) 0%, transparent 65%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
+        <div aria-hidden style={{ position: 'absolute', bottom: -60, left: -80, width: 460, height: 380, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(26,50,112,0.18) 0%, transparent 65%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
 
-        <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 clamp(16px,5vw,40px)', position: 'relative', zIndex: 1, width: '100%' }}>
+        <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 clamp(20px,5vw,48px)', position: 'relative', zIndex: 1, width: '100%' }}>
 
-          {/* Overline */}
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
+          {/* Headline — 3 lignes courtes Hyperbeat-style */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            style={{ fontFamily: H.font, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: H.caramel, margin: '0 0 16px', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
           >
-            <span style={{ width: 20, height: 1, background: H.caramel, display: 'inline-block' }} />
-            Plateforme de location entre particuliers
-          </motion.p>
+            <h1 style={{
+              fontFamily: BAI.fontDisplay,
+              fontStyle: 'italic',
+              fontWeight: 700,
+              fontSize: 'clamp(56px, 8vw, 96px)',
+              lineHeight: 0.95,
+              color: '#ffffff',
+              margin: 0,
+              letterSpacing: '-0.02em',
+            }}>
+              <span style={{ display: 'block' }}>Trouvez<span style={{ color: BAI.caramel }}>.</span></span>
+              <span style={{ display: 'block' }}>Postulez<span style={{ color: BAI.caramel }}>.</span></span>
+              <span style={{ display: 'block' }}>Emménagez<span style={{ color: BAI.caramel }}>.</span></span>
+            </h1>
+          </motion.div>
 
-          {/* H1 */}
-          <motion.h1
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
-            style={{
-              fontFamily: H.display, fontStyle: 'italic', fontWeight: 700,
-              fontSize: 'clamp(36px,6vw,68px)', color: H.white,
-              margin: '0 0 16px', lineHeight: 1.05, letterSpacing: '-0.02em',
-            }}
-          >
-            Trouvez votre logement<br />
-            <span style={{ color: H.caramel }}>sans intermédiaire.</span>
-          </motion.h1>
-
-          {/* Subtitle */}
+          {/* Sous-titre */}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.35, delay: 0.18 }}
-            style={{ fontFamily: H.font, fontSize: 16, color: H.white45, margin: '0 0 32px', lineHeight: 1.6 }}
+            transition={{ duration: 0.4, delay: 0.22 }}
+            style={{
+              fontFamily: BAI.fontBody,
+              fontSize: 'clamp(16px, 2vw, 20px)',
+              color: 'rgba(255,255,255,0.65)',
+              maxWidth: 480,
+              marginTop: 24,
+              marginBottom: 0,
+              lineHeight: 1.55,
+            }}
           >
-            Annonces directes entre propriétaires et locataires — 0 € de frais d'agence
+            De la recherche à la signature du bail, sans agence, sans frais.
           </motion.p>
 
-          {/* Search box */}
-          <SearchBox
-            city={city} setCity={setCity}
-            type={type} setType={setType}
-            priceRange={priceRange} setPriceRange={setPriceRange}
-          />
+          {/* Boutons CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.30 }}
+            style={{ display: 'flex', gap: 12, marginTop: 40, flexWrap: 'wrap' }}
+          >
+            <Link to="/search"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                background: BAI.caramel, color: '#fff',
+                borderRadius: 8, padding: '14px 28px',
+                fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 16,
+                textDecoration: 'none', border: 'none',
+                transition: 'opacity 0.18s',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1' }}>
+              Trouver un logement
+              <ArrowRight size={16} />
+            </Link>
+            <Link to="/register?role=OWNER"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                background: 'transparent', color: 'rgba(255,255,255,0.85)',
+                borderRadius: 8, padding: '14px 28px',
+                fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 16,
+                textDecoration: 'none', border: '1px solid rgba(255,255,255,0.30)',
+                transition: 'background 0.18s, border-color 0.18s',
+              }}
+              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.08)'; el.style.borderColor = 'rgba(255,255,255,0.50)' }}
+              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.borderColor = 'rgba(255,255,255,0.30)' }}>
+              Publier une annonce
+            </Link>
+          </motion.div>
 
-          {/* Stats glass chips */}
+          {/* SearchBox */}
+          <div style={{ marginTop: 48, maxWidth: 720 }}>
+            <SearchBox
+              city={city} setCity={setCity}
+              type={type} setType={setType}
+              priceRange={priceRange} setPriceRange={setPriceRange}
+            />
+          </div>
+
+          {/* Stat chips */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.40 }}
-            className="hero-stats"
-            style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 20 }}
+            transition={{ delay: 0.50 }}
+            style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap' }}
           >
             {[
-              { icon: '✦', text: '0 € de frais' },
-              { icon: '⚡', text: 'Bail signé en ligne' },
-              { icon: '🛡', text: 'Documents sécurisés' },
-              { icon: '📄', text: 'Conforme loi ALUR' },
-            ].map((s, i) => (
+              '12 000+ annonces',
+              '0€ de frais d\'agence',
+              'Signature électronique',
+            ].map((label, i) => (
               <motion.span
-                key={s.text}
-                initial={{ opacity: 0, scale: 0.88 }}
+                key={label}
+                initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.44 + i * 0.06, duration: 0.22 }}
-                className="hero-stat-chip"
+                transition={{ delay: 0.52 + i * 0.06 }}
                 style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '7px 14px',
-                  backdropFilter: 'blur(12px)',
-                  WebkitBackdropFilter: 'blur(12px)',
-                  background: 'rgba(255,255,255,0.07)',
-                  border: '1px solid rgba(255,255,255,0.10)',
-                  borderRadius: 999,
-                  fontFamily: H.font, fontSize: 13, color: H.white70,
+                  display: 'inline-flex', alignItems: 'center',
+                  padding: '6px 14px',
+                  background: 'rgba(255,255,255,0.08)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  borderRadius: 50,
+                  fontFamily: BAI.fontBody, fontSize: 13,
+                  color: 'rgba(255,255,255,0.70)',
                 }}
               >
-                <span style={{ fontSize: 12 }}>{s.icon}</span>
-                {s.text}
+                {label}
               </motion.span>
             ))}
           </motion.div>
-
-          {/* Popular cities */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.55 }}
-            style={{ marginTop: 36 }}
-          >
-            <p style={{ fontFamily: H.font, fontSize: 11, fontWeight: 600, color: H.white25, letterSpacing: '0.10em', textTransform: 'uppercase', margin: '0 0 12px' }}>
-              Villes populaires
-            </p>
-            <div className="cities-scroll">
-              {CITIES.map((c, i) => (
-                <motion.div
-                  key={c.slug}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.58 + i * 0.05 }}
-                  className="city-chip"
-                >
-                  <Link
-                    to={`/location/${c.slug}`}
-                    style={{
-                      display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start',
-                      padding: '10px 16px',
-                      backdropFilter: 'blur(12px)',
-                      WebkitBackdropFilter: 'blur(12px)',
-                      background: 'rgba(255,255,255,0.06)',
-                      border: '1px solid rgba(255,255,255,0.10)',
-                      borderRadius: 12,
-                      textDecoration: 'none',
-                      transition: 'background 0.18s, border-color 0.18s',
-                    }}
-                    onMouseEnter={e => {
-                      e.currentTarget.style.background = 'rgba(255,255,255,0.12)'
-                      e.currentTarget.style.borderColor = 'rgba(196,151,106,0.45)'
-                    }}
-                    onMouseLeave={e => {
-                      e.currentTarget.style.background = 'rgba(255,255,255,0.06)'
-                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)'
-                    }}
-                  >
-                    <span style={{ fontFamily: H.font, fontWeight: 600, fontSize: 14, color: H.white }}>{c.name}</span>
-                    <span style={{ fontFamily: H.font, fontSize: 11, color: H.white45 }}>{c.count} annonces</span>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
         </div>
 
-        {/* Bottom fade to base color */}
-        <div aria-hidden style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 80, background: 'linear-gradient(to bottom, transparent, rgba(10,13,20,0.5))', pointerEvents: 'none' }} />
+        {/* Bottom fade */}
+        <div aria-hidden style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 80, background: `linear-gradient(to bottom, transparent, ${HERO_BG})`, pointerEvents: 'none' }} />
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
-          TRUST TICKER
+          2. BENTO GRID — Pourquoi Bailio
       ══════════════════════════════════════════════════════════════════════ */}
-      <section style={{ background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}`, overflow: 'hidden', position: 'relative' }}>
-        <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 80, background: `linear-gradient(to right, ${BAI.bgSurface}, transparent)`, zIndex: 2, pointerEvents: 'none' }} />
-        <div aria-hidden style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 80, background: `linear-gradient(to left, ${BAI.bgSurface}, transparent)`, zIndex: 2, pointerEvents: 'none' }} />
+      <section style={{ background: BAI.bgBase, padding: 'clamp(64px,8vh,96px) clamp(20px,5vw,48px)' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+
+          {/* Header section */}
+          <div style={{ maxWidth: 500 }}>
+            <p style={{
+              fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700,
+              letterSpacing: '0.12em', textTransform: 'uppercase',
+              color: BAI.caramel, margin: '0 0 12px',
+            }}>
+              Pourquoi Bailio
+            </p>
+            <h2 style={{
+              fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+              fontSize: 'clamp(28px, 4vw, 44px)', color: BAI.ink,
+              margin: 0, lineHeight: 1.1,
+            }}>
+              Tout ce qu'une agence fait, en mieux.
+            </h2>
+          </div>
+
+          {/* Bento grid */}
+          <div className="bento-grid">
+
+            {/* Carte 1 — Grande (col 1, row 1-2) */}
+            <div className="bento-card-tall"
+              style={{
+                background: BAI.night, borderRadius: 16,
+                padding: 'clamp(20px, 2.5vw, 32px)',
+                display: 'flex', flexDirection: 'column', gap: 12,
+                minHeight: 300,
+              }}>
+              <FolderOpen size={32} color={BAI.caramel} />
+              <h3 style={{
+                fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+                fontSize: 'clamp(20px, 2vw, 26px)', color: '#ffffff',
+                margin: '8px 0 0', lineHeight: 1.15,
+              }}>
+                Votre dossier,<br />votre clé
+              </h3>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.62)', margin: 0, lineHeight: 1.6 }}>
+                Passeports, fiches de paie, avis d'imposition. Tout centralisé, partagé en un clic auprès des propriétaires.
+              </p>
+              <div style={{ marginTop: 'auto' }}>
+                <Link to="/register"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600,
+                    color: BAI.caramel, textDecoration: 'none',
+                  }}>
+                  Créer mon dossier <ArrowRight size={13} />
+                </Link>
+              </div>
+            </div>
+
+            {/* Carte 2 — Postulez partout */}
+            <div
+              style={{
+                background: BAI.bgSurface, border: `1px solid ${BAI.border}`,
+                borderRadius: 16, padding: 'clamp(20px, 2.5vw, 28px)',
+                display: 'flex', flexDirection: 'column', gap: 12,
+              }}>
+              <Send size={24} color={BAI.owner} />
+              <h3 style={{ fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 16, color: BAI.ink, margin: 0 }}>
+                Postulez partout
+              </h3>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, margin: 0, lineHeight: 1.55 }}>
+                Un dossier, des dizaines de candidatures. En quelques secondes.
+              </p>
+            </div>
+
+            {/* Carte 3 — Signez en ligne */}
+            <div
+              style={{
+                background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`,
+                borderRadius: 16, padding: 'clamp(20px, 2.5vw, 28px)',
+                display: 'flex', flexDirection: 'column', gap: 12,
+              }}>
+              <FileSignature size={24} color={BAI.tenant} />
+              <h3 style={{ fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 16, color: BAI.ink, margin: 0 }}>
+                Signez en ligne
+              </h3>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, margin: 0, lineHeight: 1.55 }}>
+                Bail conforme loi ALUR, signature eIDAS certifiée. 100% légal.
+              </p>
+            </div>
+
+            {/* Carte 4 — Zéro frais (col 2-4) */}
+            <div className="bento-card-wide"
+              style={{
+                background: BAI.caramel, borderRadius: 16,
+                padding: 'clamp(20px, 2.5vw, 28px)',
+                display: 'flex', flexDirection: 'column', gap: 12,
+              }}>
+              <Euro size={28} color="#ffffff" />
+              <h3 style={{ fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 17, color: '#ffffff', margin: 0 }}>
+                Zéro frais d'agence
+              </h3>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.80)', margin: 0 }}>
+                Entre particuliers, de bout en bout.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          3. COMMENT CA MARCHE
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section style={{ background: BAI.bgSurface, padding: 'clamp(48px,7vh,80px) clamp(20px,5vw,48px)', borderTop: `1px solid ${BAI.border}` }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 8px' }}>
+              Comment ça marche
+            </p>
+            <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(24px,4vw,38px)', color: BAI.ink, margin: 0, lineHeight: 1.1 }}>
+              Simple. Rapide. Transparent.
+            </h2>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 24 }}>
+            {[
+              { step: '01', icon: Search, title: 'Cherchez', desc: 'Filtres par ville, budget, surface. Carte interactive disponible.', color: BAI.owner, bg: BAI.ownerLight },
+              { step: '02', icon: TrendingUp, title: 'Postulez', desc: 'Dossier locataire digital complet. L\'IA analyse et valorise vos documents.', color: BAI.caramel, bg: BAI.caramelLight },
+              { step: '03', icon: Shield, title: 'Signez', desc: 'Bail ALUR conforme, signature eIDAS. 100% légal, 100% en ligne.', color: BAI.tenant, bg: BAI.tenantLight },
+            ].map((s, i) => (
+              <motion.div
+                key={s.step}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1, duration: 0.3 }}
+                style={{
+                  background: BAI.bgBase,
+                  border: `1px solid ${BAI.border}`,
+                  borderRadius: 16, padding: '28px 24px',
+                  boxShadow: BAI.shadowMd,
+                  position: 'relative',
+                  transition: 'box-shadow 0.2s, transform 0.2s',
+                }}
+                whileHover={{ y: -4, boxShadow: BAI.shadowLg }}
+              >
+                <span style={{ position: 'absolute', top: 18, right: 20, fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 48, fontWeight: 700, color: BAI.border, lineHeight: 1, userSelect: 'none' }}>{s.step}</span>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                  <s.icon size={20} color={s.color} />
+                </div>
+                <h3 style={{ fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 17, color: BAI.ink, margin: '0 0 8px' }}>{s.title}</h3>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: 0, lineHeight: 1.6 }}>{s.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          4. FEATURE — Pour les locataires (dark)
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section style={{ background: HERO_BG, padding: 'clamp(64px,8vh,96px) clamp(20px,5vw,48px)', position: 'relative', overflow: 'hidden' }}>
+        <div aria-hidden style={{ position: 'absolute', top: -60, left: -40, width: 400, height: 320, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.12) 0%, transparent 65%)', filter: 'blur(50px)', pointerEvents: 'none' }} />
+
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div className="feature-grid">
+
+            {/* Texte gauche */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.45 }}
+            >
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 12px' }}>
+                Pour les locataires
+              </p>
+              <h2 style={{
+                fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+                fontSize: 'clamp(28px, 4vw, 42px)', color: '#ffffff',
+                margin: '0 0 20px', lineHeight: 1.1,
+              }}>
+                Trouvez le bien idéal,<br />postulez en 2 minutes.
+              </h2>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 32 }}>
+                {[
+                  'Annonces de particuliers uniquement',
+                  'Dossier locatif en ligne, partageable',
+                  'Messagerie directe avec le propriétaire',
+                ].map(point => (
+                  <div key={point} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(196,151,106,0.20)', border: `1px solid ${BAI.caramel}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Check size={11} color={BAI.caramel} />
+                    </div>
+                    <span style={{ fontFamily: BAI.fontBody, fontSize: 15, color: 'rgba(255,255,255,0.78)' }}>{point}</span>
+                  </div>
+                ))}
+              </div>
+
+              <Link to="/search"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                  background: BAI.caramel, color: '#fff',
+                  borderRadius: 8, padding: '13px 24px',
+                  fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 15,
+                  textDecoration: 'none', transition: 'opacity 0.18s',
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1' }}>
+                Commencer ma recherche <ArrowRight size={15} />
+              </Link>
+            </motion.div>
+
+            {/* Mockup droite — card property stylisée */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.45, delay: 0.12 }}
+              className="hidden md:block"
+            >
+              <div style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.10)',
+                borderRadius: 20,
+                padding: 20,
+                display: 'flex', flexDirection: 'column', gap: 14,
+              }}>
+                {/* Image placeholder */}
+                <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 12, height: 180, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', top: 10, left: 10, background: BAI.caramel, borderRadius: 6, padding: '4px 10px' }}>
+                    <span style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: '#fff' }}>DISPONIBLE</span>
+                  </div>
+                  <Building2 size={40} color="rgba(255,255,255,0.15)" />
+                </div>
+                {/* Prix */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <div style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: '#ffffff', lineHeight: 1 }}>890 €/mois</div>
+                    <div style={{ fontFamily: BAI.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.50)', marginTop: 4 }}>Appartement — 45 m²</div>
+                  </div>
+                  <div style={{ background: 'rgba(196,151,106,0.15)', border: `1px solid rgba(196,151,106,0.30)`, borderRadius: 8, padding: '6px 10px' }}>
+                    <span style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.caramel }}>0€ frais</span>
+                  </div>
+                </div>
+                {/* Localisation */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <MapPin size={13} color="rgba(255,255,255,0.40)" />
+                  <span style={{ fontFamily: BAI.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>Lyon 3e arrondissement</span>
+                </div>
+                {/* Ligne séparateur */}
+                <div style={{ height: 1, background: 'rgba(255,255,255,0.07)' }} />
+                {/* Actions */}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <div style={{ flex: 1, background: BAI.caramel, borderRadius: 8, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: '#fff' }}>Postuler</span>
+                  </div>
+                  <div style={{ width: 38, height: 38, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <MessageSquareMock />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          5. FEATURE — Pour les propriétaires (clair)
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section style={{ background: BAI.bgBase, padding: 'clamp(64px,8vh,96px) clamp(20px,5vw,48px)' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div className="feature-grid">
+
+            {/* Mockup gauche — dashboard simplifié */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.45 }}
+              className="hidden md:block"
+              style={{ order: 0 }}
+            >
+              <div style={{
+                background: BAI.bgSurface,
+                border: `1px solid ${BAI.border}`,
+                borderRadius: 20,
+                padding: 20,
+                boxShadow: BAI.shadowLg,
+                display: 'flex', flexDirection: 'column', gap: 14,
+              }}>
+                {/* Header du mockup */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.ink }}>Mes biens</span>
+                  <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint }}>2 publiés</span>
+                </div>
+                {/* Stats row */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+                  {[
+                    { label: 'Candidatures', value: '14', color: BAI.owner },
+                    { label: 'Visites', value: '6', color: BAI.tenant },
+                    { label: 'Vues', value: '312', color: BAI.caramel },
+                  ].map(stat => (
+                    <div key={stat.label} style={{ background: BAI.bgMuted, borderRadius: 10, padding: '12px 10px' }}>
+                      <div style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: stat.color }}>{stat.value}</div>
+                      <div style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, marginTop: 2 }}>{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+                {/* Liste de candidatures */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {[
+                    { name: 'Marie L.', status: 'Nouveau', color: BAI.ownerLight, textColor: BAI.owner },
+                    { name: 'Thomas M.', status: 'En cours', color: BAI.tenantLight, textColor: BAI.tenant },
+                    { name: 'Sophie K.', status: 'Validé', color: BAI.caramelLight, textColor: BAI.caramel },
+                  ].map(item => (
+                    <div key={item.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: BAI.bgBase, borderRadius: 8, border: `1px solid ${BAI.border}` }}>
+                      <span style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.ink }}>{item.name}</span>
+                      <span style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 600, background: item.color, color: item.textColor, padding: '3px 8px', borderRadius: 4 }}>{item.status}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Texte droite */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.45, delay: 0.12 }}
+            >
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 12px' }}>
+                Pour les propriétaires
+              </p>
+              <h2 style={{
+                fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+                fontSize: 'clamp(28px, 4vw, 42px)', color: BAI.ink,
+                margin: '0 0 20px', lineHeight: 1.1,
+              }}>
+                Gérez tout depuis<br />un seul endroit.
+              </h2>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 32 }}>
+                {[
+                  'Publiez en 5 minutes, visible immédiatement',
+                  'Sélectionnez vos locataires sereinement',
+                  'Contrats signés en ligne, conformes loi ALUR',
+                ].map(point => (
+                  <div key={point} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 20, height: 20, borderRadius: '50%', background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Check size={11} color={BAI.owner} />
+                    </div>
+                    <span style={{ fontFamily: BAI.fontBody, fontSize: 15, color: BAI.inkMid }}>{point}</span>
+                  </div>
+                ))}
+              </div>
+
+              <Link to="/register?role=OWNER"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                  background: BAI.night, color: '#fff',
+                  borderRadius: 8, padding: '13px 24px',
+                  fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 15,
+                  textDecoration: 'none', transition: 'opacity 0.18s',
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.85' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1' }}>
+                Publier mon bien <ArrowRight size={15} />
+              </Link>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          6. VILLES
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section style={{ background: BAI.bgSurface, padding: 'clamp(48px,6vh,72px) clamp(20px,5vw,48px)', borderTop: `1px solid ${BAI.border}` }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
+            <div>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 6px' }}>
+                Villes populaires
+              </p>
+              <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3vw,32px)', color: BAI.ink, margin: 0, lineHeight: 1.1 }}>
+                Cherchez près de chez vous
+              </h2>
+            </div>
+            <Link to="/search" style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.caramel, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              Voir toutes les annonces <ChevronRight size={13} />
+            </Link>
+          </div>
+
+          <div className="cities-grid">
+            {CITIES.map((c, i) => (
+              <motion.div
+                key={c.slug}
+                initial={{ opacity: 0, y: 8 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05, duration: 0.25 }}
+              >
+                <Link
+                  to={`/location/${c.slug}`}
+                  style={{
+                    display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start',
+                    padding: '12px 18px',
+                    background: BAI.bgBase,
+                    border: `1px solid ${BAI.border}`,
+                    borderRadius: 12,
+                    textDecoration: 'none',
+                    transition: 'border-color 0.18s, box-shadow 0.18s',
+                    minWidth: 120,
+                  }}
+                  onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = BAI.caramel; el.style.boxShadow = BAI.shadowMd }}
+                  onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = BAI.border; el.style.boxShadow = 'none' }}
+                >
+                  <span style={{ fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 15, color: BAI.ink }}>{c.name}</span>
+                  <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, marginTop: 2 }}>{c.count} annonces</span>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          7. TRUST TICKER
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section style={{ background: BAI.bgBase, borderTop: `1px solid ${BAI.border}`, borderBottom: `1px solid ${BAI.border}`, overflow: 'hidden', position: 'relative' }}>
+        <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 80, background: `linear-gradient(to right, ${BAI.bgBase}, transparent)`, zIndex: 2, pointerEvents: 'none' }} />
+        <div aria-hidden style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 80, background: `linear-gradient(to left, ${BAI.bgBase}, transparent)`, zIndex: 2, pointerEvents: 'none' }} />
         <div className="ticker-track" style={{ display: 'flex', width: 'max-content', padding: '14px 0' }}>
           {[...Array(2)].flatMap(() => [
             { stat: '0 €', label: 'de frais d\'agence' },
@@ -543,11 +949,10 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
-          LISTINGS
+          8. ANNONCES RÉCENTES
       ══════════════════════════════════════════════════════════════════════ */}
-      <section style={{ maxWidth: 1280, margin: '0 auto', padding: 'clamp(32px,5vh,56px) clamp(16px,5vw,40px) 80px' }}>
+      <section style={{ background: BAI.bgBase, maxWidth: 1280, margin: '0 auto', padding: 'clamp(32px,5vh,56px) clamp(20px,5vw,48px) 80px' }}>
 
-        {/* Header */}
         <div className="results-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 4px' }}>
@@ -564,15 +969,14 @@ export default function Home() {
           </div>
           <Link
             to="/search"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.caramel, textDecoration: 'none', border: `1px solid ${BAI.caramelBorder ?? '#e8c59a'}`, borderRadius: 8, padding: '8px 16px', transition: 'all .15s', background: BAI.caramelLight ?? '#fdf5ec' }}
-            onMouseEnter={e => { e.currentTarget.style.opacity = '0.85' }}
-            onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.caramel, textDecoration: 'none', border: `1px solid ${BAI.caramelBorder}`, borderRadius: 8, padding: '8px 16px', transition: 'all .15s', background: BAI.caramelLight }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.85' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1' }}
           >
             Voir tout <ChevronRight size={13} />
           </Link>
         </div>
 
-        {/* Grid / Skeleton / Empty */}
         <AnimatePresence mode="wait">
           {(authLoading || (isLoading && allProperties.length === 0)) ? (
             <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="prop-grid">
@@ -619,7 +1023,7 @@ export default function Home() {
                     disabled={loadingMore}
                     whileHover={{ y: -2, boxShadow: `0 4px 20px rgba(13,12,10,0.10)` }}
                     whileTap={{ scale: 0.97 }}
-                    style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: '14px 36px', fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, color: BAI.ink, cursor: loadingMore ? 'default' : 'pointer', opacity: loadingMore ? 0.6 : 1, transition: 'border-color .15s', boxShadow: BAI.shadowMd }}
+                    style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: '14px 36px', fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, color: BAI.ink, cursor: loadingMore ? 'default' : 'pointer', opacity: loadingMore ? 0.6 : 1, boxShadow: BAI.shadowMd }}
                   >
                     {loadingMore ? 'Chargement…' : 'Voir plus de biens'}
                   </motion.button>
@@ -631,115 +1035,10 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
-          OWNER CTA — glass panel on dark
-      ══════════════════════════════════════════════════════════════════════ */}
-      <section style={{ background: H.bg, padding: 'clamp(48px,7vh,80px) clamp(16px,5vw,40px)', position: 'relative', overflow: 'hidden' }}>
-        <div aria-hidden style={{ position: 'absolute', top: -80, left: -60, width: 500, height: 400, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.15) 0%, transparent 65%)', filter: 'blur(40px)', pointerEvents: 'none' }} />
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4 }}
-          className="owner-cta-strip"
-          style={{
-            maxWidth: 900, margin: '0 auto',
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            flexWrap: 'wrap', gap: 28,
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.10)',
-            borderRadius: 20, padding: 'clamp(24px,4vw,40px)',
-            boxShadow: '0 8px 40px rgba(0,0,0,0.25)',
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(196,151,106,0.18)', border: '1px solid rgba(196,151,106,0.30)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <HomeIcon size={16} color={H.caramel} />
-              </div>
-              <span style={{ fontFamily: H.font, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: H.caramel }}>
-                Propriétaires
-              </span>
-            </div>
-            <h2 style={{ fontFamily: H.display, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3vw,34px)', color: H.white, margin: '0 0 8px', lineHeight: 1.1 }}>
-              Publiez votre bien gratuitement
-            </h2>
-            <p style={{ fontFamily: H.font, fontSize: 14, color: H.white45, margin: 0, maxWidth: '48ch', lineHeight: 1.6 }}>
-              Bail ALUR, signature eIDAS, dossiers locataires analysés par IA — tout inclus. Zéro commission sur les loyers.
-            </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 16 }}>
-              {['8 min pour publier', 'Aucun abonnement requis', 'Support 7j/7'].map(s => (
-                <span key={s} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: H.font, fontSize: 12, color: H.white70, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)', padding: '4px 10px', borderRadius: 999 }}>
-                  <span style={{ color: '#4ade80', fontSize: 10 }}>✓</span> {s}
-                </span>
-              ))}
-            </div>
-          </div>
-          <Link
-            to="/register?role=OWNER"
-            className="owner-cta-btn"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: H.caramel, color: '#fff', border: 'none', borderRadius: 12, padding: '16px 28px', fontFamily: H.font, fontSize: 15, fontWeight: 700, textDecoration: 'none', flexShrink: 0, transition: 'opacity .15s, transform .15s', minHeight: 52, boxShadow: '0 4px 20px rgba(196,151,106,0.35)' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.9'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)' }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)' }}
-          >
-            Déposer une annonce <ArrowRight size={16} />
-          </Link>
-        </motion.div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          HOW IT WORKS — 3 étapes visuelles
-      ══════════════════════════════════════════════════════════════════════ */}
-      <section style={{ background: BAI.bgSurface, padding: 'clamp(48px,7vh,80px) clamp(16px,5vw,40px)', borderTop: `1px solid ${BAI.border}` }}>
-        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 8px' }}>Comment ça marche</p>
-            <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(24px,4vw,38px)', color: BAI.ink, margin: 0, lineHeight: 1.1 }}>
-              Simple. Rapide. Transparent.
-            </h2>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 24 }}>
-            {[
-              { step: '01', icon: Search, title: 'Cherchez', desc: 'Filtres par ville, budget, surface. Carte interactive disponible.', color: BAI.owner, bg: BAI.ownerLight },
-              { step: '02', icon: TrendingUp, title: 'Postulez', desc: 'Dossier locataire digital complet. L\'IA analyse et valorise vos documents.', color: BAI.caramel, bg: '#fdf5ec' },
-              { step: '03', icon: Shield, title: 'Signez', desc: 'Bail ALUR conforme, signature eIDAS. 100% légal, 100% en ligne.', color: BAI.tenant, bg: BAI.tenantLight },
-            ].map((s, i) => (
-              <motion.div
-                key={s.step}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.3 }}
-                whileHover={{ y: -4, boxShadow: BAI.shadowLg ?? '0 8px 24px rgba(13,12,10,0.10)' }}
-                style={{
-                  background: BAI.bgBase,
-                  border: `1px solid ${BAI.border}`,
-                  borderRadius: 16, padding: '28px 24px',
-                  boxShadow: BAI.shadowMd,
-                  position: 'relative',
-                  transition: 'box-shadow 0.2s, transform 0.2s',
-                }}
-              >
-                <span style={{ position: 'absolute', top: 18, right: 20, fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 48, fontWeight: 700, color: BAI.border, lineHeight: 1, userSelect: 'none' }}>{s.step}</span>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-                  <s.icon size={20} color={s.color} />
-                </div>
-                <h3 style={{ fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 17, color: BAI.ink, margin: '0 0 8px' }}>{s.title}</h3>
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: 0, lineHeight: 1.6 }}>{s.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          GUIDE ÉDITORIAL
+          9. GUIDE ÉDITORIAL
       ══════════════════════════════════════════════════════════════════════ */}
       <section style={{ background: BAI.bgMuted, padding: 'clamp(40px,6vh,72px) 0 calc(clamp(40px,6vh,72px) + env(safe-area-inset-bottom, 0px))', borderTop: `1px solid ${BAI.border}` }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,40px)' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(20px,5vw,48px)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
             <div>
               <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 4px' }}>Guide</p>
@@ -789,7 +1088,54 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ══════════════════════════════════════════════════════════════════════
+          10. CTA FOOTER — dark, centré
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section style={{ background: HERO_BG, padding: 'clamp(64px,9vh,112px) clamp(20px,5vw,48px)', position: 'relative', overflow: 'hidden', textAlign: 'center' }}>
+        <div aria-hidden style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 600, height: 300, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.12) 0%, transparent 65%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.45 }}
+          style={{ position: 'relative', zIndex: 1 }}
+        >
+          <h2 style={{
+            fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+            fontSize: 'clamp(32px, 5vw, 56px)', color: '#ffffff',
+            margin: '0 0 16px', lineHeight: 1.05,
+          }}>
+            Prêt à trouver votre<br />prochain logement ?
+          </h2>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 'clamp(15px,1.5vw,18px)', color: 'rgba(255,255,255,0.55)', margin: '0 0 36px' }}>
+            Rejoignez 50 000+ utilisateurs qui font confiance à Bailio.
+          </p>
+          <Link to="/register"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              background: '#ffffff', color: BAI.night,
+              borderRadius: 8, padding: '14px 32px',
+              fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 16,
+              textDecoration: 'none', transition: 'opacity 0.18s',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1' }}>
+            Commencer gratuitement <ArrowRight size={16} />
+          </Link>
+        </motion.div>
+      </section>
+
       <Footer />
     </div>
+  )
+}
+
+// ─── Micro composant icône message pour le mockup ─────────────────────────────
+function MessageSquareMock() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
   )
 }

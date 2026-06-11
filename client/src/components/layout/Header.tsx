@@ -1,8 +1,9 @@
 /**
  * Header — Maison Design System
- * Mode public : transparent → sticky blanc après scroll (SeLoger-style), nav centrée avec dropdowns
+ * Mode public : transparent sur hero → sticky blanc après scroll (Hyperbeat-style), nav plate
  * Mode dashboard : topbar 52px fond blanc, dropdown profil raffiné
  */
+import React from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import {
   LogOut, Settings, LayoutDashboard, Menu,
@@ -262,26 +263,23 @@ export const Header = () => {
     )
   }
 
-  // ── PUBLIC HEADER ──────────────────────────────────────────────────────────
+  // ── PUBLIC HEADER — Hyperbeat style ───────────────────────────────────────
   const [scrolled, setScrolled] = useState(false)
   const [locationDropdownOpen, setLocationDropdownOpen] = useState(false)
   const locationDropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    // Transition seulement après avoir quitté le hero (≈90% de la viewport)
-    const onScroll = () => setScrolled(window.scrollY > window.innerHeight * 0.85)
+    const onScroll = () => setScrolled(window.scrollY > 60)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
   const isSticky = scrolled || !isHomePage
 
-  // ── Nav tokens — sombre sur hero, blanc solide après ──────────────────────
-  const glassNavPillBg   = isSticky ? '#ffffff' : 'rgba(255,255,255,0.10)'
-  const glassNavPillBdr  = isSticky ? BAI.border : 'rgba(255,255,255,0.22)'
-  const navTextColor     = isSticky ? BAI.inkMid : 'rgba(255,255,255,0.88)'
-  const navTextHover     = isSticky ? BAI.ink    : '#ffffff'
-  const logoColor        = isSticky ? BAI.ink    : '#ffffff'
+  // Nav tokens : blanc sur fond sombre hero, encré sur fond blanc après scroll
+  const navTextColor  = isSticky ? BAI.inkMid          : 'rgba(255,255,255,0.88)'
+  const navTextHover  = isSticky ? BAI.ink              : '#ffffff'
+  const logoColor     = isSticky ? BAI.ink              : '#ffffff'
 
   const LOCATION_DROPDOWN = [
     { label: 'Appartements à louer', to: '/search?type=APARTMENT' },
@@ -304,138 +302,132 @@ export const Header = () => {
 
   const closeMobileMenu = () => setShowMobilePublicMenu(false)
 
+  const navLinkStyle: React.CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    padding: '8px 14px',
+    borderRadius: 6,
+    fontFamily: BAI.fontBody,
+    fontSize: 14,
+    fontWeight: 500,
+    color: navTextColor,
+    textDecoration: 'none',
+    background: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    transition: 'color 0.2s, background 0.2s',
+    lineHeight: 1,
+    whiteSpace: 'nowrap',
+  }
+
   return (
     <>
     <header style={{
       position: 'fixed',
       top: 0, left: 0, right: 0,
       zIndex: 1000,
-      height: 64,
+      height: 60,
       display: 'flex', alignItems: 'center',
       background: isSticky ? BAI.bgSurface : 'transparent',
-      borderBottom: isSticky ? `1px solid ${BAI.border}` : 'none',
-      boxShadow: isSticky ? '0 1px 0 rgba(13,12,10,0.04)' : 'none',
-      transition: 'background 0.4s, border-color 0.4s, box-shadow 0.4s',
-      pointerEvents: 'auto',
+      borderBottom: isSticky ? `1px solid ${BAI.border}` : '1px solid transparent',
+      transition: 'background 0.3s ease, border-color 0.3s ease',
     }}>
-      {/* Conteneur interne — height: 64 pour que top:50% de la nav pill soit exact */}
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,3vw,32px)', width: '100%', height: 64, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, position: 'relative' }}>
+      <div style={{
+        maxWidth: 1280, margin: '0 auto',
+        padding: '0 clamp(16px,3vw,32px)',
+        width: '100%', height: 60,
+        boxSizing: 'border-box',
+        display: 'flex', alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 16,
+      }}>
 
-        {/* Logo */}
+        {/* ── Logo ── */}
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 7, textDecoration: 'none', flexShrink: 0 }}>
-          <BailioLogo size={22} />
+          <BailioLogo size={20} />
           <span style={{
-            fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700,
+            fontFamily: BAI.fontDisplay, fontSize: 20, fontWeight: 700,
             fontStyle: 'italic', color: logoColor,
             letterSpacing: '-0.01em', lineHeight: 1, whiteSpace: 'nowrap',
-            transition: 'color 0.35s',
+            transition: 'color 0.3s',
           }}>
             Bailio<span style={{ color: BAI.caramel }}>.</span>
           </span>
         </Link>
 
-        {/* ── Nav centrale : pill glass sur hero, liens plats après scroll ── */}
+        {/* ── Nav centrale — plate, sans pill, sans backdrop-filter ── */}
         {!isAuthenticated && (
-          <nav
-            className="hidden md:flex items-center"
-            style={{
-              gap: 2,
-              position: 'absolute', left: '50%', top: '50%',
-              transform: 'translate(-50%, -50%)',
-              background: isSticky ? 'transparent' : glassNavPillBg,
-              backdropFilter: isSticky ? 'none' : 'blur(14px) saturate(160%)',
-              WebkitBackdropFilter: isSticky ? 'none' : 'blur(14px) saturate(160%)',
-              border: isSticky ? 'none' : `1px solid ${glassNavPillBdr}`,
-              borderRadius: 50,
-              padding: '4px 8px',
-              boxShadow: isSticky ? 'none' : '0 2px 14px rgba(0,0,0,0.10)',
-              transition: 'background 0.4s, border-color 0.4s, box-shadow 0.4s',
-            }}>
+          <nav className="hidden md:flex items-center" style={{ gap: 0, position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
 
             {/* Location avec dropdown */}
             <div
               ref={locationDropdownRef}
-              style={{ position: 'relative', display: 'flex', alignItems: 'center' }}
+              style={{ position: 'relative' }}
               onMouseEnter={() => setLocationDropdownOpen(true)}
-              onMouseLeave={() => setLocationDropdownOpen(false)}>
-              <button style={{
-                display: 'flex', alignItems: 'center', gap: 4,
-                padding: '7px 14px', borderRadius: 40, border: 'none',
-                background: 'transparent', cursor: 'pointer',
-                fontFamily: BAI.fontBody, fontSize: 13.5, fontWeight: 500,
-                lineHeight: 1,
-                color: navTextColor, transition: 'color 0.2s, background 0.2s',
-              }}
-                onMouseEnter={(e) => {
-                  const el = e.currentTarget as HTMLElement
-                  el.style.color = navTextHover
-                  el.style.background = isSticky ? 'rgba(13,12,10,0.05)' : 'rgba(255,255,255,0.12)'
-                }}
-                onMouseLeave={(e) => {
-                  const el = e.currentTarget as HTMLElement
-                  el.style.color = navTextColor
-                  el.style.background = 'transparent'
-                }}>
-                Location <ChevronDown size={13} style={{ opacity: 0.7 }} />
+              onMouseLeave={() => setLocationDropdownOpen(false)}
+            >
+              <button
+                style={{ ...navLinkStyle, gap: 4 }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = navTextHover; (e.currentTarget as HTMLElement).style.background = isSticky ? BAI.bgMuted : 'rgba(255,255,255,0.10)' }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = navTextColor; (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+              >
+                Location <ChevronDown size={13} style={{ opacity: 0.65, marginLeft: 2 }} />
               </button>
 
-              {/* Dropdown — verre dépoli. top:100% + paddingTop:10 = pont invisible qui évite le gap mouseLeave */}
+              {/* Dropdown simple — fond blanc, border, pas de backdrop-filter */}
               {locationDropdownOpen && (
                 <div style={{
                   position: 'absolute', top: '100%', left: '50%',
                   transform: 'translateX(-40%)',
-                  paddingTop: 10,
-                  background: 'transparent',
-                  minWidth: 230, zIndex: 10,
+                  paddingTop: 8,
+                  minWidth: 220, zIndex: 10,
                 }}>
-                <div style={{
-                  background: 'rgba(252,251,249,0.95)',
-                  backdropFilter: 'blur(24px) saturate(200%)',
-                  WebkitBackdropFilter: 'blur(24px) saturate(200%)',
-                  border: '1px solid rgba(255,255,255,0.72)',
-                  borderRadius: 16,
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.95), 0 8px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.06)',
-                  paddingTop: 8, paddingBottom: 8,
-                  overflow: 'hidden',
-                }}>
-                  {LOCATION_DROPDOWN.map((item, i) =>
-                    item === null ? (
-                      <div key={`sep-${i}`} style={{ height: 1, background: 'rgba(13,12,10,0.07)', margin: '6px 12px' }} />
-                    ) : (
-                      <Link key={item.to} to={item.to}
-                        style={{ display: 'block', padding: '10px 18px', textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, transition: 'background 0.12s, color 0.12s' }}
-                        onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(196,151,106,0.08)'; el.style.color = BAI.ink }}
-                        onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = ''; el.style.color = BAI.inkMid }}>
-                        {item.label}
-                      </Link>
-                    )
-                  )}
-                </div>
+                  <div style={{
+                    background: BAI.bgSurface,
+                    border: `1px solid ${BAI.border}`,
+                    borderRadius: 12,
+                    boxShadow: '0 8px 32px rgba(13,12,10,0.12), 0 2px 8px rgba(13,12,10,0.06)',
+                    paddingTop: 6, paddingBottom: 6,
+                    overflow: 'hidden',
+                  }}>
+                    {LOCATION_DROPDOWN.map((item, i) =>
+                      item === null ? (
+                        <div key={`sep-${i}`} style={{ height: 1, background: BAI.border, margin: '4px 12px' }} />
+                      ) : (
+                        <Link key={item.to} to={item.to}
+                          style={{ display: 'block', padding: '9px 16px', textDecoration: 'none', fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, transition: 'background 0.12s, color 0.12s' }}
+                          onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = BAI.bgMuted; el.style.color = BAI.ink }}
+                          onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = ''; el.style.color = BAI.inkMid }}>
+                          {item.label}
+                        </Link>
+                      )
+                    )}
+                  </div>
                 </div>
               )}
             </div>
 
             {/* Propriétaires */}
             <Link to="/proprietaires"
-              style={{ display: 'inline-flex', alignItems: 'center', padding: '7px 14px', borderRadius: 40, fontFamily: BAI.fontBody, fontSize: 13.5, fontWeight: 500, color: navTextColor, textDecoration: 'none', transition: 'color 0.2s, background 0.2s', lineHeight: 1 }}
-              onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = navTextHover; el.style.background = isSticky ? 'rgba(13,12,10,0.05)' : 'rgba(255,255,255,0.12)' }}
-              onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = navTextColor; el.style.background = 'transparent' }}>
+              style={navLinkStyle}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = navTextHover; (e.currentTarget as HTMLElement).style.background = isSticky ? BAI.bgMuted : 'rgba(255,255,255,0.10)' }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = navTextColor; (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
               Propriétaires
             </Link>
 
             {/* Estimer */}
             <Link to="/estimer"
-              style={{ display: 'inline-flex', alignItems: 'center', padding: '7px 14px', borderRadius: 40, fontFamily: BAI.fontBody, fontSize: 13.5, fontWeight: 500, color: navTextColor, textDecoration: 'none', transition: 'color 0.2s, background 0.2s', lineHeight: 1 }}
-              onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = navTextHover; el.style.background = isSticky ? 'rgba(13,12,10,0.05)' : 'rgba(255,255,255,0.12)' }}
-              onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = navTextColor; el.style.background = 'transparent' }}>
+              style={navLinkStyle}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = navTextHover; (e.currentTarget as HTMLElement).style.background = isSticky ? BAI.bgMuted : 'rgba(255,255,255,0.10)' }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = navTextColor; (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
               Estimer
             </Link>
 
             {/* Guide */}
             <Link to="/guide"
-              style={{ display: 'inline-flex', alignItems: 'center', padding: '7px 14px', borderRadius: 40, fontFamily: BAI.fontBody, fontSize: 13.5, fontWeight: 500, color: navTextColor, textDecoration: 'none', transition: 'color 0.2s, background 0.2s', lineHeight: 1 }}
-              onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = navTextHover; el.style.background = isSticky ? 'rgba(13,12,10,0.05)' : 'rgba(255,255,255,0.12)' }}
-              onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = navTextColor; el.style.background = 'transparent' }}>
+              style={navLinkStyle}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = navTextHover; (e.currentTarget as HTMLElement).style.background = isSticky ? BAI.bgMuted : 'rgba(255,255,255,0.10)' }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = navTextColor; (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
               Guide
             </Link>
           </nav>
@@ -451,12 +443,12 @@ export const Header = () => {
         )}
 
         {/* ── Actions droite desktop ── */}
-        <div className="hidden md:flex items-center gap-2" style={{ flexShrink: 0 }}>
+        <div className="hidden md:flex items-center" style={{ gap: 8, flexShrink: 0 }}>
           {isAuthenticated ? (
             <>
               <Link to="/notifications"
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, color: BAI.inkFaint, width: 36, height: 36 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, color: isSticky ? BAI.inkFaint : 'rgba(255,255,255,0.70)', width: 36, height: 36 }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = isSticky ? BAI.bgMuted : 'rgba(255,255,255,0.12)' }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
                 <Bell size={17} />
               </Link>
@@ -464,28 +456,26 @@ export const Header = () => {
                 <button onClick={() => setShowUserMenu(!showUserMenu)}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 8, padding: '5px 12px 5px 6px',
-                    borderRadius: 8, border: `1px solid ${BAI.border}`,
+                    borderRadius: 8, border: `1px solid ${isSticky ? BAI.border : 'rgba(255,255,255,0.25)'}`,
                     background: showUserMenu ? BAI.bgMuted : 'transparent', cursor: 'pointer',
                   }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = isSticky ? BAI.bgMuted : 'rgba(255,255,255,0.12)' }}
                   onMouseLeave={(e) => { if (!showUserMenu) (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
                   <div style={{ width: 26, height: 26, borderRadius: 6, background: threadColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700 }}>{initials}</div>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: BAI.ink, fontFamily: 'var(--font-body)' }}>{user?.firstName}</span>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: isSticky ? BAI.ink : '#ffffff', fontFamily: BAI.fontBody }}>{user?.firstName}</span>
                 </button>
                 {showUserMenu && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
                     <div style={{
                       position: 'absolute', right: 0, top: '100%', marginTop: 8,
-                      background: 'rgba(252,251,249,0.92)',
-                      backdropFilter: 'blur(20px) saturate(180%)',
-                      WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                      border: '1px solid rgba(255,255,255,0.70)',
-                      borderRadius: 16,
-                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.95), 0 16px 48px rgba(13,12,10,0.12), 0 4px 16px rgba(13,12,10,0.06)',
+                      background: BAI.bgSurface,
+                      border: `1px solid ${BAI.border}`,
+                      borderRadius: 12,
+                      boxShadow: '0 8px 32px rgba(13,12,10,0.12), 0 4px 16px rgba(13,12,10,0.06)',
                       width: 220, zIndex: 20, overflow: 'hidden',
                     }}>
-                      <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(13,12,10,0.06)' }}>
+                      <div style={{ padding: '12px 16px', borderBottom: `1px solid ${BAI.border}` }}>
                         <p style={{ fontSize: 13, fontWeight: 600, color: BAI.ink, margin: 0 }}>{user?.firstName} {user?.lastName}</p>
                         <p style={{ fontSize: 11, color: BAI.inkMid, margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</p>
                       </div>
@@ -496,15 +486,15 @@ export const Header = () => {
                       ].map(({ to, icon, label }) => (
                         <Link key={to} to={to} onClick={() => setShowUserMenu(false)}
                           style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 16px', fontSize: 13.5, minHeight: 42, color: BAI.inkMid, textDecoration: 'none' }}
-                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(196,151,106,0.07)' }}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
                           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
                           <span style={{ color: BAI.inkFaint }}>{icon}</span>{label}
                         </Link>
                       ))}
-                      <div style={{ borderTop: '1px solid rgba(13,12,10,0.06)', paddingTop: 4 }}>
+                      <div style={{ borderTop: `1px solid ${BAI.border}`, paddingTop: 4 }}>
                         <button onClick={handleLogout}
-                          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 16px', width: '100%', fontSize: 13.5, minHeight: 42, color: '#9b1c1c', background: 'none', border: 'none', cursor: 'pointer' }}
-                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#fef2f2' }}
+                          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 16px', width: '100%', fontSize: 13.5, minHeight: 42, color: BAI.error, background: 'none', border: 'none', cursor: 'pointer' }}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.errorLight }}
                           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
                           <LogOut size={15} /> Déconnexion
                         </button>
@@ -516,38 +506,38 @@ export const Header = () => {
             </>
           ) : (
             <>
-              {/* Déposer une annonce — glass pill sombre */}
-              <Link to="/register?role=OWNER"
-                style={{
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  padding: '8px 18px', borderRadius: 40, fontSize: 13.5, fontWeight: 600,
-                  background: BAI.night,
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 2px 12px rgba(26,26,46,0.28)',
-                  color: '#fff', textDecoration: 'none',
-                  transition: 'opacity 0.18s, box-shadow 0.18s',
-                }}
-                onMouseEnter={(e) => { const el = e.currentTarget as HTMLAnchorElement; el.style.opacity = '0.86'; el.style.boxShadow = 'inset 0 1px 0 rgba(255,255,255,0.18), 0 4px 20px rgba(26,26,46,0.36)' }}
-                onMouseLeave={(e) => { const el = e.currentTarget as HTMLAnchorElement; el.style.opacity = '1'; el.style.boxShadow = 'inset 0 1px 0 rgba(255,255,255,0.12), 0 2px 12px rgba(26,26,46,0.28)' }}>
-                Déposer une annonce
-              </Link>
-
-              {/* Se connecter */}
+              {/* Se connecter — flat, contextuel */}
               <Link to="/login"
                 style={{
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  padding: '7px 16px', borderRadius: 40, fontSize: 13.5, fontWeight: 500,
-                  background: isSticky ? 'transparent' : 'rgba(255,255,255,0.10)',
-                  backdropFilter: isSticky ? 'none' : 'blur(10px)',
-                  WebkitBackdropFilter: isSticky ? 'none' : 'blur(10px)',
-                  border: isSticky ? `1px solid ${BAI.border}` : '1px solid rgba(255,255,255,0.28)',
+                  padding: '8px 16px', borderRadius: 8,
+                  fontSize: 13.5, fontWeight: 500, fontFamily: BAI.fontBody,
+                  background: 'transparent',
+                  border: isSticky ? `1px solid ${BAI.border}` : '1px solid rgba(255,255,255,0.30)',
                   color: isSticky ? BAI.inkMid : 'rgba(255,255,255,0.90)',
                   textDecoration: 'none',
                   transition: 'color 0.2s, background 0.2s, border-color 0.2s',
                 }}
-                onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = isSticky ? BAI.ink : '#fff'; el.style.background = isSticky ? BAI.bgMuted : 'rgba(255,255,255,0.18)' }}
-                onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = isSticky ? BAI.inkMid : 'rgba(255,255,255,0.90)'; el.style.background = isSticky ? 'transparent' : 'rgba(255,255,255,0.10)' }}>
+                onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = isSticky ? BAI.ink : '#fff'; el.style.background = isSticky ? BAI.bgMuted : 'rgba(255,255,255,0.12)' }}
+                onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = isSticky ? BAI.inkMid : 'rgba(255,255,255,0.90)'; el.style.background = 'transparent' }}>
                 Se connecter
+              </Link>
+
+              {/* Déposer une annonce — CTA solid */}
+              <Link to="/register?role=OWNER"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  padding: '8px 16px', borderRadius: 8,
+                  fontSize: 13.5, fontWeight: 600, fontFamily: BAI.fontBody,
+                  background: BAI.night,
+                  border: '1px solid transparent',
+                  color: '#ffffff', textDecoration: 'none',
+                  transition: 'opacity 0.18s',
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.85' }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1' }}>
+                Déposer une annonce
+                <ArrowRight size={13} />
               </Link>
             </>
           )}
@@ -560,12 +550,9 @@ export const Header = () => {
               <button onClick={() => setShowUserMenu(!showUserMenu)}
                 style={{
                   display: 'flex', alignItems: 'center', width: 40, height: 40,
-                  borderRadius: 12,
-                  background: isSticky ? 'rgba(255,255,255,0.60)' : 'rgba(255,255,255,0.12)',
-                  backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)',
-                  border: isSticky ? `1px solid rgba(255,255,255,0.72)` : '1px solid rgba(255,255,255,0.22)',
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.60)',
+                  borderRadius: 10,
+                  background: isSticky ? 'transparent' : 'rgba(255,255,255,0.12)',
+                  border: isSticky ? `1px solid ${BAI.border}` : '1px solid rgba(255,255,255,0.22)',
                   cursor: 'pointer', justifyContent: 'center',
                 }}>
                 <div style={{ width: 26, height: 26, borderRadius: 6, background: threadColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700 }}>{initials}</div>
@@ -575,15 +562,13 @@ export const Header = () => {
                   <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
                   <div style={{
                     position: 'absolute', right: 0, top: '100%', marginTop: 8,
-                    background: 'rgba(252,251,249,0.92)',
-                    backdropFilter: 'blur(20px) saturate(180%)',
-                    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                    border: '1px solid rgba(255,255,255,0.70)',
-                    borderRadius: 16,
-                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.95), 0 16px 48px rgba(13,12,10,0.12)',
+                    background: BAI.bgSurface,
+                    border: `1px solid ${BAI.border}`,
+                    borderRadius: 12,
+                    boxShadow: '0 8px 32px rgba(13,12,10,0.12)',
                     width: 'min(220px,calc(100vw - 32px))', zIndex: 20, overflow: 'hidden',
                   }}>
-                    <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(13,12,10,0.06)' }}>
+                    <div style={{ padding: '12px 16px', borderBottom: `1px solid ${BAI.border}` }}>
                       <p style={{ fontSize: 13, fontWeight: 600, color: BAI.ink, margin: 0 }}>{user?.firstName} {user?.lastName}</p>
                       <p style={{ fontSize: 11, color: BAI.inkMid, margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</p>
                     </div>
@@ -594,15 +579,15 @@ export const Header = () => {
                     ].map(({ to, label }) => (
                       <Link key={to} to={to} onClick={() => setShowUserMenu(false)}
                         style={{ display: 'flex', alignItems: 'center', padding: '0 16px', fontSize: 14, minHeight: 44, color: BAI.inkMid, textDecoration: 'none' }}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(196,151,106,0.07)' }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
                         onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
                         {label}
                       </Link>
                     ))}
-                    <div style={{ borderTop: '1px solid rgba(13,12,10,0.06)', paddingTop: 4 }}>
+                    <div style={{ borderTop: `1px solid ${BAI.border}`, paddingTop: 4 }}>
                       <button onClick={handleLogout}
-                        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 16px', width: '100%', fontSize: 14, minHeight: 44, color: '#9b1c1c', background: 'none', border: 'none', cursor: 'pointer' }}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#fef2f2' }}
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 16px', width: '100%', fontSize: 14, minHeight: 44, color: BAI.error, background: 'none', border: 'none', cursor: 'pointer' }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.errorLight }}
                         onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
                         <LogOut size={15} /> Déconnexion
                       </button>
@@ -616,10 +601,9 @@ export const Header = () => {
               onClick={() => setShowMobilePublicMenu(!showMobilePublicMenu)}
               style={{
                 display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-                gap: 5, width: 40, height: 40, borderRadius: 12,
-                background: isSticky ? BAI.bgSurface : 'rgba(255,255,255,0.12)',
-                border: isSticky ? `1px solid ${BAI.border}` : '1px solid rgba(255,255,255,0.30)',
-                boxShadow: isSticky ? '0 1px 4px rgba(13,12,10,0.08)' : 'inset 0 1px 0 rgba(255,255,255,0.35)',
+                gap: 5, width: 40, height: 40, borderRadius: 10,
+                background: isSticky ? 'transparent' : 'rgba(255,255,255,0.10)',
+                border: isSticky ? `1px solid ${BAI.border}` : '1px solid rgba(255,255,255,0.28)',
                 cursor: 'pointer', padding: 0,
               }}
               aria-label="Menu">
@@ -633,53 +617,34 @@ export const Header = () => {
       </div>
     </header>
 
-    {/* ── Menu mobile fullscreen — fond glass night ── */}
+    {/* ── Menu mobile fullscreen — fond dark ── */}
     {!isAuthenticated && showMobilePublicMenu && (
       <div
         className="md:hidden"
         style={{
           position: 'fixed', inset: 0, zIndex: 999,
-          background: 'rgba(15,12,26,0.96)',
-          backdropFilter: 'blur(24px) saturate(150%)',
-          WebkitBackdropFilter: 'blur(24px) saturate(150%)',
+          background: '#0a0d1a',
           display: 'flex', flexDirection: 'column',
         }}>
-
-        {/* Orbe décoratif fond */}
-        <div aria-hidden style={{
-          position: 'absolute', top: '8%', right: '-10%',
-          width: 260, height: 260, borderRadius: '50%',
-          background: 'radial-gradient(circle at 30% 30%, rgba(196,151,106,0.20) 0%, transparent 70%)',
-          pointerEvents: 'none',
-        }} />
-        <div aria-hidden style={{
-          position: 'absolute', bottom: '15%', left: '-8%',
-          width: 200, height: 200, borderRadius: '50%',
-          background: 'radial-gradient(circle at 60% 60%, rgba(26,26,46,0.60) 0%, transparent 70%)',
-          border: '1px solid rgba(255,255,255,0.05)',
-          pointerEvents: 'none',
-        }} />
 
         {/* Topbar overlay */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          height: 64, padding: '0 20px',
+          height: 60, padding: '0 20px',
           borderBottom: '1px solid rgba(255,255,255,0.08)', flexShrink: 0,
-          position: 'relative', zIndex: 1,
         }}>
           <Link to="/" onClick={closeMobileMenu} style={{ display: 'flex', alignItems: 'center', gap: 7, textDecoration: 'none' }}>
-            <BailioLogo size={22} />
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', lineHeight: 1 }}>
+            <BailioLogo size={20} />
+            <span style={{ fontFamily: BAI.fontDisplay, fontSize: 20, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', lineHeight: 1 }}>
               Bailio<span style={{ color: BAI.caramel }}>.</span>
             </span>
           </Link>
           <button onClick={closeMobileMenu}
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: 40, height: 40, borderRadius: 12,
+              width: 40, height: 40, borderRadius: 10,
               background: 'rgba(255,255,255,0.07)',
               border: '1px solid rgba(255,255,255,0.15)',
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15)',
               cursor: 'pointer',
             }}>
             <X size={18} color="#ffffff" />
@@ -687,7 +652,7 @@ export const Header = () => {
         </div>
 
         {/* Nav links */}
-        <nav style={{ flex: 1, padding: '32px 24px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 0, position: 'relative', zIndex: 1 }}>
+        <nav style={{ flex: 1, padding: '32px 24px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 0 }}>
           {MOBILE_NAV_LINKS.map(({ to, label }) => {
             const isActive = location.pathname === to || location.pathname.startsWith(to + '/')
             return (
@@ -697,7 +662,7 @@ export const Header = () => {
                   padding: '16px 0', borderBottom: '1px solid rgba(255,255,255,0.06)',
                   textDecoration: 'none',
                 }}>
-                <span style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(24px,7vw,36px)', color: isActive ? BAI.caramel : 'rgba(255,255,255,0.88)', lineHeight: 1 }}>
+                <span style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(24px,7vw,36px)', color: isActive ? BAI.caramel : 'rgba(255,255,255,0.88)', lineHeight: 1 }}>
                   {label}
                 </span>
                 <ArrowRight size={16} color={isActive ? BAI.caramel : 'rgba(255,255,255,0.25)'} />
@@ -706,29 +671,25 @@ export const Header = () => {
           })}
         </nav>
 
-        {/* Boutons auth en bas — glass, safe area iPhone */}
-        <div style={{ padding: '20px 24px', paddingBottom: 'max(40px, calc(env(safe-area-inset-bottom) + 20px))', display: 'flex', flexDirection: 'column', gap: 10, flexShrink: 0, position: 'relative', zIndex: 1 }}>
+        {/* Boutons auth en bas */}
+        <div style={{ padding: '20px 24px', paddingBottom: 'max(40px, calc(env(safe-area-inset-bottom) + 20px))', display: 'flex', flexDirection: 'column', gap: 10, flexShrink: 0 }}>
           <Link to="/register?role=OWNER" onClick={closeMobileMenu}
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              padding: '14px 0', borderRadius: 14, textDecoration: 'none',
-              fontFamily: 'var(--font-body)', fontSize: 15, fontWeight: 600,
+              padding: '14px 0', borderRadius: 10, textDecoration: 'none',
+              fontFamily: BAI.fontBody, fontSize: 15, fontWeight: 600,
               background: BAI.night, color: '#fff',
               border: `1px solid ${BAI.caramel}`,
-              boxShadow: `inset 0 1px 0 rgba(255,255,255,0.10), 0 4px 20px rgba(196,151,106,0.25)`,
             }}>
             Déposer une annonce
           </Link>
           <Link to="/login" onClick={closeMobileMenu}
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              padding: '14px 0', borderRadius: 14, textDecoration: 'none',
-              fontFamily: 'var(--font-body)', fontSize: 15, fontWeight: 500,
+              padding: '14px 0', borderRadius: 10, textDecoration: 'none',
+              fontFamily: BAI.fontBody, fontSize: 15, fontWeight: 500,
               background: 'rgba(255,255,255,0.07)',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
               border: '1px solid rgba(255,255,255,0.18)',
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15)',
               color: 'rgba(255,255,255,0.88)',
             }}>
             Se connecter
@@ -737,7 +698,7 @@ export const Header = () => {
       </div>
     )}
 
-    {!isHomePage && <div aria-hidden style={{ height: 64, flexShrink: 0, background: 'transparent' }} />}
+    {!isHomePage && <div aria-hidden style={{ height: 60, flexShrink: 0, background: 'transparent' }} />}
     </>
   )
 }
