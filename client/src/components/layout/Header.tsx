@@ -268,16 +268,17 @@ export const Header = () => {
   const locationDropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 50)
+    // Transition seulement après avoir quitté le hero (≈90% de la viewport)
+    const onScroll = () => setScrolled(window.scrollY > window.innerHeight * 0.85)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
   const isSticky = scrolled || !isHomePage
 
-  // ── Glass morphism tokens ──────────────────────────────────────────────────
-  const glassNavPillBg   = isSticky ? 'rgba(255,255,255,0.62)' : 'rgba(255,255,255,0.08)'
-  const glassNavPillBdr  = isSticky ? 'rgba(255,255,255,0.80)' : 'rgba(255,255,255,0.22)'
+  // ── Nav tokens — sombre sur hero, blanc solide après ──────────────────────
+  const glassNavPillBg   = isSticky ? '#ffffff' : 'rgba(255,255,255,0.10)'
+  const glassNavPillBdr  = isSticky ? BAI.border : 'rgba(255,255,255,0.22)'
   const navTextColor     = isSticky ? BAI.inkMid : 'rgba(255,255,255,0.88)'
   const navTextHover     = isSticky ? BAI.ink    : '#ffffff'
   const logoColor        = isSticky ? BAI.ink    : '#ffffff'
@@ -305,18 +306,20 @@ export const Header = () => {
 
   return (
     <>
-    {/* ── Navigation flottante — pas de barre pleine largeur, uniquement les éléments arrondis ── */}
     <header style={{
       position: 'fixed',
       top: 0, left: 0, right: 0,
       zIndex: 1000,
       height: 64,
       display: 'flex', alignItems: 'center',
-      background: 'transparent',
-      pointerEvents: 'none',
+      background: isSticky ? BAI.bgSurface : 'transparent',
+      borderBottom: isSticky ? `1px solid ${BAI.border}` : 'none',
+      boxShadow: isSticky ? '0 1px 0 rgba(13,12,10,0.04)' : 'none',
+      transition: 'background 0.4s, border-color 0.4s, box-shadow 0.4s',
+      pointerEvents: 'auto',
     }}>
       {/* Conteneur interne — height: 64 pour que top:50% de la nav pill soit exact */}
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,3vw,32px)', width: '100%', height: 64, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, position: 'relative', pointerEvents: 'auto' }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,3vw,32px)', width: '100%', height: 64, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, position: 'relative' }}>
 
         {/* Logo */}
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 7, textDecoration: 'none', flexShrink: 0 }}>
@@ -331,7 +334,7 @@ export const Header = () => {
           </span>
         </Link>
 
-        {/* ── Nav centrale — pill de verre ── */}
+        {/* ── Nav centrale : pill glass sur hero, liens plats après scroll ── */}
         {!isAuthenticated && (
           <nav
             className="hidden md:flex items-center"
@@ -339,16 +342,14 @@ export const Header = () => {
               gap: 2,
               position: 'absolute', left: '50%', top: '50%',
               transform: 'translate(-50%, -50%)',
-              background: glassNavPillBg,
-              backdropFilter: 'blur(14px) saturate(160%)',
-              WebkitBackdropFilter: 'blur(14px) saturate(160%)',
-              border: `1px solid ${glassNavPillBdr}`,
+              background: isSticky ? 'transparent' : glassNavPillBg,
+              backdropFilter: isSticky ? 'none' : 'blur(14px) saturate(160%)',
+              WebkitBackdropFilter: isSticky ? 'none' : 'blur(14px) saturate(160%)',
+              border: isSticky ? 'none' : `1px solid ${glassNavPillBdr}`,
               borderRadius: 50,
               padding: '4px 8px',
-              boxShadow: isSticky
-                ? 'inset 0 1px 0 rgba(255,255,255,0.88), 0 2px 10px rgba(13,12,10,0.06), 0 1px 4px rgba(13,12,10,0.04)'
-                : 'inset 0 1px 0 rgba(255,255,255,0.30), 0 2px 14px rgba(0,0,0,0.10)',
-              transition: 'background 0.38s, border-color 0.38s, box-shadow 0.38s',
+              boxShadow: isSticky ? 'none' : '0 2px 14px rgba(0,0,0,0.10)',
+              transition: 'background 0.4s, border-color 0.4s, box-shadow 0.4s',
             }}>
 
             {/* Location avec dropdown */}
@@ -531,22 +532,21 @@ export const Header = () => {
                 Déposer une annonce
               </Link>
 
-              {/* Se connecter — glass transparent */}
+              {/* Se connecter */}
               <Link to="/login"
                 style={{
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                   padding: '7px 16px', borderRadius: 40, fontSize: 13.5, fontWeight: 500,
-                  background: isSticky ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.10)',
-                  backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)',
-                  border: isSticky ? '1px solid rgba(13,12,10,0.10)' : '1px solid rgba(255,255,255,0.28)',
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.70)',
+                  background: isSticky ? 'transparent' : 'rgba(255,255,255,0.10)',
+                  backdropFilter: isSticky ? 'none' : 'blur(10px)',
+                  WebkitBackdropFilter: isSticky ? 'none' : 'blur(10px)',
+                  border: isSticky ? `1px solid ${BAI.border}` : '1px solid rgba(255,255,255,0.28)',
                   color: isSticky ? BAI.inkMid : 'rgba(255,255,255,0.90)',
                   textDecoration: 'none',
                   transition: 'color 0.2s, background 0.2s, border-color 0.2s',
                 }}
-                onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = isSticky ? BAI.ink : '#fff'; el.style.background = isSticky ? 'rgba(255,255,255,0.80)' : 'rgba(255,255,255,0.18)' }}
-                onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = isSticky ? BAI.inkMid : 'rgba(255,255,255,0.90)'; el.style.background = isSticky ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.10)' }}>
+                onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = isSticky ? BAI.ink : '#fff'; el.style.background = isSticky ? BAI.bgMuted : 'rgba(255,255,255,0.18)' }}
+                onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = isSticky ? BAI.inkMid : 'rgba(255,255,255,0.90)'; el.style.background = isSticky ? 'transparent' : 'rgba(255,255,255,0.10)' }}>
                 Se connecter
               </Link>
             </>
