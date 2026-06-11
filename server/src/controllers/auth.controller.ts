@@ -551,7 +551,7 @@ class AuthController {
    */
   async googleAuth(req: Request, res: Response, next: NextFunction) {
     try {
-      const { idToken } = req.body
+      const { idToken, role } = req.body
 
       if (!idToken) {
         return res.status(400).json({
@@ -560,7 +560,7 @@ class AuthController {
         })
       }
 
-      const result = await authService.googleAuth(idToken)
+      const result = await authService.googleAuth(idToken, role)
 
       return res.status(200).json({
         success: true,

@@ -31,7 +31,11 @@ const allowedOrigins = new Set([
   'https://bailio.fr',
   'https://www.bailio.fr',
   // localhost uniquement en développement — jamais en production
-  ...(env.NODE_ENV !== 'production' ? ['http://localhost:5173', 'http://localhost:3000'] : []),
+  ...(env.NODE_ENV !== 'production' ? [
+    'http://localhost:3000',
+    'http://localhost:5173', 'http://localhost:5174',
+    'http://localhost:5175', 'http://localhost:5176',
+  ] : []),
   ...env.CORS_ORIGIN.split(',').map((o: string) => o.trim()).filter(Boolean),
 ])
 

@@ -232,8 +232,14 @@ export default function Register() {
 
   const handleGoogleSuccess = async (idToken: string) => {
     try {
-      const { isNewUser } = await googleLogin(idToken)
-      navigate(isNewUser ? '/select-role' : '/dashboard/tenant')
+      const role = formData.role || undefined
+      const { isNewUser, user } = await googleLogin(idToken, role)
+      if (isNewUser && !role) {
+        navigate('/select-role')
+      } else {
+        const dest = user.role === 'OWNER' ? '/dashboard/owner' : '/dashboard/tenant'
+        navigate(dest)
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Connexion Google échouée.')
     }

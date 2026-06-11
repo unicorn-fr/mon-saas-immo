@@ -19,7 +19,7 @@ interface AuthActions {
     nationalNumber?: string; documentNumber?: string; documentExpiry?: string
     profileMeta?: Record<string, Record<string, unknown>>
   }) => Promise<User>
-  googleLogin: (idToken: string) => Promise<{ user: User; isNewUser: boolean }>
+  googleLogin: (idToken: string, role?: string) => Promise<{ user: User; isNewUser: boolean }>
   setUser: (user: User) => void
   setTokens: (accessToken: string, refreshToken: string) => void
   clearAuth: () => void
@@ -117,11 +117,11 @@ export const useAuthStore = create<AuthStore>()(
       /**
        * Google OAuth login
        */
-      googleLogin: async (idToken: string) => {
+      googleLogin: async (idToken: string, role?: string) => {
         set({ isLoading: true, error: null })
 
         try {
-          const response = await authService.googleAuth(idToken)
+          const response = await authService.googleAuth(idToken, role)
 
           setApiTokens(response.accessToken, response.refreshToken)
 

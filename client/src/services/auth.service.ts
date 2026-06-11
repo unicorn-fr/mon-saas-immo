@@ -188,11 +188,11 @@ class AuthService {
   /**
    * Google OAuth login
    */
-  async googleAuth(idToken: string): Promise<AuthResponse> {
+  async googleAuth(idToken: string, role?: string): Promise<AuthResponse> {
     try {
       const response = await apiClient.post<ApiResponse<AuthResponse>>(
         '/auth/google',
-        { idToken }
+        { idToken, ...(role ? { role } : {}) }
       )
       return response.data.data
     } catch (error) {

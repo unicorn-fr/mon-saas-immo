@@ -102,11 +102,10 @@ class AuthService {
       },
     })
 
-    // Send verification email (auto-verify only in dev if no email provider configured)
+    // Send verification email — auto-verify in dev if no provider OR if email delivery fails
     const emailConfigured = !!(env.SMTP_HOST || env.RESEND_API_KEY)
     if (!emailConfigured) {
       if (env.IS_PRODUCTION) {
-        // In production, email verification is mandatory — fail loudly
         throw new Error('Email provider not configured in production')
       }
       await prisma.user.update({
@@ -129,7 +128,22 @@ class AuthService {
       })
 
       const tpl = emailVerificationTemplate({ firstName: user.firstName, code })
-      await sendEmail({ to: user.email, ...tpl })
+      const sent = await sendEmail({ to: user.email, ...tpl })
+
+      // Toujours loguer en dev pour faciliter les tests
+      if (!env.IS_PRODUCTION) {
+        console.log(`\n[dev] ═══ Code de vérification pour ${user.email} : ${code} ═══\n`)
+      }
+
+      // En dev, si l'email échoue, auto-vérifier pour ne pas bloquer le développement
+      if (!sent && !env.IS_PRODUCTION) {
+        console.warn('[dev] Email non envoyé — auto-vérification activée')
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { emailVerified: true, emailVerifiedAt: new Date() },
+        })
+        user.emailVerified = true
+      }
     }
 
     return { user }
@@ -574,7 +588,7 @@ class AuthService {
   /**
    * Google OAuth authentication
    */
-  async googleAuth(idToken: string): Promise<AuthResponse & { isNewUser: boolean }> {
+  async googleAuth(idToken: string, preferredRole?: string): Promise<AuthResponse & { isNewUser: boolean }> {
     if (!env.GOOGLE_CLIENT_ID) {
       throw new Error('Google OAuth is not configured')
     }
@@ -648,6 +662,10 @@ class AuthService {
           throw new Error('Les inscriptions sont fermées. Bailio ouvre bientôt — rejoignez la liste d\'attente.')
         }
         isNewUser = true
+        const validRoles = ['TENANT', 'OWNER']
+        const assignedRole = (preferredRole && validRoles.includes(preferredRole))
+          ? preferredRole as 'TENANT' | 'OWNER'
+          : 'TENANT'
         user = await prisma.user.create({
           data: {
             email: email.toLowerCase(),
@@ -655,7 +673,7 @@ class AuthService {
             password: null,
             firstName: given_name || 'Utilisateur',
             lastName: family_name || 'Google',
-            role: 'TENANT',
+            role: assignedRole,
             emailVerified: true,
             emailVerifiedAt: new Date(),
             avatar: picture || null,
