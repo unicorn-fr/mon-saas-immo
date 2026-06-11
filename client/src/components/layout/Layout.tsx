@@ -95,7 +95,8 @@ export const Layout = ({ children, showHeader = true, showFooter, bodyBackground
           <motion.main
             key={location.pathname}
             id="main-content"
-            className="flex-1 overflow-y-auto pb-16 md:pb-0 md:pt-16"
+            className="flex-1 overflow-y-auto md:pb-0 md:pt-16"
+            style={{ paddingBottom: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}
             variants={pageVariants}
             initial="initial"
             animate="animate"

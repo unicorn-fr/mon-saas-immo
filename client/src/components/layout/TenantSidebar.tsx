@@ -362,10 +362,10 @@ export function TenantSidebar() {
               onClick={handleLogout}
               title="Déconnexion"
               style={{
-                width: 28, height: 28, flexShrink: 0,
+                width: 44, height: 44, flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 background: 'none', border: 'none', cursor: 'pointer',
-                color: 'rgba(255,255,255,0.30)', borderRadius: 7,
+                color: 'rgba(255,255,255,0.30)', borderRadius: 10,
                 transition: 'background 0.15s, color 0.15s',
               }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(155,28,28,0.18)'; (e.currentTarget as HTMLElement).style.color = '#ef4444' }}

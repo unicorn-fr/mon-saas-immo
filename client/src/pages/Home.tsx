@@ -99,6 +99,7 @@ function SearchBox({ city, setCity, type, setType, priceRange, setPriceRange }: 
   return (
     <motion.form
       onSubmit={handleSubmit}
+      className="hero-searchbox"
       initial={{ opacity: 0, y: 20, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.45, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
@@ -144,7 +145,7 @@ function SearchBox({ city, setCity, type, setType, priceRange, setPriceRange }: 
       </div>
 
       {/* Separator */}
-      <div style={{ width: 1, background: 'rgba(255,255,255,0.10)', margin: '8px 0', flexShrink: 0 }} />
+      <div className="hero-sep" style={{ width: 1, background: 'rgba(255,255,255,0.10)', margin: '8px 0', flexShrink: 0 }} />
 
       {/* Type */}
       <select
@@ -171,7 +172,7 @@ function SearchBox({ city, setCity, type, setType, priceRange, setPriceRange }: 
       </select>
 
       {/* Separator */}
-      <div style={{ width: 1, background: 'rgba(255,255,255,0.10)', margin: '8px 0', flexShrink: 0 }} />
+      <div className="hero-sep" style={{ width: 1, background: 'rgba(255,255,255,0.10)', margin: '8px 0', flexShrink: 0 }} />
 
       {/* Budget */}
       <select

@@ -51,7 +51,7 @@ export const Header = () => {
   const location = useLocation()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showMobilePublicMenu, setShowMobilePublicMenu] = useState(false)
-  const { toggle: toggleSidebar } = useSidebarStore()
+  const { toggle: toggleSidebar, mobileOpen } = useSidebarStore()
   const { unreadCount } = useMessages()
   usePageTitle(user?.role)
 
@@ -159,10 +159,10 @@ export const Header = () => {
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '0 12px',
           }}>
-            {/* Hamburger */}
-            <button onClick={toggleSidebar} aria-label="Menu"
-              style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10, border: `1px solid ${BAI.border}`, background: 'transparent', color: BAI.inkMid, cursor: 'pointer', flexShrink: 0 }}>
-              <Menu className="w-5 h-5" />
+            {/* Hamburger — bascule en X quand sidebar ouverte */}
+            <button onClick={toggleSidebar} aria-label={mobileOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+              style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10, border: `1px solid ${mobileOpen ? BAI.caramel : BAI.border}`, background: mobileOpen ? `${BAI.caramel}14` : 'transparent', color: mobileOpen ? BAI.caramel : BAI.inkMid, cursor: 'pointer', flexShrink: 0, transition: 'all 0.18s' }}>
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
 
             {/* Logo centré */}
@@ -706,8 +706,8 @@ export const Header = () => {
           })}
         </nav>
 
-        {/* Boutons auth en bas — glass */}
-        <div style={{ padding: '20px 24px 40px', display: 'flex', flexDirection: 'column', gap: 10, flexShrink: 0, position: 'relative', zIndex: 1 }}>
+        {/* Boutons auth en bas — glass, safe area iPhone */}
+        <div style={{ padding: '20px 24px', paddingBottom: 'max(40px, calc(env(safe-area-inset-bottom) + 20px))', display: 'flex', flexDirection: 'column', gap: 10, flexShrink: 0, position: 'relative', zIndex: 1 }}>
           <Link to="/register?role=OWNER" onClick={closeMobileMenu}
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
