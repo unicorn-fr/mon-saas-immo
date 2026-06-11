@@ -19,7 +19,11 @@ const app: Application = express()
 // Must respond even if DB/Redis/env are broken
 // ============================================
 app.get('/health', (_req: Request, res: Response) => {
-  res.status(200).json({ status: 'ok' })
+  res.status(200).json({
+    status: 'ok',
+    google_client_id: process.env.GOOGLE_CLIENT_ID ? '✅ défini' : '❌ manquant',
+    google_client_secret: process.env.GOOGLE_CLIENT_SECRET ? '✅ défini' : '❌ manquant',
+  })
 })
 
 // ============================================

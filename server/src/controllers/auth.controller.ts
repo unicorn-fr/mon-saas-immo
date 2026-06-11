@@ -595,13 +595,14 @@ class AuthController {
   async googleRedirect(req: Request, res: Response, next: NextFunction) {
     try {
       const { OAuth2Client } = await import('google-auth-library')
-      const clientId = (await import('../config/env.js')).env.GOOGLE_CLIENT_ID
-      const clientSecret = (await import('../config/env.js')).env.GOOGLE_CLIENT_SECRET
+      const clientId = process.env.GOOGLE_CLIENT_ID
+      const clientSecret = process.env.GOOGLE_CLIENT_SECRET
       if (!clientId || !clientSecret) {
-        return res.status(500).send('Google OAuth non configuré')
+        return res.status(500).send('Google OAuth non configuré — GOOGLE_CLIENT_ID ou GOOGLE_CLIENT_SECRET manquant dans Railway Variables')
       }
       const role = (req.query.role as string) || 'TENANT'
-      const redirectUri = `${req.protocol}://${req.get('host')}/api/v1/auth/google/callback`
+      const proto = (req.headers['x-forwarded-proto'] as string)?.split(',')[0].trim() || req.protocol
+      const redirectUri = `${proto}://${req.get('host')}/api/v1/auth/google/callback`
       const client = new OAuth2Client(clientId, clientSecret, redirectUri)
       const url = client.generateAuthUrl({
         access_type: 'offline',
@@ -622,7 +623,6 @@ class AuthController {
   async googleCallback(req: Request, res: Response, next: NextFunction) {
     try {
       const { OAuth2Client } = await import('google-auth-library')
-      const { env } = await import('../config/env.js')
       const code = req.query.code as string
       const role = (req.query.state as string) || 'TENANT'
 
@@ -630,8 +630,9 @@ class AuthController {
         return res.send(googlePopupHtml({ error: 'Code OAuth manquant' }))
       }
 
-      const redirectUri = `${req.protocol}://${req.get('host')}/api/v1/auth/google/callback`
-      const client = new OAuth2Client(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET, redirectUri)
+      const proto = (req.headers['x-forwarded-proto'] as string)?.split(',')[0].trim() || req.protocol
+      const redirectUri = `${proto}://${req.get('host')}/api/v1/auth/google/callback`
+      const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, redirectUri)
       const { tokens } = await client.getToken(code)
       const idToken = tokens.id_token
       if (!idToken) {
