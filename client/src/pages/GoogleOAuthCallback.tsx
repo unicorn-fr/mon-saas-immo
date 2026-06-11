@@ -4,20 +4,12 @@ export default function GoogleOAuthCallback() {
   useEffect(() => {
     try {
       const hash = window.location.hash.slice(1)
-      if (hash) {
-        const data = JSON.parse(atob(hash))
-        if (window.opener) {
-          window.opener.postMessage(data, window.location.origin)
-        }
-      } else {
-        if (window.opener) {
-          window.opener.postMessage({ type: 'GOOGLE_AUTH_ERROR', error: 'Callback vide' }, window.location.origin)
-        }
-      }
+      const data = hash
+        ? JSON.parse(atob(hash))
+        : { type: 'GOOGLE_AUTH_ERROR', error: 'Callback vide' }
+      localStorage.setItem('google_auth_result', JSON.stringify(data))
     } catch {
-      if (window.opener) {
-        window.opener.postMessage({ type: 'GOOGLE_AUTH_ERROR', error: 'Erreur de callback Google' }, window.location.origin)
-      }
+      localStorage.setItem('google_auth_result', JSON.stringify({ type: 'GOOGLE_AUTH_ERROR', error: 'Erreur callback Google' }))
     } finally {
       window.close()
     }

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'
+const STORAGE_KEY = 'google_auth_result'
 
 interface GoogleSignInButtonProps {
   onSuccess: (idToken: string) => void
@@ -27,6 +28,9 @@ export default function GoogleSignInButton({
   useEffect(() => { onErrorRef.current = onError }, [onError])
 
   const handleClick = () => {
+    // Clear any stale result from a previous attempt
+    localStorage.removeItem(STORAGE_KEY)
+
     const roleParam = role ? `?role=${encodeURIComponent(role)}` : ''
     const popupUrl = `${API_BASE}/auth/google/redirect${roleParam}`
 
@@ -41,26 +45,34 @@ export default function GoogleSignInButton({
       return
     }
 
-    const onMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'GOOGLE_AUTH_SUCCESS') {
-        window.removeEventListener('message', onMessage)
-        // The server returns full auth data — we forward the idToken placeholder
-        // Actually we forward the full result to a special callback
-        onSuccessRef.current('__popup_result__' + JSON.stringify(event.data))
-      } else if (event.data?.type === 'GOOGLE_AUTH_ERROR') {
-        window.removeEventListener('message', onMessage)
-        onErrorRef.current?.(event.data.error || 'Erreur Google')
+    // Use storage event — fires in THIS window when the popup writes to localStorage
+    // This avoids window.opener which gets nullified by Google's COOP headers
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== STORAGE_KEY || !event.newValue) return
+      cleanup()
+      try {
+        const data = JSON.parse(event.newValue)
+        localStorage.removeItem(STORAGE_KEY)
+        if (data.type === 'GOOGLE_AUTH_SUCCESS') {
+          onSuccessRef.current('__popup_result__' + JSON.stringify(data))
+        } else {
+          onErrorRef.current?.(data.error || 'Erreur Google')
+        }
+      } catch {
+        onErrorRef.current?.('Erreur de lecture du résultat Google')
       }
     }
 
-    window.addEventListener('message', onMessage)
+    const cleanup = () => {
+      clearInterval(pollClosed)
+      window.removeEventListener('storage', onStorage)
+    }
 
-    // Check if popup was closed without completing auth
+    window.addEventListener('storage', onStorage)
+
+    // Fallback: cleanup if popup was closed without completing auth
     const pollClosed = setInterval(() => {
-      if (popup.closed) {
-        clearInterval(pollClosed)
-        window.removeEventListener('message', onMessage)
-      }
+      if (popup.closed) cleanup()
     }, 500)
   }
 
