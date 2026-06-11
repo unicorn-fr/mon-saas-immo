@@ -1,12 +1,5 @@
-/**
- * MobileBottomNav — Maison Design System
- * Navigation iOS-style fixée en bas de l'écran sur mobile (< md).
- * Cachée sur md: et plus (sidebar desktop prend le relais).
- *
- * Utilise les vraies routes de l'application (App.tsx).
- * Icônes Lucide (déjà installé dans le projet).
- */
 import { NavLink, useLocation } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import {
   LayoutDashboard, Home,
   MessageSquare, User, Search, ClipboardList,
@@ -83,36 +76,45 @@ export function MobileBottomNav({
               className="relative flex flex-col items-center justify-center flex-1 gap-0.5 py-1.5"
               aria-current={isActive ? 'page' : undefined}
             >
-              {/* Indicateur actif en haut */}
+              {/* Spring-animated active indicator — layoutId makes it slide between items */}
               {isActive && (
-                <span
+                <motion.span
+                  layoutId="mobileNavActive"
                   className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full"
                   style={{ background: activeColor }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 40 }}
                 />
               )}
 
-              {/* Icône + badge */}
-              <div className="relative">
+              {/* Icône + badge avec tap feedback */}
+              <motion.div
+                className="relative"
+                whileTap={{ scale: 0.82 }}
+                transition={{ duration: 0.12 }}
+              >
                 <Icon
                   className="w-5 h-5"
                   style={{ color: isActive ? activeColor : INK_FAINT }}
                   strokeWidth={isActive ? 2.2 : 1.8}
                 />
                 {item.badge !== undefined && item.badge > 0 && (
-                  <span
+                  <motion.span
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 600, damping: 30 }}
                     className="absolute -top-1.5 -right-2 flex items-center justify-center
                       min-w-[16px] h-4 px-1 rounded-full text-white"
                     style={{
                       fontSize: '9px',
                       fontWeight: 700,
-                      background: '#c4976a', // caramel Maison
+                      background: '#c4976a',
                       fontFamily: 'var(--font-body)',
                     }}
                   >
                     {item.badge > 99 ? '99+' : item.badge}
-                  </span>
+                  </motion.span>
                 )}
-              </div>
+              </motion.div>
 
               {/* Label */}
               <span

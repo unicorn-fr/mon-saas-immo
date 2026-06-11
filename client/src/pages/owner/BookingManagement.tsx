@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
+import { motion } from 'framer-motion'
 import {
   Calendar as CalendarIcon,
   Search,
@@ -181,10 +182,15 @@ export const BookingManagement = () => {
         <div className="max-w-7xl mx-auto">
 
           {/* Page header — Maison style */}
-          <div className="mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.24 }}
+            className="mb-8"
+          >
             <p
               className="uppercase tracking-widest mb-1"
-              style={{ fontSize: 10, color: BAI.caramel, letterSpacing: '0.12em' }}
+              style={{ fontSize: 10, fontWeight: 700, color: BAI.caramel, letterSpacing: '0.12em' }}
             >
               Propriétaire
             </p>
@@ -204,7 +210,7 @@ export const BookingManagement = () => {
             <p className="mt-1.5" style={{ fontSize: 14, color: BAI.inkMid }}>
               Gérez les demandes de visite de vos propriétés
             </p>
-          </div>
+          </motion.div>
 
           {/* Prochains rendez-vous */}
           {upcomingConfirmed.length > 0 && (
@@ -279,9 +285,13 @@ export const BookingManagement = () => {
           {/* Statistics */}
           {statistics && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
-              {statCards.map(({ label, value, icon, bg, border, color }) => (
-                <div
+              {statCards.map(({ label, value, icon, bg, border, color }, i) => (
+                <motion.div
                   key={label}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 + i * 0.08, duration: 0.24 }}
+                  whileHover={{ y: -2 }}
                   className="flex flex-col sm:flex-row items-center sm:items-start gap-3 p-4"
                   style={cardStyle}
                 >
@@ -299,7 +309,7 @@ export const BookingManagement = () => {
                       {value}
                     </p>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           )}

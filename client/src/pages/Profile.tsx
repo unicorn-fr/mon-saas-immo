@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { Layout } from '../components/layout/Layout'
 import { useAuth } from '../hooks/useAuth'
 import { authService } from '../services/auth.service'
@@ -254,15 +255,20 @@ export default function Profile() {
           )}
 
           {/* Page Header */}
-          <div className="mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.24 }}
+            className="mb-8"
+          >
             <p
               style={{
                 fontFamily: BAI.fontBody,
                 fontSize: '10px',
-                fontWeight: 600,
-                letterSpacing: '0.1em',
+                fontWeight: 700,
+                letterSpacing: '0.12em',
                 textTransform: 'uppercase',
-                color: BAI.inkFaint,
+                color: BAI.caramel,
                 marginBottom: '6px',
               }}
             >
@@ -273,7 +279,7 @@ export default function Profile() {
                 fontFamily: BAI.fontDisplay,
                 fontWeight: 700,
                 fontStyle: 'italic',
-                fontSize: '40px',
+                fontSize: 'clamp(28px,5vw,40px)',
                 color: BAI.ink,
                 lineHeight: 1.1,
                 marginBottom: '6px',
@@ -284,7 +290,7 @@ export default function Profile() {
             <p style={{ fontFamily: BAI.fontBody, fontSize: '14px', color: BAI.inkMid }}>
               Gérez vos informations personnelles et vos paramètres de sécurité
             </p>
-          </div>
+          </motion.div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* ── Left: Profile summary card ── */}

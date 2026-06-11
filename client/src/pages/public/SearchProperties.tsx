@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, type ElementType } from 'react'
+import { motion } from 'framer-motion'
 import { useSearchParams } from 'react-router-dom'
 import { useProperties } from '../../hooks/useProperties'
 import { useAuth } from '../../hooks/useAuth'
@@ -507,8 +508,15 @@ export default function SearchProperties() {
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px,100%), 1fr))', gap: 20 }}>
-                  {allProperties.map(property => (
-                    <PropertyCard key={property.id} property={property} />
+                  {allProperties.map((property, i) => (
+                    <motion.div
+                      key={property.id}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: Math.min(i * 0.04, 0.3), duration: 0.24 }}
+                    >
+                      <PropertyCard property={property} />
+                    </motion.div>
                   ))}
                 </div>
               )}

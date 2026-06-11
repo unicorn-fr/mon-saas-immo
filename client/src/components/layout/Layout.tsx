@@ -1,4 +1,6 @@
 import { ReactNode } from 'react'
+import { useLocation } from 'react-router-dom'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Header } from './Header'
 import Footer from './Footer'
 import { OwnerSidebar } from './OwnerSidebar'
@@ -7,6 +9,13 @@ import { MobileBottomNav } from './MobileBottomNav'
 import { useAuth } from '../../hooks/useAuth'
 import { OnboardingModal, useOnboarding } from '../onboarding/OnboardingModal'
 import { BugReportButton } from '../BugReportButton'
+
+const pageVariants = {
+  initial: { opacity: 0, y: 6 },
+  animate: { opacity: 1, y: 0 },
+  exit:    { opacity: 0, y: -4 },
+}
+const pageTransition = { duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] as const }
 
 interface LayoutProps {
   children: ReactNode
@@ -19,6 +28,7 @@ interface LayoutProps {
 
 export const Layout = ({ children, showHeader = true, showFooter, bodyBackground }: LayoutProps) => {
   const { isAuthenticated, user } = useAuth()
+  const location = useLocation()
 
   const hasSidebar =
     isAuthenticated &&
@@ -37,7 +47,20 @@ export const Layout = ({ children, showHeader = true, showFooter, bodyBackground
     return (
       <div className="min-h-screen flex flex-col" style={{ background: bodyBackground || 'var(--bg-base)', fontFamily: 'var(--font-body)' }}>
         {showHeader && <Header />}
-        <main id="main-content" className="flex-1">{children}</main>
+        <AnimatePresence mode="wait">
+          <motion.main
+            key={location.pathname}
+            id="main-content"
+            className="flex-1"
+            variants={pageVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={pageTransition}
+          >
+            {children}
+          </motion.main>
+        </AnimatePresence>
         {displayFooter && <Footer />}
       </div>
     )
@@ -68,9 +91,20 @@ export const Layout = ({ children, showHeader = true, showFooter, bodyBackground
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {showHeader && <Header />}
         {/* mobile: pas de paddingTop (topbar en flux), desktop: espace pour la bulle flottante */}
-        <main id="main-content" className="flex-1 overflow-y-auto pb-16 md:pb-0 md:pt-16">
-          {children}
-        </main>
+        <AnimatePresence mode="wait">
+          <motion.main
+            key={location.pathname}
+            id="main-content"
+            className="flex-1 overflow-y-auto pb-16 md:pb-0 md:pt-16"
+            variants={pageVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={pageTransition}
+          >
+            {children}
+          </motion.main>
+        </AnimatePresence>
       </div>
 
       {/* Bottom nav iOS-style — mobile uniquement */}

@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { Property } from '../../types/property.types'
 import { MapPin, Bed, Square, Heart, Camera } from 'lucide-react'
 import { useFavoriteStore } from '../../store/favoriteStore'
@@ -42,21 +43,24 @@ export const PropertyCard = ({ property, variant = 'default', showStats = false 
   // ── Compact (map popup, sidebar) ──────────────────────────────────────────
   if (variant === 'compact') {
     return (
-      <div
+      <motion.div
         onClick={handleClick}
+        whileHover={{ y: -1, boxShadow: `0 4px 16px rgba(13,12,10,0.10)` }}
+        transition={{ duration: 0.16 }}
         style={{
           display: 'flex', gap: 12, padding: '10px 12px',
           borderRadius: 10, cursor: 'pointer',
           background: BAI.bgSurface, border: `1px solid ${BAI.border}`,
-          transition: 'border-color 0.15s',
           fontFamily: BAI.fontBody,
         }}
-        onMouseEnter={e => (e.currentTarget.style.borderColor = BAI.caramelBorder)}
-        onMouseLeave={e => (e.currentTarget.style.borderColor = BAI.border)}
       >
         <div style={{ width: 76, height: 60, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: BAI.bgMuted }}>
           {mainImage && (
-            <img src={mainImage} alt={property.title}
+            <motion.img
+              src={mainImage}
+              alt={property.title}
+              whileHover={{ scale: 1.06 }}
+              transition={{ duration: 0.3 }}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
             />
@@ -78,46 +82,43 @@ export const PropertyCard = ({ property, variant = 'default', showStats = false 
             <span>{property.surface} m²</span>
           </div>
         </div>
-      </div>
+      </motion.div>
     )
   }
 
   // ── Default card ──────────────────────────────────────────────────────────
   return (
-    <article
+    <motion.article
       onClick={handleClick}
+      whileHover={{
+        y: -3,
+        boxShadow: '0 8px 32px rgba(13,12,10,0.12), 0 2px 8px rgba(13,12,10,0.06)',
+        borderColor: BAI.caramelBorder,
+      }}
+      transition={{ duration: 0.18, ease: 'easeOut' }}
       style={{
         background: BAI.bgSurface,
         borderRadius: 12,
         overflow: 'hidden',
         cursor: 'pointer',
         border: `1px solid ${BAI.border}`,
-        transition: 'border-color 0.2s, box-shadow 0.2s',
+        boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 2px 8px rgba(13,12,10,0.04)',
         fontFamily: BAI.fontBody,
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.borderColor = BAI.caramelBorder
-        e.currentTarget.style.boxShadow = '0 4px 24px rgba(13,12,10,0.10)'
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.borderColor = BAI.border
-        e.currentTarget.style.boxShadow = 'none'
       }}
     >
       {/* Photo — 4:3 */}
       <div style={{ position: 'relative', paddingBottom: '66.66%', overflow: 'hidden', background: BAI.bgMuted }}>
         {mainImage ? (
-          <img
+          <motion.img
             src={mainImage}
             alt={property.title}
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
             style={{
               position: 'absolute', inset: 0,
               width: '100%', height: '100%', objectFit: 'cover',
-              transition: 'transform 0.4s ease',
             }}
             onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.04)' }}
-            onMouseLeave={e => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)' }}
           />
         ) : (
           <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -125,42 +126,50 @@ export const PropertyCard = ({ property, variant = 'default', showStats = false 
           </div>
         )}
 
-        {/* Type — top left */}
+        {/* Type badge — top left */}
         <span style={{
           position: 'absolute', top: 10, left: 10,
-          background: 'rgba(255,255,255,0.95)',
+          background: 'rgba(255,255,255,0.96)',
           borderRadius: 6, padding: '3px 9px',
           fontSize: 11, fontWeight: 600, color: BAI.ink, letterSpacing: '0.02em',
+          backdropFilter: 'blur(8px)',
         }}>
           {typeLabel}
         </span>
 
         {/* Favoris — top right */}
-        <button
+        <motion.button
           onClick={handleFav}
+          whileTap={{ scale: 0.85 }}
+          whileHover={{ scale: 1.12 }}
+          transition={{ duration: 0.12 }}
           aria-label={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'}
           style={{
             position: 'absolute', top: 8, right: 8,
-            width: 40, height: 40, borderRadius: '50%',
-            background: 'rgba(255,255,255,0.92)',
+            width: 36, height: 36, borderRadius: '50%',
+            background: 'rgba(255,255,255,0.95)',
             border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', transition: 'transform 0.15s',
+            cursor: 'pointer',
             boxShadow: '0 1px 4px rgba(0,0,0,0.12)',
           }}
-          onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)' }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)' }}
         >
-          <Heart size={15} fill={fav ? '#e11d48' : 'none'} color={fav ? '#e11d48' : BAI.inkMid} />
-        </button>
+          <Heart
+            size={14}
+            fill={fav ? '#e11d48' : 'none'}
+            color={fav ? '#e11d48' : BAI.inkMid}
+            strokeWidth={fav ? 0 : 2}
+          />
+        </motion.button>
 
         {/* Nb photos — bottom right */}
         {property.images?.length > 1 && (
           <span style={{
             position: 'absolute', bottom: 8, right: 10,
             display: 'flex', alignItems: 'center', gap: 4,
-            background: 'rgba(13,12,10,0.52)',
+            background: 'rgba(13,12,10,0.55)',
             borderRadius: 5, padding: '3px 7px',
-            fontSize: 11, color: 'rgba(255,255,255,0.9)', fontWeight: 500,
+            fontSize: 11, color: 'rgba(255,255,255,0.92)', fontWeight: 500,
+            backdropFilter: 'blur(4px)',
           }}>
             <Camera size={10} />
             {property.images.length}
@@ -183,8 +192,8 @@ export const PropertyCard = ({ property, variant = 'default', showStats = false 
       {/* Infos */}
       <div style={{ padding: '14px 16px 16px' }}>
 
-        {/* Prix — élément dominant */}
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 6 }}>
+        {/* Prix */}
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
           <span style={{
             fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
             fontSize: 26, color: BAI.caramel, lineHeight: 1,
@@ -200,7 +209,7 @@ export const PropertyCard = ({ property, variant = 'default', showStats = false 
         </div>
 
         {/* Localisation */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 5 }}>
           <MapPin size={11} color={BAI.inkFaint} style={{ flexShrink: 0 }} />
           <span style={{ fontSize: 12, color: BAI.inkMid, fontWeight: 500 }}>
             {property.city}{property.postalCode ? ` (${property.postalCode.slice(0, 2)})` : ''}
@@ -240,6 +249,6 @@ export const PropertyCard = ({ property, variant = 'default', showStats = false 
           )}
         </div>
       </div>
-    </article>
+    </motion.article>
   )
 }

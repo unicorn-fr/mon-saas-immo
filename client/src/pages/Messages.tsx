@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { ConversationList } from '../components/message/ConversationList'
 import { ChatWindow } from '../components/message/ChatWindow'
 import { CreateLeaseModal } from '../components/message/CreateLeaseModal'
@@ -46,7 +47,10 @@ export default function Messages() {
 
   return (
     <Layout>
-      <div
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.22 }}
         className="h-full overflow-hidden flex flex-col md:flex-row"
         style={{ backgroundColor: '#fafaf8', fontFamily: "'DM Sans', system-ui, sans-serif" }}
       >
@@ -264,7 +268,7 @@ export default function Messages() {
           </div>
         )}
 
-      </div>
+      </motion.div>
 
       {/* CreateLeaseModal — déclenché depuis le panneau droit */}
       {isOwner && otherUser && otherUserId && (

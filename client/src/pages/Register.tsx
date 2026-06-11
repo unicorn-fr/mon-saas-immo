@@ -1,5 +1,6 @@
 import { useState, FormEvent, useRef, KeyboardEvent, ClipboardEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { AlertCircle, CheckCircle } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useAuthStore } from '../store/authStore'
@@ -450,10 +451,15 @@ export default function Register() {
                 {([
                   { value: 'TENANT' as const, label: 'Locataire', desc: 'Je cherche un logement', emoji: '🏠' },
                   { value: 'OWNER' as const, label: 'Propriétaire', desc: 'Je loue mon bien', emoji: '🔑' },
-                ]).map(opt => (
-                  <button
+                ]).map((opt, i) => (
+                  <motion.button
                     key={opt.value}
                     type="button"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.08, duration: 0.24 }}
+                    whileTap={{ scale: 0.96 }}
+                    whileHover={{ borderColor: '#1a1a2e', boxShadow: '0 4px 16px rgba(26,26,46,0.10)' }}
                     onClick={() => {
                       setFormData(p => ({ ...p, role: opt.value }))
                       setScreen('form')
@@ -463,26 +469,13 @@ export default function Register() {
                       border: '1.5px solid #e4e1db',
                       background: '#f8f7f4',
                       fontFamily: "'DM Sans', system-ui, sans-serif",
-                      transition: 'border-color 0.15s, background 0.15s, box-shadow 0.15s',
                       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
-                    }}
-                    onMouseEnter={e => {
-                      const b = e.currentTarget as HTMLButtonElement
-                      b.style.borderColor = '#1a1a2e'
-                      b.style.background = 'rgba(26,26,46,0.04)'
-                      b.style.boxShadow = '0 4px 16px rgba(26,26,46,0.10)'
-                    }}
-                    onMouseLeave={e => {
-                      const b = e.currentTarget as HTMLButtonElement
-                      b.style.borderColor = '#e4e1db'
-                      b.style.background = '#f8f7f4'
-                      b.style.boxShadow = 'none'
                     }}
                   >
                     <span style={{ fontSize: '28px', lineHeight: 1 }}>{opt.emoji}</span>
                     <span style={{ fontWeight: 700, fontSize: '15px', color: '#0d0c0a' }}>{opt.label}</span>
                     <span style={{ fontSize: '12px', color: '#9e9b96' }}>{opt.desc}</span>
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             </div>
@@ -567,7 +560,12 @@ export default function Register() {
           ← Retour
         </button>
 
-        <div style={{ width: '100%', maxWidth: '380px', padding: '72px 32px 48px' }}>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.32, ease: 'easeOut' }}
+          style={{ width: '100%', maxWidth: '380px', padding: '72px 32px 48px' }}
+        >
 
           {/* Mobile logo */}
           <div className="flex md:hidden" style={{ justifyContent: 'center', marginBottom: '28px' }}>
@@ -729,7 +727,7 @@ export default function Register() {
               Se connecter
             </Link>
           </p>
-        </div>
+        </motion.div>
       </div>
     </div>
   )

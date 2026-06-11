@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { Check, X, Info, Zap, ArrowRight } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
@@ -164,14 +165,19 @@ export default function Pricing() {
           className="pricing-grid"
           style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 20, alignItems: 'start', maxWidth: 800, margin: '0 auto' }}
         >
-          {PLANS.map(plan => {
+          {PLANS.map((plan, i) => {
             const saving = getSaving(plan)
             const isHighlight = plan.highlight
             const isDimmed = false
 
             return (
-              <div
+              <motion.div
                 key={plan.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-20px' }}
+                transition={{ delay: i * 0.08, duration: 0.32 }}
+                whileHover={{ y: isHighlight ? -2 : -4, boxShadow: isHighlight ? '0 8px 32px rgba(196,151,106,0.26), 0 1px 4px rgba(13,12,10,0.06)' : '0 8px 24px rgba(13,12,10,0.10)' }}
                 style={{
                   background: BAI.bgSurface,
                   border: isHighlight
@@ -188,8 +194,8 @@ export default function Pricing() {
                     ? `0 4px 24px rgba(196,151,106,0.18), 0 1px 4px rgba(13,12,10,0.06)`
                     : '0 1px 3px rgba(13,12,10,0.04)',
                   transform: isHighlight ? 'scale(1.03)' : 'none',
-                  transition: 'box-shadow 0.2s, transform 0.2s',
                   zIndex: isHighlight ? 1 : 0,
+                  cursor: 'default',
                 }}
               >
                 {/* Badge populaire */}
@@ -280,7 +286,7 @@ export default function Pricing() {
                     </li>
                   ))}
                 </ul>
-              </div>
+              </motion.div>
             )
           })}
         </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
 import { Bell, CheckCheck, Trash2, Loader } from 'lucide-react'
 import { useNotifications } from '../hooks/useNotifications'
 import { useNavigate } from 'react-router-dom'
@@ -281,14 +282,18 @@ export default function Notifications() {
             </div>
           ) : (
             <div className="space-y-2">
-              {notifications.map((notification) => {
+              {notifications.map((notification, i) => {
                 const config = getNotificationConfig(notification.type)
                 const isDeleting = actionLoading === notification.id
                 const isUnread = !notification.isRead
 
                 return (
-                  <button
+                  <motion.button
                     key={notification.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.04, duration: 0.2 }}
+                    whileHover={{ y: -1 }}
                     onClick={() => handleNotificationClick(notification)}
                     disabled={isDeleting}
                     className="w-full text-left group transition-all"
@@ -381,7 +386,7 @@ export default function Notifications() {
                         </p>
                       </div>
                     </div>
-                  </button>
+                  </motion.button>
                 )
               })}
             </div>

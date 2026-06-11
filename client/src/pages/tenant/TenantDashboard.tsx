@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { useAuth } from '../../hooks/useAuth'
 import { useContractStore } from '../../store/contractStore'
 import { applicationService } from '../../services/application.service'
@@ -57,21 +58,23 @@ function StepCard({ icon, title, route, done, inProgress }: StepProps) {
   }
 
   return (
-    <Link
-      to={route}
+    <motion.a
+      href={route}
+      onClick={e => { e.preventDefault(); window.location.href = route }}
+      whileHover={{ y: -2, boxShadow: '0 4px 20px rgba(13,12,10,0.12)' }}
+      whileTap={{ scale: 0.97 }}
+      transition={{ duration: 0.18 }}
       style={{
         display: 'flex',
         flexDirection: 'column',
         gap: 12,
-        flex: '1 1 140px',
-        minWidth: 120,
+        width: '100%',
         background: BAI.bgSurface,
         border: `1px solid ${done ? BAI.tenantBorder : BAI.border}`,
         borderRadius: BAI.radiusLg,
         padding: '16px 14px',
         boxShadow: BAI.shadowMd,
         textDecoration: 'none',
-        transition: BAI.transition,
         cursor: 'pointer',
       }}
     >
@@ -103,7 +106,7 @@ function StepCard({ icon, title, route, done, inProgress }: StepProps) {
       <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'flex-end' }}>
         <ChevronRight size={14} color={BAI.inkFaint} />
       </div>
-    </Link>
+    </motion.a>
   )
 }
 
@@ -198,7 +201,12 @@ export default function TenantDashboard() {
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: 'clamp(16px,4vw,40px)' }}>
 
         {/* ── Header ─────────────────────────────────────────────────────── */}
-        <div style={{ marginBottom: 32 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.24 }}
+          style={{ marginBottom: 32 }}
+        >
           <p style={{
             fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700,
             letterSpacing: '0.12em', textTransform: 'uppercase',
@@ -213,7 +221,7 @@ export default function TenantDashboard() {
           }}>
             Bonjour{user?.firstName ? ` ${user.firstName}` : ''}
           </h1>
-        </div>
+        </motion.div>
 
         {/* ── Stats rapides ──────────────────────────────────────────────── */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 32 }}>
@@ -221,9 +229,12 @@ export default function TenantDashboard() {
             { label: `${pendingApps.length} candidature${pendingApps.length !== 1 ? 's' : ''} en attente`, bg: '#fff3e0', color: '#e65100' },
             { label: `${upcomingVisits.length} visite${upcomingVisits.length !== 1 ? 's' : ''} à venir`, bg: BAI.ownerLight, color: BAI.owner },
             { label: `Dossier ${pct}%`, bg: pct >= 80 ? BAI.tenantLight : BAI.caramelLight, color: pct >= 80 ? BAI.tenant : BAI.caramel },
-          ].map((chip) => (
-            <span
+          ].map((chip, i) => (
+            <motion.span
               key={chip.label}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.08 + i * 0.06, duration: 0.22 }}
               style={{
                 display: 'inline-block', padding: '5px 12px',
                 borderRadius: 20, background: chip.bg, color: chip.color,
@@ -231,7 +242,7 @@ export default function TenantDashboard() {
               }}
             >
               {chip.label}
-            </span>
+            </motion.span>
           ))}
         </div>
 
@@ -263,11 +274,16 @@ export default function TenantDashboard() {
         )}
 
         {/* ── Pipeline progression ────────────────────────────────────────── */}
-        <div style={{
-          background: BAI.bgSurface, border: `1px solid ${BAI.border}`,
-          borderRadius: BAI.radiusLg, padding: 'clamp(16px,3vw,24px)',
-          boxShadow: BAI.shadowMd, marginBottom: 32,
-        }}>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.18, duration: 0.28 }}
+          style={{
+            background: BAI.bgSurface, border: `1px solid ${BAI.border}`,
+            borderRadius: BAI.radiusLg, padding: 'clamp(16px,3vw,24px)',
+            boxShadow: BAI.shadowMd, marginBottom: 32,
+          }}
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <span style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.ink }}>
               Progression du parcours
@@ -279,27 +295,44 @@ export default function TenantDashboard() {
 
           {/* Progress bar */}
           <div style={{ height: 6, borderRadius: 3, background: BAI.bgMuted, marginBottom: 20 }}>
-            <div style={{
-              height: '100%', borderRadius: 3,
-              background: progressPct === 100 ? BAI.tenant : BAI.caramel,
-              width: `${progressPct}%`, transition: 'width 0.4s ease',
-            }} />
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPct}%` }}
+              transition={{ duration: 0.7, ease: 'easeOut', delay: 0.36 }}
+              style={{
+                height: '100%', borderRadius: 3,
+                background: progressPct === 100 ? BAI.tenant : BAI.caramel,
+              }}
+            />
           </div>
 
           {/* Step cards */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-            {steps.map((step) => (
-              <StepCard key={step.title} {...step} />
+            {steps.map((step, i) => (
+              <motion.div
+                key={step.title}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.42 + i * 0.07, duration: 0.22 }}
+                style={{ flex: '1 1 140px', minWidth: 120 }}
+              >
+                <StepCard {...step} />
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* ── Recherche rapide ────────────────────────────────────────────── */}
-        <div
+        <motion.div
           role="button"
           tabIndex={0}
           onClick={() => navigate('/search')}
-          onKeyDown={(e) => e.key === 'Enter' && navigate('/search')}
+          onKeyDown={(e: React.KeyboardEvent) => e.key === 'Enter' && navigate('/search')}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.28, duration: 0.22 }}
+          whileHover={{ scale: 1.01, boxShadow: '0 4px 16px rgba(13,12,10,0.08)' }}
+          whileTap={{ scale: 0.99 }}
           style={{
             display: 'flex', alignItems: 'center', gap: 12,
             background: BAI.bgInput, border: `1px solid ${BAI.border}`,
@@ -311,7 +344,7 @@ export default function TenantDashboard() {
           <span style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint }}>
             Rechercher un logement…
           </span>
-        </div>
+        </motion.div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
 

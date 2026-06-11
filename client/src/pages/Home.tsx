@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, Navigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { BAI } from '../constants/bailio-tokens'
 import { useAuth } from '../hooks/useAuth'
 import { useProperties } from '../hooks/useProperties'
@@ -298,6 +299,9 @@ export default function Home() {
           .results-header { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
           .results-header a { align-self: flex-start; }
         }
+        /* ── Shimmer skeleton ── */
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+        .skel { background: linear-gradient(90deg, ${T.bgMuted} 0%, #ebe8e2 40%, ${T.bgMuted} 100%); background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite; border-radius: 8px; }
       `}</style>
 
       <Header />
@@ -317,24 +321,48 @@ export default function Home() {
         <div aria-hidden style={{ position: 'absolute', top: -100, right: -60, width: 600, height: 500, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.25) 0%, transparent 65%)', filter: 'blur(40px)', pointerEvents: 'none' }} />
 
         <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 clamp(16px,5vw,40px)', position: 'relative', zIndex: 1 }}>
-          {/* Overline */}
-          <p style={{ fontFamily: T.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: T.caramel, margin: '0 0 12px' }}>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{ fontFamily: T.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: T.caramel, margin: '0 0 12px' }}
+          >
             Nouvelle façon de louer
-          </p>
+          </motion.p>
 
-          <h1 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(32px,5vw,56px)', color: '#fff', margin: '0 0 10px', lineHeight: 1.1, letterSpacing: '-0.02em', paddingBottom: 2 }}>
+          <motion.h1
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.06 }}
+            style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(32px,5vw,56px)', color: '#fff', margin: '0 0 10px', lineHeight: 1.1, letterSpacing: '-0.02em', paddingBottom: 2 }}
+          >
             Trouvez votre prochain logement.
-          </h1>
+          </motion.h1>
 
-          <p style={{ fontFamily: T.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.55)', margin: '0 0 6px' }}>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.35, delay: 0.12 }}
+            style={{ fontFamily: T.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.55)', margin: '0 0 6px' }}
+          >
             Annonces entre particuliers, zéro frais d'agence
-          </p>
-          <p style={{ fontFamily: T.fontBody, fontSize: 12, color: 'rgba(255,255,255,0.38)', margin: '0 0 28px', letterSpacing: '0.01em' }}>
+          </motion.p>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.16 }}
+            style={{ fontFamily: T.fontBody, fontSize: 12, color: 'rgba(255,255,255,0.38)', margin: '0 0 28px', letterSpacing: '0.01em' }}
+          >
             0 € de frais d'agence &nbsp;·&nbsp; Bail signé en ligne &nbsp;·&nbsp; Entre particuliers
-          </p>
+          </motion.p>
 
-          {/* Search bar — ligne ville + bouton, filtres en dessous */}
-          <form onSubmit={handleSearch}>
+          {/* Search bar */}
+          <motion.form
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.20 }}
+            onSubmit={handleSearch}
+          >
             {/* Ligne principale : icône + input + bouton */}
             <div className="hero-search-wrap">
               <Search size={16} color="rgba(255,255,255,0.45)" style={{ flexShrink: 0 }} />
@@ -373,25 +401,31 @@ export default function Home() {
                 ))}
               </select>
             </div>
-          </form>
+          </motion.form>
 
           {/* Quick links */}
-          <div className="hero-quick-links">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.32 }}
+            className="hero-quick-links"
+            style={{ display: 'flex', gap: 16, marginTop: 20, flexWrap: 'wrap' }}
+          >
             <Link to="/search"
-              style={{ fontFamily: T.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.50)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, minHeight: 44 }}
+              style={{ fontFamily: T.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.50)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, minHeight: 44, transition: 'color 0.15s' }}
               onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.85)')}
               onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.50)')}
             >
               <SlidersHorizontal size={12} /> Carte &amp; filtres avancés
             </Link>
             <Link to="/register?role=OWNER"
-              style={{ fontFamily: T.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.50)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, minHeight: 44 }}
+              style={{ fontFamily: T.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.50)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, minHeight: 44, transition: 'color 0.15s' }}
               onMouseEnter={e => (e.currentTarget.style.color = T.caramel)}
               onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.50)')}
             >
               <ArrowRight size={12} /> Publier une annonce
             </Link>
-          </div>
+          </motion.div>
         </div>
 
         {/* Wave transition */}
@@ -438,18 +472,26 @@ export default function Home() {
               { name: 'Bordeaux', slug: 'bordeaux' },
               { name: 'Toulouse', slug: 'toulouse' },
               { name: 'Nantes', slug: 'nantes' },
-            ].map(ville => (
-              <Link key={ville.slug} to={`/location/${ville.slug}`} className="ville-chip" style={{
-                display: 'inline-flex', flexDirection: 'column', alignItems: 'center',
-                padding: '12px 20px', background: BAI.bgMuted, borderRadius: 10,
-                border: `1px solid ${BAI.border}`, textDecoration: 'none', transition: 'border-color 0.15s',
-              }}
-                onMouseEnter={e => (e.currentTarget.style.borderColor = BAI.caramel)}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = BAI.border)}
+            ].map((ville, i) => (
+              <motion.div
+                key={ville.slug}
+                initial={{ opacity: 0, y: 8 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05, duration: 0.22 }}
               >
-                <span style={{ fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 14, color: BAI.ink }}>{ville.name}</span>
-                <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint }}>Voir les annonces</span>
-              </Link>
+                <Link to={`/location/${ville.slug}`} className="ville-chip" style={{
+                  display: 'inline-flex', flexDirection: 'column', alignItems: 'center',
+                  padding: '12px 20px', background: BAI.bgMuted, borderRadius: 10,
+                  border: `1px solid ${BAI.border}`, textDecoration: 'none', transition: 'border-color 0.15s',
+                }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = BAI.caramel)}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor = BAI.border)}
+                >
+                  <span style={{ fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 14, color: BAI.ink }}>{ville.name}</span>
+                  <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint }}>Voir les annonces</span>
+                </Link>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -490,11 +532,13 @@ export default function Home() {
         {(authLoading || (isLoading && allProperties.length === 0)) ? (
           <div className="prop-grid">
             {[...Array(9)].map((_, i) => (
-              <div key={i} style={{ background: T.bgSurface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: 'hidden' }}>
-                <div style={{ height: 220, background: T.bgMuted }} />
-                <div style={{ padding: 16 }}>
-                  <div style={{ height: 16, background: T.bgMuted, borderRadius: 4, marginBottom: 10, width: '65%' }} />
-                  <div style={{ height: 13, background: T.bgMuted, borderRadius: 4, width: '45%' }} />
+              <div key={i} style={{ background: T.bgSurface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: 'hidden' }}>
+                <div className="skel" style={{ height: 200, borderRadius: 0 }} />
+                <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div className="skel" style={{ height: 22, width: '55%' }} />
+                  <div className="skel" style={{ height: 13, width: '40%' }} />
+                  <div className="skel" style={{ height: 15, width: '80%' }} />
+                  <div className="skel" style={{ height: 13, width: '60%', marginTop: 4 }} />
                 </div>
               </div>
             ))}
@@ -514,22 +558,30 @@ export default function Home() {
         ) : (
           <>
             <div className="prop-grid">
-              {allProperties.map(property => (
-                <PropertyCard key={property.id} property={property} />
+              {allProperties.map((property, i) => (
+                <motion.div
+                  key={property.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-40px' }}
+                  transition={{ delay: (i % 3) * 0.06, duration: 0.24 }}
+                >
+                  <PropertyCard property={property} />
+                </motion.div>
               ))}
             </div>
 
             {storeHasMore && (
               <div style={{ textAlign: 'center', marginTop: 48 }}>
-                <button
+                <motion.button
                   onClick={handleLoadMore}
                   disabled={loadingMore}
-                  style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 10, padding: '12px 32px', fontFamily: T.fontBody, fontSize: 14, fontWeight: 600, color: T.ink, cursor: loadingMore ? 'default' : 'pointer', opacity: loadingMore ? 0.6 : 1, transition: 'all .15s' }}
-                  onMouseEnter={e => { if (!loadingMore) e.currentTarget.style.borderColor = T.ink }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = T.border }}
+                  whileTap={{ scale: 0.96 }}
+                  whileHover={{ borderColor: T.ink }}
+                  style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 10, padding: '12px 32px', fontFamily: T.fontBody, fontSize: 14, fontWeight: 600, color: T.ink, cursor: loadingMore ? 'default' : 'pointer', opacity: loadingMore ? 0.6 : 1, transition: 'border-color .15s' }}
                 >
                   {loadingMore ? 'Chargement...' : 'Voir plus de biens'}
-                </button>
+                </motion.button>
               </div>
             )}
           </>

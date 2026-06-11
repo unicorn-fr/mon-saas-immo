@@ -1,12 +1,8 @@
-/**
- * TenantSidebar — Bailio Design System
- * Thème night · accent tenant vert #1b5e3b · DM Sans
- * Responsive : desktop 220px · tablet compact 64px · mobile drawer
- */
 import { useEffect, useState } from 'react'
-import { NavLink, Link, useLocation } from 'react-router-dom'
+import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Search, Calendar, Bell,
+  LayoutDashboard, Search, Calendar, Bell, Star,
   FolderOpen, SendHorizonal, FileText, MessageSquare, X, LogOut, Settings,
 } from 'lucide-react'
 import { useSidebarStore } from '../../store/sidebarStore'
@@ -14,18 +10,23 @@ import { useMessages } from '../../hooks/useMessages'
 import { useAuth } from '../../hooks/useAuth'
 import { applicationService } from '../../services/application.service'
 import { dossierService } from '../../services/dossier.service'
-import { useNavigate } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { useWindowWidth } from '../../hooks/useWindowWidth'
 
 const REQUIRED_CATEGORIES = ['IDENTITE', 'EMPLOI', 'REVENUS', 'DOMICILE'] as const
 
+type SectionItem = {
+  to: string
+  icon: React.ElementType
+  label: string
+  badge?: number
+  end?: boolean
+  id?: string
+}
+
 function NavItem({
   to, icon: Icon, label, badge, end, onClick, compact, id,
-}: {
-  to: string; icon: React.ElementType; label: string
-  badge?: number; end?: boolean; onClick?: () => void; compact?: boolean; id?: string
-}) {
+}: SectionItem & { onClick?: () => void; compact?: boolean }) {
   const location = useLocation()
   const active = end ? location.pathname === to : location.pathname.startsWith(to)
 
@@ -37,52 +38,69 @@ function NavItem({
       onClick={onClick}
       title={compact ? label : undefined}
       aria-current={active ? 'page' : undefined}
-      style={active ? {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: compact ? 'center' : 'flex-start',
-        gap: compact ? 0 : 10,
-        padding: compact ? '12px 0' : '7px 10px',
-        margin: compact ? '2px 6px' : '1px 12px',
-        borderRadius: BAI.radius,
-        color: '#ffffff',
-        fontFamily: BAI.fontBody, fontSize: '13px', fontWeight: 600,
-        background: 'rgba(196,151,106,0.18)',
-        borderLeft: compact ? 'none' : `3px solid ${BAI.caramel}`,
-        cursor: 'pointer', transition: BAI.transition,
-        textDecoration: 'none',
-        position: 'relative',
-      } : {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: compact ? 'center' : 'flex-start',
-        gap: compact ? 0 : 10,
-        padding: compact ? '12px 0' : '7px 10px',
-        margin: compact ? '2px 6px' : '1px 12px',
-        borderRadius: BAI.radius,
-        color: 'rgba(255,255,255,0.70)',
-        fontFamily: BAI.fontBody, fontSize: '13px', fontWeight: 400,
-        cursor: 'pointer', transition: BAI.transition,
-        textDecoration: 'none',
-        borderLeft: compact ? 'none' : '3px solid transparent',
-      }}
-      onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = BAI.nightHover }}
-      onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = '' }}>
-      <Icon className={compact ? 'w-5 h-5' : 'w-4 h-4 flex-shrink-0'} />
-      {!compact && <span className="flex-1 truncate">{label}</span>}
-      {!compact && badge !== undefined && badge > 0 && (
-        <span className="text-[10px] font-semibold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1"
-          style={{ background: BAI.caramel, color: '#ffffff' }}>
-          {badge > 99 ? '99+' : badge}
-        </span>
+      style={{ position: 'relative', display: 'block', textDecoration: 'none' }}
+    >
+      {active && (
+        <motion.div
+          layoutId="tenantActiveNav"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            margin: compact ? '2px 6px' : '1px 12px',
+            borderRadius: BAI.radius,
+            background: 'rgba(196,151,106,0.14)',
+          }}
+          transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+        />
       )}
-      {compact && badge !== undefined && badge > 0 && (
-        <span style={{
-          position: 'absolute', top: 6, right: 6,
-          width: 7, height: 7, borderRadius: '50%',
-          background: BAI.caramel,
-        }} />
-      )}
+      <motion.div
+        whileHover={!active ? { x: compact ? 0 : 2, opacity: 1 } : {}}
+        transition={{ duration: 0.12 }}
+        style={{
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: compact ? 'center' : 'flex-start',
+          gap: compact ? 0 : 10,
+          padding: compact ? '11px 0' : '7px 10px',
+          margin: compact ? '2px 6px' : '1px 12px',
+          borderRadius: BAI.radius,
+          borderLeft: active && !compact ? `2px solid ${BAI.caramel}` : '2px solid transparent',
+          color: active ? '#fff' : 'rgba(255,255,255,0.55)',
+          fontFamily: BAI.fontBody,
+          fontSize: 13.5,
+          fontWeight: active ? 600 : 400,
+          transition: 'color 0.15s',
+          cursor: 'pointer',
+        }}
+      >
+        <Icon size={compact ? 18 : 16} style={{ flexShrink: 0, transition: 'opacity 0.15s', opacity: active ? 1 : 0.65 }} />
+        {!compact && <span style={{ flex: 1 }}>{label}</span>}
+
+        {!compact && badge !== undefined && badge > 0 && (
+          <motion.span
+            initial={{ scale: 0.7, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            style={{
+              fontSize: 10, fontWeight: 700,
+              background: BAI.caramel, color: '#fff',
+              borderRadius: 20, minWidth: 18, height: 18,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: '0 4px',
+            }}
+          >
+            {badge > 99 ? '99+' : badge}
+          </motion.span>
+        )}
+
+        {compact && badge !== undefined && badge > 0 && (
+          <span style={{
+            position: 'absolute', top: 6, right: 6,
+            width: 7, height: 7, borderRadius: '50%',
+            background: BAI.caramel,
+          }} />
+        )}
+      </motion.div>
     </NavLink>
   )
 }
@@ -109,28 +127,54 @@ export function TenantSidebar() {
         setDossierPercent(Math.round((covered / REQUIRED_CATEGORIES.length) * 100))
       })
       .catch(() => {})
-    // Poll unread badge every 30s so it stays fresh on any page
     const timer = setInterval(() => fetchUnreadCount(), 30_000)
     return () => clearInterval(timer)
   }, [fetchUnreadCount])
 
-  const initials = `${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}`.toUpperCase()
+  const initials = `${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}`.toUpperCase() || '?'
   const closeMobile = () => setMobileOpen(false)
   const handleLogout = () => { logout(); navigate('/') }
 
-  const dossierColor =
+  const dossierBarColor =
     dossierPercent >= 80 ? BAI.tenantBorder
     : dossierPercent >= 50 ? BAI.caramel
     : '#ef4444'
 
-  const Content = ({ compact = false }: { compact?: boolean }) => (
-    <div className="flex flex-col h-full" style={{ fontFamily: BAI.fontBody }}>
+  const SECTIONS: { label: string | null; items: SectionItem[] }[] = [
+    {
+      label: null,
+      items: [
+        { to: '/dashboard/tenant', icon: LayoutDashboard, label: 'Tableau de bord', end: true },
+        { to: '/search', icon: Search, label: 'Rechercher', id: 'tour-tenant-search' },
+        { to: '/favorites', icon: Star, label: 'Favoris' },
+        { to: '/mes-alertes', icon: Bell, label: 'Mes alertes' },
+      ],
+    },
+    {
+      label: 'Mon dossier',
+      items: [
+        { to: '/my-applications', icon: SendHorizonal, label: 'Candidatures', badge: pendingAppsCount, id: 'tour-tenant-applications' },
+        { to: '/my-bookings', icon: Calendar, label: 'Mes visites' },
+        { to: '/dossier', icon: FolderOpen, label: 'Mon dossier', end: true, id: 'tour-tenant-dossier' },
+      ],
+    },
+    {
+      label: 'Contrat',
+      items: [
+        { to: '/messages', icon: MessageSquare, label: 'Messages', badge: unreadCount, id: 'tour-tenant-messages' },
+        { to: '/contracts', icon: FileText, label: 'Mon bail', id: 'tour-tenant-contracts' },
+      ],
+    },
+  ]
 
-      {/* Logo + bouton fermer (mobile uniquement) */}
+  const Content = ({ compact = false }: { compact?: boolean }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', fontFamily: BAI.fontBody }}>
+
+      {/* Logo */}
       <div style={{
-        padding: compact ? '20px 0 16px' : '20px 20px 16px',
+        padding: compact ? '20px 0 16px' : '20px 20px 14px',
         borderBottom: `1px solid ${BAI.nightBorder}`,
-        marginBottom: 8,
+        marginBottom: 6,
         flexShrink: 0,
         display: 'flex',
         alignItems: 'center',
@@ -140,145 +184,196 @@ export function TenantSidebar() {
           <Link to="/" style={{
             fontFamily: BAI.fontDisplay, fontStyle: 'italic',
             fontWeight: 700, fontSize: 18, color: BAI.caramel,
-            textDecoration: 'none', letterSpacing: '-0.01em', lineHeight: 1,
-          }}>
-            b
-          </Link>
+            textDecoration: 'none',
+          }}>b</Link>
         ) : (
           <>
-            <Link to="/" onClick={closeMobile} className="hover:opacity-75 transition-opacity block" style={{ textDecoration: 'none' }}>
+            <Link to="/" onClick={closeMobile} style={{ textDecoration: 'none' }}>
               <span style={{
                 fontFamily: BAI.fontDisplay, fontStyle: 'italic',
-                fontWeight: 700, fontSize: 24, color: BAI.caramel,
-                letterSpacing: '-0.02em', lineHeight: 1, display: 'block',
+                fontWeight: 700, fontSize: 21, color: '#fff',
+                display: 'block', lineHeight: 1,
               }}>
-                bailio
+                bailio<span style={{ color: BAI.caramel }}>.</span>
               </span>
-              <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: BAI.fontBody, margin: '4px 0 0' }}>
+              <p style={{
+                fontSize: 9.5, color: 'rgba(255,255,255,0.30)',
+                fontFamily: BAI.fontBody, margin: '4px 0 0',
+                letterSpacing: '0.08em', textTransform: 'uppercase',
+              }}>
                 Espace locataire
               </p>
             </Link>
-            {/* Bouton ✕ visible uniquement dans le drawer mobile */}
             <button
               onClick={closeMobile}
               className="md:hidden"
               aria-label="Fermer le menu"
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-                background: 'rgba(255,255,255,0.07)',
-                border: '1px solid rgba(255,255,255,0.14)',
+                width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.10)',
                 cursor: 'pointer',
-              }}>
-              <X size={16} color="rgba(255,255,255,0.70)" />
+              }}
+            >
+              <X size={14} color="rgba(255,255,255,0.65)" />
             </button>
           </>
         )}
       </div>
 
       {/* Navigation */}
-      <nav role="navigation" aria-label="Navigation principale" className="flex-1 overflow-y-auto py-1.5 scrollbar-thin">
-        <NavItem to="/search" icon={Search} label="Rechercher" onClick={closeMobile} compact={compact} id="tour-tenant-search" />
-        <NavItem to="/mes-alertes" icon={Bell} label="Mes alertes" onClick={closeMobile} compact={compact} />
-        <NavItem to="/my-applications" icon={SendHorizonal} label="Candidatures" badge={pendingAppsCount} onClick={closeMobile} compact={compact} id="tour-tenant-applications" />
-        <NavItem to="/my-bookings" icon={Calendar} label="Mes visites" onClick={closeMobile} compact={compact} />
-        <NavItem to="/messages" icon={MessageSquare} label="Messages" badge={unreadCount} onClick={closeMobile} compact={compact} id="tour-tenant-messages" />
-        <NavItem to="/contracts" icon={FileText} label="Mon bail" onClick={closeMobile} compact={compact} id="tour-tenant-contracts" />
-        <NavItem to="/dossier" icon={FolderOpen} label="Mon dossier" end onClick={closeMobile} compact={compact} id="tour-tenant-dossier" />
-        <NavItem to="/tenant/settings" icon={Settings} label="Paramètres" onClick={closeMobile} compact={compact} id="tour-tenant-settings" />
+      <nav
+        role="navigation"
+        aria-label="Navigation principale"
+        style={{ flex: 1, overflowY: 'auto', paddingBottom: 4 }}
+      >
+        {SECTIONS.map((section, si) => (
+          <div key={si} style={{ marginBottom: 2 }}>
+            {section.label && !compact && (
+              <p style={{
+                fontSize: 9.5, fontWeight: 700,
+                letterSpacing: '0.12em', textTransform: 'uppercase',
+                color: 'rgba(255,255,255,0.22)',
+                padding: '10px 22px 3px',
+                margin: 0,
+              }}>
+                {section.label}
+              </p>
+            )}
+            {section.label && compact && (
+              <div style={{ height: 1, margin: '6px 10px', background: 'rgba(255,255,255,0.07)' }} />
+            )}
+            {section.items.map((item) => (
+              <NavItem
+                key={item.to}
+                {...item}
+                onClick={closeMobile}
+                compact={compact}
+              />
+            ))}
+          </div>
+        ))}
+
+        <div style={{ height: 1, margin: compact ? '6px 10px' : '6px 18px', background: 'rgba(255,255,255,0.07)' }} />
+
+        <NavItem
+          to="/tenant/settings"
+          icon={Settings}
+          label="Paramètres"
+          onClick={closeMobile}
+          compact={compact}
+          id="tour-tenant-settings"
+        />
       </nav>
 
-      {/* Dossier progress — masqué en mode compact, cliquable */}
+      {/* Dossier progress bar */}
       {!compact && dossierPercent < 100 && (
         <Link
           to="/dossier"
           onClick={closeMobile}
-          className="mx-4 mb-3 px-3 py-2.5 rounded-lg block"
-          style={{ background: BAI.nightHover, border: `1px solid ${BAI.nightBorder}`, textDecoration: 'none', transition: 'background 0.15s' }}
+          style={{
+            display: 'block', margin: '0 10px 8px',
+            padding: '10px 12px', borderRadius: 10,
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            textDecoration: 'none',
+            transition: 'background 0.15s',
+          }}
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)' }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.nightHover }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)' }}
         >
-          <div className="flex items-center justify-between mb-1.5">
-            <span style={{ color: 'rgba(255,255,255,0.40)', fontSize: '10px', fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase' as const }}>Dossier complété</span>
-            <span style={{ color: dossierColor, fontSize: '11px', fontWeight: 600, fontFamily: BAI.fontDisplay }}>{dossierPercent}%</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <span style={{ color: 'rgba(255,255,255,0.38)', fontSize: 9.5, fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase' }}>
+              Dossier complété
+            </span>
+            <span style={{ color: dossierBarColor, fontSize: 11, fontWeight: 700 }}>{dossierPercent}%</span>
           </div>
-          <div className="w-full h-[3px] rounded-full overflow-hidden" style={{ background: BAI.nightBorder }}>
-            <div className="h-full rounded-full transition-all duration-700"
-              style={{ width: `${dossierPercent}%`, backgroundColor: dossierColor }} />
+          <div style={{ width: '100%', height: 3, borderRadius: 4, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${dossierPercent}%` }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+              style={{ height: '100%', borderRadius: 4, background: dossierBarColor }}
+            />
           </div>
         </Link>
       )}
 
-      <div style={{ height: 1, background: BAI.nightBorder, margin: compact ? '0 8px' : '0 16px' }} />
-
-      {/* Profil */}
-      <div style={{
-        padding: compact ? '12px 0' : '16px',
-        flexShrink: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: compact ? 'center' : 'stretch',
-        gap: compact ? 8 : 0,
-      }}>
+      {/* User card */}
+      <div style={{ borderTop: `1px solid ${BAI.nightBorder}`, padding: compact ? '10px 6px' : '10px', flexShrink: 0 }}>
         {compact ? (
-          <>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
             <div
               title={`${user?.firstName} ${user?.lastName} — Locataire`}
               style={{
-                width: 32, height: 32, borderRadius: '50%',
-                background: BAI.caramelLight, color: BAI.caramel,
+                width: 32, height: 32, borderRadius: 8,
+                background: BAI.tenantLight, color: BAI.tenant,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 11, fontWeight: 700, cursor: 'default',
-              }}>
+              }}
+            >
               {initials}
             </div>
-            <button
+            <motion.button
+              whileTap={{ scale: 0.9 }}
               onClick={handleLogout}
               title="Déconnexion"
               style={{
-                minWidth: BAI.touchMin, minHeight: BAI.touchMin,
+                width: BAI.touchMin, height: BAI.touchMin,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 background: 'none', border: 'none', cursor: 'pointer',
-                color: 'rgba(255,255,255,0.50)', borderRadius: BAI.radius,
-                transition: BAI.transition,
+                color: 'rgba(255,255,255,0.40)', borderRadius: BAI.radius,
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#fef2f2'; (e.currentTarget as HTMLElement).style.color = '#9b1c1c' }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.50)' }}>
-              <LogOut className="w-3.5 h-3.5" />
-            </button>
-          </>
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(155,28,28,0.18)'; (e.currentTarget as HTMLElement).style.color = '#ef4444' }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.40)' }}
+            >
+              <LogOut size={14} />
+            </motion.button>
+          </div>
         ) : (
-          <>
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold flex-shrink-0"
-                style={{ background: BAI.tenantLight, color: BAI.tenant }}>
-                {initials}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[12px] font-semibold truncate leading-tight" style={{ color: 'rgba(255,255,255,0.90)' }}>
-                  {user?.firstName} {user?.lastName}
-                </p>
-                <p className="text-[10px] leading-tight" style={{ color: 'rgba(255,255,255,0.40)' }}>Locataire</p>
-              </div>
-              <button onClick={closeMobile} className="md:hidden p-1 rounded-md" style={{ color: 'rgba(255,255,255,0.40)' }} aria-label="Fermer">
-                <X className="w-4 h-4" />
-              </button>
+          <div style={{
+            padding: '8px 10px', borderRadius: 10,
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.07)',
+            display: 'flex', alignItems: 'center', gap: 10,
+          }}>
+            <div style={{
+              width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+              background: BAI.tenantLight, color: BAI.tenant,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 11, fontWeight: 700, overflow: 'hidden',
+            }}>
+              {user?.avatar
+                ? <img src={user.avatar} alt="" style={{ width: 30, height: 30, objectFit: 'cover', borderRadius: 7 }} />
+                : initials
+              }
             </div>
-            <button onClick={handleLogout}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.85)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {user?.firstName} {user?.lastName}
+              </p>
+              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.30)', margin: '1px 0 0', letterSpacing: '0.04em' }}>
+                Locataire
+              </p>
+            </div>
+            <motion.button
+              whileTap={{ scale: 0.88 }}
+              onClick={handleLogout}
+              title="Déconnexion"
               style={{
-                color: 'rgba(255,255,255,0.50)',
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '8px 12px', borderRadius: BAI.radius,
-                fontSize: 13, transition: BAI.transition,
-                background: 'none', border: 'none', cursor: 'pointer', width: '100%',
-                minHeight: BAI.touchMin,
+                width: 28, height: 28, flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: 'rgba(255,255,255,0.30)', borderRadius: 7,
+                transition: 'background 0.15s, color 0.15s',
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#fef2f2'; (e.currentTarget as HTMLElement).style.color = '#9b1c1c' }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.50)' }}>
-              <LogOut className="w-3.5 h-3.5" />
-              <span>Déconnexion</span>
-            </button>
-          </>
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(155,28,28,0.18)'; (e.currentTarget as HTMLElement).style.color = '#ef4444' }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.30)' }}
+            >
+              <LogOut size={13} />
+            </motion.button>
+          </div>
         )}
       </div>
     </div>
@@ -291,30 +386,42 @@ export function TenantSidebar() {
 
   return (
     <>
-      {/* Desktop + Tablet — visible md+ */}
+      {/* Desktop + Tablet */}
       <aside
         className="hidden md:flex flex-col flex-shrink-0 overflow-hidden"
-        style={{ ...sidebarStyle, width: isTabletCompact ? 64 : 220, transition: 'width 0.25s ease' }}>
+        style={{ ...sidebarStyle, width: isTabletCompact ? 64 : 220, transition: 'width 0.25s ease' }}
+      >
         <Content compact={isTabletCompact} />
       </aside>
 
-      {/* Mobile — drawer */}
-      {mobileOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-40 md:hidden"
-            onClick={closeMobile}
-            style={{
-              background: 'rgba(0,0,0,0.5)',
-            }}
-          />
-          <aside
-            className="fixed left-0 top-0 bottom-0 z-50 flex flex-col md:hidden"
-            style={{ ...sidebarStyle, width: 'min(256px, 85vw)', boxShadow: '4px 0 24px rgba(13,12,10,0.12)', overflowX: 'hidden' }}>
-            <Content compact={false} />
-          </aside>
-        </>
-      )}
+      {/* Mobile drawer */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            <motion.div
+              key="overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-40 md:hidden"
+              onClick={closeMobile}
+              style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)' }}
+            />
+            <motion.aside
+              key="drawer"
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', stiffness: 380, damping: 38 }}
+              className="fixed left-0 top-0 bottom-0 z-50 flex flex-col md:hidden"
+              style={{ ...sidebarStyle, width: 'min(256px, 85vw)', boxShadow: '6px 0 32px rgba(0,0,0,0.30)', overflowX: 'hidden' }}
+            >
+              <Content compact={false} />
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
     </>
   )
 }

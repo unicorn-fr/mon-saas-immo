@@ -1,5 +1,6 @@
 import { useState, FormEvent } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { AlertCircle, ArrowRight, Mail } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { apiClient as api } from '../services/api.service'
@@ -168,7 +169,12 @@ export default function Login() {
             >← Accueil</Link>
           </div>
 
-          <div style={{ width: '100%', maxWidth: '380px', padding: '64px 32px 48px' }}>
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.32, ease: 'easeOut' }}
+            style={{ width: '100%', maxWidth: '380px', padding: '64px 32px 48px' }}
+          >
 
             {/* Mobile logo */}
             <div className="flex md:hidden" style={{ justifyContent: 'center', marginBottom: '28px' }}>
@@ -226,7 +232,7 @@ export default function Login() {
                 Créer un compte →
               </Link>
             </p>
-          </div>
+          </motion.div>
         </div>
       </div>
     )
@@ -293,7 +299,12 @@ export default function Login() {
           ← Retour
         </button>
 
-        <div style={{ width: '100%', maxWidth: '380px', padding: '72px 32px 48px' }}>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.32, ease: 'easeOut' }}
+          style={{ width: '100%', maxWidth: '380px', padding: '72px 32px 48px' }}
+        >
 
           {/* Mobile logo */}
           <div className="flex md:hidden" style={{ justifyContent: 'center', marginBottom: '28px' }}>
@@ -426,7 +437,7 @@ export default function Login() {
               Créer un compte
             </Link>
           </p>
-        </div>
+        </motion.div>
       </div>
     </div>
   )

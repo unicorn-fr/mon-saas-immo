@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { useProperties } from '../../hooks/useProperties'
 import { useContractStore } from '../../store/contractStore'
 import { useAuth } from '../../hooks/useAuth'
@@ -121,25 +122,22 @@ export default function MyProperties() {
     { key: 'hors-marche', label: 'Hors marché' },
   ]
 
-  const PropertyCard = ({ property }: { property: Property }) => {
+  const PropertyCard = ({ property, delay = 0 }: { property: Property; delay?: number }) => {
     const cfg = statusConfig[property.status] || statusConfig['DRAFT']
     const mainImage = property.images[0] || '/placeholder-property.jpg'
-    const [hovered, setHovered] = useState(false)
 
     return (
-      <div
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
+      <motion.article
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.28, delay }}
+        whileHover={{ y: -3, boxShadow: '0 8px 24px rgba(13,12,10,0.12), 0 16px 40px rgba(13,12,10,0.08)' }}
         style={{
           background: BAI.bgSurface,
           border: `1px solid ${BAI.border}`,
           borderRadius: 12,
           overflow: 'hidden',
-          boxShadow: hovered
-            ? '0 4px 16px rgba(13,12,10,0.10), 0 12px 32px rgba(13,12,10,0.08)'
-            : '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
-          transform: hovered ? 'translateY(-1px)' : 'translateY(0)',
-          transition: 'box-shadow 0.2s, transform 0.2s',
+          boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
         }}
       >
         {/* Image */}
@@ -315,7 +313,7 @@ export default function MyProperties() {
             </button>
           </div>
         </div>
-      </div>
+      </motion.article>
     )
   }
 
@@ -543,8 +541,8 @@ export default function MyProperties() {
           {/* Grid */}
           {!isLoading && filtered.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filtered.map((property) => (
-                <PropertyCard key={property.id} property={property} />
+              {filtered.map((property, i) => (
+                <PropertyCard key={property.id} property={property} delay={i * 0.05} />
               ))}
             </div>
           )}
