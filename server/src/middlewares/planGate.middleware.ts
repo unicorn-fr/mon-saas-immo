@@ -42,12 +42,12 @@ export async function checkPropertyLimit(req: Request, res: Response, next: Next
   const plan = (sub?.plan ?? 'FREE') as PlanType
   const maxProperties = PLANS[plan].maxProperties
 
-  if (maxProperties !== Infinity) {
+  if (maxProperties != null && maxProperties !== Infinity) {
     const currentCount = await prisma.property.count({
       where: { ownerId: req.user!.id },
     })
 
-    if (currentCount >= maxProperties) {
+    if (currentCount >= (maxProperties as number)) {
       const upgradeRequired = plan === 'FREE' ? 'SOLO' : plan === 'SOLO' ? 'PRO' : 'EXPERT'
       return res.status(403).json({
         error: 'PROPERTY_LIMIT_REACHED',

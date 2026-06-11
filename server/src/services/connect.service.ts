@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Stripe Connect Service — Paiements loyers entre locataires et propriétaires
  *

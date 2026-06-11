@@ -534,7 +534,7 @@ class DossierService {
         documentNumber: data.documentNumber ?? null,
         documentExpiry: data.documentExpiry ?? null,
         nationalNumber: data.nationalNumber ?? null,
-        profileMeta,
+        profileMeta: profileMeta as object,
       },
     })
   }

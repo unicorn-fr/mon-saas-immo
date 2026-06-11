@@ -11,6 +11,7 @@ declare global {
         id: string
         email: string
         role: 'TENANT' | 'OWNER' | 'ADMIN' | 'SUPER_ADMIN'
+        emailVerified?: boolean
       }
     }
   }

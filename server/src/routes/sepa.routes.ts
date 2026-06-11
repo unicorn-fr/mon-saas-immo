@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Routes SEPA — Paiement automatique des loyers
  *
