@@ -43,7 +43,7 @@ function inputStyle(focused: boolean): React.CSSProperties {
 export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { login, googleLogin, isLoading } = useAuth()
+  const { login, googleLogin } = useAuth()
 
   type Screen = 'welcome' | 'email_login'
   const [screen, setScreen] = useState<Screen>('welcome')
@@ -52,6 +52,8 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [focusedField, setFocusedField] = useState('')
   const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)  // local — indépendant du store
+  const [showRegisterHint, setShowRegisterHint] = useState(false)
 
   const redirectByRole = (role: string) => {
     const from = (location.state as { from?: string })?.from
@@ -67,6 +69,8 @@ export default function Login() {
     e.preventDefault()
     if (!email || !password) { setError('Remplissez tous les champs'); return }
     setError('')
+    setShowRegisterHint(false)
+    setIsSubmitting(true)
     try {
       const userData = await login({ email, password })
       redirectByRole(userData.role)
@@ -77,14 +81,20 @@ export default function Login() {
         return
       }
       if (msg === 'Network Error' || msg.includes('ECONNREFUSED') || msg.includes('timeout')) {
-        setError('Impossible de contacter le serveur. Vérifiez que le serveur est bien démarré (npm run dev).')
+        setError('Serveur inaccessible — vérifiez votre connexion ou réessayez dans quelques secondes.')
+        setIsSubmitting(false)
         return
       }
       if (msg.includes('Too Many') || msg.includes('429')) {
         setError('Trop de tentatives. Réessayez dans 15 minutes.')
+        setIsSubmitting(false)
         return
       }
-      setError('Identifiants incorrects. Vérifiez votre email et mot de passe.')
+      // Email inconnu ou mauvais mdp → suggérer de créer un compte
+      setError('Email ou mot de passe incorrect.')
+      setShowRegisterHint(true)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -324,11 +334,28 @@ export default function Login() {
             </p>
           </div>
 
-          {/* Error banner */}
+          {/* Error banner + suggestion créer un compte */}
           {error && (
-            <div style={{ marginBottom: '16px', padding: '11px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', display: 'flex', gap: '8px' }}>
-              <AlertCircle style={{ width: '15px', height: '15px', color: '#dc2626', flexShrink: 0, marginTop: '2px' }} />
-              <p style={{ fontSize: '13px', color: '#991b1b', margin: 0 }}>{error}</p>
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ padding: '11px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', display: 'flex', gap: '8px' }}>
+                <AlertCircle style={{ width: '15px', height: '15px', color: '#dc2626', flexShrink: 0, marginTop: '2px' }} />
+                <p style={{ fontSize: '13px', color: '#991b1b', margin: 0 }}>{error}</p>
+              </div>
+              {showRegisterHint && (
+                <div style={{ marginTop: '10px', padding: '12px 14px', background: '#f8f7f4', border: '1px solid #e4e1db', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                  <p style={{ fontSize: '13px', color: '#5a5754', margin: 0 }}>
+                    Pas encore de compte ?
+                  </p>
+                  <Link
+                    to={`/register?email=${encodeURIComponent(email)}`}
+                    style={{ fontSize: '13px', fontWeight: 700, color: '#1a1a2e', textDecoration: 'none', whiteSpace: 'nowrap', border: '1px solid #1a1a2e', padding: '5px 12px', borderRadius: 7, transition: 'background 0.15s' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#1a1a2e'; (e.currentTarget as HTMLElement).style.color = '#fff' }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#1a1a2e' }}
+                  >
+                    Créer un compte →
+                  </Link>
+                </div>
+              )}
             </div>
           )}
 
@@ -344,7 +371,7 @@ export default function Login() {
                 onChange={e => { setEmail(e.target.value); if (error) setError('') }}
                 onFocus={() => setFocusedField('email')}
                 onBlur={() => setFocusedField('')}
-                required disabled={isLoading}
+                required disabled={isSubmitting}
                 style={inputStyle(focusedField === 'email')}
                 autoComplete="email"
               />
@@ -367,27 +394,27 @@ export default function Login() {
                 onChange={e => { setPassword(e.target.value); if (error) setError('') }}
                 onFocus={() => setFocusedField('password')}
                 onBlur={() => setFocusedField('')}
-                required disabled={isLoading}
+                required disabled={isSubmitting}
                 style={inputStyle(focusedField === 'password')}
                 autoComplete="current-password"
               />
             </div>
 
             <button
-              type="submit" disabled={isLoading}
+              type="submit" disabled={isSubmitting}
               style={{
                 width: '100%', padding: '14px', marginTop: '4px',
-                background: isLoading ? '#4a4a6a' : '#1a1a2e',
+                background: isSubmitting ? '#4a4a6a' : '#1a1a2e',
                 color: '#fff', border: 'none', borderRadius: '10px',
                 fontSize: '14px', fontWeight: 600,
-                cursor: isLoading ? 'not-allowed' : 'pointer',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
                 fontFamily: 'inherit', transition: 'background 0.15s',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
               }}
-              onMouseEnter={e => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.background = '#2a2a4a' }}
-              onMouseLeave={e => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.background = '#1a1a2e' }}
+              onMouseEnter={e => { if (!isSubmitting) (e.currentTarget as HTMLButtonElement).style.background = '#2a2a4a' }}
+              onMouseLeave={e => { if (!isSubmitting) (e.currentTarget as HTMLButtonElement).style.background = '#1a1a2e' }}
             >
-              {isLoading ? (
+              {isSubmitting ? (
                 <>
                   <svg className="animate-spin" style={{ width: '15px', height: '15px' }} viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />

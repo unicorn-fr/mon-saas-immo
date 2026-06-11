@@ -203,7 +203,7 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       /**
-       * Load user from token
+       * Load user from token — timeout 6s max pour ne pas bloquer l'UI au cold start
        */
       loadUser: async () => {
         // Read from in-memory tokens (initialized from localStorage on module load)
@@ -217,8 +217,16 @@ export const useAuthStore = create<AuthStore>()(
 
         set({ isLoading: true })
 
+        // Race: vérification token vs timeout 6s
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('INIT_TIMEOUT')), 6000)
+        )
+
         try {
-          const user = await authService.getCurrentUser()
+          const user = await Promise.race([
+            authService.getCurrentUser(),
+            timeoutPromise,
+          ])
 
           set({
             user,
@@ -229,15 +237,9 @@ export const useAuthStore = create<AuthStore>()(
             error: null,
           })
         } catch (error) {
-          console.error('Failed to load user:', error)
-
-          // Clear invalid tokens
+          // Token invalide ou serveur indisponible → on laisse l'utilisateur se connecter
           setApiTokens(null, null)
-
-          set({
-            ...initialState,
-            isLoading: false,
-          })
+          set({ ...initialState, isLoading: false })
         }
       },
 

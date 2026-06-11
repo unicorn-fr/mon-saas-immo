@@ -1,5 +1,5 @@
 import { useState, FormEvent, useRef, KeyboardEvent, ClipboardEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { AlertCircle, CheckCircle } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
@@ -224,7 +224,11 @@ function VerifyCodeScreen({ email, onBack }: { email: string; onBack: () => void
 ═══════════════════════════════════════════════════════════════════════════ */
 export default function Register() {
   const navigate = useNavigate()
-  const { register, googleLogin, isLoading } = useAuth()
+  const [searchParams] = useSearchParams()
+  const prefillEmail = searchParams.get('email') ?? ''
+  const prefillRole = (searchParams.get('role') ?? '') as 'OWNER' | 'TENANT' | ''
+  const { register, googleLogin } = useAuth()
+  const [isSubmitting, setIsSubmitting] = useState(false)  // local — indépendant du store
 
   const handleGoogleSuccess = async (idToken: string) => {
     try {
@@ -236,11 +240,11 @@ export default function Register() {
   }
 
   type Screen = 'welcome' | 'form' | 'verify_code' | 'waitlist'
-  const [screen, setScreen] = useState<Screen>('welcome')
+  const [screen, setScreen] = useState<Screen>(prefillRole ? 'form' : 'welcome')
 
   const [formData, setFormData] = useState({
-    email: '', password: '', confirmPassword: '',
-    firstName: '', lastName: '', role: '' as 'OWNER' | 'TENANT' | '',
+    email: prefillEmail, password: '', confirmPassword: '',
+    firstName: '', lastName: '', role: prefillRole,
   })
   const [registeredEmail, setRegisteredEmail] = useState('')
   const [error, setError] = useState('')
@@ -280,6 +284,7 @@ export default function Register() {
     if (formData.password !== formData.confirmPassword) {
       setError('Les mots de passe ne correspondent pas'); return
     }
+    setIsSubmitting(true)
     try {
       await register({
         email: formData.email,
@@ -300,6 +305,8 @@ export default function Register() {
       setError(msg)
       toast.error(msg, { duration: 5000 })
       window.scrollTo({ top: 0, behavior: 'smooth' })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -629,7 +636,7 @@ export default function Register() {
                 <input id="firstName" name="firstName" type="text" placeholder="Jean"
                   value={formData.firstName} onChange={handleChange}
                   onFocus={() => onFocus('firstName')} onBlur={() => onBlur('firstName')}
-                  disabled={isLoading} required style={inp(focused['firstName'])}
+                  disabled={isSubmitting} required style={inp(focused['firstName'])}
                   autoComplete="given-name" />
               </div>
               <div>
@@ -637,7 +644,7 @@ export default function Register() {
                 <input id="lastName" name="lastName" type="text" placeholder="Dupont"
                   value={formData.lastName} onChange={handleChange}
                   onFocus={() => onFocus('lastName')} onBlur={() => onBlur('lastName')}
-                  disabled={isLoading} required style={inp(focused['lastName'])}
+                  disabled={isSubmitting} required style={inp(focused['lastName'])}
                   autoComplete="family-name" />
               </div>
             </div>
@@ -648,7 +655,7 @@ export default function Register() {
               <input id="email" name="email" type="email" placeholder="votre@email.com"
                 value={formData.email} onChange={handleChange}
                 onFocus={() => onFocus('email')} onBlur={() => onBlur('email')}
-                disabled={isLoading} required style={inp(focused['email'])}
+                disabled={isSubmitting} required style={inp(focused['email'])}
                 autoComplete="email" />
             </div>
 
@@ -658,7 +665,7 @@ export default function Register() {
               <input id="password" name="password" type="password" placeholder="••••••••"
                 value={formData.password} onChange={handleChange}
                 onFocus={() => onFocus('password')} onBlur={() => onBlur('password')}
-                disabled={isLoading} required style={inp(focused['password'])}
+                disabled={isSubmitting} required style={inp(focused['password'])}
                 autoComplete="new-password" />
               {formData.password.length > 0 && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px', marginTop: '10px' }}>
@@ -682,7 +689,7 @@ export default function Register() {
               <input id="confirmPassword" name="confirmPassword" type="password" placeholder="••••••••"
                 value={formData.confirmPassword} onChange={handleChange}
                 onFocus={() => onFocus('confirmPassword')} onBlur={() => onBlur('confirmPassword')}
-                disabled={isLoading} required
+                disabled={isSubmitting} required
                 style={{
                   ...inp(focused['confirmPassword']),
                   borderColor: formData.confirmPassword.length > 0 && formData.confirmPassword !== formData.password
@@ -697,19 +704,19 @@ export default function Register() {
 
             {/* Submit */}
             <button
-              type="submit" disabled={isLoading}
+              type="submit" disabled={isSubmitting}
               style={{
-                width: '100%', background: isLoading ? '#4a4a6a' : '#1a1a2e',
+                width: '100%', background: isSubmitting ? '#4a4a6a' : '#1a1a2e',
                 color: '#ffffff', border: 'none', borderRadius: '8px', padding: '14px 0',
                 ...font, fontWeight: 600, fontSize: '14px',
-                cursor: isLoading ? 'not-allowed' : 'pointer', marginTop: '4px',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer', marginTop: '4px',
                 transition: 'background 0.15s', display: 'flex', alignItems: 'center',
                 justifyContent: 'center', gap: '8px',
               }}
-              onMouseEnter={e => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.background = '#2a2a4a' }}
-              onMouseLeave={e => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.background = '#1a1a2e' }}
+              onMouseEnter={e => { if (!isSubmitting) (e.currentTarget as HTMLButtonElement).style.background = '#2a2a4a' }}
+              onMouseLeave={e => { if (!isSubmitting) (e.currentTarget as HTMLButtonElement).style.background = '#1a1a2e' }}
             >
-              {isLoading ? (
+              {isSubmitting ? (
                 <>
                   <svg className="animate-spin" style={{ width: '15px', height: '15px' }} viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
