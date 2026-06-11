@@ -1,11 +1,12 @@
 import { useState, FormEvent, useRef, KeyboardEvent, ClipboardEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { AlertCircle, CheckCircle } from 'lucide-react'
+import { AlertCircle, CheckCircle, CheckCircle2, Home, Key } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useAuthStore } from '../store/authStore'
 import { apiClient } from '../services/api.service'
 import { celebrateBig } from '../utils/celebrate'
+import { BAI } from '../constants/bailio-tokens'
 import { BailioLogo } from '../components/BailioLogo'
 import GoogleSignInButton from '../components/auth/GoogleSignInButton'
 import toast from 'react-hot-toast'
@@ -17,32 +18,107 @@ const ROLE_PATHS: Record<string, string> = {
   SUPER_ADMIN: '/super-admin/dashboard',
 }
 
-/* ─── Tokens ─────────────────────────────────────────────────────────────── */
-const font: React.CSSProperties = { fontFamily: "'DM Sans', system-ui, sans-serif" }
-const fontDisplay: React.CSSProperties = { fontFamily: "'Cormorant Garamond', Georgia, serif" }
+/* ─── Styles partagés ────────────────────────────────────────────────────── */
+const fontBody: React.CSSProperties = { fontFamily: BAI.fontBody }
+const fontDisplay: React.CSSProperties = { fontFamily: BAI.fontDisplay }
 
-const inputBase: React.CSSProperties = {
-  width: '100%',
-  background: '#f8f7f4',
-  border: '1px solid #e4e1db',
-  borderRadius: '8px',
-  padding: '12px 16px',
-  fontSize: '16px', /* prevents iOS auto-zoom */
-  color: '#0d0c0a',
-  outline: 'none',
-  fontFamily: "'DM Sans', system-ui, sans-serif",
-  transition: 'border-color 0.15s, box-shadow 0.15s',
-  boxSizing: 'border-box',
-}
-
-function inp(focused: boolean): React.CSSProperties {
+function inputStyle(focused: boolean, error?: boolean): React.CSSProperties {
   return {
-    ...inputBase,
-    borderColor: focused ? '#1a1a2e' : '#e4e1db',
-    boxShadow: focused ? '0 0 0 3px rgba(26,26,46,0.08)' : 'none',
+    width: '100%',
+    background: BAI.bgInput,
+    border: `1px solid ${error ? '#fca5a5' : focused ? BAI.night : BAI.border}`,
+    borderRadius: '8px',
+    padding: '12px 16px',
+    fontSize: '16px',
+    color: BAI.ink,
+    outline: 'none',
+    fontFamily: BAI.fontBody,
+    transition: 'border-color 0.15s, box-shadow 0.15s',
+    boxSizing: 'border-box' as const,
+    boxShadow: focused && !error ? '0 0 0 3px rgba(26,26,46,0.08)' : 'none',
   }
 }
 
+/* ─── Panneau gauche dark ────────────────────────────────────────────────── */
+const BULLETS = [
+  'Zéro frais d\'agence',
+  'Documents sécurisés & anti-fraude',
+  'Contrats électroniques ALUR',
+  'Dossier locataire intelligent',
+]
+
+function LeftPanel() {
+  return (
+    <div
+      className="hidden md:flex"
+      style={{
+        width: '45%',
+        background: '#0a0d1a',
+        flexDirection: 'column',
+        padding: '40px 48px',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Glows */}
+      <div style={{
+        position: 'absolute', top: '-60px', right: '-60px',
+        width: '320px', height: '320px', borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(196,151,106,0.12) 0%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
+      <div style={{
+        position: 'absolute', bottom: '60px', left: '-40px',
+        width: '240px', height: '240px', borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(26,26,46,0.7) 0%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
+
+      {/* Logo */}
+      <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8, position: 'relative', zIndex: 1 }}>
+        <BailioLogo size={28} variant="onDark" />
+        <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '20px', color: '#ffffff', letterSpacing: '-0.02em' }}>
+          Bailio
+        </span>
+      </Link>
+
+      {/* Contenu central */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '32px', position: 'relative', zIndex: 1 }}>
+        <div>
+          <p style={{
+            ...fontDisplay, fontStyle: 'italic', fontWeight: 400,
+            fontSize: 'clamp(22px, 2.5vw, 30px)',
+            color: 'rgba(255,255,255,0.92)', lineHeight: 1.4,
+            margin: '0 0 8px', maxWidth: '300px',
+          }}>
+            "Commencez gratuitement."
+          </p>
+          <p style={{ ...fontBody, fontSize: '13px', color: 'rgba(255,255,255,0.45)', margin: 0 }}>
+            La location entre particuliers, sans intermédiaire.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          {BULLETS.map(b => (
+            <div key={b} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <CheckCircle2
+                style={{ width: '18px', height: '18px', color: BAI.caramel, flexShrink: 0 }}
+              />
+              <span style={{ ...fontBody, fontSize: '14px', color: 'rgba(255,255,255,0.68)' }}>{b}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <p style={{ ...fontBody, fontSize: '13px', color: 'rgba(255,255,255,0.35)', margin: 0, position: 'relative', zIndex: 1 }}>
+        Déjà inscrit ?{' '}
+        <Link to="/login" style={{ color: BAI.caramel, fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: '2px' }}>
+          Se connecter
+        </Link>
+      </p>
+    </div>
+  )
+}
 
 /* ─── VerifyCodeScreen ───────────────────────────────────────────────────── */
 function VerifyCodeScreen({ email, onBack }: { email: string; onBack: () => void }) {
@@ -113,34 +189,41 @@ function VerifyCodeScreen({ email, onBack }: { email: string; onBack: () => void
   }
 
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafaf8', padding: '24px', ...font }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: BAI.bgBase, padding: '24px', ...fontBody }}>
       <div style={{
-        background: '#ffffff', border: '1px solid #e4e1db', borderRadius: '20px',
-        padding: '48px 40px', maxWidth: '440px', width: '100%', textAlign: 'center',
-        boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 8px 24px rgba(13,12,10,0.07)',
+        background: BAI.bgSurface,
+        border: `1px solid ${BAI.border}`,
+        borderRadius: '20px',
+        padding: '48px 40px',
+        maxWidth: '440px', width: '100%', textAlign: 'center',
+        boxShadow: BAI.shadowLg,
       }}>
         {/* Icon */}
-        <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#fdf5ec', border: '1px solid #f3c99a', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 28px' }}>
+        <div style={{
+          width: '72px', height: '72px', borderRadius: '50%',
+          background: BAI.caramelLight, border: `1px solid ${BAI.caramelBorder}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 28px',
+        }}>
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-            <path d="M4 8h24v16a2 2 0 01-2 2H6a2 2 0 01-2-2V8z" stroke="#c4976a" strokeWidth="1.8" fill="none" strokeLinejoin="round" />
-            <path d="M4 8l12 10L28 8" stroke="#c4976a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M4 8h24v16a2 2 0 01-2 2H6a2 2 0 01-2-2V8z" stroke={BAI.caramel} strokeWidth="1.8" fill="none" strokeLinejoin="round" />
+            <path d="M4 8l12 10L28 8" stroke={BAI.caramel} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
 
-        <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#9e9b96', marginBottom: '12px' }}>
+        <div style={{ ...fontBody, fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, marginBottom: '12px' }}>
           Vérification requise
         </div>
-        <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '32px', color: '#0d0c0a', margin: '0 0 12px', lineHeight: 1.2 }}>
+        <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '32px', color: BAI.ink, margin: '0 0 12px', lineHeight: 1.2 }}>
           Vérifiez votre email
         </h1>
-        <p style={{ fontSize: '14px', color: '#5a5754', lineHeight: 1.7, margin: '0 0 6px' }}>
+        <p style={{ ...fontBody, fontSize: '14px', color: BAI.inkMid, lineHeight: 1.7, margin: '0 0 6px' }}>
           Un code à 6 chiffres a été envoyé à
         </p>
-        <p style={{ fontSize: '14px', fontWeight: 600, color: '#1a1a2e', margin: '0 0 28px', wordBreak: 'break-all' }}>
+        <p style={{ ...fontBody, fontSize: '14px', fontWeight: 600, color: BAI.night, margin: '0 0 28px', wordBreak: 'break-all' }}>
           {email}
         </p>
 
-        {/* Code boxes */}
+        {/* Boxes code */}
         <div style={{ display: 'flex', gap: 'clamp(6px, 2vw, 10px)', justifyContent: 'center', marginBottom: '20px' }}>
           {digits.map((d, i) => (
             <input
@@ -155,58 +238,59 @@ function VerifyCodeScreen({ email, onBack }: { email: string; onBack: () => void
               onPaste={handlePaste}
               style={{
                 width: 'clamp(38px, 10vw, 48px)', height: 'clamp(44px, 12vw, 56px)', textAlign: 'center',
-                fontSize: 'clamp(18px, 5vw, 24px)', fontWeight: 700, color: '#0d0c0a',
-                background: '#f8f7f4',
-                border: `2px solid ${codeError ? '#fca5a5' : d ? '#1a1a2e' : '#e4e1db'}`,
+                fontSize: 'clamp(18px, 5vw, 24px)', fontWeight: 700, color: BAI.ink,
+                background: BAI.bgInput,
+                border: `2px solid ${codeError ? '#fca5a5' : d ? BAI.night : BAI.border}`,
                 borderRadius: '10px', outline: 'none',
-                fontFamily: "'DM Sans', system-ui, sans-serif",
+                fontFamily: BAI.fontBody,
                 transition: 'border-color 0.15s',
                 boxSizing: 'border-box',
               }}
-              onFocus={e => { e.currentTarget.style.borderColor = '#1a1a2e' }}
-              onBlur={e => { e.currentTarget.style.borderColor = codeError ? '#fca5a5' : d ? '#1a1a2e' : '#e4e1db' }}
+              onFocus={e => { e.currentTarget.style.borderColor = BAI.night }}
+              onBlur={e => { e.currentTarget.style.borderColor = codeError ? '#fca5a5' : d ? BAI.night : BAI.border }}
             />
           ))}
         </div>
 
         {codeError && (
-          <p style={{ fontSize: '13px', color: '#9b1c1c', margin: '0 0 16px' }}>{codeError}</p>
+          <p style={{ ...fontBody, fontSize: '13px', color: BAI.error, margin: '0 0 16px' }}>{codeError}</p>
         )}
 
         <button
           onClick={handleVerify}
           disabled={loading}
           style={{
-            width: '100%', background: loading ? '#5a5754' : '#1a1a2e', color: '#fff', border: 'none',
-            borderRadius: '8px', padding: '14px 32px',
-            ...font, fontWeight: 600, fontSize: '15px',
+            width: '100%', background: loading ? '#5a5754' : BAI.night,
+            color: '#fff', border: 'none', borderRadius: '8px', padding: '14px 32px',
+            ...fontBody, fontWeight: 600, fontSize: '15px',
             cursor: loading ? 'not-allowed' : 'pointer', marginBottom: '20px', transition: 'background 0.15s',
+            minHeight: '48px',
           }}
           onMouseEnter={e => { if (!loading) e.currentTarget.style.background = '#2a2a4a' }}
-          onMouseLeave={e => { if (!loading) e.currentTarget.style.background = '#1a1a2e' }}
+          onMouseLeave={e => { if (!loading) e.currentTarget.style.background = BAI.night }}
         >
           {loading ? 'Vérification…' : 'Confirmer le code'}
         </button>
 
-        <p style={{ fontSize: '13px', color: '#9e9b96', margin: '0 0 8px' }}>
+        <p style={{ ...fontBody, fontSize: '13px', color: BAI.inkFaint, margin: '0 0 8px' }}>
           Code non reçu ?{' '}
           {resendDone ? (
-            <span style={{ color: '#1b5e3b', fontWeight: 500 }}>Envoyé !</span>
+            <span style={{ color: BAI.tenant, fontWeight: 500 }}>Envoyé !</span>
           ) : (
             <button
               onClick={handleResend}
               disabled={resendLoading}
-              style={{ background: 'none', border: 'none', color: '#c4976a', fontWeight: 500, cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontFamily: 'inherit' }}
+              style={{ background: 'none', border: 'none', color: BAI.caramel, fontWeight: 500, cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontFamily: 'inherit' }}
             >
               {resendLoading ? 'Envoi…' : 'Renvoyer le code'}
             </button>
           )}
         </p>
-        <p style={{ fontSize: '13px', color: '#9e9b96' }}>
+        <p style={{ ...fontBody, fontSize: '13px', color: BAI.inkFaint }}>
           Mauvaise adresse ?{' '}
           <button
             onClick={onBack}
-            style={{ background: 'none', border: 'none', color: '#c4976a', fontWeight: 500, cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontFamily: 'inherit' }}
+            style={{ background: 'none', border: 'none', color: BAI.caramel, fontWeight: 500, cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontFamily: 'inherit' }}
           >
             Modifier l'email
           </button>
@@ -218,9 +302,9 @@ function VerifyCodeScreen({ email, onBack }: { email: string; onBack: () => void
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Page Register — 3 écrans
-   1. welcome     → Landing: Google / Apple / "Créer un compte avec un email"
-   2. form        → Formulaire complet + tagline
-   3. verify_code → Saisie du code à 6 chiffres
+   1. welcome     → Choix rôle + Google
+   2. form        → Formulaire complet
+   3. verify_code → Code 6 chiffres
 ═══════════════════════════════════════════════════════════════════════════ */
 export default function Register() {
   const navigate = useNavigate()
@@ -228,7 +312,7 @@ export default function Register() {
   const prefillEmail = searchParams.get('email') ?? ''
   const prefillRole = (searchParams.get('role') ?? '') as 'OWNER' | 'TENANT' | ''
   const { register, googleLogin, setAuthFromPopup } = useAuth()
-  const [isSubmitting, setIsSubmitting] = useState(false)  // local — indépendant du store
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleGoogleSuccess = async (token: string) => {
     try {
@@ -304,7 +388,6 @@ export default function Register() {
         role: formData.role,
       })
       if (emailVerified) {
-        // Dev mode: already verified — redirect to login
         toast.success('Compte créé ! Connectez-vous maintenant.')
         navigate(`/login?email=${encodeURIComponent(formData.email)}`, { replace: true })
         return
@@ -326,186 +409,172 @@ export default function Register() {
     }
   }
 
-  /* ── Écran liste d'attente ───────────────────────────────────────────── */
+  /* ── Waitlist ──────────────────────────────────────────────────────────── */
   if (screen === 'waitlist') {
     return (
-      <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafaf8', padding: '24px', ...font }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: BAI.bgBase, padding: '24px', ...fontBody }}>
         <div style={{ maxWidth: 440, width: '100%', textAlign: 'center' }}>
           <Link to="/" style={{ display: 'inline-block', marginBottom: '32px' }}>
             <BailioLogo size={36} />
           </Link>
-          <div style={{ background: '#fdf5ec', border: '1px solid #f3c99a', borderRadius: '12px', padding: '12px 16px', marginBottom: '24px', fontSize: '13px', color: '#92400e', fontWeight: 500 }}>
+          <div style={{ background: BAI.caramelLight, border: `1px solid ${BAI.caramelBorder}`, borderRadius: '12px', padding: '12px 16px', marginBottom: '24px', fontSize: '13px', color: BAI.warning, fontWeight: 500 }}>
             Bailio est en accès anticipé
           </div>
-          <h1 style={{ ...fontDisplay, fontSize: '32px', fontWeight: 700, fontStyle: 'italic', color: '#0d0c0a', marginBottom: '12px' }}>
+          <h1 style={{ ...fontDisplay, fontSize: '32px', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, marginBottom: '12px' }}>
             Rejoignez la liste d'attente
           </h1>
-          <p style={{ fontSize: '14px', color: '#5a5754', marginBottom: '32px', lineHeight: 1.6 }}>
+          <p style={{ ...fontBody, fontSize: '14px', color: BAI.inkMid, marginBottom: '32px', lineHeight: 1.6 }}>
             Bailio ouvre progressivement. Laissez-nous votre email et nous vous préviendrons dès que votre accès est disponible.
           </p>
           <a
             href="mailto:contact@bailio.fr?subject=Liste d'attente Bailio"
             style={{
-              display: 'inline-block',
-              background: '#1a1a2e',
-              color: '#ffffff',
-              borderRadius: '8px',
-              padding: '12px 28px',
-              fontSize: '14px',
-              fontWeight: 600,
-              textDecoration: 'none',
-              marginBottom: '16px',
+              display: 'inline-block', background: BAI.night, color: '#ffffff',
+              borderRadius: '8px', padding: '12px 28px', fontSize: '14px',
+              fontWeight: 600, textDecoration: 'none', marginBottom: '16px',
             }}
           >
             M'inscrire sur la liste d'attente
           </a>
-          <p style={{ fontSize: '13px', color: '#9e9b96' }}>
-            <Link to="/" style={{ color: '#c4976a', textDecoration: 'none' }}>← Retour à l'accueil</Link>
+          <p style={{ ...fontBody, fontSize: '13px', color: BAI.inkFaint }}>
+            <Link to="/" style={{ color: BAI.caramel, textDecoration: 'none' }}>← Retour à l'accueil</Link>
           </p>
         </div>
       </div>
     )
   }
 
-  /* ── Écran saisie du code ─────────────────────────────────────────────── */
+  /* ── Verify code ───────────────────────────────────────────────────────── */
   if (screen === 'verify_code') {
     return <VerifyCodeScreen email={registeredEmail} onBack={() => { setScreen('form'); setRegisteredEmail('') }} />
   }
 
-  /* ── Écran d'accueil ──────────────────────────────────────────────────
-     Landing inscription : split panel caramel + droite auth
-  ─────────────────────────────────────────────────────────────────────── */
+  /* ── Écran d'accueil — choix du rôle ──────────────────────────────────── */
   if (screen === 'welcome') {
     return (
-      <div style={{ minHeight: '100dvh', display: 'flex', ...font }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', ...fontBody }}>
+        <LeftPanel />
 
-        {/* ── Panneau gauche ──────────────────────────────────────────── */}
+        {/* Panneau droit */}
         <div
-          className="hidden md:flex"
-          style={{ width: '44%', background: '#c4976a', flexDirection: 'column', padding: '40px 48px', position: 'relative' }}
-        >
-          <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-            <BailioLogo size={28} />
-            <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '20px', color: '#1a1a2e', letterSpacing: '-0.02em' }}>
-              Bailio
-            </span>
-          </Link>
-
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '32px' }}>
-            <div>
-              <p style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 600, fontSize: '30px', color: '#1a1a2e', margin: '0 0 8px', lineHeight: 1.3, maxWidth: '300px' }}>
-                "Ensemble, nous trouvons ta maison idéale."
-              </p>
-              <p style={{ fontSize: '13px', color: 'rgba(26,26,46,0.6)', margin: 0 }}>
-                La location entre particuliers, sans intermédiaire.
-              </p>
-            </div>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {['Zéro frais d\'agence', 'Documents sécurisés & anti-fraude', 'Contrats électroniques ALUR', 'Dossier locataire intelligent'].map(b => (
-                <li key={b} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'rgba(255,255,255,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                      <path d="M1.5 5.5l2.5 2.5 5-5" stroke="#1a1a2e" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
-                  <span style={{ fontSize: '13px', color: '#1a1a2e', fontWeight: 400 }}>{b}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <p style={{ fontSize: '13px', color: 'rgba(26,26,46,0.55)', margin: 0 }}>
-            Déjà inscrit ?{' '}
-            <Link to="/login" style={{ color: '#1a1a2e', fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: '2px' }}>
-              Se connecter
-            </Link>
-          </p>
-        </div>
-
-        {/* ── Panneau droit ───────────────────────────────────────────── */}
-        <div
-          style={{ background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}
-          className="w-full md:w-[56%]"
+          style={{
+            background: BAI.bgBase,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative',
+          }}
+          className="w-full md:w-[55%]"
         >
           <div style={{ position: 'absolute', top: '24px', left: '28px' }}>
-            <Link to="/" style={{ fontSize: '13px', color: '#9e9b96', textDecoration: 'none' }}
-              onMouseEnter={e => (e.currentTarget.style.color = '#5a5754')}
-              onMouseLeave={e => (e.currentTarget.style.color = '#9e9b96')}
-            >← Accueil</Link>
+            <Link
+              to="/"
+              style={{ ...fontBody, fontSize: '13px', color: BAI.inkFaint, textDecoration: 'none' }}
+              onMouseEnter={e => (e.currentTarget.style.color = BAI.inkMid)}
+              onMouseLeave={e => (e.currentTarget.style.color = BAI.inkFaint)}
+            >
+              ← Accueil
+            </Link>
           </div>
 
-          <div style={{ width: '100%', maxWidth: '400px', padding: '64px 32px 48px' }}>
-
+          <div style={{ width: '100%', maxWidth: '420px', padding: '64px 32px 48px' }}>
             {/* Mobile logo */}
             <div className="flex md:hidden" style={{ justifyContent: 'center', marginBottom: '28px' }}>
               <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                 <BailioLogo size={30} />
-                <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '22px', color: '#1a1a2e', letterSpacing: '-0.02em' }}>Bailio</span>
+                <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '22px', color: BAI.night, letterSpacing: '-0.02em' }}>Bailio</span>
               </Link>
             </div>
 
-            <div style={{ marginBottom: '28px' }}>
-              <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '34px', color: '#0d0c0a', margin: '0 0 6px', lineHeight: 1.1 }}>
+            <div style={{ marginBottom: '32px' }}>
+              <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(28px, 6vw, 36px)', color: BAI.ink, margin: '0 0 8px', lineHeight: 1.1 }}>
                 Créer un compte
               </h1>
-              <p style={{ fontSize: '14px', color: '#5a5754', margin: 0 }}>
+              <p style={{ ...fontBody, fontSize: '14px', color: BAI.inkMid, margin: 0 }}>
                 Commencez par choisir votre profil.
               </p>
             </div>
 
-            {/* Google sign-in */}
+            {/* Google */}
             <div style={{ marginBottom: '20px' }}>
               <GoogleSignInButton onSuccess={handleGoogleSuccess} text="signup_with" role={formData.role || 'TENANT'} />
             </div>
 
             {/* Divider */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-              <div style={{ flex: 1, height: '1px', background: '#e4e1db' }} />
-              <span style={{ fontSize: '12px', color: '#9e9b96', fontFamily: "'DM Sans', system-ui, sans-serif", whiteSpace: 'nowrap' }}>ou créer un compte avec un email</span>
-              <div style={{ flex: 1, height: '1px', background: '#e4e1db' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+              <div style={{ flex: 1, height: '1px', background: BAI.border }} />
+              <span style={{ ...fontBody, fontSize: '12px', color: BAI.inkFaint, whiteSpace: 'nowrap' }}>ou créer un compte avec un email</span>
+              <div style={{ flex: 1, height: '1px', background: BAI.border }} />
             </div>
 
-            {/* Role picker — first and most prominent */}
-            <div style={{ marginBottom: '24px' }}>
-              <p style={{ fontSize: '12px', fontWeight: 600, color: '#5a5754', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 10px' }}>
-                Je suis
-              </p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                {([
-                  { value: 'TENANT' as const, label: 'Locataire', desc: 'Je cherche un logement', emoji: '🏠' },
-                  { value: 'OWNER' as const, label: 'Propriétaire', desc: 'Je loue mon bien', emoji: '🔑' },
-                ]).map((opt, i) => (
-                  <motion.button
-                    key={opt.value}
-                    type="button"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.08, duration: 0.24 }}
-                    whileTap={{ scale: 0.96 }}
-                    whileHover={{ borderColor: '#1a1a2e', boxShadow: '0 4px 16px rgba(26,26,46,0.10)' }}
-                    onClick={() => {
-                      setFormData(p => ({ ...p, role: opt.value }))
-                      setScreen('form')
-                    }}
-                    style={{
-                      padding: '20px 12px', borderRadius: '12px', textAlign: 'center', cursor: 'pointer',
-                      border: '1.5px solid #e4e1db',
-                      background: '#f8f7f4',
-                      fontFamily: "'DM Sans', system-ui, sans-serif",
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
-                    }}
-                  >
-                    <span style={{ fontSize: '28px', lineHeight: 1 }}>{opt.emoji}</span>
-                    <span style={{ fontWeight: 700, fontSize: '15px', color: '#0d0c0a' }}>{opt.label}</span>
-                    <span style={{ fontSize: '12px', color: '#9e9b96' }}>{opt.desc}</span>
-                  </motion.button>
-                ))}
-              </div>
+            {/* Sélection du rôle */}
+            <p style={{ ...fontBody, fontSize: '12px', fontWeight: 700, color: BAI.inkMid, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 12px' }}>
+              Je suis
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '28px' }}>
+              {([
+                {
+                  value: 'TENANT' as const,
+                  label: 'Locataire',
+                  desc: 'Je cherche un logement',
+                  icon: <Home style={{ width: '22px', height: '22px', color: BAI.tenant }} />,
+                  iconBg: BAI.tenantLight,
+                },
+                {
+                  value: 'OWNER' as const,
+                  label: 'Propriétaire',
+                  desc: 'Je loue mon bien',
+                  icon: <Key style={{ width: '22px', height: '22px', color: BAI.owner }} />,
+                  iconBg: BAI.ownerLight,
+                },
+              ]).map((opt, i) => (
+                <motion.button
+                  key={opt.value}
+                  type="button"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.08, duration: 0.24 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => {
+                    setFormData(p => ({ ...p, role: opt.value }))
+                    setScreen('form')
+                  }}
+                  style={{
+                    padding: '24px 12px',
+                    borderRadius: '12px',
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    border: `1.5px solid ${BAI.border}`,
+                    background: BAI.bgSurface,
+                    fontFamily: BAI.fontBody,
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
+                    transition: 'border-color 0.15s, box-shadow 0.15s',
+                    boxShadow: BAI.shadowSm,
+                  }}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = BAI.night
+                    ;(e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 16px rgba(26,26,46,0.10)'
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = BAI.border
+                    ;(e.currentTarget as HTMLButtonElement).style.boxShadow = BAI.shadowSm
+                  }}
+                >
+                  <div style={{
+                    width: '44px', height: '44px', borderRadius: '12px',
+                    background: opt.iconBg,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {opt.icon}
+                  </div>
+                  <span style={{ fontWeight: 700, fontSize: '14px', color: BAI.ink }}>{opt.label}</span>
+                  <span style={{ fontSize: '12px', color: BAI.inkFaint }}>{opt.desc}</span>
+                </motion.button>
+              ))}
             </div>
 
-            <p style={{ textAlign: 'center', fontSize: '13px', color: '#9e9b96', marginTop: '28px', marginBottom: 0 }}>
+            <p style={{ textAlign: 'center', fontSize: '13px', color: BAI.inkFaint, marginBottom: 0 }}>
               Vous avez déjà un compte ?{' '}
-              <Link to="/login" style={{ color: '#1a1a2e', fontWeight: 600, textDecoration: 'none' }}
+              <Link
+                to="/login"
+                style={{ color: BAI.night, fontWeight: 600, textDecoration: 'none' }}
                 onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
                 onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
               >
@@ -518,128 +587,111 @@ export default function Register() {
     )
   }
 
-  /* ── Formulaire d'inscription ─────────────────────────────────────────
-     form : panneau gauche caramel + formulaire complet
-  ─────────────────────────────────────────────────────────────────────── */
+  /* ── Formulaire d'inscription ──────────────────────────────────────────── */
+  const stepLabels = ['Profil', 'Informations', 'Mot de passe']
+  const currentStep = 1 // toujours step 1 dans ce contexte (form = étape 2 sur 3 conceptuellement)
+
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', ...font }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', ...fontBody }}>
+      <LeftPanel />
 
-      {/* ── Panneau gauche ────────────────────────────────────────────── */}
+      {/* Panneau droit */}
       <div
-        className="hidden md:flex"
-        style={{ width: '44%', background: '#c4976a', flexDirection: 'column', padding: '40px 48px', position: 'relative' }}
+        style={{
+          background: BAI.bgBase,
+          overflowY: 'auto', display: 'flex', justifyContent: 'center', position: 'relative',
+        }}
+        className="w-full md:w-[55%]"
       >
-        <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-          <BailioLogo size={28} />
-          <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '20px', color: '#1a1a2e', letterSpacing: '-0.02em' }}>
-            Bailio
-          </span>
-        </Link>
-
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '32px' }}>
-          <div>
-            <p style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 600, fontSize: '30px', color: '#1a1a2e', margin: '0 0 8px', lineHeight: 1.3, maxWidth: '300px' }}>
-              "Ensemble, nous trouvons ta maison idéale."
-            </p>
-            <p style={{ fontSize: '13px', color: 'rgba(26,26,46,0.6)', margin: 0 }}>
-              La location entre particuliers, sans intermédiaire.
-            </p>
-          </div>
-
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {['Zéro frais d\'agence', 'Documents sécurisés & anti-fraude', 'Contrats électroniques ALUR', 'Dossier locataire intelligent'].map(b => (
-              <li key={b} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'rgba(255,255,255,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                    <path d="M1.5 5.5l2.5 2.5 5-5" stroke="#1a1a2e" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-                <span style={{ fontSize: '13px', color: '#1a1a2e', fontWeight: 400 }}>{b}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <p style={{ fontSize: '13px', color: 'rgba(26,26,46,0.55)', margin: 0 }}>
-          Déjà inscrit ?{' '}
-          <Link to="/login" style={{ color: '#1a1a2e', fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: '2px' }}>
-            Se connecter
-          </Link>
-        </p>
-      </div>
-
-      {/* ── Panneau droit ─────────────────────────────────────────────── */}
-      <div
-        style={{ background: '#ffffff', overflowY: 'auto', display: 'flex', justifyContent: 'center', position: 'relative' }}
-        className="w-full md:w-[56%]"
-      >
-        {/* Back button */}
         <button
           onClick={() => { setScreen('welcome'); setError('') }}
-          style={{ position: 'absolute', top: '28px', left: '32px', background: 'none', border: 'none', fontSize: '13px', color: '#9e9b96', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'inherit' }}
-          onMouseEnter={e => (e.currentTarget.style.color = '#5a5754')}
-          onMouseLeave={e => (e.currentTarget.style.color = '#9e9b96')}
+          style={{
+            position: 'absolute', top: '28px', left: '32px',
+            background: 'none', border: 'none', fontSize: '13px', color: BAI.inkFaint,
+            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: BAI.fontBody,
+          }}
+          onMouseEnter={e => (e.currentTarget.style.color = BAI.inkMid)}
+          onMouseLeave={e => (e.currentTarget.style.color = BAI.inkFaint)}
         >
           ← Retour
         </button>
 
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.32, ease: 'easeOut' }}
-          style={{ width: '100%', maxWidth: '380px', padding: '72px 32px 48px' }}
+          style={{ width: '100%', maxWidth: '400px', padding: '72px 32px 48px' }}
         >
-
           {/* Mobile logo */}
           <div className="flex md:hidden" style={{ justifyContent: 'center', marginBottom: '28px' }}>
             <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
               <BailioLogo size={30} />
-              <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '22px', color: '#1a1a2e', letterSpacing: '-0.02em' }}>Bailio</span>
+              <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '22px', color: BAI.night, letterSpacing: '-0.02em' }}>Bailio</span>
             </Link>
+          </div>
+
+          {/* Steps indicator */}
+          <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', marginBottom: '28px' }}>
+            {stepLabels.map((_, idx) => (
+              <div
+                key={idx}
+                style={{
+                  width: idx === currentStep ? '20px' : '8px',
+                  height: '8px',
+                  borderRadius: '50px',
+                  background: idx === currentStep ? BAI.caramel : idx < currentStep ? BAI.caramel : BAI.border,
+                  transition: 'all 0.2s ease',
+                  opacity: idx > currentStep ? 0.4 : 1,
+                }}
+              />
+            ))}
           </div>
 
           {/* Heading */}
           <div style={{ marginBottom: '24px' }}>
-            <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '34px', color: '#0d0c0a', margin: '0 0 6px', lineHeight: 1.1 }}>
-              Créer votre compte {formData.role === 'OWNER' ? 'propriétaire' : 'locataire'}
+            <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(24px, 5vw, 34px)', color: BAI.ink, margin: '0 0 6px', lineHeight: 1.1 }}>
+              Compte {formData.role === 'OWNER' ? 'propriétaire' : 'locataire'}
             </h1>
-            <p style={{ fontSize: '14px', color: '#5a5754', margin: 0 }}>
+            <p style={{ ...fontBody, fontSize: '14px', color: BAI.inkMid, margin: 0 }}>
               Rejoignez la plateforme en quelques minutes.
             </p>
           </div>
 
           {error && (
-            <div style={{ marginBottom: '18px', padding: '12px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+            <div style={{
+              marginBottom: '18px', padding: '12px 14px',
+              background: BAI.errorLight, border: '1px solid #fecaca',
+              borderRadius: '8px', display: 'flex', alignItems: 'flex-start', gap: '8px',
+            }}>
               <AlertCircle style={{ width: '16px', height: '16px', color: '#dc2626', flexShrink: 0, marginTop: '1px' }} />
-              <p style={{ fontSize: '13px', color: '#991b1b', margin: 0 }}>{error}</p>
+              <p style={{ ...fontBody, fontSize: '13px', color: BAI.error, margin: 0 }}>{error}</p>
             </div>
           )}
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
-            {/* Choix du rôle */}
+            {/* Rôle inline */}
             <div>
-              <label style={{ ...font, fontWeight: 500, fontSize: '13px', color: '#0d0c0a', display: 'block', marginBottom: '8px' }}>Je suis</label>
+              <label style={{ ...fontBody, fontWeight: 500, fontSize: '13px', color: BAI.ink, display: 'block', marginBottom: '8px' }}>Je suis</label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 {([
-                  { value: 'TENANT', label: 'Locataire', desc: 'Je cherche un logement', emoji: '🏠' },
-                  { value: 'OWNER', label: 'Propriétaire', desc: 'Je loue mon bien', emoji: '🔑' },
-                ] as const).map(opt => (
+                  { value: 'TENANT' as const, label: 'Locataire', desc: 'Je cherche un logement', bg: BAI.tenantLight },
+                  { value: 'OWNER' as const, label: 'Propriétaire', desc: 'Je loue mon bien', bg: BAI.ownerLight },
+                ]).map(opt => (
                   <button
                     key={opt.value}
                     type="button"
                     onClick={() => setFormData(p => ({ ...p, role: opt.value }))}
                     style={{
-                      padding: '12px 10px', borderRadius: '10px', textAlign: 'center', cursor: 'pointer',
-                      border: formData.role === opt.value ? '2px solid #1a1a2e' : '1.5px solid #e4e1db',
-                      background: formData.role === opt.value ? 'rgba(26,26,46,0.04)' : '#f8f7f4',
-                      fontFamily: "'DM Sans', system-ui, sans-serif",
-                      transition: 'border-color 0.15s, background 0.15s',
+                      padding: '10px 12px', borderRadius: '10px', textAlign: 'left', cursor: 'pointer',
+                      border: formData.role === opt.value ? `2px solid ${BAI.night}` : `1.5px solid ${BAI.border}`,
+                      background: formData.role === opt.value ? opt.bg : BAI.bgInput,
+                      fontFamily: BAI.fontBody, transition: 'border-color 0.15s, background 0.15s',
+                      display: 'flex', alignItems: 'center', gap: '8px',
                     }}
                   >
-                    <div style={{ fontSize: '20px', marginBottom: '4px' }}>{opt.emoji}</div>
-                    <div style={{ fontWeight: 600, fontSize: '13px', color: '#0d0c0a' }}>{opt.label}</div>
-                    <div style={{ fontSize: '11px', color: '#9e9b96', marginTop: '2px' }}>{opt.desc}</div>
+                    <div style={{ fontWeight: 600, fontSize: '13px', color: BAI.ink }}>{opt.label}</div>
+                    <div style={{ fontSize: '11px', color: BAI.inkFaint }}>{opt.desc}</div>
                   </button>
                 ))}
               </div>
@@ -648,89 +700,89 @@ export default function Register() {
             {/* Prénom + Nom */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(140px, 100%), 1fr))', gap: '10px' }}>
               <div>
-                <label style={{ ...font, fontWeight: 500, fontSize: '13px', color: '#0d0c0a', display: 'block', marginBottom: '6px' }}>Prénom</label>
+                <label style={{ ...fontBody, fontWeight: 500, fontSize: '13px', color: BAI.ink, display: 'block', marginBottom: '6px' }}>Prénom</label>
                 <input id="firstName" name="firstName" type="text" placeholder="Jean"
                   value={formData.firstName} onChange={handleChange}
                   onFocus={() => onFocus('firstName')} onBlur={() => onBlur('firstName')}
-                  disabled={isSubmitting} required style={inp(focused['firstName'])}
+                  disabled={isSubmitting} required style={inputStyle(focused['firstName'])}
                   autoComplete="given-name" />
               </div>
               <div>
-                <label style={{ ...font, fontWeight: 500, fontSize: '13px', color: '#0d0c0a', display: 'block', marginBottom: '6px' }}>Nom</label>
+                <label style={{ ...fontBody, fontWeight: 500, fontSize: '13px', color: BAI.ink, display: 'block', marginBottom: '6px' }}>Nom</label>
                 <input id="lastName" name="lastName" type="text" placeholder="Dupont"
                   value={formData.lastName} onChange={handleChange}
                   onFocus={() => onFocus('lastName')} onBlur={() => onBlur('lastName')}
-                  disabled={isSubmitting} required style={inp(focused['lastName'])}
+                  disabled={isSubmitting} required style={inputStyle(focused['lastName'])}
                   autoComplete="family-name" />
               </div>
             </div>
 
             {/* Email */}
             <div>
-              <label style={{ ...font, fontWeight: 500, fontSize: '13px', color: '#0d0c0a', display: 'block', marginBottom: '6px' }}>Adresse email</label>
+              <label style={{ ...fontBody, fontWeight: 500, fontSize: '13px', color: BAI.ink, display: 'block', marginBottom: '6px' }}>Adresse email</label>
               <input id="email" name="email" type="email" placeholder="votre@email.com"
                 value={formData.email} onChange={handleChange}
                 onFocus={() => onFocus('email')} onBlur={() => onBlur('email')}
-                disabled={isSubmitting} required style={inp(focused['email'])}
+                disabled={isSubmitting} required style={inputStyle(focused['email'])}
                 autoComplete="email" />
             </div>
 
-            {/* Password */}
+            {/* Mot de passe */}
             <div>
-              <label style={{ ...font, fontWeight: 500, fontSize: '13px', color: '#0d0c0a', display: 'block', marginBottom: '6px' }}>Mot de passe</label>
+              <label style={{ ...fontBody, fontWeight: 500, fontSize: '13px', color: BAI.ink, display: 'block', marginBottom: '6px' }}>Mot de passe</label>
               <input id="password" name="password" type="password" placeholder="••••••••"
                 value={formData.password} onChange={handleChange}
                 onFocus={() => onFocus('password')} onBlur={() => onBlur('password')}
-                disabled={isSubmitting} required style={inp(focused['password'])}
+                disabled={isSubmitting} required style={inputStyle(focused['password'])}
                 autoComplete="new-password" />
               {formData.password.length > 0 && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px', marginTop: '10px' }}>
                   {passwordChecks.map(c => (
                     <div key={c.text} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       {c.met ? (
-                        <CheckCircle style={{ width: '12px', height: '12px', color: '#16a34a', flexShrink: 0 }} />
+                        <CheckCircle style={{ width: '12px', height: '12px', color: BAI.success, flexShrink: 0 }} />
                       ) : (
-                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', border: '1.5px solid #d1d5db', flexShrink: 0 }} />
+                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', border: `1.5px solid ${BAI.border}`, flexShrink: 0 }} />
                       )}
-                      <span style={{ fontSize: '11px', color: c.met ? '#16a34a' : '#9e9b96' }}>{c.text}</span>
+                      <span style={{ ...fontBody, fontSize: '11px', color: c.met ? BAI.success : BAI.inkFaint }}>{c.text}</span>
                     </div>
                   ))}
                 </div>
               )}
             </div>
 
-            {/* Confirm password */}
+            {/* Confirmer mot de passe */}
             <div>
-              <label style={{ ...font, fontWeight: 500, fontSize: '13px', color: '#0d0c0a', display: 'block', marginBottom: '6px' }}>Confirmer le mot de passe</label>
-              <input id="confirmPassword" name="confirmPassword" type="password" placeholder="••••••••"
+              <label style={{ ...fontBody, fontWeight: 500, fontSize: '13px', color: BAI.ink, display: 'block', marginBottom: '6px' }}>Confirmer le mot de passe</label>
+              <input
+                id="confirmPassword" name="confirmPassword" type="password" placeholder="••••••••"
                 value={formData.confirmPassword} onChange={handleChange}
                 onFocus={() => onFocus('confirmPassword')} onBlur={() => onBlur('confirmPassword')}
                 disabled={isSubmitting} required
-                style={{
-                  ...inp(focused['confirmPassword']),
-                  borderColor: formData.confirmPassword.length > 0 && formData.confirmPassword !== formData.password
-                    ? '#fca5a5'
-                    : focused['confirmPassword'] ? '#1a1a2e' : '#e4e1db',
-                }}
+                style={inputStyle(
+                  focused['confirmPassword'],
+                  formData.confirmPassword.length > 0 && formData.confirmPassword !== formData.password
+                )}
                 autoComplete="new-password" />
               {formData.confirmPassword.length > 0 && formData.confirmPassword !== formData.password && (
-                <p style={{ fontSize: '11px', color: '#dc2626', margin: '5px 0 0' }}>Les mots de passe ne correspondent pas.</p>
+                <p style={{ ...fontBody, fontSize: '11px', color: '#dc2626', margin: '5px 0 0' }}>Les mots de passe ne correspondent pas.</p>
               )}
             </div>
 
-            {/* Submit */}
+            {/* Bouton submit */}
             <button
               type="submit" disabled={isSubmitting}
               style={{
-                width: '100%', background: isSubmitting ? '#4a4a6a' : '#1a1a2e',
+                width: '100%',
+                background: isSubmitting ? '#4a4a6a' : BAI.night,
                 color: '#ffffff', border: 'none', borderRadius: '8px', padding: '14px 0',
-                ...font, fontWeight: 600, fontSize: '14px',
+                ...fontBody, fontWeight: 600, fontSize: '14px',
                 cursor: isSubmitting ? 'not-allowed' : 'pointer', marginTop: '4px',
                 transition: 'background 0.15s', display: 'flex', alignItems: 'center',
-                justifyContent: 'center', gap: '8px',
+                justifyContent: 'center', gap: '8px', minHeight: '48px',
               }}
               onMouseEnter={e => { if (!isSubmitting) (e.currentTarget as HTMLButtonElement).style.background = '#2a2a4a' }}
-              onMouseLeave={e => { if (!isSubmitting) (e.currentTarget as HTMLButtonElement).style.background = '#1a1a2e' }}
+              onMouseLeave={e => { if (!isSubmitting) (e.currentTarget as HTMLButtonElement).style.background = BAI.night }}
             >
               {isSubmitting ? (
                 <>
@@ -740,13 +792,13 @@ export default function Register() {
                   </svg>
                   Inscription en cours…
                 </>
-              ) : 'Continuer'}
+              ) : 'Créer mon compte'}
             </button>
           </form>
 
-          <p style={{ ...font, textAlign: 'center', fontSize: '13px', color: '#5a5754', marginTop: '22px', marginBottom: 0 }}>
+          <p style={{ ...fontBody, textAlign: 'center', fontSize: '13px', color: BAI.inkMid, marginTop: '22px', marginBottom: 0 }}>
             Déjà un compte ?{' '}
-            <Link to="/login" style={{ color: '#0d0c0a', fontWeight: 500, textDecoration: 'underline', textDecorationColor: '#c4976a', textUnderlineOffset: '2px' }}>
+            <Link to="/login" style={{ color: BAI.ink, fontWeight: 500, textDecoration: 'underline', textDecorationColor: BAI.caramel, textUnderlineOffset: '2px' }}>
               Se connecter
             </Link>
           </p>

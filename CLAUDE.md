@@ -47,8 +47,11 @@ import { BAI } from '../../constants/bailio-tokens'
 - `BAI.fontDisplay` = `'Cormorant Garamond', Georgia, serif`
 - `BAI.fontBody` = `'DM Sans', system-ui, sans-serif`
 
-### Composants interdits
-- ❌ `backdrop-filter` / glassmorphism
+### Glassmorphisme — règle actualisée (style Hyperbeat)
+- ✅ **Autorisé sur fonds sombres** (`#0a0d1a`, `BAI.night`) : `backdropFilter: 'blur(20px) saturate(160%)'`, `background: 'rgba(255,255,255,0.07)'`, `border: '1px solid rgba(255,255,255,0.12)'`
+- ✅ **Autorisé** : nav sticky/fixed, modals, drawers mobiles, sidebar items hover
+- ❌ **Interdit sur fonds clairs** (`bgBase`, `bgSurface`) : incohérent visuellement
+- ❌ **Interdit** : overuse (max 2-3 éléments glass par page)
 - ❌ `dark:` classes Tailwind
 - ❌ Gradients bleu/violet, blobs, neon
 

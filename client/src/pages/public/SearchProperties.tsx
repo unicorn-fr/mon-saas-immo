@@ -10,8 +10,8 @@ import { Layout } from '../../components/layout/Layout'
 import { SearchMap } from '../../components/property/SearchMap'
 import { BAI } from '../../constants/bailio-tokens'
 import {
-  Search, Grid3x3, Map as MapIcon, X, Home as HomeIcon,
-  SlidersHorizontal, ChevronDown, ChevronUp,
+  Search, Grid3x3, Map as MapIcon, X,
+  SlidersHorizontal, ChevronDown, ChevronUp, MapPin,
 } from 'lucide-react'
 
 // ─── Constantes filtres ────────────────────────────────────────────────────────
@@ -85,12 +85,12 @@ function FilterPanel({ filters, city, onCity, onChange, onReset, total }: Filter
 
   const inputStyle: React.CSSProperties = {
     width: '100%', background: BAI.bgInput, border: `1px solid ${BAI.border}`,
-    borderRadius: 8, padding: '10px 12px', fontFamily: BAI.fontBody, fontSize: 14,
+    borderRadius: 8, padding: '10px 12px', fontFamily: BAI.fontBody, fontSize: 13,
     color: BAI.ink, outline: 'none', boxSizing: 'border-box',
   }
   const selectStyle: React.CSSProperties = { ...inputStyle, cursor: 'pointer' }
-  const sectionTitle: React.CSSProperties = {
-    fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700,
+  const sectionBtn: React.CSSProperties = {
+    fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700,
     letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.inkMid,
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     cursor: 'pointer', padding: '10px 0', border: 'none', background: 'none', width: '100%',
@@ -103,7 +103,7 @@ function FilterPanel({ filters, city, onCity, onChange, onReset, total }: Filter
     <aside style={{
       background: BAI.bgSurface, border: `1px solid ${BAI.border}`,
       borderRadius: 14, padding: 20, fontFamily: BAI.fontBody,
-      position: 'sticky', top: 80, maxHeight: 'calc(100vh - 100px)', overflowY: 'auto',
+      position: 'sticky', top: 72, maxHeight: 'calc(100vh - 90px)', overflowY: 'auto',
     }}>
       {/* Titre + reset */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
@@ -111,7 +111,10 @@ function FilterPanel({ filters, city, onCity, onChange, onReset, total }: Filter
           {total > 0 ? `${total} bien${total > 1 ? 's' : ''}` : 'Filtres'}
         </span>
         {hasActive && (
-          <button onClick={onReset} style={{ fontSize: 12, color: BAI.caramel, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}>
+          <button onClick={onReset} style={{
+            fontSize: 12, color: BAI.caramel, background: 'none', border: 'none',
+            cursor: 'pointer', fontWeight: 600, padding: 0,
+          }}>
             Effacer tout
           </button>
         )}
@@ -119,15 +122,18 @@ function FilterPanel({ filters, city, onCity, onChange, onReset, total }: Filter
 
       {/* Ville */}
       <div style={{ marginBottom: 14 }}>
-        <label style={{ fontSize: 12, fontWeight: 600, color: BAI.inkMid, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        <label style={{
+          fontSize: 11, fontWeight: 700, color: BAI.inkMid, display: 'block',
+          marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em',
+        }}>
           Localisation
         </label>
         <div style={{ position: 'relative' }}>
-          <Search size={14} color={BAI.inkFaint} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+          <MapPin size={13} color={BAI.caramel} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
           <input
             type="text" value={city} onChange={e => onCity(e.target.value)}
             placeholder="Ville, code postal…"
-            style={{ ...inputStyle, paddingLeft: 32 }}
+            style={{ ...inputStyle, paddingLeft: 30 }}
           />
           {city && (
             <button onClick={() => onCity('')} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: BAI.inkFaint, padding: 2 }}>
@@ -139,7 +145,7 @@ function FilterPanel({ filters, city, onCity, onChange, onReset, total }: Filter
 
       {/* Type */}
       <div style={{ marginBottom: 14 }}>
-        <label style={{ fontSize: 12, fontWeight: 600, color: BAI.inkMid, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        <label style={{ fontSize: 11, fontWeight: 700, color: BAI.inkMid, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
           Type de bien
         </label>
         <select value={filters.type ?? ''} onChange={e => onChange({ ...filters, type: (e.target.value as any) || undefined })} style={selectStyle}>
@@ -149,9 +155,9 @@ function FilterPanel({ filters, city, onCity, onChange, onReset, total }: Filter
 
       {/* Budget */}
       <div style={{ marginBottom: 14, borderTop: `1px solid ${BAI.border}`, paddingTop: 12 }}>
-        <button style={sectionTitle} onClick={() => setBudgetOpen(v => !v)}>
+        <button style={sectionBtn} onClick={() => setBudgetOpen(v => !v)}>
           <span>Budget</span>
-          {budgetOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          {budgetOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
         </button>
         {budgetOpen && (
           <select value={activeBudget} onChange={e => setBudget(e.target.value)} style={{ ...selectStyle, marginTop: 6 }}>
@@ -162,9 +168,9 @@ function FilterPanel({ filters, city, onCity, onChange, onReset, total }: Filter
 
       {/* Surface */}
       <div style={{ marginBottom: 14, borderTop: `1px solid ${BAI.border}`, paddingTop: 12 }}>
-        <button style={sectionTitle} onClick={() => setSurfaceOpen(v => !v)}>
+        <button style={sectionBtn} onClick={() => setSurfaceOpen(v => !v)}>
           <span>Surface</span>
-          {surfaceOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          {surfaceOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
         </button>
         {surfaceOpen && (
           <select
@@ -179,14 +185,14 @@ function FilterPanel({ filters, city, onCity, onChange, onReset, total }: Filter
 
       {/* Plus de critères */}
       <div style={{ borderTop: `1px solid ${BAI.border}`, paddingTop: 12 }}>
-        <button style={sectionTitle} onClick={() => setMoreOpen(v => !v)}>
+        <button style={sectionBtn} onClick={() => setMoreOpen(v => !v)}>
           <span>Plus de critères</span>
-          {moreOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          {moreOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
         </button>
         {moreOpen && (
           <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BAI.inkMid, display: 'block', marginBottom: 4 }}>Pièces</label>
+              <label style={{ fontSize: 11, fontWeight: 700, color: BAI.inkMid, display: 'block', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Pièces</label>
               <select
                 value={filters.bedrooms?.toString() ?? ''}
                 onChange={e => onChange({ ...filters, bedrooms: e.target.value ? Number(e.target.value) : undefined })}
@@ -195,7 +201,7 @@ function FilterPanel({ filters, city, onCity, onChange, onReset, total }: Filter
                 {ROOMS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
               </select>
             </div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: BAI.ink, cursor: 'pointer' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: BAI.ink, cursor: 'pointer' }}>
               <input
                 type="checkbox" checked={!!filters.furnished}
                 onChange={e => onChange({ ...filters, furnished: e.target.checked || undefined })}
@@ -203,7 +209,7 @@ function FilterPanel({ filters, city, onCity, onChange, onReset, total }: Filter
               />
               Meublé uniquement
             </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: BAI.ink, cursor: 'pointer' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: BAI.ink, cursor: 'pointer' }}>
               <input
                 type="checkbox" checked={!!filters.hasParking}
                 onChange={e => onChange({ ...filters, hasParking: e.target.checked || undefined })}
@@ -211,7 +217,7 @@ function FilterPanel({ filters, city, onCity, onChange, onReset, total }: Filter
               />
               Avec parking
             </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: BAI.ink, cursor: 'pointer' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: BAI.ink, cursor: 'pointer' }}>
               <input
                 type="checkbox" checked={!!filters.hasGarden}
                 onChange={e => onChange({ ...filters, hasGarden: e.target.checked || undefined })}
@@ -223,6 +229,30 @@ function FilterPanel({ filters, city, onCity, onChange, onReset, total }: Filter
         )}
       </div>
     </aside>
+  )
+}
+
+// ─── Skeleton card ─────────────────────────────────────────────────────────────
+
+function SkeletonCard() {
+  return (
+    <div style={{
+      background: BAI.bgSurface, border: `1px solid ${BAI.border}`,
+      borderRadius: BAI.radiusLg, overflow: 'hidden',
+    }}>
+      <div style={{ height: 180, background: BAI.bgMuted, position: 'relative', overflow: 'hidden' }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: `linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)`,
+          animation: 'shimmer 1.5s infinite',
+        }} />
+      </div>
+      <div style={{ padding: 16 }}>
+        <div style={{ height: 16, borderRadius: 4, background: BAI.bgMuted, marginBottom: 8, width: '70%' }} />
+        <div style={{ height: 12, borderRadius: 4, background: BAI.bgMuted, marginBottom: 12, width: '50%' }} />
+        <div style={{ height: 20, borderRadius: 4, background: BAI.bgMuted, width: '40%' }} />
+      </div>
+    </div>
   )
 }
 
@@ -310,6 +340,11 @@ export default function SearchProperties() {
       <style>{`
         .sl-input:focus { border-color: ${BAI.caramel} !important; outline: none; }
         .sl-select:focus { border-color: ${BAI.caramel} !important; outline: none; }
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
         @media (max-width: 768px) {
           .sl-sidebar { display: none; }
           .sl-sidebar.open { display: block !important; position: fixed; inset: 0; z-index: 200; overflow-y: auto; border-radius: 0; }
@@ -317,21 +352,25 @@ export default function SearchProperties() {
         }
       `}</style>
 
-      {/* ── Barre de recherche ── */}
+      {/* ── Barre de recherche sticky ─────────────────────────────────────── */}
       <div style={{
-        background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}`,
-        padding: '10px clamp(12px,3vw,32px)', display: 'flex', gap: 8,
-        alignItems: 'center', flexWrap: 'wrap', position: 'sticky', top: 0, zIndex: 100,
+        background: BAI.bgSurface,
+        borderBottom: `1px solid ${BAI.border}`,
+        padding: '10px clamp(12px,3vw,32px)',
+        display: 'flex', gap: 8,
+        alignItems: 'center', flexWrap: 'wrap',
+        position: 'sticky', top: 0, zIndex: 100,
+        boxShadow: '0 1px 0 rgba(13,12,10,0.04)',
       }}>
-        {/* Champ ville — pleine largeur mobile */}
+        {/* Champ ville */}
         <div style={{ position: 'relative', flex: '1 1 180px', minWidth: 0 }}>
-          <Search size={15} color={BAI.inkFaint} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+          <MapPin size={14} color={BAI.caramel} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
           <input
             className="sl-input"
             type="text" value={city} onChange={e => setCity(e.target.value)}
             placeholder="Ville, quartier, code postal…"
             style={{
-              width: '100%', paddingLeft: 32, paddingRight: city ? 28 : 12,
+              width: '100%', paddingLeft: 34, paddingRight: city ? 32 : 14,
               paddingTop: 10, paddingBottom: 10, borderRadius: 8, minHeight: 44,
               border: `1px solid ${BAI.border}`, background: BAI.bgInput,
               fontFamily: BAI.fontBody, fontSize: 14, color: BAI.ink,
@@ -339,27 +378,28 @@ export default function SearchProperties() {
             }}
           />
           {city && (
-            <button onClick={() => setCity('')} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: BAI.inkFaint, padding: 2 }}>
+            <button onClick={() => setCity('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: BAI.inkFaint, padding: 2 }}>
               <X size={13} />
             </button>
           )}
         </div>
 
-        {/* Type — masqué sur mobile */}
+        {/* Type */}
         <select
           className="sl-select sl-desktop-filter"
           value={filters.type ?? ''}
           onChange={e => handleFiltersChange({ ...filters, type: (e.target.value as any) || undefined })}
           style={{
-            flex: '0 0 auto', background: BAI.bgInput, border: `1px solid ${BAI.border}`,
-            borderRadius: 8, padding: '10px 12px', minHeight: 44, fontFamily: BAI.fontBody, fontSize: 14,
+            flex: '0 0 auto', background: BAI.bgInput, border: `1px solid ${filters.type ? BAI.caramel : BAI.border}`,
+            borderRadius: 8, padding: '10px 12px', minHeight: 44,
+            fontFamily: BAI.fontBody, fontSize: 14,
             color: filters.type ? BAI.ink : BAI.inkFaint, cursor: 'pointer', outline: 'none',
           }}
         >
           {TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
         </select>
 
-        {/* Budget — masqué sur mobile */}
+        {/* Budget */}
         <select
           className="sl-select sl-desktop-filter"
           value={BUDGETS.find(b => {
@@ -374,46 +414,56 @@ export default function SearchProperties() {
             handleFiltersChange({ ...filters, minPrice: min ? Number(min) : undefined, maxPrice: max ? Number(max) : undefined })
           }}
           style={{
-            flex: '0 0 auto', background: BAI.bgInput, border: `1px solid ${BAI.border}`,
-            borderRadius: 8, padding: '10px 12px', minHeight: 44, fontFamily: BAI.fontBody, fontSize: 14,
+            flex: '0 0 auto', background: BAI.bgInput,
+            border: `1px solid ${(filters.minPrice || filters.maxPrice) ? BAI.caramel : BAI.border}`,
+            borderRadius: 8, padding: '10px 12px', minHeight: 44,
+            fontFamily: BAI.fontBody, fontSize: 14,
             color: (filters.minPrice || filters.maxPrice) ? BAI.ink : BAI.inkFaint, cursor: 'pointer', outline: 'none',
           }}
         >
           {BUDGETS.map(b => <option key={b.value} value={b.value}>{b.label}</option>)}
         </select>
 
-        {/* Tri — masqué sur mobile */}
+        {/* Tri */}
         <select
           className="sl-select sl-desktop-filter"
           value={`${sortBy}-${sortOrder}`}
           onChange={e => { const [sb, so] = e.target.value.split('-'); setSortBy(sb as any); setSortOrder(so as any) }}
           style={{
             flex: '0 0 auto', background: BAI.bgInput, border: `1px solid ${BAI.border}`,
-            borderRadius: 8, padding: '10px 12px', minHeight: 44, fontFamily: BAI.fontBody, fontSize: 14,
-            color: BAI.inkMid, cursor: 'pointer', outline: 'none',
+            borderRadius: 8, padding: '10px 12px', minHeight: 44,
+            fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, cursor: 'pointer', outline: 'none',
           }}
         >
           <option value="createdAt-desc">Plus récent</option>
           <option value="createdAt-asc">Plus ancien</option>
-          <option value="price-asc">Prix ↑</option>
-          <option value="price-desc">Prix ↓</option>
+          <option value="price-asc">Prix croissant</option>
+          <option value="price-desc">Prix décroissant</option>
         </select>
 
-        {/* Toggle vue — masqué sur mobile */}
-        <div className="sl-desktop-filter" style={{ display: 'flex', border: `1px solid ${BAI.border}`, borderRadius: 8, overflow: 'hidden', background: BAI.bgSurface, flexShrink: 0 }}>
-          {([{ mode: 'grid', Icon: Grid3x3 }, { mode: 'map', Icon: MapIcon }] as { mode: 'grid' | 'map'; Icon: ElementType }[]).map(({ mode, Icon }, i) => (
+        {/* Toggle vue grille / carte */}
+        <div className="sl-desktop-filter" style={{
+          display: 'flex', border: `1px solid ${BAI.border}`, borderRadius: 8,
+          overflow: 'hidden', background: BAI.bgSurface, flexShrink: 0,
+        }}>
+          {([
+            { mode: 'grid', Icon: Grid3x3, label: 'Grille' },
+            { mode: 'map',  Icon: MapIcon,  label: 'Carte' },
+          ] as { mode: 'grid' | 'map'; Icon: ElementType; label: string }[]).map(({ mode, Icon }, i) => (
             <button key={mode} onClick={() => setViewMode(mode)} style={{
-              padding: '10px 14px', minHeight: 44, background: viewMode === mode ? BAI.night : 'transparent',
+              padding: '10px 14px', minHeight: 44,
+              background: viewMode === mode ? BAI.night : 'transparent',
               color: viewMode === mode ? '#fff' : BAI.inkFaint,
               border: 'none', borderLeft: i > 0 ? `1px solid ${BAI.border}` : 'none',
-              cursor: 'pointer', display: 'flex', alignItems: 'center',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+              fontFamily: BAI.fontBody, fontSize: 13,
             }}>
-              <Icon size={16} />
+              <Icon size={15} />
             </button>
           ))}
         </div>
 
-        {/* Bouton filtres — visible uniquement sur mobile (flex conditionnel React) */}
+        {/* Bouton filtres mobile */}
         <button
           onClick={() => {
             setShowMobileFilters(v => !v)
@@ -429,24 +479,28 @@ export default function SearchProperties() {
             color: hasActive ? BAI.caramel : BAI.inkMid, cursor: 'pointer', flexShrink: 0,
           }}
         >
-          <SlidersHorizontal size={15} /> Filtres{hasActive ? ' •' : ''}
+          <SlidersHorizontal size={15} />
+          Filtres{hasActive ? ' •' : ''}
         </button>
 
         {hasActive && (
-          <button onClick={handleReset} style={{ fontSize: 13, color: BAI.caramel, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, flexShrink: 0, minHeight: 44 }}>
+          <button onClick={handleReset} style={{
+            fontSize: 13, color: BAI.caramel, background: 'none', border: 'none',
+            cursor: 'pointer', fontWeight: 600, flexShrink: 0, minHeight: 44,
+          }}>
             Effacer
           </button>
         )}
       </div>
 
-      {/* ── Corps : sidebar gauche + contenu ── */}
+      {/* ── Corps : sidebar + résultats ───────────────────────────────────── */}
       <div style={{
         maxWidth: 1400, margin: '0 auto',
         padding: 'clamp(16px,2vw,24px) clamp(12px,3vw,32px)',
         display: 'flex', gap: 24, alignItems: 'flex-start',
       }}>
 
-        {/* Sidebar filtres — toujours visible desktop */}
+        {/* Sidebar filtres desktop */}
         <div className="sl-sidebar" style={{ width: 260, flexShrink: 0 }}>
           <FilterPanel
             filters={filters} city={city} onCity={setCity}
@@ -458,9 +512,14 @@ export default function SearchProperties() {
         {/* Overlay filtres mobile */}
         {showMobileFilters && (
           <div className="sl-sidebar open" style={{ padding: 20, background: BAI.bgBase }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-              <span style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 20 }}>Filtres</span>
-              <button onClick={() => { setShowMobileFilters(false); document.body.style.overflow = '' }} style={{ background: 'none', border: 'none', cursor: 'pointer', minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <span style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: BAI.ink }}>
+                Filtres
+              </span>
+              <button
+                onClick={() => { setShowMobileFilters(false); document.body.style.overflow = '' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
                 <X size={20} color={BAI.inkMid} />
               </button>
             </div>
@@ -472,12 +531,27 @@ export default function SearchProperties() {
         <div style={{ flex: 1, minWidth: 0 }}>
 
           {/* Résumé */}
-          <div style={{ marginBottom: 16, fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid }}>
-            {isLoading && allProperties.length === 0
-              ? 'Chargement…'
-              : <><span style={{ fontWeight: 700, color: BAI.ink }}>{totalProperties}</span> bien{totalProperties > 1 ? 's' : ''} disponible{totalProperties > 1 ? 's' : ''}</>
-            }
-          </div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            style={{ marginBottom: 18, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+          >
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: 0 }}>
+              {isLoading && allProperties.length === 0
+                ? 'Recherche en cours…'
+                : (
+                  <>
+                    <span style={{ fontWeight: 700, color: BAI.ink }}>{totalProperties}</span>
+                    {' '}bien{totalProperties > 1 ? 's' : ''} disponible{totalProperties > 1 ? 's' : ''}
+                    {city && (
+                      <> · <span style={{ color: BAI.caramel, fontWeight: 600 }}>{city}</span></>
+                    )}
+                  </>
+                )
+              }
+            </p>
+          </motion.div>
 
           {/* Carte */}
           {viewMode === 'map' && (
@@ -493,25 +567,66 @@ export default function SearchProperties() {
           {/* Grille */}
           {viewMode === 'grid' && (
             <>
-              {!isLoading && allProperties.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '80px 0' }}>
-                  <HomeIcon size={48} color={BAI.inkFaint} style={{ opacity: 0.3, margin: '0 auto 16px', display: 'block' }} />
-                  <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 22, color: BAI.inkMid, marginBottom: 8 }}>
-                    Aucun bien trouvé.
+              {/* Loading skeletons (premier chargement) */}
+              {isLoading && allProperties.length === 0 && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px,100%), 1fr))', gap: 20 }}>
+                  {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+                </div>
+              )}
+
+              {/* Empty state */}
+              {!isLoading && allProperties.length === 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.26 }}
+                  style={{ textAlign: 'center', padding: 'clamp(48px,8vw,96px) 0' }}
+                >
+                  <div style={{
+                    width: 72, height: 72, borderRadius: 18,
+                    background: BAI.bgMuted, border: `1px solid ${BAI.border}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    margin: '0 auto 20px',
+                  }}>
+                    <Search size={28} color={BAI.inkFaint} />
+                  </div>
+                  <p style={{
+                    fontFamily: BAI.fontDisplay, fontStyle: 'italic',
+                    fontSize: 'clamp(20px,3vw,26px)', color: BAI.ink,
+                    marginBottom: 8,
+                  }}>
+                    Aucun bien trouvé pour ces critères.
                   </p>
-                  <p style={{ fontSize: 14, color: BAI.inkFaint, marginBottom: 24 }}>Modifiez vos filtres pour voir plus de résultats.</p>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint, marginBottom: 28 }}>
+                    Essayez d'élargir votre recherche ou de modifier vos filtres.
+                  </p>
                   {hasActive && (
-                    <button onClick={handleReset} style={{ background: BAI.night, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 22px', fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-                      Effacer les filtres
+                    <button
+                      onClick={handleReset}
+                      style={{
+                        background: BAI.night, color: '#fff', border: 'none',
+                        borderRadius: 8, padding: '12px 28px',
+                        fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600,
+                        cursor: 'pointer', minHeight: 44,
+                      }}
+                    >
+                      Modifier les filtres
                     </button>
                   )}
-                </div>
-              ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px,100%), 1fr))', gap: 20 }}>
+                </motion.div>
+              )}
+
+              {/* Résultats */}
+              {allProperties.length > 0 && (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px,100%), 1fr))',
+                  gap: 20,
+                }}>
                   {allProperties.map((property, i) => (
                     <motion.div
                       key={property.id}
-                      initial={{ opacity: 0, y: 12 }}
+                      initial={{ opacity: 0, y: 14 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: Math.min(i * 0.04, 0.3), duration: 0.24 }}
                     >
@@ -524,18 +639,22 @@ export default function SearchProperties() {
               {/* Infinite scroll sentinel */}
               <div ref={sentinelRef} style={{ display: 'flex', justifyContent: 'center', padding: '32px 0' }}>
                 {isLoading && allProperties.length > 0 && (
-                  <div style={{ width: 28, height: 28, borderRadius: '50%', border: `3px solid ${BAI.border}`, borderTopColor: BAI.caramel, animation: 'spin 0.8s linear infinite' }} />
+                  <div style={{
+                    width: 28, height: 28, borderRadius: '50%',
+                    border: `3px solid ${BAI.border}`, borderTopColor: BAI.caramel,
+                    animation: 'spin 0.8s linear infinite',
+                  }} />
                 )}
                 {!isLoading && !hasMore && allProperties.length > 0 && (
-                  <p style={{ fontSize: 13, color: BAI.inkFaint, fontFamily: BAI.fontBody }}>Tous les biens ont été affichés</p>
+                  <p style={{ fontSize: 13, color: BAI.inkFaint, fontFamily: BAI.fontBody }}>
+                    Tous les biens ont été affichés
+                  </p>
                 )}
               </div>
             </>
           )}
         </div>
       </div>
-
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </Layout>
   )
 }

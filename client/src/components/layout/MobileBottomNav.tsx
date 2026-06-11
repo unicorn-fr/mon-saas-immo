@@ -4,6 +4,7 @@ import {
   LayoutDashboard, Home,
   MessageSquare, User, Search, ClipboardList,
 } from 'lucide-react'
+import { BAI } from '../../constants/bailio-tokens'
 
 interface NavItem {
   to: string
@@ -19,25 +20,27 @@ interface MobileBottomNavProps {
 }
 
 const OWNER_ITEMS = (unread: number, pending: number): NavItem[] => [
-  { to: '/dashboard/owner',   label: 'Accueil',     icon: LayoutDashboard },
-  { to: '/properties/owner/me', label: 'Biens',     icon: Home },
-  { to: '/applications/manage', label: 'Dossiers',  icon: ClipboardList, badge: pending },
-  { to: '/messages',           label: 'Messages',   icon: MessageSquare, badge: unread },
-  { to: '/profile',            label: 'Profil',     icon: User },
+  { to: '/dashboard/owner',    label: 'Accueil',     icon: LayoutDashboard },
+  { to: '/properties/owner/me', label: 'Biens',      icon: Home },
+  { to: '/applications/manage', label: 'Dossiers',   icon: ClipboardList, badge: pending },
+  { to: '/messages',            label: 'Messages',   icon: MessageSquare, badge: unread },
+  { to: '/profile',             label: 'Profil',     icon: User },
 ]
 
 const TENANT_ITEMS = (unread: number, pending: number): NavItem[] => [
-  { to: '/dashboard/tenant', label: 'Accueil',      icon: LayoutDashboard },
-  { to: '/search',           label: 'Recherche',    icon: Search },
-  { to: '/my-applications',  label: 'Candidatures', icon: ClipboardList, badge: pending },
-  { to: '/messages',         label: 'Messages',     icon: MessageSquare, badge: unread },
-  { to: '/profile',          label: 'Profil',       icon: User },
+  { to: '/dashboard/tenant',   label: 'Accueil',     icon: LayoutDashboard },
+  { to: '/search',             label: 'Recherche',   icon: Search },
+  { to: '/my-applications',    label: 'Candidatures',icon: ClipboardList, badge: pending },
+  { to: '/messages',           label: 'Messages',    icon: MessageSquare, badge: unread },
+  { to: '/profile',            label: 'Profil',      icon: User },
 ]
 
-const OWNER_COLOR  = '#1a3270'
-const TENANT_COLOR = '#1b5e3b'
-const INK_FAINT    = '#9e9b96'
-const BORDER       = '#e4e1db'
+// Dark nav background — Hyperbeat-inspired
+const NAV_BG      = '#0a0d1a'
+const NAV_BORDER  = 'rgba(255,255,255,0.08)'
+const ICON_ACTIVE = BAI.caramel
+const ICON_IDLE   = 'rgba(255,255,255,0.40)'
+const LABEL_IDLE  = 'rgba(255,255,255,0.35)'
 
 export function MobileBottomNav({
   role,
@@ -45,19 +48,17 @@ export function MobileBottomNav({
   pendingApps = 0,
 }: MobileBottomNavProps) {
   const location = useLocation()
-  const activeColor = role === 'OWNER' ? OWNER_COLOR : TENANT_COLOR
   const items = role === 'OWNER'
     ? OWNER_ITEMS(unreadMessages, pendingApps)
     : TENANT_ITEMS(unreadMessages, pendingApps)
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
+      className="fixed bottom-0 left-0 right-0 md:hidden"
       style={{
-        background: '#ffffff',
-        borderTop: `1px solid ${BORDER}`,
-        boxShadow: '0 -1px 2px rgba(13,12,10,0.04), 0 -4px 12px rgba(13,12,10,0.06)',
-        // Safe area pour les iPhones avec barre d'accueil (Dynamic Island, etc.)
+        background: NAV_BG,
+        borderTop: `1px solid ${NAV_BORDER}`,
+        zIndex: 1010,
         paddingBottom: 'max(env(safe-area-inset-bottom), 0px)',
       }}
       aria-label="Navigation principale"
@@ -75,40 +76,51 @@ export function MobileBottomNav({
               to={item.to}
               className="relative flex flex-col items-center justify-center flex-1 gap-0.5 py-1.5"
               aria-current={isActive ? 'page' : undefined}
+              style={{ textDecoration: 'none' }}
             >
-              {/* Spring-animated active indicator — layoutId makes it slide between items */}
+              {/* Indicator line under active icon */}
               {isActive && (
                 <motion.span
-                  layoutId="mobileNavActive"
-                  className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full"
-                  style={{ background: activeColor }}
+                  layoutId="mobileNavActiveDark"
+                  style={{
+                    position: 'absolute',
+                    bottom: 4,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: 20,
+                    height: 2,
+                    borderRadius: 2,
+                    background: ICON_ACTIVE,
+                  }}
                   transition={{ type: 'spring', stiffness: 500, damping: 40 }}
                 />
               )}
 
-              {/* Icône + badge avec tap feedback */}
+              {/* Icon + badge */}
               <motion.div
                 className="relative"
-                whileTap={{ scale: 0.82 }}
-                transition={{ duration: 0.12 }}
+                whileTap={{ scale: 0.80 }}
+                transition={{ duration: 0.11 }}
               >
                 <Icon
-                  className="w-5 h-5"
-                  style={{ color: isActive ? activeColor : INK_FAINT }}
-                  strokeWidth={isActive ? 2.2 : 1.8}
+                  size={20}
+                  style={{ color: isActive ? ICON_ACTIVE : ICON_IDLE }}
+                  strokeWidth={isActive ? 2.2 : 1.7}
                 />
                 {item.badge !== undefined && item.badge > 0 && (
                   <motion.span
                     initial={{ scale: 0.5, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ type: 'spring', stiffness: 600, damping: 30 }}
-                    className="absolute -top-1.5 -right-2 flex items-center justify-center
-                      min-w-[16px] h-4 px-1 rounded-full text-white"
                     style={{
-                      fontSize: '9px',
-                      fontWeight: 700,
-                      background: '#c4976a',
-                      fontFamily: 'var(--font-body)',
+                      position: 'absolute',
+                      top: -6, right: -8,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      minWidth: 16, height: 16,
+                      padding: '0 3px', borderRadius: 99,
+                      fontSize: 9, fontWeight: 700, color: '#fff',
+                      background: BAI.caramel,
+                      fontFamily: BAI.fontBody,
                     }}
                   >
                     {item.badge > 99 ? '99+' : item.badge}
@@ -116,19 +128,32 @@ export function MobileBottomNav({
                 )}
               </motion.div>
 
-              {/* Label */}
-              <span
-                className="truncate max-w-full"
-                style={{
-                  fontSize: '10px',
-                  fontWeight: isActive ? 600 : 400,
-                  color: isActive ? activeColor : INK_FAINT,
-                  fontFamily: 'var(--font-body)',
-                  lineHeight: 1,
-                }}
-              >
-                {item.label}
-              </span>
+              {/* Label — uniquement pour l'item actif */}
+              {isActive && (
+                <span
+                  style={{
+                    fontSize: 10, fontWeight: 700,
+                    color: ICON_ACTIVE,
+                    fontFamily: BAI.fontBody,
+                    lineHeight: 1,
+                    letterSpacing: '0.02em',
+                  }}
+                >
+                  {item.label}
+                </span>
+              )}
+              {!isActive && (
+                <span
+                  style={{
+                    fontSize: 9, fontWeight: 400,
+                    color: LABEL_IDLE,
+                    fontFamily: BAI.fontBody,
+                    lineHeight: 1,
+                  }}
+                >
+                  {item.label}
+                </span>
+              )}
             </NavLink>
           )
         })}

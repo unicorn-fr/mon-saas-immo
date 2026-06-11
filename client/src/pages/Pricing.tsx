@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, X, Info, Zap, ArrowRight } from 'lucide-react'
+import { Check, X, Info, Zap, ArrowRight, ChevronDown } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { Header } from '../components/layout/Header'
@@ -10,7 +10,7 @@ import { useAuth } from '../hooks/useAuth'
 import { apiClient } from '../services/api.service'
 import { PLANS, FEATURE_TABLE, FAQ_ITEMS, type PlanId } from '../config/pricing'
 
-// ─── FAQ Accordion ────────────────────────────────────────────────────────────
+/* ─── FAQ Accordion ──────────────────────────────────────────────────────── */
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false)
   return (
@@ -22,27 +22,36 @@ function FaqItem({ q, a }: { q: string; a: string }) {
         <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 600, fontSize: 18, color: BAI.ink, margin: 0, flex: 1 }}>
           {q}
         </p>
-        <span style={{ color: BAI.caramel, fontSize: 22, fontWeight: 300, lineHeight: 1, flexShrink: 0 }}>
-          {open ? '−' : '+'}
-        </span>
+        <ChevronDown
+          style={{
+            width: '18px', height: '18px', color: BAI.caramel, flexShrink: 0,
+            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.2s ease',
+          }}
+        />
       </div>
       {open && (
-        <p style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.7, margin: '0 0 20px', paddingRight: 32 }}>
+        <motion.p
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, lineHeight: 1.7, margin: '0 0 20px', paddingRight: 32 }}
+        >
           {a}
-        </p>
+        </motion.p>
       )}
     </div>
   )
 }
 
-// ─── Feature value cell ───────────────────────────────────────────────────────
+/* ─── Feature value cell ─────────────────────────────────────────────────── */
 function FeatureCell({ value }: { value: boolean | string }) {
   if (value === true) return <Check style={{ width: 16, height: 16, color: '#16a34a', margin: '0 auto', display: 'block' }} />
   if (value === false) return <X style={{ width: 15, height: 15, color: BAI.inkFaint, margin: '0 auto', display: 'block' }} />
   return <span style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.owner }}>{value}</span>
 }
 
-// ─── Pricing Page ─────────────────────────────────────────────────────────────
+/* ─── Pricing Page ───────────────────────────────────────────────────────── */
 export default function Pricing() {
   const [billing, setBilling] = useState<'annual' | 'monthly'>('annual')
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
@@ -59,7 +68,6 @@ export default function Pricing() {
     const plan = PLANS.find(p => p.id === planId)!
     const priceId = plan.priceIds?.[billing]
 
-    // Les abonnements sont réservés aux propriétaires
     if (isAuthenticated && user?.role === 'TENANT') {
       toast.error('Les abonnements sont réservés aux propriétaires. En tant que locataire, l\'accès à la plateforme est gratuit.', { duration: 5000 })
       return
@@ -119,48 +127,116 @@ export default function Pricing() {
 
       <Header />
 
-      {/* ── HERO ── */}
-      <section style={{ padding: '72px 0 56px', textAlign: 'center' }}>
-        <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
-          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 16px' }}>
-            Tarifs
-          </p>
-          <h1 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(32px,5vw,52px)', lineHeight: 1.05, color: BAI.ink, margin: '0 0 18px' }}>
-            Simple, transparent.{' '}
-            <em style={{ color: BAI.caramel }}>Sans surprise.</em>
-          </h1>
-          <p style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.65, maxWidth: '52ch', margin: '0 auto 36px' }}>
-            Commence gratuitement. Essai 14 jours sans carte bancaire pour tous les plans payants.
-          </p>
+      {/* ── HERO DARK ── */}
+      <section style={{
+        background: '#0a0d1a',
+        padding: 'clamp(72px, 10vw, 112px) 0 clamp(56px, 8vw, 96px)',
+        textAlign: 'center',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        {/* Glows décoratifs */}
+        <div style={{
+          position: 'absolute', top: '-100px', left: '50%', transform: 'translateX(-50%)',
+          width: '600px', height: '400px',
+          background: 'radial-gradient(ellipse, rgba(196,151,106,0.10) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }} />
+        <div style={{
+          position: 'absolute', bottom: '-40px', right: '10%',
+          width: '300px', height: '300px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(26,26,46,0.6) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }} />
 
-          {/* Toggle annuel / mensuel */}
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: BAI.bgMuted, border: `1px solid ${BAI.border}`, borderRadius: 999, padding: '4px' }}>
+        <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 clamp(16px, 5vw, 48px)', position: 'relative', zIndex: 1 }}>
+          {/* Overline */}
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            style={{
+              fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700,
+              letterSpacing: '0.14em', textTransform: 'uppercase',
+              color: BAI.caramel, margin: '0 0 18px',
+            }}
+          >
+            Tarifs
+          </motion.p>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.08 }}
+            style={{
+              fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+              fontSize: 'clamp(36px, 5vw, 60px)', lineHeight: 1.05,
+              color: '#ffffff', margin: '0 0 18px',
+            }}
+          >
+            Simple. Transparent.{' '}
+            <em style={{ color: BAI.caramel }}>Sans surprise.</em>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.14 }}
+            style={{
+              fontFamily: BAI.fontBody, fontSize: 16, color: 'rgba(255,255,255,0.60)',
+              lineHeight: 1.65, maxWidth: '52ch', margin: '0 auto 40px',
+            }}
+          >
+            Commencez gratuitement, évoluez quand vous êtes prêt.
+          </motion.p>
+
+          {/* Toggle mensuel/annuel — style glass pill sur fond dark */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              background: 'rgba(255,255,255,0.07)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              borderRadius: '999px',
+              padding: '4px',
+            }}
+          >
             {(['annual', 'monthly'] as const).map(b => (
               <button
                 key={b}
                 onClick={() => setBilling(b)}
                 style={{
-                  padding: '8px 22px', borderRadius: 999, border: 'none', cursor: 'pointer',
+                  padding: '9px 24px', borderRadius: '999px', border: 'none', cursor: 'pointer',
                   fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600,
-                  background: billing === b ? BAI.night : 'transparent',
-                  color: billing === b ? '#fff' : BAI.inkMid,
+                  background: billing === b ? '#ffffff' : 'transparent',
+                  color: billing === b ? BAI.night : 'rgba(255,255,255,0.60)',
                   display: 'flex', alignItems: 'center', gap: 8,
+                  transition: 'background 0.2s, color 0.2s',
+                  minHeight: '40px',
                 }}
               >
                 {b === 'annual' ? 'Annuel' : 'Mensuel'}
                 {b === 'annual' && (
-                  <span style={{ fontSize: 10, fontWeight: 700, background: '#16a34a', color: '#fff', padding: '2px 7px', borderRadius: 999 }}>
-                    2 mois offerts
+                  <span style={{
+                    fontSize: 10, fontWeight: 700,
+                    background: billing === 'annual' ? BAI.caramel : 'rgba(196,151,106,0.25)',
+                    color: billing === 'annual' ? '#fff' : BAI.caramel,
+                    padding: '2px 7px', borderRadius: '999px',
+                    transition: 'background 0.2s, color 0.2s',
+                  }}>
+                    −20%
                   </span>
                 )}
               </button>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* ── PLANS GRID ── */}
-      <section style={{ padding: '0 clamp(16px,5vw,48px) 64px', maxWidth: 1200, margin: '0 auto' }}>
+      <section style={{ padding: 'clamp(48px, 6vw, 80px) clamp(16px, 5vw, 48px)', maxWidth: 1200, margin: '0 auto' }}>
         <div
           className="pricing-grid"
           style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 20, alignItems: 'start', maxWidth: 800, margin: '0 auto' }}
@@ -168,64 +244,59 @@ export default function Pricing() {
           {PLANS.map((plan, i) => {
             const saving = getSaving(plan)
             const isHighlight = plan.highlight
-            const isDimmed = false
 
             return (
               <motion.div
                 key={plan.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-20px' }}
                 transition={{ delay: i * 0.08, duration: 0.32 }}
-                whileHover={{ y: isHighlight ? -2 : -4, boxShadow: isHighlight ? '0 8px 32px rgba(196,151,106,0.26), 0 1px 4px rgba(13,12,10,0.06)' : '0 8px 24px rgba(13,12,10,0.10)' }}
                 style={{
                   background: BAI.bgSurface,
-                  border: isHighlight
-                    ? `2px solid ${BAI.caramel}`
-                    : isDimmed
-                    ? `1px dashed ${BAI.border}`
-                    : `1px solid ${BAI.border}`,
-                  borderTop: isHighlight ? `3px solid ${BAI.caramel}` : undefined,
-                  borderRadius: 16,
-                  padding: isHighlight ? '32px 24px 28px' : '28px 24px 24px',
+                  border: isHighlight ? `2px solid ${BAI.caramel}` : `1px solid ${BAI.border}`,
+                  borderRadius: '16px',
+                  padding: isHighlight ? '32px 28px' : '28px 24px',
                   position: 'relative',
-                  opacity: isDimmed ? 0.88 : 1,
                   boxShadow: isHighlight
-                    ? `0 4px 24px rgba(196,151,106,0.18), 0 1px 4px rgba(13,12,10,0.06)`
-                    : '0 1px 3px rgba(13,12,10,0.04)',
-                  transform: isHighlight ? 'scale(1.03)' : 'none',
+                    ? `0 0 0 4px rgba(196,151,106,0.10), 0 4px 24px rgba(196,151,106,0.14)`
+                    : BAI.shadowMd,
+                  transform: isHighlight ? 'scale(1.02)' : 'none',
                   zIndex: isHighlight ? 1 : 0,
-                  cursor: 'default',
                 }}
               >
-                {/* Badge populaire */}
+                {/* Badge */}
                 {plan.badge && (
                   <div style={{
                     position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
                     background: BAI.caramel, color: '#fff',
-                    fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.05em',
-                    padding: '5px 14px', borderRadius: 999, whiteSpace: 'nowrap',
+                    fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
+                    padding: '5px 16px', borderRadius: '999px', whiteSpace: 'nowrap',
                   }}>
                     {plan.badge}
                   </div>
                 )}
 
-                {/* Header plan */}
+                {/* Header */}
                 <div style={{ marginBottom: 20 }}>
-                  <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: isDimmed ? BAI.inkMid : BAI.ink, margin: '0 0 4px' }}>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: BAI.ink, margin: '0 0 4px' }}>
                     {plan.name}
                   </p>
-                  <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '0 0 16px', lineHeight: 1.4 }}>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: '0 0 20px', lineHeight: 1.4 }}>
                     {plan.description}
                   </p>
 
                   {/* Prix */}
                   <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, marginBottom: 4 }}>
-                    <span style={{ fontFamily: BAI.fontDisplay, fontSize: plan.monthlyPrice === 0 ? 32 : 36, fontWeight: 700, color: BAI.ink, lineHeight: 1 }}>
+                    <span style={{
+                      fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+                      fontSize: plan.monthlyPrice === 0 ? '36px' : '48px',
+                      color: BAI.ink, lineHeight: 1,
+                    }}>
                       {plan.monthlyPrice === 0 ? 'Gratuit' : `${getPrice(plan)} €`}
                     </span>
                     {plan.monthlyPrice > 0 && (
-                      <span style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint, marginBottom: 4 }}>
+                      <span style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint, marginBottom: 6 }}>
                         /mois
                       </span>
                     )}
@@ -247,17 +318,16 @@ export default function Pricing() {
                   onClick={() => handleCta(plan.id)}
                   disabled={loadingPlan === plan.id}
                   style={{
-                    width: '100%', padding: '11px 0', borderRadius: 10,
+                    width: '100%', padding: '12px 0', borderRadius: '10px',
                     fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                    marginBottom: 20,
-                    border: plan.ctaStyle === 'primary' ? 'none'
-                      : plan.ctaStyle === 'ghost' ? `1px solid ${BAI.border}`
-                      : `1px solid ${BAI.border}`,
+                    marginBottom: 20, minHeight: '44px',
+                    border: plan.ctaStyle === 'primary' ? 'none' : `1px solid ${BAI.border}`,
                     background: plan.ctaStyle === 'primary'
-                      ? (isHighlight ? BAI.caramel : BAI.owner)
+                      ? (isHighlight ? BAI.caramel : BAI.night)
                       : 'transparent',
                     color: plan.ctaStyle === 'primary' ? '#fff' : BAI.inkMid,
                     opacity: loadingPlan === plan.id ? 0.7 : 1,
+                    transition: 'opacity 0.15s',
                   }}
                 >
                   {loadingPlan === plan.id ? 'Chargement...' : plan.cta}
@@ -271,17 +341,17 @@ export default function Pricing() {
                 )}
 
                 {/* Limite biens */}
-                <div style={{ padding: '10px 12px', background: BAI.bgMuted, borderRadius: 8, marginBottom: 16 }}>
+                <div style={{ padding: '10px 14px', background: BAI.bgMuted, borderRadius: '8px', marginBottom: '16px' }}>
                   <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.ink, margin: 0 }}>
                     {plan.propertyLimit === null ? 'Biens illimités' : `${plan.propertyLimit} bien${plan.propertyLimit > 1 ? 's' : ''} maximum`}
                   </p>
                 </div>
 
-                {/* Features list */}
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {/* Features */}
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {plan.features.map(f => (
                     <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                      <Check style={{ width: 14, height: 14, color: isHighlight ? '#16a34a' : BAI.inkMid, flexShrink: 0, marginTop: 2 }} />
+                      <Check style={{ width: 14, height: 14, color: isHighlight ? BAI.caramel : BAI.inkMid, flexShrink: 0, marginTop: 2 }} />
                       <span style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, lineHeight: 1.4 }}>{f}</span>
                     </li>
                   ))}
@@ -291,17 +361,14 @@ export default function Pricing() {
           })}
         </div>
 
-        {/* ── Bannière Pro ── */}
+        {/* Bannière Pro */}
         <div style={{
-          marginTop: 24, maxWidth: 800, margin: '24px auto 0',
+          marginTop: '28px', maxWidth: 800, margin: '28px auto 0',
           padding: '16px 24px',
           background: BAI.ownerLight,
           border: `1px solid ${BAI.ownerBorder}`,
-          borderRadius: 12,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          flexWrap: 'wrap',
+          borderRadius: '12px',
+          display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
         }}>
           <Zap style={{ width: 18, height: 18, color: BAI.owner, flexShrink: 0 }} />
           <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.ink, margin: 0, flex: 1 }}>
@@ -309,24 +376,30 @@ export default function Pricing() {
           </p>
           <button
             onClick={() => handleCta('pro')}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: 'none', background: BAI.owner, color: '#fff', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '8px 16px', borderRadius: '8px', border: 'none',
+              background: BAI.owner, color: '#fff',
+              fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600,
+              cursor: 'pointer', whiteSpace: 'nowrap', minHeight: '44px',
+            }}
           >
             Commencer avec Pro <ArrowRight style={{ width: 14, height: 14 }} />
           </button>
         </div>
       </section>
 
-      {/* Bouton pour afficher le tableau sur mobile */}
+      {/* Toggle tableau mobile */}
       <div className="feat-table-toggle" style={{ display: 'none', justifyContent: 'center', padding: '0 16px 24px' }}>
         <button
           onClick={() => setShowTable(v => !v)}
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
-            padding: '12px 24px', borderRadius: 40,
+            padding: '12px 24px', borderRadius: '40px',
             background: BAI.bgSurface, border: `1px solid ${BAI.border}`,
             fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 500,
             color: BAI.inkMid, cursor: 'pointer',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+            boxShadow: BAI.shadowSm,
           }}
         >
           {showTable ? '↑ Masquer' : '↓ Voir la comparaison détaillée'}
@@ -334,11 +407,11 @@ export default function Pricing() {
       </div>
 
       {/* ── TABLEAU DE COMPARAISON ── */}
-      <section className={`feat-table${showTable ? ' open' : ''}`} style={{ padding: '0 clamp(16px,5vw,48px) 80px', maxWidth: 1200, margin: '0 auto' }}>
+      <section className={`feat-table${showTable ? ' open' : ''}`} style={{ padding: '0 clamp(16px, 5vw, 48px) 80px', maxWidth: 1200, margin: '0 auto' }}>
         <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 28, color: BAI.ink, textAlign: 'center', marginBottom: 32 }}>
           Comparaison détaillée
         </h2>
-        <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, overflow: 'hidden' }}>
+        <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: '16px', overflow: 'hidden' }}>
           {/* Header */}
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', borderBottom: `1px solid ${BAI.border}` }}>
             <div style={{ padding: '16px 20px' }} />
@@ -355,13 +428,11 @@ export default function Pricing() {
               </div>
             ))}
           </div>
-          {/* Rows */}
           {FEATURE_TABLE.map((row, idx) => (
             <div
               key={row.label}
               style={{
-                display: 'grid',
-                gridTemplateColumns: '2fr 1fr 1fr',
+                display: 'grid', gridTemplateColumns: '2fr 1fr 1fr',
                 borderBottom: idx < FEATURE_TABLE.length - 1 ? `1px solid ${BAI.border}` : 'none',
                 background: idx % 2 === 0 ? BAI.bgSurface : BAI.bgBase,
               }}
@@ -390,7 +461,7 @@ export default function Pricing() {
       </section>
 
       {/* ── FAQ ── */}
-      <section style={{ padding: '0 clamp(16px,5vw,48px) 96px', maxWidth: 720, margin: '0 auto' }}>
+      <section style={{ padding: '0 clamp(16px, 5vw, 48px) 80px', maxWidth: 720, margin: '0 auto' }}>
         <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 28, color: BAI.ink, textAlign: 'center', marginBottom: 40 }}>
           Questions fréquentes
         </h2>
@@ -399,30 +470,68 @@ export default function Pricing() {
         ))}
       </section>
 
-      {/* ── CTA FINAL ── */}
-      <section style={{ padding: '64px clamp(16px,5vw,48px) 96px', textAlign: 'center', background: BAI.night }}>
-        <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 16px' }}>
-          Prêt à commencer ?
-        </p>
-        <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(28px,4vw,40px)', color: '#fff', margin: '0 0 12px' }}>
-          Gérez vos biens comme un professionnel.
-        </h2>
-        <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.6)', margin: '0 0 32px' }}>
-          14 jours gratuits. Sans engagement. Sans carte bancaire.
-        </p>
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <button
-            onClick={() => handleCta('pro')}
-            style={{ padding: '13px 32px', borderRadius: 10, border: 'none', background: BAI.caramel, color: '#fff', fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
-          >
-            Commencer avec Pro, 9,90 €/mois
-          </button>
-          <Link
-            to="/register"
-            style={{ padding: '13px 28px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: '#fff', fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
-          >
-            Commencer gratuitement
-          </Link>
+      {/* ── CTA FOOTER DARK ── */}
+      <section style={{
+        background: '#0a0d1a',
+        padding: 'clamp(64px, 8vw, 96px) clamp(16px, 5vw, 48px)',
+        textAlign: 'center',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        {/* Glow */}
+        <div style={{
+          position: 'absolute', top: '-80px', left: '50%', transform: 'translateX(-50%)',
+          width: '500px', height: '300px',
+          background: 'radial-gradient(ellipse, rgba(196,151,106,0.08) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }} />
+
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <p style={{
+            fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700,
+            letterSpacing: '0.14em', textTransform: 'uppercase',
+            color: BAI.caramel, margin: '0 0 18px',
+          }}>
+            Prêt à commencer ?
+          </p>
+          <h2 style={{
+            fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+            fontSize: 'clamp(28px, 4vw, 48px)', color: '#ffffff', margin: '0 0 14px',
+          }}>
+            Gérez vos biens comme un professionnel.
+          </h2>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 15, color: 'rgba(255,255,255,0.55)', margin: '0 0 36px' }}>
+            14 jours gratuits. Sans engagement. Sans carte bancaire.
+          </p>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => handleCta('pro')}
+              style={{
+                padding: '14px 32px', borderRadius: '10px', border: 'none',
+                background: BAI.caramel, color: '#fff',
+                fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 700,
+                cursor: 'pointer', minHeight: '48px',
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = BAI.caramelHover)}
+              onMouseLeave={e => (e.currentTarget.style.background = BAI.caramel)}
+            >
+              Commencer avec Pro, 9,90 €/mois
+            </button>
+            <Link
+              to="/register"
+              style={{
+                padding: '14px 28px', borderRadius: '10px',
+                border: '1px solid rgba(255,255,255,0.18)',
+                background: 'transparent', color: '#fff',
+                fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600,
+                textDecoration: 'none', display: 'inline-flex', alignItems: 'center',
+                minHeight: '48px',
+              }}
+            >
+              Essayer gratuitement
+            </Link>
+          </div>
         </div>
       </section>
 

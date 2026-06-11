@@ -26,14 +26,11 @@ import toast from 'react-hot-toast'
 
 type ViewMode = 'list' | 'calendar'
 
-// ─── Maison tokens ────────────────────────────────────────────────────────────
-
-
 const cardStyle: React.CSSProperties = {
   background: BAI.bgSurface,
   border: `1px solid ${BAI.border}`,
-  borderRadius: 12,
-  boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
+  borderRadius: 14,
+  boxShadow: BAI.shadowMd,
 }
 
 const inputStyle: React.CSSProperties = {
@@ -45,7 +42,7 @@ const inputStyle: React.CSSProperties = {
   fontSize: '16px',
   outline: 'none',
   width: '100%',
-  fontFamily: "'DM Sans', system-ui, sans-serif",
+  fontFamily: BAI.fontBody,
 }
 
 export const BookingManagement = () => {
@@ -150,75 +147,75 @@ export const BookingManagement = () => {
     {
       label: 'En attente',
       value: statistics.pending,
-      icon: <Clock className="w-5 h-5" />,
+      icon: <Clock size={20} />,
       bg: BAI.warningLight,
       border: '#e8c98b',
       color: BAI.warning,
+      accent: BAI.warning,
     },
     {
       label: 'Confirmées',
       value: statistics.confirmed,
-      icon: <CheckCircle className="w-5 h-5" />,
+      icon: <CheckCircle size={20} />,
       bg: BAI.successLight,
       border: '#a8d5bc',
       color: BAI.success,
+      accent: BAI.success,
     },
     {
       label: 'Annulées',
       value: statistics.cancelled,
-      icon: <XCircle className="w-5 h-5" />,
+      icon: <XCircle size={20} />,
       bg: BAI.errorLight,
       border: '#f5c6c6',
       color: BAI.error,
+      accent: BAI.error,
     },
   ] : []
 
   return (
     <Layout>
       <div
-        className="min-h-screen px-4 py-6 sm:px-6 lg:px-8 lg:py-8"
-        style={{ background: BAI.bgBase, fontFamily: "'DM Sans', system-ui, sans-serif" }}
+        style={{ background: BAI.bgBase, minHeight: '100vh', fontFamily: BAI.fontBody }}
       >
-        <div className="max-w-7xl mx-auto">
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: 'clamp(20px,4vw,48px) clamp(16px,3vw,32px)' }}>
 
-          {/* Page header — Maison style */}
+          {/* ── Page header ─────────────────────────────────────────────── */}
           <motion.div
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.24 }}
-            className="mb-8"
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            style={{ marginBottom: 36 }}
           >
-            <p
-              className="uppercase tracking-widest mb-1"
-              style={{ fontSize: 10, fontWeight: 700, color: BAI.caramel, letterSpacing: '0.12em' }}
-            >
-              Propriétaire
+            <p style={{
+              fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700,
+              letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, marginBottom: 8,
+            }}>
+              Gestion des visites
             </p>
-            <h1
-              style={{
-                fontFamily: "'Cormorant Garamond', Georgia, serif",
-                fontWeight: 700,
-                fontStyle: 'italic',
-                fontSize: 'clamp(20px, 4vw, 40px)',
-                color: BAI.ink,
-                lineHeight: 1.1,
-                margin: 0,
-              }}
-            >
+            <h1 style={{
+              fontFamily: BAI.fontDisplay, fontWeight: 700, fontStyle: 'italic',
+              fontSize: 'clamp(26px, 4vw, 40px)', color: BAI.ink, lineHeight: 1.1, margin: '0 0 8px',
+            }}>
               Visites
             </h1>
-            <p className="mt-1.5" style={{ fontSize: 14, color: BAI.inkMid }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: 0 }}>
               Gérez les demandes de visite de vos propriétés
             </p>
           </motion.div>
 
-          {/* Prochains rendez-vous */}
+          {/* ── Prochains rendez-vous ─────────────────────────────────── */}
           {upcomingConfirmed.length > 0 && (
-            <div className="mb-8">
-              <p
-                className="uppercase tracking-widest mb-3"
-                style={{ fontSize: 10, color: BAI.inkFaint, letterSpacing: '0.12em' }}
-              >
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.28 }}
+              style={{ marginBottom: 32 }}
+            >
+              <p style={{
+                fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700,
+                letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, marginBottom: 14,
+              }}>
                 Prochains rendez-vous
               </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -228,48 +225,53 @@ export const BookingManagement = () => {
                   return (
                     <div
                       key={booking.id}
-                      className="flex items-start gap-4 p-4"
                       style={{
-                        background: '#ffffff',
+                        display: 'flex', alignItems: 'flex-start', gap: 16,
+                        padding: 16,
+                        background: BAI.bgSurface,
                         border: `1px solid ${BAI.tenantBorder}`,
-                        borderRadius: 12,
-                        boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
+                        borderRadius: 14,
+                        boxShadow: BAI.shadowMd,
+                        borderTop: `3px solid ${BAI.tenant}`,
                       }}
                     >
                       {/* Icône date */}
                       <div
-                        className="flex-shrink-0 w-12 h-12 rounded-xl flex flex-col items-center justify-center"
-                        style={{ background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}` }}
+                        style={{
+                          flexShrink: 0, width: 52, height: 52, borderRadius: 12,
+                          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                          background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`,
+                        }}
                       >
                         {visitDt ? (
                           <>
-                            <span style={{ fontSize: 9, color: BAI.tenant, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', lineHeight: 1 }}>
+                            <span style={{ fontSize: 9, color: BAI.tenant, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', lineHeight: 1 }}>
                               {format(visitDt, 'MMM', { locale: fr })}
                             </span>
-                            <span style={{ fontSize: 20, color: BAI.tenant, fontWeight: 700, lineHeight: 1 }}>
+                            <span style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 22, color: BAI.tenant, fontWeight: 700, lineHeight: 1 }}>
                               {format(visitDt, 'd')}
                             </span>
                           </>
                         ) : (
-                          <CheckCircle className="w-5 h-5" style={{ color: BAI.tenant }} />
+                          <CheckCircle size={20} style={{ color: BAI.tenant }} />
                         )}
                       </div>
 
                       {/* Infos */}
-                      <div className="flex-1 min-w-0">
-                        <p className="truncate" style={{ fontSize: 13, fontWeight: 600, color: BAI.ink, marginBottom: 2 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 13.5, fontWeight: 600, color: BAI.ink, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {booking.tenant?.firstName ?? 'Locataire'} {booking.tenant?.lastName ?? ''}
                         </p>
-                        <div className="flex items-center gap-1 mb-1">
-                          <MapPin className="w-3 h-3 flex-shrink-0" style={{ color: BAI.inkFaint }} />
-                          <p className="truncate" style={{ fontSize: 12, color: BAI.inkMid }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 3 }}>
+                          <MapPin size={11} style={{ color: BAI.inkFaint, flexShrink: 0 }} />
+                          <p style={{ fontSize: 12, color: BAI.inkMid, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {booking.property?.title ?? 'Logement'}
                           </p>
                         </div>
                         {visitDt && (
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-3 h-3 flex-shrink-0" style={{ color: BAI.inkFaint }} />
-                            <p className="truncate" style={{ fontSize: 12, color: BAI.inkFaint }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <Clock size={11} style={{ color: BAI.inkFaint, flexShrink: 0 }} />
+                            <p style={{ fontSize: 12, color: BAI.inkFaint }}>
                               {format(visitDt, "d MMM · HH'h'mm", { locale: fr })}
                             </p>
                           </div>
@@ -279,33 +281,39 @@ export const BookingManagement = () => {
                   )
                 })}
               </div>
-            </div>
+            </motion.div>
           )}
 
-          {/* Statistics */}
+          {/* ── Statistics ──────────────────────────────────────────────── */}
           {statistics && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
-              {statCards.map(({ label, value, icon, bg, border, color }, i) => (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+              {statCards.map(({ label, value, icon, bg, border, color, accent }, i) => (
                 <motion.div
                   key={label}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 + i * 0.08, duration: 0.24 }}
+                  transition={{ delay: 0.14 + i * 0.08, duration: 0.26 }}
                   whileHover={{ y: -2 }}
-                  className="flex flex-col sm:flex-row items-center sm:items-start gap-3 p-4"
-                  style={cardStyle}
+                  style={{
+                    ...cardStyle,
+                    display: 'flex', alignItems: 'center', gap: 16, padding: '18px 20px',
+                    borderTop: `3px solid ${accent}`,
+                  }}
                 >
                   <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: bg, border: `1px solid ${border}`, color }}
+                    style={{
+                      width: 44, height: 44, borderRadius: 11,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                      background: bg, border: `1px solid ${border}`, color,
+                    }}
                   >
                     {icon}
                   </div>
-                  <div className="text-center sm:text-left min-w-0">
-                    <p style={{ fontSize: 10, color: BAI.inkFaint, marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</p>
-                    <p
-                      style={{ color: BAI.ink, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1, fontSize: 'clamp(18px,4vw,28px)', fontWeight: 700 }}
-                    >
+                  <div>
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.inkFaint, marginBottom: 4 }}>
+                      {label}
+                    </p>
+                    <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,4vw,32px)', color: BAI.ink, lineHeight: 1 }}>
                       {value}
                     </p>
                   </div>
@@ -314,17 +322,14 @@ export const BookingManagement = () => {
             </div>
           )}
 
-          {/* Filters and View Toggle */}
-          <div
-            className="p-4 sm:p-5 mb-6"
-            style={cardStyle}
-          >
+          {/* ── Filters and View Toggle ────────────────────────────────── */}
+          <div style={{ ...cardStyle, padding: '18px 20px', marginBottom: 24 }}>
             <div className="flex flex-col sm:flex-row gap-3">
               {/* Search */}
-              <div className="relative flex-1">
+              <div style={{ position: 'relative', flex: 1 }}>
                 <Search
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
-                  style={{ color: BAI.inkFaint }}
+                  size={15}
+                  style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: BAI.inkFaint, pointerEvents: 'none' }}
                 />
                 <input
                   type="text"
@@ -343,7 +348,6 @@ export const BookingManagement = () => {
                 />
               </div>
 
-              {/* Selects row: 2 selects + toggle côte à côte sur mobile, inline sur sm+ */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:contents">
                 {/* Property Filter */}
                 <select
@@ -390,21 +394,19 @@ export const BookingManagement = () => {
 
                 {/* View Toggle */}
                 <div
-                  className="flex items-center gap-1 p-1"
-                  style={{ background: BAI.bgMuted, border: `1px solid ${BAI.border}`, borderRadius: 10, minHeight: 44 }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 4, padding: 4,
+                    background: BAI.bgMuted, border: `1px solid ${BAI.border}`,
+                    borderRadius: 10, minHeight: 44,
+                  }}
                 >
                   <button
                     onClick={() => setViewMode('list')}
                     className="flex-1 py-2 px-3 text-sm font-semibold transition-all"
                     style={
                       viewMode === 'list'
-                        ? {
-                            background: BAI.bgSurface,
-                            color: BAI.owner,
-                            borderRadius: 8,
-                            boxShadow: '0 1px 3px rgba(13,12,10,0.08)',
-                          }
-                        : { background: 'transparent', color: BAI.inkMid, borderRadius: 8 }
+                        ? { background: BAI.bgSurface, color: BAI.owner, borderRadius: 7, boxShadow: '0 1px 3px rgba(13,12,10,0.08)' }
+                        : { background: 'transparent', color: BAI.inkMid, borderRadius: 7 }
                     }
                   >
                     Liste
@@ -414,13 +416,8 @@ export const BookingManagement = () => {
                     className="flex-1 py-2 px-3 text-sm font-semibold transition-all"
                     style={
                       viewMode === 'calendar'
-                        ? {
-                            background: BAI.bgSurface,
-                            color: BAI.owner,
-                            borderRadius: 8,
-                            boxShadow: '0 1px 3px rgba(13,12,10,0.08)',
-                          }
-                        : { background: 'transparent', color: BAI.inkMid, borderRadius: 8 }
+                        ? { background: BAI.bgSurface, color: BAI.owner, borderRadius: 7, boxShadow: '0 1px 3px rgba(13,12,10,0.08)' }
+                        : { background: 'transparent', color: BAI.inkMid, borderRadius: 7 }
                     }
                   >
                     Calendrier
@@ -430,18 +427,20 @@ export const BookingManagement = () => {
             </div>
           </div>
 
-          {/* Guide de démarrage — affiché quand aucune visite reçue et aucune propriété sélectionnée */}
+          {/* Guide de démarrage */}
           {!isLoading && bookings.length === 0 && selectedProperty === 'all' && !searchQuery && selectedStatus === 'all' && (
             <div
-              className="flex gap-4 p-5 mb-6"
-              style={{ background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, borderRadius: 12 }}
+              style={{
+                display: 'flex', gap: 16, padding: '18px 20px', marginBottom: 24,
+                background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, borderRadius: 14,
+              }}
             >
-              <Info className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: BAI.owner }} />
+              <Info size={18} style={{ color: BAI.owner, flexShrink: 0, marginTop: 2 }} />
               <div>
-                <p style={{ fontSize: 14, fontWeight: 600, color: BAI.owner, marginBottom: 6 }}>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, color: BAI.owner, marginBottom: 8 }}>
                   Comment activer les visites ?
                 </p>
-                <ol className="space-y-1" style={{ fontSize: 13, color: BAI.owner, paddingLeft: 16, lineHeight: 1.6 }}>
+                <ol style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.owner, paddingLeft: 18, lineHeight: 1.7, margin: 0 }}>
                   <li>Sélectionnez un bien dans le filtre ci-dessus</li>
                   <li>Configurez vos créneaux de disponibilité (jours + plages horaires)</li>
                   <li>Approuvez les candidatures des locataires dans <strong>Candidatures</strong></li>
@@ -453,7 +452,7 @@ export const BookingManagement = () => {
 
           {/* Visit Slots Manager */}
           {selectedProperty !== 'all' && (
-            <div className="mb-6 w-full">
+            <div style={{ marginBottom: 24 }}>
               <VisitSlotsManager propertyId={selectedProperty} />
             </div>
           )}
@@ -461,28 +460,23 @@ export const BookingManagement = () => {
           {/* Error State */}
           {error && (
             <div
-              className="p-4 mb-6 flex items-start gap-3"
               style={{
-                background: BAI.errorLight,
-                border: `1px solid #f5c6c6`,
-                borderRadius: 10,
+                display: 'flex', alignItems: 'flex-start', gap: 12, padding: 16, marginBottom: 24,
+                background: BAI.errorLight, border: `1px solid #f5c6c6`, borderRadius: 12,
               }}
             >
-              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: BAI.error }} />
+              <AlertCircle size={18} style={{ color: BAI.error, flexShrink: 0, marginTop: 2 }} />
               <div>
-                <p className="font-semibold text-sm" style={{ color: BAI.error }}>Erreur</p>
-                <p className="text-sm" style={{ color: '#7f1d1d' }}>{error}</p>
+                <p style={{ fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13.5, color: BAI.error }}>Erreur</p>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: '#7f1d1d' }}>{error}</p>
               </div>
             </div>
           )}
 
           {/* Content */}
           {isLoading && !bookings.length ? (
-            <div
-              className="flex items-center justify-center py-16"
-              style={cardStyle}
-            >
-              <Loader className="w-7 h-7 animate-spin" style={{ color: BAI.owner }} />
+            <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '64px 0' }}>
+              <Loader size={28} style={{ color: BAI.owner, animation: 'spin 1s linear infinite' }} />
             </div>
           ) : viewMode === 'calendar' ? (
             <Calendar
@@ -493,30 +487,23 @@ export const BookingManagement = () => {
               viewMode="owner"
             />
           ) : (
-            <div className="space-y-4">
+            <div>
               {filteredBookings.length === 0 ? (
-                <div
-                  className="p-12 text-center"
-                  style={cardStyle}
-                >
-                  <div
-                    className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-                    style={{ background: BAI.ownerLight }}
-                  >
-                    <CalendarIcon className="w-8 h-8" style={{ color: BAI.owner }} />
+                <div style={{ ...cardStyle, padding: '64px 24px', textAlign: 'center' }}>
+                  <div style={{
+                    width: 64, height: 64, borderRadius: '50%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px',
+                    background: BAI.ownerLight,
+                  }}>
+                    <CalendarIcon size={28} style={{ color: BAI.owner }} />
                   </div>
-                  <h3
-                    style={{
-                      fontFamily: "'Cormorant Garamond', Georgia, serif",
-                      fontStyle: 'italic',
-                      fontSize: 22,
-                      color: BAI.ink,
-                      marginBottom: 8,
-                    }}
-                  >
+                  <h3 style={{
+                    fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 24, fontWeight: 700,
+                    color: BAI.ink, marginBottom: 8,
+                  }}>
                     Aucune visite
                   </h3>
-                  <p style={{ fontSize: 13, color: BAI.inkMid }}>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 13.5, color: BAI.inkMid }}>
                     {searchQuery || selectedProperty !== 'all' || selectedStatus !== 'all'
                       ? 'Aucune réservation ne correspond à vos filtres.'
                       : "Vous n'avez pas encore reçu de demandes de visite."}
@@ -541,10 +528,7 @@ export const BookingManagement = () => {
 
           {/* Pagination Info */}
           {filteredBookings.length > 0 && viewMode === 'list' && (
-            <div
-              className="mt-6 text-center text-sm"
-              style={{ color: BAI.inkFaint }}
-            >
+            <div style={{ marginTop: 24, textAlign: 'center', fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint }}>
               Affichage de {filteredBookings.length} sur {bookingsTotal} réservation
               {bookingsTotal > 1 ? 's' : ''}
             </div>
