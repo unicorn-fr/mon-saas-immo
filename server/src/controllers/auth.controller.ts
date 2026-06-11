@@ -9,15 +9,14 @@ import { comparePassword } from '../utils/password.util.js'
 import { verifyFirebasePhoneToken } from '../utils/firebase.util.js'
 import { generatePreAuthToken } from '../utils/jwt.util.js'
 
-function googlePopupHtml(payload: { result?: unknown; error?: string }): string {
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://bailio.fr'
+
+function googlePopupRedirect(payload: { result?: unknown; error?: string }): string {
   const data = payload.result
-    ? JSON.stringify({ type: 'GOOGLE_AUTH_SUCCESS', ...(payload.result as object) })
-    : JSON.stringify({ type: 'GOOGLE_AUTH_ERROR', error: payload.error })
-  return `<!DOCTYPE html><html><body><script>
-    try { window.opener && window.opener.postMessage(${data}, '*'); }
-    catch(e) {}
-    window.close();
-  </script></body></html>`
+    ? { type: 'GOOGLE_AUTH_SUCCESS', ...(payload.result as object) }
+    : { type: 'GOOGLE_AUTH_ERROR', error: payload.error }
+  const hash = Buffer.from(JSON.stringify(data)).toString('base64')
+  return `${FRONTEND_URL}/auth/google/callback#${hash}`
 }
 
 class AuthController {
@@ -627,7 +626,7 @@ class AuthController {
       const role = (req.query.state as string) || 'TENANT'
 
       if (!code) {
-        return res.send(googlePopupHtml({ error: 'Code OAuth manquant' }))
+        return res.redirect(googlePopupRedirect({ error: 'Code OAuth manquant' }))
       }
 
       const proto = (req.headers['x-forwarded-proto'] as string)?.split(',')[0].trim() || req.protocol
@@ -636,14 +635,14 @@ class AuthController {
       const { tokens } = await client.getToken(code)
       const idToken = tokens.id_token
       if (!idToken) {
-        return res.send(googlePopupHtml({ error: 'Token Google invalide' }))
+        return res.redirect(googlePopupRedirect({ error: 'Token Google invalide' }))
       }
 
       const result = await authService.googleAuth(idToken, role)
-      return res.send(googlePopupHtml({ result }))
+      return res.redirect(googlePopupRedirect({ result }))
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Erreur Google OAuth'
-      return res.send(googlePopupHtml({ error: msg }))
+      return res.redirect(googlePopupRedirect({ error: msg }))
     }
   }
 

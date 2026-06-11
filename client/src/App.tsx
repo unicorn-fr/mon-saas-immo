@@ -17,6 +17,7 @@ import ResetPassword from './pages/ResetPassword'
 import VerifyEmail from './pages/VerifyEmail'
 import VerifyMagicLink from './pages/VerifyMagicLink'
 import SelectRole from './pages/SelectRole'
+import GoogleOAuthCallback from './pages/GoogleOAuthCallback'
 import NotFound from './pages/NotFound'
 
 // Public Pages
@@ -220,6 +221,7 @@ function AppRoutes() {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/auth/verify" element={<VerifyMagicLink />} />
+      <Route path="/auth/google/callback" element={<GoogleOAuthCallback />} />
       <Route path="/complete-profile" element={<CompleteProfile />} />
       <Route path="/verify-identity" element={<VerifyIdentity />} />
 
