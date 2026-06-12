@@ -365,57 +365,59 @@ export default function ContractDetails() {
   return (
     <Layout>
       <div style={{ minHeight: '100vh', background: BAI.bgBase, fontFamily: BAI.fontBody }}>
-        {/* Header */}
-        <div style={{ background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}` }}>
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
+        {/* Hero sombre Hyperbeat */}
+        <div style={{ background: '#0a0d1a', padding: 'clamp(32px,5vw,56px) clamp(16px,4vw,48px) clamp(24px,4vw,40px)' }}>
+          <div className="container mx-auto">
+            <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:justify-between">
               {/* Left: back + title */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-start gap-4">
                 <button
                   onClick={() => navigate('/contracts')}
                   style={{
-                    padding: 10, background: BAI.bgSurface,
-                    border: `1px solid ${BAI.border}`, borderRadius: 8,
-                    color: BAI.inkMid, cursor: 'pointer', flexShrink: 0,
+                    padding: 10, background: 'rgba(255,255,255,0.08)',
+                    backdropFilter: 'blur(20px) saturate(160%)',
+                    WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                    border: '1px solid rgba(255,255,255,0.13)', borderRadius: 10,
+                    color: 'rgba(255,255,255,0.75)', cursor: 'pointer', flexShrink: 0,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     minHeight: 44, minWidth: 44,
+                    transition: 'background 0.15s',
                   }}
-                  onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
-                  onMouseLeave={e => (e.currentTarget.style.background = BAI.bgSurface)}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.14)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
                 >
                   <ArrowLeft style={{ width: 18, height: 18 }} />
                 </button>
                 <div className="min-w-0">
-                  <p style={{
-                    fontFamily: BAI.fontBody, fontSize: 10, textTransform: 'uppercase',
-                    letterSpacing: '0.12em', color: BAI.inkFaint, marginBottom: 2,
-                  }}>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
                     Gestion locative
                   </p>
-                  <h1 style={{
-                    fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-                    fontSize: 'clamp(20px, 5vw, 32px)', color: BAI.ink, lineHeight: 1.1, margin: 0,
-                  }}>
+                  <h1 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,5vw,34px)', color: '#ffffff', margin: '6px 0 4px', lineHeight: 1.1 }}>
                     Contrat de Location
                   </h1>
-                  <p className="truncate" style={{ fontSize: 13, color: BAI.inkMid, marginTop: 2 }}>
+                  <p className="truncate" style={{ fontFamily: BAI.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.55)', margin: 0 }}>
                     {contract.property?.title}
                   </p>
+                  {/* Statut glass badge */}
+                  <div style={{ marginTop: 14 }}>
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      padding: '6px 14px', borderRadius: 20,
+                      background: 'rgba(255,255,255,0.1)',
+                      backdropFilter: 'blur(20px) saturate(160%)',
+                      WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                      border: '1px solid rgba(255,255,255,0.18)',
+                      fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 11,
+                      color: '#ffffff', whiteSpace: 'nowrap',
+                    }}>
+                      <StatusIcon style={{ width: 12, height: 12 }} />
+                      {status.label}
+                    </span>
+                  </div>
                 </div>
               </div>
-              {/* Right: status + actions */}
+              {/* Right: actions */}
               <div className="flex items-center gap-2 flex-wrap">
-                <span style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '6px 12px', borderRadius: 20,
-                  background: status.bg, color: status.color,
-                  border: `1px solid ${status.border}`,
-                  fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 11,
-                  whiteSpace: 'nowrap',
-                }}>
-                  <StatusIcon style={{ width: 12, height: 12 }} />
-                  {status.label}
-                </span>
                 <PDFDownloadLink
                   document={<ContractPDF contract={contract} clauses={clauses.filter((c) => c.enabled)} />}
                   fileName={`contrat-${contract.property?.title?.replace(/\s+/g, '-').toLowerCase() || 'location'}.pdf`}
@@ -424,7 +426,7 @@ export default function ContractDetails() {
                     <button
                       style={{
                         display: 'inline-flex', alignItems: 'center', gap: 6,
-                        padding: '10px 14px', borderRadius: 8, minHeight: 44,
+                        padding: '10px 16px', borderRadius: 8, minHeight: 44,
                         background: BAI.caramel, color: '#ffffff',
                         fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 12,
                         border: 'none', cursor: pdfLoading ? 'wait' : 'pointer',
@@ -442,9 +444,12 @@ export default function ContractDetails() {
                     to={`/contracts/${contract.id}/edl/session`}
                     style={{
                       display: 'inline-flex', alignItems: 'center', gap: 6,
-                      padding: '10px 14px', borderRadius: 8, minHeight: 44,
-                      background: BAI.bgMuted, color: BAI.inkMid,
-                      border: `1px solid ${BAI.border}`,
+                      padding: '10px 16px', borderRadius: 8, minHeight: 44,
+                      background: 'rgba(255,255,255,0.08)',
+                      backdropFilter: 'blur(20px) saturate(160%)',
+                      WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                      border: '1px solid rgba(255,255,255,0.13)',
+                      color: 'rgba(255,255,255,0.8)',
                       fontFamily: BAI.fontBody, fontWeight: 500, fontSize: 12,
                       textDecoration: 'none', whiteSpace: 'nowrap',
                     }}

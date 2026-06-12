@@ -7,7 +7,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Shield, ShieldCheck, ShieldOff,
+  ShieldCheck, ShieldOff,
   Clock, User, Loader2, AlertTriangle, Eye, Search,
 } from 'lucide-react'
 import { Layout } from '../../components/layout/Layout'
@@ -492,43 +492,38 @@ export default function DossierShareManager() {
 
   return (
     <Layout>
+      {/* ── Hero sombre Hyperbeat ── */}
+      <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)' }}>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
+          SÉCURITÉ
+        </p>
+        <h1 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(28px,5vw,42px)', fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: '6px 0 8px', lineHeight: 1.1 }}>
+          Contrôle d'accès
+        </h1>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.55)', margin: 0 }}>
+          Vous choisissez exactement qui peut consulter vos documents, pour combien de temps.
+        </p>
+        <div className="flex flex-wrap gap-3" style={{ marginTop: 28 }}>
+          <div style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '16px 24px', minWidth: 130 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>ACCÈS ACTIFS</p>
+            <p style={{ fontFamily: BAI.fontDisplay, fontSize: 36, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1 }}>
+              {loading ? '—' : activeShares.length}
+            </p>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '16px 24px', minWidth: 130, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <ShieldCheck style={{ width: 18, height: 18, color: BAI.caramel, flexShrink: 0 }} />
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: '#ffffff', fontWeight: 600, margin: 0 }}>Documents filigranés</p>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ background: BAI.bgBase, minHeight: '60vh' }}>
       <div style={{
         maxWidth: 720,
         margin: '0 auto',
-        padding: '40px 20px',
+        padding: 'clamp(24px,4vw,40px) 20px',
         fontFamily: BAI.fontBody,
       }}>
-
-        {/* Page header */}
-        <div style={{ marginBottom: '32px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-            <Shield style={{ width: 20, height: 20, color: BAI.tenant }} />
-            <span style={{
-              fontFamily: BAI.fontBody,
-              fontSize: '11px',
-              fontWeight: 500,
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase' as const,
-              color: BAI.caramel,
-            }}>
-              Sécurité
-            </span>
-          </div>
-          <h1 style={{
-            fontFamily: BAI.fontDisplay,
-            fontSize: '40px',
-            fontWeight: 600,
-            fontStyle: 'italic',
-            color: BAI.ink,
-            margin: '0 0 8px',
-            lineHeight: 1.15,
-          }}>
-            Contrôle d'accès
-          </h1>
-          <p style={{ fontFamily: BAI.fontBody, fontSize: '15px', color: BAI.inkMid, margin: 0, maxWidth: 500 }}>
-            Vous choisissez exactement qui peut consulter vos documents, pour combien de temps.
-          </p>
-        </div>
 
         {/* Security info banner */}
         <div style={{
@@ -618,6 +613,8 @@ export default function DossierShareManager() {
             </div>
           </section>
         )}
+      </div>
+
       </div>
 
       {/* Report modal */}

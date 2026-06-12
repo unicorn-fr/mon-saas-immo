@@ -302,36 +302,31 @@ export default function PrivacyCenter() {
 
   return (
     <Layout>
+      {/* ── Hero sombre Hyperbeat ── */}
+      <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)' }}>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
+          RGPD &amp; CONFIDENTIALITÉ
+        </p>
+        <h1 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(28px,5vw,42px)', fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: '6px 0 8px', lineHeight: 1.1 }}>
+          Mes données &amp; RGPD
+        </h1>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.55)', margin: 0 }}>
+          Contrôlez vos données personnelles — droits d'accès, portabilité et effacement
+        </p>
+        <div className="flex flex-wrap gap-3" style={{ marginTop: 28 }}>
+          <div style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '16px 24px', minWidth: 140, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <ShieldCheck style={{ width: 18, height: 18, color: BAI.caramel, flexShrink: 0 }} />
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: '#ffffff', fontWeight: 600, margin: 0 }}>Chiffrement TLS</p>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '16px 24px', minWidth: 140, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Lock style={{ width: 18, height: 18, color: BAI.caramel, flexShrink: 0 }} />
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: '#ffffff', fontWeight: 600, margin: 0 }}>Conformité RGPD</p>
+          </div>
+        </div>
+      </div>
+
       <div className="min-h-screen" style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}>
         <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
-
-          {/* Page header */}
-          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
-            <p style={{
-              fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 600,
-              letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkFaint,
-              marginBottom: 6,
-            }}>
-              RGPD &amp; Confidentialité
-            </p>
-            <div className="flex items-center gap-3 mb-1">
-              <div className="w-11 h-11 flex items-center justify-center flex-shrink-0"
-                style={{ background: BAI.tenantLight, borderRadius: 12, border: `1px solid ${BAI.tenantBorder}` }}>
-                <ShieldCheck className="w-5 h-5" style={{ color: BAI.tenant }} />
-              </div>
-              <div>
-                <h1 style={{
-                  fontFamily: BAI.fontDisplay, fontWeight: 700, fontStyle: 'italic',
-                  fontSize: 36, color: BAI.ink, lineHeight: 1.1,
-                }}>
-                  Mes données &amp; RGPD
-                </h1>
-                <p style={{ color: BAI.inkMid, fontSize: 14, fontFamily: BAI.fontBody }}>
-                  Contrôlez vos données personnelles — droits d'accès, portabilité et effacement
-                </p>
-              </div>
-            </div>
-          </motion.div>
 
           {/* Info banner — tenant green left-border */}
           <motion.div

@@ -52,54 +52,37 @@ export default function Favorites() {
 
   return (
     <Layout>
-      <div
-        className="min-h-screen p-6 lg:p-8"
-        style={{ background: '#fafaf8', fontFamily: "'DM Sans', system-ui, sans-serif" }}
-      >
-        <div className="max-w-7xl mx-auto">
-          {/* Page Header */}
-          <div className="mb-8">
-            <p
-              className="uppercase tracking-widest mb-1"
-              style={{ fontSize: 10, color: BAI.caramel, letterSpacing: '0.12em' }}
-            >
-              Espace locataire
-            </p>
-            <div className="flex items-baseline gap-3">
-              <h1
-                style={{
-                  fontFamily: "'Cormorant Garamond', Georgia, serif",
-                  fontWeight: 700,
-                  fontStyle: 'italic',
-                  fontSize: 'clamp(26px, 4vw, 40px)',
-                  color: '#0d0c0a',
-                  lineHeight: 1,
-                }}
-              >
-                Mes favoris
-              </h1>
-              {favoriteProperties.length > 0 && (
-                <span
-                  style={{
-                    background: '#edf7f2',
-                    color: '#1b5e3b',
-                    border: '1px solid #9fd4ba',
-                    borderRadius: 99,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    padding: '2px 10px',
-                    fontFamily: "'DM Sans', system-ui, sans-serif",
-                  }}
-                >
-                  {favoriteProperties.length}
-                </span>
-              )}
-            </div>
-            <p style={{ fontSize: 14, color: '#5a5754', marginTop: 6 }}>
-              {favoriteProperties.length} propriété{favoriteProperties.length > 1 ? 's' : ''}{' '}
-              sauvegardée{favoriteProperties.length > 1 ? 's' : ''}
+      {/* ── Hero sombre Hyperbeat ── */}
+      <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)' }}>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
+          LOCATAIRE
+        </p>
+        <h1 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(28px,5vw,42px)', fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: '6px 0 8px', lineHeight: 1.1 }}>
+          Mes favoris
+        </h1>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.55)', margin: 0 }}>
+          {favoriteProperties.length} propriété{favoriteProperties.length > 1 ? 's' : ''} sauvegardée{favoriteProperties.length > 1 ? 's' : ''}
+        </p>
+        <div className="flex flex-wrap gap-3" style={{ marginTop: 28 }}>
+          <div style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '16px 24px', minWidth: 130 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>FAVORIS</p>
+            <p style={{ fontFamily: BAI.fontDisplay, fontSize: 36, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1 }}>
+              {isLoading ? '—' : favoriteProperties.length}
             </p>
           </div>
+          {favoriteProperties.length === 0 && !isLoading && (
+            <div style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '16px 24px', minWidth: 180, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Heart style={{ width: 18, height: 18, color: BAI.caramel }} />
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.7)', margin: 0 }}>Commencez à sauvegarder des biens</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div
+        style={{ background: '#fafaf8', minHeight: '60vh', padding: 'clamp(24px,4vw,40px) clamp(16px,4vw,48px)', fontFamily: BAI.fontBody }}
+      >
+        <div className="max-w-7xl mx-auto">
 
           {/* Filters Bar */}
           <div

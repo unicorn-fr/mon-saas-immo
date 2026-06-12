@@ -195,7 +195,7 @@ export default function Proprietaires() {
       {/* ── HERO: asymmetric — H1 left, big stat right ── */}
       <section ref={heroRef} className="prop-hero-sec" style={{
         position: 'relative',
-        background: BAI.night,
+        background: '#0a0d1a',
         color: '#fff',
         overflow: 'hidden',
         padding: '80px 0 100px',
@@ -213,6 +213,13 @@ export default function Proprietaires() {
 
             {/* Left — copy */}
             <div>
+              <p style={{
+                fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700,
+                letterSpacing: '0.12em', textTransform: 'uppercase',
+                color: BAI.caramel, margin: '0 0 14px',
+              }}>
+                Propriétaires
+              </p>
               <h1 style={{
                 fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
                 fontSize: 'clamp(38px,6vw,72px)', lineHeight: 1.02,
@@ -435,7 +442,7 @@ export default function Proprietaires() {
       </section>
 
       {/* ── CTA STRIP ── */}
-      <section className="prop-cta-sec" style={{ background: BAI.night, padding: '80px 0' }}>
+      <section className="prop-cta-sec" style={{ background: '#0a0d1a', padding: '80px 0' }}>
         <div style={{
           maxWidth: 1280, margin: '0 auto',
           padding: '0 clamp(16px,5vw,48px)', textAlign: 'center',

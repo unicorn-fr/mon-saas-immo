@@ -62,12 +62,19 @@ export default function Locataires() {
       <Header />
 
       {/* ── HERO dark ── */}
-      <section ref={heroRef} className="loc-hero-sec" style={{ background: BAI.night, color: '#fff', padding: '80px 0 100px', overflow: 'hidden' }}>
+      <section ref={heroRef} className="loc-hero-sec" style={{ background: '#0a0d1a', color: '#fff', padding: '80px 0 100px', overflow: 'hidden' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
           <div className="hero-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'center' }}>
 
             {/* Left — copy */}
             <div>
+              <p style={{
+                fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700,
+                letterSpacing: '0.12em', textTransform: 'uppercase',
+                color: BAI.caramel, margin: '0 0 14px',
+              }}>
+                Locataires
+              </p>
               <h1 style={{
                 fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
                 fontSize: 'clamp(38px,6vw,72px)', lineHeight: 1.02,
@@ -127,7 +134,9 @@ export default function Locataires() {
 
             {/* Right — dossier preview card */}
             <div style={{
-              background: 'rgba(255,255,255,0.04)',
+              background: 'rgba(255,255,255,0.07)',
+              backdropFilter: 'blur(20px) saturate(160%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(160%)',
               border: '1px solid rgba(255,255,255,0.12)',
               borderRadius: 16,
               padding: 28,
@@ -238,7 +247,7 @@ export default function Locataires() {
       </section>
 
       {/* ── CTA dark ── */}
-      <section className="loc-cta-sec" style={{ background: BAI.night, padding: '80px 0' }}>
+      <section className="loc-cta-sec" style={{ background: '#0a0d1a', padding: '80px 0' }}>
         <div style={{
           maxWidth: 1280, margin: '0 auto',
           padding: '0 clamp(16px,5vw,48px)', textAlign: 'center',

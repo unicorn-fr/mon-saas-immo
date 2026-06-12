@@ -434,7 +434,6 @@ export default function Quittances() {
       )
       setGroups(withSettings)
     } catch {
-      // silent — show empty state instead of error
       setPayments([])
       setGroups([])
     } finally {
@@ -452,7 +451,6 @@ export default function Quittances() {
   const currentMonth = now.getMonth() + 1
   const currentYear = now.getFullYear()
   const thisMonth = payments.filter(p => p.month === currentMonth && p.year === currentYear)
-  const totalThisMonth = thisMonth.length
   const paidThisMonth = thisMonth.filter(p => p.status === 'PAID').length
   const pendingThisMonth = thisMonth.filter(p => p.status === 'PENDING').length
   const lateThisMonth = thisMonth.filter(p => p.status === 'LATE').length
@@ -482,7 +480,6 @@ export default function Quittances() {
   }
 
   async function handleDownload(paymentId: string) {
-    // Open window synchronously inside click handler to avoid popup blockers
     const win = window.open('', '_blank', 'noopener,noreferrer')
     setActionLoading(paymentId)
     try {
@@ -542,508 +539,585 @@ export default function Quittances() {
 
   return (
     <Layout>
-      <div
-        style={{
-          minHeight: '100vh',
-          background: BAI.bgBase,
-          padding: 'clamp(20px, 4vw, 40px) clamp(16px, 4vw, 40px)',
-          fontFamily: BAI.fontBody,
-        }}
-      >
-        {/* ── Header ── */}
+      <div style={{ minHeight: '100vh', background: BAI.bgBase, fontFamily: BAI.fontBody }}>
+
+        {/* === DARK HERO === */}
         <div
-          className="flex items-start justify-between flex-wrap gap-4"
-          style={{ marginBottom: 32 }}
+          style={{
+            background: '#0a0d1a',
+            padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)',
+          }}
         >
-          <div>
-            <p
-              style={{
-                fontFamily: BAI.fontBody,
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
-                color: BAI.caramel,
-                marginBottom: 6,
-              }}
-            >
-              Gestion locative
-            </p>
-            <h1
-              style={{
-                fontFamily: BAI.fontDisplay,
-                fontSize: 'clamp(28px, 5vw, 40px)',
-                fontWeight: 700,
-                fontStyle: 'italic',
-                color: BAI.ink,
-                margin: 0,
-                lineHeight: 1.15,
-              }}
-            >
-              Quittances de loyer
-            </h1>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, marginTop: 8 }}>
-              Gérez les paiements, générez et envoyez les quittances à vos locataires.
-            </p>
-          </div>
-
-          {/* Générer le mois en cours */}
-          <button
-            onClick={handleGenerateAll}
-            disabled={generatingAll}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              fontFamily: BAI.fontBody,
-              fontSize: 13,
-              fontWeight: 600,
-              color: BAI.ink,
-              background: BAI.bgSurface,
-              border: `1px solid ${BAI.border}`,
-              borderRadius: 10,
-              padding: '10px 18px',
-              cursor: generatingAll ? 'not-allowed' : 'pointer',
-              minHeight: 44,
-              opacity: generatingAll ? 0.7 : 1,
-              transition: BAI.transition,
-              flexShrink: 0,
-              alignSelf: 'flex-end',
-            }}
-          >
-            <RefreshCw
-              size={15}
-              style={{
-                color: BAI.caramel,
-                animation: generatingAll ? 'spin 1s linear infinite' : 'none',
-              }}
-            />
-            {generatingAll ? 'Génération…' : 'Générer le mois en cours'}
-          </button>
-        </div>
-
-        {/* ── Stats Bar ── */}
-        {!loading && !error && (
-          <div
-            className="grid gap-4"
-            style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', marginBottom: 32 }}
-          >
-            {[
-              {
-                label: 'Total ce mois',
-                value: totalThisMonth,
-                suffix: 'paiements',
-                bg: BAI.bgSurface,
-                color: BAI.ink,
-                border: BAI.border,
-              },
-              {
-                label: 'Payés',
-                value: paidThisMonth,
-                suffix: 'reçus',
-                bg: BAI.tenantLight,
-                color: BAI.tenant,
-                border: BAI.tenantBorder,
-              },
-              {
-                label: 'En attente',
-                value: pendingThisMonth,
-                suffix: 'en cours',
-                bg: BAI.caramelLight,
-                color: BAI.caramel,
-                border: BAI.caramelBorder,
-              },
-              {
-                label: 'En retard',
-                value: lateThisMonth,
-                suffix: 'retards',
-                bg: BAI.errorLight,
-                color: BAI.error,
-                border: '#fca5a5',
-              },
-            ].map(stat => (
-              <div
-                key={stat.label}
-                style={{
-                  background: stat.bg,
-                  border: `1px solid ${stat.border}`,
-                  borderRadius: 12,
-                  padding: '16px 20px',
-                  boxShadow: BAI.shadowSm,
-                }}
-              >
-                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: stat.color, marginBottom: 6 }}>
-                  {stat.label}
-                </p>
-                <p style={{ fontSize: 28, fontWeight: 700, color: stat.color, lineHeight: 1 }}>
-                  {stat.value}
-                </p>
-                <p style={{ fontSize: 12, color: stat.color, opacity: 0.7, marginTop: 4 }}>
-                  {stat.suffix}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* ── Loading ── */}
-        {loading && (
-          <div className="flex items-center justify-center" style={{ padding: '64px 0' }}>
-            <RefreshCw size={24} style={{ color: BAI.caramel, animation: 'spin 1s linear infinite' }} />
-            <p style={{ marginLeft: 12, fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid }}>
-              Chargement des quittances…
-            </p>
-          </div>
-        )}
-
-        {/* ── Error ── */}
-        {error && !loading && (
-          <div
-            style={{
-              background: BAI.errorLight,
-              border: `1px solid #fca5a5`,
-              borderRadius: 12,
-              padding: '20px 24px',
-              marginBottom: 24,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-            }}
-          >
-            <AlertCircle size={20} style={{ color: BAI.error, flexShrink: 0 }} />
+          <div className="flex items-start justify-between flex-wrap gap-4">
             <div>
-              <p style={{ fontSize: 14, fontWeight: 600, color: BAI.error }}>{error}</p>
-              <button
-                onClick={fetchPayments}
+              <p
                 style={{
-                  marginTop: 6,
-                  fontSize: 13,
-                  color: BAI.error,
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: 0,
-                  textDecoration: 'underline',
                   fontFamily: BAI.fontBody,
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: '0.14em',
+                  textTransform: 'uppercase',
+                  color: BAI.caramel,
+                  margin: 0,
                 }}
               >
-                Réessayer
-              </button>
+                Gestion locative
+              </p>
+              <h1
+                style={{
+                  fontFamily: BAI.fontDisplay,
+                  fontSize: 'clamp(28px,5vw,42px)',
+                  fontWeight: 700,
+                  fontStyle: 'italic',
+                  color: '#ffffff',
+                  margin: '6px 0 8px',
+                  lineHeight: 1.1,
+                }}
+              >
+                Quittances de loyer
+              </h1>
+              <p
+                style={{
+                  fontFamily: BAI.fontBody,
+                  fontSize: 14,
+                  color: 'rgba(255,255,255,0.55)',
+                  margin: 0,
+                }}
+              >
+                Gérez les paiements, générez et envoyez les quittances à vos locataires.
+              </p>
             </div>
+
+            {/* Générer le mois en cours — glass button */}
+            <button
+              onClick={handleGenerateAll}
+              disabled={generatingAll}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                fontFamily: BAI.fontBody,
+                fontSize: 13,
+                fontWeight: 600,
+                color: '#fff',
+                background: 'rgba(255,255,255,0.12)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                borderRadius: 10,
+                padding: '10px 18px',
+                cursor: generatingAll ? 'not-allowed' : 'pointer',
+                minHeight: 44,
+                opacity: generatingAll ? 0.7 : 1,
+                transition: BAI.transition,
+                flexShrink: 0,
+                alignSelf: 'flex-end',
+              }}
+            >
+              <RefreshCw
+                size={15}
+                style={{
+                  color: BAI.caramel,
+                  animation: generatingAll ? 'spin 1s linear infinite' : 'none',
+                }}
+              />
+              {generatingAll ? 'Génération…' : 'Générer le mois en cours'}
+            </button>
           </div>
-        )}
 
-        {/* ── Rappel légal ── */}
-        {!loading && !error && groups.length > 0 && (
-          <div style={{
-            background: BAI.bgSurface,
-            border: `1px solid ${BAI.border}`,
-            borderRadius: 10,
-            padding: '12px 18px',
-            marginBottom: 20,
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: 10,
-          }}>
-            <CheckCircle size={14} style={{ color: BAI.tenant, flexShrink: 0, marginTop: 2 }} />
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, lineHeight: 1.6, margin: 0 }}>
-              <strong style={{ color: BAI.ink }}>Conformité loi ALUR :</strong> Chaque quittance est générée automatiquement dès marquage « payé » et contient les mentions obligatoires (art. 21 loi du 6 juillet 1989) : loyer et charges séparés, période du 1er au dernier jour du mois, date de paiement reçu, coordonnées bailleur et locataire. Le PDF est archivé sécurisé et accessible 7 jours par email.
-            </p>
-          </div>
-        )}
-
-        {/* ── Empty ── */}
-        {!loading && !error && groups.length === 0 && (
-          <div
-            style={{
-              background: BAI.bgSurface,
-              border: `1px solid ${BAI.border}`,
-              borderRadius: 12,
-              padding: '48px 24px',
-              textAlign: 'center',
-            }}
-          >
-            <CheckCircle size={40} style={{ color: BAI.inkFaint, margin: '0 auto 16px' }} />
-            <p style={{ fontSize: 16, fontWeight: 600, color: BAI.ink, marginBottom: 8 }}>
-              Aucune quittance pour l'instant
-            </p>
-            <p style={{ fontSize: 14, color: BAI.inkMid, maxWidth: 380, margin: '0 auto' }}>
-              Les quittances s'affichent ici une fois qu'un loyer a été marqué comme payé sur un contrat actif. Les paiements sont effectués directement entre vous et votre locataire par virement bancaire.
-            </p>
-          </div>
-        )}
-
-        {/* ── Contract Groups ── */}
-        {!loading && !error && groups.length > 0 && (
-          <div className="flex flex-col gap-6">
-            {groups.map(group => {
-              const isCollapsed = collapsedGroups.has(group.contractId)
-              const isSettingsOpen = openSettings === group.contractId
-
-              return (
-                <div
-                  key={group.contractId}
+          {/* Glass KPI cards */}
+          {!loading && (
+            <div className="flex flex-wrap gap-3" style={{ marginTop: 28 }}>
+              <div
+                style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  backdropFilter: 'blur(20px) saturate(160%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                  border: '1px solid rgba(255,255,255,0.13)',
+                  borderRadius: 16,
+                  padding: '16px 24px',
+                  minWidth: 130,
+                }}
+              >
+                <p
                   style={{
-                    background: BAI.bgSurface,
-                    border: `1px solid ${BAI.border}`,
-                    borderRadius: 12,
-                    boxShadow: BAI.shadowSm,
-                    overflow: 'hidden',
+                    fontFamily: BAI.fontBody,
+                    fontSize: 10,
+                    color: 'rgba(255,255,255,0.5)',
+                    fontWeight: 700,
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    margin: '0 0 4px',
                   }}
                 >
-                  {/* Group header */}
+                  Payés
+                </p>
+                <p
+                  style={{
+                    fontFamily: BAI.fontDisplay,
+                    fontSize: 36,
+                    fontWeight: 700,
+                    fontStyle: 'italic',
+                    color: '#ffffff',
+                    margin: 0,
+                    lineHeight: 1,
+                  }}
+                >
+                  {paidThisMonth}
+                </p>
+              </div>
+
+              <div
+                style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  backdropFilter: 'blur(20px) saturate(160%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                  border: '1px solid rgba(255,255,255,0.13)',
+                  borderRadius: 16,
+                  padding: '16px 24px',
+                  minWidth: 130,
+                }}
+              >
+                <p
+                  style={{
+                    fontFamily: BAI.fontBody,
+                    fontSize: 10,
+                    color: 'rgba(255,255,255,0.5)',
+                    fontWeight: 700,
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    margin: '0 0 4px',
+                  }}
+                >
+                  En attente
+                </p>
+                <p
+                  style={{
+                    fontFamily: BAI.fontDisplay,
+                    fontSize: 36,
+                    fontWeight: 700,
+                    fontStyle: 'italic',
+                    color: '#ffffff',
+                    margin: 0,
+                    lineHeight: 1,
+                  }}
+                >
+                  {pendingThisMonth}
+                </p>
+              </div>
+
+              <div
+                style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  backdropFilter: 'blur(20px) saturate(160%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                  border: '1px solid rgba(255,255,255,0.13)',
+                  borderRadius: 16,
+                  padding: '16px 24px',
+                  minWidth: 130,
+                }}
+              >
+                <p
+                  style={{
+                    fontFamily: BAI.fontBody,
+                    fontSize: 10,
+                    color: 'rgba(255,255,255,0.5)',
+                    fontWeight: 700,
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    margin: '0 0 4px',
+                  }}
+                >
+                  En retard
+                </p>
+                <p
+                  style={{
+                    fontFamily: BAI.fontDisplay,
+                    fontSize: 36,
+                    fontWeight: 700,
+                    fontStyle: 'italic',
+                    color: lateThisMonth > 0 ? '#ff9999' : '#ffffff',
+                    margin: 0,
+                    lineHeight: 1,
+                  }}
+                >
+                  {lateThisMonth}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* === LIGHT CONTENT === */}
+        <div
+          style={{
+            background: BAI.bgBase,
+            minHeight: '60vh',
+            padding: 'clamp(24px,4vw,40px) clamp(16px,4vw,40px)',
+          }}
+        >
+
+          {/* ── Loading ── */}
+          {loading && (
+            <div className="flex items-center justify-center" style={{ padding: '64px 0' }}>
+              <RefreshCw size={24} style={{ color: BAI.caramel, animation: 'spin 1s linear infinite' }} />
+              <p style={{ marginLeft: 12, fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid }}>
+                Chargement des quittances…
+              </p>
+            </div>
+          )}
+
+          {/* ── Error ── */}
+          {error && !loading && (
+            <div
+              style={{
+                background: BAI.errorLight,
+                border: `1px solid #fca5a5`,
+                borderRadius: 12,
+                padding: '20px 24px',
+                marginBottom: 24,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+              }}
+            >
+              <AlertCircle size={20} style={{ color: BAI.error, flexShrink: 0 }} />
+              <div>
+                <p style={{ fontSize: 14, fontWeight: 600, color: BAI.error }}>{error}</p>
+                <button
+                  onClick={fetchPayments}
+                  style={{
+                    marginTop: 6,
+                    fontSize: 13,
+                    color: BAI.error,
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: 0,
+                    textDecoration: 'underline',
+                    fontFamily: BAI.fontBody,
+                  }}
+                >
+                  Réessayer
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── Rappel légal ── */}
+          {!loading && !error && groups.length > 0 && (
+            <div
+              style={{
+                background: BAI.bgSurface,
+                border: `1px solid ${BAI.border}`,
+                borderRadius: 10,
+                padding: '12px 18px',
+                marginBottom: 20,
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 10,
+              }}
+            >
+              <CheckCircle size={14} style={{ color: BAI.tenant, flexShrink: 0, marginTop: 2 }} />
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, lineHeight: 1.6, margin: 0 }}>
+                <strong style={{ color: BAI.ink }}>Conformité loi ALUR :</strong> Chaque quittance est générée automatiquement dès marquage « payé » et contient les mentions obligatoires (art. 21 loi du 6 juillet 1989) : loyer et charges séparés, période du 1er au dernier jour du mois, date de paiement reçu, coordonnées bailleur et locataire. Le PDF est archivé sécurisé et accessible 7 jours par email.
+              </p>
+            </div>
+          )}
+
+          {/* ── Empty ── */}
+          {!loading && !error && groups.length === 0 && (
+            <div
+              style={{
+                background: BAI.bgSurface,
+                border: `1px solid ${BAI.border}`,
+                borderRadius: 12,
+                padding: '48px 24px',
+                textAlign: 'center',
+              }}
+            >
+              <CheckCircle size={40} style={{ color: BAI.inkFaint, margin: '0 auto 16px' }} />
+              <p style={{ fontSize: 16, fontWeight: 600, color: BAI.ink, marginBottom: 8 }}>
+                Aucune quittance pour l'instant
+              </p>
+              <p style={{ fontSize: 14, color: BAI.inkMid, maxWidth: 380, margin: '0 auto' }}>
+                Les quittances s'affichent ici une fois qu'un loyer a été marqué comme payé sur un contrat actif. Les paiements sont effectués directement entre vous et votre locataire par virement bancaire.
+              </p>
+            </div>
+          )}
+
+          {/* ── Contract Groups ── */}
+          {!loading && !error && groups.length > 0 && (
+            <div className="flex flex-col gap-6">
+              {groups.map(group => {
+                const isCollapsed = collapsedGroups.has(group.contractId)
+                const isSettingsOpen = openSettings === group.contractId
+
+                return (
                   <div
-                    className="flex items-center justify-between flex-wrap gap-3"
+                    key={group.contractId}
                     style={{
-                      padding: '16px 20px',
-                      borderBottom: isCollapsed ? 'none' : `1px solid ${BAI.border}`,
-                      cursor: 'pointer',
+                      background: BAI.bgSurface,
+                      border: `1px solid ${BAI.border}`,
+                      borderRadius: 12,
+                      boxShadow: BAI.shadowSm,
+                      overflow: 'hidden',
                     }}
-                    onClick={() => toggleGroup(group.contractId)}
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div style={{ flexShrink: 0, color: BAI.inkFaint }}>
-                        {isCollapsed
-                          ? <ChevronRight size={18} />
-                          : <ChevronDown size={18} />
-                        }
-                      </div>
-                      <div className="min-w-0">
-                        <p
-                          style={{
-                            fontFamily: BAI.fontBody,
-                            fontSize: 15,
-                            fontWeight: 600,
-                            color: BAI.ink,
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                          }}
-                        >
-                          {group.propertyTitle}
-                        </p>
-                        <p style={{ fontSize: 13, color: BAI.inkMid, marginTop: 2 }}>
-                          {group.tenantName} · {group.propertyCity}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                      {/* AutoSend badge */}
-                      <span
-                        style={{
-                          fontFamily: BAI.fontBody,
-                          fontSize: 11,
-                          fontWeight: 600,
-                          letterSpacing: '0.06em',
-                          textTransform: 'uppercase',
-                          padding: '3px 10px',
-                          borderRadius: 99,
-                          ...(group.settings?.autoSend
-                            ? { background: BAI.tenantLight, color: BAI.tenant, border: `1px solid ${BAI.tenantBorder}` }
-                            : { background: BAI.bgMuted, color: BAI.inkFaint, border: `1px solid ${BAI.border}` }
-                          ),
-                        }}
-                      >
-                        Envoi auto : {group.settings?.autoSend ? 'ON' : 'OFF'}
-                      </span>
-
-                      {/* Settings button */}
-                      <button
-                        onClick={() => setOpenSettings(isSettingsOpen ? null : group.contractId)}
-                        title="Paramètres d'envoi"
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          width: 36,
-                          height: 36,
-                          borderRadius: 8,
-                          border: `1px solid ${BAI.border}`,
-                          background: isSettingsOpen ? BAI.bgMuted : BAI.bgSurface,
-                          cursor: 'pointer',
-                          color: isSettingsOpen ? BAI.ink : BAI.inkMid,
-                          transition: BAI.transition,
-                        }}
-                      >
-                        <Settings size={15} />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Settings panel */}
-                  {isSettingsOpen && (
-                    <div style={{ padding: '0 20px 4px' }}>
-                      <SettingsPanel
-                        contractId={group.contractId}
-                        settings={group.settings}
-                        onClose={() => setOpenSettings(null)}
-                        onSaved={handleSettingsSaved}
-                      />
-                    </div>
-                  )}
-
-                  {/* Payments list */}
-                  {!isCollapsed && (
-                    <div>
-                      {group.payments.map((payment, idx) => {
-                        const isLast = idx === group.payments.length - 1
-                        const isMarkingThisOne = markingPaid === payment.id
-                        const isActing = actionLoading === payment.id
-                        const total = payment.amount + (payment.charges ?? 0)
-
-                        return (
-                          <div
-                            key={payment.id}
+                    {/* Group header */}
+                    <div
+                      className="flex items-center justify-between flex-wrap gap-3"
+                      style={{
+                        padding: '16px 20px',
+                        borderBottom: isCollapsed ? 'none' : `1px solid ${BAI.border}`,
+                        cursor: 'pointer',
+                      }}
+                      onClick={() => toggleGroup(group.contractId)}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div style={{ flexShrink: 0, color: BAI.inkFaint }}>
+                          {isCollapsed
+                            ? <ChevronRight size={18} />
+                            : <ChevronDown size={18} />
+                          }
+                        </div>
+                        <div className="min-w-0">
+                          <p
                             style={{
-                              padding: '14px 20px',
-                              borderBottom: isLast ? 'none' : `1px solid ${BAI.border}`,
+                              fontFamily: BAI.fontBody,
+                              fontSize: 15,
+                              fontWeight: 600,
+                              color: BAI.ink,
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
                             }}
                           >
-                            <div className="flex items-center justify-between flex-wrap gap-3">
-                              {/* Left: month + amount */}
-                              <div className="flex items-center gap-4 min-w-0">
-                                <div>
-                                  <p style={{ fontSize: 14, fontWeight: 600, color: BAI.ink }}>
-                                    {formatMonthYear(payment.month, payment.year)}
-                                  </p>
-                                  <p style={{ fontSize: 13, color: BAI.inkMid, marginTop: 2 }}>
-                                    {formatEuro(payment.amount)}
-                                    {payment.charges > 0 && (
-                                      <span style={{ color: BAI.inkFaint }}> + {formatEuro(payment.charges)} charges</span>
-                                    )}
-                                    {' '}={' '}
-                                    <strong style={{ color: BAI.ink }}>{formatEuro(total)}</strong>
-                                  </p>
-                                  {payment.paidDate && (
-                                    <p style={{ fontSize: 12, color: BAI.inkFaint, marginTop: 2 }}>
-                                      Payé le {formatDate(payment.paidDate)}
+                            {group.propertyTitle}
+                          </p>
+                          <p style={{ fontSize: 13, color: BAI.inkMid, marginTop: 2 }}>
+                            {group.tenantName} · {group.propertyCity}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                        {/* AutoSend badge */}
+                        <span
+                          style={{
+                            fontFamily: BAI.fontBody,
+                            fontSize: 11,
+                            fontWeight: 600,
+                            letterSpacing: '0.06em',
+                            textTransform: 'uppercase',
+                            padding: '3px 10px',
+                            borderRadius: 99,
+                            ...(group.settings?.autoSend
+                              ? { background: BAI.tenantLight, color: BAI.tenant, border: `1px solid ${BAI.tenantBorder}` }
+                              : { background: BAI.bgMuted, color: BAI.inkFaint, border: `1px solid ${BAI.border}` }
+                            ),
+                          }}
+                        >
+                          Envoi auto : {group.settings?.autoSend ? 'ON' : 'OFF'}
+                        </span>
+
+                        {/* Settings button */}
+                        <button
+                          onClick={() => setOpenSettings(isSettingsOpen ? null : group.contractId)}
+                          title="Paramètres d'envoi"
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 36,
+                            height: 36,
+                            borderRadius: 8,
+                            border: `1px solid ${BAI.border}`,
+                            background: isSettingsOpen ? BAI.bgMuted : BAI.bgSurface,
+                            cursor: 'pointer',
+                            color: isSettingsOpen ? BAI.ink : BAI.inkMid,
+                            transition: BAI.transition,
+                          }}
+                        >
+                          <Settings size={15} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Settings panel */}
+                    {isSettingsOpen && (
+                      <div style={{ padding: '0 20px 4px' }}>
+                        <SettingsPanel
+                          contractId={group.contractId}
+                          settings={group.settings}
+                          onClose={() => setOpenSettings(null)}
+                          onSaved={handleSettingsSaved}
+                        />
+                      </div>
+                    )}
+
+                    {/* Payments list */}
+                    {!isCollapsed && (
+                      <div>
+                        {group.payments.map((payment, idx) => {
+                          const isLast = idx === group.payments.length - 1
+                          const isMarkingThisOne = markingPaid === payment.id
+                          const isActing = actionLoading === payment.id
+                          const total = payment.amount + (payment.charges ?? 0)
+
+                          return (
+                            <div
+                              key={payment.id}
+                              style={{
+                                padding: '14px 20px',
+                                borderBottom: isLast ? 'none' : `1px solid ${BAI.border}`,
+                              }}
+                            >
+                              <div className="flex items-center justify-between flex-wrap gap-3">
+                                {/* Left: month + amount */}
+                                <div className="flex items-center gap-4 min-w-0">
+                                  <div>
+                                    <p style={{ fontSize: 14, fontWeight: 600, color: BAI.ink }}>
+                                      {formatMonthYear(payment.month, payment.year)}
                                     </p>
+                                    <p style={{ fontSize: 13, color: BAI.inkMid, marginTop: 2 }}>
+                                      {formatEuro(payment.amount)}
+                                      {payment.charges > 0 && (
+                                        <span style={{ color: BAI.inkFaint }}> + {formatEuro(payment.charges)} charges</span>
+                                      )}
+                                      {' '}={' '}
+                                      <strong style={{ color: BAI.ink }}>{formatEuro(total)}</strong>
+                                    </p>
+                                    {payment.paidDate && (
+                                      <p style={{ fontSize: 12, color: BAI.inkFaint, marginTop: 2 }}>
+                                        Payé le {formatDate(payment.paidDate)}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Right: status + actions */}
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  {/* Status badge */}
+                                  <span
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: 5,
+                                      fontSize: 12,
+                                      fontWeight: 600,
+                                      padding: '4px 10px',
+                                      borderRadius: 99,
+                                      ...getStatusStyle(payment.status),
+                                    }}
+                                  >
+                                    {getStatusIcon(payment.status)}
+                                    {getStatusLabel(payment.status)}
+                                  </span>
+
+                                  {/* Action: Mark paid */}
+                                  {(payment.status === 'PENDING' || payment.status === 'LATE') && (
+                                    <button
+                                      onClick={() => setMarkingPaid(isMarkingThisOne ? null : payment.id)}
+                                      disabled={isActing}
+                                      style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: 6,
+                                        fontSize: 12,
+                                        fontWeight: 600,
+                                        color: '#fff',
+                                        background: isActing ? BAI.inkFaint : BAI.tenant,
+                                        border: 'none',
+                                        borderRadius: 8,
+                                        padding: '6px 12px',
+                                        cursor: isActing ? 'not-allowed' : 'pointer',
+                                        minHeight: 32,
+                                        transition: BAI.transition,
+                                      }}
+                                    >
+                                      <CheckCircle size={13} />
+                                      Marquer payé
+                                    </button>
+                                  )}
+
+                                  {/* Action: Download receipt */}
+                                  {payment.status === 'PAID' && payment.receiptCloudinaryId && (
+                                    <button
+                                      onClick={() => handleDownload(payment.id)}
+                                      disabled={isActing}
+                                      title="Télécharger la quittance"
+                                      style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: 6,
+                                        fontSize: 12,
+                                        fontWeight: 500,
+                                        color: BAI.ink,
+                                        background: BAI.bgSurface,
+                                        border: `1px solid ${BAI.border}`,
+                                        borderRadius: 8,
+                                        padding: '6px 12px',
+                                        cursor: isActing ? 'not-allowed' : 'pointer',
+                                        minHeight: 32,
+                                        transition: BAI.transition,
+                                        opacity: isActing ? 0.5 : 1,
+                                      }}
+                                    >
+                                      <Download size={13} />
+                                      Télécharger
+                                    </button>
+                                  )}
+
+                                  {/* Action: Resend receipt */}
+                                  {payment.status === 'PAID' && payment.receiptCloudinaryId && (
+                                    <button
+                                      onClick={() => handleResend(payment.id)}
+                                      disabled={isActing}
+                                      title="Renvoyer la quittance"
+                                      style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: 6,
+                                        fontSize: 12,
+                                        fontWeight: 500,
+                                        color: BAI.owner,
+                                        background: BAI.ownerLight,
+                                        border: `1px solid ${BAI.ownerBorder}`,
+                                        borderRadius: 8,
+                                        padding: '6px 12px',
+                                        cursor: isActing ? 'not-allowed' : 'pointer',
+                                        minHeight: 32,
+                                        transition: BAI.transition,
+                                        opacity: isActing ? 0.5 : 1,
+                                      }}
+                                    >
+                                      <Send size={13} />
+                                      Renvoyer
+                                    </button>
                                   )}
                                 </div>
                               </div>
 
-                              {/* Right: status + actions */}
-                              <div className="flex items-center gap-2 flex-wrap">
-                                {/* Status badge */}
-                                <span
-                                  style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: 5,
-                                    fontSize: 12,
-                                    fontWeight: 600,
-                                    padding: '4px 10px',
-                                    borderRadius: 99,
-                                    ...getStatusStyle(payment.status),
-                                  }}
-                                >
-                                  {getStatusIcon(payment.status)}
-                                  {getStatusLabel(payment.status)}
-                                </span>
-
-                                {/* Action: Mark paid */}
-                                {(payment.status === 'PENDING' || payment.status === 'LATE') && (
-                                  <button
-                                    onClick={() => setMarkingPaid(isMarkingThisOne ? null : payment.id)}
-                                    disabled={isActing}
-                                    style={{
-                                      display: 'inline-flex',
-                                      alignItems: 'center',
-                                      gap: 6,
-                                      fontSize: 12,
-                                      fontWeight: 600,
-                                      color: '#fff',
-                                      background: isActing ? BAI.inkFaint : BAI.tenant,
-                                      border: 'none',
-                                      borderRadius: 8,
-                                      padding: '6px 12px',
-                                      cursor: isActing ? 'not-allowed' : 'pointer',
-                                      minHeight: 32,
-                                      transition: BAI.transition,
-                                    }}
-                                  >
-                                    <CheckCircle size={13} />
-                                    Marquer payé
-                                  </button>
-                                )}
-
-                                {/* Action: Download receipt */}
-                                {payment.status === 'PAID' && payment.receiptCloudinaryId && (
-                                  <button
-                                    onClick={() => handleDownload(payment.id)}
-                                    disabled={isActing}
-                                    title="Télécharger la quittance"
-                                    style={{
-                                      display: 'inline-flex',
-                                      alignItems: 'center',
-                                      gap: 6,
-                                      fontSize: 12,
-                                      fontWeight: 500,
-                                      color: BAI.ink,
-                                      background: BAI.bgSurface,
-                                      border: `1px solid ${BAI.border}`,
-                                      borderRadius: 8,
-                                      padding: '6px 12px',
-                                      cursor: isActing ? 'not-allowed' : 'pointer',
-                                      minHeight: 32,
-                                      transition: BAI.transition,
-                                      opacity: isActing ? 0.5 : 1,
-                                    }}
-                                  >
-                                    <Download size={13} />
-                                    Télécharger
-                                  </button>
-                                )}
-
-                                {/* Action: Resend receipt */}
-                                {payment.status === 'PAID' && payment.receiptCloudinaryId && (
-                                  <button
-                                    onClick={() => handleResend(payment.id)}
-                                    disabled={isActing}
-                                    title="Renvoyer la quittance"
-                                    style={{
-                                      display: 'inline-flex',
-                                      alignItems: 'center',
-                                      gap: 6,
-                                      fontSize: 12,
-                                      fontWeight: 500,
-                                      color: BAI.owner,
-                                      background: BAI.ownerLight,
-                                      border: `1px solid ${BAI.ownerBorder}`,
-                                      borderRadius: 8,
-                                      padding: '6px 12px',
-                                      cursor: isActing ? 'not-allowed' : 'pointer',
-                                      minHeight: 32,
-                                      transition: BAI.transition,
-                                      opacity: isActing ? 0.5 : 1,
-                                    }}
-                                  >
-                                    <Send size={13} />
-                                    Renvoyer
-                                  </button>
-                                )}
-                              </div>
+                              {/* Mark paid inline UI */}
+                              {isMarkingThisOne && (
+                                <MarkPaidInline
+                                  paymentId={payment.id}
+                                  onConfirm={handleMarkPaid}
+                                  onCancel={() => setMarkingPaid(null)}
+                                />
+                              )}
                             </div>
-
-                            {/* Mark paid inline UI */}
-                            {isMarkingThisOne && (
-                              <MarkPaidInline
-                                paymentId={payment.id}
-                                onConfirm={handleMarkPaid}
-                                onCancel={() => setMarkingPaid(null)}
-                              />
-                            )}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        )}
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
 
         {/* Spin keyframe */}
         <style>{`

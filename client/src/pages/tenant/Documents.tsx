@@ -763,29 +763,35 @@ export default function TenantDocuments() {
 
   return (
     <Layout>
-      <div style={{ background: BAI.bgBase, minHeight: '100vh', padding: 'clamp(20px, 4vw, 40px)' }}>
-        <div style={{ maxWidth: 920, margin: '0 auto' }}>
-
-          {/* Page header */}
-          <div style={{ marginBottom: 32 }}>
-            <p style={{
-              fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700,
-              letterSpacing: '0.12em', textTransform: 'uppercase',
-              color: BAI.caramel, margin: '0 0 4px',
-            }}>
-              Ressources
-            </p>
-            <h1 style={{
-              fontFamily: BAI.fontDisplay, fontSize: 'clamp(26px, 4vw, 40px)',
-              fontWeight: 700, fontStyle: 'italic', color: BAI.ink,
-              margin: '0 0 4px', lineHeight: 1.15,
-            }}>
-              Mes Courriers Types
-            </h1>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: 0 }}>
-              Modèles de lettres prêts à l'emploi — copiez, personnalisez et téléchargez en PDF
+      {/* ── Hero sombre Hyperbeat ── */}
+      <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)' }}>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
+          LOCATAIRE
+        </p>
+        <h1 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(28px,5vw,42px)', fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: '6px 0 8px', lineHeight: 1.1 }}>
+          Mes Courriers Types
+        </h1>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.55)', margin: 0 }}>
+          Modèles de lettres prêts à l'emploi — copiez, personnalisez et téléchargez en PDF
+        </p>
+        <div className="flex flex-wrap gap-3" style={{ marginTop: 28 }}>
+          <div style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '16px 24px', minWidth: 130 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>MODÈLES</p>
+            <p style={{ fontFamily: BAI.fontDisplay, fontSize: 36, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1 }}>
+              {LETTERS.length}
             </p>
           </div>
+          <div style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '16px 24px', minWidth: 130 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>CATÉGORIES</p>
+            <p style={{ fontFamily: BAI.fontDisplay, fontSize: 36, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1 }}>
+              {CATEGORIES.length - 1}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ background: BAI.bgBase, minHeight: '60vh', padding: 'clamp(24px,4vw,40px) clamp(16px,4vw,48px)' }}>
+        <div style={{ maxWidth: 920, margin: '0 auto' }}>
 
           {/* Info banner */}
           <div style={{

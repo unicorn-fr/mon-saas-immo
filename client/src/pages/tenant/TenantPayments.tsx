@@ -117,27 +117,35 @@ export default function TenantPayments() {
 
   return (
     <Layout>
-      <div style={{ background: BAI.bgBase, minHeight: '100vh', fontFamily: BAI.fontBody }}>
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-
-          {/* ── Page Header ───────────────────────────────────────────────── */}
-          <div className="mb-8">
-            <p style={{
-              fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase',
-              color: BAI.caramel, fontFamily: BAI.fontBody, fontWeight: 700, marginBottom: 6,
-            }}>
-              Mes loyers
-            </p>
-            <h1 style={{
-              fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-              fontSize: 'clamp(28px,5vw,40px)', color: BAI.ink, lineHeight: 1.1, marginBottom: 8,
-            }}>
-              Paiements & Quittances
-            </h1>
-            <p style={{ fontSize: 14, color: BAI.inkMid }}>
-              Coordonnées bancaires de votre bailleur pour vos virements mensuels
+      {/* ── Hero sombre Hyperbeat ── */}
+      <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)' }}>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
+          MES LOYERS
+        </p>
+        <h1 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(28px,5vw,42px)', fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: '6px 0 8px', lineHeight: 1.1 }}>
+          Paiements & Quittances
+        </h1>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.55)', margin: 0 }}>
+          Coordonnées bancaires de votre bailleur pour vos virements mensuels
+        </p>
+        <div className="flex flex-wrap gap-3" style={{ marginTop: 28 }}>
+          <div style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '16px 24px', minWidth: 130 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>LOYER MENSUEL</p>
+            <p style={{ fontFamily: BAI.fontDisplay, fontSize: 36, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1 }}>
+              {contract ? `${formatEuro(totalRent)}` : '—'}
             </p>
           </div>
+          <div style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '16px 24px', minWidth: 130 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>STATUT</p>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: contract ? '#4ade80' : 'rgba(255,255,255,0.5)', margin: 0 }}>
+              {isLoading ? '…' : contract ? 'Bail actif' : 'Aucun contrat'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ background: BAI.bgBase, minHeight: '60vh', fontFamily: BAI.fontBody }}>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
 
           {isLoading && (
             <div style={{ textAlign: 'center', padding: '60px 0', color: BAI.inkFaint }}>

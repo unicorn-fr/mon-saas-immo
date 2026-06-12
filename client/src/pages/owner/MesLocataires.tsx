@@ -109,156 +109,277 @@ export default function MesLocataires() {
 
   return (
     <Layout>
-      <div style={{ background: BAI.bgBase, minHeight: '100vh', padding: 'clamp(20px, 4vw, 40px)' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+      <div style={{ background: BAI.bgBase, minHeight: '100vh', fontFamily: BAI.fontBody }}>
 
-          {/* Header */}
-          <div style={{ marginBottom: 32 }}>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 4px' }}>
-              Locataires
-            </p>
-            <h1 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(26px, 4vw, 40px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '0 0 4px', lineHeight: 1.15 }}>
-              Mes locataires
-            </h1>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: 0 }}>
-              {tenants.length} locataire{tenants.length !== 1 ? 's' : ''} en bail actif
-            </p>
-          </div>
+        {/* === DARK HERO === */}
+        <div
+          style={{
+            background: '#0a0d1a',
+            padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)',
+          }}
+        >
+          <p
+            style={{
+              fontFamily: BAI.fontBody,
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: BAI.caramel,
+              margin: 0,
+            }}
+          >
+            Locataires
+          </p>
+          <h1
+            style={{
+              fontFamily: BAI.fontDisplay,
+              fontSize: 'clamp(28px,5vw,42px)',
+              fontWeight: 700,
+              fontStyle: 'italic',
+              color: '#ffffff',
+              margin: '6px 0 8px',
+              lineHeight: 1.1,
+            }}
+          >
+            Mes locataires
+          </h1>
+          <p
+            style={{
+              fontFamily: BAI.fontBody,
+              fontSize: 14,
+              color: 'rgba(255,255,255,0.55)',
+              margin: 0,
+            }}
+          >
+            Gérez vos locataires et accédez à leurs informations en un clic.
+          </p>
 
-          {/* Search */}
-          {tenants.length > 0 && (
-            <div style={{ marginBottom: 24, position: 'relative' }}>
-              <input
-                type="text"
-                placeholder="Rechercher un locataire, un bien..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
+          {/* Glass KPI card */}
+          <div className="flex flex-wrap gap-3" style={{ marginTop: 28 }}>
+            <div
+              style={{
+                background: 'rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(20px) saturate(160%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                border: '1px solid rgba(255,255,255,0.13)',
+                borderRadius: 16,
+                padding: '16px 24px',
+                minWidth: 130,
+              }}
+            >
+              <p
                 style={{
-                  width: '100%', padding: '11px 16px 11px 42px',
-                  border: `1px solid ${BAI.border}`, borderRadius: 10,
-                  fontFamily: BAI.fontBody, fontSize: 14, color: BAI.ink,
-                  background: BAI.bgSurface, outline: 'none', boxSizing: 'border-box',
+                  fontFamily: BAI.fontBody,
+                  fontSize: 10,
+                  color: 'rgba(255,255,255,0.5)',
+                  fontWeight: 700,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  margin: '0 0 4px',
                 }}
-              />
-              <svg style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: BAI.inkFaint }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            </div>
-          )}
-
-          {/* Content */}
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: 60, color: BAI.inkFaint, fontFamily: BAI.fontBody }}>
-              Chargement...
-            </div>
-          ) : tenants.length === 0 ? (
-            <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: '56px 24px', textAlign: 'center' }}>
-              <Users className="w-10 h-10" style={{ color: BAI.inkFaint, margin: '0 auto 16px' }} />
-              <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 22, fontWeight: 700, color: BAI.ink, margin: '0 0 8px' }}>
-                Aucun locataire pour l'instant
+              >
+                Locataires
               </p>
-              <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: '0 0 24px' }}>
-                Vos locataires apparaîtront ici une fois leurs contrats signés.
+              <p
+                style={{
+                  fontFamily: BAI.fontDisplay,
+                  fontSize: 36,
+                  fontWeight: 700,
+                  fontStyle: 'italic',
+                  color: '#ffffff',
+                  margin: 0,
+                  lineHeight: 1,
+                }}
+              >
+                {tenants.length}
               </p>
-              <Link to="/contracts/new" style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                padding: '11px 24px', background: BAI.night, color: '#fff',
-                borderRadius: 10, textDecoration: 'none',
-                fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 14,
-              }}>
-                Créer un contrat
-              </Link>
             </div>
-          ) : filtered.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: 40, color: BAI.inkMid, fontFamily: BAI.fontBody }}>
-              Aucun résultat pour "{search}"
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {filtered.map(t => {
-                const s = CONTRACT_STATUS[t.status] ?? CONTRACT_STATUS.DRAFT
-                return (
-                  <div key={t.contractId} style={{
-                    background: BAI.bgSurface, border: `1px solid ${BAI.border}`,
-                    borderRadius: 12, padding: '20px 24px',
-                    boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.04)',
-                    display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
-                  }}>
-                    {/* Avatar */}
-                    <Initials firstName={t.firstName} lastName={t.lastName} />
+          </div>
+        </div>
 
-                    {/* Info */}
-                    <div style={{ flex: 1, minWidth: 200 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 4 }}>
-                        <span style={{ fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 16, color: BAI.ink }}>
-                          {t.firstName} {t.lastName}
-                        </span>
-                        <span style={{
-                          fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
-                          background: s.bg, color: s.color,
-                        }}>
-                          {s.label}
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', gap: '4px 20px', flexWrap: 'wrap', alignItems: 'center' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid }}>
-                          <Home className="w-3.5 h-3.5" />
-                          {t.property.title} · {t.property.city}
-                        </span>
-                        <span style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid }}>
-                          <strong style={{ color: BAI.ink }}>{t.monthlyRent.toLocaleString('fr-FR')} €</strong>/mois
-                        </span>
-                        {t.startDate && (
-                          <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>
-                            depuis {new Date(t.startDate).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+        {/* === LIGHT CONTENT === */}
+        <div
+          style={{
+            background: BAI.bgBase,
+            minHeight: '60vh',
+            padding: 'clamp(24px,4vw,40px) clamp(16px,4vw,48px)',
+          }}
+        >
+          <div style={{ maxWidth: 900, margin: '0 auto' }}>
+
+            {/* Search */}
+            {tenants.length > 0 && (
+              <div style={{ marginBottom: 24, position: 'relative' }}>
+                <input
+                  type="text"
+                  placeholder="Rechercher un locataire, un bien..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  style={{
+                    width: '100%', padding: '11px 16px 11px 42px',
+                    border: `1px solid ${BAI.border}`, borderRadius: 10,
+                    fontFamily: BAI.fontBody, fontSize: 14, color: BAI.ink,
+                    background: BAI.bgSurface, outline: 'none', boxSizing: 'border-box',
+                  }}
+                />
+                <svg
+                  style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: BAI.inkFaint }}
+                  width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                >
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="m21 21-4.35-4.35"/>
+                </svg>
+              </div>
+            )}
+
+            {/* Content */}
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: 60, color: BAI.inkFaint, fontFamily: BAI.fontBody }}>
+                Chargement...
+              </div>
+            ) : tenants.length === 0 ? (
+              <div
+                style={{
+                  background: BAI.bgSurface,
+                  border: `1px solid ${BAI.border}`,
+                  borderRadius: 12,
+                  padding: '56px 24px',
+                  textAlign: 'center',
+                }}
+              >
+                <Users className="w-10 h-10" style={{ color: BAI.inkFaint, margin: '0 auto 16px' }} />
+                <p
+                  style={{
+                    fontFamily: BAI.fontDisplay,
+                    fontStyle: 'italic',
+                    fontSize: 22,
+                    fontWeight: 700,
+                    color: BAI.ink,
+                    margin: '0 0 8px',
+                  }}
+                >
+                  Aucun locataire pour l'instant
+                </p>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: '0 0 24px' }}>
+                  Vos locataires apparaîtront ici une fois leurs contrats signés.
+                </p>
+                <Link
+                  to="/contracts/new"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 8,
+                    padding: '11px 24px', background: BAI.night, color: '#fff',
+                    borderRadius: 10, textDecoration: 'none',
+                    fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 14,
+                  }}
+                >
+                  Créer un contrat
+                </Link>
+              </div>
+            ) : filtered.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 40, color: BAI.inkMid, fontFamily: BAI.fontBody }}>
+                Aucun résultat pour "{search}"
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {filtered.map(t => {
+                  const s = CONTRACT_STATUS[t.status] ?? CONTRACT_STATUS.DRAFT
+                  return (
+                    <div
+                      key={t.contractId}
+                      style={{
+                        background: BAI.bgSurface,
+                        border: `1px solid ${BAI.border}`,
+                        borderRadius: 12,
+                        padding: '20px 24px',
+                        boxShadow: BAI.shadowSm,
+                        display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+                      }}
+                    >
+                      {/* Avatar */}
+                      <Initials firstName={t.firstName} lastName={t.lastName} />
+
+                      {/* Info */}
+                      <div style={{ flex: 1, minWidth: 200 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 4 }}>
+                          <span style={{ fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 16, color: BAI.ink }}>
+                            {t.firstName} {t.lastName}
                           </span>
-                        )}
-                      </div>
-                      <div style={{ display: 'flex', gap: '4px 16px', flexWrap: 'wrap', marginTop: 6 }}>
-                        <a href={`mailto:${t.email}`} style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: BAI.fontBody, fontSize: 12, color: BAI.caramel, textDecoration: 'none' }}>
-                          <Mail className="w-3 h-3" />{t.email}
-                        </a>
-                        {t.phone && (
-                          <a href={`tel:${t.phone}`} style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, textDecoration: 'none' }}>
-                            <Phone className="w-3 h-3" />{t.phone}
+                          <span style={{
+                            fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
+                            background: s.bg, color: s.color,
+                          }}>
+                            {s.label}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '4px 20px', flexWrap: 'wrap', alignItems: 'center' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid }}>
+                            <Home className="w-3.5 h-3.5" />
+                            {t.property.title} · {t.property.city}
+                          </span>
+                          <span style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid }}>
+                            <strong style={{ color: BAI.ink }}>{t.monthlyRent.toLocaleString('fr-FR')} €</strong>/mois
+                          </span>
+                          {t.startDate && (
+                            <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>
+                              depuis {new Date(t.startDate).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', gap: '4px 16px', flexWrap: 'wrap', marginTop: 6 }}>
+                          <a
+                            href={`mailto:${t.email}`}
+                            style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: BAI.fontBody, fontSize: 12, color: BAI.caramel, textDecoration: 'none' }}
+                          >
+                            <Mail className="w-3 h-3" />{t.email}
                           </a>
-                        )}
+                          {t.phone && (
+                            <a
+                              href={`tel:${t.phone}`}
+                              style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, textDecoration: 'none' }}
+                            >
+                              <Phone className="w-3 h-3" />{t.phone}
+                            </a>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                        <Link
+                          to={`/contracts/${t.contractId}`}
+                          title="Voir le contrat"
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 6,
+                            padding: '8px 14px', borderRadius: 8,
+                            border: `1px solid ${BAI.border}`, background: BAI.bgSurface,
+                            fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 500, color: BAI.inkMid,
+                            textDecoration: 'none',
+                          }}
+                        >
+                          <FileText className="w-4 h-4" />
+                          Contrat
+                        </Link>
+                        <Link
+                          to={`/owner/tenants/${t.id}`}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 6,
+                            padding: '8px 14px', borderRadius: 8,
+                            background: BAI.night, color: '#fff',
+                            fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600,
+                            textDecoration: 'none',
+                          }}
+                        >
+                          Profil
+                          <ChevronRight className="w-4 h-4" />
+                        </Link>
                       </div>
                     </div>
-
-                    {/* Actions */}
-                    <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                      <Link
-                        to={`/contracts/${t.contractId}`}
-                        title="Voir le contrat"
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: 6,
-                          padding: '8px 14px', borderRadius: 8,
-                          border: `1px solid ${BAI.border}`, background: BAI.bgSurface,
-                          fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 500, color: BAI.inkMid,
-                          textDecoration: 'none',
-                        }}
-                      >
-                        <FileText className="w-4 h-4" />
-                        Contrat
-                      </Link>
-                      <Link
-                        to={`/owner/tenants/${t.id}`}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: 6,
-                          padding: '8px 14px', borderRadius: 8,
-                          background: BAI.night, color: '#fff',
-                          fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600,
-                          textDecoration: 'none',
-                        }}
-                      >
-                        Profil
-                        <ChevronRight className="w-4 h-4" />
-                      </Link>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
+                  )
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </Layout>

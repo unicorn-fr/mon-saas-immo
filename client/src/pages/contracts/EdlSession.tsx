@@ -664,36 +664,46 @@ export default function EdlSessionPage() {
   // Écran PIN locataire
   if (showPinEntry) return (
     <Layout>
-      <div style={{ background: BAI.bgBase, minHeight: '100vh', fontFamily: BAI.fontBody, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-        <div style={{ ...card, maxWidth: 440, width: '100%', padding: 'clamp(20px,5vw,36px)' }}>
-          {/* Retour */}
-          <button
-            onClick={() => navigate(`/contracts/${contractId}`)}
-            style={{ ...btnBase(BAI.bgMuted, BAI.inkMid), marginBottom: 20, padding: '8px 14px', fontSize: 13 }}
-          >
-            <ArrowLeft size={14} /> Retour
-          </button>
-
-          {/* Header */}
-          <div style={{ textAlign: 'center', marginBottom: 28 }}>
+      <div style={{ background: '#0a0d1a', minHeight: '100vh', fontFamily: BAI.fontBody }}>
+        {/* Hero dark */}
+        <div style={{ padding: 'clamp(48px,8vw,80px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)', textAlign: 'center' }}>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 8px' }}>
+            État des Lieux
+          </p>
+          <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(26px,5vw,38px)', color: '#ffffff', margin: '0 0 8px', lineHeight: 1.1 }}>
+            Rejoindre la session
+          </h2>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.5)', margin: 0, lineHeight: 1.5 }}>
+            Tapez les 6 chiffres affichés sur l'écran du propriétaire,<br />ou scannez le QR code.
+          </p>
+        </div>
+        {/* Card glass */}
+        <div className="flex justify-center px-4 pb-16">
+          <div style={{
+            background: 'rgba(255,255,255,0.08)',
+            backdropFilter: 'blur(20px) saturate(160%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+            border: '1px solid rgba(255,255,255,0.13)',
+            borderRadius: 24,
+            padding: 'clamp(24px,5vw,40px)',
+            maxWidth: 440, width: '100%',
+          }}>
             <div style={{
-              width: 56, height: 56, borderRadius: 16, background: BAI.bgMuted,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px',
+              width: 56, height: 56, borderRadius: 16,
+              background: 'rgba(255,255,255,0.1)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px',
             }}>
               <QrCode size={26} style={{ color: BAI.caramel }} />
             </div>
-            <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, marginBottom: 4 }}>
-              État des Lieux
-            </p>
-            <h2 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(22px,5vw,28px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, marginBottom: 8 }}>
-              Rejoindre la session
-            </h2>
-            <p style={{ fontSize: 13, color: BAI.inkMid, lineHeight: 1.5 }}>
-              Tapez les 6 chiffres affichés sur l'écran du propriétaire,<br />ou scannez le QR code.
-            </p>
+            <button
+              onClick={() => navigate(`/contracts/${contractId}`)}
+              style={{ ...btnBase(BAI.bgMuted, BAI.inkMid), marginBottom: 20, padding: '8px 14px', fontSize: 13 }}
+            >
+              <ArrowLeft size={14} /> Retour
+            </button>
+            <PinInput onJoin={handleJoinByPin} joining={joining} />
           </div>
-
-          <PinInput onJoin={handleJoinByPin} joining={joining} />
         </div>
       </div>
     </Layout>
@@ -707,24 +717,65 @@ export default function EdlSessionPage() {
   return (
     <Layout>
       <div style={{ background: BAI.bgBase, minHeight: '100vh', fontFamily: BAI.fontBody }}>
-        <div style={{ maxWidth: 700, margin: '0 auto', padding: 'clamp(12px,4vw,32px)' }}>
-
-          {/* Header */}
-          <div style={{ marginBottom: 16 }}>
-            <button
-              onClick={() => navigate(`/contracts/${contractId}`)}
-              style={{ ...btnBase(BAI.bgMuted, BAI.inkMid), padding: '8px 14px', fontSize: 12, marginBottom: 12 }}
-            >
-              <ArrowLeft size={13} /> Retour au contrat
-            </button>
-            <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, marginBottom: 2 }}>
-              État des Lieux · {session?.edlType === 'ENTREE' ? 'Entrée' : 'Sortie'}
-            </p>
-            <h1 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(20px,5vw,32px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, marginBottom: 2 }}>
-              {contract?.property?.title ?? 'Logement'}
-            </h1>
-            <p style={{ fontSize: 12, color: BAI.inkMid }}>{contract?.property?.address ?? ''}</p>
+        {/* Hero sombre Hyperbeat */}
+        <div style={{ background: '#0a0d1a', padding: 'clamp(28px,5vw,48px) clamp(16px,4vw,48px) clamp(20px,4vw,36px)' }}>
+          <div style={{ maxWidth: 700, margin: '0 auto' }}>
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div className="flex items-start gap-4">
+                <button
+                  onClick={() => navigate(`/contracts/${contractId}`)}
+                  style={{
+                    padding: 9, background: 'rgba(255,255,255,0.08)',
+                    backdropFilter: 'blur(20px) saturate(160%)',
+                    WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                    border: '1px solid rgba(255,255,255,0.13)', borderRadius: 9,
+                    color: 'rgba(255,255,255,0.75)', cursor: 'pointer', flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    minHeight: 40, minWidth: 40, transition: 'background 0.15s',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.14)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+                >
+                  <ArrowLeft size={16} />
+                </button>
+                <div>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
+                    État des Lieux · {session?.edlType === 'ENTREE' ? 'Entrée' : 'Sortie'}
+                  </p>
+                  <h1 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(20px,4vw,30px)', color: '#ffffff', margin: '6px 0 4px', lineHeight: 1.1 }}>
+                    {contract?.property?.title ?? 'Logement'}
+                  </h1>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: 0 }}>{contract?.property?.address ?? ''}</p>
+                </div>
+              </div>
+              {/* Statut glass */}
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 7,
+                padding: '8px 16px', borderRadius: 20,
+                background: 'rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(20px) saturate(160%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                border: '1px solid rgba(255,255,255,0.13)',
+                fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600,
+                color: completed ? '#4ade80' : peerLeft ? '#f87171' : sessionActive ? '#4ade80' : 'rgba(255,255,255,0.55)',
+                whiteSpace: 'nowrap', alignSelf: 'flex-start',
+              }}>
+                {completed
+                  ? <><Lock size={13} /> Finalisé</>
+                  : peerLeft
+                  ? <><WifiOff size={13} /> Session verrouillée</>
+                  : syncError
+                  ? <><WifiOff size={13} /> Connexion perdue</>
+                  : sessionActive
+                  ? <><Wifi size={13} /> En temps réel</>
+                  : <><WifiOff size={13} /> En attente…</>
+                }
+              </div>
+            </div>
           </div>
+        </div>
+        <div style={{ maxWidth: 700, margin: '0 auto', padding: 'clamp(12px,4vw,32px)' }}>
+          <div style={{ height: 0 }} />
 
           {/* Bandeau statut */}
           <div style={{

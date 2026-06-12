@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { apiClient } from '../services/api.service'
 import toast from 'react-hot-toast'
 import { BAI } from '../constants/bailio-tokens'
-import { User, ArrowRight } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 
 export default function CompleteProfile() {
   const { user, updateProfile } = useAuth()
@@ -34,47 +34,101 @@ export default function CompleteProfile() {
     }
   }
 
-  const inputStyle: React.CSSProperties = {
-    background: BAI.bgInput,
-    border: `1px solid ${BAI.border}`,
+  const darkInputStyle: React.CSSProperties = {
+    background: 'rgba(255,255,255,0.08)',
+    border: '1px solid rgba(255,255,255,0.15)',
     borderRadius: 8,
     padding: '0.7rem 1rem',
-    color: BAI.ink,
+    color: '#ffffff',
     fontSize: 15,
     outline: 'none',
     width: '100%',
     fontFamily: BAI.fontBody,
     boxSizing: 'border-box',
+    transition: 'border-color 0.15s',
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: BAI.bgBase, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px', fontFamily: BAI.fontBody }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: '#0a0d1a',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px 16px',
+        fontFamily: BAI.fontBody,
+      }}
+    >
       <div style={{ width: '100%', maxWidth: 440 }}>
 
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
-          <p style={{ fontFamily: BAI.fontDisplay, fontSize: 32, fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: 0 }}>
+          <p
+            style={{
+              fontFamily: BAI.fontDisplay,
+              fontSize: 32,
+              fontWeight: 700,
+              fontStyle: 'italic',
+              color: '#ffffff',
+              margin: 0,
+            }}
+          >
             Bailio<span style={{ color: BAI.caramel }}>.</span>
           </p>
         </div>
 
-        {/* Card */}
-        <div style={{
-          background: BAI.bgSurface,
-          border: `1px solid ${BAI.border}`,
-          borderRadius: 16,
-          padding: '36px 32px',
-          boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 24px rgba(13,12,10,0.08)',
-        }}>
+        {/* Glass card */}
+        <div
+          style={{
+            background: 'rgba(255,255,255,0.08)',
+            backdropFilter: 'blur(20px) saturate(160%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+            border: '1px solid rgba(255,255,255,0.13)',
+            borderRadius: 16,
+            padding: '36px 32px',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: BAI.bgMuted, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <User size={18} style={{ color: BAI.inkMid }} />
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
             </div>
-            <h1 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 24, color: BAI.ink, margin: 0 }}>
+            <h1
+              style={{
+                fontFamily: BAI.fontDisplay,
+                fontStyle: 'italic',
+                fontWeight: 700,
+                fontSize: 24,
+                color: '#ffffff',
+                margin: 0,
+              }}
+            >
               Complétez votre profil
             </h1>
           </div>
-          <p style={{ fontSize: 14, color: BAI.inkMid, marginBottom: 28, lineHeight: 1.6 }}>
+          <p
+            style={{
+              fontSize: 14,
+              color: 'rgba(255,255,255,0.6)',
+              marginBottom: 28,
+              lineHeight: 1.6,
+            }}
+          >
             Pour des raisons de sécurité et de traçabilité, votre prénom et nom sont requis avant d'accéder à la plateforme.
           </p>
 
@@ -82,7 +136,17 @@ export default function CompleteProfile() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BAI.inkMid, letterSpacing: '0.05em', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>
+                <label
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: 'rgba(255,255,255,0.85)',
+                    letterSpacing: '0.05em',
+                    textTransform: 'uppercase',
+                    display: 'block',
+                    marginBottom: 6,
+                  }}
+                >
                   Prénom
                 </label>
                 <input
@@ -91,13 +155,27 @@ export default function CompleteProfile() {
                   onChange={e => setFirstName(e.target.value)}
                   placeholder="Jean"
                   autoFocus
-                  style={inputStyle}
-                  onFocus={e => { e.currentTarget.style.borderColor = BAI.night; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(26,26,46,0.10)' }}
-                  onBlur={e => { e.currentTarget.style.borderColor = BAI.border; e.currentTarget.style.boxShadow = 'none' }}
+                  style={darkInputStyle}
+                  onFocus={e => {
+                    e.currentTarget.style.borderColor = 'rgba(196,151,106,0.7)'
+                  }}
+                  onBlur={e => {
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'
+                  }}
                 />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BAI.inkMid, letterSpacing: '0.05em', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>
+                <label
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: 'rgba(255,255,255,0.85)',
+                    letterSpacing: '0.05em',
+                    textTransform: 'uppercase',
+                    display: 'block',
+                    marginBottom: 6,
+                  }}
+                >
                   Nom
                 </label>
                 <input
@@ -105,9 +183,13 @@ export default function CompleteProfile() {
                   value={lastName}
                   onChange={e => setLastName(e.target.value)}
                   placeholder="Dupont"
-                  style={inputStyle}
-                  onFocus={e => { e.currentTarget.style.borderColor = BAI.night; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(26,26,46,0.10)' }}
-                  onBlur={e => { e.currentTarget.style.borderColor = BAI.border; e.currentTarget.style.boxShadow = 'none' }}
+                  style={darkInputStyle}
+                  onFocus={e => {
+                    e.currentTarget.style.borderColor = 'rgba(196,151,106,0.7)'
+                  }}
+                  onBlur={e => {
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'
+                  }}
                 />
               </div>
             </div>
@@ -117,7 +199,7 @@ export default function CompleteProfile() {
               disabled={isLoading || !firstName.trim() || !lastName.trim()}
               style={{
                 background: BAI.night,
-                border: 'none',
+                border: '1px solid rgba(255,255,255,0.15)',
                 borderRadius: 8,
                 padding: '0.75rem 1.25rem',
                 color: '#ffffff',
@@ -133,15 +215,26 @@ export default function CompleteProfile() {
                 marginTop: 4,
                 transition: 'background 0.15s, opacity 0.15s',
               }}
-              onMouseEnter={e => { if (!isLoading) (e.currentTarget as HTMLElement).style.background = '#2d2d4e' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = BAI.night }}
+              onMouseEnter={e => {
+                if (!isLoading) (e.currentTarget as HTMLElement).style.background = '#2d2d4e'
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLElement).style.background = BAI.night
+              }}
             >
               {isLoading ? 'Enregistrement…' : <>Accéder à mon espace <ArrowRight size={15} /></>}
             </button>
           </form>
         </div>
 
-        <p style={{ textAlign: 'center', fontSize: 12, color: BAI.inkFaint, marginTop: 20 }}>
+        <p
+          style={{
+            textAlign: 'center',
+            fontSize: 12,
+            color: 'rgba(255,255,255,0.35)',
+            marginTop: 20,
+          }}
+        >
           Ces informations sont utilisées pour identifier les signataires des contrats et quittances.
         </p>
       </div>

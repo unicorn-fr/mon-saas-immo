@@ -71,34 +71,93 @@ export default function VerifyIdentity() {
 
   return (
     <Layout>
-      <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 16px', background: BAI.bgBase }}>
-        <div style={{ maxWidth: 520, width: '100%' }}>
-          {/* Header */}
-          <div style={{ textAlign: 'center', marginBottom: 40 }}>
-            <div style={{ width: 72, height: 72, borderRadius: '50%', background: `${BAI.night}12`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-              <ShieldCheck size={32} color={BAI.night} />
-            </div>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 8px' }}>
-              Sécurité & Confiance
-            </p>
-            <h1 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(26px,5vw,36px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '0 0 12px' }}>
-              Vérification d'identité
-            </h1>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, lineHeight: 1.6, margin: 0 }}>
-              Bailio exige une vérification d'identité pour garantir la sécurité de tous les utilisateurs. Cette étape est nécessaire avant de pouvoir postuler à une location ou créer un bail.
-            </p>
-          </div>
+      {/* Dark hero strip */}
+      <div style={{
+        background: '#0a0d1a',
+        padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(36px,5vw,56px)',
+        textAlign: 'center',
+      }}>
+        {/* Shield icon in glass circle */}
+        <div style={{
+          width: 64,
+          height: 64,
+          borderRadius: '50%',
+          background: 'rgba(196,151,106,0.15)',
+          border: '1px solid rgba(196,151,106,0.30)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          margin: '0 auto 20px',
+        }}>
+          <ShieldCheck size={28} color={BAI.caramel} />
+        </div>
 
+        <p style={{
+          fontFamily: BAI.fontBody,
+          fontSize: 10,
+          fontWeight: 700,
+          letterSpacing: '0.14em',
+          textTransform: 'uppercase',
+          color: BAI.caramel,
+          margin: '0 0 10px',
+        }}>
+          Sécurité &amp; Confiance
+        </p>
+        <h1 style={{
+          fontFamily: BAI.fontDisplay,
+          fontSize: 'clamp(26px,5vw,40px)',
+          fontWeight: 700,
+          fontStyle: 'italic',
+          color: '#ffffff',
+          margin: '0 0 12px',
+          lineHeight: 1.1,
+        }}>
+          Vérification d'identité
+        </h1>
+        <p style={{
+          fontFamily: BAI.fontBody,
+          fontSize: 15,
+          color: 'rgba(255,255,255,0.55)',
+          maxWidth: 520,
+          margin: '0 auto',
+          lineHeight: 1.65,
+        }}>
+          Bailio exige une vérification d'identité pour garantir la sécurité de tous les utilisateurs. Cette étape est nécessaire avant de pouvoir postuler à une location ou créer un bail.
+        </p>
+      </div>
+
+      {/* Light card section */}
+      <div style={{
+        background: BAI.bgBase,
+        display: 'flex',
+        justifyContent: 'center',
+        padding: 'clamp(32px,5vw,56px) clamp(16px,4vw,48px)',
+        fontFamily: BAI.fontBody,
+      }}>
+        <div style={{ maxWidth: 520, width: '100%' }}>
           {/* Card */}
-          <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: 32, boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)' }}>
+          <div style={{
+            background: BAI.bgSurface,
+            border: `1px solid ${BAI.border}`,
+            borderRadius: 16,
+            padding: 32,
+            boxShadow: BAI.shadowMd,
+          }}>
             {checking ? (
               <div style={{ textAlign: 'center', padding: '20px 0', color: BAI.inkFaint, fontFamily: BAI.fontBody, fontSize: 14 }}>
                 Vérification du statut…
               </div>
             ) : (
               <>
-                {/* Status */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid ${BAI.border}` }}>
+                {/* Status row */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: 24,
+                  paddingBottom: 20,
+                  borderBottom: `1px solid ${BAI.border}`,
+                }}>
                   <span style={{ fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, color: BAI.ink }}>Statut actuel</span>
                   <StatusBadge />
                 </div>
@@ -127,7 +186,23 @@ export default function VerifyIdentity() {
                     <button
                       onClick={handleVerify}
                       disabled={loading}
-                      style={{ width: '100%', padding: '14px 24px', background: BAI.night, color: '#fff', border: 'none', borderRadius: 10, fontFamily: BAI.fontBody, fontSize: 15, fontWeight: 600, cursor: loading ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: loading ? 0.7 : 1 }}
+                      style={{
+                        width: '100%',
+                        padding: '14px 24px',
+                        background: BAI.night,
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 10,
+                        fontFamily: BAI.fontBody,
+                        fontSize: 15,
+                        fontWeight: 600,
+                        cursor: loading ? 'wait' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8,
+                        opacity: loading ? 0.7 : 1,
+                      }}
                     >
                       {loading ? 'Chargement…' : <><ShieldCheck size={18} /> Vérifier mon identité</>}
                     </button>
@@ -137,7 +212,19 @@ export default function VerifyIdentity() {
                 {/* Back link */}
                 <button
                   onClick={() => navigate(-1)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 20, background: 'none', border: 'none', cursor: 'pointer', fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint, padding: 0 }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    marginTop: 20,
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontFamily: BAI.fontBody,
+                    fontSize: 13,
+                    color: BAI.inkFaint,
+                    padding: 0,
+                  }}
                 >
                   ← Retour
                 </button>
@@ -147,7 +234,14 @@ export default function VerifyIdentity() {
 
           {/* Info footer */}
           {!checking && status !== 'verified' && (
-            <p style={{ textAlign: 'center', fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, marginTop: 20, lineHeight: 1.6 }}>
+            <p style={{
+              textAlign: 'center',
+              fontFamily: BAI.fontBody,
+              fontSize: 12,
+              color: BAI.inkFaint,
+              marginTop: 20,
+              lineHeight: 1.6,
+            }}>
               La vérification est effectuée par <strong>Stripe Identity</strong>, un service certifié conforme aux normes eIDAS. Bailio ne stocke pas vos données biométriques.
             </p>
           )}

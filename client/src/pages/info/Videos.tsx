@@ -61,7 +61,7 @@ export default function Videos() {
       <div style={{ minHeight: '100vh', background: BAI.bgBase, fontFamily: BAI.fontBody }}>
 
         {/* Hero */}
-        <section style={{ background: BAI.night, padding: 'clamp(56px,8vw,88px) clamp(16px,5vw,48px) clamp(40px,5vw,60px)' }}>
+        <section style={{ background: '#0a0d1a', padding: 'clamp(48px,7vw,80px) clamp(16px,4vw,48px) clamp(40px,6vw,60px)' }}>
           <div style={{ maxWidth: 1100, margin: '0 auto' }}>
             <Link
               to="/"
@@ -71,13 +71,13 @@ export default function Videos() {
             >
               <ArrowLeft size={14} /> Retour à l'accueil
             </Link>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, marginBottom: 12 }}>
-              Branding
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 10px' }}>
+              Ressources
             </p>
-            <h1 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(28px,5vw,52px)', color: '#ffffff', margin: '0 0 16px', lineHeight: 1.1 }}>
-              Vidéos de présentation Bailio
+            <h1 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(32px,6vw,52px)', color: '#ffffff', margin: '8px 0 12px', lineHeight: 1.1 }}>
+              Vidéos & tutoriels
             </h1>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 16, color: 'rgba(255,255,255,0.55)', maxWidth: 600, lineHeight: 1.6 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 15, color: 'rgba(255,255,255,0.55)', maxWidth: 520, lineHeight: 1.6, margin: 0 }}>
               Motion design professionnel — rendues avec Remotion. Prêtes à publier sur YouTube, LinkedIn, TikTok et Instagram.
             </p>
           </div>

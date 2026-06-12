@@ -98,37 +98,49 @@ export default function TenantMaintenance() {
 
   return (
     <Layout>
-      <div style={{ background: BAI.bgBase, minHeight: '100vh', padding: 'clamp(20px, 4vw, 40px)' }}>
-        <div style={{ maxWidth: 720, margin: '0 auto' }}>
-
-          {/* Header */}
-          <div style={{ marginBottom: 32, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
-            <div>
-              <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 4px' }}>
-                Mon logement
-              </p>
-              <h1 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '0 0 4px', lineHeight: 1.15 }}>
-                Maintenance
-              </h1>
-              <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: 0 }}>
-                Signalez un problème à votre propriétaire
-              </p>
-            </div>
-            <button
-              onClick={() => setShowForm(!showForm)}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                padding: '11px 20px', borderRadius: 10,
-                background: BAI.night, color: '#fff',
-                border: 'none', cursor: 'pointer',
-                fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 14,
-                minHeight: 44,
-              }}
-            >
-              {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-              {showForm ? 'Annuler' : 'Signaler un problème'}
-            </button>
+      {/* ── Hero sombre Hyperbeat ── */}
+      <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)' }}>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
+          MON LOGEMENT
+        </p>
+        <h1 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(28px,5vw,42px)', fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: '6px 0 8px', lineHeight: 1.1 }}>
+          Maintenance
+        </h1>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.55)', margin: 0 }}>
+          Signalez un problème à votre propriétaire
+        </p>
+        <div className="flex flex-wrap gap-3" style={{ marginTop: 28 }}>
+          <div style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '16px 24px', minWidth: 130 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>DEMANDES</p>
+            <p style={{ fontFamily: BAI.fontDisplay, fontSize: 36, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1 }}>
+              {loading ? '—' : requests.length}
+            </p>
           </div>
+          <div style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '16px 24px', minWidth: 130 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>EN COURS</p>
+            <p style={{ fontFamily: BAI.fontDisplay, fontSize: 36, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1 }}>
+              {loading ? '—' : requests.filter(r => r.status === 'OPEN' || r.status === 'IN_PROGRESS').length}
+            </p>
+          </div>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '16px 24px', borderRadius: 16,
+              background: showForm ? 'rgba(255,255,255,0.15)' : BAI.caramel,
+              color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)',
+              cursor: 'pointer', fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13,
+              backdropFilter: showForm ? 'blur(20px)' : 'none',
+            }}
+          >
+            {showForm ? <X style={{ width: 15, height: 15 }} /> : <Plus style={{ width: 15, height: 15 }} />}
+            {showForm ? 'Annuler' : 'Signaler un problème'}
+          </button>
+        </div>
+      </div>
+
+      <div style={{ background: BAI.bgBase, minHeight: '60vh', padding: 'clamp(20px, 4vw, 40px)' }}>
+        <div style={{ maxWidth: 720, margin: '0 auto' }}>
 
           {/* New Request Form */}
           {showForm && (

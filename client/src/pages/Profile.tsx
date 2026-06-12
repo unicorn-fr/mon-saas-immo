@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import { Layout } from '../components/layout/Layout'
 import { useAuth } from '../hooks/useAuth'
 import { authService } from '../services/auth.service'
@@ -180,11 +179,32 @@ export default function Profile() {
     }
   }
 
-  const getAvatarColors = (role: string) => {
+  const getRoleBadgeStyleDark = (role: string): React.CSSProperties => {
     switch (role) {
-      case 'OWNER':  return { bg: BAI.ownerLight, color: BAI.owner }
-      case 'TENANT': return { bg: BAI.tenantLight, color: BAI.tenant }
-      default:       return { bg: BAI.bgMuted, color: BAI.inkMid }
+      case 'OWNER':
+        return {
+          background: 'rgba(26,50,112,0.35)',
+          border: '1px solid rgba(184,204,240,0.3)',
+          color: '#b8ccf0',
+        }
+      case 'TENANT':
+        return {
+          background: 'rgba(27,94,59,0.35)',
+          border: '1px solid rgba(159,212,186,0.3)',
+          color: '#9fd4ba',
+        }
+      case 'ADMIN':
+        return {
+          background: 'rgba(153,27,27,0.35)',
+          border: '1px solid rgba(252,165,165,0.3)',
+          color: '#fca5a5',
+        }
+      default:
+        return {
+          background: 'rgba(255,255,255,0.08)',
+          border: '1px solid rgba(255,255,255,0.15)',
+          color: 'rgba(255,255,255,0.6)',
+        }
     }
   }
 
@@ -203,47 +223,51 @@ export default function Profile() {
 
   const hasPassword = true
 
-  const avatarColors = getAvatarColors(user?.role || '')
   const initials = `${user?.firstName?.[0] || ''}${user?.lastName?.[0] || ''}`.toUpperCase()
 
   return (
     <Layout>
+      {/* ── Dark Hero ─────────────────────────────────────────────────── */}
       <div
-        className="min-h-screen p-6 lg:p-8"
-        style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}
+        style={{
+          background: '#0a0d1a',
+          padding: 'clamp(48px,7vw,80px) clamp(16px,4vw,48px) clamp(40px,6vw,60px)',
+        }}
       >
-        <div className="max-w-4xl mx-auto">
+        <div style={{ maxWidth: 896, margin: '0 auto' }}>
 
-          {/* Email verification banner */}
+          {/* Email verification banner — dark variant */}
           {user && !user.emailVerified && (
             <div
-              className="mb-6 p-4 flex items-start gap-3"
+              className="mb-8 flex items-start gap-3 p-4"
               style={{
-                background: '#fffbeb',
-                border: '1px solid #fde68a',
+                background: 'rgba(217,119,6,0.15)',
+                border: '1px solid rgba(253,230,138,0.25)',
                 borderRadius: '12px',
               }}
             >
-              <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#d97706' }} />
+              <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#fbbf24' }} />
               <div className="flex-1">
-                <p className="text-sm font-semibold" style={{ color: '#d97706', fontFamily: BAI.fontBody }}>
+                <p className="text-sm font-semibold" style={{ color: '#fbbf24', fontFamily: BAI.fontBody }}>
                   Votre adresse email n'est pas vérifiée
                 </p>
-                <p className="text-sm mt-0.5" style={{ color: '#78350f', fontFamily: BAI.fontBody }}>
+                <p className="text-sm mt-0.5" style={{ color: 'rgba(251,191,36,0.7)', fontFamily: BAI.fontBody }}>
                   Vérifiez votre email pour accéder à toutes les fonctionnalités.
                 </p>
               </div>
               <button
                 onClick={handleResendVerification}
                 disabled={isResendingVerification}
-                className="font-semibold px-3 py-1.5 text-xs text-white flex-shrink-0 disabled:opacity-50 transition-colors"
+                className="font-semibold px-3 py-1.5 text-xs flex-shrink-0 disabled:opacity-50 transition-colors"
                 style={{
-                  background: '#d97706',
+                  background: 'rgba(217,119,6,0.3)',
+                  border: '1px solid rgba(253,230,138,0.3)',
+                  color: '#fbbf24',
                   borderRadius: '8px',
                   fontFamily: BAI.fontBody,
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = '#b45309')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = '#d97706')}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(217,119,6,0.5)')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(217,119,6,0.3)')}
               >
                 {isResendingVerification ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -254,50 +278,107 @@ export default function Profile() {
             </div>
           )}
 
-          {/* Page Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.24 }}
-            className="mb-8"
-          >
-            <p
+          {/* Hero content: avatar left + text right */}
+          <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6">
+
+            {/* Avatar glass circle */}
+            <div
+              className="w-24 h-24 rounded-full flex items-center justify-center flex-shrink-0 select-none"
               style={{
-                fontFamily: BAI.fontBody,
-                fontSize: '10px',
-                fontWeight: 700,
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
-                color: BAI.caramel,
-                marginBottom: '6px',
-              }}
-            >
-              Compte
-            </p>
-            <h1
-              style={{
+                background: 'rgba(255,255,255,0.07)',
+                backdropFilter: 'blur(20px) saturate(160%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                border: '2px solid rgba(255,255,255,0.2)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
                 fontFamily: BAI.fontDisplay,
                 fontWeight: 700,
+                fontSize: '32px',
                 fontStyle: 'italic',
-                fontSize: 'clamp(28px,5vw,40px)',
-                color: BAI.ink,
-                lineHeight: 1.1,
-                marginBottom: '6px',
+                color: '#ffffff',
               }}
             >
-              Mon profil
-            </h1>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: '14px', color: BAI.inkMid }}>
-              Gérez vos informations personnelles et vos paramètres de sécurité
-            </p>
-          </motion.div>
+              {user?.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt="Avatar"
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                initials || <User className="w-10 h-10" style={{ color: 'rgba(255,255,255,0.7)' }} />
+              )}
+            </div>
 
+            {/* Text */}
+            <div className="flex-1 text-center sm:text-left">
+              <p
+                style={{
+                  fontFamily: BAI.fontBody,
+                  fontSize: '10px',
+                  fontWeight: 700,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: BAI.caramel,
+                  marginBottom: '6px',
+                }}
+              >
+                Compte
+              </p>
+              <h1
+                style={{
+                  fontFamily: BAI.fontDisplay,
+                  fontWeight: 700,
+                  fontStyle: 'italic',
+                  fontSize: 'clamp(28px,5vw,40px)',
+                  color: '#ffffff',
+                  lineHeight: 1.1,
+                  marginBottom: '8px',
+                }}
+              >
+                {user?.firstName} {user?.lastName}
+              </h1>
+              <p
+                style={{
+                  fontFamily: BAI.fontBody,
+                  fontSize: '14px',
+                  color: 'rgba(255,255,255,0.55)',
+                  marginBottom: '12px',
+                }}
+              >
+                {user?.email}
+              </p>
+
+              {/* Role badge — glass on dark */}
+              <div
+                className="inline-flex items-center gap-1.5 px-3 py-1"
+                style={{
+                  ...getRoleBadgeStyleDark(user?.role || ''),
+                  borderRadius: '20px',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  fontFamily: BAI.fontBody,
+                  letterSpacing: '0.04em',
+                }}
+              >
+                <Shield className="w-3.5 h-3.5" />
+                {getRoleName(user?.role || '')}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Main content on bgBase ─────────────────────────────────────── */}
+      <div
+        className="p-6 lg:p-8"
+        style={{ background: BAI.bgBase, fontFamily: BAI.fontBody, minHeight: '60vh' }}
+      >
+        <div className="max-w-4xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* ── Left: Profile summary card ── */}
             <div className="lg:col-span-1">
               <div style={cardStyle}>
 
-                {/* Avatar + identity */}
+                {/* Avatar + identity — light card version */}
                 <div className="text-center">
                   <div className="relative inline-block mb-4">
                     {user?.avatar ? (
@@ -311,9 +392,9 @@ export default function Profile() {
                       <div
                         className="w-24 h-24 rounded-full flex items-center justify-center select-none"
                         style={{
-                          background: avatarColors.bg,
+                          background: BAI.bgMuted,
                           border: `3px solid ${BAI.border}`,
-                          color: avatarColors.color,
+                          color: BAI.inkMid,
                           fontFamily: BAI.fontDisplay,
                           fontWeight: 700,
                           fontSize: '32px',
@@ -904,7 +985,6 @@ export default function Profile() {
                       Changer le mot de passe
                     </button>
                   )}
-
                 </div>
               </div>
 

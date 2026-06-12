@@ -171,43 +171,47 @@ export default function LocationVille() {
     <Layout>
       <div style={{ background: BAI.bgBase, minHeight: '100vh', fontFamily: BAI.fontBody }}>
 
-        {/* Hero compact */}
-        <div style={{ background: BAI.night, padding: 'clamp(28px, 4vw, 48px) clamp(16px, 5vw, 48px)' }}>
+        {/* Hero sombre Hyperbeat */}
+        <div style={{ background: '#0a0d1a', padding: 'clamp(36px,5vw,60px) clamp(16px,5vw,48px) clamp(28px,4vw,44px)' }}>
           {/* Breadcrumb */}
-          <nav style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}>
+          <nav style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20 }}>
             {[['Accueil', '/'], ['Location', '/search'], [villeData.nom, '']].map(([label, href], i) => (
               <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                {i > 0 && <ChevronRight size={12} style={{ color: 'rgba(255,255,255,0.4)' }} />}
+                {i > 0 && <ChevronRight size={12} style={{ color: 'rgba(255,255,255,0.35)' }} />}
                 {href ? (
-                  <Link to={href} style={{ fontFamily: BAI.fontBody, fontSize: 12, color: 'rgba(255,255,255,0.55)', textDecoration: 'none' }}>
+                  <Link to={href} style={{ fontFamily: BAI.fontBody, fontSize: 12, color: 'rgba(255,255,255,0.45)', textDecoration: 'none' }}>
                     {label}
                   </Link>
                 ) : (
-                  <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: 'rgba(255,255,255,0.85)' }}>{label}</span>
+                  <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>{label}</span>
                 )}
               </span>
             ))}
           </nav>
 
-          <h1 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(24px, 4vw, 38px)', fontWeight: 700, fontStyle: 'italic', color: '#fff', marginBottom: 6 }}>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 8px' }}>
+            Marché locatif
+          </p>
+          <h1 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(28px,5vw,44px)', fontWeight: 700, fontStyle: 'italic', color: '#fff', margin: '0 0 8px', lineHeight: 1.1 }}>
             Location à {villeData.nom}
           </h1>
-          <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>
-            {villeData.nomComplet} — Loyer moyen : {villeData.prixMoyen}€/m²/mois
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.55)', margin: 0 }}>
+            {villeData.nomComplet}
           </p>
-        </div>
 
-        {/* Stats band */}
-        <div style={{ background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}`, padding: '12px clamp(16px, 5vw, 48px)' }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', gap: 32, flexWrap: 'wrap' }}>
+          {/* Glass KPI chips */}
+          <div className="flex flex-wrap gap-3" style={{ marginTop: 28 }}>
             {[
-              { icon: <Building2 size={14} />, label: `${properties.length} annonce${properties.length !== 1 ? 's' : ''} disponible${properties.length !== 1 ? 's' : ''}` },
-              { icon: <TrendingUp size={14} />, label: `Loyer moyen : ${villeData.prixMoyen}€/m²` },
-              { icon: <MapPin size={14} />, label: `${villeData.quartiers.length} quartiers référencés` },
+              { icon: <Building2 size={13} />, label: 'ANNONCES', value: properties.length },
+              { icon: <TrendingUp size={13} />, label: 'LOYER MOYEN', value: `${villeData.prixMoyen}€/m²` },
+              { icon: <MapPin size={13} />, label: 'QUARTIERS', value: villeData.quartiers.length },
             ].map((item, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 7, color: BAI.inkMid }}>
+              <div key={i} style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 14, padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ color: BAI.caramel }}>{item.icon}</span>
-                <span style={{ fontFamily: BAI.fontBody, fontSize: 13 }}>{item.label}</span>
+                <div>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 9, color: 'rgba(255,255,255,0.45)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 2px' }}>{item.label}</p>
+                  <p style={{ fontFamily: BAI.fontDisplay, fontSize: 20, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1 }}>{item.value}</p>
+                </div>
               </div>
             ))}
           </div>

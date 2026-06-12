@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { apiClient } from '../services/api.service'
 import { useAuthStore } from '../store/authStore'
+import { BAI } from '../constants/bailio-tokens'
 
 type Status = 'loading' | 'success' | 'error'
 
@@ -53,39 +54,43 @@ export default function VerifyMagicLink() {
     <div
       style={{
         minHeight: '100dvh',
-        background: '#fafaf8',
+        background: '#0a0d1a',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontFamily: "'DM Sans', system-ui, sans-serif",
+        fontFamily: BAI.fontBody,
         padding: '24px',
       }}
     >
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
+      {/* Glass card on dark background */}
       <div
         style={{
-          background: '#ffffff',
-          border: '1px solid #e4e1db',
-          borderRadius: 16,
+          background: 'rgba(255,255,255,0.08)',
+          backdropFilter: 'blur(20px) saturate(160%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+          border: '1px solid rgba(255,255,255,0.13)',
+          borderRadius: 20,
           padding: '48px 40px',
           maxWidth: 420,
           width: '100%',
           textAlign: 'center',
-          boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
         }}
       >
         {/* Logo */}
         <div style={{ marginBottom: 32 }}>
           <span
             style={{
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
+              fontFamily: BAI.fontDisplay,
               fontWeight: 700,
               fontSize: 26,
               fontStyle: 'italic',
-              color: '#0d0c0a',
+              color: '#ffffff',
               letterSpacing: '-0.5px',
             }}
           >
-            Foyer
+            Bailio
           </span>
         </div>
 
@@ -96,14 +101,13 @@ export default function VerifyMagicLink() {
                 width: 48,
                 height: 48,
                 borderRadius: '50%',
-                border: '3px solid #e4e1db',
-                borderTopColor: '#1a1a2e',
+                border: `3px solid rgba(196,151,106,0.25)`,
+                borderTopColor: BAI.caramel,
                 margin: '0 auto 24px',
                 animation: 'spin 0.8s linear infinite',
               }}
             />
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-            <p style={{ color: '#5a5754', fontSize: 15, margin: 0 }}>
+            <p style={{ color: 'rgba(255,255,255,0.70)', fontSize: 15, margin: 0, fontFamily: BAI.fontBody }}>
               Connexion en cours...
             </p>
           </>
@@ -116,7 +120,8 @@ export default function VerifyMagicLink() {
                 width: 56,
                 height: 56,
                 borderRadius: '50%',
-                background: '#edf7f2',
+                background: 'rgba(27,94,59,0.25)',
+                border: '1px solid rgba(27,94,59,0.4)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -126,7 +131,7 @@ export default function VerifyMagicLink() {
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M5 13l4 4L19 7"
-                  stroke="#1b5e3b"
+                  stroke="#4ade80"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -135,17 +140,17 @@ export default function VerifyMagicLink() {
             </div>
             <h2
               style={{
-                fontFamily: "'Cormorant Garamond', Georgia, serif",
+                fontFamily: BAI.fontDisplay,
                 fontWeight: 700,
                 fontStyle: 'italic',
                 fontSize: 24,
-                color: '#0d0c0a',
+                color: '#ffffff',
                 margin: '0 0 8px',
               }}
             >
               Connexion réussie
             </h2>
-            <p style={{ color: '#5a5754', fontSize: 14, margin: 0 }}>
+            <p style={{ color: 'rgba(255,255,255,0.60)', fontSize: 14, margin: 0, fontFamily: BAI.fontBody }}>
               Redirection vers votre espace...
             </p>
           </>
@@ -158,7 +163,8 @@ export default function VerifyMagicLink() {
                 width: 56,
                 height: 56,
                 borderRadius: '50%',
-                background: '#fef2f2',
+                background: 'rgba(155,28,28,0.20)',
+                border: '1px solid rgba(155,28,28,0.35)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -168,7 +174,7 @@ export default function VerifyMagicLink() {
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  stroke="#9b1c1c"
+                  stroke="#fca5a5"
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -177,11 +183,11 @@ export default function VerifyMagicLink() {
             </div>
             <h2
               style={{
-                fontFamily: "'Cormorant Garamond', Georgia, serif",
+                fontFamily: BAI.fontDisplay,
                 fontWeight: 700,
                 fontStyle: 'italic',
                 fontSize: 24,
-                color: '#0d0c0a',
+                color: '#ffffff',
                 margin: '0 0 8px',
               }}
             >
@@ -189,13 +195,14 @@ export default function VerifyMagicLink() {
             </h2>
             <p
               style={{
-                color: '#9b1c1c',
+                color: '#fca5a5',
                 fontSize: 14,
                 margin: '0 0 28px',
-                background: '#fef2f2',
-                border: '1px solid #fca5a5',
+                background: 'rgba(155,28,28,0.15)',
+                border: '1px solid rgba(155,28,28,0.30)',
                 borderRadius: 8,
                 padding: '10px 14px',
+                fontFamily: BAI.fontBody,
               }}
             >
               {errorMsg}
@@ -205,14 +212,14 @@ export default function VerifyMagicLink() {
               style={{
                 width: '100%',
                 padding: '12px 20px',
-                background: '#1a1a2e',
+                background: BAI.night,
                 color: '#ffffff',
-                border: 'none',
+                border: '1px solid rgba(255,255,255,0.15)',
                 borderRadius: 8,
                 fontSize: 14,
                 fontWeight: 500,
                 cursor: 'pointer',
-                fontFamily: 'inherit',
+                fontFamily: BAI.fontBody,
               }}
             >
               Retour à la connexion

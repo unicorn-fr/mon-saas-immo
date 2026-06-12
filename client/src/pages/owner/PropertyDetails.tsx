@@ -28,18 +28,30 @@ import { Layout } from '../../components/layout/Layout'
 import toast from 'react-hot-toast'
 import { BAI } from '../../constants/bailio-tokens'
 
-// ─── Maison tokens ────────────────────────────────────────────────────────────
-
-
 const cardStyle: React.CSSProperties = {
   background: BAI.bgSurface,
   border: `1px solid ${BAI.border}`,
   borderRadius: 12,
-  boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
+  boxShadow: BAI.shadowMd,
   padding: 24,
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+const glassBtn: React.CSSProperties = {
+  background: 'rgba(255,255,255,0.12)',
+  backdropFilter: 'blur(10px)',
+  WebkitBackdropFilter: 'blur(10px)',
+  border: '1px solid rgba(255,255,255,0.2)',
+  color: '#fff',
+  borderRadius: 8,
+  padding: '8px 16px',
+  fontFamily: BAI.fontBody,
+  fontSize: 13,
+  fontWeight: 600,
+  cursor: 'pointer',
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 7,
+}
 
 export default function PropertyDetails() {
   const { id } = useParams<{ id: string }>()
@@ -146,23 +158,24 @@ export default function PropertyDetails() {
       <Layout>
         <div
           className="min-h-screen flex items-center justify-center"
-          style={{ background: BAI.bgBase, fontFamily: "'DM Sans', system-ui, sans-serif" }}
+          style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}
         >
           <div className="text-center">
             <h2
-              className="text-2xl font-semibold mb-2"
               style={{
-                fontFamily: "'Cormorant Garamond', Georgia, serif",
+                fontFamily: BAI.fontDisplay,
                 fontStyle: 'italic',
+                fontSize: 24,
+                fontWeight: 700,
                 color: BAI.ink,
+                marginBottom: 8,
               }}
             >
               Propriété introuvable
             </h2>
             <Link
               to="/properties/owner/me"
-              className="text-sm font-medium hover:opacity-70"
-              style={{ color: BAI.owner }}
+              style={{ fontSize: 14, fontWeight: 500, color: BAI.owner, textDecoration: 'none' }}
             >
               Retour à mes propriétés
             </Link>
@@ -177,23 +190,46 @@ export default function PropertyDetails() {
   const propertyStatus = PROPERTY_STATUS.find((s) => s.value === property.status)
   const images = property.images.length > 0 ? property.images : ['/placeholder-property.jpg']
 
-  // Status pill styles — Maison palette
   const statusPillStyles: Record<string, React.CSSProperties> = {
-    green:  { background: BAI.successLight,   color: BAI.success },
-    red:    { background: BAI.errorLight,    color: BAI.error  },
-    yellow: { background: BAI.warningLight,   color: BAI.warning },
-    amber:  { background: BAI.caramelLight, color: '#a0622a' },
-    blue:   { background: BAI.ownerLight,  color: BAI.owner   },
+    green:  { background: BAI.successLight,  color: BAI.success },
+    red:    { background: BAI.errorLight,    color: BAI.error   },
+    yellow: { background: BAI.warningLight,  color: BAI.warning },
+    amber:  { background: BAI.caramelLight,  color: '#a0622a'   },
+    blue:   { background: BAI.ownerLight,    color: BAI.owner   },
     gray:   { background: BAI.bgMuted,       color: BAI.inkMid  },
   }
 
-  const getStatusBadge = () => {
+  const getStatusBadge = (dark = false) => {
     if (!propertyStatus) return null
+    if (dark) {
+      return (
+        <span
+          style={{
+            fontSize: 11,
+            fontWeight: 700,
+            fontFamily: BAI.fontBody,
+            padding: '4px 12px',
+            borderRadius: 99,
+            background: 'rgba(255,255,255,0.14)',
+            border: '1px solid rgba(255,255,255,0.22)',
+            color: '#fff',
+          }}
+        >
+          {propertyStatus.label}
+        </span>
+      )
+    }
     const style = statusPillStyles[propertyStatus.color] || statusPillStyles['gray']
     return (
       <span
-        className="px-3 py-1 rounded-full text-xs font-semibold"
-        style={style}
+        style={{
+          ...style,
+          fontSize: 11,
+          fontWeight: 700,
+          fontFamily: BAI.fontBody,
+          padding: '3px 10px',
+          borderRadius: 99,
+        }}
       >
         {propertyStatus.label}
       </span>
@@ -202,107 +238,256 @@ export default function PropertyDetails() {
 
   return (
     <Layout>
-      <div
-        className="min-h-screen"
-        style={{ background: BAI.bgBase, fontFamily: "'DM Sans', system-ui, sans-serif" }}
-      >
-        {/* Top nav bar */}
-        <div style={{ background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}` }}>
-          <div className="container mx-auto px-4 py-4">
-            <Link
-              to="/properties/owner/me"
-              className="inline-flex items-center gap-1.5 text-sm font-medium mb-3 hover:opacity-70 transition-opacity"
-              style={{ color: BAI.inkMid }}
+      <div className="min-h-screen" style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}>
+
+        {/* === DARK HERO === */}
+        <div
+          style={{
+            background: '#0a0d1a',
+            padding: 'clamp(36px,5vw,64px) clamp(16px,4vw,48px) clamp(28px,4vw,48px)',
+          }}
+        >
+          {/* Back link */}
+          <Link
+            to="/properties/owner/me"
+            style={{
+              fontFamily: BAI.fontBody,
+              fontSize: 13,
+              fontWeight: 500,
+              color: 'rgba(255,255,255,0.6)',
+              textDecoration: 'none',
+              marginBottom: 20,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+            }}
+          >
+            <ArrowLeft size={15} />
+            Retour à mes propriétés
+          </Link>
+
+          {/* Title row */}
+          <div className="flex items-start justify-between flex-wrap gap-4" style={{ marginTop: 4 }}>
+            <div>
+              <p
+                style={{
+                  fontFamily: BAI.fontBody,
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: '0.14em',
+                  textTransform: 'uppercase',
+                  color: BAI.caramel,
+                  margin: '0 0 6px',
+                }}
+              >
+                Détail du bien
+              </p>
+              <h1
+                style={{
+                  fontFamily: BAI.fontDisplay,
+                  fontSize: 'clamp(26px,5vw,42px)',
+                  fontWeight: 700,
+                  fontStyle: 'italic',
+                  color: '#ffffff',
+                  margin: '0 0 10px',
+                  lineHeight: 1.1,
+                }}
+              >
+                {property.title}
+              </h1>
+              <div className="flex items-center gap-3 flex-wrap">
+                {getStatusBadge(true)}
+                <span
+                  style={{
+                    fontFamily: BAI.fontBody,
+                    fontSize: 13,
+                    color: 'rgba(255,255,255,0.5)',
+                  }}
+                >
+                  {propertyType?.label}
+                </span>
+              </div>
+            </div>
+
+            {/* Action buttons — glass style on dark */}
+            <div className="flex gap-2 flex-wrap" style={{ alignSelf: 'flex-start' }}>
+              <button
+                onClick={() => navigate(`/properties/${property.id}/edit`)}
+                style={glassBtn}
+              >
+                <Edit size={14} />
+                Modifier
+              </button>
+              {property.status === 'DRAFT' && (
+                <button
+                  onClick={handlePublish}
+                  disabled={isPublishing}
+                  style={{ ...glassBtn, opacity: isPublishing ? 0.6 : 1 }}
+                >
+                  <CheckCircle size={14} />
+                  {isPublishing ? 'Publication...' : 'Publier'}
+                </button>
+              )}
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                style={{
+                  ...glassBtn,
+                  background: 'rgba(155,28,28,0.35)',
+                  border: '1px solid rgba(255,100,100,0.3)',
+                  opacity: isDeleting ? 0.6 : 1,
+                }}
+              >
+                <Trash2 size={14} />
+                {isDeleting ? 'Suppression...' : 'Supprimer'}
+              </button>
+            </div>
+          </div>
+
+          {/* Glass KPI cards */}
+          <div className="flex flex-wrap gap-3" style={{ marginTop: 28 }}>
+            <div
+              style={{
+                background: 'rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(20px) saturate(160%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                border: '1px solid rgba(255,255,255,0.13)',
+                borderRadius: 16,
+                padding: '16px 24px',
+                minWidth: 130,
+              }}
             >
-              <ArrowLeft className="w-4 h-4" />
-              Retour à mes propriétés
-            </Link>
-            <div className="flex items-start justify-between">
-              <div>
-                <h1
-                  className="mb-2"
-                  style={{
-                    fontFamily: "'Cormorant Garamond', Georgia, serif",
-                    fontWeight: 700,
-                    fontStyle: 'italic',
-                    fontSize: 32,
-                    color: BAI.ink,
-                    lineHeight: 1.15,
-                  }}
-                >
-                  {property.title}
-                </h1>
-                <div className="flex items-center gap-3">
-                  {getStatusBadge()}
-                  <span style={{ fontSize: 13, color: BAI.inkMid }}>{propertyType?.label}</span>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => navigate(`/properties/${property.id}/edit`)}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white transition-all hover:-translate-y-px"
-                  style={{ background: BAI.owner, borderRadius: 8 }}
-                >
-                  <Edit className="w-4 h-4" />
-                  Modifier
-                </button>
-                {property.status === 'DRAFT' && (
-                  <button
-                    onClick={handlePublish}
-                    disabled={isPublishing}
-                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white transition-all hover:-translate-y-px disabled:opacity-50"
-                    style={{ background: BAI.success, borderRadius: 8 }}
-                  >
-                    {isPublishing ? 'Publication...' : (
-                      <>
-                        <CheckCircle className="w-4 h-4" />
-                        Publier le bien
-                      </>
-                    )}
-                  </button>
-                )}
-                <button
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold transition-all hover:-translate-y-px disabled:opacity-50"
-                  style={{
-                    background: BAI.errorLight,
-                    border: `1px solid #f5c6c6`,
-                    color: BAI.error,
-                    borderRadius: 8,
-                  }}
-                >
-                  {isDeleting ? 'Suppression...' : (
-                    <>
-                      <Trash2 className="w-4 h-4" />
-                      Supprimer
-                    </>
-                  )}
-                </button>
-              </div>
+              <p
+                style={{
+                  fontFamily: BAI.fontBody,
+                  fontSize: 10,
+                  color: 'rgba(255,255,255,0.5)',
+                  fontWeight: 700,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  margin: '0 0 4px',
+                }}
+              >
+                Loyer
+              </p>
+              <p
+                style={{
+                  fontFamily: BAI.fontDisplay,
+                  fontSize: 36,
+                  fontWeight: 700,
+                  fontStyle: 'italic',
+                  color: '#ffffff',
+                  margin: 0,
+                  lineHeight: 1,
+                }}
+              >
+                {property.price} €
+              </p>
+            </div>
+
+            <div
+              style={{
+                background: 'rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(20px) saturate(160%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                border: '1px solid rgba(255,255,255,0.13)',
+                borderRadius: 16,
+                padding: '16px 24px',
+                minWidth: 130,
+              }}
+            >
+              <p
+                style={{
+                  fontFamily: BAI.fontBody,
+                  fontSize: 10,
+                  color: 'rgba(255,255,255,0.5)',
+                  fontWeight: 700,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  margin: '0 0 4px',
+                }}
+              >
+                Surface
+              </p>
+              <p
+                style={{
+                  fontFamily: BAI.fontDisplay,
+                  fontSize: 36,
+                  fontWeight: 700,
+                  fontStyle: 'italic',
+                  color: '#ffffff',
+                  margin: 0,
+                  lineHeight: 1,
+                }}
+              >
+                {property.surface} m²
+              </p>
+            </div>
+
+            <div
+              style={{
+                background: 'rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(20px) saturate(160%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                border: '1px solid rgba(255,255,255,0.13)',
+                borderRadius: 16,
+                padding: '16px 24px',
+                minWidth: 130,
+              }}
+            >
+              <p
+                style={{
+                  fontFamily: BAI.fontBody,
+                  fontSize: 10,
+                  color: 'rgba(255,255,255,0.5)',
+                  fontWeight: 700,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  margin: '0 0 4px',
+                }}
+              >
+                Type
+              </p>
+              <p
+                style={{
+                  fontFamily: BAI.fontDisplay,
+                  fontSize: 28,
+                  fontWeight: 700,
+                  fontStyle: 'italic',
+                  color: '#ffffff',
+                  margin: 0,
+                  lineHeight: 1,
+                }}
+              >
+                {propertyType?.label ?? property.type}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Error Message */}
-        {error && (
-          <div className="container mx-auto px-4 mt-4">
+        {/* === LIGHT CONTENT === */}
+        <div
+          style={{
+            background: BAI.bgBase,
+            padding: 'clamp(24px,4vw,40px) clamp(16px,4vw,48px)',
+          }}
+        >
+          {/* Error Message */}
+          {error && (
             <div
-              className="p-4 flex items-start gap-3"
+              className="flex items-start gap-3 mb-6"
               style={{
                 background: BAI.errorLight,
                 border: `1px solid #f5c6c6`,
                 borderRadius: 10,
+                padding: '14px 18px',
               }}
             >
               <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: BAI.error }} />
-              <p className="text-sm" style={{ color: '#7f1d1d' }}>{error}</p>
+              <p style={{ fontSize: 14, color: '#7f1d1d', fontFamily: BAI.fontBody }}>{error}</p>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Content */}
-        <div className="container mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             {/* ── Main Content ──────────────────────────────────────────────── */}
@@ -328,11 +513,12 @@ export default function PropertyDetails() {
                     onError={(e) => { e.currentTarget.src = '/placeholder-property.jpg' }}
                   />
                   <div
-                    className="absolute bottom-4 right-4 text-white text-xs px-3 py-1"
+                    className="absolute bottom-4 right-4 text-xs px-3 py-1"
                     style={{
                       background: 'rgba(13,12,10,0.55)',
                       borderRadius: 20,
-                      fontFamily: "'DM Sans', system-ui, sans-serif",
+                      fontFamily: BAI.fontBody,
+                      color: '#fff',
                     }}
                   >
                     {selectedImage + 1} / {images.length}
@@ -369,8 +555,14 @@ export default function PropertyDetails() {
               {/* Description */}
               <div style={cardStyle}>
                 <p
-                  className="uppercase tracking-widest mb-3"
-                  style={{ fontSize: 11, color: BAI.inkFaint, letterSpacing: '0.08em' }}
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    color: BAI.inkFaint,
+                    marginBottom: 12,
+                  }}
                 >
                   Description
                 </p>
@@ -385,8 +577,14 @@ export default function PropertyDetails() {
               {/* Characteristics */}
               <div style={cardStyle}>
                 <p
-                  className="uppercase tracking-widest mb-4"
-                  style={{ fontSize: 11, color: BAI.inkFaint, letterSpacing: '0.08em' }}
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    color: BAI.inkFaint,
+                    marginBottom: 16,
+                  }}
                 >
                   Caractéristiques
                 </p>
@@ -415,7 +613,7 @@ export default function PropertyDetails() {
                       </div>
                       <div>
                         <p style={{ fontSize: 12, color: BAI.inkFaint }}>{label}</p>
-                        <p className="font-semibold" style={{ color: BAI.ink, fontSize: 14 }}>{value}</p>
+                        <p style={{ fontWeight: 600, color: BAI.ink, fontSize: 14 }}>{value}</p>
                       </div>
                     </div>
                   ))}
@@ -424,8 +622,14 @@ export default function PropertyDetails() {
                 {/* Features */}
                 <div className="mt-6 pt-6" style={{ borderTop: `1px solid ${BAI.border}` }}>
                   <p
-                    className="uppercase tracking-widest mb-3"
-                    style={{ fontSize: 11, color: BAI.inkFaint, letterSpacing: '0.08em' }}
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 600,
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      color: BAI.inkFaint,
+                      marginBottom: 12,
+                    }}
                   >
                     Équipements
                   </p>
@@ -451,8 +655,14 @@ export default function PropertyDetails() {
                 {property.amenities && property.amenities.length > 0 && (
                   <div className="mt-6 pt-6" style={{ borderTop: `1px solid ${BAI.border}` }}>
                     <p
-                      className="uppercase tracking-widest mb-3"
-                      style={{ fontSize: 11, color: BAI.inkFaint, letterSpacing: '0.08em' }}
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 600,
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                        color: BAI.inkFaint,
+                        marginBottom: 12,
+                      }}
                     >
                       Autres équipements
                     </p>
@@ -462,12 +672,13 @@ export default function PropertyDetails() {
                         return amenityConfig ? (
                           <span
                             key={amenity}
-                            className="px-3 py-1 rounded-full text-sm"
                             style={{
                               background: BAI.bgMuted,
                               border: `1px solid ${BAI.border}`,
                               color: BAI.inkMid,
                               fontSize: 12,
+                              padding: '4px 12px',
+                              borderRadius: 99,
                             }}
                           >
                             {amenityConfig.label}
@@ -482,8 +693,14 @@ export default function PropertyDetails() {
               {/* Location */}
               <div style={cardStyle}>
                 <p
-                  className="uppercase tracking-widest mb-4"
-                  style={{ fontSize: 11, color: BAI.inkFaint, letterSpacing: '0.08em' }}
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    color: BAI.inkFaint,
+                    marginBottom: 16,
+                  }}
                 >
                   Localisation
                 </p>
@@ -495,7 +712,7 @@ export default function PropertyDetails() {
                     <MapPin className="w-5 h-5" style={{ color: BAI.owner }} />
                   </div>
                   <div>
-                    <p className="font-medium" style={{ color: BAI.ink }}>{property.address}</p>
+                    <p style={{ fontWeight: 500, color: BAI.ink }}>{property.address}</p>
                     <p style={{ color: BAI.inkMid }}>{property.city}, {property.postalCode}</p>
                     <p style={{ color: BAI.inkMid }}>{property.country}</p>
                   </div>
@@ -509,8 +726,14 @@ export default function PropertyDetails() {
               {/* Price Card */}
               <div style={cardStyle}>
                 <p
-                  className="uppercase tracking-widest mb-4"
-                  style={{ fontSize: 11, color: BAI.inkFaint, letterSpacing: '0.08em' }}
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    color: BAI.inkFaint,
+                    marginBottom: 16,
+                  }}
                 >
                   Informations financières
                 </p>
@@ -519,7 +742,7 @@ export default function PropertyDetails() {
                     <p style={{ fontSize: 12, color: BAI.inkFaint }}>Loyer mensuel</p>
                     <p
                       style={{
-                        fontFamily: "'Cormorant Garamond', Georgia, serif",
+                        fontFamily: BAI.fontDisplay,
                         fontWeight: 700,
                         fontSize: 36,
                         color: BAI.owner,
@@ -532,10 +755,7 @@ export default function PropertyDetails() {
                   {property.charges && property.charges > 0 && (
                     <div>
                       <p style={{ fontSize: 12, color: BAI.inkFaint }}>Charges</p>
-                      <p
-                        className="text-lg font-semibold"
-                        style={{ color: BAI.ink }}
-                      >
+                      <p style={{ fontSize: 18, fontWeight: 600, color: BAI.ink }}>
                         {property.charges} €
                       </p>
                     </div>
@@ -543,20 +763,14 @@ export default function PropertyDetails() {
                   {property.deposit && property.deposit > 0 && (
                     <div>
                       <p style={{ fontSize: 12, color: BAI.inkFaint }}>Dépôt de garantie</p>
-                      <p
-                        className="text-lg font-semibold"
-                        style={{ color: BAI.ink }}
-                      >
+                      <p style={{ fontSize: 18, fontWeight: 600, color: BAI.ink }}>
                         {property.deposit} €
                       </p>
                     </div>
                   )}
                   <div className="pt-3" style={{ borderTop: `1px solid ${BAI.border}` }}>
                     <p style={{ fontSize: 12, color: BAI.inkFaint }}>Total mensuel</p>
-                    <p
-                      className="text-xl font-bold"
-                      style={{ color: BAI.ink }}
-                    >
+                    <p style={{ fontSize: 20, fontWeight: 700, color: BAI.ink }}>
                       {property.price + (property.charges || 0)} €
                     </p>
                   </div>
@@ -566,8 +780,14 @@ export default function PropertyDetails() {
               {/* Statistics Card */}
               <div style={cardStyle}>
                 <p
-                  className="uppercase tracking-widest mb-4"
-                  style={{ fontSize: 11, color: BAI.inkFaint, letterSpacing: '0.08em' }}
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    color: BAI.inkFaint,
+                    marginBottom: 16,
+                  }}
                 >
                   Statistiques
                 </p>
@@ -586,7 +806,7 @@ export default function PropertyDetails() {
                         </div>
                         <span style={{ fontSize: 13, color: BAI.inkMid }}>{label}</span>
                       </div>
-                      <span className="font-semibold" style={{ color: BAI.ink }}>{value}</span>
+                      <span style={{ fontWeight: 600, color: BAI.ink }}>{value}</span>
                     </div>
                   ))}
                   <div className="pt-3 space-y-2" style={{ borderTop: `1px solid ${BAI.border}` }}>
@@ -621,14 +841,11 @@ export default function PropertyDetails() {
                     >
                       <Shield className="w-5 h-5" style={{ color: BAI.owner }} />
                     </div>
-                    <p
-                      className="text-sm font-semibold"
-                      style={{ color: BAI.ink }}
-                    >
+                    <p style={{ fontSize: 14, fontWeight: 600, color: BAI.ink }}>
                       Vérification du propriétaire
                     </p>
                   </div>
-                  <p className="text-sm mb-4" style={{ color: BAI.inkMid }}>
+                  <p style={{ fontSize: 14, color: BAI.inkMid, marginBottom: 16 }}>
                     Documents obligatoires avant la mise en ligne du bien (anti-arnaque).
                   </p>
 
@@ -658,11 +875,12 @@ export default function PropertyDetails() {
                   ].map((doc) => (
                     <div
                       key={doc.key}
-                      className="p-3 mb-3"
                       style={{
                         background: doc.hasDoc ? BAI.successLight : BAI.bgMuted,
                         border: `1px solid ${doc.hasDoc ? '#a8d5bc' : BAI.border}`,
                         borderRadius: 10,
+                        padding: 12,
+                        marginBottom: 12,
                       }}
                     >
                       <div className="flex items-start gap-3">
@@ -675,28 +893,19 @@ export default function PropertyDetails() {
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <p
-                              className="text-sm font-medium"
-                              style={{ color: BAI.ink }}
-                            >
+                            <p style={{ fontSize: 14, fontWeight: 500, color: BAI.ink }}>
                               {doc.title}
                             </p>
                             <Lock className="w-3 h-3" style={{ color: BAI.inkFaint }} />
-                            <span
-                              className="text-xs font-semibold"
-                              style={{ color: BAI.error }}
-                            >
+                            <span style={{ fontSize: 11, fontWeight: 600, color: BAI.error }}>
                               Obligatoire
                             </span>
                           </div>
-                          <p className="text-xs mt-0.5" style={{ color: BAI.inkFaint }}>{doc.desc}</p>
+                          <p style={{ fontSize: 12, marginTop: 2, color: BAI.inkFaint }}>{doc.desc}</p>
                           {doc.hasDoc ? (
                             <div className="mt-2 flex items-center gap-2">
                               <CheckCircle className="w-4 h-4" style={{ color: BAI.success }} />
-                              <span
-                                className="text-xs font-medium"
-                                style={{ color: BAI.success }}
-                              >
+                              <span style={{ fontSize: 12, fontWeight: 500, color: BAI.success }}>
                                 Document fourni
                               </span>
                               <a
@@ -707,8 +916,7 @@ export default function PropertyDetails() {
                                 }
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-xs font-medium ml-2 hover:opacity-70"
-                                style={{ color: BAI.owner }}
+                                style={{ fontSize: 12, fontWeight: 500, color: BAI.owner, textDecoration: 'none', marginLeft: 8 }}
                               >
                                 Voir
                               </a>
@@ -717,8 +925,8 @@ export default function PropertyDetails() {
                             <button
                               onClick={() => handleDocUpload(doc.key)}
                               disabled={uploadingDoc === doc.key}
-                              className="mt-2 text-xs flex items-center gap-1 font-medium hover:opacity-70"
-                              style={{ color: BAI.owner }}
+                              className="mt-2 flex items-center gap-1"
+                              style={{ fontSize: 12, fontWeight: 500, color: BAI.owner, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                             >
                               <Upload className="w-3.5 h-3.5" />
                               {uploadingDoc === doc.key ? 'Envoi en cours...' : 'Télécharger le document'}
@@ -730,11 +938,12 @@ export default function PropertyDetails() {
                   ))}
 
                   <div
-                    className="text-xs p-2"
                     style={{
                       background: BAI.bgMuted,
                       border: `1px solid ${BAI.border}`,
                       borderRadius: 8,
+                      padding: '8px 12px',
+                      fontSize: 12,
                       color: BAI.inkFaint,
                     }}
                   >
@@ -746,16 +955,32 @@ export default function PropertyDetails() {
               {/* Actions Card */}
               <div style={cardStyle}>
                 <p
-                  className="uppercase tracking-widest mb-4"
-                  style={{ fontSize: 11, color: BAI.inkFaint, letterSpacing: '0.08em' }}
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    color: BAI.inkFaint,
+                    marginBottom: 16,
+                  }}
                 >
                   Actions rapides
                 </p>
                 <div className="space-y-2">
                   <button
                     onClick={() => navigate(`/properties/${property.id}/edit`)}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white transition-all hover:-translate-y-px"
-                    style={{ background: BAI.owner, borderRadius: 8 }}
+                    className="w-full flex items-center justify-center gap-2 transition-all hover:-translate-y-px"
+                    style={{
+                      background: BAI.owner,
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: 8,
+                      padding: '10px 20px',
+                      fontFamily: BAI.fontBody,
+                      fontSize: 14,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
                   >
                     <Edit className="w-4 h-4" />
                     Modifier le bien
@@ -764,34 +989,41 @@ export default function PropertyDetails() {
                     <button
                       onClick={handlePublish}
                       disabled={isPublishing}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white transition-all hover:-translate-y-px disabled:opacity-50"
-                      style={{ background: BAI.success, borderRadius: 8 }}
+                      className="w-full flex items-center justify-center gap-2 transition-all hover:-translate-y-px disabled:opacity-50"
+                      style={{
+                        background: BAI.success,
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 8,
+                        padding: '10px 20px',
+                        fontFamily: BAI.fontBody,
+                        fontSize: 14,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
                     >
-                      {isPublishing ? 'Publication...' : (
-                        <>
-                          <CheckCircle className="w-4 h-4" />
-                          Publier le bien
-                        </>
-                      )}
+                      <CheckCircle className="w-4 h-4" />
+                      {isPublishing ? 'Publication...' : 'Publier le bien'}
                     </button>
                   )}
                   <button
                     onClick={handleDelete}
                     disabled={isDeleting}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold transition-all hover:-translate-y-px disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-2 transition-all hover:-translate-y-px disabled:opacity-50"
                     style={{
                       background: BAI.errorLight,
                       border: `1px solid #f5c6c6`,
                       color: BAI.error,
                       borderRadius: 8,
+                      padding: '10px 20px',
+                      fontFamily: BAI.fontBody,
+                      fontSize: 14,
+                      fontWeight: 600,
+                      cursor: 'pointer',
                     }}
                   >
-                    {isDeleting ? 'Suppression...' : (
-                      <>
-                        <Trash2 className="w-4 h-4" />
-                        Supprimer le bien
-                      </>
-                    )}
+                    <Trash2 className="w-4 h-4" />
+                    {isDeleting ? 'Suppression...' : 'Supprimer le bien'}
                   </button>
                 </div>
               </div>

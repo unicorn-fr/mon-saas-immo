@@ -6,8 +6,7 @@ import {
   ChevronDown, ChevronUp, Info, Calculator, Landmark,
 } from 'lucide-react'
 
-// ─── Maison Design Tokens ─────────────────────────────────────────────────────
-
+// ─── Shared light-area styles ─────────────────────────────────────────────────
 
 const cardStyle: React.CSSProperties = {
   background: BAI.bgSurface,
@@ -381,22 +380,74 @@ export default function Rentabilite() {
 
   return (
     <Layout>
-      <div style={{ background: BAI.bgBase, minHeight: '100vh', fontFamily: BAI.fontBody }}>
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div style={{ fontFamily: BAI.fontBody }}>
 
-          {/* Page Header */}
-          <div className="mb-8">
-            <p style={{ fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, marginBottom: '6px' }}>
-              Propriétaire
-            </p>
-            <h1 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(32px,5vw,44px)', color: BAI.ink, lineHeight: 1.1, marginBottom: '8px' }}>
-              Simulateur de rentabilité
-            </h1>
-            <p style={{ fontSize: '14px', color: BAI.inkMid, maxWidth: '560px' }}>
-              Calculez votre rendement net, votre cash-flow, vos impôts et le moment où votre prêt sera remboursé — en tenant compte de votre situation fiscale.
-            </p>
+        {/* === DARK HERO === */}
+        <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)' }}>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
+            PROPRIÉTAIRE
+          </p>
+          <h1 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(28px,5vw,42px)', fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: '6px 0 8px', lineHeight: 1.1 }}>
+            Simulateur de rentabilité
+          </h1>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.55)', margin: 0 }}>
+            Calculez votre rendement net, cash-flow et impôts selon votre situation fiscale.
+          </p>
+
+          {/* Glass KPI cards */}
+          <div className="flex flex-wrap gap-3" style={{ marginTop: 28 }}>
+            <div style={{
+              background: 'rgba(255,255,255,0.08)',
+              backdropFilter: 'blur(20px) saturate(160%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+              border: '1px solid rgba(255,255,255,0.13)',
+              borderRadius: 16, padding: '16px 24px', minWidth: 130,
+            }}>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>
+                Rendement brut
+              </p>
+              <p style={{ fontFamily: BAI.fontDisplay, fontSize: 36, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1 }}>
+                {fmtDec(c.rendementBrut)} %
+              </p>
+            </div>
+            <div style={{
+              background: 'rgba(255,255,255,0.08)',
+              backdropFilter: 'blur(20px) saturate(160%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+              border: '1px solid rgba(255,255,255,0.13)',
+              borderRadius: 16, padding: '16px 24px', minWidth: 130,
+            }}>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>
+                Rendement net
+              </p>
+              <p style={{ fontFamily: BAI.fontDisplay, fontSize: 36, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1 }}>
+                {fmtDec(c.rendementNet)} %
+              </p>
+            </div>
+            <div style={{
+              background: 'rgba(255,255,255,0.08)',
+              backdropFilter: 'blur(20px) saturate(160%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+              border: '1px solid rgba(255,255,255,0.13)',
+              borderRadius: 16, padding: '16px 24px', minWidth: 150,
+            }}>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>
+                Cash-flow net/mois
+              </p>
+              <p style={{
+                fontFamily: BAI.fontDisplay, fontSize: 36, fontWeight: 700, fontStyle: 'italic',
+                color: c.cashflowMensuelNet >= 0 ? 'rgba(159,212,186,1)' : 'rgba(252,165,165,1)',
+                margin: 0, lineHeight: 1,
+              }}>
+                {c.cashflowMensuelNet >= 0 ? '+' : ''}{fmt(c.cashflowMensuelNet)} €
+              </p>
+            </div>
           </div>
+        </div>
 
+        {/* === LIGHT CONTENT === */}
+        <div style={{ background: BAI.bgBase, minHeight: '60vh', padding: 'clamp(24px,4vw,40px) clamp(16px,4vw,48px)' }}>
+          <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
 
             {/* ── Formulaire ────────────────────────────────────────────── */}
@@ -646,7 +697,9 @@ export default function Rentabilite() {
 
             </div>
           </div>
+          </div>
         </div>
+
       </div>
     </Layout>
   )

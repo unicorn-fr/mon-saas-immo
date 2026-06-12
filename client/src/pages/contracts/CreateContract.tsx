@@ -288,39 +288,65 @@ export default function CreateContract() {
     <Layout>
       <div style={{ minHeight: '100vh', background: BAI.bgBase, fontFamily: BAI.fontBody }}>
 
-        {/* Header */}
-        <div style={{ background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}` }}>
-          <div className="container mx-auto px-4 py-6">
-            <div className="flex items-center gap-4">
+        {/* Hero sombre Hyperbeat */}
+        <div style={{ background: '#0a0d1a', padding: 'clamp(32px,5vw,56px) clamp(16px,4vw,48px) clamp(24px,4vw,40px)' }}>
+          <div className="container mx-auto">
+            <div className="flex items-start gap-4">
               <button
                 onClick={() => navigate('/contracts')}
                 style={{
-                  padding: 8, background: BAI.bgSurface,
-                  border: `1px solid ${BAI.border}`, borderRadius: 8,
-                  color: BAI.inkMid, cursor: 'pointer',
+                  padding: 10, background: 'rgba(255,255,255,0.08)',
+                  backdropFilter: 'blur(20px) saturate(160%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                  border: '1px solid rgba(255,255,255,0.13)', borderRadius: 10,
+                  color: 'rgba(255,255,255,0.75)', cursor: 'pointer', flexShrink: 0,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  minHeight: 44, minWidth: 44,
+                  transition: 'background 0.15s',
                 }}
-                onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
-                onMouseLeave={e => (e.currentTarget.style.background = BAI.bgSurface)}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.14)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
               >
                 <ArrowLeft style={{ width: 18, height: 18 }} />
               </button>
               <div>
-                <p style={{
-                  fontFamily: BAI.fontBody, fontSize: 10, textTransform: 'uppercase',
-                  letterSpacing: '0.12em', color: BAI.inkFaint, marginBottom: 4,
-                }}>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
                   Gestion locative
                 </p>
-                <h1 style={{
-                  fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-                  fontSize: 32, color: BAI.ink, lineHeight: 1.1, margin: 0,
-                }}>
+                <h1 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(26px,5vw,38px)', color: '#ffffff', margin: '6px 0 4px', lineHeight: 1.1 }}>
                   Nouveau Contrat
                 </h1>
-                <p style={{ fontSize: 13, color: BAI.inkMid, marginTop: 2 }}>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.55)', margin: 0 }}>
                   Générateur de bail — Loi ALUR
                 </p>
+                {/* Glass step indicator */}
+                <div className="flex items-center gap-2 flex-wrap" style={{ marginTop: 20 }}>
+                  {(['Bien & Locataire', 'Conditions', 'Clauses'] as const).map((label, i) => {
+                    const stepNum = (i + 1) as WizardStep
+                    const isActive = step === stepNum
+                    const isCompleted = step > stepNum
+                    return (
+                      <div key={label} className="flex items-center gap-2">
+                        <div style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 7,
+                          padding: '6px 14px', borderRadius: 20,
+                          background: isActive ? BAI.caramel : isCompleted ? 'rgba(196,151,106,0.25)' : 'rgba(255,255,255,0.07)',
+                          backdropFilter: 'blur(20px) saturate(160%)',
+                          WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                          border: isActive ? '1px solid rgba(196,151,106,0.6)' : '1px solid rgba(255,255,255,0.12)',
+                          fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 600,
+                          color: isActive ? '#fff' : isCompleted ? BAI.caramel : 'rgba(255,255,255,0.5)',
+                          whiteSpace: 'nowrap',
+                          transition: 'all 0.2s',
+                        }}>
+                          {isCompleted ? <Check style={{ width: 11, height: 11 }} /> : <span style={{ width: 16, height: 16, borderRadius: '50%', background: isActive ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.15)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700 }}>{stepNum}</span>}
+                          {label}
+                        </div>
+                        {i < 2 && <div style={{ width: 16, height: 1, background: 'rgba(255,255,255,0.15)' }} />}
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             </div>
           </div>

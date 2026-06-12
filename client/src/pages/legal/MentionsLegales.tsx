@@ -33,7 +33,7 @@ export default function MentionsLegales() {
     <div style={{ minHeight: '100vh', backgroundColor: BAI.bgBase, fontFamily: BAI.fontBody }}>
 
       {/* Hero */}
-      <section style={{ backgroundColor: BAI.night, padding: '64px 16px 56px' }}>
+      <section style={{ backgroundColor: '#0a0d1a', padding: 'clamp(48px,7vw,80px) clamp(16px,4vw,48px) clamp(40px,6vw,60px)' }}>
         <div style={{ maxWidth: '896px', margin: '0 auto' }}>
           <Link
             to="/"
@@ -61,8 +61,8 @@ export default function MentionsLegales() {
             style={{
               fontFamily: BAI.fontDisplay,
               fontStyle: 'italic',
-              fontSize: 'clamp(26px, 7vw, 40px)',
-              fontWeight: 600,
+              fontSize: 'clamp(28px,5vw,44px)',
+              fontWeight: 700,
               color: '#ffffff',
               lineHeight: 1.15,
               marginBottom: '12px',

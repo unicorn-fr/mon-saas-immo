@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Home } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { BAI } from '../constants/bailio-tokens'
 import { useAuth } from '../hooks/useAuth'
 
@@ -14,60 +14,48 @@ export default function NotFound() {
   return (
     <div
       className="min-h-screen flex items-center justify-center p-6"
-      style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}
+      style={{ background: '#0a0d1a', fontFamily: BAI.fontBody }}
     >
-      <div className="text-center" style={{ maxWidth: 400 }}>
+      <div className="text-center" style={{ maxWidth: 480 }}>
 
-        {/* Architectural ornament */}
-        <div className="flex justify-center mb-4">
-          <div style={{
-            width: 64, height: 64, borderRadius: 16,
-            background: BAI.bgSurface, border: `1px solid ${BAI.border}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
-          }}>
-            <Home className="w-7 h-7" style={{ color: BAI.inkFaint }} />
-          </div>
-        </div>
+        {/* Caramel overline */}
+        <p style={{
+          fontFamily: BAI.fontBody,
+          fontSize: 10,
+          fontWeight: 700,
+          letterSpacing: '0.14em',
+          textTransform: 'uppercase',
+          color: BAI.caramel,
+          margin: '0 0 12px',
+        }}>
+          Page introuvable
+        </p>
 
-        {/* 404 muted number */}
+        {/* 404 large white number */}
         <div
-          className="select-none mb-1"
+          className="select-none"
           style={{
             fontFamily: BAI.fontDisplay,
-            fontSize: 'clamp(72px, 20vw, 120px)',
+            fontSize: 'clamp(96px, 22vw, 160px)',
             fontWeight: 700,
-            color: BAI.border,
+            fontStyle: 'italic',
+            color: '#ffffff',
             lineHeight: 1,
             letterSpacing: '-0.02em',
+            margin: '0 0 16px',
           }}
         >
           404
         </div>
 
-        <h1
-          className="mb-3"
-          style={{
-            fontFamily: BAI.fontDisplay,
-            fontStyle: 'italic',
-            fontWeight: 700,
-            fontSize: 'clamp(24px, 6vw, 36px)',
-            color: BAI.ink,
-            lineHeight: 1.15,
-          }}
-        >
-          Page introuvable
-        </h1>
-
         <p
-          className="mb-8"
           style={{
             fontFamily: BAI.fontBody,
-            fontSize: '15px',
-            color: BAI.inkMid,
+            fontSize: 15,
+            color: 'rgba(255,255,255,0.55)',
             lineHeight: 1.65,
-            maxWidth: 320,
-            margin: '0 auto 32px',
+            maxWidth: 360,
+            margin: '0 auto 40px',
           }}
         >
           Désolé, la page que vous recherchez n'existe pas ou a été déplacée.
@@ -80,13 +68,15 @@ export default function NotFound() {
             style={{
               background: BAI.night,
               color: '#ffffff',
-              borderRadius: '10px',
+              borderRadius: 10,
               fontFamily: BAI.fontBody,
-              fontSize: '14px',
+              fontSize: 15,
               fontWeight: 600,
-              padding: '11px 28px',
+              padding: '13px 36px',
               textDecoration: 'none',
-              minHeight: 44,
+              minHeight: 48,
+              letterSpacing: '0.01em',
+              border: '1px solid rgba(255,255,255,0.15)',
             }}
           >
             Retour à l'accueil
@@ -94,10 +84,14 @@ export default function NotFound() {
 
           <Link
             to={dashboardLink}
-            className="inline-flex items-center gap-1.5 transition-colors"
-            style={{ fontFamily: BAI.fontBody, fontSize: '13px', color: BAI.inkMid, textDecoration: 'none' }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = BAI.ink)}
-            onMouseLeave={(e) => (e.currentTarget.style.color = BAI.inkMid)}
+            className="inline-flex items-center gap-1.5 transition-opacity hover:opacity-80"
+            style={{
+              fontFamily: BAI.fontBody,
+              fontSize: 13,
+              color: BAI.caramel,
+              textDecoration: 'none',
+              marginTop: 4,
+            }}
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             Tableau de bord

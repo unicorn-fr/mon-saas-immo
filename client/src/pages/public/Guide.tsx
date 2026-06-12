@@ -157,7 +157,7 @@ function ArticleCard({ article, isOwner }: { article: Article; isOwner: boolean 
 function GuideHero({ search, onSearch }: { search: string; onSearch: (v: string) => void }) {
   return (
     <div style={{
-      background: BAI.night,
+      background: '#0a0d1a',
       padding: 'clamp(48px, 8vw, 80px) clamp(16px, 5vw, 48px)',
       textAlign: 'center',
     }}>
@@ -195,7 +195,20 @@ function GuideHero({ search, onSearch }: { search: string; onSearch: (v: string)
       }}>
         Conseils pratiques, guides juridiques et astuces — rédigés pour locataires et propriétaires.
       </p>
-      {/* Barre de recherche */}
+      {/* Glass stats */}
+      <div className="flex flex-wrap justify-center gap-3" style={{ marginBottom: 32 }}>
+        {[
+          { label: 'ARTICLES', value: '12' },
+          { label: 'THÈMES', value: '8' },
+          { label: 'LECTURE', value: '~6 min' },
+        ].map(stat => (
+          <div key={stat.label} style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 14, padding: '10px 18px' }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 9, color: 'rgba(255,255,255,0.45)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 2px' }}>{stat.label}</p>
+            <p style={{ fontFamily: BAI.fontDisplay, fontSize: 22, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1 }}>{stat.value}</p>
+          </div>
+        ))}
+      </div>
+      {/* Barre de recherche glass */}
       <div style={{
         maxWidth: 480,
         margin: '0 auto',
@@ -206,7 +219,7 @@ function GuideHero({ search, onSearch }: { search: string; onSearch: (v: string)
           left: 14,
           top: '50%',
           transform: 'translateY(-50%)',
-          color: BAI.inkFaint,
+          color: 'rgba(255,255,255,0.4)',
         }} />
         <input
           type="text"
@@ -215,13 +228,15 @@ function GuideHero({ search, onSearch }: { search: string; onSearch: (v: string)
           placeholder="Rechercher un article…"
           style={{
             width: '100%',
-            background: BAI.bgSurface,
-            border: `1px solid ${BAI.border}`,
+            background: 'rgba(255,255,255,0.08)',
+            backdropFilter: 'blur(20px) saturate(160%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+            border: '1px solid rgba(255,255,255,0.15)',
             borderRadius: BAI.radius,
-            padding: '12px 14px 12px 40px',
+            padding: '13px 14px 13px 40px',
             fontFamily: BAI.fontBody,
             fontSize: 14,
-            color: BAI.ink,
+            color: '#ffffff',
             outline: 'none',
             boxSizing: 'border-box',
           }}

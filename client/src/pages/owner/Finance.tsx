@@ -527,38 +527,50 @@ export default function Finance() {
 
   return (
     <Layout>
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: 'clamp(20px,4vw,32px) clamp(16px,3vw,20px)' }}>
-
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, marginBottom: 28 }}>
+      {/* ── DARK HERO ── */}
+      <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)' }}>
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 6px' }}>
-              Propriétaire
-            </p>
-            <h1 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(28px,5vw,40px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: 0 }}>
-              Finances
-            </h1>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: '6px 0 0' }}>
-              Pilotez la rentabilité de votre patrimoine locatif
-            </p>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>PROPRIÉTAIRE</p>
+            <h1 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(28px,5vw,42px)', fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: '6px 0 8px', lineHeight: 1.1 }}>Finances</h1>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.55)', margin: 0 }}>Pilotez la rentabilité de votre patrimoine locatif</p>
           </div>
           <button
-            onClick={() => setActiveTab('expenses')}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 10, border: 'none', background: BAI.night, color: '#fff', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', alignSelf: 'flex-end' }}
+            onClick={() => { setActiveTab('expenses'); setShowExpenseForm(true) }}
+            style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)', color: '#fff', borderRadius: 10, padding: '10px 20px', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', display: 'inline-flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', alignSelf: 'flex-start', marginTop: 2 }}
           >
             <PlusCircle style={{ width: 15, height: 15 }} />
             Ajouter une dépense
           </button>
         </div>
-
-        {/* Tabs */}
-        <div style={{ display: 'flex', gap: 4, marginBottom: 28, overflowX: 'auto', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: 5 }}>
-          <TabPill id="summary"  label="Résumé"    icon={BarChart2} />
-          <TabPill id="expenses" label="Dépenses"  icon={Receipt}   badge={expenses?.length} />
-          <TabPill id="loans"    label="Emprunts"  icon={Landmark} />
-          <TabPill id="market"   label="Marché"    icon={TrendingUp} />
-          <TabPill id="fiscal"   label="Fiscal"    icon={Calculator} />
+        <div className="flex flex-wrap gap-3" style={{ marginTop: 28 }}>
+          <div style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '16px 24px', minWidth: 130 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>Revenus</p>
+            <p style={{ fontFamily: BAI.fontDisplay, fontSize: 36, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1 }}>{summary ? formatEuro(summary.totalRevenue) : '—'}</p>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '16px 24px', minWidth: 130 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>Charges</p>
+            <p style={{ fontFamily: BAI.fontDisplay, fontSize: 36, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1 }}>{summary ? formatEuro(summary.totalExpenses) : '—'}</p>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '16px 24px', minWidth: 130 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>Cash-flow net</p>
+            <p style={{ fontFamily: BAI.fontDisplay, fontSize: 36, fontWeight: 700, fontStyle: 'italic', color: summary && summary.netCashFlow < 0 ? '#ff8080' : '#ffffff', margin: 0, lineHeight: 1 }}>{summary ? formatEuro(summary.netCashFlow) : '—'}</p>
+          </div>
         </div>
+      </div>
+
+      {/* ── LIGHT CONTENT ── */}
+      <div style={{ background: BAI.bgBase, minHeight: '60vh' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', padding: 'clamp(24px,4vw,40px) clamp(16px,4vw,48px)' }}>
+
+          {/* Tabs */}
+          <div style={{ display: 'flex', gap: 4, marginBottom: 28, overflowX: 'auto', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: 5 }}>
+            <TabPill id="summary"  label="Résumé"    icon={BarChart2} />
+            <TabPill id="expenses" label="Dépenses"  icon={Receipt}   badge={expenses?.length} />
+            <TabPill id="loans"    label="Emprunts"  icon={Landmark} />
+            <TabPill id="market"   label="Marché"    icon={TrendingUp} />
+            <TabPill id="fiscal"   label="Fiscal"    icon={Calculator} />
+          </div>
 
         {/* ── TAB: SUMMARY ── */}
         {activeTab === 'summary' && (
@@ -2360,6 +2372,7 @@ export default function Finance() {
           </div>
         )}
 
+        </div>
       </div>
     </Layout>
   )

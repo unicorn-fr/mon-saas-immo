@@ -318,58 +318,58 @@ export default function EtatDesLieux() {
     <Layout>
       <div style={{ minHeight: '100vh', background: BAI.bgBase, fontFamily: BAI.fontBody }}>
 
-        {/* Header */}
-        <div style={{ background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}` }}>
-          <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center gap-3 sm:gap-4">
+        {/* Hero sombre Hyperbeat */}
+        <div style={{ background: '#0a0d1a', padding: 'clamp(32px,5vw,56px) clamp(16px,4vw,48px) clamp(24px,4vw,40px)' }}>
+          <div className="container mx-auto">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div className="flex items-start gap-4">
                 <button
                   onClick={() => navigate(`/contracts/${id}`)}
                   style={{
-                    padding: 8, background: BAI.bgSurface,
-                    border: `1px solid ${BAI.border}`, borderRadius: 8,
-                    color: BAI.inkMid, cursor: 'pointer',
+                    padding: 10, background: 'rgba(255,255,255,0.08)',
+                    backdropFilter: 'blur(20px) saturate(160%)',
+                    WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                    border: '1px solid rgba(255,255,255,0.13)', borderRadius: 10,
+                    color: 'rgba(255,255,255,0.75)', cursor: 'pointer', flexShrink: 0,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    minHeight: 44, minWidth: 44, transition: 'background 0.15s',
                   }}
-                  onMouseEnter={e => (e.currentTarget.style.background = BAI.bgMuted)}
-                  onMouseLeave={e => (e.currentTarget.style.background = BAI.bgSurface)}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.14)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
                 >
                   <ArrowLeft style={{ width: 18, height: 18 }} />
                 </button>
                 <div>
-                  <p style={{
-                    fontFamily: BAI.fontBody, fontSize: 10, textTransform: 'uppercase',
-                    letterSpacing: '0.12em', color: BAI.inkFaint, marginBottom: 4,
-                  }}>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
                     Gestion locative
                   </p>
-                  <h1 style={{
-                    fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-                    fontSize: 'clamp(22px, 5vw, 32px)', color: BAI.ink, lineHeight: 1.1, margin: 0,
-                    display: 'flex', alignItems: 'center', gap: 10,
-                  }}>
-                    <ClipboardCheck style={{ width: 26, height: 26, color: BAI.owner }} />
+                  <h1 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(24px,5vw,36px)', color: '#ffffff', margin: '6px 0 4px', lineHeight: 1.1, display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <ClipboardCheck style={{ width: 28, height: 28, color: BAI.caramel }} />
                     État des Lieux
                   </h1>
-                  <p style={{ fontSize: 13, color: BAI.inkMid, marginTop: 2 }}>{contract.property?.title}</p>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.55)', margin: 0 }}>{contract.property?.title}</p>
                 </div>
               </div>
 
-              {/* Type toggle */}
+              {/* Toggle Entrée / Sortie glass */}
               <div style={{
-                display: 'flex',
-                background: BAI.bgMuted, borderRadius: 10, padding: 4,
-                border: `1px solid ${BAI.border}`,
+                display: 'flex', alignSelf: 'flex-start',
+                background: 'rgba(255,255,255,0.06)',
+                backdropFilter: 'blur(20px) saturate(160%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                borderRadius: 12, padding: 4,
+                border: '1px solid rgba(255,255,255,0.13)',
+                flexShrink: 0,
               }}>
                 <button
                   onClick={() => handleSwitchType('ENTREE')}
                   style={{
-                    padding: '8px 18px', borderRadius: 7, fontSize: 13, fontWeight: 500,
+                    padding: '9px 20px', borderRadius: 9, fontSize: 13, fontWeight: 600,
                     fontFamily: BAI.fontBody, cursor: 'pointer', border: 'none',
-                    background: edlType === 'ENTREE' ? BAI.bgSurface : 'transparent',
-                    color: edlType === 'ENTREE' ? BAI.night : BAI.inkFaint,
-                    boxShadow: edlType === 'ENTREE' ? '0 1px 4px rgba(13,12,10,0.08)' : 'none',
+                    background: edlType === 'ENTREE' ? BAI.caramel : 'transparent',
+                    color: edlType === 'ENTREE' ? '#fff' : 'rgba(255,255,255,0.5)',
                     transition: 'all 0.15s',
+                    minHeight: 40,
                   }}
                 >
                   Entrée
@@ -377,12 +377,12 @@ export default function EtatDesLieux() {
                 <button
                   onClick={() => handleSwitchType('SORTIE')}
                   style={{
-                    padding: '8px 18px', borderRadius: 7, fontSize: 13, fontWeight: 500,
+                    padding: '9px 20px', borderRadius: 9, fontSize: 13, fontWeight: 600,
                     fontFamily: BAI.fontBody, cursor: 'pointer', border: 'none',
-                    background: edlType === 'SORTIE' ? BAI.bgSurface : 'transparent',
-                    color: edlType === 'SORTIE' ? BAI.night : BAI.inkFaint,
-                    boxShadow: edlType === 'SORTIE' ? '0 1px 4px rgba(13,12,10,0.08)' : 'none',
+                    background: edlType === 'SORTIE' ? BAI.caramel : 'transparent',
+                    color: edlType === 'SORTIE' ? '#fff' : 'rgba(255,255,255,0.5)',
                     transition: 'all 0.15s',
+                    minHeight: 40,
                   }}
                 >
                   Sortie

@@ -26,9 +26,21 @@ export default function APropos() {
 
       <Header />
 
-      {/* ── SECTION 1 — Intro ── */}
-      <section style={{ padding: '80px 0 60px' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
+      {/* ── SECTION 1 — Intro hero ── */}
+      <section style={{
+        background: '#0a0d1a',
+        padding: 'clamp(64px,10vw,100px) 0 clamp(48px,7vw,72px)',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        {/* Ambient orb */}
+        <div aria-hidden style={{
+          position: 'absolute', top: '10%', right: '-40px',
+          width: 380, height: 100, borderRadius: '50%',
+          background: 'rgba(196,151,106,0.06)', filter: 'blur(48px)',
+          pointerEvents: 'none',
+        }} />
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)', position: 'relative', zIndex: 2 }}>
           <div style={{ maxWidth: 720 }}>
             <p style={{
               fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700,
@@ -40,15 +52,15 @@ export default function APropos() {
             <h1 style={{
               fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
               fontSize: 'clamp(36px,5vw,64px)', lineHeight: 1.05,
-              color: BAI.ink, margin: '0 0 24px',
+              color: '#ffffff', margin: '0 0 24px',
             }}>
               Louer ne devrait pas{' '}
               <em style={{ color: BAI.caramel }}>faire mal.</em>
             </h1>
-            <p style={{ fontSize: 18, lineHeight: 1.65, color: BAI.inkMid, margin: '0 0 20px' }}>
+            <p style={{ fontSize: 18, lineHeight: 1.65, color: 'rgba(255,255,255,0.65)', margin: '0 0 20px' }}>
               Bailio est né d'un constat simple : chercher un appartement en France, c'est une épreuve. Dossiers refusés sans explication, agences qui prennent des centaines d'euros, bails imprimés en triple exemplaire. Ce n'est pas normal.
             </p>
-            <p style={{ fontSize: 18, lineHeight: 1.65, color: BAI.inkMid, margin: 0 }}>
+            <p style={{ fontSize: 18, lineHeight: 1.65, color: 'rgba(255,255,255,0.65)', margin: 0 }}>
               La plateforme existe pour que ça change — pour les locataires comme pour les propriétaires.
             </p>
           </div>

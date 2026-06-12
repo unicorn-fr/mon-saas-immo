@@ -4,31 +4,16 @@ import { Mail, Clock, ArrowRight } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Header } from '../../components/layout/Header'
 import Footer from '../../components/layout/Footer'
-
-const T = {
-  bgBase:    '#fafaf8',
-  bgSurface: '#ffffff',
-  bgMuted:   '#f4f2ee',
-  ink:       '#0d0c0a',
-  inkMid:    '#5a5754',
-  inkFaint:  '#9e9b96',
-  night:     '#1a1a2e',
-  caramel:   '#c4976a',
-  caramelLight: '#fdf5ec',
-  border:    '#e4e1db',
-  success:   '#1b5e3b',
-  fontDisplay: "'Cormorant Garamond', Georgia, serif",
-  fontBody:    "'DM Sans', system-ui, sans-serif",
-} as const
+import { BAI } from '../../constants/bailio-tokens'
 
 const inputBase: React.CSSProperties = {
   width: '100%',
   padding: '11px 14px',
   borderRadius: '8px',
-  border: `1px solid ${T.border}`,
-  background: T.bgMuted,
-  color: T.ink,
-  fontFamily: T.fontBody,
+  border: `1px solid ${BAI.border}`,
+  background: BAI.bgMuted,
+  color: BAI.ink,
+  fontFamily: BAI.fontBody,
   fontSize: '15px',
   outline: 'none',
   transition: 'border-color 0.15s',
@@ -59,7 +44,7 @@ export default function Contact() {
 
   const inp = (field: string): React.CSSProperties => ({
     ...inputBase,
-    borderColor: focused === field ? T.night : T.border,
+    borderColor: focused === field ? BAI.night : BAI.border,
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -76,47 +61,95 @@ export default function Contact() {
   }
 
   return (
-    <div style={{ backgroundColor: T.bgBase, fontFamily: T.fontBody, color: T.ink, minHeight: '100vh' }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=DM+Sans:wght@400;500;600;700&display=swap');`}</style>
-
+    <div style={{ backgroundColor: BAI.bgBase, fontFamily: BAI.fontBody, color: BAI.ink, minHeight: '100vh' }}>
       <Header />
 
-      <section style={{ padding: 'clamp(64px,10vh,100px) 0 clamp(64px,10vh,100px)' }}>
+      {/* Hero */}
+      <section
+        style={{
+          background: '#0a0d1a',
+          padding: 'clamp(48px,7vw,80px) clamp(16px,4vw,48px) clamp(40px,6vw,60px)',
+          textAlign: 'center',
+        }}
+      >
+        <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+          <p
+            style={{
+              fontFamily: BAI.fontBody,
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: BAI.caramel,
+              margin: '0 0 10px',
+            }}
+          >
+            Contact
+          </p>
+          <h1
+            style={{
+              fontFamily: BAI.fontDisplay,
+              fontWeight: 700,
+              fontStyle: 'italic',
+              fontSize: 'clamp(32px,6vw,52px)',
+              color: '#ffffff',
+              lineHeight: 1.1,
+              margin: '8px 0 12px',
+            }}
+          >
+            Parlons-nous.
+          </h1>
+          <p
+            style={{
+              fontFamily: BAI.fontBody,
+              fontSize: '15px',
+              color: 'rgba(255,255,255,0.55)',
+              lineHeight: 1.6,
+              maxWidth: 520,
+              margin: '0 auto',
+            }}
+          >
+            Une question, un retour, un bug à signaler — on répond en moins de 4 heures ouvrées.
+          </p>
+        </div>
+      </section>
+
+      <section style={{ padding: 'clamp(48px,8vh,80px) 0 clamp(64px,10vh,100px)' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 'clamp(40px,6vw,80px)', alignItems: 'start' }}>
 
-            {/* ── Colonne gauche ── */}
+            {/* Left column */}
             <div>
-              <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.caramel, margin: '0 0 14px' }}>
-                Contact
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 14px' }}>
+                On t'écoute
               </p>
-              <h1 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(36px,5vw,56px)', lineHeight: 1.05, margin: '0 0 18px' }}>
+              <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(28px,4vw,44px)', lineHeight: 1.1, color: BAI.ink, margin: '0 0 18px' }}>
                 On t'écoute.{' '}
-                <em style={{ color: T.caramel }}>Vraiment.</em>
-              </h1>
-              <p style={{ fontSize: 16, color: T.inkMid, lineHeight: 1.65, margin: '0 0 36px', maxWidth: '38ch' }}>
+                <em style={{ color: BAI.caramel }}>Vraiment.</em>
+              </h2>
+              <p style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.65, margin: '0 0 36px', maxWidth: '38ch' }}>
                 Une question, un retour, un bug à signaler — on répond en moins de 4 heures ouvrées. Pas de bot, pas de ticket numéroté.
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                 {CONTACT_ITEMS.map(({ Icon, label, sub }) => (
                   <div key={label} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 10, background: T.caramelLight, color: T.caramel, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: BAI.caramelLight, color: BAI.caramel, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <Icon size={20} />
                     </div>
                     <div>
-                      <p style={{ margin: 0, fontWeight: 600, fontSize: 14, color: T.ink }}>{label}</p>
-                      <p style={{ margin: '2px 0 0', fontSize: 13, color: T.inkFaint }}>{sub}</p>
+                      <p style={{ margin: 0, fontWeight: 600, fontSize: 14, color: BAI.ink }}>{label}</p>
+                      <p style={{ margin: '2px 0 0', fontSize: 13, color: BAI.inkFaint }}>{sub}</p>
                     </div>
                   </div>
                 ))}
               </div>
 
               {/* FAQ teaser */}
-              <div style={{ marginTop: 48, padding: '20px 24px', background: T.bgMuted, border: `1px solid ${T.border}`, borderRadius: 12 }}>
-                <p style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 18, margin: '0 0 6px', color: T.ink }}>Tu cherches une réponse rapide ?</p>
-                <p style={{ fontSize: 13, color: T.inkMid, margin: '0 0 14px' }}>La FAQ couvre 90 % des questions courantes.</p>
-                <Link to="/faq" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: T.night, textDecoration: 'none' }}
+              <div style={{ marginTop: 48, padding: '20px 24px', background: BAI.bgMuted, border: `1px solid ${BAI.border}`, borderRadius: 12 }}>
+                <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 18, margin: '0 0 6px', color: BAI.ink }}>Tu cherches une réponse rapide ?</p>
+                <p style={{ fontSize: 13, color: BAI.inkMid, margin: '0 0 14px' }}>La FAQ couvre 90 % des questions courantes.</p>
+                <Link to="/faq" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: BAI.night, textDecoration: 'none' }}
                   onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
                   onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
                 >
@@ -125,20 +158,20 @@ export default function Contact() {
               </div>
             </div>
 
-            {/* ── Colonne droite — formulaire ── */}
-            <div style={{ background: T.bgSurface, border: `1px solid ${T.border}`, borderRadius: 16, padding: 'clamp(24px,4vw,40px)', boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)' }}>
+            {/* Right column — form */}
+            <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: 'clamp(24px,4vw,40px)', boxShadow: BAI.shadowMd }}>
               {sent ? (
                 <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                  <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#edf7f2', border: '1px solid #9fd4ba', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+                  <div style={{ width: 64, height: 64, borderRadius: '50%', background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
                     <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                      <path d="M6 14l5 5 11-11" stroke={T.success} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M6 14l5 5 11-11" stroke={BAI.tenant} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
-                  <h2 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 28, color: T.ink, margin: '0 0 10px' }}>Message envoyé ✓</h2>
-                  <p style={{ fontSize: 15, color: T.inkMid, margin: '0 0 28px' }}>On te répond dans les 4 heures ouvrées.</p>
+                  <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 28, color: BAI.ink, margin: '0 0 10px' }}>Message envoyé ✓</h2>
+                  <p style={{ fontSize: 15, color: BAI.inkMid, margin: '0 0 28px' }}>On te répond dans les 4 heures ouvrées.</p>
                   <button
                     onClick={() => { setSent(false); setForm({ firstName: '', lastName: '', email: '', role: '', subject: '', message: '' }) }}
-                    style={{ fontSize: 14, color: T.caramel, background: 'none', border: 'none', cursor: 'pointer', fontFamily: T.fontBody, fontWeight: 600, textDecoration: 'underline' }}
+                    style={{ fontSize: 14, color: BAI.caramel, background: 'none', border: 'none', cursor: 'pointer', fontFamily: BAI.fontBody, fontWeight: 600, textDecoration: 'underline' }}
                   >
                     Envoyer un autre message
                   </button>
@@ -148,7 +181,7 @@ export default function Contact() {
                   {/* Prénom / Nom */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                     <div>
-                      <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: T.ink, marginBottom: 6 }}>Prénom *</label>
+                      <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: BAI.ink, marginBottom: 6 }}>Prénom *</label>
                       <input
                         type="text" placeholder="Camille"
                         value={form.firstName}
@@ -159,7 +192,7 @@ export default function Contact() {
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: T.ink, marginBottom: 6 }}>Nom</label>
+                      <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: BAI.ink, marginBottom: 6 }}>Nom</label>
                       <input
                         type="text" placeholder="Dupont"
                         value={form.lastName}
@@ -173,7 +206,7 @@ export default function Contact() {
 
                   {/* Email */}
                   <div>
-                    <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: T.ink, marginBottom: 6 }}>Email *</label>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: BAI.ink, marginBottom: 6 }}>Email *</label>
                     <input
                       type="email" placeholder="ton@email.fr"
                       value={form.email}
@@ -186,7 +219,7 @@ export default function Contact() {
 
                   {/* Rôle */}
                   <div>
-                    <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: T.ink, marginBottom: 6 }}>Tu es</label>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: BAI.ink, marginBottom: 6 }}>Tu es</label>
                     <select
                       value={form.role}
                       onChange={e => setForm({ ...form, role: e.target.value })}
@@ -204,7 +237,7 @@ export default function Contact() {
 
                   {/* Sujet */}
                   <div>
-                    <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: T.ink, marginBottom: 6 }}>Sujet</label>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: BAI.ink, marginBottom: 6 }}>Sujet</label>
                     <input
                       type="text" placeholder="Pourquoi Bailio ?"
                       value={form.subject}
@@ -217,7 +250,7 @@ export default function Contact() {
 
                   {/* Message */}
                   <div>
-                    <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: T.ink, marginBottom: 6 }}>Message *</label>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: BAI.ink, marginBottom: 6 }}>Message *</label>
                     <textarea
                       placeholder="Dis-nous tout."
                       rows={5}
@@ -234,22 +267,22 @@ export default function Contact() {
                     disabled={sending}
                     style={{
                       width: '100%', padding: '14px', marginTop: 6,
-                      background: sending ? '#4a4a6a' : T.night,
+                      background: sending ? '#4a4a6a' : BAI.night,
                       color: '#fff', border: 'none', borderRadius: 10,
-                      fontSize: 14, fontWeight: 600, fontFamily: T.fontBody,
+                      fontSize: 14, fontWeight: 600, fontFamily: BAI.fontBody,
                       cursor: sending ? 'not-allowed' : 'pointer',
                       transition: 'background 0.15s',
                       justifyContent: 'center',
                     }}
-                    onMouseEnter={e => { if (!sending) (e.currentTarget as HTMLButtonElement).style.background = '#2a2a4a' }}
-                    onMouseLeave={e => { if (!sending) (e.currentTarget as HTMLButtonElement).style.background = T.night }}
+                    onMouseEnter={e => { if (!sending) (e.currentTarget as HTMLButtonElement).style.background = BAI.nightHover }}
+                    onMouseLeave={e => { if (!sending) (e.currentTarget as HTMLButtonElement).style.background = BAI.night }}
                   >
                     {sending ? 'Envoi en cours…' : 'Envoyer'}
                   </button>
 
-                  <p style={{ fontSize: 12, color: T.inkFaint, margin: 0, textAlign: 'center' }}>
+                  <p style={{ fontSize: 12, color: BAI.inkFaint, margin: 0, textAlign: 'center' }}>
                     En envoyant ce message, tu acceptes notre{' '}
-                    <Link to="/confidentialite" style={{ color: T.caramel, textDecoration: 'none' }}
+                    <Link to="/confidentialite" style={{ color: BAI.caramel, textDecoration: 'none' }}
                       onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
                       onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
                     >

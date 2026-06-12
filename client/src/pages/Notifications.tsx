@@ -85,122 +85,165 @@ export default function Notifications() {
 
   return (
     <Layout>
-      <div className="min-h-screen py-8" style={{ background: BAI.bgBase }}>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* ── Dark Hero ───────────────────────────────────────────────────── */}
+      <div
+        style={{
+          background: '#0a0d1a',
+          padding: 'clamp(48px,7vw,80px) clamp(16px,4vw,48px) clamp(40px,6vw,60px)',
+        }}
+      >
+        <div style={{ maxWidth: 896, margin: '0 auto' }}>
 
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <p style={{
+          {/* Top row: title left + actions right */}
+          <div className="flex flex-col sm:flex-row sm:items-end gap-6">
+
+            {/* Left: overline + title + count badge */}
+            <div className="flex-1">
+              <p
+                style={{
                   fontFamily: BAI.fontBody,
                   fontSize: 10,
                   fontWeight: 700,
                   letterSpacing: '0.12em',
                   textTransform: 'uppercase',
                   color: BAI.caramel,
-                  margin: '0 0 4px',
-                }}>
-                  Compte
-                </p>
-                <h1 style={{
-                  fontFamily: BAI.fontDisplay,
-                  fontSize: 'clamp(26px, 4vw, 40px)',
-                  fontWeight: 700,
-                  fontStyle: 'italic',
-                  color: BAI.ink,
                   margin: '0 0 6px',
-                  lineHeight: 1.1,
-                }}>
+                }}
+              >
+                Compte
+              </p>
+              <div className="flex items-center gap-4 flex-wrap">
+                <h1
+                  style={{
+                    fontFamily: BAI.fontDisplay,
+                    fontSize: 'clamp(28px,5vw,40px)',
+                    fontWeight: 700,
+                    fontStyle: 'italic',
+                    color: '#ffffff',
+                    margin: 0,
+                    lineHeight: 1.1,
+                  }}
+                >
                   Notifications
                 </h1>
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: 0 }}>
-                  {notificationsTotal} notification{notificationsTotal > 1 ? 's' : ''}
-                  {unreadCount > 0 && (
-                    <span style={{ marginLeft: 8, color: BAI.night, fontWeight: 600 }}>
-                      · {unreadCount} non lue{unreadCount > 1 ? 's' : ''}
-                    </span>
-                  )}
-                </p>
-              </div>
-
-              {/* Actions */}
-              {notifications.length > 0 && (
-                <div className="flex items-center gap-2 flex-shrink-0 mt-2">
-                  {unreadCount > 0 && (
-                    <button
-                      onClick={handleMarkAllAsRead}
-                      disabled={actionLoading === 'mark-all'}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
+                {/* Unread count badge — glass on dark */}
+                {unreadCount > 0 && (
+                  <div
+                    className="flex items-center gap-2 px-3 py-1.5"
+                    style={{
+                      background: 'rgba(255,255,255,0.07)',
+                      backdropFilter: 'blur(20px) saturate(160%)',
+                      WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                      border: '1px solid rgba(255,255,255,0.13)',
+                      borderRadius: '999px',
+                    }}
+                  >
+                    <div
+                      className="w-2 h-2 rounded-full"
+                      style={{ background: BAI.caramel }}
+                    />
+                    <span
                       style={{
                         fontFamily: BAI.fontBody,
                         fontSize: 13,
-                        fontWeight: 600,
-                        color: BAI.night,
-                        background: 'transparent',
-                        border: 'none',
-                        cursor: actionLoading === 'mark-all' ? 'not-allowed' : 'pointer',
-                        minHeight: BAI.touchMin,
+                        fontWeight: 700,
+                        color: '#ffffff',
                       }}
-                      onMouseEnter={e => (e.currentTarget.style.background = BAI.ownerLight)}
-                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                     >
-                      {actionLoading === 'mark-all' ? (
-                        <Loader className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <CheckCheck className="w-4 h-4" />
-                      )}
-                      Tout marquer comme lu
-                    </button>
-                  )}
+                      {unreadCount} non lue{unreadCount > 1 ? 's' : ''}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <p
+                style={{
+                  fontFamily: BAI.fontBody,
+                  fontSize: 14,
+                  color: 'rgba(255,255,255,0.45)',
+                  margin: '8px 0 0',
+                }}
+              >
+                {notificationsTotal} notification{notificationsTotal > 1 ? 's' : ''}
+              </p>
+            </div>
+
+            {/* Right: action buttons */}
+            {notifications.length > 0 && (
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {unreadCount > 0 && (
                   <button
-                    onClick={handleDeleteAll}
-                    disabled={actionLoading === 'delete-all'}
+                    onClick={handleMarkAllAsRead}
+                    disabled={actionLoading === 'mark-all'}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
                     style={{
                       fontFamily: BAI.fontBody,
                       fontSize: 13,
                       fontWeight: 600,
-                      color: BAI.error,
-                      background: 'transparent',
-                      border: 'none',
-                      cursor: actionLoading === 'delete-all' ? 'not-allowed' : 'pointer',
+                      color: 'rgba(255,255,255,0.8)',
+                      background: 'rgba(255,255,255,0.07)',
+                      border: '1px solid rgba(255,255,255,0.13)',
+                      cursor: actionLoading === 'mark-all' ? 'not-allowed' : 'pointer',
                       minHeight: BAI.touchMin,
                     }}
-                    onMouseEnter={e => (e.currentTarget.style.background = BAI.errorLight)}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.13)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.07)')}
                   >
-                    {actionLoading === 'delete-all' ? (
+                    {actionLoading === 'mark-all' ? (
                       <Loader className="w-4 h-4 animate-spin" />
                     ) : (
-                      <Trash2 className="w-4 h-4" />
+                      <CheckCheck className="w-4 h-4" />
                     )}
-                    Tout supprimer
+                    Tout marquer
                   </button>
-                </div>
-              )}
-            </div>
+                )}
+                <button
+                  onClick={handleDeleteAll}
+                  disabled={actionLoading === 'delete-all'}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
+                  style={{
+                    fontFamily: BAI.fontBody,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: 'rgba(252,165,165,0.85)',
+                    background: 'rgba(153,27,27,0.2)',
+                    border: '1px solid rgba(252,165,165,0.2)',
+                    cursor: actionLoading === 'delete-all' ? 'not-allowed' : 'pointer',
+                    minHeight: BAI.touchMin,
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(153,27,27,0.35)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(153,27,27,0.2)')}
+                >
+                  {actionLoading === 'delete-all' ? (
+                    <Loader className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
+                  Tout supprimer
+                </button>
+              </div>
+            )}
+          </div>
 
-            {/* Filters */}
+          {/* Filter tabs — glass pill on dark bg */}
+          <div className="mt-8">
             <div
               className="inline-flex items-center gap-1 p-1"
               style={{
-                background: BAI.bgSurface,
-                border: `1px solid ${BAI.border}`,
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.1)',
                 borderRadius: 12,
-                boxShadow: BAI.shadowSm,
               }}
             >
               <button
                 onClick={() => setFilterMode('all')}
-                className="px-4 py-1.5 rounded-lg text-sm font-semibold transition-all"
+                className="px-4 py-1.5 rounded-lg font-semibold transition-all"
                 style={{
                   fontFamily: BAI.fontBody,
                   fontWeight: 600,
                   fontSize: 13,
-                  background: filterMode === 'all' ? BAI.night : 'transparent',
-                  color: filterMode === 'all' ? '#ffffff' : BAI.inkMid,
-                  border: 'none',
+                  background: filterMode === 'all' ? 'rgba(255,255,255,0.15)' : 'transparent',
+                  color: filterMode === 'all' ? '#ffffff' : 'rgba(255,255,255,0.5)',
+                  border: filterMode === 'all' ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent',
                   cursor: 'pointer',
                   minHeight: 32,
                 }}
@@ -209,14 +252,14 @@ export default function Notifications() {
               </button>
               <button
                 onClick={() => setFilterMode('unread')}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition-all"
+                className="flex items-center gap-2 px-4 py-1.5 rounded-lg font-semibold transition-all"
                 style={{
                   fontFamily: BAI.fontBody,
                   fontWeight: 600,
                   fontSize: 13,
-                  background: filterMode === 'unread' ? BAI.night : 'transparent',
-                  color: filterMode === 'unread' ? '#ffffff' : BAI.inkMid,
-                  border: 'none',
+                  background: filterMode === 'unread' ? 'rgba(255,255,255,0.15)' : 'transparent',
+                  color: filterMode === 'unread' ? '#ffffff' : 'rgba(255,255,255,0.5)',
+                  border: filterMode === 'unread' ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent',
                   cursor: 'pointer',
                   minHeight: 32,
                 }}
@@ -232,8 +275,8 @@ export default function Notifications() {
                       fontSize: 11,
                       fontWeight: 700,
                       borderRadius: 999,
-                      background: filterMode === 'unread' ? '#ffffff' : BAI.night,
-                      color: filterMode === 'unread' ? BAI.night : '#ffffff',
+                      background: filterMode === 'unread' ? BAI.caramel : 'rgba(255,255,255,0.2)',
+                      color: '#ffffff',
                     }}
                   >
                     {unreadCount}
@@ -242,6 +285,15 @@ export default function Notifications() {
               </button>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* ── Notification list on bgBase ─────────────────────────────────── */}
+      <div
+        className="py-8"
+        style={{ background: BAI.bgBase, minHeight: '50vh' }}
+      >
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Content */}
           {isLoading && notifications.length === 0 ? (

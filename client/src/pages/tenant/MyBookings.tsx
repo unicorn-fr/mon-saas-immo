@@ -5,9 +5,6 @@ import {
   Filter,
   Loader,
   AlertCircle,
-  Clock,
-  CheckCircle,
-  XCircle,
   Home,
   MapPin,
   Euro,
@@ -275,70 +272,44 @@ export const MyBookings = () => {
     cancelled: bookings.filter((b) => b.status === 'CANCELLED').length,
   }
 
-  const statCards = [
-    {
-      label: 'Total',
-      value: stats.total,
-      valueColor: '#0d0c0a',
-      iconBg: '#f4f2ee',
-      icon: <Home className="w-5 h-5" style={{ color: '#5a5754' }} />,
-    },
-    {
-      label: 'En attente',
-      value: stats.pending,
-      valueColor: '#92400e',
-      iconBg: '#fdf5ec',
-      icon: <Clock className="w-5 h-5" style={{ color: '#92400e' }} />,
-    },
-    {
-      label: 'Confirmées',
-      value: stats.confirmed,
-      valueColor: '#1b5e3b',
-      iconBg: '#edf7f2',
-      icon: <CheckCircle className="w-5 h-5" style={{ color: '#1b5e3b' }} />,
-    },
-    {
-      label: 'Annulées',
-      value: stats.cancelled,
-      valueColor: '#9b1c1c',
-      iconBg: '#fef2f2',
-      icon: <XCircle className="w-5 h-5" style={{ color: '#9b1c1c' }} />,
-    },
-  ]
 
   return (
     <Layout>
-      <div
-        className="min-h-screen px-4 py-6 lg:p-8"
-        style={{ background: '#fafaf8', fontFamily: "'DM Sans', system-ui, sans-serif" }}
-      >
-        <div className="max-w-7xl mx-auto">
-          {/* Page Header */}
-          <div className="mb-8">
-            <p
-              className="uppercase tracking-widest mb-1"
-              style={{ fontSize: 10, color: BAI.caramel, letterSpacing: '0.12em' }}
-            >
-              Espace locataire
-            </p>
-            <h1
-              style={{
-                fontFamily: "'Cormorant Garamond', Georgia, serif",
-                fontWeight: 700,
-                fontStyle: 'italic',
-                fontSize: 'clamp(28px, 6vw, 40px)',
-                color: '#0d0c0a',
-                lineHeight: 1,
-                marginBottom: 6,
-              }}
-            >
-              Mes visites
-            </h1>
-            <p style={{ fontSize: 14, color: '#5a5754' }}>
-              Consultez et gérez vos demandes de visite
+      {/* ── Hero sombre Hyperbeat ── */}
+      <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)' }}>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
+          LOCATAIRE
+        </p>
+        <h1 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(28px,5vw,42px)', fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: '6px 0 8px', lineHeight: 1.1 }}>
+          Mes visites
+        </h1>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.55)', margin: 0 }}>
+          Consultez et gérez vos demandes de visite
+        </p>
+        <div className="flex flex-wrap gap-3" style={{ marginTop: 28 }}>
+          <div style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '16px 24px', minWidth: 130 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>PLANIFIÉES</p>
+            <p style={{ fontFamily: BAI.fontDisplay, fontSize: 36, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1 }}>
+              {stats.confirmed}
             </p>
           </div>
+          <div style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '16px 24px', minWidth: 130 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>EN ATTENTE</p>
+            <p style={{ fontFamily: BAI.fontDisplay, fontSize: 36, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1 }}>
+              {stats.pending}
+            </p>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '16px 24px', minWidth: 130 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>TOTAL</p>
+            <p style={{ fontFamily: BAI.fontDisplay, fontSize: 36, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1 }}>
+              {stats.total}
+            </p>
+          </div>
+        </div>
+      </div>
 
+      <div style={{ background: BAI.bgBase, minHeight: '60vh', padding: 'clamp(24px,4vw,40px) clamp(16px,4vw,48px)', fontFamily: BAI.fontBody }}>
+        <div className="max-w-7xl mx-auto">
           {/* Invitations calendrier */}
           {invites.length > 0 && (
             <div className="mb-8">
@@ -362,44 +333,6 @@ export const MyBookings = () => {
             </div>
           )}
 
-          {/* Statistics — 2 cols mobile, 4 cols sm+ */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-            {statCards.map(({ label, value, valueColor, iconBg, icon }) => (
-              <div
-                key={label}
-                className="p-4 sm:p-5"
-                style={{
-                  background: '#ffffff',
-                  border: '1px solid #e4e1db',
-                  borderRadius: 12,
-                  boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p style={{ fontSize: 12, color: '#9e9b96', marginBottom: 4 }}>{label}</p>
-                    <p
-                      style={{
-                        fontFamily: "'Cormorant Garamond', Georgia, serif",
-                        fontSize: 28,
-                        fontWeight: 700,
-                        color: valueColor,
-                        lineHeight: 1,
-                      }}
-                    >
-                      {value}
-                    </p>
-                  </div>
-                  <div
-                    className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center"
-                    style={{ background: iconBg, borderRadius: 10 }}
-                  >
-                    {icon}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
 
           {/* Filters and View Toggle */}
           <div

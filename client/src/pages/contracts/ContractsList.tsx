@@ -220,64 +220,58 @@ export default function ContractsList() {
     <Layout>
       <div style={{ minHeight: '100vh', background: BAI.bgBase, fontFamily: BAI.fontBody }}>
 
-        {/* Header */}
-        <div style={{ background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}` }}>
-          <div className="container mx-auto px-4 py-6 sm:py-8">
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-              <div>
-                <p style={{
-                  fontFamily: BAI.fontBody, fontSize: 10, textTransform: 'uppercase',
-                  letterSpacing: '0.12em', color: BAI.caramel, marginBottom: 6,
-                }}>
-                  Gestion locative
-                </p>
-                <h1 style={{
-                  fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-                  fontSize: 'clamp(24px, 5vw, 40px)', color: BAI.ink, lineHeight: 1.1, margin: 0,
-                }}>
-                  Mes contrats
-                  {statistics && (
-                    <span style={{
-                      fontFamily: BAI.fontBody, fontStyle: 'normal', fontWeight: 600,
-                      fontSize: 14, color: BAI.inkFaint,
-                      background: BAI.bgMuted, border: `1px solid ${BAI.border}`,
-                      borderRadius: 20, padding: '2px 10px', marginLeft: 14,
-                      verticalAlign: 'middle',
-                    }}>
-                      {statistics.total}
-                    </span>
-                  )}
-                </h1>
-                {statistics && (
-                  <p style={{ fontSize: 14, color: BAI.inkMid, marginTop: 6 }}>
-                    <span style={{ color: BAI.tenant, fontWeight: 600 }}>{statistics.active}</span> actifs
-                    {pendingSignatures > 0 && (
-                      <> · <span style={{ color: BAI.caramel, fontWeight: 600 }}>{pendingSignatures}</span> en attente de signature</>
-                    )}
-                  </p>
-                )}
-              </div>
-              {user?.role === 'OWNER' && (
-                <Link
-                  to="/contracts/new"
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 8,
-                    padding: '0 18px', minHeight: 44, borderRadius: 8,
-                    background: BAI.night, color: '#ffffff',
-                    fontFamily: BAI.fontBody, fontWeight: 500, fontSize: 13,
-                    textDecoration: 'none', border: 'none',
-                    transition: 'opacity 0.15s',
-                    touchAction: 'manipulation',
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.opacity = '0.88')}
-                  onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-                >
-                  <Plus style={{ width: 15, height: 15 }} />
-                  Nouveau contrat
-                </Link>
-              )}
+        {/* Hero sombre Hyperbeat */}
+        <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,64px) clamp(16px,4vw,48px) clamp(28px,4vw,44px)' }}>
+          <div className="container mx-auto" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20 }}>
+            <div>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
+                Gestion locative
+              </p>
+              <h1 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(28px,5vw,42px)', color: '#ffffff', margin: '6px 0 8px', lineHeight: 1.1 }}>
+                Mes contrats
+              </h1>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.55)', margin: 0 }}>
+                {statistics
+                  ? `${statistics.total} contrat${statistics.total > 1 ? 's' : ''} · ${statistics.active} actif${statistics.active > 1 ? 's' : ''}${pendingSignatures > 0 ? ` · ${pendingSignatures} en attente de signature` : ''}`
+                  : 'Tous vos baux en un seul endroit'}
+              </p>
             </div>
+            {user?.role === 'OWNER' && (
+              <Link
+                to="/contracts/new"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                  padding: '0 20px', minHeight: 44, borderRadius: 10,
+                  background: BAI.caramel, color: '#ffffff',
+                  fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13,
+                  textDecoration: 'none', border: 'none',
+                  transition: 'opacity 0.15s', flexShrink: 0,
+                  touchAction: 'manipulation',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = '0.88')}
+                onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+              >
+                <Plus style={{ width: 15, height: 15 }} />
+                Nouveau contrat
+              </Link>
+            )}
           </div>
+          {/* KPIs glass */}
+          {statistics && (
+            <div className="container mx-auto flex flex-wrap gap-3" style={{ marginTop: 28 }}>
+              {[
+                { label: 'TOTAL', value: statistics.total },
+                { label: 'ACTIFS', value: statistics.active },
+                { label: 'EN COURS', value: (statistics.sent || 0) + (statistics.signedOwner || 0) + (statistics.signedTenant || 0) + (statistics.completed || 0) },
+                { label: 'BROUILLONS', value: statistics.draft || 0 },
+              ].map(kpi => (
+                <div key={kpi.label} style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '14px 22px', minWidth: 110 }}>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>{kpi.label}</p>
+                  <p style={{ fontFamily: BAI.fontDisplay, fontSize: 32, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1 }}>{kpi.value}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Tabs — scrollables horizontalement sur mobile */}

@@ -63,20 +63,35 @@ export default function SearchAlerts() {
 
   return (
     <Layout>
-      <div style={{ maxWidth: 800, margin: '0 auto', padding: 'clamp(24px,4vw,48px) clamp(16px,5vw,32px)' }}>
-
-        {/* Header */}
-        <div style={{ marginBottom: 32 }}>
-          <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, marginBottom: 6 }}>
-            Alertes
-          </p>
-          <h1 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(28px,5vw,40px)', color: BAI.ink, margin: '0 0 8px', lineHeight: 1.1 }}>
-            Mes alertes de recherche
-          </h1>
-          <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: 0 }}>
-            Soyez informé en temps réel des nouvelles annonces correspondant à vos critères.
-          </p>
+      {/* ── Hero sombre Hyperbeat ── */}
+      <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)' }}>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
+          LOCATAIRE
+        </p>
+        <h1 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(28px,5vw,42px)', fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: '6px 0 8px', lineHeight: 1.1 }}>
+          Mes alertes de recherche
+        </h1>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.55)', margin: 0 }}>
+          Soyez informé en temps réel des nouvelles annonces correspondant à vos critères.
+        </p>
+        <div className="flex flex-wrap gap-3" style={{ marginTop: 28 }}>
+          <div style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '16px 24px', minWidth: 130 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>ALERTES ACTIVES</p>
+            <p style={{ fontFamily: BAI.fontDisplay, fontSize: 36, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1 }}>
+              {alerts.filter(a => a.active).length}
+            </p>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '16px 24px', minWidth: 130 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>TOTAL</p>
+            <p style={{ fontFamily: BAI.fontDisplay, fontSize: 36, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1 }}>
+              {alerts.length}
+            </p>
+          </div>
         </div>
+      </div>
+
+      <div style={{ background: BAI.bgBase, minHeight: '60vh' }}>
+      <div style={{ maxWidth: 800, margin: '0 auto', padding: 'clamp(24px,4vw,40px) clamp(16px,5vw,32px)' }}>
 
         {/* Bouton créer */}
         <button
@@ -241,6 +256,7 @@ export default function SearchAlerts() {
           ))}
         </div>
 
+      </div>
       </div>
     </Layout>
   )

@@ -5,6 +5,7 @@
  */
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { BAI } from '../../constants/bailio-tokens'
 
 const API = `${import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1'}/waitlist`
 const ADMIN_SECRET = import.meta.env.VITE_ADMIN_SECRET ?? ''
@@ -59,19 +60,43 @@ function StatCard({ label, value, sub }: { label: string; value: string | number
   return (
     <div
       style={{
-        background: '#fff',
-        border: '1px solid #e4e1db',
-        borderRadius: 8,
+        background: BAI.bgSurface,
+        border: `1px solid ${BAI.border}`,
+        borderRadius: BAI.radius,
+        boxShadow: BAI.shadowMd,
         padding: '16px 20px',
       }}
     >
-      <p style={{ margin: 0, fontSize: 11, color: '#9e9b96', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+      <p
+        style={{
+          margin: 0,
+          fontFamily: BAI.fontBody,
+          fontSize: 11,
+          fontWeight: 700,
+          color: BAI.inkFaint,
+          textTransform: 'uppercase',
+          letterSpacing: '0.08em',
+        }}
+      >
         {label}
       </p>
-      <p style={{ margin: '4px 0 0', fontSize: 28, fontWeight: 700, color: '#0d0c0a', fontFamily: 'monospace' }}>
+      <p
+        style={{
+          margin: '4px 0 0',
+          fontFamily: BAI.fontDisplay,
+          fontSize: 28,
+          fontWeight: 700,
+          color: BAI.ink,
+          lineHeight: 1.1,
+        }}
+      >
         {value}
       </p>
-      {sub && <p style={{ margin: '2px 0 0', fontSize: 12, color: '#9e9b96' }}>{sub}</p>}
+      {sub && (
+        <p style={{ margin: '2px 0 0', fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>
+          {sub}
+        </p>
+      )}
     </div>
   )
 }
@@ -241,41 +266,69 @@ export default function WaitlistAdmin() {
     <div
       style={{
         minHeight: '100dvh',
-        background: '#fafaf8',
-        fontFamily: "'DM Sans', system-ui, sans-serif",
+        background: BAI.bgBase,
+        fontFamily: BAI.fontBody,
         fontSize: 14,
-        color: '#0d0c0a',
+        color: BAI.ink,
       }}
     >
-      {/* Header */}
+      {/* Dark hero banner */}
       <div
         style={{
-          background: '#1a1a2e',
-          padding: '14px 24px',
+          background: BAI.night,
+          padding: '32px clamp(16px,4vw,48px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 12,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ color: '#fff', fontWeight: 700, fontSize: 16, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
-            Bailio
-          </span>
-          <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>/</span>
-          <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12 }}>Admin Waitlist</span>
+        <div>
+          <p
+            style={{
+              margin: '0 0 6px',
+              fontFamily: BAI.fontBody,
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              color: BAI.caramel,
+            }}
+          >
+            Administration
+          </p>
+          <h1
+            style={{
+              margin: 0,
+              fontFamily: BAI.fontDisplay,
+              fontSize: 'clamp(24px,4vw,32px)',
+              fontWeight: 700,
+              fontStyle: 'italic',
+              color: '#ffffff',
+              lineHeight: 1.2,
+            }}
+          >
+            Waitlist
+          </h1>
         </div>
-        <span
-          style={{
-            fontSize: 11,
-            padding: '3px 10px',
-            borderRadius: 12,
-            background: LAUNCH_MODE === 'waitlist' ? '#92400e' : '#1b5e3b',
-            color: '#fff',
-            fontWeight: 600,
-          }}
-        >
-          MODE: {LAUNCH_MODE.toUpperCase()}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span
+            style={{
+              fontSize: 11,
+              padding: '4px 12px',
+              borderRadius: 12,
+              background: LAUNCH_MODE === 'waitlist' ? BAI.warning : BAI.tenant,
+              color: '#fff',
+              fontFamily: BAI.fontBody,
+              fontWeight: 700,
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+            }}
+          >
+            MODE: {LAUNCH_MODE.toUpperCase()}
+          </span>
+        </div>
       </div>
 
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 20px' }}>
@@ -284,24 +337,40 @@ export default function WaitlistAdmin() {
         {LAUNCH_MODE === 'waitlist' && (
           <div
             style={{
-              background: '#fdf5ec',
-              border: '1px solid #f3c99a',
-              borderRadius: 8,
+              background: BAI.caramelLight,
+              border: `1px solid ${BAI.caramelBorder}`,
+              borderRadius: BAI.radius,
               padding: '12px 16px',
               marginBottom: 24,
               fontSize: 13,
-              color: '#92400e',
+              color: BAI.warning,
             }}
           >
             <strong>Mode waitlist actif.</strong> Pour passer en mode live, changez{' '}
-            <code style={{ background: '#fff3e0', padding: '1px 5px', borderRadius: 3 }}>LAUNCH_MODE=live</code> dans vos
-            variables d'environnement Vercel et redéployez.
+            <code style={{ background: BAI.bgMuted, padding: '1px 5px', borderRadius: 3, fontFamily: 'monospace' }}>
+              LAUNCH_MODE=live
+            </code>{' '}
+            dans vos variables d'environnement Vercel et redéployez.
           </div>
         )}
 
         {/* ── Stats ──────────────────────────────────────────────────────── */}
-        <h2 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 700 }}>Statistiques</h2>
-        {statsError && <p style={{ color: '#9b1c1c', marginBottom: 16 }}>{statsError}</p>}
+        <h2
+          style={{
+            margin: '0 0 12px',
+            fontFamily: BAI.fontBody,
+            fontSize: 13,
+            fontWeight: 700,
+            color: BAI.inkMid,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+          }}
+        >
+          Statistiques
+        </h2>
+        {statsError && (
+          <p style={{ color: BAI.error, fontFamily: BAI.fontBody, marginBottom: 16 }}>{statsError}</p>
+        )}
 
         {stats ? (
           <>
@@ -320,43 +389,64 @@ export default function WaitlistAdmin() {
                 sub={`${stats.earlyAccessRemaining} restante(s)`}
               />
               <StatCard label="Notifiés" value={stats.notifiedCount} />
-              <StatCard
-                label="Cette semaine"
-                value={stats.thisWeek}
-                sub={growthLabel}
-              />
+              <StatCard label="Cette semaine" value={stats.thisWeek} sub={growthLabel} />
               <StatCard label="Semaine préc." value={stats.lastWeek} />
             </div>
 
-            {/* Sparkline table — 14 days */}
+            {/* Sparkline chart — 14 days */}
             {stats.signupsByDay.length > 0 && (
               <div
                 style={{
-                  background: '#fff',
-                  border: '1px solid #e4e1db',
-                  borderRadius: 8,
+                  background: BAI.bgSurface,
+                  border: `1px solid ${BAI.border}`,
+                  borderRadius: BAI.radius,
+                  boxShadow: BAI.shadowMd,
                   padding: '16px 20px',
                   marginBottom: 28,
                 }}
               >
-                <p style={{ margin: '0 0 12px', fontSize: 12, fontWeight: 600, color: '#9e9b96', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                <p
+                  style={{
+                    margin: '0 0 12px',
+                    fontFamily: BAI.fontBody,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: BAI.inkFaint,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                  }}
+                >
                   Inscriptions — 14 derniers jours
                 </p>
                 <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end', height: 60 }}>
                   {stats.signupsByDay.map((d) => (
-                    <div key={d.day} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                      <span style={{ fontSize: 9, color: '#9e9b96' }}>{d.count}</span>
+                    <div
+                      key={d.day}
+                      style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}
+                    >
+                      <span style={{ fontSize: 9, color: BAI.inkFaint, fontFamily: BAI.fontBody }}>
+                        {d.count}
+                      </span>
                       <div
                         style={{
                           width: '100%',
                           height: `${Math.round((d.count / maxDayCount) * 40) + 4}px`,
-                          background: '#1a1a2e',
+                          background: BAI.caramel,
                           borderRadius: 2,
                           minHeight: 4,
                         }}
                         title={`${d.day} : ${d.count} inscription(s)`}
                       />
-                      <span style={{ fontSize: 8, color: '#ccc9c3', transform: 'rotate(-40deg)', transformOrigin: 'top center', whiteSpace: 'nowrap' }}>
+                      <span
+                        style={{
+                          fontSize: 8,
+                          color: BAI.borderStrong,
+                          fontFamily: BAI.fontBody,
+                          transform: 'rotate(-40deg)',
+                          transformOrigin: 'top center',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
                         {d.day.slice(5)}
                       </span>
                     </div>
@@ -366,11 +456,23 @@ export default function WaitlistAdmin() {
             )}
           </>
         ) : (
-          <p style={{ color: '#9e9b96' }}>Chargement...</p>
+          <p style={{ color: BAI.inkFaint, fontFamily: BAI.fontBody }}>Chargement...</p>
         )}
 
         {/* ── Actions ────────────────────────────────────────────────────── */}
-        <h2 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 700 }}>Actions</h2>
+        <h2
+          style={{
+            margin: '0 0 12px',
+            fontFamily: BAI.fontBody,
+            fontSize: 13,
+            fontWeight: 700,
+            color: BAI.inkMid,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+          }}
+        >
+          Actions
+        </h2>
         <div
           style={{
             display: 'grid',
@@ -382,23 +484,36 @@ export default function WaitlistAdmin() {
           {/* Notify all */}
           <div
             style={{
-              background: '#fff',
-              border: '1px solid #e4e1db',
-              borderRadius: 8,
+              background: BAI.bgSurface,
+              border: `1px solid ${BAI.border}`,
+              borderRadius: BAI.radius,
+              boxShadow: BAI.shadowMd,
               padding: '16px 20px',
             }}
           >
-            <p style={{ margin: '0 0 8px', fontWeight: 600 }}>Email de lancement</p>
-            <p style={{ margin: '0 0 12px', fontSize: 12, color: '#9e9b96' }}>
+            <p style={{ margin: '0 0 8px', fontFamily: BAI.fontBody, fontWeight: 600, color: BAI.ink }}>
+              Email de lancement
+            </p>
+            <p style={{ margin: '0 0 12px', fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>
               Envoie l'email de lancement à tous les inscrits non encore notifiés.
             </p>
             {confirmNotify && (
-              <p style={{ margin: '0 0 10px', fontSize: 13, color: '#9b1c1c', fontWeight: 600 }}>
+              <p
+                style={{
+                  margin: '0 0 10px',
+                  fontFamily: BAI.fontBody,
+                  fontSize: 13,
+                  color: BAI.error,
+                  fontWeight: 600,
+                }}
+              >
                 Cette action est irréversible. Confirmer ?
               </p>
             )}
             {notifyStatus && (
-              <p style={{ margin: '0 0 10px', fontSize: 13, color: '#1b5e3b' }}>{notifyStatus}</p>
+              <p style={{ margin: '0 0 10px', fontFamily: BAI.fontBody, fontSize: 13, color: BAI.tenant }}>
+                {notifyStatus}
+              </p>
             )}
             <div style={{ display: 'flex', gap: 8 }}>
               <button
@@ -406,14 +521,16 @@ export default function WaitlistAdmin() {
                 disabled={notifyLoading}
                 style={{
                   padding: '8px 16px',
-                  background: confirmNotify ? '#9b1c1c' : '#1a1a2e',
+                  background: confirmNotify ? BAI.error : BAI.night,
                   color: '#fff',
                   border: 'none',
-                  borderRadius: 6,
+                  borderRadius: BAI.radius,
+                  fontFamily: BAI.fontBody,
                   fontSize: 13,
                   fontWeight: 600,
                   cursor: notifyLoading ? 'not-allowed' : 'pointer',
                   opacity: notifyLoading ? 0.6 : 1,
+                  minHeight: 36,
                 }}
               >
                 {notifyLoading ? 'Envoi...' : confirmNotify ? 'Oui, envoyer' : 'Envoyer les emails'}
@@ -424,11 +541,13 @@ export default function WaitlistAdmin() {
                   style={{
                     padding: '8px 14px',
                     background: 'transparent',
-                    color: '#5a5754',
-                    border: '1px solid #e4e1db',
-                    borderRadius: 6,
+                    color: BAI.inkMid,
+                    border: `1px solid ${BAI.border}`,
+                    borderRadius: BAI.radius,
+                    fontFamily: BAI.fontBody,
                     fontSize: 13,
                     cursor: 'pointer',
+                    minHeight: 36,
                   }}
                 >
                   Annuler
@@ -440,13 +559,16 @@ export default function WaitlistAdmin() {
           {/* Manual add */}
           <div
             style={{
-              background: '#fff',
-              border: '1px solid #e4e1db',
-              borderRadius: 8,
+              background: BAI.bgSurface,
+              border: `1px solid ${BAI.border}`,
+              borderRadius: BAI.radius,
+              boxShadow: BAI.shadowMd,
               padding: '16px 20px',
             }}
           >
-            <p style={{ margin: '0 0 8px', fontWeight: 600 }}>Ajouter manuellement</p>
+            <p style={{ margin: '0 0 8px', fontFamily: BAI.fontBody, fontWeight: 600, color: BAI.ink }}>
+              Ajouter manuellement
+            </p>
             <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <input
                 type="email"
@@ -456,32 +578,42 @@ export default function WaitlistAdmin() {
                 required
                 style={{
                   padding: '8px 12px',
-                  background: '#f8f7f4',
-                  border: '1px solid #e4e1db',
-                  borderRadius: 6,
+                  background: BAI.bgInput,
+                  border: `1px solid ${BAI.border}`,
+                  borderRadius: BAI.radius,
+                  fontFamily: BAI.fontBody,
                   fontSize: 13,
                   outline: 'none',
-                  color: '#0d0c0a',
+                  color: BAI.ink,
                 }}
               />
               <button
                 type="submit"
                 style={{
                   padding: '8px 16px',
-                  background: '#1a1a2e',
+                  background: BAI.night,
                   color: '#fff',
                   border: 'none',
-                  borderRadius: 6,
+                  borderRadius: BAI.radius,
+                  fontFamily: BAI.fontBody,
                   fontSize: 13,
                   fontWeight: 600,
                   cursor: 'pointer',
                   alignSelf: 'flex-start',
+                  minHeight: 36,
                 }}
               >
                 Ajouter
               </button>
               {addStatus && (
-                <p style={{ margin: 0, fontSize: 12, color: addStatus.startsWith('Erreur') ? '#9b1c1c' : '#1b5e3b' }}>
+                <p
+                  style={{
+                    margin: 0,
+                    fontFamily: BAI.fontBody,
+                    fontSize: 12,
+                    color: addStatus.startsWith('Erreur') ? BAI.error : BAI.tenant,
+                  }}
+                >
                   {addStatus}
                 </p>
               )}
@@ -491,14 +623,17 @@ export default function WaitlistAdmin() {
           {/* Export */}
           <div
             style={{
-              background: '#fff',
-              border: '1px solid #e4e1db',
-              borderRadius: 8,
+              background: BAI.bgSurface,
+              border: `1px solid ${BAI.border}`,
+              borderRadius: BAI.radius,
+              boxShadow: BAI.shadowMd,
               padding: '16px 20px',
             }}
           >
-            <p style={{ margin: '0 0 8px', fontWeight: 600 }}>Export CSV</p>
-            <p style={{ margin: '0 0 12px', fontSize: 12, color: '#9e9b96' }}>
+            <p style={{ margin: '0 0 8px', fontFamily: BAI.fontBody, fontWeight: 600, color: BAI.ink }}>
+              Export CSV
+            </p>
+            <p style={{ margin: '0 0 12px', fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>
               Télécharge tous les emails avec leur position et statut.
             </p>
             <button
@@ -506,12 +641,14 @@ export default function WaitlistAdmin() {
               style={{
                 padding: '8px 16px',
                 background: 'transparent',
-                color: '#1a1a2e',
-                border: '1px solid #1a1a2e',
-                borderRadius: 6,
+                color: BAI.night,
+                border: `1px solid ${BAI.night}`,
+                borderRadius: BAI.radius,
+                fontFamily: BAI.fontBody,
                 fontSize: 13,
                 fontWeight: 600,
                 cursor: 'pointer',
+                minHeight: 36,
               }}
             >
               Exporter (CSV)
@@ -521,11 +658,21 @@ export default function WaitlistAdmin() {
 
         {/* ── List ───────────────────────────────────────────────────────── */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>
+          <h2
+            style={{
+              margin: 0,
+              fontFamily: BAI.fontBody,
+              fontSize: 13,
+              fontWeight: 700,
+              color: BAI.inkMid,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+            }}
+          >
             Inscrits {listData ? `(${listData.total})` : ''}
           </h2>
           {listData && listData.pages > 1 && (
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 13 }}>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center', fontFamily: BAI.fontBody, fontSize: 13 }}>
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
@@ -533,7 +680,7 @@ export default function WaitlistAdmin() {
               >
                 ← Préc.
               </button>
-              <span style={{ color: '#9e9b96' }}>
+              <span style={{ color: BAI.inkFaint }}>
                 {page} / {listData.pages}
               </span>
               <button
@@ -547,25 +694,36 @@ export default function WaitlistAdmin() {
           )}
         </div>
 
-        {listError && <p style={{ color: '#9b1c1c' }}>{listError}</p>}
+        {listError && (
+          <p style={{ color: BAI.error, fontFamily: BAI.fontBody }}>{listError}</p>
+        )}
 
         {listData ? (
-          <div style={{ background: '#fff', border: '1px solid #e4e1db', borderRadius: 8, overflow: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <div
+            style={{
+              background: BAI.bgSurface,
+              border: `1px solid ${BAI.border}`,
+              borderRadius: BAI.radius,
+              boxShadow: BAI.shadowMd,
+              overflow: 'auto',
+            }}
+          >
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, fontFamily: BAI.fontBody }}>
               <thead>
-                <tr style={{ background: '#f4f2ee', textAlign: 'left' }}>
+                <tr style={{ background: BAI.bgMuted, textAlign: 'left' }}>
                   {['#', 'Email', "Date d'inscription", 'Early Access', 'Notifié', 'Action'].map((h) => (
                     <th
                       key={h}
                       style={{
                         padding: '10px 14px',
-                        fontWeight: 600,
-                        color: '#5a5754',
+                        fontFamily: BAI.fontBody,
+                        fontWeight: 700,
+                        color: BAI.inkMid,
                         fontSize: 11,
                         textTransform: 'uppercase',
                         letterSpacing: '0.06em',
                         whiteSpace: 'nowrap',
-                        borderBottom: '1px solid #e4e1db',
+                        borderBottom: `1px solid ${BAI.border}`,
                       }}
                     >
                       {h}
@@ -577,23 +735,23 @@ export default function WaitlistAdmin() {
                 {listData.entries.map((entry, i) => (
                   <tr
                     key={entry.id}
-                    style={{ borderBottom: i < listData.entries.length - 1 ? '1px solid #f4f2ee' : 'none' }}
+                    style={{ borderBottom: i < listData.entries.length - 1 ? `1px solid ${BAI.bgMuted}` : 'none' }}
                   >
                     <td style={tdStyle}>{entry.position}</td>
-                    <td style={{ ...tdStyle, fontFamily: 'monospace', color: '#1a1a2e' }}>{entry.email}</td>
-                    <td style={{ ...tdStyle, color: '#9e9b96', whiteSpace: 'nowrap' }}>{fmtDate(entry.createdAt)}</td>
+                    <td style={{ ...tdStyle, fontFamily: 'monospace', color: BAI.night }}>{entry.email}</td>
+                    <td style={{ ...tdStyle, color: BAI.inkFaint, whiteSpace: 'nowrap' }}>{fmtDate(entry.createdAt)}</td>
                     <td style={tdStyle}>
                       {entry.isEarlyAccess ? (
-                        <span style={badge('#fdf5ec', '#92400e')}>Early</span>
+                        <span style={badge(BAI.caramelLight, BAI.warning)}>Early</span>
                       ) : (
-                        <span style={{ color: '#ccc9c3' }}>—</span>
+                        <span style={{ color: BAI.borderStrong }}>—</span>
                       )}
                     </td>
                     <td style={tdStyle}>
                       {entry.notifiedAt ? (
-                        <span style={badge('#edf7f2', '#1b5e3b')}>Oui</span>
+                        <span style={badge(BAI.tenantLight, BAI.tenant)}>Oui</span>
                       ) : (
-                        <span style={{ color: '#ccc9c3' }}>Non</span>
+                        <span style={{ color: BAI.borderStrong }}>Non</span>
                       )}
                     </td>
                     <td style={tdStyle}>
@@ -602,10 +760,11 @@ export default function WaitlistAdmin() {
                         disabled={deletingId === entry.id}
                         style={{
                           padding: '4px 10px',
-                          background: deleteConfirm === entry.id ? '#9b1c1c' : 'transparent',
-                          color: deleteConfirm === entry.id ? '#fff' : '#9b1c1c',
-                          border: `1px solid ${deleteConfirm === entry.id ? '#9b1c1c' : '#fca5a5'}`,
-                          borderRadius: 4,
+                          background: deleteConfirm === entry.id ? BAI.error : 'transparent',
+                          color: deleteConfirm === entry.id ? '#fff' : BAI.error,
+                          border: `1px solid ${deleteConfirm === entry.id ? BAI.error : '#fca5a5'}`,
+                          borderRadius: BAI.radiusSm,
+                          fontFamily: BAI.fontBody,
                           fontSize: 12,
                           cursor: 'pointer',
                           fontWeight: 500,
@@ -620,9 +779,10 @@ export default function WaitlistAdmin() {
                             marginLeft: 6,
                             padding: '4px 10px',
                             background: 'transparent',
-                            color: '#9e9b96',
-                            border: '1px solid #e4e1db',
-                            borderRadius: 4,
+                            color: BAI.inkFaint,
+                            border: `1px solid ${BAI.border}`,
+                            borderRadius: BAI.radiusSm,
+                            fontFamily: BAI.fontBody,
                             fontSize: 12,
                             cursor: 'pointer',
                           }}
@@ -637,10 +797,18 @@ export default function WaitlistAdmin() {
             </table>
           </div>
         ) : (
-          <p style={{ color: '#9e9b96' }}>Chargement...</p>
+          <p style={{ color: BAI.inkFaint, fontFamily: BAI.fontBody }}>Chargement...</p>
         )}
 
-        <p style={{ marginTop: 32, fontSize: 11, color: '#ccc9c3', textAlign: 'center' }}>
+        <p
+          style={{
+            marginTop: 32,
+            fontFamily: BAI.fontBody,
+            fontSize: 11,
+            color: BAI.borderStrong,
+            textAlign: 'center',
+          }}
+        >
           Bailio Admin — usage interne uniquement
         </p>
       </div>
@@ -671,11 +839,12 @@ function pagerBtn(disabled: boolean): React.CSSProperties {
   return {
     padding: '5px 12px',
     background: 'transparent',
-    border: '1px solid #e4e1db',
-    borderRadius: 5,
+    border: `1px solid ${BAI.border}`,
+    borderRadius: BAI.radiusSm,
     cursor: disabled ? 'not-allowed' : 'pointer',
     opacity: disabled ? 0.4 : 1,
     fontSize: 13,
-    color: '#5a5754',
+    color: BAI.inkMid,
+    fontFamily: BAI.fontBody,
   }
 }

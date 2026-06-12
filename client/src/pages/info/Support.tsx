@@ -45,19 +45,35 @@ export default function Support() {
       <div className="min-h-screen" style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}>
         {/* Hero */}
         <section
-          className="py-20 px-4 text-center"
-          style={{ background: BAI.night }}
+          style={{
+            background: '#0a0d1a',
+            padding: 'clamp(48px,7vw,80px) clamp(16px,4vw,48px) clamp(40px,6vw,60px)',
+            textAlign: 'center',
+          }}
         >
-          <div className="max-w-3xl mx-auto">
+          <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+            <p
+              style={{
+                fontFamily: BAI.fontBody,
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                color: BAI.caramel,
+                margin: '0 0 10px',
+              }}
+            >
+              Support
+            </p>
             <h1
               style={{
                 fontFamily: BAI.fontDisplay,
                 fontWeight: 700,
                 fontStyle: 'italic',
-                fontSize: '52px',
+                fontSize: 'clamp(32px,6vw,52px)',
                 color: '#ffffff',
-                lineHeight: 1.15,
-                marginBottom: '16px',
+                lineHeight: 1.1,
+                margin: '8px 0 12px',
               }}
             >
               Centre d'aide
@@ -65,9 +81,11 @@ export default function Support() {
             <p
               style={{
                 fontFamily: BAI.fontBody,
-                fontSize: '16px',
-                color: 'rgba(255,255,255,0.7)',
+                fontSize: '15px',
+                color: 'rgba(255,255,255,0.55)',
                 lineHeight: 1.6,
+                maxWidth: 520,
+                margin: '0 auto',
               }}
             >
               Besoin d'assistance ? Trouvez rapidement l'aide dont vous avez besoin.
@@ -91,14 +109,14 @@ export default function Support() {
                     borderRadius: '12px',
                     padding: '24px',
                     textDecoration: 'none',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                    boxShadow: BAI.shadowMd,
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)'
-                    e.currentTarget.style.borderColor = '#c8c4bc'
+                    e.currentTarget.style.boxShadow = BAI.shadowLg
+                    e.currentTarget.style.borderColor = BAI.borderStrong
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)'
+                    e.currentTarget.style.boxShadow = BAI.shadowMd
                     e.currentTarget.style.borderColor = BAI.border
                   }}
                 >
@@ -117,8 +135,8 @@ export default function Support() {
                     <h3
                       style={{
                         fontFamily: BAI.fontBody,
-                        fontWeight: 600,
-                        fontSize: '15px',
+                        fontWeight: 700,
+                        fontSize: '16px',
                         color: BAI.ink,
                         marginBottom: '4px',
                       }}

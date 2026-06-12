@@ -15,19 +15,35 @@ export default function Presse() {
       <div className="min-h-screen" style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}>
         {/* Hero */}
         <section
-          className="py-20 px-4 text-center"
-          style={{ background: BAI.night }}
+          style={{
+            background: '#0a0d1a',
+            padding: 'clamp(48px,7vw,80px) clamp(16px,4vw,48px) clamp(40px,6vw,60px)',
+            textAlign: 'center',
+          }}
         >
-          <div className="max-w-3xl mx-auto">
+          <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+            <p
+              style={{
+                fontFamily: BAI.fontBody,
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                color: BAI.caramel,
+                margin: '0 0 10px',
+              }}
+            >
+              Presse
+            </p>
             <h1
               style={{
                 fontFamily: BAI.fontDisplay,
                 fontWeight: 700,
                 fontStyle: 'italic',
-                fontSize: '52px',
+                fontSize: 'clamp(32px,6vw,52px)',
                 color: '#ffffff',
-                lineHeight: 1.15,
-                marginBottom: '16px',
+                lineHeight: 1.1,
+                margin: '8px 0 12px',
               }}
             >
               Espace presse
@@ -35,13 +51,64 @@ export default function Presse() {
             <p
               style={{
                 fontFamily: BAI.fontBody,
-                fontSize: '16px',
-                color: 'rgba(255,255,255,0.7)',
+                fontSize: '15px',
+                color: 'rgba(255,255,255,0.55)',
                 lineHeight: 1.6,
+                maxWidth: 520,
+                margin: '0 auto',
               }}
             >
               Retrouvez toutes les informations sur Bailio pour vos articles et reportages.
             </p>
+          </div>
+        </section>
+
+        {/* Stats — dark glass section */}
+        <section
+          style={{
+            background: BAI.night,
+            padding: 'clamp(32px,5vw,56px) clamp(16px,4vw,48px)',
+          }}
+        >
+          <div style={{ maxWidth: '860px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
+            {STATS.map((stat) => (
+              <div
+                key={stat.label}
+                style={{
+                  background: 'rgba(255,255,255,0.07)',
+                  backdropFilter: 'blur(20px) saturate(160%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: '12px',
+                  padding: 'clamp(20px,3vw,32px) 16px',
+                  textAlign: 'center',
+                  boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
+                }}
+              >
+                <p
+                  style={{
+                    fontFamily: BAI.fontDisplay,
+                    fontWeight: 700,
+                    fontSize: 'clamp(36px,5vw,52px)',
+                    color: '#ffffff',
+                    lineHeight: 1,
+                    marginBottom: '8px',
+                  }}
+                >
+                  {stat.value}
+                </p>
+                <p
+                  style={{
+                    fontFamily: BAI.fontBody,
+                    fontSize: '13px',
+                    color: 'rgba(255,255,255,0.55)',
+                    margin: 0,
+                  }}
+                >
+                  {stat.label}
+                </p>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -74,7 +141,7 @@ export default function Presse() {
                 fontSize: '15px',
                 color: BAI.inkMid,
                 lineHeight: 1.7,
-                marginBottom: '32px',
+                margin: 0,
               }}
             >
               Fondée en 2024, Bailio est la première plateforme française dédiée
@@ -83,43 +150,6 @@ export default function Presse() {
               une sécurité maximale.
             </p>
 
-            {/* Stats */}
-            <div className="grid md:grid-cols-3 gap-4">
-              {STATS.map((stat) => (
-                <div
-                  key={stat.label}
-                  className="text-center"
-                  style={{
-                    background: BAI.bgMuted,
-                    borderRadius: '10px',
-                    padding: '24px 16px',
-                  }}
-                >
-                  <p
-                    style={{
-                      fontFamily: BAI.fontDisplay,
-                      fontWeight: 700,
-                      fontSize: '48px',
-                      color: BAI.ink,
-                      lineHeight: 1,
-                      marginBottom: '8px',
-                    }}
-                  >
-                    {stat.value}
-                  </p>
-                  <p
-                    style={{
-                      fontFamily: BAI.fontBody,
-                      fontSize: '13px',
-                      color: BAI.inkMid,
-                      margin: 0,
-                    }}
-                  >
-                    {stat.label}
-                  </p>
-                </div>
-              ))}
-            </div>
           </div>
 
           {/* Press kit section */}

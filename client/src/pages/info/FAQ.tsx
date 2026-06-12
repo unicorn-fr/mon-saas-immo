@@ -3,20 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Plus, Minus } from 'lucide-react'
 import { Header } from '../../components/layout/Header'
 import Footer from '../../components/layout/Footer'
-
-const T = {
-  bgBase:    '#fafaf8',
-  bgSurface: '#ffffff',
-  bgMuted:   '#f4f2ee',
-  ink:       '#0d0c0a',
-  inkMid:    '#5a5754',
-  inkFaint:  '#9e9b96',
-  night:     '#1a1a2e',
-  caramel:   '#c4976a',
-  border:    '#e4e1db',
-  fontDisplay: "'Cormorant Garamond', Georgia, serif",
-  fontBody:    "'DM Sans', system-ui, sans-serif",
-} as const
+import { BAI } from '../../constants/bailio-tokens'
 
 interface FaqItem {
   q: string
@@ -97,15 +84,25 @@ const FAQ_SECTIONS: FaqSection[] = [
 function FaqItem({ item }: { item: FaqItem }) {
   const [open, setOpen] = useState(false)
   return (
-    <div style={{ borderBottom: `1px solid ${T.border}`, padding: '22px 0', cursor: 'pointer' }} onClick={() => setOpen(o => !o)}>
+    <div
+      style={{
+        borderBottom: `1px solid ${BAI.border}`,
+        padding: '22px 0',
+        cursor: 'pointer',
+        borderLeft: open ? `3px solid ${BAI.caramel}` : '3px solid transparent',
+        paddingLeft: open ? 16 : 0,
+        transition: 'border-color 0.15s, padding-left 0.15s',
+      }}
+      onClick={() => setOpen(o => !o)}
+    >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
-        <p style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 600, fontSize: 19, color: T.ink, margin: 0, lineHeight: 1.3, flex: 1 }}>{item.q}</p>
-        <div style={{ color: T.caramel, flexShrink: 0, transition: 'transform .2s' }}>
+        <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 600, fontSize: 19, color: BAI.ink, margin: 0, lineHeight: 1.3, flex: 1 }}>{item.q}</p>
+        <div style={{ color: BAI.caramel, flexShrink: 0, transition: 'transform .2s' }}>
           {open ? <Minus size={22} /> : <Plus size={22} />}
         </div>
       </div>
       {open && (
-        <p style={{ fontSize: 14, color: T.inkMid, lineHeight: 1.7, margin: '14px 0 0', textWrap: 'pretty' } as React.CSSProperties}>{item.a}</p>
+        <p style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.7, margin: '14px 0 0', textWrap: 'pretty' } as React.CSSProperties}>{item.a}</p>
       )}
     </div>
   )
@@ -113,32 +110,66 @@ function FaqItem({ item }: { item: FaqItem }) {
 
 export default function FAQ() {
   return (
-    <div style={{ backgroundColor: T.bgBase, fontFamily: T.fontBody, color: T.ink, minHeight: '100vh' }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=DM+Sans:wght@400;500;600;700&display=swap');`}</style>
-
+    <div style={{ backgroundColor: BAI.bgBase, fontFamily: BAI.fontBody, color: BAI.ink, minHeight: '100vh' }}>
       <Header />
 
-      {/* ── HERO ── */}
-      <section style={{ padding: 'clamp(64px,10vh,100px) 0 clamp(40px,6vh,60px)', textAlign: 'center' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
-          <p style={{ fontFamily: T.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.caramel, margin: '0 0 14px' }}>
-            Support
+      {/* Hero */}
+      <section
+        style={{
+          background: '#0a0d1a',
+          padding: 'clamp(48px,7vw,80px) clamp(16px,4vw,48px) clamp(40px,6vw,60px)',
+          textAlign: 'center',
+        }}
+      >
+        <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+          <p
+            style={{
+              fontFamily: BAI.fontBody,
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: BAI.caramel,
+              margin: '0 0 10px',
+            }}
+          >
+            Questions fréquentes
           </p>
-          <h1 style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(36px,5vw,60px)', margin: '0 auto 18px', lineHeight: 1.05, maxWidth: '18ch' }}>
-            Les réponses <em style={{ color: T.caramel }}>aux vraies questions.</em>
+          <h1
+            style={{
+              fontFamily: BAI.fontDisplay,
+              fontWeight: 700,
+              fontStyle: 'italic',
+              fontSize: 'clamp(32px,6vw,52px)',
+              color: '#ffffff',
+              lineHeight: 1.1,
+              margin: '8px 0 12px',
+            }}
+          >
+            Tout ce que vous{' '}
+            <em style={{ color: BAI.caramel }}>voulez savoir.</em>
           </h1>
-          <p style={{ fontSize: 16, color: T.inkMid, maxWidth: '52ch', margin: '0 auto' }}>
+          <p
+            style={{
+              fontFamily: BAI.fontBody,
+              fontSize: '15px',
+              color: 'rgba(255,255,255,0.55)',
+              lineHeight: 1.6,
+              maxWidth: 520,
+              margin: '0 auto',
+            }}
+          >
             Tu ne trouves pas ? Écris-nous, on répond en moins de 4 heures ouvrées.
           </p>
         </div>
       </section>
 
-      {/* ── FAQ ── */}
-      <section style={{ padding: '0 0 clamp(64px,10vh,100px)' }}>
+      {/* FAQ */}
+      <section style={{ padding: 'clamp(40px,6vh,60px) 0 clamp(64px,10vh,100px)' }}>
         <div style={{ maxWidth: 780, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
           {FAQ_SECTIONS.map(section => (
             <div key={section.category}>
-              <p style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 24, margin: '48px 0 0', color: T.ink }}>{section.category}</p>
+              <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 24, margin: '48px 0 0', color: BAI.ink }}>{section.category}</p>
               {section.items.map(item => (
                 <FaqItem key={item.q} item={item} />
               ))}
@@ -146,10 +177,10 @@ export default function FAQ() {
           ))}
 
           {/* Contact block */}
-          <div style={{ marginTop: 64, background: T.bgMuted, border: `1px solid ${T.border}`, borderRadius: 12, padding: 32, textAlign: 'center' }}>
-            <p style={{ fontFamily: T.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 24, margin: '0 0 8px', color: T.ink }}>Encore une question ?</p>
-            <p style={{ fontSize: 14, color: T.inkMid, margin: '0 0 20px' }}>L'équipe répond en moins de 4 heures ouvrées.</p>
-            <Link to="/contact" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '12px 24px', borderRadius: 8, fontFamily: T.fontBody, fontWeight: 600, fontSize: 14, background: T.night, color: '#fff', textDecoration: 'none' }}>
+          <div style={{ marginTop: 64, background: BAI.bgMuted, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: 32, textAlign: 'center' }}>
+            <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 24, margin: '0 0 8px', color: BAI.ink }}>Encore une question ?</p>
+            <p style={{ fontSize: 14, color: BAI.inkMid, margin: '0 0 20px' }}>L'équipe répond en moins de 4 heures ouvrées.</p>
+            <Link to="/contact" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '12px 24px', borderRadius: 8, fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 14, background: BAI.night, color: '#fff', textDecoration: 'none' }}>
               Nous contacter <ArrowRight size={15} />
             </Link>
           </div>

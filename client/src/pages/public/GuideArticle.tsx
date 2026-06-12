@@ -958,29 +958,37 @@ export default function GuideArticle() {
               Guide Bailio
             </Link>
 
-            {/* Tag + read time */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
+            {/* Tag + read time — glass style */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
               <span style={{
-                background: meta.tagColor.bg,
-                color: meta.tagColor.color,
-                border: `1px solid ${meta.tagColor.border}`,
-                borderRadius: 4,
+                background: 'rgba(255,255,255,0.12)',
+                backdropFilter: 'blur(20px) saturate(160%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                borderRadius: 8,
                 fontSize: 10,
                 fontWeight: 700,
                 letterSpacing: '0.10em',
-                padding: '3px 9px',
+                padding: '5px 12px',
                 fontFamily: BAI.fontBody,
+                color: '#ffffff',
               }}>
                 <Tag size={9} style={{ display: 'inline', marginRight: 4 }} />
                 {meta.tag}
               </span>
               <span style={{
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
                 gap: 5,
+                background: 'rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(20px) saturate(160%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                border: '1px solid rgba(255,255,255,0.13)',
+                borderRadius: 8,
+                padding: '5px 12px',
                 fontFamily: BAI.fontBody,
                 fontSize: 12,
-                color: 'rgba(255,255,255,0.6)',
+                color: 'rgba(255,255,255,0.8)',
               }}>
                 <Clock size={12} />
                 {meta.readTime} min de lecture
