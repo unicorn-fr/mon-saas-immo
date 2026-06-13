@@ -9,14 +9,11 @@ import { useSidebarStore } from '../../store/sidebarStore'
 import { useMessages } from '../../hooks/useMessages'
 import { useAuth } from '../../hooks/useAuth'
 import { applicationService } from '../../services/application.service'
-import { dossierService } from '../../services/dossier.service'
 import { BAI } from '../../constants/bailio-tokens'
 import { useWindowWidth } from '../../hooks/useWindowWidth'
 
 const SIDEBAR_BG = '#0a0d1a'
 const SIDEBAR_BORDER = 'rgba(255,255,255,0.07)'
-
-const REQUIRED_CATEGORIES = ['IDENTITE', 'EMPLOI', 'REVENUS', 'DOMICILE'] as const
 
 type SectionItem = {
   to: string
@@ -72,10 +69,10 @@ function NavItem({
           padding: compact ? '11px 0' : '7px 10px',
           margin: compact ? '2px 4px' : '1px 12px',
           borderRadius: BAI.radius,
-          color: active ? '#fff' : 'rgba(255,255,255,0.50)',
+          color: active ? '#fff' : 'rgba(255,255,255,0.70)',
           fontFamily: BAI.fontBody,
           fontSize: 13.5,
-          fontWeight: active ? 600 : 400,
+          fontWeight: active ? 600 : 450,
           transition: 'color 0.15s',
           cursor: 'pointer',
         }}
@@ -120,7 +117,6 @@ export function TenantSidebar() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [pendingAppsCount, setPendingAppsCount] = useState(0)
-  const [dossierPercent, setDossierPercent] = useState(0)
   const windowWidth = useWindowWidth()
   const isTabletCompact = windowWidth >= BAI.bpMd && windowWidth < BAI.bpLg
 
@@ -129,13 +125,6 @@ export function TenantSidebar() {
     applicationService.list()
       .then((apps) => setPendingAppsCount(apps.filter((a) => a.status === 'PENDING').length))
       .catch(() => {})
-    dossierService.getDocuments()
-      .then((docs) => {
-        const uploaded = new Set(docs.map((d) => d.category))
-        const covered = REQUIRED_CATEGORIES.filter((cat) => uploaded.has(cat)).length
-        setDossierPercent(Math.round((covered / REQUIRED_CATEGORIES.length) * 100))
-      })
-      .catch(() => {})
     const timer = setInterval(() => fetchUnreadCount(), 30_000)
     return () => clearInterval(timer)
   }, [fetchUnreadCount])
@@ -143,11 +132,6 @@ export function TenantSidebar() {
   const initials = `${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}`.toUpperCase() || '?'
   const closeMobile = () => setMobileOpen(false)
   const handleLogout = () => { logout(); navigate('/') }
-
-  const dossierBarColor =
-    dossierPercent >= 80 ? BAI.tenantBorder
-    : dossierPercent >= 50 ? BAI.caramel
-    : '#ef4444'
 
   const SECTIONS: { label: string | null; items: SectionItem[] }[] = [
     {
@@ -242,12 +226,14 @@ export function TenantSidebar() {
           <div key={si} style={{ marginBottom: 2 }}>
             {section.label && !compact && (
               <p style={{
-                fontSize: 9, fontWeight: 700,
-                letterSpacing: '0.13em', textTransform: 'uppercase',
-                color: 'rgba(255,255,255,0.20)',
-                padding: '12px 22px 4px',
+                fontSize: 10, fontWeight: 700,
+                letterSpacing: '0.11em', textTransform: 'uppercase',
+                color: 'rgba(255,255,255,0.48)',
+                padding: '14px 22px 5px',
                 margin: 0,
+                display: 'flex', alignItems: 'center', gap: 6,
               }}>
+                <span style={{ width: 3, height: 3, borderRadius: '50%', background: BAI.tenant, flexShrink: 0, display: 'inline-block' }} />
                 {section.label}
               </p>
             )}
@@ -276,39 +262,6 @@ export function TenantSidebar() {
           id="tour-tenant-settings"
         />
       </nav>
-
-      {/* Dossier progress bar */}
-      {!compact && dossierPercent < 100 && (
-        <Link
-          to="/dossier"
-          onClick={closeMobile}
-          style={{
-            display: 'block', margin: '0 10px 8px',
-            padding: '10px 12px', borderRadius: 10,
-            background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            textDecoration: 'none',
-            transition: 'background 0.15s',
-          }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)' }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)' }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 9, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase' }}>
-              Dossier complété
-            </span>
-            <span style={{ color: dossierBarColor, fontSize: 11, fontWeight: 700 }}>{dossierPercent}%</span>
-          </div>
-          <div style={{ width: '100%', height: 3, borderRadius: 4, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${dossierPercent}%` }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
-              style={{ height: '100%', borderRadius: 4, background: dossierBarColor }}
-            />
-          </div>
-        </Link>
-      )}
 
       {/* User card */}
       <div style={{ borderTop: `1px solid ${SIDEBAR_BORDER}`, padding: compact ? '10px 6px' : '10px', flexShrink: 0 }}>

@@ -71,10 +71,10 @@ function NavItem({
           padding: compact ? '11px 0' : '8px 13px',
           margin: compact ? '2px 4px' : '1px 8px',
           borderRadius: BAI.radius,
-          color: active ? '#fff' : 'rgba(255,255,255,0.50)',
+          color: active ? '#fff' : 'rgba(255,255,255,0.70)',
           fontFamily: BAI.fontBody,
           fontSize: 13.5,
-          fontWeight: active ? 600 : 400,
+          fontWeight: active ? 600 : 450,
           transition: 'color 0.15s',
           cursor: 'pointer',
         }}
@@ -266,12 +266,14 @@ export function OwnerSidebar() {
           <div key={si} style={{ marginBottom: 2 }}>
             {section.label && !compact && (
               <p style={{
-                fontSize: 9, fontWeight: 700,
-                letterSpacing: '0.13em', textTransform: 'uppercase',
-                color: 'rgba(255,255,255,0.20)',
-                padding: '12px 21px 4px',
+                fontSize: 10, fontWeight: 700,
+                letterSpacing: '0.11em', textTransform: 'uppercase',
+                color: 'rgba(255,255,255,0.48)',
+                padding: '14px 21px 5px',
                 margin: 0,
+                display: 'flex', alignItems: 'center', gap: 6,
               }}>
+                <span style={{ width: 3, height: 3, borderRadius: '50%', background: BAI.caramel, flexShrink: 0, display: 'inline-block' }} />
                 {section.label}
               </p>
             )}

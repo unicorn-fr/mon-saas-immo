@@ -22,6 +22,10 @@ export interface User {
   profileMeta: Record<string, Record<string, unknown>> | null
   // Owner personal address (used on rent receipts)
   address: string | null
+  // City (tenant: current residence / owner: property city)
+  city: string | null
+  // Onboarding wizard completion flag
+  onboardingCompleted: boolean
   // Bank details (shared between tenant ↔ owner)
   iban: string | null
   bic: string | null

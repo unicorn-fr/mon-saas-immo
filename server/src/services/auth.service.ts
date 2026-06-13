@@ -735,6 +735,8 @@ class AuthService {
       profileMeta?: Record<string, unknown>
       // Bank details
       iban?: string; bic?: string; bankName?: string; bankHolder?: string
+      // Location & onboarding
+      city?: string; onboardingCompleted?: boolean
     }
   ) {
     // profileMeta: deep-merge existing JSON with incoming data
@@ -767,6 +769,8 @@ class AuthService {
         ...(data.bic        !== undefined && { bic:        data.bic        || null }),
         ...(data.bankName   !== undefined && { bankName:   data.bankName   || null }),
         ...(data.bankHolder !== undefined && { bankHolder: data.bankHolder || null }),
+        ...(data.city                !== undefined && { city:                data.city                || null }),
+        ...(data.onboardingCompleted !== undefined && { onboardingCompleted: data.onboardingCompleted }),
       },
       select: {
         id: true, email: true, firstName: true, lastName: true,
@@ -776,6 +780,7 @@ class AuthService {
         nationalNumber: true, documentNumber: true, documentExpiry: true,
         profileMeta: true,
         iban: true, bic: true, bankName: true, bankHolder: true,
+        city: true, onboardingCompleted: true,
         createdAt: true, updatedAt: true,
       },
     })
@@ -798,6 +803,7 @@ class AuthService {
         profileMeta: true,
         stripeIdentityStatus: true,
         isBanned: true,
+        city: true, onboardingCompleted: true,
         createdAt: true, updatedAt: true,
       },
     })

@@ -15,6 +15,7 @@ interface AuthActions {
   logout: () => Promise<void>
   updateProfile: (data: {
     firstName?: string; lastName?: string; phone?: string; bio?: string; address?: string; role?: string
+    city?: string; onboardingCompleted?: boolean
     birthDate?: string; birthCity?: string; nationality?: string
     nationalNumber?: string; documentNumber?: string; documentExpiry?: string
     profileMeta?: Record<string, Record<string, unknown>>

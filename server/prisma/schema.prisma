@@ -97,6 +97,8 @@ model User {
   avatar            String?
   bio               String?   @db.Text
   address           String?   // Adresse personnelle du bailleur (obligatoire art. 21 loi 89-462)
+  city              String?   // Ville de résidence actuelle (locataire) ou du bien (propriétaire)
+  onboardingCompleted Boolean @default(false) // Wizard first-login complété
 
   // Profil emploi/revenus locataire (minimum légal avant signature de bail)
   monthlyIncome     Float?    // Revenus mensuels nets déclarés

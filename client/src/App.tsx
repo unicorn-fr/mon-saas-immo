@@ -114,6 +114,9 @@ import Pricing from './pages/Pricing'
 import { InstallPWA } from './components/pwa/InstallPWA'
 import { UpdatePWA } from './components/pwa/UpdatePWA'
 
+// Onboarding
+import { OnboardingWizard } from './components/onboarding/OnboardingWizard'
+
 // Create a client for React Query
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -190,6 +193,10 @@ function AppRoutes() {
   return (
     <>
     <ScrollToTop />
+    {/* Onboarding wizard — full-screen overlay for new users */}
+    {isAuthenticated && user && user.onboardingCompleted === false && (
+      <OnboardingWizard />
+    )}
     <ErrorBoundary>
     <Routes>
       {/* Public Routes */}

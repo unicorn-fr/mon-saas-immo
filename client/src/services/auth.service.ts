@@ -132,6 +132,8 @@ class AuthService {
     phone?: string
     bio?: string
     address?: string
+    city?: string
+    onboardingCompleted?: boolean
     // Identity document fields
     birthDate?: string
     birthCity?: string

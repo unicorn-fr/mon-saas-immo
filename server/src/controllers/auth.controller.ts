@@ -389,6 +389,7 @@ class AuthController {
         birthDate, birthCity, nationality, nationalNumber, documentNumber, documentExpiry,
         profileMeta,
         iban, bic, bankName, bankHolder,
+        city, onboardingCompleted,
       } = req.body
 
       const user = await authService.updateProfile(userId, {
@@ -412,6 +413,9 @@ class AuthController {
         bic:        bic        !== undefined ? bic.replace(/\s+/g, '').toUpperCase()        : undefined,
         bankName:   bankName   !== undefined ? sanitizeInput(bankName)                      : undefined,
         bankHolder: bankHolder !== undefined ? sanitizeInput(bankHolder)                    : undefined,
+        // New fields
+        city:                 city                 !== undefined ? sanitizeInput(city)        : undefined,
+        onboardingCompleted:  onboardingCompleted  !== undefined ? Boolean(onboardingCompleted) : undefined,
       })
 
       return res.status(200).json({
