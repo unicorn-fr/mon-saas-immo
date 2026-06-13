@@ -1257,57 +1257,107 @@ export default function DossierLocatif() {
 
   // ── OVERVIEW MODE ──────────────────────────────────────────────────────────
   if (showOverview) {
+    // Strength badge based on pct
+    const strengthLabel = pct >= 90 ? 'Excellent' : pct >= 70 ? 'Solide' : pct >= 40 ? 'En cours' : 'Incomplet'
+    const strengthColor = pct >= 90 ? '#4ade80' : pct >= 70 ? BAI.caramel : pct >= 40 ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.4)'
+
     return (
       <Layout>
-        <div style={{ minHeight: '100vh', background: BAI.bgBase, padding: '32px 0 64px', fontFamily: BAI.fontBody }}>
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* ── Hero sombre ── */}
+        <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)' }}>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
+            LOCATAIRE
+          </p>
+          <div className="flex items-end justify-between gap-4 flex-wrap" style={{ margin: '6px 0 8px' }}>
+            <h1 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(28px,5vw,42px)', fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1.1 }}>
+              Mon Dossier Locatif
+            </h1>
+            <button
+              onClick={() => goToStep(0)}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '9px 18px', borderRadius: 9, flexShrink: 0,
+                background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.18)',
+                color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+              }}
+            >
+              Reprendre le guide
+            </button>
+          </div>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.55)', margin: 0 }}>
+            Complétez votre dossier pour accéder aux meilleures offres
+          </p>
 
-            {/* Header */}
-            <div style={{ marginBottom: 32, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-              <div>
-                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.tenant, margin: '0 0 6px' }}>
-                  Locataire
-                </p>
-                <h1 style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontStyle: 'italic', fontSize: 'clamp(30px,5vw,42px)', color: BAI.ink, margin: '0 0 6px', lineHeight: 1.1 }}>
-                  Mon Dossier Locatif
-                </h1>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-                  <p style={{ fontSize: 13, color: BAI.inkFaint, margin: 0 }}>
-                    {pct}% complété
-                  </p>
-                  {pct >= 100 && (
-                    <span style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 5,
-                      fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
-                      background: BAI.tenantLight, color: BAI.tenant, border: `1px solid ${BAI.tenantBorder}`,
-                    }}>
-                      <CheckCircle2 style={{ width: 11, height: 11 }} />
-                      Dossier complet
-                    </span>
-                  )}
-                </div>
-              </div>
-              <button
-                onClick={() => goToStep(0)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  padding: '9px 18px', borderRadius: 9,
-                  border: `1px solid ${BAI.border}`, background: BAI.bgSurface,
-                  color: BAI.inkMid, fontSize: 13, fontWeight: 500, cursor: 'pointer',
-                }}
-              >
-                Reprendre le guide
-              </button>
+          {/* KPI glass cards */}
+          <div className="flex flex-wrap gap-3" style={{ marginTop: 28 }}>
+            {/* Complétude */}
+            <div style={{
+              background: 'rgba(255,255,255,0.08)',
+              backdropFilter: 'blur(20px) saturate(160%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+              border: '1px solid rgba(255,255,255,0.13)',
+              borderRadius: 16,
+              padding: '16px 24px',
+              minWidth: 130,
+            }}>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>
+                COMPLÉTÉ
+              </p>
+              <p style={{ fontFamily: BAI.fontDisplay, fontSize: 36, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1 }}>
+                {loadingDocs ? '—' : `${pct}%`}
+              </p>
             </div>
 
-            {/* Progress bar */}
-            {!loadingDocs && (
-              <div style={{ marginBottom: 28 }}>
-                <div style={{ height: 5, borderRadius: 99, background: BAI.border }}>
-                  <div style={{ height: '100%', borderRadius: 99, background: BAI.tenant, width: `${pct}%`, transition: 'width 0.4s ease' }} />
-                </div>
+            {/* Strength badge */}
+            <div style={{
+              background: 'rgba(255,255,255,0.08)',
+              backdropFilter: 'blur(20px) saturate(160%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+              border: '1px solid rgba(255,255,255,0.13)',
+              borderRadius: 16,
+              padding: '16px 24px',
+              minWidth: 130,
+            }}>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>
+                FORCE DU DOSSIER
+              </p>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 16, fontWeight: 700, color: strengthColor, margin: '4px 0 0' }}>
+                {loadingDocs ? '…' : strengthLabel}
+              </p>
+            </div>
+
+            {/* Documents */}
+            <div style={{
+              background: 'rgba(255,255,255,0.08)',
+              backdropFilter: 'blur(20px) saturate(160%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+              border: '1px solid rgba(255,255,255,0.13)',
+              borderRadius: 16,
+              padding: '16px 24px',
+              minWidth: 130,
+            }}>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>
+                DOCUMENTS
+              </p>
+              <p style={{ fontFamily: BAI.fontDisplay, fontSize: 36, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1 }}>
+                {loadingDocs ? '—' : documents.length}
+              </p>
+            </div>
+          </div>
+
+          {/* Progress bar in hero */}
+          {!loadingDocs && (
+            <div style={{ marginTop: 24, maxWidth: 400 }}>
+              <div style={{ height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.12)' }}>
+                <div style={{ height: '100%', borderRadius: 99, background: BAI.caramel, width: `${pct}%`, transition: 'width 0.4s ease' }} />
               </div>
-            )}
+            </div>
+          )}
+        </div>
+
+        <div style={{ minHeight: '60vh', background: BAI.bgBase, padding: 'clamp(24px,4vw,40px) 0 64px', fontFamily: BAI.fontBody }}>
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
             {/* Dossier Resume Card */}
             {(() => {
@@ -1505,32 +1555,47 @@ export default function DossierLocatif() {
 
   return (
     <Layout>
-      <div style={{ minHeight: '100vh', background: BAI.bgBase, padding: '32px 0 64px', fontFamily: BAI.fontBody }}>
-        <div className="max-w-3xl mx-auto px-4 sm:px-6">
+      {/* ── Hero sombre (stepper mode) ── */}
+      <div style={{ background: '#0a0d1a', padding: 'clamp(32px,5vw,56px) clamp(16px,4vw,48px) clamp(24px,4vw,40px)' }}>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
+          LOCATAIRE
+        </p>
+        <div className="flex items-center justify-between gap-4 flex-wrap" style={{ margin: '6px 0 0' }}>
+          <h1 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(24px,4vw,36px)', fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1.1 }}>
+            Mon Dossier Locatif
+          </h1>
+          <button
+            onClick={() => goToStep(TOTAL_STEPS)}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '8px 16px', borderRadius: 8, flexShrink: 0,
+              background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.16)',
+              color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: 500, cursor: 'pointer',
+            }}
+          >
+            <LayoutGrid style={{ width: 13, height: 13 }} />
+            Voir tout
+          </button>
+        </div>
 
-          {/* Page header */}
-          <div style={{ marginBottom: 28 }}>
-            <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.tenant, margin: '0 0 6px' }}>
-              Locataire
-            </p>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-              <h1 style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontStyle: 'italic', fontSize: 'clamp(28px,5vw,40px)', color: BAI.ink, margin: 0, lineHeight: 1.1 }}>
-                Mon Dossier Locatif
-              </h1>
-              <button
-                onClick={() => goToStep(TOTAL_STEPS)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  padding: '8px 14px', borderRadius: 8,
-                  border: `1px solid ${BAI.border}`, background: BAI.bgSurface,
-                  color: BAI.inkMid, fontSize: 12, fontWeight: 500, cursor: 'pointer',
-                }}
-              >
-                <LayoutGrid style={{ width: 13, height: 13 }} />
-                Voir tout
-              </button>
-            </div>
+        {/* Progress bar in hero */}
+        <div style={{ marginTop: 20, maxWidth: 360 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+            <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>
+              Étape {currentStep + 1} sur {TOTAL_STEPS}
+            </span>
+            <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.caramel, fontWeight: 600 }}>
+              {STEPS[currentStep]?.label ?? 'Récapitulatif'}
+            </span>
           </div>
+          <div style={{ height: 3, borderRadius: 99, background: 'rgba(255,255,255,0.12)' }}>
+            <div style={{ height: '100%', borderRadius: 99, background: BAI.caramel, width: `${Math.round((currentStep / TOTAL_STEPS) * 100)}%`, transition: 'width 0.4s ease' }} />
+          </div>
+        </div>
+      </div>
+
+      <div style={{ minHeight: '60vh', background: BAI.bgBase, padding: 'clamp(24px,4vw,40px) 0 64px', fontFamily: BAI.fontBody }}>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6">
 
           {/* Stepper header */}
           <StepperHeader current={currentStep} />

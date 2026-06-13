@@ -75,21 +75,53 @@ export default function Abonnement() {
 
   return (
     <Layout>
-      <div style={{ minHeight: '100vh', background: BAI.bgBase, padding: '40px 0 80px', fontFamily: BAI.fontBody }}>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+      <div>
 
-          {/* ── Header ── */}
-          <div style={{ marginBottom: 40 }}>
-            <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 8px' }}>
-              Mon abonnement
-            </p>
-            <h1 style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontStyle: 'italic', fontSize: 'clamp(28px,5vw,40px)', color: BAI.ink, margin: '0 0 8px', lineHeight: 1.1 }}>
-              Gérez votre plan Bailio
-            </h1>
-            <p style={{ fontSize: 14, color: BAI.inkMid, margin: 0 }}>
-              Passez au Pro à tout moment, sans engagement.
-            </p>
+        {/* ── DARK HERO ── */}
+        <div style={{
+          background: '#0a0d1a',
+          padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)',
+        }}>
+          <p style={{
+            fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700,
+            letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0,
+          }}>COMPTE</p>
+          <h1 style={{
+            fontFamily: BAI.fontDisplay, fontSize: 'clamp(28px,5vw,42px)',
+            fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: '6px 0 8px', lineHeight: 1.1,
+          }}>Mon Abonnement</h1>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.55)', margin: 0 }}>
+            Passez au Pro à tout moment, sans engagement.
+          </p>
+          <div className="flex flex-wrap gap-3" style={{ marginTop: 28 }}>
+            {/* Plan actuel en glass proéminent */}
+            <div style={{
+              background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+              border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '20px 28px',
+            }}>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>PLAN ACTUEL</p>
+              <p style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(32px,5vw,48px)', fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1 }}>
+                {currentPlan.name}
+              </p>
+            </div>
+            <div style={{
+              background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+              border: `1px solid ${status === 'ACTIVE' ? 'rgba(155,212,186,0.4)' : 'rgba(255,255,255,0.13)'}`,
+              borderRadius: 16, padding: '20px 24px', minWidth: 130,
+            }}>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>STATUT</p>
+              <p style={{ fontFamily: BAI.fontDisplay, fontSize: 28, fontWeight: 700, fontStyle: 'italic', color: status === 'ACTIVE' ? '#9fd4ba' : 'rgba(255,255,255,0.6)', margin: 0, lineHeight: 1 }}>
+                {status === 'ACTIVE' ? 'Actif' : status === 'TRIALING' ? 'Essai' : 'Gratuit'}
+              </p>
+            </div>
           </div>
+        </div>
+
+        {/* ── CONTENU LIGHT ── */}
+        <div style={{ background: BAI.bgBase, padding: '40px 0 80px', fontFamily: BAI.fontBody }}>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
 
           {/* ── Plan actuel ── */}
           <div style={{
@@ -394,8 +426,9 @@ export default function Abonnement() {
             </div>
           </div>
 
-        </div>
-      </div>
+        </div>{/* end inner max-w */}
+        </div>{/* end contenu light */}
+      </div>{/* end root */}
     </Layout>
   )
 }

@@ -10,7 +10,7 @@ import { Layout } from '../../components/layout/Layout'
 import { BAI } from '../../constants/bailio-tokens'
 import {
   FolderOpen, SendHorizonal, Calendar, FileText, CreditCard,
-  ChevronRight, CheckCircle, Clock, ArrowUpRight, MapPin,
+  ChevronRight, CheckCircle, Clock, ArrowUpRight, MapPin, Home,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -161,6 +161,7 @@ export default function TenantDashboard() {
 
   const pendingApps    = applications.filter((a) => a.status === 'PENDING')
   const activeContracts = contracts.filter((c) => c.status === 'ACTIVE')
+  const activeContract = activeContracts[0] ?? null
 
   const steps: StepProps[] = [
     {
@@ -259,24 +260,24 @@ export default function TenantDashboard() {
             </p>
           </motion.div>
 
-          {/* Stats row */}
+          {/* Stats row — 4 glass KPIs */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 32 }}>
             {[
+              {
+                label: activeContract ? 'Logement actuel' : 'En recherche',
+                value: activeContract ? '1' : '0',
+                icon: <Home size={16} />,
+                bg: activeContract ? 'rgba(27,94,59,0.35)' : 'rgba(255,255,255,0.06)',
+                color: activeContract ? '#5fcf96' : 'rgba(255,255,255,0.45)',
+                delay: 0.05,
+              },
               {
                 label: 'candidature' + (pendingApps.length > 1 ? 's' : '') + ' en attente',
                 value: pendingApps.length,
                 icon: <SendHorizonal size={16} />,
                 bg: 'rgba(196,151,106,0.18)',
                 color: BAI.caramel,
-                delay: 0.08,
-              },
-              {
-                label: 'visite' + (upcomingVisits.length > 1 ? 's' : '') + ' à venir',
-                value: upcomingVisits.length,
-                icon: <Calendar size={16} />,
-                bg: 'rgba(26,50,112,0.4)',
-                color: '#7aa4f0',
-                delay: 0.14,
+                delay: 0.11,
               },
               {
                 label: 'dossier complété',
@@ -284,15 +285,15 @@ export default function TenantDashboard() {
                 icon: <FolderOpen size={16} />,
                 bg: pct >= 80 ? 'rgba(27,94,59,0.35)' : 'rgba(196,151,106,0.18)',
                 color: pct >= 80 ? '#5fcf96' : BAI.caramel,
-                delay: 0.20,
+                delay: 0.17,
               },
               {
-                label: 'contrat' + (activeContracts.length > 1 ? 's' : '') + ' actif' + (activeContracts.length > 1 ? 's' : ''),
-                value: activeContracts.length,
-                icon: <FileText size={16} />,
-                bg: 'rgba(27,94,59,0.35)',
-                color: '#5fcf96',
-                delay: 0.26,
+                label: 'visite' + (upcomingVisits.length !== 1 ? 's' : '') + ' à venir',
+                value: upcomingVisits.length,
+                icon: <Calendar size={16} />,
+                bg: 'rgba(26,50,112,0.40)',
+                color: '#7aa4f0',
+                delay: 0.23,
               },
             ].map((s) => (
               <motion.div
@@ -379,37 +380,150 @@ export default function TenantDashboard() {
           </motion.div>
         )}
 
-        {/* ── Recherche rapide ─────────────────────────────────────────── */}
-        <motion.div
-          role="button"
-          tabIndex={0}
-          onClick={() => navigate('/search')}
-          onKeyDown={(e: React.KeyboardEvent) => e.key === 'Enter' && navigate('/search')}
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15, duration: 0.22 }}
-          whileHover={{ scale: 1.005, boxShadow: '0 4px 20px rgba(13,12,10,0.08)' }}
-          whileTap={{ scale: 0.99 }}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 12,
-            background: BAI.bgSurface, border: `1px solid ${BAI.border}`,
-            borderRadius: BAI.radiusLg, padding: '0 20px',
-            height: 52, cursor: 'pointer', marginBottom: 28,
-            boxShadow: BAI.shadowSm,
-          }}
-        >
-          <MapPin size={16} color={BAI.caramel} />
-          <span style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint, flex: 1 }}>
-            Rechercher un logement…
-          </span>
-          <div style={{
-            padding: '5px 12px', borderRadius: 6,
-            background: BAI.night, color: '#fff',
-            fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600,
-          }}>
-            Rechercher
-          </div>
-        </motion.div>
+        {/* ── Mon logement actuel (si locataire actif) ─────────────────── */}
+        {activeContract && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.12, duration: 0.24 }}
+            style={{
+              background: '#0a0d1a',
+              borderRadius: BAI.radiusLg,
+              padding: 'clamp(20px,3vw,28px)',
+              marginBottom: 28,
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Glow */}
+            <div style={{
+              position: 'absolute', top: -40, right: -20, width: 200, height: 200,
+              borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(27,94,59,0.25) 0%, transparent 70%)',
+              pointerEvents: 'none',
+            }} />
+
+            <div style={{ position: 'relative' }}>
+              <p style={{
+                fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700,
+                letterSpacing: '0.12em', textTransform: 'uppercase',
+                color: '#5fcf96', marginBottom: 12,
+              }}>
+                Mon logement actuel
+              </p>
+
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+                <div>
+                  <h2 style={{
+                    fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+                    fontSize: 'clamp(22px,4vw,32px)', color: '#fff',
+                    margin: 0, marginBottom: 6, lineHeight: 1.1,
+                  }}>
+                    {activeContract.property?.title ?? 'Mon logement'}
+                  </h2>
+                  {activeContract.property?.city && (
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.55)', margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <MapPin size={12} />
+                      {activeContract.property.city}
+                      {activeContract.property.postalCode ? `, ${activeContract.property.postalCode}` : ''}
+                    </p>
+                  )}
+                </div>
+
+                <div style={{
+                  background: 'rgba(255,255,255,0.07)',
+                  backdropFilter: 'blur(16px) saturate(150%)',
+                  WebkitBackdropFilter: 'blur(16px) saturate(150%)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: BAI.radiusLg,
+                  padding: '14px 20px',
+                  textAlign: 'right',
+                }}>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 4px' }}>
+                    Loyer mensuel
+                  </p>
+                  <p style={{
+                    fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+                    fontSize: 'clamp(22px,3vw,28px)', color: BAI.caramel, margin: 0, lineHeight: 1,
+                  }}>
+                    {activeContract.monthlyRent
+                      ? `${Number(activeContract.monthlyRent).toLocaleString('fr-FR')} €`
+                      : '—'
+                    }
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ marginTop: 20, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <Link
+                  to="/contracts"
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600,
+                    color: '#fff',
+                    background: 'rgba(255,255,255,0.10)',
+                    backdropFilter: 'blur(12px)',
+                    WebkitBackdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    padding: '9px 18px', borderRadius: 8, textDecoration: 'none',
+                    minHeight: 44,
+                  }}
+                >
+                  <FileText size={14} />
+                  Voir mon contrat
+                </Link>
+                <Link
+                  to="/messages"
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600,
+                    color: 'rgba(255,255,255,0.70)',
+                    background: 'transparent',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    padding: '9px 18px', borderRadius: 8, textDecoration: 'none',
+                    minHeight: 44,
+                  }}
+                >
+                  Contacter le propriétaire
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── Recherche rapide (si pas de contrat actif) ───────────────── */}
+        {!activeContract && (
+          <motion.div
+            role="button"
+            tabIndex={0}
+            onClick={() => navigate('/search')}
+            onKeyDown={(e: React.KeyboardEvent) => e.key === 'Enter' && navigate('/search')}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15, duration: 0.22 }}
+            whileHover={{ scale: 1.005, boxShadow: '0 4px 20px rgba(13,12,10,0.08)' }}
+            whileTap={{ scale: 0.99 }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              background: BAI.bgSurface, border: `1px solid ${BAI.border}`,
+              borderRadius: BAI.radiusLg, padding: '0 20px',
+              height: 52, cursor: 'pointer', marginBottom: 28,
+              boxShadow: BAI.shadowSm,
+            }}
+          >
+            <MapPin size={16} color={BAI.caramel} />
+            <span style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint, flex: 1 }}>
+              Rechercher un logement…
+            </span>
+            <div style={{
+              padding: '5px 12px', borderRadius: 6,
+              background: BAI.night, color: '#fff',
+              fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600,
+            }}>
+              Rechercher
+            </div>
+          </motion.div>
+        )}
 
         {/* ── Pipeline progression ─────────────────────────────────────── */}
         <motion.div
@@ -463,7 +577,7 @@ export default function TenantDashboard() {
           </div>
         </motion.div>
 
-        {/* ── Grille candidatures + visites ────────────────────────────── */}
+        {/* ── Grille candidatures + visites + dossier ──────────────────── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
 
           {/* Candidatures récentes */}
@@ -562,7 +676,7 @@ export default function TenantDashboard() {
                     <Calendar size={13} color={BAI.owner} />
                   </div>
                   <span style={{ fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 700, color: BAI.ink }}>
-                    Visites à venir
+                    Prochaine visite
                   </span>
                 </div>
                 <Link to="/my-bookings" style={{

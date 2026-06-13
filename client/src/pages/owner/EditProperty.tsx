@@ -256,67 +256,40 @@ export default function EditProperty() {
 
   return (
     <Layout>
-      <div className="min-h-screen px-4 sm:px-6 lg:px-8 py-6 lg:py-8" style={{ background: BAI.bgBase, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-        <div className="max-w-4xl mx-auto">
+      <div>
 
-          {/* ── Back link + Header ── */}
-          <div className="mb-8">
-            <Link
-              to="/properties/owner/me"
-              className="inline-flex items-center gap-1.5 mb-4 transition-colors"
-              style={{
-                fontFamily: "'DM Sans', system-ui, sans-serif",
-                fontSize: 13,
-                fontWeight: 500,
-                color: BAI.owner,
-                textDecoration: 'none',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#142860')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = BAI.owner)}
-            >
-              <ArrowLeft style={{ width: 15, height: 15 }} />
-              Retour à mes propriétés
-            </Link>
+        {/* ── DARK HERO ── */}
+        <div style={{
+          background: '#0a0d1a',
+          padding: 'clamp(32px,5vw,56px) clamp(16px,4vw,48px) clamp(24px,4vw,40px)',
+        }}>
+          <Link
+            to="/properties/owner/me"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 20,
+              fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 500,
+              color: 'rgba(255,255,255,0.55)', textDecoration: 'none',
+            }}
+          >
+            <ArrowLeft style={{ width: 15, height: 15 }} />
+            Retour à mes propriétés
+          </Link>
+          <p style={{
+            fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700,
+            letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0,
+          }}>GESTION</p>
+          <h1 style={{
+            fontFamily: BAI.fontDisplay, fontSize: 'clamp(28px,5vw,42px)',
+            fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: '6px 0 6px', lineHeight: 1.1,
+          }}>Modifier le bien</h1>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.55)', margin: 0 }}>
+            {currentProperty.title}
+          </p>
+        </div>
 
-            {/* Overline */}
-            <p
-              style={{
-                fontFamily: "'DM Sans', system-ui, sans-serif",
-                fontSize: 10,
-                fontWeight: 500,
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
-                color: BAI.inkFaint,
-                marginBottom: 6,
-              }}
-            >
-              Propriétaire — Modifier
-            </p>
-            {/* Title */}
-            <h1
-              style={{
-                fontFamily: "'Cormorant Garamond', Georgia, serif",
-                fontSize: 40,
-                fontWeight: 700,
-                fontStyle: 'italic',
-                color: BAI.ink,
-                lineHeight: 1.1,
-                marginBottom: 6,
-              }}
-            >
-              Modifier le bien
-            </h1>
-            {/* Subtitle */}
-            <p
-              style={{
-                fontFamily: "'DM Sans', system-ui, sans-serif",
-                fontSize: 14,
-                color: BAI.inkMid,
-              }}
-            >
-              {currentProperty.title}
-            </p>
-          </div>
+        {/* ── CONTENU LIGHT ── */}
+        <div style={{ background: BAI.bgBase, minHeight: '70vh', padding: 'clamp(24px,4vw,40px) clamp(16px,4vw,48px)' }}>
+        <div className="max-w-4xl mx-auto" style={{ fontFamily: BAI.fontBody }}>
 
           <form onSubmit={handleSubmit}>
             {/* Error */}
@@ -326,7 +299,7 @@ export default function EditProperty() {
                 style={{ background: BAI.errorLight, border: `1px solid ${BAI.error}44`, borderRadius: 12 }}
               >
                 <AlertCircle style={{ width: 18, height: 18, color: BAI.error, flexShrink: 0, marginTop: 2 }} />
-                <p style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 13, color: BAI.error }}>{displayError}</p>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.error }}>{displayError}</p>
               </div>
             )}
 
@@ -722,8 +695,9 @@ export default function EditProperty() {
               </button>
             </div>
           </form>
-        </div>
-      </div>
+        </div>{/* end inner max-w */}
+        </div>{/* end contenu light */}
+      </div>{/* end root */}
     </Layout>
   )
 }

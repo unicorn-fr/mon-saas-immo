@@ -671,78 +671,92 @@ export default function CreatePropertyWizard() {
 
   return (
     <Layout>
-      <div style={{ background: BAI.bgBase, minHeight: '100vh', paddingBottom: 80 }}>
-        <div style={{ maxWidth: 700, margin: '0 auto', padding: '0 1rem' }}>
+      <div>
 
-          {/* Page header */}
-          <div style={{ paddingTop: 40, paddingBottom: 28, textAlign: 'center' }}>
+        {/* ── DARK HERO — titre + step indicator ── */}
+        <div style={{
+          background: '#0a0d1a',
+          padding: 'clamp(32px,5vw,52px) clamp(16px,4vw,48px) 0',
+        }}>
+          <div style={{ maxWidth: 700, margin: '0 auto' }}>
             <p style={{
-              fontFamily: 'DM Sans', fontSize: 11, fontWeight: 700,
-              letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, marginBottom: 8,
-            }}>Publier un bien</p>
+              fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700,
+              letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0,
+            }}>PUBLIER UN BIEN</p>
             <h1 style={{
-              fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 'clamp(24px, 6vw, 36px)',
-              fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: 0,
+              fontFamily: BAI.fontDisplay, fontSize: 'clamp(24px,5vw,36px)',
+              fontWeight: 700, fontStyle: 'italic', color: '#ffffff',
+              margin: '6px 0 24px', lineHeight: 1.1,
             }}>{STEPS[step].title}</h1>
-          </div>
 
-          {/* Progress stepper */}
-          <div style={{ marginBottom: 32 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              {STEPS.map((_s, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => { if (i < step) setStep(i) }}
-                  style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                    background: 'none', border: 'none', cursor: i < step ? 'pointer' : 'default', padding: 0,
-                  }}
-                >
-                  <div style={{
-                    width: 28, height: 28, borderRadius: '50%',
-                    background: i <= step ? BAI.owner : BAI.bgMuted,
-                    border: `2px solid ${i <= step ? BAI.owner : BAI.border}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    transition: 'all 0.2s',
-                  }}>
-                    {i < step
-                      ? <Check size={13} color="#fff" strokeWidth={3} />
-                      : <span style={{ fontSize: 11, fontWeight: 700, color: i === step ? '#fff' : BAI.inkFaint }}>{i + 1}</span>
-                    }
-                  </div>
-                </button>
-              ))}
-            </div>
-            <div style={{ height: 4, background: BAI.border, borderRadius: 2 }}>
-              <div style={{
-                height: '100%', background: BAI.owner, borderRadius: 2,
-                width: `${progress}%`, transition: 'width 0.3s ease',
-              }} />
-            </div>
-            {!isMobile && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-                {STEPS.map((s, i) => (
-                  <span key={i} style={{
-                    fontSize: 10, fontWeight: 500,
-                    color: i === step ? BAI.owner : i < step ? BAI.inkMid : BAI.inkFaint,
-                  }}>{s.label}</span>
+            {/* ── Step indicator caramel ── */}
+            <div style={{ paddingBottom: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                {STEPS.map((_s, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => { if (i < step) setStep(i) }}
+                    style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                      background: 'none', border: 'none',
+                      cursor: i < step ? 'pointer' : 'default', padding: 0,
+                    }}
+                  >
+                    <div style={{
+                      width: 28, height: 28, borderRadius: '50%',
+                      background: i < step ? BAI.caramel : i === step ? '#fff' : 'rgba(255,255,255,0.12)',
+                      border: `2px solid ${i <= step ? BAI.caramel : 'rgba(255,255,255,0.18)'}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'all 0.2s',
+                    }}>
+                      {i < step
+                        ? <Check size={13} color="#fff" strokeWidth={3} />
+                        : <span style={{ fontSize: 11, fontWeight: 700, color: i === step ? BAI.night : 'rgba(255,255,255,0.4)' }}>{i + 1}</span>
+                      }
+                    </div>
+                  </button>
                 ))}
               </div>
-            )}
-            {isMobile && (
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 6 }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: BAI.owner }}>
-                  Étape {step + 1}/{STEPS.length} — {STEPS[step].label}
-                </span>
+
+              {/* Barre de progression caramel */}
+              <div style={{ height: 3, background: 'rgba(255,255,255,0.12)', borderRadius: 2, marginBottom: 0 }}>
+                <div style={{
+                  height: '100%', background: BAI.caramel, borderRadius: 2,
+                  width: `${progress}%`, transition: 'width 0.3s ease',
+                }} />
               </div>
-            )}
+
+              {/* Labels */}
+              {!isMobile ? (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, paddingBottom: 20 }}>
+                  {STEPS.map((s, i) => (
+                    <span key={i} style={{
+                      fontSize: 10, fontWeight: 500,
+                      color: i === step ? BAI.caramel : i < step ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.25)',
+                    }}>{s.label}</span>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: 6, paddingBottom: 20 }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: BAI.caramel }}>
+                    Étape {step + 1}/{STEPS.length} — {STEPS[step].label}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
+        </div>
+
+        {/* ── CONTENU LIGHT ── */}
+        <div style={{ background: BAI.bgBase, minHeight: '60vh', padding: 'clamp(24px,4vw,40px) clamp(16px,4vw,32px)', paddingBottom: 80 }}>
+        <div style={{ maxWidth: 700, margin: '0 auto' }}>
 
           {/* Step card */}
           <div style={{
             background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 16,
             padding: isMobile ? '1rem' : '2rem', boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
+            marginBottom: 24,
           }}>
 
             {/* ── Step 0: Type ─────────────────────────────────────────────── */}
@@ -1265,9 +1279,10 @@ export default function CreatePropertyWizard() {
                 </button>
               )}
             </div>
-          </div>
-        </div>
-      </div>
+          </div>{/* end nav bar */}
+        </div>{/* end inner max-w */}
+        </div>{/* end contenu light */}
+      </div>{/* end root */}
     </Layout>
   )
 }

@@ -460,6 +460,75 @@ export default function ContractDetails() {
                 )}
               </div>
             </div>
+
+            {/* Glass info strip — parties + loyer + dates */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 24 }}>
+              {/* Bailleur */}
+              <div style={{
+                background: 'rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(20px) saturate(160%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                border: '1px solid rgba(255,255,255,0.13)',
+                borderRadius: 14, padding: '14px 20px', minWidth: 160,
+              }}>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', margin: '0 0 4px' }}>
+                  Bailleur
+                </p>
+                <p style={{ fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 14, color: '#ffffff', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {contract.signedByOwner && <CheckCircle style={{ width: 12, height: 12, color: '#6ee7b7' }} />}
+                  {contract.owner?.firstName} {contract.owner?.lastName}
+                </p>
+              </div>
+
+              {/* Locataire */}
+              <div style={{
+                background: 'rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(20px) saturate(160%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                border: '1px solid rgba(255,255,255,0.13)',
+                borderRadius: 14, padding: '14px 20px', minWidth: 160,
+              }}>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', margin: '0 0 4px' }}>
+                  Locataire
+                </p>
+                <p style={{ fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 14, color: '#ffffff', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {contract.signedByTenant && <CheckCircle style={{ width: 12, height: 12, color: '#6ee7b7' }} />}
+                  {contract.tenant?.firstName} {contract.tenant?.lastName}
+                </p>
+              </div>
+
+              {/* Loyer */}
+              <div style={{
+                background: 'rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(20px) saturate(160%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                border: '1px solid rgba(255,255,255,0.13)',
+                borderRadius: 14, padding: '14px 20px', minWidth: 120,
+              }}>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', margin: '0 0 4px' }}>
+                  Loyer mensuel
+                </p>
+                <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 24, color: BAI.caramel, margin: 0, lineHeight: 1 }}>
+                  {Number(contract.monthlyRent).toLocaleString('fr-FR')} €
+                </p>
+              </div>
+
+              {/* Période */}
+              <div style={{
+                background: 'rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(20px) saturate(160%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                border: '1px solid rgba(255,255,255,0.13)',
+                borderRadius: 14, padding: '14px 20px', minWidth: 180,
+              }}>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', margin: '0 0 4px' }}>
+                  Période
+                </p>
+                <p style={{ fontFamily: BAI.fontBody, fontWeight: 500, fontSize: 13, color: 'rgba(255,255,255,0.85)', margin: 0 }}>
+                  {format(new Date(contract.startDate), 'dd MMM yyyy', { locale: fr })} → {format(new Date(contract.endDate), 'dd MMM yyyy', { locale: fr })}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 

@@ -1,6 +1,6 @@
 import { useRef } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowRight, Check } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { ArrowRight, Check, MapPin, FolderOpen, MessageSquare, FileText, Search, Clock, Users } from 'lucide-react'
 import { BAI } from '../../constants/bailio-tokens'
 import { Header } from '../../components/layout/Header'
 import Footer from '../../components/layout/Footer'
@@ -10,34 +10,48 @@ const STEPS = [
   {
     num: '1',
     title: 'Constituez votre dossier.',
-    desc: "Identite, bulletins de salaire, avis d'imposition, garant si necessaire. Vous televersez une fois, on verifie la coherence des documents.",
+    desc: "Identité, bulletins de salaire, avis d'imposition, garant si nécessaire. Vous téléversez une fois, on vérifie la cohérence des documents.",
   },
   {
     num: '2',
     title: 'Postulez en un clic.',
-    desc: "Vous voyez un bien qui vous interesse, vous postulez. Le proprietaire recoit votre dossier deja complet, pas de relance, pas de PDF par mail.",
+    desc: "Vous voyez un bien qui vous intéresse, vous postulez. Le propriétaire reçoit votre dossier déjà complet, pas de relance, pas de PDF par mail.",
   },
   {
     num: '3',
-    title: 'Visitez et echangez.',
-    desc: "Messagerie directe avec le proprietaire integree a la plateforme. La visite se programme sans exposer vos coordonnees personnelles.",
+    title: 'Visitez et échangez.',
+    desc: "Messagerie directe avec le propriétaire intégrée à la plateforme. La visite se programme sans exposer vos coordonnées personnelles.",
   },
   {
     num: '4',
-    title: 'Signez et emmenagez.',
-    desc: "Bail electronique conforme loi ALUR, etat des lieux guide depuis votre telephone. Vous virez votre loyer directement et recevez votre quittance automatiquement.",
+    title: 'Signez et emménagez.',
+    desc: "Bail électronique conforme loi ALUR, état des lieux guidé depuis votre téléphone. Vous virez votre loyer directement et recevez votre quittance automatiquement.",
   },
 ]
 
 const DOSSIER_DOCS = [
-  { label: "Piece d'identite", status: 'verified' },
+  { label: "Pièce d'identité", status: 'verified' },
   { label: '3 derniers bulletins de salaire', status: 'verified' },
   { label: "Avis d'imposition", status: 'verified' },
   { label: 'Garant (optionnel)', status: 'pending' },
 ]
 
+const STATS_DARK = [
+  { value: '350+', label: 'Biens disponibles', icon: <MapPin size={20} /> },
+  { value: '72%',  label: 'Candidatures acceptées', icon: <Users size={20} /> },
+  { value: '3 j',  label: 'Délai moyen de réponse', icon: <Clock size={20} /> },
+]
+
+const FEATURE_TENANT = [
+  { icon: <FolderOpen size={20} />, title: 'Dossier numérique', desc: 'Un dossier complet, constitué une fois, réutilisable pour toutes vos candidatures sur la plateforme.', color: BAI.tenant },
+  { icon: <Search size={20} />, title: 'Recherche intelligente', desc: 'Filtrez par ville, budget, surface, équipements. Créez des alertes pour être notifié en temps réel.', color: BAI.caramel },
+  { icon: <MessageSquare size={20} />, title: 'Messagerie directe', desc: 'Échangez directement avec les propriétaires sans intermédiaire, en toute confidentialité.', color: BAI.owner },
+  { icon: <FileText size={20} />, title: 'Signature du bail', desc: 'Bail électronique conforme loi ALUR avec signature eIDAS, accessible depuis votre téléphone.', color: BAI.tenant },
+]
+
 export default function Locataires() {
   const heroRef = useRef<HTMLElement>(null)
+  const navigate = useNavigate()
   useDarkSection(heroRef)
   return (
     <div style={{ backgroundColor: BAI.bgBase, fontFamily: BAI.fontBody, color: BAI.ink, minHeight: '100vh' }}>
@@ -49,21 +63,39 @@ export default function Locataires() {
           100% { box-shadow: 0 0 0 0 rgba(196,151,106,0); }
         }
         @media (max-width: 768px) {
-          .hero-grid   { grid-template-columns: 1fr !important; gap: 28px !important; }
+          .hero-grid    { grid-template-columns: 1fr !important; gap: 28px !important; }
           .loc-hero-sec { padding: 56px 0 64px !important; }
           .loc-cta-sec  { padding: 56px 0 !important; }
+          .loc-feat-grid { grid-template-columns: 1fr 1fr !important; }
+          .loc-stats-grid { grid-template-columns: 1fr !important; }
         }
         @media (max-width: 480px) {
           .loc-btn-group { flex-direction: column !important; }
           .loc-btn-group a { width: 100% !important; justify-content: center !important; }
+          .loc-feat-grid { grid-template-columns: 1fr !important; }
         }
+        .loc-feat-grid  { display: grid; grid-template-columns: repeat(2,1fr); gap: 20px; }
+        .loc-stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
       `}</style>
 
       <Header />
 
       {/* ── HERO dark ── */}
-      <section ref={heroRef} className="loc-hero-sec" style={{ background: '#0a0d1a', color: '#fff', padding: '80px 0 100px', overflow: 'hidden' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
+      <section ref={heroRef} className="loc-hero-sec" style={{ background: '#0a0d1a', color: '#fff', padding: '80px 0 100px', overflow: 'hidden', position: 'relative' }}>
+        {/* Ambient orb */}
+        <div aria-hidden style={{
+          position: 'absolute', top: '15%', left: '-40px',
+          width: 360, height: 100, borderRadius: '50%',
+          background: 'rgba(27,94,59,0.12)', filter: 'blur(40px)',
+          pointerEvents: 'none',
+        }} />
+        <div aria-hidden style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: 80,
+          background: 'linear-gradient(to bottom, transparent, rgba(10,13,26,0.6))',
+          pointerEvents: 'none',
+        }} />
+
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)', position: 'relative', zIndex: 2 }}>
           <div className="hero-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'center' }}>
 
             {/* Left — copy */}
@@ -81,21 +113,57 @@ export default function Locataires() {
                 letterSpacing: '-0.02em', color: '#fff', margin: '0 0 22px',
                 maxWidth: '16ch', paddingBottom: 2,
               }}>
-                Louez plus vite.{' '}
-                <em style={{ color: BAI.caramel }}>Sans dossier papier.</em>
+                Trouvez votre{' '}
+                <em style={{ color: BAI.caramel }}>logement idéal.</em>
               </h1>
 
               <p style={{
                 fontSize: 'clamp(15px,1.3vw,17px)', color: 'rgba(255,255,255,0.78)',
-                lineHeight: 1.6, maxWidth: 520, margin: '0 0 40px',
+                lineHeight: 1.6, maxWidth: 520, margin: '0 0 28px',
               }}>
-                Constituez votre dossier numerique une fois pour toutes. Postulez en un clic.
-                Communiquez en direct avec le proprietaire. Signez votre bail en ligne, depuis votre canape.
+                Constituez votre dossier numérique une fois pour toutes. Postulez en un clic.
+                Communiquez en direct avec le propriétaire. Signez votre bail en ligne.
               </p>
 
-              <div className="loc-btn-group" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 32 }}>
+              {/* Search bar — glassmorphisme dans le hero */}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => navigate('/search')}
+                onKeyDown={(e: React.KeyboardEvent) => e.key === 'Enter' && navigate('/search')}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  background: 'rgba(255,255,255,0.08)',
+                  backdropFilter: 'blur(20px) saturate(150%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(150%)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  borderRadius: 10, padding: '12px 16px',
+                  cursor: 'pointer', marginBottom: 24,
+                  maxWidth: 440,
+                  transition: 'background 0.15s, border-color 0.15s',
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.13)' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)' }}
+              >
+                <MapPin size={16} color={BAI.caramel} style={{ flexShrink: 0 }} />
+                <span style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.55)', flex: 1 }}>
+                  Ville, quartier, code postal…
+                </span>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 5,
+                  padding: '5px 12px', borderRadius: 7,
+                  background: BAI.caramel, color: '#fff',
+                  fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600,
+                  flexShrink: 0,
+                }}>
+                  <Search size={12} />
+                  Rechercher
+                </div>
+              </div>
+
+              <div className="loc-btn-group" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
                 <Link
-                  to="/search"
+                  to="/register?role=TENANT"
                   style={{
                     display: 'inline-flex', alignItems: 'center', gap: 7,
                     padding: '14px 26px', borderRadius: 8,
@@ -106,23 +174,7 @@ export default function Locataires() {
                   onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = BAI.caramelHover }}
                   onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = BAI.caramel }}
                 >
-                  Chercher mon logement <ArrowRight size={16} />
-                </Link>
-
-                <Link
-                  to="/register?role=TENANT"
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 7,
-                    padding: '14px 26px', borderRadius: 8,
-                    fontFamily: BAI.fontBody, fontSize: 15, fontWeight: 600,
-                    background: 'rgba(255,255,255,0.08)', color: '#fff',
-                    border: '1px solid rgba(255,255,255,0.18)', textDecoration: 'none',
-                    minHeight: 44,
-                  }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(255,255,255,0.14)' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(255,255,255,0.08)' }}
-                >
-                  Creer mon dossier
+                  Créer mon dossier <ArrowRight size={16} />
                 </Link>
               </div>
 
@@ -161,15 +213,18 @@ export default function Locataires() {
                   >
                     <span>{doc.label}</span>
                     {doc.status === 'verified' ? (
-                      <span style={{ color: BAI.caramel, fontWeight: 600 }}>Verifie</span>
+                      <span style={{ color: '#5fcf96', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Check size={12} />
+                        Vérifié
+                      </span>
                     ) : (
-                      <span style={{ color: 'rgba(255,255,255,0.5)' }}>A ajouter</span>
+                      <span style={{ color: 'rgba(255,255,255,0.5)' }}>À ajouter</span>
                     )}
                   </div>
                 ))}
               </div>
 
-              {/* Score de fiabilite */}
+              {/* Score de fiabilité */}
               <div style={{
                 marginTop: 20, paddingTop: 20,
                 borderTop: '1px solid rgba(255,255,255,0.1)',
@@ -185,7 +240,7 @@ export default function Locataires() {
                   marginLeft: 8, fontSize: 12, color: 'rgba(255,255,255,0.5)',
                   fontFamily: BAI.fontBody,
                 }}>
-                  Score de fiabilite
+                  Score de fiabilité
                 </span>
               </div>
             </div>
@@ -202,7 +257,7 @@ export default function Locataires() {
             fontSize: 'clamp(28px,4vw,44px)', lineHeight: 1.1,
             color: BAI.ink, margin: '0 0 48px', paddingBottom: 2,
           }}>
-            Du clic <em style={{ color: BAI.caramel }}>aux cles.</em>
+            Du clic <em style={{ color: BAI.caramel }}>aux clés.</em>
           </h2>
 
           {/* Editorial numbered items */}
@@ -246,6 +301,123 @@ export default function Locataires() {
         </div>
       </section>
 
+      {/* ── STATS SOMBRES ── */}
+      <section style={{ background: '#0a0d1a', padding: 'clamp(48px,6vh,72px) 0' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
+          <div style={{ marginBottom: 36, textAlign: 'center' }}>
+            <p style={{
+              fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700,
+              letterSpacing: '0.12em', textTransform: 'uppercase',
+              color: BAI.caramel, margin: '0 0 10px',
+            }}>
+              En chiffres
+            </p>
+            <h2 style={{
+              fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+              fontSize: 'clamp(24px,4vw,38px)', color: '#fff',
+              margin: 0, lineHeight: 1.1,
+            }}>
+              Bailio,{' '}<em style={{ color: BAI.caramel }}>ça marche.</em>
+            </h2>
+          </div>
+
+          <div className="loc-stats-grid">
+            {STATS_DARK.map((stat) => (
+              <div
+                key={stat.label}
+                style={{
+                  background: 'rgba(255,255,255,0.06)',
+                  backdropFilter: 'blur(20px) saturate(160%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                  border: '1px solid rgba(255,255,255,0.10)',
+                  borderRadius: 14,
+                  padding: '28px 24px',
+                  display: 'flex', alignItems: 'flex-start', gap: 16,
+                }}
+              >
+                <div style={{
+                  width: 44, height: 44, borderRadius: 10,
+                  background: 'rgba(27,94,59,0.28)',
+                  color: '#5fcf96',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0,
+                }}>
+                  {stat.icon}
+                </div>
+                <div>
+                  <p style={{
+                    fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+                    fontSize: 'clamp(26px,4vw,38px)', color: '#fff',
+                    margin: 0, lineHeight: 1,
+                  }}>
+                    {stat.value}
+                  </p>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.50)', margin: '6px 0 0' }}>
+                    {stat.label}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FEATURES LOCATAIRE ── */}
+      <section style={{ padding: 'clamp(48px,6vh,80px) 0', background: BAI.bgMuted }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
+          <div style={{ marginBottom: 36 }}>
+            <p style={{
+              fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700,
+              letterSpacing: '0.12em', textTransform: 'uppercase',
+              color: BAI.caramel, margin: '0 0 12px',
+            }}>
+              Pour vous
+            </p>
+            <h2 style={{
+              fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+              fontSize: 'clamp(26px,4vw,40px)', color: BAI.ink,
+              margin: 0, lineHeight: 1.1,
+            }}>
+              Tout pour faciliter <em style={{ color: BAI.caramel }}>votre recherche.</em>
+            </h2>
+          </div>
+
+          <div className="loc-feat-grid">
+            {FEATURE_TENANT.map((feat) => (
+              <div
+                key={feat.title}
+                style={{
+                  background: BAI.bgSurface,
+                  border: `1px solid ${BAI.border}`,
+                  borderRadius: 12,
+                  padding: '22px 20px',
+                  boxShadow: BAI.shadowSm,
+                }}
+              >
+                <div style={{
+                  width: 44, height: 44, borderRadius: 10,
+                  background: feat.color === BAI.caramel ? BAI.caramelLight : feat.color === BAI.tenant ? BAI.tenantLight : BAI.ownerLight,
+                  color: feat.color,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  marginBottom: 14,
+                }}>
+                  {feat.icon}
+                </div>
+                <h4 style={{
+                  fontFamily: BAI.fontBody, fontSize: 15, fontWeight: 700,
+                  color: BAI.ink, margin: '0 0 8px',
+                }}>
+                  {feat.title}
+                </h4>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, lineHeight: 1.6, margin: 0 }}>
+                  {feat.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA dark ── */}
       <section className="loc-cta-sec" style={{ background: '#0a0d1a', padding: '80px 0' }}>
         <div style={{
@@ -257,14 +429,14 @@ export default function Locataires() {
             fontSize: 'clamp(28px,4vw,48px)', color: '#fff',
             margin: '0 0 18px', lineHeight: 1.1, paddingBottom: 2,
           }}>
-            Trouvez votre <em style={{ color: BAI.caramel }}>chez-vous.</em>
+            Commencez votre <em style={{ color: BAI.caramel }}>recherche.</em>
           </h2>
           <p style={{
             color: 'rgba(255,255,255,0.7)', fontSize: 16,
             margin: '0 auto 32px', maxWidth: '46ch', lineHeight: 1.65,
           }}>
             Inscrivez-vous, constituez votre dossier une fois, postulez partout.
-            Gratuit, rapide, serieux.
+            Gratuit, rapide, sérieux.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link
@@ -292,7 +464,7 @@ export default function Locataires() {
                 minHeight: 44,
               }}
             >
-              Creer mon dossier
+              Créer mon dossier
             </Link>
           </div>
         </div>

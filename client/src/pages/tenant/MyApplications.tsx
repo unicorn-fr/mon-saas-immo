@@ -118,9 +118,9 @@ function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw:
             style={{
               ...STATUS_STYLE[app.status],
               fontSize: 11,
-              fontWeight: 500,
+              fontWeight: 600,
               borderRadius: 99,
-              padding: '2px 10px',
+              padding: '4px 12px',
               whiteSpace: 'nowrap',
             }}
           >
@@ -131,6 +131,10 @@ function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw:
     )
   }
 
+  const imgSrc = prop.images?.[0]
+    ? prop.images[0].startsWith('http') ? prop.images[0] : `${SERVER_BASE}${prop.images[0]}`
+    : null
+
   return (
     <motion.div
       layout
@@ -140,93 +144,103 @@ function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw:
       style={{
         background: '#ffffff',
         border: isRejected ? '1px solid #fca5a5' : isWithdrawn ? '1px solid #ccc9c3' : '1px solid #e4e1db',
-        borderRadius: 12,
-        boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
+        borderRadius: 14,
+        boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 16px rgba(13,12,10,0.07)',
         overflow: 'hidden',
         fontFamily: "'DM Sans', system-ui, sans-serif",
         opacity: isRejected || isWithdrawn ? 0.85 : 1,
+        transition: 'box-shadow 0.18s',
       }}
     >
       <Link
         to={`/property/${prop.id}`}
         style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}
       >
-        {/* Card body — colonne sur mobile, ligne sur sm+ */}
-        <div className="flex flex-col sm:flex-row gap-0 sm:gap-4 sm:p-4">
-          {/* Property image — 100px mobile (full width), 64px sm+ (fixed) */}
-          {prop.images && prop.images[0] ? (
-            <img
-              src={prop.images[0].startsWith('http') ? prop.images[0] : `${SERVER_BASE}${prop.images[0]}`}
-              alt={prop.title}
-              className="w-full sm:w-16 sm:flex-shrink-0 object-cover"
-              style={{
-                height: 100,
-                borderRadius: 0,
-              }}
-            />
-          ) : (
-            <div
-              className="w-full sm:w-16 sm:flex-shrink-0 flex items-center justify-center"
-              style={{ height: 100, background: '#f4f2ee' }}
-            >
-              <Building2 className="w-6 h-6" style={{ color: '#9e9b96' }} />
-            </div>
-          )}
-
-          <div className="flex-1 min-w-0 p-4 sm:p-0">
-            {/* Title + status badge */}
-            <div className="flex items-start justify-between gap-2 flex-wrap">
-              <div className="min-w-0">
-                <h3
-                  className="truncate"
-                  style={{
-                    fontFamily: "'DM Sans', system-ui, sans-serif",
-                    fontWeight: 600,
-                    fontSize: 14,
-                    color: '#0d0c0a',
-                  }}
-                >
-                  {prop.title}
-                </h3>
-                <p style={{ fontSize: 12, color: '#9e9b96', marginTop: 2 }}>
-                  {prop.city}
-                  {' · '}
-                  <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 13, color: '#5a5754' }}>
-                    {Number(prop.price).toLocaleString('fr-FR')} €/mois
-                  </span>
-                </p>
+        {/* Card body */}
+        <div style={{ display: 'flex', gap: 0 }}>
+          {/* Property image — responsive left column */}
+          <div style={{ width: 100, flexShrink: 0, position: 'relative' }}>
+            {imgSrc ? (
+              <img
+                src={imgSrc}
+                alt={prop.title}
+                style={{ width: '100%', height: '100%', minHeight: 120, objectFit: 'cover', display: 'block' }}
+              />
+            ) : (
+              <div style={{ width: '100%', height: '100%', minHeight: 120, background: '#f4f2ee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Building2 className="w-6 h-6" style={{ color: '#9e9b96' }} />
               </div>
+            )}
+            {/* Status accent bar */}
+            <div style={{
+              position: 'absolute', bottom: 0, left: 0, right: 0, height: 3,
+              background: isRejected ? '#fca5a5' : isWithdrawn ? '#ccc9c3' : app.status === 'APPROVED' ? '#9fd4ba' : '#f3c99a',
+            }} />
+          </div>
+
+          <div style={{ flex: 1, minWidth: 0, padding: '14px 16px 12px' }}>
+            {/* Status badge prominent */}
+            <div style={{ marginBottom: 6 }}>
               <span
-                className="flex-shrink-0"
                 style={{
                   ...STATUS_STYLE[app.status],
-                  fontSize: 11,
-                  fontWeight: 500,
+                  fontSize: 10,
+                  fontWeight: 700,
                   borderRadius: 99,
-                  padding: '4px 10px',
-                  whiteSpace: 'nowrap',
+                  padding: '3px 10px',
+                  letterSpacing: '0.05em',
+                  textTransform: 'uppercase',
                 }}
               >
                 {STATUS_LABEL[app.status]}
               </span>
             </div>
 
-            <div className="flex items-center gap-3 mt-2 flex-wrap">
+            {/* Property title in Cormorant */}
+            <h3
+              style={{
+                fontFamily: "'Cormorant Garamond', Georgia, serif",
+                fontWeight: 700,
+                fontStyle: 'italic',
+                fontSize: 18,
+                color: '#0d0c0a',
+                margin: '0 0 2px',
+                lineHeight: 1.2,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {prop.title}
+            </h3>
+
+            {/* City + price */}
+            <p style={{ fontSize: 12, color: '#9e9b96', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span>{prop.city}</span>
+              <span style={{ color: '#e4e1db' }}>·</span>
+              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 14, fontWeight: 700, color: '#5a5754' }}>
+                {Number(prop.price).toLocaleString('fr-FR')} €/mois
+              </span>
+            </p>
+
+            {/* Date + voir le bien */}
+            <div className="flex items-center gap-3 flex-wrap">
               <span style={{ fontSize: 11, color: '#9e9b96' }}>
                 Envoyée le {format(new Date(app.createdAt), 'd MMM yyyy', { locale: fr })}
               </span>
               <span
                 className="flex items-center gap-0.5"
-                style={{ fontSize: 11, color: '#c4976a', fontWeight: 500 }}
+                style={{ fontSize: 11, color: '#c4976a', fontWeight: 600 }}
               >
                 Voir le bien <ArrowUpRight className="w-3 h-3" />
               </span>
             </div>
 
+            {/* Visite CTA if approved */}
             {app.status === 'APPROVED' && prop && (
               <>
                 <button
-                  className="mt-2 inline-flex items-center gap-1.5"
+                  className="mt-3 inline-flex items-center gap-1.5"
                   onClick={e => { e.preventDefault(); e.stopPropagation(); setShowBooking(true) }}
                   style={{
                     background: '#edf7f2',
@@ -237,7 +251,7 @@ function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw:
                     fontSize: 12,
                     fontWeight: 600,
                     fontFamily: "'DM Sans', system-ui, sans-serif",
-                    minHeight: 44,
+                    minHeight: 40,
                     cursor: 'pointer',
                   }}
                 >
@@ -255,7 +269,7 @@ function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw:
               </>
             )}
 
-            {/* Actions — flex-wrap, touch targets ≥ 44px */}
+            {/* Actions */}
             <div
               className="flex items-center gap-2 flex-wrap mt-3"
               onClick={e => e.preventDefault()}
@@ -264,47 +278,47 @@ function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw:
                 <button
                   onClick={handleWithdraw}
                   disabled={withdrawing}
-                  className="inline-flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 disabled:opacity-50"
                   style={{
                     borderRadius: 8,
                     color: '#9b1c1c',
                     border: '1px solid #fca5a5',
                     background: '#fef2f2',
-                    padding: '10px 14px',
+                    padding: '8px 12px',
                     fontSize: 12,
                     fontWeight: 500,
                     cursor: withdrawing ? 'not-allowed' : 'pointer',
                     fontFamily: "'DM Sans', system-ui, sans-serif",
-                    minHeight: 44,
+                    minHeight: 36,
                   }}
                 >
                   {withdrawing
-                    ? <Loader2 className="w-4 h-4 animate-spin" />
-                    : <Trash2 className="w-4 h-4" />}
+                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    : <Trash2 className="w-3.5 h-3.5" />}
                   Retirer
                 </button>
               )}
               {!isWithdrawn && (
                 <button
                   onClick={(e) => { e.preventDefault(); setExpanded(!expanded) }}
-                  className="inline-flex items-center gap-1.5 transition-colors"
+                  className="inline-flex items-center gap-1.5"
                   style={{
                     borderRadius: 8,
                     color: '#5a5754',
                     border: '1px solid #e4e1db',
                     background: '#f4f2ee',
-                    padding: '10px 14px',
+                    padding: '8px 12px',
                     fontSize: 12,
                     fontWeight: 500,
                     cursor: 'pointer',
                     fontFamily: "'DM Sans', system-ui, sans-serif",
-                    minHeight: 44,
+                    minHeight: 36,
                   }}
                 >
                   {expanded ? (
-                    <><ChevronUp className="w-4 h-4" /> Réduire</>
+                    <><ChevronUp className="w-3.5 h-3.5" /> Réduire</>
                   ) : (
-                    <><ChevronDown className="w-4 h-4" /> Détails</>
+                    <><ChevronDown className="w-3.5 h-3.5" /> Détails</>
                   )}
                 </button>
               )}

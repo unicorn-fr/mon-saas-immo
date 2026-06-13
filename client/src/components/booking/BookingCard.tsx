@@ -115,7 +115,7 @@ export const BookingCard = ({
   const formattedDate = format(visitDate, "EEEE d MMMM yyyy", { locale: fr })
   const isPast = visitDate < new Date()
   const canConfirm = viewMode === 'owner' && booking.status === 'PENDING' && !isPast
-  const canCancel = booking.status === 'PENDING' && !isPast
+  const canCancel = (booking.status === 'PENDING' || (booking.status === 'CONFIRMED' && !isPast)) && !isPast
   const canAddToCalendar = (booking.status === 'CONFIRMED' || (viewMode === 'tenant' && booking.status === 'PENDING')) && !isPast
 
   // Jour de la visite pour le badge date
@@ -143,7 +143,7 @@ export const BookingCard = ({
 
           {/* Badge date */}
           <div style={{
-            flexShrink: 0, width: 52, height: 52,
+            flexShrink: 0, width: 58, height: 58,
             borderRadius: 12,
             background: s.bgColor,
             border: `1px solid ${s.borderColor}`,
@@ -152,7 +152,7 @@ export const BookingCard = ({
             <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: s.color, lineHeight: 1 }}>
               {monthShort}
             </span>
-            <span style={{ fontSize: 22, fontWeight: 700, color: s.color, lineHeight: 1.1, fontFamily: BAI.fontDisplay, fontStyle: 'italic' }}>
+            <span style={{ fontSize: 26, fontWeight: 700, color: s.color, lineHeight: 1.1, fontFamily: BAI.fontDisplay, fontStyle: 'italic' }}>
               {dayNum}
             </span>
           </div>
@@ -167,15 +167,17 @@ export const BookingCard = ({
               }}
             >
               <p style={{
-                fontSize: 16, fontWeight: 700,
-                color: BAI.ink, lineHeight: 1.25, margin: '0 0 4px',
+                fontFamily: BAI.fontDisplay,
+                fontStyle: 'italic',
+                fontSize: 18, fontWeight: 700,
+                color: BAI.ink, lineHeight: 1.2, margin: '0 0 4px',
                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>
                 {booking.property.title}
               </p>
             </button>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: BAI.inkMid }}>
-              <MapPin className="w-3 h-3 flex-shrink-0" style={{ color: BAI.inkFaint }} />
+              <MapPin className="w-3 h-3 flex-shrink-0" style={{ color: BAI.caramel }} />
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {[booking.property.address, booking.property.city].filter(Boolean).join(', ')}
               </span>

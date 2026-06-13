@@ -12,6 +12,9 @@ import { applicationService } from '../../services/application.service'
 import { BAI } from '../../constants/bailio-tokens'
 import { useWindowWidth } from '../../hooks/useWindowWidth'
 
+const SIDEBAR_BG = '#0a0d1a'
+const SIDEBAR_BORDER = 'rgba(255,255,255,0.07)'
+
 type SectionItem = {
   to: string
   icon: React.ElementType
@@ -43,15 +46,21 @@ function NavItem({
           style={{
             position: 'absolute',
             inset: 0,
-            margin: compact ? '2px 6px' : '1px 8px',
+            margin: compact ? '2px 4px' : '1px 8px',
             borderRadius: BAI.radius,
-            background: 'rgba(196,151,106,0.14)',
+            background: 'rgba(255,255,255,0.09)',
+            backdropFilter: 'blur(12px) saturate(160%)',
+            WebkitBackdropFilter: 'blur(12px) saturate(160%)',
+            border: `1px solid rgba(196,151,106,0.30)`,
+            borderLeft: compact ? `1px solid rgba(196,151,106,0.30)` : `2px solid ${BAI.caramel}`,
           }}
           transition={{ type: 'spring', stiffness: 500, damping: 40 }}
         />
       )}
       <motion.div
-        whileHover={!active ? { x: compact ? 0 : 2, opacity: 1 } : {}}
+        whileHover={!active ? {
+          backgroundColor: 'rgba(255,255,255,0.05)',
+        } : {}}
         transition={{ duration: 0.12 }}
         style={{
           position: 'relative',
@@ -60,10 +69,9 @@ function NavItem({
           justifyContent: compact ? 'center' : 'flex-start',
           gap: compact ? 0 : 10,
           padding: compact ? '11px 0' : '8px 13px',
-          margin: compact ? '2px 6px' : '1px 8px',
+          margin: compact ? '2px 4px' : '1px 8px',
           borderRadius: BAI.radius,
-          borderLeft: active && !compact ? `2px solid ${BAI.caramel}` : '2px solid transparent',
-          color: active ? '#fff' : 'rgba(255,255,255,0.55)',
+          color: active ? '#fff' : 'rgba(255,255,255,0.50)',
           fontFamily: BAI.fontBody,
           fontSize: 13.5,
           fontWeight: active ? 600 : 400,
@@ -71,7 +79,10 @@ function NavItem({
           cursor: 'pointer',
         }}
       >
-        <Icon size={compact ? 18 : 16} style={{ flexShrink: 0, transition: 'opacity 0.15s', opacity: active ? 1 : 0.65 }} />
+        <Icon
+          size={compact ? 18 : 16}
+          style={{ flexShrink: 0, transition: 'opacity 0.15s', opacity: active ? 1 : 0.60 }}
+        />
         {!compact && <span style={{ flex: 1 }}>{label}</span>}
 
         {!compact && badge !== undefined && badge > 0 && (
@@ -151,7 +162,7 @@ export function OwnerSidebar() {
       {/* Logo */}
       <div style={{
         padding: compact ? '20px 0 16px' : '20px 20px 14px',
-        borderBottom: `1px solid ${BAI.nightBorder}`,
+        borderBottom: `1px solid ${SIDEBAR_BORDER}`,
         marginBottom: 6,
         flexShrink: 0,
         display: 'flex',
@@ -161,7 +172,7 @@ export function OwnerSidebar() {
         {compact ? (
           <Link to="/" style={{
             fontFamily: BAI.fontDisplay, fontStyle: 'italic',
-            fontWeight: 700, fontSize: 18, color: BAI.caramel,
+            fontWeight: 700, fontSize: 20, color: BAI.caramel,
             textDecoration: 'none',
           }}>b</Link>
         ) : (
@@ -169,15 +180,16 @@ export function OwnerSidebar() {
             <Link to="/" onClick={closeMobile} style={{ textDecoration: 'none' }}>
               <span style={{
                 fontFamily: BAI.fontDisplay, fontStyle: 'italic',
-                fontWeight: 700, fontSize: 21, color: '#fff',
+                fontWeight: 700, fontSize: 22, color: '#fff',
                 display: 'block', lineHeight: 1,
+                letterSpacing: '-0.01em',
               }}>
                 bailio<span style={{ color: BAI.caramel }}>.</span>
               </span>
               <p style={{
-                fontSize: 9.5, color: 'rgba(255,255,255,0.30)',
-                fontFamily: BAI.fontBody, margin: '4px 0 0',
-                letterSpacing: '0.08em', textTransform: 'uppercase',
+                fontSize: 9, color: 'rgba(255,255,255,0.28)',
+                fontFamily: BAI.fontBody, margin: '5px 0 0',
+                letterSpacing: '0.10em', textTransform: 'uppercase',
               }}>
                 Espace propriétaire
               </p>
@@ -233,8 +245,8 @@ export function OwnerSidebar() {
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 padding: '10px 0', borderRadius: 9,
-                background: `rgba(196,151,106,0.15)`,
-                border: `1px solid rgba(196,151,106,0.25)`,
+                background: 'rgba(196,151,106,0.15)',
+                border: '1px solid rgba(196,151,106,0.25)',
                 color: BAI.caramel, textDecoration: 'none',
               }}
             >
@@ -254,10 +266,10 @@ export function OwnerSidebar() {
           <div key={si} style={{ marginBottom: 2 }}>
             {section.label && !compact && (
               <p style={{
-                fontSize: 9.5, fontWeight: 700,
-                letterSpacing: '0.12em', textTransform: 'uppercase',
-                color: 'rgba(255,255,255,0.22)',
-                padding: '10px 21px 3px',
+                fontSize: 9, fontWeight: 700,
+                letterSpacing: '0.13em', textTransform: 'uppercase',
+                color: 'rgba(255,255,255,0.20)',
+                padding: '12px 21px 4px',
                 margin: 0,
               }}>
                 {section.label}
@@ -289,15 +301,15 @@ export function OwnerSidebar() {
       </nav>
 
       {/* User card */}
-      <div style={{ borderTop: `1px solid ${BAI.nightBorder}`, padding: compact ? '10px 6px' : '10px', flexShrink: 0 }}>
+      <div style={{ borderTop: `1px solid ${SIDEBAR_BORDER}`, padding: compact ? '10px 6px' : '10px', flexShrink: 0 }}>
         {compact ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
             <div
               title={`${user?.firstName} ${user?.lastName} — Propriétaire`}
               style={{
                 width: 32, height: 32, borderRadius: 8,
-                background: `rgba(196,151,106,0.18)`,
-                border: `1px solid rgba(196,151,106,0.30)`,
+                background: 'rgba(196,151,106,0.18)',
+                border: '1px solid rgba(196,151,106,0.30)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 11, fontWeight: 700, color: BAI.caramel, overflow: 'hidden',
               }}
@@ -317,7 +329,7 @@ export function OwnerSidebar() {
                 background: 'none', border: 'none', cursor: 'pointer',
                 color: 'rgba(255,255,255,0.40)', borderRadius: BAI.radius,
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#fef2f2'; (e.currentTarget as HTMLElement).style.color = '#9b1c1c' }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(155,28,28,0.18)'; (e.currentTarget as HTMLElement).style.color = '#ef4444' }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.40)' }}
             >
               <LogOut size={14} />
@@ -325,20 +337,20 @@ export function OwnerSidebar() {
           </div>
         ) : (
           <div style={{
-            padding: '8px 10px', borderRadius: 10,
+            padding: '9px 10px', borderRadius: 10,
             background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.07)',
+            border: '1px solid rgba(255,255,255,0.08)',
             display: 'flex', alignItems: 'center', gap: 10,
           }}>
             <div style={{
-              width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-              background: `rgba(196,151,106,0.18)`,
-              border: `1px solid rgba(196,151,106,0.28)`,
+              width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+              background: 'rgba(196,151,106,0.18)',
+              border: '1px solid rgba(196,151,106,0.28)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 10, fontWeight: 700, color: BAI.caramel, overflow: 'hidden',
+              fontSize: 11, fontWeight: 700, color: BAI.caramel, overflow: 'hidden',
             }}>
               {user?.avatar
-                ? <img src={user.avatar} alt="" style={{ width: 30, height: 30, objectFit: 'cover', borderRadius: 7 }} />
+                ? <img src={user.avatar} alt="" style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 7 }} />
                 : initials
               }
             </div>
@@ -346,23 +358,29 @@ export function OwnerSidebar() {
               <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.85)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {user?.firstName} {user?.lastName}
               </p>
-              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.30)', margin: '1px 0 0', letterSpacing: '0.04em' }}>
+              <span style={{
+                display: 'inline-block', marginTop: 3,
+                fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
+                padding: '2px 6px', borderRadius: 4,
+                background: 'rgba(196,151,106,0.18)',
+                color: BAI.caramel,
+              }}>
                 Propriétaire
-              </p>
+              </span>
             </div>
             <motion.button
               whileTap={{ scale: 0.88 }}
               onClick={handleLogout}
               title="Déconnexion"
               style={{
-                width: 44, height: 44, flexShrink: 0,
+                width: 36, height: 36, flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 background: 'none', border: 'none', cursor: 'pointer',
-                color: 'rgba(255,255,255,0.30)', borderRadius: 10,
+                color: 'rgba(255,255,255,0.28)', borderRadius: 8,
                 transition: 'background 0.15s, color 0.15s',
               }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(155,28,28,0.18)'; (e.currentTarget as HTMLElement).style.color = '#ef4444' }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.30)' }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.28)' }}
             >
               <LogOut size={13} />
             </motion.button>
@@ -373,8 +391,8 @@ export function OwnerSidebar() {
   )
 
   const sidebarStyle = {
-    background: BAI.night,
-    borderRight: `1px solid ${BAI.nightBorder}`,
+    background: SIDEBAR_BG,
+    borderRight: `1px solid ${SIDEBAR_BORDER}`,
   }
 
   return (
@@ -399,7 +417,7 @@ export function OwnerSidebar() {
               transition={{ duration: 0.2 }}
               className="fixed inset-0 z-40 md:hidden"
               onClick={closeMobile}
-              style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)' }}
+              style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(2px)' }}
             />
             <motion.aside
               key="drawer"
@@ -408,7 +426,7 @@ export function OwnerSidebar() {
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', stiffness: 380, damping: 38 }}
               className="fixed left-0 top-0 bottom-0 z-50 flex flex-col md:hidden"
-              style={{ ...sidebarStyle, width: 'min(256px, 85vw)', boxShadow: '6px 0 32px rgba(0,0,0,0.30)', overflowX: 'hidden' }}
+              style={{ ...sidebarStyle, width: 'min(256px, 85vw)', boxShadow: '6px 0 40px rgba(0,0,0,0.40)', overflowX: 'hidden' }}
             >
               <Content compact={false} />
             </motion.aside>

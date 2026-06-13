@@ -236,35 +236,37 @@ export default function PropertyDetailsPublic() {
           </button>
 
           {/* Hero Hyperbeat — image bg + overlay sombre + glass KPIs */}
-          <div style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', marginBottom: 20 }}>
+          <div style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', marginBottom: 20, minHeight: 200 }}>
             {/* Image de fond */}
-            {images[0] && images[0] !== '/placeholder-property.jpg' && (
+            {images[0] && images[0] !== '/placeholder-property.jpg' ? (
               <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${images[0]})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+            ) : (
+              <div style={{ position: 'absolute', inset: 0, background: '#0a0d1a' }} />
             )}
             {/* Overlay sombre */}
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg, rgba(10,13,26,0.85) 0%, rgba(10,13,26,0.7) 60%, rgba(10,13,26,0.55) 100%)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg, rgba(10,13,26,0.90) 0%, rgba(10,13,26,0.72) 60%, rgba(10,13,26,0.55) 100%)' }} />
             {/* Contenu du hero */}
             <div style={{ position: 'relative', padding: 'clamp(28px,5vw,48px) clamp(20px,4vw,40px) clamp(20px,4vw,36px)' }}>
               <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 8px' }}>
                 {propertyType?.label ?? 'Location'}
               </p>
-              <h1 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(24px,5vw,38px)', color: '#ffffff', margin: '0 0 6px', lineHeight: 1.1 }}>
+              <h1 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(24px,5vw,40px)', color: '#ffffff', margin: '0 0 8px', lineHeight: 1.1 }}>
                 {property.title}
               </h1>
-              <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.6)', margin: 0 }}>
-                <MapPin style={{ width: 12, height: 12, display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.6)', margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <MapPin style={{ width: 12, height: 12, flexShrink: 0 }} />
                 {property.city}{property.postalCode ? `, ${property.postalCode}` : ''}
               </p>
-              {/* Glass KPIs */}
+              {/* Glass KPIs — no duplicates */}
               <div className="flex flex-wrap gap-3" style={{ marginTop: 20 }}>
                 {[
                   { label: 'LOYER', value: `${Number(property.price).toLocaleString('fr-FR')} €/mois` },
                   { label: 'SURFACE', value: `${property.surface} m²` },
-                  { label: 'CHAMBRES', value: `${property.bedrooms} pièce${property.bedrooms > 1 ? 's' : ''}` },
-                  ...(property.bedrooms ? [{ label: 'CHAMBRES', value: `${property.bedrooms}` }] : []),
+                  { label: 'PIÈCES', value: `${property.bedrooms} pièce${property.bedrooms > 1 ? 's' : ''}` },
+                  ...(property.furnished ? [{ label: 'TYPE', value: 'Meublé' }] : []),
                 ].map(kpi => (
-                  <div key={kpi.label} style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 12, padding: '10px 16px' }}>
-                    <p style={{ fontFamily: BAI.fontBody, fontSize: 9, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 2px' }}>{kpi.label}</p>
+                  <div key={kpi.label} style={{ background: 'rgba(255,255,255,0.10)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 12, padding: '10px 16px' }}>
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 9, color: 'rgba(255,255,255,0.50)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 2px' }}>{kpi.label}</p>
                     <p style={{ fontFamily: BAI.fontDisplay, fontSize: 18, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1.1 }}>{kpi.value}</p>
                   </div>
                 ))}

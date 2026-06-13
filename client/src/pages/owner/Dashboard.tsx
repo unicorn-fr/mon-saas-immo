@@ -12,7 +12,7 @@ import { BAI } from '../../constants/bailio-tokens'
 import {
   Plus, ArrowRight, ShieldAlert, Calendar,
   Home, ClipboardList, MessageSquare, ChevronRight,
-  TrendingUp,
+  TrendingUp, Euro, BarChart2,
 } from 'lucide-react'
 import { apiClient } from '../../services/api.service'
 import type { Application } from '../../types/application.types'
@@ -129,6 +129,8 @@ export default function OwnerDashboard() {
   const [pendingApps, setPendingApps] = useState<Application[]>([])
   const [upcomingVisits, setUpcomingVisits] = useState<Booking[]>([])
   const [identityVerified, setIdentityVerified] = useState(true)
+  const [monthRevenue, setMonthRevenue] = useState<number | null>(null)
+  const [activeContracts, setActiveContracts] = useState<number | null>(null)
 
   useEffect(() => {
     fetchMyProperties()
@@ -149,6 +151,22 @@ export default function OwnerDashboard() {
 
     apiClient.get('/stripe/identity-status').then((res) => {
       setIdentityVerified(res.data?.data?.verified ?? true)
+    }).catch(() => {})
+
+    // Finance summary for dashboard widget
+    apiClient.get('/finances/summary').then((res) => {
+      const s = res.data?.data?.summary
+      if (s) {
+        const months = s.cashFlowByMonth ?? []
+        const currentMonth = new Date().toISOString().slice(0, 7)
+        const thisMonth = months.find((m: any) => m.month === currentMonth)
+        setMonthRevenue(thisMonth ? Math.round(thisMonth.revenue) : null)
+      }
+    }).catch(() => {})
+
+    apiClient.get('/contracts').then((res) => {
+      const contracts = res.data?.data?.contracts ?? []
+      setActiveContracts(contracts.filter((c: any) => c.status === 'ACTIVE').length)
     }).catch(() => {})
   }, [])
 
@@ -246,6 +264,117 @@ export default function OwnerDashboard() {
           }}>
             {kpis.map((kpi) => <KpiCard key={kpi.label} {...kpi} />)}
           </div>
+
+          {/* ── Revenus & raccourcis ─────────────────────────────────── */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.22, duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: 16,
+              marginBottom: 32,
+            }}
+          >
+            {/* Revenus ce mois */}
+            <div style={{
+              background: BAI.night,
+              borderRadius: 14,
+              padding: '20px 24px',
+              boxShadow: '0 4px 20px rgba(26,26,46,0.18)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 16,
+            }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: 11,
+                background: 'rgba(196,151,106,0.18)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                <Euro size={20} color={BAI.caramel} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', margin: '0 0 4px' }}>
+                  Revenus ce mois
+                </p>
+                <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 28, color: monthRevenue !== null ? BAI.caramel : 'rgba(255,255,255,0.6)', margin: 0, lineHeight: 1 }}>
+                  {monthRevenue !== null ? `${monthRevenue.toLocaleString('fr-FR')} €` : '—'}
+                </p>
+              </div>
+              <Link to="/dashboard/owner/finances" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}
+                onMouseEnter={e => (e.currentTarget.style.color = BAI.caramel)}
+                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.4)')}>
+                <BarChart2 size={14} />
+              </Link>
+            </div>
+
+            {/* Contrats actifs */}
+            <div style={{
+              background: BAI.bgSurface,
+              border: `1px solid ${BAI.border}`,
+              borderRadius: 14,
+              padding: '20px 24px',
+              boxShadow: BAI.shadowMd,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 16,
+            }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: 11,
+                background: BAI.tenantLight,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                <TrendingUp size={20} color={BAI.tenant} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 4px' }}>
+                  Contrats actifs
+                </p>
+                <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 28, color: BAI.tenant, margin: 0, lineHeight: 1 }}>
+                  {activeContracts !== null ? activeContracts : '—'}
+                </p>
+              </div>
+              <Link to="/contracts" style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 11, fontWeight: 600, color: BAI.inkFaint, textDecoration: 'none' }}
+                onMouseEnter={e => (e.currentTarget.style.color = BAI.caramel)}
+                onMouseLeave={e => (e.currentTarget.style.color = BAI.inkFaint)}>
+                Voir <ChevronRight size={11} />
+              </Link>
+            </div>
+
+            {/* Mes locataires */}
+            <div style={{
+              background: BAI.bgSurface,
+              border: `1px solid ${BAI.border}`,
+              borderRadius: 14,
+              padding: '20px 24px',
+              boxShadow: BAI.shadowMd,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 16,
+            }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: 11,
+                background: BAI.ownerLight,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                <Home size={20} color={BAI.owner} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 4px' }}>
+                  Mes locataires
+                </p>
+                <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 28, color: BAI.owner, margin: 0, lineHeight: 1 }}>
+                  {activeContracts !== null ? activeContracts : '—'}
+                </p>
+              </div>
+              <Link to="/owner/tenants" style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 11, fontWeight: 600, color: BAI.inkFaint, textDecoration: 'none' }}
+                onMouseEnter={e => (e.currentTarget.style.color = BAI.caramel)}
+                onMouseLeave={e => (e.currentTarget.style.color = BAI.inkFaint)}>
+                Voir <ChevronRight size={11} />
+              </Link>
+            </div>
+          </motion.div>
 
           {/* ── Alerte identité ────────────────────────────────────────── */}
           {!identityVerified && (

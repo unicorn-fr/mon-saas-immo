@@ -88,37 +88,50 @@ function CodeEntry({ email: initialEmail }: { email: string }) {
   }
 
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: BAI.bgBase, padding: '24px', ...font }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0d1a', padding: '24px', ...font, position: 'relative', overflow: 'hidden' }}>
+      {/* Subtle background glow */}
+      <div aria-hidden="true" style={{ position: 'absolute', top: '20%', left: '50%', transform: 'translateX(-50%)', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(196,151,106,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
+      {/* Glass card */}
       <div style={{
-        background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: '20px',
-        padding: '48px 40px', maxWidth: '440px', width: '100%', textAlign: 'center',
-        boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 8px 24px rgba(13,12,10,0.07)',
+        background: 'rgba(255,255,255,0.07)',
+        backdropFilter: 'blur(20px) saturate(160%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+        border: '1px solid rgba(255,255,255,0.13)',
+        borderRadius: 20,
+        padding: 'clamp(32px,5vw,48px) clamp(24px,4vw,40px)',
+        maxWidth: '440px',
+        width: '100%',
+        textAlign: 'center',
+        boxShadow: '0 8px 40px rgba(0,0,0,0.4)',
+        position: 'relative',
+        zIndex: 1,
       }}>
         {/* Logo */}
-        <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: '32px' }}>
+        <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: '28px' }}>
           <BailioLogo size={28} />
-          <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '20px', color: BAI.night, letterSpacing: '-0.02em' }}>
+          <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '20px', color: '#ffffff', letterSpacing: '-0.02em' }}>
             Bailio
           </span>
         </Link>
 
-        {/* Icon */}
-        <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#fdf5ec', border: '1px solid #f3c99a', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+        {/* Mail icon */}
+        <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(196,151,106,0.15)', border: '1px solid rgba(196,151,106,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
           <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
             <path d="M4 8h24v16a2 2 0 01-2 2H6a2 2 0 01-2-2V8z" stroke="#c4976a" strokeWidth="1.8" fill="none" strokeLinejoin="round" />
             <path d="M4 8l12 10L28 8" stroke="#c4976a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
 
-        <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, marginBottom: '12px' }}>
+        <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', marginBottom: '10px' }}>
           Vérification requise
         </div>
-        <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '30px', color: BAI.ink, margin: '0 0 12px', lineHeight: 1.2 }}>
+        <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '30px', color: '#ffffff', margin: '0 0 12px', lineHeight: 1.2 }}>
           Vérifiez votre email
         </h1>
         {editingEmail ? (
           <div style={{ marginBottom: 24 }}>
-            <p style={{ fontSize: '14px', color: BAI.inkMid, lineHeight: 1.7, margin: '0 0 10px' }}>
+            <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.7, margin: '0 0 10px' }}>
               Entrez votre adresse email pour recevoir le code
             </p>
             <input
@@ -126,7 +139,7 @@ function CodeEntry({ email: initialEmail }: { email: string }) {
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="votre@email.com"
-              style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: `1px solid ${BAI.border}`, fontFamily: BAI.fontBody, fontSize: 14, color: BAI.ink, background: '#f8f7f4', outline: 'none', boxSizing: 'border-box', marginBottom: 8 }}
+              style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.18)', fontFamily: BAI.fontBody, fontSize: 14, color: '#ffffff', background: 'rgba(255,255,255,0.08)', outline: 'none', boxSizing: 'border-box', marginBottom: 8 }}
               autoFocus
             />
             <button
@@ -142,17 +155,17 @@ function CodeEntry({ email: initialEmail }: { email: string }) {
                 finally { setResendLoading(false) }
               }}
               disabled={resendLoading || !email.trim()}
-              style={{ width: '100%', background: BAI.night, color: '#fff', border: 'none', borderRadius: 8, padding: '12px', fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 14, cursor: resendLoading ? 'not-allowed' : 'pointer' }}
+              style={{ width: '100%', background: BAI.caramel, color: '#fff', border: 'none', borderRadius: 8, padding: '12px', fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 14, cursor: resendLoading ? 'not-allowed' : 'pointer', opacity: (resendLoading || !email.trim()) ? 0.5 : 1 }}
             >
               {resendLoading ? 'Envoi…' : 'Envoyer le code'}
             </button>
           </div>
         ) : (
           <>
-            <p style={{ fontSize: '14px', color: BAI.inkMid, lineHeight: 1.7, margin: '0 0 6px' }}>
+            <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, margin: '0 0 6px' }}>
               Un code à 6 chiffres a été envoyé à
             </p>
-            <p style={{ fontSize: '14px', fontWeight: 600, color: BAI.night, margin: '0 0 4px', wordBreak: 'break-all' }}>
+            <p style={{ fontSize: '14px', fontWeight: 600, color: '#ffffff', margin: '0 0 4px', wordBreak: 'break-all' }}>
               {email}
             </p>
             <button
@@ -164,36 +177,38 @@ function CodeEntry({ email: initialEmail }: { email: string }) {
           </>
         )}
 
-        {/* Code boxes — masqués si on édite l'email */}
-        {!editingEmail && <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '20px' }}>
-          {digits.map((d, i) => (
-            <input
-              key={i}
-              ref={el => { inputRefs.current[i] = el }}
-              type="text"
-              inputMode="numeric"
-              maxLength={1}
-              value={d}
-              onChange={e => handleDigit(i, e.target.value)}
-              onKeyDown={e => handleKey(i, e)}
-              onPaste={handlePaste}
-              style={{
-                width: '48px', height: '56px', textAlign: 'center',
-                fontSize: '24px', fontWeight: 700, color: BAI.ink,
-                background: '#f8f7f4',
-                border: `2px solid ${codeError ? '#fca5a5' : d ? BAI.night : BAI.border}`,
-                borderRadius: '10px', outline: 'none',
-                fontFamily: "'DM Sans', system-ui, sans-serif",
-                transition: 'border-color 0.15s',
-              }}
-              onFocus={e => { e.currentTarget.style.borderColor = BAI.night }}
-              onBlur={e => { e.currentTarget.style.borderColor = codeError ? '#fca5a5' : d ? BAI.night : BAI.border }}
-            />
-          ))}
-        </div>}
+        {/* Code boxes */}
+        {!editingEmail && (
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '20px' }}>
+            {digits.map((d, i) => (
+              <input
+                key={i}
+                ref={el => { inputRefs.current[i] = el }}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={d}
+                onChange={e => handleDigit(i, e.target.value)}
+                onKeyDown={e => handleKey(i, e)}
+                onPaste={handlePaste}
+                style={{
+                  width: '48px', height: '56px', textAlign: 'center',
+                  fontSize: '24px', fontWeight: 700, color: '#ffffff',
+                  background: 'rgba(255,255,255,0.08)',
+                  border: `2px solid ${codeError ? '#fca5a5' : d ? BAI.caramel : 'rgba(255,255,255,0.18)'}`,
+                  borderRadius: '10px', outline: 'none',
+                  fontFamily: "'DM Sans', system-ui, sans-serif",
+                  transition: 'border-color 0.15s',
+                }}
+                onFocus={e => { e.currentTarget.style.borderColor = BAI.caramel }}
+                onBlur={e => { e.currentTarget.style.borderColor = codeError ? '#fca5a5' : d ? BAI.caramel : 'rgba(255,255,255,0.18)' }}
+              />
+            ))}
+          </div>
+        )}
 
         {!editingEmail && codeError && (
-          <p style={{ fontSize: '13px', color: BAI.error, margin: '0 0 16px' }}>{codeError}</p>
+          <p style={{ fontSize: '13px', color: '#fca5a5', margin: '0 0 16px' }}>{codeError}</p>
         )}
 
         {!editingEmail && (
@@ -201,36 +216,36 @@ function CodeEntry({ email: initialEmail }: { email: string }) {
             onClick={handleVerify}
             disabled={loading}
             style={{
-              width: '100%', background: loading ? BAI.inkMid : BAI.night, color: '#fff', border: 'none',
+              width: '100%', background: loading ? 'rgba(255,255,255,0.2)' : BAI.caramel, color: '#fff', border: 'none',
               borderRadius: '8px', padding: '14px 32px',
-              ...font, fontWeight: 600, fontSize: '15px',
+              ...font, fontWeight: 700, fontSize: '15px',
               cursor: loading ? 'not-allowed' : 'pointer', marginBottom: '20px', transition: 'background 0.15s',
             }}
-            onMouseEnter={e => { if (!loading) e.currentTarget.style.background = '#2a2a4a' }}
-            onMouseLeave={e => { if (!loading) e.currentTarget.style.background = BAI.night }}
           >
             {loading ? 'Vérification…' : 'Confirmer le code'}
           </button>
         )}
 
-        {!editingEmail && <p style={{ fontSize: '13px', color: BAI.inkFaint, margin: '0 0 8px' }}>
-          Code non reçu ?{' '}
-          {resendDone ? (
-            <span style={{ color: BAI.tenant, fontWeight: 500 }}>Envoyé !</span>
-          ) : (
-            <button
-              onClick={handleResend}
-              disabled={resendLoading}
-              style={{ background: 'none', border: 'none', color: BAI.caramel, fontWeight: 500, cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontFamily: 'inherit' }}
-            >
-              {resendLoading ? 'Envoi…' : 'Renvoyer le code'}
-            </button>
-          )}
-        </p>}
-        <p style={{ fontSize: '13px', color: BAI.inkFaint }}>
+        {!editingEmail && (
+          <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', margin: '0 0 8px' }}>
+            Code non reçu ?{' '}
+            {resendDone ? (
+              <span style={{ color: '#4ade80', fontWeight: 500 }}>Envoyé !</span>
+            ) : (
+              <button
+                onClick={handleResend}
+                disabled={resendLoading}
+                style={{ background: 'none', border: 'none', color: BAI.caramel, fontWeight: 500, cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontFamily: 'inherit' }}
+              >
+                {resendLoading ? 'Envoi…' : 'Renvoyer le code'}
+              </button>
+            )}
+          </p>
+        )}
+        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)' }}>
           <button
             onClick={() => { useAuthStore.getState().clearAuth(); navigate('/login', { replace: true }) }}
-            style={{ background: 'none', border: 'none', color: BAI.caramel, fontWeight: 500, cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontFamily: 'inherit' }}
+            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.55)', fontWeight: 500, cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontFamily: 'inherit' }}
           >
             Retour à la connexion
           </button>

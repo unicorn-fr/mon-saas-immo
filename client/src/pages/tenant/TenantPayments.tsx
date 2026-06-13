@@ -10,6 +10,9 @@ import {
   AlertCircle,
   Info,
   ArrowRight,
+  Wallet,
+  CalendarClock,
+  CheckCircle2,
 } from 'lucide-react'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -42,12 +45,22 @@ function formatEuro(amount: number) {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount)
 }
 
+function getNextPaymentDate(): string {
+  const now = new Date()
+  const next = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+  return next.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
+}
+
+function getCurrentMonthLabel(): string {
+  return new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+}
+
 const cardStyle: React.CSSProperties = {
   background: BAI.bgSurface,
   border: `1px solid ${BAI.border}`,
   borderRadius: 12,
   padding: 24,
-  boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
+  boxShadow: BAI.shadowMd,
 }
 
 function CopyButton({ value, label }: { value: string; label: string }) {
@@ -117,28 +130,71 @@ export default function TenantPayments() {
 
   return (
     <Layout>
-      {/* ── Hero sombre Hyperbeat ── */}
+      {/* ── Hero sombre ── */}
       <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)' }}>
         <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
-          MES LOYERS
+          FINANCES
         </p>
         <h1 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(28px,5vw,42px)', fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: '6px 0 8px', lineHeight: 1.1 }}>
-          Paiements & Quittances
+          Mon Portefeuille
         </h1>
         <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.55)', margin: 0 }}>
           Coordonnées bancaires de votre bailleur pour vos virements mensuels
         </p>
+
+        {/* KPI glass cards */}
         <div className="flex flex-wrap gap-3" style={{ marginTop: 28 }}>
-          <div style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '16px 24px', minWidth: 130 }}>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>LOYER MENSUEL</p>
-            <p style={{ fontFamily: BAI.fontDisplay, fontSize: 36, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1 }}>
-              {contract ? `${formatEuro(totalRent)}` : '—'}
+          {/* Solde loyer */}
+          <div style={{
+            background: 'rgba(255,255,255,0.08)',
+            backdropFilter: 'blur(20px) saturate(160%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+            border: '1px solid rgba(255,255,255,0.13)',
+            borderRadius: 16,
+            padding: '16px 24px',
+            minWidth: 150,
+          }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>
+              LOYER MENSUEL
+            </p>
+            <p style={{ fontFamily: BAI.fontDisplay, fontSize: 42, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1 }}>
+              {isLoading ? '—' : contract ? `${formatEuro(totalRent)}` : '—'}
             </p>
           </div>
-          <div style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '16px 24px', minWidth: 130 }}>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>STATUT</p>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: contract ? '#4ade80' : 'rgba(255,255,255,0.5)', margin: 0 }}>
-              {isLoading ? '…' : contract ? 'Bail actif' : 'Aucun contrat'}
+
+          {/* Payé ce mois */}
+          <div style={{
+            background: 'rgba(255,255,255,0.08)',
+            backdropFilter: 'blur(20px) saturate(160%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+            border: '1px solid rgba(255,255,255,0.13)',
+            borderRadius: 16,
+            padding: '16px 24px',
+            minWidth: 150,
+          }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>
+              PAYÉ CE MOIS
+            </p>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: isLoading ? 'rgba(255,255,255,0.5)' : contract ? '#4ade80' : 'rgba(255,255,255,0.5)', margin: '4px 0 0' }}>
+              {isLoading ? '…' : contract ? getCurrentMonthLabel() : 'Aucun contrat'}
+            </p>
+          </div>
+
+          {/* Prochain loyer */}
+          <div style={{
+            background: 'rgba(255,255,255,0.08)',
+            backdropFilter: 'blur(20px) saturate(160%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+            border: '1px solid rgba(255,255,255,0.13)',
+            borderRadius: 16,
+            padding: '16px 24px',
+            minWidth: 150,
+          }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>
+              PROCHAIN LOYER
+            </p>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: isLoading ? 'rgba(255,255,255,0.5)' : contract ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.5)', margin: '4px 0 0' }}>
+              {isLoading ? '…' : contract ? `1er — ${getNextPaymentDate()}` : '—'}
             </p>
           </div>
         </div>
@@ -179,11 +235,61 @@ export default function TenantPayments() {
                       <p style={{ fontSize: 12, color: BAI.inkFaint, margin: '2px 0 0' }}>{contract.property.address}</p>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <p style={{ fontSize: 18, fontWeight: 700, color: BAI.ink, margin: 0, fontFamily: BAI.fontDisplay, fontStyle: 'italic' }}>
+                      <p style={{ fontSize: 22, fontWeight: 700, color: BAI.ink, margin: 0, fontFamily: BAI.fontDisplay, fontStyle: 'italic' }}>
                         {formatEuro(totalRent)}
                       </p>
                       <p style={{ fontSize: 11, color: BAI.inkFaint, margin: '2px 0 0' }}>/ mois (charges incluses)</p>
                     </div>
+                  </div>
+
+                  {/* Quick status row */}
+                  <div className="flex items-center gap-3 flex-wrap" style={{ marginTop: 14 }}>
+                    <div className="flex items-center gap-2" style={{ padding: '6px 12px', background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`, borderRadius: 20 }}>
+                      <CheckCircle2 size={12} style={{ color: BAI.tenant }} />
+                      <span style={{ fontSize: 12, fontWeight: 600, color: BAI.tenant, fontFamily: BAI.fontBody }}>Bail actif</span>
+                    </div>
+                    <div className="flex items-center gap-2" style={{ padding: '6px 12px', background: BAI.bgMuted, border: `1px solid ${BAI.border}`, borderRadius: 20 }}>
+                      <CalendarClock size={12} style={{ color: BAI.inkMid }} />
+                      <span style={{ fontSize: 12, color: BAI.inkMid, fontFamily: BAI.fontBody }}>
+                        Depuis le {new Date(contract.startDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Payer maintenant CTA si contrat actif ────────────────── */}
+              {contract && owner?.iban && (
+                <div style={{ background: '#0a0d1a', borderRadius: 12, padding: '20px 24px' }}>
+                  <div className="flex items-center justify-between gap-4 flex-wrap">
+                    <div className="flex items-center gap-3">
+                      <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(196,151,106,0.15)', border: '1px solid rgba(196,151,106,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Wallet size={18} style={{ color: BAI.caramel }} />
+                      </div>
+                      <div>
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: '#ffffff', margin: 0 }}>
+                          Prochain virement
+                        </p>
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: '2px 0 0' }}>
+                          {formatEuro(totalRent)} · dû le 1er du mois
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const iban = owner.iban!
+                        navigator.clipboard.writeText(iban.replace(/\s/g, '')).then(() => toast.success('IBAN copié — collez dans votre application bancaire'))
+                      }}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                        padding: '10px 20px', borderRadius: 9, border: 'none',
+                        background: BAI.caramel, color: '#ffffff',
+                        fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Payer maintenant <ArrowRight size={14} />
+                    </button>
                   </div>
                 </div>
               )}
@@ -247,10 +353,10 @@ export default function TenantPayments() {
                     </div>
                   </div>
                 ) : (
-                  <div style={{ ...cardStyle, background: '#fdf5ec', border: '1px solid #f3c99a' }}>
+                  <div style={{ ...cardStyle, background: BAI.warningLight, border: `1px solid ${BAI.caramelBorder}` }}>
                     <div className="flex items-start gap-3">
-                      <AlertCircle size={16} style={{ color: '#92400e', flexShrink: 0, marginTop: 2 }} />
-                      <p style={{ fontSize: 14, color: '#92400e', margin: 0 }}>
+                      <AlertCircle size={16} style={{ color: BAI.warning, flexShrink: 0, marginTop: 2 }} />
+                      <p style={{ fontSize: 14, color: BAI.warning, margin: 0 }}>
                         Votre bailleur n'a pas encore renseigné son IBAN. Contactez-le via la messagerie pour obtenir ses coordonnées bancaires.
                       </p>
                     </div>
@@ -259,7 +365,7 @@ export default function TenantPayments() {
               ) : (
                 <div style={{ ...cardStyle, textAlign: 'center', padding: '48px 24px' }}>
                   <Building2 size={36} style={{ color: BAI.border, margin: '0 auto 16px' }} />
-                  <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 20, color: BAI.ink, marginBottom: 8 }}>
+                  <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 22, color: BAI.ink, marginBottom: 8 }}>
                     Aucun contrat actif
                   </p>
                   <p style={{ fontSize: 14, color: BAI.inkMid, margin: 0 }}>

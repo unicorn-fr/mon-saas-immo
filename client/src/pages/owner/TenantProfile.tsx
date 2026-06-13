@@ -167,39 +167,60 @@ export default function TenantProfile() {
 
   return (
     <Layout>
-      <div className="min-h-screen p-6 lg:p-8" style={{ background: BAI.bgBase, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-        <div className="max-w-5xl mx-auto">
+      <div>
 
+        {/* ── DARK HERO ── */}
+        <div style={{
+          background: '#0a0d1a',
+          padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)',
+        }}>
           {/* Back button */}
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-1.5 text-sm font-medium mb-6 transition-opacity hover:opacity-70"
-            style={{ color: BAI.inkMid }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6, marginBottom: 24,
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 500,
+              color: 'rgba(255,255,255,0.55)',
+            }}
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft style={{ width: 15, height: 15 }} />
             Retour
           </button>
 
-          {/* Page header */}
-          <div className="mb-8">
-            <p className="uppercase tracking-widest mb-1" style={{ fontSize: 10, color: BAI.inkFaint, letterSpacing: '0.12em' }}>
-              Propriétaire · Dossier locataire
-            </p>
+          <p style={{
+            fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700,
+            letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0,
+          }}>LOCATAIRE</p>
+          <div className="flex flex-wrap items-center gap-4" style={{ marginTop: 6, marginBottom: 8 }}>
+            {/* Avatar initiales glass */}
+            <div style={{
+              width: 56, height: 56, borderRadius: '50%', flexShrink: 0,
+              background: 'rgba(255,255,255,0.10)', backdropFilter: 'blur(20px) saturate(160%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+              border: '1px solid rgba(255,255,255,0.18)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: BAI.fontDisplay, fontSize: 22, fontWeight: 700, color: '#ffffff',
+            }}>
+              {loading ? '?' : (profile?.firstName?.[0] ?? '?').toUpperCase()}
+            </div>
             <h1 style={{
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
-              fontWeight: 700,
-              fontStyle: 'italic',
-              fontSize: 40,
-              color: BAI.ink,
-              lineHeight: 1.1,
-              margin: 0,
+              fontFamily: BAI.fontDisplay, fontSize: 'clamp(28px,5vw,42px)',
+              fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1.1,
             }}>
               {loading ? 'Chargement…' : fullName || 'Locataire'}
             </h1>
-            {profile?.email && (
-              <p className="mt-1.5" style={{ fontSize: 14, color: BAI.inkMid }}>{profile.email}</p>
-            )}
           </div>
+          {profile?.email && (
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.55)', margin: '0 0 20px' }}>
+              {profile.email}
+            </p>
+          )}
+        </div>
+
+        {/* ── CONTENU LIGHT ── */}
+        <div style={{ background: BAI.bgBase, minHeight: '60vh', padding: 'clamp(24px,4vw,40px) clamp(16px,4vw,48px)' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
 
           {loading ? (
             <div className="flex flex-col items-center justify-center py-24 gap-3"
@@ -316,8 +337,9 @@ export default function TenantProfile() {
             </div>
           )}
 
-        </div>
-      </div>
+        </div>{/* end inner max-w */}
+        </div>{/* end contenu light */}
+      </div>{/* end root */}
     </Layout>
   )
 }

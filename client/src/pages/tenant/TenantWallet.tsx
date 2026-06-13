@@ -1,2 +1,2 @@
-// This file has been deleted — replaced by TenantPayments.tsx
-export {}
+// TenantWallet → redirects to TenantPayments (same page, kept for router compat)
+export { default } from './TenantPayments'

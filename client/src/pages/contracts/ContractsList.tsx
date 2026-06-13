@@ -9,7 +9,6 @@ import {
   FileText,
   Plus,
   Calendar,
-  Euro,
   User,
   Home as HomeIcon,
   CheckCircle,
@@ -94,49 +93,67 @@ export default function ContractsList() {
     const isOwner = user?.role === 'OWNER'
     const otherParty = isOwner ? contract.tenant : contract.owner
     const inSignature = ['SENT', 'SIGNED_OWNER', 'SIGNED_TENANT', 'COMPLETED'].includes(contract.status)
+    const isActive = contract.status === 'ACTIVE'
+
+    // Duration progress for ACTIVE contracts
+    let durationPct: number | null = null
+    if (isActive && contract.startDate && contract.endDate) {
+      const start = new Date(contract.startDate).getTime()
+      const end = new Date(contract.endDate).getTime()
+      const now = Date.now()
+      durationPct = Math.min(100, Math.max(0, Math.round(((now - start) / (end - start)) * 100)))
+    }
+
+    // Loyer display with Cormorant for impact
+    const loyer = Number(contract.monthlyRent)
+    const totalMonthly = loyer + (contract.charges ? Number(contract.charges) : 0)
 
     return (
       <div
         style={{
           background: BAI.bgSurface,
-          border: `1px solid ${BAI.border}`,
-          borderRadius: 12,
+          border: `1px solid ${isActive ? BAI.tenantBorder : BAI.border}`,
+          borderRadius: 14,
           boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
           padding: '20px',
           cursor: 'pointer',
           transition: 'box-shadow 0.15s, border-color 0.15s, transform 0.15s',
           fontFamily: BAI.fontBody,
+          borderTop: isActive ? `3px solid ${BAI.tenant}` : `3px solid transparent`,
         }}
         onClick={() => navigate(`/contracts/${contract.id}`)}
         onMouseEnter={e => {
           const el = e.currentTarget as HTMLDivElement
           el.style.boxShadow = '0 4px 12px rgba(13,12,10,0.10), 0 12px 32px rgba(13,12,10,0.08)'
           el.style.transform = 'translateY(-2px)'
-          el.style.borderColor = BAI.borderStrong
         }}
         onMouseLeave={e => {
           const el = e.currentTarget as HTMLDivElement
           el.style.boxShadow = '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)'
           el.style.transform = 'translateY(0)'
-          el.style.borderColor = BAI.border
         }}
       >
+        {/* Header row */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1 min-w-0">
             <h3
               className="truncate mb-1"
-              style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 17, color: BAI.ink }}
+              style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 18, color: BAI.ink }}
             >
               {contract.property?.title}
             </h3>
             <div className="flex items-center" style={{ fontSize: 12, color: BAI.inkFaint, gap: 4 }}>
               <HomeIcon style={{ width: 12, height: 12 }} />
               {contract.property?.city}
+              {contract.property?.postalCode && (
+                <span style={{ color: BAI.border }}> · {contract.property.postalCode}</span>
+              )}
             </div>
           </div>
           <div className="ml-3 shrink-0">{getStatusPill(contract.status)}</div>
         </div>
 
+        {/* Body info */}
         <div className="space-y-1.5 mb-3">
           <div className="flex items-center" style={{ fontSize: 13, color: BAI.inkMid, gap: 8 }}>
             <User style={{ width: 13, height: 13, color: BAI.inkFaint, flexShrink: 0 }} />
@@ -152,19 +169,47 @@ export default function ContractsList() {
             {format(new Date(contract.startDate), 'dd MMM yyyy', { locale: fr })} →{' '}
             {format(new Date(contract.endDate), 'dd MMM yyyy', { locale: fr })}
           </div>
-          <div className="flex items-center" style={{ fontSize: 13, gap: 8 }}>
-            <Euro style={{ width: 13, height: 13, color: BAI.inkFaint, flexShrink: 0 }} />
-            <span style={{ fontWeight: 600, color: BAI.caramel, whiteSpace: 'nowrap' }}>{Number(contract.monthlyRent).toLocaleString('fr-FR')} €/mois</span>
-            {contract.charges ? <span style={{ color: BAI.inkFaint, whiteSpace: 'nowrap' }}>+ {Number(contract.charges).toLocaleString('fr-FR')} € charges</span> : null}
-          </div>
         </div>
 
+        {/* Loyer in Cormorant */}
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 12 }}>
+          <span style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 24, color: BAI.caramel, lineHeight: 1 }}>
+            {loyer.toLocaleString('fr-FR')} €
+          </span>
+          <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>
+            /mois HC
+          </span>
+          {contract.charges ? (
+            <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid }}>
+              · {totalMonthly.toLocaleString('fr-FR')} € CC
+            </span>
+          ) : null}
+        </div>
+
+        {/* ACTIVE: duration progress bar */}
+        {isActive && durationPct !== null && (
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+              <span style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, color: BAI.inkFaint, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Durée écoulée
+              </span>
+              <span style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, color: BAI.tenant }}>
+                {durationPct}%
+              </span>
+            </div>
+            <div style={{ height: 5, background: BAI.bgMuted, borderRadius: 99, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${durationPct}%`, background: BAI.tenant, borderRadius: 99 }} />
+            </div>
+          </div>
+        )}
+
+        {/* IN-SIGNATURE: signature progression */}
         {inSignature && (
           <div
             className="pt-3"
             style={{ borderTop: `1px solid ${BAI.border}` }}
           >
-            <p style={{ fontSize: 11, color: BAI.inkFaint, marginBottom: 6, fontFamily: BAI.fontBody, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <p style={{ fontSize: 10, color: BAI.inkFaint, marginBottom: 6, fontFamily: BAI.fontBody, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
               Progression des signatures
             </p>
             <div className="flex items-center gap-4" style={{ fontSize: 12 }}>
