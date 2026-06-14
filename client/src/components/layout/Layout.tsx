@@ -89,13 +89,11 @@ export const Layout = ({ children, showHeader = true, showFooter, bodyBackground
 
       {/* Colonne droite */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        {showHeader && <Header />}
-        {/* mobile: pas de paddingTop (topbar en flux), desktop: espace pour la bulle flottante */}
         <AnimatePresence mode="wait">
           <motion.main
             key={location.pathname}
             id="main-content"
-            className="flex-1 overflow-y-auto md:pb-0 md:pt-16"
+            className="flex-1 overflow-y-auto md:pb-0"
             style={{ paddingBottom: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}
             variants={pageVariants}
             initial="initial"

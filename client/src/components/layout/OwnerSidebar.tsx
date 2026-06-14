@@ -3,7 +3,7 @@ import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Home, ClipboardList, Calendar, FileText,
-  MessageSquare, Plus, Settings, Receipt, X, LogOut,
+  MessageSquare, Plus, Settings, Receipt, LogOut,
 } from 'lucide-react'
 import { useSidebarStore } from '../../store/sidebarStore'
 import { useMessages } from '../../hooks/useMessages'
@@ -194,20 +194,6 @@ export function OwnerSidebar() {
                 Espace propriétaire
               </p>
             </Link>
-            <button
-              onClick={closeMobile}
-              className="md:hidden"
-              aria-label="Fermer le menu"
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.10)',
-                cursor: 'pointer',
-              }}
-            >
-              <X size={14} color="rgba(255,255,255,0.65)" />
-            </button>
           </>
         )}
       </div>
