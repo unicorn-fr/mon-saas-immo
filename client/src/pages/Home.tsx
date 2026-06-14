@@ -11,6 +11,7 @@ import { useDarkSection } from '../hooks/useDarkSection'
 import {
   Search, ArrowRight, MapPin, Building2, TrendingUp, Shield,
   Clock, ChevronRight, Check, FolderOpen, Send, FileSignature, Euro,
+  ChevronDown,
 } from 'lucide-react'
 import { Property } from '../types/property.types'
 import { BAI } from '../constants/bailio-tokens'
@@ -39,12 +40,12 @@ const PRICE_RANGES = [
 ]
 
 const CITIES = [
-  { name: 'Paris', slug: 'paris', count: '1 200+' },
-  { name: 'Lyon', slug: 'lyon', count: '340+' },
-  { name: 'Marseille', slug: 'marseille', count: '280+' },
-  { name: 'Bordeaux', slug: 'bordeaux', count: '190+' },
-  { name: 'Toulouse', slug: 'toulouse', count: '220+' },
-  { name: 'Nantes', slug: 'nantes', count: '160+' },
+  { name: 'Paris', slug: 'paris', count: '1 200+', img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=300&h=160&q=80' },
+  { name: 'Lyon', slug: 'lyon', count: '340+', img: 'https://images.unsplash.com/photo-1524397057410-1e775ed476f3?auto=format&fit=crop&w=300&h=160&q=80' },
+  { name: 'Marseille', slug: 'marseille', count: '280+', img: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=300&h=160&q=80' },
+  { name: 'Bordeaux', slug: 'bordeaux', count: '190+', img: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=300&h=160&q=80' },
+  { name: 'Toulouse', slug: 'toulouse', count: '220+', img: 'https://images.unsplash.com/photo-1508050919630-b135583b29ab?auto=format&fit=crop&w=300&h=160&q=80' },
+  { name: 'Nantes', slug: 'nantes', count: '160+', img: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=300&h=160&q=80' },
 ]
 
 const GUIDE_ARTICLES = [
@@ -60,6 +61,53 @@ const GUIDE_ARTICLES = [
   { tag: 'JURIDIQUE', title: 'Comprendre le bail : tout ce que dit la loi', temps: '8 min', slug: 'comprendre-bail-loi', featured: false },
   { tag: 'VISITE', title: 'Visite appartement : 20 questions à poser', temps: '4 min', slug: 'visite-appartement-questions', featured: false },
   { tag: 'PROPRIÉTAIRE', title: 'Fixer le bon loyer pour son bien', temps: '6 min', slug: 'fixer-bon-loyer', featured: false },
+]
+
+// ─── Photos marquee ───────────────────────────────────────────────────────────
+
+const MARQUEE_ROW1 = [
+  'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=400&h=260&q=80',
+  'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=400&h=260&q=80',
+  'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=400&h=260&q=80',
+  'https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=400&h=260&q=80',
+  'https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=400&h=260&q=80',
+]
+
+const MARQUEE_ROW2 = [
+  'https://images.unsplash.com/photo-1560185893-a55cbc8c57e8?auto=format&fit=crop&w=400&h=260&q=80',
+  'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=400&h=260&q=80',
+  'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=400&h=260&q=80',
+  'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=400&h=260&q=80',
+  'https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=400&h=260&q=80',
+]
+
+// ─── Témoignages ──────────────────────────────────────────────────────────────
+
+const TESTIMONIALS = [
+  {
+    initials: 'ML',
+    name: 'Marie L.',
+    role: 'Locataire',
+    city: 'Paris',
+    quote: "J'ai trouvé mon appartement en 3 jours. Le dossier partageable m'a sauvé la mise.",
+    stars: 5,
+  },
+  {
+    initials: 'TM',
+    name: 'Thomas M.',
+    role: 'Propriétaire',
+    city: 'Lyon',
+    quote: "La signature électronique est un gain de temps fou. Plus jamais sans Bailio.",
+    stars: 5,
+  },
+  {
+    initials: 'SK',
+    name: 'Sophie K.',
+    role: 'Locataire',
+    city: 'Bordeaux',
+    quote: "L'interface est tellement intuitive. J'ai postulé à 5 appartements en 10 minutes.",
+    stars: 5,
+  },
 ]
 
 // ─── SearchBox ────────────────────────────────────────────────────────────────
@@ -95,14 +143,16 @@ function SearchBox({ city, setCity, type, setType, priceRange, setPriceRange }: 
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.45, delay: 0.30, ease: [0.22, 1, 0.36, 1] }}
       style={{
-        background: 'rgba(255,255,255,0.06)',
-        border: '1px solid rgba(255,255,255,0.14)',
+        background: 'rgba(255,255,255,0.07)',
+        backdropFilter: 'blur(24px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+        border: '1px solid rgba(255,255,255,0.16)',
         borderRadius: 16,
         padding: 8,
         display: 'flex',
         gap: 0,
         alignItems: 'stretch',
-        boxShadow: '0 8px 40px rgba(0,0,0,0.30)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
       }}
     >
       {/* Location */}
@@ -331,7 +381,7 @@ export default function Home() {
         @media (max-width: 768px) { .feature-grid { grid-template-columns: 1fr; gap: 32px; } }
 
         /* ── Cities grid ── */
-        .cities-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+        .cities-grid { display: flex; flex-wrap: wrap; gap: 12px; }
 
         /* ── Guide grid ── */
         .guide-grid { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: auto auto; gap: 16px; }
@@ -348,12 +398,58 @@ export default function Home() {
           .results-header { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
           .results-header a { align-self: flex-start; }
         }
+
+        /* ── Hero 2-col grid ── */
+        .hero-layout {
+          display: grid;
+          grid-template-columns: minmax(0,1fr) minmax(0,480px);
+          gap: 48px;
+          align-items: center;
+        }
+        .hero-images-col { display: block; }
+        @media (max-width: 900px) {
+          .hero-layout { grid-template-columns: 1fr; }
+          .hero-images-col { display: none; }
+        }
+
+        /* ── Marquee keyframes ── */
+        @keyframes marquee-left {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        @keyframes marquee-right {
+          0% { transform: translateX(-50%); }
+          100% { transform: translateX(0); }
+        }
+        .marquee-left { animation: marquee-left 40s linear infinite; }
+        .marquee-right { animation: marquee-right 45s linear infinite; }
+        .marquee-left:hover, .marquee-right:hover { animation-play-state: paused; }
+
+        /* ── Scroll indicator bounce ── */
+        @keyframes bounce-y {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(8px); }
+        }
+        .scroll-bounce { animation: bounce-y 1.8s ease-in-out infinite; }
+
+        /* ── Testimonials grid ── */
+        .testimonials-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 20px;
+        }
+
+        /* ── Steps connection line ── */
+        .steps-grid { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        @media (max-width: 640px) { .steps-grid { grid-template-columns: 1fr; } }
+        .steps-line { position: absolute; top: 54px; left: calc(16.66% + 22px); right: calc(16.66% + 22px); height: 1px; background: rgba(255,255,255,0.08); pointer-events: none; }
+        @media (max-width: 640px) { .steps-line { display: none; } }
       `}</style>
 
       <Header />
 
       {/* ══════════════════════════════════════════════════════════════════════
-          1. HERO — full viewport, Hyperbeat-style
+          1. HERO — full viewport, 2-col desktop
       ══════════════════════════════════════════════════════════════════════ */}
       <section
         ref={heroRef}
@@ -369,128 +465,218 @@ export default function Home() {
           justifyContent: 'center',
         }}
       >
-        {/* Ambient glows — sans backdrop-filter */}
+        {/* Ambient glows */}
         <div aria-hidden style={{ position: 'absolute', top: -80, right: -60, width: 600, height: 500, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.16) 0%, transparent 65%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
         <div aria-hidden style={{ position: 'absolute', bottom: -60, left: -80, width: 460, height: 380, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(26,50,112,0.18) 0%, transparent 65%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
 
-        <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 clamp(20px,5vw,48px)', position: 'relative', zIndex: 1, width: '100%' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 clamp(20px,5vw,48px)', position: 'relative', zIndex: 1, width: '100%' }}>
+          <div className="hero-layout">
 
-          {/* Headline — 3 lignes courtes Hyperbeat-style */}
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <h1 style={{
-              fontFamily: BAI.fontDisplay,
-              fontStyle: 'italic',
-              fontWeight: 700,
-              fontSize: 'clamp(56px, 8vw, 96px)',
-              lineHeight: 0.95,
-              color: '#ffffff',
-              margin: 0,
-              letterSpacing: '-0.02em',
-            }}>
-              <span style={{ display: 'block' }}>Trouvez<span style={{ color: BAI.caramel }}>.</span></span>
-              <span style={{ display: 'block' }}>Postulez<span style={{ color: BAI.caramel }}>.</span></span>
-              <span style={{ display: 'block' }}>Emménagez<span style={{ color: BAI.caramel }}>.</span></span>
-            </h1>
-          </motion.div>
+            {/* Colonne gauche — texte + search */}
+            <div>
+              {/* Headline */}
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <h1 style={{
+                  fontFamily: BAI.fontDisplay,
+                  fontStyle: 'italic',
+                  fontWeight: 700,
+                  fontSize: 'clamp(56px, 8vw, 96px)',
+                  lineHeight: 0.95,
+                  color: '#ffffff',
+                  margin: 0,
+                  letterSpacing: '-0.02em',
+                }}>
+                  <span style={{ display: 'block' }}>Trouvez<span style={{ color: BAI.caramel }}>.</span></span>
+                  <span style={{ display: 'block' }}>Postulez<span style={{ color: BAI.caramel }}>.</span></span>
+                  <span style={{ display: 'block' }}>Emménagez<span style={{ color: BAI.caramel }}>.</span></span>
+                </h1>
+              </motion.div>
 
-          {/* Sous-titre */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.22 }}
-            style={{
-              fontFamily: BAI.fontBody,
-              fontSize: 'clamp(16px, 2vw, 20px)',
-              color: 'rgba(255,255,255,0.65)',
-              maxWidth: 480,
-              marginTop: 24,
-              marginBottom: 0,
-              lineHeight: 1.55,
-            }}
-          >
-            De la recherche à la signature du bail, sans agence, sans frais.
-          </motion.p>
-
-          {/* Boutons CTA */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.30 }}
-            style={{ display: 'flex', gap: 12, marginTop: 40, flexWrap: 'wrap' }}
-          >
-            <Link to="/search"
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                background: BAI.caramel, color: '#fff',
-                borderRadius: 8, padding: '14px 28px',
-                fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 16,
-                textDecoration: 'none', border: 'none',
-                transition: 'opacity 0.18s',
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1' }}>
-              Trouver un logement
-              <ArrowRight size={16} />
-            </Link>
-            <Link to="/register?role=OWNER"
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                background: 'transparent', color: 'rgba(255,255,255,0.85)',
-                borderRadius: 8, padding: '14px 28px',
-                fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 16,
-                textDecoration: 'none', border: '1px solid rgba(255,255,255,0.30)',
-                transition: 'background 0.18s, border-color 0.18s',
-              }}
-              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.08)'; el.style.borderColor = 'rgba(255,255,255,0.50)' }}
-              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.borderColor = 'rgba(255,255,255,0.30)' }}>
-              Publier une annonce
-            </Link>
-          </motion.div>
-
-          {/* SearchBox */}
-          <div style={{ marginTop: 48, maxWidth: 720 }}>
-            <SearchBox
-              city={city} setCity={setCity}
-              type={type} setType={setType}
-              priceRange={priceRange} setPriceRange={setPriceRange}
-            />
-          </div>
-
-          {/* Stat chips */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.50 }}
-            style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap' }}
-          >
-            {[
-              '12 000+ annonces',
-              '0€ de frais d\'agence',
-              'Signature électronique',
-            ].map((label, i) => (
-              <motion.span
-                key={label}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.52 + i * 0.06 }}
+              {/* Sous-titre */}
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.22 }}
                 style={{
-                  display: 'inline-flex', alignItems: 'center',
-                  padding: '6px 14px',
-                  background: 'rgba(255,255,255,0.08)',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  borderRadius: 50,
-                  fontFamily: BAI.fontBody, fontSize: 13,
-                  color: 'rgba(255,255,255,0.70)',
+                  fontFamily: BAI.fontBody,
+                  fontSize: 'clamp(16px, 2vw, 20px)',
+                  color: 'rgba(255,255,255,0.65)',
+                  maxWidth: 480,
+                  marginTop: 24,
+                  marginBottom: 0,
+                  lineHeight: 1.55,
                 }}
               >
-                {label}
-              </motion.span>
-            ))}
-          </motion.div>
+                De la recherche à la signature du bail, sans agence, sans frais.
+              </motion.p>
+
+              {/* Boutons CTA */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: 0.30 }}
+                style={{ display: 'flex', gap: 12, marginTop: 40, flexWrap: 'wrap' }}
+              >
+                <Link to="/search"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 8,
+                    background: BAI.caramel, color: '#fff',
+                    borderRadius: 8, padding: '14px 28px',
+                    fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 16,
+                    textDecoration: 'none', border: 'none',
+                    transition: 'opacity 0.18s',
+                  }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88' }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1' }}>
+                  Trouver un logement
+                  <ArrowRight size={16} />
+                </Link>
+                <Link to="/register?role=OWNER"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 8,
+                    background: 'transparent', color: 'rgba(255,255,255,0.85)',
+                    borderRadius: 8, padding: '14px 28px',
+                    fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 16,
+                    textDecoration: 'none', border: '1px solid rgba(255,255,255,0.30)',
+                    transition: 'background 0.18s, border-color 0.18s',
+                  }}
+                  onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.08)'; el.style.borderColor = 'rgba(255,255,255,0.50)' }}
+                  onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.borderColor = 'rgba(255,255,255,0.30)' }}>
+                  Publier une annonce
+                </Link>
+              </motion.div>
+
+              {/* SearchBox */}
+              <div style={{ marginTop: 48, maxWidth: 720 }}>
+                <SearchBox
+                  city={city} setCity={setCity}
+                  type={type} setType={setType}
+                  priceRange={priceRange} setPriceRange={setPriceRange}
+                />
+              </div>
+
+              {/* Stat chips */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.50 }}
+                style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap' }}
+              >
+                {[
+                  '12 000+ annonces',
+                  '0€ de frais d\'agence',
+                  'Signature électronique',
+                ].map((label, i) => (
+                  <motion.span
+                    key={label}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.52 + i * 0.06 }}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center',
+                      padding: '6px 14px',
+                      background: 'rgba(255,255,255,0.08)',
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      borderRadius: 50,
+                      fontFamily: BAI.fontBody, fontSize: 13,
+                      color: 'rgba(255,255,255,0.70)',
+                    }}
+                  >
+                    {label}
+                  </motion.span>
+                ))}
+              </motion.div>
+            </div>
+
+            {/* Colonne droite — grille photos desktop */}
+            <div className="hero-images-col" style={{ position: 'relative' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, position: 'relative' }}>
+                {/* Photo 1 — grande gauche */}
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.4 }}
+                  style={{ gridRow: '1 / 3', borderRadius: 16, overflow: 'hidden', height: 360 }}
+                >
+                  <img
+                    src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=600&q=80"
+                    alt="Appartement moderne"
+                    loading="lazy"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                </motion.div>
+                {/* Photo 2 — haut droite */}
+                <motion.div
+                  initial={{ opacity: 0, y: 0 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.5 }}
+                  style={{ borderRadius: 16, overflow: 'hidden', height: 170 }}
+                >
+                  <img
+                    src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=600&q=80"
+                    alt="Salon lumineux"
+                    loading="lazy"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                </motion.div>
+                {/* Photo 3 — bas droite décalé */}
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.6 }}
+                  style={{ borderRadius: 16, overflow: 'hidden', height: 170, marginTop: 8 }}
+                >
+                  <img
+                    src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=600&q=80"
+                    alt="Chambre élégante"
+                    loading="lazy"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                </motion.div>
+              </div>
+
+              {/* Badge glass overlay */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: 0.75 }}
+                style={{
+                  position: 'absolute',
+                  bottom: -16,
+                  left: -16,
+                  background: 'rgba(255,255,255,0.08)',
+                  backdropFilter: 'blur(20px) saturate(160%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                  border: '1px solid rgba(255,255,255,0.13)',
+                  borderRadius: 14,
+                  padding: '12px 18px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                }}
+              >
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(196,151,106,0.20)', border: '1px solid rgba(196,151,106,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Euro size={16} color={BAI.caramel} />
+                </div>
+                <div>
+                  <div style={{ fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 15, color: BAI.caramel }}>0€ de frais</div>
+                  <div style={{ fontFamily: BAI.fontBody, fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>sans agence</div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+
+        {/* Scroll indicator */}
+        <div style={{ position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+          <span style={{ fontFamily: BAI.fontBody, fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.30)' }}>Découvrir</span>
+          <div className="scroll-bounce" style={{ color: 'rgba(255,255,255,0.35)' }}>
+            <ChevronDown size={20} />
+          </div>
         </div>
 
         {/* Bottom fade */}
@@ -524,14 +710,24 @@ export default function Home() {
           {/* Bento grid */}
           <div className="bento-grid">
 
-            {/* Carte 1 — Grande (col 1, row 1-2) */}
+            {/* Carte 1 — Grande (col 1, row 1-2) avec image */}
             <div className="bento-card-tall"
               style={{
                 background: BAI.night, borderRadius: 16,
                 padding: 'clamp(20px, 2.5vw, 32px)',
                 display: 'flex', flexDirection: 'column', gap: 12,
                 minHeight: 300,
+                overflow: 'hidden',
               }}>
+              {/* Image en tête */}
+              <div style={{ height: 180, borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
+                <img
+                  src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?auto=format&fit=crop&w=800&q=80"
+                  alt="Appartement"
+                  loading="lazy"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                />
+              </div>
               <FolderOpen size={32} color={BAI.caramel} />
               <h3 style={{
                 fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
@@ -607,47 +803,92 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
-          3. COMMENT CA MARCHE
+          3. MARQUEE PHOTOS — Logements en vedette
       ══════════════════════════════════════════════════════════════════════ */}
-      <section style={{ background: BAI.bgSurface, padding: 'clamp(48px,7vh,80px) clamp(20px,5vw,48px)', borderTop: `1px solid ${BAI.border}` }}>
-        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+      <section style={{ background: '#0a0d1a', padding: 'clamp(48px,6vh,72px) 0', overflow: 'hidden', position: 'relative' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 clamp(20px,5vw,48px)', marginBottom: 40 }}>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 12px' }}>
+            Logements en vedette
+          </p>
+          <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(26px,4vw,40px)', color: '#ffffff', margin: 0, lineHeight: 1.1 }}>
+            Des biens qui vous ressemblent.
+          </h2>
+        </div>
+
+        {/* Fades bords */}
+        <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 120, background: 'linear-gradient(to right, #0a0d1a, transparent)', zIndex: 2, pointerEvents: 'none' }} />
+        <div aria-hidden style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 120, background: 'linear-gradient(to left, #0a0d1a, transparent)', zIndex: 2, pointerEvents: 'none' }} />
+
+        {/* Rangée 1 — vers la gauche */}
+        <div style={{ overflow: 'hidden', marginBottom: 14 }}>
+          <div className="marquee-left" style={{ display: 'flex', width: 'max-content', gap: 14 }}>
+            {[...MARQUEE_ROW1, ...MARQUEE_ROW1].map((src, i) => (
+              <div key={i} style={{ width: 300, height: 200, flexShrink: 0, borderRadius: 14, overflow: 'hidden' }}>
+                <img src={src} alt="Logement" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Rangée 2 — vers la droite */}
+        <div style={{ overflow: 'hidden' }}>
+          <div className="marquee-right" style={{ display: 'flex', width: 'max-content', gap: 14 }}>
+            {[...MARQUEE_ROW2, ...MARQUEE_ROW2].map((src, i) => (
+              <div key={i} style={{ width: 300, height: 200, flexShrink: 0, borderRadius: 14, overflow: 'hidden' }}>
+                <img src={src} alt="Logement" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          4. COMMENT CA MARCHE — fond sombre glass
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section style={{ background: '#0a0d1a', padding: 'clamp(48px,7vh,80px) clamp(20px,5vw,48px)', position: 'relative', overflow: 'hidden' }}>
+        <div aria-hidden style={{ position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%,-50%)', width: 700, height: 400, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.07) 0%, transparent 65%)', filter: 'blur(80px)', pointerEvents: 'none' }} />
+
+        <div style={{ maxWidth: 1000, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+          <div style={{ textAlign: 'center', marginBottom: 56 }}>
             <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 8px' }}>
               Comment ça marche
             </p>
-            <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(24px,4vw,38px)', color: BAI.ink, margin: 0, lineHeight: 1.1 }}>
+            <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(24px,4vw,38px)', color: '#ffffff', margin: 0, lineHeight: 1.1 }}>
               Simple. Rapide. Transparent.
             </h2>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 24 }}>
+          <div className="steps-grid">
+            {/* Ligne de connexion desktop */}
+            <div className="steps-line" />
+
             {[
-              { step: '01', icon: Search, title: 'Cherchez', desc: 'Filtres par ville, budget, surface. Carte interactive disponible.', color: BAI.owner, bg: BAI.ownerLight },
-              { step: '02', icon: TrendingUp, title: 'Postulez', desc: 'Dossier locataire digital complet. L\'IA analyse et valorise vos documents.', color: BAI.caramel, bg: BAI.caramelLight },
-              { step: '03', icon: Shield, title: 'Signez', desc: 'Bail ALUR conforme, signature eIDAS. 100% légal, 100% en ligne.', color: BAI.tenant, bg: BAI.tenantLight },
+              { step: '01', icon: Search, title: 'Cherchez', desc: 'Filtres par ville, budget, surface. Carte interactive disponible.', color: BAI.caramel },
+              { step: '02', icon: TrendingUp, title: 'Postulez', desc: 'Dossier locataire digital complet. L\'IA analyse et valorise vos documents.', color: BAI.caramel },
+              { step: '03', icon: Shield, title: 'Signez', desc: 'Bail ALUR conforme, signature eIDAS. 100% légal, 100% en ligne.', color: BAI.caramel },
             ].map((s, i) => (
               <motion.div
                 key={s.step}
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.3 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ delay: i * 0.12, duration: 0.35 }}
                 style={{
-                  background: BAI.bgBase,
-                  border: `1px solid ${BAI.border}`,
-                  borderRadius: 16, padding: '28px 24px',
-                  boxShadow: BAI.shadowMd,
+                  background: 'rgba(255,255,255,0.07)',
+                  backdropFilter: 'blur(20px) saturate(160%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: 20,
+                  padding: '28px 24px',
                   position: 'relative',
-                  transition: 'box-shadow 0.2s, transform 0.2s',
                 }}
-                whileHover={{ y: -4, boxShadow: BAI.shadowLg }}
               >
-                <span style={{ position: 'absolute', top: 18, right: 20, fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 48, fontWeight: 700, color: BAI.border, lineHeight: 1, userSelect: 'none' }}>{s.step}</span>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-                  <s.icon size={20} color={s.color} />
+                <span style={{ position: 'absolute', top: 16, right: 18, fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 52, fontWeight: 700, color: 'rgba(255,255,255,0.06)', lineHeight: 1, userSelect: 'none' }}>{s.step}</span>
+                <div style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(196,151,106,0.15)', border: '1px solid rgba(196,151,106,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18 }}>
+                  <s.icon size={22} color={s.color} />
                 </div>
-                <h3 style={{ fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 17, color: BAI.ink, margin: '0 0 8px' }}>{s.title}</h3>
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: 0, lineHeight: 1.6 }}>{s.desc}</p>
+                <h3 style={{ fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 18, color: '#ffffff', margin: '0 0 10px' }}>{s.title}</h3>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.62)', margin: 0, lineHeight: 1.6 }}>{s.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -655,7 +896,7 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
-          4. FEATURE — Pour les locataires (dark)
+          5. FEATURE — Pour les locataires (dark)
       ══════════════════════════════════════════════════════════════════════ */}
       <section style={{ background: HERO_BG, padding: 'clamp(64px,8vh,96px) clamp(20px,5vw,48px)', position: 'relative', overflow: 'hidden' }}>
         <div aria-hidden style={{ position: 'absolute', top: -60, left: -40, width: 400, height: 320, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.12) 0%, transparent 65%)', filter: 'blur(50px)', pointerEvents: 'none' }} />
@@ -667,7 +908,7 @@ export default function Home() {
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, margin: '-60px' }}
               transition={{ duration: 0.45 }}
             >
               <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 12px' }}>
@@ -710,52 +951,48 @@ export default function Home() {
               </Link>
             </motion.div>
 
-            {/* Mockup droite — card property stylisée */}
+            {/* Mockup droite — vraie image avec overlay */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, margin: '-60px' }}
               transition={{ duration: 0.45, delay: 0.12 }}
               className="hidden md:block"
             >
-              <div style={{
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.10)',
-                borderRadius: 20,
-                padding: 20,
-                display: 'flex', flexDirection: 'column', gap: 14,
-              }}>
-                {/* Image placeholder */}
-                <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 12, height: 180, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-                  <div style={{ position: 'absolute', top: 10, left: 10, background: BAI.caramel, borderRadius: 6, padding: '4px 10px' }}>
-                    <span style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: '#fff' }}>DISPONIBLE</span>
-                  </div>
-                  <Building2 size={40} color="rgba(255,255,255,0.15)" />
-                </div>
-                {/* Prix */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div style={{ borderRadius: 20, overflow: 'hidden', position: 'relative', height: 380 }}>
+                <img
+                  src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=600&q=80"
+                  alt="Appartement disponible"
+                  loading="lazy"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                />
+                {/* Overlay gradient */}
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(10,13,26,0.85) 0%, rgba(10,13,26,0.20) 60%, transparent 100%)' }} />
+                {/* Info card glass en bas */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: 20,
+                  left: 16,
+                  right: 16,
+                  background: 'rgba(255,255,255,0.08)',
+                  backdropFilter: 'blur(20px) saturate(160%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                  border: '1px solid rgba(255,255,255,0.13)',
+                  borderRadius: 14,
+                  padding: '14px 16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                }}>
                   <div>
-                    <div style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: '#ffffff', lineHeight: 1 }}>890 €/mois</div>
-                    <div style={{ fontFamily: BAI.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.50)', marginTop: 4 }}>Appartement — 45 m²</div>
+                    <div style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 20, color: '#ffffff', lineHeight: 1 }}>890 €/mois</div>
+                    <div style={{ fontFamily: BAI.fontBody, fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <MapPin size={11} /> Lyon 3e — 45 m²
+                    </div>
                   </div>
-                  <div style={{ background: 'rgba(196,151,106,0.15)', border: `1px solid rgba(196,151,106,0.30)`, borderRadius: 8, padding: '6px 10px' }}>
-                    <span style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.caramel }}>0€ frais</span>
-                  </div>
-                </div>
-                {/* Localisation */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <MapPin size={13} color="rgba(255,255,255,0.40)" />
-                  <span style={{ fontFamily: BAI.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>Lyon 3e arrondissement</span>
-                </div>
-                {/* Ligne séparateur */}
-                <div style={{ height: 1, background: 'rgba(255,255,255,0.07)' }} />
-                {/* Actions */}
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <div style={{ flex: 1, background: BAI.caramel, borderRadius: 8, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: '#fff' }}>Postuler</span>
-                  </div>
-                  <div style={{ width: 38, height: 38, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <MessageSquareMock />
+                  <div style={{ background: 'rgba(27,94,59,0.70)', border: '1px solid rgba(159,212,186,0.40)', borderRadius: 8, padding: '5px 10px', flexShrink: 0 }}>
+                    <span style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: '#7de4aa' }}>DISPONIBLE</span>
                   </div>
                 </div>
               </div>
@@ -765,7 +1002,7 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
-          5. FEATURE — Pour les propriétaires (clair)
+          6. FEATURE — Pour les propriétaires (clair)
       ══════════════════════════════════════════════════════════════════════ */}
       <section style={{ background: BAI.bgBase, padding: 'clamp(64px,8vh,96px) clamp(20px,5vw,48px)' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
@@ -775,7 +1012,7 @@ export default function Home() {
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, margin: '-60px' }}
               transition={{ duration: 0.45 }}
               className="hidden md:block"
               style={{ order: 0 }}
@@ -826,7 +1063,7 @@ export default function Home() {
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, margin: '-60px' }}
               transition={{ duration: 0.45, delay: 0.12 }}
             >
               <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 12px' }}>
@@ -873,7 +1110,68 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
-          6. VILLES
+          7. TÉMOIGNAGES
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section style={{ background: BAI.bgMuted, padding: 'clamp(64px,8vh,96px) clamp(20px,5vw,48px)', borderTop: `1px solid ${BAI.border}` }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 10px' }}>
+              Ils nous font confiance
+            </p>
+            <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(24px,4vw,38px)', color: BAI.ink, margin: 0, lineHeight: 1.1 }}>
+              Ce que disent nos utilisateurs.
+            </h2>
+          </div>
+
+          <div className="testimonials-grid">
+            {TESTIMONIALS.map((t, i) => (
+              <motion.div
+                key={t.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ delay: i * 0.12, duration: 0.35 }}
+                style={{
+                  background: BAI.bgSurface,
+                  border: `1px solid ${BAI.border}`,
+                  borderRadius: 16,
+                  padding: '28px 24px',
+                  boxShadow: BAI.shadowMd,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 16,
+                }}
+              >
+                {/* Étoiles */}
+                <div style={{ display: 'flex', gap: 3 }}>
+                  {Array.from({ length: t.stars }).map((_, si) => (
+                    <span key={si} style={{ fontSize: 14, color: BAI.caramel }}>★</span>
+                  ))}
+                </div>
+
+                {/* Citation */}
+                <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 17, color: BAI.ink, margin: 0, lineHeight: 1.5, flex: 1 }}>
+                  "{t.quote}"
+                </p>
+
+                {/* Auteur */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: '50%', background: BAI.bgMuted, border: `1px solid ${BAI.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <span style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 17, fontWeight: 700, color: BAI.caramel }}>{t.initials}</span>
+                  </div>
+                  <div>
+                    <div style={{ fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 14, color: BAI.ink }}>{t.name}</div>
+                    <div style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, marginTop: 2 }}>{t.role} · {t.city}</div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          8. VILLES — cards avec images
       ══════════════════════════════════════════════════════════════════════ */}
       <section style={{ background: BAI.bgSurface, padding: 'clamp(48px,6vh,72px) clamp(20px,5vw,48px)', borderTop: `1px solid ${BAI.border}` }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
@@ -895,28 +1193,39 @@ export default function Home() {
             {CITIES.map((c, i) => (
               <motion.div
                 key={c.slug}
-                initial={{ opacity: 0, y: 8 }}
+                initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05, duration: 0.25 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ delay: i * 0.06, duration: 0.28 }}
               >
                 <Link
                   to={`/location/${c.slug}`}
                   style={{
-                    display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start',
-                    padding: '12px 18px',
-                    background: BAI.bgBase,
-                    border: `1px solid ${BAI.border}`,
-                    borderRadius: 12,
+                    display: 'block',
+                    width: 'clamp(140px, 20vw, 200px)',
+                    height: 120,
+                    borderRadius: 14,
+                    overflow: 'hidden',
+                    position: 'relative',
                     textDecoration: 'none',
-                    transition: 'border-color 0.18s, box-shadow 0.18s',
-                    minWidth: 120,
+                    transition: 'transform 0.2s, box-shadow 0.2s',
                   }}
-                  onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = BAI.caramel; el.style.boxShadow = BAI.shadowMd }}
-                  onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = BAI.border; el.style.boxShadow = 'none' }}
+                  onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.transform = 'translateY(-3px)'; el.style.boxShadow = BAI.shadowLg }}
+                  onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform = 'none'; el.style.boxShadow = 'none' }}
                 >
-                  <span style={{ fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 15, color: BAI.ink }}>{c.name}</span>
-                  <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, marginTop: 2 }}>{c.count} annonces</span>
+                  <img
+                    src={c.img}
+                    alt={c.name}
+                    loading="lazy"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                  {/* Overlay gradient */}
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(10,13,26,0.75) 0%, transparent 60%)' }} />
+                  {/* Texte */}
+                  <div style={{ position: 'absolute', bottom: 10, left: 12, right: 12 }}>
+                    <div style={{ fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 14, color: '#ffffff' }}>{c.name}</div>
+                    <div style={{ fontFamily: BAI.fontBody, fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 2 }}>{c.count} annonces</div>
+                  </div>
                 </Link>
               </motion.div>
             ))}
@@ -925,7 +1234,7 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
-          7. TRUST TICKER
+          9. TRUST TICKER
       ══════════════════════════════════════════════════════════════════════ */}
       <section style={{ background: BAI.bgBase, borderTop: `1px solid ${BAI.border}`, borderBottom: `1px solid ${BAI.border}`, overflow: 'hidden', position: 'relative' }}>
         <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 80, background: `linear-gradient(to right, ${BAI.bgBase}, transparent)`, zIndex: 2, pointerEvents: 'none' }} />
@@ -949,7 +1258,7 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
-          8. ANNONCES RÉCENTES
+          10. ANNONCES RÉCENTES
       ══════════════════════════════════════════════════════════════════════ */}
       <section style={{ background: BAI.bgBase, maxWidth: 1280, margin: '0 auto', padding: 'clamp(32px,5vh,56px) clamp(20px,5vw,48px) 80px' }}>
 
@@ -1035,7 +1344,7 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
-          9. GUIDE ÉDITORIAL
+          11. GUIDE ÉDITORIAL
       ══════════════════════════════════════════════════════════════════════ */}
       <section style={{ background: BAI.bgMuted, padding: 'clamp(40px,6vh,72px) 0 calc(clamp(40px,6vh,72px) + env(safe-area-inset-bottom, 0px))', borderTop: `1px solid ${BAI.border}` }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(20px,5vw,48px)' }}>
@@ -1089,53 +1398,60 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
-          10. CTA FOOTER — dark, centré
+          12. CTA FINAL — dark, 2 boutons
       ══════════════════════════════════════════════════════════════════════ */}
-      <section style={{ background: HERO_BG, padding: 'clamp(64px,9vh,112px) clamp(20px,5vw,48px)', position: 'relative', overflow: 'hidden', textAlign: 'center' }}>
-        <div aria-hidden style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 600, height: 300, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.12) 0%, transparent 65%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
+      <section style={{ background: '#0a0d1a', padding: 'clamp(64px,9vh,112px) clamp(20px,5vw,48px)', position: 'relative', overflow: 'hidden', textAlign: 'center' }}>
+        {/* Glow ambient caramel */}
+        <div aria-hidden style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 700, height: 360, pointerEvents: 'none', background: 'radial-gradient(ellipse, rgba(196,151,106,0.18) 0%, transparent 60%)' }} />
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.45 }}
           style={{ position: 'relative', zIndex: 1 }}
         >
           <h2 style={{
             fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-            fontSize: 'clamp(32px, 5vw, 56px)', color: '#ffffff',
-            margin: '0 0 16px', lineHeight: 1.05,
+            fontSize: 'clamp(36px, 5vw, 60px)', color: '#ffffff',
+            margin: '0 0 18px', lineHeight: 1.05,
           }}>
             Prêt à trouver votre<br />prochain logement ?
           </h2>
-          <p style={{ fontFamily: BAI.fontBody, fontSize: 'clamp(15px,1.5vw,18px)', color: 'rgba(255,255,255,0.55)', margin: '0 0 36px' }}>
-            Rejoignez 50 000+ utilisateurs qui font confiance à Bailio.
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 'clamp(15px,1.5vw,18px)', color: 'rgba(255,255,255,0.62)', margin: '0 0 40px' }}>
+            Créez votre compte gratuitement et commencez dès aujourd'hui.
           </p>
-          <Link to="/register"
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              background: '#ffffff', color: BAI.night,
-              borderRadius: 8, padding: '14px 32px',
-              fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 16,
-              textDecoration: 'none', transition: 'opacity 0.18s',
-            }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88' }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1' }}>
-            Commencer gratuitement <ArrowRight size={16} />
-          </Link>
+          <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Link to="/register?role=TENANT"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                background: BAI.caramel, color: '#fff',
+                borderRadius: 8, padding: '14px 28px',
+                fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 16,
+                textDecoration: 'none', transition: 'opacity 0.18s',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1' }}>
+              Je suis locataire <ArrowRight size={16} />
+            </Link>
+            <Link to="/register?role=OWNER"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                background: 'transparent', color: 'rgba(255,255,255,0.85)',
+                borderRadius: 8, padding: '14px 28px',
+                fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 16,
+                textDecoration: 'none', border: '1px solid rgba(255,255,255,0.30)',
+                transition: 'background 0.18s, border-color 0.18s',
+              }}
+              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.08)'; el.style.borderColor = 'rgba(255,255,255,0.50)' }}
+              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.borderColor = 'rgba(255,255,255,0.30)' }}>
+              Je suis propriétaire
+            </Link>
+          </div>
         </motion.div>
       </section>
 
       <Footer />
     </div>
-  )
-}
-
-// ─── Micro composant icône message pour le mockup ─────────────────────────────
-function MessageSquareMock() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-    </svg>
   )
 }
