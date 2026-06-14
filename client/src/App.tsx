@@ -149,6 +149,8 @@ function App() {
       <DarkModeSync />
       <Router>
         <AppRoutes />
+        {/* Cookie consent — doit être dans le Router car utilise <Link> */}
+        <CookieBanner />
       </Router>
       {/* Toast Notifications */}
       <Toaster
@@ -178,8 +180,6 @@ function App() {
       {/* PWA Components */}
       <InstallPWA />
       <UpdatePWA />
-      {/* Cookie consent — RGPD */}
-      <CookieBanner />
     </QueryClientProvider>
   )
 }
