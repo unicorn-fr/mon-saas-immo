@@ -1143,3 +1143,13 @@ model MaintenanceRequest {
   @@index([ownerId, propertyId])  // Vue groupée par bien (maintenance.routes.ts)
   @@map("maintenance_requests")
 }
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  source    String   @default("unknown")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("newsletter_subscribers")
+}

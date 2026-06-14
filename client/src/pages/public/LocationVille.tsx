@@ -6,6 +6,7 @@ import { useProperties } from '../../hooks/useProperties'
 import { PropertyCard } from '../../components/property/PropertyCard'
 import { MapPin, TrendingUp, Train, ChevronRight, Building2 } from 'lucide-react'
 import { marketService, type CityPrice } from '../../services/market.service'
+import { useSEO } from '../../hooks/useSEO'
 
 // ─── Données villes ───────────────────────────────────────────────────────────
 
@@ -135,6 +136,20 @@ export default function LocationVille() {
 
   const villeKey = villeParam?.toLowerCase() ?? ''
   const villeData = VILLES_DATA[villeKey]
+
+  useSEO(villeData ? {
+    title: `Location appartement ${villeData.nom} — Annonces immobilières | Bailio`,
+    description: `Trouvez votre appartement ou maison à louer à ${villeData.nom}. ${villeData.description} Loyer moyen : ${villeData.prixMoyen}€/m².`,
+    canonical: `https://bailio.fr/location/${villeKey}`,
+    type: 'website',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: `Location immobilière à ${villeData.nom}`,
+      description: villeData.description,
+      url: `https://bailio.fr/location/${villeKey}`,
+    },
+  } : { title: 'Bailio — Location immobilière', description: 'Trouvez votre logement à louer avec Bailio.' })
 
   useEffect(() => {
     if (villeData) {

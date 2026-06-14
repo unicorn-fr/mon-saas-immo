@@ -40,6 +40,7 @@ import yousignWebhookRouter from './yousign.webhook.routes.js'
 import irlRouter from './irl.routes.js'
 import georisquesRouter from './georisques.routes.js'
 import alertRoutes from './alert.routes.js'
+import newsletterRoutes from './newsletter.routes.js'
 
 /**
  * Register all application routes on the Express app.
@@ -54,6 +55,7 @@ import alertRoutes from './alert.routes.js'
 export function registerRoutes(app: Application, prefix: string): void {
   // ── Public / mixed ──────────────────────────────────────────────────────
   app.use(`${prefix}/waitlist`, waitlistRoutes)
+  app.use(`${prefix}/newsletter`, newsletterRoutes)
   app.use(`${prefix}/auth`, authRoutes)
   app.use(`${prefix}/properties`, propertyRoutes)
   app.use(`${prefix}/market`, marketRoutes)

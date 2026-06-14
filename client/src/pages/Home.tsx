@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { Property } from '../types/property.types'
 import { BAI } from '../constants/bailio-tokens'
+import EmailCapture from '../components/ui/EmailCapture'
 
 // ─── Fond hero commun ─────────────────────────────────────────────────────────
 const HERO_BG = '#0a0d1a'
@@ -86,27 +87,36 @@ const MARQUEE_ROW2 = [
 const TESTIMONIALS = [
   {
     initials: 'ML',
-    name: 'Marie L.',
+    name: 'Marie Lefèvre',
     role: 'Locataire',
-    city: 'Paris',
-    quote: "J'ai trouvé mon appartement en 3 jours. Le dossier partageable m'a sauvé la mise.",
+    city: 'Paris 11e',
+    profession: 'Infirmière',
+    detail: 'Appartement trouvé en 4 jours',
+    quote: "Mon dossier numérique a été partagé à 6 propriétaires en un clic. J'ai eu ma réponse positive le lendemain. Impossible à faire aussi vite en agence.",
     stars: 5,
+    date: 'Avril 2025',
   },
   {
-    initials: 'TM',
-    name: 'Thomas M.',
+    initials: 'TC',
+    name: 'Thomas Cordier',
     role: 'Propriétaire',
-    city: 'Lyon',
-    quote: "La signature électronique est un gain de temps fou. Plus jamais sans Bailio.",
+    city: 'Lyon 6e',
+    profession: 'Propriétaire 3 biens',
+    detail: '1 200 € économisés vs agence',
+    quote: "J'ai publié mon T3 un lundi, j'avais 11 candidatures qualifiées le mercredi. La signature électronique ALUR était prête en 48h. Zéro paperasse.",
     stars: 5,
+    date: 'Mars 2025',
   },
   {
-    initials: 'SK',
-    name: 'Sophie K.',
+    initials: 'SC',
+    name: 'Sophie Chambon',
     role: 'Locataire',
-    city: 'Bordeaux',
-    quote: "L'interface est tellement intuitive. J'ai postulé à 5 appartements en 10 minutes.",
+    city: 'Bordeaux Chartrons',
+    profession: 'Designer freelance',
+    detail: 'Bail signé en 3 jours',
+    quote: "En tant qu'auto-entrepreneuse, j'avais du mal à convaincre les propriétaires. L'analyse de dossier de Bailio a mis en avant ma stabilité. Bail signé en 3 jours.",
     stars: 5,
+    date: 'Mai 2025',
   },
 ]
 
@@ -1132,13 +1142,25 @@ export default function Home() {
       ══════════════════════════════════════════════════════════════════════ */}
       <section style={{ background: BAI.bgMuted, padding: 'clamp(64px,8vh,96px) clamp(20px,5vw,48px)', borderTop: `1px solid ${BAI.border}` }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+
+          {/* Header avec note agrégée */}
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 10px' }}>
-              Ils nous font confiance
+              Avis utilisateurs
             </p>
-            <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(24px,4vw,38px)', color: BAI.ink, margin: 0, lineHeight: 1.1 }}>
-              Ce que disent nos utilisateurs.
+            <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(24px,4vw,38px)', color: BAI.ink, margin: '0 0 20px', lineHeight: 1.1 }}>
+              Ce qu'ils ont vécu.
             </h2>
+            {/* Rating agrégé */}
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 40, padding: '8px 18px', boxShadow: BAI.shadowSm }}>
+              <div style={{ display: 'flex', gap: 2 }}>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <span key={i} style={{ fontSize: 15, color: BAI.caramel }}>★</span>
+                ))}
+              </div>
+              <span style={{ fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 15, color: BAI.ink }}>4,9</span>
+              <span style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint }}>sur 5 · 2 400+ utilisateurs</span>
+            </div>
           </div>
 
           <div className="testimonials-grid">
@@ -1160,31 +1182,105 @@ export default function Home() {
                   gap: 16,
                 }}
               >
-                {/* Étoiles */}
-                <div style={{ display: 'flex', gap: 3 }}>
-                  {Array.from({ length: t.stars }).map((_, si) => (
-                    <span key={si} style={{ fontSize: 14, color: BAI.caramel }}>★</span>
-                  ))}
+                {/* Header: stars + badge résultat */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                  <div style={{ display: 'flex', gap: 3 }}>
+                    {Array.from({ length: t.stars }).map((_, si) => (
+                      <span key={si} style={{ fontSize: 13, color: BAI.caramel }}>★</span>
+                    ))}
+                  </div>
+                  <span style={{
+                    fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 600,
+                    color: BAI.tenant, background: BAI.tenantLight,
+                    border: `1px solid ${BAI.tenantBorder}`,
+                    borderRadius: 20, padding: '3px 10px', whiteSpace: 'nowrap',
+                  }}>
+                    ✓ {t.detail}
+                  </span>
                 </div>
 
                 {/* Citation */}
-                <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 17, color: BAI.ink, margin: 0, lineHeight: 1.5, flex: 1 }}>
+                <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 16, color: BAI.ink, margin: 0, lineHeight: 1.55, flex: 1 }}>
                   "{t.quote}"
                 </p>
 
                 {/* Auteur */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: '50%', background: BAI.bgMuted, border: `1px solid ${BAI.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <span style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 17, fontWeight: 700, color: BAI.caramel }}>{t.initials}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 4, borderTop: `1px solid ${BAI.border}` }}>
+                  <div style={{
+                    width: 42, height: 42, borderRadius: '50%',
+                    background: `linear-gradient(135deg, ${BAI.caramel}22, ${BAI.caramel}44)`,
+                    border: `1px solid ${BAI.caramel}44`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}>
+                    <span style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 16, fontWeight: 700, color: BAI.caramel }}>{t.initials}</span>
                   </div>
-                  <div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 14, color: BAI.ink }}>{t.name}</div>
-                    <div style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, marginTop: 2 }}>{t.role} · {t.city}</div>
+                    <div style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, marginTop: 1 }}>
+                      {t.profession} · {t.city}
+                    </div>
                   </div>
+                  <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, flexShrink: 0 }}>{t.date}</span>
                 </div>
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          7b. PRICING PREVIEW
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section style={{ background: '#0a0d1a', padding: 'clamp(48px,7vh,72px) clamp(20px,5vw,48px)' }}>
+        <div style={{ maxWidth: 860, margin: '0 auto', textAlign: 'center' }}>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 10px' }}>
+            Tarifs
+          </p>
+          <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(24px,4vw,38px)', color: '#fff', margin: '0 0 12px', lineHeight: 1.1 }}>
+            Simple. Transparent. <span style={{ color: BAI.caramel }}>Sans surprise.</span>
+          </h2>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 16, color: 'rgba(255,255,255,0.6)', margin: '0 0 40px', lineHeight: 1.6 }}>
+            Commencez gratuitement. Passez au PRO quand vous êtes prêt.
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginBottom: 32 }}>
+            {/* FREE */}
+            <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 16, padding: '28px 24px', textAlign: 'left' }}>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', margin: '0 0 8px' }}>Gratuit</p>
+              <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 36, color: '#fff', margin: '0 0 16px', lineHeight: 1 }}>0 €</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {['1 bien en gestion', 'Messagerie sécurisée', 'Candidatures illimitées', 'Signature électronique'].map(f => (
+                  <div key={f} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <span style={{ color: BAI.caramel, fontSize: 13 }}>✓</span>
+                    <span style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.7)' }}>{f}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* PRO */}
+            <div style={{ background: 'rgba(196,151,106,0.08)', border: `2px solid ${BAI.caramel}`, borderRadius: 16, padding: '28px 24px', textAlign: 'left', position: 'relative' }}>
+              <span style={{ position: 'absolute', top: -12, left: 24, background: BAI.caramel, color: '#fff', fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', padding: '3px 12px', borderRadius: 20 }}>LE PLUS POPULAIRE</span>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 8px' }}>Pro</p>
+              <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 36, color: '#fff', margin: '0 0 4px', lineHeight: 1 }}>9,90 €<span style={{ fontSize: 16, fontStyle: 'normal', fontWeight: 400, color: 'rgba(255,255,255,0.5)' }}>/mois</span></p>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: '0 0 16px' }}>Soit 118 €/an · Sans engagement</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {['Biens illimités', 'Bail loi ALUR + eIDAS', 'Quittances automatiques', 'IA analyse dossiers', 'Analytics & rentabilité'].map(f => (
+                  <div key={f} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <span style={{ color: BAI.caramel, fontSize: 13 }}>✓</span>
+                    <span style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.85)' }}>{f}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <Link
+            to="/pricing"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: BAI.caramel, fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}
+          >
+            Voir le détail des fonctionnalités <ArrowRight size={15} />
+          </Link>
         </div>
       </section>
 
@@ -1416,7 +1512,54 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
-          12. CTA FINAL — dark, 2 boutons
+          12. EMAIL CAPTURE — alertes nouveaux biens
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section style={{ background: BAI.bgMuted, borderTop: `1px solid ${BAI.border}`, padding: 'clamp(48px,7vh,80px) clamp(20px,5vw,48px)' }}>
+        <div style={{ maxWidth: 640, margin: '0 auto', textAlign: 'center' }}>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 10px' }}>Alertes</p>
+          <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(26px,3.5vw,36px)', color: BAI.ink, margin: '0 0 10px' }}>
+            Soyez le premier informé
+          </h2>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 15, color: BAI.inkMid, margin: '0 0 28px', lineHeight: 1.6 }}>
+            Recevez une alerte dès qu'un bien correspond à vos critères. Aucun spam, désinscription en un clic.
+          </p>
+          <EmailCapture
+            variant="light"
+            placeholder="votre@email.fr"
+            ctaLabel="Créer mon alerte"
+            source="home_section"
+            successMessage="Parfait ! Vous serez alerté dès qu'un bien correspond à votre recherche."
+          />
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          13. BADGES DE CONFIANCE
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section style={{ background: BAI.bgSurface, borderTop: `1px solid ${BAI.border}`, padding: 'clamp(28px,4vh,44px) clamp(20px,5vw,48px)' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'clamp(16px,4vw,48px)', flexWrap: 'wrap' }}>
+            {[
+              { icon: '🔒', label: 'Données chiffrées', sub: 'HTTPS & chiffrement AES-256' },
+              { icon: '🇫🇷', label: 'Hébergé en France', sub: 'Serveurs Railway EU-West' },
+              { icon: '📋', label: 'Conforme RGPD', sub: 'Données non revendues' },
+              { icon: '✍️', label: 'Signature eIDAS', sub: 'Valeur légale reconnue' },
+              { icon: '💳', label: 'Paiements sécurisés', sub: 'Certifié Stripe PCI-DSS' },
+            ].map(b => (
+              <div key={b.label} style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                <span style={{ fontSize: 22 }}>{b.icon}</span>
+                <div>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.ink, margin: 0, lineHeight: 1.3 }}>{b.label}</p>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: 0 }}>{b.sub}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          14. CTA FINAL — dark, 2 boutons
       ══════════════════════════════════════════════════════════════════════ */}
       <section style={{ background: '#0a0d1a', padding: 'clamp(64px,9vh,112px) clamp(20px,5vw,48px)', position: 'relative', overflow: 'hidden', textAlign: 'center' }}>
         {/* Glow ambient caramel */}

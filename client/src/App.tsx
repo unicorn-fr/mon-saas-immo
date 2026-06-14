@@ -1,114 +1,114 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { useAuth } from './hooks/useAuth'
 import { useThemeStore } from './store/themeStore'
 import { ScrollToTop } from './components/ScrollToTop'
 import { ErrorBoundary } from './components/ErrorBoundary'
 
-// Pages
-import Home from './pages/Home'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import ForgotPassword from './pages/ForgotPassword'
-import ResetPassword from './pages/ResetPassword'
-import VerifyEmail from './pages/VerifyEmail'
-import VerifyMagicLink from './pages/VerifyMagicLink'
-import SelectRole from './pages/SelectRole'
-import GoogleOAuthCallback from './pages/GoogleOAuthCallback'
-import NotFound from './pages/NotFound'
+// Pages — lazy-loaded for code splitting
+const Home = lazy(() => import('./pages/Home'))
+const Login = lazy(() => import('./pages/Login'))
+const Register = lazy(() => import('./pages/Register'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword'))
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail'))
+const VerifyMagicLink = lazy(() => import('./pages/VerifyMagicLink'))
+const SelectRole = lazy(() => import('./pages/SelectRole'))
+const GoogleOAuthCallback = lazy(() => import('./pages/GoogleOAuthCallback'))
+const NotFound = lazy(() => import('./pages/NotFound'))
 
 // Public Pages
-import SearchProperties from './pages/public/SearchProperties'
-import PropertyDetailsPublic from './pages/public/PropertyDetailsPublic'
-import Guide from './pages/public/Guide'
-import GuideArticle from './pages/public/GuideArticle'
-import LocationVille from './pages/public/LocationVille'
-import Estimer from './pages/public/Estimer'
+const SearchProperties = lazy(() => import('./pages/public/SearchProperties'))
+const PropertyDetailsPublic = lazy(() => import('./pages/public/PropertyDetailsPublic'))
+const Guide = lazy(() => import('./pages/public/Guide'))
+const GuideArticle = lazy(() => import('./pages/public/GuideArticle'))
+const LocationVille = lazy(() => import('./pages/public/LocationVille'))
+const Estimer = lazy(() => import('./pages/public/Estimer'))
 
 // Owner Pages
-import Dashboard from './pages/owner/Dashboard'
-import MyProperties from './pages/owner/MyProperties'
-import CreatePropertyWizard from './pages/owner/CreatePropertyWizard'
-import EditProperty from './pages/owner/EditProperty'
-import PropertyDetails from './pages/owner/PropertyDetails'
-import BookingManagement from './pages/owner/BookingManagement'
-import ApplicationManagement from './pages/owner/ApplicationManagement'
-import TenantProfile from './pages/owner/TenantProfile'
-import OwnerSettings from './pages/owner/Settings'
-import Rentabilite from './pages/owner/Rentabilite'
-import Finance from './pages/owner/Finance'
-import Maintenance from './pages/owner/Maintenance'
-import Quittances from './pages/owner/Quittances'
-import MesLocataires from './pages/owner/MesLocataires'
-import Documents from './pages/owner/Documents'
-import Outils from './pages/owner/Outils'
-import Abonnement from './pages/owner/Abonnement'
+const Dashboard = lazy(() => import('./pages/owner/Dashboard'))
+const MyProperties = lazy(() => import('./pages/owner/MyProperties'))
+const CreatePropertyWizard = lazy(() => import('./pages/owner/CreatePropertyWizard'))
+const EditProperty = lazy(() => import('./pages/owner/EditProperty'))
+const PropertyDetails = lazy(() => import('./pages/owner/PropertyDetails'))
+const BookingManagement = lazy(() => import('./pages/owner/BookingManagement'))
+const ApplicationManagement = lazy(() => import('./pages/owner/ApplicationManagement'))
+const TenantProfile = lazy(() => import('./pages/owner/TenantProfile'))
+const OwnerSettings = lazy(() => import('./pages/owner/Settings'))
+const Rentabilite = lazy(() => import('./pages/owner/Rentabilite'))
+const Finance = lazy(() => import('./pages/owner/Finance'))
+const Maintenance = lazy(() => import('./pages/owner/Maintenance'))
+const Quittances = lazy(() => import('./pages/owner/Quittances'))
+const MesLocataires = lazy(() => import('./pages/owner/MesLocataires'))
+const Documents = lazy(() => import('./pages/owner/Documents'))
+const Outils = lazy(() => import('./pages/owner/Outils'))
+const Abonnement = lazy(() => import('./pages/owner/Abonnement'))
 
 // Tenant Pages
-import TenantDashboard from './pages/tenant/TenantDashboard'
-import TenantPayments from './pages/tenant/TenantPayments'
-import MyBookings from './pages/tenant/MyBookings'
-import MyApplications from './pages/tenant/MyApplications'
-import Favorites from './pages/tenant/Favorites'
-import DossierLocatif from './pages/tenant/DossierLocatif'
-import DossierShareManager from './pages/tenant/DossierShareManager'
-import PrivacyCenter from './pages/tenant/PrivacyCenter'
-import TenantSettings from './pages/tenant/Settings'
-import TenantMaintenance from './pages/tenant/Maintenance'
-import TenantDocuments from './pages/tenant/Documents'
-import SearchAlerts from './pages/tenant/SearchAlerts'
+const TenantDashboard = lazy(() => import('./pages/tenant/TenantDashboard'))
+const TenantPayments = lazy(() => import('./pages/tenant/TenantPayments'))
+const MyBookings = lazy(() => import('./pages/tenant/MyBookings'))
+const MyApplications = lazy(() => import('./pages/tenant/MyApplications'))
+const Favorites = lazy(() => import('./pages/tenant/Favorites'))
+const DossierLocatif = lazy(() => import('./pages/tenant/DossierLocatif'))
+const DossierShareManager = lazy(() => import('./pages/tenant/DossierShareManager'))
+const PrivacyCenter = lazy(() => import('./pages/tenant/PrivacyCenter'))
+const TenantSettings = lazy(() => import('./pages/tenant/Settings'))
+const TenantMaintenance = lazy(() => import('./pages/tenant/Maintenance'))
+const TenantDocuments = lazy(() => import('./pages/tenant/Documents'))
+const SearchAlerts = lazy(() => import('./pages/tenant/SearchAlerts'))
 
 // Shared Pages
-import Messages from './pages/Messages'
-import Notifications from './pages/Notifications'
-import Profile from './pages/Profile'
+const Messages = lazy(() => import('./pages/Messages'))
+const Notifications = lazy(() => import('./pages/Notifications'))
+const Profile = lazy(() => import('./pages/Profile'))
 
 // Contract Pages
-import ContractsList from './pages/contracts/ContractsList'
-import CreateContract from './pages/contracts/CreateContract'
-import ContractDetails from './pages/contracts/ContractDetails'
-import EtatDesLieux from './pages/contracts/EtatDesLieux'
-import EdlSessionPage from './pages/contracts/EdlSession'
-import EdlJoin from './pages/contracts/EdlJoin'
+const ContractsList = lazy(() => import('./pages/contracts/ContractsList'))
+const CreateContract = lazy(() => import('./pages/contracts/CreateContract'))
+const ContractDetails = lazy(() => import('./pages/contracts/ContractDetails'))
+const EtatDesLieux = lazy(() => import('./pages/contracts/EtatDesLieux'))
+const EdlSessionPage = lazy(() => import('./pages/contracts/EdlSession'))
+const EdlJoin = lazy(() => import('./pages/contracts/EdlJoin'))
 
 // Admin Pages
-import AdminDashboard from './pages/admin/AdminDashboard'
-import UsersManagement from './pages/admin/UsersManagement'
-import WaitlistAdmin from './pages/admin/WaitlistAdmin'
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
+const UsersManagement = lazy(() => import('./pages/admin/UsersManagement'))
+const WaitlistAdmin = lazy(() => import('./pages/admin/WaitlistAdmin'))
 
 // Super Admin Pages — Cerveau Central
-import SuperAdminLayout from './pages/super-admin/SuperAdminLayout'
-import SADashboard from './pages/super-admin/SADashboard'
-import SAUsers from './pages/super-admin/SAUsers'
-import SADossiers from './pages/super-admin/SADossiers'
-import SADatabase from './pages/super-admin/SADatabase'
-import SAMessages from './pages/super-admin/SAMessages'
-import SAAuditLogs from './pages/super-admin/SAAuditLogs'
-import SAContracts from './pages/super-admin/SAContracts'
-import SAUserDetail from './pages/super-admin/SAUserDetail'
-import SAProperties from './pages/super-admin/SAProperties'
+const SuperAdminLayout = lazy(() => import('./pages/super-admin/SuperAdminLayout'))
+const SADashboard = lazy(() => import('./pages/super-admin/SADashboard'))
+const SAUsers = lazy(() => import('./pages/super-admin/SAUsers'))
+const SADossiers = lazy(() => import('./pages/super-admin/SADossiers'))
+const SADatabase = lazy(() => import('./pages/super-admin/SADatabase'))
+const SAMessages = lazy(() => import('./pages/super-admin/SAMessages'))
+const SAAuditLogs = lazy(() => import('./pages/super-admin/SAAuditLogs'))
+const SAContracts = lazy(() => import('./pages/super-admin/SAContracts'))
+const SAUserDetail = lazy(() => import('./pages/super-admin/SAUserDetail'))
+const SAProperties = lazy(() => import('./pages/super-admin/SAProperties'))
 
 // Legal Pages
-import MentionsLegales from './pages/legal/MentionsLegales'
-import CGU from './pages/legal/CGU'
-import PolitiqueConfidentialite from './pages/legal/PolitiqueConfidentialite'
-import Cookies from './pages/legal/Cookies'
+const MentionsLegales = lazy(() => import('./pages/legal/MentionsLegales'))
+const CGU = lazy(() => import('./pages/legal/CGU'))
+const PolitiqueConfidentialite = lazy(() => import('./pages/legal/PolitiqueConfidentialite'))
+const Cookies = lazy(() => import('./pages/legal/Cookies'))
 
 // Info Pages
-import FAQ from './pages/info/FAQ'
-import Contact from './pages/info/Contact'
-import Support from './pages/info/Support'
-import Presse from './pages/info/Presse'
-import Videos from './pages/info/Videos'
-import APropos from './pages/info/APropos'
-import CompleteProfile from './pages/CompleteProfile'
-import VerifyIdentity from './pages/VerifyIdentity'
-import Proprietaires from './pages/info/Proprietaires'
-import Locataires from './pages/info/Locataires'
-import Pricing from './pages/Pricing'
+const FAQ = lazy(() => import('./pages/info/FAQ'))
+const Contact = lazy(() => import('./pages/info/Contact'))
+const Support = lazy(() => import('./pages/info/Support'))
+const Presse = lazy(() => import('./pages/info/Presse'))
+const Videos = lazy(() => import('./pages/info/Videos'))
+const APropos = lazy(() => import('./pages/info/APropos'))
+const CompleteProfile = lazy(() => import('./pages/CompleteProfile'))
+const VerifyIdentity = lazy(() => import('./pages/VerifyIdentity'))
+const Proprietaires = lazy(() => import('./pages/info/Proprietaires'))
+const Locataires = lazy(() => import('./pages/info/Locataires'))
+const Pricing = lazy(() => import('./pages/Pricing'))
 
 // PWA Components
 import { InstallPWA } from './components/pwa/InstallPWA'
@@ -116,6 +116,9 @@ import { UpdatePWA } from './components/pwa/UpdatePWA'
 
 // Onboarding
 import { OnboardingWizard } from './components/onboarding/OnboardingWizard'
+
+// Cookie consent
+import CookieBanner from './components/ui/CookieBanner'
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -175,6 +178,8 @@ function App() {
       {/* PWA Components */}
       <InstallPWA />
       <UpdatePWA />
+      {/* Cookie consent — RGPD */}
+      <CookieBanner />
     </QueryClientProvider>
   )
 }
@@ -198,6 +203,7 @@ function AppRoutes() {
       <OnboardingWizard />
     )}
     <ErrorBoundary>
+    <Suspense fallback={<div style={{ minHeight: '100vh' }} />}>
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<Home />} />
@@ -337,6 +343,7 @@ function AppRoutes() {
       {/* 404 */}
       <Route path="*" element={<NotFound />} />
     </Routes>
+    </Suspense>
     </ErrorBoundary>
     </>
   )

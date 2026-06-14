@@ -11,8 +11,9 @@ import { SearchMap } from '../../components/property/SearchMap'
 import { BAI } from '../../constants/bailio-tokens'
 import {
   Search, Grid3x3, Map as MapIcon, X,
-  SlidersHorizontal, ChevronDown, ChevronUp, MapPin,
+  SlidersHorizontal, ChevronDown, ChevronUp, MapPin, Bell,
 } from 'lucide-react'
+import EmailCapture from '../../components/ui/EmailCapture'
 
 // ─── Constantes filtres ────────────────────────────────────────────────────────
 
@@ -580,26 +581,39 @@ export default function SearchProperties() {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.26 }}
-                  style={{ textAlign: 'center', padding: 'clamp(48px,8vw,96px) 0' }}
+                  style={{ textAlign: 'center', padding: 'clamp(48px,8vw,80px) clamp(16px,5vw,48px)' }}
                 >
-                  <div style={{
-                    width: 72, height: 72, borderRadius: 18,
-                    background: BAI.bgMuted, border: `1px solid ${BAI.border}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    margin: '0 auto 20px',
-                  }}>
-                    <Search size={28} color={BAI.inkFaint} />
+                  {/* Illustration */}
+                  <div style={{ position: 'relative', width: 88, height: 88, margin: '0 auto 24px' }}>
+                    <div style={{
+                      width: 88, height: 88, borderRadius: 22,
+                      background: BAI.bgMuted, border: `1px solid ${BAI.border}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <Search size={32} color={BAI.inkFaint} />
+                    </div>
+                    <div style={{
+                      position: 'absolute', bottom: -6, right: -6,
+                      width: 30, height: 30, borderRadius: 10,
+                      background: BAI.caramelLight ?? '#fdf5ec',
+                      border: `1px solid ${BAI.border}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <MapPin size={14} color={BAI.caramel} />
+                    </div>
                   </div>
+
                   <p style={{
                     fontFamily: BAI.fontDisplay, fontStyle: 'italic',
                     fontSize: 'clamp(20px,3vw,26px)', color: BAI.ink,
                     marginBottom: 8,
                   }}>
-                    Aucun bien trouvé pour ces critères.
+                    Aucun bien ne correspond à vos critères.
                   </p>
-                  <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint, marginBottom: 28 }}>
-                    Essayez d'élargir votre recherche ou de modifier vos filtres.
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkFaint, marginBottom: 28, lineHeight: 1.6 }}>
+                    Élargissez votre recherche ou créez une alerte pour être notifié dès qu'un bien correspond.
                   </p>
+
                   {hasActive && (
                     <button
                       onClick={handleReset}
@@ -607,12 +621,36 @@ export default function SearchProperties() {
                         background: BAI.night, color: '#fff', border: 'none',
                         borderRadius: 8, padding: '12px 28px',
                         fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600,
-                        cursor: 'pointer', minHeight: 44,
+                        cursor: 'pointer', minHeight: 44, marginBottom: 36,
                       }}
                     >
-                      Modifier les filtres
+                      Réinitialiser les filtres
                     </button>
                   )}
+
+                  {/* Email alert CTA */}
+                  <div style={{
+                    maxWidth: 480, margin: '0 auto',
+                    background: BAI.bgSurface, border: `1px solid ${BAI.border}`,
+                    borderRadius: 14, padding: 'clamp(18px,3vw,28px)',
+                    boxShadow: BAI.shadowMd,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, justifyContent: 'center' }}>
+                      <div style={{ width: 34, height: 34, borderRadius: 9, background: BAI.bgMuted, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Bell size={16} color={BAI.caramel} />
+                      </div>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, color: BAI.ink, margin: 0 }}>
+                        Créer une alerte email
+                      </p>
+                    </div>
+                    <EmailCapture
+                      variant="light"
+                      placeholder="votre@email.fr"
+                      ctaLabel="M'alerter"
+                      source="search_empty_state"
+                      successMessage="Alerte créée ! Vous serez notifié dès qu'un bien correspond."
+                    />
+                  </div>
                 </motion.div>
               )}
 

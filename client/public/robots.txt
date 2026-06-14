@@ -1,0 +1,27 @@
+User-agent: *
+Allow: /
+
+# Pages privées (dashboards, profil, admin)
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /super-admin/
+Disallow: /profile
+Disallow: /messages
+Disallow: /notifications
+Disallow: /contracts/
+Disallow: /properties/new
+Disallow: /properties/*/edit
+Disallow: /dossier
+Disallow: /favorites
+Disallow: /my-bookings
+Disallow: /my-applications
+Disallow: /owner/
+Disallow: /tenant/
+Disallow: /bookings/
+Disallow: /applications/
+Disallow: /waitlist
+
+# Fichiers techniques
+Disallow: /api/
+
+Sitemap: https://bailio.fr/sitemap.xml

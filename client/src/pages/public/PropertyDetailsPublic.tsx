@@ -185,6 +185,23 @@ export default function PropertyDetailsPublic() {
   }
 
   const property = currentProperty
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'RealEstateListing',
+    name: property.title,
+    description: property.description,
+    url: `https://bailio.fr/property/${property.id}`,
+    ...(property.images?.[0] ? { image: property.images[0] } : {}),
+    offers: {
+      '@type': 'Offer',
+      price: property.price,
+      priceCurrency: 'EUR',
+      priceSpecification: { '@type': 'UnitPriceSpecification', unitText: 'MON' },
+    },
+    address: { '@type': 'PostalAddress', addressLocality: property.city, addressCountry: 'FR' },
+    numberOfRooms: property.bedrooms,
+    ...(property.surface ? { floorSize: { '@type': 'QuantitativeValue', value: property.surface, unitCode: 'MTK' } } : {}),
+  }
   const propertyType = PROPERTY_TYPES.find((t) => t.value === property.type)
   const images = property.images.length > 0 ? property.images : ['/placeholder-property.jpg']
 
@@ -207,6 +224,7 @@ export default function PropertyDetailsPublic() {
 
   return (
     <Layout>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div style={{ background: M.bg, fontFamily: M.body }} className="min-h-screen">
 
         {/* Error Message */}
