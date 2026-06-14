@@ -12,7 +12,6 @@ import { BAI } from '../../constants/bailio-tokens'
 import {
   Plus, ArrowRight, ShieldAlert, Calendar,
   Home, ClipboardList, MessageSquare, ChevronRight,
-  TrendingUp, Euro, BarChart2,
 } from 'lucide-react'
 import { apiClient } from '../../services/api.service'
 import type { Application } from '../../types/application.types'
@@ -20,7 +19,10 @@ import type { Booking } from '../../types/booking.types'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
-// ── Skeleton shimmer ────────────────────────────────────────────────────────
+const HERO_BG = '#0a0d1a'
+const HERO_IMG = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1400&q=80'
+
+// ── Skeleton shimmer ─────────────────────────────────────────────────────────
 const shimmerStyle: React.CSSProperties = {
   background: `linear-gradient(90deg, ${BAI.bgMuted} 0%, #ebe8e2 40%, ${BAI.bgMuted} 100%)`,
   backgroundSize: '200% 100%',
@@ -42,7 +44,32 @@ function SkeletonCard() {
   )
 }
 
-// ── KPI card ────────────────────────────────────────────────────────────────
+// ── Hero glass badge ──────────────────────────────────────────────────────────
+function HeroBadge({ icon, value, label }: { icon: React.ReactNode; value: number | string; label: string }) {
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      background: 'rgba(255,255,255,0.08)',
+      backdropFilter: 'blur(20px) saturate(160%)',
+      WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+      border: '1px solid rgba(255,255,255,0.13)',
+      borderRadius: 16,
+      padding: '8px 14px',
+    }}>
+      <span style={{ color: BAI.caramel, display: 'flex', alignItems: 'center' }}>{icon}</span>
+      <span style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 20, color: '#fff', lineHeight: 1 }}>
+        {value}
+      </span>
+      <span style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.55)', whiteSpace: 'nowrap' }}>
+        {label}
+      </span>
+    </div>
+  )
+}
+
+// ── KPI card ─────────────────────────────────────────────────────────────────
 interface KpiProps {
   icon: React.ReactNode
   iconBg: string
@@ -60,7 +87,7 @@ function KpiCard({ icon, iconBg, iconColor, value, label, to, accent, delay }: K
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={{ y: -3, boxShadow: '0 8px 28px rgba(13,12,10,0.10)' }}
+      whileHover={{ y: -3 }}
       style={{
         background: BAI.bgSurface,
         border: `1px solid ${BAI.border}`,
@@ -68,7 +95,6 @@ function KpiCard({ icon, iconBg, iconColor, value, label, to, accent, delay }: K
         padding: '20px 24px',
         borderTop: `3px solid ${accent}`,
         boxShadow: BAI.shadowMd,
-        cursor: 'default',
         transition: 'box-shadow 0.2s ease, transform 0.2s ease',
       }}
     >
@@ -89,7 +115,7 @@ function KpiCard({ icon, iconBg, iconColor, value, label, to, accent, delay }: K
           Voir <ChevronRight size={11} />
         </Link>
       </div>
-      <div style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 36, color: BAI.ink, lineHeight: 1, marginBottom: 6 }}>
+      <div style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 40, color: BAI.ink, lineHeight: 1, marginBottom: 6 }}>
         {value}
       </div>
       <div style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.inkFaint }}>
@@ -99,28 +125,56 @@ function KpiCard({ icon, iconBg, iconColor, value, label, to, accent, delay }: K
   )
 }
 
-// ── Section header ────────────────────────────────────────────────────────────
-function SectionHeader({ title, to, linkLabel }: { title: string; to?: string; linkLabel?: string }) {
+// ── Activity feed item ────────────────────────────────────────────────────────
+type FeedKind = 'application' | 'visit' | 'message'
+
+interface FeedItem {
+  id: string
+  kind: FeedKind
+  name: string
+  action: string
+  date: Date
+}
+
+const kindConfig: Record<FeedKind, { color: string; bg: string; border: string }> = {
+  application: { color: BAI.owner, bg: BAI.ownerLight, border: BAI.ownerBorder },
+  visit:       { color: BAI.tenant, bg: BAI.tenantLight, border: BAI.tenantBorder },
+  message:     { color: BAI.caramel, bg: BAI.caramelLight, border: BAI.caramelBorder },
+}
+
+function FeedRow({ item }: { item: FeedItem }) {
+  const cfg = kindConfig[item.kind]
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-      <h2 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(18px,2.5vw,22px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: 0 }}>
-        {title}
-      </h2>
-      {to && linkLabel && (
-        <Link
-          to={to}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12.5, fontWeight: 600, color: BAI.caramel, textDecoration: 'none', transition: 'opacity 0.15s' }}
-          onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.7')}
-          onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
-        >
-          {linkLabel} <ArrowRight size={13} />
-        </Link>
-      )}
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 12,
+      paddingTop: 10, paddingBottom: 10,
+      borderBottom: `1px solid ${BAI.border}`,
+    }}>
+      <div style={{
+        width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+        background: cfg.color,
+        boxShadow: `0 0 0 3px ${cfg.bg}`,
+      }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.ink }}>
+          {item.name}
+        </span>
+        {' '}
+        <span style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid }}>
+          {item.action}
+        </span>
+      </div>
+      <span style={{
+        fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, flexShrink: 0,
+        textTransform: 'capitalize',
+      }}>
+        {format(item.date, 'dd MMM', { locale: fr })}
+      </span>
     </div>
   )
 }
 
-// ── Main ─────────────────────────────────────────────────────────────────────
+// ── Main ──────────────────────────────────────────────────────────────────────
 export default function OwnerDashboard() {
   const { user } = useAuth()
   const { myProperties, statistics, fetchMyProperties, fetchMyStatistics, isLoading } = useProperties()
@@ -129,8 +183,6 @@ export default function OwnerDashboard() {
   const [pendingApps, setPendingApps] = useState<Application[]>([])
   const [upcomingVisits, setUpcomingVisits] = useState<Booking[]>([])
   const [identityVerified, setIdentityVerified] = useState(true)
-  const [monthRevenue, setMonthRevenue] = useState<number | null>(null)
-  const [activeContracts, setActiveContracts] = useState<number | null>(null)
 
   useEffect(() => {
     fetchMyProperties()
@@ -145,52 +197,39 @@ export default function OwnerDashboard() {
       const future = res.bookings
         .filter((b) => new Date(`${b.visitDate}T${b.visitTime}`) > now)
         .sort((a, b) => new Date(`${a.visitDate}T${a.visitTime}`).getTime() - new Date(`${b.visitDate}T${b.visitTime}`).getTime())
-        .slice(0, 3)
+        .slice(0, 5)
       setUpcomingVisits(future)
     }).catch(() => {})
 
     apiClient.get('/stripe/identity-status').then((res) => {
       setIdentityVerified(res.data?.data?.verified ?? true)
     }).catch(() => {})
-
-    // Finance summary for dashboard widget
-    apiClient.get('/finances/summary').then((res) => {
-      const s = res.data?.data?.summary
-      if (s) {
-        const months = s.cashFlowByMonth ?? []
-        const currentMonth = new Date().toISOString().slice(0, 7)
-        const thisMonth = months.find((m: any) => m.month === currentMonth)
-        setMonthRevenue(thisMonth ? Math.round(thisMonth.revenue) : null)
-      }
-    }).catch(() => {})
-
-    apiClient.get('/contracts').then((res) => {
-      const contracts = res.data?.data?.contracts ?? []
-      setActiveContracts(contracts.filter((c: any) => c.status === 'ACTIVE').length)
-    }).catch(() => {})
   }, [])
 
-  const displayedProperties = myProperties.slice(0, 6)
+  const displayedProperties = myProperties.slice(0, 3)
   const totalProps = statistics?.totalProperties ?? myProperties.length
 
-  const todayLabel = format(new Date(), "EEEE d MMMM yyyy", { locale: fr })
-  const contextMsg = pendingApps.length > 0
-    ? `${pendingApps.length} candidature${pendingApps.length > 1 ? 's' : ''} en attente de votre décision.`
-    : upcomingVisits.length > 0
-    ? `${upcomingVisits.length} visite${upcomingVisits.length > 1 ? 's' : ''} confirmée${upcomingVisits.length > 1 ? 's' : ''} à venir.`
-    : 'Tout est à jour.'
+  // Build activity feed (max 5 items, mixed)
+  const feedItems: FeedItem[] = [
+    ...pendingApps.slice(0, 3).map((a): FeedItem => ({
+      id: `app-${a.id}`,
+      kind: 'application',
+      name: a.tenant ? `${a.tenant.firstName} ${a.tenant.lastName}` : 'Un candidat',
+      action: `a postulé pour "${(a as any).property?.title ?? 'votre bien'}"`,
+      date: new Date(a.createdAt),
+    })),
+    ...upcomingVisits.slice(0, 2).map((v): FeedItem => ({
+      id: `visit-${v.id}`,
+      kind: 'visit',
+      name: `${v.tenant.firstName} ${v.tenant.lastName}`,
+      action: `visite — ${v.property?.title ?? 'bien'}`,
+      date: new Date(`${v.visitDate}T${v.visitTime}`),
+    })),
+  ]
+    .sort((a, b) => b.date.getTime() - a.date.getTime())
+    .slice(0, 5)
 
   const kpis: KpiProps[] = [
-    {
-      icon: <Home size={18} />,
-      iconBg: `rgba(196,151,106,0.12)`,
-      iconColor: BAI.caramel,
-      value: isLoading ? '—' : totalProps,
-      label: 'Biens actifs',
-      to: '/properties/owner/me',
-      accent: BAI.caramel,
-      delay: 0.06,
-    },
     {
       icon: <ClipboardList size={18} />,
       iconBg: `rgba(26,50,112,0.10)`,
@@ -199,184 +238,120 @@ export default function OwnerDashboard() {
       label: 'Candidatures en attente',
       to: '/applications/manage',
       accent: BAI.owner,
-      delay: 0.12,
+      delay: 0.06,
     },
     {
       icon: <Calendar size={18} />,
       iconBg: `rgba(27,94,59,0.10)`,
       iconColor: BAI.tenant,
       value: upcomingVisits.length,
-      label: 'Visites à venir',
+      label: 'Visites planifiées',
       to: '/bookings/manage',
       accent: BAI.tenant,
-      delay: 0.18,
+      delay: 0.12,
     },
     {
       icon: <MessageSquare size={18} />,
-      iconBg: `rgba(26,26,46,0.08)`,
-      iconColor: BAI.night,
+      iconBg: `rgba(196,151,106,0.12)`,
+      iconColor: BAI.caramel,
       value: unreadCount,
       label: 'Messages non lus',
       to: '/messages',
-      accent: BAI.night,
-      delay: 0.24,
+      accent: BAI.caramel,
+      delay: 0.18,
     },
   ]
 
   return (
     <Layout>
       <style>{`@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }`}</style>
-      <div style={{ background: BAI.bgBase, minHeight: '100vh', padding: 'clamp(20px, 4vw, 48px)' }}>
-        <div style={{ maxWidth: 1140, margin: '0 auto' }}>
 
-          {/* ── Page header ─────────────────────────────────────────────── */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            style={{ marginBottom: 36 }}
-          >
-            <p style={{
-              fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700,
-              letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, marginBottom: 8,
-            }}>
-              Tableau de bord
-            </p>
-            <h1 style={{
-              fontFamily: BAI.fontDisplay, fontSize: 'clamp(28px, 4vw, 40px)',
-              fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '0 0 8px',
-            }}>
-              Bonjour, {user?.firstName}.
-            </h1>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: 0 }}>
-              <span style={{ textTransform: 'capitalize' }}>{todayLabel}</span>
-              {' · '}
-              <span style={{ color: BAI.inkFaint }}>{contextMsg}</span>
-            </p>
-          </motion.div>
+      {/* ── 1. HERO BANNER ───────────────────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4 }}
+        style={{
+          position: 'relative',
+          background: HERO_BG,
+          height: 'clamp(160px, 22vw, 220px)',
+          overflow: 'hidden',
+          borderRadius: 0,
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
+        {/* Ambient glow top-right */}
+        <div style={{
+          position: 'absolute', top: 0, right: 0,
+          width: '60%', height: '100%',
+          background: 'radial-gradient(ellipse at top right, rgba(196,151,106,0.20) 0%, transparent 60%)',
+          pointerEvents: 'none',
+        }} />
 
-          {/* ── KPI bar ──────────────────────────────────────────────────── */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))',
-            gap: 16,
-            marginBottom: 36,
+        {/* Background image */}
+        <img
+          src={HERO_IMG}
+          alt=""
+          aria-hidden="true"
+          style={{
+            position: 'absolute', inset: 0,
+            width: '100%', height: '100%',
+            objectFit: 'cover',
+            opacity: 0.18,
+            pointerEvents: 'none',
+          }}
+        />
+
+        {/* Content */}
+        <div style={{
+          position: 'relative', zIndex: 1,
+          width: '100%',
+          padding: '24px clamp(20px, 4vw, 40px)',
+        }}>
+          {/* Overline */}
+          <p style={{
+            fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700,
+            letterSpacing: '0.12em', textTransform: 'uppercase',
+            color: BAI.caramel, margin: '0 0 6px',
           }}>
-            {kpis.map((kpi) => <KpiCard key={kpi.label} {...kpi} />)}
+            Bon retour
+          </p>
+
+          {/* Title */}
+          <h1 style={{
+            fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+            fontSize: 'clamp(28px, 4vw, 42px)',
+            color: '#ffffff',
+            margin: '0 0 6px',
+            lineHeight: 1.1,
+          }}>
+            Bonjour, {user?.firstName}.
+          </h1>
+
+          {/* Subtitle */}
+          <p style={{
+            fontFamily: BAI.fontBody, fontSize: 15,
+            color: 'rgba(255,255,255,0.60)',
+            margin: '0 0 18px',
+          }}>
+            Voici un résumé de votre activité.
+          </p>
+
+          {/* Glass badges row */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+            <HeroBadge icon={<Home size={14} />} value={isLoading ? '—' : totalProps} label="biens publiés" />
+            <HeroBadge icon={<ClipboardList size={14} />} value={pendingApps.length} label="candidatures en attente" />
+            <HeroBadge icon={<MessageSquare size={14} />} value={unreadCount} label="messages non lus" />
           </div>
+        </div>
+      </motion.div>
 
-          {/* ── Revenus & raccourcis ─────────────────────────────────── */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.22, duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-              gap: 16,
-              marginBottom: 32,
-            }}
-          >
-            {/* Revenus ce mois */}
-            <div style={{
-              background: BAI.night,
-              borderRadius: 14,
-              padding: '20px 24px',
-              boxShadow: '0 4px 20px rgba(26,26,46,0.18)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 16,
-            }}>
-              <div style={{
-                width: 44, height: 44, borderRadius: 11,
-                background: 'rgba(196,151,106,0.18)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              }}>
-                <Euro size={20} color={BAI.caramel} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', margin: '0 0 4px' }}>
-                  Revenus ce mois
-                </p>
-                <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 28, color: monthRevenue !== null ? BAI.caramel : 'rgba(255,255,255,0.6)', margin: 0, lineHeight: 1 }}>
-                  {monthRevenue !== null ? `${monthRevenue.toLocaleString('fr-FR')} €` : '—'}
-                </p>
-              </div>
-              <Link to="/dashboard/owner/finances" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}
-                onMouseEnter={e => (e.currentTarget.style.color = BAI.caramel)}
-                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.4)')}>
-                <BarChart2 size={14} />
-              </Link>
-            </div>
+      {/* ── Page body ──────────────────────────────────────────────────────── */}
+      <div style={{ background: BAI.bgBase, minHeight: '100vh', padding: 'clamp(24px, 4vw, 40px)' }}>
+        <div style={{ maxWidth: 1140, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 40 }}>
 
-            {/* Contrats actifs */}
-            <div style={{
-              background: BAI.bgSurface,
-              border: `1px solid ${BAI.border}`,
-              borderRadius: 14,
-              padding: '20px 24px',
-              boxShadow: BAI.shadowMd,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 16,
-            }}>
-              <div style={{
-                width: 44, height: 44, borderRadius: 11,
-                background: BAI.tenantLight,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              }}>
-                <TrendingUp size={20} color={BAI.tenant} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 4px' }}>
-                  Contrats actifs
-                </p>
-                <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 28, color: BAI.tenant, margin: 0, lineHeight: 1 }}>
-                  {activeContracts !== null ? activeContracts : '—'}
-                </p>
-              </div>
-              <Link to="/contracts" style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 11, fontWeight: 600, color: BAI.inkFaint, textDecoration: 'none' }}
-                onMouseEnter={e => (e.currentTarget.style.color = BAI.caramel)}
-                onMouseLeave={e => (e.currentTarget.style.color = BAI.inkFaint)}>
-                Voir <ChevronRight size={11} />
-              </Link>
-            </div>
-
-            {/* Mes locataires */}
-            <div style={{
-              background: BAI.bgSurface,
-              border: `1px solid ${BAI.border}`,
-              borderRadius: 14,
-              padding: '20px 24px',
-              boxShadow: BAI.shadowMd,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 16,
-            }}>
-              <div style={{
-                width: 44, height: 44, borderRadius: 11,
-                background: BAI.ownerLight,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              }}>
-                <Home size={20} color={BAI.owner} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 4px' }}>
-                  Mes locataires
-                </p>
-                <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 28, color: BAI.owner, margin: 0, lineHeight: 1 }}>
-                  {activeContracts !== null ? activeContracts : '—'}
-                </p>
-              </div>
-              <Link to="/owner/tenants" style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 11, fontWeight: 600, color: BAI.inkFaint, textDecoration: 'none' }}
-                onMouseEnter={e => (e.currentTarget.style.color = BAI.caramel)}
-                onMouseLeave={e => (e.currentTarget.style.color = BAI.inkFaint)}>
-                Voir <ChevronRight size={11} />
-              </Link>
-            </div>
-          </motion.div>
-
-          {/* ── Alerte identité ────────────────────────────────────────── */}
+          {/* ── Alerte identité ─────────────────────────────────────────── */}
           {!identityVerified && (
             <motion.div
               initial={{ opacity: 0, x: -8 }}
@@ -384,7 +359,7 @@ export default function OwnerDashboard() {
               style={{
                 display: 'flex', alignItems: 'center', gap: 12,
                 background: BAI.warningLight, border: `1px solid ${BAI.caramelBorder}`,
-                borderRadius: 12, padding: '12px 18px', marginBottom: 32,
+                borderRadius: 12, padding: '12px 18px',
               }}
             >
               <ShieldAlert size={16} color={BAI.warning} style={{ flexShrink: 0 }} />
@@ -397,244 +372,250 @@ export default function OwnerDashboard() {
             </motion.div>
           )}
 
-          {/* ── Section principale 2 colonnes ─────────────────────────── */}
-          {(pendingApps.length > 0 || upcomingVisits.length > 0) && (
-            <motion.div
+          {/* ── 2. KPI ROW ─────────────────────────────────────────────── */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: 16,
+          }}>
+            {kpis.map((kpi) => <KpiCard key={kpi.label} {...kpi} />)}
+          </div>
+
+          {/* ── 3. GRID 2 COLONNES ─────────────────────────────────────── */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: 28,
+            alignItems: 'start',
+          }}>
+            {/* Colonne gauche — Mes biens */}
+            <motion.section
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.26, duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                gap: 24,
-                marginBottom: 40,
-              }}
+              transition={{ delay: 0.22, duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
             >
-              {/* Candidatures récentes */}
-              {pendingApps.length > 0 && (
-                <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 14, padding: '20px 24px', boxShadow: BAI.shadowMd }}>
-                  <SectionHeader title="Candidatures récentes" to="/applications/manage" linkLabel="Voir tout" />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {pendingApps.slice(0, 5).map((app, i) => {
-                      const tenant = app.tenant
-                      const name = tenant ? `${tenant.firstName} ${tenant.lastName}` : 'Locataire'
-                      const initials = tenant ? `${tenant.firstName?.[0] ?? ''}${tenant.lastName?.[0] ?? ''}`.toUpperCase() : '?'
-                      const propTitle = (app as any).property?.title ?? 'Bien'
-                      return (
-                        <motion.div
-                          key={app.id}
-                          initial={{ opacity: 0, x: -8 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.30 + i * 0.05 }}
-                        >
-                          <Link to="/applications/manage" style={{ textDecoration: 'none' }}>
-                            <div
-                              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, transition: 'background 0.15s', cursor: 'pointer' }}
-                              onMouseEnter={(e) => (e.currentTarget.style.background = BAI.bgMuted)}
-                              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                            >
-                              <div style={{
-                                width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
-                                background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: 12, fontWeight: 700, color: BAI.owner, fontFamily: BAI.fontBody,
-                              }}>
-                                {initials}
-                              </div>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <p style={{ fontFamily: BAI.fontBody, fontSize: 13.5, fontWeight: 600, color: BAI.ink, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</p>
-                                <p style={{ fontFamily: BAI.fontBody, fontSize: 11.5, color: BAI.inkFaint, margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                  {propTitle} · {format(new Date(app.createdAt), 'd MMM', { locale: fr })}
-                                </p>
-                              </div>
-                              <span style={{
-                                fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
-                                color: BAI.warning, background: BAI.warningLight,
-                                border: `1px solid ${BAI.caramelBorder}`, borderRadius: 6, padding: '3px 8px', flexShrink: 0,
-                              }}>
-                                Attente
-                              </span>
-                            </div>
-                          </Link>
-                        </motion.div>
-                      )
-                    })}
-                  </div>
-                  {pendingApps.length > 5 && (
-                    <div style={{ marginTop: 10, textAlign: 'center' }}>
-                      <Link to="/applications/manage" style={{ fontFamily: BAI.fontBody, fontSize: 12.5, fontWeight: 600, color: BAI.caramel, textDecoration: 'none' }}>
-                        +{pendingApps.length - 5} autres candidatures
-                      </Link>
-                    </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <h2 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(18px,2.5vw,22px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: 0 }}>
+                  Mes biens
+                </h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  {myProperties.length > 3 && (
+                    <Link
+                      to="/properties/owner/me"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: BAI.fontBody, fontSize: 12.5, fontWeight: 600, color: BAI.caramel, textDecoration: 'none' }}
+                    >
+                      Voir tout <ArrowRight size={13} />
+                    </Link>
                   )}
-                </div>
-              )}
-
-              {/* Prochaines visites */}
-              {upcomingVisits.length > 0 && (
-                <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 14, padding: '20px 24px', boxShadow: BAI.shadowMd }}>
-                  <SectionHeader title="Visites à venir" to="/bookings/manage" linkLabel="Voir tout" />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {upcomingVisits.map((visit, i) => {
-                      const visitDt = new Date(`${visit.visitDate}T${visit.visitTime}`)
-                      const tenant = visit.tenant
-                      const tenantName = tenant ? `${tenant.firstName} ${tenant.lastName}` : 'Locataire'
-                      return (
-                        <motion.div
-                          key={visit.id}
-                          initial={{ opacity: 0, x: 8 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.32 + i * 0.05 }}
-                        >
-                          <Link to="/bookings/manage" style={{ textDecoration: 'none' }}>
-                            <div
-                              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, transition: 'background 0.15s', cursor: 'pointer' }}
-                              onMouseEnter={(e) => (e.currentTarget.style.background = BAI.bgMuted)}
-                              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                            >
-                              <div style={{
-                                width: 36, height: 36, borderRadius: 9, flexShrink: 0,
-                                background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              }}>
-                                <Calendar size={16} color={BAI.tenant} />
-                              </div>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <p style={{ fontFamily: BAI.fontBody, fontSize: 13.5, fontWeight: 600, color: BAI.ink, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                  {visit.property?.title ?? 'Visite confirmée'}
-                                </p>
-                                <p style={{ fontFamily: BAI.fontBody, fontSize: 11.5, color: BAI.inkFaint, margin: '2px 0 0' }}>
-                                  {format(visitDt, 'EEE d MMM · HH:mm', { locale: fr })} · {tenantName}
-                                </p>
-                              </div>
-                              <span style={{
-                                fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
-                                color: BAI.tenant, background: BAI.tenantLight,
-                                border: `1px solid ${BAI.tenantBorder}`, borderRadius: 6, padding: '3px 8px', flexShrink: 0,
-                              }}>
-                                Confirmée
-                              </span>
-                            </div>
-                          </Link>
-                        </motion.div>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          )}
-
-          {/* ── Biens récents ────────────────────────────────────────────── */}
-          <motion.section
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.34, duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-            style={{ marginBottom: 48 }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-              <h2 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(18px,2.5vw,24px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: 0 }}>
-                Mes annonces
-              </h2>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                {myProperties.length > 6 && (
-                  <Link
-                    to="/properties/owner/me"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: BAI.fontBody, fontSize: 12.5, fontWeight: 600, color: BAI.caramel, textDecoration: 'none' }}
-                  >
-                    Gérer mes biens <ArrowRight size={13} />
-                  </Link>
-                )}
-                <motion.div whileTap={{ scale: 0.96 }}>
                   <Link
                     to="/properties/new"
                     style={{
                       display: 'inline-flex', alignItems: 'center', gap: 6,
                       background: BAI.night, color: '#fff',
                       fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600,
-                      padding: '9px 16px', borderRadius: 9, textDecoration: 'none', minHeight: 40,
+                      padding: '9px 14px', borderRadius: 9, textDecoration: 'none', minHeight: 40,
                     }}
                   >
                     <Plus size={14} /> Ajouter
                   </Link>
-                </motion.div>
-              </div>
-            </div>
-
-            {isLoading ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 18 }}>
-                {[1, 2, 3].map((i) => <SkeletonCard key={i} />)}
-              </div>
-            ) : displayedProperties.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                style={{
-                  textAlign: 'center', padding: '56px 24px',
-                  background: BAI.bgSurface, border: `1px dashed ${BAI.border}`, borderRadius: 16,
-                  boxShadow: BAI.shadowMd,
-                }}
-              >
-                <div style={{
-                  width: 56, height: 56, borderRadius: '50%',
-                  background: BAI.bgMuted,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px',
-                }}>
-                  <Home size={24} color={BAI.inkFaint} />
                 </div>
-                <h3 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 22, fontWeight: 700, color: BAI.ink, marginBottom: 8 }}>
-                  Vous n'avez pas encore de bien
-                </h3>
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, marginBottom: 24 }}>
-                  Publiez votre première annonce et commencez à recevoir des candidatures.
-                </p>
-                <motion.div whileTap={{ scale: 0.96 }} style={{ display: 'inline-block' }}>
+              </div>
+
+              {isLoading ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {[1, 2, 3].map((i) => <SkeletonCard key={i} />)}
+                </div>
+              ) : displayedProperties.length === 0 ? (
+                /* Empty state attrayant */
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  style={{
+                    background: 'linear-gradient(135deg, #1a1a2e 0%, #0a0d1a 100%)',
+                    borderRadius: 16,
+                    padding: '48px 28px',
+                    textAlign: 'center',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 16,
+                  }}
+                >
+                  <div style={{
+                    width: 64, height: 64, borderRadius: '50%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.13)',
+                  }}>
+                    <Home size={28} color="rgba(255,255,255,0.20)" />
+                  </div>
+                  <h3 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 20, fontWeight: 700, color: '#ffffff', margin: 0 }}>
+                    Publiez votre premier bien en 5 minutes
+                  </h3>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 13.5, color: 'rgba(255,255,255,0.50)', margin: 0 }}>
+                    Commencez à recevoir des candidatures qualifiées dès aujourd'hui.
+                  </p>
                   <Link
                     to="/properties/new"
                     style={{
                       display: 'inline-flex', alignItems: 'center', gap: 8,
-                      background: BAI.night, color: '#fff',
+                      background: BAI.caramel, color: '#fff',
                       fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600,
                       padding: '12px 24px', borderRadius: 10, textDecoration: 'none',
+                      marginTop: 4,
                     }}
                   >
-                    <Plus size={16} /> Ajouter votre premier bien
+                    <Plus size={16} /> Ajouter un bien
                   </Link>
                 </motion.div>
-              </motion.div>
-            ) : (
-              <>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {displayedProperties.map((property, i) => (
                     <motion.div
                       key={property.id}
-                      initial={{ opacity: 0, y: 12 }}
+                      initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.36 + i * 0.06, duration: 0.28 }}
+                      transition={{ delay: 0.28 + i * 0.06, duration: 0.28 }}
                     >
                       <PropertyCard property={property} />
                     </motion.div>
                   ))}
-                </div>
-                {myProperties.length > 6 && (
-                  <div style={{ marginTop: 20, textAlign: 'center' }}>
+                  {myProperties.length > 3 && (
                     <Link
                       to="/properties/owner/me"
                       style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                         fontFamily: BAI.fontBody, fontSize: 13.5, fontWeight: 600,
                         color: BAI.caramel, textDecoration: 'none',
                         padding: '10px 20px', border: `1px solid ${BAI.caramelBorder}`,
                         borderRadius: 9, background: BAI.caramelLight,
                       }}
                     >
-                      <TrendingUp size={14} /> Voir tous mes biens ({myProperties.length})
+                      Voir tous mes biens ({myProperties.length}) <ArrowRight size={14} />
                     </Link>
+                  )}
+                </div>
+              )}
+            </motion.section>
+
+            {/* Colonne droite — Activité récente */}
+            <motion.section
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.30, duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <h2 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(18px,2.5vw,22px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: 0 }}>
+                  Activité récente
+                </h2>
+                <Link
+                  to="/applications/manage"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: BAI.fontBody, fontSize: 12.5, fontWeight: 600, color: BAI.caramel, textDecoration: 'none' }}
+                >
+                  Tout voir <ArrowRight size={13} />
+                </Link>
+              </div>
+
+              <div style={{
+                background: BAI.bgSurface,
+                border: `1px solid ${BAI.border}`,
+                borderRadius: 14,
+                padding: '4px 20px 4px',
+                boxShadow: BAI.shadowMd,
+              }}>
+                {feedItems.length === 0 ? (
+                  <div style={{ padding: '32px 0', textAlign: 'center' }}>
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 13.5, color: BAI.inkFaint, margin: 0 }}>
+                      Aucune activité récente.
+                    </p>
                   </div>
+                ) : (
+                  feedItems.map((item) => <FeedRow key={item.id} item={item} />)
                 )}
-              </>
-            )}
-          </motion.section>
+              </div>
+
+              {/* Légende */}
+              <div style={{ display: 'flex', gap: 16, marginTop: 14, flexWrap: 'wrap' }}>
+                {(Object.keys(kindConfig) as FeedKind[]).map((k) => {
+                  const labels: Record<FeedKind, string> = {
+                    application: 'Candidature',
+                    visit: 'Visite',
+                    message: 'Message',
+                  }
+                  return (
+                    <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div style={{
+                        width: 7, height: 7, borderRadius: '50%',
+                        background: kindConfig[k].color,
+                      }} />
+                      <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint }}>
+                        {labels[k]}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            </motion.section>
+          </div>
+
+          {/* ── 4. QUICK ACTIONS ────────────────────────────────────────── */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.40, duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              background: HERO_BG,
+              borderRadius: 16,
+              padding: 'clamp(20px, 3vw, 32px)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 20,
+            }}
+          >
+            <p style={{
+              fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700,
+              letterSpacing: '0.12em', textTransform: 'uppercase',
+              color: BAI.caramel, margin: 0,
+            }}>
+              Actions rapides
+            </p>
+            <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+              {[
+                { label: '+ Nouvelle annonce', to: '/properties/new' },
+                { label: 'Voir candidatures', to: '/applications/manage' },
+                { label: 'Mes messages', to: '/messages' },
+              ].map(({ label, to }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 8,
+                    background: 'rgba(255,255,255,0.08)',
+                    backdropFilter: 'blur(20px) saturate(160%)',
+                    WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                    border: '1px solid rgba(255,255,255,0.13)',
+                    borderRadius: 12,
+                    padding: '12px 20px',
+                    fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600,
+                    color: '#ffffff',
+                    textDecoration: 'none',
+                    minHeight: 44,
+                    transition: 'background 0.18s, border-color 0.18s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(196,151,106,0.18)'
+                    e.currentTarget.style.borderColor = 'rgba(196,151,106,0.35)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.08)'
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.13)'
+                  }}
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </motion.div>
 
         </div>
       </div>

@@ -1,10 +1,11 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { Layout } from '../../components/layout/Layout'
 import { BAI } from '../../constants/bailio-tokens'
 import { useProperties } from '../../hooks/useProperties'
 import { PropertyCard } from '../../components/property/PropertyCard'
 import { MapPin, TrendingUp, Train, ChevronRight, Building2 } from 'lucide-react'
+import { marketService, type CityPrice } from '../../services/market.service'
 
 // ─── Données villes ───────────────────────────────────────────────────────────
 
@@ -128,6 +129,9 @@ export default function LocationVille() {
   const { ville: villeParam } = useParams<{ ville: string }>()
   const navigate = useNavigate()
   const { properties, isLoading, fetchProperties } = useProperties()
+  const [cityPrice, setCityPrice] = useState<CityPrice | null>(null)
+  const [marketSource, setMarketSource] = useState<string>('')
+  const [marketUpdated, setMarketUpdated] = useState<string>('')
 
   const villeKey = villeParam?.toLowerCase() ?? ''
   const villeData = VILLES_DATA[villeKey]
@@ -137,6 +141,18 @@ export default function LocationVille() {
       fetchProperties({ city: villeData.nom, status: 'AVAILABLE' as const }, { page: 1, limit: 12 })
     }
   }, [villeData?.nom])
+
+  useEffect(() => {
+    if (!villeKey) return
+    marketService.getCityPrice(villeKey).then(data => {
+      if (data) setCityPrice(data)
+    })
+    // Fetch source/lastUpdated from full list on first load
+    marketService.getCityPrices().then(md => {
+      setMarketSource(md.source)
+      setMarketUpdated(md.lastUpdated)
+    }).catch(() => {})
+  }, [villeKey])
 
   // Ville non trouvée
   if (!villeData) {
@@ -216,6 +232,112 @@ export default function LocationVille() {
             ))}
           </div>
         </div>
+
+        {/* Widget prix du marché */}
+        {cityPrice && (
+          <div style={{ maxWidth: 1100, margin: '0 auto', padding: 'clamp(20px, 3vw, 32px) clamp(16px, 4vw, 32px) 0' }}>
+            <div style={{
+              background: BAI.bgSurface,
+              border: `1px solid ${BAI.border}`,
+              borderRadius: BAI.radiusLg,
+              padding: '20px 24px',
+              boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
+            }}>
+              {/* En-tête */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+                <div>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 4px' }}>
+                    Observatoire des loyers
+                  </p>
+                  <h2 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(18px, 2.5vw, 22px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: 0 }}>
+                    Prix du marché à {cityPrice.city}
+                  </h2>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  {/* Badge tendance */}
+                  <span style={{
+                    fontFamily: BAI.fontBody,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    padding: '4px 10px',
+                    borderRadius: 20,
+                    background: cityPrice.trend.startsWith('+') ? '#edf7f2' : '#fef2f2',
+                    color: cityPrice.trend.startsWith('+') ? BAI.tenant : BAI.error,
+                    border: `1px solid ${cityPrice.trend.startsWith('+') ? BAI.tenantBorder : '#fca5a5'}`,
+                  }}>
+                    {cityPrice.trend} sur 1 an
+                  </span>
+                  {/* Badge zone tendue */}
+                  {cityPrice.zone === 'tendue' && (
+                    <span style={{
+                      fontFamily: BAI.fontBody,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      padding: '4px 10px',
+                      borderRadius: 20,
+                      background: BAI.ownerLight,
+                      color: BAI.owner,
+                      border: `1px solid ${BAI.ownerBorder}`,
+                    }}>
+                      Zone tendue
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* KPI */}
+              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                {/* Loyer moyen */}
+                <div style={{
+                  flex: 1,
+                  minWidth: 160,
+                  background: BAI.bgMuted,
+                  border: `1px solid ${BAI.border}`,
+                  borderRadius: BAI.radius,
+                  padding: '16px 20px',
+                }}>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 6px' }}>
+                    Loyer moyen
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                    <span style={{ fontFamily: BAI.fontDisplay, fontSize: 28, fontWeight: 700, color: BAI.tenant, lineHeight: 1 }}>
+                      {cityPrice.rentPerSqm}
+                    </span>
+                    <span style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid }}>€/m²/mois</span>
+                  </div>
+                </div>
+
+                {/* Prix achat */}
+                <div style={{
+                  flex: 1,
+                  minWidth: 160,
+                  background: BAI.bgMuted,
+                  border: `1px solid ${BAI.border}`,
+                  borderRadius: BAI.radius,
+                  padding: '16px 20px',
+                }}>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: BAI.inkFaint, margin: '0 0 6px' }}>
+                    Prix d'achat
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                    <span style={{ fontFamily: BAI.fontDisplay, fontSize: 28, fontWeight: 700, color: BAI.owner, lineHeight: 1 }}>
+                      {cityPrice.buyPerSqm.toLocaleString('fr-FR')}
+                    </span>
+                    <span style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid }}>€/m²</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Source */}
+              {marketSource && (
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: '12px 0 0' }}>
+                  Source : {marketSource}
+                  {marketUpdated && ` — Mis à jour le ${new Date(marketUpdated).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Contenu principal */}
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: 'clamp(24px, 4vw, 40px) clamp(16px, 4vw, 32px)' }}>
