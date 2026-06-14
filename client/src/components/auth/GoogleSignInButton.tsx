@@ -45,13 +45,9 @@ export default function GoogleSignInButton({
       return
     }
 
-    // Use storage event — fires in THIS window when the popup writes to localStorage
-    // This avoids window.opener which gets nullified by Google's COOP headers
-    const onStorage = (event: StorageEvent) => {
-      if (event.key !== STORAGE_KEY || !event.newValue) return
-      cleanup()
+    const processResult = (raw: string) => {
       try {
-        const data = JSON.parse(event.newValue)
+        const data = JSON.parse(raw)
         localStorage.removeItem(STORAGE_KEY)
         if (data.type === 'GOOGLE_AUTH_SUCCESS') {
           onSuccessRef.current('__popup_result__' + JSON.stringify(data))
@@ -63,14 +59,36 @@ export default function GoogleSignInButton({
       }
     }
 
+    let handled = false
+
     const cleanup = () => {
       clearInterval(pollClosed)
+      clearInterval(pollStorage)
       window.removeEventListener('storage', onStorage)
     }
 
+    // Primary: StorageEvent — fires when popup writes to localStorage
+    // (works when popup & parent share the same origin)
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== STORAGE_KEY || !event.newValue || handled) return
+      handled = true
+      cleanup()
+      processResult(event.newValue)
+    }
     window.addEventListener('storage', onStorage)
 
-    // Fallback: cleanup if popup was closed without completing auth
+    // Fallback: poll localStorage every 150ms in case StorageEvent was missed
+    // (race condition when popup closes before event dispatches)
+    const pollStorage = setInterval(() => {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw && !handled) {
+        handled = true
+        cleanup()
+        processResult(raw)
+      }
+    }, 150)
+
+    // Cleanup if popup closed without auth
     const pollClosed = setInterval(() => {
       if (popup.closed) cleanup()
     }, 500)

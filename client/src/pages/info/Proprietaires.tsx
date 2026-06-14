@@ -1,165 +1,65 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Check, Home, Users, TrendingUp, FileCheck, CalendarCheck, MessageCircle } from 'lucide-react'
+import { ArrowRight, Check } from 'lucide-react'
 import { Header } from '../../components/layout/Header'
 import Footer from '../../components/layout/Footer'
 import { BAI } from '../../constants/bailio-tokens'
 import { useDarkSection } from '../../hooks/useDarkSection'
 
-/* ─── Icons ─────────────────────────────────────────────────────────────── */
-const IconStar = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="22" height="22">
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-  </svg>
-)
-const IconUserX = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="22" height="22">
-    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-    <circle cx="9" cy="7" r="4"/>
-    <path d="m22 11-3-3"/><path d="m19 8-3 3"/>
-  </svg>
-)
-const IconDollar = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="22" height="22">
-    <line x1="12" x2="12" y1="2" y2="22"/>
-    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-  </svg>
-)
-
-/* ─── Data ───────────────────────────────────────────────────────────────── */
-const FEATURES = [
+const STEPS = [
   {
-    icon: <IconStar />,
-    title: 'Annonce premium.',
-    desc: "Remplissez les informations essentielles : surface, loyer, equipements. L'IA optimise le titre et la description pour maximiser la visibilite. Vous visualisez avant publication.",
-    stat: '3x',
-    statLabel: 'plus de candidatures qu\'une annonce classique',
-    reverse: false,
+    num: '01',
+    emoji: '📸',
+    title: 'Publiez votre bien',
+    desc: 'Photos, surface, loyer. Votre annonce est en ligne en 8 minutes.',
   },
   {
-    icon: <IconUserX />,
-    title: 'Filtre intelligent.',
-    desc: "Chaque candidature arrive avec une analyse : taux d'effort, stabilite professionnelle, coherence des justificatifs. Vous comparez en un coup d'oeil, sans dossier papier.",
-    stat: '87%',
-    statLabel: 'des dossiers traites en moins de 24 h',
-    reverse: true,
+    num: '02',
+    emoji: '📋',
+    title: 'Choisissez votre locataire',
+    desc: 'Les candidats arrivent avec dossiers vérifiés. Vous choisissez.',
   },
   {
-    icon: <IconDollar />,
-    title: 'Encaissement automatique.',
-    desc: 'Votre locataire verse le loyer directement. Vous le marquez comme recu en 1 clic, la quittance part automatiquement. Zero paperasse.',
-    stat: '1 200 €',
-    statLabel: 'economises en moyenne sur la premiere annee',
-    reverse: false,
+    num: '03',
+    emoji: '💶',
+    title: 'Encaissez chaque mois',
+    desc: 'Loyers, quittances, relances. Tout est automatique.',
   },
 ]
 
-const KPI_CARDS = [
-  { label: 'Loyers ce mois',   value: '3 870 €', sub: '+4 % vs mois dernier', color: BAI.owner },
-  { label: 'Biens en gestion', value: '3',        sub: '2 loues - 1 en attente', color: BAI.owner },
-  { label: 'Candidatures',     value: '12',       sub: '4 a examiner',          color: BAI.caramel },
-  { label: 'Rentabilite brute',value: '5,8 %',    sub: 'Calculee en temps reel', color: BAI.tenant },
+const PERKS = [
+  'Bail conforme loi ALUR signé en ligne',
+  'Messagerie sécurisée avec vos locataires',
+  'Visites organisées avec créneaux en ligne',
+  '1 200 € économisés en moyenne par an',
 ]
 
-const ACTIVITY = [
-  { dot: '✓', bg: BAI.tenantLight, col: BAI.tenant, title: 'Loyer recu, quittance envoyee', sub: 'Mai 2026' },
-  { dot: '✉', bg: BAI.ownerLight,  col: BAI.owner,  title: 'Nouvelle candidature recue',    sub: 'Dossier a consulter' },
-  { dot: '✎', bg: BAI.ownerLight,  col: BAI.owner,  title: 'Bail signe electroniquement',   sub: 'Conforme loi ALUR' },
-]
-
-const BAR_HEIGHTS = [55, 62, 58, 71, 75, 80, 88]
-
-const STATS_DARK = [
-  { value: '2 400+', label: 'Propriétaires inscrits', icon: <Home size={20} /> },
-  { value: '98%',    label: 'Taux de satisfaction',   icon: <TrendingUp size={20} /> },
-  { value: '8 min',  label: 'Pour publier une annonce', icon: <CalendarCheck size={20} /> },
-]
-
-const FEATURE_GRID = [
-  { icon: <Home size={20} />, title: 'Annonces illimitées', desc: 'Publiez autant de biens que vous le souhaitez avec photos, description, carte.', color: BAI.owner },
-  { icon: <Users size={20} />, title: 'Gestion candidatures', desc: 'Tableau de bord centralisé : scores, documents, comparaison en un clic.', color: BAI.owner },
-  { icon: <FileCheck size={20} />, title: 'Contrats numériques', desc: 'Bail loi ALUR, état des lieux, signature électronique eIDAS intégrée.', color: BAI.caramel },
-  { icon: <TrendingUp size={20} />, title: 'Suivi des loyers', desc: 'Encaissement, quittances automatiques, relances en cas de retard.', color: BAI.caramel },
-  { icon: <MessageCircle size={20} />, title: 'Messagerie sécurisée', desc: 'Communication directe avec vos locataires sans exposer vos coordonnées.', color: BAI.tenant },
-  { icon: <CalendarCheck size={20} />, title: 'Visites organisées', desc: 'Créneaux en ligne, confirmations automatiques, rappels par email.', color: BAI.tenant },
-]
-
-/* ─── Component ─────────────────────────────────────────────────────────── */
 export default function Proprietaires() {
   const heroRef = useRef<HTMLDivElement>(null)
   useDarkSection(heroRef)
+
   return (
     <div style={{ backgroundColor: BAI.bgBase, fontFamily: BAI.fontBody, color: BAI.ink, minHeight: '100vh' }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=DM+Sans:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,700;1,700&family=DM+Sans:wght@400;500;600;700&display=swap');
 
-        @keyframes pulse-dot {
-          0%   { box-shadow: 0 0 0 0 rgba(196,151,106,0.6); }
-          70%  { box-shadow: 0 0 0 10px rgba(196,151,106,0); }
-          100% { box-shadow: 0 0 0 0 rgba(196,151,106,0); }
-        }
-
-        /* Hero asymmetric */
-        .prop-hero-grid {
+        .prop-steps {
           display: grid;
-          grid-template-columns: 1fr auto;
-          gap: 60px;
-          align-items: center;
-        }
-        .prop-hero-stat {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          text-align: right;
-          min-width: 200px;
-        }
-
-        /* Feature zig-zag */
-        .prop-feat-row {
-          display: grid;
-          grid-template-columns: 3fr 2fr;
+          grid-template-columns: repeat(3, 1fr);
           gap: 0;
-          border-bottom: 1px solid ${BAI.border};
-          padding: clamp(28px,4vh,52px) 0;
-          align-items: start;
         }
-        .prop-feat-row.reverse { grid-template-columns: 2fr 3fr; }
-        .prop-feat-row:last-child { border-bottom: none; }
-
-        /* KPI and dashboard grids */
-        .prop-kpi-grid    { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
-        .prop-dash-bot    { display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; }
-        .prop-feat-grid   { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
-        .prop-stats-grid  { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
-
-        @media (max-width: 1024px) {
-          .prop-kpi-grid  { grid-template-columns: repeat(2,1fr) !important; }
-          .prop-feat-grid { grid-template-columns: repeat(2,1fr) !important; }
-        }
-        @media (max-width: 768px) {
-          .prop-hero-grid  { grid-template-columns: 1fr !important; gap: 32px !important; }
-          .prop-hero-stat  { align-items: flex-start !important; text-align: left !important; }
-          .prop-feat-row, .prop-feat-row.reverse { grid-template-columns: 1fr !important; gap: 20px; }
-          .prop-feat-row.reverse .prop-feat-text-col { order: -1; }
-          .prop-kpi-grid   { grid-template-columns: 1fr 1fr !important; }
-          .prop-dash-bot   { grid-template-columns: 1fr !important; }
-          .prop-hero-sec   { padding: 56px 0 64px !important; }
-          .prop-cta-sec    { padding: 56px 0 !important; }
-          .prop-btn-group  { justify-content: flex-start !important; }
-          .prop-feat-grid  { grid-template-columns: 1fr !important; }
-          .prop-stats-grid { grid-template-columns: 1fr !important; }
-        }
-        @media (max-width: 480px) {
-          .prop-kpi-grid   { grid-template-columns: 1fr 1fr !important; }
-          .prop-btn-group  { flex-direction: column !important; width: 100% !important; }
-          .prop-btn-caramel, .prop-btn-ghost, .prop-btn-outline-dark { width: 100% !important; justify-content: center !important; }
+        .prop-split {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0;
+          min-height: 480px;
         }
 
-        .prop-btn-caramel {
+        .prop-btn-main {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          padding: 14px 26px;
+          padding: 14px 28px;
           border-radius: 8px;
           font-size: 15px;
           font-weight: 600;
@@ -168,16 +68,16 @@ export default function Proprietaires() {
           text-decoration: none;
           border: none;
           cursor: pointer;
-          transition: background .18s ease;
-          min-height: 44px;
+          transition: background .18s;
+          min-height: 48px;
         }
-        .prop-btn-caramel:hover { background: #b07f54; }
+        .prop-btn-main:hover { background: #b07f54; }
 
         .prop-btn-ghost {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          padding: 14px 26px;
+          padding: 14px 28px;
           border-radius: 8px;
           font-size: 15px;
           font-weight: 600;
@@ -186,16 +86,16 @@ export default function Proprietaires() {
           border: 1px solid rgba(255,255,255,0.18);
           text-decoration: none;
           cursor: pointer;
-          transition: background .18s ease;
-          min-height: 44px;
+          transition: background .18s;
+          min-height: 48px;
         }
-        .prop-btn-ghost:hover { background: rgba(255,255,255,0.14); }
+        .prop-btn-ghost:hover { background: rgba(255,255,255,0.15); }
 
-        .prop-btn-outline-dark {
+        .prop-btn-outline {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          padding: 14px 26px;
+          padding: 14px 28px;
           border-radius: 8px;
           font-size: 15px;
           font-weight: 600;
@@ -204,429 +104,256 @@ export default function Proprietaires() {
           border: 1px solid rgba(255,255,255,0.3);
           text-decoration: none;
           cursor: pointer;
-          transition: border-color .18s ease, background .18s ease;
-          min-height: 44px;
+          transition: border-color .18s, background .18s;
+          min-height: 48px;
         }
-        .prop-btn-outline-dark:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.5); }
+        .prop-btn-outline:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.5); }
+
+        @media (max-width: 768px) {
+          .prop-steps { grid-template-columns: 1fr !important; }
+          .prop-split { grid-template-columns: 1fr !important; }
+          .prop-split-img { min-height: 280px !important; order: -1; }
+          .prop-hero-btns { flex-direction: column !important; }
+          .prop-btn-main, .prop-btn-ghost, .prop-btn-outline { width: 100% !important; justify-content: center !important; }
+        }
+        @media (max-width: 640px) {
+          .prop-steps { gap: 0 !important; }
+        }
       `}</style>
 
       <Header />
 
-      {/* ── HERO: asymmetric — H1 left, big stat right ── */}
-      <section ref={heroRef} className="prop-hero-sec" style={{
+      {/* ── HERO ── */}
+      <section ref={heroRef} style={{
         position: 'relative',
         background: '#0a0d1a',
         color: '#fff',
         overflow: 'hidden',
-        padding: '80px 0 100px',
+        padding: 'clamp(64px,10vh,100px) 0 clamp(64px,9vh,96px)',
       }}>
-        {/* Ambient orb */}
         <div aria-hidden style={{
-          position: 'absolute', top: '8%', right: '-60px',
-          width: 420, height: 120, borderRadius: '50%',
-          background: 'rgba(196,151,106,0.06)', filter: 'blur(40px)',
-          pointerEvents: 'none',
-        }} />
-        {/* Bottom gradient fade */}
-        <div aria-hidden style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0, height: 80,
-          background: 'linear-gradient(to bottom, transparent, rgba(10,13,26,0.6))',
+          position: 'absolute', top: '-20%', right: '-80px',
+          width: 500, height: 160, borderRadius: '50%',
+          background: 'rgba(196,151,106,0.07)', filter: 'blur(60px)',
           pointerEvents: 'none',
         }} />
 
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)', position: 'relative', zIndex: 2 }}>
-          <div className="prop-hero-grid">
+        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 clamp(20px,5vw,48px)', position: 'relative', zIndex: 2 }}>
+          <p style={{
+            fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700,
+            letterSpacing: '0.14em', textTransform: 'uppercase',
+            color: BAI.caramel, margin: '0 0 16px',
+          }}>
+            Pour les propriétaires
+          </p>
 
-            {/* Left — copy */}
-            <div>
-              <p style={{
-                fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700,
-                letterSpacing: '0.12em', textTransform: 'uppercase',
-                color: BAI.caramel, margin: '0 0 14px',
-              }}>
-                Propriétaires
-              </p>
-              <h1 style={{
-                fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-                fontSize: 'clamp(38px,6vw,72px)', lineHeight: 1.02,
-                color: '#fff', margin: '0 0 22px', paddingBottom: 2,
-              }}>
-                Gérez vos biens{' '}
-                <em style={{ color: BAI.caramel }}>en toute sérénité.</em>
-              </h1>
+          <h1 style={{
+            fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+            fontSize: 'clamp(36px,6vw,68px)', lineHeight: 1.04,
+            color: '#fff', margin: '0 0 20px',
+          }}>
+            Gérez votre patrimoine{' '}
+            <span style={{ color: BAI.caramel }}>sans agence.</span>
+          </h1>
 
-              <p style={{
-                fontSize: 'clamp(15px,1.3vw,17px)', color: 'rgba(255,255,255,0.78)',
-                lineHeight: 1.6, maxWidth: 560, margin: '0 0 40px',
-              }}>
-                Publiez votre annonce en huit minutes. Recevez des candidatures déjà vérifiées.
-                Signez le bail en ligne. Les loyers tombent automatiquement.
-              </p>
+          <p style={{
+            fontSize: 'clamp(15px,1.4vw,18px)', color: 'rgba(255,255,255,0.72)',
+            lineHeight: 1.65, maxWidth: 520, margin: '0 0 40px',
+          }}>
+            Annonce, candidats, bail, loyers. Tout en un seul endroit.
+          </p>
 
-              <div className="prop-btn-group" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                <Link to="/register?role=OWNER" className="prop-btn-caramel">
-                  Publier mon annonce <ArrowRight size={16} />
-                </Link>
-                <Link to="/pricing" className="prop-btn-ghost">
-                  Voir la tarification
-                </Link>
-              </div>
-            </div>
-
-            {/* Right — big stat asymmetric */}
-            <div className="prop-hero-stat">
-              <span style={{
-                fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-                fontSize: 'clamp(52px,8vw,96px)', color: BAI.caramel, lineHeight: 1,
-              }}>
-                1 200 €
-              </span>
-              <span style={{
-                fontFamily: BAI.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.55)',
-                marginTop: 8, maxWidth: '18ch', lineHeight: 1.4,
-              }}>
-                économisés en moyenne par an face à une agence classique
-              </span>
-            </div>
-
+          <div className="prop-hero-btns" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <Link to="/register?role=OWNER" className="prop-btn-main">
+              Commencer gratuitement <ArrowRight size={16} />
+            </Link>
+            <Link to="/pricing" className="prop-btn-ghost">
+              Voir les tarifs
+            </Link>
           </div>
 
-          {/* Hero glass feature cards */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginTop: 56 }}>
+          {/* Stats inline */}
+          <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap', marginTop: 52 }}>
             {[
-              { icon: '📋', label: 'Annonce publiée en', value: '8 minutes' },
-              { icon: '🔍', label: 'Candidats filtrés', value: 'automatiquement' },
-              { icon: '✍️', label: 'Bail signé', value: 'en ligne' },
-            ].map((feat) => (
-              <div
-                key={feat.label}
-                style={{
-                  flex: '1 1 160px', minWidth: 160,
-                  background: 'rgba(255,255,255,0.06)',
-                  backdropFilter: 'blur(20px) saturate(160%)',
-                  WebkitBackdropFilter: 'blur(20px) saturate(160%)',
-                  border: '1px solid rgba(255,255,255,0.10)',
-                  borderRadius: 12,
-                  padding: '16px 20px',
-                  display: 'flex', alignItems: 'center', gap: 14,
-                }}
-              >
-                <span style={{ fontSize: 22, flexShrink: 0 }}>{feat.icon}</span>
-                <div>
-                  <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: 'rgba(255,255,255,0.50)', margin: 0 }}>{feat.label}</p>
-                  <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 17, color: BAI.caramel, margin: '2px 0 0', lineHeight: 1 }}>{feat.value}</p>
-                </div>
+              { val: '8 min', label: 'pour publier' },
+              { val: '1 200 €', label: 'économisés / an' },
+              { val: '2 400+', label: 'propriétaires' },
+            ].map(s => (
+              <div key={s.val}>
+                <p style={{
+                  fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
+                  fontSize: 'clamp(22px,3vw,32px)', color: BAI.caramel,
+                  margin: 0, lineHeight: 1,
+                }}>
+                  {s.val}
+                </p>
+                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', margin: '4px 0 0' }}>
+                  {s.label}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── CE QUE FAIT BAILIO — zig-zag ── */}
-      <section style={{ padding: 'clamp(40px,6vh,80px) 0', background: BAI.bgBase }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
+      {/* ── 3 ÉTAPES ── */}
+      <section style={{ background: BAI.bgBase, padding: 'clamp(48px,7vh,80px) 0' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 clamp(20px,5vw,48px)' }}>
           <h2 style={{
             fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-            fontSize: 'clamp(28px,4vw,44px)', lineHeight: 1.1,
-            color: BAI.ink, margin: '0 0 48px', paddingBottom: 2,
+            fontSize: 'clamp(26px,3.5vw,40px)', color: BAI.ink,
+            margin: '0 0 clamp(32px,5vh,52px)', textAlign: 'center',
           }}>
-            Tout. <em style={{ color: BAI.caramel }}>Sauf à votre place.</em>
+            Simple comme <span style={{ color: BAI.caramel }}>1, 2, 3.</span>
           </h2>
 
-          {FEATURES.map((feat, i) => (
-            <div key={i} className={`prop-feat-row${feat.reverse ? ' reverse' : ''}`}>
-              {/* Icon + title col */}
+          <div className="prop-steps">
+            {STEPS.map((step, i) => (
               <div
+                key={step.num}
                 style={{
-                  display: 'flex', alignItems: 'flex-start', gap: 20,
-                  order: feat.reverse ? 2 : 1,
-                  padding: feat.reverse ? '0 0 0 clamp(20px,4vw,60px)' : '0 clamp(20px,4vw,60px) 0 0',
+                  padding: 'clamp(24px,4vw,40px) clamp(20px,3vw,36px)',
+                  borderRight: i < STEPS.length - 1 ? `1px solid ${BAI.border}` : 'none',
+                  position: 'relative',
                 }}
               >
-                <div style={{
-                  width: 48, height: 48, borderRadius: 12,
-                  background: BAI.ownerLight, color: BAI.owner,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0,
-                }}>
-                  {feat.icon}
-                </div>
-                <h3 style={{
+                <p style={{
                   fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-                  fontSize: 'clamp(20px,2.5vw,28px)', color: BAI.ink,
-                  margin: '6px 0 0', paddingBottom: 2, lineHeight: 1.15,
+                  fontSize: 48, color: BAI.border, lineHeight: 1, margin: '0 0 16px',
                 }}>
-                  {feat.title}
+                  {step.num}
+                </p>
+                <span style={{ fontSize: 32, display: 'block', marginBottom: 14 }}>{step.emoji}</span>
+                <h3 style={{
+                  fontFamily: BAI.fontBody, fontSize: 17, fontWeight: 700,
+                  color: BAI.ink, margin: '0 0 10px',
+                }}>
+                  {step.title}
                 </h3>
-              </div>
-
-              {/* Text + stat col */}
-              <div
-                className="prop-feat-text-col"
-                style={{ order: feat.reverse ? 1 : 2, paddingTop: 4 }}
-              >
-                <p style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.7, margin: '0 0 16px' }}>
-                  {feat.desc}
-                </p>
-                <p style={{ margin: 0 }}>
-                  <span style={{
-                    fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-                    fontSize: 'clamp(24px,3vw,32px)', color: BAI.caramel, lineHeight: 1,
-                  }}>
-                    {feat.stat}
-                  </span>
-                  {' '}
-                  <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>
-                    {feat.statLabel}
-                  </span>
+                <p style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.65, margin: 0 }}>
+                  {step.desc}
                 </p>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ── FONCTIONNALITÉS: grille 2×3 ── */}
-      <section style={{ padding: 'clamp(48px,6vh,80px) 0', background: BAI.bgMuted }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
-          <div style={{ marginBottom: 40 }}>
+      {/* ── SPLIT: PHOTO + LISTE ── */}
+      <section style={{ background: BAI.bgMuted }}>
+        <div className="prop-split" style={{ maxWidth: 1280, margin: '0 auto' }}>
+
+          {/* Photo */}
+          <div
+            className="prop-split-img"
+            style={{
+              position: 'relative',
+              overflow: 'hidden',
+              minHeight: 420,
+            }}
+          >
+            <img
+              src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=900&q=80"
+              alt="Appartement bien géré"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', position: 'absolute', inset: 0 }}
+            />
+            {/* Glass badge */}
+            <div style={{
+              position: 'absolute', bottom: 24, left: 24,
+              background: 'rgba(10,13,26,0.72)',
+              backdropFilter: 'blur(20px) saturate(160%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+              border: '1px solid rgba(255,255,255,0.14)',
+              borderRadius: 12,
+              padding: '14px 18px',
+              color: '#fff',
+            }}>
+              <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 26, margin: 0, color: BAI.caramel, lineHeight: 1 }}>
+                +14
+              </p>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: 'rgba(255,255,255,0.6)', margin: '4px 0 0' }}>
+                candidatures reçues
+              </p>
+            </div>
+          </div>
+
+          {/* Texte */}
+          <div style={{
+            padding: 'clamp(40px,6vw,72px) clamp(24px,5vw,60px)',
+            display: 'flex', flexDirection: 'column', justifyContent: 'center',
+          }}>
             <p style={{
               fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700,
               letterSpacing: '0.12em', textTransform: 'uppercase',
-              color: BAI.caramel, margin: '0 0 12px',
+              color: BAI.caramel, margin: '0 0 14px',
             }}>
-              Fonctionnalités
+              Ce que vous gagnez
             </p>
             <h2 style={{
               fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-              fontSize: 'clamp(26px,4vw,40px)', color: BAI.ink,
-              margin: 0, lineHeight: 1.1,
+              fontSize: 'clamp(24px,3vw,36px)', color: BAI.ink,
+              margin: '0 0 28px', lineHeight: 1.15,
             }}>
-              Tout ce dont vous avez besoin, <em style={{ color: BAI.caramel }}>réuni.</em>
+              Tout ce qu'une agence fait,{' '}
+              <span style={{ color: BAI.caramel }}>sans les 8 %.</span>
             </h2>
-          </div>
 
-          <div className="prop-feat-grid">
-            {FEATURE_GRID.map((feat) => (
-              <div
-                key={feat.title}
-                style={{
-                  background: BAI.bgSurface,
-                  border: `1px solid ${BAI.border}`,
-                  borderRadius: 12,
-                  padding: '22px 20px',
-                  boxShadow: BAI.shadowSm,
-                }}
-              >
-                <div style={{
-                  width: 44, height: 44, borderRadius: 10,
-                  background: feat.color === BAI.caramel ? BAI.caramelLight : feat.color === BAI.tenant ? BAI.tenantLight : BAI.ownerLight,
-                  color: feat.color,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  marginBottom: 14,
-                }}>
-                  {feat.icon}
-                </div>
-                <h4 style={{
-                  fontFamily: BAI.fontBody, fontSize: 15, fontWeight: 700,
-                  color: BAI.ink, margin: '0 0 8px',
-                }}>
-                  {feat.title}
-                </h4>
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, lineHeight: 1.6, margin: 0 }}>
-                  {feat.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── STATS SOMBRES ── */}
-      <section style={{ background: '#0a0d1a', padding: 'clamp(48px,6vh,72px) 0' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
-          <div className="prop-stats-grid">
-            {STATS_DARK.map((stat) => (
-              <div
-                key={stat.label}
-                style={{
-                  background: 'rgba(255,255,255,0.06)',
-                  backdropFilter: 'blur(20px) saturate(160%)',
-                  WebkitBackdropFilter: 'blur(20px) saturate(160%)',
-                  border: '1px solid rgba(255,255,255,0.10)',
-                  borderRadius: 14,
-                  padding: '28px 24px',
-                  display: 'flex', alignItems: 'flex-start', gap: 16,
-                }}
-              >
-                <div style={{
-                  width: 44, height: 44, borderRadius: 10,
-                  background: 'rgba(196,151,106,0.18)',
-                  color: BAI.caramel,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0,
-                }}>
-                  {stat.icon}
-                </div>
-                <div>
-                  <p style={{
-                    fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-                    fontSize: 'clamp(26px,4vw,38px)', color: '#fff',
-                    margin: 0, lineHeight: 1,
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {PERKS.map(perk => (
+                <div key={perk} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  <div style={{
+                    width: 22, height: 22, borderRadius: '50%',
+                    background: BAI.ownerLight, color: BAI.owner,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0, marginTop: 1,
                   }}>
-                    {stat.value}
-                  </p>
-                  <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.50)', margin: '6px 0 0' }}>
-                    {stat.label}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── DASHBOARD MOCKUP ── */}
-      <section style={{ padding: 'clamp(48px,8vh,96px) 0', background: BAI.bgBase }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,5vw,48px)' }}>
-          <h2 style={{
-            fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-            fontSize: 'clamp(28px,4vw,44px)', lineHeight: 1.1,
-            color: BAI.ink, margin: '0 0 36px', paddingBottom: 2,
-          }}>
-            Un tableau de bord pour <em style={{ color: BAI.caramel }}>tout piloter.</em>
-          </h2>
-
-          {/* Dashboard mockup card */}
-          <div style={{
-            background: BAI.bgSurface,
-            border: `1px solid ${BAI.border}`,
-            borderRadius: 16,
-            padding: 24,
-            boxShadow: BAI.shadowMd,
-          }}>
-            {/* KPI row */}
-            <div className="prop-kpi-grid">
-              {KPI_CARDS.map(kpi => (
-                <div key={kpi.label} style={{
-                  background: BAI.bgBase,
-                  border: `1px solid ${BAI.border}`,
-                  borderTop: `3px solid ${kpi.color}`,
-                  borderRadius: 10,
-                  padding: 18,
-                }}>
-                  <p style={{
-                    fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em',
-                    color: BAI.inkFaint, fontWeight: 600, margin: '0 0 8px',
-                  }}>
-                    {kpi.label}
-                  </p>
-                  <p style={{
-                    fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-                    fontSize: 'clamp(20px, 4vw, 28px)', margin: 0, color: BAI.ink, paddingBottom: 1,
-                  }}>
-                    {kpi.value}
-                  </p>
-                  <p style={{ fontSize: 12, color: BAI.inkMid, margin: '4px 0 0' }}>
-                    {kpi.sub}
+                    <Check size={13} strokeWidth={2.5} />
+                  </div>
+                  <p style={{ fontSize: 15, color: BAI.ink, margin: 0, lineHeight: 1.5 }}>
+                    {perk}
                   </p>
                 </div>
               ))}
             </div>
 
-            {/* Bottom row: activity + bar chart */}
-            <div className="prop-dash-bot">
-              {/* Activity list */}
-              <div>
-                <p style={{ fontSize: 13, fontWeight: 600, color: BAI.ink, margin: '0 0 12px' }}>
-                  Activité récente
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {ACTIVITY.map(item => (
-                    <div key={item.title} style={{
-                      display: 'flex', gap: 12, alignItems: 'center',
-                      padding: 12, background: BAI.bgBase, borderRadius: 8,
-                    }}>
-                      <div style={{
-                        width: 36, height: 36, borderRadius: 8,
-                        background: item.bg, color: item.col,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        flexShrink: 0, fontSize: 14,
-                      }}>
-                        {item.dot}
-                      </div>
-                      <div>
-                        <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: BAI.ink }}>
-                          {item.title}
-                        </p>
-                        <p style={{ margin: '2px 0 0', fontSize: 12, color: BAI.inkFaint }}>
-                          {item.sub}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Bar chart */}
-              <div>
-                <p style={{ fontSize: 13, fontWeight: 600, color: BAI.ink, margin: '0 0 12px' }}>
-                  Évolution des loyers
-                </p>
-                <div style={{
-                  background: BAI.bgBase, borderRadius: 8, padding: 18, height: 160,
-                  display: 'flex', alignItems: 'flex-end', gap: 6,
-                }}>
-                  {BAR_HEIGHTS.map((h, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        flex: 1,
-                        background: i === BAR_HEIGHTS.length - 1 ? BAI.owner : BAI.ownerLight,
-                        height: `${h}%`,
-                        borderRadius: '4px 4px 0 0',
-                        transition: 'background .18s ease',
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
+            <Link
+              to="/register?role=OWNER"
+              className="prop-btn-main"
+              style={{ alignSelf: 'flex-start', marginTop: 36 }}
+            >
+              Essayer gratuitement <ArrowRight size={16} />
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* ── CTA STRIP ── */}
-      <section className="prop-cta-sec" style={{ background: '#0a0d1a', padding: '80px 0' }}>
-        <div style={{
-          maxWidth: 1280, margin: '0 auto',
-          padding: '0 clamp(16px,5vw,48px)', textAlign: 'center',
-        }}>
+      {/* ── CTA ── */}
+      <section style={{ background: '#0a0d1a', padding: 'clamp(56px,9vh,96px) 0', textAlign: 'center' }}>
+        <div style={{ maxWidth: 680, margin: '0 auto', padding: '0 clamp(20px,5vw,48px)' }}>
           <h2 style={{
             fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-            fontSize: 'clamp(28px,4vw,52px)', color: '#fff',
-            margin: '0 0 18px', lineHeight: 1.1, paddingBottom: 2,
+            fontSize: 'clamp(28px,4.5vw,52px)', color: '#fff',
+            margin: '0 0 16px', lineHeight: 1.08,
           }}>
-            Et si votre prochain locataire{' '}
-            <em style={{ color: BAI.caramel }}>arrivait demain ?</em>
+            Votre prochain locataire{' '}
+            <span style={{ color: BAI.caramel }}>vous attend.</span>
           </h2>
           <p style={{
-            color: 'rgba(255,255,255,0.72)', fontSize: 17,
-            margin: '0 auto 36px', maxWidth: '52ch', lineHeight: 1.6,
+            fontSize: 16, color: 'rgba(255,255,255,0.6)',
+            margin: '0 auto 36px', lineHeight: 1.65,
           }}>
-            Créez votre annonce, on s'occupe du reste. Rejoignez les premiers propriétaires qui simplifient leur gestion.
+            Rejoignez les propriétaires qui gèrent tout depuis Bailio.
           </p>
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 20 }}>
-            <Link to="/register?role=OWNER" className="prop-btn-caramel">
-              Publier mon annonce <ArrowRight size={16} />
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Link to="/register?role=OWNER" className="prop-btn-main">
+              Publier mon bien <ArrowRight size={16} />
             </Link>
-            <Link to="/pricing" className="prop-btn-outline-dark">
+            <Link to="/pricing" className="prop-btn-outline">
               Voir les tarifs
             </Link>
           </div>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
-            <Check size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} />
-            Essai 14 jours sans CB, à partir de 9,90 €/mois, sans engagement
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', margin: '24px 0 0' }}>
+            14 jours d'essai · Sans carte bancaire · Résiliable à tout moment
           </p>
         </div>
       </section>

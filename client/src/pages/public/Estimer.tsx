@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Layout } from '../../components/layout/Layout'
 import { BAI } from '../../constants/bailio-tokens'
-import { TrendingUp, ChevronRight, BarChart3, Home, MapPin, Database } from 'lucide-react'
+import { TrendingUp, ChevronRight, BarChart3, MapPin, Database } from 'lucide-react'
 import { marketService, DvfEstimation, Commune } from '../../services/market.service'
 
 // ─── Autocomplete commune — API geo.api.gouv.fr (35 000+ communes FR) ─────────
@@ -519,12 +519,10 @@ export default function Estimer() {
   const [result, setResult] = useState<{ min: number; mid: number; max: number } | null>(null)
   const [dvfData, setDvfData] = useState<DvfEstimation | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [dvfError, setDvfError] = useState(false)
 
   const handleSubmit = async () => {
     if (!form.codePostal) return
     setIsLoading(true)
-    setDvfError(false)
 
     let dvf: DvfEstimation | null = null
     let buyPerM2 = fallbackBuyPerM2(form.codePostal)
@@ -534,11 +532,9 @@ export default function Estimer() {
       dvf = await marketService.getEstimation(form.codePostal, dvfType)
       if (dvf) {
         buyPerM2 = dvf.medianPricePerM2
-      } else {
-        setDvfError(true)
       }
     } catch {
-      setDvfError(true)
+      // use fallback on error
     }
 
     setDvfData(dvf)
@@ -550,7 +546,6 @@ export default function Estimer() {
   const handleReset = () => {
     setResult(null)
     setDvfData(null)
-    setDvfError(false)
     setStep(1)
     setForm(DEFAULT_FORM)
   }
