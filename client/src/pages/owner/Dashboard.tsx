@@ -144,25 +144,29 @@ const kindConfig: Record<FeedKind, { color: string; bg: string; border: string }
 
 function FeedRow({ item }: { item: FeedItem }) {
   const cfg = kindConfig[item.kind]
+  const initials = item.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 12,
-      paddingTop: 10, paddingBottom: 10,
+      paddingTop: 11, paddingBottom: 11,
       borderBottom: `1px solid ${BAI.border}`,
     }}>
       <div style={{
-        width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
-        background: cfg.color,
-        boxShadow: `0 0 0 3px ${cfg.bg}`,
-      }} />
+        width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+        background: cfg.bg,
+        border: `1px solid ${cfg.border}`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: cfg.color,
+      }}>
+        {initials}
+      </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <span style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.ink }}>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.ink, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {item.name}
-        </span>
-        {' '}
-        <span style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid }}>
+        </p>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, margin: '1px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {item.action}
-        </span>
+        </p>
       </div>
       <span style={{
         fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, flexShrink: 0,
@@ -206,7 +210,7 @@ export default function OwnerDashboard() {
     }).catch(() => {})
   }, [])
 
-  const displayedProperties = myProperties.slice(0, 3)
+  const displayedProperties = myProperties.slice(0, 4)
   const totalProps = statistics?.totalProperties ?? myProperties.length
 
   // Build activity feed (max 5 items, mixed)
@@ -274,7 +278,7 @@ export default function OwnerDashboard() {
         style={{
           position: 'relative',
           background: HERO_BG,
-          height: 'clamp(160px, 22vw, 220px)',
+          height: 'clamp(200px, 28vw, 280px)',
           overflow: 'hidden',
           borderRadius: 0,
           display: 'flex',
@@ -298,10 +302,16 @@ export default function OwnerDashboard() {
             position: 'absolute', inset: 0,
             width: '100%', height: '100%',
             objectFit: 'cover',
-            opacity: 0.18,
+            opacity: 0.32,
             pointerEvents: 'none',
           }}
         />
+        {/* Gradient overlay — left dark for readability, right open */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(90deg, rgba(10,13,26,0.88) 0%, rgba(10,13,26,0.50) 55%, rgba(10,13,26,0.15) 100%)',
+          pointerEvents: 'none',
+        }} />
 
         {/* Content */}
         <div style={{
@@ -384,7 +394,7 @@ export default function OwnerDashboard() {
           {/* ── 3. GRID 2 COLONNES ─────────────────────────────────────── */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gridTemplateColumns: 'minmax(0,1.4fr) minmax(0,1fr)',
             gap: 28,
             alignItems: 'start',
           }}>
@@ -422,7 +432,7 @@ export default function OwnerDashboard() {
               </div>
 
               {isLoading ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
                   {[1, 2, 3].map((i) => <SkeletonCard key={i} />)}
                 </div>
               ) : displayedProperties.length === 0 ? (
@@ -469,7 +479,7 @@ export default function OwnerDashboard() {
                   </Link>
                 </motion.div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
                   {displayedProperties.map((property, i) => (
                     <motion.div
                       key={property.id}
@@ -534,27 +544,6 @@ export default function OwnerDashboard() {
                 )}
               </div>
 
-              {/* Légende */}
-              <div style={{ display: 'flex', gap: 16, marginTop: 14, flexWrap: 'wrap' }}>
-                {(Object.keys(kindConfig) as FeedKind[]).map((k) => {
-                  const labels: Record<FeedKind, string> = {
-                    application: 'Candidature',
-                    visit: 'Visite',
-                    message: 'Message',
-                  }
-                  return (
-                    <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <div style={{
-                        width: 7, height: 7, borderRadius: '50%',
-                        background: kindConfig[k].color,
-                      }} />
-                      <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint }}>
-                        {labels[k]}
-                      </span>
-                    </div>
-                  )
-                })}
-              </div>
             </motion.section>
           </div>
 

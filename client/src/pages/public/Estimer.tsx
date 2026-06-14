@@ -1,8 +1,120 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Layout } from '../../components/layout/Layout'
 import { BAI } from '../../constants/bailio-tokens'
-import { TrendingUp, ChevronRight, BarChart3, Home } from 'lucide-react'
+import { TrendingUp, ChevronRight, BarChart3, Home, MapPin } from 'lucide-react'
+
+// ─── Liste des villes françaises pour autocomplete ────────────────────────────
+const FRENCH_CITIES = [
+  'Ajaccio','Amiens','Angers','Annecy','Antibes','Argenteuil','Aix-en-Provence',
+  'Avignon','Besançon','Bordeaux','Boulogne-Billancourt','Brest','Caen','Cannes',
+  'Clermont-Ferrand','Colmar','Dijon','Dunkerque','Fort-de-France','Grenoble',
+  'La Rochelle','Le Havre','Le Mans','Lens','Limoges','Lille','Lyon','Marseille',
+  'Metz','Montpellier','Mulhouse','Nancy','Nantes','Nice','Nîmes','Orléans',
+  'Paris','Pau','Perpignan','Poitiers','Reims','Rennes','Rouen','Saint-Denis',
+  'Saint-Étienne','Strasbourg','Toulon','Toulouse','Tours','Troyes','Valenciennes',
+  'Versailles','Villeurbanne','Massy','Nanterre','Courbevoie','Rueil-Malmaison',
+  'Montreuil','Créteil','Aulnay-sous-Bois','Vitry-sur-Seine','Champigny-sur-Marne',
+  'Asnières-sur-Seine','Colombes','Roubaix','Tourcoing','Mérignac','Pessac',
+  'Talence','Bruges','Bègles','Villenave-d\'Ornon','Cenon','Lormont',
+]
+
+function CityAutocomplete({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [suggestions, setSuggestions] = useState<string[]>([])
+  const [open, setOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const handleInput = (v: string) => {
+    onChange(v)
+    if (v.trim().length >= 1) {
+      const q = v.trim().toLowerCase()
+      const matches = FRENCH_CITIES.filter(c => c.toLowerCase().startsWith(q)).slice(0, 6)
+      setSuggestions(matches)
+      setOpen(matches.length > 0)
+    } else {
+      setSuggestions([])
+      setOpen(false)
+    }
+  }
+
+  const select = (city: string) => {
+    onChange(city)
+    setSuggestions([])
+    setOpen(false)
+  }
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative' }}>
+      <div style={{ position: 'relative' }}>
+        <MapPin size={14} color={BAI.inkFaint} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+        <input
+          type="text"
+          value={value}
+          onChange={e => handleInput(e.target.value)}
+          onFocus={() => { if (suggestions.length > 0) setOpen(true) }}
+          placeholder="Ex : Paris, Lyon, Bordeaux…"
+          autoComplete="off"
+          style={{
+            width: '100%',
+            background: BAI.bgInput,
+            border: `1px solid ${open ? BAI.caramel : BAI.border}`,
+            borderRadius: open ? '10px 10px 0 0' : BAI.radius,
+            padding: '11px 14px 11px 36px',
+            fontFamily: BAI.fontBody,
+            fontSize: 14,
+            color: BAI.ink,
+            outline: 'none',
+            boxSizing: 'border-box',
+            transition: 'border-color 0.15s',
+          }}
+        />
+      </div>
+      {open && (
+        <div style={{
+          position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100,
+          background: BAI.bgSurface,
+          border: `1px solid ${BAI.caramel}`,
+          borderTop: 'none',
+          borderRadius: '0 0 10px 10px',
+          overflow: 'hidden',
+          boxShadow: BAI.shadowLg,
+        }}>
+          {suggestions.map((city, i) => (
+            <button
+              key={city}
+              onMouseDown={() => select(city)}
+              style={{
+                width: '100%',
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '9px 14px',
+                background: 'transparent',
+                border: 'none',
+                borderBottom: i < suggestions.length - 1 ? `1px solid ${BAI.border}` : 'none',
+                fontFamily: BAI.fontBody, fontSize: 14,
+                color: BAI.ink, cursor: 'pointer',
+                textAlign: 'left',
+                transition: 'background 0.1s',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+            >
+              <MapPin size={12} color={BAI.caramel} style={{ flexShrink: 0 }} />
+              {city}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 // ─── Types & logique d'estimation ────────────────────────────────────────────
 
@@ -101,27 +213,7 @@ function Step1({ form, setForm }: { form: EstimForm; setForm: (f: EstimForm) => 
       {/* Ville */}
       <div>
         <SectionTitle>Ville</SectionTitle>
-        <input
-          type="text"
-          value={form.city}
-          onChange={e => setForm({ ...form, city: e.target.value })}
-          placeholder="Ex : Paris, Lyon, Bordeaux…"
-          style={{
-            width: '100%',
-            background: BAI.bgInput,
-            border: `1px solid ${BAI.border}`,
-            borderRadius: BAI.radius,
-            padding: '11px 14px',
-            fontFamily: BAI.fontBody,
-            fontSize: 14,
-            color: BAI.ink,
-            outline: 'none',
-            boxSizing: 'border-box',
-          }}
-        />
-        <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, marginTop: 4 }}>
-          Paris, Lyon, Marseille, Bordeaux, Toulouse, Nantes, Nice, Strasbourg…
-        </p>
+        <CityAutocomplete value={form.city} onChange={v => setForm({ ...form, city: v })} />
       </div>
 
       {/* Surface */}

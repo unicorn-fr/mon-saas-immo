@@ -88,7 +88,9 @@ export const Layout = ({ children, showHeader = true, showFooter, bodyBackground
       {user?.role === 'TENANT' && <TenantSidebar />}
 
       {/* Colonne droite */}
-      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0" style={{ position: 'relative' }}>
+        {/* Header dashboard : mobile topbar + bulle flottante desktop */}
+        {showHeader && <Header />}
         <AnimatePresence mode="wait">
           <motion.main
             key={location.pathname}
