@@ -1,44 +1,40 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Layout } from '../../components/layout/Layout'
 import { BAI } from '../../constants/bailio-tokens'
-import { TrendingUp, ChevronRight, BarChart3, Home, MapPin } from 'lucide-react'
+import { TrendingUp, ChevronRight, BarChart3, Home, MapPin, Database } from 'lucide-react'
+import { marketService, DvfEstimation, Commune } from '../../services/market.service'
 
-// ─── Liste des villes françaises pour autocomplete ────────────────────────────
-const FRENCH_CITIES = [
-  'Ajaccio','Amiens','Angers','Annecy','Antibes','Argenteuil','Aix-en-Provence',
-  'Avignon','Besançon','Bordeaux','Boulogne-Billancourt','Brest','Caen','Cannes',
-  'Clermont-Ferrand','Colmar','Dijon','Dunkerque','Fort-de-France','Grenoble',
-  'La Rochelle','Le Havre','Le Mans','Lens','Limoges','Lille','Lyon','Marseille',
-  'Metz','Montpellier','Mulhouse','Nancy','Nantes','Nice','Nîmes','Orléans',
-  'Paris','Pau','Perpignan','Poitiers','Reims','Rennes','Rouen','Saint-Denis',
-  'Saint-Étienne','Strasbourg','Toulon','Toulouse','Tours','Troyes','Valenciennes',
-  'Versailles','Villeurbanne','Massy','Nanterre','Courbevoie','Rueil-Malmaison',
-  'Montreuil','Créteil','Aulnay-sous-Bois','Vitry-sur-Seine','Champigny-sur-Marne',
-  'Asnières-sur-Seine','Colombes','Roubaix','Tourcoing','Mérignac','Pessac',
-  'Talence','Bruges','Bègles','Villenave-d\'Ornon','Cenon','Lormont',
-]
+// ─── Autocomplete commune — API geo.api.gouv.fr (35 000+ communes FR) ─────────
 
-function CityAutocomplete({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const [suggestions, setSuggestions] = useState<string[]>([])
+function CommuneAutocomplete({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (nom: string, codePostal: string, codeInsee: string) => void
+}) {
+  const [suggestions, setSuggestions] = useState<Commune[]>([])
   const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const handleInput = (v: string) => {
-    onChange(v)
-    if (v.trim().length >= 1) {
-      const q = v.trim().toLowerCase()
-      const matches = FRENCH_CITIES.filter(c => c.toLowerCase().startsWith(q)).slice(0, 6)
-      setSuggestions(matches)
-      setOpen(matches.length > 0)
-    } else {
-      setSuggestions([])
-      setOpen(false)
-    }
-  }
+  const search = useCallback((q: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (q.trim().length < 2) { setSuggestions([]); setOpen(false); return }
+    debounceRef.current = setTimeout(async () => {
+      setLoading(true)
+      const results = await marketService.searchCommunes(q)
+      setSuggestions(results)
+      setOpen(results.length > 0)
+      setLoading(false)
+    }, 280)
+  }, [])
 
-  const select = (city: string) => {
-    onChange(city)
+  const select = (c: Commune) => {
+    const cp = c.codesPostaux?.[0] ?? ''
+    onChange(c.nom, cp, c.code)
     setSuggestions([])
     setOpen(false)
   }
@@ -58,9 +54,9 @@ function CityAutocomplete({ value, onChange }: { value: string; onChange: (v: st
         <input
           type="text"
           value={value}
-          onChange={e => handleInput(e.target.value)}
+          onChange={e => { search(e.target.value); onChange(e.target.value, '', '') }}
           onFocus={() => { if (suggestions.length > 0) setOpen(true) }}
-          placeholder="Ex : Paris, Lyon, Bordeaux…"
+          placeholder="Tapez une ville ou un village…"
           autoComplete="off"
           style={{
             width: '100%',
@@ -76,6 +72,11 @@ function CityAutocomplete({ value, onChange }: { value: string; onChange: (v: st
             transition: 'border-color 0.15s',
           }}
         />
+        {loading && (
+          <div style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)' }}>
+            <div style={{ width: 14, height: 14, border: `2px solid ${BAI.border}`, borderTopColor: BAI.caramel, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+          </div>
+        )}
       </div>
       {open && (
         <div style={{
@@ -87,13 +88,13 @@ function CityAutocomplete({ value, onChange }: { value: string; onChange: (v: st
           overflow: 'hidden',
           boxShadow: BAI.shadowLg,
         }}>
-          {suggestions.map((city, i) => (
+          {suggestions.map((c, i) => (
             <button
-              key={city}
-              onMouseDown={() => select(city)}
+              key={c.code}
+              onMouseDown={() => select(c)}
               style={{
                 width: '100%',
-                display: 'flex', alignItems: 'center', gap: 8,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
                 padding: '9px 14px',
                 background: 'transparent',
                 border: 'none',
@@ -106,8 +107,13 @@ function CityAutocomplete({ value, onChange }: { value: string; onChange: (v: st
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
             >
-              <MapPin size={12} color={BAI.caramel} style={{ flexShrink: 0 }} />
-              {city}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <MapPin size={12} color={BAI.caramel} style={{ flexShrink: 0 }} />
+                <span>{c.nom}</span>
+              </div>
+              <span style={{ fontSize: 11, color: BAI.inkFaint, flexShrink: 0 }}>
+                {c.departement?.nom} ({c.codesPostaux?.[0] ?? c.code})
+              </span>
             </button>
           ))}
         </div>
@@ -121,6 +127,8 @@ function CityAutocomplete({ value, onChange }: { value: string; onChange: (v: st
 interface EstimForm {
   type: 'APPARTEMENT' | 'MAISON' | 'STUDIO' | 'LOFT'
   city: string
+  codePostal: string
+  codeInsee: string
   surface: number
   rooms: number
   floor: '0' | '1-2' | '3-5' | '6+'
@@ -132,29 +140,31 @@ interface EstimForm {
   dpe: 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | ''
 }
 
-const PRIX_BASE: Record<string, number> = {
-  'paris': 28, 'lyon': 14, 'marseille': 12, 'bordeaux': 16,
-  'toulouse': 13, 'nantes': 13, 'nice': 18, 'strasbourg': 12,
-  'rennes': 13, 'montpellier': 14, 'lille': 12, 'grenoble': 11,
+// Rendement locatif brut annuel estimé selon la localisation
+function yieldRate(codePostal: string): number {
+  const dept = codePostal.substring(0, 2)
+  if (dept === '75') return 0.035                                          // Paris
+  if (['92', '93', '94', '77', '78', '91', '95'].includes(dept)) return 0.040 // Île-de-France
+  if (['13', '69', '33', '31', '44', '06', '67'].includes(dept)) return 0.046 // Grandes métropoles
+  return 0.055                                                             // Autres
 }
 
-function estimerLoyer(form: EstimForm): { min: number; mid: number; max: number } | null {
-  if (!form.city || form.surface < 1) return null
-  const cityKey = form.city.toLowerCase().trim()
-  const base = PRIX_BASE[cityKey] ?? 11
+function estimerLoyer(form: EstimForm, buyPerM2: number): { min: number; mid: number; max: number } {
+  // Loyer mensuel = (prix achat/m²) × rendement annuel / 12 × surface
+  const loyerPerM2 = (buyPerM2 * yieldRate(form.codePostal)) / 12
 
-  let prix = base * form.surface
-  if (form.type === 'STUDIO') prix *= 1.1
-  if (form.type === 'LOFT') prix *= 1.15
-  if (form.furnished) prix *= 1.1
-  if (form.floor === '6+') prix *= 1.05
-  if (form.floor === '0') prix *= 0.95
-  if (form.hasParking) prix += base * 10
-  if (form.hasBalcony) prix *= 1.03
-  if (form.hasGarden) prix *= 1.05
+  let prix = loyerPerM2 * form.surface
+  if (form.type === 'STUDIO') prix *= 1.10
+  if (form.type === 'LOFT')   prix *= 1.15
+  if (form.furnished)          prix *= 1.10
+  if (form.floor === '6+')     prix *= 1.05
+  if (form.floor === '0')      prix *= 0.95
+  if (form.hasParking)         prix += loyerPerM2 * 10
+  if (form.hasBalcony)         prix *= 1.03
+  if (form.hasGarden)          prix *= 1.05
   if (form.hasElevator && form.floor !== '0') prix *= 1.02
-  if (form.dpe === 'A' || form.dpe === 'B') prix *= 1.02
-  if (form.dpe === 'F' || form.dpe === 'G') prix *= 0.95
+  if (form.dpe === 'A' || form.dpe === 'B')   prix *= 1.02
+  if (form.dpe === 'F' || form.dpe === 'G')   prix *= 0.95
 
   return { min: Math.round(prix * 0.85), mid: Math.round(prix), max: Math.round(prix * 1.15) }
 }
@@ -212,8 +222,16 @@ function Step1({ form, setForm }: { form: EstimForm; setForm: (f: EstimForm) => 
 
       {/* Ville */}
       <div>
-        <SectionTitle>Ville</SectionTitle>
-        <CityAutocomplete value={form.city} onChange={v => setForm({ ...form, city: v })} />
+        <SectionTitle>Ville ou village</SectionTitle>
+        <CommuneAutocomplete
+          value={form.city}
+          onChange={(nom, cp, insee) => setForm({ ...form, city: nom, codePostal: cp, codeInsee: insee })}
+        />
+        {form.codePostal && (
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, marginTop: 5 }}>
+            Code postal : {form.codePostal} — données DVF disponibles
+          </p>
+        )}
       </div>
 
       {/* Surface */}
@@ -363,11 +381,16 @@ function Step2({ form, setForm }: { form: EstimForm; setForm: (f: EstimForm) => 
 
 // ─── Résultat ─────────────────────────────────────────────────────────────────
 
-function EstimResult({ result, form }: { result: { min: number; mid: number; max: number }; form: EstimForm }) {
+function EstimResult({
+  result,
+  form,
+  dvf,
+}: {
+  result: { min: number; mid: number; max: number }
+  form: EstimForm
+  dvf: DvfEstimation | null
+}) {
   const navigate = useNavigate()
-  const cityKey = form.city.toLowerCase().trim()
-  const prixM2 = PRIX_BASE[cityKey] ?? 11
-
   const range = result.max - result.min
   const midPct = range > 0 ? Math.round(((result.mid - result.min) / range) * 100) : 50
 
@@ -381,10 +404,12 @@ function EstimResult({ result, form }: { result: { min: number; mid: number; max
       maxWidth: 520,
       margin: '0 auto',
     }}>
-      {/* Fourchette */}
+      {/* Header */}
       <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: BAI.caramel, textAlign: 'center', marginBottom: 8 }}>
-        Estimation du loyer
+        Estimation du loyer mensuel
       </p>
+
+      {/* Fourchette */}
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 12, marginBottom: 6 }}>
         <div style={{ textAlign: 'center' }}>
           <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, marginBottom: 2 }}>Min.</p>
@@ -402,72 +427,55 @@ function EstimResult({ result, form }: { result: { min: number; mid: number; max
         </div>
       </div>
 
-      {/* Barre visuelle min/mid/max */}
+      {/* Barre */}
       <div style={{ margin: '16px 0', background: BAI.bgMuted, borderRadius: 8, height: 8, position: 'relative' }}>
-        <div style={{
-          position: 'absolute',
-          left: 0, top: 0, height: '100%',
-          width: '100%',
-          background: `linear-gradient(to right, ${BAI.caramelLight}, ${BAI.caramel}, ${BAI.caramelLight})`,
-          borderRadius: 8,
-        }} />
-        <div style={{
-          position: 'absolute',
-          left: `${midPct}%`,
-          top: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 16,
-          height: 16,
-          background: BAI.caramel,
-          border: '2px solid #fff',
-          borderRadius: '50%',
-          boxShadow: BAI.shadowSm,
-        }} />
+        <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: '100%', background: `linear-gradient(to right, ${BAI.caramelLight}, ${BAI.caramel}, ${BAI.caramelLight})`, borderRadius: 8 }} />
+        <div style={{ position: 'absolute', left: `${midPct}%`, top: '50%', transform: 'translate(-50%, -50%)', width: 16, height: 16, background: BAI.caramel, border: '2px solid #fff', borderRadius: '50%', boxShadow: BAI.shadowSm }} />
       </div>
 
-      {/* Prix m² */}
-      <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, textAlign: 'center', marginBottom: 4 }}>
-        Prix moyen à <strong>{form.city}</strong> : <strong>{prixM2}€/m²/mois</strong>
-      </p>
-      <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, textAlign: 'center', marginBottom: 24 }}>
-        Estimation indicative basée sur les prix moyens du marché 2026.
+      {/* Données DVF */}
+      {dvf ? (
+        <div style={{ background: BAI.bgMuted, borderRadius: 10, padding: '14px 16px', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+            <Database size={12} color={BAI.inkFaint} />
+            <span style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.inkFaint, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              Données officielles DVF — data.gouv.fr
+            </span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+            {[
+              { label: 'Prix médian achat', value: `${dvf.medianPricePerM2.toLocaleString('fr-FR')} €/m²` },
+              { label: 'Transactions', value: String(dvf.nbTransactions) },
+              { label: 'Données', value: `Année ${dvf.annee}` },
+            ].map(s => (
+              <div key={s.label} style={{ textAlign: 'center' }}>
+                <div style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: BAI.ink }}>{s.value}</div>
+                <div style={{ fontFamily: BAI.fontBody, fontSize: 10, color: BAI.inkFaint, marginTop: 2 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, textAlign: 'center', marginBottom: 16 }}>
+          Données DVF non disponibles pour cette commune (trop peu de transactions).
+        </p>
+      )}
+
+      <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, textAlign: 'center', marginBottom: 20 }}>
+        Estimation calculée sur le prix d'achat médian DVF + rendement locatif local.
       </p>
 
       {/* CTA */}
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         <button
           onClick={() => navigate(`/search?city=${encodeURIComponent(form.city)}&minPrice=${result.min}&maxPrice=${result.max}`)}
-          style={{
-            flex: 1,
-            background: BAI.night,
-            color: '#fff',
-            border: 'none',
-            borderRadius: BAI.radius,
-            padding: '12px 16px',
-            fontFamily: BAI.fontBody,
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: 'pointer',
-            minHeight: 44,
-          }}
+          style={{ flex: 1, background: BAI.night, color: '#fff', border: 'none', borderRadius: BAI.radius, padding: '12px 16px', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer', minHeight: 44 }}
         >
           Voir les annonces dans cette fourchette
         </button>
         <button
           onClick={() => navigate('/register?role=OWNER')}
-          style={{
-            flex: 1,
-            background: BAI.bgSurface,
-            color: BAI.ink,
-            border: `1px solid ${BAI.border}`,
-            borderRadius: BAI.radius,
-            padding: '12px 16px',
-            fontFamily: BAI.fontBody,
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: 'pointer',
-            minHeight: 44,
-          }}
+          style={{ flex: 1, background: BAI.bgSurface, color: BAI.ink, border: `1px solid ${BAI.border}`, borderRadius: BAI.radius, padding: '12px 16px', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer', minHeight: 44 }}
         >
           Publier mon annonce
         </button>
@@ -481,6 +489,8 @@ function EstimResult({ result, form }: { result: { min: number; mid: number; max
 const DEFAULT_FORM: EstimForm = {
   type: 'APPARTEMENT',
   city: '',
+  codePostal: '',
+  codeInsee: '',
   surface: 45,
   rooms: 2,
   floor: '1-2',
@@ -492,24 +502,62 @@ const DEFAULT_FORM: EstimForm = {
   dpe: '',
 }
 
+// Fallback si DVF indisponible — prix d'achat médian par type de zone
+function fallbackBuyPerM2(codePostal: string): number {
+  const dept = codePostal.substring(0, 2)
+  if (dept === '75') return 9500
+  if (['92', '93', '94'].includes(dept)) return 6000
+  if (['77', '78', '91', '95'].includes(dept)) return 4200
+  if (['13', '69'].includes(dept)) return 4000
+  if (['33', '31', '44', '06', '67'].includes(dept)) return 3700
+  return 2800
+}
+
 export default function Estimer() {
   const [step, setStep] = useState<1 | 2>(1)
   const [form, setForm] = useState<EstimForm>(DEFAULT_FORM)
   const [result, setResult] = useState<{ min: number; mid: number; max: number } | null>(null)
+  const [dvfData, setDvfData] = useState<DvfEstimation | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [dvfError, setDvfError] = useState(false)
 
-  const handleSubmit = () => {
-    const r = estimerLoyer(form)
+  const handleSubmit = async () => {
+    if (!form.codePostal) return
+    setIsLoading(true)
+    setDvfError(false)
+
+    let dvf: DvfEstimation | null = null
+    let buyPerM2 = fallbackBuyPerM2(form.codePostal)
+
+    try {
+      const dvfType = form.type === 'MAISON' ? 'Maison' : 'Appartement'
+      dvf = await marketService.getEstimation(form.codePostal, dvfType)
+      if (dvf) {
+        buyPerM2 = dvf.medianPricePerM2
+      } else {
+        setDvfError(true)
+      }
+    } catch {
+      setDvfError(true)
+    }
+
+    setDvfData(dvf)
+    const r = estimerLoyer(form, buyPerM2)
     setResult(r)
+    setIsLoading(false)
   }
 
   const handleReset = () => {
     setResult(null)
+    setDvfData(null)
+    setDvfError(false)
     setStep(1)
     setForm(DEFAULT_FORM)
   }
 
   return (
     <Layout>
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
       <div style={{ background: BAI.bgBase, minHeight: '100vh', fontFamily: BAI.fontBody }}>
 
         {/* Hero */}
@@ -533,7 +581,7 @@ export default function Estimer() {
 
           {result ? (
             <div>
-              <EstimResult result={result} form={form} />
+              <EstimResult result={result} form={form} dvf={dvfData} />
               <div style={{ textAlign: 'center', marginTop: 20 }}>
                 <button
                   onClick={handleReset}
@@ -633,17 +681,17 @@ export default function Estimer() {
                 {step === 1 ? (
                   <button
                     onClick={() => setStep(2)}
-                    disabled={!form.city || form.surface < 1}
+                    disabled={!form.codePostal || form.surface < 1}
                     style={{
-                      background: (!form.city || form.surface < 1) ? BAI.bgMuted : BAI.night,
-                      color: (!form.city || form.surface < 1) ? BAI.inkFaint : '#fff',
+                      background: (!form.codePostal || form.surface < 1) ? BAI.bgMuted : BAI.night,
+                      color: (!form.codePostal || form.surface < 1) ? BAI.inkFaint : '#fff',
                       border: 'none',
                       borderRadius: BAI.radius,
                       padding: '10px 24px',
                       fontFamily: BAI.fontBody,
                       fontSize: 13,
                       fontWeight: 600,
-                      cursor: (!form.city || form.surface < 1) ? 'not-allowed' : 'pointer',
+                      cursor: (!form.codePostal || form.surface < 1) ? 'not-allowed' : 'pointer',
                       minHeight: 44,
                       display: 'flex',
                       alignItems: 'center',
@@ -655,23 +703,31 @@ export default function Estimer() {
                 ) : (
                   <button
                     onClick={handleSubmit}
+                    disabled={isLoading || !form.codePostal}
                     style={{
-                      background: BAI.caramel,
-                      color: '#fff',
+                      background: (!form.codePostal || isLoading) ? BAI.bgMuted : BAI.caramel,
+                      color: (!form.codePostal || isLoading) ? BAI.inkFaint : '#fff',
                       border: 'none',
                       borderRadius: BAI.radius,
                       padding: '10px 24px',
                       fontFamily: BAI.fontBody,
                       fontSize: 13,
                       fontWeight: 600,
-                      cursor: 'pointer',
+                      cursor: (!form.codePostal || isLoading) ? 'not-allowed' : 'pointer',
                       minHeight: 44,
                       display: 'flex',
                       alignItems: 'center',
                       gap: 6,
                     }}
                   >
-                    <TrendingUp size={14} /> Estimer mon loyer
+                    {isLoading ? (
+                      <>
+                        <div style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+                        Chargement données DVF…
+                      </>
+                    ) : (
+                      <><TrendingUp size={14} /> Estimer mon loyer</>
+                    )}
                   </button>
                 )}
               </div>
@@ -682,7 +738,7 @@ export default function Estimer() {
           {!result && (
             <div style={{ marginTop: 16, textAlign: 'center' }}>
               <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                <Home size={11} /> Estimation 100% gratuite · Sans engagement · Données marché 2026
+                <Database size={11} /> Données officielles DVF · data.gouv.fr · Toutes les communes de France
               </p>
             </div>
           )}

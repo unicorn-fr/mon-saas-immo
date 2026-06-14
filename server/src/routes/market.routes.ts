@@ -68,6 +68,30 @@ router.get('/city-prices/:slug', (req: Request, res: Response) => {
 })
 
 /**
+ * GET /api/v1/market/communes?q={query}
+ * Autocomplete de communes françaises via geo.api.gouv.fr (gratuit, officiel)
+ * Couvre les 35 000+ communes + villages de France.
+ */
+router.get('/communes', async (req: Request, res: Response) => {
+  const q = (req.query.q as string ?? '').trim()
+  if (q.length < 2) {
+    return res.json({ success: true, data: [] })
+  }
+  try {
+    const url = `https://geo.api.gouv.fr/communes?nom=${encodeURIComponent(q)}&fields=nom,code,codesPostaux,departement&boost=population&limit=10&format=json`
+    const r = await fetch(url, { signal: AbortSignal.timeout(6000) })
+    if (!r.ok) return res.json({ success: true, data: [] })
+    const data = await r.json() as {
+      nom: string; code: string; codesPostaux: string[];
+      departement: { nom: string; code: string }
+    }[]
+    return res.json({ success: true, data })
+  } catch {
+    return res.json({ success: true, data: [] })
+  }
+})
+
+/**
  * GET /api/v1/market/estimation
  * Query params:
  *   - codePostal (required) : e.g. "75011"
