@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'
 const STORAGE_KEY = 'google_auth_result'
+const CHANNEL_NAME = 'bailio_google_auth'
 
 interface GoogleSignInButtonProps {
   onSuccess: (idToken: string) => void
@@ -45,50 +46,57 @@ export default function GoogleSignInButton({
       return
     }
 
-    const processResult = (raw: string) => {
-      try {
-        const data = JSON.parse(raw)
-        localStorage.removeItem(STORAGE_KEY)
-        if (data.type === 'GOOGLE_AUTH_SUCCESS') {
-          onSuccessRef.current('__popup_result__' + JSON.stringify(data))
-        } else {
-          onErrorRef.current?.(data.error || 'Erreur Google')
-        }
-      } catch {
-        onErrorRef.current?.('Erreur de lecture du résultat Google')
+    const processResult = (data: Record<string, unknown>) => {
+      localStorage.removeItem(STORAGE_KEY)
+      if (data.type === 'GOOGLE_AUTH_SUCCESS') {
+        onSuccessRef.current('__popup_result__' + JSON.stringify(data))
+      } else {
+        onErrorRef.current?.((data.error as string) || 'Erreur Google')
       }
     }
 
     let handled = false
 
     const cleanup = () => {
-      clearInterval(pollClosed)
+      try { bc?.close() } catch { /* noop */ }
       clearInterval(pollStorage)
+      clearInterval(pollClosed)
       window.removeEventListener('storage', onStorage)
     }
 
-    // Primary: StorageEvent — fires when popup writes to localStorage
-    // (works when popup & parent share the same origin)
+    // 1. PRIMARY — BroadcastChannel: instant, same-origin, unaffected by COOP headers
+    let bc: BroadcastChannel | null = null
+    try {
+      bc = new BroadcastChannel(CHANNEL_NAME)
+      bc.onmessage = (event) => {
+        if (handled) return
+        handled = true
+        cleanup()
+        processResult(event.data as Record<string, unknown>)
+      }
+    } catch {
+      bc = null // BroadcastChannel not available, use fallbacks
+    }
+
+    // 2. SECONDARY — StorageEvent: fires in parent when popup writes to localStorage
     const onStorage = (event: StorageEvent) => {
       if (event.key !== STORAGE_KEY || !event.newValue || handled) return
       handled = true
       cleanup()
-      processResult(event.newValue)
+      try { processResult(JSON.parse(event.newValue)) } catch { onErrorRef.current?.('Erreur Google') }
     }
     window.addEventListener('storage', onStorage)
 
-    // Fallback: poll localStorage every 150ms in case StorageEvent was missed
-    // (race condition when popup closes before event dispatches)
+    // 3. FALLBACK — Poll localStorage every 200ms (catches cases where StorageEvent is missed)
     const pollStorage = setInterval(() => {
       const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw && !handled) {
-        handled = true
-        cleanup()
-        processResult(raw)
-      }
-    }, 150)
+      if (!raw || handled) return
+      handled = true
+      cleanup()
+      try { processResult(JSON.parse(raw)) } catch { onErrorRef.current?.('Erreur Google') }
+    }, 200)
 
-    // Cleanup if popup closed without auth
+    // Cleanup if popup was closed without completing auth
     const pollClosed = setInterval(() => {
       if (popup.closed) cleanup()
     }, 500)

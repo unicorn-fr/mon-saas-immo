@@ -1,23 +1,48 @@
 import { useEffect } from 'react'
 
+const CHANNEL_NAME = 'bailio_google_auth'
+const STORAGE_KEY = 'google_auth_result'
+
 export default function GoogleOAuthCallback() {
   useEffect(() => {
+    // Decode the data from the URL hash (set by the backend after Google auth)
     let data: object
     try {
       const hash = window.location.hash.slice(1)
-      data = hash
-        ? JSON.parse(atob(hash))
-        : { type: 'GOOGLE_AUTH_ERROR', error: 'Callback vide' }
+      if (!hash) {
+        data = { type: 'GOOGLE_AUTH_ERROR', error: 'Callback vide' }
+      } else {
+        // Handle both standard base64 and URL-safe base64
+        const normalized = hash.replace(/-/g, '+').replace(/_/g, '/')
+        // Use TextDecoder to handle UTF-8 names (accented chars) correctly
+        const bytes = Uint8Array.from(atob(normalized), c => c.charCodeAt(0))
+        const decoded = new TextDecoder().decode(bytes)
+        data = JSON.parse(decoded)
+      }
     } catch {
       data = { type: 'GOOGLE_AUTH_ERROR', error: 'Erreur callback Google' }
     }
 
-    // Write BEFORE closing so parent's storage event fires reliably
-    localStorage.setItem('google_auth_result', JSON.stringify(data))
+    const json = JSON.stringify(data)
 
-    // Delay window.close() so the StorageEvent has time to propagate to the
-    // parent window before this popup is destroyed (race condition fix)
-    setTimeout(() => window.close(), 800)
+    // 1. BroadcastChannel — instant, reliable, bypasses COOP restrictions
+    try {
+      const bc = new BroadcastChannel(CHANNEL_NAME)
+      bc.postMessage(data)
+      setTimeout(() => bc.close(), 1000)
+    } catch {
+      // BroadcastChannel not available (very old browser) — fall back to localStorage
+    }
+
+    // 2. localStorage — fallback for browsers without BroadcastChannel
+    try {
+      localStorage.setItem(STORAGE_KEY, json)
+    } catch {
+      // storage blocked (unlikely but possible in private mode)
+    }
+
+    // Close popup after a short delay to ensure messages are delivered
+    setTimeout(() => window.close(), 1200)
   }, [])
 
   return (
