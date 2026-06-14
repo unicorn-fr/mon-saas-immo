@@ -1002,92 +1002,109 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
-          6. FEATURE — Pour les propriétaires (clair)
+          6. FEATURE — Pour les propriétaires (visuel)
       ══════════════════════════════════════════════════════════════════════ */}
-      <section style={{ background: BAI.bgBase, padding: 'clamp(64px,8vh,96px) clamp(20px,5vw,48px)' }}>
+      <section style={{ background: BAI.bgBase, padding: 'clamp(64px,8vh,96px) clamp(20px,5vw,48px)', overflow: 'hidden' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div className="feature-grid">
 
-            {/* Mockup gauche — dashboard simplifié */}
+            {/* Photo gauche avec overlay glass */}
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, scale: 0.96 }}
+              whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true, margin: '-60px' }}
-              transition={{ duration: 0.45 }}
+              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
               className="hidden md:block"
-              style={{ order: 0 }}
+              style={{ order: 0, position: 'relative' }}
             >
-              <div style={{
-                background: BAI.bgSurface,
-                border: `1px solid ${BAI.border}`,
-                borderRadius: 20,
-                padding: 20,
-                boxShadow: BAI.shadowLg,
-                display: 'flex', flexDirection: 'column', gap: 14,
-              }}>
-                {/* Header du mockup */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.ink }}>Mes biens</span>
-                  <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint }}>2 publiés</span>
-                </div>
-                {/* Stats row */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+              {/* Photo principale */}
+              <div style={{ position: 'relative', borderRadius: 20, overflow: 'hidden', aspectRatio: '4/3' }}>
+                <img
+                  src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80"
+                  alt="Appartement moderne"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                />
+                {/* Gradient de bas pour lisibilité */}
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(10,13,26,0.60) 0%, transparent 50%)' }} />
+
+                {/* Badge glass flottant bas */}
+                <div style={{
+                  position: 'absolute', bottom: 20, left: 20, right: 20,
+                  background: 'rgba(10,13,26,0.72)',
+                  backdropFilter: 'blur(20px) saturate(160%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: 14,
+                  padding: '14px 18px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-around',
+                }}>
                   {[
-                    { label: 'Candidatures', value: '14', color: BAI.owner },
-                    { label: 'Visites', value: '6', color: BAI.tenant },
-                    { label: 'Vues', value: '312', color: BAI.caramel },
-                  ].map(stat => (
-                    <div key={stat.label} style={{ background: BAI.bgMuted, borderRadius: 10, padding: '12px 10px' }}>
-                      <div style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: stat.color }}>{stat.value}</div>
-                      <div style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, marginTop: 2 }}>{stat.label}</div>
-                    </div>
-                  ))}
-                </div>
-                {/* Liste de candidatures */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {[
-                    { name: 'Marie L.', status: 'Nouveau', color: BAI.ownerLight, textColor: BAI.owner },
-                    { name: 'Thomas M.', status: 'En cours', color: BAI.tenantLight, textColor: BAI.tenant },
-                    { name: 'Sophie K.', status: 'Validé', color: BAI.caramelLight, textColor: BAI.caramel },
-                  ].map(item => (
-                    <div key={item.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: BAI.bgBase, borderRadius: 8, border: `1px solid ${BAI.border}` }}>
-                      <span style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.ink }}>{item.name}</span>
-                      <span style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 600, background: item.color, color: item.textColor, padding: '3px 8px', borderRadius: 4 }}>{item.status}</span>
+                    { v: '14', l: 'Candidatures' },
+                    { v: '6', l: 'Visites' },
+                    { v: '312', l: 'Vues' },
+                  ].map(s => (
+                    <div key={s.l} style={{ textAlign: 'center' }}>
+                      <div style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: BAI.caramel, lineHeight: 1 }}>{s.v}</div>
+                      <div style={{ fontFamily: BAI.fontBody, fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 3 }}>{s.l}</div>
                     </div>
                   ))}
                 </div>
               </div>
+
+              {/* Petite photo en surimpression */}
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.28, duration: 0.4 }}
+                style={{
+                  position: 'absolute', top: -20, right: -20,
+                  width: 140, height: 100,
+                  borderRadius: 14,
+                  overflow: 'hidden',
+                  border: `3px solid ${BAI.bgBase}`,
+                  boxShadow: BAI.shadowLg,
+                }}
+              >
+                <img
+                  src="https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=280&q=80"
+                  alt=""
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </motion.div>
             </motion.div>
 
-            {/* Texte droite */}
+            {/* Texte droite — épuré */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, margin: '-60px' }}
-              transition={{ duration: 0.45, delay: 0.12 }}
+              transition={{ duration: 0.45, delay: 0.15 }}
             >
-              <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 12px' }}>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 14px' }}>
                 Pour les propriétaires
               </p>
               <h2 style={{
                 fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-                fontSize: 'clamp(28px, 4vw, 42px)', color: BAI.ink,
-                margin: '0 0 20px', lineHeight: 1.1,
+                fontSize: 'clamp(30px, 4vw, 46px)', color: BAI.ink,
+                margin: '0 0 16px', lineHeight: 1.05,
               }}>
-                Gérez tout depuis<br />un seul endroit.
+                Louez sereinement,<br />gérez en quelques clics.
               </h2>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 16, color: BAI.inkMid, lineHeight: 1.65, margin: '0 0 32px', maxWidth: 400 }}>
+                Publiez votre bien en 5 minutes, recevez des candidatures qualifiées et signez vos contrats en ligne.
+              </p>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 32 }}>
+              {/* 3 pictos horizontal */}
+              <div style={{ display: 'flex', gap: 24, marginBottom: 36, flexWrap: 'wrap' }}>
                 {[
-                  'Publiez en 5 minutes, visible immédiatement',
-                  'Sélectionnez vos locataires sereinement',
-                  'Contrats signés en ligne, conformes loi ALUR',
-                ].map(point => (
-                  <div key={point} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 20, height: 20, borderRadius: '50%', background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Check size={11} color={BAI.owner} />
-                    </div>
-                    <span style={{ fontFamily: BAI.fontBody, fontSize: 15, color: BAI.inkMid }}>{point}</span>
+                  { emoji: '📸', text: 'Publication rapide' },
+                  { emoji: '👥', text: 'Candidats vérifiés' },
+                  { emoji: '✍️', text: 'Contrat ALUR' },
+                ].map(item => (
+                  <div key={item.text} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 20 }}>{item.emoji}</span>
+                    <span style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.ink }}>{item.text}</span>
                   </div>
                 ))}
               </div>
@@ -1096,9 +1113,10 @@ export default function Home() {
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 8,
                   background: BAI.night, color: '#fff',
-                  borderRadius: 8, padding: '13px 24px',
+                  borderRadius: 10, padding: '14px 28px',
                   fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 15,
                   textDecoration: 'none', transition: 'opacity 0.18s',
+                  boxShadow: '0 4px 20px rgba(26,26,46,0.18)',
                 }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.85' }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1' }}>

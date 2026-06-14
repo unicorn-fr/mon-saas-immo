@@ -333,7 +333,7 @@ export default function Register() {
     }
   }
 
-  type Screen = 'welcome' | 'form' | 'verify_code' | 'waitlist'
+  type Screen = 'welcome' | 'method' | 'form' | 'verify_code' | 'waitlist'
   const [screen, setScreen] = useState<Screen>(prefillRole ? 'form' : 'welcome')
 
   const [formData, setFormData] = useState({
@@ -449,139 +449,219 @@ export default function Register() {
     return <VerifyCodeScreen email={registeredEmail} onBack={() => { setScreen('form'); setRegisteredEmail('') }} />
   }
 
-  /* ── Écran d'accueil — choix du rôle ──────────────────────────────────── */
+  /* ── Écran 1 — Choix du rôle ─────────────────────────────────────────── */
   if (screen === 'welcome') {
+    const roleOptions = [
+      {
+        value: 'TENANT' as const,
+        label: 'Locataire',
+        desc: 'Je cherche un logement à louer',
+        icon: <Home style={{ width: '26px', height: '26px', color: BAI.tenant }} />,
+        iconBg: BAI.tenantLight,
+        border: BAI.tenantBorder,
+        accent: BAI.tenant,
+      },
+      {
+        value: 'OWNER' as const,
+        label: 'Propriétaire',
+        desc: 'Je souhaite louer mon bien',
+        icon: <Key style={{ width: '26px', height: '26px', color: BAI.owner }} />,
+        iconBg: BAI.ownerLight,
+        border: BAI.ownerBorder,
+        accent: BAI.owner,
+      },
+    ]
+
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', ...fontBody }}>
         <LeftPanel />
 
-        {/* Panneau droit */}
         <div
-          style={{
-            background: BAI.bgBase,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative',
-          }}
+          style={{ background: BAI.bgBase, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}
           className="w-full md:w-[55%]"
         >
           <div style={{ position: 'absolute', top: '24px', left: '28px' }}>
-            <Link
-              to="/"
-              style={{ ...fontBody, fontSize: '13px', color: BAI.inkFaint, textDecoration: 'none' }}
+            <Link to="/" style={{ ...fontBody, fontSize: '13px', color: BAI.inkFaint, textDecoration: 'none' }}
               onMouseEnter={e => (e.currentTarget.style.color = BAI.inkMid)}
-              onMouseLeave={e => (e.currentTarget.style.color = BAI.inkFaint)}
-            >
+              onMouseLeave={e => (e.currentTarget.style.color = BAI.inkFaint)}>
               ← Accueil
             </Link>
           </div>
 
           <div style={{ width: '100%', maxWidth: '420px', padding: '64px 32px 48px' }}>
-            {/* Mobile logo */}
             <div className="flex md:hidden" style={{ justifyContent: 'center', marginBottom: '28px' }}>
               <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                 <BailioLogo size={30} />
-                <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '22px', color: BAI.night, letterSpacing: '-0.02em' }}>Bailio</span>
+                <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '22px', color: BAI.night }}>Bailio</span>
               </Link>
             </div>
 
-            <div style={{ marginBottom: '32px' }}>
+            <div style={{ marginBottom: '36px' }}>
+              <p style={{ ...fontBody, fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 10px' }}>
+                Étape 1 sur 2
+              </p>
               <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(28px, 6vw, 36px)', color: BAI.ink, margin: '0 0 8px', lineHeight: 1.1 }}>
-                Créer un compte
+                Vous êtes…
               </h1>
               <p style={{ ...fontBody, fontSize: '14px', color: BAI.inkMid, margin: 0 }}>
-                Commencez par choisir votre profil.
+                Choisissez votre profil pour commencer.
               </p>
             </div>
 
-            {/* Google */}
-            <div style={{ marginBottom: '20px' }}>
-              <GoogleSignInButton onSuccess={handleGoogleSuccess} text="signup_with" role={formData.role || 'TENANT'} />
-            </div>
-
-            {/* Divider */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-              <div style={{ flex: 1, height: '1px', background: BAI.border }} />
-              <span style={{ ...fontBody, fontSize: '12px', color: BAI.inkFaint, whiteSpace: 'nowrap' }}>ou créer un compte avec un email</span>
-              <div style={{ flex: 1, height: '1px', background: BAI.border }} />
-            </div>
-
-            {/* Sélection du rôle */}
-            <p style={{ ...fontBody, fontSize: '12px', fontWeight: 700, color: BAI.inkMid, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 12px' }}>
-              Je suis
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '28px' }}>
-              {([
-                {
-                  value: 'TENANT' as const,
-                  label: 'Locataire',
-                  desc: 'Je cherche un logement',
-                  icon: <Home style={{ width: '22px', height: '22px', color: BAI.tenant }} />,
-                  iconBg: BAI.tenantLight,
-                },
-                {
-                  value: 'OWNER' as const,
-                  label: 'Propriétaire',
-                  desc: 'Je loue mon bien',
-                  icon: <Key style={{ width: '22px', height: '22px', color: BAI.owner }} />,
-                  iconBg: BAI.ownerLight,
-                },
-              ]).map((opt, i) => (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
+              {roleOptions.map((opt, i) => (
                 <motion.button
                   key={opt.value}
                   type="button"
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.08, duration: 0.24 }}
+                  transition={{ delay: i * 0.08, duration: 0.28 }}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => {
                     setFormData(p => ({ ...p, role: opt.value }))
-                    setScreen('form')
+                    setScreen('method')
                   }}
                   style={{
-                    padding: '24px 12px',
-                    borderRadius: '12px',
+                    padding: '28px 16px 20px',
+                    borderRadius: '16px',
                     textAlign: 'center',
                     cursor: 'pointer',
                     border: `1.5px solid ${BAI.border}`,
                     background: BAI.bgSurface,
                     fontFamily: BAI.fontBody,
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
-                    transition: 'border-color 0.15s, box-shadow 0.15s',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px',
+                    transition: 'border-color 0.18s, box-shadow 0.18s, transform 0.18s',
                     boxShadow: BAI.shadowSm,
                   }}
                   onMouseEnter={e => {
-                    (e.currentTarget as HTMLButtonElement).style.borderColor = BAI.night
-                    ;(e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 16px rgba(26,26,46,0.10)'
+                    const el = e.currentTarget as HTMLButtonElement
+                    el.style.borderColor = opt.accent
+                    el.style.boxShadow = `0 4px 20px ${opt.iconBg}`
+                    el.style.transform = 'translateY(-2px)'
                   }}
                   onMouseLeave={e => {
-                    (e.currentTarget as HTMLButtonElement).style.borderColor = BAI.border
-                    ;(e.currentTarget as HTMLButtonElement).style.boxShadow = BAI.shadowSm
+                    const el = e.currentTarget as HTMLButtonElement
+                    el.style.borderColor = BAI.border
+                    el.style.boxShadow = BAI.shadowSm
+                    el.style.transform = 'translateY(0)'
                   }}
                 >
-                  <div style={{
-                    width: '44px', height: '44px', borderRadius: '12px',
-                    background: opt.iconBg,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
+                  <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: opt.iconBg, border: `1px solid ${opt.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {opt.icon}
                   </div>
-                  <span style={{ fontWeight: 700, fontSize: '14px', color: BAI.ink }}>{opt.label}</span>
-                  <span style={{ fontSize: '12px', color: BAI.inkFaint }}>{opt.desc}</span>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '15px', color: BAI.ink, marginBottom: 4 }}>{opt.label}</div>
+                    <div style={{ fontSize: '12px', color: BAI.inkFaint, lineHeight: 1.4 }}>{opt.desc}</div>
+                  </div>
                 </motion.button>
               ))}
             </div>
 
-            <p style={{ textAlign: 'center', fontSize: '13px', color: BAI.inkFaint, marginBottom: 0 }}>
+            <p style={{ textAlign: 'center', fontSize: '13px', color: BAI.inkFaint }}>
               Vous avez déjà un compte ?{' '}
-              <Link
-                to="/login"
-                style={{ color: BAI.night, fontWeight: 600, textDecoration: 'none' }}
+              <Link to="/login" style={{ color: BAI.night, fontWeight: 600, textDecoration: 'none' }}
                 onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
-                onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
-              >
+                onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>
                 Se connecter →
               </Link>
             </p>
           </div>
+        </div>
+      </div>
+    )
+  }
+
+  /* ── Écran 2 — Choisir la méthode (Google ou email) ───────────────────── */
+  if (screen === 'method') {
+    const isOwner = formData.role === 'OWNER'
+    const roleLabel = isOwner ? 'Propriétaire' : 'Locataire'
+    const roleColor = isOwner ? BAI.owner : BAI.tenant
+    const roleBg = isOwner ? BAI.ownerLight : BAI.tenantLight
+
+    return (
+      <div style={{ minHeight: '100dvh', display: 'flex', ...fontBody }}>
+        <LeftPanel />
+
+        <div
+          style={{ background: BAI.bgBase, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}
+          className="w-full md:w-[55%]"
+        >
+          <button
+            onClick={() => setScreen('welcome')}
+            style={{ position: 'absolute', top: '28px', left: '32px', background: 'none', border: 'none', fontSize: '13px', color: BAI.inkFaint, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: BAI.fontBody }}
+            onMouseEnter={e => (e.currentTarget.style.color = BAI.inkMid)}
+            onMouseLeave={e => (e.currentTarget.style.color = BAI.inkFaint)}
+          >
+            ← Retour
+          </button>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            style={{ width: '100%', maxWidth: '400px', padding: '72px 32px 48px' }}
+          >
+            <div className="flex md:hidden" style={{ justifyContent: 'center', marginBottom: '28px' }}>
+              <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <BailioLogo size={30} />
+                <span style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: '22px', color: BAI.night }}>Bailio</span>
+              </Link>
+            </div>
+
+            {/* Badge rôle sélectionné */}
+            <div style={{ marginBottom: '28px' }}>
+              <p style={{ ...fontBody, fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 10px' }}>
+                Étape 2 sur 2
+              </p>
+              <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(26px, 5vw, 34px)', color: BAI.ink, margin: '0 0 12px', lineHeight: 1.1 }}>
+                Créer mon compte
+              </h1>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: roleBg, border: `1px solid ${isOwner ? BAI.ownerBorder : BAI.tenantBorder}`, borderRadius: 8, padding: '6px 12px' }}>
+                <span style={{ ...fontBody, fontSize: '13px', fontWeight: 600, color: roleColor }}>{roleLabel}</span>
+                <button
+                  onClick={() => setScreen('welcome')}
+                  style={{ ...fontBody, fontSize: '11px', color: BAI.inkFaint, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+                >
+                  Modifier
+                </button>
+              </div>
+            </div>
+
+            {/* Google */}
+            <div style={{ marginBottom: '16px' }}>
+              <GoogleSignInButton onSuccess={handleGoogleSuccess} text="signup_with" role={formData.role as 'OWNER' | 'TENANT'} />
+            </div>
+
+            {/* Divider */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ flex: 1, height: '1px', background: BAI.border }} />
+              <span style={{ ...fontBody, fontSize: '12px', color: BAI.inkFaint, whiteSpace: 'nowrap' }}>ou</span>
+              <div style={{ flex: 1, height: '1px', background: BAI.border }} />
+            </div>
+
+            {/* Email/form */}
+            <button
+              type="button"
+              onClick={() => setScreen('form')}
+              style={{
+                width: '100%', background: BAI.bgSurface, color: BAI.ink,
+                border: `1.5px solid ${BAI.border}`, borderRadius: '8px', padding: '13px 0',
+                ...fontBody, fontWeight: 600, fontSize: '14px', cursor: 'pointer',
+                transition: 'border-color 0.15s, background 0.15s', minHeight: '48px',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = BAI.night; (e.currentTarget as HTMLButtonElement).style.background = BAI.bgMuted }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = BAI.border; (e.currentTarget as HTMLButtonElement).style.background = BAI.bgSurface }}
+            >
+              Continuer avec mon email
+            </button>
+
+            <p style={{ textAlign: 'center', fontSize: '13px', color: BAI.inkFaint, marginTop: '20px' }}>
+              Vous avez déjà un compte ?{' '}
+              <Link to="/login" style={{ color: BAI.night, fontWeight: 600, textDecoration: 'none' }}>
+                Se connecter →
+              </Link>
+            </p>
+          </motion.div>
         </div>
       </div>
     )
@@ -669,33 +749,6 @@ export default function Register() {
           )}
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-
-            {/* Rôle inline */}
-            <div>
-              <label style={{ ...fontBody, fontWeight: 500, fontSize: '13px', color: BAI.ink, display: 'block', marginBottom: '8px' }}>Je suis</label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                {([
-                  { value: 'TENANT' as const, label: 'Locataire', desc: 'Je cherche un logement', bg: BAI.tenantLight },
-                  { value: 'OWNER' as const, label: 'Propriétaire', desc: 'Je loue mon bien', bg: BAI.ownerLight },
-                ]).map(opt => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setFormData(p => ({ ...p, role: opt.value }))}
-                    style={{
-                      padding: '10px 12px', borderRadius: '10px', textAlign: 'left', cursor: 'pointer',
-                      border: formData.role === opt.value ? `2px solid ${BAI.night}` : `1.5px solid ${BAI.border}`,
-                      background: formData.role === opt.value ? opt.bg : BAI.bgInput,
-                      fontFamily: BAI.fontBody, transition: 'border-color 0.15s, background 0.15s',
-                      display: 'flex', alignItems: 'center', gap: '8px',
-                    }}
-                  >
-                    <div style={{ fontWeight: 600, fontSize: '13px', color: BAI.ink }}>{opt.label}</div>
-                    <div style={{ fontSize: '11px', color: BAI.inkFaint }}>{opt.desc}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
 
             {/* Prénom + Nom */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(140px, 100%), 1fr))', gap: '10px' }}>
