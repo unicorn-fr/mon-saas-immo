@@ -265,7 +265,11 @@ export default function Login() {
               </p>
             </div>
 
-            <GoogleSignInButton onSuccess={handleGoogleSuccess} text="signin_with" />
+            <GoogleSignInButton
+              onSuccess={handleGoogleSuccess}
+              onError={(msg) => toast.error(msg || 'Connexion Google échouée')}
+              text="signin_with"
+            />
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
               <div style={{ flex: 1, height: 1, background: BAI.border }} />

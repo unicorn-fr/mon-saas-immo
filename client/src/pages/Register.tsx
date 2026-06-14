@@ -629,7 +629,12 @@ export default function Register() {
 
             {/* Google */}
             <div style={{ marginBottom: '16px' }}>
-              <GoogleSignInButton onSuccess={handleGoogleSuccess} text="signup_with" role={formData.role as 'OWNER' | 'TENANT'} />
+              <GoogleSignInButton
+                onSuccess={handleGoogleSuccess}
+                onError={(msg) => toast.error(msg || 'Connexion Google échouée')}
+                text="signup_with"
+                role={formData.role as 'OWNER' | 'TENANT'}
+              />
             </div>
 
             {/* Divider */}
