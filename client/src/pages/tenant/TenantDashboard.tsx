@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../../hooks/useAuth'
@@ -10,8 +10,11 @@ import { Layout } from '../../components/layout/Layout'
 import { BAI } from '../../constants/bailio-tokens'
 import {
   FolderOpen, SendHorizonal, Calendar, FileText, CreditCard,
-  ChevronRight, CheckCircle, Clock, ArrowUpRight, MapPin, Home,
+  ChevronRight, CheckCircle, Clock, ArrowUpRight, MapPin, Home, HelpCircle,
 } from 'lucide-react'
+import { GuidedTour } from '../../components/ui/GuidedTour'
+
+const TOUR_KEY = 'bailio_tour_tenant_v1'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import type { Application } from '../../types/application.types'
@@ -131,6 +134,30 @@ export default function TenantDashboard() {
   const [pct, setPct]                     = useState(0)
   const [uploadedCats, setUploadedCats]   = useState<Set<string>>(new Set())
   const [loading, setLoading]             = useState(true)
+  const [tourKey, setTourKey]             = useState(0)
+
+  // Tour target refs
+  const kpiRef      = useRef<HTMLDivElement>(null)
+  const parcourRef  = useRef<HTMLDivElement>(null)
+  const gridRef     = useRef<HTMLDivElement>(null)
+
+  const tourSteps = [
+    {
+      targetRef: kpiRef,
+      title: 'Votre tableau de bord',
+      desc: 'Votre situation locative en un coup d\'œil : logement actuel, candidatures en cours, avancement de votre dossier et prochaines visites.',
+    },
+    {
+      targetRef: parcourRef,
+      title: 'Votre parcours locatif',
+      desc: 'Les 5 étapes pour louer votre logement. Chaque étape complétée vous rapproche de la signature du bail. Dossier → Candidature → Visite → Contrat → Paiements.',
+    },
+    {
+      targetRef: gridRef,
+      title: 'Vos actions en cours',
+      desc: 'Retrouvez ici vos candidatures avec leur statut (en attente, approuvée, refusée), vos visites planifiées et l\'état de votre dossier locatif.',
+    },
+  ]
 
   useEffect(() => {
     const load = async () => {
@@ -251,17 +278,34 @@ export default function TenantDashboard() {
             }}>
               Bonjour{user?.firstName ? `, ${user.firstName}` : ''}.
             </h1>
-            <p style={{
-              fontFamily: BAI.fontBody, fontSize: 13,
-              color: 'rgba(255,255,255,0.45)',
-              margin: 0,
-            }}>
-              {todayCap}
-            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 }}>
+              <p style={{
+                fontFamily: BAI.fontBody, fontSize: 13,
+                color: 'rgba(255,255,255,0.45)',
+                margin: 0,
+              }}>
+                {todayCap}
+              </p>
+              <button
+                onClick={() => { localStorage.removeItem(TOUR_KEY); setTourKey(k => k + 1) }}
+                title="Lancer le guide interactif"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 5,
+                  padding: '4px 10px', borderRadius: 20,
+                  background: 'rgba(255,255,255,0.09)',
+                  border: '1px solid rgba(255,255,255,0.16)',
+                  color: 'rgba(255,255,255,0.65)',
+                  fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 600,
+                  cursor: 'pointer', flexShrink: 0,
+                }}
+              >
+                <HelpCircle size={11} /> Guide
+              </button>
+            </div>
           </motion.div>
 
           {/* Stats row — 4 glass KPIs */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 32 }}>
+          <div ref={kpiRef} style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 32 }}>
             {[
               {
                 label: activeContract ? 'Logement actuel' : 'En recherche',
@@ -527,6 +571,7 @@ export default function TenantDashboard() {
 
         {/* ── Pipeline progression ─────────────────────────────────────── */}
         <motion.div
+          ref={parcourRef}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.28 }}
@@ -578,7 +623,7 @@ export default function TenantDashboard() {
         </motion.div>
 
         {/* ── Grille candidatures + visites + dossier ──────────────────── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+        <div ref={gridRef} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
 
           {/* Candidatures récentes */}
           {applications.length > 0 && (
@@ -826,6 +871,7 @@ export default function TenantDashboard() {
       </div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <GuidedTour key={tourKey} steps={tourSteps} storageKey={TOUR_KEY} />
     </Layout>
   )
 }

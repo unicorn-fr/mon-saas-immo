@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useProperties } from '../../hooks/useProperties'
@@ -11,13 +11,16 @@ import { PropertyCard } from '../../components/property/PropertyCard'
 import { BAI } from '../../constants/bailio-tokens'
 import {
   Plus, ArrowRight, ShieldAlert, Calendar,
-  Home, ClipboardList, MessageSquare, ChevronRight,
+  Home, ClipboardList, MessageSquare, ChevronRight, HelpCircle,
 } from 'lucide-react'
 import { apiClient } from '../../services/api.service'
 import type { Application } from '../../types/application.types'
 import type { Booking } from '../../types/booking.types'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import { GuidedTour } from '../../components/ui/GuidedTour'
+
+const TOUR_KEY = 'bailio_tour_owner_v1'
 
 const HERO_BG = '#0a0d1a'
 const HERO_IMG = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1400&q=80'
@@ -187,6 +190,36 @@ export default function OwnerDashboard() {
   const [pendingApps, setPendingApps] = useState<Application[]>([])
   const [upcomingVisits, setUpcomingVisits] = useState<Booking[]>([])
   const [identityVerified, setIdentityVerified] = useState(true)
+  const [tourKey, setTourKey] = useState(0)
+
+  // Tour target refs
+  const kpiRef       = useRef<HTMLDivElement>(null)
+  const propsRef     = useRef<HTMLElement>(null)
+  const activityRef  = useRef<HTMLElement>(null)
+  const actionsRef   = useRef<HTMLDivElement>(null)
+
+  const tourSteps = [
+    {
+      targetRef: kpiRef,
+      title: 'Vos métriques clés',
+      desc: 'Candidatures à traiter, visites planifiées, messages non lus — tout ce qui nécessite votre attention aujourd\'hui. Cliquez sur une carte pour y accéder directement.',
+    },
+    {
+      targetRef: propsRef,
+      title: 'Mes biens',
+      desc: 'Toutes vos annonces de location. Publiez un bien en 5 minutes grâce au formulaire guidé. Les locataires peuvent candidater dès la publication.',
+    },
+    {
+      targetRef: activityRef,
+      title: 'Activité récente',
+      desc: 'Flux en temps réel : nouvelles candidatures, visites à venir. Agissez vite — les bons dossiers partent souvent en 48h.',
+    },
+    {
+      targetRef: actionsRef,
+      title: 'Actions rapides',
+      desc: 'Les raccourcis essentiels pour votre quotidien : créer une annonce, gérer les candidatures, lire vos messages.',
+    },
+  ]
 
   useEffect(() => {
     fetchMyProperties()
@@ -339,14 +372,34 @@ export default function OwnerDashboard() {
             Bonjour, {user?.firstName}.
           </h1>
 
-          {/* Subtitle */}
-          <p style={{
-            fontFamily: BAI.fontBody, fontSize: 15,
-            color: 'rgba(255,255,255,0.60)',
-            margin: '0 0 18px',
-          }}>
-            Voici un résumé de votre activité.
-          </p>
+          {/* Subtitle + Guide button */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
+            <p style={{
+              fontFamily: BAI.fontBody, fontSize: 15,
+              color: 'rgba(255,255,255,0.60)',
+              margin: 0,
+            }}>
+              Voici un résumé de votre activité.
+            </p>
+            <button
+              onClick={() => { localStorage.removeItem(TOUR_KEY); setTourKey(k => k + 1) }}
+              title="Lancer le guide interactif"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                padding: '5px 11px', borderRadius: 20,
+                background: 'rgba(255,255,255,0.10)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                border: '1px solid rgba(255,255,255,0.18)',
+                color: 'rgba(255,255,255,0.75)',
+                fontFamily: BAI.fontBody, fontSize: 11.5, fontWeight: 600,
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+            >
+              <HelpCircle size={12} /> Guide
+            </button>
+          </div>
 
           {/* Glass badges row */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
@@ -383,7 +436,7 @@ export default function OwnerDashboard() {
           )}
 
           {/* ── 2. KPI ROW ─────────────────────────────────────────────── */}
-          <div style={{
+          <div ref={kpiRef} style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
             gap: 16,
@@ -400,6 +453,7 @@ export default function OwnerDashboard() {
           }}>
             {/* Colonne gauche — Mes biens */}
             <motion.section
+              ref={propsRef}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.22, duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
@@ -510,6 +564,7 @@ export default function OwnerDashboard() {
 
             {/* Colonne droite — Activité récente */}
             <motion.section
+              ref={activityRef}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.30, duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
@@ -549,6 +604,7 @@ export default function OwnerDashboard() {
 
           {/* ── 4. QUICK ACTIONS ────────────────────────────────────────── */}
           <motion.div
+            ref={actionsRef}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.40, duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
@@ -608,6 +664,8 @@ export default function OwnerDashboard() {
 
         </div>
       </div>
+
+      <GuidedTour key={tourKey} steps={tourSteps} storageKey={TOUR_KEY} />
     </Layout>
   )
 }
