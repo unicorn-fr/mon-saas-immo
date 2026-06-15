@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react'
+import { useState, useEffect, FormEvent } from 'react'
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { AlertCircle, Mail, CheckCircle2 } from 'lucide-react'
@@ -130,7 +130,7 @@ export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()
-  const { login, googleLogin, setAuthFromPopup } = useAuth()
+  const { login } = useAuth()
 
   const prefillEmail = searchParams.get('email') ?? ''
 
@@ -143,6 +143,12 @@ export default function Login() {
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showRegisterHint, setShowRegisterHint] = useState(false)
+
+  // Show Google OAuth errors sent back via navigation state
+  useEffect(() => {
+    const googleError = (location.state as { googleError?: string })?.googleError
+    if (googleError) toast.error(googleError)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const redirectByRole = (role: string) => {
     const from = (location.state as { from?: string })?.from
@@ -183,24 +189,6 @@ export default function Login() {
       setShowRegisterHint(true)
     } finally {
       setIsSubmitting(false)
-    }
-  }
-
-  const handleGoogleSuccess = async (token: string) => {
-    try {
-      if (token.startsWith('__popup_result__')) {
-        const data = JSON.parse(token.slice('__popup_result__'.length))
-        setAuthFromPopup(data)
-        if (data.isNewUser) { navigate('/select-role'); return }
-        redirectByRole(data.user?.role)
-        return
-      }
-      const { user: u, isNewUser } = await googleLogin(token)
-      if (isNewUser) { navigate('/select-role'); return }
-      redirectByRole(u.role)
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Connexion Google échouée.'
-      toast.error(msg)
     }
   }
 
@@ -265,11 +253,7 @@ export default function Login() {
               </p>
             </div>
 
-            <GoogleSignInButton
-              onSuccess={handleGoogleSuccess}
-              onError={(msg) => toast.error(msg || 'Connexion Google échouée')}
-              text="signin_with"
-            />
+            <GoogleSignInButton text="signin_with" />
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
               <div style={{ flex: 1, height: 1, background: BAI.border }} />

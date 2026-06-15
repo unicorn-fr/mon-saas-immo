@@ -311,27 +311,8 @@ export default function Register() {
   const [searchParams] = useSearchParams()
   const prefillEmail = searchParams.get('email') ?? ''
   const prefillRole = (searchParams.get('role') ?? '') as 'OWNER' | 'TENANT' | ''
-  const { register, googleLogin, setAuthFromPopup } = useAuth()
+  const { register } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const handleGoogleSuccess = async (token: string) => {
-    try {
-      if (token.startsWith('__popup_result__')) {
-        const data = JSON.parse(token.slice('__popup_result__'.length))
-        setAuthFromPopup(data)
-        const dest = data.user?.role === 'OWNER' ? '/dashboard/owner' : '/dashboard/tenant'
-        navigate(dest)
-        return
-      }
-      const role = formData.role || undefined
-      const { isNewUser, user } = await googleLogin(token, role)
-      if (isNewUser && !role) { navigate('/select-role'); return }
-      const dest = user.role === 'OWNER' ? '/dashboard/owner' : '/dashboard/tenant'
-      navigate(dest)
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Connexion Google échouée.')
-    }
-  }
 
   type Screen = 'welcome' | 'method' | 'form' | 'verify_code' | 'waitlist'
   const [screen, setScreen] = useState<Screen>(prefillRole ? 'form' : 'welcome')
@@ -630,8 +611,6 @@ export default function Register() {
             {/* Google */}
             <div style={{ marginBottom: '16px' }}>
               <GoogleSignInButton
-                onSuccess={handleGoogleSuccess}
-                onError={(msg) => toast.error(msg || 'Connexion Google échouée')}
                 text="signup_with"
                 role={formData.role as 'OWNER' | 'TENANT'}
               />
