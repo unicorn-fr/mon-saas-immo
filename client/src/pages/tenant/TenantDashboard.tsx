@@ -11,8 +11,10 @@ import { BAI } from '../../constants/bailio-tokens'
 import {
   FolderOpen, SendHorizonal, Calendar, FileText, CreditCard,
   ChevronRight, CheckCircle, Clock, ArrowUpRight, MapPin, Home, HelpCircle,
+  MessageSquare, Search, LayoutDashboard,
 } from 'lucide-react'
-import { GuidedTour } from '../../components/ui/GuidedTour'
+import { PlatformTour } from '../../components/ui/PlatformTour'
+import type { TourFeature } from '../../components/ui/PlatformTour'
 
 const TOUR_KEY = 'bailio_tour_tenant_v1'
 import { format } from 'date-fns'
@@ -135,27 +137,86 @@ export default function TenantDashboard() {
   const [uploadedCats, setUploadedCats]   = useState<Set<string>>(new Set())
   const [loading, setLoading]             = useState(true)
   const [tourKey, setTourKey]             = useState(0)
+  const [tourImmediate, setTourImmediate] = useState(false)
 
-  // Tour target refs
+  // Tour target refs (kept for potential future use)
   const kpiRef      = useRef<HTMLDivElement>(null)
   const parcourRef  = useRef<HTMLDivElement>(null)
   const gridRef     = useRef<HTMLDivElement>(null)
 
-  const tourSteps = [
+  const tourFeatures: TourFeature[] = [
     {
-      targetRef: kpiRef,
-      title: 'Votre tableau de bord',
-      desc: 'Votre situation locative en un coup d\'œil : logement actuel, candidatures en cours, avancement de votre dossier et prochaines visites.',
+      icon: LayoutDashboard,
+      iconBg: 'rgba(196,151,106,0.16)',
+      iconColor: BAI.caramel,
+      label: 'Tableau de bord',
+      title: 'Votre espace locataire',
+      desc: 'Résumé complet de votre situation : logement actuel, candidatures en cours, prochaines visites, avancement de votre dossier. Tout est organisé pour que rien ne vous échappe.',
     },
     {
-      targetRef: parcourRef,
-      title: 'Votre parcours locatif',
-      desc: 'Les 5 étapes pour louer votre logement. Chaque étape complétée vous rapproche de la signature du bail. Dossier → Candidature → Visite → Contrat → Paiements.',
+      icon: Search,
+      iconBg: 'rgba(26,50,112,0.28)',
+      iconColor: '#7aa4f0',
+      label: 'Recherche',
+      title: 'Trouvez votre logement idéal',
+      desc: 'Parcourez des centaines d\'annonces vérifiées. Filtres avancés : ville, budget, surface, type de bien. Activez des alertes pour être notifié dès qu\'une annonce correspond à vos critères.',
+      link: '/search',
     },
     {
-      targetRef: gridRef,
-      title: 'Vos actions en cours',
-      desc: 'Retrouvez ici vos candidatures avec leur statut (en attente, approuvée, refusée), vos visites planifiées et l\'état de votre dossier locatif.',
+      icon: FolderOpen,
+      iconBg: 'rgba(27,94,59,0.28)',
+      iconColor: '#5fcf96',
+      label: 'Dossier locatif',
+      title: 'Votre dossier, prêt en 10 min',
+      desc: 'Constituez votre dossier une seule fois, partagez-le à tous vos propriétaires en un clic. Notre IA vérifie chaque document automatiquement : pièce d\'identité, revenus, emploi, domicile.',
+      link: '/dossier',
+      tag: 'IA',
+    },
+    {
+      icon: SendHorizonal,
+      iconBg: 'rgba(196,151,106,0.18)',
+      iconColor: BAI.caramel,
+      label: 'Candidatures',
+      title: 'Postulez et suivez en temps réel',
+      desc: 'Candidatez pour plusieurs logements simultanément. Suivez chaque dossier en temps réel : en attente, visite proposée, acceptée. Vous êtes notifié dès qu\'un propriétaire répond.',
+      link: '/my-applications',
+    },
+    {
+      icon: Calendar,
+      iconBg: 'rgba(26,50,112,0.24)',
+      iconColor: '#7aa4f0',
+      label: 'Visites',
+      title: 'Réservez vos créneaux de visite',
+      desc: 'Choisissez parmi les créneaux proposés par le propriétaire et confirmez votre visite en un clic. Rappel automatique la veille, modification possible à tout moment.',
+      link: '/my-bookings',
+    },
+    {
+      icon: FileText,
+      iconBg: 'rgba(27,94,59,0.24)',
+      iconColor: '#5fcf96',
+      label: 'Contrats',
+      title: 'Signez votre bail électroniquement',
+      desc: 'Une fois votre candidature acceptée, le bail vous est envoyé pour signature. Conforme eIDAS, valeur légale garantie — depuis votre téléphone, en quelques secondes.',
+      link: '/contracts',
+      tag: 'eIDAS',
+    },
+    {
+      icon: MessageSquare,
+      iconBg: 'rgba(196,151,106,0.16)',
+      iconColor: BAI.caramel,
+      label: 'Messages',
+      title: 'Contactez votre propriétaire',
+      desc: 'Communiquez directement avec vos propriétaires : posez des questions, confirmez des détails, signalez un problème. Tout est tracé, archivé et accessible à tout moment.',
+      link: '/messages',
+    },
+    {
+      icon: CreditCard,
+      iconBg: 'rgba(26,50,112,0.22)',
+      iconColor: '#7aa4f0',
+      label: 'Paiements',
+      title: 'Suivez vos loyers et quittances',
+      desc: 'Retrouvez l\'historique complet de vos paiements, téléchargez vos quittances de loyer et suivez votre compte. Tout est automatiquement archivé, disponible à tout moment.',
+      link: '/tenant/payments',
     },
   ]
 
@@ -287,7 +348,7 @@ export default function TenantDashboard() {
                 {todayCap}
               </p>
               <button
-                onClick={() => { localStorage.removeItem(TOUR_KEY); setTourKey(k => k + 1) }}
+                onClick={() => { localStorage.removeItem(TOUR_KEY); setTourImmediate(true); setTourKey(k => k + 1) }}
                 title="Lancer le guide interactif"
                 style={{
                   display: 'flex', alignItems: 'center', gap: 5,
@@ -871,7 +932,13 @@ export default function TenantDashboard() {
       </div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      <GuidedTour key={tourKey} steps={tourSteps} storageKey={TOUR_KEY} />
+      <PlatformTour
+        key={tourKey}
+        features={tourFeatures}
+        storageKey={TOUR_KEY}
+        tourTitle="Votre espace locataire"
+        immediate={tourImmediate}
+      />
     </Layout>
   )
 }

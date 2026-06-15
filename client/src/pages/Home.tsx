@@ -31,14 +31,6 @@ const PROPERTY_TYPES = [
   { value: 'LOFT', label: 'Loft' },
 ]
 
-const PRICE_RANGES = [
-  { value: '', label: 'Tout budget' },
-  { value: '0-500', label: '< 500 €/mois' },
-  { value: '500-800', label: '500 – 800 €' },
-  { value: '800-1200', label: '800 – 1 200 €' },
-  { value: '1200-2000', label: '1 200 – 2 000 €' },
-  { value: '2000-', label: '> 2 000 €' },
-]
 
 const CITIES = [
   { name: 'Paris', slug: 'paris', count: '1 200+', img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=300&h=160&q=80' },
@@ -122,141 +114,229 @@ const TESTIMONIALS = [
 
 // ─── SearchBox ────────────────────────────────────────────────────────────────
 
+const BUDGET_PRESETS = [
+  { label: '600 €', value: '600' },
+  { label: '800 €', value: '800' },
+  { label: '1 000 €', value: '1000' },
+  { label: '1 200 €', value: '1200' },
+  { label: '1 500 €', value: '1500' },
+  { label: '2 000 €+', value: '2000' },
+]
+
 interface SearchBoxProps {
   city: string; setCity: (v: string) => void
   type: string; setType: (v: string) => void
-  priceRange: string; setPriceRange: (v: string) => void
+  maxBudget: string; setMaxBudget: (v: string) => void
 }
 
-function SearchBox({ city, setCity, type, setType, priceRange, setPriceRange }: SearchBoxProps) {
+function SearchBox({ city, setCity, type, setType, maxBudget, setMaxBudget }: SearchBoxProps) {
   const [focused, setFocused] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 700)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const h = () => setIsMobile(window.innerWidth < 700)
+    window.addEventListener('resize', h)
+    return () => window.removeEventListener('resize', h)
+  }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const params = new URLSearchParams()
     if (city.trim()) params.set('city', city.trim())
     if (type) params.set('type', type)
-    if (priceRange) {
-      const [min, max] = priceRange.split('-')
-      if (min) params.set('minPrice', min)
-      if (max) params.set('maxPrice', max)
-    }
+    if (maxBudget) params.set('maxPrice', maxBudget)
     navigate(`/search?${params.toString()}`)
   }
 
+  const motionProps = {
+    initial: { opacity: 0, y: 20, scale: 0.97 },
+    animate: { opacity: 1, y: 0, scale: 1 },
+    transition: { duration: 0.45, delay: 0.30, ease: [0.22, 1, 0.36, 1] as [number,number,number,number] },
+  }
+
+  const glassCard: React.CSSProperties = {
+    background: 'rgba(255,255,255,0.09)',
+    backdropFilter: 'blur(24px) saturate(180%)',
+    WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+    border: '1px solid rgba(255,255,255,0.15)',
+    borderRadius: 16,
+  }
+
+  const inputBase: React.CSSProperties = {
+    background: 'transparent', border: 'none', outline: 'none',
+    fontFamily: BAI.fontBody, color: '#ffffff', width: '100%', minWidth: 0,
+  }
+
+  const labelStyle: React.CSSProperties = {
+    fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700,
+    letterSpacing: '0.11em', textTransform: 'uppercase' as const,
+    color: 'rgba(255,255,255,0.38)', display: 'block', marginBottom: 5,
+  }
+
+  /* ── MOBILE ─────────────────────────────────────────────────────────────── */
+  if (isMobile) {
+    return (
+      <motion.form onSubmit={handleSubmit} {...motionProps}
+        style={{ ...glassCard, padding: 14, boxShadow: '0 8px 40px rgba(0,0,0,0.35)', display: 'flex', flexDirection: 'column', gap: 10 }}
+      >
+        {/* Ville */}
+        <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: '13px 16px' }}>
+          <span style={labelStyle}>Où cherchez-vous ?</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <MapPin size={16} color={focused === 'city' ? BAI.caramel : 'rgba(255,255,255,0.40)'} style={{ flexShrink: 0 }} />
+            <input
+              type="text" placeholder="Paris, Lyon, Marseille…"
+              value={city} onChange={e => setCity(e.target.value)}
+              onFocus={() => setFocused('city')} onBlur={() => setFocused(null)}
+              style={{ ...inputBase, fontSize: 16 }}
+            />
+          </div>
+        </div>
+
+        {/* Type + Budget côte à côte */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          {/* Type */}
+          <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: '13px 14px' }}>
+            <span style={labelStyle}>Type de bien</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Building2 size={15} color='rgba(255,255,255,0.38)' style={{ flexShrink: 0 }} />
+              <select
+                value={type} onChange={e => setType(e.target.value)}
+                style={{ ...inputBase, fontSize: 15, appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', color: type ? '#fff' : 'rgba(255,255,255,0.50)' }}
+              >
+                {PROPERTY_TYPES.map(o => <option key={o.value} value={o.value} style={{ background: '#111827', color: '#fff' }}>{o.label}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Budget max */}
+          <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: '13px 14px' }}>
+            <span style={labelStyle}>Budget max. / mois</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Euro size={15} color={focused === 'budget' ? BAI.caramel : 'rgba(255,255,255,0.38)'} style={{ flexShrink: 0 }} />
+              <input
+                type="number" inputMode="numeric" placeholder="ex. 1 200"
+                value={maxBudget} onChange={e => setMaxBudget(e.target.value)}
+                onFocus={() => setFocused('budget')} onBlur={() => setFocused(null)}
+                min="0" step="50"
+                style={{ ...inputBase, fontSize: 16, color: maxBudget ? '#fff' : 'rgba(255,255,255,0.50)' }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Budget presets — chips SeLoger style */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, paddingLeft: 2 }}>
+          {BUDGET_PRESETS.map(({ label: lbl, value: v }) => {
+            const active = maxBudget === v
+            return (
+              <button
+                type="button" key={v}
+                onClick={() => setMaxBudget(active ? '' : v)}
+                style={{
+                  padding: '6px 14px', borderRadius: 20, cursor: 'pointer',
+                  border: `1px solid ${active ? 'rgba(196,151,106,0.55)' : 'rgba(255,255,255,0.20)'}`,
+                  background: active ? 'rgba(196,151,106,0.22)' : 'rgba(255,255,255,0.05)',
+                  color: active ? '#ffffff' : 'rgba(255,255,255,0.62)',
+                  fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600,
+                  transition: 'all 0.15s',
+                }}
+              >
+                {lbl}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Submit */}
+        <motion.button
+          type="submit" whileTap={{ scale: 0.97 }}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+            background: BAI.caramel, border: 'none', borderRadius: 14,
+            height: 56, marginTop: 2,
+            fontFamily: BAI.fontBody, fontSize: 16, fontWeight: 700,
+            color: '#fff', cursor: 'pointer',
+            boxShadow: '0 4px 20px rgba(196,151,106,0.42)',
+          }}
+        >
+          <Search size={18} /> Rechercher un logement
+        </motion.button>
+      </motion.form>
+    )
+  }
+
+  /* ── DESKTOP ──────────────────────────────────────────────────────────────── */
   return (
-    <motion.form
-      onSubmit={handleSubmit}
-      className="hero-searchbox"
-      initial={{ opacity: 0, y: 20, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.45, delay: 0.30, ease: [0.22, 1, 0.36, 1] }}
+    <motion.form onSubmit={handleSubmit} {...motionProps}
       style={{
-        background: 'rgba(255,255,255,0.07)',
-        backdropFilter: 'blur(24px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-        border: '1px solid rgba(255,255,255,0.16)',
-        borderRadius: 16,
-        padding: 8,
-        display: 'flex',
-        gap: 0,
-        alignItems: 'stretch',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+        ...glassCard,
+        padding: 8, display: 'flex', gap: 0,
+        alignItems: 'stretch', boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
       }}
     >
-      {/* Location */}
+      {/* Ville */}
       <div style={{
-        flex: 2,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        padding: '12px 16px',
-        borderRadius: 10,
-        background: focused === 'city' ? 'rgba(255,255,255,0.08)' : 'transparent',
-        transition: 'background 0.2s',
-        cursor: 'text',
+        flex: 2, display: 'flex', alignItems: 'center', gap: 10,
+        padding: '0 18px', height: 54, borderRadius: 10, minWidth: 0,
+        background: focused === 'city' ? 'rgba(255,255,255,0.10)' : 'transparent',
+        transition: 'background 0.18s',
       }}>
-        <MapPin size={15} color={focused === 'city' ? BAI.caramel : 'rgba(255,255,255,0.40)'} style={{ flexShrink: 0, transition: 'color 0.2s' }} />
+        <MapPin size={15} color={focused === 'city' ? BAI.caramel : 'rgba(255,255,255,0.38)'} style={{ flexShrink: 0, transition: 'color 0.18s' }} />
         <input
-          type="text"
-          placeholder="Ville, code postal…"
-          value={city}
-          onChange={e => setCity(e.target.value)}
-          onFocus={() => setFocused('city')}
-          onBlur={() => setFocused(null)}
-          style={{
-            background: 'transparent', border: 'none', outline: 'none',
-            fontFamily: BAI.fontBody, fontSize: 15, color: '#ffffff',
-            width: '100%', minWidth: 0,
-          }}
+          type="text" placeholder="Ville, code postal…"
+          value={city} onChange={e => setCity(e.target.value)}
+          onFocus={() => setFocused('city')} onBlur={() => setFocused(null)}
+          style={{ ...inputBase, fontSize: 15 }}
         />
       </div>
 
-      {/* Separator */}
-      <div className="hero-sep" style={{ width: 1, background: 'rgba(255,255,255,0.10)', margin: '8px 0', flexShrink: 0 }} />
+      <div style={{ width: 1, background: 'rgba(255,255,255,0.10)', margin: '10px 0', flexShrink: 0 }} />
 
       {/* Type */}
-      <select
-        value={type}
-        onChange={e => setType(e.target.value)}
-        onFocus={() => setFocused('type')}
-        onBlur={() => setFocused(null)}
-        style={{
-          flex: 1,
-          background: focused === 'type' ? 'rgba(255,255,255,0.08)' : 'transparent',
-          border: 'none', outline: 'none',
-          fontFamily: BAI.fontBody, fontSize: 14,
-          color: type ? '#ffffff' : 'rgba(255,255,255,0.45)',
-          padding: '12px 14px',
-          borderRadius: 10,
-          cursor: 'pointer',
-          appearance: 'none',
-          WebkitAppearance: 'none',
-          transition: 'background 0.2s',
-          minWidth: 100,
-        }}
-      >
-        {PROPERTY_TYPES.map(o => <option key={o.value} value={o.value} style={{ background: '#111827', color: '#fff' }}>{o.label}</option>)}
-      </select>
+      <div style={{
+        flex: 1, display: 'flex', alignItems: 'center', gap: 10,
+        padding: '0 16px', height: 54, borderRadius: 10, minWidth: 0,
+        background: focused === 'type' ? 'rgba(255,255,255,0.10)' : 'transparent',
+        transition: 'background 0.18s',
+      }}>
+        <Building2 size={15} color={focused === 'type' ? BAI.caramel : 'rgba(255,255,255,0.38)'} style={{ flexShrink: 0, transition: 'color 0.18s' }} />
+        <select
+          value={type} onChange={e => setType(e.target.value)}
+          onFocus={() => setFocused('type')} onBlur={() => setFocused(null)}
+          style={{ ...inputBase, fontSize: 14, appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', color: type ? '#fff' : 'rgba(255,255,255,0.45)' }}
+        >
+          {PROPERTY_TYPES.map(o => <option key={o.value} value={o.value} style={{ background: '#111827', color: '#fff' }}>{o.label}</option>)}
+        </select>
+      </div>
 
-      {/* Separator */}
-      <div className="hero-sep" style={{ width: 1, background: 'rgba(255,255,255,0.10)', margin: '8px 0', flexShrink: 0 }} />
+      <div style={{ width: 1, background: 'rgba(255,255,255,0.10)', margin: '10px 0', flexShrink: 0 }} />
 
-      {/* Budget */}
-      <select
-        value={priceRange}
-        onChange={e => setPriceRange(e.target.value)}
-        onFocus={() => setFocused('budget')}
-        onBlur={() => setFocused(null)}
-        style={{
-          flex: 1,
-          background: focused === 'budget' ? 'rgba(255,255,255,0.08)' : 'transparent',
-          border: 'none', outline: 'none',
-          fontFamily: BAI.fontBody, fontSize: 14,
-          color: priceRange ? '#ffffff' : 'rgba(255,255,255,0.45)',
-          padding: '12px 14px',
-          borderRadius: 10,
-          cursor: 'pointer',
-          appearance: 'none',
-          WebkitAppearance: 'none',
-          transition: 'background 0.2s',
-          minWidth: 120,
-        }}
-      >
-        {PRICE_RANGES.map(o => <option key={o.value} value={o.value} style={{ background: '#111827', color: '#fff' }}>{o.label}</option>)}
-      </select>
+      {/* Budget max */}
+      <div style={{
+        flex: 1, display: 'flex', alignItems: 'center', gap: 10,
+        padding: '0 16px', height: 54, borderRadius: 10, minWidth: 0,
+        background: focused === 'budget' ? 'rgba(255,255,255,0.10)' : 'transparent',
+        transition: 'background 0.18s',
+      }}>
+        <Euro size={15} color={focused === 'budget' ? BAI.caramel : 'rgba(255,255,255,0.38)'} style={{ flexShrink: 0, transition: 'color 0.18s' }} />
+        <input
+          type="number" inputMode="numeric" placeholder="Budget max. (€/mois)"
+          value={maxBudget} onChange={e => setMaxBudget(e.target.value)}
+          onFocus={() => setFocused('budget')} onBlur={() => setFocused(null)}
+          min="0" step="50"
+          style={{ ...inputBase, fontSize: 14, color: maxBudget ? '#fff' : 'rgba(255,255,255,0.45)' }}
+        />
+      </div>
 
       {/* CTA */}
       <motion.button
-        type="submit"
-        whileHover={{ scale: 1.03 }}
-        whileTap={{ scale: 0.97 }}
+        type="submit" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
         style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          background: BAI.caramel,
-          border: 'none', borderRadius: 10,
-          padding: '0 24px', height: 52, flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          background: BAI.caramel, border: 'none', borderRadius: 10,
+          padding: '0 26px', height: 54, flexShrink: 0,
           fontFamily: BAI.fontBody, fontSize: 15, fontWeight: 700,
           color: '#fff', cursor: 'pointer',
           boxShadow: '0 2px 12px rgba(196,151,106,0.40)',
@@ -281,7 +361,7 @@ export default function Home() {
 
   const [city, setCity] = useState('')
   const [type, setType] = useState('')
-  const [priceRange, setPriceRange] = useState('')
+  const [maxBudget, setMaxBudget] = useState('')
   const [allProperties, setAllProperties] = useState<Property[]>([])
   const [page, setPage] = useState(1)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -295,11 +375,7 @@ export default function Home() {
     const filters: Record<string, unknown> = { status: 'AVAILABLE' }
     if (city.trim()) filters.city = city.trim()
     if (type) filters.type = type
-    if (priceRange) {
-      const [min, max] = priceRange.split('-')
-      if (min) filters.minPrice = Number(min)
-      if (max) filters.maxPrice = Number(max)
-    }
+    if (maxBudget) filters.maxPrice = Number(maxBudget)
     return filters
   }
 
@@ -309,7 +385,7 @@ export default function Home() {
     setAllProperties([])
     setPage(1)
     fetchProperties(buildFilters(), { page: 1, limit: LIMIT }).catch(() => {})
-  }, [type, priceRange, authLoading])
+  }, [type, maxBudget, authLoading])
 
   useEffect(() => {
     if (page === 1) {
@@ -363,12 +439,10 @@ export default function Home() {
         .ticker-track { animation: ticker-slide 36s linear infinite; }
         .ticker-track:hover { animation-play-state: paused; }
 
-        /* ── Hero search responsive ── */
-        @media (max-width: 700px) {
-          .hero-searchbox { flex-direction: column !important; border-radius: 14px !important; padding: 6px !important; }
-          .hero-sep { display: none !important; }
-          .hero-searchbox select, .hero-searchbox input { border-radius: 8px !important; background: rgba(255,255,255,0.08) !important; }
-        }
+        /* ── Hero search — hide number spinners ── */
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
 
         /* ── Bento grid ── */
         .bento-grid {
@@ -565,7 +639,7 @@ export default function Home() {
                 <SearchBox
                   city={city} setCity={setCity}
                   type={type} setType={setType}
-                  priceRange={priceRange} setPriceRange={setPriceRange}
+                  maxBudget={maxBudget} setMaxBudget={setMaxBudget}
                 />
               </div>
 
@@ -1420,7 +1494,7 @@ export default function Home() {
               <Building2 size={48} color={BAI.inkFaint} style={{ opacity: 0.25, margin: '0 auto 16px', display: 'block' }} />
               <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 22, color: BAI.inkMid, marginBottom: 8 }}>Aucun bien pour ces critères.</p>
               <p style={{ fontSize: 14, color: BAI.inkFaint, marginBottom: 24 }}>Essayez de modifier vos filtres.</p>
-              <button onClick={() => { setCity(''); setType(''); setPriceRange('') }} style={{ background: BAI.night, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+              <button onClick={() => { setCity(''); setType(''); setMaxBudget('') }} style={{ background: BAI.night, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                 Effacer les filtres
               </button>
             </motion.div>

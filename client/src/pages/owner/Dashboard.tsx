@@ -12,13 +12,15 @@ import { BAI } from '../../constants/bailio-tokens'
 import {
   Plus, ArrowRight, ShieldAlert, Calendar,
   Home, ClipboardList, MessageSquare, ChevronRight, HelpCircle,
+  FileText, TrendingUp, Receipt, LayoutDashboard, Users,
 } from 'lucide-react'
 import { apiClient } from '../../services/api.service'
 import type { Application } from '../../types/application.types'
 import type { Booking } from '../../types/booking.types'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { GuidedTour } from '../../components/ui/GuidedTour'
+import { PlatformTour } from '../../components/ui/PlatformTour'
+import type { TourFeature } from '../../components/ui/PlatformTour'
 
 const TOUR_KEY = 'bailio_tour_owner_v1'
 
@@ -191,33 +193,95 @@ export default function OwnerDashboard() {
   const [upcomingVisits, setUpcomingVisits] = useState<Booking[]>([])
   const [identityVerified, setIdentityVerified] = useState(true)
   const [tourKey, setTourKey] = useState(0)
+  const [tourImmediate, setTourImmediate] = useState(false)
 
-  // Tour target refs
+  // Tour target refs (kept for future spotlight steps if needed)
   const kpiRef       = useRef<HTMLDivElement>(null)
   const propsRef     = useRef<HTMLElement>(null)
   const activityRef  = useRef<HTMLElement>(null)
   const actionsRef   = useRef<HTMLDivElement>(null)
 
-  const tourSteps = [
+  const tourFeatures: TourFeature[] = [
     {
-      targetRef: kpiRef,
-      title: 'Vos métriques clés',
-      desc: 'Candidatures à traiter, visites planifiées, messages non lus — tout ce qui nécessite votre attention aujourd\'hui. Cliquez sur une carte pour y accéder directement.',
+      icon: LayoutDashboard,
+      iconBg: 'rgba(196,151,106,0.16)',
+      iconColor: BAI.caramel,
+      label: 'Tableau de bord',
+      title: 'Votre centre de contrôle',
+      desc: 'Candidatures à traiter, visites planifiées, messages non lus — tout ce qui nécessite votre attention aujourd\'hui, résumé en un coup d\'œil. Agissez directement depuis les cartes.',
     },
     {
-      targetRef: propsRef,
-      title: 'Mes biens',
-      desc: 'Toutes vos annonces de location. Publiez un bien en 5 minutes grâce au formulaire guidé. Les locataires peuvent candidater dès la publication.',
+      icon: Home,
+      iconBg: 'rgba(26,50,112,0.28)',
+      iconColor: '#7aa4f0',
+      label: 'Mes annonces',
+      title: 'Publiez et gérez vos biens',
+      desc: 'Créez une annonce complète en 5 minutes grâce au formulaire guidé : photos, description, loyer, critères de solvabilité. Les locataires peuvent candidater dès la publication.',
+      link: '/properties/owner/me',
     },
     {
-      targetRef: activityRef,
-      title: 'Activité récente',
-      desc: 'Flux en temps réel : nouvelles candidatures, visites à venir. Agissez vite — les bons dossiers partent souvent en 48h.',
+      icon: ClipboardList,
+      iconBg: 'rgba(27,94,59,0.28)',
+      iconColor: '#5fcf96',
+      label: 'Candidatures',
+      title: 'Évaluez les dossiers locataires',
+      desc: 'Chaque candidature arrive avec le dossier complet du locataire : revenus, pièce d\'identité, justificatifs d\'emploi. Acceptez, refusez ou planifiez une visite directement depuis cette page.',
+      link: '/applications/manage',
     },
     {
-      targetRef: actionsRef,
-      title: 'Actions rapides',
-      desc: 'Les raccourcis essentiels pour votre quotidien : créer une annonce, gérer les candidatures, lire vos messages.',
+      icon: Calendar,
+      iconBg: 'rgba(196,151,106,0.18)',
+      iconColor: BAI.caramel,
+      label: 'Visites',
+      title: 'Planifiez votre agenda de visites',
+      desc: 'Proposez des créneaux de visite aux candidats. Ils confirment directement depuis leur espace — sans échange d\'emails, sans appel téléphonique. Les confirmations apparaissent en temps réel.',
+      link: '/bookings/manage',
+    },
+    {
+      icon: MessageSquare,
+      iconBg: 'rgba(26,50,112,0.22)',
+      iconColor: '#7aa4f0',
+      label: 'Messages',
+      title: 'Communiquez avec vos locataires',
+      desc: 'Échangez directement avec vos candidats et locataires. Historique complet, pièces jointes, notifications instantanées — tout est centralisé, rien ne se perd.',
+      link: '/messages',
+    },
+    {
+      icon: FileText,
+      iconBg: 'rgba(27,94,59,0.24)',
+      iconColor: '#5fcf96',
+      label: 'Contrats',
+      title: 'Bail électronique conforme eIDAS',
+      desc: 'Rédigez votre bail à partir du modèle Loi ALUR, personnalisez-le et envoyez-le en signature électronique. Le locataire signe depuis son téléphone — aucun déplacement, aucune impression.',
+      link: '/contracts',
+      tag: 'eIDAS',
+    },
+    {
+      icon: TrendingUp,
+      iconBg: 'rgba(196,151,106,0.16)',
+      iconColor: BAI.caramel,
+      label: 'Finances',
+      title: 'Suivez vos revenus locatifs',
+      desc: 'Tableau de bord financier complet : loyers encaissés, charges, rentabilité par bien. Générez des rapports mensuels et suivez l\'évolution de votre patrimoine en un coup d\'œil.',
+      link: '/owner/finances',
+    },
+    {
+      icon: Receipt,
+      iconBg: 'rgba(26,50,112,0.20)',
+      iconColor: '#7aa4f0',
+      label: 'Quittances',
+      title: 'Quittances automatiques conformes',
+      desc: 'Générez les quittances de loyer de vos locataires en un clic, conformément à l\'article 21 de la Loi ALUR. Envoyées automatiquement par email, archivées dans votre espace.',
+      link: '/owner/quittances',
+    },
+    {
+      icon: Users,
+      iconBg: 'rgba(27,94,59,0.20)',
+      iconColor: '#5fcf96',
+      label: 'Mes locataires',
+      title: 'Gérez votre portefeuille locataire',
+      desc: 'Vue d\'ensemble de tous vos locataires actifs : contrats en cours, loyers, coordonnées. Accédez à l\'historique complet de chaque relation locative en un clic.',
+      link: '/owner/locataires',
     },
   ]
 
@@ -382,7 +446,7 @@ export default function OwnerDashboard() {
               Voici un résumé de votre activité.
             </p>
             <button
-              onClick={() => { localStorage.removeItem(TOUR_KEY); setTourKey(k => k + 1) }}
+              onClick={() => { localStorage.removeItem(TOUR_KEY); setTourImmediate(true); setTourKey(k => k + 1) }}
               title="Lancer le guide interactif"
               style={{
                 display: 'flex', alignItems: 'center', gap: 5,
@@ -665,7 +729,13 @@ export default function OwnerDashboard() {
         </div>
       </div>
 
-      <GuidedTour key={tourKey} steps={tourSteps} storageKey={TOUR_KEY} />
+      <PlatformTour
+        key={tourKey}
+        features={tourFeatures}
+        storageKey={TOUR_KEY}
+        tourTitle="Votre espace propriétaire"
+        immediate={tourImmediate}
+      />
     </Layout>
   )
 }
