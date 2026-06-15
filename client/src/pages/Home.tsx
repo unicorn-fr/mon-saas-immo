@@ -115,13 +115,21 @@ const TESTIMONIALS = [
 // ─── SearchBox ────────────────────────────────────────────────────────────────
 
 const BUDGET_PRESETS = [
-  { label: '600 €', value: '600' },
   { label: '800 €', value: '800' },
   { label: '1 000 €', value: '1000' },
-  { label: '1 200 €', value: '1200' },
   { label: '1 500 €', value: '1500' },
   { label: '2 000 €+', value: '2000' },
 ]
+
+const SUG_STYLE: React.CSSProperties = {
+  position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 200,
+  background: 'rgba(8,11,26,0.97)',
+  backdropFilter: 'blur(24px) saturate(160%)',
+  WebkitBackdropFilter: 'blur(24px) saturate(160%)',
+  border: '1px solid rgba(255,255,255,0.12)',
+  borderRadius: 14, overflow: 'hidden',
+  boxShadow: '0 12px 40px rgba(0,0,0,0.50)',
+}
 
 interface SearchBoxProps {
   city: string; setCity: (v: string) => void
@@ -132,6 +140,9 @@ interface SearchBoxProps {
 function SearchBox({ city, setCity, type, setType, maxBudget, setMaxBudget }: SearchBoxProps) {
   const [focused, setFocused] = useState<string | null>(null)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700)
+  const [suggestions, setSuggestions] = useState<string[]>([])
+  const [showSug, setShowSug] = useState(false)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -140,8 +151,29 @@ function SearchBox({ city, setCity, type, setType, maxBudget, setMaxBudget }: Se
     return () => window.removeEventListener('resize', h)
   }, [])
 
+  const handleCityChange = (val: string) => {
+    setCity(val)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (val.length < 2) { setSuggestions([]); setShowSug(false); return }
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const r = await fetch(`https://geo.api.gouv.fr/communes?nom=${encodeURIComponent(val)}&fields=nom&boost=population&limit=5`)
+        const data: { nom: string }[] = await r.json()
+        setSuggestions(data.map(c => c.nom))
+        setShowSug(true)
+      } catch { /* silent */ }
+    }, 220)
+  }
+
+  const selectCity = (name: string) => {
+    setCity(name)
+    setSuggestions([])
+    setShowSug(false)
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    setShowSug(false)
     const params = new URLSearchParams()
     if (city.trim()) params.set('city', city.trim())
     if (type) params.set('type', type)
@@ -174,6 +206,29 @@ function SearchBox({ city, setCity, type, setType, maxBudget, setMaxBudget }: Se
     color: 'rgba(255,255,255,0.38)', display: 'block', marginBottom: 5,
   }
 
+  const SuggestionsDropdown = showSug && suggestions.length > 0 ? (
+    <div style={SUG_STYLE}>
+      {suggestions.map(name => (
+        <button
+          key={name} type="button"
+          onMouseDown={e => { e.preventDefault(); selectCity(name) }}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            width: '100%', padding: '11px 16px', border: 'none',
+            background: 'transparent', cursor: 'pointer', textAlign: 'left',
+            color: 'rgba(255,255,255,0.88)', fontFamily: BAI.fontBody, fontSize: 14,
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.07)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+        >
+          <MapPin size={13} color={BAI.caramel} style={{ flexShrink: 0 }} />
+          {name}
+        </button>
+      ))}
+    </div>
+  ) : null
+
   /* ── MOBILE ─────────────────────────────────────────────────────────────── */
   if (isMobile) {
     return (
@@ -181,17 +236,20 @@ function SearchBox({ city, setCity, type, setType, maxBudget, setMaxBudget }: Se
         style={{ ...glassCard, padding: 14, boxShadow: '0 8px 40px rgba(0,0,0,0.35)', display: 'flex', flexDirection: 'column', gap: 10 }}
       >
         {/* Ville */}
-        <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: '13px 16px' }}>
+        <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: '13px 16px', position: 'relative' }}>
           <span style={labelStyle}>Où cherchez-vous ?</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <MapPin size={16} color={focused === 'city' ? BAI.caramel : 'rgba(255,255,255,0.40)'} style={{ flexShrink: 0 }} />
             <input
               type="text" placeholder="Paris, Lyon, Marseille…"
-              value={city} onChange={e => setCity(e.target.value)}
-              onFocus={() => setFocused('city')} onBlur={() => setFocused(null)}
+              value={city}
+              onChange={e => handleCityChange(e.target.value)}
+              onFocus={() => { setFocused('city'); if (suggestions.length) setShowSug(true) }}
+              onBlur={() => { setFocused(null); setTimeout(() => setShowSug(false), 120) }}
               style={{ ...inputBase, fontSize: 16 }}
             />
           </div>
+          {SuggestionsDropdown}
         </div>
 
         {/* Type + Budget côte à côte */}
@@ -226,8 +284,8 @@ function SearchBox({ city, setCity, type, setType, maxBudget, setMaxBudget }: Se
           </div>
         </div>
 
-        {/* Budget presets — chips SeLoger style */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, paddingLeft: 2 }}>
+        {/* Budget presets */}
+        <div style={{ display: 'flex', gap: 8, paddingLeft: 2 }}>
           {BUDGET_PRESETS.map(({ label: lbl, value: v }) => {
             const active = maxBudget === v
             return (
@@ -235,12 +293,12 @@ function SearchBox({ city, setCity, type, setType, maxBudget, setMaxBudget }: Se
                 type="button" key={v}
                 onClick={() => setMaxBudget(active ? '' : v)}
                 style={{
-                  padding: '6px 14px', borderRadius: 20, cursor: 'pointer',
-                  border: `1px solid ${active ? 'rgba(196,151,106,0.55)' : 'rgba(255,255,255,0.20)'}`,
-                  background: active ? 'rgba(196,151,106,0.22)' : 'rgba(255,255,255,0.05)',
-                  color: active ? '#ffffff' : 'rgba(255,255,255,0.62)',
-                  fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600,
-                  transition: 'all 0.15s',
+                  flex: 1, padding: '7px 0', borderRadius: 20, cursor: 'pointer',
+                  border: `1px solid ${active ? 'rgba(196,151,106,0.55)' : 'rgba(255,255,255,0.18)'}`,
+                  background: active ? 'rgba(196,151,106,0.20)' : 'rgba(255,255,255,0.04)',
+                  color: active ? '#ffffff' : 'rgba(255,255,255,0.58)',
+                  fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600,
+                  transition: 'all 0.15s', whiteSpace: 'nowrap',
                 }}
               >
                 {lbl}
@@ -277,19 +335,24 @@ function SearchBox({ city, setCity, type, setType, maxBudget, setMaxBudget }: Se
       }}
     >
       {/* Ville */}
-      <div style={{
-        flex: 2, display: 'flex', alignItems: 'center', gap: 10,
-        padding: '0 18px', height: 54, borderRadius: 10, minWidth: 0,
-        background: focused === 'city' ? 'rgba(255,255,255,0.10)' : 'transparent',
-        transition: 'background 0.18s',
-      }}>
-        <MapPin size={15} color={focused === 'city' ? BAI.caramel : 'rgba(255,255,255,0.38)'} style={{ flexShrink: 0, transition: 'color 0.18s' }} />
-        <input
-          type="text" placeholder="Ville, code postal…"
-          value={city} onChange={e => setCity(e.target.value)}
-          onFocus={() => setFocused('city')} onBlur={() => setFocused(null)}
-          style={{ ...inputBase, fontSize: 15 }}
-        />
+      <div style={{ flex: 2, position: 'relative', minWidth: 0 }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '0 18px', height: 54, borderRadius: 10,
+          background: focused === 'city' ? 'rgba(255,255,255,0.10)' : 'transparent',
+          transition: 'background 0.18s',
+        }}>
+          <MapPin size={15} color={focused === 'city' ? BAI.caramel : 'rgba(255,255,255,0.38)'} style={{ flexShrink: 0, transition: 'color 0.18s' }} />
+          <input
+            type="text" placeholder="Ville, code postal…"
+            value={city}
+            onChange={e => handleCityChange(e.target.value)}
+            onFocus={() => { setFocused('city'); if (suggestions.length) setShowSug(true) }}
+            onBlur={() => { setFocused(null); setTimeout(() => setShowSug(false), 120) }}
+            style={{ ...inputBase, fontSize: 15 }}
+          />
+        </div>
+        {SuggestionsDropdown}
       </div>
 
       <div style={{ width: 1, background: 'rgba(255,255,255,0.10)', margin: '10px 0', flexShrink: 0 }} />
