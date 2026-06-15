@@ -45,7 +45,7 @@ class BookingService {
       throw new Error('Property not found')
     }
 
-    if (property.status !== 'AVAILABLE') {
+    if (property.status !== 'AVAILABLE' && property.status !== 'RESERVED') {
       throw new Error('Property is not available for booking')
     }
 
