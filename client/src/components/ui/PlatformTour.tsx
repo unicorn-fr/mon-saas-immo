@@ -52,6 +52,14 @@ export function PlatformTour({
     return () => clearTimeout(t)
   }, [storageKey, immediate])
 
+  /* ── Body scroll lock on mobile ────────────────────────────── */
+  useEffect(() => {
+    if (!visible) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [visible])
+
   /* ── Resize ─────────────────────────────────────────────────── */
   useEffect(() => {
     const h = () => setWindowW(window.innerWidth)
@@ -135,7 +143,7 @@ export function PlatformTour({
           transform: 'translate(-50%,-50%)',
           zIndex: 9501,
           width: isSmall ? '96vw' : 'min(860px, 92vw)',
-          maxHeight: '88vh',
+          maxHeight: isSmall ? 'min(92dvh, 92vh)' : '88vh',
           borderRadius: 22,
           display: 'flex', flexDirection: 'column',
           overflow: 'hidden',
@@ -337,10 +345,11 @@ export function PlatformTour({
                 <button
                   onClick={() => handleNav(cur.link!)}
                   style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 7,
-                    padding: '11px 22px', borderRadius: 10,
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                    width: isSmall ? '100%' : 'auto',
+                    padding: isSmall ? '14px 22px' : '11px 22px', borderRadius: 10,
                     background: BAI.caramel, color: '#fff', border: 'none',
-                    fontFamily: BAI.fontBody, fontSize: 13.5, fontWeight: 700,
+                    fontFamily: BAI.fontBody, fontSize: isSmall ? 15 : 13.5, fontWeight: 700,
                     cursor: 'pointer',
                     boxShadow: '0 4px 20px rgba(196,151,106,0.32)',
                     transition: 'transform 0.15s, box-shadow 0.15s',
@@ -396,23 +405,27 @@ export function PlatformTour({
 
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: isSmall ? '12px 18px 14px' : '13px 24px 15px',
+            padding: isSmall ? '10px 16px 12px' : '13px 24px 15px',
           }}>
             <button onClick={finish} style={{
               background: 'none', border: 'none', cursor: 'pointer',
-              fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 500,
-              color: 'rgba(255,255,255,0.25)', letterSpacing: '0.02em', padding: 0,
+              fontFamily: BAI.fontBody, fontSize: isSmall ? 13 : 12, fontWeight: 500,
+              color: 'rgba(255,255,255,0.25)', letterSpacing: '0.02em',
+              padding: isSmall ? '10px 4px' : '0',
+              minHeight: isSmall ? 44 : 'auto',
             }}>
-              Passer le guide
+              Passer
             </button>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{
-                fontFamily: BAI.fontBody, fontSize: 11,
-                color: 'rgba(255,255,255,0.22)', letterSpacing: '0.06em',
-              }}>
-                {idx + 1} / {features.length}
-              </span>
+              {!isSmall && (
+                <span style={{
+                  fontFamily: BAI.fontBody, fontSize: 11,
+                  color: 'rgba(255,255,255,0.22)', letterSpacing: '0.06em',
+                }}>
+                  {idx + 1} / {features.length}
+                </span>
+              )}
 
               <div style={{ display: 'flex', gap: 6 }}>
                 <button
@@ -420,34 +433,38 @@ export function PlatformTour({
                   disabled={idx === 0}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 3,
-                    padding: '7px 13px', borderRadius: 8,
+                    padding: isSmall ? '0 16px' : '7px 13px',
+                    height: isSmall ? 44 : 'auto',
+                    borderRadius: 10,
                     border: '1px solid rgba(255,255,255,0.10)',
                     background: 'rgba(255,255,255,0.04)',
                     color: idx === 0 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.60)',
-                    fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600,
+                    fontFamily: BAI.fontBody, fontSize: isSmall ? 14 : 12, fontWeight: 600,
                     cursor: idx === 0 ? 'default' : 'pointer',
                   }}
                 >
-                  <ChevronLeft size={12} /> Préc.
+                  <ChevronLeft size={isSmall ? 15 : 12} /> Préc.
                 </button>
 
                 <button
                   onClick={goNext}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 5,
-                    padding: '7px 18px', borderRadius: 8, border: 'none',
+                    padding: isSmall ? '0 22px' : '7px 18px',
+                    height: isSmall ? 44 : 'auto',
+                    borderRadius: 10, border: 'none',
                     background: idx === features.length - 1
                       ? BAI.tenant
                       : 'rgba(255,255,255,0.10)',
                     color: '#fff',
-                    fontFamily: BAI.fontBody, fontSize: 12.5, fontWeight: 700,
+                    fontFamily: BAI.fontBody, fontSize: isSmall ? 14 : 12.5, fontWeight: 700,
                     cursor: 'pointer',
                     transition: 'background 0.15s',
                   }}
                 >
                   {idx === features.length - 1
                     ? '✓ Terminé'
-                    : <> Suivant <ChevronRight size={12} /></>
+                    : <> Suivant <ChevronRight size={isSmall ? 15 : 12} /></>
                   }
                 </button>
               </div>
