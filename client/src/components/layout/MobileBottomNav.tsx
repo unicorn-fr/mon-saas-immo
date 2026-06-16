@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
@@ -5,6 +6,7 @@ import {
   MessageSquare, User, Search, ClipboardList,
 } from 'lucide-react'
 import { BAI } from '../../constants/bailio-tokens'
+import { prefetchRoute } from '../../utils/routePrefetch'
 
 interface NavItem {
   to: string
@@ -52,6 +54,12 @@ export function MobileBottomNav({
     ? OWNER_ITEMS(unreadMessages, pendingApps)
     : TENANT_ITEMS(unreadMessages, pendingApps)
 
+  // Précharge les 5 onglets dès le montage — élimine le délai réseau au tap
+  useEffect(() => {
+    const t = setTimeout(() => { items.forEach(i => prefetchRoute(i.to)) }, 300)
+    return () => clearTimeout(t)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 md:hidden"
@@ -74,6 +82,7 @@ export function MobileBottomNav({
             <NavLink
               key={item.to}
               to={item.to}
+              onTouchStart={() => prefetchRoute(item.to)}
               className="relative flex flex-col items-center justify-center flex-1 gap-0.5 py-1.5"
               aria-current={isActive ? 'page' : undefined}
               style={{ textDecoration: 'none' }}
