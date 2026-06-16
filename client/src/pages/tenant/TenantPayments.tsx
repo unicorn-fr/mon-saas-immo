@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Layout } from '../../components/layout/Layout'
 import { BAI } from '../../constants/bailio-tokens'
 import { apiClient } from '../../services/api.service'
 import toast from 'react-hot-toast'
@@ -129,8 +128,7 @@ export default function TenantPayments() {
   const totalRent = contract ? (contract.monthlyRent + (contract.charges ?? 0)) : 0
 
   return (
-    <Layout>
-      {/* ── Hero sombre ── */}
+    <>      {/* ── Hero sombre ── */}
       <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)' }}>
         <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
           FINANCES
@@ -386,6 +384,5 @@ export default function TenantPayments() {
           )}
         </div>
       </div>
-    </Layout>
-  )
+    </>  )
 }

@@ -9,7 +9,6 @@ import { ContractClause } from '../../types/contract.types'
 import { DEFAULT_CLAUSES } from '../../data/loiAlurClauses'
 import { PDFDownloadLink } from '@react-pdf/renderer'
 import { ContractPDF } from '../../components/contract/ContractPDF'
-import { Layout } from '../../components/layout/Layout'
 import { applicationService } from '../../services/application.service'
 import {
   ArrowLeft,
@@ -285,8 +284,7 @@ export default function CreateContract() {
   }
 
   return (
-    <Layout>
-      <div style={{ minHeight: '100vh', background: BAI.bgBase, fontFamily: BAI.fontBody }}>
+    <>      <div style={{ minHeight: '100vh', background: BAI.bgBase, fontFamily: BAI.fontBody }}>
 
         {/* Hero sombre Hyperbeat */}
         <div style={{ background: '#0a0d1a', padding: 'clamp(32px,5vw,56px) clamp(16px,4vw,48px) clamp(24px,4vw,40px)' }}>
@@ -1087,6 +1085,5 @@ export default function CreateContract() {
           </div>
         </div>
       </div>
-    </Layout>
-  )
+    </>  )
 }

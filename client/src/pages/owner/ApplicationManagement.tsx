@@ -12,7 +12,6 @@ import {
 import { applicationService } from '../../services/application.service'
 import { scoreColor } from '../../utils/matchingEngine'
 import type { Application, ApplicationStatus } from '../../types/application.types'
-import { Layout } from '../../components/layout/Layout'
 import { DossierReviewModal } from '../../components/document/DossierReviewModal'
 import { CalendarShareModal } from '../../components/booking/CalendarShareModal'
 import toast from 'react-hot-toast'
@@ -561,8 +560,7 @@ export default function ApplicationManagement() {
   ]
 
   return (
-    <Layout>
-      {dossierModal && (
+    <>      {dossierModal && (
         <DossierReviewModal
           tenantId={dossierModal.tenantId}
           tenantName={dossierModal.tenantName}
@@ -720,6 +718,5 @@ export default function ApplicationManagement() {
           )}
         </div>
       </div>
-    </Layout>
-  )
+    </>  )
 }

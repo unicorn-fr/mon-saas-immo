@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Check, Star, Crown, ArrowRight, Loader2, X } from 'lucide-react'
-import { Layout } from '../../components/layout/Layout'
 import { usePlan } from '../../hooks/usePlan'
 import { apiClient } from '../../services/api.service'
 import { PLANS, FEATURE_TABLE, FAQ_ITEMS } from '../../config/pricing'
@@ -66,16 +65,13 @@ export default function Abonnement() {
   }
 
   if (loading) return (
-    <Layout>
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: BAI.bgBase }}>
+    <>      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: BAI.bgBase }}>
         <Loader2 className="animate-spin" style={{ width: 32, height: 32, color: BAI.inkFaint }} />
       </div>
-    </Layout>
-  )
+    </>  )
 
   return (
-    <Layout>
-      <div>
+    <>      <div>
 
         {/* ── DARK HERO ── */}
         <div style={{
@@ -429,6 +425,5 @@ export default function Abonnement() {
         </div>{/* end inner max-w */}
         </div>{/* end contenu light */}
       </div>{/* end root */}
-    </Layout>
-  )
+    </>  )
 }

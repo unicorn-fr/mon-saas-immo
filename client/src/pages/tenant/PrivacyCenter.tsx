@@ -16,7 +16,6 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
-import { Layout } from '../../components/layout/Layout'
 import { privacyApi, DossierAccessLog } from '../../services/dossier.service'
 import toast from 'react-hot-toast'
 import { BAI } from '../../constants/bailio-tokens'
@@ -301,8 +300,7 @@ export default function PrivacyCenter() {
   const visibleLogs = showAllLogs ? accessLogs : accessLogs.slice(0, 5)
 
   return (
-    <Layout>
-      {/* ── Hero sombre Hyperbeat ── */}
+    <>      {/* ── Hero sombre Hyperbeat ── */}
       <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)' }}>
         <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
           RGPD &amp; CONFIDENTIALITÉ
@@ -628,6 +626,5 @@ export default function PrivacyCenter() {
           />
         )}
       </AnimatePresence>
-    </Layout>
-  )
+    </>  )
 }

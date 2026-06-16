@@ -4,7 +4,6 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useContractStore } from '../../store/contractStore'
 import { useDocumentStore } from '../../store/documentStore'
 import { useAuth } from '../../hooks/useAuth'
-import { Layout } from '../../components/layout/Layout'
 import { EDLPDF } from '../../components/contract/EDLPDF'
 import {
   EDLType,
@@ -80,8 +79,7 @@ export default function EtatDesLieux() {
 
   if (!contract || !edl) {
     return (
-      <Layout>
-        <div
+      <>        <div
           className="flex items-center justify-center min-h-screen"
           style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}
         >
@@ -97,8 +95,7 @@ export default function EtatDesLieux() {
             <p style={{ fontSize: 13, color: BAI.inkFaint }}>Chargement…</p>
           </div>
         </div>
-      </Layout>
-    )
+      </>    )
   }
 
   // Get uploaded EDL documents
@@ -315,8 +312,7 @@ export default function EtatDesLieux() {
   }
 
   return (
-    <Layout>
-      <div style={{ minHeight: '100vh', background: BAI.bgBase, fontFamily: BAI.fontBody }}>
+    <>      <div style={{ minHeight: '100vh', background: BAI.bgBase, fontFamily: BAI.fontBody }}>
 
         {/* Hero sombre Hyperbeat */}
         <div style={{ background: '#0a0d1a', padding: 'clamp(32px,5vw,56px) clamp(16px,4vw,48px) clamp(24px,4vw,40px)' }}>
@@ -806,6 +802,5 @@ export default function EtatDesLieux() {
           </div>
         </div>
       </div>
-    </Layout>
-  )
+    </>  )
 }

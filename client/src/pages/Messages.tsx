@@ -6,7 +6,6 @@ import { CreateLeaseModal } from '../components/message/CreateLeaseModal'
 import { ContractActivityFeed } from '../components/message/ContractActivityFeed'
 import { Conversation } from '../types/message.types'
 import { MessageSquare, FolderOpen, Home, FileText } from 'lucide-react'
-import { Layout } from '../components/layout/Layout'
 import { useAuth } from '../hooks/useAuth'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
@@ -46,8 +45,7 @@ export default function Messages() {
     : ''
 
   return (
-    <Layout>
-      <motion.div
+    <>      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.22 }}
@@ -323,6 +321,5 @@ export default function Messages() {
           onSuccess={(contractId) => { setShowLeaseModal(false); navigate(`/contracts/${contractId}`) }}
         />
       )}
-    </Layout>
-  )
+    </>  )
 }

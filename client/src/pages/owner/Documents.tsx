@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { pdf, Document, Page, Text, StyleSheet } from '@react-pdf/renderer'
-import { Layout } from '../../components/layout/Layout'
 import { BAI } from '../../constants/bailio-tokens'
 import {
   FileText, Download, Copy, Check, AlertTriangle, TrendingUp,
@@ -1079,8 +1078,7 @@ export default function Documents() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <Layout>
-      <div>
+    <>      <div>
 
         {/* ── DARK HERO ── */}
         <div style={{
@@ -1452,6 +1450,5 @@ export default function Documents() {
         {/* Spinner keyframe */}
         <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
       </div>{/* end root */}
-    </Layout>
-  )
+    </>  )
 }

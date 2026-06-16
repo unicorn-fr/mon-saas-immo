@@ -20,7 +20,6 @@ import { CancelBookingModal } from '../../components/booking/CancelBookingModal'
 import { Calendar } from '../../components/booking/Calendar'
 import { VisitSlotsManager } from '../../components/booking/VisitSlotsManager'
 import { BookingStatus } from '../../types/booking.types'
-import { Layout } from '../../components/layout/Layout'
 import { BAI } from '../../constants/bailio-tokens'
 import toast from 'react-hot-toast'
 
@@ -174,8 +173,7 @@ export const BookingManagement = () => {
   ] : []
 
   return (
-    <Layout>
-      <div
+    <>      <div
         style={{ background: BAI.bgBase, minHeight: '100vh', fontFamily: BAI.fontBody }}
       >
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: 'clamp(20px,4vw,48px) clamp(16px,3vw,32px)' }}>
@@ -543,8 +541,7 @@ export const BookingManagement = () => {
         onConfirm={handleCancelConfirm}
         isLoading={actionLoading !== null}
       />
-    </Layout>
-  )
+    </>  )
 }
 
 export default BookingManagement

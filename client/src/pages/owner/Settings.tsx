@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { loadStripe } from '@stripe/stripe-js'
 import { BAI } from '../../constants/bailio-tokens'
 import { useNavigate } from 'react-router-dom'
-import { Layout } from '../../components/layout/Layout'
 import { useAuth } from '../../hooks/useAuth'
 import { authService } from '../../services/auth.service'
 import { apiClient } from '../../services/api.service'
@@ -581,8 +580,7 @@ export default function OwnerSettings() {
   const currentTabLabel = TABS.find(t => t.id === activeTab)?.label ?? ''
 
   return (
-    <Layout>
-      {/* Save bars for dirty tabs */}
+    <>      {/* Save bars for dirty tabs */}
       <SaveBar
         visible={activeTab === 'notifications' && notifDirty}
         saving={saving}
@@ -1673,7 +1671,6 @@ export default function OwnerSettings() {
 
       {/* Change Password Modal */}
       <ChangePasswordModal isOpen={showPasswordModal} onClose={() => setShowPasswordModal(false)} />
-    </Layout>
-  )
+    </>  )
 }
 

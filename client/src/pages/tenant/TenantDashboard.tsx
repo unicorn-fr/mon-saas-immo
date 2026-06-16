@@ -6,7 +6,6 @@ import { useContractStore } from '../../store/contractStore'
 import { applicationService } from '../../services/application.service'
 import { bookingService } from '../../services/booking.service'
 import { dossierService } from '../../services/dossier.service'
-import { Layout } from '../../components/layout/Layout'
 import { BAI } from '../../constants/bailio-tokens'
 import {
   FolderOpen, SendHorizonal, Calendar, FileText, CreditCard,
@@ -282,8 +281,7 @@ export default function TenantDashboard() {
 
   if (loading) {
     return (
-      <Layout>
-        <div style={{ display: 'flex', justifyContent: 'center', padding: 80 }}>
+      <>        <div style={{ display: 'flex', justifyContent: 'center', padding: 80 }}>
           <div style={{
             width: 32, height: 32, borderRadius: '50%',
             border: `3px solid ${BAI.border}`, borderTopColor: BAI.caramel,
@@ -291,13 +289,11 @@ export default function TenantDashboard() {
           }} />
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
-      </Layout>
-    )
+      </>    )
   }
 
   return (
-    <Layout>
-      {/* ── Hero dark strip ──────────────────────────────────────────────── */}
+    <>      {/* ── Hero dark strip ──────────────────────────────────────────────── */}
       <div style={{
         background: '#0a0d1a',
         padding: 'clamp(32px,5vw,56px) clamp(20px,5vw,48px) clamp(24px,4vw,40px)',
@@ -939,6 +935,5 @@ export default function TenantDashboard() {
         tourTitle="Votre espace locataire"
         immediate={tourImmediate}
       />
-    </Layout>
-  )
+    </>  )
 }

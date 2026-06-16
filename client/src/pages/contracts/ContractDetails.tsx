@@ -9,7 +9,6 @@ import { ContractClause } from '../../types/contract.types'
 import { SignaturePad } from '../../components/contract/SignaturePad'
 import { ContractPDF } from '../../components/contract/ContractPDF'
 import { DossierReviewModal } from '../../components/document/DossierReviewModal'
-import { Layout } from '../../components/layout/Layout'
 import { PDFDownloadLink } from '@react-pdf/renderer'
 import {
   FileText,
@@ -106,8 +105,7 @@ export default function ContractDetails() {
 
   if (!initialLoaded || (!contract && isLoading)) {
     return (
-      <Layout>
-        <div
+      <>        <div
           className="flex items-center justify-center min-h-screen"
           style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}
         >
@@ -123,14 +121,12 @@ export default function ContractDetails() {
             <p style={{ fontSize: 13, color: BAI.inkFaint }}>Chargement du contrat…</p>
           </div>
         </div>
-      </Layout>
-    )
+      </>    )
   }
 
   if (!contract) {
     return (
-      <Layout>
-        <div
+      <>        <div
           className="flex flex-col items-center justify-center min-h-screen gap-4"
           style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}
         >
@@ -154,8 +150,7 @@ export default function ContractDetails() {
             Retour aux contrats
           </button>
         </div>
-      </Layout>
-    )
+      </>    )
   }
 
   const isOwner = user?.id === contract.ownerId
@@ -363,8 +358,7 @@ export default function ContractDetails() {
   }
 
   return (
-    <Layout>
-      <div style={{ minHeight: '100vh', background: BAI.bgBase, fontFamily: BAI.fontBody }}>
+    <>      <div style={{ minHeight: '100vh', background: BAI.bgBase, fontFamily: BAI.fontBody }}>
         {/* Hero sombre Hyperbeat */}
         <div style={{ background: '#0a0d1a', padding: 'clamp(32px,5vw,56px) clamp(16px,4vw,48px) clamp(24px,4vw,40px)' }}>
           <div className="container mx-auto">
@@ -1820,6 +1814,5 @@ export default function ContractDetails() {
           onClose={() => setShowDossierModal(false)}
         />
       )}
-    </Layout>
-  )
+    </>  )
 }

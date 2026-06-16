@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { Layout } from '../../components/layout/Layout'
 import { BAI } from '../../constants/bailio-tokens'
 import { apiClient } from '../../services/api.service'
 import {
@@ -170,8 +169,7 @@ export default function Maintenance() {
   }
 
   return (
-    <Layout>
-      <div>
+    <>      <div>
 
         {/* === DARK HERO === */}
         <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)' }}>
@@ -350,6 +348,5 @@ export default function Maintenance() {
         </div>
 
       </div>
-    </Layout>
-  )
+    </>  )
 }

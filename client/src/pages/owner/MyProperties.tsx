@@ -19,7 +19,6 @@ import {
   MessageSquare,
   Building2,
 } from 'lucide-react'
-import { Layout } from '../../components/layout/Layout'
 import { StatusChangeModal } from '../../components/property/StatusChangeModal'
 import { BAI } from '../../constants/bailio-tokens'
 import toast from 'react-hot-toast'
@@ -321,8 +320,7 @@ export default function MyProperties() {
   }
 
   return (
-    <Layout>
-      <div style={{ background: BAI.bgBase, minHeight: '100vh', fontFamily: BAI.fontBody }}>
+    <>      <div style={{ background: BAI.bgBase, minHeight: '100vh', fontFamily: BAI.fontBody }}>
 
         {/* ── Page Header ── */}
         <div style={{ background: BAI.bgSurface, borderBottom: `1px solid ${BAI.border}` }}>
@@ -544,6 +542,5 @@ export default function MyProperties() {
           currentStatus={statusModalProperty.status}
         />
       )}
-    </Layout>
-  )
+    </>  )
 }

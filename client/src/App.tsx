@@ -9,6 +9,8 @@ import { ScrollToTop } from './components/ScrollToTop'
 import { ErrorBoundary } from './components/ErrorBoundary'
 
 // Pages — lazy-loaded for code splitting
+const LayoutRoute = lazy(() => import('./components/layout/LayoutRoute').then(m => ({ default: m.LayoutRoute })))
+
 const Home = lazy(() => import('./pages/Home'))
 const Login = lazy(() => import('./pages/Login'))
 const Register = lazy(() => import('./pages/Register'))
@@ -210,6 +212,12 @@ function App() {
 function AppRoutes() {
   const { isAuthenticated, isLoading, user } = useAuth()
 
+  // Précharge le chunk Layout (sidebar/header) dès l'authentification confirmée —
+  // évite tout flash au premier accès au dashboard.
+  useEffect(() => {
+    if (isAuthenticated) import('./components/layout/LayoutRoute')
+  }, [isAuthenticated])
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -280,41 +288,45 @@ function AppRoutes() {
       {/* <Route path="/search" element={<SearchPage />} /> */}
       {/* <Route path="/property/:id" element={<PropertyDetails />} /> */}
 
-      {/* Protected Routes - Owner Dashboard */}
+      {/* Protected Routes - Owner Dashboard — Layout monté une seule fois pour tout le groupe */}
       <Route element={<ProtectedRoute allowedRoles={['OWNER', 'ADMIN']} />}>
-        <Route path="/dashboard/owner" element={<Dashboard />} />
-        <Route path="/properties/owner/me" element={<MyProperties />} />
-        <Route path="/properties/new" element={<CreatePropertyWizard />} />
-        <Route path="/properties/:id/edit" element={<EditProperty />} />
-        <Route path="/properties/:id" element={<PropertyDetails />} />
-        <Route path="/bookings/manage" element={<BookingManagement />} />
-        <Route path="/applications/manage" element={<ApplicationManagement />} />
-        <Route path="/owner/tenants/:tenantId" element={<TenantProfile />} />
-        <Route path="/owner/settings" element={<OwnerSettings />} />
-        <Route path="/owner/rentabilite" element={<Rentabilite />} />
-        <Route path="/owner/finances" element={<Finance />} />
-        <Route path="/owner/maintenance" element={<Maintenance />} />
-        <Route path="/owner/quittances" element={<Quittances />} />
-        <Route path="/owner/locataires" element={<MesLocataires />} />
-        <Route path="/owner/documents" element={<Documents />} />
-        <Route path="/owner/outils" element={<Outils />} />
-        <Route path="/owner/abonnement" element={<Abonnement />} />
+        <Route element={<LayoutRoute />}>
+          <Route path="/dashboard/owner" element={<Dashboard />} />
+          <Route path="/properties/owner/me" element={<MyProperties />} />
+          <Route path="/properties/new" element={<CreatePropertyWizard />} />
+          <Route path="/properties/:id/edit" element={<EditProperty />} />
+          <Route path="/properties/:id" element={<PropertyDetails />} />
+          <Route path="/bookings/manage" element={<BookingManagement />} />
+          <Route path="/applications/manage" element={<ApplicationManagement />} />
+          <Route path="/owner/tenants/:tenantId" element={<TenantProfile />} />
+          <Route path="/owner/settings" element={<OwnerSettings />} />
+          <Route path="/owner/rentabilite" element={<Rentabilite />} />
+          <Route path="/owner/finances" element={<Finance />} />
+          <Route path="/owner/maintenance" element={<Maintenance />} />
+          <Route path="/owner/quittances" element={<Quittances />} />
+          <Route path="/owner/locataires" element={<MesLocataires />} />
+          <Route path="/owner/documents" element={<Documents />} />
+          <Route path="/owner/outils" element={<Outils />} />
+          <Route path="/owner/abonnement" element={<Abonnement />} />
+        </Route>
       </Route>
 
-      {/* Protected Routes - Tenant Dashboard */}
+      {/* Protected Routes - Tenant Dashboard — Layout monté une seule fois pour tout le groupe */}
       <Route element={<ProtectedRoute allowedRoles={['TENANT', 'ADMIN']} />}>
-        <Route path="/dashboard/tenant" element={<TenantDashboard />} />
-        <Route path="/favorites" element={<Favorites />} />
-        <Route path="/my-bookings" element={<MyBookings />} />
-        <Route path="/my-applications" element={<MyApplications />} />
-        <Route path="/dossier" element={<DossierLocatif />} />
-        <Route path="/dossier/partages" element={<DossierShareManager />} />
-        <Route path="/privacy" element={<PrivacyCenter />} />
-        <Route path="/tenant/settings" element={<TenantSettings />} />
-        <Route path="/tenant/maintenance" element={<TenantMaintenance />} />
-        <Route path="/tenant/documents" element={<TenantDocuments />} />
-        <Route path="/mes-alertes" element={<SearchAlerts />} />
-        <Route path="/tenant/payments" element={<TenantPayments />} />
+        <Route element={<LayoutRoute />}>
+          <Route path="/dashboard/tenant" element={<TenantDashboard />} />
+          <Route path="/favorites" element={<Favorites />} />
+          <Route path="/my-bookings" element={<MyBookings />} />
+          <Route path="/my-applications" element={<MyApplications />} />
+          <Route path="/dossier" element={<DossierLocatif />} />
+          <Route path="/dossier/partages" element={<DossierShareManager />} />
+          <Route path="/privacy" element={<PrivacyCenter />} />
+          <Route path="/tenant/settings" element={<TenantSettings />} />
+          <Route path="/tenant/maintenance" element={<TenantMaintenance />} />
+          <Route path="/tenant/documents" element={<TenantDocuments />} />
+          <Route path="/mes-alertes" element={<SearchAlerts />} />
+          <Route path="/tenant/payments" element={<TenantPayments />} />
+        </Route>
       </Route>
 
       <Route element={<ProtectedRoute />}>
@@ -323,17 +335,21 @@ function AppRoutes() {
 
       {/* Protected Routes - Create Contract (Owner only) — AVANT /contracts/:id */}
       <Route element={<ProtectedRoute allowedRoles={['OWNER', 'ADMIN']} />}>
-        <Route path="/contracts/new" element={<ErrorBoundary><CreateContract /></ErrorBoundary>} />
+        <Route element={<LayoutRoute />}>
+          <Route path="/contracts/new" element={<ErrorBoundary><CreateContract /></ErrorBoundary>} />
+        </Route>
       </Route>
 
-      {/* Protected Routes - All authenticated users */}
+      {/* Protected Routes - All authenticated users — Layout monté une seule fois pour tout le groupe */}
       <Route element={<ProtectedRoute />}>
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/messages" element={<Messages />} />
-        <Route path="/notifications" element={<Notifications />} />
-        <Route path="/contracts" element={<ContractsList />} />
-        <Route path="/contracts/:id" element={<ErrorBoundary><ContractDetails /></ErrorBoundary>} />
-        <Route path="/contracts/:id/edl" element={<EtatDesLieux />} />
+        <Route element={<LayoutRoute />}>
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/messages" element={<Messages />} />
+          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/contracts" element={<ContractsList />} />
+          <Route path="/contracts/:id" element={<ErrorBoundary><ContractDetails /></ErrorBoundary>} />
+          <Route path="/contracts/:id/edl" element={<EtatDesLieux />} />
+        </Route>
         <Route path="/contracts/:contractId/edl/session" element={<EdlSessionPage />} />
         <Route path="/edl/join" element={<EdlJoin />} />
       </Route>

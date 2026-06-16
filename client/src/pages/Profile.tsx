@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Layout } from '../components/layout/Layout'
 import { useAuth } from '../hooks/useAuth'
 import { authService } from '../services/auth.service'
 import ChangePasswordModal from '../components/auth/ChangePasswordModal'
@@ -226,8 +225,7 @@ export default function Profile() {
   const initials = `${user?.firstName?.[0] || ''}${user?.lastName?.[0] || ''}`.toUpperCase()
 
   return (
-    <Layout>
-      {/* ── Dark Hero ─────────────────────────────────────────────────── */}
+    <>      {/* ── Dark Hero ─────────────────────────────────────────────────── */}
       <div
         style={{
           background: '#0a0d1a',
@@ -1190,6 +1188,5 @@ export default function Profile() {
           </div>
         </div>
       )}
-    </Layout>
-  )
+    </>  )
 }

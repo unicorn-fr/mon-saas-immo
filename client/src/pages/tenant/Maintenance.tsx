@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { Layout } from '../../components/layout/Layout'
 import { BAI } from '../../constants/bailio-tokens'
 import { apiClient } from '../../services/api.service'
 import { Wrench, Plus, X, Clock, CheckCircle, AlertCircle, Loader } from 'lucide-react'
@@ -97,8 +96,7 @@ export default function TenantMaintenance() {
   }
 
   return (
-    <Layout>
-      {/* ── Hero sombre Hyperbeat ── */}
+    <>      {/* ── Hero sombre Hyperbeat ── */}
       <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)' }}>
         <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
           MON LOGEMENT
@@ -301,6 +299,5 @@ export default function TenantMaintenance() {
           )}
         </div>
       </div>
-    </Layout>
-  )
+    </>  )
 }

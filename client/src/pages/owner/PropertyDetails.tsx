@@ -24,7 +24,6 @@ import {
 import { useProperties } from '../../hooks/useProperties'
 import { propertyService } from '../../services/property.service'
 import { PROPERTY_TYPES, PROPERTY_STATUS, AMENITIES } from '../../types/property.types'
-import { Layout } from '../../components/layout/Layout'
 import toast from 'react-hot-toast'
 import { BAI } from '../../constants/bailio-tokens'
 
@@ -138,8 +137,7 @@ export default function PropertyDetails() {
   // ── Loading state ──────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <Layout>
-        <div
+      <>        <div
           className="flex items-center justify-center min-h-screen"
           style={{ background: BAI.bgBase }}
         >
@@ -148,15 +146,13 @@ export default function PropertyDetails() {
             style={{ borderColor: BAI.owner }}
           />
         </div>
-      </Layout>
-    )
+      </>    )
   }
 
   // ── Not found ──────────────────────────────────────────────────────────────
   if (!currentProperty) {
     return (
-      <Layout>
-        <div
+      <>        <div
           className="min-h-screen flex items-center justify-center"
           style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}
         >
@@ -181,8 +177,7 @@ export default function PropertyDetails() {
             </Link>
           </div>
         </div>
-      </Layout>
-    )
+      </>    )
   }
 
   const property = currentProperty
@@ -237,8 +232,7 @@ export default function PropertyDetails() {
   }
 
   return (
-    <Layout>
-      <div className="min-h-screen" style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}>
+    <>      <div className="min-h-screen" style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}>
 
         {/* === DARK HERO === */}
         <div
@@ -1032,6 +1026,5 @@ export default function PropertyDetails() {
           </div>
         </div>
       </div>
-    </Layout>
-  )
+    </>  )
 }

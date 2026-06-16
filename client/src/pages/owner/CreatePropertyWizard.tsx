@@ -9,7 +9,6 @@ import {
 import { useProperties } from '../../hooks/useProperties'
 import { ImageUpload } from '../../components/property/ImageUpload'
 import { RentAdvisor } from '../../components/property/RentAdvisor'
-import { Layout } from '../../components/layout/Layout'
 import { celebrateBig } from '../../utils/celebrate'
 import type { CreatePropertyInput, PropertyType } from '../../types/property.types'
 import { AMENITIES } from '../../types/property.types'
@@ -670,8 +669,7 @@ export default function CreatePropertyWizard() {
   const progress = (step / (STEPS.length - 1)) * 100
 
   return (
-    <Layout>
-      <div>
+    <>      <div>
 
         {/* ── DARK HERO — titre + step indicator ── */}
         <div style={{
@@ -1283,6 +1281,5 @@ export default function CreatePropertyWizard() {
         </div>{/* end inner max-w */}
         </div>{/* end contenu light */}
       </div>{/* end root */}
-    </Layout>
-  )
+    </>  )
 }

@@ -6,7 +6,6 @@ import { useAuth } from '../../hooks/useAuth'
 import { useMessages } from '../../hooks/useMessages'
 import { applicationService } from '../../services/application.service'
 import { bookingService } from '../../services/booking.service'
-import { Layout } from '../../components/layout/Layout'
 import { PropertyCard } from '../../components/property/PropertyCard'
 import { BAI } from '../../constants/bailio-tokens'
 import {
@@ -364,8 +363,7 @@ export default function OwnerDashboard() {
   ]
 
   return (
-    <Layout>
-      <style>{`@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }`}</style>
+    <>      <style>{`@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }`}</style>
 
       {/* ── 1. HERO BANNER ───────────────────────────────────────────────── */}
       <motion.div
@@ -736,6 +734,5 @@ export default function OwnerDashboard() {
         tourTitle="Votre espace propriétaire"
         immediate={tourImmediate}
       />
-    </Layout>
-  )
+    </>  )
 }

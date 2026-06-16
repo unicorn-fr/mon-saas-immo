@@ -4,7 +4,6 @@ import { Heart, Loader, Search, Grid, List } from 'lucide-react'
 import { useProperties } from '../../hooks/useProperties'
 import { useFavoriteStore } from '../../store/favoriteStore'
 import { PropertyCard } from '../../components/property/PropertyCard'
-import { Layout } from '../../components/layout/Layout'
 import { BAI } from '../../constants/bailio-tokens'
 
 type ViewMode = 'grid' | 'list'
@@ -51,8 +50,7 @@ export default function Favorites() {
   })
 
   return (
-    <Layout>
-      {/* ── Hero sombre Hyperbeat ── */}
+    <>      {/* ── Hero sombre Hyperbeat ── */}
       <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)' }}>
         <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
           LOCATAIRE
@@ -284,6 +282,5 @@ export default function Favorites() {
           )}
         </div>
       </div>
-    </Layout>
-  )
+    </>  )
 }

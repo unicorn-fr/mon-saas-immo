@@ -10,7 +10,6 @@ import {
   ShieldCheck, ShieldOff,
   Clock, User, Loader2, AlertTriangle, Eye, Search,
 } from 'lucide-react'
-import { Layout } from '../../components/layout/Layout'
 import { TrustBadge } from '../../components/security/TrustBadge'
 import { ReportUserModal } from '../../components/security/ReportUserModal'
 import { shareApi, type DossierShare } from '../../services/dossier.service'
@@ -491,8 +490,7 @@ export default function DossierShareManager() {
   const pastShares   = shares.filter((s) => shareStatus(s) !== 'active')
 
   return (
-    <Layout>
-      {/* ── Hero sombre Hyperbeat ── */}
+    <>      {/* ── Hero sombre Hyperbeat ── */}
       <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)' }}>
         <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
           SÉCURITÉ
@@ -626,6 +624,5 @@ export default function DossierShareManager() {
           onClose={() => setReportTarget(null)}
         />
       )}
-    </Layout>
-  )
+    </>  )
 }

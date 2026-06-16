@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Layout } from '../../components/layout/Layout'
 import { BAI } from '../../constants/bailio-tokens'
 import { apiClient } from '../../services/api.service'
 import { Users, Home, FileText, Phone, Mail, ChevronRight, Search, TrendingUp, Calendar, MapPin } from 'lucide-react'
@@ -133,8 +132,7 @@ export default function MesLocataires() {
   )
 
   return (
-    <Layout>
-      <div style={{ background: BAI.bgBase, minHeight: '100vh', fontFamily: BAI.fontBody }}>
+    <>      <div style={{ background: BAI.bgBase, minHeight: '100vh', fontFamily: BAI.fontBody }}>
 
         {/* === DARK HERO === */}
         <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)' }}>
@@ -379,6 +377,5 @@ export default function MesLocataires() {
           </div>
         </div>
       </div>
-    </Layout>
-  )
+    </>  )
 }

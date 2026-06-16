@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { Layout } from '../../components/layout/Layout'
 import { BAI } from '../../constants/bailio-tokens'
 import { useFinanceStore } from '../../store/financeStore'
 import { usePropertyStore } from '../../store/propertyStore'
@@ -526,8 +525,7 @@ export default function Finance() {
   }
 
   return (
-    <Layout>
-      {/* ── DARK HERO ── */}
+    <>      {/* ── DARK HERO ── */}
       <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)' }}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -2374,6 +2372,5 @@ export default function Finance() {
 
         </div>
       </div>
-    </Layout>
-  )
+    </>  )
 }

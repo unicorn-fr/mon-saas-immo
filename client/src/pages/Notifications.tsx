@@ -6,7 +6,6 @@ import { useNavigate } from 'react-router-dom'
 import { Notification, NOTIFICATION_TYPES } from '../types/notification.types'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { Layout } from '../components/layout/Layout'
 import { BAI } from '../constants/bailio-tokens'
 import toast from 'react-hot-toast'
 
@@ -84,8 +83,7 @@ export default function Notifications() {
   }
 
   return (
-    <Layout>
-      {/* ── Dark Hero ───────────────────────────────────────────────────── */}
+    <>      {/* ── Dark Hero ───────────────────────────────────────────────────── */}
       <div
         style={{
           background: '#0a0d1a',
@@ -456,6 +454,5 @@ export default function Notifications() {
           )}
         </div>
       </div>
-    </Layout>
-  )
+    </>  )
 }

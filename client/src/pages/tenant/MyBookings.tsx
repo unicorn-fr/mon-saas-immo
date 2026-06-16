@@ -17,7 +17,6 @@ import { BookingCard } from '../../components/booking/BookingCard'
 import { CancelBookingModal } from '../../components/booking/CancelBookingModal'
 import { Calendar } from '../../components/booking/Calendar'
 import { BookingStatus, CalendarInviteWithProperty } from '../../types/booking.types'
-import { Layout } from '../../components/layout/Layout'
 import { bookingService } from '../../services/booking.service'
 import { applicationService } from '../../services/application.service'
 import toast from 'react-hot-toast'
@@ -274,8 +273,7 @@ export const MyBookings = () => {
 
 
   return (
-    <Layout>
-      {/* ── Hero sombre Hyperbeat ── */}
+    <>      {/* ── Hero sombre Hyperbeat ── */}
       <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)' }}>
         <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
           LOCATAIRE
@@ -573,8 +571,7 @@ export const MyBookings = () => {
         onConfirm={handleCancelConfirm}
         isLoading={actionLoading !== null}
       />
-    </Layout>
-  )
+    </>  )
 }
 
 export default MyBookings

@@ -6,7 +6,6 @@ import {
   LayoutGrid, ChevronDown, ChevronUp, Camera, FileText,
   GraduationCap, Building2, HandHelping, UserCheck, ShieldCheck, XCircle,
 } from 'lucide-react'
-import { Layout } from '../../components/layout/Layout'
 import { useAuth } from '../../hooks/useAuth'
 import { dossierService, TenantDocument } from '../../services/dossier.service'
 import { DocumentViewerModal } from '../../components/document/DocumentViewerModal'
@@ -1262,8 +1261,7 @@ export default function DossierLocatif() {
     const strengthColor = pct >= 90 ? '#4ade80' : pct >= 70 ? BAI.caramel : pct >= 40 ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.4)'
 
     return (
-      <Layout>
-        {/* ── Hero sombre ── */}
+      <>        {/* ── Hero sombre ── */}
         <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)' }}>
           <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
             LOCATAIRE
@@ -1530,8 +1528,7 @@ export default function DossierLocatif() {
             onClose={() => setViewerDoc(null)}
           />
         )}
-      </Layout>
-    )
+      </>    )
   }
 
   // ── STEPPER MODE ───────────────────────────────────────────────────────────
@@ -1554,8 +1551,7 @@ export default function DossierLocatif() {
   }
 
   return (
-    <Layout>
-      {/* ── Hero sombre (stepper mode) ── */}
+    <>      {/* ── Hero sombre (stepper mode) ── */}
       <div style={{ background: '#0a0d1a', padding: 'clamp(32px,5vw,56px) clamp(16px,4vw,48px) clamp(24px,4vw,40px)' }}>
         <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
           LOCATAIRE
@@ -2141,6 +2137,5 @@ export default function DossierLocatif() {
           onClose={() => setViewerDoc(null)}
         />
       )}
-    </Layout>
-  )
+    </>  )
 }

@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { pdf, Document, Page, Text, StyleSheet } from '@react-pdf/renderer'
-import { Layout } from '../../components/layout/Layout'
 import { BAI } from '../../constants/bailio-tokens'
 import {
   FileText, Download, Copy, Check, AlertTriangle, Scale,
@@ -762,8 +761,7 @@ export default function TenantDocuments() {
   }
 
   return (
-    <Layout>
-      {/* ── Hero sombre Hyperbeat ── */}
+    <>      {/* ── Hero sombre Hyperbeat ── */}
       <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)' }}>
         <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
           LOCATAIRE
@@ -976,6 +974,5 @@ export default function TenantDocuments() {
 
         </div>
       </div>
-    </Layout>
-  )
+    </>  )
 }

@@ -10,7 +10,6 @@ import {
   Loader2, ExternalLink, CalendarDays, MapPin, Globe,
   Mail, ShieldOff, Phone,
 } from 'lucide-react'
-import { Layout } from '../../components/layout/Layout'
 import { dossierService, TenantDossierProfile, TenantDocument } from '../../services/dossier.service'
 import { apiClient as api } from '../../services/api.service'
 import toast from 'react-hot-toast'
@@ -166,8 +165,7 @@ export default function TenantProfile() {
   const fullName = profile ? `${profile.firstName ?? ''} ${profile.lastName ?? ''}`.trim() : ''
 
   return (
-    <Layout>
-      <div>
+    <>      <div>
 
         {/* ── DARK HERO ── */}
         <div style={{
@@ -340,6 +338,5 @@ export default function TenantProfile() {
         </div>{/* end inner max-w */}
         </div>{/* end contenu light */}
       </div>{/* end root */}
-    </Layout>
-  )
+    </>  )
 }

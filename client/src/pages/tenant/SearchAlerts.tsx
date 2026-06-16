@@ -2,7 +2,6 @@
 import { useState } from 'react'
 import { Bell, Trash2, Plus, X } from 'lucide-react'
 import { BAI } from '../../constants/bailio-tokens'
-import { Layout } from '../../components/layout/Layout'
 
 interface Alert {
   id: string
@@ -62,8 +61,7 @@ export default function SearchAlerts() {
   }
 
   return (
-    <Layout>
-      {/* ── Hero sombre Hyperbeat ── */}
+    <>      {/* ── Hero sombre Hyperbeat ── */}
       <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)' }}>
         <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
           LOCATAIRE
@@ -258,6 +256,5 @@ export default function SearchAlerts() {
 
       </div>
       </div>
-    </Layout>
-  )
+    </>  )
 }

@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Layout } from '../../components/layout/Layout'
 import { useAuth } from '../../hooks/useAuth'
 import { authService } from '../../services/auth.service'
 import { apiClient } from '../../services/api.service'
@@ -390,8 +389,7 @@ export default function TenantSettings() {
   const initials = `${user?.firstName?.[0] || ''}${user?.lastName?.[0] || ''}`.toUpperCase()
 
   return (
-    <Layout>
-      {/* ── Dirty bar (notifications) ─────────────────────────────────────── */}
+    <>      {/* ── Dirty bar (notifications) ─────────────────────────────────────── */}
       {notifDirty && (
         <div style={{
           position: 'sticky',
@@ -1266,6 +1264,5 @@ export default function TenantSettings() {
           </div>
         </div>
       )}
-    </Layout>
-  )
+    </>  )
 }

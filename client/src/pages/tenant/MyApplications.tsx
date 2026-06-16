@@ -13,7 +13,6 @@ import {
 import { BAI } from '../../constants/bailio-tokens'
 import { applicationService } from '../../services/application.service'
 import type { Application, ApplicationStatus } from '../../types/application.types'
-import { Layout } from '../../components/layout/Layout'
 import { BookingModal } from '../../components/booking/BookingModal'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
@@ -484,8 +483,7 @@ export default function MyApplications() {
   const withdrawnApps = apps.filter(a => a.status === 'WITHDRAWN')
 
   return (
-    <Layout>
-      {/* ── Hero sombre Hyperbeat ── */}
+    <>      {/* ── Hero sombre Hyperbeat ── */}
       <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,48px) clamp(32px,5vw,56px)' }}>
         <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
           LOCATAIRE
@@ -631,7 +629,6 @@ export default function MyApplications() {
           )}
         </div>
       </div>
-    </Layout>
-  )
+    </>  )
 }
 

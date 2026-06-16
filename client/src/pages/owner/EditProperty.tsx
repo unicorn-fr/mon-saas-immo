@@ -11,7 +11,6 @@ import {
   UpdatePropertyInput,
 } from '../../types/property.types'
 import { DEFAULT_CRITERIA, type SelectionCriteria } from '../../types/application.types'
-import { Layout } from '../../components/layout/Layout'
 import { BAI } from '../../constants/bailio-tokens'
 
 // ─── Maison tokens ────────────────────────────────────────────────────────────
@@ -205,22 +204,19 @@ export default function EditProperty() {
   // Loading state
   if (isLoading && !isInitialized) {
     return (
-      <Layout>
-        <div className="min-h-screen flex items-center justify-center" style={{ background: BAI.bgBase }}>
+      <>        <div className="min-h-screen flex items-center justify-center" style={{ background: BAI.bgBase }}>
           <div
             className="animate-spin rounded-full"
             style={{ width: 40, height: 40, borderWidth: 2, borderStyle: 'solid', borderColor: BAI.border, borderTopColor: BAI.owner }}
           />
         </div>
-      </Layout>
-    )
+      </>    )
   }
 
   // Not found
   if (!currentProperty) {
     return (
-      <Layout>
-        <div className="min-h-screen flex items-center justify-center" style={{ background: BAI.bgBase }}>
+      <>        <div className="min-h-screen flex items-center justify-center" style={{ background: BAI.bgBase }}>
           <div className="text-center">
             <h2
               style={{
@@ -250,13 +246,11 @@ export default function EditProperty() {
             </Link>
           </div>
         </div>
-      </Layout>
-    )
+      </>    )
   }
 
   return (
-    <Layout>
-      <div>
+    <>      <div>
 
         {/* ── DARK HERO ── */}
         <div style={{
@@ -698,6 +692,5 @@ export default function EditProperty() {
         </div>{/* end inner max-w */}
         </div>{/* end contenu light */}
       </div>{/* end root */}
-    </Layout>
-  )
+    </>  )
 }

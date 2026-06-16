@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { BAI } from '../../constants/bailio-tokens'
-import { Layout } from '../../components/layout/Layout'
 import { apiClient } from '../../services/api.service'
 import toast from 'react-hot-toast'
 import {
@@ -538,8 +537,7 @@ export default function Quittances() {
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <Layout>
-      <div style={{ minHeight: '100vh', background: BAI.bgBase, fontFamily: BAI.fontBody }}>
+    <>      <div style={{ minHeight: '100vh', background: BAI.bgBase, fontFamily: BAI.fontBody }}>
 
         {/* === DARK HERO === */}
         <div
@@ -1124,6 +1122,5 @@ export default function Quittances() {
           @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         `}</style>
       </div>
-    </Layout>
-  )
+    </>  )
 }

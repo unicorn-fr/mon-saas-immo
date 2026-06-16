@@ -4,7 +4,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useContractStore } from '../../store/contractStore'
 import { useAuth } from '../../hooks/useAuth'
 import { Contract } from '../../types/contract.types'
-import { Layout } from '../../components/layout/Layout'
 import {
   FileText,
   Plus,
@@ -238,8 +237,7 @@ export default function ContractsList() {
 
   if (isLoading && contracts.length === 0) {
     return (
-      <Layout>
-        <div
+      <>        <div
           className="flex items-center justify-center min-h-screen"
           style={{ background: BAI.bgBase, fontFamily: BAI.fontBody }}
         >
@@ -255,15 +253,13 @@ export default function ContractsList() {
             <p style={{ fontSize: 13, color: BAI.inkFaint }}>Chargement des contrats…</p>
           </div>
         </div>
-      </Layout>
-    )
+      </>    )
   }
 
   const pendingSignatures = (statistics?.sent || 0) + (statistics?.completed || 0)
 
   return (
-    <Layout>
-      <div style={{ minHeight: '100vh', background: BAI.bgBase, fontFamily: BAI.fontBody }}>
+    <>      <div style={{ minHeight: '100vh', background: BAI.bgBase, fontFamily: BAI.fontBody }}>
 
         {/* Hero sombre Hyperbeat */}
         <div style={{ background: '#0a0d1a', padding: 'clamp(40px,6vw,64px) clamp(16px,4vw,48px) clamp(28px,4vw,44px)' }}>
@@ -425,6 +421,5 @@ export default function ContractsList() {
           )}
         </div>
       </div>
-    </Layout>
-  )
+    </>  )
 }
