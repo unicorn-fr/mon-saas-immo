@@ -6,6 +6,7 @@ import {
   MessageSquare, Plus, Settings, Receipt, LogOut,
 } from 'lucide-react'
 import { useSidebarStore } from '../../store/sidebarStore'
+import { prefetchRoute } from '../../utils/routePrefetch'
 import { useMessages } from '../../hooks/useMessages'
 import { useAuth } from '../../hooks/useAuth'
 import { applicationService } from '../../services/application.service'
@@ -36,6 +37,9 @@ function NavItem({
       end={end}
       id={id}
       onClick={onClick}
+      onMouseEnter={() => prefetchRoute(to)}
+      onTouchStart={() => prefetchRoute(to)}
+      onFocus={() => prefetchRoute(to)}
       title={compact ? label : undefined}
       aria-current={active ? 'page' : undefined}
       style={{ position: 'relative', display: 'block', textDecoration: 'none' }}

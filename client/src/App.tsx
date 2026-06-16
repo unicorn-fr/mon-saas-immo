@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
-import { useEffect, lazy, Suspense } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { useAuth } from './hooks/useAuth'
 import { useThemeStore } from './store/themeStore'
@@ -143,6 +143,29 @@ function DarkModeSync() {
   return null
 }
 
+function RouteLoader() {
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    const t = setTimeout(() => setShow(true), 160)
+    return () => clearTimeout(t)
+  }, [])
+  return (
+    <div style={{
+      minHeight: '100vh', background: '#fafaf8',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      {show && (
+        <div style={{
+          width: 28, height: 28, borderRadius: '50%',
+          border: '2.5px solid #e4e1db', borderTopColor: '#c4976a',
+          animation: 'routeSpin 0.7s linear infinite',
+        }} />
+      )}
+      <style>{`@keyframes routeSpin { to { transform: rotate(360deg) } }`}</style>
+    </div>
+  )
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -203,7 +226,7 @@ function AppRoutes() {
       <OnboardingWizard />
     )}
     <ErrorBoundary>
-    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#fafaf8' }} />}>
+    <Suspense fallback={<RouteLoader />}>
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<Home />} />
