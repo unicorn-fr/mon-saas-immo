@@ -203,7 +203,7 @@ function AppRoutes() {
       <OnboardingWizard />
     )}
     <ErrorBoundary>
-    <Suspense fallback={<div style={{ minHeight: '100vh' }} />}>
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#fafaf8' }} />}>
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<Home />} />
