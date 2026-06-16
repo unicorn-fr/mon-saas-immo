@@ -216,7 +216,11 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       /**
-       * Load user from token — timeout 6s max pour ne pas bloquer l'UI au cold start
+       * Load user from token — timeout 6s max pour ne pas bloquer l'UI au cold start.
+       * Optimistic : si user+isAuthenticated sont déjà en cache (localStorage persist),
+       * on affiche immédiatement le dashboard avec ces données et on revalide en
+       * arrière-plan sans bloquer le rendu — évite le spinner plein écran à chaque
+       * refresh pour un utilisateur déjà connu.
        */
       loadUser: async () => {
         // Read from in-memory tokens (initialized from localStorage on module load)
@@ -228,7 +232,8 @@ export const useAuthStore = create<AuthStore>()(
           return
         }
 
-        set({ isLoading: true })
+        const hasCachedSession = !!get().user && get().isAuthenticated
+        if (!hasCachedSession) set({ isLoading: true })
 
         // Race: vérification token vs timeout 6s
         const timeoutPromise = new Promise<never>((_, reject) =>
@@ -250,7 +255,13 @@ export const useAuthStore = create<AuthStore>()(
             error: null,
           })
         } catch (error) {
-          // Token invalide ou serveur indisponible → on laisse l'utilisateur se connecter
+          if (hasCachedSession) {
+            // Revalidation silencieuse échouée (timeout/réseau) — on garde la session
+            // en cache plutôt que de déconnecter un utilisateur valide sur un simple aléa réseau
+            set({ isLoading: false })
+            return
+          }
+          // Pas de cache : token invalide ou serveur indisponible → laisser se connecter
           setApiTokens(null, null)
           set({ ...initialState, isLoading: false })
         }
