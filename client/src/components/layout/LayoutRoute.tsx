@@ -1,28 +1,19 @@
 import { Outlet } from 'react-router-dom'
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense } from 'react'
 import { Layout } from './Layout'
 
 function PageLoader() {
-  const [show, setShow] = useState(false)
-  useEffect(() => {
-    const t = setTimeout(() => setShow(true), 120)
-    return () => clearTimeout(t)
-  }, [])
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      minHeight: '60vh',
+      minHeight: '60vh', background: '#fafaf8',
     }}>
-      {show && (
-        <>
-          <div style={{
-            width: 24, height: 24, borderRadius: '50%',
-            border: '2px solid #e4e1db', borderTopColor: '#c4976a',
-            animation: 'pageSpin 0.7s linear infinite',
-          }} />
-          <style>{`@keyframes pageSpin { to { transform: rotate(360deg) } }`}</style>
-        </>
-      )}
+      <div style={{
+        width: 24, height: 24, borderRadius: '50%',
+        border: '2px solid #e4e1db', borderTopColor: '#c4976a',
+        animation: 'pageSpin 0.7s linear infinite',
+      }} />
+      <style>{`@keyframes pageSpin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )
 }
