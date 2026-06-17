@@ -56,7 +56,8 @@ class BookingController {
           error.message.includes('not available') ||
           error.message.includes('already booked') ||
           error.message.includes('must be in the future') ||
-          error.message.includes('not available for this property')
+          error.message.includes('not available for this property') ||
+          error.message.includes('déjà une visite')
         ) {
           return res.status(400).json({
             success: false,

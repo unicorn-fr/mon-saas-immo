@@ -36,7 +36,7 @@ interface ContractStore {
   clearError: () => void
 }
 
-export const useContractStore = create<ContractStore>((set) => ({
+export const useContractStore = create<ContractStore>((set, get) => ({
   contracts: [],
   currentContract: null,
   statistics: null,
@@ -47,7 +47,7 @@ export const useContractStore = create<ContractStore>((set) => ({
   limit: 20,
 
   fetchContracts: async (filters?, page = 1, limit = 20) => {
-    set({ isLoading: true, error: null })
+    set(get().contracts.length > 0 ? { error: null } : { isLoading: true, error: null })
     try {
       const data = await contractService.getContracts(filters, { page, limit })
       set({
@@ -233,7 +233,7 @@ export const useContractStore = create<ContractStore>((set) => ({
   },
 
   fetchStatistics: async () => {
-    set({ isLoading: true, error: null })
+    set(get().statistics ? { error: null } : { isLoading: true, error: null })
     try {
       const statistics = await contractService.getStatistics()
       set({ statistics, isLoading: false })

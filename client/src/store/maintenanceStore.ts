@@ -14,14 +14,14 @@ interface MaintenanceStore {
   analyzeWithAI: (id: string) => Promise<void>
 }
 
-export const useMaintenanceStore = create<MaintenanceStore>((set) => ({
+export const useMaintenanceStore = create<MaintenanceStore>((set, get) => ({
   requests: [],
   isLoading: false,
   isAnalyzing: null,
   error: null,
 
   fetchRequests: async () => {
-    set({ isLoading: true, error: null })
+    set(get().requests.length > 0 ? { error: null } : { isLoading: true, error: null })
     try {
       const requests = await maintenanceService.getRequests()
       set({ requests, isLoading: false })

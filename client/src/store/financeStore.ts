@@ -25,7 +25,7 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
   error: null,
 
   fetchExpenses: async () => {
-    set({ isLoading: true, error: null })
+    set(get().expenses.length > 0 ? { error: null } : { isLoading: true, error: null })
     try {
       const expenses = await financeService.getExpenses()
       set({ expenses, isLoading: false })
@@ -64,7 +64,7 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
   },
 
   fetchLoans: async () => {
-    set({ isLoading: true, error: null })
+    set(get().loans.length > 0 ? { error: null } : { isLoading: true, error: null })
     try {
       const loans = await financeService.getLoans()
       set({ loans, isLoading: false })
@@ -96,7 +96,7 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
   },
 
   fetchSummary: async () => {
-    set({ isLoading: true, error: null })
+    set(get().summary ? { error: null } : { isLoading: true, error: null })
     try {
       const summary = await financeService.getSummary()
       set({ summary, isLoading: false })

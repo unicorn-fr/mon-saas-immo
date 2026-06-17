@@ -31,7 +31,7 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
 
   // Actions
   fetchNotifications: async (page = 1, limit = 20, unreadOnly = false) => {
-    set({ isLoading: true, error: null })
+    set(get().notifications.length > 0 ? { error: null } : { isLoading: true, error: null })
     try {
       const result = await notificationService.getNotifications(page, limit, unreadOnly)
       set({

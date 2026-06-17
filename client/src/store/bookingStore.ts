@@ -46,7 +46,7 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
 
   // Actions
   fetchBookings: async (filters = {}, pagination = { page: 1, limit: 20 }) => {
-    set({ isLoading: true, error: null })
+    set(get().bookings.length > 0 ? { error: null } : { isLoading: true, error: null })
     try {
       const result = await bookingService.getBookings(filters, pagination)
       set({
@@ -178,7 +178,7 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
   },
 
   fetchOwnerStatistics: async () => {
-    set({ isLoading: true, error: null })
+    set(get().statistics ? { error: null } : { isLoading: true, error: null })
     try {
       const statistics = await bookingService.getOwnerStatistics()
       set({ statistics, isLoading: false })

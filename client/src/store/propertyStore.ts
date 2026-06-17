@@ -89,14 +89,14 @@ const initialState: PropertyState = {
   error: null,
 }
 
-export const usePropertyStore = create<PropertyStore>((set) => ({
+export const usePropertyStore = create<PropertyStore>((set, get) => ({
   ...initialState,
 
   /**
    * Fetch properties with filters
    */
   fetchProperties: async (filters = {}, pagination = { page: 1, limit: 20 }) => {
-    set({ isLoading: true, error: null })
+    set(get().properties.length > 0 ? { error: null } : { isLoading: true, error: null })
 
     try {
       const response = await propertyService.getProperties(filters, pagination)
@@ -164,7 +164,7 @@ export const usePropertyStore = create<PropertyStore>((set) => ({
    * Fetch my properties (owner)
    */
   fetchMyProperties: async (pagination = { page: 1, limit: 20 }) => {
-    set({ isLoading: true, error: null })
+    set(get().myProperties.length > 0 ? { error: null } : { isLoading: true, error: null })
 
     try {
       const response = await propertyService.getMyProperties(pagination)

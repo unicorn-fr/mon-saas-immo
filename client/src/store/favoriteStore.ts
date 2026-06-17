@@ -21,7 +21,7 @@ export const useFavoriteStore = create<FavoriteStore>((set, get) => ({
   error: null,
 
   loadFavorites: async () => {
-    set({ isLoading: true, error: null })
+    set(get().favoriteIds.size > 0 ? { error: null } : { isLoading: true, error: null })
     try {
       const ids = await favoriteService.getFavoriteIds()
       set({ favoriteIds: new Set(ids), isLoading: false })

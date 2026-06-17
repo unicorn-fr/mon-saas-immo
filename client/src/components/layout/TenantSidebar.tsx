@@ -164,7 +164,7 @@ export function TenantSidebar() {
     },
   ]
 
-  const Content = ({ compact = false }: { compact?: boolean }) => (
+  const renderContent = (compact = false) => (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', fontFamily: BAI.fontBody }}>
 
       {/* Logo */}
@@ -354,7 +354,7 @@ export function TenantSidebar() {
         className="hidden md:flex flex-col flex-shrink-0 overflow-hidden"
         style={{ ...sidebarStyle, width: isTabletCompact ? 64 : 220, transition: 'width 0.25s ease' }}
       >
-        <Content compact={isTabletCompact} />
+        {renderContent(isTabletCompact)}
       </aside>
 
       {/* Mobile drawer */}
@@ -380,7 +380,7 @@ export function TenantSidebar() {
               className="fixed left-0 top-0 bottom-0 z-50 flex flex-col md:hidden"
               style={{ ...sidebarStyle, width: 'min(256px, 85vw)', boxShadow: '6px 0 40px rgba(0,0,0,0.40)', overflowX: 'hidden' }}
             >
-              <Content compact={false} />
+              {renderContent(false)}
             </motion.aside>
           </>
         )}

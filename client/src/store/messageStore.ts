@@ -50,7 +50,7 @@ export const useMessageStore = create<MessageStore>((set, get) => ({
 
   // Actions
   fetchConversations: async () => {
-    set({ isLoading: true, error: null })
+    set(get().conversations.length > 0 ? { error: null } : { isLoading: true, error: null })
     try {
       const conversations = await messageService.getConversations()
       set({ conversations, isLoading: false })
