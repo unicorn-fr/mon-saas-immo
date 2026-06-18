@@ -33,31 +33,43 @@ export function PremiumGate({
   }
 
   return (
-    <div style={{ position: 'relative', borderRadius: 16, overflow: 'hidden' }}>
-      {/* Blurred/greyed children — still partially visible for teasing */}
+    // overflow: clip clips visually like overflow:hidden
+    // but does NOT create a scroll container — sticky children still work
+    <div style={{ position: 'relative', borderRadius: 16, overflow: 'clip' }}>
+
+      {/* Blurred content — lighter so the layout is still legible (teasing) */}
       <div style={{
-        filter: 'blur(3px)',
-        opacity: 0.45,
+        filter: 'blur(1.5px)',
+        opacity: 0.65,
         pointerEvents: 'none',
         userSelect: 'none',
-        transition: 'filter 0.3s',
       }}>
         {children}
       </div>
 
-      {/* Overlay */}
+      {/* Gradient overlay — covers the full scrollable area */}
       <div style={{
         position: 'absolute',
         inset: 0,
-        background: 'linear-gradient(180deg, rgba(250,250,248,0.55) 0%, rgba(250,250,248,0.92) 50%, rgba(250,250,248,0.98) 100%)',
+        background: 'linear-gradient(180deg, rgba(250,250,248,0.25) 0%, rgba(250,250,248,0.72) 35%, rgba(250,250,248,0.96) 65%)',
+        pointerEvents: 'none',
+      }} />
+
+      {/* Sticky CTA — follows the viewport as the user scrolls */}
+      <div style={{
+        position: 'sticky',
+        top: compact ? '8vh' : '18vh',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         padding: compact ? '20px 16px' : '32px 24px',
         gap: compact ? 8 : 14,
+        zIndex: 2,
+        pointerEvents: 'auto',
       }}>
-        {/* Lock icon with caramel badge */}
+
+        {/* Lock icon */}
         <div style={{
           width: compact ? 40 : 52,
           height: compact ? 40 : 52,
@@ -67,17 +79,18 @@ export function PremiumGate({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          boxShadow: '0 4px 16px rgba(196,151,106,0.18)',
         }}>
           <Lock size={compact ? 18 : 22} style={{ color: BAI.caramel }} />
         </div>
 
-        {/* Title */}
-        <div style={{ textAlign: 'center' }}>
+        {/* Title + description */}
+        <div style={{ textAlign: 'center', maxWidth: 420 }}>
           <h3 style={{
             fontFamily: BAI.fontDisplay,
             fontStyle: 'italic',
             fontWeight: 700,
-            fontSize: compact ? 18 : 22,
+            fontSize: compact ? 18 : 24,
             color: BAI.ink,
             margin: '0 0 6px',
           }}>
@@ -88,20 +101,20 @@ export function PremiumGate({
             fontSize: compact ? 12 : 13,
             color: BAI.inkMid,
             margin: 0,
-            maxWidth: 360,
+            lineHeight: 1.6,
           }}>
             {description ?? `Disponible à partir du plan ${requiredPlan ?? 'SOLO'}. Upgradez pour débloquer cette fonctionnalité.`}
           </p>
         </div>
 
-        {/* CTA */}
+        {/* CTA button */}
         <Link
           to="/owner/abonnement"
           style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: 8,
-            padding: compact ? '10px 20px' : '12px 28px',
+            padding: compact ? '10px 20px' : '13px 32px',
             background: BAI.night,
             color: '#fff',
             textDecoration: 'none',
@@ -109,6 +122,7 @@ export function PremiumGate({
             fontFamily: BAI.fontBody,
             fontSize: compact ? 13 : 14,
             fontWeight: 600,
+            boxShadow: '0 4px 20px rgba(26,26,46,0.25)',
           }}
         >
           <Zap size={compact ? 13 : 15} />

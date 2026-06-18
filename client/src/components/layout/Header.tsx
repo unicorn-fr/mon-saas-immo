@@ -89,7 +89,7 @@ export const Header = () => {
     const ownerLinks = [
       { to: getDashboardLink(), icon: <LayoutDashboard className="w-4 h-4" />, label: 'Tableau de bord' },
       { to: settingsLink,       icon: <Settings className="w-4 h-4" />,        label: 'Paramètres & profil' },
-      { to: '/pricing',         icon: <CreditCard className="w-4 h-4" />,     label: 'Mon abonnement' },
+      { to: '/owner/abonnement', icon: <CreditCard className="w-4 h-4" />,     label: 'Mon abonnement' },
     ]
 
     const ProfileDropdown = () => showUserMenu ? (
@@ -482,7 +482,7 @@ export const Header = () => {
                       {[
                         { to: getDashboardLink(), icon: <LayoutDashboard size={15} />, label: 'Tableau de bord' },
                         { to: '/profile',         icon: <Settings size={15} />,        label: 'Mon profil'      },
-                        { to: '/pricing',         icon: <CreditCard size={15} />,      label: 'Mon abonnement'  },
+                        { to: '/owner/abonnement', icon: <CreditCard size={15} />,      label: 'Mon abonnement'  },
                       ].map(({ to, icon, label }) => (
                         <Link key={to} to={to} onClick={() => setShowUserMenu(false)}
                           style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 16px', fontSize: 13.5, minHeight: 42, color: BAI.inkMid, textDecoration: 'none' }}
@@ -575,7 +575,7 @@ export const Header = () => {
                     {[
                       { to: getDashboardLink(), label: 'Tableau de bord' },
                       { to: '/profile',         label: 'Mon profil'      },
-                      { to: '/pricing',         label: 'Mon abonnement'  },
+                      { to: '/owner/abonnement', label: 'Mon abonnement'  },
                     ].map(({ to, label }) => (
                       <Link key={to} to={to} onClick={() => setShowUserMenu(false)}
                         style={{ display: 'flex', alignItems: 'center', padding: '0 16px', fontSize: 14, minHeight: 44, color: BAI.inkMid, textDecoration: 'none' }}
