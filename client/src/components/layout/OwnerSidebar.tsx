@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Home, ClipboardList, Calendar, FileText,
   MessageSquare, Plus, Settings, Receipt, LogOut,
+  Lock, BarChart2, Wallet, Wand2,
 } from 'lucide-react'
 import { useSidebarStore } from '../../store/sidebarStore'
 import { prefetchRoute } from '../../utils/routePrefetch'
@@ -12,6 +13,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { applicationService } from '../../services/application.service'
 import { BAI } from '../../constants/bailio-tokens'
 import { useWindowWidth } from '../../hooks/useWindowWidth'
+import { usePlan } from '../../hooks/usePlan'
 
 const SIDEBAR_BG = '#0a0d1a'
 const SIDEBAR_BORDER = 'rgba(255,255,255,0.07)'
@@ -23,11 +25,12 @@ type SectionItem = {
   badge?: number
   end?: boolean
   id?: string
+  lockedForPlan?: 'SOLO' | 'PRO' | 'EXPERT'
 }
 
 function NavItem({
-  to, icon: Icon, label, badge, end, onClick, compact, id,
-}: SectionItem & { onClick?: () => void; compact?: boolean }) {
+  to, icon: Icon, label, badge, end, onClick, compact, id, locked,
+}: SectionItem & { onClick?: () => void; compact?: boolean; locked?: boolean }) {
   const location = useLocation()
   const active = end ? location.pathname === to : location.pathname.startsWith(to)
 
@@ -75,7 +78,7 @@ function NavItem({
           padding: compact ? '11px 0' : '8px 13px',
           margin: compact ? '2px 4px' : '1px 8px',
           borderRadius: BAI.radius,
-          color: active ? '#fff' : 'rgba(255,255,255,0.70)',
+          color: active ? '#fff' : locked ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.70)',
           fontFamily: BAI.fontBody,
           fontSize: 13.5,
           fontWeight: active ? 600 : 450,
@@ -88,6 +91,16 @@ function NavItem({
           style={{ flexShrink: 0, transition: 'opacity 0.15s', opacity: active ? 1 : 0.60 }}
         />
         {!compact && <span style={{ flex: 1 }}>{label}</span>}
+        {!compact && locked && (
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: 16, height: 16, borderRadius: 4,
+            background: 'rgba(196,151,106,0.18)', border: '1px solid rgba(196,151,106,0.3)',
+            flexShrink: 0,
+          }}>
+            <Lock size={9} style={{ color: '#c4976a' }} />
+          </span>
+        )}
 
         {!compact && badge !== undefined && badge > 0 && (
           <motion.span
@@ -125,6 +138,7 @@ export function OwnerSidebar() {
   const [pendingAppsCount, setPendingAppsCount] = useState(0)
   const windowWidth = useWindowWidth()
   const isTabletCompact = windowWidth >= BAI.bpMd && windowWidth < BAI.bpLg
+  const { hasPlan } = usePlan()
 
   useEffect(() => {
     fetchUnreadCount()
@@ -155,7 +169,15 @@ export function OwnerSidebar() {
         { to: '/bookings/manage', icon: Calendar, label: 'Visites', id: 'tour-owner-visits' },
         { to: '/messages', icon: MessageSquare, label: 'Messages', badge: unreadCount, id: 'tour-owner-messages' },
         { to: '/contracts', icon: FileText, label: 'Contrats & Baux', id: 'tour-owner-contracts' },
-        { to: '/owner/quittances', icon: Receipt, label: 'Quittances', id: 'tour-owner-quittances' },
+      ],
+    },
+    {
+      label: 'Finance & Fiscalité',
+      items: [
+        { to: '/owner/quittances', icon: Receipt, label: 'Quittances', id: 'tour-owner-quittances', lockedForPlan: 'PRO' },
+        { to: '/owner/finances', icon: Wallet, label: 'Finances', id: 'tour-owner-finances' },
+        { to: '/owner/rentabilite', icon: BarChart2, label: 'Rentabilité', lockedForPlan: 'PRO' },
+        { to: '/owner/fiscal-wizard', icon: Wand2, label: 'Assistant fiscal', lockedForPlan: 'PRO' },
       ],
     },
   ]
@@ -276,6 +298,7 @@ export function OwnerSidebar() {
                 {...item}
                 onClick={closeMobile}
                 compact={compact}
+                locked={item.lockedForPlan ? !hasPlan(item.lockedForPlan) : false}
               />
             ))}
           </div>

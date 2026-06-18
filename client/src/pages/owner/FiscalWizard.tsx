@@ -6,6 +6,7 @@
 
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { PremiumGate } from '../../components/billing/PremiumGate'
 import {
   ChevronRight,
   ChevronLeft,
@@ -1715,6 +1716,11 @@ export default function FiscalWizard() {
       </div>
 
       {/* ── Wizard card ──────────────────────────────────────────────────────── */}
+      <PremiumGate
+        requiredPlan="PRO"
+        title="Assistant fiscal automatique"
+        description="Générez vos formulaires fiscaux pré-remplis (2044, 2042, 2042-C-PRO, 2031) en 3 minutes, depuis les données de votre compte Bailio. Disponible à partir du plan Pro."
+      >
       <div
         style={{
           maxWidth: 680,
@@ -1845,6 +1851,7 @@ export default function FiscalWizard() {
           </div>
         )}
       </div>
+      </PremiumGate>
 
       {/* Keyframe for spinner */}
       <style>{`@keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }`}</style>

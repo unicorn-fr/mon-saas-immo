@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { BAI } from '../../constants/bailio-tokens'
+import { PremiumGate } from '../../components/billing/PremiumGate'
 import { apiClient } from '../../services/api.service'
 import toast from 'react-hot-toast'
 import {
@@ -747,6 +748,11 @@ export default function Quittances() {
         </div>
 
         {/* === LIGHT CONTENT === */}
+        <PremiumGate
+          requiredPlan="PRO"
+          title="Quittances automatiques"
+          description="Générez et envoyez automatiquement les quittances de loyer à vos locataires chaque mois. Conforme loi ALUR art. 21. Disponible à partir du plan Pro."
+        >
         <div
           style={{
             background: BAI.bgBase,
@@ -1116,6 +1122,7 @@ export default function Quittances() {
             </div>
           )}
         </div>
+        </PremiumGate>
 
         {/* Spin keyframe */}
         <style>{`

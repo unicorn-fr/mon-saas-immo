@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { BAI } from '../../constants/bailio-tokens'
+import { PremiumGate } from '../../components/billing/PremiumGate'
 import {
   Home, Euro, Calendar, Percent,
   ChevronDown, ChevronUp, Info, Calculator, Landmark,
@@ -444,6 +445,11 @@ export default function Rentabilite() {
         </div>
 
         {/* === LIGHT CONTENT === */}
+        <PremiumGate
+          requiredPlan="PRO"
+          title="Analytics & Rentabilité"
+          description="Visualisez la performance de votre patrimoine immobilier : TRI, rendement net, évolution des loyers, taux d'occupation. Disponible à partir du plan Pro."
+        >
         <div style={{ background: BAI.bgBase, minHeight: '60vh', padding: 'clamp(24px,4vw,40px) clamp(16px,4vw,48px)' }}>
           <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
@@ -697,6 +703,7 @@ export default function Rentabilite() {
           </div>
           </div>
         </div>
+        </PremiumGate>
 
       </div>
     </>  )
