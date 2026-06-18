@@ -66,6 +66,7 @@ export const BookingManagement = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [cancelModalBookingId, setCancelModalBookingId] = useState<string | null>(null)
+  const [showPast, setShowPast] = useState(false)
 
   // ── Prochains RDV confirmés ───────────────────────────────────────────────
   const upcomingConfirmed = useMemo(() => {
@@ -100,17 +101,26 @@ export const BookingManagement = () => {
     fetchBookings(filters)
   }, [selectedProperty, selectedStatus, fetchBookings])
 
-  // Filter bookings by search query
-  const filteredBookings = bookings.filter((booking) => {
-    if (!searchQuery) return true
-    const query = searchQuery.toLowerCase()
-    return (
-      (booking.property?.title ?? '').toLowerCase().includes(query) ||
-      (booking.tenant?.firstName ?? '').toLowerCase().includes(query) ||
-      (booking.tenant?.lastName ?? '').toLowerCase().includes(query) ||
-      (booking.tenant?.email ?? '').toLowerCase().includes(query)
-    )
-  })
+  const filteredBookings = useMemo(() => {
+    const now = new Date()
+    return bookings.filter((booking) => {
+      // In list mode, hide past visits by default
+      if (viewMode === 'list' && !showPast) {
+        try {
+          const dt = parseISO(`${booking.visitDate}T${booking.visitTime}`)
+          if (!isAfter(dt, now)) return false
+        } catch { /* keep */ }
+      }
+      if (!searchQuery) return true
+      const query = searchQuery.toLowerCase()
+      return (
+        (booking.property?.title ?? '').toLowerCase().includes(query) ||
+        (booking.tenant?.firstName ?? '').toLowerCase().includes(query) ||
+        (booking.tenant?.lastName ?? '').toLowerCase().includes(query) ||
+        (booking.tenant?.email ?? '').toLowerCase().includes(query)
+      )
+    })
+  }, [bookings, viewMode, showPast, searchQuery])
 
   const handleConfirmBooking = async (id: string) => {
     setActionLoading(id)
@@ -421,6 +431,23 @@ export const BookingManagement = () => {
                     Calendrier
                   </button>
                 </div>
+
+                {/* Past toggle — list mode only */}
+                {viewMode === 'list' && (
+                  <button
+                    onClick={() => setShowPast(p => !p)}
+                    style={{
+                      background: showPast ? BAI.ownerLight : 'transparent',
+                      border: `1px solid ${showPast ? BAI.ownerBorder : BAI.border}`,
+                      borderRadius: 8, padding: '8px 14px',
+                      fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 500,
+                      color: showPast ? BAI.owner : BAI.inkMid,
+                      cursor: 'pointer', whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {showPast ? 'Masquer l\'historique' : 'Voir l\'historique'}
+                  </button>
+                )}
               </div>
             </div>
           </div>

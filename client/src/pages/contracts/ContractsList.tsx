@@ -16,6 +16,7 @@ import {
   AlertCircle,
   Send,
   PenLine,
+  ClipboardCheck,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -229,6 +230,46 @@ export default function ContractsList() {
                 <span style={{ color: BAI.inkMid }}>Locataire</span>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Quick-action buttons */}
+        {(isActive || contract.status === 'SIGNED_TENANT') && (
+          <div
+            className="pt-3 flex gap-2"
+            style={{ borderTop: `1px solid ${BAI.border}`, marginTop: inSignature ? 0 : undefined }}
+            onClick={e => e.stopPropagation()}
+          >
+            {isActive && (
+              <Link
+                to={`/contracts/${contract.id}/edl/session`}
+                style={{
+                  flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  padding: '8px 12px', borderRadius: 8,
+                  background: BAI.bgMuted, border: `1px solid ${BAI.border}`,
+                  fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, color: BAI.inkMid,
+                  textDecoration: 'none',
+                }}
+              >
+                <ClipboardCheck size={13} />
+                État des lieux
+              </Link>
+            )}
+            {contract.status === 'SIGNED_TENANT' && isOwner && (
+              <Link
+                to={`/contracts/${contract.id}`}
+                style={{
+                  flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  padding: '8px 12px', borderRadius: 8,
+                  background: BAI.owner, color: '#fff',
+                  fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600,
+                  textDecoration: 'none',
+                }}
+              >
+                <PenLine size={13} />
+                Signer le contrat
+              </Link>
+            )}
           </div>
         )}
       </div>

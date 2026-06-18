@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useProperties } from '../../hooks/useProperties'
 import { useAuth } from '../../hooks/useAuth'
+import { contractService } from '../../services/contract.service'
+import type { Contract } from '../../types/contract.types'
 import { useMessages } from '../../hooks/useMessages'
 import { applicationService } from '../../services/application.service'
 import { bookingService } from '../../services/booking.service'
@@ -12,7 +14,7 @@ import {
   Plus, ArrowRight, ShieldAlert, Calendar,
   Home, ClipboardList, MessageSquare, ChevronRight, HelpCircle,
   FileText, TrendingUp, Receipt, LayoutDashboard, Users,
-  Zap, Lock,
+  Zap, Lock, PenLine, ClipboardCheck,
 } from 'lucide-react'
 import { apiClient } from '../../services/api.service'
 import type { Application } from '../../types/application.types'
@@ -194,6 +196,8 @@ export default function OwnerDashboard() {
 
   const [pendingApps, setPendingApps] = useState<Application[]>([])
   const [upcomingVisits, setUpcomingVisits] = useState<Booking[]>([])
+  const [pendingBookings, setPendingBookings] = useState<Booking[]>([])
+  const [contractsToSign, setContractsToSign] = useState<Contract[]>([])
   const [identityVerified, setIdentityVerified] = useState(true)
   const [tourKey, setTourKey] = useState(0)
   const [tourImmediate, setTourImmediate] = useState(false)
@@ -303,6 +307,14 @@ export default function OwnerDashboard() {
         .sort((a, b) => new Date(`${a.visitDate}T${a.visitTime}`).getTime() - new Date(`${b.visitDate}T${b.visitTime}`).getTime())
         .slice(0, 5)
       setUpcomingVisits(future)
+    }).catch(() => {})
+
+    bookingService.getBookings({ status: 'PENDING' }, { page: 1, limit: 10 }).then((res) => {
+      setPendingBookings(res.bookings.slice(0, 5))
+    }).catch(() => {})
+
+    contractService.getContracts({ status: 'SIGNED_TENANT' }, { page: 1, limit: 5 }).then((res) => {
+      setContractsToSign(res.contracts)
     }).catch(() => {})
 
     apiClient.get('/stripe/identity-status').then((res) => {
@@ -509,6 +521,113 @@ export default function OwnerDashboard() {
           }}>
             {kpis.map((kpi) => <KpiCard key={kpi.label} {...kpi} />)}
           </div>
+
+          {/* ── Actions requises ──────────────────────────────────────── */}
+          {(pendingBookings.length > 0 || contractsToSign.length > 0) && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.14, duration: 0.28 }}
+              style={{
+                background: BAI.bgSurface,
+                border: `1px solid ${BAI.border}`,
+                borderRadius: 14,
+                padding: '18px 20px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                <div style={{
+                  width: 28, height: 28, borderRadius: 8,
+                  background: '#fef9ec', border: '1px solid #f3c99a',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <ClipboardCheck size={14} style={{ color: BAI.warning }} />
+                </div>
+                <h3 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 17, color: BAI.ink, margin: 0, flex: 1 }}>
+                  À faire maintenant
+                </h3>
+                <span style={{
+                  padding: '2px 9px', borderRadius: 20,
+                  background: BAI.warningLight, border: '1px solid #f3c99a',
+                  fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.warning,
+                }}>
+                  {pendingBookings.length + contractsToSign.length}
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {pendingBookings.map((b) => (
+                  <div key={b.id} style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '10px 14px', borderRadius: 10,
+                    background: BAI.bgMuted, border: `1px solid ${BAI.border}`,
+                  }}>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                      background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <Calendar size={14} style={{ color: BAI.tenant }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.ink, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        Visite à confirmer — {(b as any).property?.title ?? 'Bien'}
+                      </p>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 11.5, color: BAI.inkMid, margin: '1px 0 0' }}>
+                        {b.tenant ? `${b.tenant.firstName} ${b.tenant.lastName}` : ''} · {b.visitDate ? format(new Date(b.visitDate), 'dd MMM', { locale: fr }) : ''}
+                      </p>
+                    </div>
+                    <Link
+                      to="/bookings/manage"
+                      style={{
+                        padding: '6px 14px', borderRadius: 7, flexShrink: 0,
+                        background: BAI.tenant, color: '#fff',
+                        fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600,
+                        textDecoration: 'none',
+                      }}
+                    >
+                      Confirmer
+                    </Link>
+                  </div>
+                ))}
+
+                {contractsToSign.map((c) => (
+                  <div key={c.id} style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '10px 14px', borderRadius: 10,
+                    background: BAI.bgMuted, border: `1px solid ${BAI.border}`,
+                  }}>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                      background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <PenLine size={14} style={{ color: BAI.owner }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.ink, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        Contrat à signer — {(c as any).property?.title ?? 'Bien'}
+                      </p>
+                      <p style={{ fontFamily: BAI.fontBody, fontSize: 11.5, color: BAI.inkMid, margin: '1px 0 0' }}>
+                        Locataire a signé · votre signature est requise
+                      </p>
+                    </div>
+                    <Link
+                      to={`/contracts/${c.id}`}
+                      style={{
+                        padding: '6px 14px', borderRadius: 7, flexShrink: 0,
+                        background: BAI.owner, color: '#fff',
+                        fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600,
+                        textDecoration: 'none',
+                      }}
+                    >
+                      Signer
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
 
           {/* ── PRO Upgrade Banner — FREE users only ─────────────────── */}
           {isFreePlan && (

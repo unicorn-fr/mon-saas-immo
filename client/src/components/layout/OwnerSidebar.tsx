@@ -11,6 +11,7 @@ import { prefetchRoute } from '../../utils/routePrefetch'
 import { useMessages } from '../../hooks/useMessages'
 import { useAuth } from '../../hooks/useAuth'
 import { applicationService } from '../../services/application.service'
+import { contractService } from '../../services/contract.service'
 import { BAI } from '../../constants/bailio-tokens'
 import { useWindowWidth } from '../../hooks/useWindowWidth'
 import { usePlan } from '../../hooks/usePlan'
@@ -136,6 +137,7 @@ export function OwnerSidebar() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [pendingAppsCount, setPendingAppsCount] = useState(0)
+  const [contractsToSignCount, setContractsToSignCount] = useState(0)
   const windowWidth = useWindowWidth()
   const isTabletCompact = windowWidth >= BAI.bpMd && windowWidth < BAI.bpLg
   const { hasPlan } = usePlan()
@@ -144,6 +146,9 @@ export function OwnerSidebar() {
     fetchUnreadCount()
     applicationService.list()
       .then((apps) => setPendingAppsCount(apps.filter((a) => a.status === 'PENDING').length))
+      .catch(() => {})
+    contractService.getContracts({ status: 'SIGNED_TENANT' }, { page: 1, limit: 20 })
+      .then((res) => setContractsToSignCount(res.contracts.length))
       .catch(() => {})
     const timer = setInterval(() => fetchUnreadCount(), 30_000)
     return () => clearInterval(timer)
@@ -168,7 +173,7 @@ export function OwnerSidebar() {
         { to: '/applications/manage', icon: ClipboardList, label: 'Candidatures', badge: pendingAppsCount, id: 'tour-owner-applications' },
         { to: '/bookings/manage', icon: Calendar, label: 'Visites', id: 'tour-owner-visits' },
         { to: '/messages', icon: MessageSquare, label: 'Messages', badge: unreadCount, id: 'tour-owner-messages' },
-        { to: '/contracts', icon: FileText, label: 'Contrats & Baux', id: 'tour-owner-contracts' },
+        { to: '/contracts', icon: FileText, label: 'Contrats & Baux', badge: contractsToSignCount, id: 'tour-owner-contracts' },
       ],
     },
     {
