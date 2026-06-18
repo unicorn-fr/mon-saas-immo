@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import { prisma } from '../config/database.js'
+import { generateFiscalPDF, FiscalPDFData } from '../templates/fiscalPDF.js'
 
 class FinanceController {
   /**
@@ -159,6 +160,147 @@ class FinanceController {
       })
     } catch (err) {
       console.error('getFiscalData error:', err)
+      return res.status(500).json({ success: false, message: 'Server error' })
+    }
+  }
+
+  /**
+   * GET /api/v1/finances/fiscal-pdf?year=2024
+   * Generate a fiscal PDF report for the authenticated owner
+   */
+  async getFiscalPDF(req: Request, res: Response) {
+    try {
+      const userId = req.user!.id
+      const year = parseInt(req.query.year as string) || new Date().getFullYear() - 1
+
+      const currentYear = new Date().getFullYear()
+      if (year > currentYear) {
+        return res.status(400).json({ success: false, message: 'Year cannot be in the future' })
+      }
+      if (year < 2010) {
+        return res.status(400).json({ success: false, message: 'Year too far in the past' })
+      }
+
+      const startDate = new Date(`${year}-01-01`)
+      const endDate = new Date(`${year}-12-31T23:59:59`)
+
+      // Fetch owner name
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { firstName: true, lastName: true },
+      })
+
+      // Fetch payments for the year
+      const payments = await prisma.payment.findMany({
+        where: {
+          contract: { ownerId: userId },
+          status: 'PAID',
+          paidDate: { gte: startDate, lte: endDate },
+        },
+        include: { contract: { include: { property: true } } },
+      })
+
+      // Fetch expenses for the year
+      const expenses = await prisma.expense.findMany({
+        where: {
+          ownerId: userId,
+          date: { gte: startDate, lte: endDate },
+        },
+        include: { property: true },
+      })
+
+      // Fetch all loans for the owner
+      const loans = await prisma.loan.findMany({
+        where: { ownerId: userId },
+      })
+
+      // Calculate totals
+      const totalRevenusBruts = payments.reduce((sum, p) => sum + (p.amount || 0), 0)
+      const totalChargesDeductibles = expenses.reduce((sum, e) => sum + (e.amount || 0), 0)
+      const totalInteretsEmprunt = loans.reduce((sum, l) => {
+        return sum + (l.totalAmount * l.interestRate) / 100
+      }, 0)
+      const revenuNetFoncier = Math.max(0, totalRevenusBruts - totalChargesDeductibles)
+
+      // Group payments and expenses by property
+      const byProperty: Record<string, { title: string; address: string; revenus: number; charges: number }> = {}
+
+      payments.forEach((p) => {
+        const prop = p.contract?.property
+        if (!prop) return
+        if (!byProperty[prop.id]) {
+          byProperty[prop.id] = { title: prop.title, address: prop.address ?? '', revenus: 0, charges: 0 }
+        }
+        byProperty[prop.id].revenus += p.amount || 0
+      })
+
+      expenses.forEach((e) => {
+        const prop = e.property
+        if (!prop) return
+        if (!byProperty[prop.id]) {
+          byProperty[prop.id] = { title: prop.title, address: prop.address ?? '', revenus: 0, charges: 0 }
+        }
+        byProperty[prop.id].charges += e.amount || 0
+      })
+
+      const insuranceAmount = expenses
+        .filter((e) => e.category === 'ASSURANCE')
+        .reduce((s, e) => s + e.amount, 0)
+      const managementAmount = expenses
+        .filter((e) => e.category === 'CHARGES_COPRO' || e.category === 'AUTRE')
+        .reduce((s, e) => s + e.amount, 0)
+
+      // Determine regime
+      const regimeParam = req.query.regime as string | undefined
+      let regime = regimeParam && regimeParam !== 'auto'
+        ? regimeParam
+        : totalRevenusBruts < 15000
+          ? 'Revenus fonciers — Micro-foncier (abattement 30%)'
+          : 'Revenus fonciers — Régime Réel'
+
+      const ownerName = user ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() : 'Propriétaire'
+      const generatedDate = new Date().toLocaleDateString('fr-FR')
+
+      const pdfData: FiscalPDFData = {
+        year,
+        ownerName,
+        generatedDate,
+        regime,
+        summary: {
+          totalRevenusBruts: Math.round(totalRevenusBruts),
+          totalChargesDeductibles: Math.round(totalChargesDeductibles),
+          totalInteretsEmprunt: Math.round(totalInteretsEmprunt),
+          revenuNetFoncier: Math.round(revenuNetFoncier),
+        },
+        properties: Object.values(byProperty),
+        form2044: {
+          ligne110: Math.round(totalRevenusBruts),
+          ligne220: Math.round(totalChargesDeductibles),
+          ligne420: Math.round(totalInteretsEmprunt),
+          ligne430: Math.round(insuranceAmount),
+          ligne440: Math.round(managementAmount),
+          ligne240: Math.round(revenuNetFoncier),
+        },
+        form2042: {
+          case4BA: Math.round(revenuNetFoncier),
+          case4BC: 0,
+          case4BE: Math.round(totalRevenusBruts),
+        },
+        loans: loans.map((l) => ({
+          bankName: l.bankName ?? 'Banque',
+          totalAmount: l.totalAmount,
+          interestRate: l.interestRate,
+          annualInterests: Math.round((l.totalAmount * l.interestRate) / 100),
+        })),
+      }
+
+      const buffer = await generateFiscalPDF(pdfData)
+
+      res.setHeader('Content-Type', 'application/pdf')
+      res.setHeader('Content-Disposition', `attachment; filename="rapport-fiscal-${year}.pdf"`)
+      return res.send(buffer)
+    } catch (err) {
+      console.error('getFiscalPDF error:', err)
       return res.status(500).json({ success: false, message: 'Server error' })
     }
   }

@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { authenticate, authorize } from '../middlewares/auth.middleware.js'
+import { requireFeature } from '../middlewares/featureGate.middleware.js'
 import { prisma } from '../config/database.js'
 import { findRentalMarketData } from '../data/rentalMarketData.js'
 import { financeController } from '../controllers/finance.controller.js'
@@ -7,6 +8,9 @@ import { financeController } from '../controllers/finance.controller.js'
 const router = Router()
 router.use(authenticate)
 router.use(authorize('OWNER'))
+
+// GET /finances/fiscal-pdf?year=2024
+router.get('/fiscal-pdf', requireFeature('rapport_fiscal'), financeController.getFiscalPDF.bind(financeController))
 
 // GET /finances/fiscal-data?year=2024
 router.get('/fiscal-data', financeController.getFiscalData.bind(financeController))

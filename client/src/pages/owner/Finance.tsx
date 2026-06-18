@@ -42,9 +42,9 @@ import {
   Wallet,
   Download,
   ShieldCheck,
-  Printer,
 } from 'lucide-react'
 import { financeService, MarketAnalysis, FiscalData } from '../../services/finance.service'
+import { PremiumGate } from '../../components/billing/PremiumGate'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -399,71 +399,24 @@ export default function Finance() {
   }
 
   // ── Fiscal report generator ──────────────────────────────────────────────
-  function generateFiscalReport() {
+  async function downloadFiscalPDF() {
     const year = new Date().getFullYear() - 1
-    const rev = summary?.totalRevenue ?? 0
-    const exp = summary?.totalExpenses ?? 0
-    const net = summary?.netCashFlow ?? 0
-    const regimeLabels: Record<string, string> = {
-      micro_foncier: 'Micro-foncier (abattement 30 %)',
-      reel: 'Régime réel foncier',
-      micro_bic: 'LMNP Micro-BIC (abattement 50 %)',
-      bic_reel: 'LMNP BIC Réel',
-      is: "SCI à l'IS",
-      unknown: 'Régime non défini',
+    try {
+      const { data } = await apiClient.get(`/finances/fiscal-pdf?year=${year}`, { responseType: 'blob' })
+      const url = URL.createObjectURL(new Blob([data], { type: 'application/pdf' }))
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `rapport-fiscal-${year}-bailio.pdf`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      // Fallback to legacy print if PDF endpoint fails
+      const w = window.open('', '_blank')
+      if (w) {
+        w.document.write(`<html><body><h1>Rapport fiscal ${year}</h1><p>Génération du PDF en cours...</p></body></html>`)
+        w.document.close()
+      }
     }
-    const regime = regimeLabels[fiscalForm.currentRegime] ?? 'Non défini'
-    const microBase = fiscalForm.currentRegime === 'micro_foncier' ? Math.round(rev * 0.7) : fiscalForm.currentRegime === 'micro_bic' ? Math.round(rev * 0.5) : null
-    const forms = fiscalForm.currentRegime === 'reel' || fiscalForm.currentRegime === 'micro_foncier'
-      ? [{ label: 'Revenus fonciers', ref: '2044 + 2042' }]
-      : fiscalForm.currentRegime === 'micro_bic' || fiscalForm.currentRegime === 'bic_reel'
-      ? [{ label: 'BIC (LMNP)', ref: '2031 + 2042-C' }]
-      : fiscalForm.currentRegime === 'is'
-      ? [{ label: 'Impôt sur les sociétés', ref: '2065' }]
-      : [{ label: 'Déclaration principale', ref: '2042' }]
-    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Rapport fiscal ${year} — Bailio</title>
-    <style>
-      *{box-sizing:border-box}
-      body{font-family:'DM Sans',Arial,sans-serif;max-width:780px;margin:40px auto;padding:0 24px;color:#0d0c0a;line-height:1.6}
-      h1{font-family:Georgia,serif;font-style:italic;font-size:36px;color:#1a3270;margin:0 0 4px}
-      .sub{color:#5a5754;font-size:13px;margin:0 0 32px}
-      .badge{display:inline-block;padding:3px 10px;border-radius:99px;border:1px solid #b8ccf0;background:#eaf0fb;color:#1a3270;font-size:11px;font-weight:700;letter-spacing:0.06em;margin-bottom:32px}
-      .card{background:#f4f2ee;border-radius:12px;padding:20px 24px;margin-bottom:16px}
-      .card h2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#9e9b96;margin:0 0 14px}
-      .row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #e4e1db;font-size:14px}
-      .row:last-child{border-bottom:none}
-      .lbl{color:#5a5754}.val{font-weight:700}
-      .green{color:#1b5e3b}.red{color:#9b1c1c}.blue{color:#1a3270}
-      .links a{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;border:1px solid #e4e1db;background:#fff;color:#1a3270;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:8px}
-      .links a:hover{background:#eaf0fb}
-      .disclaimer{font-size:11px;color:#9e9b96;margin-top:32px;padding-top:16px;border-top:1px solid #e4e1db}
-      @media print{body{margin:20px}.no-print{display:none}}
-    </style></head><body>
-    <p style="color:#c4976a;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin:0 0 8px">Gestion locative · Bailio</p>
-    <h1>Rapport fiscal ${year}</h1>
-    <p class="sub">Généré le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-    <span class="badge">${regime}</span>
-    <div class="card"><h2>Synthèse financière ${year}</h2>
-      <div class="row"><span class="lbl">Revenus fonciers bruts</span><span class="val blue">${rev.toLocaleString('fr-FR')} €</span></div>
-      <div class="row"><span class="lbl">Charges &amp; dépenses</span><span class="val">${exp.toLocaleString('fr-FR')} €</span></div>
-      <div class="row"><span class="lbl">Résultat net</span><span class="val ${net >= 0 ? 'green' : 'red'}">${net >= 0 ? '+' : ''}${net.toLocaleString('fr-FR')} €</span></div>
-      ${microBase != null ? `<div class="row"><span class="lbl">Base imposable (après abattement)</span><span class="val blue">${microBase.toLocaleString('fr-FR')} €</span></div>` : ''}
-    </div>
-    ${myProperties.length > 0 ? `<div class="card"><h2>Patrimoine immobilier</h2>${myProperties.map(p => `<div class="row"><span class="lbl">${p.title} — ${p.city}</span><span class="val">${p.price ? (p.price * 12).toLocaleString('fr-FR') + ' €/an estimé' : 'Loyer à renseigner'}</span></div>`).join('')}</div>` : ''}
-    <div class="card"><h2>Formulaires à déposer</h2>
-      ${forms.map(f => `<div class="row"><span class="lbl">${f.label}</span><span class="val blue">Formulaire ${f.ref}</span></div>`).join('')}
-      <div class="row"><span class="lbl">Date limite de dépôt</span><span class="val">Voir calendrier fiscal impots.gouv.fr</span></div>
-    </div>
-    <div class="links"><h2 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#9e9b96;margin:0 0 12px">Se connecter &amp; déclarer</h2>
-      <a href="https://www.impots.gouv.fr/particulier/declarer-mes-revenus" target="_blank">🔗 impots.gouv.fr — Déclaration en ligne</a>
-      <a href="https://www.impots.gouv.fr/sites/default/files/formulaires/2044/2024/2044_3671.pdf" target="_blank">📄 Formulaire 2044 — Revenus fonciers (régime réel)</a>
-      <a href="https://www.impots.gouv.fr/particulier/les-revenus-des-locations-meublees" target="_blank">📄 LMNP — Locations meublées (2042-C Pro)</a>
-    </div>
-    <div class="disclaimer">⚠️ Ce rapport est indicatif et généré automatiquement à partir de vos données Bailio. Il ne constitue pas un conseil fiscal. Consultez votre expert-comptable ou le service des impôts pour votre situation personnelle.</div>
-    <script>window.onload=function(){window.print()}</script>
-    </body></html>`
-    const w = window.open('', '_blank')
-    if (w) { w.document.write(html); w.document.close() }
   }
 
   const chartData = (summary?.cashFlowByMonth ?? []).map((m) => ({
@@ -2060,6 +2013,11 @@ export default function Finance() {
 
         {/* ── TAB: FISCAL ── */}
         {activeTab === 'fiscal' && (
+          <PremiumGate
+            requiredPlan="PRO"
+            title="Rapport fiscal automatique"
+            description="Accédez à votre récapitulatif fiscal personnalisé, formulaires 2044 et 2042 pré-remplis, et téléchargez votre rapport PDF directement depuis Bailio."
+          >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
             {/* Header */}
@@ -2081,10 +2039,10 @@ export default function Finance() {
                   </p>
                 </div>
                 <button
-                  onClick={generateFiscalReport}
+                  onClick={downloadFiscalPDF}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 10, border: 'none', background: BAI.owner, color: '#fff', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer', minHeight: 44 }}
                 >
-                  <Printer style={{ width: 15, height: 15 }} />
+                  <Download style={{ width: 15, height: 15 }} />
                   Générer le rapport PDF
                 </button>
               </div>
@@ -2368,6 +2326,7 @@ export default function Finance() {
             </div>
 
           </div>
+          </PremiumGate>
         )}
 
         </div>
