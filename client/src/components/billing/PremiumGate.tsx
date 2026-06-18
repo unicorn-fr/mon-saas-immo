@@ -33,40 +33,21 @@ export function PremiumGate({
   }
 
   return (
-    // overflow: clip clips visually like overflow:hidden
-    // but does NOT create a scroll container — sticky children still work
-    <div style={{ position: 'relative', borderRadius: 16, overflow: 'clip' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
 
-      {/* Blurred content — lighter so the layout is still legible (teasing) */}
+      {/* ── CTA card — toujours visible en haut ── */}
       <div style={{
-        filter: 'blur(1.5px)',
-        opacity: 0.65,
-        pointerEvents: 'none',
-        userSelect: 'none',
-      }}>
-        {children}
-      </div>
-
-      {/* Gradient overlay — covers the full scrollable area */}
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        background: 'linear-gradient(180deg, rgba(250,250,248,0.25) 0%, rgba(250,250,248,0.72) 35%, rgba(250,250,248,0.96) 65%)',
-        pointerEvents: 'none',
-      }} />
-
-      {/* Sticky CTA — follows the viewport as the user scrolls */}
-      <div style={{
-        position: 'sticky',
-        top: compact ? '8vh' : '18vh',
+        background: BAI.bgSurface,
+        border: `1px solid ${BAI.border}`,
+        borderRadius: compact ? 12 : 16,
+        padding: compact ? '20px 20px' : '28px 32px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
-        padding: compact ? '20px 16px' : '32px 24px',
-        gap: compact ? 8 : 14,
-        zIndex: 2,
-        pointerEvents: 'auto',
+        gap: compact ? 10 : 16,
+        textAlign: 'center',
+        boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
+        marginBottom: 2,
       }}>
 
         {/* Lock icon */}
@@ -85,7 +66,7 @@ export function PremiumGate({
         </div>
 
         {/* Title + description */}
-        <div style={{ textAlign: 'center', maxWidth: 420 }}>
+        <div style={{ maxWidth: 460 }}>
           <h3 style={{
             fontFamily: BAI.fontDisplay,
             fontStyle: 'italic',
@@ -151,6 +132,31 @@ export function PremiumGate({
               ))}
           </div>
         )}
+      </div>
+
+      {/* ── Aperçu flouté en dessous ── */}
+      <div style={{
+        position: 'relative',
+        borderRadius: compact ? 12 : 16,
+        overflow: 'hidden',
+        maxHeight: compact ? 200 : 340,
+      }}>
+        <div style={{
+          filter: 'blur(2px)',
+          opacity: 0.55,
+          pointerEvents: 'none',
+          userSelect: 'none',
+        }}>
+          {children}
+        </div>
+        {/* Fade out at bottom so cut-off looks intentional */}
+        <div style={{
+          position: 'absolute',
+          bottom: 0, left: 0, right: 0,
+          height: compact ? 60 : 100,
+          background: 'linear-gradient(0deg, rgba(250,250,248,1) 0%, rgba(250,250,248,0) 100%)',
+          pointerEvents: 'none',
+        }} />
       </div>
     </div>
   )
