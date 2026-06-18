@@ -1,5 +1,7 @@
 import { prisma } from '../config/database.js'
 import { EdlSessionStatus } from '@prisma/client'
+import { sendEmail } from '../utils/email.util.js'
+import { env } from '../config/env.js'
 
 // ── SSE clients map ─────────────────────────────────────────────────────────
 // sessionId → Set of Response objects (owner + tenant)
@@ -185,9 +187,16 @@ class EdlService {
       data: { status: 'COMPLETED' },
     })
 
-    // Persiste dans le contrat
+    // Persiste dans le contrat (charge aussi owner/tenant/property pour les emails)
     const edlKey = `edl_${session.edlType.toLowerCase()}`
-    const contract = await prisma.contract.findUnique({ where: { id: session.contractId } })
+    const contract = await prisma.contract.findUnique({
+      where: { id: session.contractId },
+      include: {
+        owner: { select: { firstName: true, lastName: true, email: true } },
+        tenant: { select: { firstName: true, lastName: true, email: true } },
+        property: { select: { address: true, city: true } },
+      },
+    })
     if (contract) {
       const content = (contract.content ?? {}) as Record<string, unknown>
       await prisma.contract.update({
@@ -197,6 +206,74 @@ class EdlService {
     }
 
     broadcastEdlUpdate(sessionId, userId, { type: 'SESSION_COMPLETED' })
+
+    // Envoi des emails de confirmation (non-bloquant)
+    try {
+      if (contract?.owner && contract?.tenant && contract?.property) {
+        const edlTypeLabel = session.edlType === 'ENTREE' ? "d'entrée" : 'de sortie'
+        const edlTypeFull = session.edlType === 'ENTREE' ? "d'entrée" : 'de sortie'
+        const propertyAddress = `${contract.property.address}, ${contract.property.city}`
+        const edlUrl = `${env.FRONTEND_URL}/contracts/${session.contractId}/edl/session`
+        const dateStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
+
+        const buildHtml = (recipientFirstName: string) => `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#fafaf8;font-family:'DM Sans',system-ui,sans-serif">
+  <div style="max-width:560px;margin:40px auto;background:#fff;border:1px solid #e4e1db;border-radius:12px;overflow:hidden">
+    <div style="background:#1a1a2e;padding:28px 32px">
+      <p style="color:#c4976a;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin:0 0 4px">Bailio · Gestion Locative</p>
+      <h1 style="color:#fff;font-size:22px;font-weight:700;margin:0">État des lieux ${edlTypeFull} finalisé</h1>
+    </div>
+    <div style="padding:28px 32px">
+      <p style="color:#0d0c0a;font-size:15px;line-height:1.6;margin:0 0 16px">Bonjour ${recipientFirstName},</p>
+      <p style="color:#5a5754;font-size:14px;line-height:1.6;margin:0 0 24px">
+        L'état des lieux ${edlTypeLabel} du bien situé au <strong>${propertyAddress}</strong> a été finalisé et signé par les deux parties.
+        Le document est désormais verrouillé et consultable à tout moment depuis votre espace Bailio.
+      </p>
+      <div style="background:#f4f2ee;border-radius:8px;padding:16px 20px;margin:0 0 24px">
+        <p style="color:#9e9b96;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 12px">Récapitulatif</p>
+        <table style="width:100%;border-collapse:collapse">
+          <tr>
+            <td style="color:#9e9b96;font-size:13px;padding:3px 0">Bailleur</td>
+            <td style="color:#0d0c0a;font-size:13px;font-weight:600;text-align:right">${contract.owner.firstName} ${contract.owner.lastName}</td>
+          </tr>
+          <tr>
+            <td style="color:#9e9b96;font-size:13px;padding:3px 0">Locataire</td>
+            <td style="color:#0d0c0a;font-size:13px;font-weight:600;text-align:right">${contract.tenant.firstName} ${contract.tenant.lastName}</td>
+          </tr>
+          <tr>
+            <td style="color:#9e9b96;font-size:13px;padding:3px 0">Bien</td>
+            <td style="color:#0d0c0a;font-size:13px;font-weight:600;text-align:right">${propertyAddress}</td>
+          </tr>
+          <tr>
+            <td style="color:#9e9b96;font-size:13px;padding:3px 0">Date</td>
+            <td style="color:#0d0c0a;font-size:13px;font-weight:600;text-align:right">${dateStr}</td>
+          </tr>
+        </table>
+      </div>
+      <a href="${edlUrl}" style="display:inline-block;background:#1a1a2e;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600">Consulter l'état des lieux →</a>
+      <p style="color:#9e9b96;font-size:12px;line-height:1.6;margin:24px 0 0">
+        Ce document est établi conformément à la loi n° 89-462 du 6 juillet 1989 et au décret n° 2016-382 du 30 mars 2016.<br>
+        <a href="https://bailio.fr" style="color:#c4976a;text-decoration:none">bailio.fr</a> · plateforme de gestion locative
+      </p>
+    </div>
+  </div>
+</body>
+</html>`
+
+        const subject = `État des lieux ${edlTypeLabel} finalisé — ${propertyAddress}`
+
+        await Promise.all([
+          sendEmail({ to: contract.owner.email, subject, html: buildHtml(contract.owner.firstName) }),
+          sendEmail({ to: contract.tenant.email, subject, html: buildHtml(contract.tenant.firstName) }),
+        ])
+        console.log(`[edl] emails envoyés → ${contract.owner.email}, ${contract.tenant.email}`)
+      }
+    } catch (emailErr: unknown) {
+      const msg = emailErr instanceof Error ? emailErr.message : String(emailErr)
+      console.error('[edl] email send failed (non-bloquant):', msg)
+    }
 
     return updated
   }

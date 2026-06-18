@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import jsQR from 'jsqr'
@@ -18,8 +18,11 @@ import toast from 'react-hot-toast'
 import {
   ClipboardCheck, CheckCircle, Lock, ChevronDown, ChevronRight,
   Loader2, QrCode, Wifi, WifiOff, Users, Camera, ArrowLeft, X,
-  AlertTriangle, PenTool,
+  AlertTriangle, PenTool, FileText,
 } from 'lucide-react'
+import { PDFDownloadLink } from '@react-pdf/renderer'
+import { EDLPDF } from '../../components/contract/EDLPDF'
+import type { EtatDesLieux } from '../../data/etatDesLieuxTemplate'
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 
@@ -470,6 +473,44 @@ export default function EdlSessionPage() {
   const [iHaveSigned, setIHaveSigned] = useState(false)   // moi j'ai signé, j'attends l'autre
 
   const isOwner = user?.role === 'OWNER'
+
+  // ── PDF data ──────────────────────────────────────────────────────────────
+
+  const edlForPdf = useMemo<EtatDesLieux | null>(() => {
+    if (!completed || !contract || rooms.length === 0) return null
+    return {
+      type: session?.edlType ?? 'ENTREE',
+      date: new Date().toLocaleDateString('fr-FR'),
+      bailleur: {
+        prenom: (contract as any).owner?.firstName ?? '',
+        nom: (contract as any).owner?.lastName ?? '',
+      },
+      locataire: {
+        prenom: (contract as any).tenant?.firstName ?? '',
+        nom: (contract as any).tenant?.lastName ?? '',
+      },
+      adresse: (contract as any).property?.address ?? '',
+      codePostal: (contract as any).property?.postalCode ?? '',
+      ville: (contract as any).property?.city ?? '',
+      typeLogement: (contract as any).property?.type ?? '',
+      surface: (contract as any).property?.surface ?? 0,
+      rooms: rooms.map(room => ({
+        ...room,
+        elements: room.elements.map(el => {
+          const roomData = (edlData as any)[room.id]
+          const elData = roomData?.elements?.[el.id]
+          return {
+            ...el,
+            etat: elData?.state ?? el.etat ?? 'NA',
+            observation: elData?.observation ?? el.observation ?? '',
+          }
+        }),
+      })),
+      compteurs: (edlData as any)._compteurs ?? [],
+      cles: (edlData as any)._cles ?? [],
+      observationsGenerales: (edlData as any)._observations ?? '',
+    }
+  }, [completed, contract, rooms, edlData, session?.edlType])
 
   // ── Init ──────────────────────────────────────────────────────────────────
 
@@ -959,10 +1000,29 @@ export default function EdlSessionPage() {
                   </div>
                 ))}
               </div>
-              <div style={{ textAlign: 'center' }}>
-                <button style={btnBase(BAI.night)} onClick={() => navigate(`/contracts/${contractId}`)}>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <button
+                  style={{ ...btnBase(BAI.bgSurface, BAI.ink), border: `1px solid ${BAI.border}` }}
+                  onClick={() => navigate(`/contracts/${contractId}`)}
+                >
                   Retour au contrat
                 </button>
+                {edlForPdf && (
+                  <PDFDownloadLink
+                    document={<EDLPDF edl={edlForPdf} />}
+                    fileName={`EDL-${session?.edlType === 'ENTREE' ? 'entree' : 'sortie'}-${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}.pdf`}
+                    style={{ textDecoration: 'none' }}
+                  >
+                    {({ loading: pdfLoading }) => (
+                      <button style={btnBase(BAI.tenant)} disabled={pdfLoading}>
+                        {pdfLoading
+                          ? <><Loader2 size={14} className="animate-spin" /> Génération PDF…</>
+                          : <><FileText size={14} /> Télécharger le PDF</>
+                        }
+                      </button>
+                    )}
+                  </PDFDownloadLink>
+                )}
               </div>
             </div>
           )}

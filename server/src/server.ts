@@ -21,6 +21,7 @@ import { checkRequiredEnvVars } from './utils/checkEnv.js'
 import cron from 'node-cron'
 import { generateMonthlyPayments } from './jobs/generateMonthlyPayments.js'
 import { checkSearchAlerts } from './jobs/checkSearchAlerts.js'
+import { sendRentReminders } from './jobs/sendRentReminders.js'
 
 checkRequiredEnvVars()
 
@@ -83,6 +84,14 @@ setImmediate(async () => {
     console.log('[cron] Vérification des alertes de recherche...')
     await checkSearchAlerts().catch((err: Error) =>
       console.error('[cron] checkSearchAlerts error:', err)
+    )
+  })
+
+  // Cron quotidien à 9h : envoi des relances de loyer en retard
+  cron.schedule('0 9 * * *', async () => {
+    console.log('[cron] Relances loyers en retard...')
+    await sendRentReminders().catch((err: Error) =>
+      console.error('[cron] sendRentReminders error:', err)
     )
   })
 
