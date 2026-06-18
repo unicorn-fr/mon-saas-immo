@@ -304,6 +304,109 @@ class FinanceController {
       return res.status(500).json({ success: false, message: 'Server error' })
     }
   }
+
+  /**
+   * GET /api/v1/finances/wizard-prefill?year=2024
+   * Returns pre-filled WizardAnswers from existing Bailio data.
+   * Avoids re-asking the user for data the platform already knows.
+   */
+  async getWizardPrefill(req: Request, res: Response) {
+    try {
+      const userId = req.user!.id
+      const year = parseInt(req.query.year as string) || new Date().getFullYear() - 1
+      const startDate = new Date(`${year}-01-01`)
+      const endDate   = new Date(`${year}-12-31T23:59:59`)
+
+      // ── 1. Properties ────────────────────────────────────────────────────────
+      const properties = await prisma.property.findMany({
+        where: { ownerId: userId },
+        select: { id: true, title: true, address: true, city: true, furnished: true, price: true },
+      })
+
+      // Auto-detect location type
+      const allFurnished = properties.length > 0 && properties.every((p) => p.furnished)
+      const allNu        = properties.length > 0 && properties.every((p) => !p.furnished)
+      const mixed        = properties.length > 0 && !allFurnished && !allNu
+
+      // ── 2. Paid payments for the year ────────────────────────────────────────
+      const payments = await prisma.payment.findMany({
+        where: {
+          contract: { ownerId: userId },
+          status: 'PAID',
+          paidDate: { gte: startDate, lte: endDate },
+        },
+        select: { amount: true, charges: true },
+      })
+      const loyersBruts = Math.round(payments.reduce((s, p) => s + (p.amount ?? 0), 0))
+      const recettesMeublees = loyersBruts  // same total, regime-split is semantic
+
+      // ── 3. Expenses by category ──────────────────────────────────────────────
+      const expenses = await prisma.expense.findMany({
+        where: { ownerId: userId, date: { gte: startDate, lte: endDate } },
+        select: { category: true, amount: true },
+      })
+      const sumCat = (cat: string) =>
+        Math.round(expenses.filter((e) => e.category === cat).reduce((s, e) => s + e.amount, 0))
+
+      const taxeFonciere   = sumCat('TAXE_FONCIERE')
+      const assurances     = sumCat('ASSURANCE')
+      const travaux        = sumCat('TRAVAUX')
+      const chargesCopro   = sumCat('CHARGES_COPRO')
+      const autresCharges  = sumCat('AUTRE')
+
+      // ── 4. Loans → annual interests ──────────────────────────────────────────
+      const loans = await prisma.loan.findMany({
+        where: { ownerId: userId },
+        select: { bankName: true, totalAmount: true, interestRate: true, monthlyPayment: true },
+      })
+      const interetsEmprunt = Math.round(
+        loans.reduce((s, l) => s + (l.totalAmount * l.interestRate) / 100, 0)
+      )
+
+      // ── 5. Build prefill object ──────────────────────────────────────────────
+      const prefill = {
+        // Always nom propre default — user will be asked about SCI/indivision
+        holdingMode: 'NOM_PROPRE' as const,
+        // Location type if unambiguous
+        locationType: allNu ? 'NU' : allFurnished ? 'MEUBLE' : undefined,
+        // Financials
+        loyersBruts,
+        recettesMeublees,
+        interetsEmprunt,
+        taxeFonciere,
+        assurances,
+        travaux,
+        chargesCopro,
+        autresCharges,
+        // Regime hint (auto based on threshold)
+        opteRegimeReel: loyersBruts >= 15000,
+      }
+
+      return res.json({
+        success: true,
+        data: {
+          prefill,
+          properties: properties.map((p) => ({
+            id: p.id,
+            title: p.title,
+            address: `${p.address ?? ''}, ${p.city ?? ''}`.trim().replace(/^,\s*/, ''),
+            furnished: p.furnished,
+            monthlyRent: p.price,
+          })),
+          mixed,
+          year,
+          dataQuality: {
+            hasPayments: payments.length > 0,
+            hasExpenses: expenses.length > 0,
+            hasLoans:    loans.length > 0,
+          },
+        },
+      })
+    } catch (err) {
+      console.error('getWizardPrefill error:', err)
+      return res.status(500).json({ success: false, message: 'Server error' })
+    }
+  }
 }
 
 export const financeController = new FinanceController()

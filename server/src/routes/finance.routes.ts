@@ -9,6 +9,9 @@ const router = Router()
 router.use(authenticate)
 router.use(authorize('OWNER'))
 
+// GET /finances/wizard-prefill?year=2024 — pre-fills WizardAnswers from existing Bailio data
+router.get('/wizard-prefill', financeController.getWizardPrefill.bind(financeController))
+
 // GET /finances/fiscal-pdf?year=2024
 router.get('/fiscal-pdf', requireFeature('rapport_fiscal'), financeController.getFiscalPDF.bind(financeController))
 

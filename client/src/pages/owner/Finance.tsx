@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { useFinanceStore } from '../../store/financeStore'
 import { usePropertyStore } from '../../store/propertyStore'
@@ -42,6 +43,7 @@ import {
   Wallet,
   Download,
   ShieldCheck,
+  Wand2,
 } from 'lucide-react'
 import { financeService, MarketAnalysis, FiscalData } from '../../services/finance.service'
 import { PremiumGate } from '../../components/billing/PremiumGate'
@@ -2038,13 +2040,22 @@ export default function Finance() {
                     Récapitulatif fiscal {new Date().getFullYear() - 1}
                   </p>
                 </div>
-                <button
-                  onClick={downloadFiscalPDF}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 10, border: 'none', background: BAI.owner, color: '#fff', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer', minHeight: 44 }}
-                >
-                  <Download style={{ width: 15, height: 15 }} />
-                  Générer le rapport PDF
-                </button>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  <Link
+                    to="/owner/fiscal-wizard"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 10, textDecoration: 'none', background: BAI.night, color: '#fff', fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, minHeight: 44 }}
+                  >
+                    <Wand2 style={{ width: 15, height: 15 }} />
+                    Assistant fiscal
+                  </Link>
+                  <button
+                    onClick={downloadFiscalPDF}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 10, border: `1px solid ${BAI.border}`, background: BAI.bgSurface, color: BAI.ink, fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer', minHeight: 44 }}
+                  >
+                    <Download style={{ width: 15, height: 15 }} />
+                    Rapport PDF
+                  </button>
+                </div>
               </div>
 
               {/* KPI grid — uses API data when available, fallback to summary */}

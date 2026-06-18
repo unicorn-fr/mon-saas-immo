@@ -42,6 +42,7 @@ const TenantProfile = lazy(() => import('./pages/owner/TenantProfile'))
 const OwnerSettings = lazy(() => import('./pages/owner/Settings'))
 const Rentabilite = lazy(() => import('./pages/owner/Rentabilite'))
 const Finance = lazy(() => import('./pages/owner/Finance'))
+const FiscalWizard = lazy(() => import('./pages/owner/FiscalWizard'))
 const Maintenance = lazy(() => import('./pages/owner/Maintenance'))
 const Quittances = lazy(() => import('./pages/owner/Quittances'))
 const MesLocataires = lazy(() => import('./pages/owner/MesLocataires'))
@@ -302,6 +303,7 @@ function AppRoutes() {
           <Route path="/owner/settings" element={<OwnerSettings />} />
           <Route path="/owner/rentabilite" element={<Rentabilite />} />
           <Route path="/owner/finances" element={<Finance />} />
+          <Route path="/owner/fiscal-wizard" element={<FiscalWizard />} />
           <Route path="/owner/maintenance" element={<Maintenance />} />
           <Route path="/owner/quittances" element={<Quittances />} />
           <Route path="/owner/locataires" element={<MesLocataires />} />
