@@ -12,6 +12,7 @@ import {
   Plus, ArrowRight, ShieldAlert, Calendar,
   Home, ClipboardList, MessageSquare, ChevronRight, HelpCircle,
   FileText, TrendingUp, Receipt, LayoutDashboard, Users,
+  Zap, Lock,
 } from 'lucide-react'
 import { apiClient } from '../../services/api.service'
 import type { Application } from '../../types/application.types'
@@ -20,6 +21,7 @@ import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { PlatformTour } from '../../components/ui/PlatformTour'
 import type { TourFeature } from '../../components/ui/PlatformTour'
+import { usePlan } from '../../hooks/usePlan'
 
 const TOUR_KEY = 'bailio_tour_owner_v1'
 
@@ -187,6 +189,8 @@ export default function OwnerDashboard() {
   const { user } = useAuth()
   const { myProperties, statistics, fetchMyProperties, fetchMyStatistics, isLoading } = useProperties()
   const { unreadCount } = useMessages()
+  const { hasPlan, loading: planLoading } = usePlan()
+  const isFreePlan = !planLoading && !hasPlan('SOLO')
 
   const [pendingApps, setPendingApps] = useState<Application[]>([])
   const [upcomingVisits, setUpcomingVisits] = useState<Booking[]>([])
@@ -505,6 +509,93 @@ export default function OwnerDashboard() {
           }}>
             {kpis.map((kpi) => <KpiCard key={kpi.label} {...kpi} />)}
           </div>
+
+          {/* ── PRO Upgrade Banner — FREE users only ─────────────────── */}
+          {isFreePlan && (
+            <div style={{
+              background: 'linear-gradient(135deg, #1a1a2e 0%, #0a0d1a 100%)',
+              borderRadius: 16,
+              padding: 'clamp(20px,3vw,28px)',
+              position: 'relative',
+              overflow: 'hidden',
+              border: '1px solid rgba(196,151,106,0.25)',
+            }}>
+              {/* Ambient glow */}
+              <div style={{
+                position: 'absolute', top: 0, right: 0,
+                width: '40%', height: '100%',
+                background: 'radial-gradient(ellipse at top right, rgba(196,151,106,0.15) 0%, transparent 60%)',
+                pointerEvents: 'none',
+              }} />
+
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20 }}>
+                {/* Left: title + features */}
+                <div style={{ flex: 1, minWidth: 240 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: 9,
+                      background: 'rgba(196,151,106,0.18)', border: '1px solid rgba(196,151,106,0.3)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <Zap size={16} style={{ color: '#c4976a' }} />
+                    </div>
+                    <div>
+                      <p style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#c4976a', margin: 0 }}>
+                        Plan Free actif
+                      </p>
+                      <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 20, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1.1 }}>
+                        Débloquez tout Bailio
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px' }}>
+                    {[
+                      'Quittances automatiques',
+                      'Signature eIDAS',
+                      'Relances auto',
+                      'Analyse IA dossiers',
+                      'Rapport fiscal',
+                      'Analytics & Rentabilité',
+                    ].map(f => (
+                      <span key={f} style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 5,
+                        fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: 12,
+                        color: 'rgba(255,255,255,0.65)',
+                      }}>
+                        <Lock size={10} style={{ color: '#c4976a', opacity: 0.8 }} />
+                        {f}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Right: price + CTA */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8, flexShrink: 0 }}>
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.45)', margin: '0 0 2px', textDecoration: 'line-through' }}>19,90 €/mois</p>
+                    <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontStyle: 'italic', fontSize: 26, fontWeight: 700, color: '#ffffff', margin: 0, lineHeight: 1 }}>
+                      9,90 €<span style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)' }}>/mois</span>
+                    </p>
+                  </div>
+                  <Link
+                    to="/owner/abonnement"
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 8,
+                      padding: '12px 24px', borderRadius: 10,
+                      background: '#c4976a', color: '#fff',
+                      fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: 14, fontWeight: 700,
+                      textDecoration: 'none',
+                      boxShadow: '0 4px 16px rgba(196,151,106,0.35)',
+                    }}
+                  >
+                    <Zap size={15} />
+                    Passer à Pro
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* ── 3. GRID 2 COLONNES ─────────────────────────────────────── */}
           <div style={{

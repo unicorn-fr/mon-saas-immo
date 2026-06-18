@@ -3,6 +3,7 @@ import { BAI } from '../../constants/bailio-tokens'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useContractStore } from '../../store/contractStore'
 import { useAuth } from '../../hooks/useAuth'
+import { usePlan } from '../../hooks/usePlan'
 import { contractService } from '../../services/contract.service'
 import toast from 'react-hot-toast'
 import { ContractClause } from '../../types/contract.types'
@@ -35,6 +36,7 @@ import {
   Check,
   Circle,
   ExternalLink,
+  Lock,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -96,6 +98,7 @@ export default function ContractDetails() {
   const [actionLoading, setActionLoading] = useState(false)
   const [initialLoaded, setInitialLoaded] = useState(false)
   const [yousignLoading, setYousignLoading] = useState(false)
+  const { hasPlan } = usePlan()
   useEffect(() => {
     if (id) {
       fetchContractById(id).then(() => setInitialLoaded(true))
@@ -836,34 +839,61 @@ export default function ContractDetails() {
                         Envoyer au locataire
                       </button>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <button
-                          onClick={handleSendYousign}
-                          disabled={actionLoading || yousignLoading}
-                          style={{
-                            display: 'inline-flex', alignItems: 'center', gap: 7,
-                            padding: '10px 18px', borderRadius: 10,
-                            background: BAI.night, color: '#ffffff',
-                            fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13,
-                            border: 'none', cursor: actionLoading || yousignLoading ? 'not-allowed' : 'pointer',
-                            opacity: actionLoading || yousignLoading ? 0.5 : 1,
-                          }}
-                        >
-                          {yousignLoading ? (
-                            <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff' }} className="animate-spin" />
-                          ) : (
-                            <ShieldCheck style={{ width: 15, height: 15 }} />
-                          )}
-                          Signature Yousign
-                          <span style={{
-                            fontSize: 10, fontWeight: 700,
-                            background: '#f0fdf4', color: '#16a34a',
-                            border: '1px solid #bbf7d0',
-                            borderRadius: 20, padding: '2px 7px',
-                            letterSpacing: '0.04em',
-                          }}>
-                            Légalement opposable
-                          </span>
-                        </button>
+                        {hasPlan('PRO') ? (
+                          <button
+                            onClick={handleSendYousign}
+                            disabled={actionLoading || yousignLoading}
+                            style={{
+                              display: 'inline-flex', alignItems: 'center', gap: 7,
+                              padding: '10px 18px', borderRadius: 10,
+                              background: BAI.night, color: '#ffffff',
+                              fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13,
+                              border: 'none', cursor: actionLoading || yousignLoading ? 'not-allowed' : 'pointer',
+                              opacity: actionLoading || yousignLoading ? 0.5 : 1,
+                            }}
+                          >
+                            {yousignLoading ? (
+                              <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff' }} className="animate-spin" />
+                            ) : (
+                              <ShieldCheck style={{ width: 15, height: 15 }} />
+                            )}
+                            Signature Yousign
+                            <span style={{
+                              fontSize: 10, fontWeight: 700,
+                              background: '#f0fdf4', color: '#16a34a',
+                              border: '1px solid #bbf7d0',
+                              borderRadius: 20, padding: '2px 7px',
+                              letterSpacing: '0.04em',
+                            }}>
+                              Légalement opposable
+                            </span>
+                          </button>
+                        ) : (
+                          <a
+                            href="/owner/abonnement"
+                            style={{
+                              display: 'inline-flex', alignItems: 'center', gap: 7,
+                              padding: '10px 18px', borderRadius: 10,
+                              background: BAI.bgMuted, color: BAI.inkMid,
+                              fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13,
+                              border: `1px solid ${BAI.border}`,
+                              textDecoration: 'none', cursor: 'pointer',
+                            }}
+                            title="Signature eIDAS disponible à partir du plan Pro"
+                          >
+                            <Lock style={{ width: 13, height: 13 }} />
+                            Signature Yousign
+                            <span style={{
+                              fontSize: 10, fontWeight: 700,
+                              background: '#fdf5ec', color: '#c4976a',
+                              border: '1px solid rgba(196,151,106,0.3)',
+                              borderRadius: 20, padding: '2px 7px',
+                              letterSpacing: '0.04em',
+                            }}>
+                              PRO
+                            </span>
+                          </a>
+                        )}
                       </div>
                     </>
                   )}

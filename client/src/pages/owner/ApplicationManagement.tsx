@@ -7,7 +7,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   CheckCircle2, XCircle, Clock, Users, ChevronDown, ChevronUp,
-  Building2, RotateCcw, Loader2, MapPin, Euro, ChevronRight, FolderOpen, CalendarDays,
+  Building2, RotateCcw, Loader2, MapPin, Euro, ChevronRight, FolderOpen, CalendarDays, Lock,
 } from 'lucide-react'
 import { applicationService } from '../../services/application.service'
 import { scoreColor } from '../../utils/matchingEngine'
@@ -18,6 +18,8 @@ import toast from 'react-hot-toast'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { BAI } from '../../constants/bailio-tokens'
+import { usePlan } from '../../hooks/usePlan'
+import { Link } from 'react-router-dom'
 
 const SERVER_BASE =
   (import.meta.env.VITE_API_URL as string | undefined)?.replace('/api/v1', '') ?? 'http://localhost:5000'
@@ -84,11 +86,13 @@ function ApplicationCard({
   onDecision,
   onUnreject,
   onOpenDossier,
+  isPro,
 }: {
   app: Application
   onDecision: (id: string, status: 'APPROVED' | 'REJECTED') => Promise<void>
   onUnreject: (id: string) => Promise<void>
   onOpenDossier: (tenantId: string, tenantName: string) => void
+  isPro: boolean
 }) {
   const [expanded, setExpanded] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -125,7 +129,21 @@ function ApplicationCard({
             {initials}
           </div>
 
-          <ScoreBadge score={app.score} />
+          {isPro ? (
+            <ScoreBadge score={app.score} />
+          ) : (
+            <div
+              style={{
+                width: 40, height: 40, borderRadius: '50%',
+                background: '#fdf5ec', border: '1px solid rgba(196,151,106,0.3)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}
+              title="Score IA disponible avec le plan Pro"
+            >
+              <Lock size={14} style={{ color: BAI.caramel }} />
+            </div>
+          )}
 
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -175,21 +193,37 @@ function ApplicationCard({
 
         {/* Ligne 2 : boutons actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, overflowX: 'auto', paddingBottom: 2, scrollbarWidth: 'none' }}>
-          <button
-            onClick={() => onOpenDossier(tenant.id, `${tenant.firstName ?? ''} ${tenant.lastName ?? ''}`.trim())}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
-              fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600,
-              background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, color: BAI.owner,
-              borderRadius: 8, minHeight: 36, padding: '0 14px', whiteSpace: 'nowrap', cursor: 'pointer',
-              transition: 'background 0.15s',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = '#d8e8fa')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = BAI.ownerLight)}
-          >
-            <FolderOpen size={13} />
-            Dossier
-          </button>
+          {isPro ? (
+            <button
+              onClick={() => onOpenDossier(tenant.id, `${tenant.firstName ?? ''} ${tenant.lastName ?? ''}`.trim())}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
+                fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600,
+                background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, color: BAI.owner,
+                borderRadius: 8, minHeight: 36, padding: '0 14px', whiteSpace: 'nowrap', cursor: 'pointer',
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#d8e8fa')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = BAI.ownerLight)}
+            >
+              <FolderOpen size={13} />
+              Dossier
+            </button>
+          ) : (
+            <Link
+              to="/owner/abonnement"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0,
+                fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600,
+                background: '#fdf5ec', border: '1px solid rgba(196,151,106,0.3)', color: BAI.caramel,
+                borderRadius: 8, minHeight: 36, padding: '0 14px', whiteSpace: 'nowrap',
+                textDecoration: 'none', cursor: 'pointer',
+              }}
+            >
+              <Lock size={12} />
+              Dossier IA (PRO)
+            </Link>
+          )}
 
           {app.status === 'PENDING' && (
             <>
@@ -266,32 +300,50 @@ function ApplicationCard({
             <div style={{ padding: 16, background: BAI.bgMuted, display: 'flex', flexDirection: 'column', gap: 14 }}>
               {details.length > 0 && (
                 <div>
-                  <p style={{
-                    fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
-                    textTransform: 'uppercase', color: BAI.inkFaint, marginBottom: 10,
-                  }}>
-                    Détail du score
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {details.map((d: { label: string; points: number; maxPoints: number; status: string; explanation: string }) => (
-                      <div
-                        key={d.label}
-                        style={{
-                          borderRadius: 10, padding: '10px 12px', fontSize: 12,
-                          ...(d.status === 'pass'    ? { background: BAI.successLight, border: `1px solid #a8d5bc`, color: BAI.success } :
-                              d.status === 'partial' ? { background: BAI.warningLight, border: `1px solid #e8c98b`, color: BAI.warning } :
-                              d.status === 'fail'    ? { background: BAI.errorLight,  border: `1px solid #f5c6c6`, color: BAI.error  } :
-                                                       { background: BAI.bgMuted, border: `1px solid ${BAI.border}`, color: BAI.inkMid }),
-                        }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                          <span style={{ fontWeight: 600 }}>{d.label}</span>
-                          <span style={{ fontWeight: 700 }}>{d.points}/{d.maxPoints}</span>
-                        </div>
-                        <p style={{ opacity: 0.85 }}>{d.explanation}</p>
+                  {isPro ? (
+                    <>
+                      <p style={{
+                        fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
+                        textTransform: 'uppercase', color: BAI.inkFaint, marginBottom: 10,
+                      }}>
+                        Détail du score
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {details.map((d: { label: string; points: number; maxPoints: number; status: string; explanation: string }) => (
+                          <div
+                            key={d.label}
+                            style={{
+                              borderRadius: 10, padding: '10px 12px', fontSize: 12,
+                              ...(d.status === 'pass'    ? { background: BAI.successLight, border: `1px solid #a8d5bc`, color: BAI.success } :
+                                  d.status === 'partial' ? { background: BAI.warningLight, border: `1px solid #e8c98b`, color: BAI.warning } :
+                                  d.status === 'fail'    ? { background: BAI.errorLight,  border: `1px solid #f5c6c6`, color: BAI.error  } :
+                                                           { background: BAI.bgMuted, border: `1px solid ${BAI.border}`, color: BAI.inkMid }),
+                            }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+                              <span style={{ fontWeight: 600 }}>{d.label}</span>
+                              <span style={{ fontWeight: 700 }}>{d.points}/{d.maxPoints}</span>
+                            </div>
+                            <p style={{ opacity: 0.85 }}>{d.explanation}</p>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </>
+                  ) : (
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      borderRadius: 10, padding: '12px 14px',
+                      background: '#fdf5ec', border: '1px solid rgba(196,151,106,0.3)',
+                    }}>
+                      <Lock size={14} style={{ color: BAI.caramel, flexShrink: 0 }} />
+                      <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.caramel }}>
+                        Le détail du score IA est disponible avec le plan{' '}
+                        <Link to="/owner/abonnement" style={{ fontWeight: 700, color: BAI.caramel, textDecoration: 'underline' }}>
+                          Pro
+                        </Link>.
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -346,6 +398,7 @@ function PropertyGroup({
   onUnreject,
   onOpenDossier,
   onShareCalendar,
+  isPro,
 }: {
   property: PropertyInfo
   apps: Application[]
@@ -353,6 +406,7 @@ function PropertyGroup({
   onUnreject: (id: string) => Promise<void>
   onOpenDossier: (tenantId: string, tenantName: string) => void
   onShareCalendar: (propertyId: string, propertyTitle: string, tenants: { id: string; firstName: string; lastName: string; email: string }[]) => void
+  isPro: boolean
 }) {
   const [open, setOpen] = useState(true)
   const pending  = apps.filter((a) => a.status === 'PENDING').length
@@ -468,7 +522,7 @@ function PropertyGroup({
           >
             <div style={{ padding: 12, borderTop: `1px solid ${BAI.border}`, background: BAI.bgMuted, display: 'flex', flexDirection: 'column', gap: 8 }}>
               {sorted.map((app) => (
-                <ApplicationCard key={app.id} app={app} onDecision={onDecision} onUnreject={onUnreject} onOpenDossier={onOpenDossier} />
+                <ApplicationCard key={app.id} app={app} onDecision={onDecision} onUnreject={onUnreject} onOpenDossier={onOpenDossier} isPro={isPro} />
               ))}
             </div>
           </motion.div>
@@ -488,6 +542,8 @@ export default function ApplicationManagement() {
   const [filter, setFilter] = useState<Filter>('ALL')
   const [dossierModal, setDossierModal] = useState<{ tenantId: string; tenantName: string } | null>(null)
   const [calendarModal, setCalendarModal] = useState<{ propertyId: string; propertyTitle: string; tenants: { id: string; firstName: string; lastName: string; email: string }[] } | null>(null)
+  const { hasPlan } = usePlan()
+  const isPro = hasPlan('PRO')
 
   async function load() {
     setLoading(true)
@@ -710,6 +766,7 @@ export default function ApplicationManagement() {
                       onUnreject={handleUnreject}
                       onOpenDossier={(id, name) => setDossierModal({ tenantId: id, tenantName: name })}
                       onShareCalendar={(pid, ptitle, tenants) => setCalendarModal({ propertyId: pid, propertyTitle: ptitle, tenants })}
+                      isPro={isPro}
                     />
                   </motion.div>
                 ))}
