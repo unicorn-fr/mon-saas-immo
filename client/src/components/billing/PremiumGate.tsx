@@ -33,56 +33,77 @@ export function PremiumGate({
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+    // overflow:clip = visual clip sans créer de scroll container → sticky fonctionne
+    <div style={{ position: 'relative', borderRadius: 16, overflow: 'clip' }}>
 
-      {/* ── CTA card — toujours visible en haut ── */}
+      {/* Contenu flouté en arrière-plan */}
       <div style={{
-        background: BAI.bgSurface,
-        border: `1px solid ${BAI.border}`,
-        borderRadius: compact ? 12 : 16,
-        padding: compact ? '20px 20px' : '28px 32px',
+        filter: 'blur(2px)',
+        opacity: 0.55,
+        pointerEvents: 'none',
+        userSelect: 'none',
+      }}>
+        {children}
+      </div>
+
+      {/* Dégradé léger pour contraste lisibilité */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'radial-gradient(ellipse at center, rgba(250,250,248,0.55) 0%, rgba(250,250,248,0.15) 70%)',
+        pointerEvents: 'none',
+      }} />
+
+      {/* CTA sticky — reste centré dans le viewport pendant le scroll */}
+      <div style={{
+        position: 'sticky',
+        top: compact ? 'calc(50vh - 110px)' : 'calc(50vh - 160px)',
+        zIndex: 2,
+        pointerEvents: 'auto',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
+        justifyContent: 'center',
         gap: compact ? 10 : 16,
+        padding: compact ? '24px 20px' : '40px 32px',
         textAlign: 'center',
-        boxShadow: '0 1px 2px rgba(13,12,10,0.04), 0 4px 12px rgba(13,12,10,0.06)',
-        marginBottom: 2,
       }}>
 
         {/* Lock icon */}
         <div style={{
-          width: compact ? 40 : 52,
-          height: compact ? 40 : 52,
-          borderRadius: compact ? 12 : 16,
+          width: compact ? 44 : 56,
+          height: compact ? 44 : 56,
+          borderRadius: compact ? 14 : 18,
           background: '#fdf5ec',
-          border: '1px solid rgba(196,151,106,0.3)',
+          border: '1px solid rgba(196,151,106,0.35)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 4px 16px rgba(196,151,106,0.18)',
+          boxShadow: '0 6px 24px rgba(196,151,106,0.22), 0 1px 4px rgba(13,12,10,0.08)',
         }}>
-          <Lock size={compact ? 18 : 22} style={{ color: BAI.caramel }} />
+          <Lock size={compact ? 20 : 24} style={{ color: BAI.caramel }} />
         </div>
 
         {/* Title + description */}
-        <div style={{ maxWidth: 460 }}>
+        <div style={{ maxWidth: 480 }}>
           <h3 style={{
             fontFamily: BAI.fontDisplay,
             fontStyle: 'italic',
             fontWeight: 700,
-            fontSize: compact ? 18 : 24,
+            fontSize: compact ? 20 : 26,
             color: BAI.ink,
-            margin: '0 0 6px',
+            margin: '0 0 8px',
+            textShadow: '0 1px 8px rgba(250,250,248,0.9)',
           }}>
             {title ?? 'Fonctionnalité Premium'}
           </h3>
           <p style={{
             fontFamily: BAI.fontBody,
-            fontSize: compact ? 12 : 13,
+            fontSize: compact ? 12.5 : 13.5,
             color: BAI.inkMid,
             margin: 0,
             lineHeight: 1.6,
+            textShadow: '0 1px 6px rgba(250,250,248,0.85)',
           }}>
             {description ?? `Disponible à partir du plan ${requiredPlan ?? 'SOLO'}. Upgradez pour débloquer cette fonctionnalité.`}
           </p>
@@ -95,7 +116,7 @@ export function PremiumGate({
             display: 'inline-flex',
             alignItems: 'center',
             gap: 8,
-            padding: compact ? '10px 20px' : '13px 32px',
+            padding: compact ? '11px 22px' : '14px 36px',
             background: BAI.night,
             color: '#fff',
             textDecoration: 'none',
@@ -103,7 +124,7 @@ export function PremiumGate({
             fontFamily: BAI.fontBody,
             fontSize: compact ? 13 : 14,
             fontWeight: 600,
-            boxShadow: '0 4px 20px rgba(26,26,46,0.25)',
+            boxShadow: '0 4px 24px rgba(26,26,46,0.30)',
           }}
         >
           <Zap size={compact ? 13 : 15} />
@@ -119,8 +140,8 @@ export function PremiumGate({
                 <span key={p} style={{
                   padding: '3px 10px',
                   borderRadius: 99,
-                  background: BAI.caramelLight,
-                  border: '1px solid rgba(196,151,106,0.3)',
+                  background: 'rgba(253,245,236,0.92)',
+                  border: '1px solid rgba(196,151,106,0.35)',
                   fontFamily: BAI.fontBody,
                   fontSize: 11,
                   fontWeight: 700,
@@ -132,31 +153,6 @@ export function PremiumGate({
               ))}
           </div>
         )}
-      </div>
-
-      {/* ── Aperçu flouté en dessous ── */}
-      <div style={{
-        position: 'relative',
-        borderRadius: compact ? 12 : 16,
-        overflow: 'hidden',
-        maxHeight: compact ? 200 : 340,
-      }}>
-        <div style={{
-          filter: 'blur(2px)',
-          opacity: 0.55,
-          pointerEvents: 'none',
-          userSelect: 'none',
-        }}>
-          {children}
-        </div>
-        {/* Fade out at bottom so cut-off looks intentional */}
-        <div style={{
-          position: 'absolute',
-          bottom: 0, left: 0, right: 0,
-          height: compact ? 60 : 100,
-          background: 'linear-gradient(0deg, rgba(250,250,248,1) 0%, rgba(250,250,248,0) 100%)',
-          pointerEvents: 'none',
-        }} />
       </div>
     </div>
   )
