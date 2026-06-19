@@ -626,26 +626,6 @@ export default function Login() {
             </p>
           )}
 
-          {/* Comptes démo */}
-          <div style={{
-            marginTop: '24px', padding: '14px 16px',
-            background: BAI.caramelLight,
-            border: `1px solid ${BAI.caramelBorder}`,
-            borderRadius: '8px',
-          }}>
-            <p style={{ ...fontBody, fontWeight: 700, fontSize: '11px', color: BAI.caramel, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px 0' }}>
-              Comptes de démonstration
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <p style={{ ...fontBody, fontSize: '12px', color: BAI.inkMid, margin: 0 }}>
-                <span style={{ fontWeight: 500, color: BAI.ink }}>Propriétaire :</span> owner@example.com / owner123
-              </p>
-              <p style={{ ...fontBody, fontSize: '12px', color: BAI.inkMid, margin: 0 }}>
-                <span style={{ fontWeight: 500, color: BAI.ink }}>Locataire :</span> tenant@example.com / tenant123
-              </p>
-            </div>
-          </div>
-
           {/* Lien inscription */}
           <p style={{ textAlign: 'center', fontSize: '13px', color: BAI.inkFaint, marginTop: '24px', marginBottom: 0 }}>
             Pas encore de compte ?{' '}
