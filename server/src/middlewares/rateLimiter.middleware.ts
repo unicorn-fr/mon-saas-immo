@@ -40,3 +40,15 @@ export const registerLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 })
+
+/**
+ * Promo code rate limiter — 5 attempts per 15 min per user IP.
+ * Blocks brute-force guessing of promo codes.
+ */
+export const promoLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 min
+  max: 5,
+  message: { success: false, message: 'Trop de tentatives. Réessayez dans 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+})

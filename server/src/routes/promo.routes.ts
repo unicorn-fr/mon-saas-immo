@@ -1,12 +1,13 @@
 import { Router } from 'express'
 import { PrismaClient } from '@prisma/client'
 import { authenticate } from '../middlewares/auth.middleware.js'
+import { promoLimiter } from '../middlewares/rateLimiter.middleware.js'
 
 const router = Router()
 const prisma = new PrismaClient()
 
 // POST /promo/apply — Appliquer un code promo
-router.post('/apply', authenticate, async (req, res) => {
+router.post('/apply', promoLimiter, authenticate, async (req, res) => {
   try {
     const userId = req.user!.id
     const code = (req.body.code as string)?.trim().toUpperCase()
