@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, Star, Crown, ArrowRight, Loader2, X } from 'lucide-react'
+import { Check, Star, Crown, ArrowRight, Loader2, X, Tag, CheckCircle2 } from 'lucide-react'
 import { usePlan } from '../../hooks/usePlan'
 import { apiClient } from '../../services/api.service'
 import { PLANS, FEATURE_TABLE, FAQ_ITEMS } from '../../config/pricing'
@@ -30,6 +30,9 @@ export default function Abonnement() {
   const [upgrading, setUpgrading] = useState<string | null>(null)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [portalLoading, setPortalLoading] = useState(false)
+  const [promoCode, setPromoCode] = useState('')
+  const [promoLoading, setPromoLoading] = useState(false)
+  const [promoSuccess, setPromoSuccess] = useState<{ plan: string; permanent: boolean; planExpires: string | null } | null>(null)
 
   const currentPlanId = toPlanId(currentPlanEnum)
   const currentPlan = PLANS.find(p => p.id === currentPlanId) ?? PLANS[0]
@@ -49,6 +52,23 @@ export default function Abonnement() {
       toast.error('Erreur lors de la redirection Stripe. Réessayez.')
     } finally {
       setUpgrading(null)
+    }
+  }
+
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim()) return
+    setPromoLoading(true)
+    try {
+      const res = await apiClient.post<{ plan: string; permanent: boolean; planExpires: string | null }>('/promo/apply', { code: promoCode.trim() })
+      setPromoSuccess(res.data)
+      setPromoCode('')
+      toast.success(`Code appliqué — plan ${res.data.plan} activé !`)
+      setTimeout(() => window.location.reload(), 1500)
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Code invalide'
+      toast.error(msg)
+    } finally {
+      setPromoLoading(false)
     }
   }
 
@@ -174,6 +194,62 @@ export default function Abonnement() {
                 {portalLoading ? <Loader2 className="animate-spin" style={{ width: 14, height: 14 }} /> : null}
                 Gérer la facturation
               </button>
+            )}
+          </div>
+
+          {/* ── Code Promo ── */}
+          <div style={{
+            background: BAI.bgSurface, border: `1px solid ${BAI.border}`,
+            borderRadius: 16, padding: '20px 24px', marginBottom: 32,
+            boxShadow: BAI.shadowMd,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <Tag size={16} style={{ color: BAI.caramel }} />
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: BAI.ink, margin: 0 }}>
+                Code promotionnel
+              </p>
+            </div>
+
+            {promoSuccess ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 10, background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}` }}>
+                <CheckCircle2 size={16} style={{ color: BAI.tenant, flexShrink: 0 }} />
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.tenant, margin: 0 }}>
+                  Plan <strong>{promoSuccess.plan}</strong> activé — {promoSuccess.permanent ? 'accès permanent' : `jusqu'au ${new Date(promoSuccess.planExpires!).toLocaleDateString('fr-FR')}`}
+                </p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <input
+                  type="text"
+                  value={promoCode}
+                  onChange={e => setPromoCode(e.target.value.toUpperCase())}
+                  onKeyDown={e => e.key === 'Enter' && handleApplyPromo()}
+                  placeholder="BAILIO2026"
+                  style={{
+                    flex: 1, minWidth: 160, padding: '10px 14px',
+                    border: `1px solid ${BAI.border}`, borderRadius: 9,
+                    fontFamily: BAI.fontBody, fontSize: 14, color: BAI.ink,
+                    background: BAI.bgBase, outline: 'none',
+                    letterSpacing: '0.08em', fontWeight: 600,
+                  }}
+                />
+                <button
+                  onClick={handleApplyPromo}
+                  disabled={promoLoading || !promoCode.trim()}
+                  style={{
+                    padding: '10px 20px', borderRadius: 9, border: 'none',
+                    background: BAI.night, color: '#fff',
+                    fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600,
+                    cursor: promoLoading || !promoCode.trim() ? 'default' : 'pointer',
+                    opacity: !promoCode.trim() ? 0.5 : 1,
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    minHeight: 40,
+                  }}
+                >
+                  {promoLoading ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
+                  Appliquer
+                </button>
+              </div>
             )}
           </div>
 

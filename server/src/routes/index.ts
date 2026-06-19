@@ -41,6 +41,7 @@ import irlRouter from './irl.routes.js'
 import georisquesRouter from './georisques.routes.js'
 import alertRoutes from './alert.routes.js'
 import newsletterRoutes from './newsletter.routes.js'
+import promoRoutes from './promo.routes.js'
 
 /**
  * Register all application routes on the Express app.
@@ -76,6 +77,7 @@ export function registerRoutes(app: Application, prefix: string): void {
   // ── Billing ─────────────────────────────────────────────────────────────
   app.use(`${prefix}/stripe`, stripeRoutes)
   app.use(`${prefix}/payments`, paymentRoutes)
+  app.use(`${prefix}/promo`, promoRoutes)
   // ── Aggregation ─────────────────────────────────────────────────────────
   app.use(`${prefix}/dashboard`, dashboardRoutes)
 

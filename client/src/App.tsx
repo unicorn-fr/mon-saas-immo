@@ -93,6 +93,7 @@ const SAAuditLogs = lazy(() => import('./pages/super-admin/SAAuditLogs'))
 const SAContracts = lazy(() => import('./pages/super-admin/SAContracts'))
 const SAUserDetail = lazy(() => import('./pages/super-admin/SAUserDetail'))
 const SAProperties = lazy(() => import('./pages/super-admin/SAProperties'))
+const SAPromoCodes = lazy(() => import('./pages/super-admin/SAPromoCodes'))
 
 // Legal Pages
 const MentionsLegales = lazy(() => import('./pages/legal/MentionsLegales'))
@@ -378,6 +379,7 @@ function AppRoutes() {
           <Route path="database" element={<SADatabase />} />
           <Route path="properties" element={<SAProperties />} />
           <Route path="audit" element={<SAAuditLogs />} />
+          <Route path="promo-codes" element={<SAPromoCodes />} />
         </Route>
       </Route>
 

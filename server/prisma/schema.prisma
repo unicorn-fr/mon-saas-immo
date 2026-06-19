@@ -181,6 +181,7 @@ model User {
   fraudReportsFiled     FraudReport[]         @relation("FraudReporter")
   fraudReportsReceived  FraudReport[]         @relation("FraudTarget")
   subscription          Subscription?
+  promoRedemptions      PromoRedemption[]
   calendarInvitesSent   CalendarInvite[]      @relation("CalendarInviteSender")
   calendarInvitesReceived CalendarInvite[]    @relation("CalendarInviteReceiver")
   edlSessionsOwned      EdlSession[]          @relation("EdlSessionOwner")
@@ -893,6 +894,8 @@ model Subscription {
   currentPeriodEnd     DateTime?
   cancelAtPeriodEnd    Boolean      @default(false)
   trialEndsAt          DateTime?
+  promoCodeId          String?      // Si le plan vient d'un code promo
+  promoExpiresAt       DateTime?    // Expiry du plan promo (null = permanent)
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
 
@@ -1152,4 +1155,37 @@ model NewsletterSubscriber {
   updatedAt DateTime @updatedAt
 
   @@map("newsletter_subscribers")
+}
+
+// ============================================
+// CODES PROMO (accès offerts / réductions)
+// ============================================
+
+model PromoCode {
+  id           String            @id @default(cuid())
+  code         String            @unique
+  planGranted  PlanType          // Plan accordé (SOLO | PRO | EXPERT)
+  durationDays Int?              // Durée en jours (null = permanent)
+  maxUses      Int?              // Nombre max d'utilisations (null = illimité)
+  usedCount    Int               @default(0)
+  expiresAt    DateTime?         // Date d'expiration du code lui-même
+  isActive     Boolean           @default(true)
+  note         String?           // Note interne (admin uniquement)
+  createdAt    DateTime          @default(now())
+  redemptions  PromoRedemption[]
+
+  @@map("promo_codes")
+}
+
+model PromoRedemption {
+  id            String    @id @default(cuid())
+  promoCodeId   String
+  promoCode     PromoCode @relation(fields: [promoCodeId], references: [id])
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  redeemedAt    DateTime  @default(now())
+  planExpires   DateTime? // Quand le plan promo expire pour cet utilisateur
+
+  @@unique([promoCodeId, userId]) // Un code = une utilisation par user
+  @@map("promo_redemptions")
 }

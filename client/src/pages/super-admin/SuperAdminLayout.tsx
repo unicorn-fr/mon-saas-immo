@@ -9,7 +9,7 @@ import { useAuthStore } from '../../store/authStore'
 import {
   LayoutDashboard, Users, FolderOpen, Database, MessageSquare,
   ScrollText, LogOut, ChevronLeft, ChevronRight, Shield, FileText,
-  Terminal, Home,
+  Terminal, Home, Tag,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
@@ -19,6 +19,7 @@ const NAV_ITEMS = [
   { to: '/super-admin/dossiers', icon: FolderOpen, label: 'Dossiers' },
   { to: '/super-admin/contracts', icon: FileText, label: 'Contrats' },
   { to: '/super-admin/messages', icon: MessageSquare, label: 'Messages' },
+  { to: '/super-admin/promo-codes', icon: Tag, label: 'Codes Promo' },
   { to: '/super-admin/database', icon: Database, label: 'DB Explorer' },
   { to: '/super-admin/audit', icon: ScrollText, label: 'Audit Logs' },
 ]

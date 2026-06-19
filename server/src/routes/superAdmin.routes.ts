@@ -10,6 +10,7 @@ import {
   UpdateDocStatusSchema,
   PaginationSchema,
 } from '../middlewares/security.middleware.js'
+import * as promoCodes from '../controllers/promoCodes.controller.js'
 
 const router = Router()
 
@@ -46,5 +47,11 @@ router.get('/conversations/:id/messages', superAdminController.getConversationMe
 
 // ── Contracts ──────────────────────────────────
 router.get('/contracts', validateQuery(PaginationSchema), superAdminController.getContracts.bind(superAdminController))
+
+// ── Codes Promo ────────────────────────────────
+router.get('/promo-codes', promoCodes.listPromoCodes)
+router.post('/promo-codes', promoCodes.createPromoCode)
+router.patch('/promo-codes/:id', promoCodes.updatePromoCode)
+router.delete('/promo-codes/:id', promoCodes.deletePromoCode)
 
 export default router
