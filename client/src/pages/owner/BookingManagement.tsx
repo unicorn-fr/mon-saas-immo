@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
+import { useWindowWidth } from '../../hooks/useWindowWidth'
 import {
   Calendar as CalendarIcon,
   Search,
@@ -10,6 +11,7 @@ import {
   AlertCircle,
   MapPin,
   Info,
+  History,
 } from 'lucide-react'
 import { format, parseISO, isAfter } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -151,6 +153,9 @@ export const BookingManagement = () => {
       setActionLoading(null)
     }
   }
+
+  const windowWidth = useWindowWidth()
+  const isMobile = windowWidth < 768
 
   const statCards = statistics ? [
     {
@@ -294,7 +299,7 @@ export const BookingManagement = () => {
 
           {/* ── Statistics ──────────────────────────────────────────────── */}
           {statistics && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3, 1fr)', gap: 12, marginBottom: 32 }}>
               {statCards.map(({ label, value, icon, bg, border, color, accent }, i) => (
                 <motion.div
                   key={label}
@@ -436,16 +441,21 @@ export const BookingManagement = () => {
                 {viewMode === 'list' && (
                   <button
                     onClick={() => setShowPast(p => !p)}
+                    title={showPast ? 'Masquer l\'historique' : 'Voir l\'historique'}
                     style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
                       background: showPast ? BAI.ownerLight : 'transparent',
                       border: `1px solid ${showPast ? BAI.ownerBorder : BAI.border}`,
-                      borderRadius: 8, padding: '8px 14px',
+                      borderRadius: 8, padding: '8px 12px',
                       fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 500,
                       color: showPast ? BAI.owner : BAI.inkMid,
-                      cursor: 'pointer', whiteSpace: 'nowrap',
+                      cursor: 'pointer', whiteSpace: 'nowrap', minHeight: 44,
                     }}
                   >
-                    {showPast ? 'Masquer l\'historique' : 'Voir l\'historique'}
+                    <History size={15} />
+                    <span className="hidden sm:inline">
+                      {showPast ? 'Masquer' : 'Historique'}
+                    </span>
                   </button>
                 )}
               </div>
@@ -535,7 +545,7 @@ export const BookingManagement = () => {
                   </p>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: 16 }}>
                   {filteredBookings.map((booking) => (
                     <BookingCard
                       key={booking.id}

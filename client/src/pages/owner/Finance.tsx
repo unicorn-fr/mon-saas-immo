@@ -610,7 +610,7 @@ export default function Finance() {
             </div>
 
             {/* Graphiques côte à côte */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', gap: 16 }}>
               {/* Area chart */}
               <div style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(13,12,10,0.04)' }}>
                 <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700, color: BAI.ink, margin: '0 0 20px', letterSpacing: '0.02em' }}>

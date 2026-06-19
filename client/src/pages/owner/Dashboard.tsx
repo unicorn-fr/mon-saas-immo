@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useWindowWidth } from '../../hooks/useWindowWidth'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useProperties } from '../../hooks/useProperties'
@@ -193,6 +194,8 @@ export default function OwnerDashboard() {
   const { unreadCount } = useMessages()
   const { hasPlan, loading: planLoading } = usePlan()
   const isFreePlan = !planLoading && !hasPlan('SOLO')
+  const windowWidth = useWindowWidth()
+  const isMobile = windowWidth < 768
 
   const [pendingApps, setPendingApps] = useState<Application[]>([])
   const [upcomingVisits, setUpcomingVisits] = useState<Booking[]>([])
@@ -716,11 +719,11 @@ export default function OwnerDashboard() {
             </div>
           )}
 
-          {/* ── 3. GRID 2 COLONNES ─────────────────────────────────────── */}
+          {/* ── 3. GRID 2 COLONNES → 1 col sur mobile ─────────────────── */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'minmax(0,1.4fr) minmax(0,1fr)',
-            gap: 28,
+            gridTemplateColumns: isMobile ? '1fr' : 'minmax(0,1.4fr) minmax(0,1fr)',
+            gap: isMobile ? 20 : 28,
             alignItems: 'start',
           }}>
             {/* Colonne gauche — Mes biens */}
