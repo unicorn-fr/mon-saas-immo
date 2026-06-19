@@ -44,6 +44,7 @@ const inputStyle: React.CSSProperties = {
   outline: 'none',
   width: '100%',
   fontFamily: BAI.fontBody,
+  minHeight: 44,
 }
 
 export const BookingManagement = () => {
@@ -361,7 +362,7 @@ export const BookingManagement = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:contents">
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3, 1fr)', gap: 10 }}>
                 {/* Property Filter */}
                 <select
                   value={selectedProperty}
@@ -443,19 +444,18 @@ export const BookingManagement = () => {
                     onClick={() => setShowPast(p => !p)}
                     title={showPast ? 'Masquer l\'historique' : 'Voir l\'historique'}
                     style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                       background: showPast ? BAI.ownerLight : 'transparent',
                       border: `1px solid ${showPast ? BAI.ownerBorder : BAI.border}`,
                       borderRadius: 8, padding: '8px 12px',
                       fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 500,
                       color: showPast ? BAI.owner : BAI.inkMid,
                       cursor: 'pointer', whiteSpace: 'nowrap', minHeight: 44,
+                      ...(isMobile ? { gridColumn: 'span 2' } : {}),
                     }}
                   >
                     <History size={15} />
-                    <span className="hidden sm:inline">
-                      {showPast ? 'Masquer' : 'Historique'}
-                    </span>
+                    {showPast ? 'Masquer l\'historique' : 'Historique'}
                   </button>
                 )}
               </div>

@@ -340,14 +340,14 @@ export default function ContractsList() {
           </div>
           {/* KPIs glass */}
           {statistics && (
-            <div className="container mx-auto flex flex-wrap gap-3" style={{ marginTop: 28 }}>
+            <div className="container mx-auto px-4" style={{ marginTop: 28, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 130px), 1fr))', gap: 10 }}>
               {[
                 { label: 'TOTAL', value: statistics.total },
                 { label: 'ACTIFS', value: statistics.active },
                 { label: 'EN COURS', value: (statistics.sent || 0) + (statistics.signedOwner || 0) + (statistics.signedTenant || 0) + (statistics.completed || 0) },
                 { label: 'BROUILLONS', value: statistics.draft || 0 },
               ].map(kpi => (
-                <div key={kpi.label} style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '14px 22px', minWidth: 110 }}>
+                <div key={kpi.label} style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 16, padding: '12px 16px' }}>
                   <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>{kpi.label}</p>
                   <p style={{ fontFamily: BAI.fontDisplay, fontSize: 32, fontWeight: 700, fontStyle: 'italic', color: '#ffffff', margin: 0, lineHeight: 1 }}>{kpi.value}</p>
                 </div>

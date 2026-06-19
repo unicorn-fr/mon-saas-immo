@@ -2,6 +2,7 @@ import { Lock, Zap } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { usePlan } from '../../hooks/usePlan'
+import { useWindowWidth } from '../../hooks/useWindowWidth'
 
 type PlanId = 'SOLO' | 'PRO' | 'EXPERT'
 
@@ -23,6 +24,9 @@ export function PremiumGate({
   compact = false,
 }: PremiumGateProps) {
   const { loading, hasPlan } = usePlan()
+  const windowWidth = useWindowWidth()
+  const isMobile = windowWidth < 768
+  const isCompact = compact || isMobile
 
   if (loading) {
     return <div style={{ minHeight: compact ? 100 : 200 }} />
@@ -41,23 +45,23 @@ export function PremiumGate({
           Sticky le maintient centré dans le viewport dès que la section est visible. */}
       <div style={{
         position: 'sticky',
-        top: compact ? 'calc(50vh - 120px)' : 'calc(50vh - 175px)',
+        top: isCompact ? 'calc(50vh - 120px)' : 'calc(50vh - 175px)',
         zIndex: 2,
         pointerEvents: 'auto',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: compact ? 10 : 16,
-        padding: compact ? '24px 20px' : '40px 32px',
+        gap: isCompact ? 10 : 16,
+        padding: isCompact ? '24px clamp(16px,4vw,20px)' : '40px 32px',
         textAlign: 'center',
       }}>
 
         {/* Lock icon */}
         <div style={{
-          width: compact ? 44 : 56,
-          height: compact ? 44 : 56,
-          borderRadius: compact ? 14 : 18,
+          width: isCompact ? 44 : 56,
+          height: isCompact ? 44 : 56,
+          borderRadius: isCompact ? 14 : 18,
           background: '#fdf5ec',
           border: '1px solid rgba(196,151,106,0.35)',
           display: 'flex',
@@ -65,7 +69,7 @@ export function PremiumGate({
           justifyContent: 'center',
           boxShadow: '0 6px 24px rgba(196,151,106,0.22), 0 1px 4px rgba(13,12,10,0.08)',
         }}>
-          <Lock size={compact ? 20 : 24} style={{ color: BAI.caramel }} />
+          <Lock size={isCompact ? 20 : 24} style={{ color: BAI.caramel }} />
         </div>
 
         {/* Title + description */}
@@ -74,7 +78,7 @@ export function PremiumGate({
             fontFamily: BAI.fontDisplay,
             fontStyle: 'italic',
             fontWeight: 700,
-            fontSize: compact ? 20 : 26,
+            fontSize: isCompact ? 20 : 26,
             color: BAI.ink,
             margin: '0 0 8px',
             textShadow: '0 1px 8px rgba(250,250,248,0.9)',
@@ -83,7 +87,7 @@ export function PremiumGate({
           </h3>
           <p style={{
             fontFamily: BAI.fontBody,
-            fontSize: compact ? 12.5 : 13.5,
+            fontSize: isCompact ? 12.5 : 13.5,
             color: BAI.inkMid,
             margin: 0,
             lineHeight: 1.6,
@@ -100,23 +104,24 @@ export function PremiumGate({
             display: 'inline-flex',
             alignItems: 'center',
             gap: 8,
-            padding: compact ? '11px 22px' : '14px 36px',
+            padding: isCompact ? '12px 24px' : '14px 36px',
             background: BAI.night,
             color: '#fff',
             textDecoration: 'none',
             borderRadius: 10,
             fontFamily: BAI.fontBody,
-            fontSize: compact ? 13 : 14,
+            fontSize: isCompact ? 13 : 14,
             fontWeight: 600,
             boxShadow: '0 4px 24px rgba(26,26,46,0.30)',
+            minHeight: 44,
           }}
         >
-          <Zap size={compact ? 13 : 15} />
+          <Zap size={isCompact ? 13 : 15} />
           Passer au plan {requiredPlan ?? 'SOLO'}
         </Link>
 
-        {/* Plan badges */}
-        {!compact && (
+        {/* Plan badges — masqués sur mobile */}
+        {!isCompact && (
           <div style={{ display: 'flex', gap: 6 }}>
             {(['SOLO', 'PRO', 'EXPERT'] as const)
               .filter(p => PLAN_ORDER[p] >= PLAN_ORDER[requiredPlan ?? 'SOLO'])
@@ -143,7 +148,7 @@ export function PremiumGate({
           marginTop négatif ≈ hauteur du CTA → le contenu se glisse visuellement
           derrière le CTA pendant que sticky le maintient centré. */}
       <div style={{
-        marginTop: compact ? '-200px' : '-380px',
+        marginTop: isCompact ? '-200px' : '-380px',
         position: 'relative',
         zIndex: 1,
       }}>

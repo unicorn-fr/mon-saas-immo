@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useWindowWidth } from '../../hooks/useWindowWidth'
 import { BAI } from '../../constants/bailio-tokens'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useContractStore } from '../../store/contractStore'
@@ -99,6 +100,8 @@ export default function ContractDetails() {
   const [initialLoaded, setInitialLoaded] = useState(false)
   const [yousignLoading, setYousignLoading] = useState(false)
   const { hasPlan } = usePlan()
+  const windowWidth = useWindowWidth()
+  const isMobile = windowWidth < 768
   useEffect(() => {
     if (id) {
       fetchContractById(id).then(() => setInitialLoaded(true))
@@ -337,26 +340,26 @@ export default function ContractDetails() {
   }
 
   const btnPrimary: React.CSSProperties = {
-    display: 'inline-flex', alignItems: 'center', gap: 7,
-    padding: '10px 18px', borderRadius: 8,
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+    padding: '12px 18px', borderRadius: 8, minHeight: 44,
     background: BAI.night, color: '#ffffff',
-    fontFamily: BAI.fontBody, fontWeight: 500, fontSize: 13,
+    fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13,
     border: 'none', cursor: 'pointer',
   }
 
   const btnGhost: React.CSSProperties = {
-    display: 'inline-flex', alignItems: 'center', gap: 7,
-    padding: '10px 18px', borderRadius: 8,
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+    padding: '12px 18px', borderRadius: 8, minHeight: 44,
     background: BAI.bgSurface, color: BAI.inkMid,
-    fontFamily: BAI.fontBody, fontWeight: 500, fontSize: 13,
+    fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13,
     border: `1px solid ${BAI.border}`, cursor: 'pointer',
   }
 
   const btnDanger: React.CSSProperties = {
-    display: 'inline-flex', alignItems: 'center', gap: 7,
-    padding: '10px 18px', borderRadius: 8,
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+    padding: '12px 18px', borderRadius: 8, minHeight: 44,
     background: BAI.errorLight, color: BAI.error,
-    fontFamily: BAI.fontBody, fontWeight: 500, fontSize: 13,
+    fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13,
     border: `1px solid #fca5a5`, cursor: 'pointer',
   }
 
@@ -459,14 +462,14 @@ export default function ContractDetails() {
             </div>
 
             {/* Glass info strip — parties + loyer + dates */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 24 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 160px), 1fr))', gap: 8, marginTop: 24 }}>
               {/* Bailleur */}
               <div style={{
                 background: 'rgba(255,255,255,0.08)',
                 backdropFilter: 'blur(20px) saturate(160%)',
                 WebkitBackdropFilter: 'blur(20px) saturate(160%)',
                 border: '1px solid rgba(255,255,255,0.13)',
-                borderRadius: 14, padding: '14px 20px', minWidth: 160,
+                borderRadius: 14, padding: '12px 16px',
               }}>
                 <p style={{ fontFamily: BAI.fontBody, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', margin: '0 0 4px' }}>
                   Bailleur
@@ -483,7 +486,7 @@ export default function ContractDetails() {
                 backdropFilter: 'blur(20px) saturate(160%)',
                 WebkitBackdropFilter: 'blur(20px) saturate(160%)',
                 border: '1px solid rgba(255,255,255,0.13)',
-                borderRadius: 14, padding: '14px 20px', minWidth: 160,
+                borderRadius: 14, padding: '12px 16px',
               }}>
                 <p style={{ fontFamily: BAI.fontBody, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', margin: '0 0 4px' }}>
                   Locataire
@@ -500,7 +503,7 @@ export default function ContractDetails() {
                 backdropFilter: 'blur(20px) saturate(160%)',
                 WebkitBackdropFilter: 'blur(20px) saturate(160%)',
                 border: '1px solid rgba(255,255,255,0.13)',
-                borderRadius: 14, padding: '14px 20px', minWidth: 120,
+                borderRadius: 14, padding: '12px 16px',
               }}>
                 <p style={{ fontFamily: BAI.fontBody, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', margin: '0 0 4px' }}>
                   Loyer mensuel
@@ -516,7 +519,7 @@ export default function ContractDetails() {
                 backdropFilter: 'blur(20px) saturate(160%)',
                 WebkitBackdropFilter: 'blur(20px) saturate(160%)',
                 border: '1px solid rgba(255,255,255,0.13)',
-                borderRadius: 14, padding: '14px 20px', minWidth: 180,
+                borderRadius: 14, padding: '12px 16px',
               }}>
                 <p style={{ fontFamily: BAI.fontBody, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', margin: '0 0 4px' }}>
                   Période
@@ -566,13 +569,15 @@ export default function ContractDetails() {
                               <StepIcon style={{ width: 18, height: 18 }} />
                             )}
                           </div>
-                          <span style={{
-                            fontSize: 11, fontWeight: 500, marginTop: 6,
-                            color: isCompleted ? BAI.tenant : isCurrent ? BAI.night : BAI.inkFaint,
-                          }}>
-                            {step.label}
-                          </span>
-                          {signatureDetail && (
+                          {!isMobile && (
+                            <span style={{
+                              fontSize: 11, fontWeight: 500, marginTop: 6,
+                              color: isCompleted ? BAI.tenant : isCurrent ? BAI.night : BAI.inkFaint,
+                            }}>
+                              {step.label}
+                            </span>
+                          )}
+                          {!isMobile && signatureDetail && (
                             <span style={{ fontSize: 10, color: BAI.caramel, marginTop: 2 }}>{signatureDetail}</span>
                           )}
                         </div>
@@ -827,7 +832,7 @@ export default function ContractDetails() {
             {/* Action Buttons Bar */}
             {!isTerminal && (canSend || canSign || canActivate || canTerminate || canDelete || canCancel) && (
               <div style={cardStyle}>
-                <div className="flex flex-wrap gap-3">
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, ...(isMobile ? { flexDirection: 'column', alignItems: 'stretch' } : {}) }}>
                   {canSend && (
                     <>
                       <button
@@ -838,18 +843,19 @@ export default function ContractDetails() {
                         <Send style={{ width: 15, height: 15 }} />
                         Envoyer au locataire
                       </button>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, ...(isMobile ? { alignSelf: 'stretch' } : {}) }}>
                         {hasPlan('PRO') ? (
                           <button
                             onClick={handleSendYousign}
                             disabled={actionLoading || yousignLoading}
                             style={{
-                              display: 'inline-flex', alignItems: 'center', gap: 7,
-                              padding: '10px 18px', borderRadius: 10,
+                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                              padding: '12px 18px', borderRadius: 10, minHeight: 44,
                               background: BAI.night, color: '#ffffff',
                               fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13,
                               border: 'none', cursor: actionLoading || yousignLoading ? 'not-allowed' : 'pointer',
                               opacity: actionLoading || yousignLoading ? 0.5 : 1,
+                              ...(isMobile ? { width: '100%' } : {}),
                             }}
                           >
                             {yousignLoading ? (
@@ -872,12 +878,13 @@ export default function ContractDetails() {
                           <a
                             href="/owner/abonnement"
                             style={{
-                              display: 'inline-flex', alignItems: 'center', gap: 7,
-                              padding: '10px 18px', borderRadius: 10,
+                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                              padding: '12px 18px', borderRadius: 10, minHeight: 44,
                               background: BAI.bgMuted, color: BAI.inkMid,
                               fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13,
                               border: `1px solid ${BAI.border}`,
                               textDecoration: 'none', cursor: 'pointer',
+                              ...(isMobile ? { width: '100%' } : {}),
                             }}
                             title="Signature eIDAS disponible à partir du plan Pro"
                           >

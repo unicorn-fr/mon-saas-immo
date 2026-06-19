@@ -5,6 +5,7 @@
  */
 import { useEffect, useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useWindowWidth } from '../../hooks/useWindowWidth'
 import {
   CheckCircle2, XCircle, Clock, Users, ChevronDown, ChevronUp,
   Building2, RotateCcw, Loader2, MapPin, Euro, ChevronRight, FolderOpen, CalendarDays, Lock,
@@ -544,6 +545,8 @@ export default function ApplicationManagement() {
   const [calendarModal, setCalendarModal] = useState<{ propertyId: string; propertyTitle: string; tenants: { id: string; firstName: string; lastName: string; email: string }[] } | null>(null)
   const { hasPlan } = usePlan()
   const isPro = hasPlan('PRO')
+  const windowWidth = useWindowWidth()
+  const isMobile = windowWidth < 768
 
   async function load() {
     setLoading(true)
@@ -640,7 +643,7 @@ export default function ApplicationManagement() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 36, flexWrap: 'wrap' }}
+            style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: 12, marginBottom: 36, flexWrap: 'wrap' }}
           >
             <div>
               <p style={{
@@ -675,7 +678,7 @@ export default function ApplicationManagement() {
           </motion.div>
 
           {/* ── Stats ─────────────────────────────────────────────────────── */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3, 1fr)', gap: 12, marginBottom: 32 }}>
             {[
               { label: 'En attente', value: counts.pending, icon: <Clock size={20} />, bg: BAI.warningLight, border: '#e8c98b', color: BAI.warning, accent: BAI.warning },
               { label: 'Approuvées', value: counts.approved, icon: <CheckCircle2 size={20} />, bg: BAI.successLight, border: '#a8d5bc', color: BAI.success, accent: BAI.success },
@@ -700,7 +703,7 @@ export default function ApplicationManagement() {
           </div>
 
           {/* ── Filter tab bar ─────────────────────────────────────────── */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', borderBottom: `1px solid ${BAI.border}`, marginBottom: 24 }}>
+          <div style={{ display: 'flex', overflowX: 'auto', scrollbarWidth: 'none', borderBottom: `1px solid ${BAI.border}`, marginBottom: 24 }}>
             {FILTERS.map(({ key, label, count }) => {
               const active = filter === key
               return (
@@ -716,7 +719,8 @@ export default function ApplicationManagement() {
                     borderBottomColor: active ? BAI.caramel : 'transparent',
                     padding: '10px 18px 12px', cursor: 'pointer',
                     transition: 'color 0.15s, border-bottom-color 0.15s',
-                    marginBottom: -1,
+                    marginBottom: -1, flexShrink: 0, whiteSpace: 'nowrap',
+                    minHeight: 44, touchAction: 'manipulation',
                   }}
                 >
                   {label} <span style={{ opacity: 0.6, fontSize: 12, marginLeft: 4 }}>({count})</span>
