@@ -9,21 +9,18 @@ import { useDarkSection } from '../../hooks/useDarkSection'
 const STEPS = [
   {
     num: '01',
-    emoji: '📸',
     title: 'Publiez votre bien',
     desc: 'Photos, surface, loyer. Votre annonce est en ligne en 8 minutes.',
   },
   {
     num: '02',
-    emoji: '📋',
     title: 'Choisissez votre locataire',
     desc: 'Les candidats arrivent avec dossiers vérifiés. Vous choisissez.',
   },
   {
     num: '03',
-    emoji: '💶',
-    title: 'Encaissez chaque mois',
-    desc: 'Loyers, quittances, relances. Tout est automatique.',
+    title: 'Gérez en ligne',
+    desc: 'Loyers, quittances, contrats. Tout centralisé sur Bailio.',
   },
 ]
 
@@ -31,7 +28,7 @@ const PERKS = [
   'Bail conforme loi ALUR signé en ligne',
   'Messagerie sécurisée avec vos locataires',
   'Visites organisées avec créneaux en ligne',
-  '1 200 € économisés en moyenne par an',
+  'Zéro frais d\'agence',
 ]
 
 export default function Proprietaires() {
@@ -223,7 +220,6 @@ export default function Proprietaires() {
                 }}>
                   {step.num}
                 </p>
-                <span style={{ fontSize: 32, display: 'block', marginBottom: 14 }}>{step.emoji}</span>
                 <h3 style={{
                   fontFamily: BAI.fontBody, fontSize: 17, fontWeight: 700,
                   color: BAI.ink, margin: '0 0 10px',

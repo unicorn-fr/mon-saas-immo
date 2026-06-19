@@ -5,7 +5,7 @@ import { BAI } from '../constants/bailio-tokens'
 import { Layout } from '../components/layout/Layout'
 import { apiClient } from '../services/api.service'
 import toast from 'react-hot-toast'
-import { ShieldCheck, Clock, CheckCircle2, AlertCircle } from 'lucide-react'
+import { ShieldCheck, Clock, CheckCircle2, AlertCircle, Camera, Lock, CreditCard } from 'lucide-react'
 
 export default function VerifyIdentity() {
   const navigate = useNavigate()
@@ -172,13 +172,15 @@ export default function VerifyIdentity() {
                   <>
                     <div style={{ marginBottom: 24 }}>
                       {[
-                        { icon: '🪪', text: 'Carte nationale d\'identité ou passeport en cours de validité' },
-                        { icon: '📸', text: 'Photo claire du document (recto-verso pour la CNI)' },
-                        { icon: '🔒', text: 'Vos données sont chiffrées et traitées par Stripe' },
+                        { Icon: CreditCard, text: 'Carte nationale d\'identité ou passeport en cours de validité' },
+                        { Icon: Camera, text: 'Photo claire du document (recto-verso pour la CNI)' },
+                        { Icon: Lock, text: 'Vos données sont chiffrées et traitées par Stripe' },
                       ].map((item, i) => (
                         <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
-                          <span style={{ fontSize: 18, lineHeight: 1 }}>{item.icon}</span>
-                          <span style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, lineHeight: 1.5 }}>{item.text}</span>
+                          <div style={{ width: 28, height: 28, borderRadius: 8, background: BAI.bgMuted, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <item.Icon size={14} style={{ color: BAI.caramel }} />
+                          </div>
+                          <span style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, lineHeight: 1.5, paddingTop: 6 }}>{item.text}</span>
                         </div>
                       ))}
                     </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import {
   Key, FileText, PenTool, CreditCard,
   CheckCircle, Shield, Home, Euro, ArrowRight,
+  MessageCircle, Lock,
 } from 'lucide-react'
 import HowItWorksSection from '../components/waitlist/HowItWorksSection'
 import FounderSection from '../components/waitlist/FounderSection'
@@ -1342,12 +1343,13 @@ export default function WaitlistPage() {
             {Array.from(new Set(FAQ_ITEMS.map(f => f.cat))).map(cat => {
               const catOpen = openCats.has(cat)
               const items = FAQ_ITEMS.filter(f => f.cat === cat)
-              const CAT_ICONS: Record<string, string> = {
-                'Général': '💬',
-                'Propriétaires': '🔑',
-                'Locataires': '🏠',
-                'Légal & Sécurité': '🔒',
+              const CAT_ICON_MAP: Record<string, React.ElementType> = {
+                'Général': MessageCircle,
+                'Propriétaires': Key,
+                'Locataires': Home,
+                'Légal & Sécurité': Lock,
               }
+              const CatIcon = CAT_ICON_MAP[cat] ?? FileText
               return (
                 <div key={cat} style={{ borderRadius: 10, overflow: 'hidden' }}>
                   {/* Category toggle button */}
@@ -1356,7 +1358,7 @@ export default function WaitlistPage() {
                     aria-expanded={catOpen}
                     onClick={() => toggleCat(cat)}
                   >
-                    <span style={{ fontSize: 18, lineHeight: 1 }}>{CAT_ICONS[cat] ?? '📌'}</span>
+                    <CatIcon size={16} style={{ color: 'var(--c-accent)', flexShrink: 0 }} />
                     <span style={{
                       fontFamily: 'var(--font-body)', fontWeight: 700,
                       fontSize: 15, color: 'var(--c-ink)', flex: 1,

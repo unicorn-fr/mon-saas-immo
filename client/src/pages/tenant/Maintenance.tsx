@@ -19,13 +19,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   AUTRE: 'Autre',
 }
 
-const CATEGORY_ICONS: Record<string, string> = {
-  PLOMBERIE: '🚿',
-  ELECTRICITE: '⚡',
-  CHAUFFAGE: '🔥',
-  SERRURERIE: '🔐',
-  AUTRE: '🔧',
-}
 
 interface MaintenanceRequest {
   id: string
@@ -166,7 +159,7 @@ export default function TenantMaintenance() {
                     }}
                   >
                     {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
-                      <option key={key} value={key}>{CATEGORY_ICONS[key]} {label}</option>
+                      <option key={key} value={key}>{label}</option>
                     ))}
                   </select>
                 </div>
@@ -258,9 +251,6 @@ export default function TenantMaintenance() {
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                       <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                          {req.category && (
-                            <span style={{ fontSize: 14 }}>{CATEGORY_ICONS[req.category] ?? '🔧'}</span>
-                          )}
                           <h3 style={{ fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 15, color: BAI.ink, margin: 0 }}>
                             {req.title}
                           </h3>

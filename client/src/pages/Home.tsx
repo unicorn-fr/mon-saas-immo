@@ -11,7 +11,7 @@ import { useDarkSection } from '../hooks/useDarkSection'
 import {
   Search, ArrowRight, MapPin, Building2, TrendingUp, Shield,
   Clock, ChevronRight, Check, FolderOpen, Send, FileSignature, Euro,
-  ChevronDown,
+  ChevronDown, Camera, Users, PenLine, Lock, ClipboardList, CreditCard, Globe,
 } from 'lucide-react'
 import { Property } from '../types/property.types'
 import { BAI } from '../constants/bailio-tokens'
@@ -1210,13 +1210,13 @@ export default function Home() {
               {/* 3 pictos horizontal */}
               <div style={{ display: 'flex', gap: 24, marginBottom: 36, flexWrap: 'wrap' }}>
                 {[
-                  { emoji: '📸', text: 'Publication rapide' },
-                  { emoji: '👥', text: 'Candidats vérifiés' },
-                  { emoji: '✍️', text: 'Contrat ALUR' },
-                ].map(item => (
-                  <div key={item.text} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 20 }}>{item.emoji}</span>
-                    <span style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.ink }}>{item.text}</span>
+                  { icon: Camera, text: 'Publication rapide' },
+                  { icon: Users, text: 'Candidats vérifiés' },
+                  { icon: PenLine, text: 'Contrat ALUR' },
+                ].map(({ icon: Icon, text }) => (
+                  <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Icon size={16} style={{ color: BAI.caramel, flexShrink: 0 }} />
+                    <span style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.ink }}>{text}</span>
                   </div>
                 ))}
               </div>
@@ -1551,17 +1551,19 @@ export default function Home() {
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'clamp(16px,4vw,48px)', flexWrap: 'wrap' }}>
             {[
-              { icon: '🔒', label: 'Données chiffrées', sub: 'HTTPS & chiffrement AES-256' },
-              { icon: '🇫🇷', label: 'Hébergé en France', sub: 'Serveurs Railway EU-West' },
-              { icon: '📋', label: 'Conforme RGPD', sub: 'Données non revendues' },
-              { icon: '✍️', label: 'Signature eIDAS', sub: 'Valeur légale reconnue' },
-              { icon: '💳', label: 'Paiements sécurisés', sub: 'Certifié Stripe PCI-DSS' },
-            ].map(b => (
-              <div key={b.label} style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-                <span style={{ fontSize: 22 }}>{b.icon}</span>
+              { Icon: Lock,          label: 'Données chiffrées',  sub: 'HTTPS & chiffrement AES-256' },
+              { Icon: Globe,         label: 'Hébergé en France',  sub: 'Serveurs Railway EU-West' },
+              { Icon: ClipboardList, label: 'Conforme RGPD',      sub: 'Données non revendues' },
+              { Icon: PenLine,       label: 'Signature eIDAS',    sub: 'Valeur légale reconnue' },
+              { Icon: CreditCard,    label: 'Paiements sécurisés',sub: 'Certifié Stripe PCI-DSS' },
+            ].map(({ Icon, label, sub }) => (
+              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: BAI.bgMuted, border: `1px solid ${BAI.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Icon size={16} style={{ color: BAI.inkMid }} />
+                </div>
                 <div>
-                  <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.ink, margin: 0, lineHeight: 1.3 }}>{b.label}</p>
-                  <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: 0 }}>{b.sub}</p>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.ink, margin: 0, lineHeight: 1.3 }}>{label}</p>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: 0 }}>{sub}</p>
                 </div>
               </div>
             ))}

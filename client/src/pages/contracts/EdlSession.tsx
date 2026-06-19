@@ -603,7 +603,7 @@ export default function EdlSessionPage() {
       if (ev.type === 'PEER_DISCONNECTED') {
         setPeerConnected(false)
         setPeerLeft(true)
-        toast('L\'autre partie a quitté la session. La session est verrouillée.', { icon: '🔒', duration: 6000 })
+        toast('L\'autre partie a quitté la session. La session est verrouillée.', { duration: 6000 })
         return
       }
     })
