@@ -11,6 +11,7 @@ import {
 
 interface AuthActions {
   login: (credentials: LoginCredentials) => Promise<User>
+  verifyTotp: (preAuthToken: string, code: string) => Promise<User>
   register: (data: RegisterData) => Promise<{ emailVerified: boolean }>
   logout: () => Promise<void>
   updateProfile: (data: {
@@ -75,6 +76,30 @@ export const useAuthStore = create<AuthStore>()(
             isLoading: false,
             error: errorMessage,
           })
+          throw error
+        }
+      },
+
+      /**
+       * Complete 2FA login after password step
+       */
+      verifyTotp: async (preAuthToken: string, code: string) => {
+        set({ isLoading: true, error: null })
+        try {
+          const response = await authService.verifyTotp(preAuthToken, code)
+          setApiTokens(response.accessToken, response.refreshToken)
+          set({
+            user: response.user,
+            accessToken: response.accessToken,
+            refreshToken: response.refreshToken,
+            isAuthenticated: true,
+            isLoading: false,
+            error: null,
+          })
+          return response.user
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Verification failed'
+          set({ isLoading: false, error: errorMessage })
           throw error
         }
       },

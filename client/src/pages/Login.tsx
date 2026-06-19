@@ -1,7 +1,7 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { AlertCircle, Mail, CheckCircle2 } from 'lucide-react'
+import { AlertCircle, Mail, CheckCircle2, Shield } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { apiClient as api } from '../services/api.service'
 import { BAI } from '../constants/bailio-tokens'
@@ -130,11 +130,11 @@ export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()
-  const { login } = useAuth()
+  const { login, verifyTotp } = useAuth()
 
   const prefillEmail = searchParams.get('email') ?? ''
 
-  type Screen = 'welcome' | 'email_login'
+  type Screen = 'welcome' | 'email_login' | 'totp'
   const [screen, setScreen] = useState<Screen>(prefillEmail ? 'email_login' : 'welcome')
 
   const [email, setEmail] = useState(prefillEmail)
@@ -143,6 +143,8 @@ export default function Login() {
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showRegisterHint, setShowRegisterHint] = useState(false)
+  const [preAuthToken, setPreAuthToken] = useState('')
+  const [totpCode, setTotpCode] = useState('')
 
   // Show Google OAuth errors sent back via navigation state
   useEffect(() => {
@@ -171,6 +173,15 @@ export default function Login() {
       redirectByRole(userData.role)
     } catch (err) {
       const msg = err instanceof Error ? err.message : ''
+      if (msg === 'TOTP_REQUIRED') {
+        const token = (err as Error & { preAuthToken?: string }).preAuthToken ?? ''
+        setPreAuthToken(token)
+        setTotpCode('')
+        setError('')
+        setIsSubmitting(false)
+        setScreen('totp')
+        return
+      }
       if (msg === 'EMAIL_NOT_VERIFIED') {
         navigate('/verify-email', { state: { email }, replace: true })
         return
@@ -200,6 +211,116 @@ export default function Login() {
     } catch {
       toast.error('Erreur lors de l\'envoi.')
     }
+  }
+
+  const handleTotpSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    const code = totpCode.replace(/\s/g, '')
+    if (!/^\d{6}$/.test(code)) { setError('Entrez le code à 6 chiffres'); return }
+    setError('')
+    setIsSubmitting(true)
+    try {
+      const userData = await verifyTotp(preAuthToken, code)
+      redirectByRole(userData.role)
+    } catch {
+      setError('Code incorrect ou expiré. Réessayez.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  /* ── Écran TOTP (2FA) ──────────────────────────────────────────────────── */
+  if (screen === 'totp') {
+    return (
+      <div style={{ minHeight: '100dvh', display: 'flex', ...fontBody }}>
+        <LeftPanel />
+        <div
+          style={{ background: BAI.bgBase, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflowY: 'auto' }}
+          className="w-full md:w-[55%]"
+        >
+          <button
+            onClick={() => { setScreen('email_login'); setError('') }}
+            style={{ position: 'absolute', top: '24px', left: '28px', background: 'none', border: 'none', fontSize: '13px', color: BAI.inkFaint, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: BAI.fontBody }}
+            onMouseEnter={e => (e.currentTarget.style.color = BAI.inkMid)}
+            onMouseLeave={e => (e.currentTarget.style.color = BAI.inkFaint)}
+          >
+            ← Retour
+          </button>
+
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.32, ease: 'easeOut' }}
+            style={{ width: '100%', maxWidth: '400px', padding: '72px 32px 48px' }}
+          >
+            {/* Icon */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
+              <div style={{ width: 56, height: 56, borderRadius: 16, background: BAI.bgMuted, border: `1px solid ${BAI.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Shield size={24} style={{ color: BAI.night }} />
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '28px', textAlign: 'center' }}>
+              <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(26px, 6vw, 34px)', color: BAI.ink, margin: '0 0 8px', lineHeight: 1.1 }}>
+                Double authentification
+              </h1>
+              <p style={{ ...fontBody, fontSize: '14px', color: BAI.inkMid, margin: 0 }}>
+                Ouvrez votre application d'authentification et entrez le code à 6 chiffres.
+              </p>
+            </div>
+
+            {error && (
+              <div style={{ marginBottom: 16, padding: '11px 14px', background: BAI.errorLight, border: '1px solid #fecaca', borderRadius: 8, display: 'flex', gap: 8 }}>
+                <AlertCircle style={{ width: 15, height: 15, color: '#dc2626', flexShrink: 0, marginTop: 2 }} />
+                <p style={{ ...fontBody, fontSize: 13, color: BAI.error, margin: 0 }}>{error}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleTotpSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="\d{6}"
+                maxLength={6}
+                placeholder="123456"
+                value={totpCode}
+                onChange={e => { setTotpCode(e.target.value.replace(/\D/g, '')); if (error) setError('') }}
+                onFocus={() => setFocusedField('totp')}
+                onBlur={() => setFocusedField('')}
+                autoFocus
+                disabled={isSubmitting}
+                style={{ ...inputStyle(focusedField === 'totp'), textAlign: 'center', fontSize: 28, letterSpacing: '0.3em', fontWeight: 700 }}
+              />
+              <button
+                type="submit"
+                disabled={isSubmitting || totpCode.length < 6}
+                style={{
+                  width: '100%', padding: '14px', background: (isSubmitting || totpCode.length < 6) ? '#4a4a6a' : BAI.night,
+                  color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600,
+                  cursor: (isSubmitting || totpCode.length < 6) ? 'not-allowed' : 'pointer',
+                  fontFamily: BAI.fontBody, minHeight: 48,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                }}
+              >
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin" style={{ width: 15, height: 15 }} viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Vérification…
+                  </>
+                ) : 'Vérifier le code'}
+              </button>
+            </form>
+
+            <p style={{ textAlign: 'center', fontSize: 12, color: BAI.inkFaint, marginTop: 20 }}>
+              Google Authenticator · Authy · 1Password
+            </p>
+          </motion.div>
+        </div>
+      </div>
+    )
   }
 
   /* ── Écran d'accueil ───────────────────────────────────────────────────── */

@@ -30,12 +30,32 @@ class AuthService {
   }
 
   /**
-   * Login user
+   * Login user — may return totpRequired instead of full AuthResponse
    */
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
       const response = await apiClient.post('/auth/login', credentials)
-      return (response.data as ApiResponse<AuthResponse>).data
+      const body = response.data as ApiResponse<AuthResponse> & { totpRequired?: boolean; preAuthToken?: string }
+      if (body.totpRequired) {
+        const err = new Error('TOTP_REQUIRED') as Error & { preAuthToken?: string }
+        err.preAuthToken = body.preAuthToken
+        throw err
+      }
+      return body.data
+    } catch (error) {
+      // Re-throw our own tagged errors as-is
+      if (error instanceof Error && error.message === 'TOTP_REQUIRED') throw error
+      throw new Error(handleApiError(error))
+    }
+  }
+
+  /**
+   * Complete 2FA login — exchange preAuthToken + TOTP code for full session
+   */
+  async verifyTotp(preAuthToken: string, token: string): Promise<AuthResponse> {
+    try {
+      const response = await apiClient.post<ApiResponse<AuthResponse>>('/auth/totp/verify', { preAuthToken, token })
+      return response.data.data
     } catch (error) {
       throw new Error(handleApiError(error))
     }

@@ -13,6 +13,7 @@ export const useAuth = () => {
     isLoading,
     error,
     login,
+    verifyTotp,
     register,
     logout,
     updateProfile,
@@ -44,6 +45,7 @@ export const useAuth = () => {
 
     // Actions
     login,
+    verifyTotp,
     register,
     logout,
     updateProfile,
