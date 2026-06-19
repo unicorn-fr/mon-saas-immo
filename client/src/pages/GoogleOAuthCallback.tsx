@@ -33,6 +33,14 @@ export default function GoogleOAuthCallback() {
       return
     }
 
+    // Si l'utilisateur venait d'une page spécifique (ex: annonce), y revenir
+    const returnTo = localStorage.getItem('authReturnTo')
+    if (returnTo) {
+      localStorage.removeItem('authReturnTo')
+      navigate(returnTo, { replace: true })
+      return
+    }
+
     const role = (data.user as Record<string, unknown>)?.role as string | undefined
     const paths: Record<string, string> = {
       SUPER_ADMIN: '/super-admin',

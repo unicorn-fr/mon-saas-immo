@@ -28,6 +28,7 @@ import { ContactModal } from '../../components/property/ContactModal'
 import { PropertyMap } from '../../components/property/PropertyMap'
 import { PreQualificationModal } from '../../components/application/PreQualificationModal'
 import { BookingModal } from '../../components/booking/BookingModal'
+import { AuthGateModal } from '../../components/auth/AuthGateModal'
 import { PROPERTY_TYPES, AMENITIES } from '../../types/property.types'
 import { Layout } from '../../components/layout/Layout'
 import { applicationService } from '../../services/application.service'
@@ -77,6 +78,21 @@ export default function PropertyDetailsPublic() {
   const [docCategories, setDocCategories] = useState<string[]>([])
   const dossierComplete = REQUIRED_DOC_CATEGORIES.every(c => docCategories.includes(c))
   const [showBookingModal, setShowBookingModal] = useState(false)
+  const [showAuthGate, setShowAuthGate] = useState(false)
+  const [pendingAction, setPendingAction] = useState<'apply' | 'contact' | 'book' | 'favorite' | null>(null)
+
+  const openAuthGate = (action: typeof pendingAction) => {
+    setPendingAction(action)
+    setShowAuthGate(true)
+  }
+
+  const handleAuthSuccess = () => {
+    setShowAuthGate(false)
+    if (pendingAction === 'apply') setShowPreQualModal(true)
+    if (pendingAction === 'contact') setShowContactModal(true)
+    if (pendingAction === 'book') setShowBookingModal(true)
+    setPendingAction(null)
+  }
 
   useEffect(() => {
     if (id) {
@@ -124,7 +140,7 @@ export default function PropertyDetailsPublic() {
 
   const handleFavoriteToggle = async () => {
     if (!isAuthenticated) {
-      navigate('/login')
+      openAuthGate('favorite')
       return
     }
     if (!id) return
@@ -787,7 +803,7 @@ export default function PropertyDetailsPublic() {
                 {/* Smart CTA */}
                 {!isAuthenticated ? (
                   <button
-                    onClick={() => navigate('/login')}
+                    onClick={() => openAuthGate('apply')}
                     className="w-full flex items-center justify-center gap-2 px-4 py-3 mb-3 transition-opacity hover:opacity-90"
                     style={{
                       background: M.tenant,
@@ -905,7 +921,7 @@ export default function PropertyDetailsPublic() {
 
                 {/* Secondary: contact button */}
                 <button
-                  onClick={() => isAuthenticated ? setShowContactModal(true) : navigate('/login')}
+                  onClick={() => isAuthenticated ? setShowContactModal(true) : openAuthGate('contact')}
                   className="w-full flex items-center justify-center gap-2 px-4 py-3 transition-colors"
                   style={{
                     background: M.surface,
@@ -1023,7 +1039,7 @@ export default function PropertyDetailsPublic() {
           <div style={{ fontFamily: M.body, fontSize: 12, color: M.inkFaint }}>/ mois CC</div>
         </div>
         <button
-          onClick={() => isAuthenticated ? (user?.role === 'TENANT' ? setShowPreQualModal(true) : undefined) : navigate('/login')}
+          onClick={() => isAuthenticated ? (user?.role === 'TENANT' ? setShowPreQualModal(true) : undefined) : openAuthGate('apply')}
           style={{
             flexShrink: 0,
             background: M.tenant,
@@ -1043,7 +1059,7 @@ export default function PropertyDetailsPublic() {
           Postuler
         </button>
         <button
-          onClick={() => isAuthenticated ? setShowContactModal(true) : navigate('/login')}
+          onClick={() => isAuthenticated ? setShowContactModal(true) : openAuthGate('contact')}
           style={{
             flexShrink: 0,
             background: M.surface,
@@ -1060,6 +1076,20 @@ export default function PropertyDetailsPublic() {
       </div>
 
       </div>
+
+      {/* Auth Gate Modal — affiché quand un visiteur non connecté clique sur une action */}
+      <AuthGateModal
+        isOpen={showAuthGate}
+        onClose={() => { setShowAuthGate(false); setPendingAction(null) }}
+        onSuccess={handleAuthSuccess}
+        prompt={
+          pendingAction === 'apply' ? 'Créez un compte gratuit pour postuler à cette annonce.'
+          : pendingAction === 'contact' ? 'Créez un compte gratuit pour contacter le propriétaire.'
+          : pendingAction === 'book' ? 'Créez un compte gratuit pour réserver une visite.'
+          : 'Créez un compte pour accéder à toutes les fonctionnalités.'
+        }
+      />
+
     </Layout>
   )
 }
