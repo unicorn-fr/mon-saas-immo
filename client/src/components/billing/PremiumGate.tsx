@@ -33,31 +33,15 @@ export function PremiumGate({
   }
 
   return (
-    // overflow:clip = visual clip sans créer de scroll container → sticky fonctionne
+    // overflow:clip = clip visuel sans créer de scroll container → sticky fonctionne
     <div style={{ position: 'relative', borderRadius: 16, overflow: 'clip' }}>
 
-      {/* Contenu flouté en arrière-plan */}
-      <div style={{
-        filter: 'blur(2px)',
-        opacity: 0.55,
-        pointerEvents: 'none',
-        userSelect: 'none',
-      }}>
-        {children}
-      </div>
-
-      {/* Dégradé léger pour contraste lisibilité */}
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        background: 'radial-gradient(ellipse at center, rgba(250,250,248,0.55) 0%, rgba(250,250,248,0.15) 70%)',
-        pointerEvents: 'none',
-      }} />
-
-      {/* CTA sticky — reste centré dans le viewport pendant le scroll */}
+      {/* ── CTA sticky EN PREMIER dans le DOM ─────────────────────────────────
+          Placé avant le contenu, son top naturel = haut du conteneur.
+          Sticky le maintient centré dans le viewport dès que la section est visible. */}
       <div style={{
         position: 'sticky',
-        top: compact ? 'calc(50vh - 110px)' : 'calc(50vh - 160px)',
+        top: compact ? 'calc(50vh - 120px)' : 'calc(50vh - 175px)',
         zIndex: 2,
         pointerEvents: 'auto',
         display: 'flex',
@@ -153,6 +137,32 @@ export function PremiumGate({
               ))}
           </div>
         )}
+      </div>
+
+      {/* ── Contenu flouté EN DESSOUS, remonté derrière le CTA ───────────────
+          marginTop négatif ≈ hauteur du CTA → le contenu se glisse visuellement
+          derrière le CTA pendant que sticky le maintient centré. */}
+      <div style={{
+        marginTop: compact ? '-200px' : '-380px',
+        position: 'relative',
+        zIndex: 1,
+      }}>
+        {/* Dégradé radial pour lisibilité du CTA au-dessus */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'radial-gradient(ellipse at 50% 0%, rgba(250,250,248,0.70) 0%, rgba(250,250,248,0.08) 60%)',
+          pointerEvents: 'none',
+          zIndex: 1,
+        }} />
+        <div style={{
+          filter: 'blur(2px)',
+          opacity: 0.55,
+          pointerEvents: 'none',
+          userSelect: 'none',
+        }}>
+          {children}
+        </div>
       </div>
     </div>
   )
