@@ -33,12 +33,12 @@ const PROPERTY_TYPES = [
 
 
 const CITIES = [
-  { name: 'Paris', slug: 'paris', count: '1 200+', img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=300&h=160&q=80' },
-  { name: 'Lyon', slug: 'lyon', count: '340+', img: 'https://images.unsplash.com/photo-1524397057410-1e775ed476f3?auto=format&fit=crop&w=300&h=160&q=80' },
-  { name: 'Marseille', slug: 'marseille', count: '280+', img: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=300&h=160&q=80' },
-  { name: 'Bordeaux', slug: 'bordeaux', count: '190+', img: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=300&h=160&q=80' },
-  { name: 'Toulouse', slug: 'toulouse', count: '220+', img: 'https://images.unsplash.com/photo-1508050919630-b135583b29ab?auto=format&fit=crop&w=300&h=160&q=80' },
-  { name: 'Nantes', slug: 'nantes', count: '160+', img: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=300&h=160&q=80' },
+  { name: 'Paris', slug: 'paris', img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=300&h=160&q=80' },
+  { name: 'Lyon', slug: 'lyon', img: 'https://images.unsplash.com/photo-1524397057410-1e775ed476f3?auto=format&fit=crop&w=300&h=160&q=80' },
+  { name: 'Marseille', slug: 'marseille', img: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=300&h=160&q=80' },
+  { name: 'Bordeaux', slug: 'bordeaux', img: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=300&h=160&q=80' },
+  { name: 'Toulouse', slug: 'toulouse', img: 'https://images.unsplash.com/photo-1508050919630-b135583b29ab?auto=format&fit=crop&w=300&h=160&q=80' },
+  { name: 'Nantes', slug: 'nantes', img: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=300&h=160&q=80' },
 ]
 
 const GUIDE_ARTICLES = [
@@ -76,41 +76,6 @@ const MARQUEE_ROW2 = [
 
 // ─── Témoignages ──────────────────────────────────────────────────────────────
 
-const TESTIMONIALS = [
-  {
-    initials: 'ML',
-    name: 'Marie Lefèvre',
-    role: 'Locataire',
-    city: 'Paris 11e',
-    profession: 'Infirmière',
-    detail: 'Appartement trouvé en 4 jours',
-    quote: "Mon dossier numérique a été partagé à 6 propriétaires en un clic. J'ai eu ma réponse positive le lendemain. Impossible à faire aussi vite en agence.",
-    stars: 5,
-    date: 'Avril 2025',
-  },
-  {
-    initials: 'TC',
-    name: 'Thomas Cordier',
-    role: 'Propriétaire',
-    city: 'Lyon 6e',
-    profession: 'Propriétaire 3 biens',
-    detail: '1 200 € économisés vs agence',
-    quote: "J'ai publié mon T3 un lundi, j'avais 11 candidatures qualifiées le mercredi. La signature électronique ALUR était prête en 48h. Zéro paperasse.",
-    stars: 5,
-    date: 'Mars 2025',
-  },
-  {
-    initials: 'SC',
-    name: 'Sophie Chambon',
-    role: 'Locataire',
-    city: 'Bordeaux Chartrons',
-    profession: 'Designer freelance',
-    detail: 'Bail signé en 3 jours',
-    quote: "En tant qu'auto-entrepreneuse, j'avais du mal à convaincre les propriétaires. L'analyse de dossier de Bailio a mis en avant ma stabilité. Bail signé en 3 jours.",
-    stars: 5,
-    date: 'Mai 2025',
-  },
-]
 
 // ─── SearchBox ────────────────────────────────────────────────────────────────
 
@@ -1274,96 +1239,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          7. TÉMOIGNAGES
-      ══════════════════════════════════════════════════════════════════════ */}
-      <section style={{ background: BAI.bgMuted, padding: 'clamp(64px,8vh,96px) clamp(20px,5vw,48px)', borderTop: `1px solid ${BAI.border}` }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-
-          {/* Header avec note agrégée */}
-          <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 10px' }}>
-              Avis utilisateurs
-            </p>
-            <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(24px,4vw,38px)', color: BAI.ink, margin: '0 0 20px', lineHeight: 1.1 }}>
-              Ce qu'ils ont vécu.
-            </h2>
-            {/* Rating agrégé */}
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 40, padding: '8px 18px', boxShadow: BAI.shadowSm }}>
-              <div style={{ display: 'flex', gap: 2 }}>
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <span key={i} style={{ fontSize: 15, color: BAI.caramel }}>★</span>
-                ))}
-              </div>
-              <span style={{ fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 15, color: BAI.ink }}>4,9</span>
-              <span style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkFaint }}>sur 5 · 2 400+ utilisateurs</span>
-            </div>
-          </div>
-
-          <div className="testimonials-grid">
-            {TESTIMONIALS.map((t, i) => (
-              <motion.div
-                key={t.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-60px' }}
-                transition={{ delay: i * 0.12, duration: 0.35 }}
-                style={{
-                  background: BAI.bgSurface,
-                  border: `1px solid ${BAI.border}`,
-                  borderRadius: 16,
-                  padding: '28px 24px',
-                  boxShadow: BAI.shadowMd,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 16,
-                }}
-              >
-                {/* Header: stars + badge résultat */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                  <div style={{ display: 'flex', gap: 3 }}>
-                    {Array.from({ length: t.stars }).map((_, si) => (
-                      <span key={si} style={{ fontSize: 13, color: BAI.caramel }}>★</span>
-                    ))}
-                  </div>
-                  <span style={{
-                    fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 600,
-                    color: BAI.tenant, background: BAI.tenantLight,
-                    border: `1px solid ${BAI.tenantBorder}`,
-                    borderRadius: 20, padding: '3px 10px', whiteSpace: 'nowrap',
-                  }}>
-                    ✓ {t.detail}
-                  </span>
-                </div>
-
-                {/* Citation */}
-                <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 16, color: BAI.ink, margin: 0, lineHeight: 1.55, flex: 1 }}>
-                  "{t.quote}"
-                </p>
-
-                {/* Auteur */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 4, borderTop: `1px solid ${BAI.border}` }}>
-                  <div style={{
-                    width: 42, height: 42, borderRadius: '50%',
-                    background: `linear-gradient(135deg, ${BAI.caramel}22, ${BAI.caramel}44)`,
-                    border: `1px solid ${BAI.caramel}44`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  }}>
-                    <span style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 16, fontWeight: 700, color: BAI.caramel }}>{t.initials}</span>
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 14, color: BAI.ink }}>{t.name}</div>
-                    <div style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, marginTop: 1 }}>
-                      {t.profession} · {t.city}
-                    </div>
-                  </div>
-                  <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, flexShrink: 0 }}>{t.date}</span>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
           7b. PRICING PREVIEW
@@ -1475,7 +1350,6 @@ export default function Home() {
                   {/* Texte */}
                   <div style={{ position: 'absolute', bottom: 10, left: 12, right: 12 }}>
                     <div style={{ fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 14, color: '#ffffff' }}>{c.name}</div>
-                    <div style={{ fontFamily: BAI.fontBody, fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 2 }}>{c.count} annonces</div>
                   </div>
                 </Link>
               </motion.div>

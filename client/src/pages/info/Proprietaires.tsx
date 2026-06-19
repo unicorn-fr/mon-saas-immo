@@ -176,8 +176,8 @@ export default function Proprietaires() {
           <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap', marginTop: 52 }}>
             {[
               { val: '8 min', label: 'pour publier' },
-              { val: '1 200 €', label: 'économisés / an' },
-              { val: '2 400+', label: 'propriétaires' },
+              { val: '0 €', label: 'de frais d\'agence' },
+              { val: '100%', label: 'en ligne' },
             ].map(s => (
               <div key={s.val}>
                 <p style={{
