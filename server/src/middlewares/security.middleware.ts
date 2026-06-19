@@ -237,6 +237,9 @@ export const require2FA = async (req: Request, res: Response, next: NextFunction
 
     if (req.user.role !== 'SUPER_ADMIN') return next()
 
+    // En développement, le panel SA est accessible sans 2FA (friction inutile en local)
+    if (process.env.NODE_ENV !== 'production') return next()
+
     // Lazy import to avoid circular dependency
     const { prisma } = await import('../config/database.js')
     const user = await prisma.user.findUnique({
