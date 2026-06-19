@@ -9,7 +9,7 @@ import {
 import { hashPassword, comparePassword } from '../utils/password.util.js'
 import { validateEmail } from '../utils/validation.util.js'
 import { validatePasswordStrength } from '../utils/password.util.js'
-import { generateSecureToken } from '../utils/token.util.js'
+import { generateSecureToken, generateResetCode, hashToken } from '../utils/token.util.js'
 import { sendEmail } from '../utils/email.util.js'
 import {
   emailVerificationTemplate,
@@ -479,22 +479,20 @@ class AuthService {
       where: { userId: user.id, type: 'PASSWORD_RESET' },
     })
 
-    // Generate reset token
-    const token = generateSecureToken()
-    const expiresAt = new Date()
-    expiresAt.setHours(expiresAt.getHours() + 1) // 1 hour
+    // Generate short unambiguous code (Amazon-style) — store only its SHA-256 hash
+    const code = generateResetCode()
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000) // 15 minutes
 
     await prisma.verificationToken.create({
       data: {
-        token,
+        token: hashToken(code), // never store plaintext code
         userId: user.id,
         type: 'PASSWORD_RESET',
         expiresAt,
       },
     })
 
-    const resetUrl = `${env.FRONTEND_URL}/reset-password?token=${token}`
-    const tpl = passwordResetTemplate({ firstName: user.firstName, resetUrl })
+    const tpl = passwordResetTemplate({ firstName: user.firstName, code })
     await sendEmail({ to: user.email, ...tpl })
   }
 
@@ -505,8 +503,9 @@ class AuthService {
     token: string,
     newPassword: string
   ): Promise<void> {
+    // Input code → hash before lookup (DB only stores hashes)
     const verificationToken = await prisma.verificationToken.findUnique({
-      where: { token },
+      where: { token: hashToken(token) },
     })
 
     if (!verificationToken) {

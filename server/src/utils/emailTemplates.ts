@@ -70,25 +70,23 @@ export const emailVerificationTemplate = (params: {
 
 export const passwordResetTemplate = (params: {
   firstName: string
-  resetUrl: string
+  code: string
 }) => ({
-  subject: 'Réinitialisation de votre mot de passe — Bailio',
+  subject: 'Votre code de réinitialisation — Bailio',
   html: BASE(`
     <div class="overline">Sécurité du compte</div>
-    <div class="title">Réinitialiser votre mot de passe</div>
+    <div class="title">Code de réinitialisation</div>
     <p class="text">
-      Bonjour <strong>${params.firstName}</strong>, vous avez demandé la réinitialisation de votre mot de passe. Cliquez sur le bouton ci-dessous pour en choisir un nouveau.
+      Bonjour <strong>${params.firstName}</strong>, voici votre code à usage unique pour réinitialiser votre mot de passe.
     </p>
-    <div style="text-align:center;">
-      <a href="${params.resetUrl}" class="btn">Choisir un nouveau mot de passe</a>
+    <div class="code-block">
+      <div class="code">${params.code}</div>
     </div>
-    <hr class="divider" />
-    <p class="text" style="font-size:12px;">
-      Ou copiez ce lien dans votre navigateur :<br/>
-      <a href="${params.resetUrl}" class="link">${params.resetUrl}</a>
+    <p class="text" style="text-align:center;font-size:13px;">
+      Rendez-vous sur <a href="${process.env.FRONTEND_URL ?? ''}/forgot-password" class="link">bailio.fr/forgot-password</a> et saisissez ce code.
     </p>
     <div class="warning">
-      Ce lien expire dans <strong>1 heure</strong>. Si vous n'avez pas fait cette demande, ignorez cet email — votre mot de passe reste inchangé.
+      Ce code expire dans <strong>15 minutes</strong> et ne peut être utilisé qu'une seule fois. Si vous n'avez pas fait cette demande, ignorez cet email.
     </div>
   `),
 })

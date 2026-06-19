@@ -3,6 +3,7 @@ import { authController } from '../controllers/auth.controller.js'
 import { authenticate } from '../middlewares/auth.middleware.js'
 import * as totpController from '../controllers/totp.controller.js'
 import { loginRateLimiter, emailRateLimiter, registerLimiter } from '../middlewares/security.middleware.js'
+import { passwordResetLimiter } from '../middlewares/rateLimiter.middleware.js'
 import { requireOpenRegistrations } from '../middlewares/launchMode.middleware.js'
 import { prisma } from '../config/database.js'
 
@@ -24,10 +25,10 @@ router.post('/refresh', authController.refresh.bind(authController))
 // POST /api/v1/auth/logout - Logout user
 router.post('/logout', authController.logout.bind(authController))
 
-// POST /api/v1/auth/forgot-password - Request password reset (5 per hour)
+// POST /api/v1/auth/forgot-password - Request password reset (3 per 15 min)
 router.post(
   '/forgot-password',
-  emailRateLimiter,
+  passwordResetLimiter,
   authController.forgotPassword.bind(authController)
 )
 

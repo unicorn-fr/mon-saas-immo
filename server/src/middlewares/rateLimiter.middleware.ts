@@ -52,3 +52,15 @@ export const promoLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 })
+
+/**
+ * Password reset rate limiter — 3 requests per 15 min per IP.
+ * Blocks email enumeration and brute-force of reset codes.
+ */
+export const passwordResetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 3,
+  message: { success: false, message: 'Trop de demandes. Réessayez dans 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+})

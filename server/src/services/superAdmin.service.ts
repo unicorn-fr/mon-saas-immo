@@ -160,7 +160,7 @@ class SuperAdminService {
         select: {
           id: true, email: true, firstName: true, lastName: true, role: true,
           emailVerified: true, phoneVerified: true, phone: true, avatar: true,
-          createdAt: true, lastLoginAt: true, totpEnabled: true,
+          createdAt: true, lastLoginAt: true, totpEnabled: true, googleId: true,
           _count: {
             select: {
               ownedProperties: true,
