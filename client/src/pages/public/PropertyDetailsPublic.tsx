@@ -20,6 +20,9 @@ import {
   Clock,
   ChevronLeft,
   ChevronRight,
+  Calculator,
+  Printer,
+  Flag,
 } from 'lucide-react'
 import { useProperties } from '../../hooks/useProperties'
 import { useAuth } from '../../hooks/useAuth'
@@ -80,6 +83,12 @@ export default function PropertyDetailsPublic() {
   const [showBookingModal, setShowBookingModal] = useState(false)
   const [showAuthGate, setShowAuthGate] = useState(false)
   const [pendingAction, setPendingAction] = useState<'apply' | 'contact' | 'book' | 'favorite' | null>(null)
+  const [simApport, setSimApport] = useState(20000)
+  const [simRate, setSimRate] = useState(4.0)
+  const [simInsurance, setSimInsurance] = useState(0.1)
+  const [showReportModal, setShowReportModal] = useState(false)
+  const [reportReason, setReportReason] = useState('')
+  const [reportSent, setReportSent] = useState(false)
 
   const openAuthGate = (action: typeof pendingAction) => {
     setPendingAction(action)
@@ -721,6 +730,172 @@ export default function PropertyDetailsPublic() {
                   longitude={property.longitude ?? undefined}
                 />
               </div>
+
+              {/* Simulation de financement — inspiré PAP */}
+              <div style={cardStyle} className="p-6">
+                <div className="flex items-center gap-2 mb-1">
+                  <Calculator className="w-4 h-4" style={{ color: M.caramel }} />
+                  <p style={{ ...sectionLabel, marginBottom: 0 }}>Simulation de financement</p>
+                </div>
+                <p style={{ fontFamily: M.body, fontSize: 12, color: M.inkFaint, margin: '4px 0 0' }}>
+                  Estimation si vous souhaitez acquérir un bien similaire
+                </p>
+                <div style={{ borderTop: `1px solid ${M.border}`, margin: '16px 0' }} />
+
+                {(() => {
+                  const estValue = Math.round(property.price * 200)
+                  const fraisNotaire = Math.round(estValue * 0.08)
+                  const emprunt = Math.max(0, estValue + fraisNotaire - simApport)
+
+                  const calcMensualite = (annees: number) => {
+                    const n = annees * 12
+                    const r = simRate / 100 / 12
+                    const ra = simInsurance / 100 / 12
+                    if (r === 0 && ra === 0) return emprunt / n
+                    const mCredit = r > 0 ? emprunt * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1) : emprunt / n
+                    return mCredit + emprunt * ra
+                  }
+
+                  return (
+                    <>
+                      {/* Prix estimé + frais notaire */}
+                      <div className="grid grid-cols-2 gap-3 mb-5">
+                        <div style={{ background: M.muted, borderRadius: 10, padding: '12px 14px' }}>
+                          <p style={{ fontFamily: M.body, fontSize: 11, color: M.inkFaint, margin: '0 0 2px' }}>Prix estimé du bien</p>
+                          <p style={{ fontFamily: M.display, fontStyle: 'italic', fontSize: 20, fontWeight: 700, color: M.ink, margin: 0 }}>
+                            {estValue.toLocaleString('fr-FR')} €
+                          </p>
+                          <p style={{ fontFamily: M.body, fontSize: 10, color: M.inkFaint, margin: '2px 0 0' }}>loyer × 200</p>
+                        </div>
+                        <div style={{ background: M.muted, borderRadius: 10, padding: '12px 14px' }}>
+                          <p style={{ fontFamily: M.body, fontSize: 11, color: M.inkFaint, margin: '0 0 2px' }}>Frais de notaire (~8%)</p>
+                          <p style={{ fontFamily: M.display, fontStyle: 'italic', fontSize: 20, fontWeight: 700, color: M.ink, margin: 0 }}>
+                            {fraisNotaire.toLocaleString('fr-FR')} €
+                          </p>
+                          <p style={{ fontFamily: M.body, fontSize: 10, color: M.inkFaint, margin: '2px 0 0' }}>estimation ancien</p>
+                        </div>
+                      </div>
+
+                      {/* Inputs */}
+                      <div className="grid grid-cols-3 gap-3 mb-4">
+                        <div>
+                          <label style={{ fontFamily: M.body, fontSize: 11, color: M.inkMid, display: 'block', marginBottom: 4 }}>Apport (€)</label>
+                          <input
+                            type="number"
+                            value={simApport}
+                            min={0}
+                            onChange={e => setSimApport(Math.max(0, Number(e.target.value)))}
+                            style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: `1px solid ${M.border}`, background: M.inputBg, fontFamily: M.body, fontSize: 13, color: M.ink, outline: 'none', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontFamily: M.body, fontSize: 11, color: M.inkMid, display: 'block', marginBottom: 4 }}>Taux crédit (%)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            min={0}
+                            max={20}
+                            value={simRate}
+                            onChange={e => setSimRate(Math.max(0, Number(e.target.value)))}
+                            style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: `1px solid ${M.border}`, background: M.inputBg, fontFamily: M.body, fontSize: 13, color: M.ink, outline: 'none', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontFamily: M.body, fontSize: 11, color: M.inkMid, display: 'block', marginBottom: 4 }}>Assurance (%)</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min={0}
+                            max={2}
+                            value={simInsurance}
+                            onChange={e => setSimInsurance(Math.max(0, Number(e.target.value)))}
+                            style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: `1px solid ${M.border}`, background: M.inputBg, fontFamily: M.body, fontSize: 13, color: M.ink, outline: 'none', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Montant emprunté */}
+                      <div style={{ background: M.caramelLight, borderRadius: 10, padding: '10px 14px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontFamily: M.body, fontSize: 13, color: M.inkMid }}>Montant emprunté</span>
+                        <span style={{ fontFamily: M.display, fontStyle: 'italic', fontSize: 20, fontWeight: 700, color: M.caramel }}>
+                          {emprunt.toLocaleString('fr-FR')} €
+                        </span>
+                      </div>
+
+                      {/* Table durées */}
+                      <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: M.body, fontSize: 13 }}>
+                          <thead>
+                            <tr>
+                              <th style={{ textAlign: 'left', padding: '8px 12px', color: M.inkFaint, fontSize: 11, fontWeight: 600, borderBottom: `1px solid ${M.border}` }}>Durée</th>
+                              <th style={{ textAlign: 'right', padding: '8px 12px', color: M.inkFaint, fontSize: 11, fontWeight: 600, borderBottom: `1px solid ${M.border}` }}>Mensualité</th>
+                              <th style={{ textAlign: 'right', padding: '8px 12px', color: M.inkFaint, fontSize: 11, fontWeight: 600, borderBottom: `1px solid ${M.border}` }}>Coût de l'emprunt</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {[10, 15, 20, 25, 30].map((annees, i) => {
+                              const mensualite = calcMensualite(annees)
+                              const coutTotal = Math.max(0, mensualite * annees * 12 - emprunt)
+                              return (
+                                <tr key={annees} style={{ background: i % 2 === 0 ? 'transparent' : M.muted }}>
+                                  <td style={{ padding: '10px 12px', color: M.ink, fontWeight: 600 }}>{annees} ans</td>
+                                  <td style={{ padding: '10px 12px', textAlign: 'right', color: M.caramel, fontFamily: M.display, fontStyle: 'italic', fontSize: 16, fontWeight: 700 }}>
+                                    {Math.round(mensualite).toLocaleString('fr-FR')} €/mois
+                                  </td>
+                                  <td style={{ padding: '10px 12px', textAlign: 'right', color: M.inkMid }}>
+                                    {Math.round(coutTotal).toLocaleString('fr-FR')} €
+                                  </td>
+                                </tr>
+                              )
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <p style={{ fontFamily: M.body, fontSize: 11, color: M.inkFaint, margin: '12px 0 0', lineHeight: 1.5 }}>
+                        * Simulation indicative hors frais annexes. Taux non contractuels.
+                      </p>
+
+                      <div className="flex flex-wrap gap-3 mt-4">
+                        <Link
+                          to="/search"
+                          style={{ fontFamily: M.body, fontSize: 13, fontWeight: 600, color: M.caramel, textDecoration: 'none' }}
+                        >
+                          Affiner ma simulation →
+                        </Link>
+                      </div>
+                    </>
+                  )
+                })()}
+              </div>
+
+              {/* Actions PAP-style — imprimer, partager, signaler */}
+              <div className="flex flex-wrap gap-2 pb-2">
+                <button
+                  onClick={() => window.print()}
+                  className="flex items-center gap-1.5 px-3 py-2"
+                  style={{ fontFamily: M.body, fontSize: 12, fontWeight: 500, color: M.inkMid, background: M.muted, border: `1px solid ${M.border}`, borderRadius: 8, cursor: 'pointer' }}
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  Imprimer la fiche
+                </button>
+                <button
+                  onClick={handleShare}
+                  className="flex items-center gap-1.5 px-3 py-2"
+                  style={{ fontFamily: M.body, fontSize: 12, fontWeight: 500, color: M.inkMid, background: M.muted, border: `1px solid ${M.border}`, borderRadius: 8, cursor: 'pointer' }}
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  Envoyer à un ami
+                </button>
+                <button
+                  onClick={() => setShowReportModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-2"
+                  style={{ fontFamily: M.body, fontSize: 12, fontWeight: 500, color: M.inkFaint, background: 'transparent', border: `1px solid ${M.border}`, borderRadius: 8, cursor: 'pointer' }}
+                >
+                  <Flag className="w-3.5 h-3.5" />
+                  Signaler un abus
+                </button>
+              </div>
             </div>
 
             {/* Sidebar — masquée sur mobile, remplacée par la barre sticky en bas */}
@@ -1089,6 +1264,72 @@ export default function PropertyDetailsPublic() {
           : 'Créez un compte pour accéder à toutes les fonctionnalités.'
         }
       />
+
+      {/* Modal Signalement */}
+      {showReportModal && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+          onClick={() => { setShowReportModal(false); setReportSent(false); setReportReason('') }}
+        >
+          <div
+            style={{ background: M.surface, border: `1px solid ${M.border}`, borderRadius: 16, padding: 28, maxWidth: 400, width: '100%', boxShadow: '0 8px 32px rgba(13,12,10,0.12)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            {!reportSent ? (
+              <>
+                <h3 style={{ fontFamily: M.display, fontStyle: 'italic', fontSize: 22, fontWeight: 700, color: M.ink, margin: '0 0 6px' }}>Signaler une annonce</h3>
+                <p style={{ fontFamily: M.body, fontSize: 13, color: M.inkMid, margin: '0 0 18px' }}>
+                  Décrivez le problème rencontré avec cette annonce.
+                </p>
+                <div className="space-y-3">
+                  {['Annonce frauduleuse', 'Photos erronées', 'Prix inexact', 'Bien déjà loué', 'Autre'].map(reason => (
+                    <label key={reason} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="report-reason"
+                        value={reason}
+                        checked={reportReason === reason}
+                        onChange={() => setReportReason(reason)}
+                        style={{ accentColor: M.caramel, width: 16, height: 16 }}
+                      />
+                      <span style={{ fontFamily: M.body, fontSize: 14, color: M.inkMid }}>{reason}</span>
+                    </label>
+                  ))}
+                </div>
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={() => { setShowReportModal(false); setReportReason('') }}
+                    style={{ flex: 1, padding: '10px', borderRadius: 8, border: `1px solid ${M.border}`, background: 'transparent', fontFamily: M.body, fontSize: 14, fontWeight: 500, color: M.inkMid, cursor: 'pointer' }}
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={() => { if (reportReason) setReportSent(true) }}
+                    disabled={!reportReason}
+                    style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: reportReason ? M.night : M.muted, fontFamily: M.body, fontSize: 14, fontWeight: 600, color: reportReason ? '#fff' : M.inkFaint, cursor: reportReason ? 'pointer' : 'not-allowed' }}
+                  >
+                    Envoyer
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-2">
+                <CheckCircle className="w-12 h-12 mx-auto mb-3" style={{ color: M.tenant }} />
+                <h3 style={{ fontFamily: M.display, fontStyle: 'italic', fontSize: 20, fontWeight: 700, color: M.ink, margin: '0 0 8px' }}>Signalement envoyé</h3>
+                <p style={{ fontFamily: M.body, fontSize: 14, color: M.inkMid, margin: '0 0 20px' }}>
+                  Merci, notre équipe examinera cette annonce sous 48h.
+                </p>
+                <button
+                  onClick={() => { setShowReportModal(false); setReportSent(false); setReportReason('') }}
+                  style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: M.night, fontFamily: M.body, fontSize: 14, fontWeight: 600, color: '#fff', cursor: 'pointer' }}
+                >
+                  Fermer
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
     </Layout>
   )

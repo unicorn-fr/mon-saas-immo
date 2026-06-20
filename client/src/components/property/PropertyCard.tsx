@@ -176,6 +176,18 @@ export const PropertyCard = ({ property, variant = 'default', showStats = false 
           </span>
         )}
 
+        {/* Nouveau badge — annonce < 7 jours */}
+        {Date.now() - new Date(property.createdAt).getTime() < 7 * 24 * 60 * 60 * 1000 && (
+          <span style={{
+            position: 'absolute', top: 10, right: property.images?.length > 1 ? 54 : 52,
+            fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
+            background: BAI.caramel, color: '#fff',
+            borderRadius: 5, padding: '3px 7px',
+          }}>
+            Nouveau
+          </span>
+        )}
+
         {/* Meublé tag */}
         {property.furnished && (
           <span style={{
@@ -242,7 +254,12 @@ export const PropertyCard = ({ property, variant = 'default', showStats = false 
               {property.bedrooms} ch.
             </span>
           )}
-          {showStats && property.views > 0 && (
+          {property.availableFrom && new Date(property.availableFrom) > new Date() && (
+            <span style={{ marginLeft: 'auto', fontSize: 11, color: BAI.inkFaint, whiteSpace: 'nowrap' }}>
+              Dispo {new Date(property.availableFrom).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+            </span>
+          )}
+          {showStats && property.views > 0 && !property.availableFrom && (
             <span style={{ marginLeft: 'auto', fontSize: 11, color: BAI.inkFaint }}>
               {property.views} vues
             </span>

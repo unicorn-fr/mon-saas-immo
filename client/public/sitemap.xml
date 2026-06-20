@@ -5,21 +5,25 @@
   <!-- Pages principales -->
   <url>
     <loc>https://bailio.fr/</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://bailio.fr/search</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://bailio.fr/pricing</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://bailio.fr/estimer</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -27,11 +31,13 @@
   <!-- Landing pages rôles -->
   <url>
     <loc>https://bailio.fr/proprietaires</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://bailio.fr/locataires</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -39,66 +45,79 @@
   <!-- Guide / Blog -->
   <url>
     <loc>https://bailio.fr/guide</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://bailio.fr/guide/dossier-locatif-solide</loc>
+    <lastmod>2026-06-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://bailio.fr/guide/comprendre-bail-loi</loc>
+    <lastmod>2026-06-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://bailio.fr/guide/visite-appartement-questions</loc>
+    <lastmod>2026-06-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://bailio.fr/guide/droits-locataire</loc>
+    <lastmod>2026-06-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://bailio.fr/guide/demenagement-checklist</loc>
+    <lastmod>2026-06-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://bailio.fr/guide/loyer-charges-comprises</loc>
+    <lastmod>2026-06-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://bailio.fr/guide/fixer-bon-loyer</loc>
+    <lastmod>2026-06-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://bailio.fr/guide/choisir-locataire-criteres</loc>
+    <lastmod>2026-06-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://bailio.fr/guide/rediger-annonce-attire</loc>
+    <lastmod>2026-06-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://bailio.fr/guide/fiscalite-locative</loc>
+    <lastmod>2026-06-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://bailio.fr/guide/etat-des-lieux</loc>
+    <lastmod>2026-06-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://bailio.fr/guide/charges-recuperables</loc>
+    <lastmod>2026-06-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -106,101 +125,121 @@
   <!-- Pages villes -->
   <url>
     <loc>https://bailio.fr/location/paris</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://bailio.fr/location/lyon</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://bailio.fr/location/marseille</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://bailio.fr/location/bordeaux</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://bailio.fr/location/toulouse</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://bailio.fr/location/nantes</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://bailio.fr/location/nice</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://bailio.fr/location/strasbourg</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://bailio.fr/location/montpellier</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://bailio.fr/location/rennes</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://bailio.fr/location/lille</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://bailio.fr/location/grenoble</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://bailio.fr/location/toulon</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://bailio.fr/location/aix-en-provence</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://bailio.fr/location/brest</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://bailio.fr/location/dijon</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://bailio.fr/location/angers</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://bailio.fr/location/nimes</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://bailio.fr/location/clermont-ferrand</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://bailio.fr/location/le-mans</loc>
+    <lastmod>2026-06-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -208,38 +247,63 @@
   <!-- Informations -->
   <url>
     <loc>https://bailio.fr/faq</loc>
+    <lastmod>2026-06-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://bailio.fr/contact</loc>
+    <lastmod>2026-01-01</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://bailio.fr/a-propos</loc>
+    <lastmod>2026-01-01</lastmod>
     <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://bailio.fr/support</loc>
+    <lastmod>2026-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://bailio.fr/presse</loc>
+    <lastmod>2026-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://bailio.fr/videos</loc>
+    <lastmod>2026-06-01</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
 
   <!-- Pages légales -->
   <url>
     <loc>https://bailio.fr/mentions-legales</loc>
+    <lastmod>2026-01-01</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://bailio.fr/cgu</loc>
+    <lastmod>2026-01-01</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://bailio.fr/confidentialite</loc>
+    <lastmod>2026-01-01</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://bailio.fr/cookies</loc>
+    <lastmod>2026-01-01</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>

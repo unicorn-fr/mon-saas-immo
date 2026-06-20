@@ -67,10 +67,10 @@ export default defineConfig({
       selfDestroying: true,
       includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.png'],
       manifest: {
-        name: 'ImmoParticuliers - Gestion Locative',
-        short_name: 'ImmoParticuliers',
-        description: 'Plateforme de gestion locative entre particuliers',
-        theme_color: '#00BCD4',
+        name: 'Bailio — Gestion Locative',
+        short_name: 'Bailio',
+        description: 'Plateforme de gestion locative entre particuliers. Bail électronique, zéro frais d\'agence.',
+        theme_color: '#1a1a2e',
         background_color: '#ffffff',
         display: 'standalone',
         icons: [

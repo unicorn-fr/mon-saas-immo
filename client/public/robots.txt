@@ -21,6 +21,14 @@ Disallow: /bookings/
 Disallow: /applications/
 Disallow: /waitlist
 
+# Pages d'authentification (inutiles à indexer)
+Disallow: /select-role
+Disallow: /complete-profile
+Disallow: /verify-identity
+Disallow: /verify-email
+Disallow: /auth/
+Disallow: /edl/
+
 # Fichiers techniques
 Disallow: /api/
 
