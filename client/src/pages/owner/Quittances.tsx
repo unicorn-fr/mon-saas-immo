@@ -15,6 +15,8 @@ import {
   RefreshCw,
   Calendar,
   X,
+  Eye,
+  Loader2,
 } from 'lucide-react'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -411,6 +413,21 @@ export default function Quittances() {
   const [actionLoading, setActionLoading] = useState<string | null>(null) // paymentId
   const [generatingAll, setGeneratingAll] = useState(false)
 
+  // Preview modal
+  const [previewPaymentId, setPreviewPaymentId] = useState<string | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewFetching, setPreviewFetching] = useState(false)
+
+  // Sent receipt tracking (persisted in localStorage)
+  const [sentReceiptIds, setSentReceiptIds] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem('bailio_sent_receipts')
+      return saved ? new Set(JSON.parse(saved)) : new Set<string>()
+    } catch {
+      return new Set<string>()
+    }
+  })
+
   // ── Fetch data ───────────────────────────────────────────────────────────────
 
   const fetchPayments = useCallback(async () => {
@@ -500,10 +517,29 @@ export default function Quittances() {
     try {
       await apiClient.post(`/payments/${paymentId}/send-email`)
       toast.success('Quittance renvoyée au locataire')
+      const newSent = new Set([...sentReceiptIds, paymentId])
+      setSentReceiptIds(newSent)
+      localStorage.setItem('bailio_sent_receipts', JSON.stringify([...newSent]))
     } catch {
       toast.error('Impossible d\'envoyer la quittance')
     } finally {
       setActionLoading(null)
+    }
+  }
+
+  async function handlePreview(paymentId: string) {
+    setPreviewFetching(true)
+    setPreviewPaymentId(paymentId)
+    try {
+      const res = await apiClient.get(`/payments/${paymentId}/receipt`)
+      const url: string = res.data.url ?? res.data.data?.url
+      if (!url) throw new Error('URL manquante')
+      setPreviewUrl(url)
+    } catch {
+      toast.error('Impossible de prévisualiser la quittance')
+      setPreviewPaymentId(null)
+    } finally {
+      setPreviewFetching(false)
     }
   }
 
@@ -537,8 +573,92 @@ export default function Quittances() {
 
   // ── Render ───────────────────────────────────────────────────────────────────
 
+  // ── Preview Modal ─────────────────────────────────────────────────────────────
+  const PreviewModal = previewPaymentId ? (
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 1000,
+        background: 'rgba(10,13,26,0.85)',
+        backdropFilter: 'blur(8px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 16,
+      }}
+      onClick={() => { setPreviewPaymentId(null); setPreviewUrl(null) }}
+    >
+      <div
+        style={{
+          background: BAI.bgSurface, borderRadius: 16,
+          border: `1px solid ${BAI.border}`,
+          boxShadow: '0 24px 80px rgba(0,0,0,0.40)',
+          width: '100%', maxWidth: 720, maxHeight: '90vh',
+          display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '16px 20px',
+          borderBottom: `1px solid ${BAI.border}`,
+        }}>
+          <div>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>Quittance</p>
+            <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 20, fontWeight: 700, color: BAI.ink, margin: 0 }}>Prévisualisation</p>
+          </div>
+          <button
+            onClick={() => { setPreviewPaymentId(null); setPreviewUrl(null) }}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: 36, height: 36, borderRadius: 8,
+              border: `1px solid ${BAI.border}`, background: BAI.bgMuted,
+              cursor: 'pointer', color: BAI.inkMid,
+            }}
+          >
+            <X size={16} />
+          </button>
+        </div>
+        {/* Content */}
+        <div style={{ flex: 1, overflow: 'hidden', minHeight: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', background: BAI.bgBase }}>
+          {previewFetching ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, color: BAI.inkFaint }}>
+              <Loader2 size={28} style={{ animation: 'spin 1s linear infinite', color: BAI.caramel }} />
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 13 }}>Chargement du PDF…</p>
+            </div>
+          ) : previewUrl ? (
+            <iframe
+              src={previewUrl}
+              style={{ width: '100%', height: '100%', minHeight: 480, border: 'none' }}
+              title="Prévisualisation quittance"
+            />
+          ) : null}
+        </div>
+        {/* Footer */}
+        {previewUrl && (
+          <div style={{ padding: '12px 20px', borderTop: `1px solid ${BAI.border}`, display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+            <a
+              href={previewUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '8px 16px', borderRadius: 8,
+                background: BAI.night, color: '#fff',
+                fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600,
+                textDecoration: 'none',
+              }}
+            >
+              <Download size={14} /> Ouvrir en plein écran
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
+  ) : null
+
   return (
-    <>      <div style={{ minHeight: '100vh', background: BAI.bgBase, fontFamily: BAI.fontBody }}>
+    <>
+      {PreviewModal}
+      <div style={{ minHeight: '100vh', background: BAI.bgBase, fontFamily: BAI.fontBody }}>
 
         {/* === DARK HERO === */}
         <div
@@ -1019,6 +1139,46 @@ export default function Quittances() {
                                     {getStatusLabel(payment.status)}
                                   </span>
 
+                                  {/* Receipt status pipeline — only when paid */}
+                                  {payment.status === 'PAID' && (
+                                    <div style={{
+                                      display: 'flex', alignItems: 'center', gap: 0,
+                                      fontSize: 11, fontFamily: BAI.fontBody,
+                                    }}>
+                                      {/* Step 1: Payé */}
+                                      <span style={{
+                                        display: 'inline-flex', alignItems: 'center', gap: 4,
+                                        padding: '3px 10px', borderRadius: '99px 0 0 99px',
+                                        background: BAI.tenantLight, color: BAI.tenant,
+                                        border: `1px solid ${BAI.tenantBorder}`, fontWeight: 600, fontSize: 11,
+                                      }}>
+                                        <CheckCircle size={10} /> Payé
+                                      </span>
+                                      {/* Step 2: Générée */}
+                                      <span style={{
+                                        display: 'inline-flex', alignItems: 'center', gap: 4,
+                                        padding: '3px 10px', borderRadius: 0,
+                                        background: payment.receiptCloudinaryId ? BAI.caramelLight : BAI.bgMuted,
+                                        color: payment.receiptCloudinaryId ? BAI.caramel : BAI.inkFaint,
+                                        border: `1px solid ${payment.receiptCloudinaryId ? BAI.caramelBorder : BAI.border}`,
+                                        borderLeft: 'none', fontWeight: 600, fontSize: 11,
+                                      }}>
+                                        <CheckCircle size={10} /> Générée
+                                      </span>
+                                      {/* Step 3: Envoyée */}
+                                      <span style={{
+                                        display: 'inline-flex', alignItems: 'center', gap: 4,
+                                        padding: '3px 10px', borderRadius: '0 99px 99px 0',
+                                        background: sentReceiptIds.has(payment.id) ? BAI.ownerLight : BAI.bgMuted,
+                                        color: sentReceiptIds.has(payment.id) ? BAI.owner : BAI.inkFaint,
+                                        border: `1px solid ${sentReceiptIds.has(payment.id) ? BAI.ownerBorder : BAI.border}`,
+                                        borderLeft: 'none', fontWeight: 600, fontSize: 11,
+                                      }}>
+                                        {sentReceiptIds.has(payment.id) ? <CheckCircle size={10} /> : <Send size={10} />} Envoyée
+                                      </span>
+                                    </div>
+                                  )}
+
                                   {/* Action: Mark paid */}
                                   {(payment.status === 'PENDING' || payment.status === 'LATE') && (
                                     <button
@@ -1098,6 +1258,30 @@ export default function Quittances() {
                                     >
                                       <Send size={13} />
                                       Renvoyer
+                                    </button>
+                                  )}
+
+                                  {/* Action: Preview receipt */}
+                                  {payment.status === 'PAID' && payment.receiptCloudinaryId && (
+                                    <button
+                                      onClick={() => handlePreview(payment.id)}
+                                      disabled={isActing || (previewFetching && previewPaymentId === payment.id)}
+                                      title="Prévisualiser la quittance"
+                                      style={{
+                                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                                        fontSize: 12, fontWeight: 500,
+                                        color: BAI.inkMid,
+                                        background: BAI.bgSurface,
+                                        border: `1px solid ${BAI.border}`,
+                                        borderRadius: 8, padding: '6px 12px',
+                                        cursor: 'pointer', minHeight: 32,
+                                        transition: BAI.transition,
+                                      }}
+                                    >
+                                      {previewFetching && previewPaymentId === payment.id
+                                        ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} />
+                                        : <Eye size={13} />}
+                                      Aperçu
                                     </button>
                                   )}
                                 </div>

@@ -158,15 +158,15 @@ function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw:
         {/* Card body */}
         <div style={{ display: 'flex', gap: 0 }}>
           {/* Property image — responsive left column */}
-          <div style={{ width: 100, flexShrink: 0, position: 'relative' }}>
+          <div style={{ width: 130, flexShrink: 0, position: 'relative', alignSelf: 'stretch' }}>
             {imgSrc ? (
               <img
                 src={imgSrc}
                 alt={prop.title}
-                style={{ width: '100%', height: '100%', minHeight: 120, objectFit: 'cover', display: 'block' }}
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
               />
             ) : (
-              <div style={{ width: '100%', height: '100%', minHeight: 120, background: '#f4f2ee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ position: 'absolute', inset: 0, background: '#f4f2ee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Building2 className="w-6 h-6" style={{ color: '#9e9b96' }} />
               </div>
             )}
@@ -177,9 +177,9 @@ function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw:
             }} />
           </div>
 
-          <div style={{ flex: 1, minWidth: 0, padding: '14px 16px 12px' }}>
+          <div style={{ flex: 1, minWidth: 0, padding: '10px 14px 8px' }}>
             {/* Status badge prominent */}
-            <div style={{ marginBottom: 6 }}>
+            <div style={{ marginBottom: 4 }}>
               <span
                 style={{
                   ...STATUS_STYLE[app.status],
@@ -203,7 +203,7 @@ function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw:
                 fontStyle: 'italic',
                 fontSize: 18,
                 color: '#0d0c0a',
-                margin: '0 0 2px',
+                margin: '0 0 1px',
                 lineHeight: 1.2,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -214,7 +214,7 @@ function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw:
             </h3>
 
             {/* City + price */}
-            <p style={{ fontSize: 12, color: '#9e9b96', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <p style={{ fontSize: 12, color: '#9e9b96', margin: '0 0 5px', display: 'flex', alignItems: 'center', gap: 4 }}>
               <span>{prop.city}</span>
               <span style={{ color: '#e4e1db' }}>·</span>
               <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 14, fontWeight: 700, color: '#5a5754' }}>
@@ -239,7 +239,7 @@ function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw:
             {app.status === 'APPROVED' && prop && (
               <>
                 <button
-                  className="mt-3 inline-flex items-center gap-1.5"
+                  className="mt-2 inline-flex items-center gap-1.5"
                   onClick={e => { e.preventDefault(); e.stopPropagation(); setShowBooking(true) }}
                   style={{
                     background: '#edf7f2',
@@ -270,7 +270,7 @@ function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw:
 
             {/* Actions */}
             <div
-              className="flex items-center gap-2 flex-wrap mt-3"
+              className="flex items-center gap-2 flex-wrap mt-2"
               onClick={e => e.preventDefault()}
             >
               {app.status === 'PENDING' && (

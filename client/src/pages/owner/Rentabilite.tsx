@@ -1,10 +1,12 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { BAI } from '../../constants/bailio-tokens'
 import { PremiumGate } from '../../components/billing/PremiumGate'
 import {
   Home, Euro, Calendar, Percent,
   ChevronDown, ChevronUp, Info, Calculator, Landmark,
 } from 'lucide-react'
+import { useProperties } from '../../hooks/useProperties'
+import { useAuth } from '../../hooks/useAuth'
 
 // ─── Shared light-area styles ─────────────────────────────────────────────────
 
@@ -58,6 +60,7 @@ interface State {
   montantPret: number
   tauxPret: number            // % annuel
   dureePret: number           // années
+  dateDebutPret: string      // 'YYYY-MM-DD' ou ''
   fraisDossierPret: number
   assurancePret: number       // €/mois
   // Charges annuelles
@@ -86,6 +89,7 @@ const DEFAULT: State = {
   montantPret: 180000,
   tauxPret: 3.5,
   dureePret: 20,
+  dateDebutPret: '',
   fraisDossierPret: 1000,
   assurancePret: 50,
   chargesCopro: 1200,
@@ -143,10 +147,18 @@ function useCalculs(s: State) {
     // Charges annuelles hors prêt
     const chargesAnnuelles = s.taxeFonciere + s.chargesCopro + s.assurancePNO + (s.fraisGestion / 100) * revenusBruts + s.entretienAnnuel
 
-    // Amortissement année 1
-    const amort1 = s.avecPret ? calcAmortissement(s.montantPret, s.tauxPret, s.dureePret, 1) : { interets: 0, capital: 0, solde: s.montantPret }
-    const interetsAnnee1 = amort1.interets
-    const capitalRestant = amort1.solde
+    // Année actuelle du prêt (basée sur dateDebutPret ou année 1 par défaut)
+    const anneeActuelle = s.avecPret && s.dateDebutPret
+      ? Math.max(1, Math.min(Math.ceil((Date.now() - new Date(s.dateDebutPret).getTime()) / (365.25 * 24 * 3600 * 1000)), s.dureePret))
+      : 1
+
+    // Amortissement à l'année actuelle
+    const amortN = s.avecPret ? calcAmortissement(s.montantPret, s.tauxPret, s.dureePret, anneeActuelle) : { interets: 0, capital: 0, solde: s.montantPret }
+    const interetsAnnee1 = amortN.interets
+    const capitalRestant = amortN.solde
+    const capitalRembourse = s.montantPret - capitalRestant
+    const anneeActuelleOut = anneeActuelle
+    const progressionRemboursement = s.montantPret > 0 ? (capitalRembourse / s.montantPret) * 100 : 0
 
     // ── Calcul fiscal ──────────────────────────────────────────────────────────
 
@@ -239,6 +251,9 @@ function useCalculs(s: State) {
       coutCreditTotal,
       interetsAnnee1,
       capitalRestant,
+      capitalRembourse,
+      anneeActuelleOut,
+      progressionRemboursement,
       impotAnnuel,
       baseImposable,
       detailImpot,
@@ -369,6 +384,36 @@ export default function Rentabilite() {
   const [s, setS] = useState<State>(DEFAULT)
   const c = useCalculs(s)
 
+  const { user } = useAuth()
+  const { myProperties, fetchMyProperties } = useProperties()
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null)
+
+  // Charger les biens du propriétaire
+  useEffect(() => {
+    fetchMyProperties()
+  }, [])
+
+  // Persistance localStorage — chargement
+  useEffect(() => {
+    if (!user?.id) return
+    try {
+      const key = `bailio_rentabilite_${user.id}`
+      const saved = localStorage.getItem(key)
+      if (saved) {
+        const parsed = JSON.parse(saved) as Partial<State>
+        setS(prev => ({ ...prev, ...parsed }))
+      }
+    } catch {}
+  }, [user?.id])
+
+  // Persistance localStorage — sauvegarde
+  useEffect(() => {
+    if (!user?.id) return
+    try {
+      localStorage.setItem(`bailio_rentabilite_${user.id}`, JSON.stringify(s))
+    } catch {}
+  }, [s, user?.id])
+
   function upd<K extends keyof State>(key: K, value: State[K]) {
     setS(prev => ({ ...prev, [key]: value }))
   }
@@ -457,6 +502,60 @@ export default function Rentabilite() {
             {/* ── Formulaire ────────────────────────────────────────────── */}
             <div className="flex flex-col gap-5">
 
+              {/* ── Sélection d'un bien existant ─────────────────────────────────────── */}
+              {myProperties.length > 0 && (
+                <div style={{
+                  background: 'linear-gradient(135deg, rgba(196,151,106,0.08) 0%, rgba(196,151,106,0.03) 100%)',
+                  border: `1px solid ${BAI.caramelBorder}`,
+                  borderRadius: 12,
+                  padding: '16px 20px',
+                }}>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 12px' }}>
+                    Préremplir depuis un de vos biens
+                  </p>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <button
+                      onClick={() => setSelectedPropertyId(null)}
+                      style={{
+                        padding: '6px 14px', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                        background: !selectedPropertyId ? BAI.night : BAI.bgSurface,
+                        color: !selectedPropertyId ? '#fff' : BAI.inkMid,
+                        border: `1px solid ${!selectedPropertyId ? BAI.night : BAI.border}`,
+                        fontFamily: BAI.fontBody, transition: 'all 0.15s',
+                      }}
+                    >
+                      Mode manuel
+                    </button>
+                    {myProperties.map(p => (
+                      <button
+                        key={p.id}
+                        onClick={() => {
+                          setSelectedPropertyId(p.id)
+                          setS(prev => ({
+                            ...prev,
+                            loyerMensuel: Number(p.price) || prev.loyerMensuel,
+                          }))
+                        }}
+                        style={{
+                          padding: '6px 14px', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                          background: selectedPropertyId === p.id ? BAI.caramel : BAI.bgSurface,
+                          color: selectedPropertyId === p.id ? '#fff' : BAI.ink,
+                          border: `1px solid ${selectedPropertyId === p.id ? BAI.caramel : BAI.border}`,
+                          fontFamily: BAI.fontBody, transition: 'all 0.15s',
+                        }}
+                      >
+                        {p.title} · {Number(p.price).toLocaleString('fr-FR')} €/mois
+                      </button>
+                    ))}
+                  </div>
+                  {selectedPropertyId && (
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.caramel, margin: '8px 0 0' }}>
+                      Loyer prérempli. Renseignez le prix d'achat et les autres paramètres manuellement.
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* Bien */}
               <Section title="Le bien" icon={<Home size={16} />}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -506,6 +605,23 @@ export default function Rentabilite() {
                         Coût total du crédit : <strong style={{ color: BAI.owner }}>{fmt(c.coutCreditTotal)} €</strong>
                       </span>
                     </div>
+                  </div>
+                )}
+                {s.avecPret && (
+                  <div>
+                    <label style={labelStyle}>Date de début du prêt</label>
+                    <input
+                      type="date"
+                      value={s.dateDebutPret}
+                      onChange={e => upd('dateDebutPret', e.target.value)}
+                      max={new Date().toISOString().slice(0, 10)}
+                      style={{ ...inputStyle }}
+                      onFocus={e => { e.currentTarget.style.borderColor = BAI.night }}
+                      onBlur={e => { e.currentTarget.style.borderColor = BAI.border }}
+                    />
+                    <p style={{ fontSize: '11px', color: BAI.inkFaint, marginTop: '3px' }}>
+                      Renseigner pour voir le capital actuel remboursé
+                    </p>
                   </div>
                 )}
               </Section>
@@ -691,6 +807,85 @@ export default function Rentabilite() {
                   <p style={{ fontSize: '11px', color: BAI.inkFaint, marginTop: '4px' }}>
                     Gain net cumulé sur {s.dureePret} ans : {c.gainNetCumule >= 0 ? '+' : ''}{fmt(c.gainNetCumule)} €
                   </p>
+                </div>
+              )}
+
+              {/* ── Barre de performance rentabilité ────────────────────────── */}
+              <div style={{ ...cardStyle, overflow: 'hidden' }}>
+                <p style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.inkFaint, marginBottom: '14px' }}>
+                  Performance du bien
+                </p>
+                {(['brut', 'net', 'netnet'] as const).map((type) => {
+                  const val = type === 'brut' ? c.rendementBrut : type === 'net' ? c.rendementNet : c.rendementNetNet
+                  const label = type === 'brut' ? 'Brut' : type === 'net' ? 'Net' : 'Net-net'
+                  const color = val >= 7 ? BAI.tenant : val >= 5 ? BAI.caramel : val >= 3 ? '#f59e0b' : BAI.error
+                  const pct = Math.min(100, Math.max(0, (val / 10) * 100))
+                  return (
+                    <div key={type} style={{ marginBottom: type === 'netnet' ? 0 : 12 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid }}>{label}</span>
+                        <span style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 14, fontWeight: 700, color }}>{fmtDec(val)} %</span>
+                      </div>
+                      <div style={{ height: 6, borderRadius: 3, background: BAI.bgMuted, overflow: 'hidden' }}>
+                        <div style={{
+                          height: '100%', borderRadius: 3,
+                          width: `${pct}%`,
+                          background: `linear-gradient(90deg, ${color}aa, ${color})`,
+                          transition: 'width 0.6s ease',
+                        }} />
+                      </div>
+                    </div>
+                  )
+                })}
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, paddingTop: 10, borderTop: `1px solid ${BAI.border}` }}>
+                  {[{ l: '< 3%', c: BAI.error }, { l: '3–5%', c: '#f59e0b' }, { l: '5–7%', c: BAI.caramel }, { l: '> 7%', c: BAI.tenant }].map(({ l, c: col }) => (
+                    <span key={l} style={{ fontSize: 10, color: col, fontFamily: BAI.fontBody, fontWeight: 600 }}>{l}</span>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── Suivi remboursement prêt ──────────────────────────────────── */}
+              {s.avecPret && s.montantPret > 0 && (
+                <div style={{ ...cardStyle, background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}` }}>
+                  <p style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.owner, marginBottom: '14px' }}>
+                    Remboursement du crédit
+                    {c.anneeActuelleOut > 1 && s.dateDebutPret && (
+                      <span style={{ marginLeft: 8, fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: 10, color: BAI.inkMid }}>
+                        — An {c.anneeActuelleOut} / {s.dureePret}
+                      </span>
+                    )}
+                  </p>
+                  {/* Barre de remboursement */}
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid }}>Capital remboursé</span>
+                      <span style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 14, fontWeight: 700, color: BAI.owner }}>
+                        {fmt(c.capitalRembourse)} €
+                      </span>
+                    </div>
+                    <div style={{ height: 10, borderRadius: 5, background: 'rgba(26,50,112,0.12)', overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%', borderRadius: 5,
+                        width: `${c.progressionRemboursement}%`,
+                        background: `linear-gradient(90deg, ${BAI.ownerBorder}, ${BAI.owner})`,
+                        transition: 'width 0.6s ease',
+                      }} />
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                      <span style={{ fontSize: 11, color: BAI.inkFaint, fontFamily: BAI.fontBody }}>0 €</span>
+                      <span style={{ fontSize: 11, color: BAI.owner, fontFamily: BAI.fontBody, fontWeight: 600 }}>
+                        {Math.round(c.progressionRemboursement)} % remboursé
+                      </span>
+                      <span style={{ fontSize: 11, color: BAI.inkFaint, fontFamily: BAI.fontBody }}>{fmt(s.montantPret)} €</span>
+                    </div>
+                  </div>
+                  {/* Capital restant */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: `1px solid ${BAI.ownerBorder}` }}>
+                    <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid }}>Capital restant dû</span>
+                    <span style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 16, fontWeight: 700, color: BAI.owner }}>
+                      {fmt(c.capitalRestant)} €
+                    </span>
+                  </div>
                 </div>
               )}
 
