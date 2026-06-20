@@ -18,8 +18,10 @@ const PLAN_ICONS: Record<string, React.ElementType> = {
 }
 
 const PLAN_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  free: { bg: BAI.bgMuted,    border: BAI.border,      text: BAI.inkMid },
-  pro:  { bg: BAI.ownerLight, border: BAI.ownerBorder, text: BAI.owner  },
+  free:   { bg: BAI.bgMuted,      border: BAI.border,       text: BAI.inkMid  },
+  solo:   { bg: BAI.caramelLight, border: BAI.caramelBorder, text: BAI.caramel },
+  pro:    { bg: BAI.ownerLight,   border: BAI.ownerBorder,  text: BAI.owner   },
+  expert: { bg: BAI.tenantLight,  border: BAI.tenantBorder, text: BAI.tenant  },
 }
 
 type BillingCycle = 'monthly' | 'annual'
