@@ -218,194 +218,6 @@ interface FilterPanelProps {
   compact?: boolean // pour le futur
 }
 
-function FilterPanel({ filters, city, onCity, onChange, onReset, total }: FilterPanelProps) {
-  const active = countActive(filters, city)
-
-  return (
-    <aside style={{
-      background: T.surface, border: `1px solid ${T.border}`, borderRadius: T.radiusLg,
-      padding: '18px 18px 4px', fontFamily: T.body,
-      position: 'sticky', top: 72,
-      maxHeight: 'calc(100vh - 90px)', overflowY: 'auto',
-    }}>
-      {/* Titre + reset */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-        <span style={{ fontFamily: T.display, fontStyle: 'italic', fontWeight: 700, fontSize: 18, color: T.ink }}>
-          {total > 0 ? `${total} bien${total > 1 ? 's' : ''}` : 'Filtres'}
-        </span>
-        {active > 0 && (
-          <button onClick={onReset} style={{ fontSize: 12, color: T.caramel, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}>
-            Tout effacer
-          </button>
-        )}
-      </div>
-
-      {/* Localisation */}
-      <div style={{ marginBottom: 14 }}>
-        <label style={{ fontSize: 11, fontWeight: 700, color: T.inkMid, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-          Localisation
-        </label>
-        <div style={{ position: 'relative' }}>
-          <MapPin size={13} color={T.caramel} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-          <input
-            className="sl-input"
-            type="text" value={city} onChange={e => onCity(e.target.value)}
-            placeholder="Ville, code postal…"
-            style={{ width: '100%', paddingLeft: 30, paddingRight: city ? 32 : 12, paddingTop: 10, paddingBottom: 10, borderRadius: T.radius, border: `1px solid ${T.border}`, background: T.input, fontFamily: T.body, fontSize: 13, color: T.ink, outline: 'none', boxSizing: 'border-box' }}
-          />
-          {city && (
-            <button onClick={() => onCity('')} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: T.inkFaint, padding: 2 }}>
-              <X size={13} />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Type de bien */}
-      <Section title="Type de bien" defaultOpen>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {TYPE_OPTS.map(t => {
-            const sel = filters.type === t.value
-            return (
-              <button
-                key={t.value}
-                onClick={() => onChange({ ...filters, type: sel ? undefined : t.value as any })}
-                style={{
-                  padding: '6px 12px', borderRadius: 20, cursor: 'pointer',
-                  fontFamily: T.body, fontSize: 12, fontWeight: sel ? 700 : 500,
-                  border: `1px solid ${sel ? T.caramel : T.border}`,
-                  background: sel ? T.caramelLight : T.surface,
-                  color: sel ? T.caramel : T.inkMid,
-                  transition: 'all 0.12s',
-                }}
-              >
-                {t.label}
-              </button>
-            )
-          })}
-        </div>
-      </Section>
-
-      {/* Budget */}
-      <Section title="Budget (€/mois)" defaultOpen>
-        <RangeField
-          labelMin="Min" labelMax="Max" unit="€"
-          min={filters.minPrice} max={filters.maxPrice}
-          onMin={v => onChange({ ...filters, minPrice: v })}
-          onMax={v => onChange({ ...filters, maxPrice: v })}
-          step={50}
-        />
-      </Section>
-
-      {/* Surface */}
-      <Section title="Surface (m²)" defaultOpen={false}>
-        <RangeField
-          labelMin="Min" labelMax="Max" unit="m²"
-          min={filters.minSurface} max={filters.maxSurface}
-          onMin={v => onChange({ ...filters, minSurface: v })}
-          onMax={v => onChange({ ...filters, maxSurface: v })}
-          step={5}
-        />
-      </Section>
-
-      {/* Pièces & Chambres */}
-      <Section title="Pièces & Chambres" defaultOpen={false}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <RoomStepper
-            label="Nombre de chambres (min)"
-            value={filters.minBedrooms}
-            onChange={v => onChange({ ...filters, minBedrooms: v, maxBedrooms: undefined })}
-          />
-          <RoomStepper
-            label="Salles de bain (min)"
-            value={filters.minBathrooms}
-            onChange={v => onChange({ ...filters, minBathrooms: v, maxBathrooms: undefined })}
-            max={3}
-          />
-        </div>
-      </Section>
-
-      {/* Meublé */}
-      <Section title="Ameublement" defaultOpen={false}>
-        <div style={{ display: 'flex', gap: 6 }}>
-          {[
-            { key: 'furnished', label: 'Meublé' },
-            { key: 'unfurnished', label: 'Non meublé' },
-          ].map(({ key, label }) => {
-            const sel = !!filters[key as keyof PropertyFilters]
-            return (
-              <button
-                key={key}
-                onClick={() => onChange({ ...filters, [key]: sel ? undefined : true })}
-                style={{
-                  flex: 1, padding: '8px 10px', borderRadius: T.radius, cursor: 'pointer',
-                  fontFamily: T.body, fontSize: 13, fontWeight: sel ? 700 : 500,
-                  border: `1px solid ${sel ? T.caramel : T.border}`,
-                  background: sel ? T.caramelLight : T.surface,
-                  color: sel ? T.caramel : T.inkMid,
-                  transition: 'all 0.12s',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                }}
-              >
-                {sel && <Check size={12} />}
-                {label}
-              </button>
-            )
-          })}
-        </div>
-      </Section>
-
-      {/* Extérieur & Annexes */}
-      <Section title="Extérieur & Annexes" defaultOpen={false}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {AMENITY_CHIPS.map(({ key, label }) => {
-            const sel = !!filters[key as keyof PropertyFilters]
-            return (
-              <button
-                key={key}
-                onClick={() => onChange({ ...filters, [key]: sel ? undefined : true })}
-                style={{
-                  padding: '6px 12px', borderRadius: 20, cursor: 'pointer',
-                  fontFamily: T.body, fontSize: 12, fontWeight: sel ? 700 : 500,
-                  border: `1px solid ${sel ? T.caramel : T.border}`,
-                  background: sel ? T.caramelLight : T.surface,
-                  color: sel ? T.caramel : T.inkMid,
-                  transition: 'all 0.12s',
-                }}
-              >
-                {label}
-              </button>
-            )
-          })}
-        </div>
-      </Section>
-
-      {/* DPE */}
-      <Section title="DPE — Performance énergétique" defaultOpen={false}>
-        <p style={{ fontFamily: T.body, fontSize: 11, color: T.inkFaint, margin: '0 0 8px', lineHeight: 1.5 }}>
-          Filtre visuel — données disponibles prochainement.
-        </p>
-        <div style={{ display: 'flex', gap: 4 }}>
-          {DPE_GRADES.map(g => (
-            <button
-              key={g.value}
-              disabled
-              title="Bientôt disponible"
-              style={{
-                flex: 1, padding: '6px 4px', borderRadius: 6, border: `1px solid ${T.border}`,
-                background: g.bg, color: g.color, fontFamily: T.body, fontSize: 12, fontWeight: 700,
-                cursor: 'not-allowed', opacity: 0.55,
-              }}
-            >
-              {g.value}
-            </button>
-          ))}
-        </div>
-      </Section>
-    </aside>
-  )
-}
-
 // ─── Barre de filtres compacte (top bar) ──────────────────────────────────────
 // Flyout dropdown interne
 
@@ -505,11 +317,11 @@ function TopBar({
 
   return (
     <div style={{
-      background: T.surface, borderBottom: `1px solid ${T.border}`,
-      padding: '8px clamp(12px,3vw,28px)',
+      background: T.surface, border: `1px solid ${T.border}`,
+      borderRadius: 14,
+      padding: '10px clamp(12px,2vw,20px)',
       display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'nowrap',
-      position: 'sticky', top: 0, zIndex: 100,
-      boxShadow: '0 1px 0 rgba(13,12,10,0.04)',
+      boxShadow: '0 2px 12px rgba(13,12,10,0.06)',
       overflowX: 'auto',
     }}>
       {/* Champ ville */}
@@ -906,24 +718,21 @@ export default function SearchProperties() {
       <style>{`
         .sl-input:focus  { border-color: ${T.caramel} !important; }
         .sl-select:focus { border-color: ${T.caramel} !important; }
-        .sl-desktop-only { display: flex; }
         @keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
         @keyframes spin    { to { transform: rotate(360deg); } }
-        @media (max-width: 1024px) {
-          .sl-sidebar { display: none !important; }
-          .sl-desktop-only { display: none !important; }
-        }
       `}</style>
 
-      {/* ── Top Bar ─────────────────────────────────────────────────────── */}
-      <TopBar
-        {...commonFilterProps}
-        onOpenFilters={() => setShowFilterSheet(true)}
-        sortBy={sortBy} sortOrder={sortOrder}
-        onSort={(sb, so) => { setSortBy(sb as any); setSortOrder(so as any) }}
-        viewMode={viewMode} onView={setViewMode}
-        activeCount={activeCount}
-      />
+      {/* ── Barre de filtres ─────────────────────────────────────────── */}
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: 'clamp(20px,3vw,36px) clamp(12px,3vw,28px) 0' }}>
+        <TopBar
+          {...commonFilterProps}
+          onOpenFilters={() => setShowFilterSheet(true)}
+          sortBy={sortBy} sortOrder={sortOrder}
+          onSort={(sb, so) => { setSortBy(sb as any); setSortOrder(so as any) }}
+          viewMode={viewMode} onView={setViewMode}
+          activeCount={activeCount}
+        />
+      </div>
 
       {/* ── Sheet mobile ─────────────────────────────────────────────────── */}
       {showFilterSheet && (
@@ -932,18 +741,12 @@ export default function SearchProperties() {
 
       {/* ── Corps ────────────────────────────────────────────────────────── */}
       <div style={{
-        maxWidth: 1440, margin: '0 auto',
+        maxWidth: 1280, margin: '0 auto',
         padding: 'clamp(16px,2vw,24px) clamp(12px,3vw,28px)',
-        display: 'flex', gap: 24, alignItems: 'flex-start',
       }}>
 
-        {/* Sidebar desktop (≥1024px) */}
-        <div className="sl-sidebar" style={{ width: 270, flexShrink: 0 }}>
-          <FilterPanel {...commonFilterProps} />
-        </div>
-
         {/* Zone résultats */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div>
 
           {/* Résumé + chips filtres actifs */}
           <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
