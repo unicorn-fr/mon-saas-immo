@@ -28,4 +28,9 @@ router.put('/users/:id/role', adminController.updateUserRole.bind(adminControlle
 // DELETE /api/v1/admin/users/:id - Delete user
 router.delete('/users/:id', adminController.deleteUser.bind(adminController))
 
+// GET  /api/v1/admin/reports         - List all signalements
+router.get('/reports', adminController.getReports.bind(adminController))
+// PATCH /api/v1/admin/reports/:id    - Update report status
+router.patch('/reports/:id', adminController.updateReport.bind(adminController))
+
 export default router

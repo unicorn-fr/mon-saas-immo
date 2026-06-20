@@ -89,6 +89,7 @@ export default function PropertyDetailsPublic() {
   const [showReportModal, setShowReportModal] = useState(false)
   const [reportReason, setReportReason] = useState('')
   const [reportSent, setReportSent] = useState(false)
+  const [reportLoading, setReportLoading] = useState(false)
 
   const openAuthGate = (action: typeof pendingAction) => {
     setPendingAction(action)
@@ -1304,11 +1305,28 @@ export default function PropertyDetailsPublic() {
                     Annuler
                   </button>
                   <button
-                    onClick={() => { if (reportReason) setReportSent(true) }}
-                    disabled={!reportReason}
-                    style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: reportReason ? M.night : M.muted, fontFamily: M.body, fontSize: 14, fontWeight: 600, color: reportReason ? '#fff' : M.inkFaint, cursor: reportReason ? 'pointer' : 'not-allowed' }}
+                    onClick={async () => {
+                      if (!reportReason || reportLoading) return
+                      setReportLoading(true)
+                      try {
+                        await dossierService.reportUser(
+                          property.ownerId,
+                          reportReason,
+                          undefined,
+                          property.id,
+                        )
+                        setReportSent(true)
+                      } catch {
+                        // silently set sent — don't expose errors to avoid fishing
+                        setReportSent(true)
+                      } finally {
+                        setReportLoading(false)
+                      }
+                    }}
+                    disabled={!reportReason || reportLoading}
+                    style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: reportReason ? M.night : M.muted, fontFamily: M.body, fontSize: 14, fontWeight: 600, color: reportReason ? '#fff' : M.inkFaint, cursor: reportReason && !reportLoading ? 'pointer' : 'not-allowed', opacity: reportLoading ? 0.7 : 1 }}
                   >
-                    Envoyer
+                    {reportLoading ? 'Envoi...' : 'Envoyer'}
                   </button>
                 </div>
               </>

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { adminService } from '../services/admin.service.js'
+import { dossierService } from '../services/dossier.service.js'
 import { UserRole } from '@prisma/client'
 
 class AdminController {
@@ -138,6 +139,40 @@ class AdminController {
           message: 'User not found',
         })
       }
+      next(error)
+    }
+  }
+
+  /**
+   * GET /api/v1/admin/reports
+   * List all signalements with reporter/target/property
+   */
+  async getReports(req: Request, res: Response, next: NextFunction) {
+    try {
+      const page  = req.query.page  ? parseInt(req.query.page  as string) : 1
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 30
+      const data = await dossierService.listAllReportsForAdmin(page, limit)
+      return res.status(200).json({ success: true, data })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  /**
+   * PATCH /api/v1/admin/reports/:id
+   * Update report status (REVIEWED | DISMISSED | ACTIONED)
+   */
+  async updateReport(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params
+      const { status, reviewNote } = req.body
+      const allowed = ['PENDING', 'REVIEWED', 'DISMISSED', 'ACTIONED']
+      if (!status || !allowed.includes(status)) {
+        return res.status(400).json({ success: false, message: 'Statut invalide' })
+      }
+      const report = await dossierService.updateReportStatus(id, status, reviewNote, req.user?.id)
+      return res.status(200).json({ success: true, data: report })
+    } catch (error) {
       next(error)
     }
   }

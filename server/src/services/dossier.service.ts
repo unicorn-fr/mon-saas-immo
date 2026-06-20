@@ -431,11 +431,11 @@ class DossierService {
 
   // ── FRAUD REPORTING ───────────────────────────────────────────────────────
 
-  async reportUser(reporterId: string, targetId: string, reason: string, details?: string) {
+  async reportUser(reporterId: string, targetId: string, reason: string, details?: string, propertyId?: string) {
     if (reporterId === targetId) throw new Error('Impossible de se signaler soi-même')
 
     const report = await prisma.fraudReport.create({
-      data: { reporterId, targetId, reason, details: details ?? null },
+      data: { reporterId, targetId, reason, details: details ?? null, propertyId: propertyId ?? null },
     })
 
     // Increment target's reportCount (atomic)
@@ -462,6 +462,31 @@ class DossierService {
       where: { targetId },
       orderBy: { createdAt: 'desc' },
       select: { id: true, reason: true, status: true, createdAt: true },
+    })
+  }
+
+  async listAllReportsForAdmin(page = 1, limit = 30) {
+    const skip = (page - 1) * limit
+    const [reports, total] = await Promise.all([
+      prisma.fraudReport.findMany({
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          reporter: { select: { id: true, firstName: true, lastName: true, email: true } },
+          target:   { select: { id: true, firstName: true, lastName: true, email: true } },
+          property: { select: { id: true, title: true, city: true, address: true } },
+        },
+      }),
+      prisma.fraudReport.count(),
+    ])
+    return { reports, total, page, pages: Math.ceil(total / limit) }
+  }
+
+  async updateReportStatus(id: string, status: string, reviewNote?: string, reviewedBy?: string) {
+    return prisma.fraudReport.update({
+      where: { id },
+      data: { status, reviewNote: reviewNote ?? null, reviewedAt: new Date(), reviewedBy: reviewedBy ?? null },
     })
   }
 

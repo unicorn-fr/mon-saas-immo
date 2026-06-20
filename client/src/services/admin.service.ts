@@ -61,4 +61,40 @@ export const adminService = {
     const response = await api.get('/admin/activity', { params: { limit } })
     return response.data.data.activity
   },
+
+  /**
+   * List all fraud reports (signalements)
+   */
+  async getReports(page = 1, limit = 30): Promise<{
+    reports: FraudReport[]
+    total: number
+    page: number
+    pages: number
+  }> {
+    const response = await api.get('/admin/reports', { params: { page, limit } })
+    return response.data.data
+  },
+
+  /**
+   * Update a report's status
+   */
+  async updateReport(id: string, status: string, reviewNote?: string): Promise<void> {
+    await api.patch(`/admin/reports/${id}`, { status, reviewNote })
+  },
+}
+
+export interface FraudReport {
+  id: string
+  reporterId: string
+  reporter: { id: string; firstName: string; lastName: string; email: string }
+  targetId: string
+  target: { id: string; firstName: string; lastName: string; email: string }
+  propertyId: string | null
+  property: { id: string; title: string; city: string; address: string } | null
+  reason: string
+  details: string | null
+  status: string
+  reviewNote: string | null
+  reviewedAt: string | null
+  createdAt: string
 }

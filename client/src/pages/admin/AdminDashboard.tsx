@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { adminService } from '../../services/admin.service'
+import type { FraudReport } from '../../services/admin.service'
 import { PlatformStatistics, RecentActivity } from '../../types/admin.types'
 import {
   Shield,
@@ -13,19 +14,49 @@ import {
   MessageSquare,
   Mail,
   RefreshCw,
+  Flag,
+  ExternalLink,
+  CheckCircle,
+  XCircle,
+  Clock,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import toast from 'react-hot-toast'
 import { BAI } from '../../constants/bailio-tokens'
 
+const REPORT_REASON_FR: Record<string, string> = {
+  'Annonce frauduleuse': 'Annonce frauduleuse',
+  'Photos erronées': 'Photos erronées',
+  'Prix inexact': 'Prix inexact',
+  'Bien déjà loué': 'Bien déjà loué',
+  'Autre': 'Autre',
+  'FAKE_LISTING': 'Annonce frauduleuse',
+  'WRONG_PHOTOS': 'Photos erronées',
+  'WRONG_PRICE': 'Prix inexact',
+  'ALREADY_RENTED': 'Bien déjà loué',
+  'HARASSMENT': 'Harcèlement',
+  'OTHER': 'Autre',
+}
+
+const REPORT_STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; border: string }> = {
+  PENDING:    { label: 'En attente', bg: BAI.caramelLight, color: BAI.caramel, border: 'rgba(196,151,106,0.3)' },
+  REVIEWED:   { label: 'Examiné',    bg: BAI.ownerLight,   color: BAI.owner,   border: BAI.ownerBorder },
+  DISMISSED:  { label: 'Rejeté',     bg: BAI.bgMuted,      color: BAI.inkFaint, border: BAI.border },
+  ACTIONED:   { label: 'Traité',     bg: BAI.tenantLight,  color: BAI.tenant,  border: BAI.tenantBorder },
+}
+
 export default function AdminDashboard() {
   const [statistics, setStatistics] = useState<PlatformStatistics | null>(null)
   const [activity, setActivity] = useState<RecentActivity | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [reports, setReports] = useState<FraudReport[]>([])
+  const [reportsLoading, setReportsLoading] = useState(true)
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
 
   useEffect(() => {
     loadData()
+    loadReports()
   }, [])
 
   const loadData = async () => {
@@ -41,6 +72,31 @@ export default function AdminDashboard() {
       toast.error(error.response?.data?.message || 'Erreur lors du chargement')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const loadReports = async () => {
+    setReportsLoading(true)
+    try {
+      const { reports: data } = await adminService.getReports(1, 50)
+      setReports(data)
+    } catch {
+      // silently skip
+    } finally {
+      setReportsLoading(false)
+    }
+  }
+
+  const handleUpdateReport = async (id: string, status: string) => {
+    setUpdatingId(id)
+    try {
+      await adminService.updateReport(id, status)
+      setReports(prev => prev.map(r => r.id === id ? { ...r, status } : r))
+      toast.success('Statut mis à jour')
+    } catch {
+      toast.error('Erreur lors de la mise à jour')
+    } finally {
+      setUpdatingId(null)
     }
   }
 
@@ -489,6 +545,110 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
+
+        {/* ── SIGNALEMENTS D'ABUS ── */}
+        <div style={{ marginTop: 32 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <h2 style={{ fontFamily: BAI.fontBody, fontSize: 16, fontWeight: 700, color: BAI.ink, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Flag size={16} color={BAI.error} />
+              Signalements d'abus
+              {reports.filter(r => r.status === 'PENDING').length > 0 && (
+                <span style={{ background: BAI.errorLight, color: BAI.error, border: `1px solid #fca5a5`, borderRadius: 20, padding: '2px 8px', fontSize: 11, fontWeight: 700 }}>
+                  {reports.filter(r => r.status === 'PENDING').length} en attente
+                </span>
+              )}
+            </h2>
+            <button onClick={loadReports} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: 'transparent', cursor: 'pointer', fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid }}>
+              <RefreshCw size={12} /> Actualiser
+            </button>
+          </div>
+
+          {reportsLoading ? (
+            <div style={{ padding: '32px', textAlign: 'center', color: BAI.inkFaint, fontFamily: BAI.fontBody, fontSize: 14 }}>Chargement…</div>
+          ) : reports.length === 0 ? (
+            <div style={{ padding: '24px', background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, textAlign: 'center', color: BAI.inkFaint, fontFamily: BAI.fontBody, fontSize: 14 }}>
+              Aucun signalement pour le moment.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {reports.map(report => {
+                const cfg = REPORT_STATUS_CONFIG[report.status] ?? REPORT_STATUS_CONFIG.PENDING
+                const isPending = report.status === 'PENDING'
+                return (
+                  <div key={report.id} style={{ background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: '16px 20px', boxShadow: BAI.shadowMd }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+
+                      {/* Status badge */}
+                      <span style={{ flexShrink: 0, fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}>
+                        {cfg.label}
+                      </span>
+
+                      {/* Main info */}
+                      <div style={{ flex: 1, minWidth: 200 }}>
+                        {/* Raison */}
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 700, color: BAI.ink, margin: '0 0 6px' }}>
+                          {REPORT_REASON_FR[report.reason] ?? report.reason}
+                        </p>
+
+                        {/* Qui a signalé */}
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 20px', marginBottom: 4 }}>
+                          <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid }}>
+                            <strong style={{ color: BAI.ink }}>Signalé par :</strong>{' '}
+                            {report.reporter.firstName} {report.reporter.lastName}
+                            <span style={{ color: BAI.inkFaint }}> — {report.reporter.email}</span>
+                          </span>
+                          <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint }}>
+                            <Clock size={10} style={{ display: 'inline', marginRight: 3, verticalAlign: 'middle' }} />
+                            {format(new Date(report.createdAt), 'dd MMM yyyy HH:mm', { locale: fr })}
+                          </span>
+                        </div>
+
+                        {/* Auteur signalé */}
+                        <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, margin: '0 0 4px' }}>
+                          <strong style={{ color: BAI.ink }}>Annonce de :</strong>{' '}
+                          {report.target.firstName} {report.target.lastName}
+                          <span style={{ color: BAI.inkFaint }}> — {report.target.email}</span>
+                        </p>
+
+                        {/* Annonce */}
+                        {report.property && (
+                          <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <strong style={{ color: BAI.ink }}>Annonce :</strong>{' '}
+                            {report.property.title} — {report.property.address}, {report.property.city}
+                            <Link to={`/property/${report.property.id}`} target="_blank" style={{ color: BAI.caramel, display: 'inline-flex', alignItems: 'center', gap: 3, textDecoration: 'none', fontSize: 11 }}>
+                              <ExternalLink size={10} /> Voir
+                            </Link>
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Actions */}
+                      {isPending && (
+                        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                          <button
+                            onClick={() => handleUpdateReport(report.id, 'ACTIONED')}
+                            disabled={updatingId === report.id}
+                            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: 'none', background: BAI.tenant, color: '#fff', fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600, cursor: 'pointer', opacity: updatingId === report.id ? 0.6 : 1 }}
+                          >
+                            <CheckCircle size={12} /> Traiter
+                          </button>
+                          <button
+                            onClick={() => handleUpdateReport(report.id, 'DISMISSED')}
+                            disabled={updatingId === report.id}
+                            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: `1px solid ${BAI.border}`, background: 'transparent', color: BAI.inkMid, fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}
+                          >
+                            <XCircle size={12} /> Rejeter
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   )

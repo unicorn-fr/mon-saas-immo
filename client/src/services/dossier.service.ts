@@ -135,6 +135,10 @@ class DossierService {
   getWatermarkedDocUrl(docId: string): string {
     return `/api/v1/dossier/docs/${docId}/view`
   }
+
+  async reportUser(targetId: string, reason: string, details?: string, propertyId?: string): Promise<void> {
+    await api.post('/dossier/report', { targetId, reason, details, propertyId })
+  }
 }
 
 export const dossierService = new DossierService()
@@ -156,8 +160,8 @@ export const shareApi = {
     return res.data.data || []
   },
 
-  async reportUser(targetId: string, reason: string, details?: string): Promise<void> {
-    await api.post('/dossier/report', { targetId, reason, details })
+  async reportUser(targetId: string, reason: string, details?: string, propertyId?: string): Promise<void> {
+    await api.post('/dossier/report', { targetId, reason, details, propertyId })
   },
 
   async getPublicProfile(userId: string): Promise<PublicUserProfile> {

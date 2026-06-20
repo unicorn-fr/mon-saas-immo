@@ -310,6 +310,7 @@ model Property {
   expenses               Expense[]
   loan                   Loan?
   maintenanceRequests    MaintenanceRequest[]
+  fraudReports           FraudReport[]         @relation("PropertyReports")
 
   @@index([ownerId])
   @@index([city])
@@ -813,10 +814,13 @@ model FraudReport {
   reporterId  String    // Qui signale
   reporter    User      @relation("FraudReporter", fields: [reporterId], references: [id], onDelete: Cascade)
 
-  targetId    String    // Qui est signalé
+  targetId    String    // Qui est signalé (propriétaire de l'annonce)
   target      User      @relation("FraudTarget", fields: [targetId], references: [id], onDelete: Cascade)
 
-  reason      String    // FAKE_LISTING | DATA_THEFT | FAKE_DOCUMENTS | HARASSMENT | OTHER
+  propertyId  String?   // Annonce concernée
+  property    Property? @relation("PropertyReports", fields: [propertyId], references: [id], onDelete: SetNull)
+
+  reason      String    // FAKE_LISTING | WRONG_PHOTOS | WRONG_PRICE | ALREADY_RENTED | HARASSMENT | OTHER
   details     String?   @db.Text
 
   status      String    @default("PENDING")   // PENDING | REVIEWED | DISMISSED | ACTIONED
@@ -829,6 +833,7 @@ model FraudReport {
 
   @@index([reporterId])
   @@index([targetId])
+  @@index([propertyId])
   @@index([status])
   @@map("fraud_reports")
 }

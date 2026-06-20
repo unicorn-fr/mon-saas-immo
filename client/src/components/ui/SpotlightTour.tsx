@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ArrowRight, Sparkles, ChevronLeft } from 'lucide-react'
@@ -132,14 +132,14 @@ function Tooltip({ step, idx, total, rect, vw, vh, onBack, onClose }: TooltipPro
     // Mobile : en bas ou en haut selon l'espace disponible
     const spaceBelow = vh - rect.bottom - PAD
     const spaceAbove = rect.top - PAD
-    const useBelow = spaceBelow >= 170 || spaceBelow >= spaceAbove
+    const useBelow = spaceBelow >= 180 || spaceBelow >= spaceAbove
     tipStyle = {
       position: 'fixed',
-      left: 16,
-      right: 16,
+      left: 12,
+      right: 12,
       ...(useBelow
-        ? { top: Math.min(rect.bottom + PAD + 16, vh - 175) }
-        : { bottom: Math.max(vh - rect.top + PAD + 10, 12) }),
+        ? { top: Math.min(rect.bottom + PAD + 12, vh - 220) }
+        : { top: Math.max(rect.top - PAD - 12 - 200, 12) }),
     }
   } else {
     // Desktop : à droite de la sidebar
@@ -183,14 +183,17 @@ function Tooltip({ step, idx, total, rect, vw, vh, onBack, onClose }: TooltipPro
         onClick={(e) => { e.stopPropagation(); onClose() }}
         aria-label="Fermer le guide"
         style={{
-          position: 'absolute', top: 14, right: 14,
-          width: 28, height: 28, borderRadius: '50%',
+          position: 'absolute', top: 12, right: 12,
+          width: isMobile ? 36 : 28, height: isMobile ? 36 : 28, borderRadius: '50%',
           background: 'rgba(255,255,255,0.07)',
           border: '1px solid rgba(255,255,255,0.12)',
           color: 'rgba(255,255,255,0.40)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer', pointerEvents: 'auto',
           transition: 'background 0.15s, color 0.15s',
+          // 44px minimum touch target on mobile
+          minWidth: isMobile ? 44 : undefined,
+          minHeight: isMobile ? 44 : undefined,
         }}
         onMouseEnter={e => {
           e.currentTarget.style.background = 'rgba(255,255,255,0.13)'
@@ -286,7 +289,7 @@ function Tooltip({ step, idx, total, rect, vw, vh, onBack, onClose }: TooltipPro
           ))}
         </div>
 
-        {/* Hint clic / Espace */}
+        {/* Hint clic / Espace / Tap */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: 5,
           fontFamily: BAI.fontBody, fontSize: 12,
@@ -297,13 +300,20 @@ function Tooltip({ step, idx, total, rect, vw, vh, onBack, onClose }: TooltipPro
           ) : (
             <>
               <span>{isWelcome ? step.ctaLabel ?? "C'est parti !" : 'Suivant'}</span>
-              <span style={{
-                fontSize: 11, padding: '2px 5px',
-                background: 'rgba(255,255,255,0.08)',
-                border: '1px solid rgba(255,255,255,0.12)',
-                borderRadius: 4,
-              }}>Espace</span>
-              <ArrowRight size={11} style={{ color: 'rgba(255,255,255,0.22)' }} />
+              {!isMobile && (
+                <>
+                  <span style={{
+                    fontSize: 11, padding: '2px 5px',
+                    background: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: 4,
+                  }}>Espace</span>
+                  <ArrowRight size={11} style={{ color: 'rgba(255,255,255,0.22)' }} />
+                </>
+              )}
+              {isMobile && (
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.22)' }}>Toucher →</span>
+              )}
             </>
           )}
         </div>
@@ -359,6 +369,7 @@ export function SpotlightTour({ steps, storageKey, onClose, immediate = false }:
   const [rect, setRect]         = useState<DOMRect | null>(null)
   const [vw, setVw]             = useState(() => window.innerWidth)
   const [vh, setVh]             = useState(() => window.innerHeight)
+  const touchStartX             = useRef<number | null>(null)
 
   // ── Décision d'affichage ─────────────────────────────────────────────────
   useEffect(() => {
@@ -418,6 +429,20 @@ export function SpotlightTour({ steps, storageKey, onClose, immediate = false }:
     return () => window.removeEventListener('keydown', handle)
   }, [visible, advance, back, close])
 
+  // ── Swipe tactile (mobile) ───────────────────────────────────────────────
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+  }, [])
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (touchStartX.current === null) return
+    const dx = e.changedTouches[0].clientX - touchStartX.current
+    touchStartX.current = null
+    if (Math.abs(dx) < 40) { advance(); return }   // small tap = advance
+    if (dx < -40) advance()   // swipe left = next
+    if (dx >  40) back()      // swipe right = prev
+  }, [advance, back])
+
   if (!visible) return null
 
   const step  = steps[idx]
@@ -432,13 +457,17 @@ export function SpotlightTour({ steps, storageKey, onClose, immediate = false }:
     <AnimatePresence>
       {visible && (
         <>
-          {/* ── Overlay cliquable ─────────────────────────────────────────── */}
+          {/* ── Overlay cliquable / swipable ─────────────────────────────── */}
           <div
             key="overlay"
             onClick={advance}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
             style={{
               position: 'fixed', inset: 0,
               zIndex: 9998, cursor: 'pointer',
+              // iOS safe area bottom
+              paddingBottom: 'env(safe-area-inset-bottom)',
             }}
             aria-hidden="true"
           >

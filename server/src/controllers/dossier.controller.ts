@@ -252,9 +252,9 @@ class DossierController {
     try {
       const reporterId = req.user?.id
       if (!reporterId) return res.status(401).json({ success: false, message: 'Authentification requise' })
-      const { targetId, reason, details } = req.body
+      const { targetId, reason, details, propertyId } = req.body
       if (!targetId || !reason) return res.status(400).json({ success: false, message: 'targetId et reason requis' })
-      const report = await dossierService.reportUser(reporterId, targetId, reason, details)
+      const report = await dossierService.reportUser(reporterId, targetId, reason, details, propertyId)
       return res.status(201).json({ success: true, data: report, message: 'Signalement enregistré. Notre équipe va examiner ce cas.' })
     } catch (error) {
       if (error instanceof Error) return res.status(400).json({ success: false, message: error.message })
