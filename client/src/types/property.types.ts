@@ -183,19 +183,26 @@ export interface UpdatePropertyInput {
 export interface PropertyFilters {
   city?: string
   type?: PropertyType
-  types?: string[]   // OR logic — multi-type depuis la recherche NL
+  types?: string[]       // OR logic — multi-type depuis la recherche NL
   status?: PropertyStatus
   minPrice?: number
   maxPrice?: number
   minSurface?: number
   maxSurface?: number
-  bedrooms?: number
-  bathrooms?: number
+  bedrooms?: number      // minimum chambres (gte)
+  minBedrooms?: number
+  maxBedrooms?: number
+  bathrooms?: number     // minimum SDB (gte)
+  minBathrooms?: number
+  maxBathrooms?: number
   furnished?: boolean
+  unfurnished?: boolean  // UI only — maps to furnished: false
   hasParking?: boolean
   hasBalcony?: boolean
   hasElevator?: boolean
   hasGarden?: boolean
+  hasTerrace?: boolean   // maps to amenities: ['terrace']
+  hasCellar?: boolean    // maps to amenities: ['cellar']
   amenities?: string[]
 }
 
