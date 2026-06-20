@@ -4,6 +4,8 @@ import { PropertyType, PropertyStatus } from '@prisma/client'
 import { saveFile } from '../utils/upload.util.js'
 import Anthropic from '@anthropic-ai/sdk'
 import { env } from '../config/env.js'
+import { generatePropertyKit } from '../services/propertyKit.service.js'
+import { syndicateProperty, getSyndications } from '../services/syndication.service.js'
 
 const anthropic = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY })
 
@@ -950,6 +952,105 @@ EXEMPLES :
         data: { filters, chips, originalQuery: query },
       })
     } catch (error) {
+      next(error)
+    }
+  }
+
+  /**
+   * GET /api/v1/properties/:id/kit
+   * Generate multi-platform publication kit for a property
+   */
+  async getPropertyKit(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params
+      const userId = req.user?.id
+
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'Non authentifié' })
+      }
+
+      const kit = await generatePropertyKit(id, userId)
+      return res.status(200).json({ success: true, data: kit })
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message === 'Bien introuvable') {
+          return res.status(404).json({ success: false, message: error.message })
+        }
+        if (error.message === 'Accès refusé') {
+          return res.status(403).json({ success: false, message: error.message })
+        }
+        return res.status(400).json({ success: false, message: error.message })
+      }
+      next(error)
+    }
+  }
+
+  /**
+   * GET /api/v1/properties/:id/syndications
+   * Get all syndication records for a property
+   */
+  async getSyndications(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params
+      const userId = req.user?.id
+
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'Non authentifié' })
+      }
+
+      // Verify ownership
+      const property = await propertyService.getPropertyById(id)
+      if (property.ownerId !== userId) {
+        return res.status(403).json({ success: false, message: 'Accès refusé' })
+      }
+
+      const syndications = await getSyndications(id)
+      return res.status(200).json({ success: true, data: syndications })
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Property not found') {
+        return res.status(404).json({ success: false, message: 'Bien introuvable' })
+      }
+      next(error)
+    }
+  }
+
+  /**
+   * POST /api/v1/properties/:id/syndications
+   * Syndicate a property to specified platforms
+   */
+  async syndicateProperty(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params
+      const userId = req.user?.id
+      const { platforms } = req.body as { platforms?: string[] }
+
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'Non authentifié' })
+      }
+
+      if (!platforms || !Array.isArray(platforms) || platforms.length === 0) {
+        return res.status(400).json({ success: false, message: 'platforms requis (tableau non vide)' })
+      }
+
+      // Verify ownership
+      const property = await propertyService.getPropertyById(id)
+      if (property.ownerId !== userId) {
+        return res.status(403).json({ success: false, message: 'Accès refusé' })
+      }
+
+      await syndicateProperty(id, platforms)
+      const syndications = await getSyndications(id)
+      return res.status(200).json({ success: true, data: syndications })
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message === 'Property not found' || error.message === 'Bien introuvable') {
+          return res.status(404).json({ success: false, message: 'Bien introuvable' })
+        }
+        if (error.message === 'Accès refusé') {
+          return res.status(403).json({ success: false, message: error.message })
+        }
+        return res.status(400).json({ success: false, message: error.message })
+      }
       next(error)
     }
   }

@@ -305,6 +305,7 @@ model Property {
   visitAvailabilitySlots VisitAvailabilitySlot[]
   visitDateOverrides     VisitDateOverride[]
   applications           Application[]
+  syndications           PropertySyndication[]
   calendarInvites        CalendarInvite[]
   expenses               Expense[]
   loan                   Loan?
@@ -753,6 +754,10 @@ model Application {
   hasGuarantor    Boolean         @default(false)
   guarantorType   String?         // "physique" | "visale"
 
+  // Analyse IA qualitative (Claude Haiku)
+  aiCommentary  String?           @db.Text
+  aiScoredAt    DateTime?
+
   // Timestamps
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
@@ -1188,4 +1193,34 @@ model PromoRedemption {
 
   @@unique([promoCodeId, userId]) // Un code = une utilisation par user
   @@map("promo_redemptions")
+}
+
+// ============================================
+// SYNDICATION — DIFFUSION MULTI-PLATEFORMES
+// ============================================
+
+model PropertySyndication {
+  id          String    @id @default(uuid())
+
+  propertyId  String
+  property    Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  platform    String    // "leboncoin" | "facebook" | "pap" | "seloger"
+  status      String    @default("DRAFT") // DRAFT | PUBLISHED | FAILED | PAUSED
+
+  externalId  String?   // ID sur la plateforme externe
+  externalUrl String?   // URL de l'annonce publiée
+
+  syncedAt    DateTime?
+  lastError   String?   @db.Text
+  metadata    Json?     // Données spécifiques à la plateforme
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([propertyId, platform])
+  @@index([propertyId])
+  @@index([platform])
+  @@index([status])
+  @@map("property_syndications")
 }

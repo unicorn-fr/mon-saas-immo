@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { dossierService, TenantDocument } from '../../services/dossier.service'
+import { DossierPdfDownloadButton } from '../../components/dossier/DossierPdf'
 import { DocumentViewerModal } from '../../components/document/DocumentViewerModal'
 import { CameraCapture, CaptureEntry } from '../../components/dossier/CameraCapture'
 import { NationalitySearch } from '../../components/dossier/NationalitySearch'
@@ -1442,7 +1443,7 @@ export default function DossierLocatif() {
                   </div>
 
                   {/* Document chips */}
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
                     {[
                       { id: 'IDENTITE', label: "Pièce d'ID" },
                       { id: 'EMPLOI', label: 'Emploi' },
@@ -1468,6 +1469,25 @@ export default function DossierLocatif() {
                       )
                     })}
                   </div>
+
+                  {/* PDF Export */}
+                  {documents.length > 0 && (
+                    <div style={{ borderTop: `1px solid ${BAI.border}`, paddingTop: 12 }}>
+                      <DossierPdfDownloadButton
+                        user={{
+                          firstName: user?.firstName,
+                          lastName: user?.lastName,
+                          email: user?.email,
+                          birthDate: user?.birthDate ?? null,
+                          birthCity: user?.birthCity ?? null,
+                          nationality: user?.nationality ?? null,
+                          profileMeta: user?.profileMeta as Record<string, unknown> | null,
+                        }}
+                        documents={documents}
+                        score={pct}
+                      />
+                    </div>
+                  )}
                 </div>
               )
             })()}

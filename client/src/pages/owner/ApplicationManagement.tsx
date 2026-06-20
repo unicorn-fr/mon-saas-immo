@@ -9,6 +9,7 @@ import { useWindowWidth } from '../../hooks/useWindowWidth'
 import {
   CheckCircle2, XCircle, Clock, Users, ChevronDown, ChevronUp,
   Building2, RotateCcw, Loader2, MapPin, Euro, ChevronRight, FolderOpen, CalendarDays, Lock,
+  Sparkles, AlertTriangle,
 } from 'lucide-react'
 import { applicationService } from '../../services/application.service'
 import { scoreColor } from '../../utils/matchingEngine'
@@ -97,6 +98,20 @@ function ApplicationCard({
 }) {
   const [expanded, setExpanded] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiResult, setAiResult] = useState<{ commentary: string; strengths: string[]; concerns: string[]; verdict: 'FORT' | 'MOYEN' | 'FRAGILE' } | null>(null)
+
+  const handleAiScore = async () => {
+    setAiLoading(true)
+    try {
+      const result = await applicationService.aiScore(app.id)
+      setAiResult(result)
+    } catch {
+      toast.error('Analyse IA indisponible')
+    } finally {
+      setAiLoading(false)
+    }
+  }
 
   if (!app.tenant) return null
   const tenant = app.tenant
@@ -226,6 +241,23 @@ function ApplicationCard({
             </Link>
           )}
 
+          {isPro && (
+            <button
+              onClick={handleAiScore}
+              disabled={aiLoading}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
+                fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600,
+                background: '#fdf5ec', border: '1px solid rgba(196,151,106,0.3)', color: BAI.caramel,
+                borderRadius: 8, minHeight: 36, padding: '0 14px', whiteSpace: 'nowrap', cursor: aiLoading ? 'wait' : 'pointer',
+                opacity: aiLoading ? 0.7 : 1,
+              }}
+            >
+              {aiLoading ? <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} /> : <Sparkles size={12} />}
+              Analyse IA
+            </button>
+          )}
+
           {app.status === 'PENDING' && (
             <>
               <button
@@ -345,6 +377,58 @@ function ApplicationCard({
                       </span>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* ── Résultat Analyse IA ── */}
+              {aiResult && (
+                <div style={{ borderRadius: 10, overflow: 'hidden', border: `1px solid rgba(196,151,106,0.3)` }}>
+                  {/* Header */}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '10px 14px', background: '#fdf5ec',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Sparkles size={13} style={{ color: BAI.caramel }} />
+                      <span style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.caramel, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                        Analyse IA (Claude)
+                      </span>
+                    </div>
+                    <span style={{
+                      fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
+                      ...(aiResult.verdict === 'FORT'    ? { background: BAI.successLight, color: BAI.success, border: `1px solid #a8d5bc` } :
+                          aiResult.verdict === 'MOYEN'   ? { background: '#fdf5ec', color: BAI.caramel, border: '1px solid rgba(196,151,106,0.4)' } :
+                                                          { background: BAI.errorLight, color: BAI.error, border: `1px solid #f5c6c6` }),
+                    }}>
+                      {aiResult.verdict}
+                    </span>
+                  </div>
+                  {/* Body */}
+                  <div style={{ padding: '12px 14px', background: BAI.bgSurface, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, fontStyle: 'italic', margin: 0, lineHeight: 1.65 }}>
+                      {aiResult.commentary}
+                    </p>
+                    {aiResult.strengths.length > 0 && (
+                      <div className="space-y-1">
+                        {aiResult.strengths.map((s, i) => (
+                          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: BAI.success }}>
+                            <CheckCircle2 size={12} style={{ flexShrink: 0 }} />
+                            {s}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {aiResult.concerns.length > 0 && (
+                      <div className="space-y-1">
+                        {aiResult.concerns.map((c, i) => (
+                          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: BAI.warning }}>
+                            <AlertTriangle size={12} style={{ flexShrink: 0 }} />
+                            {c}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 

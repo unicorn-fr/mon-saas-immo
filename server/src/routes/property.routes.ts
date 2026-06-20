@@ -140,4 +140,28 @@ router.patch(
 // POST /api/v1/properties/:id/contact - Contact property owner (public, auth optional)
 router.post('/:id/contact', optionalAuthenticate, propertyController.contactProperty.bind(propertyController))
 
+// GET /api/v1/properties/:id/kit - Generate multi-platform publication kit
+router.get(
+  '/:id/kit',
+  authenticate,
+  authorize('OWNER'),
+  propertyController.getPropertyKit.bind(propertyController)
+)
+
+// GET /api/v1/properties/:id/syndications - Get syndication records
+router.get(
+  '/:id/syndications',
+  authenticate,
+  authorize('OWNER'),
+  propertyController.getSyndications.bind(propertyController)
+)
+
+// POST /api/v1/properties/:id/syndications - Syndicate to platforms
+router.post(
+  '/:id/syndications',
+  authenticate,
+  authorize('OWNER'),
+  propertyController.syndicateProperty.bind(propertyController)
+)
+
 export default router

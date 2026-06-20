@@ -54,6 +54,12 @@ class ApplicationService {
   async withdraw(id: string): Promise<void> {
     await api.delete(`/applications/${id}`)
   }
+
+  /** Owner triggers Claude Haiku qualitative analysis */
+  async aiScore(id: string): Promise<{ commentary: string; strengths: string[]; concerns: string[]; verdict: 'FORT' | 'MOYEN' | 'FRAGILE' }> {
+    const res = await api.post(`/applications/${id}/ai-score`)
+    return res.data.data
+  }
 }
 
 export const applicationService = new ApplicationService()

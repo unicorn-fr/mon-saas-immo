@@ -107,7 +107,18 @@
       "Bash(pip3 install:*)",
       "Bash(mkdir -p /mnt/user-data/outputs)",
       "Bash(cp /tmp/saas_audit_report.pdf /mnt/user-data/outputs/saas_audit_report.pdf)",
-      "Bash(./node_modules/.bin/tsc --noEmit)"
+      "Bash(./node_modules/.bin/tsc --noEmit)",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(npx remotion *)",
+      "Bash(awk 'NR%100==0 || /^\\\\+/')",
+      "Bash(node_modules/.bin/tsx src/server.ts)",
+      "Read(//tmp/**)",
+      "Bash(jobs)",
+      "Bash(client/node_modules/.bin/tsc --noEmit)",
+      "WebFetch(domain:hyperbeat.org)",
+      "Bash(git -C /Users/enzo/Desktop/Projets/Applications_Web/En_Cours/plateforme-gestion-locative/.claude/worktrees/agent-a23894f6b815ae18c diff --stat HEAD)",
+      "Bash(npm audit *)",
+      "Bash(npm run *)"
     ]
   }
 }

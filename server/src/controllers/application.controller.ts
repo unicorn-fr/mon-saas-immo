@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express'
 import { ApplicationStatus } from '@prisma/client'
 import { applicationService } from '../services/application.service.js'
+import { generateAiCommentary } from '../services/aiScoring.service.js'
+import { prisma } from '../config/database.js'
 
 class ApplicationController {
   /** GET /api/v1/applications/prequalify/:propertyId — live eligibility check */
@@ -91,6 +93,30 @@ class ApplicationController {
       if (!ownerId) return res.status(401).json({ success: false, message: 'Non authentifié' })
       const app = await applicationService.unrejectApplication(req.params.id, ownerId)
       return res.json({ success: true, data: app })
+    } catch (error) {
+      if (error instanceof Error) return res.status(400).json({ success: false, message: error.message })
+      next(error)
+    }
+  }
+
+  /** POST /api/v1/applications/:id/ai-score — owner triggers AI commentary */
+  async aiScore(req: Request, res: Response, next: NextFunction) {
+    try {
+      const ownerId = req.user?.id
+      if (!ownerId) return res.status(401).json({ success: false, message: 'Non authentifié' })
+
+      // Verify application belongs to a property owned by this owner
+      const app = await prisma.application.findUnique({
+        where: { id: req.params.id },
+        include: { property: { select: { ownerId: true } } },
+      })
+      if (!app) return res.status(404).json({ success: false, message: 'Candidature introuvable' })
+      if (app.property.ownerId !== ownerId) {
+        return res.status(403).json({ success: false, message: 'Accès refusé' })
+      }
+
+      const result = await generateAiCommentary(req.params.id)
+      return res.json({ success: true, data: result })
     } catch (error) {
       if (error instanceof Error) return res.status(400).json({ success: false, message: error.message })
       next(error)

@@ -22,6 +22,9 @@ router.patch('/:id/status', authorize('OWNER'), applicationController.updateStat
 // Owner cancels a rejection
 router.patch('/:id/unreject', authorize('OWNER'), applicationController.unreject.bind(applicationController))
 
+// Owner triggers AI commentary on a candidature
+router.post('/:id/ai-score', authorize('OWNER'), applicationController.aiScore.bind(applicationController))
+
 // Tenant withdraws
 router.delete('/:id', applicationController.withdraw.bind(applicationController))
 

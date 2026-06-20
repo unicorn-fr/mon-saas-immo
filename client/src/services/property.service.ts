@@ -373,6 +373,65 @@ class PropertyService {
       throw new Error(handleApiError(error))
     }
   }
+
+  /**
+   * Get diffusion kit texts for a property (Owner only)
+   */
+  async getPropertyKit(propertyId: string): Promise<{
+    leboncoin: string
+    facebook: string
+    pap: string
+    whatsapp: string
+  }> {
+    try {
+      const response = await apiClient.get<ApiResponse<{
+        leboncoin: string
+        facebook: string
+        pap: string
+        whatsapp: string
+      }>>(`/properties/${propertyId}/kit`)
+      return response.data.data
+    } catch (error) {
+      throw new Error(handleApiError(error))
+    }
+  }
+
+  /**
+   * Get syndications for a property (Owner only)
+   */
+  async getSyndications(propertyId: string): Promise<Array<{
+    id: string
+    platform: string
+    status: string
+    externalUrl: string | null
+    syncedAt: string | null
+    lastError: string | null
+  }>> {
+    try {
+      const response = await apiClient.get<ApiResponse<Array<{
+        id: string
+        platform: string
+        status: string
+        externalUrl: string | null
+        syncedAt: string | null
+        lastError: string | null
+      }>>>(`/properties/${propertyId}/syndications`)
+      return response.data.data
+    } catch (error) {
+      throw new Error(handleApiError(error))
+    }
+  }
+
+  /**
+   * Syndicate property on selected platforms (Owner only)
+   */
+  async syndicateProperty(propertyId: string, platforms: string[]): Promise<void> {
+    try {
+      await apiClient.post(`/properties/${propertyId}/syndications`, { platforms })
+    } catch (error) {
+      throw new Error(handleApiError(error))
+    }
+  }
 }
 
 export const propertyService = new PropertyService()
