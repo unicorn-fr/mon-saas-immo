@@ -731,8 +731,8 @@ export default function PropertyDetailsPublic() {
                 />
               </div>
 
-              {/* Simulation de financement — inspiré PAP */}
-              <div style={cardStyle} className="p-6">
+              {/* Simulation de financement — uniquement pour les biens en vente (non applicable en location) */}
+              {false && <div style={cardStyle} className="p-6">
                 <div className="flex items-center gap-2 mb-1">
                   <Calculator className="w-4 h-4" style={{ color: M.caramel }} />
                   <p style={{ ...sectionLabel, marginBottom: 0 }}>Simulation de financement</p>
@@ -867,7 +867,7 @@ export default function PropertyDetailsPublic() {
                     </>
                   )
                 })()}
-              </div>
+              </div>}
 
               {/* Actions PAP-style — imprimer, partager, signaler */}
               <div className="flex flex-wrap gap-2 pb-2">
