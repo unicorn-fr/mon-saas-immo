@@ -543,10 +543,11 @@ export default function Login() {
           {/* Formulaire */}
           <form onSubmit={handlePasswordLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div>
-              <label style={{ ...fontBody, fontSize: '13px', fontWeight: 500, color: BAI.ink, display: 'block', marginBottom: '6px' }}>
+              <label htmlFor="login-email" style={{ ...fontBody, fontSize: '13px', fontWeight: 500, color: BAI.ink, display: 'block', marginBottom: '6px' }}>
                 Adresse email
               </label>
               <input
+                id="login-email"
                 type="email" placeholder="votre@email.com"
                 value={email}
                 onChange={e => { setEmail(e.target.value); if (error) setError('') }}
@@ -560,7 +561,7 @@ export default function Login() {
 
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                <label style={{ ...fontBody, fontSize: '13px', fontWeight: 500, color: BAI.ink }}>Mot de passe</label>
+                <label htmlFor="login-pwd" style={{ ...fontBody, fontSize: '13px', fontWeight: 500, color: BAI.ink }}>Mot de passe</label>
                 <Link
                   to="/forgot-password"
                   style={{ ...fontBody, fontSize: '13px', color: BAI.caramel, textDecoration: 'none' }}
@@ -571,6 +572,7 @@ export default function Login() {
                 </Link>
               </div>
               <input
+                id="login-pwd"
                 type="password" placeholder="••••••••"
                 value={password}
                 onChange={e => { setPassword(e.target.value); if (error) setError('') }}

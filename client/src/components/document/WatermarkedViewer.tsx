@@ -79,7 +79,7 @@ export function WatermarkedViewer({
             responseType: 'blob',
             timeout: 30000,
           })
-          response = { data: axiosRes.data, headers: { 'content-type': axiosRes.headers['content-type'] || '' } }
+          response = { data: axiosRes.data, headers: { 'content-type': (axiosRes.headers['content-type'] as string) || '' } }
         }
 
         const blob = response.data

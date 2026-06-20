@@ -9,8 +9,28 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "size-limit": "size-limit",
+    "test:a11y": "eslint --config .eslintrc.a11y.cjs src/pages/ForgotPassword.tsx src/pages/Login.tsx src/pages/super-admin/SAUsers.tsx"
   },
+  "size-limit": [
+    {
+      "name": "Initial JS (entry + vendors)",
+      "path": [
+        "dist/assets/main-*.js",
+        "dist/assets/react-vendor-*.js",
+        "dist/assets/ui-vendor-*.js"
+      ],
+      "limit": "165 kB",
+      "gzip": true
+    },
+    {
+      "name": "CSS",
+      "path": "dist/assets/*.css",
+      "limit": "20 kB",
+      "gzip": true
+    }
+  ],
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/utilities": "^3.2.2",
@@ -51,26 +71,29 @@
     "serialize-javascript": "^7.0.4"
   },
   "devDependencies": {
+    "@size-limit/file": "^12.1.0",
     "@types/canvas-confetti": "^1.9.0",
     "@types/leaflet": "^1.9.21",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
     "@types/react-signature-canvas": "^1.0.7",
     "@typescript-eslint/eslint-plugin": "^8.57.0",
-    "@typescript-eslint/parser": "^8.57.0",
+    "@typescript-eslint/parser": "^8.61.1",
     "@vitejs/plugin-react-swc": "^4.3.0",
-    "@vitest/ui": "^4.0.18",
+    "@vitest/ui": "^4.1.9",
     "autoprefixer": "^10.4.17",
     "eslint": "^8.57.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
     "jsdom": "^28.1.0",
     "postcss": "^8.4.35",
+    "size-limit": "^12.1.0",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3",
     "vite": "^6.4.1",
     "vite-plugin-pwa": "^0.21.2",
-    "vitest": "^4.0.18",
+    "vitest": "^4.1.9",
     "workbox-window": "^7.0.0"
   }
 }

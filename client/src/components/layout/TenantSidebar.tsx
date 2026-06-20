@@ -141,17 +141,17 @@ export function TenantSidebar() {
     {
       label: null,
       items: [
-        { to: '/dashboard/tenant', icon: LayoutDashboard, label: 'Tableau de bord', end: true },
+        { to: '/dashboard/tenant', icon: LayoutDashboard, label: 'Tableau de bord', end: true, id: 'tour-tenant-dashboard' },
         { to: '/search', icon: Search, label: 'Rechercher', id: 'tour-tenant-search' },
-        { to: '/favorites', icon: Star, label: 'Favoris' },
-        { to: '/mes-alertes', icon: Bell, label: 'Mes alertes' },
+        { to: '/favorites', icon: Star, label: 'Favoris', id: 'tour-tenant-favorites' },
+        { to: '/mes-alertes', icon: Bell, label: 'Mes alertes', id: 'tour-tenant-alerts' },
       ],
     },
     {
       label: 'Mon dossier',
       items: [
         { to: '/my-applications', icon: SendHorizonal, label: 'Candidatures', badge: pendingAppsCount, id: 'tour-tenant-applications' },
-        { to: '/my-bookings', icon: Calendar, label: 'Mes visites' },
+        { to: '/my-bookings', icon: Calendar, label: 'Mes visites', id: 'tour-tenant-bookings' },
         { to: '/dossier', icon: FolderOpen, label: 'Mon dossier', end: true, id: 'tour-tenant-dossier' },
       ],
     },

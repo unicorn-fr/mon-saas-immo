@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../../hooks/useAuth'
@@ -10,10 +10,9 @@ import { BAI } from '../../constants/bailio-tokens'
 import {
   FolderOpen, SendHorizonal, Calendar, FileText, CreditCard,
   ChevronRight, CheckCircle, Clock, ArrowUpRight, MapPin, Home, HelpCircle,
-  MessageSquare, Search, LayoutDashboard,
 } from 'lucide-react'
-import { PlatformTour } from '../../components/ui/PlatformTour'
-import type { TourFeature } from '../../components/ui/PlatformTour'
+import { SpotlightTour } from '../../components/ui/SpotlightTour'
+import type { SpotlightStep } from '../../components/ui/SpotlightTour'
 
 const TOUR_KEY = 'bailio_tour_tenant_v1'
 import { format } from 'date-fns'
@@ -123,6 +122,100 @@ function StepCard({ icon, title, route, done, inProgress }: StepProps) {
   )
 }
 
+// ─── Skeleton loading ─────────────────────────────────────────────────────────
+
+const SHIMMER_KF = `@keyframes bai-shimmer {
+  0%   { background-position: 200% 0 }
+  100% { background-position: -200% 0 }
+}`
+
+function Bone({ w, h, r = 8, opacity = 1 }: { w?: number | string; h: number; r?: number; opacity?: number }) {
+  return (
+    <div style={{
+      width: w ?? '100%', height: h, borderRadius: r,
+      background: 'linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.06) 75%)',
+      backgroundSize: '200% 100%',
+      animation: 'bai-shimmer 1.6s ease-in-out infinite',
+      opacity,
+    }} />
+  )
+}
+
+function DashboardSkeleton() {
+  return (
+    <>
+      <style>{SHIMMER_KF}</style>
+
+      {/* Hero */}
+      <div style={{ background: '#0a0d1a', padding: 'clamp(32px,5vw,56px) clamp(20px,5vw,48px) clamp(24px,4vw,40px)' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+          <Bone w={80} h={10} r={5} opacity={0.6} />
+          <div style={{ marginTop: 10, marginBottom: 32 }}>
+            <Bone w={220} h={38} r={8} opacity={0.5} />
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} style={{
+                flex: '1 1 120px', minWidth: 120, height: 96, borderRadius: 12,
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                animation: 'bai-shimmer 1.6s ease-in-out infinite',
+                backgroundSize: '200% 100%',
+                backgroundImage: 'linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.09) 50%, rgba(255,255,255,0.04) 75%)',
+                animationDelay: `${i * 0.12}s`,
+              }} />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div style={{ maxWidth: 1000, margin: '0 auto', padding: 'clamp(20px,4vw,40px) clamp(16px,4vw,40px)' }}>
+        {/* Banner skeleton */}
+        <div style={{ height: 68, borderRadius: 12, background: BAI.caramelLight, marginBottom: 28, opacity: 0.55 }} />
+
+        {/* Pipeline skeleton */}
+        <div style={{
+          background: BAI.bgSurface, border: `1px solid ${BAI.border}`,
+          borderRadius: 12, padding: 24, marginBottom: 28, boxShadow: BAI.shadowSm,
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
+            <Bone w={160} h={14} r={6} />
+            <Bone w={60} h={14} r={6} />
+          </div>
+          <div style={{ height: 5, borderRadius: 3, background: BAI.bgMuted, marginBottom: 20 }} />
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} style={{
+                flex: '1 1 130px', minWidth: 120, height: 104,
+                borderRadius: 12, background: BAI.bgMuted,
+                animation: 'bai-shimmer 1.6s ease-in-out infinite',
+                backgroundSize: '200% 100%',
+                backgroundImage: 'linear-gradient(90deg, #f4f2ee 25%, #ebe8e3 50%, #f4f2ee 75%)',
+                animationDelay: `${i * 0.10}s`,
+              }} />
+            ))}
+          </div>
+        </div>
+
+        {/* Grid skeleton */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+          {[1, 2, 3].map(i => (
+            <div key={i} style={{
+              height: 220, borderRadius: 12, background: BAI.bgSurface,
+              border: `1px solid ${BAI.border}`, boxShadow: BAI.shadowSm,
+              animation: 'bai-shimmer 1.6s ease-in-out infinite',
+              backgroundSize: '200% 100%',
+              backgroundImage: 'linear-gradient(90deg, #ffffff 25%, #f4f2ee 50%, #ffffff 75%)',
+              animationDelay: `${i * 0.15}s`,
+            }} />
+          ))}
+        </div>
+      </div>
+    </>
+  )
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function TenantDashboard() {
@@ -138,84 +231,64 @@ export default function TenantDashboard() {
   const [tourKey, setTourKey]             = useState(0)
   const [tourImmediate, setTourImmediate] = useState(false)
 
-  // Tour target refs (kept for potential future use)
-  const kpiRef      = useRef<HTMLDivElement>(null)
-  const parcourRef  = useRef<HTMLDivElement>(null)
-  const gridRef     = useRef<HTMLDivElement>(null)
-
-  const tourFeatures: TourFeature[] = [
+  const spotlightSteps: SpotlightStep[] = [
     {
-      icon: LayoutDashboard,
-      iconBg: 'rgba(196,151,106,0.16)',
-      iconColor: BAI.caramel,
-      label: 'Tableau de bord',
-      title: 'Votre espace locataire',
-      desc: 'Résumé complet de votre situation : logement actuel, candidatures en cours, prochaines visites, avancement de votre dossier. Tout est organisé pour que rien ne vous échappe.',
+      targetId: null,
+      title: 'Bienvenue sur Bailio !',
+      description: 'Merci de nous rejoindre. En moins d\'une minute, on vous montre comment tout fonctionne. Votre prochain logement commence ici.',
+      ctaLabel: "C'est parti !",
     },
     {
-      icon: Search,
-      iconBg: 'rgba(26,50,112,0.28)',
-      iconColor: '#7aa4f0',
-      label: 'Recherche',
-      title: 'Trouvez votre logement idéal',
-      desc: 'Parcourez des centaines d\'annonces vérifiées. Filtres avancés : ville, budget, surface, type de bien. Activez des alertes pour être notifié dès qu\'une annonce correspond à vos critères.',
-      link: '/search',
+      targetId: 'tour-tenant-dashboard',
+      title: 'Tableau de bord',
+      description: 'Votre hub central : logement actuel, candidatures en cours, visites à venir, avancement de votre dossier. Tout d\'un seul coup d\'œil.',
     },
     {
-      icon: FolderOpen,
-      iconBg: 'rgba(27,94,59,0.28)',
-      iconColor: '#5fcf96',
-      label: 'Dossier locatif',
-      title: 'Votre dossier, prêt en 10 min',
-      desc: 'Constituez votre dossier une seule fois, partagez-le à tous vos propriétaires en un clic. Notre IA vérifie chaque document automatiquement : pièce d\'identité, revenus, emploi, domicile.',
-      link: '/dossier',
+      targetId: 'tour-tenant-search',
+      title: 'Rechercher un logement',
+      description: 'Parcourez des annonces vérifiées. Filtres avancés, carte interactive. Activez des alertes pour être prévenu en temps réel dès qu\'un bien correspond.',
+    },
+    {
+      targetId: 'tour-tenant-favorites',
+      title: 'Vos favoris',
+      description: 'Sauvegardez les logements qui vous plaisent d\'un clic. Comparez, revenez quand vous voulez. Ne ratez plus un coup de cœur.',
+    },
+    {
+      targetId: 'tour-tenant-alerts',
+      title: 'Mes alertes',
+      description: 'Paramétrez vos critères et recevez une notification dès qu\'un logement correspond. Soyez le premier à postuler.',
+    },
+    {
+      targetId: 'tour-tenant-dossier',
+      title: 'Mon dossier locatif',
+      description: 'Constituez votre dossier une seule fois. Notre IA vérifie chaque document automatiquement. Partagez-le instantanément à tous vos propriétaires.',
       tag: 'IA',
     },
     {
-      icon: SendHorizonal,
-      iconBg: 'rgba(196,151,106,0.18)',
-      iconColor: BAI.caramel,
-      label: 'Candidatures',
-      title: 'Postulez et suivez en temps réel',
-      desc: 'Candidatez pour plusieurs logements simultanément. Suivez chaque dossier en temps réel : en attente, visite proposée, acceptée. Vous êtes notifié dès qu\'un propriétaire répond.',
-      link: '/my-applications',
+      targetId: 'tour-tenant-applications',
+      title: 'Mes candidatures',
+      description: 'Postulez à plusieurs logements en même temps. Suivez le statut de chaque dossier en temps réel : en attente, visite proposée, acceptée.',
     },
     {
-      icon: Calendar,
-      iconBg: 'rgba(26,50,112,0.24)',
-      iconColor: '#7aa4f0',
-      label: 'Visites',
-      title: 'Réservez vos créneaux de visite',
-      desc: 'Choisissez parmi les créneaux proposés par le propriétaire et confirmez votre visite en un clic. Rappel automatique la veille, modification possible à tout moment.',
-      link: '/my-bookings',
+      targetId: 'tour-tenant-bookings',
+      title: 'Mes visites',
+      description: 'Choisissez votre créneau parmi ceux proposés par le propriétaire. Confirmation en un clic, rappel automatique la veille.',
     },
     {
-      icon: FileText,
-      iconBg: 'rgba(27,94,59,0.24)',
-      iconColor: '#5fcf96',
-      label: 'Contrats',
-      title: 'Signez votre bail électroniquement',
-      desc: 'Une fois votre candidature acceptée, le bail vous est envoyé pour signature. Conforme eIDAS, valeur légale garantie — depuis votre téléphone, en quelques secondes.',
-      link: '/contracts',
+      targetId: 'tour-tenant-contracts',
+      title: 'Contrat & Mon bail',
+      description: 'Signez votre bail électroniquement, conforme eIDAS. Valeur légale garantie, accessible à tout moment depuis n\'importe quel appareil.',
       tag: 'eIDAS',
     },
     {
-      icon: MessageSquare,
-      iconBg: 'rgba(196,151,106,0.16)',
-      iconColor: BAI.caramel,
-      label: 'Messages',
-      title: 'Contactez votre propriétaire',
-      desc: 'Communiquez directement avec vos propriétaires : posez des questions, confirmez des détails, signalez un problème. Tout est tracé, archivé et accessible à tout moment.',
-      link: '/messages',
+      targetId: 'tour-tenant-messages',
+      title: 'Messages',
+      description: 'Discutez directement avec vos propriétaires. Posez vos questions, confirmez des détails. Tout est archivé et accessible en permanence.',
     },
     {
-      icon: CreditCard,
-      iconBg: 'rgba(26,50,112,0.22)',
-      iconColor: '#7aa4f0',
-      label: 'Paiements',
-      title: 'Suivez vos loyers et quittances',
-      desc: 'Retrouvez l\'historique complet de vos paiements, téléchargez vos quittances de loyer et suivez votre compte. Tout est automatiquement archivé, disponible à tout moment.',
-      link: '/tenant/payments',
+      targetId: 'tour-tenant-settings',
+      title: 'Paramètres',
+      description: 'Gérez votre profil, vos notifications et votre abonnement. Votre compte, entièrement personnalisé selon vos préférences.',
     },
   ]
 
@@ -279,18 +352,7 @@ export default function TenantDashboard() {
   const todayStr = format(now, "EEEE d MMMM yyyy", { locale: fr })
   const todayCap = todayStr.charAt(0).toUpperCase() + todayStr.slice(1)
 
-  if (loading) {
-    return (
-      <>        <div style={{ display: 'flex', justifyContent: 'center', padding: 80 }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: '50%',
-            border: `3px solid ${BAI.border}`, borderTopColor: BAI.caramel,
-            animation: 'spin 0.7s linear infinite',
-          }} />
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        </div>
-      </>    )
-  }
+  if (loading) return <DashboardSkeleton />
 
   return (
     <>      {/* ── Hero dark strip ──────────────────────────────────────────────── */}
@@ -362,7 +424,7 @@ export default function TenantDashboard() {
           </motion.div>
 
           {/* Stats row — 4 glass KPIs */}
-          <div ref={kpiRef} style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 32 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 32 }}>
             {[
               {
                 label: activeContract ? 'Logement actuel' : 'En recherche',
@@ -628,7 +690,6 @@ export default function TenantDashboard() {
 
         {/* ── Pipeline progression ─────────────────────────────────────── */}
         <motion.div
-          ref={parcourRef}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.28 }}
@@ -680,7 +741,7 @@ export default function TenantDashboard() {
         </motion.div>
 
         {/* ── Grille candidatures + visites + dossier ──────────────────── */}
-        <div ref={gridRef} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
 
           {/* Candidatures récentes */}
           {applications.length > 0 && (
@@ -927,13 +988,13 @@ export default function TenantDashboard() {
 
       </div>
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      <PlatformTour
+      <SpotlightTour
         key={tourKey}
-        features={tourFeatures}
+        steps={spotlightSteps}
         storageKey={TOUR_KEY}
-        tourTitle="Votre espace locataire"
         immediate={tourImmediate}
+        onClose={() => setTourImmediate(false)}
       />
-    </>  )
+    </>
+  )
 }

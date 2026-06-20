@@ -53,7 +53,7 @@ export function DocumentViewerModal({ fileUrl, fileName, onClose }: DocumentView
           timeout: 30000,
         })
         const blob = axiosRes.data
-        const contentType = axiosRes.headers['content-type'] || ''
+        const contentType = (axiosRes.headers['content-type'] as string) || ''
 
         setMimeType((blob as Blob).type || contentType)
         objectUrl = URL.createObjectURL(blob)

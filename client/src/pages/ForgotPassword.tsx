@@ -134,8 +134,9 @@ export default function ForgotPassword() {
               <form onSubmit={handleResetPassword} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {/* Code field */}
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: BAI.inkMid, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Code de vérification</label>
+                  <label htmlFor="fp-code" style={{ fontSize: 12, fontWeight: 600, color: BAI.inkMid, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Code de vérification</label>
                   <input
+                    id="fp-code"
                     type="text" value={code}
                     onChange={e => { setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')); setError('') }}
                     placeholder="EX: K7M2P9QX" maxLength={8}
@@ -148,10 +149,11 @@ export default function ForgotPassword() {
 
                 {/* New password */}
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: BAI.inkMid, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Nouveau mot de passe</label>
+                  <label htmlFor="fp-new-pwd" style={{ fontSize: 12, fontWeight: 600, color: BAI.inkMid, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Nouveau mot de passe</label>
                   <div style={{ position: 'relative' }}>
                     <Lock size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: BAI.inkFaint }} />
                     <input
+                      id="fp-new-pwd"
                       type={showPwd ? 'text' : 'password'} value={newPassword}
                       onChange={e => setNewPassword(e.target.value)}
                       placeholder="••••••••" required autoComplete="new-password"
@@ -181,8 +183,9 @@ export default function ForgotPassword() {
 
                 {/* Confirm password */}
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: BAI.inkMid, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Confirmer le mot de passe</label>
+                  <label htmlFor="fp-confirm-pwd" style={{ fontSize: 12, fontWeight: 600, color: BAI.inkMid, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Confirmer le mot de passe</label>
                   <input
+                    id="fp-confirm-pwd"
                     type={showPwd ? 'text' : 'password'} value={confirmPassword}
                     onChange={e => setConfirmPassword(e.target.value)}
                     placeholder="••••••••" required autoComplete="new-password"
