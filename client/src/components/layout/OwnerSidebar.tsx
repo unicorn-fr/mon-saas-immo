@@ -163,7 +163,7 @@ export function OwnerSidebar() {
     {
       label: null,
       items: [
-        { to: '/dashboard/owner', icon: LayoutDashboard, label: 'Tableau de bord', end: true },
+        { to: '/dashboard/owner', icon: LayoutDashboard, label: 'Tableau de bord', end: true, id: 'tour-owner-dashboard' },
         { to: '/properties/owner/me', icon: Home, label: 'Mes annonces', id: 'tour-owner-properties' },
       ],
     },
@@ -181,8 +181,8 @@ export function OwnerSidebar() {
       items: [
         { to: '/owner/quittances', icon: Receipt, label: 'Quittances', id: 'tour-owner-quittances', lockedForPlan: 'PRO' },
         { to: '/owner/finances', icon: Wallet, label: 'Finances', id: 'tour-owner-finances' },
-        { to: '/owner/rentabilite', icon: BarChart2, label: 'Rentabilité', lockedForPlan: 'PRO' },
-        { to: '/owner/fiscal-wizard', icon: Wand2, label: 'Assistant fiscal', lockedForPlan: 'PRO' },
+        { to: '/owner/rentabilite', icon: BarChart2, label: 'Rentabilité', lockedForPlan: 'PRO', id: 'tour-owner-rentabilite' },
+        { to: '/owner/fiscal-wizard', icon: Wand2, label: 'Assistant fiscal', lockedForPlan: 'PRO', id: 'tour-owner-fiscal-wizard' },
       ],
     },
   ]
@@ -317,6 +317,7 @@ export function OwnerSidebar() {
           label="Paramètres"
           onClick={closeMobile}
           compact={compact}
+          id="tour-owner-settings"
         />
       </nav>
 

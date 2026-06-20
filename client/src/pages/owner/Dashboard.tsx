@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useWindowWidth } from '../../hooks/useWindowWidth'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -14,7 +14,6 @@ import { BAI } from '../../constants/bailio-tokens'
 import {
   Plus, ArrowRight, ShieldAlert, Calendar,
   Home, ClipboardList, MessageSquare, ChevronRight, HelpCircle,
-  FileText, TrendingUp, Receipt, LayoutDashboard, Users,
   Zap, Lock, PenLine, ClipboardCheck,
 } from 'lucide-react'
 import { apiClient } from '../../services/api.service'
@@ -22,8 +21,8 @@ import type { Application } from '../../types/application.types'
 import type { Booking } from '../../types/booking.types'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { PlatformTour } from '../../components/ui/PlatformTour'
-import type { TourFeature } from '../../components/ui/PlatformTour'
+import { SpotlightTour } from '../../components/ui/SpotlightTour'
+import type { SpotlightStep } from '../../components/ui/SpotlightTour'
 import { usePlan } from '../../hooks/usePlan'
 
 const TOUR_KEY = 'bailio_tour_owner_v1'
@@ -205,93 +204,71 @@ export default function OwnerDashboard() {
   const [tourKey, setTourKey] = useState(0)
   const [tourImmediate, setTourImmediate] = useState(false)
 
-  // Tour target refs (kept for future spotlight steps if needed)
-  const kpiRef       = useRef<HTMLDivElement>(null)
-  const propsRef     = useRef<HTMLElement>(null)
-  const activityRef  = useRef<HTMLElement>(null)
-  const actionsRef   = useRef<HTMLDivElement>(null)
-
-  const tourFeatures: TourFeature[] = [
+  const spotlightSteps: SpotlightStep[] = [
     {
-      icon: LayoutDashboard,
-      iconBg: 'rgba(196,151,106,0.16)',
-      iconColor: BAI.caramel,
-      label: 'Tableau de bord',
-      title: 'Votre centre de contrôle',
-      desc: 'Candidatures à traiter, visites planifiées, messages non lus — tout ce qui nécessite votre attention aujourd\'hui, résumé en un coup d\'œil. Agissez directement depuis les cartes.',
+      targetId: null,
+      title: 'Votre espace propriétaire',
+      description: 'Bienvenue sur Bailio ! Ce guide interactif vous présente chaque fonctionnalité en 60 secondes. Cliquez ou appuyez sur Espace pour avancer.',
+      ctaLabel: "C'est parti !",
     },
     {
-      icon: Home,
-      iconBg: 'rgba(26,50,112,0.28)',
-      iconColor: '#7aa4f0',
-      label: 'Mes annonces',
-      title: 'Publiez et gérez vos biens',
-      desc: 'Créez une annonce complète en 5 minutes grâce au formulaire guidé : photos, description, loyer, critères de solvabilité. Les locataires peuvent candidater dès la publication.',
-      link: '/properties/owner/me',
+      targetId: 'tour-owner-dashboard',
+      title: 'Tableau de bord',
+      description: 'Candidatures à traiter, visites planifiées, messages non lus — tout ce qui nécessite votre attention aujourd\'hui, résumé en un coup d\'œil.',
     },
     {
-      icon: ClipboardList,
-      iconBg: 'rgba(27,94,59,0.28)',
-      iconColor: '#5fcf96',
-      label: 'Candidatures',
-      title: 'Évaluez les dossiers locataires',
-      desc: 'Chaque candidature arrive avec le dossier complet du locataire : revenus, pièce d\'identité, justificatifs d\'emploi. Acceptez, refusez ou planifiez une visite directement depuis cette page.',
-      link: '/applications/manage',
+      targetId: 'tour-owner-properties',
+      title: 'Mes annonces',
+      description: 'Créez une annonce complète en 5 minutes : photos, description, loyer, critères de solvabilité. Les locataires peuvent candidater dès la publication.',
     },
     {
-      icon: Calendar,
-      iconBg: 'rgba(196,151,106,0.18)',
-      iconColor: BAI.caramel,
-      label: 'Visites',
-      title: 'Planifiez votre agenda de visites',
-      desc: 'Proposez des créneaux de visite aux candidats. Ils confirment directement depuis leur espace — sans échange d\'emails, sans appel téléphonique. Les confirmations apparaissent en temps réel.',
-      link: '/bookings/manage',
+      targetId: 'tour-owner-applications',
+      title: 'Candidatures',
+      description: 'Chaque candidature arrive avec le dossier complet : revenus, pièce d\'identité, justificatifs. Acceptez, refusez ou planifiez une visite directement.',
     },
     {
-      icon: MessageSquare,
-      iconBg: 'rgba(26,50,112,0.22)',
-      iconColor: '#7aa4f0',
-      label: 'Messages',
-      title: 'Communiquez avec vos locataires',
-      desc: 'Échangez directement avec vos candidats et locataires. Historique complet, pièces jointes, notifications instantanées — tout est centralisé, rien ne se perd.',
-      link: '/messages',
+      targetId: 'tour-owner-visits',
+      title: 'Visites',
+      description: 'Proposez des créneaux aux candidats. Ils confirment depuis leur espace — sans emails, sans appels. Les confirmations apparaissent en temps réel.',
     },
     {
-      icon: FileText,
-      iconBg: 'rgba(27,94,59,0.24)',
-      iconColor: '#5fcf96',
-      label: 'Contrats',
-      title: 'Bail électronique conforme eIDAS',
-      desc: 'Rédigez votre bail à partir du modèle Loi ALUR, personnalisez-le et envoyez-le en signature électronique. Le locataire signe depuis son téléphone — aucun déplacement, aucune impression.',
-      link: '/contracts',
+      targetId: 'tour-owner-messages',
+      title: 'Messages',
+      description: 'Échangez avec vos candidats et locataires. Historique complet, pièces jointes, notifications instantanées — tout est centralisé, rien ne se perd.',
+    },
+    {
+      targetId: 'tour-owner-contracts',
+      title: 'Contrats & Baux',
+      description: 'Rédigez votre bail à partir du modèle Loi ALUR et envoyez-le en signature électronique. Le locataire signe depuis son téléphone.',
       tag: 'eIDAS',
     },
     {
-      icon: TrendingUp,
-      iconBg: 'rgba(196,151,106,0.16)',
-      iconColor: BAI.caramel,
-      label: 'Finances',
-      title: 'Suivez vos revenus locatifs',
-      desc: 'Tableau de bord financier complet : loyers encaissés, charges, rentabilité par bien. Générez des rapports mensuels et suivez l\'évolution de votre patrimoine en un coup d\'œil.',
-      link: '/owner/finances',
+      targetId: 'tour-owner-quittances',
+      title: 'Quittances',
+      description: 'Générez les quittances de loyer en un clic, conformément à l\'article 21 de la Loi ALUR. Envoyées par email, archivées automatiquement.',
+      tag: 'PRO',
     },
     {
-      icon: Receipt,
-      iconBg: 'rgba(26,50,112,0.20)',
-      iconColor: '#7aa4f0',
-      label: 'Quittances',
-      title: 'Quittances automatiques conformes',
-      desc: 'Générez les quittances de loyer de vos locataires en un clic, conformément à l\'article 21 de la Loi ALUR. Envoyées automatiquement par email, archivées dans votre espace.',
-      link: '/owner/quittances',
+      targetId: 'tour-owner-finances',
+      title: 'Finances',
+      description: 'Tableau de bord financier : loyers encaissés, charges, flux de trésorerie. Suivez l\'évolution de votre patrimoine locatif en un coup d\'œil.',
     },
     {
-      icon: Users,
-      iconBg: 'rgba(27,94,59,0.20)',
-      iconColor: '#5fcf96',
-      label: 'Mes locataires',
-      title: 'Gérez votre portefeuille locataire',
-      desc: 'Vue d\'ensemble de tous vos locataires actifs : contrats en cours, loyers, coordonnées. Accédez à l\'historique complet de chaque relation locative en un clic.',
-      link: '/owner/locataires',
+      targetId: 'tour-owner-rentabilite',
+      title: 'Rentabilité',
+      description: 'Calculez le rendement brut et net de chaque bien, comparez vos actifs et identifiez les optimisations possibles pour maximiser votre patrimoine.',
+      tag: 'PRO',
+    },
+    {
+      targetId: 'tour-owner-fiscal-wizard',
+      title: 'Assistant fiscal',
+      description: 'Préparez votre déclaration de revenus fonciers avec l\'assistant IA. Régime micro-foncier ou réel — il calcule et génère les documents nécessaires.',
+      tag: 'PRO',
+    },
+    {
+      targetId: 'tour-owner-settings',
+      title: 'Paramètres',
+      description: 'Gérez votre profil, vos préférences de notification et votre abonnement Bailio depuis cet espace.',
     },
   ]
 
@@ -517,7 +494,7 @@ export default function OwnerDashboard() {
           )}
 
           {/* ── 2. KPI ROW ─────────────────────────────────────────────── */}
-          <div ref={kpiRef} style={{
+          <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
             gap: 16,
@@ -728,7 +705,6 @@ export default function OwnerDashboard() {
           }}>
             {/* Colonne gauche — Mes biens */}
             <motion.section
-              ref={propsRef}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.22, duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
@@ -839,7 +815,6 @@ export default function OwnerDashboard() {
 
             {/* Colonne droite — Activité récente */}
             <motion.section
-              ref={activityRef}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.30, duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
@@ -879,7 +854,6 @@ export default function OwnerDashboard() {
 
           {/* ── 4. QUICK ACTIONS ────────────────────────────────────────── */}
           <motion.div
-            ref={actionsRef}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.40, duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
@@ -940,12 +914,12 @@ export default function OwnerDashboard() {
         </div>
       </div>
 
-      <PlatformTour
+      <SpotlightTour
         key={tourKey}
-        features={tourFeatures}
+        steps={spotlightSteps}
         storageKey={TOUR_KEY}
-        tourTitle="Votre espace propriétaire"
         immediate={tourImmediate}
+        onClose={() => setTourImmediate(false)}
       />
     </>  )
 }

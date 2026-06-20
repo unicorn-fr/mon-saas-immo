@@ -226,7 +226,7 @@ function Tooltip({ step, idx, total, rect, vw, vh, onBack, onClose }: TooltipPro
       {!isWelcome && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
           <span style={{
-            fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700,
+            fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700,
             letterSpacing: '0.12em', textTransform: 'uppercase',
             color: BAI.caramel,
           }}>
@@ -234,7 +234,7 @@ function Tooltip({ step, idx, total, rect, vw, vh, onBack, onClose }: TooltipPro
           </span>
           {step.tag && (
             <span style={{
-              fontSize: 9, fontWeight: 700, letterSpacing: '0.06em',
+              fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
               padding: '2px 7px', borderRadius: 20, textTransform: 'uppercase',
               background: 'rgba(196,151,106,0.16)',
               border: '1px solid rgba(196,151,106,0.28)',
@@ -249,7 +249,7 @@ function Tooltip({ step, idx, total, rect, vw, vh, onBack, onClose }: TooltipPro
       {/* ── Titre ───────────────────────────────────────────────────────────── */}
       <h2 style={{
         fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-        fontSize: isWelcome ? 'clamp(26px,5vw,38px)' : 22,
+        fontSize: isWelcome ? 'clamp(28px,5vw,40px)' : 24,
         color: '#ffffff', margin: '0 0 10px', lineHeight: 1.15,
       }}>
         {step.title}
@@ -258,7 +258,7 @@ function Tooltip({ step, idx, total, rect, vw, vh, onBack, onClose }: TooltipPro
       {/* ── Description ─────────────────────────────────────────────────────── */}
       <p style={{
         fontFamily: BAI.fontBody,
-        fontSize: isWelcome ? 15 : 13.5,
+        fontSize: isWelcome ? 16 : 15,
         lineHeight: 1.65,
         color: 'rgba(255,255,255,0.60)',
         margin: `0 0 ${isWelcome ? 28 : 20}px`,
@@ -289,7 +289,7 @@ function Tooltip({ step, idx, total, rect, vw, vh, onBack, onClose }: TooltipPro
         {/* Hint clic / Espace */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: 5,
-          fontFamily: BAI.fontBody, fontSize: 11,
+          fontFamily: BAI.fontBody, fontSize: 12,
           color: 'rgba(255,255,255,0.28)',
         }}>
           {isLast ? (
@@ -298,12 +298,12 @@ function Tooltip({ step, idx, total, rect, vw, vh, onBack, onClose }: TooltipPro
             <>
               <span>{isWelcome ? step.ctaLabel ?? "C'est parti !" : 'Suivant'}</span>
               <span style={{
-                fontSize: 10, padding: '2px 5px',
+                fontSize: 11, padding: '2px 5px',
                 background: 'rgba(255,255,255,0.08)',
                 border: '1px solid rgba(255,255,255,0.12)',
                 borderRadius: 4,
               }}>Espace</span>
-              <ArrowRight size={10} style={{ color: 'rgba(255,255,255,0.22)' }} />
+              <ArrowRight size={11} style={{ color: 'rgba(255,255,255,0.22)' }} />
             </>
           )}
         </div>
@@ -317,7 +317,7 @@ function Tooltip({ step, idx, total, rect, vw, vh, onBack, onClose }: TooltipPro
           style={{
             position: 'absolute', bottom: 22, left: 24,
             display: 'flex', alignItems: 'center', gap: 4,
-            fontFamily: BAI.fontBody, fontSize: 11,
+            fontFamily: BAI.fontBody, fontSize: 12,
             color: 'rgba(255,255,255,0.28)', background: 'none',
             border: 'none', cursor: 'pointer', pointerEvents: 'auto',
             transition: 'color 0.15s',
@@ -335,7 +335,7 @@ function Tooltip({ step, idx, total, rect, vw, vh, onBack, onClose }: TooltipPro
           onClick={(e) => { e.stopPropagation(); onClose() }}
           style={{
             display: 'block', width: '100%', marginTop: 10,
-            fontFamily: BAI.fontBody, fontSize: 12,
+            fontFamily: BAI.fontBody, fontSize: 13,
             color: 'rgba(255,255,255,0.25)',
             background: 'none', border: 'none', cursor: 'pointer',
             textAlign: 'center', pointerEvents: 'auto',
