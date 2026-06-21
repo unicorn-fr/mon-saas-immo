@@ -16,7 +16,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "prisma:seed": "tsx prisma/seed.ts",
-    "railway:start": "npx prisma db push --accept-data-loss && node dist/server.js",
+    "railway:start": "ulimit -n 65535 2>/dev/null || true && npx prisma db push --accept-data-loss && pm2-runtime ecosystem.config.cjs --env production",
     "railway:seed": "npx tsx prisma/seed.ts",
     "lint": "eslint . --ext .ts",
     "type-check": "tsc --noEmit"
@@ -58,6 +58,7 @@
     "stripe": "^16.12.0",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3",
+    "pm2": "^5.4.3",
     "winston": "^3.11.0",
     "zod": "^3.22.4"
   },

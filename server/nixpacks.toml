@@ -8,4 +8,7 @@ cmds = ["npm ci"]
 cmds = ["npm run build"]
 
 [start]
-cmd = "npm run railway:start"
+# ulimit -n 65535 : augmente le nombre max de file descriptors (1 par connexion SSE)
+# 2>/dev/null || true : silencieux si le container ne le permet pas (non bloquant)
+# pm2-runtime : mode container de PM2 (foreground, pas de daemon)
+cmd = "ulimit -n 65535 2>/dev/null || true && npx prisma db push --accept-data-loss && pm2-runtime ecosystem.config.cjs --env production"

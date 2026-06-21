@@ -18,6 +18,7 @@ import { env } from './config/env.js'
 import { prisma } from './config/database.js'
 import { connectRedis } from './utils/cache.js'
 import { checkRequiredEnvVars } from './utils/checkEnv.js'
+import { sseManager } from './lib/sseManager.js'
 import cron from 'node-cron'
 import { generateMonthlyPayments } from './jobs/generateMonthlyPayments.js'
 import { checkSearchAlerts } from './jobs/checkSearchAlerts.js'
@@ -67,9 +68,12 @@ setImmediate(async () => {
   }
 
   // Redis (non-bloquant)
-  connectRedis().catch((err: Error) => {
+  await connectRedis().catch((err: Error) => {
     console.warn('[redis] Unavailable, running without cache:', err.message)
   })
+
+  // SSE pub/sub cross-worker — requis pour PM2 cluster mode
+  await sseManager.initPubSub(env.REDIS_URL)
 
   // Cron mensuel : génération des paiements de loyer attendus (1er du mois, 8h00)
   cron.schedule('0 8 1 * *', async () => {

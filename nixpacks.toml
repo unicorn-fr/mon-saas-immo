@@ -8,4 +8,4 @@ cmds = ["npm ci --prefix server"]
 cmds = ["npm run build --prefix server"]
 
 [start]
-cmd = "npm run railway:start --prefix server"
+cmd = "ulimit -n 65535 2>/dev/null || true && npx prisma db push --accept-data-loss --prefix server && pm2-runtime server/ecosystem.config.cjs --env production"
