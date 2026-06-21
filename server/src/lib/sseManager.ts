@@ -44,6 +44,10 @@ class SSEManager {
     }
     return false
   }
+
+  getConnectionCount(userId: string): number {
+    return this.connections.get(userId)?.size ?? 0
+  }
 }
 
 export const sseManager = new SSEManager()

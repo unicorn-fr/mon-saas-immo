@@ -5,22 +5,21 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/
 let isRedirecting = false
 
 /**
- * In-memory token storage (per-tab, not shared between browser tabs)
- * This prevents the bug where two tabs with different accounts
- * overwrite each other's tokens in localStorage.
+ * Access token: in-memory only (never persisted) — stolen by XSS = 15min exposure max.
+ * Refresh token: localStorage — needed to survive page refresh (httpOnly cookie migration is P1 tech debt).
  */
-let _accessToken: string | null = localStorage.getItem('accessToken')
+let _accessToken: string | null = null
 let _refreshToken: string | null = localStorage.getItem('refreshToken')
 
+// Mutex: prevents concurrent refresh storms when multiple 401s fire simultaneously
+let _refreshPromise: Promise<void> | null = null
+
 /**
- * Set tokens in memory AND persist to localStorage for page refresh
+ * Set tokens — access token stays in memory only, refresh token persisted to localStorage.
  */
 export const setApiTokens = (accessToken: string | null, refreshToken: string | null) => {
   _accessToken = accessToken
   _refreshToken = refreshToken
-
-  if (accessToken) localStorage.setItem('accessToken', accessToken)
-  else localStorage.removeItem('accessToken')
 
   if (refreshToken) localStorage.setItem('refreshToken', refreshToken)
   else localStorage.removeItem('refreshToken')
@@ -88,20 +87,26 @@ apiClient.interceptors.response.use(
           throw new Error('No refresh token')
         }
 
-        // Refresh the token
-        const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-          refreshToken: _refreshToken,
-        })
+        // Mutex: if a refresh is already in-flight, wait for it instead of firing another
+        if (!_refreshPromise) {
+          _refreshPromise = (async () => {
+            try {
+              const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+                refreshToken: _refreshToken,
+              })
+              const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data.data
+              setApiTokens(newAccessToken, newRefreshToken)
+            } finally {
+              _refreshPromise = null
+            }
+          })()
+        }
 
-        const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
-          response.data.data
+        await _refreshPromise
 
-        // Update tokens in memory and localStorage
-        setApiTokens(newAccessToken, newRefreshToken)
-
-        // Retry original request with new token
+        // Retry original request with the freshly-set access token
         if (originalRequest.headers) {
-          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
+          originalRequest.headers.Authorization = `Bearer ${_accessToken}`
         }
 
         return apiClient(originalRequest)

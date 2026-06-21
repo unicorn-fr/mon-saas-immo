@@ -1,9 +1,22 @@
 import { Router, Request, Response } from 'express'
+import { rateLimit } from 'express-rate-limit'
 import { messageController } from '../controllers/message.controller.js'
 import { authenticate } from '../middlewares/auth.middleware.js'
 import { sseManager } from '../lib/sseManager.js'
 import { verifyAccessToken } from '../utils/jwt.util.js'
 import { authService } from '../services/auth.service.js'
+
+// SSE-specific rate limiter — 20 new connections per minute per IP
+const sseLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  message: { success: false, message: 'Trop de connexions SSE. Réessayez dans une minute.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+
+// Max simultaneous SSE connections per authenticated user (prevents memory exhaustion)
+const MAX_SSE_PER_USER = 5
 
 const router = Router()
 
@@ -26,7 +39,7 @@ router.get('/unread-count', messageController.getUnreadCount.bind(messageControl
 router.get('/search', messageController.searchMessages.bind(messageController))
 
 // SSE — EventSource ne peut pas envoyer Authorization header → auth via query token
-router.get('/stream', async (req: Request, res: Response) => {
+router.get('/stream', sseLimiter, async (req: Request, res: Response) => {
   // Auth: header Authorization OR ?token= query param (for EventSource)
   const authHeader = req.headers.authorization
   const headerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null
@@ -45,6 +58,11 @@ router.get('/stream', async (req: Request, res: Response) => {
     req.user = { id: user.id, email: user.email, role: user.role as 'TENANT' | 'OWNER' | 'ADMIN' | 'SUPER_ADMIN' }
   } catch {
     return res.status(401).json({ success: false, message: 'Token invalide' })
+  }
+
+  // Limit simultaneous SSE connections per user (prevents memory exhaustion)
+  if (sseManager.getConnectionCount(req.user!.id) >= MAX_SSE_PER_USER) {
+    return res.status(429).json({ success: false, message: 'Trop de connexions simultanées' })
   }
 
   res.setHeader('Content-Type', 'text/event-stream')

@@ -62,12 +62,16 @@ class DossierController {
         return res.status(400).json({ success: false, message: 'Le fichier ne doit pas depasser 5 Mo' })
       }
 
-      console.log(`[uploadDocument] category=${category} size=${req.file.size} mime=${req.file.mimetype}`)
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`[uploadDocument] category=${category} size=${req.file.size} mime=${req.file.mimetype}`)
+      }
 
       let fileUrl: string
       try {
         fileUrl = await saveFile(req.file.buffer, req.file.originalname, req.file.mimetype)
-        console.log(`[uploadDocument] saveFile OK → ${fileUrl.slice(0, 60)}`)
+        if (process.env.NODE_ENV !== 'production') {
+          console.log(`[uploadDocument] saveFile OK → ${fileUrl.slice(0, 60)}`)
+        }
       } catch (uploadErr) {
         const msg = uploadErr instanceof Error ? uploadErr.message : String(uploadErr)
         console.error('[uploadDocument] saveFile failed:', msg)
@@ -201,7 +205,12 @@ class DossierController {
       if (!doc) return res.status(404).json({ success: false, message: 'Document introuvable' })
 
       // Verify access: active DossierShare OR active application OR active contract
-      await dossierService.assertDocumentAccess(doc.userId, requesterId)
+      // Return 404 (not 403) on access denied — prevents IDOR existence disclosure
+      try {
+        await dossierService.assertDocumentAccess(doc.userId, requesterId)
+      } catch {
+        return res.status(404).json({ success: false, message: 'Document introuvable' })
+      }
 
       const requester = await _prisma.user.findUnique({
         where: { id: requesterId },
