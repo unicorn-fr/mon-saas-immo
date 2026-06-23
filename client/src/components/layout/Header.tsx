@@ -295,6 +295,8 @@ export const Header = () => {
 
   const MOBILE_NAV_LINKS = [
     { to: '/search',        label: 'Location' },
+    { to: '/locataires',    label: 'Locataires' },
+    { to: '/pricing',       label: 'Tarifs'    },
     { to: '/proprietaires', label: 'Propriétaires' },
     { to: '/estimer',       label: 'Estimer'   },
     { to: '/guide',         label: 'Guide'     },
@@ -406,6 +408,22 @@ export const Header = () => {
                 </div>
               )}
             </div>
+
+            {/* Locataires */}
+            <Link to="/locataires"
+              style={navLinkStyle}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = navTextHover; (e.currentTarget as HTMLElement).style.background = isSticky ? BAI.bgMuted : 'rgba(255,255,255,0.10)' }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = navTextColor; (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
+              Locataires
+            </Link>
+
+            {/* Tarifs */}
+            <Link to="/pricing"
+              style={navLinkStyle}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = navTextHover; (e.currentTarget as HTMLElement).style.background = isSticky ? BAI.bgMuted : 'rgba(255,255,255,0.10)' }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = navTextColor; (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
+              Tarifs
+            </Link>
 
             {/* Propriétaires */}
             <Link to="/proprietaires"

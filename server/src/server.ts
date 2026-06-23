@@ -23,6 +23,9 @@ import cron from 'node-cron'
 import { generateMonthlyPayments } from './jobs/generateMonthlyPayments.js'
 import { checkSearchAlerts } from './jobs/checkSearchAlerts.js'
 import { sendRentReminders } from './jobs/sendRentReminders.js'
+import { sendOnboardingEmails } from './jobs/onboardingEmails.js'
+import { sendContractReminders } from './jobs/contractReminders.js'
+import { sendIrlReminders } from './jobs/irlReminders.js'
 
 checkRequiredEnvVars()
 
@@ -96,6 +99,27 @@ setImmediate(async () => {
     console.log('[cron] Relances loyers en retard...')
     await sendRentReminders().catch((err: Error) =>
       console.error('[cron] sendRentReminders error:', err)
+    )
+  })
+
+  // Cron toutes les heures : emails d'onboarding J+1 et J+7
+  cron.schedule('0 * * * *', () => {
+    sendOnboardingEmails().catch(err => console.error('[cron] onboardingEmails error:', err))
+  })
+
+  // Cron toutes les 6h : relances signature contrat (J+3 et J+7)
+  cron.schedule('0 */6 * * *', async () => {
+    console.log('[cron] Relances signature contrat...')
+    await sendContractReminders().catch((err: Error) =>
+      console.error('[cron] sendContractReminders error:', err)
+    )
+  })
+
+  // Cron quotidien à 10h : rappel révision IRL (3 mois avant anniversaire bail)
+  cron.schedule('0 10 * * *', async () => {
+    console.log('[cron] Rappels révision IRL...')
+    await sendIrlReminders().catch((err: Error) =>
+      console.error('[cron] sendIrlReminders error:', err)
     )
   })
 

@@ -42,6 +42,7 @@ import georisquesRouter from './georisques.routes.js'
 import alertRoutes from './alert.routes.js'
 import newsletterRoutes from './newsletter.routes.js'
 import promoRoutes from './promo.routes.js'
+import kycRoutes from './kyc.routes.js'
 
 /**
  * Register all application routes on the Express app.
@@ -100,6 +101,9 @@ export function registerRoutes(app: Application, prefix: string): void {
 
   // ── Webhooks (sans authenticate) ────────────────────────────────────────────
   app.use(`${prefix}/webhooks/yousign`, yousignWebhookRouter)
+
+  // ── KYC — Vérification d'identité + signature vidéo ─────────────────────
+  app.use(`${prefix}/kyc`, kycRoutes)
 
   // ── Administration ──────────────────────────────────────────────────────
   app.use(`${prefix}/admin`, adminRoutes)

@@ -15,6 +15,7 @@ import { AMENITIES } from '../../types/property.types'
 import { BAI } from '../../constants/bailio-tokens'
 import { bookingService } from '../../services/booking.service'
 import { propertyService } from '../../services/property.service'
+import { useUpgradeModal } from '../../components/billing/UpgradeModal'
 
 // ─── Maison tokens ────────────────────────────────────────────────────────────
 
@@ -482,6 +483,7 @@ interface BanFeature {
 export default function CreatePropertyWizard() {
   const navigate = useNavigate()
   const { createProperty, isLoading, isUploadingImages } = useProperties()
+  const { showUpgrade, UpgradeModal } = useUpgradeModal()
   const [step, setStep] = useState(0)
   const [state, setState] = useState<WizardState>(loadDraft)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -645,6 +647,18 @@ export default function CreatePropertyWizard() {
       celebrateBig()
       navigate(`/properties/${property.id}`)
     } catch (err) {
+      // Intercept plan limit error → UpgradeModal instead of generic error
+      const apiData = (err as { response?: { data?: { error?: string; requiredPlan?: string; maxAllowed?: number } } })?.response?.data
+      if (apiData?.error === 'PROPERTY_LIMIT_REACHED') {
+        const requiredPlan = apiData.requiredPlan ?? 'SOLO'
+        const max = apiData.maxAllowed ?? 3
+        showUpgrade({
+          feature: 'Ajouter un nouveau bien',
+          requiredPlan,
+          message: `Vous avez atteint la limite de ${max} bien${max > 1 ? 's' : ''} de votre plan actuel. Passez au plan ${requiredPlan} pour continuer à gérer plus de biens.`,
+        })
+        return
+      }
       setErrors({ general: err instanceof Error ? err.message : 'Erreur lors de la création' })
     }
   }
@@ -1281,5 +1295,6 @@ export default function CreatePropertyWizard() {
         </div>{/* end inner max-w */}
         </div>{/* end contenu light */}
       </div>{/* end root */}
+      {UpgradeModal}
     </>  )
 }

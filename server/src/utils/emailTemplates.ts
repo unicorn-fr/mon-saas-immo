@@ -147,3 +147,127 @@ export const magicLinkTemplate = (params: { magicUrl: string; expiresMinutes?: n
     </div>
   `),
 })
+
+export const newsletterConfirmTemplate = (params: { email: string }) => ({
+  subject: 'Votre alerte est activée — Bailio',
+  html: BASE(`
+    <div class="overline">Alertes biens</div>
+    <div class="title">Vous serez le premier informé</div>
+    <p class="text">
+      Bonne nouvelle — votre adresse <strong>${params.email}</strong> est bien enregistrée.
+      Dès qu'un bien correspondant à votre recherche est publié sur Bailio, vous recevrez un email en avant-première.
+    </p>
+    <div style="text-align:center;">
+      <a href="${process.env.FRONTEND_URL ?? ''}/search" class="btn" style="background:#c4976a;">Parcourir les annonces</a>
+    </div>
+    <hr class="divider" />
+    <p class="text" style="font-size:12px;text-align:center;color:#9e9b96;">
+      Pour gérer vos alertes, créez un compte gratuit.
+    </p>
+  `),
+})
+
+export const onboardingOwnerJ1Template = (params: { firstName: string; loginUrl: string }) => ({
+  subject: 'Publiez votre premier bien en 5 minutes — Bailio',
+  html: BASE(`
+    <div class="overline">Pour les propriétaires</div>
+    <div class="title">Bonjour ${params.firstName}, prêt à publier ?</div>
+    <p class="text">
+      Votre compte est actif. Il ne vous reste plus qu'une étape : publier votre premier bien.
+      0&nbsp;€ de frais d'agence, des candidatures qualifiées directement dans votre espace.
+    </p>
+    <div style="text-align:center;">
+      <a href="${params.loginUrl}" class="btn">Publier mon bien maintenant</a>
+    </div>
+    <hr class="divider" />
+    <p class="text" style="font-size:13px;color:#5a5754;">Ce que vous obtenez avec Bailio :</p>
+    <p class="text" style="font-size:13px;line-height:2;">
+      ✓ Bail conforme loi ALUR signé en ligne<br/>
+      ✓ Candidats avec dossiers vérifiés par IA<br/>
+      ✓ Quittances générées automatiquement
+    </p>
+  `),
+})
+
+export const onboardingTenantJ1Template = (params: { firstName: string; loginUrl: string }) => ({
+  subject: 'Complétez votre dossier locatif — Bailio',
+  html: BASE(`
+    <div class="overline">Pour les locataires</div>
+    <div class="title">Bonjour ${params.firstName}, constituez votre dossier</div>
+    <p class="text">
+      Un dossier complet augmente considérablement vos chances d'être accepté.
+      Notre IA analyse et valorise vos documents pour mettre en avant votre profil auprès des propriétaires.
+    </p>
+    <div style="text-align:center;">
+      <a href="${params.loginUrl}" class="btn" style="background:#c4976a;">Accéder à mon dossier</a>
+    </div>
+    <hr class="divider" />
+    <p class="text" style="font-size:13px;color:#5a5754;">Avec votre dossier Bailio :</p>
+    <p class="text" style="font-size:13px;line-height:2;">
+      ✓ Téléchargez vos documents une seule fois<br/>
+      ✓ Postulez en 1 clic pour tous les biens<br/>
+      ✓ Signature du bail en ligne
+    </p>
+  `),
+})
+
+export const contractSignatureReminderTemplate = (params: {
+  firstName: string
+  contractTitle: string
+  signingUrl: string
+  role: 'OWNER' | 'TENANT'
+  daysElapsed: number
+}) => ({
+  subject: `Rappel : votre contrat attend votre signature — Bailio`,
+  html: BASE(`
+    <div class="overline">Contrat en attente</div>
+    <div class="title">Bonjour ${params.firstName},<br>votre signature est attendue</div>
+    <p class="text">
+      Le contrat <strong>${params.contractTitle}</strong> a été envoyé il y a
+      <strong>${params.daysElapsed} jour${params.daysElapsed > 1 ? 's' : ''}</strong>
+      et attend toujours votre signature.
+    </p>
+    <p class="text">
+      La signature prend moins de 2 minutes directement depuis votre espace personnel.
+    </p>
+    <div style="text-align:center;">
+      <a href="${params.signingUrl}" class="btn">Signer maintenant →</a>
+    </div>
+    <div class="warning">
+      Si vous ne signez pas, le propriétaire pourra annuler le contrat et proposer le bien à un autre candidat.
+    </div>
+  `),
+})
+
+export const onboardingReminderJ7Template = (params: {
+  firstName: string
+  loginUrl: string
+  role: 'OWNER' | 'TENANT'
+}) => ({
+  subject: 'Votre compte Bailio vous attend',
+  html: BASE(
+    params.role === 'OWNER'
+      ? `
+    <div class="overline">Pour les propriétaires</div>
+    <div class="title">Votre bien n'est pas encore publié</div>
+    <p class="text">
+      Bonjour ${params.firstName}, ça prend 5 minutes. Des locataires recherchent en ce moment un bien comme le vôtre.
+      Ne laissez pas votre logement inoccupé plus longtemps.
+    </p>
+    <div style="text-align:center;">
+      <a href="${params.loginUrl}" class="btn">Reprendre où j'en étais</a>
+    </div>
+      `
+      : `
+    <div class="overline">Pour les locataires</div>
+    <div class="title">Votre dossier est incomplet</div>
+    <p class="text">
+      Bonjour ${params.firstName}, un dossier complet = 3x plus de chances d'être accepté.
+      Les propriétaires choisissent en priorité les candidats avec un dossier finalisé.
+    </p>
+    <div style="text-align:center;">
+      <a href="${params.loginUrl}" class="btn" style="background:#c4976a;">Reprendre où j'en étais</a>
+    </div>
+      `
+  ),
+})

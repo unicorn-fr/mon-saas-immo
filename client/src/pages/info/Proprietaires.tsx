@@ -323,6 +323,147 @@ export default function Proprietaires() {
         </div>
       </section>
 
+      {/* ── Réassurance juridique ── */}
+      <section style={{ background: BAI.bgSurface, borderTop: `1px solid ${BAI.border}`, padding: 'clamp(48px,7vh,80px) clamp(20px,5vw,48px)' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          {/* Header */}
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 10px' }}>
+              Protection juridique
+            </p>
+            <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(26px,4vw,38px)', color: BAI.ink, margin: '0 0 12px', lineHeight: 1.1 }}>
+              Louer en toute sérénité.
+            </h2>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 16, color: BAI.inkMid, margin: 0, lineHeight: 1.6, maxWidth: 540, marginLeft: 'auto', marginRight: 'auto' }}>
+              Chaque bail généré sur Bailio respecte le cadre légal français. Vous êtes protégé à chaque étape.
+            </p>
+          </div>
+
+          {/* Grille de garanties */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20, marginBottom: 48 }}>
+            {[
+              {
+                icon: '⚖️',
+                title: 'Bail loi ALUR conforme',
+                desc: 'Chaque contrat est généré à partir du modèle officiel loi ALUR du 24 mars 2014. Clauses légales incluses, erreurs de rédaction évitées.',
+                badge: 'Modèle officiel',
+                badgeColor: BAI.ownerLight,
+                badgeBorder: BAI.ownerBorder,
+                badgeText: BAI.owner,
+              },
+              {
+                icon: '✍️',
+                title: 'Signature eIDAS certifiée',
+                desc: "La signature électronique a la même valeur légale qu'une signature manuscrite. Horodatée, non répudiable, archivée.",
+                badge: 'Valeur légale',
+                badgeColor: BAI.tenantLight,
+                badgeBorder: BAI.tenantBorder,
+                badgeText: BAI.tenant,
+              },
+              {
+                icon: '🔒',
+                title: 'Données chiffrées RGPD',
+                desc: 'Vos données et celles de vos locataires sont chiffrées AES-256 et hébergées en Europe. Conformité CNIL totale.',
+                badge: 'RGPD / CNIL',
+                badgeColor: BAI.caramelLight,
+                badgeBorder: BAI.caramelBorder,
+                badgeText: BAI.inkMid,
+              },
+              {
+                icon: '📋',
+                title: 'État des lieux numérique',
+                desc: 'Réalisé depuis votre téléphone, signé électroniquement par les deux parties. Valeur probante en cas de litige.',
+                badge: 'Double signature',
+                badgeColor: BAI.bgMuted,
+                badgeBorder: BAI.border,
+                badgeText: BAI.inkMid,
+              },
+              {
+                icon: '🧾',
+                title: 'Quittances automatiques',
+                desc: 'Générées et envoyées automatiquement à chaque loyer payé. Obligation légale respectée sans effort (art. 21 loi 1989).',
+                badge: 'Automatique',
+                badgeColor: BAI.tenantLight,
+                badgeBorder: BAI.tenantBorder,
+                badgeText: BAI.tenant,
+              },
+              {
+                icon: '📈',
+                title: 'Révision IRL encadrée',
+                desc: 'Outil de calcul basé sur les indices INSEE publiés chaque trimestre. Révision dans les limites légales, jamais au-delà.',
+                badge: 'Indice INSEE',
+                badgeColor: BAI.ownerLight,
+                badgeBorder: BAI.ownerBorder,
+                badgeText: BAI.owner,
+              },
+            ].map((item) => (
+              <div key={item.title} style={{
+                background: BAI.bgSurface,
+                border: `1px solid ${BAI.border}`,
+                borderRadius: 16,
+                padding: '24px 20px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 12,
+                boxShadow: BAI.shadowMd,
+              }}>
+                <div style={{ fontSize: 28 }}>{item.icon}</div>
+                <div>
+                  <h3 style={{ fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 15, color: BAI.ink, margin: '0 0 4px' }}>
+                    {item.title}
+                  </h3>
+                  <span style={{
+                    display: 'inline-block',
+                    fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700,
+                    letterSpacing: '0.08em', textTransform: 'uppercase',
+                    background: item.badgeColor, border: `1px solid ${item.badgeBorder}`,
+                    color: item.badgeText, padding: '2px 8px', borderRadius: 4,
+                  }}>
+                    {item.badge}
+                  </span>
+                </div>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, margin: 0, lineHeight: 1.6, flex: 1 }}>
+                  {item.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Bandeau bas — conformité */}
+          <div style={{
+            background: BAI.bgMuted,
+            border: `1px solid ${BAI.border}`,
+            borderRadius: 12,
+            padding: '20px 28px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 16,
+            flexWrap: 'wrap',
+          }}>
+            <div style={{ flex: 1, minWidth: 260 }}>
+              <p style={{ fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 14, color: BAI.ink, margin: '0 0 4px' }}>
+                Conformité mise à jour automatiquement
+              </p>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, margin: 0, lineHeight: 1.5 }}>
+                Notre équipe juridique surveille les évolutions du droit locatif français. Vos contrats sont toujours à jour.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+              {['Loi ALUR', 'Loi Élan', 'Loi Boutin', 'Décret 2019-650'].map(law => (
+                <span key={law} style={{
+                  fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600,
+                  color: BAI.inkMid, background: BAI.bgSurface,
+                  border: `1px solid ${BAI.border}`, borderRadius: 6,
+                  padding: '4px 10px',
+                }}>
+                  {law}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA ── */}
       <section style={{ background: '#0a0d1a', padding: 'clamp(56px,9vh,96px) 0', textAlign: 'center' }}>
         <div style={{ maxWidth: 680, margin: '0 auto', padding: '0 clamp(20px,5vw,48px)' }}>

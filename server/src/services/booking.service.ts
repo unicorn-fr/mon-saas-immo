@@ -147,19 +147,37 @@ class BookingService {
     const tenantName = `${booking.tenant.firstName} ${booking.tenant.lastName}`
     notificationService.notifyNewBooking(booking.property.owner.id, booking.id, booking.property.title, tenantName).catch(() => {})
 
-    // Send email to owner
-    const ownerEmail = booking.property.owner.email
+    // Send styled email to owner
     const visitDateStr = new Date(booking.visitDate).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    const frontendUrl = process.env.FRONTEND_URL ?? ''
     sendEmail({
-      to: ownerEmail,
+      to: booking.property.owner.email,
       subject: `Nouvelle demande de visite — ${booking.property.title}`,
-      html: `
-        <p>Bonjour,</p>
-        <p><strong>${tenantName}</strong> souhaite visiter votre bien <strong>${booking.property.title}</strong>.</p>
-        <p>Date souhaitée : <strong>${visitDateStr}</strong> à <strong>${booking.visitTime}</strong></p>
-        <p>Connectez-vous à votre espace Bailio pour confirmer ou refuser cette visite.</p>
-        <p>— L'équipe Bailio</p>
-      `,
+      html: `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><style>
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{background:#fafaf8;font-family:'DM Sans',Arial,sans-serif;color:#0d0c0a;}
+        .wrapper{max-width:560px;margin:40px auto;background:#ffffff;border:1px solid #e4e1db;border-radius:16px;overflow:hidden;}
+        .header{background:#1a1a2e;padding:32px 40px;text-align:center;}
+        .header-logo{color:#ffffff;font-size:22px;font-weight:600;}
+        .header-logo span{color:#c4976a;}
+        .body{padding:40px;}
+        .overline{font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#9e9b96;margin-bottom:12px;}
+        .title{font-size:26px;font-weight:700;color:#0d0c0a;margin-bottom:16px;line-height:1.25;}
+        .text{font-size:14px;color:#5a5754;line-height:1.7;margin-bottom:16px;}
+        .btn{display:inline-block;padding:14px 32px;background:#1a1a2e;color:#ffffff!important;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;margin:24px 0;}
+        .footer{padding:24px 40px;background:#f4f2ee;text-align:center;font-size:12px;color:#9e9b96;line-height:1.6;}
+      </style></head><body>
+        <div class="wrapper">
+          <div class="header"><div class="header-logo">Bai<span>lio</span></div></div>
+          <div class="body">
+            <div class="overline">Demande de visite</div>
+            <div class="title">Demande de visite reçue</div>
+            <p class="text">${booking.tenant.firstName} souhaite visiter <strong>${booking.property.title}</strong> le <strong>${visitDateStr}</strong> à <strong>${booking.visitTime}</strong>.</p>
+            <div style="text-align:center;"><a href="${frontendUrl}/dashboard/owner" class="btn">Gérer les visites →</a></div>
+          </div>
+          <div class="footer"><p>Bailio — Plateforme de gestion locative</p></div>
+        </div>
+      </body></html>`,
     }).catch(() => {})
 
     return booking
@@ -520,6 +538,40 @@ class BookingService {
 
     // Notify tenant of booking confirmation
     notificationService.notifyBookingConfirmed(confirmedBooking.tenantId, confirmedBooking.id, confirmedBooking.property.title).catch(() => {})
+
+    // Send styled confirmation email to tenant
+    const confirmFrontendUrl = process.env.FRONTEND_URL ?? ''
+    const confirmDateStr = new Date(confirmedBooking.visitDate).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    const confirmTimeStr = confirmedBooking.visitTime ? ` à ${confirmedBooking.visitTime}` : ''
+    sendEmail({
+      to: confirmedBooking.tenant.email,
+      subject: `Votre visite est confirmée — Bailio`,
+      html: `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><style>
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{background:#fafaf8;font-family:'DM Sans',Arial,sans-serif;color:#0d0c0a;}
+        .wrapper{max-width:560px;margin:40px auto;background:#ffffff;border:1px solid #e4e1db;border-radius:16px;overflow:hidden;}
+        .header{background:#1a1a2e;padding:32px 40px;text-align:center;}
+        .header-logo{color:#ffffff;font-size:22px;font-weight:600;}
+        .header-logo span{color:#c4976a;}
+        .body{padding:40px;}
+        .overline{font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#9e9b96;margin-bottom:12px;}
+        .title{font-size:26px;font-weight:700;font-style:italic;color:#0d0c0a;margin-bottom:16px;line-height:1.25;}
+        .text{font-size:14px;color:#5a5754;line-height:1.7;margin-bottom:16px;}
+        .btn{display:inline-block;padding:14px 32px;background:#c4976a;color:#ffffff!important;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;margin:24px 0;}
+        .footer{padding:24px 40px;background:#f4f2ee;text-align:center;font-size:12px;color:#9e9b96;line-height:1.6;}
+      </style></head><body>
+        <div class="wrapper">
+          <div class="header"><div class="header-logo">Bai<span>lio</span></div></div>
+          <div class="body">
+            <div class="overline">Visite confirmée</div>
+            <div class="title">Votre visite est confirmée !</div>
+            <p class="text">Rendez-vous le <strong>${confirmDateStr}${confirmTimeStr}</strong> pour visiter <strong>${confirmedBooking.property.title}</strong>. Vous recevrez les détails de l'adresse dans votre espace personnel.</p>
+            <div style="text-align:center;"><a href="${confirmFrontendUrl}/dashboard/tenant" class="btn">Voir mes visites →</a></div>
+          </div>
+          <div class="footer"><p>Bailio — Plateforme de gestion locative</p></div>
+        </div>
+      </body></html>`,
+    }).catch(() => {})
 
     return confirmedBooking
   }

@@ -192,6 +192,7 @@ model User {
   tenantMaintenanceReqs MaintenanceRequest[]  @relation("TenantMaintenanceRequests")
   aiUsageTracking        AiUsageTracking[]
   searchAlerts           SearchAlert[]
+  kycVerification        KycVerification?
 
   // Stripe Connect (propriétaires — pour recevoir les loyers)
   stripeAccountId        String?              @unique
@@ -872,6 +873,21 @@ model AuditLog {
 // ABONNEMENTS STRIPE
 // ============================================
 
+enum KycStatus {
+  PENDING
+  DOCUMENT_VERIFIED
+  BIOMETRIC_VERIFIED
+  COMPLETED
+  FAILED
+  REJECTED
+}
+
+enum KycDocumentType {
+  CNI
+  PERMIS_CONDUIRE
+  PASSEPORT
+}
+
 enum PlanType {
   FREE
   SOLO
@@ -1155,6 +1171,50 @@ model MaintenanceRequest {
   @@index([ownerId, status])
   @@index([ownerId, propertyId])  // Vue groupée par bien (maintenance.routes.ts)
   @@map("maintenance_requests")
+}
+
+model KycVerification {
+  id              String          @id @default(cuid())
+  userId          String          @unique
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  status          KycStatus       @default(PENDING)
+  documentType    KycDocumentType?
+
+  // Données extraites du document (JAMAIS le fichier lui-même)
+  firstName       String?
+  lastName        String?
+  birthDate       DateTime?
+  documentExpiry  DateTime?
+  nationality     String?
+  documentNumberEnc String?   // AES-256-GCM chiffré
+  mrzLine1        String?
+  mrzLine2        String?
+  documentDeletedAt DateTime? // Preuve RGPD : fichier supprimé à cette date
+
+  // Biométrie (embedding chiffré — pas de photo stockée)
+  faceEmbeddingEnc  String?   // JSON float[] chiffré AES-256-GCM
+  livenessScore     Float?    // 0.0 - 1.0
+  faceMatchScore    Float?    // Cosine similarity 0.0 - 1.0
+  biometricVerifiedAt DateTime?
+
+  // Preuve de signature vidéo
+  signatureVideoUrl   String?  // Cloudinary private URL
+  signatureVideoHash  String?  // SHA-256 du fichier vidéo
+  signatureImageUrl   String?  // Cloudinary — capture du moment de signature
+  signatureTimestamp  DateTime?
+  signatureAuditChain String?  // JSON hash-chain des événements
+
+  attempts        Int     @default(0) // Compteur tentatives (anti-fraude)
+  ipAddress       String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  verifiedAt      DateTime?
+
+  @@index([userId])
+  @@index([status])
+  @@map("kyc_verifications")
 }
 
 model NewsletterSubscriber {

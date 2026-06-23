@@ -679,7 +679,7 @@ export default function Home() {
                 style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap' }}
               >
                 {[
-                  '12 000+ annonces',
+                  'Entre particuliers',
                   '0€ de frais d\'agence',
                   'Signature électronique',
                 ].map((label, i) => (
@@ -715,8 +715,8 @@ export default function Home() {
                   style={{ gridRow: '1 / 3', borderRadius: 16, overflow: 'hidden', height: 360 }}
                 >
                   <img
-                    src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=600&q=80"
-                    alt="Appartement moderne"
+                    src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=600&q=80"
+                    alt="Appartement lumineux"
                     loading="lazy"
                     style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                   />
@@ -849,8 +849,16 @@ export default function Home() {
                 Votre dossier,<br />votre clé
               </h3>
               <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.62)', margin: 0, lineHeight: 1.6 }}>
-                Passeports, fiches de paie, avis d'imposition. Tout centralisé, partagé en un clic auprès des propriétaires.
+                Pièce d'identité, bulletins de salaire, avis d'imposition. Notre IA analyse et valorise vos documents automatiquement. Partagé en un clic auprès des propriétaires.
               </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                <span style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, padding: '3px 10px', background: 'rgba(196,151,106,0.18)', border: '1px solid rgba(196,151,106,0.35)', borderRadius: 20, color: BAI.caramel, letterSpacing: '0.08em' }}>
+                  ✦ IA OCR
+                </span>
+                <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>
+                  Vérification automatique
+                </span>
+              </div>
               <div style={{ marginTop: 'auto' }}>
                 <Link to="/register"
                   style={{
@@ -1564,6 +1572,92 @@ export default function Home() {
                 <div>
                   <p style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.ink, margin: 0, lineHeight: 1.3 }}>{label}</p>
                   <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkFaint, margin: 0 }}>{sub}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          14b. TÉMOIGNAGES
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section style={{ background: BAI.bgMuted, borderTop: `1px solid ${BAI.border}`, padding: 'clamp(48px,7vh,80px) clamp(20px,5vw,48px)' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 10px' }}>Témoignages</p>
+            <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(26px,4vw,38px)', color: BAI.ink, margin: 0, lineHeight: 1.1 }}>
+              Ils ont trouvé sans agence.
+            </h2>
+          </div>
+          <div className="testimonials-grid">
+            {[
+              {
+                quote: "J'ai publié mon appartement le mardi soir, j'avais 8 candidatures le lendemain matin. Le bail a été signé en ligne en 48h. Aucune agence n'aurait fait ça.",
+                name: 'Marie L.',
+                role: 'Propriétaire',
+                city: 'Lyon 3e',
+                initial: 'M',
+                color: BAI.ownerLight,
+                borderColor: BAI.ownerBorder,
+                textColor: BAI.owner,
+              },
+              {
+                quote: "Mon dossier était toujours refusé à cause du format. Ici, j'ai tout uploadé en 10 minutes, le propriétaire a reçu un dossier complet et professionnel. Appartement obtenu en 5 jours.",
+                name: 'Thomas K.',
+                role: 'Locataire',
+                city: 'Paris 11e',
+                initial: 'T',
+                color: BAI.tenantLight,
+                borderColor: BAI.tenantBorder,
+                textColor: BAI.tenant,
+              },
+              {
+                quote: "Zéro frais d'agence sur 2 logements, c'est 3 200 € économisés. La signature électronique est aussi valable qu'un notaire. Je ne reviendrai jamais en arrière.",
+                name: 'Sandrine B.',
+                role: 'Propriétaire',
+                city: 'Bordeaux',
+                initial: 'S',
+                color: BAI.ownerLight,
+                borderColor: BAI.ownerBorder,
+                textColor: BAI.owner,
+              },
+            ].map((t) => (
+              <div key={t.name} style={{
+                background: BAI.bgSurface,
+                border: `1px solid ${BAI.border}`,
+                borderRadius: 16,
+                padding: 'clamp(20px,2.5vw,32px)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 16,
+                boxShadow: BAI.shadowMd,
+              }}>
+                {/* Stars */}
+                <div style={{ display: 'flex', gap: 3 }}>
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} style={{ color: BAI.caramel, fontSize: 14 }}>★</span>
+                  ))}
+                </div>
+                {/* Quote */}
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 15, color: BAI.inkMid, lineHeight: 1.65, margin: 0, flex: 1, fontStyle: 'italic' }}>
+                  "{t.quote}"
+                </p>
+                {/* Author */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 16, borderTop: `1px solid ${BAI.border}` }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: '50%',
+                    background: t.color, border: `1px solid ${t.borderColor}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 15, color: t.textColor,
+                    flexShrink: 0,
+                  }}>
+                    {t.initial}
+                  </div>
+                  <div>
+                    <p style={{ fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 14, color: BAI.ink, margin: 0 }}>{t.name}</p>
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: 0 }}>{t.role} · {t.city}</p>
+                  </div>
                 </div>
               </div>
             ))}

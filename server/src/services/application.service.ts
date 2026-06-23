@@ -1,6 +1,7 @@
 import { ApplicationStatus } from '@prisma/client'
 import { prisma } from '../config/database.js'
 import { notificationService } from './notification.service.js'
+import { sendEmail } from '../utils/email.util.js'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -239,28 +240,74 @@ class ApplicationService {
       status: 'PENDING' as ApplicationStatus, // Always PENDING — owner decides
     }
 
+    const appEmailHtml = (tenantFirstName: string, tenantLastName: string, propertyTitle: string) => {
+      const frontendUrl = process.env.FRONTEND_URL ?? ''
+      const tenantFullName = `${tenantFirstName} ${tenantLastName}`
+      return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><style>
+          *{box-sizing:border-box;margin:0;padding:0;}
+          body{background:#fafaf8;font-family:'DM Sans',Arial,sans-serif;color:#0d0c0a;}
+          .wrapper{max-width:560px;margin:40px auto;background:#ffffff;border:1px solid #e4e1db;border-radius:16px;overflow:hidden;}
+          .header{background:#1a1a2e;padding:32px 40px;text-align:center;}
+          .header-logo{color:#ffffff;font-size:22px;font-weight:600;}
+          .header-logo span{color:#c4976a;}
+          .body{padding:40px;}
+          .overline{font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#9e9b96;margin-bottom:12px;}
+          .title{font-size:26px;font-weight:700;font-style:italic;color:#0d0c0a;margin-bottom:16px;line-height:1.25;}
+          .text{font-size:14px;color:#5a5754;line-height:1.7;margin-bottom:16px;}
+          .btn{display:inline-block;padding:14px 32px;background:#c4976a;color:#ffffff!important;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;margin:24px 0;}
+          .footer{padding:24px 40px;background:#f4f2ee;text-align:center;font-size:12px;color:#9e9b96;line-height:1.6;}
+        </style></head><body>
+          <div class="wrapper">
+            <div class="header"><div class="header-logo">Bai<span>lio</span></div></div>
+            <div class="body">
+              <div class="overline">Candidature reçue</div>
+              <div class="title">${tenantFullName} postule pour ${propertyTitle}</div>
+              <p class="text">${tenantFullName} vient de postuler pour votre bien <strong>${propertyTitle}</strong>. Consultez son dossier et répondez depuis votre espace propriétaire.</p>
+              <div style="text-align:center;"><a href="${frontendUrl}/dashboard/owner" class="btn">Voir la candidature →</a></div>
+            </div>
+            <div class="footer"><p>Bailio — Plateforme de gestion locative</p></div>
+          </div>
+        </body></html>`
+    }
+
     // Upsert if previously rejected or withdrawn
     if (existing) {
       const updated = await prisma.application.update({
         where: { id: existing.id },
         data: appData,
-        include: { tenant: { select: { id: true, firstName: true, lastName: true } }, property: { select: { id: true, title: true, price: true, city: true, ownerId: true } } },
+        include: {
+          tenant: { select: { id: true, firstName: true, lastName: true } },
+          property: { select: { id: true, title: true, price: true, city: true, ownerId: true, owner: { select: { email: true } } } },
+        },
       })
       notificationService.notifyApplicationReceived(
         updated.property.ownerId, updated.id, updated.property.title,
         `${updated.tenant.firstName} ${updated.tenant.lastName}`, updated.score
       ).catch(() => {})
+      sendEmail({
+        to: updated.property.owner.email,
+        subject: `Nouvelle candidature — ${updated.property.title}`,
+        html: appEmailHtml(updated.tenant.firstName, updated.tenant.lastName, updated.property.title),
+      }).catch(() => {})
       return updated
     }
 
     const created = await prisma.application.create({
       data: appData,
-      include: { tenant: { select: { id: true, firstName: true, lastName: true } }, property: { select: { id: true, title: true, price: true, city: true, ownerId: true } } },
+      include: {
+        tenant: { select: { id: true, firstName: true, lastName: true } },
+        property: { select: { id: true, title: true, price: true, city: true, ownerId: true, owner: { select: { email: true } } } },
+      },
     })
     notificationService.notifyApplicationReceived(
       created.property.ownerId, created.id, created.property.title,
       `${created.tenant.firstName} ${created.tenant.lastName}`, created.score
     ).catch(() => {})
+    sendEmail({
+      to: created.property.owner.email,
+      subject: `Nouvelle candidature — ${created.property.title}`,
+      html: appEmailHtml(created.tenant.firstName, created.tenant.lastName, created.property.title),
+    }).catch(() => {})
     return created
   }
 

@@ -77,6 +77,9 @@ const envSchema = z.object({
   YOUSIGN_SANDBOX: z.string().optional(),
   YOUSIGN_API_URL: z.string().optional(),
 
+  // KYC — Chiffrement AES-256-GCM des données biométriques
+  KYC_ENCRYPTION_KEY: z.string().optional(), // 64 hex chars (32 bytes)
+
   // Waitlist
   NOTIFY_SECRET: z.string().optional(),
   LAUNCH_DATE: z.string().optional(),

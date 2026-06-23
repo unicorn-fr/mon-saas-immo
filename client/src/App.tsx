@@ -114,6 +114,9 @@ const Proprietaires = lazy(() => import('./pages/info/Proprietaires'))
 const Locataires = lazy(() => import('./pages/info/Locataires'))
 const Pricing = lazy(() => import('./pages/Pricing'))
 
+// KYC Pages
+const KycFlow = lazy(() => import('./pages/kyc/KycFlow'))
+
 // PWA Components
 import { InstallPWA } from './components/pwa/InstallPWA'
 import { UpdatePWA } from './components/pwa/UpdatePWA'
@@ -270,6 +273,9 @@ function AppRoutes() {
       <Route path="/auth/google/callback" element={<GoogleOAuthCallback />} />
       <Route path="/complete-profile" element={<CompleteProfile />} />
       <Route path="/verify-identity" element={<VerifyIdentity />} />
+
+      {/* KYC Flow — accès direct par lien (token dans URL), pas besoin de ProtectedRoute */}
+      <Route path="/kyc/:contractId" element={<KycFlow />} />
 
       {/* Legal & Info Pages */}
       <Route path="/mentions-legales" element={<MentionsLegales />} />

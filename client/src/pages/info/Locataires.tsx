@@ -37,9 +37,9 @@ const DOSSIER_DOCS = [
 ]
 
 const STATS_DARK = [
-  { value: '350+', label: 'Biens disponibles', icon: <MapPin size={20} /> },
-  { value: '72%',  label: 'Candidatures acceptées', icon: <Users size={20} /> },
-  { value: '3 j',  label: 'Délai moyen de réponse', icon: <Clock size={20} /> },
+  { value: '0 €',   label: 'De frais d\'agence',           icon: <MapPin size={20} /> },
+  { value: 'eIDAS', label: 'Signature électronique légale', icon: <Users size={20} /> },
+  { value: '5 min', label: 'Pour constituer son dossier',   icon: <Clock size={20} /> },
 ]
 
 const FEATURE_TENANT = [
@@ -414,6 +414,78 @@ export default function Locataires() {
                 </p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── IA Dossier highlight ── */}
+      <section style={{ background: '#0a0d1a', padding: 'clamp(48px,7vh,80px) clamp(20px,5vw,48px)', position: 'relative', overflow: 'hidden' }}>
+        {/* Ambient glow */}
+        <div aria-hidden style={{ position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%,-50%)', width: 600, height: 300, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,151,106,0.08) 0%, transparent 65%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
+
+        <div style={{ maxWidth: 1000, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+          {/* Header */}
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(196,151,106,0.12)', border: '1px solid rgba(196,151,106,0.30)', borderRadius: 20, padding: '5px 14px', marginBottom: 16 }}>
+              <span style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: BAI.caramel }}>✦ Intelligence Artificielle</span>
+            </span>
+            <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(26px,4vw,42px)', color: '#ffffff', margin: 0, lineHeight: 1.1 }}>
+              Votre dossier, optimisé par l'IA.
+            </h2>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 16, color: 'rgba(255,255,255,0.55)', marginTop: 12, lineHeight: 1.6 }}>
+              Téléchargez vos documents une fois. Notre IA les analyse, les vérifie et constitue un dossier professionnel prêt à partager.
+            </p>
+          </div>
+
+          {/* Feature cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
+            {[
+              {
+                icon: '📄',
+                title: 'Lecture OCR automatique',
+                desc: "L'IA extrait les informations clés de vos documents : nom, revenus, dates. Fini la saisie manuelle.",
+              },
+              {
+                icon: '✅',
+                title: 'Vérification de cohérence',
+                desc: 'Les documents sont croisés entre eux. Une incohérence ? Vous êtes alerté avant d\'envoyer.',
+              },
+              {
+                icon: '📤',
+                title: 'Partage en un clic',
+                desc: 'Un lien sécurisé. Le propriétaire consulte votre dossier complet sans email, sans PDF.',
+              },
+              {
+                icon: '🔄',
+                title: 'Réutilisable partout',
+                desc: 'Constituez-le une fois, postulez pour tous les biens qui vous intéressent sur Bailio.',
+              },
+            ].map((f) => (
+              <div key={f.title} style={{
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.10)',
+                borderRadius: 16,
+                padding: '24px 20px',
+              }}>
+                <div style={{ fontSize: 28, marginBottom: 12 }}>{f.icon}</div>
+                <h3 style={{ fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 15, color: '#ffffff', margin: '0 0 8px' }}>{f.title}</h3>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.55)', margin: 0, lineHeight: 1.6 }}>{f.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <div style={{ textAlign: 'center', marginTop: 40 }}>
+            <Link to="/register?role=TENANT"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                background: BAI.caramel, color: '#fff',
+                borderRadius: 8, padding: '14px 28px',
+                fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 15,
+                textDecoration: 'none',
+              }}>
+              Créer mon dossier gratuitement <ArrowRight size={15} />
+            </Link>
           </div>
         </div>
       </section>

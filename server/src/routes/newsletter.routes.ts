@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express'
 import { prisma } from '../config/database.js'
 import { validateEmail } from '../utils/validation.util.js'
+import { sendEmail } from '../utils/email.util.js'
+import { newsletterConfirmTemplate } from '../utils/emailTemplates.js'
 
 const router = Router()
 
@@ -27,6 +29,12 @@ router.post('/subscribe', async (req: Request, res: Response) => {
       update: { source, updatedAt: new Date() },
       create: { email: clean, source },
     })
+
+    // Envoyer email de confirmation (non bloquant)
+    sendEmail({
+      to: clean,
+      ...newsletterConfirmTemplate({ email: clean }),
+    }).catch(() => {}) // silencieux si erreur email
 
     return res.status(200).json({ success: true, message: 'Inscription enregistrée' })
   } catch (error) {
