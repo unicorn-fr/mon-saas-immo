@@ -105,7 +105,7 @@ export default function KycFlow() {
                 {docData?.firstName ? `${docData.firstName}, votre` : 'Votre'} identité a été confirmée et votre bail est signé. Vous allez recevoir un email de confirmation.
               </p>
               <button
-                onClick={() => navigate('/dashboard/tenant')}
+                onClick={() => navigate(contractId ? `/contracts/${contractId}` : '/dashboard/tenant')}
                 style={{
                   background: BAI.night, color: '#fff', border: 'none',
                   borderRadius: 10, padding: '14px 32px',
@@ -113,7 +113,7 @@ export default function KycFlow() {
                   cursor: 'pointer', minHeight: 44,
                 }}
               >
-                Accéder à mon espace →
+                {contractId ? 'Voir mon contrat →' : 'Accéder à mon espace →'}
               </button>
             </div>
           )}

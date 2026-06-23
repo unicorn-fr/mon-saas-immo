@@ -2,12 +2,19 @@ import { Request, Response, NextFunction } from 'express'
 import { prisma } from '../config/database.js'
 import { PLANS, PLAN_ORDER, PlanType } from '../lib/stripe.js'
 
+// Bypass plan restrictions for test accounts
+const TEST_EMAILS = ['owner@example.com', 'tenant@example.com']
+
 /**
  * Middleware — vérifie que l'utilisateur a au minimum le plan requis.
  * Usage : router.post('/sign', authenticate, requirePlan('PRO'), signContract)
  */
 export function requirePlan(minPlan: 'SOLO' | 'PRO' | 'EXPERT') {
   return async (req: Request, res: Response, next: NextFunction) => {
+    if (req.user?.email && TEST_EMAILS.includes(req.user.email)) {
+      return next()
+    }
+
     const sub = await prisma.subscription.findUnique({
       where: { userId: req.user!.id },
       select: { plan: true, status: true },
@@ -34,6 +41,10 @@ export function requirePlan(minPlan: 'SOLO' | 'PRO' | 'EXPERT') {
  * Usage : router.post('/', authenticate, checkPropertyLimit, createProperty)
  */
 export async function checkPropertyLimit(req: Request, res: Response, next: NextFunction) {
+  if (req.user?.email && TEST_EMAILS.includes(req.user.email)) {
+    return next()
+  }
+
   const sub = await prisma.subscription.findUnique({
     where: { userId: req.user!.id },
     select: { plan: true },

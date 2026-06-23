@@ -28,6 +28,7 @@ import {
   PenTool,
   AlertCircle,
   Info,
+  Shield,
   ShieldCheck,
   FolderOpen,
   ClipboardCheck,
@@ -910,10 +911,10 @@ export default function ContractDetails() {
                       <button
                         onClick={() => {
                           if (isTenant) {
+                            navigate(`/kyc/${contract.id}`)
+                          } else {
                             setPreSignChecks({ property: false, clauses: false, amounts: false })
                             setShowPreSignChecklist(true)
-                          } else {
-                            setShowSignature(true)
                           }
                         }}
                         disabled={actionLoading}
@@ -922,8 +923,17 @@ export default function ContractDetails() {
                           opacity: actionLoading ? 0.5 : 1,
                         }}
                       >
-                        <PenTool style={{ width: 15, height: 15 }} />
-                        Signer le contrat
+                        {isTenant ? (
+                          <>
+                            <Shield style={{ width: 15, height: 15, marginRight: 2 }} />
+                            Signer avec vérification KYC
+                          </>
+                        ) : (
+                          <>
+                            <PenTool style={{ width: 15, height: 15 }} />
+                            Signer le contrat
+                          </>
+                        )}
                       </button>
                     </>
                   )}
@@ -1046,6 +1056,21 @@ export default function ContractDetails() {
                 </div>
               </div>
             </div>
+
+            {/* KYC banner — affiché pour le locataire uniquement */}
+            {isTenant && (
+              <div style={{ background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`, borderRadius: 10, padding: '14px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Shield size={18} color={BAI.tenant} />
+                <div>
+                  <p style={{ fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 13, color: BAI.tenant, margin: 0 }}>
+                    Signature avec vérification d'identité KYC
+                  </p>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkMid, margin: '2px 0 0' }}>
+                    Votre identité sera vérifiée (pièce d'identité + reconnaissance faciale) avant signature.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Parties */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">

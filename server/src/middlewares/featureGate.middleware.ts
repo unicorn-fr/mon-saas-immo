@@ -2,6 +2,9 @@ import { Request, Response, NextFunction } from 'express'
 import { prisma } from '../config/database.js'
 import { PLANS, PlanType } from '../lib/stripe.js'
 
+// Bypass feature restrictions for test accounts
+const TEST_EMAILS = ['owner@example.com', 'tenant@example.com']
+
 export type Feature =
   | 'quittances_auto'
   | 'quittances_manual'
@@ -112,6 +115,10 @@ export function requireFeature(feature: Feature) {
     const userId = req.user?.id
     if (!userId) {
       return res.status(401).json({ error: 'Non authentifié' })
+    }
+
+    if (req.user?.email && TEST_EMAILS.includes(req.user.email)) {
+      return next()
     }
 
     const access = await checkFeatureAccess(userId, feature)

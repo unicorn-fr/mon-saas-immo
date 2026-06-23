@@ -179,6 +179,34 @@ async function main() {
   })
   console.log('[seed] Demo application created: tenant -> property1')
 
+  // Subscription EXPERT pour owner test — accès illimité à toutes les fonctionnalités
+  await prisma.subscription.upsert({
+    where: { userId: owner.id },
+    update: { plan: 'EXPERT', status: 'ACTIVE', currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) },
+    create: {
+      userId: owner.id,
+      stripeCustomerId: `cus_seed_owner_test`,
+      plan: 'EXPERT',
+      status: 'ACTIVE',
+      currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+    },
+  })
+  console.log('[seed] EXPERT subscription created for owner test account')
+
+  // Subscription EXPERT pour tenant test — accès illimité à toutes les fonctionnalités
+  await prisma.subscription.upsert({
+    where: { userId: tenant.id },
+    update: { plan: 'EXPERT', status: 'ACTIVE', currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) },
+    create: {
+      userId: tenant.id,
+      stripeCustomerId: `cus_seed_tenant_test`,
+      plan: 'EXPERT',
+      status: 'ACTIVE',
+      currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+    },
+  })
+  console.log('[seed] EXPERT subscription created for tenant test account')
+
   // Demo DossierShare — tenant explicitly shares dossier with owner (expires in 1 year)
   await prisma.dossierShare.upsert({
     where: { tenantId_ownerId: { tenantId: tenant.id, ownerId: owner.id } },
