@@ -2,10 +2,10 @@
 nixPkgs = ["nodejs_20"]
 
 [phases.install]
-cmds = ["npm ci --prefix server"]
+cmds = ["npm --prefix server ci"]
 
 [phases.build]
-cmds = ["npm run build --prefix server"]
+cmds = ["npm --prefix server run build"]
 
 [start]
-cmd = "ulimit -n 65535 2>/dev/null || true && npx prisma db push --accept-data-loss --prefix server && pm2-runtime server/ecosystem.config.cjs --env production"
+cmd = "ulimit -n 65535 2>/dev/null || true && cd server && npx prisma db push --accept-data-loss && cd .. && pm2-runtime server/ecosystem.config.cjs --env production"
