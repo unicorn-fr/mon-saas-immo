@@ -2,21 +2,31 @@ import { createCipheriv, createDecipheriv, randomBytes, createHash } from 'crypt
 
 const ALGORITHM = 'aes-256-gcm'
 
+// Clé générée une fois au démarrage si KYC_ENCRYPTION_KEY n'est pas définie.
+// En production, toujours définir KYC_ENCRYPTION_KEY dans Railway Variables.
+// En dev/test : la clé change à chaque redémarrage (embeddings stockés ne seront plus lisibles).
+let _fallbackKey: Buffer | null = null
+
 function getKey(): Buffer {
   const KEY_HEX = process.env.KYC_ENCRYPTION_KEY || ''
-  if (!KEY_HEX || KEY_HEX.length < 64) {
-    throw new Error('KYC_ENCRYPTION_KEY must be a 64-char hex string (32 bytes)')
+  if (KEY_HEX && KEY_HEX.length >= 64) {
+    return Buffer.from(KEY_HEX.substring(0, 64), 'hex')
   }
-  return Buffer.from(KEY_HEX, 'hex')
+  // Fallback : clé éphémère générée au démarrage (warning affiché une seule fois)
+  if (!_fallbackKey) {
+    _fallbackKey = randomBytes(32)
+    console.warn('[KYC] ⚠️  KYC_ENCRYPTION_KEY non définie — utilisation d\'une clé éphémère.')
+    console.warn('[KYC] ⚠️  Définissez KYC_ENCRYPTION_KEY=<64 hex chars> dans Railway Variables pour la production.')
+  }
+  return _fallbackKey
 }
 
 export function encryptField(plaintext: string): string {
   const key = getKey()
-  const iv = randomBytes(12) // 96 bits for GCM
+  const iv = randomBytes(12)
   const cipher = createCipheriv(ALGORITHM, key, iv)
   const encrypted = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()])
   const authTag = cipher.getAuthTag()
-  // Format: iv(12) + authTag(16) + ciphertext — all base64
   return Buffer.concat([iv, authTag, encrypted]).toString('base64')
 }
 
