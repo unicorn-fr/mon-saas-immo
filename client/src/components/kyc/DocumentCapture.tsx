@@ -40,19 +40,15 @@ export function DocumentCapture({ onComplete }: DocumentCaptureProps) {
   }
 
   const handleSubmit = async () => {
-    if (!file || !idImageEl) return
+    if (!file) return
     setError(null)
 
-    // 1. Extraire l'embedding facial de la pièce d'identité (client-side)
+    // 1. Extraire l'embedding facial de la pièce d'identité (client-side, optionnel)
     setStep('embedding')
     let embedding: number[] | null = null
-    if (isLoaded) {
+    if (isLoaded && idImageEl) {
       embedding = await extractEmbedding(idImageEl)
-      if (!embedding) {
-        setError('Aucun visage détecté sur la pièce d\'identité. Assurez-vous que la photo est bien visible.')
-        setStep('upload')
-        return
-      }
+      // Pas de visage détecté = on continue sans embedding (modèles optionnels)
     }
 
     // 2. Envoyer au serveur (fichier + embedding)

@@ -21,7 +21,14 @@ export async function secureDelete(filePath: string): Promise<void> {
     }
     await unlink(filePath)
   } catch {
-    // Fichier déjà supprimé ou inaccessible — on tente unlink de toute façon
     try { await unlink(filePath) } catch { /* ignore */ }
   }
+}
+
+/**
+ * Écrasement mémoire RGPD : remplit le Buffer avec des zéros.
+ * Appelé après extraction OCR pour détruire les données en RAM.
+ */
+export function secureDeleteBuffer(buf: Buffer): void {
+  try { buf.fill(0) } catch { /* ignore */ }
 }

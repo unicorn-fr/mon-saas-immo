@@ -1,27 +1,14 @@
 import { Router } from 'express'
 import multer from 'multer'
 import { rateLimit } from 'express-rate-limit'
-import { mkdirSync } from 'fs'
 import { authenticate } from '../middlewares/auth.middleware.js'
 import { kycController } from '../controllers/kyc.controller.js'
 
 const router = Router()
 
-// Créer le dossier tmp si nécessaire
-try { mkdirSync('/tmp/kyc-uploads', { recursive: true }) } catch { /* already exists */ }
-
-// Stockage temporaire sécurisé — sera supprimé après OCR
-const storage = multer.diskStorage({
-  destination: '/tmp/kyc-uploads/',
-  filename: (_req, _file, cb) => {
-    // Nom aléatoire sans extension visible
-    const rand = Math.random().toString(36).substring(2, 15)
-    cb(null, `kyc_${rand}`)
-  }
-})
-
+// Stockage en mémoire — aucun fichier écrit sur disque, suppression immédiate après OCR
 const kycUpload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB max
   fileFilter: (_req, file, cb) => {
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'video/webm', 'video/mp4']
@@ -30,10 +17,10 @@ const kycUpload = multer({
   }
 })
 
-// Rate limit strict : 5 tentatives / heure par IP
+// Rate limit : 10 tentatives / heure par IP (assoupli pour les tests)
 const kycLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 5,
+  max: 10,
   message: { success: false, message: 'Trop de tentatives. Réessayez dans 1 heure.' },
   standardHeaders: true,
   legacyHeaders: false,
