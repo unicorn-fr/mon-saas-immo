@@ -1,0 +1,12 @@
+# OCR enterprise via doctr (modèle open source de Mindee — MIT License)
+# Installation : pip install -r server/scripts/requirements.txt
+#
+# Option A — avec PyTorch (recommandé, meilleure précision) :
+python-doctr[torch]
+#
+# Option B — avec TensorFlow :
+# python-doctr[tf]
+#
+# Option C — sans framework DL (plus léger, utilise ONNX Runtime) :
+# python-doctr
+# onnxruntime

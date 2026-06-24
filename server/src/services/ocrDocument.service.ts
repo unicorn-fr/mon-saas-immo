@@ -17,6 +17,7 @@ import sharp from 'sharp'
 import path from 'path'
 import os from 'os'
 import { analyzeWithMindee, type MindeeStructuredFields } from './mindeeOcr.service.js'
+import { ocrWithDoctr, preloadDoctrWorker } from './doctrOcr.service.js'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -59,9 +60,10 @@ async function getTesseractWorker(): Promise<import('tesseract.js').Worker> {
   return _workerPromise
 }
 
-// Pré-chauffe le worker au démarrage (évite la latence sur la 1re requête)
+// Pré-chauffe les workers au démarrage
 export function preloadOcrWorker() {
   getTesseractWorker().catch(e => console.warn('[OCR] Preload Tesseract warning:', e?.message))
+  preloadDoctrWorker()  // Lance le subprocess Python doctr en arrière-plan
 }
 
 // ─── Sharp preprocessing ──────────────────────────────────────────────────────
@@ -236,7 +238,21 @@ export async function analyzeDocumentOCR(
     }
   }
 
-  // ── 2. Essai Google Vision (si clé disponible) ──
+  // ── 2. doctr — modèle open source de Mindee (subprocess Python, si installé) ──
+  // db_resnet50 (détection) + crnn_mobilenet_v3_large (reconnaissance)
+  // Même technologie que l'API Mindee — entièrement gratuit, MIT License.
+  const doctrResult = await ocrWithDoctr(normalizedBuffer, docType)
+  if (doctrResult && doctrResult.fullText.length > 20) {
+    return {
+      fullText:     doctrResult.fullText,
+      textZoneText: doctrResult.textZoneText,
+      mrzText:      doctrResult.mrzText,
+      confidence:   doctrResult.confidence,
+      engine:       'doctr',
+    }
+  }
+
+  // ── 3. Essai Google Vision (si clé disponible) ──
   const visionText = await ocrWithGoogleVision(normalizedBuffer)
   if (visionText && visionText.length > 30) {
     // Google Vision donne un texte unique de haute qualité.
@@ -260,7 +276,7 @@ export async function analyzeDocumentOCR(
     }
   }
 
-  // ── 2. Tesseract server-side avec tessdata_best + sharp preprocessing ──
+  // ── 4. Tesseract server-side avec tessdata_best + sharp preprocessing ──
   const [fullBuf, textZoneBuf, mrzBuf, lowerBuf] = await Promise.all([
     preprocessFull(normalizedBuffer),
     docType === 'CNI'
