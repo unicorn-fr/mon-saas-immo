@@ -1,45 +1,36 @@
 /**
  * LiveDocumentScanner — Scanner professionnel de document d'identité
  *
- * Architecture inspirée de Onfido / Jumio / Stripe Identity :
- *  1. Analyse qualité temps réel (netteté + luminosité) — toutes les frames
- *  2. Détection rectangle ISO/IEC 7810 (ratio 1.586:1) — toutes les 400 ms
- *  3. Détection du visage sur le document (preuve c'est une vraie pièce) — toutes les 1.5 s
- *  4. Machine d'état : searching → detected → face_confirmed → ready → captured
- *  5. Capture auto après 1.5 s à l'état "ready"
+ * Pipeline de détection :
+ *  1. Canvas dimensionné sur les PIXELS CSS affichés (corrige le bug d'étirement overlay/vidéo)
+ *  2. Dessin avec simulation objectFit:cover (drawVideoCover)
+ *  3. Guide ID-1 contraint par la hauteur → proportions correctes quelles que soient les dimensions
+ *  4. Mesure de netteté (variance Laplacienne, zone centrale)
+ *  5. Estimation de remplissage du guide (grille 8 points)
+ *  6. Messages adaptatifs : Approchez / Reculez / Trop flou / Confirme pièce IA
+ *  7. Détection de visage sur le document (face-api) → confirmation c'est bien une pièce d'identité
+ *  8. Capture auto après ~1.5 s à l'état "ready"
  */
 import { useRef, useEffect, useState, useCallback } from 'react'
-import {
-  Camera, ZapOff, RotateCcw, CheckCircle,
-  AlertCircle, ScanLine, FlipHorizontal,
-} from 'lucide-react'
+import { Camera, ZapOff, RotateCcw, CheckCircle, AlertCircle, ScanLine, FlipHorizontal } from 'lucide-react'
 import { BAI } from '../../constants/bailio-tokens'
 import { useFaceApi } from '../../hooks/useFaceApi'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type DetectionState =
-  | 'idle'          // caméra non prête
-  | 'searching'     // aucun document trouvé
-  | 'too_far'       // rectangle trop petit
-  | 'no_doc'        // mauvais ratio ou pas de rectangle
-  | 'bad_quality'   // flou ou mauvaise lumière
-  | 'detected'      // rectangle OK, qualité OK
-  | 'face_found'    // visage détecté sur le document → quasi-certitude
-  | 'ready'         // tout bon, capture imminente
+  | 'idle'
+  | 'searching'
+  | 'too_far'
+  | 'too_close'
+  | 'bad_quality'
+  | 'detected'
+  | 'face_found'
+  | 'ready'
   | 'captured'
 
-interface QualityMetrics {
-  sharpness: number   // 0-100
-  brightness: number  // 0-100
-  score: number       // 0-100
-}
-
-interface RectResult {
-  found: boolean
-  ratio: number       // width/height du rectangle détecté
-  fill: number        // proportion de la zone guide occupée (0-1)
-}
+interface GuideDimensions { gx: number; gy: number; gw: number; gh: number }
+interface QualityMetrics { sharpness: number; brightness: number; score: number }
 
 interface LiveDocumentScannerProps {
   onCapture: (file: File) => void
@@ -49,59 +40,92 @@ interface LiveDocumentScannerProps {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const ID_RATIO = 1.586          // ISO/IEC 7810 ID-1 (CNI, permis, crédit card)
-const MIN_FILL = 0.38           // document doit occuper ≥ 38 % du guide
-const QUALITY_THRESHOLD = 58    // score qualité minimum
-const READY_FRAMES_NEEDED = 22  // ~1.5 s à 15 fps
+const ID_RATIO = 1.586           // ISO/IEC 7810 ID-1 standard
+const QUALITY_THRESHOLD = 55
+const READY_FRAMES_NEEDED = 22   // ~1.5 s à ~15 fps d'analyse
 
 const STATE_MSG: Record<DetectionState, string> = {
-  idle:        'Initialisation de la caméra…',
+  idle:        'Initialisation…',
   searching:   'Placez votre document dans le cadre',
-  too_far:     'Rapprochez-vous du document',
-  no_doc:      'Repositionnez votre document — recto face à la caméra',
+  too_far:     'Approchez-vous du document',
+  too_close:   'Reculez légèrement',
   bad_quality: 'Améliorez l\'éclairage ou réduisez le flou',
   detected:    'Document détecté — restez immobile',
   face_found:  'Pièce d\'identité confirmée ✓',
-  ready:       'Parfait ! Capture automatique…',
-  captured:    'Capture effectuée',
+  ready:       'Parfait — capture en cours…',
+  captured:    'Capturé',
 }
 
 const STATE_COLOR: Record<DetectionState, string> = {
-  idle:        'rgba(255,255,255,0.4)',
+  idle:        'rgba(255,255,255,0.35)',
   searching:   'rgba(255,255,255,0.55)',
   too_far:     '#f59e0b',
-  no_doc:      '#ef4444',
-  bad_quality: '#f59e0b',
+  too_close:   '#f59e0b',
+  bad_quality: '#ef4444',
   detected:    '#60a5fa',
   face_found:  '#34d399',
   ready:       '#10b981',
   captured:    '#10b981',
 }
 
-// ─── Image analysis helpers ───────────────────────────────────────────────────
+// ─── Guide dimensions ─────────────────────────────────────────────────────────
 
-/** Variance Laplacienne sur la zone centrale — mesure de netteté */
+/**
+ * Calcule les dimensions et la position du guide ID-1.
+ *
+ * Contrainte par la hauteur : gw = min(dw × 0.88, dh × 1.3)
+ * Garantit que le cadre ressemble à une vraie carte, quelle que soit la taille du conteneur.
+ */
+function computeGuide(dw: number, dh: number): GuideDimensions {
+  const gw = Math.floor(Math.min(dw * 0.88, dh * 1.30))
+  const gh = Math.floor(gw / ID_RATIO)
+  return {
+    gx: Math.floor((dw - gw) / 2),
+    gy: Math.floor((dh - gh) / 2),
+    gw, gh,
+  }
+}
+
+// ─── Video drawing ────────────────────────────────────────────────────────────
+
+/**
+ * Dessine la vidéo dans le canvas en simulant objectFit:cover.
+ * Nécessaire car le canvas est dimensionné en pixels CSS, pas en pixels natifs de la caméra.
+ */
+function drawVideoCover(
+  ctx: CanvasRenderingContext2D,
+  video: HTMLVideoElement,
+  dw: number, dh: number
+) {
+  const nw = video.videoWidth, nh = video.videoHeight
+  if (!nw || !nh) { ctx.drawImage(video, 0, 0, dw, dh); return }
+  const scale = Math.max(dw / nw, dh / nh)
+  const sw = nw * scale, sh = nh * scale
+  ctx.drawImage(video, (dw - sw) / 2, (dh - sh) / 2, sw, sh)
+}
+
+// ─── Image analysis ───────────────────────────────────────────────────────────
+
+/** Variance Laplacienne sur la zone centrale du guide — mesure de netteté */
 function measureSharpness(
-  data: Uint8ClampedArray,
-  stride: number, /* width * 4 */
-  w: number, h: number
+  data: Uint8ClampedArray, stride: number, w: number, h: number
 ): number {
   let sum = 0; let count = 0
   const step = 3
   for (let y = 1; y < h - 1; y += step) {
     for (let x = 1; x < w - 1; x += step) {
-      const i = (y * (stride / 4) + x) * 4
+      const i = (y * (stride >> 2) + x) * 4
       const g = (v: number) => 0.299 * data[v] + 0.587 * data[v + 1] + 0.114 * data[v + 2]
       const lap = Math.abs(4 * g(i) - g(i + 4) - g(i - 4) - g(i + stride) - g(i - stride))
       sum += lap; count++
     }
   }
-  return Math.min(100, (sum / (count || 1)) * 3.8)
+  return Math.min(100, (sum / (count || 1)) * 4.0)
 }
 
 function measureBrightness(data: Uint8ClampedArray): number {
   let total = 0; let count = 0
-  for (let i = 0; i < data.length; i += 20) {
+  for (let i = 0; i < data.length; i += 16) {
     total += 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]
     count++
   }
@@ -109,68 +133,54 @@ function measureBrightness(data: Uint8ClampedArray): number {
 }
 
 function qualityScore(s: number, b: number): number {
-  const bScore = b < 15 ? 15
-    : b > 88 ? Math.max(0, 100 - (b - 88) * 8)
-    : b < 35 ? 55 + (b - 15) * 1.6
-    : b > 72 ? 100 - (b - 72) * 2.5
+  const bScore = b < 15 ? 12
+    : b > 88 ? Math.max(0, 100 - (b - 88) * 9)
+    : b < 35 ? 50 + (b - 15) * 2
+    : b > 75 ? 100 - (b - 75) * 3
     : 100
   return Math.round(s * 0.65 + bScore * 0.35)
 }
 
 /**
- * Détection de rectangle ISO/IEC 7810 par analyse de gradient Sobel
- * sur la zone de la moitié extérieure du guide.
- * Retourne le ratio et le fill estimés.
+ * Estimation du remplissage du guide par échantillonnage 8 points.
+ *
+ * Pour chaque point (4 coins + 4 milieux à 10% du bord) :
+ *   - Si luminosité locale > 20 OU variance locale > 8 → le document est là
+ *
+ * Retourne 0-1 (0 = rien, 1 = document couvre tout le guide).
  */
-function detectDocumentRect(
+function estimateFill(
   ctx: CanvasRenderingContext2D,
-  vw: number, vh: number
-): RectResult {
-  // Zone guide : 84% de largeur, centré
-  const gw = Math.floor(vw * 0.84)
-  const gh = Math.floor(gw / ID_RATIO)
-  const gx = Math.floor((vw - gw) / 2)
-  const gy = Math.floor((vh - gh) / 2)
-
-  // On analyse juste la bordure interne du guide (anneau de 12 px)
-  const margin = 12
-  // 4 bandes : haut, bas, gauche, droite
-  const bands = [
-    ctx.getImageData(gx + margin, gy, gw - margin * 2, margin),          // haut
-    ctx.getImageData(gx + margin, gy + gh - margin, gw - margin * 2, margin), // bas
-    ctx.getImageData(gx, gy + margin, margin, gh - margin * 2),          // gauche
-    ctx.getImageData(gx + gw - margin, gy + margin, margin, gh - margin * 2), // droite
+  g: GuideDimensions
+): number {
+  const probes: [number, number][] = [
+    // 4 coins (10% inset)
+    [g.gx + g.gw * 0.10, g.gy + g.gh * 0.10],
+    [g.gx + g.gw * 0.90, g.gy + g.gh * 0.10],
+    [g.gx + g.gw * 0.10, g.gy + g.gh * 0.90],
+    [g.gx + g.gw * 0.90, g.gy + g.gh * 0.90],
+    // 4 milieux de bords (10% inset)
+    [g.gx + g.gw * 0.50, g.gy + g.gh * 0.10],
+    [g.gx + g.gw * 0.50, g.gy + g.gh * 0.90],
+    [g.gx + g.gw * 0.10, g.gy + g.gh * 0.50],
+    [g.gx + g.gw * 0.90, g.gy + g.gh * 0.50],
   ]
 
-  // Calcule la densité de bords (Sobel simplifié) dans chaque bande
-  let totalEdge = 0
-  for (const band of bands) {
-    const d = band.data
-    for (let i = 0; i < d.length - 4; i += 4) {
-      const diff = Math.abs(
-        (0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]) -
-        (0.299 * d[i + 4] + 0.587 * d[i + 5] + 0.114 * d[i + 6])
-      )
-      if (diff > 20) totalEdge++
+  let hit = 0
+  for (const [px, py] of probes) {
+    const d = ctx.getImageData(Math.round(px), Math.round(py), 5, 5).data
+    let lum = 0, lumSq = 0
+    for (let i = 0; i < d.length; i += 4) {
+      const v = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]
+      lum += v; lumSq += v * v
     }
+    const n = d.length / 4
+    const mean = lum / n
+    const variance = lumSq / n - mean * mean
+    // Document détecté si la zone est lumineuse OU a de la texture
+    if (mean > 30 || variance > 60) hit++
   }
-
-  // Normalise : densité de bords / périmètre total en pixels
-  const perimeter = 2 * (gw + gh) - 4 * margin
-  const edgeDensity = totalEdge / (perimeter * 4) // *4 car RGBA
-
-  // Mesure aussi la luminosité de l'intérieur (card surface vs background)
-  const innerData = ctx.getImageData(gx + 20, gy + 20, gw - 40, gh - 40)
-  const innerBrightness = measureBrightness(innerData.data)
-
-  // Heuristique : si bords nets (> 0.08) et intérieur lumineux (> 20) → document probable
-  const docLikelihood = edgeDensity > 0.06 && innerBrightness > 18
-
-  return {
-    found: docLikelihood,
-    ratio: ID_RATIO,              // on suppose ratio correct si document trouvé
-    fill: docLikelihood ? 0.62 : 0.2,
-  }
+  return hit / probes.length
 }
 
 // ─── Overlay drawing ──────────────────────────────────────────────────────────
@@ -178,38 +188,37 @@ function detectDocumentRect(
 function drawScannerOverlay(
   canvas: HTMLCanvasElement,
   state: DetectionState,
-  readyProgress: number  // 0-1
+  readyProgress: number,
+  g: GuideDimensions,
 ) {
   const ctx = canvas.getContext('2d')
   if (!ctx) return
+  const { gx, gy, gw, gh } = g
   ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-  const vw = canvas.width
-  const vh = canvas.height
-  const gw = Math.floor(vw * 0.84)
-  const gh = Math.floor(gw / ID_RATIO)
-  const gx = Math.floor((vw - gw) / 2)
-  const gy = Math.floor((vh - gh) / 2)
 
   const color = STATE_COLOR[state]
   const isGood = state === 'face_found' || state === 'ready' || state === 'detected'
+  const isReady = state === 'ready' || state === 'face_found'
 
-  // Fond sombre avec découpe guide
-  ctx.fillStyle = isGood ? 'rgba(0,0,0,0.30)' : 'rgba(0,0,0,0.52)'
-  ctx.fillRect(0, 0, vw, vh)
+  // ── Masque sombre autour du guide (découpe le trou) ──
+  ctx.fillStyle = isGood ? 'rgba(0,0,0,0.28)' : 'rgba(0,0,0,0.55)'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+  // Découpe rectangulaire nette
   ctx.globalCompositeOperation = 'destination-out'
+  ctx.fillStyle = 'rgba(0,0,0,1)'
   ctx.fillRect(gx, gy, gw, gh)
   ctx.globalCompositeOperation = 'source-over'
 
-  // Bordure guide
+  // ── Bordure guide ──
   ctx.strokeStyle = color
-  ctx.lineWidth = state === 'ready' || state === 'face_found' ? 3 : 2
-  ctx.strokeRect(gx, gy, gw, gh)
+  ctx.lineWidth = isReady ? 2.5 : 1.5
+  ctx.strokeRect(gx + 0.5, gy + 0.5, gw - 1, gh - 1)
 
-  // Coins animés (épais + colorés)
-  const cs = 32
+  // ── Coins accent (épais, colorés) ──
+  const cs = Math.floor(Math.min(gw, gh) * 0.12)  // adaptatif
   ctx.strokeStyle = color
-  ctx.lineWidth = 5
+  ctx.lineWidth = isReady ? 5 : 4
   ctx.lineCap = 'round'
   const corners: [number, number, number, number][] = [
     [gx, gy, cs, cs],
@@ -221,24 +230,41 @@ function drawScannerOverlay(
     ctx.beginPath(); ctx.moveTo(x + dx, y); ctx.lineTo(x, y); ctx.lineTo(x, y + dy); ctx.stroke()
   }
 
-  // Barre de progression "ready" en bas du guide
-  if (state === 'ready' && readyProgress > 0) {
-    ctx.fillStyle = 'rgba(16,185,129,0.25)'
-    ctx.fillRect(gx, gy + gh - 6, gw, 6)
-    ctx.fillStyle = '#10b981'
-    ctx.fillRect(gx, gy + gh - 6, gw * readyProgress, 6)
+  // ── Halo vert pulsant quand le document est confirmé ──
+  if (isReady) {
+    const pulse = 0.5 + 0.5 * Math.sin(Date.now() * 0.005)
+    ctx.strokeStyle = `rgba(16,185,129,${0.15 + pulse * 0.2})`
+    ctx.lineWidth = 12 + pulse * 4
+    ctx.strokeRect(gx, gy, gw, gh)
   }
 
-  // Ligne de scan animée (state = detected | face_found)
-  if (state === 'detected' || state === 'face_found') {
-    const t = (Date.now() % 2000) / 2000
-    const scanY = gy + gh * t
-    const grad = ctx.createLinearGradient(gx, scanY - 20, gx, scanY + 3)
-    grad.addColorStop(0, 'transparent')
-    grad.addColorStop(1, state === 'face_found' ? 'rgba(52,211,153,0.5)' : 'rgba(96,165,250,0.5)')
-    ctx.fillStyle = grad
-    ctx.fillRect(gx, scanY - 20, gw, 22)
+  // ── Barre de progression capture auto ──
+  if (state === 'ready' && readyProgress > 0) {
+    ctx.fillStyle = 'rgba(16,185,129,0.18)'
+    ctx.fillRect(gx, gy + gh - 5, gw, 5)
+    ctx.fillStyle = '#10b981'
+    ctx.fillRect(gx, gy + gh - 5, gw * readyProgress, 5)
   }
+
+  // ── Ligne de scan animée (détection en cours) ──
+  if (state === 'detected' || state === 'face_found') {
+    const t = (Date.now() % 2400) / 2400
+    const scanY = gy + gh * t
+    const grad = ctx.createLinearGradient(gx, scanY - 24, gx, scanY + 4)
+    grad.addColorStop(0, 'transparent')
+    grad.addColorStop(1, state === 'face_found' ? 'rgba(52,211,153,0.55)' : 'rgba(96,165,250,0.5)')
+    ctx.fillStyle = grad
+    ctx.fillRect(gx, Math.max(gy, scanY - 24), gw, Math.min(28, gy + gh - scanY + 28))
+  }
+
+  // ── Étiquette type de document (bas du guide) ──
+  ctx.fillStyle = isReady ? 'rgba(16,185,129,0.85)' : 'rgba(0,0,0,0.55)'
+  const labelW = 160, labelH = 22
+  ctx.fillRect(gx + (gw - labelW) / 2, gy + gh + 6, labelW, labelH)
+  ctx.fillStyle = isReady ? '#fff' : 'rgba(255,255,255,0.75)'
+  ctx.font = `600 11px DM Sans, system-ui, sans-serif`
+  ctx.textAlign = 'center'
+  ctx.fillText('Carte ID-1 · 85.6 × 54 mm', gx + gw / 2, gy + gh + 20)
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -246,18 +272,20 @@ function drawScannerOverlay(
 export function LiveDocumentScanner({ onCapture, onCancel, docType }: LiveDocumentScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const overlayRef = useRef<HTMLCanvasElement>(null)
-  const workRef = useRef<HTMLCanvasElement>(null)      // frame analysis (hidden)
+  const workRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const rafRef = useRef<number>(0)
+  const animRef = useRef<number>(0)
   const stateRef = useRef<DetectionState>('idle')
+  const guideRef = useRef<GuideDimensions>({ gx: 0, gy: 0, gw: 100, gh: 63 })
   const readyFrames = useRef(0)
   const lastFaceCheckRef = useRef(0)
   const lastRectCheckRef = useRef(0)
-  const animFrameRef = useRef(0)
 
   const [uiState, setUiState] = useState<DetectionState>('idle')
   const [quality, setQuality] = useState<QualityMetrics>({ sharpness: 0, brightness: 0, score: 0 })
   const [readyPct, setReadyPct] = useState(0)
+  const [fillPct, setFillPct] = useState(0)
   const [captured, setCaptured] = useState<string | null>(null)
   const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null)
   const [cameraError, setCameraError] = useState<string | null>(null)
@@ -266,19 +294,20 @@ export function LiveDocumentScanner({ onCapture, onCancel, docType }: LiveDocume
 
   const { isLoaded: faceApiLoaded } = useFaceApi()
 
-  // ─── Detection: face on document ──────────────────────────────────────────
+  // ─── Détection visage sur le document ───────────────────────────────────────
 
   const checkFaceOnDocument = useCallback(async (canvas: HTMLCanvasElement): Promise<boolean> => {
     if (!faceApiLoaded) return false
     try {
       const faceapi = (await import('@vladmandic/face-api')).default as typeof import('@vladmandic/face-api')
-      const options = new faceapi.SsdMobilenetv1Options({ minConfidence: 0.18 })
-      const detection = await faceapi.detectSingleFace(canvas, options)
+      const detection = await faceapi.detectSingleFace(
+        canvas, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.16 })
+      )
       return !!detection
     } catch { return false }
   }, [faceApiLoaded])
 
-  // ─── Main analysis loop ────────────────────────────────────────────────────
+  // ─── Boucle d'analyse ────────────────────────────────────────────────────────
 
   const analyzeFrame = useCallback(() => {
     const video = videoRef.current
@@ -289,63 +318,69 @@ export function LiveDocumentScanner({ onCapture, onCancel, docType }: LiveDocume
       return
     }
 
-    const vw = video.videoWidth || 640
-    const vh = video.videoHeight || 480
+    // Dimensions CSS affichées (la vérité de ce que voit l'utilisateur)
+    const dw = video.clientWidth || 360
+    const dh = video.clientHeight || 270
 
-    // Sync canvas sizes
-    ;[overlay, work].forEach(c => { if (c.width !== vw) { c.width = vw; c.height = vh } })
+    // Sync des canvas sur les dimensions CSS (corrige le bug d'étirement)
+    if (work.width !== dw || work.height !== dh) {
+      work.width = dw; work.height = dh
+      overlay.width = dw; overlay.height = dh
+    }
 
-    const ctx = work.getContext('2d')!
-    ctx.drawImage(video, 0, 0, vw, vh)
+    const ctx = work.getContext('2d', { willReadFrequently: true })!
+    // Dessine la vidéo en simulant objectFit:cover
+    drawVideoCover(ctx, video, dw, dh)
 
-    // --- Quality (every frame, cheap) ---
-    const gw = Math.floor(vw * 0.84)
-    const gh = Math.floor(gw / ID_RATIO)
-    const gx = Math.floor((vw - gw) / 2)
-    const gy = Math.floor((vh - gh) / 2)
-    const centerData = ctx.getImageData(gx + 10, gy + 10, gw - 20, gh - 20)
-    const sharpness = measureSharpness(centerData.data, (gw - 20) * 4, gw - 20, gh - 20)
+    // Guide ID-1 contraint par la hauteur
+    const g = computeGuide(dw, dh)
+    guideRef.current = g
+
+    // ── Qualité (chaque frame) ──
+    const iw = Math.floor(g.gw * 0.6), ih = Math.floor(g.gh * 0.6)
+    const ix = g.gx + Math.floor(g.gw * 0.2), iy = g.gy + Math.floor(g.gh * 0.2)
+    const centerData = ctx.getImageData(ix, iy, iw, ih)
+    const sharpness = measureSharpness(centerData.data, iw * 4, iw, ih)
     const brightness = measureBrightness(centerData.data)
     const score = qualityScore(sharpness, brightness)
     setQuality({ sharpness, brightness, score })
 
-    // --- Rectangle detection (every 400 ms) ---
-    let rectResult: RectResult = { found: false, ratio: 0, fill: 0 }
+    // ── Estimation du remplissage (toutes les 350 ms) ──
     const now = Date.now()
-    if (now - lastRectCheckRef.current > 400) {
+    let fill = fillPct
+    if (now - lastRectCheckRef.current > 350) {
       lastRectCheckRef.current = now
-      rectResult = detectDocumentRect(ctx, vw, vh)
+      fill = estimateFill(ctx, g)
+      setFillPct(fill)
     }
 
-    // --- State machine ---
+    // ── Machine d'état ──
     let newState: DetectionState = stateRef.current
+    const isFaceOrReady = stateRef.current === 'face_found' || stateRef.current === 'ready'
 
     if (score < QUALITY_THRESHOLD) {
-      newState = brightness < 25 ? 'bad_quality' : sharpness < 20 ? 'bad_quality' : 'bad_quality'
+      newState = 'bad_quality'
       readyFrames.current = 0
-    } else if (!rectResult.found && stateRef.current !== 'face_found' && stateRef.current !== 'ready') {
-      newState = 'searching'
+    } else if (fill < 0.38 && !isFaceOrReady) {
+      newState = fill < 0.15 ? 'searching' : 'too_far'
       readyFrames.current = 0
-    } else if (rectResult.fill < MIN_FILL && stateRef.current !== 'face_found' && stateRef.current !== 'ready') {
-      newState = 'too_far'
+    } else if (fill > 0.92 && !isFaceOrReady) {
+      newState = 'too_close'
       readyFrames.current = 0
-    } else {
-      // Rectangle found + quality OK
-      if (stateRef.current === 'face_found' || stateRef.current === 'ready') {
-        // Keep elevated state
+    } else if (fill >= 0.38 && fill <= 0.92) {
+      if (isFaceOrReady) {
         readyFrames.current++
         newState = readyFrames.current >= READY_FRAMES_NEEDED ? 'ready' : 'face_found'
       } else {
         newState = 'detected'
-        // Trigger async face check (every 1.5 s)
-        if (now - lastFaceCheckRef.current > 1500 && faceApiLoaded) {
+        // Vérification de visage (toutes les 1.5 s si face-api chargé)
+        if (faceApiLoaded && now - lastFaceCheckRef.current > 1500) {
           lastFaceCheckRef.current = now
           setFaceCheckActive(true)
-          // Snapshot current frame to separate canvas for face detection
           const snap = document.createElement('canvas')
-          snap.width = vw; snap.height = vh
+          snap.width = dw; snap.height = dh
           const snapCtx = snap.getContext('2d')!
-          snapCtx.drawImage(video, 0, 0, vw, vh)
+          drawVideoCover(snapCtx, video, dw, dh)
           checkFaceOnDocument(snap).then(hasFace => {
             setFaceCheckActive(false)
             if (hasFace && (stateRef.current === 'detected' || stateRef.current === 'face_found')) {
@@ -354,6 +389,10 @@ export function LiveDocumentScanner({ onCapture, onCancel, docType }: LiveDocume
               readyFrames.current = Math.max(readyFrames.current, 4)
             }
           })
+        } else if (!faceApiLoaded) {
+          // Pas de face-api → remplissage seul suffit pour monter à ready
+          readyFrames.current++
+          if (readyFrames.current >= READY_FRAMES_NEEDED) newState = 'ready'
         }
       }
     }
@@ -363,149 +402,119 @@ export function LiveDocumentScanner({ onCapture, onCancel, docType }: LiveDocume
       setUiState(newState)
     }
 
-    // Ready progress
+    // Progression capture auto
     if (newState === 'ready' || newState === 'face_found') {
       const pct = Math.min(1, readyFrames.current / READY_FRAMES_NEEDED)
       setReadyPct(pct)
       if (pct >= 1 && newState === 'ready') {
-        // AUTO-CAPTURE
-        captureDocument(ctx, vw, vh, gx, gy, gw, gh)
+        doCapture(ctx, dw, dh, g)
         return
       }
     } else {
-      setReadyPct(0)
+      if (readyPct > 0) setReadyPct(0)
     }
 
     rafRef.current = requestAnimationFrame(analyzeFrame)
-  }, [checkFaceOnDocument, faceApiLoaded])
+  }, [checkFaceOnDocument, faceApiLoaded, fillPct, readyPct])
 
-  // ─── Overlay animation loop ────────────────────────────────────────────────
+  // ─── Boucle d'animation overlay ─────────────────────────────────────────────
 
   const animateOverlay = useCallback(() => {
     if (overlayRef.current) {
-      drawScannerOverlay(overlayRef.current, stateRef.current, readyPct)
+      drawScannerOverlay(overlayRef.current, stateRef.current, readyPct, guideRef.current)
     }
-    animFrameRef.current = requestAnimationFrame(animateOverlay)
+    animRef.current = requestAnimationFrame(animateOverlay)
   }, [readyPct])
 
-  // ─── Capture ──────────────────────────────────────────────────────────────
+  // ─── Capture ────────────────────────────────────────────────────────────────
 
-  const captureDocument = useCallback((
+  const doCapture = useCallback((
     ctx: CanvasRenderingContext2D,
-    vw: number, vh: number,
-    gx: number, gy: number, gw: number, gh: number
+    dw: number, dh: number,
+    g: GuideDimensions
   ) => {
     cancelAnimationFrame(rafRef.current)
-    cancelAnimationFrame(animFrameRef.current)
+    cancelAnimationFrame(animRef.current)
+    void dw; void dh; void ctx
 
-    // Crop to guide
     const crop = document.createElement('canvas')
-    crop.width = gw; crop.height = gh
+    crop.width = g.gw; crop.height = g.gh
     const cropCtx = crop.getContext('2d')!
-    const work = workRef.current!
-    cropCtx.drawImage(work, gx, gy, gw, gh, 0, 0, gw, gh)
-
-    void vw; void vh; void ctx // suppress unused warnings
+    cropCtx.drawImage(workRef.current!, g.gx, g.gy, g.gw, g.gh, 0, 0, g.gw, g.gh)
 
     crop.toBlob(blob => {
       if (!blob) return
-      const url = URL.createObjectURL(blob)
-      setCaptured(url)
+      setCaptured(URL.createObjectURL(blob))
       setCapturedBlob(blob)
       stateRef.current = 'captured'
       setUiState('captured')
       streamRef.current?.getTracks().forEach(t => t.stop())
-    }, 'image/jpeg', 0.94)
+    }, 'image/jpeg', 0.95)
   }, [])
 
   const handleManualCapture = useCallback(() => {
-    const video = videoRef.current
-    const work = workRef.current
+    const video = videoRef.current; const work = workRef.current
     if (!video || !work) return
-
     cancelAnimationFrame(rafRef.current)
-    cancelAnimationFrame(animFrameRef.current)
-
-    const vw = video.videoWidth || 640
-    const vh = video.videoHeight || 480
-    if (work.width !== vw) { work.width = vw; work.height = vh }
-
+    cancelAnimationFrame(animRef.current)
+    const dw = video.clientWidth || 360
+    const dh = video.clientHeight || 270
+    if (work.width !== dw || work.height !== dh) { work.width = dw; work.height = dh }
     const ctx = work.getContext('2d')!
-    ctx.drawImage(video, 0, 0, vw, vh)
-
-    const gw = Math.floor(vw * 0.84)
-    const gh = Math.floor(gw / ID_RATIO)
-    const gx = Math.floor((vw - gw) / 2)
-    const gy = Math.floor((vh - gh) / 2)
-
-    captureDocument(ctx, vw, vh, gx, gy, gw, gh)
-  }, [captureDocument])
+    drawVideoCover(ctx, video, dw, dh)
+    doCapture(ctx, dw, dh, computeGuide(dw, dh))
+  }, [doCapture])
 
   const handleRetake = useCallback(() => {
-    setCaptured(null)
-    setCapturedBlob(null)
+    setCaptured(null); setCapturedBlob(null)
     readyFrames.current = 0
-    stateRef.current = 'searching'
-    setUiState('searching')
-    setReadyPct(0)
-    startCamera()
+    stateRef.current = 'searching'; setUiState('searching'); setReadyPct(0)
+    startCamera() // eslint-disable-line react-hooks/exhaustive-deps
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleConfirm = useCallback(() => {
     if (!capturedBlob) return
-    const file = new File([capturedBlob], `kyc_${Date.now()}.jpg`, { type: 'image/jpeg' })
-    onCapture(file)
+    onCapture(new File([capturedBlob], `kyc_${Date.now()}.jpg`, { type: 'image/jpeg' }))
   }, [capturedBlob, onCapture])
 
-  // ─── Camera ───────────────────────────────────────────────────────────────
+  // ─── Caméra ──────────────────────────────────────────────────────────────────
 
   const startCamera = useCallback(async () => {
     setCameraError(null)
-    stateRef.current = 'idle'
-    setUiState('idle')
+    stateRef.current = 'idle'; setUiState('idle')
     try {
-      if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop())
+      streamRef.current?.getTracks().forEach(t => t.stop())
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode,
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-        },
+        video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
       })
       streamRef.current = stream
       const video = videoRef.current
       if (video) {
         video.srcObject = stream
         await video.play()
-        stateRef.current = 'searching'
-        setUiState('searching')
+        stateRef.current = 'searching'; setUiState('searching')
         rafRef.current = requestAnimationFrame(analyzeFrame)
-        animFrameRef.current = requestAnimationFrame(animateOverlay)
+        animRef.current = requestAnimationFrame(animateOverlay)
       }
     } catch (e) {
       const err = e as { name?: string }
       setCameraError(
-        err.name === 'NotAllowedError'
-          ? 'Accès caméra refusé — autorisez-le dans les paramètres du navigateur.'
-          : err.name === 'NotFoundError'
-          ? 'Aucune caméra détectée sur cet appareil.'
-          : 'Impossible d\'accéder à la caméra.'
+        err.name === 'NotAllowedError' ? 'Accès caméra refusé — autorisez-le dans les paramètres du navigateur.'
+        : err.name === 'NotFoundError' ? 'Aucune caméra détectée sur cet appareil.'
+        : 'Impossible d\'accéder à la caméra.'
       )
     }
   }, [facingMode, analyzeFrame, animateOverlay])
 
   useEffect(() => { startCamera() }, [startCamera])
-
   useEffect(() => () => {
-    cancelAnimationFrame(rafRef.current)
-    cancelAnimationFrame(animFrameRef.current)
+    cancelAnimationFrame(rafRef.current); cancelAnimationFrame(animRef.current)
     streamRef.current?.getTracks().forEach(t => t.stop())
   }, [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (streamRef.current) startCamera() }, [facingMode])
 
-  // Restart when facing mode changes
-  useEffect(() => { if (streamRef.current) startCamera() }, [facingMode]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ─── Render: camera error ─────────────────────────────────────────────────
+  // ─── Render: erreur caméra ───────────────────────────────────────────────────
 
   if (cameraError) return (
     <div style={{ textAlign: 'center', padding: '32px 16px' }}>
@@ -514,76 +523,73 @@ export function LiveDocumentScanner({ onCapture, onCancel, docType }: LiveDocume
         {cameraError}
       </p>
       <button onClick={onCancel} style={{
-        background: BAI.night, color: '#fff', border: 'none',
-        borderRadius: 8, padding: '11px 24px', fontFamily: BAI.fontBody,
-        fontWeight: 600, fontSize: 14, cursor: 'pointer',
-      }}>
-        ← Importer un fichier
-      </button>
+        background: BAI.night, color: '#fff', border: 'none', borderRadius: 8,
+        padding: '11px 24px', fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 14, cursor: 'pointer',
+      }}>← Importer un fichier</button>
     </div>
   )
 
-  // ─── Render: captured preview ─────────────────────────────────────────────
+  // ─── Render: prévisualisation post-capture ───────────────────────────────────
 
   if (captured) return (
     <div>
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 8,
-        marginBottom: 12, padding: '10px 14px',
-        background: BAI.tenantLight, border: `1px solid ${BAI.tenantBorder}`,
-        borderRadius: 10,
+        display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10,
+        padding: '10px 14px', background: BAI.tenantLight,
+        border: `1px solid ${BAI.tenantBorder}`, borderRadius: 10,
       }}>
         <CheckCircle size={18} color={BAI.tenant} />
         <span style={{ fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 700, color: BAI.tenant }}>
           {docType === 'CNI' ? 'Carte d\'identité' : 'Permis de conduire'} capturé
         </span>
       </div>
-      <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, marginBottom: 12 }}>
-        Vérifiez que tous les champs sont lisibles avant de continuer.
+      <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, marginBottom: 10 }}>
+        Vérifiez que les bords et les textes sont bien nets.
       </p>
       <img src={captured} alt="Document capturé"
-        style={{ width: '100%', borderRadius: 10, marginBottom: 14, objectFit: 'contain',
-          border: `1px solid ${BAI.border}`, maxHeight: 240 }} />
+        style={{
+          width: '100%', borderRadius: 10, marginBottom: 14,
+          objectFit: 'contain', border: `1px solid ${BAI.border}`,
+          maxHeight: 220, background: '#111',
+        }} />
       <div style={{ display: 'flex', gap: 10 }}>
         <button onClick={handleRetake} style={{
           flex: 1, padding: '12px',
           background: BAI.bgMuted, border: `1px solid ${BAI.border}`, borderRadius: 8,
           fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13, color: BAI.ink,
           cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-        }}>
-          <RotateCcw size={14} /> Reprendre
-        </button>
+        }}><RotateCcw size={14} /> Reprendre</button>
         <button onClick={handleConfirm} style={{
           flex: 2, padding: '12px',
           background: BAI.night, border: 'none', borderRadius: 8,
           fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 14, color: '#fff',
           cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-        }}>
-          <CheckCircle size={15} /> Utiliser cette capture
-        </button>
+        }}><CheckCircle size={15} /> Utiliser cette capture</button>
       </div>
     </div>
   )
 
-  // ─── Render: scanner ──────────────────────────────────────────────────────
+  // ─── Render: scanner ──────────────────────────────────────────────────────────
 
   const stateColor = STATE_COLOR[uiState]
-  const isGoodState = uiState === 'face_found' || uiState === 'ready' || uiState === 'detected'
-  const isCritical = uiState === 'no_doc' || uiState === 'bad_quality'
+  const isGood = uiState === 'face_found' || uiState === 'ready' || uiState === 'detected'
+  const isConfirmed = uiState === 'face_found' || uiState === 'ready'
+
+  // Message distance basé sur le fill
+  const distanceHint = fillPct < 0.35 ? 'Approchez-vous du document ↗'
+    : fillPct > 0.88 ? 'Reculez légèrement ↙'
+    : null
 
   return (
     <div>
-      {/* Instructions rapides */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
+      {/* Tips */}
+      <div style={{ display: 'flex', gap: 12, marginBottom: 10, flexWrap: 'wrap' }}>
         {[
           { icon: '💡', text: 'Éclairage uniforme' },
           { icon: '📐', text: 'Document à plat' },
           { icon: '🔍', text: 'Recto face à la caméra' },
         ].map(({ icon, text }) => (
-          <span key={text} style={{
-            fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkMid,
-            display: 'flex', alignItems: 'center', gap: 4,
-          }}>
+          <span key={text} style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.inkMid, display: 'flex', alignItems: 'center', gap: 4 }}>
             {icon} {text}
           </span>
         ))}
@@ -592,71 +598,83 @@ export function LiveDocumentScanner({ onCapture, onCancel, docType }: LiveDocume
       {/* Viewport */}
       <div style={{
         position: 'relative', borderRadius: 14, overflow: 'hidden',
-        background: '#0a0a0a', marginBottom: 12,
-        boxShadow: `0 0 0 2px ${stateColor}`,
-        transition: 'box-shadow 0.3s ease',
+        background: '#0a0a0a', marginBottom: 10,
+        outline: `2px solid ${stateColor}`,
+        transition: 'outline-color 0.35s ease',
       }}>
         <video ref={videoRef} muted playsInline
           style={{ width: '100%', display: 'block', aspectRatio: '4/3', objectFit: 'cover' }} />
 
-        {/* Overlay canvas (guide + animation) */}
+        {/* Overlay aligné sur les mêmes dimensions CSS que la vidéo */}
         <canvas ref={overlayRef}
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} />
 
-        {/* Hidden analysis canvas */}
+        {/* Canvas d'analyse (caché) */}
         <canvas ref={workRef} style={{ display: 'none' }} />
 
-        {/* Status badge */}
+        {/* Badge état */}
         <div style={{
           position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
           background: 'rgba(0,0,0,0.72)', borderRadius: 24,
           padding: '5px 14px', backdropFilter: 'blur(8px)',
-          display: 'flex', alignItems: 'center', gap: 7,
-          border: `1px solid ${isGoodState ? stateColor : 'transparent'}`,
+          display: 'flex', alignItems: 'center', gap: 7, whiteSpace: 'nowrap',
+          border: `1px solid ${isGood ? stateColor : 'transparent'}`,
           transition: 'border-color 0.3s',
         }}>
           <div style={{
-            width: 8, height: 8, borderRadius: '50%',
+            width: 7, height: 7, borderRadius: '50%',
             background: stateColor,
-            boxShadow: isGoodState ? `0 0 8px ${stateColor}` : 'none',
+            boxShadow: isGood ? `0 0 6px ${stateColor}` : 'none',
             transition: 'all 0.3s',
           }} />
           <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: '#fff', fontWeight: 600 }}>
             {STATE_MSG[uiState]}
           </span>
           {faceCheckActive && (
-            <span style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.5)' }}>
-              (analyse…)
+            <span style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.45)' }}>
+              (IA…)
             </span>
           )}
         </div>
 
-        {/* Quality bar (bas gauche) */}
+        {/* Barre qualité */}
         <div style={{
           position: 'absolute', bottom: 10, left: 10,
           background: 'rgba(0,0,0,0.62)', borderRadius: 8, padding: '5px 10px',
           backdropFilter: 'blur(4px)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <ScanLine size={11} color="rgba(255,255,255,0.6)" />
-            <span style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.7)' }}>
+            <ScanLine size={11} color="rgba(255,255,255,0.55)" />
+            <span style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.65)' }}>
               Qualité
             </span>
-            <div style={{ width: 60, height: 3, background: 'rgba(255,255,255,0.15)', borderRadius: 3 }}>
+            <div style={{ width: 55, height: 3, background: 'rgba(255,255,255,0.12)', borderRadius: 3 }}>
               <div style={{
-                height: '100%', borderRadius: 3,
-                width: `${quality.score}%`,
-                background: quality.score >= QUALITY_THRESHOLD ? '#10b981' : quality.score >= 40 ? '#f59e0b' : '#ef4444',
+                height: '100%', borderRadius: 3, width: `${quality.score}%`,
+                background: quality.score >= QUALITY_THRESHOLD ? '#10b981' : quality.score >= 38 ? '#f59e0b' : '#ef4444',
                 transition: 'width 0.2s, background 0.3s',
               }} />
             </div>
-            <span style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.6)', minWidth: 24 }}>
+            <span style={{ fontFamily: BAI.fontBody, fontSize: 10, color: 'rgba(255,255,255,0.55)', minWidth: 22 }}>
               {quality.score}%
             </span>
           </div>
         </div>
 
-        {/* Flip camera */}
+        {/* Indicateur de distance */}
+        {distanceHint && (
+          <div style={{
+            position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)',
+            background: 'rgba(245,158,11,0.82)', borderRadius: 8, padding: '4px 10px',
+            backdropFilter: 'blur(4px)',
+          }}>
+            <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: '#fff', fontWeight: 700 }}>
+              {distanceHint}
+            </span>
+          </div>
+        )}
+
+        {/* Flip caméra */}
         <button onClick={() => setFacingMode(m => m === 'environment' ? 'user' : 'environment')}
           style={{
             position: 'absolute', bottom: 10, right: 10,
@@ -669,19 +687,22 @@ export function LiveDocumentScanner({ onCapture, onCancel, docType }: LiveDocume
         </button>
       </div>
 
-      {/* Feedback contextuel */}
-      {isCritical && (
+      {/* Feedback contextuel qualité */}
+      {uiState === 'bad_quality' && (
         <div style={{
           display: 'flex', gap: 8, alignItems: 'flex-start',
           padding: '9px 12px', borderRadius: 8, marginBottom: 10,
-          background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)',
+          background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.25)',
         }}>
-          <AlertCircle size={15} color="#f59e0b" style={{ flexShrink: 0, marginTop: 2 }} />
-          <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: '#92400e', margin: 0, lineHeight: 1.5 }}>
-            {uiState === 'bad_quality' && quality.brightness < 30 && '💡 Trop sombre — allumez une lumière face au document.'}
-            {uiState === 'bad_quality' && quality.brightness > 80 && '🔆 Reflet — inclinez légèrement le document pour supprimer le reflet.'}
-            {uiState === 'bad_quality' && quality.sharpness < 25 && '📸 Image floue — rapprochez-vous et maintenez le téléphone stable 2 secondes.'}
-            {uiState === 'no_doc' && 'Présentez le recto de votre document dans le cadre, à plat et sans angle.'}
+          <AlertCircle size={15} color="#ef4444" style={{ flexShrink: 0, marginTop: 2 }} />
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: '#9b1c1c', margin: 0, lineHeight: 1.5 }}>
+            {quality.brightness < 28
+              ? '💡 Trop sombre — allumez une lumière face au document.'
+              : quality.brightness > 82
+              ? '🔆 Reflet — inclinez légèrement le document pour supprimer le reflet.'
+              : quality.sharpness < 22
+              ? '📸 Image floue — stabilisez l\'appareil 2 secondes.'
+              : 'Améliorez les conditions de prise de vue.'}
           </p>
         </div>
       )}
@@ -691,25 +712,23 @@ export function LiveDocumentScanner({ onCapture, onCancel, docType }: LiveDocume
         <button onClick={onCancel} style={{
           flex: 1, padding: '12px',
           background: BAI.bgMuted, border: `1px solid ${BAI.border}`, borderRadius: 8,
-          fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13, color: BAI.ink, cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+          fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13, color: BAI.ink,
+          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
         }}>
           <Camera size={14} /> Importer
         </button>
         <button onClick={handleManualCapture} style={{
           flex: 2, padding: '12px',
-          background: isGoodState ? (uiState === 'face_found' || uiState === 'ready' ? '#059669' : BAI.night) : BAI.night,
+          background: isConfirmed ? '#059669' : BAI.night,
           border: 'none', borderRadius: 8,
           fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 14, color: '#fff',
           cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           transition: 'background 0.3s',
-          boxShadow: isGoodState ? '0 0 12px rgba(16,185,129,0.35)' : 'none',
+          boxShadow: isConfirmed ? '0 2px 16px rgba(5,150,105,0.40)' : 'none',
         }}>
           <Camera size={16} />
-          {uiState === 'face_found' || uiState === 'ready'
-            ? `Capturer — pièce confirmée ✓`
-            : 'Capturer maintenant'}
+          {isConfirmed ? 'Capturer — pièce confirmée ✓' : 'Capturer maintenant'}
         </button>
       </div>
 
@@ -718,8 +737,8 @@ export function LiveDocumentScanner({ onCapture, onCancel, docType }: LiveDocume
         textAlign: 'center', marginTop: 8,
       }}>
         {faceApiLoaded
-          ? 'Détection IA activée — vérifie que c\'est bien une pièce d\'identité'
-          : 'Capture auto quand la qualité est suffisante'}
+          ? 'Détection IA activée — confirme que c\'est bien une pièce d\'identité'
+          : 'Capture automatique dès que la qualité et le cadrage sont bons'}
       </p>
     </div>
   )
