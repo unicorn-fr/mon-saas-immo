@@ -768,107 +768,115 @@ export function useDocumentOCR() {
     file: File,
     docType: 'CNI' | 'PERMIS_CONDUIRE'
   ): Promise<ExtractedDocument | null> => {
-    setState({ isProcessing: true, progress: 0, stage: 'Chargement de l\'image…', result: null, error: null })
+    setState({ isProcessing: true, progress: 0, stage: 'Analyse en cours…', result: null, error: null })
 
     try {
-      // ── Étape 1 : Chargement + upscale 2400 px ──
-      let canvas: HTMLCanvasElement
+      let fullText = '', textZoneText = '', mrzText = ''
+      let confidence = 0
+      let usedEngine = 'browser-tesseract'
+
+      // ── Étape 1 : Essai backend OCR enterprise ──
+      // Le backend utilise sharp (preprocessing C++) + tessdata_best + Google Vision
+      // → bien meilleur que Tesseract browser (tessdata_fast + CSS filters)
+      setState(s => ({ ...s, progress: 8, stage: 'Analyse IA du document…' }))
       try {
-        canvas = await fileToCanvas(file)
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : 'Format non supporté'
-        setState(s => ({ ...s, isProcessing: false, error: msg }))
-        return null
+        const formData = new FormData()
+        formData.append('image', file)
+        formData.append('docType', docType)
+
+        const res = await fetch('/api/v1/kyc/ocr-scan', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') ?? ''}` },
+          body: formData,
+        })
+
+        if (res.ok) {
+          const json = await res.json() as {
+            success: boolean
+            data: { fullText: string; textZoneText: string; mrzText: string; confidence: number; engine: string }
+          }
+          if (json.success && json.data.fullText) {
+            fullText = json.data.fullText
+            textZoneText = json.data.textZoneText
+            mrzText = json.data.mrzText
+            confidence = json.data.confidence
+            usedEngine = json.data.engine
+          }
+        }
+      } catch {
+        // Backend indisponible → fallback browser
       }
 
-      setState(s => ({ ...s, progress: 10, stage: 'Prétraitement de l\'image…' }))
+      // ── Étape 2 (fallback) : Tesseract browser si backend a échoué ──
+      if (!fullText) {
+        setState(s => ({ ...s, progress: 15, stage: 'Chargement de l\'image…' }))
+        let canvas: HTMLCanvasElement
+        try {
+          canvas = await fileToCanvas(file)
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : 'Format non supporté'
+          setState(s => ({ ...s, isProcessing: false, error: msg }))
+          return null
+        }
 
-      // ── Étape 2 : Preprocessing ──
-      const processed = preprocessForOCR(canvas)
+        setState(s => ({ ...s, progress: 22, stage: 'Prétraitement de l\'image…' }))
+        const processed = preprocessForOCR(canvas)
 
-      setState(s => ({ ...s, progress: 18, stage: 'Initialisation du moteur OCR…' }))
+        setState(s => ({ ...s, progress: 28, stage: 'Initialisation moteur OCR local…' }))
+        const passes: Array<{ canvas: HTMLCanvasElement; psm: number; whitelist?: string; label: string }> = [
+          { canvas: processed, psm: 11, label: 'Analyse du document…' },
+        ]
 
-      // ── Étape 3 : Construction des passes OCR ──
-      const passes: Array<{ canvas: HTMLCanvasElement; psm: number; whitelist?: string; label: string }> = [
-        // Passe principale : document entier en mode "texte épars" (meilleur pour docs hétérogènes)
-        { canvas: processed, psm: 11, label: 'Analyse du document complet…' },
-      ]
+        if (docType === 'CNI') {
+          passes.push({ canvas: preprocessForZone(cropCNITextField(canvas)), psm: 3, label: 'Lecture Nom / Prénom…' })
+          passes.push({
+            canvas: preprocessForMRZ(cropMRZZone(canvas)), psm: 6,
+            whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<', label: 'Lecture MRZ…',
+          })
+        } else {
+          passes.push({ canvas: preprocessForZone(cropPermisNameZone(canvas)), psm: 3, label: 'Lecture Nom / Prénom…' })
+          passes.push({ canvas: preprocessForZone(cropPermisLowerZone(canvas)), psm: 6, label: 'Lecture numéro / catégories…' })
+        }
 
-      if (docType === 'CNI') {
-        // Passe 2 : zone texte recto (sans photo) — layout labels+valeurs en colonnes
-        // PSM 3 (auto-colonnes) reconnaît mieux la layout à 2 colonnes de la CNI
-        // que PSM 6 (bloc uniforme) qui peut mélanger les colonnes
-        const textField = cropCNITextField(canvas)
-        passes.push({
-          canvas: preprocessForZone(textField), psm: 3,
-          label: 'Lecture zone Nom / Prénom / Date…',
-        })
-        // Passe 3 : zone MRZ (bas du document verso) — 3 lignes OCR-B uniformes
-        // PSM 6 = bloc uniforme — CORRECT pour 3 lignes de même hauteur
-        // PSM 7 serait FAUX (une seule ligne), PSM 3 serait trop lent
-        const mrzCrop = cropMRZZone(canvas)
-        const mrzProcessed = preprocessForMRZ(mrzCrop)
-        passes.push({
-          canvas: mrzProcessed, psm: 6,
-          whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<',
-          label: 'Lecture de la zone MRZ…',
-        })
-      } else {
-        // Permis : zone nom/prénom/date (côté droit, hors photo)
-        const nameZone = cropPermisNameZone(canvas)
-        passes.push({
-          canvas: preprocessForZone(nameZone), psm: 6,
-          label: 'Analyse zone nom / prénom…',
-        })
-        // Permis : zone inférieure (numéro, dates, catégories)
-        const lowerZone = cropPermisLowerZone(canvas)
-        passes.push({
-          canvas: preprocessForZone(lowerZone), psm: 6,
-          label: 'Analyse zone numéro / catégories…',
-        })
+        let ocrResults: TesseractResult[] = []
+        try {
+          ocrResults = await runTesseractPasses(passes, (stage, p) => {
+            setState(s => ({ ...s, progress: 28 + Math.round(p * 0.55), stage }))
+          })
+        } catch { /* silent */ }
+
+        fullText = ocrResults[0]?.text ?? ''
+        confidence = ocrResults[0]?.confidence ?? 0
+        textZoneText = ocrResults[1]?.text ?? ''
+        mrzText = docType === 'CNI' ? (ocrResults[2]?.text ?? '') : (ocrResults[2]?.text ?? '')
+        if (docType === 'PERMIS_CONDUIRE') {
+          textZoneText = `${ocrResults[1]?.text ?? ''}\n${ocrResults[2]?.text ?? ''}`
+          mrzText = ''
+        }
       }
 
-      // ── Étape 4 : Exécution OCR multi-passes ──
-      let ocrResults: TesseractResult[] = []
-      try {
-        ocrResults = await runTesseractPasses(passes, (stage, p) => {
-          setState(s => ({ ...s, progress: 18 + Math.round(p * 0.6), stage }))
-        })
-      } catch { /* Tesseract indisponible → on continue avec texte vide */ }
+      setState(s => ({ ...s, progress: 85, stage: 'Extraction des informations…' }))
 
-      const fullText = ocrResults[0]?.text ?? ''
-      const confidence = ocrResults[0]?.confidence ?? 0
-
-      setState(s => ({ ...s, progress: 82, stage: 'Extraction des informations…' }))
-
-      // ── Étape 5 : Extraction des champs ──
+      // ── Étape 3 : Extraction des champs ──
       let extracted: Partial<ExtractedDocument>
-
       if (docType === 'CNI') {
-        // ocrResults[0] = doc complet (PSM 11), [1] = zone texte recto (PSM 3), [2] = MRZ (PSM 6)
-        const textZoneText = ocrResults[1]?.text ?? ''
-        const mrzText = ocrResults[2]?.text ?? ''
-        // On passe les 3 textes séparément à extractCNIFields pour éviter la pollution
-        // de regex par le séparateur (ex: "--- ZONE TEXTE ---" pouvait briser les anchors ^)
         extracted = await extractCNIFields(fullText, textZoneText, mrzText)
       } else {
-        // Merge : full doc + zone nom + zone inférieure
         const mainExtract = extractPermisFromText(fullText)
-        const nameExtract = ocrResults[1] ? extractPermisFromText(ocrResults[1].text) : {}
-        const lowerExtract = ocrResults[2] ? extractPermisFromText(ocrResults[2].text) : {}
-        extracted = mergeExtracted(mergeExtracted(mainExtract, nameExtract), lowerExtract)
+        const zoneExtract = extractPermisFromText(textZoneText)
+        extracted = mergeExtracted(mainExtract, zoneExtract)
       }
 
-      setState(s => ({ ...s, progress: 95, stage: 'Validation des données…' }))
+      setState(s => ({ ...s, progress: 96, stage: 'Validation…' }))
 
-      // ── Étape 6 : Validation ──
       const validation = validateExtracted(extracted, docType)
-
       const result: ExtractedDocument = {
         ...extracted,
         confidence: confidence / 100,
         rawText: fullText,
         ...validation,
+        // @ts-ignore — champ debug non typé
+        _engine: usedEngine,
       }
 
       setState({ isProcessing: false, progress: 100, stage: 'Terminé', result, error: null })
