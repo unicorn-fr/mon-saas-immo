@@ -6,10 +6,11 @@ import { useContractStore } from '../../store/contractStore'
 import { applicationService } from '../../services/application.service'
 import { bookingService } from '../../services/booking.service'
 import { dossierService } from '../../services/dossier.service'
+import { kycService, type KycStatus } from '../../services/kyc.service'
 import { BAI } from '../../constants/bailio-tokens'
 import {
   FolderOpen, SendHorizonal, Calendar, FileText, CreditCard,
-  ChevronRight, CheckCircle, Clock, ArrowUpRight, MapPin, Home, HelpCircle,
+  ChevronRight, CheckCircle, Clock, ArrowUpRight, MapPin, Home, HelpCircle, ShieldCheck,
 } from 'lucide-react'
 import { SpotlightTour } from '../../components/ui/SpotlightTour'
 import type { SpotlightStep } from '../../components/ui/SpotlightTour'
@@ -230,6 +231,7 @@ export default function TenantDashboard() {
   const [loading, setLoading]             = useState(true)
   const [tourKey, setTourKey]             = useState(0)
   const [tourImmediate, setTourImmediate] = useState(false)
+  const [kycStatus, setKycStatus]         = useState<KycStatus | null>(null)
 
   const spotlightSteps: SpotlightStep[] = [
     {
@@ -295,10 +297,11 @@ export default function TenantDashboard() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [apps, bookRes, docs] = await Promise.allSettled([
+        const [apps, bookRes, docs, kyc] = await Promise.allSettled([
           applicationService.list(),
           bookingService.getBookings({ status: 'CONFIRMED' }),
           dossierService.getDocuments(),
+          kycService.getStatus(),
         ])
         if (apps.status === 'fulfilled')    setApplications(apps.value)
         if (bookRes.status === 'fulfilled') setBookings(bookRes.value.bookings ?? [])
@@ -306,6 +309,7 @@ export default function TenantDashboard() {
           setPct(dossierPercent(docs.value))
           setUploadedCats(new Set(docs.value.map((d: { category: string }) => d.category)))
         }
+        if (kyc.status === 'fulfilled') setKycStatus(kyc.value)
         await fetchContracts()
       } finally {
         setLoading(false)
@@ -323,6 +327,9 @@ export default function TenantDashboard() {
   const activeContracts = contracts.filter((c) => c.status === 'ACTIVE')
   const activeContract = activeContracts[0] ?? null
 
+  const kycDone = kycStatus?.status === 'COMPLETED'
+  const kycInProgress = kycStatus?.status === 'DOCUMENT_VERIFIED' || kycStatus?.status === 'BIOMETRIC_VERIFIED'
+
   const steps: StepProps[] = [
     {
       icon: <FolderOpen size={16} />, title: 'Dossier', route: '/dossier',
@@ -339,6 +346,10 @@ export default function TenantDashboard() {
     {
       icon: <FileText size={16} />, title: 'Contrat', route: '/contracts',
       done: contracts.length > 0,
+    },
+    {
+      icon: <ShieldCheck size={16} />, title: 'Identité KYC', route: '/contracts',
+      done: kycDone, inProgress: kycInProgress,
     },
     {
       icon: <CreditCard size={16} />, title: 'Paiements', route: '/tenant/payments',

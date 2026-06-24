@@ -8,6 +8,7 @@ import { appendAuditEntry } from '../services/kyc/auditLog.service.js'
 import { encryptField, sha256 } from '../utils/encryption.util.js'
 import { uploadBufferToCloudinary, generateSignedUrl } from '../utils/cloudinary.util.js'
 import { secureDelete } from '../utils/secureDelete.util.js'
+import { contractService } from '../services/contract.service.js'
 
 export class KycController {
 
@@ -305,12 +306,29 @@ export class KycController {
         }
       })
 
+      // Signer le contrat (met à jour le statut SENT → SIGNED_TENANT ou → COMPLETED)
+      let contractSigned = false
+      if (contractId) {
+        try {
+          await contractService.signContract(
+            contractId,
+            userId,
+            signatureImageUrl || signatureImageBase64 as string | undefined,
+            { ip: req.ip, userAgent: req.headers['user-agent'] }
+          )
+          contractSigned = true
+        } catch (contractErr) {
+          console.error('[KYC] signContract failed (non-blocking):', contractErr)
+        }
+      }
+
       return res.json({
         success: true,
         data: {
           status: 'COMPLETED',
           signatureTimestamp: signatureTimestamp.toISOString(),
           hasVideoProof: !!signatureVideoUrl,
+          contractSigned,
           auditChainLength: (JSON.parse(auditChain) as unknown[]).length,
         }
       })
