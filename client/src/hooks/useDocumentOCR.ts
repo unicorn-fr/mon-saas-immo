@@ -67,21 +67,11 @@ function preprocessForOCR(source: HTMLCanvasElement): HTMLCanvasElement {
   canvas.width = source.width
   canvas.height = source.height
   const ctx = canvas.getContext('2d')!
+
+  // Doux contraste via CSS filter (GPU-accéléré, préserve le détail)
+  ctx.filter = 'grayscale(100%) contrast(130%) brightness(108%)'
   ctx.drawImage(source, 0, 0)
-
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-  const data = imageData.data
-
-  // Convert to grayscale with contrast enhancement
-  for (let i = 0; i < data.length; i += 4) {
-    const gray = Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2])
-    // Contrast stretch: darken darks, brighten brights
-    const enhanced = Math.min(255, Math.max(0, (gray - 80) * 1.6))
-    data[i] = data[i + 1] = data[i + 2] = enhanced
-    // alpha unchanged
-  }
-
-  ctx.putImageData(imageData, 0, 0)
+  ctx.filter = 'none'
   return canvas
 }
 
@@ -183,15 +173,15 @@ function findMRZLines(text: string): string[] | null {
     .map(l => l.trim().replace(/\s+/g, ''))
     .filter(l => l.length >= 26)
 
-  // TD1: 3 lines of ~30 chars (French CNI)
-  const td1 = lines.filter(l => l.length >= 28 && l.length <= 32 && /^[A-Z0-9<]{28,}$/.test(l))
+  // TD1: 3 lines of ~30 chars (French CNI) — souple sur la longueur (OCR peut ajouter/supprimer chars)
+  const td1 = lines.filter(l => l.length >= 25 && l.length <= 35 && /^[A-Z0-9<]{25,}$/.test(l))
   if (td1.length >= 3) {
     const normalized = td1.slice(-3).map(l => l.substring(0, 30).padEnd(30, '<'))
     return normalized
   }
 
   // TD3: 2 lines of ~44 chars (passport)
-  const td3 = lines.filter(l => l.length >= 42 && l.length <= 46 && /^[A-Z0-9<]{42,}$/.test(l))
+  const td3 = lines.filter(l => l.length >= 40 && l.length <= 48 && /^[A-Z0-9<]{40,}$/.test(l))
   if (td3.length >= 2) {
     return td3.slice(-2).map(l => l.substring(0, 44))
   }
@@ -413,6 +403,10 @@ export function useDocumentOCR() {
     error: null,
   })
 
+  const reset = useCallback(() => {
+    setState({ isProcessing: false, progress: 0, stage: '', result: null, error: null })
+  }, [])
+
   const analyzeDocument = useCallback(async (
     file: File,
     docType: 'CNI' | 'PERMIS_CONDUIRE'
@@ -437,11 +431,11 @@ export function useDocumentOCR() {
 
       setState(s => ({ ...s, progress: 25, stage: 'Analyse OCR du document…' }))
 
-      // Step 3: Full document OCR (PSM 6 = single block)
+      // Step 3: Full document OCR — PSM 11 (sparse text) capture tout le texte
       let fullText = ''
       let confidence = 0
       try {
-        const res = await runTesseract(processed, 6, undefined, p => {
+        const res = await runTesseract(processed, 11, undefined, p => {
           setState(s => ({ ...s, progress: 25 + Math.round(p * 0.4) }))
         })
         fullText = res.text
@@ -495,5 +489,5 @@ export function useDocumentOCR() {
     }
   }, [])
 
-  return { ...state, analyzeDocument, FIELD_LABELS }
+  return { ...state, analyzeDocument, reset, FIELD_LABELS }
 }
