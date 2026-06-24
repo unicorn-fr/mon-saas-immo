@@ -16,6 +16,7 @@
 import sharp from 'sharp'
 import path from 'path'
 import os from 'os'
+import { analyzeWithMindee, type MindeeStructuredFields } from './mindeeOcr.service.js'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -31,6 +32,7 @@ export interface OcrDocumentResult {
   mrzText: string
   confidence: number
   engine: string
+  structuredFields?: MindeeStructuredFields  // Champs directs (Mindee) — skip regex côté client
 }
 
 // ─── Persistent Tesseract worker ─────────────────────────────────────────────
@@ -213,13 +215,28 @@ export async function analyzeDocumentOCR(
   docType: 'CNI' | 'PERMIS_CONDUIRE'
 ): Promise<OcrDocumentResult> {
 
-  // Redimensionne si trop grand (>3 MP) → optimal Tesseract / Vision
+  // Redimensionne si trop grand (>3 MP) → optimal pour tous les moteurs
   const normalizedBuffer = await sharp(imageBuffer)
     .resize({ width: 1800, height: 1800, fit: 'inside', withoutEnlargement: true })
     .jpeg({ quality: 92 })
     .toBuffer()
 
-  // ── 1. Essai Google Vision (si clé disponible) ──
+  // ── 1. Mindee Document AI (priorité absolue si clé disponible) ──
+  // Modèle deep learning entraîné sur des centaines de milliers de CNI/permis français.
+  // Retourne les champs structurés directement — aucune regex requise.
+  const mindeeFields = await analyzeWithMindee(normalizedBuffer, docType)
+  if (mindeeFields && (mindeeFields.lastName || mindeeFields.firstName)) {
+    return {
+      fullText: '',
+      textZoneText: '',
+      mrzText: [mindeeFields.mrzLine1, mindeeFields.mrzLine2, mindeeFields.mrzLine3].filter(Boolean).join('\n'),
+      confidence: mindeeFields.confidence,
+      engine: 'mindee',
+      structuredFields: mindeeFields,
+    }
+  }
+
+  // ── 2. Essai Google Vision (si clé disponible) ──
   const visionText = await ocrWithGoogleVision(normalizedBuffer)
   if (visionText && visionText.length > 30) {
     // Google Vision donne un texte unique de haute qualité.

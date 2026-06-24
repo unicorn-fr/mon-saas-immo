@@ -779,6 +779,21 @@ export function useDocumentOCR() {
       // Le backend utilise sharp (preprocessing C++) + tessdata_best + Google Vision
       // → bien meilleur que Tesseract browser (tessdata_fast + CSS filters)
       setState(s => ({ ...s, progress: 8, stage: 'Analyse IA du document…' }))
+
+      // Type de la réponse backend (inclut structuredFields quand Mindee répond)
+      type BackendData = {
+        fullText: string; textZoneText: string; mrzText: string
+        confidence: number; engine: string
+        structuredFields?: {
+          lastName?: string; firstName?: string; birthDate?: string; birthPlace?: string
+          documentNumber?: string; documentExpiry?: string; nationality?: string
+          sex?: 'M' | 'F'; issuedDate?: string; issuingAuthority?: string
+          licenseCategories?: string[]; mrzLine1?: string; mrzLine2?: string; mrzLine3?: string
+          confidence: number
+        }
+      }
+
+      let backendData: BackendData | null = null
       try {
         const formData = new FormData()
         formData.append('image', file)
@@ -791,11 +806,9 @@ export function useDocumentOCR() {
         })
 
         if (res.ok) {
-          const json = await res.json() as {
-            success: boolean
-            data: { fullText: string; textZoneText: string; mrzText: string; confidence: number; engine: string }
-          }
-          if (json.success && json.data.fullText) {
+          const json = await res.json() as { success: boolean; data: BackendData }
+          if (json.success && json.data) {
+            backendData = json.data
             fullText = json.data.fullText
             textZoneText = json.data.textZoneText
             mrzText = json.data.mrzText
@@ -805,6 +818,37 @@ export function useDocumentOCR() {
         }
       } catch {
         // Backend indisponible → fallback browser
+      }
+
+      // ── Mindee : champs structurés directs → skip regex ──
+      if (backendData?.structuredFields) {
+        const sf = backendData.structuredFields
+        setState(s => ({ ...s, progress: 95, stage: 'Validation…' }))
+        const extracted: Partial<ExtractedDocument> = {
+          lastName:          sf.lastName,
+          firstName:         sf.firstName,
+          birthDate:         sf.birthDate,
+          birthPlace:        sf.birthPlace,
+          documentNumber:    sf.documentNumber,
+          documentExpiry:    sf.documentExpiry,
+          nationality:       sf.nationality,
+          sex:               sf.sex,
+          issuedDate:        sf.issuedDate,
+          issuingAuthority:  sf.issuingAuthority,
+          licenseCategories: sf.licenseCategories,
+          mrzLine1:          sf.mrzLine1,
+          mrzLine2:          sf.mrzLine2,
+          mrzLine3:          sf.mrzLine3,
+          mrzValid:          !!(sf.mrzLine1 && sf.mrzLine2),
+        }
+        const validation = validateExtracted(extracted, docType)
+        const result: ExtractedDocument = {
+          ...extracted, rawText: '',
+          confidence: sf.confidence / 100,
+          ...validation,
+        }
+        setState({ isProcessing: false, progress: 100, stage: 'Terminé', result, error: null })
+        return result
       }
 
       // ── Étape 2 (fallback) : Tesseract browser si backend a échoué ──
