@@ -276,6 +276,7 @@ function AppRoutes() {
 
       {/* KYC Flow — accès direct par lien (token dans URL), pas besoin de ProtectedRoute */}
       <Route path="/kyc/:contractId" element={<KycFlow />} />
+      <Route path="/kyc" element={<KycFlow />} />
 
       {/* Legal & Info Pages */}
       <Route path="/mentions-legales" element={<MentionsLegales />} />

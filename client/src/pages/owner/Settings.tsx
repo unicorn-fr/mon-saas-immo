@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { loadStripe } from '@stripe/stripe-js'
 import { BAI } from '../../constants/bailio-tokens'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
@@ -405,7 +404,6 @@ export default function OwnerSettings() {
   // ── Stripe Identity ──
   const [identityStatus, setIdentityStatus] = useState<string | null>(null)
   const [identityVerified, setIdentityVerified] = useState(false)
-  const [identityLoading, setIdentityLoading] = useState(false)
 
   const loadIdentityStatus = useCallback(async () => {
     try {
@@ -415,24 +413,8 @@ export default function OwnerSettings() {
     } catch { /* ignore */ }
   }, [])
 
-  const handleIdentityVerify = async () => {
-    setIdentityLoading(true)
-    try {
-      const res = await apiClient.post<{ clientSecret: string }>('/stripe/identity-verify')
-      const stripeInstance = await loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? '')
-      if (!stripeInstance) { toast.error('Stripe non disponible'); return }
-      const { error } = await stripeInstance.verifyIdentity(res.data.clientSecret)
-      if (error) {
-        toast.error(error.message ?? 'Vérification annulée')
-      } else {
-        setIdentityStatus('processing')
-        toast.success('Vérification soumise — vous serez notifié par email sous 24h.')
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Erreur')
-    } finally {
-      setIdentityLoading(false)
-    }
+  const handleIdentityVerify = () => {
+    navigate('/kyc')
   }
 
   useEffect(() => { loadIdentityStatus() }, [loadIdentityStatus])
@@ -1279,23 +1261,18 @@ export default function OwnerSettings() {
                     {!identityVerified && (
                       <button
                         onClick={handleIdentityVerify}
-                        disabled={identityLoading || identityStatus === 'processing'}
+                        disabled={identityStatus === 'processing'}
                         className="flex items-center gap-2"
                         style={{
-                          background: identityLoading || identityStatus === 'processing' ? BAI.inkFaint : BAI.night,
-                          border: 'none',
-                          borderRadius: '8px',
-                          padding: '9px 18px',
-                          color: '#ffffff',
-                          fontSize: '14px',
-                          fontFamily: BAI.fontBody,
-                          cursor: identityLoading || identityStatus === 'processing' ? 'not-allowed' : 'pointer',
-                          fontWeight: 500,
-                          marginTop: '4px',
+                          background: identityStatus === 'processing' ? BAI.inkFaint : BAI.night,
+                          border: 'none', borderRadius: '8px', padding: '9px 18px',
+                          color: '#ffffff', fontSize: '14px', fontFamily: BAI.fontBody,
+                          cursor: identityStatus === 'processing' ? 'not-allowed' : 'pointer',
+                          fontWeight: 500, marginTop: '4px',
                         }}
                       >
                         <ShieldCheck size={14} />
-                        {identityLoading ? 'Chargement…' : identityStatus === 'processing' ? 'Vérification en cours…' : 'Vérifier mon identité'}
+                        {identityStatus === 'processing' ? 'Vérification en cours…' : 'Vérifier mon identité'}
                       </button>
                     )}
                   </div>

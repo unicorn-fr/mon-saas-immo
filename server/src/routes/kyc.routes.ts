@@ -43,6 +43,9 @@ router.post(
   kycController.verifyBiometric.bind(kycController)
 )
 
+// Finalise le KYC sans contrat (vérification standalone owner)
+router.post('/complete', authenticate, kycController.complete.bind(kycController))
+
 router.post(
   '/sign/:contractId',
   authenticate,

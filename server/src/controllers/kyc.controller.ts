@@ -333,6 +333,47 @@ export class KycController {
       return res.status(500).json({ success: false, message: 'Erreur lors de la signature', debug: msg })
     }
   }
+
+  /** POST /kyc/complete — finalise le KYC sans signature de contrat (vérification owner) */
+  async complete(req: Request, res: Response) {
+    const userId = req.user?.id
+    if (!userId) return res.status(401).json({ success: false, message: 'Non authentifié' })
+
+    const kyc = await prisma.kycVerification.findUnique({ where: { userId } })
+    if (!kyc) {
+      return res.status(400).json({
+        success: false,
+        message: "Veuillez d'abord télécharger votre pièce d'identité et effectuer la vérification biométrique.",
+      })
+    }
+
+    if (!['BIOMETRIC_VERIFIED', 'DOCUMENT_VERIFIED'].includes(kyc.status)) {
+      return res.status(400).json({
+        success: false,
+        message: "La vérification biométrique doit être complétée avant de finaliser.",
+      })
+    }
+
+    const auditChain = appendAuditEntry(
+      kyc.signatureAuditChain,
+      'KYC_COMPLETED',
+      userId,
+      { mode: 'standalone' }
+    )
+
+    await prisma.kycVerification.update({
+      where: { userId },
+      data: { status: 'COMPLETED', verifiedAt: new Date(), signatureAuditChain: auditChain },
+    })
+
+    // Marquer le propriétaire comme vérifié (réutilise le champ Stripe Identity)
+    await prisma.user.update({
+      where: { id: userId },
+      data: { isVerifiedOwner: true, stripeIdentityStatus: 'verified' },
+    })
+
+    return res.json({ success: true, data: { status: 'COMPLETED' } })
+  }
 }
 
 export const kycController = new KycController()
