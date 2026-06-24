@@ -101,7 +101,7 @@ function LeftPanel() {
 
       {/* Stat chips */}
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', position: 'relative', zIndex: 1 }}>
-        {['12 000+ annonces', '0€ frais d\'agence', 'Signature eIDAS'].map(chip => (
+        {['0€ frais d\'agence', 'Signature eIDAS', 'Entre particuliers'].map(chip => (
           <span
             key={chip}
             style={{
@@ -414,7 +414,7 @@ export default function Login() {
 
             {/* Stat chips mobile */}
             <div className="flex md:hidden" style={{ gap: '8px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '24px' }}>
-              {['12 000+ annonces', '0€ frais', 'Signature eIDAS'].map(chip => (
+              {['0€ frais d\'agence', 'Signature eIDAS', 'Entre particuliers'].map(chip => (
                 <span
                   key={chip}
                   style={{

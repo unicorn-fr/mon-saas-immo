@@ -48,11 +48,21 @@ async function fileToCanvas(file: File): Promise<HTMLCanvasElement> {
     const img = new Image()
     img.onload = () => {
       const canvas = document.createElement('canvas')
-      // 2400 px = ~300 DPI pour une CNI standard (85.6 mm ≈ 8.56 cm → 2400/8.56 = 280 DPI)
-      const scale = Math.max(1, 2400 / img.width)
+      // Cible : 1800 px sur le grand côté — optimal pour Tesseract (~210 DPI CNI).
+      // Upscale si < 800px (capture basse résolution).
+      // Downscale si > 3600px (photo téléphone 4K → trop lourd, Tesseract ralentit).
+      const maxSide = Math.max(img.width, img.height)
+      const TARGET = 1800
+      const scale = maxSide < 800
+        ? Math.min(2, TARGET / maxSide)        // upscale, max ×2
+        : maxSide > 3600
+          ? TARGET / maxSide                   // downscale depuis 4K
+          : 1                                  // dans la bonne plage, pas de scale
       canvas.width = Math.round(img.width * scale)
       canvas.height = Math.round(img.height * scale)
       const ctx = canvas.getContext('2d', { willReadFrequently: true })!
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = 'high'
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
       URL.revokeObjectURL(img.src)
       resolve(canvas)
@@ -183,53 +193,63 @@ function preprocessForOCR(source: HTMLCanvasElement): HTMLCanvasElement {
 
 /**
  * Preprocessing spécifique MRZ (police OCR-B monospace).
- * Grayscale → blur léger → binarisation Otsu → upscale ×2.
+ * Grayscale → blur léger → binarisation Otsu.
+ * Plafonné à 1600px de large (optimal pour Tesseract, évite OOM sur grands canvases).
  */
 function preprocessForMRZ(source: HTMLCanvasElement): HTMLCanvasElement {
-  // 1. Grayscale
+  // 1. Scale à 1600px max de large (MRZ n'a besoin que de ~600px pour 300 DPI sur 50mm)
+  const targetW = Math.min(source.width, 1600)
+  const targetH = Math.round(source.height * (targetW / source.width))
+
   const gray = document.createElement('canvas')
-  gray.width = source.width; gray.height = source.height
+  gray.width = targetW; gray.height = targetH
   const gctx = gray.getContext('2d', { willReadFrequently: true })!
-  gctx.filter = 'grayscale(100%) contrast(160%)'
-  gctx.drawImage(source, 0, 0)
+  gctx.filter = 'grayscale(100%) contrast(250%) brightness(115%)'
+  gctx.drawImage(source, 0, 0, targetW, targetH)
   gctx.filter = 'none'
 
   // 2. Blur léger pour réduire le grain
   const blurred = gaussianBlur3(gray)
 
-  // 3. Binarisation Otsu
+  // 3. Binarisation Otsu + padding blanc (Tesseract aime un bord blanc)
   const bctx = blurred.getContext('2d', { willReadFrequently: true })!
   const imgData = bctx.getImageData(0, 0, blurred.width, blurred.height)
   const threshold = otsuThreshold(imgData.data)
   const d = imgData.data
+  let darkPixels = 0
   for (let i = 0; i < d.length; i += 4) {
     const g = Math.round(0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2])
     const bin = g < threshold ? 0 : 255
     d[i] = d[i+1] = d[i+2] = bin; d[i+3] = 255
+    if (bin === 0) darkPixels++
+  }
+  // Si >60% pixels noirs, le document est inversé (MRZ clair sur fond sombre) → inverser
+  if (darkPixels > (d.length / 4) * 0.6) {
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i+3] === 255) { d[i] = 255 - d[i]; d[i+1] = 255 - d[i+1]; d[i+2] = 255 - d[i+2] }
+    }
   }
   bctx.putImageData(imgData, 0, 0)
-
-  // 4. Upscale ×2 (le texte MRZ doit être grand pour Tesseract)
-  const out = document.createElement('canvas')
-  out.width = blurred.width * 2; out.height = blurred.height * 2
-  const octx = out.getContext('2d')!
-  octx.imageSmoothingEnabled = false
-  octx.drawImage(blurred, 0, 0, out.width, out.height)
-  return out
+  return blurred
 }
 
 /**
  * Preprocessing pour zone isolée (champ spécifique).
- * Plus agressif : fort contraste + unsharp.
+ * Plafonné à 1200px de large — évite les canvases géants qui ralentissent Tesseract.
  */
 function preprocessForZone(source: HTMLCanvasElement): HTMLCanvasElement {
+  // Scale vers ~1200px de large si plus petit, mais pas plus grand que ×1.5
+  const targetW = Math.min(Math.max(source.width, 800), 1200)
+  const scale = targetW / source.width
+  const targetH = Math.round(source.height * scale)
+
   const canvas = document.createElement('canvas')
-  canvas.width = source.width * 2; canvas.height = source.height * 2
+  canvas.width = targetW; canvas.height = targetH
   const ctx = canvas.getContext('2d', { willReadFrequently: true })!
   ctx.filter = 'grayscale(100%) contrast(160%) brightness(108%)'
-  ctx.drawImage(source, 0, 0, canvas.width, canvas.height)
+  ctx.drawImage(source, 0, 0, targetW, targetH)
   ctx.filter = 'none'
-  return applyUnsharpMask(canvas, 1.6)
+  return applyUnsharpMask(canvas, 1.4)
 }
 
 // ─── Zone crops ───────────────────────────────────────────────────────────────
@@ -249,9 +269,19 @@ function cropZone(
   return out
 }
 
-/** Zone MRZ CNI : bas 22% du document */
+/** Zone MRZ CNI TD1 : bas 22% du document (3 lignes OCR-B) */
 function cropMRZZone(source: HTMLCanvasElement): HTMLCanvasElement {
   return cropZone(source, 0, 0.78, 1, 0.22)
+}
+
+/**
+ * CNI recto — zone texte (sans la photo, côté droit ~60% de largeur).
+ * Mise en page officielle CNI française :
+ *  - Photo : 0..38% largeur
+ *  - Champs : 38%..100% largeur, 0%..78% hauteur
+ */
+function cropCNITextField(source: HTMLCanvasElement): HTMLCanvasElement {
+  return cropZone(source, 0.36, 0, 0.64, 0.78)
 }
 
 /**
@@ -342,8 +372,11 @@ function parseMRZDate(yymmdd: string): string | undefined {
   const yy = parseInt(yymmdd.substring(0, 2))
   const mm = yymmdd.substring(2, 4)
   const dd = yymmdd.substring(4, 6)
-  const year = yy > 30 ? 1900 + yy : 2000 + yy
-  return `${year}-${mm}-${dd}`
+  // ICAO: si 2000+yy dépasse l'année courante+20 → c'est 1900+yy (naissance passée)
+  const y2k = 2000 + yy
+  const year = y2k > new Date().getFullYear() + 20 ? 1900 + yy : y2k
+  if (isNaN(parseInt(mm)) || isNaN(parseInt(dd))) return undefined
+  return `${year}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`
 }
 
 /**
@@ -373,18 +406,31 @@ function cleanFirstName(raw: string): string {
 function findMRZLines(text: string): string[] | null {
   const lines = text
     .split('\n')
-    .map(l => l.trim().replace(/\s+/g, '').replace(/[Oo]/g, '0'))
-    .filter(l => l.length >= 25)
+    .map(l => l.trim().replace(/\s+/g, '').replace(/[Oo]/g, '0').toUpperCase())
+    .filter(l => l.length >= 20)
 
-  // TD1: 3 lignes × 30 chars (CNI française) — tolérance sur longueur OCR
-  const td1 = lines.filter(l => l.length >= 25 && l.length <= 35 && /^[A-Z0-9<]{25,}$/.test(l))
-  if (td1.length >= 3) {
-    return td1.slice(-3).map(l => l.substring(0, 30).padEnd(30, '<'))
+  // TD1: 3 lignes × 30 chars (CNI française)
+  // Cherche d'abord une ligne commençant par "ID" (marqueur CNI) ou "AC" (ancienne CNI)
+  const td1All = lines.filter(l => l.length >= 25 && l.length <= 36 && /^[A-Z0-9<]{20,}$/.test(l))
+  if (td1All.length >= 3) {
+    // Priorité aux lignes commençant par "ID" (ligne 1 CNI FR)
+    const anchorIdx = td1All.findIndex(l => /^ID[A-Z]{3}/.test(l))
+    const start = anchorIdx >= 0 ? anchorIdx : 0
+    const candidate = td1All.slice(start, start + 3)
+    if (candidate.length === 3) {
+      return candidate.map(l => l.substring(0, 30).padEnd(30, '<'))
+    }
+    // Fallback : dernières 3 lignes TD1
+    return td1All.slice(-3).map(l => l.substring(0, 30).padEnd(30, '<'))
   }
 
   // TD3: 2 lignes × 44 chars (passeport)
-  const td3 = lines.filter(l => l.length >= 40 && l.length <= 48 && /^[A-Z0-9<]{40,}$/.test(l))
-  if (td3.length >= 2) return td3.slice(-2).map(l => l.substring(0, 44))
+  const td3All = lines.filter(l => l.length >= 40 && l.length <= 48 && /^[A-Z0-9<]{40,}$/.test(l))
+  if (td3All.length >= 2) {
+    const anchorIdx = td3All.findIndex(l => /^P[A-Z<]/.test(l))
+    const start = anchorIdx >= 0 ? anchorIdx : td3All.length - 2
+    return td3All.slice(start, start + 2).map(l => l.substring(0, 44))
+  }
 
   return null
 }
@@ -404,15 +450,22 @@ async function parseMRZWithPackage(lines: string[]): Promise<Record<string, stri
 
 // ─── CNI field extractor ──────────────────────────────────────────────────────
 
+/**
+ * Extrait les champs d'une CNI à partir de 3 sources OCR distinctes.
+ * Priorité : MRZ (fiabilité max) > textZone (PSM 3) > fullDoc (PSM 11 fallback).
+ */
 async function extractCNIFields(
   fullText: string,
+  textZoneText: string,
   mrzText: string
 ): Promise<Partial<ExtractedDocument>> {
   const result: Partial<ExtractedDocument> = {}
-  const combined = `${fullText}\n${mrzText}`
 
-  // 1. MRZ en priorité (source la plus fiable)
-  const mrzLines = findMRZLines(combined)
+  // Toutes les sources combinées pour la détection MRZ
+  const allSources = `${mrzText}\n${fullText}\n${textZoneText}`
+
+  // 1. MRZ en priorité absolue (données chiffrées, checksum, ultra-fiables)
+  const mrzLines = findMRZLines(allSources)
   if (mrzLines) {
     result.mrzLine1 = mrzLines[0]
     result.mrzLine2 = mrzLines[1]
@@ -420,10 +473,11 @@ async function extractCNIFields(
     const fields = await parseMRZWithPackage(mrzLines)
     if (fields) {
       result.mrzValid = true
-      if (fields.firstName) result.firstName = cleanFirstName(fields.firstName)
-      if (fields.lastName) result.lastName = cleanName(fields.lastName)
-      if (fields.documentNumber) result.documentNumber = fields.documentNumber
-      if (fields.nationality) result.nationality = fields.nationality
+      // MRZ: prénom et nom sont séparés par "<" (= espace) et "<<" (= séparateur)
+      if (fields.firstName) result.firstName = fields.firstName.replace(/<+/g, ' ').trim()
+      if (fields.lastName) result.lastName = fields.lastName.replace(/<+/g, ' ').trim()
+      if (fields.documentNumber) result.documentNumber = fields.documentNumber.replace(/<+/g, '')
+      if (fields.nationality) result.nationality = fields.nationality.replace(/<+/g, '')
       if (fields.birthDate) result.birthDate = parseMRZDate(fields.birthDate)
       if (fields.expirationDate) result.documentExpiry = parseMRZDate(fields.expirationDate)
       const s = fields.sex
@@ -431,62 +485,65 @@ async function extractCNIFields(
     }
   }
 
-  const t = fullText
+  // 2. Fallbacks regex sur la zone texte (PSM 3 — meilleure lisibilité) puis full doc
+  // On essaie la zone texte d'abord (plus ciblée), puis le full doc si rien trouvé
+  const sources = [textZoneText, fullText].filter(Boolean)
 
-  // 2. Regex fallback sur le texte complet
-  if (!result.lastName) {
-    const patterns = [
-      /(?:Nom\s*(?:de\s+famille)?|NOM)\s*[:\s*]+([A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒ\-\s]{2,30}?)(?:\n|Pr[ée]nom|$)/im,
-      /^([A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒ]{2,}(?:\s[A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒ]{2,})*)\s*\n/m,
-    ]
-    for (const re of patterns) {
-      const m = t.match(re)
-      if (m) { result.lastName = cleanName(m[1]); break }
+  for (const t of sources) {
+    if (!result.lastName) {
+      // Label "Nom de famille" ou "NOM" suivi de la valeur
+      const m1 = t.match(/(?:Nom\s*(?:de\s+famille)?|NOM)\s*[:\s]+([A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒ\-\s]{2,35}?)(?:\n|Pr[ée]nom|$)/im)
+      const m2 = t.match(/^([A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒ]{3,}(?:[\s\-][A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒ]{2,})*)\s*\n/m)
+      const raw = (m1 ? m1[1] : m2 ? m2[1] : null)
+      if (raw) result.lastName = cleanName(raw)
     }
-  }
 
-  if (!result.firstName) {
-    const m = t.match(/(?:Pr[ée]nom(?:s)?|PRÉNOM)\s*[:\s*]+([A-ZÉÈÊÀÂÎÔÙÛÜÇÆŒa-záéèêàâîôùûüçæœ\-\s]{2,40}?)(?:\n|N[ée]|Date|$)/im)
-    if (m) result.firstName = cleanFirstName(m[1])
-  }
+    if (!result.firstName) {
+      const m = t.match(/(?:Pr[ée]nom(?:s)?|PRÉNOM[S]?)\s*[:\s]+([A-ZÉÈÊÀÂÎÔÙÛÜÇÆŒa-záéèêàâîôùûüçæœ\-\s]{2,45}?)(?:\n|N[ée]|Date|Taille|Sex|$)/im)
+      if (m) result.firstName = cleanFirstName(m[1])
+    }
 
-  if (!result.birthDate) {
-    const m = t.match(/(?:N[ée](?:\(e\))?\s+le|date\s+de\s+naissance)\s*[:\s]+(\d{1,2}[.\-\/]\d{1,2}[.\-\/]\d{4})/im)
-    if (m) result.birthDate = parseDateFr(m[1])
-    // Fallback : toute date vraisemblable (plage 1900-2009 pour une naissance)
     if (!result.birthDate) {
-      const m2 = t.match(/\b(\d{2}[.\-\/]\d{2}[.\-\/](?:19|20)\d{2})\b/)
-      if (m2) result.birthDate = parseDateFr(m2[1])
+      // Label explicite (priorité)
+      const m1 = t.match(/(?:N[ée](?:\(e\))?\s+le|date\s+de\s+naissance)\s*[:\s]+(\d{1,2}[.\-\/]\d{1,2}[.\-\/]\d{4})/im)
+      if (m1) result.birthDate = parseDateFr(m1[1])
+      // Fallback : première date au format dd.mm.yyyy avec année plausible
+      if (!result.birthDate) {
+        const m2 = t.match(/\b(\d{2}[.\-\/]\d{2}[.\-\/](?:19|200|201)\d{1,2})\b/)
+        if (m2) result.birthDate = parseDateFr(m2[1])
+      }
     }
-  }
 
-  if (!result.birthPlace) {
-    const m = t.match(/(?:à|lieu\s+de\s+naissance)\s*[:\s]+([A-ZÉÈÊÀÂÎÔÙÛÜÇÆŒa-záéèêàâîôùûüçæœ\-\s]{2,30}?)(?:\n|Taille|Sex|$)/im)
-    if (m) result.birthPlace = m[1].trim()
-  }
-
-  if (!result.documentExpiry) {
-    const m = t.match(/(?:valable\s+jusqu(?:'|'|')au|fin\s+de\s+validit[ée]|date\s+de\s+(?:fin\s+de\s+)?validit[ée])\s*[:\s]+(\d{1,2}[.\-\/]\d{1,2}[.\-\/]\d{4})/im)
-    if (m) result.documentExpiry = parseDateFr(m[1])
-  }
-
-  if (!result.documentNumber) {
-    const patterns = [
-      /(?:n[°o]\.?\s*(?:national|carte|pièce)|numéro)\s*[:\s]+([A-Z0-9]{7,15})/im,
-      /^([A-Z0-9]{9,12})$/m,
-      // CNI ancienne : 12 chiffres
-      /\b(\d{12})\b/,
-      // CNI nouvelle : format ex "07CB01020"
-      /\b(\d{2}[A-Z]{2}\d{5})\b/,
-    ]
-    for (const re of patterns) {
-      const m = t.match(re)
-      if (m && /\d/.test(m[1])) { result.documentNumber = m[1].trim(); break }
+    if (!result.birthPlace) {
+      const m = t.match(/(?:(?:N[ée](?:\(e\))?\s+[àa]|Lieu\s+de\s+naissance)\s*[:\s]+)([A-ZÉÈÊÀÂÎÔÙÛÜÇÆŒa-záéèêàâîôùûüçæœ\-\s]{2,30}?)(?:\n|Taille|Sex|$)/im)
+      if (m) result.birthPlace = m[1].trim()
     }
-  }
 
-  if (!result.nationality) {
-    if (/fran[çc]ais|french|FRA\b/i.test(t)) result.nationality = 'FRA'
+    if (!result.documentExpiry) {
+      const m = t.match(/(?:valable\s+jusqu(?:'|'|')au|fin\s+de\s+validit[ée]|date\s+(?:de\s+)?(?:fin\s+de\s+)?validit[ée])\s*[:\s]+(\d{1,2}[.\-\/]\d{1,2}[.\-\/]\d{4})/im)
+      if (m) result.documentExpiry = parseDateFr(m[1])
+    }
+
+    if (!result.documentNumber) {
+      // CNI nouvelle (ex: "07CB01020") ou ancienne 12 chiffres
+      const numPatterns = [
+        /(?:n[°o]\.?\s*(?:national|carte|pi[eè]ce)|num[eé]ro)\s*[:\s]+([A-Z0-9]{7,15})/im,
+        /^([A-Z0-9]{9,12})\s*$/m,
+        /\b(\d{12})\b/,
+        /\b(\d{2}[A-Z]{2}\d{5,7})\b/,
+      ]
+      for (const re of numPatterns) {
+        const m = t.match(re)
+        if (m && /\d/.test(m[1])) { result.documentNumber = m[1].trim(); break }
+      }
+    }
+
+    if (!result.nationality) {
+      if (/fran[çc]ais(?:e)?|french|FRA\b/i.test(t)) result.nationality = 'FRA'
+    }
+
+    // Arrêter la boucle si on a les 3 champs critiques
+    if (result.lastName && result.firstName && result.birthDate) break
   }
 
   return result
@@ -691,11 +748,21 @@ export function useDocumentOCR() {
       ]
 
       if (docType === 'CNI') {
-        // Passe MRZ : zone bas du document avec preprocessing renforcé
+        // Passe 2 : zone texte recto (sans photo) — layout labels+valeurs en colonnes
+        // PSM 3 (auto-colonnes) reconnaît mieux la layout à 2 colonnes de la CNI
+        // que PSM 6 (bloc uniforme) qui peut mélanger les colonnes
+        const textField = cropCNITextField(canvas)
+        passes.push({
+          canvas: preprocessForZone(textField), psm: 3,
+          label: 'Lecture zone Nom / Prénom / Date…',
+        })
+        // Passe 3 : zone MRZ (bas du document verso) — 3 lignes OCR-B uniformes
+        // PSM 6 = bloc uniforme — CORRECT pour 3 lignes de même hauteur
+        // PSM 7 serait FAUX (une seule ligne), PSM 3 serait trop lent
         const mrzCrop = cropMRZZone(canvas)
         const mrzProcessed = preprocessForMRZ(mrzCrop)
         passes.push({
-          canvas: mrzProcessed, psm: 7,
+          canvas: mrzProcessed, psm: 6,
           whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<',
           label: 'Lecture de la zone MRZ…',
         })
@@ -731,8 +798,12 @@ export function useDocumentOCR() {
       let extracted: Partial<ExtractedDocument>
 
       if (docType === 'CNI') {
-        const mrzText = ocrResults[1]?.text ?? ''
-        extracted = await extractCNIFields(fullText, mrzText)
+        // ocrResults[0] = doc complet (PSM 11), [1] = zone texte recto (PSM 3), [2] = MRZ (PSM 6)
+        const textZoneText = ocrResults[1]?.text ?? ''
+        const mrzText = ocrResults[2]?.text ?? ''
+        // On passe les 3 textes séparément à extractCNIFields pour éviter la pollution
+        // de regex par le séparateur (ex: "--- ZONE TEXTE ---" pouvait briser les anchors ^)
+        extracted = await extractCNIFields(fullText, textZoneText, mrzText)
       } else {
         // Merge : full doc + zone nom + zone inférieure
         const mainExtract = extractPermisFromText(fullText)
