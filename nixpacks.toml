@@ -8,4 +8,4 @@ cmds = ["npm --prefix server ci"]
 cmds = ["npm --prefix server run build"]
 
 [start]
-cmd = "ulimit -n 65535 2>/dev/null || true && cd server && npx prisma db push --accept-data-loss && cd .. && pm2-runtime server/ecosystem.config.cjs --env production"
+cmd = "ulimit -n 65535 2>/dev/null || true && cd server && npx prisma db push --accept-data-loss && npx pm2-runtime ecosystem.config.cjs --env production"
