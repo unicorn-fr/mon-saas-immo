@@ -380,25 +380,50 @@ function parseMRZDate(yymmdd: string): string | undefined {
 }
 
 /**
- * Nettoie un nom extrait par OCR.
- * Supprime les chiffres parasites, les espaces multiples et les chars isolés.
+ * Nettoie un nom de famille extrait par OCR.
  */
 function cleanName(raw: string): string {
   return raw
-    .replace(/[0-9@#$%^&*()[\]{}|\\<>]/g, '') // chiffres et symboles
-    .replace(/\b\w\b/g, '')                      // mots d'une seule lettre (artéfacts)
+    .replace(/[0-9@#$%^&*()\[\]{}|\\<>]/g, '')
     .replace(/\s{2,}/g, ' ')
     .trim()
     .toUpperCase()
-    .replace(/^[-\s.]+|[-\s.]+$/g, '')           // tirets/points en début/fin
+    .replace(/^[-\s.]+|[-\s.]+$/g, '')
 }
 
+/**
+ * Nettoie un prénom extrait par OCR.
+ * Conserve la casse mixte et les prénoms composés.
+ */
 function cleanFirstName(raw: string): string {
   return raw
-    .replace(/[0-9@#$%^&*()[\]{}|\\<>]/g, '')
+    .replace(/[0-9@#$%^&*()\[\]{}|\\<>]/g, '')
     .replace(/\s{2,}/g, ' ')
     .trim()
     .replace(/^[-\s.]+|[-\s.]+$/g, '')
+}
+
+/**
+ * Cherche une valeur après un label dans le texte OCR.
+ * Gère les deux cas : label+valeur sur même ligne, ou valeur sur la ligne suivante.
+ * Retourne null si rien trouvé.
+ */
+function findFieldAfterLabel(
+  text: string,
+  labelRe: RegExp,
+  valueChars = '[A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒa-záéèêàâîôùûüçæœ\\-\\s\']{2,45}'
+): string | null {
+  // Cas 1 : label et valeur sur la même ligne (ex: "Nom de famille DUPONT")
+  const sameLine = new RegExp(labelRe.source + `[:\\s]+(${ valueChars})`, 'im')
+  const m1 = text.match(sameLine)
+  if (m1 && m1[1] && m1[1].trim().length >= 2) return m1[1].trim()
+
+  // Cas 2 : valeur sur la ligne suivante (ex: "Nom de famille\nDUPONT")
+  const nextLine = new RegExp(labelRe.source + `[:\\s]*\\n+(${ valueChars})`, 'im')
+  const m2 = text.match(nextLine)
+  if (m2 && m2[1] && m2[1].trim().length >= 2) return m2[1].trim()
+
+  return null
 }
 
 // ─── MRZ detection & parsing ──────────────────────────────────────────────────
@@ -485,47 +510,57 @@ async function extractCNIFields(
     }
   }
 
-  // 2. Fallbacks regex sur la zone texte (PSM 3 — meilleure lisibilité) puis full doc
-  // On essaie la zone texte d'abord (plus ciblée), puis le full doc si rien trouvé
+  // 2. Fallbacks regex — on essaie chaque source de la plus ciblée à la plus large
+  // textZoneText (PSM 3, zone recto sans photo) → fullText (PSM 11, doc entier)
   const sources = [textZoneText, fullText].filter(Boolean)
 
   for (const t of sources) {
+    // ── Nom de famille ──
     if (!result.lastName) {
-      // Label "Nom de famille" ou "NOM" suivi de la valeur
-      const m1 = t.match(/(?:Nom\s*(?:de\s+famille)?|NOM)\s*[:\s]+([A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒ\-\s]{2,35}?)(?:\n|Pr[ée]nom|$)/im)
-      const m2 = t.match(/^([A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒ]{3,}(?:[\s\-][A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒ]{2,})*)\s*\n/m)
-      const raw = (m1 ? m1[1] : m2 ? m2[1] : null)
+      // Variantes du label sur CNI : "Nom de famille", "Nom", "NOM DE FAMILLE"
+      const raw =
+        findFieldAfterLabel(t, /Nom\s+de\s+famille/i, '[A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒ\\-\\s\']{2,35}') ??
+        findFieldAfterLabel(t, /\bNOM\b/i, '[A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒ\\-\\s\']{2,35}') ??
+        // Ligne en MAJUSCULES précédant le prénom (fallback sur texte brut sans label)
+        t.match(/^([A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒ]{3,}(?:[\s\-][A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒ]{2,})*)\s*\n(?:[A-ZÉÈa-zé]{2,})/m)?.[1] ?? null
       if (raw) result.lastName = cleanName(raw)
     }
 
+    // ── Prénom(s) ──
     if (!result.firstName) {
-      const m = t.match(/(?:Pr[ée]nom(?:s)?|PRÉNOM[S]?)\s*[:\s]+([A-ZÉÈÊÀÂÎÔÙÛÜÇÆŒa-záéèêàâîôùûüçæœ\-\s]{2,45}?)(?:\n|N[ée]|Date|Taille|Sex|$)/im)
-      if (m) result.firstName = cleanFirstName(m[1])
+      const raw =
+        findFieldAfterLabel(t, /Pr[ée]noms?/i) ??
+        findFieldAfterLabel(t, /PRÉNOM[S]?/i) ??
+        null
+      if (raw) result.firstName = cleanFirstName(raw)
     }
 
+    // ── Date de naissance ──
     if (!result.birthDate) {
-      // Label explicite (priorité)
-      const m1 = t.match(/(?:N[ée](?:\(e\))?\s+le|date\s+de\s+naissance)\s*[:\s]+(\d{1,2}[.\-\/]\d{1,2}[.\-\/]\d{4})/im)
-      if (m1) result.birthDate = parseDateFr(m1[1])
-      // Fallback : première date au format dd.mm.yyyy avec année plausible
+      // Label explicite en priorité
+      const labeled = t.match(/(?:N[ée](?:\(e\))?\s*(?:le)?|[Dd]ate\s+de\s+naissance)\s*[:\s]+(\d{1,2}[.\-\/]\d{1,2}[.\-\/]\d{4})/i)
+      if (labeled) result.birthDate = parseDateFr(labeled[1])
+      // Fallback : date au format dd.mm.yyyy (1900–2015, exclut dates futures)
       if (!result.birthDate) {
-        const m2 = t.match(/\b(\d{2}[.\-\/]\d{2}[.\-\/](?:19|200|201)\d{1,2})\b/)
-        if (m2) result.birthDate = parseDateFr(m2[1])
+        const allDates = [...t.matchAll(/\b(\d{2}[.\-\/]\d{2}[.\-\/](19\d{2}|200\d|201\d))\b/g)]
+        if (allDates.length > 0) result.birthDate = parseDateFr(allDates[0][1])
       }
     }
 
+    // ── Lieu de naissance ──
     if (!result.birthPlace) {
-      const m = t.match(/(?:(?:N[ée](?:\(e\))?\s+[àa]|Lieu\s+de\s+naissance)\s*[:\s]+)([A-ZÉÈÊÀÂÎÔÙÛÜÇÆŒa-záéèêàâîôùûüçæœ\-\s]{2,30}?)(?:\n|Taille|Sex|$)/im)
+      const m = t.match(/(?:N[ée](?:\(e\))?\s+[àa]\s+|[Àà]\s+|[Ll]ieu\s+de\s+naissance\s*[:\s]+)([A-ZÉÈÊÀÂÎÔÙÛÜÇÆŒa-záéèêàâîôùûüçæœ\-\s]{2,35}?)(?:\n|Taille|Sex|$)/i)
       if (m) result.birthPlace = m[1].trim()
     }
 
+    // ── Date d'expiration ──
     if (!result.documentExpiry) {
-      const m = t.match(/(?:valable\s+jusqu(?:'|'|')au|fin\s+de\s+validit[ée]|date\s+(?:de\s+)?(?:fin\s+de\s+)?validit[ée])\s*[:\s]+(\d{1,2}[.\-\/]\d{1,2}[.\-\/]\d{4})/im)
+      const m = t.match(/(?:valable\s+jusqu['’']au|fin\s+de\s+validit[ée]|date\s+(?:de\s+)?(?:fin\s+de\s+)?validit[ée])\s*[:\s]+(\d{1,2}[.\-\/]\d{1,2}[.\-\/]\d{4})/i)
       if (m) result.documentExpiry = parseDateFr(m[1])
     }
 
+    // ── Numéro de document ──
     if (!result.documentNumber) {
-      // CNI nouvelle (ex: "07CB01020") ou ancienne 12 chiffres
       const numPatterns = [
         /(?:n[°o]\.?\s*(?:national|carte|pi[eè]ce)|num[eé]ro)\s*[:\s]+([A-Z0-9]{7,15})/im,
         /^([A-Z0-9]{9,12})\s*$/m,
@@ -538,11 +573,12 @@ async function extractCNIFields(
       }
     }
 
+    // ── Nationalité ──
     if (!result.nationality) {
       if (/fran[çc]ais(?:e)?|french|FRA\b/i.test(t)) result.nationality = 'FRA'
     }
 
-    // Arrêter la boucle si on a les 3 champs critiques
+    // Arrêter si les 3 champs critiques sont trouvés
     if (result.lastName && result.firstName && result.birthDate) break
   }
 
@@ -559,27 +595,30 @@ function extractPermisFromText(text: string): Partial<ExtractedDocument> {
   const result: Partial<ExtractedDocument> = {}
   const t = text
 
-  // Normalise les numéros de champs mal lus par OCR
-  // "l.", "I.", "1.", "1)" sont équivalents pour Tesseract
+  // Normalise les chiffres de champs OCR : I/l/|/1 → "1", 2/Z/z → "2", etc.
+  // Le permis EU a des champs numérotés 1. à 12. que l'OCR confond souvent.
   const normalize = (s: string) =>
-    s.replace(/^[\s\n]*[lI1]([.:\)])/mg, (_, p) => `1${p}`)
-     .replace(/^[\s\n]*2([.:\)])/mg, '2$1')
-     .replace(/^[\s\n]*3([.:\)])/mg, '3$1')
-     .replace(/^[\s\n]*4([.:\)])/mg, '4$1')
-     .replace(/^[\s\n]*5([.:\)])/mg, '5$1')
+    s.replace(/(?:^|(?<=\n))\s*[lI|1]([.:\),])/mg, (_, p) => `1${p}`)
+     .replace(/(?:^|(?<=\n))\s*[2ZzS]([.:\),])/mg, (_, p) => `2${p}`)
+     .replace(/(?:^|(?<=\n))\s*[3BÄ]([.:\),])/mg, (_, p) => `3${p}`)
+     .replace(/(?:^|(?<=\n))\s*4([a-cA-C][.:\),])/mg, (_, p) => `4${p}`)
+     .replace(/(?:^|(?<=\n))\s*[5S$]([.:\),])/mg, (_, p) => `5${p}`)
 
   const n = normalize(t)
 
   // Champ 1. — Nom de famille
-  const nom1 = n.match(/(?:^|\n)\s*1[.:\)]\s*([A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒ][A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒa-záéèêàâîôùûüçæœ\-\s']{1,35}?)(?=\s*\n|\s*2[.:\)])/m)
+  // Tolérance : la valeur peut être sur la même ligne ou la ligne suivante
+  const nom1 = n.match(/(?:^|\n)\s*1[.:\),]\s*([A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒ][A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒa-záéèêàâîôùûüçæœ\-\s']{1,35}?)(?=\s*\n|\s*2[.:\),])/m)
+             ?? n.match(/(?:^|\n)\s*1[.:\),]\s*\n([A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒ][A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒa-záéèêàâîôùûüçæœ\-\s']{1,35}?)(?=\s*\n)/m)
   if (nom1) result.lastName = cleanName(nom1[1])
 
   // Champ 2. — Prénom(s)
-  const nom2 = n.match(/(?:^|\n)\s*2[.:\)]\s*([A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒa-záéèêàâîôùûüçæœ\-\s']{2,45}?)(?=\s*\n|\s*3[.:\)])/m)
+  const nom2 = n.match(/(?:^|\n)\s*2[.:\),]\s*([A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒa-záéèêàâîôùûüçæœ\-\s']{2,45}?)(?=\s*\n|\s*3[.:\),])/m)
+             ?? n.match(/(?:^|\n)\s*2[.:\),]\s*\n([A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒa-záéèêàâîôùûüçæœ\-\s']{2,45}?)(?=\s*\n)/m)
   if (nom2) result.firstName = cleanFirstName(nom2[1])
 
   // Champ 3. — Date + lieu de naissance
-  const birth = n.match(/(?:^|\n)\s*3[.:\)]\s*(\d{1,2}[.\-\/\s]\d{1,2}[.\-\/\s]\d{2,4})\s*(.{2,50}?)(?=\s*\n|\s*4[a-c.:\)]|$)/im)
+  const birth = n.match(/(?:^|\n)\s*3[.:\),]\s*(\d{1,2}[.\-\/\s]\d{1,2}[.\-\/\s]\d{2,4})\s*(.{2,50}?)(?=\s*\n|\s*4[a-cA-C.:\),]|$)/im)
   if (birth) {
     result.birthDate = parseDateFr(birth[1])
     const place = birth[2]?.trim()
@@ -587,46 +626,54 @@ function extractPermisFromText(text: string): Partial<ExtractedDocument> {
   }
 
   // Champ 4a. — Date de délivrance
-  const del = n.match(/4\s*[aA@]\s*[.:\)]\s*(\d{1,2}[.\-\/\s]\d{1,2}[.\-\/\s]\d{2,4})/im)
+  const del = n.match(/4\s*[aA@]\s*[.:\),]\s*(\d{1,2}[.\-\/\s]\d{1,2}[.\-\/\s]\d{2,4})/im)
   if (del) result.issuedDate = parseDateFr(del[1])
 
   // Champ 4b. — Date d'expiration
-  const exp = n.match(/4\s*[bB]\s*[.:\)]\s*(\d{1,2}[.\-\/\s]\d{1,2}[.\-\/\s]\d{2,4})/im)
+  const exp = n.match(/4\s*[bB]\s*[.:\),]\s*(\d{1,2}[.\-\/\s]\d{1,2}[.\-\/\s]\d{2,4})/im)
   if (exp) result.documentExpiry = parseDateFr(exp[1])
 
   // Champ 4c. — Autorité délivrante
-  const auth = n.match(/4\s*[cC]\s*[.:\)]\s*([A-Z0-9\-\s]{2,40}?)(?=\s*\n)/im)
+  const auth = n.match(/4\s*[cC]\s*[.:\),]\s*([A-Z0-9\-\s]{2,40}?)(?=\s*\n)/im)
   if (auth) result.issuingAuthority = auth[1].trim()
 
-  // Champ 5. — Numéro du permis (format standard : AAYYYYNNNNNN ou similaire)
-  const num = n.match(/(?:^|\n)\s*5[.:\)]\s*([A-Z0-9]{5,20})/im)
+  // Champ 5. — Numéro du permis
+  const num = n.match(/(?:^|\n)\s*5[.:\),]\s*([A-Z0-9]{5,20})/im)
   if (num) result.documentNumber = num[1].trim()
-  // Fallback : cherche un motif numéro connu (14 chars alphanums typiquement)
   if (!result.documentNumber) {
     const numFb = t.match(/\b([0-9]{2}[A-Z]{2}[0-9]{10}|[A-Z0-9]{12,14})\b/)
     if (numFb) result.documentNumber = numFb[1]
   }
 
   // Catégories B, A, AM, A1, A2, BE, C, CE, D...
-  const catPattern = /\b(A[M12]?|B[E1]?|C[1E]?[E]?|D[1E]?[E]?)\b/g
+  const catPattern = /\b(A[M12]?|B[E1]?|C1?E?|D1?E?)\b/g
   const cats = [...new Set([...t.matchAll(catPattern)].map(m => m[1]))]
   if (cats.length > 0) result.licenseCategories = cats
 
-  // Fallbacks avec labels textuels
+  // ── Fallbacks textuels si champs numérotés non trouvés ──
   if (!result.lastName) {
-    const m = t.match(/(?:NOM|SURNAME|NACHNANE)\s*[:\s]+([A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒ][A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒ\-\s]{1,30}?)(?=\n)/im)
-    if (m) result.lastName = cleanName(m[1])
+    const raw =
+      findFieldAfterLabel(t, /\bNOM\b/i, '[A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒ\\-\\s\']{2,35}') ??
+      findFieldAfterLabel(t, /SURNAME/i, '[A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒa-z\\-\\s\']{2,35}') ??
+      null
+    if (raw) result.lastName = cleanName(raw)
   }
 
   if (!result.firstName) {
-    const m = t.match(/(?:PR[ÉE]NOM|PRENOM|FIRSTNAME|VORNAME)\s*[:\s]+([A-ZÁÉÈÊÀÂÎÔÙÛÜÇÆŒa-záéèêàâîôùûüçæœ\-\s]{2,45}?)(?=\n)/im)
-    if (m) result.firstName = cleanFirstName(m[1])
+    const raw =
+      findFieldAfterLabel(t, /PR[ÉE]NOMS?/i) ??
+      findFieldAfterLabel(t, /FIRSTNAME/i) ??
+      null
+    if (raw) result.firstName = cleanFirstName(raw)
   }
 
-  // Fallback date si aucun champ numéroté trouvé
+  // Fallback date de naissance : toutes les dates trouvées, prendre la plus ancienne
   if (!result.birthDate) {
     const dates = [...t.matchAll(/\b(\d{2}[.\-\/]\d{2}[.\-\/](?:19|20)\d{2})\b/g)]
-    if (dates.length >= 1) result.birthDate = parseDateFr(dates[0][1])
+      .map(m => parseDateFr(m[1]))
+      .filter((d): d is string => !!d)
+      .sort() // tri chronologique — la plus ancienne est la date de naissance
+    if (dates.length > 0) result.birthDate = dates[0]
   }
 
   return result

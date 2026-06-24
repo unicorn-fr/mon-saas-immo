@@ -11,7 +11,7 @@
  *  - CORRIGÉ : qualityThreshold assoupli quand doc déjà confirmé
  */
 import { useRef, useEffect, useState, useCallback } from 'react'
-import { Camera, ZapOff, RotateCcw, CheckCircle, AlertCircle, ScanLine, FlipHorizontal } from 'lucide-react'
+import { Camera, ZapOff, AlertCircle, ScanLine, FlipHorizontal } from 'lucide-react'
 import { BAI } from '../../constants/bailio-tokens'
 import { useFaceApi } from '../../hooks/useFaceApi'
 
@@ -280,32 +280,30 @@ export function LiveDocumentScanner({ onCapture, onCancel, docType }: LiveDocume
   const lastFaceCheckRef = useRef(0)
   const lastRectCheckRef = useRef(0)
 
-  // ── CORRECTION CRITIQUE : refs pour les valeurs utilisées dans analyzeFrame ──
-  // Utiliser des états React dans les deps de analyzeFrame causait la récréation
-  // de analyzeFrame → startCamera à chaque update → redémarrage caméra en boucle.
+  // Refs pour les valeurs utilisées dans les boucles RAF (évite les dépendances React instables)
   const fillPctRef = useRef(0)
   const readyPctRef = useRef(0)
 
   const [uiState, setUiState] = useState<DetectionState>('idle')
   const [quality, setQuality] = useState<QualityMetrics>({ sharpness: 0, brightness: 0, score: 0 })
   const [fillPct, setFillPct] = useState(0)
-  const [captured, setCaptured] = useState<string | null>(null)
-  const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null)
+  const [captureFlash, setCaptureFlash] = useState(false)  // flash blanc post-capture
   const [cameraError, setCameraError] = useState<string | null>(null)
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment')
   const [faceCheckActive, setFaceCheckActive] = useState(false)
 
   const { isLoaded: faceApiLoaded } = useFaceApi()
 
-  // Refs stables pour les valeurs utilisées dans analyzeFrame.
-  // Évite toute dépendance sur des états React dans analyzeFrame → startCamera stables.
+  // Refs stables pour les callbacks utilisés dans doCapture ([] deps)
   const faceApiLoadedRef = useRef(faceApiLoaded)
   const checkFaceRef = useRef<(canvas: HTMLCanvasElement) => Promise<boolean>>(() => Promise.resolve(false))
   const startCameraRef = useRef<() => void>(() => {})
+  const onCaptureRef = useRef(onCapture)
   const lastQualityUpdateRef = useRef(0)
 
   // Sync des refs quand les valeurs changent
   useEffect(() => { faceApiLoadedRef.current = faceApiLoaded }, [faceApiLoaded])
+  useEffect(() => { onCaptureRef.current = onCapture }, [onCapture])
 
   // ─── Détection visage sur le document ───────────────────────────────────────
 
@@ -363,11 +361,14 @@ export function LiveDocumentScanner({ onCapture, onCancel, docType }: LiveDocume
 
     crop.toBlob(blob => {
       if (!blob) return
-      setCaptured(URL.createObjectURL(blob))
-      setCapturedBlob(blob)
       stateRef.current = 'captured'
       setUiState('captured')
       streamRef.current?.getTracks().forEach(t => t.stop())
+      // Flash blanc → feedback visuel immédiat
+      setCaptureFlash(true)
+      setTimeout(() => setCaptureFlash(false), 350)
+      // Lance le scan directement — plus de confirmation intermédiaire
+      onCaptureRef.current(new File([blob], `kyc_${Date.now()}.jpg`, { type: 'image/jpeg' }))
     }, 'image/jpeg', 0.95)
   }, [])
 
@@ -514,20 +515,6 @@ export function LiveDocumentScanner({ onCapture, onCancel, docType }: LiveDocume
     doCapture(computeGuide(dw, dh), dw, dh)
   }, [doCapture])
 
-  const handleRetake = useCallback(() => {
-    setCaptured(prev => { if (prev) URL.revokeObjectURL(prev); return null })
-    setCapturedBlob(null)
-    readyFrames.current = 0
-    fillPctRef.current = 0; readyPctRef.current = 0
-    stateRef.current = 'searching'; setUiState('searching'); setFillPct(0)
-    startCameraRef.current()  // toujours la version la plus récente
-  }, [])
-
-  const handleConfirm = useCallback(() => {
-    if (!capturedBlob) return
-    onCapture(new File([capturedBlob], `kyc_${Date.now()}.jpg`, { type: 'image/jpeg' }))
-  }, [capturedBlob, onCapture])
-
   // ─── Caméra ──────────────────────────────────────────────────────────────────
 
   // analyzeFrame et animateOverlay sont stables ([] deps) → startCamera ne dépend que de facingMode.
@@ -593,46 +580,6 @@ export function LiveDocumentScanner({ onCapture, onCancel, docType }: LiveDocume
     </div>
   )
 
-  // ─── Render: prévisualisation post-capture ───────────────────────────────────
-
-  if (captured) return (
-    <div>
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10,
-        padding: '10px 14px', background: BAI.tenantLight,
-        border: `1px solid ${BAI.tenantBorder}`, borderRadius: 10,
-      }}>
-        <CheckCircle size={18} color={BAI.tenant} />
-        <span style={{ fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 700, color: BAI.tenant }}>
-          {docType === 'CNI' ? 'Carte d\'identité' : 'Permis de conduire'} capturé
-        </span>
-      </div>
-      <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, marginBottom: 10 }}>
-        Vérifiez que les bords et les textes sont bien nets.
-      </p>
-      <img src={captured} alt="Document capturé"
-        style={{
-          width: '100%', borderRadius: 10, marginBottom: 14,
-          objectFit: 'contain', border: `1px solid ${BAI.border}`,
-          maxHeight: 220, background: '#111',
-        }} />
-      <div style={{ display: 'flex', gap: 10 }}>
-        <button onClick={handleRetake} style={{
-          flex: 1, padding: '12px',
-          background: BAI.bgMuted, border: `1px solid ${BAI.border}`, borderRadius: 8,
-          fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13, color: BAI.ink,
-          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-        }}><RotateCcw size={14} /> Reprendre</button>
-        <button onClick={handleConfirm} style={{
-          flex: 2, padding: '12px',
-          background: BAI.night, border: 'none', borderRadius: 8,
-          fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 14, color: '#fff',
-          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-        }}><CheckCircle size={15} /> Utiliser cette capture</button>
-      </div>
-    </div>
-  )
-
   // ─── Render: scanner ──────────────────────────────────────────────────────────
 
   const stateColor = STATE_COLOR[uiState]
@@ -671,6 +618,15 @@ export function LiveDocumentScanner({ onCapture, onCancel, docType }: LiveDocume
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} />
 
         <canvas ref={workRef} style={{ display: 'none' }} />
+
+        {/* Flash blanc post-capture */}
+        {captureFlash && (
+          <div style={{
+            position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.85)',
+            pointerEvents: 'none', animation: 'none',
+            transition: 'opacity 0.35s ease',
+          }} />
+        )}
 
         {/* Badge état */}
         <div style={{
@@ -788,7 +744,9 @@ export function LiveDocumentScanner({ onCapture, onCancel, docType }: LiveDocume
           boxShadow: isConfirmed ? '0 2px 16px rgba(5,150,105,0.40)' : 'none',
         }}>
           <Camera size={16} />
-          {isConfirmed ? 'Capturer — pièce confirmée ✓' : 'Capturer maintenant'}
+          {isConfirmed
+            ? `${docType === 'CNI' ? 'Carte' : 'Permis'} détecté — capture ✓`
+            : 'Capturer'}
         </button>
       </div>
 
