@@ -35,7 +35,7 @@ export class KycController {
     if (!userId) return res.status(401).json({ success: false, message: 'Non authentifié' })
 
     const file = req.file
-    const { documentType, faceEmbedding } = req.body
+    const { documentType, faceEmbedding, extractedData } = req.body
 
     if (!file || !file.buffer) {
       return res.status(400).json({ success: false, message: 'Fichier requis' })
@@ -48,17 +48,47 @@ export class KycController {
     }
 
     try {
-      // 1. OCR sur le buffer (Tesseract dynamique, non-bloquant si absent)
-      let ocrResult
-      try {
-        ocrResult = await analyzeIdentityDocument(file.buffer)
-      } catch (ocrErr) {
-        console.error('[KYC] OCR failed (non-blocking):', (ocrErr as Error).message)
+      // 1. Utiliser les données extraites côté client (OCR browser) si disponibles
+      //    Sinon, fallback sur le server-side OCR
+      interface ClientExtracted {
+        lastName?: string; firstName?: string; birthDate?: string
+        documentExpiry?: string; nationality?: string; documentNumber?: string
+        mrzLine1?: string; mrzLine2?: string; mrzLine3?: string
+        confidence?: number; validationScore?: number
+      }
+      let clientData: ClientExtracted = {}
+      if (extractedData) {
+        try { clientData = JSON.parse(extractedData as string) } catch { /* ignore */ }
+      }
+
+      let ocrResult: import('../services/kyc/ocr.service.js').OcrResult
+      if (clientData.firstName || clientData.lastName || clientData.documentNumber) {
+        // Données client-side disponibles → on les utilise directement
         ocrResult = {
-          rawText: '', confidence: 0,
-          firstName: undefined, lastName: undefined, birthDate: undefined,
-          documentExpiry: undefined, nationality: undefined,
-          documentNumber: undefined, mrzLine1: undefined, mrzLine2: undefined,
+          rawText: '',
+          confidence: Math.round((clientData.confidence ?? 0) * 100),
+          firstName: clientData.firstName,
+          lastName: clientData.lastName,
+          birthDate: clientData.birthDate ? new Date(clientData.birthDate) : undefined,
+          documentExpiry: clientData.documentExpiry ? new Date(clientData.documentExpiry) : undefined,
+          nationality: clientData.nationality,
+          documentNumber: clientData.documentNumber,
+          mrzLine1: clientData.mrzLine1,
+          mrzLine2: clientData.mrzLine2,
+        }
+        console.log('[KYC] Using client-side OCR data:', { firstName: ocrResult.firstName, lastName: ocrResult.lastName })
+      } else {
+        // Fallback: OCR server-side
+        try {
+          ocrResult = await analyzeIdentityDocument(file.buffer)
+        } catch (ocrErr) {
+          console.error('[KYC] Server OCR failed (non-blocking):', (ocrErr as Error).message)
+          ocrResult = {
+            rawText: '', confidence: 0,
+            firstName: undefined, lastName: undefined, birthDate: undefined,
+            documentExpiry: undefined, nationality: undefined,
+            documentNumber: undefined, mrzLine1: undefined, mrzLine2: undefined,
+          }
         }
       }
       const deletedAt = new Date()
@@ -81,7 +111,10 @@ export class KycController {
 
       // 4. Audit log
       let auditChain = appendAuditEntry(existing?.signatureAuditChain, 'DOCUMENT_UPLOADED', userId, {
-        documentType: documentType as string, confidence: ocrResult.confidence,
+        documentType: documentType as string,
+        confidence: ocrResult.confidence,
+        source: clientData.firstName ? 'client-ocr' : 'server-ocr',
+        validationScore: clientData.validationScore,
       })
       auditChain = appendAuditEntry(auditChain, 'OCR_COMPLETED', userId, {
         hasFirstName: !!ocrResult.firstName, hasLastName: !!ocrResult.lastName, hasMrz: !!ocrResult.mrzLine1,
