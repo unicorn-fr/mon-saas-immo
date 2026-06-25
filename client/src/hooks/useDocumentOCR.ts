@@ -24,6 +24,7 @@ export interface ExtractedDocument {
   missingFields: string[]
   rawText: string
   isValid: boolean
+  _engine?: string  // moteur utilisé (debug)
 }
 
 export interface DocumentOCRState {
@@ -922,7 +923,6 @@ export function useDocumentOCR() {
           ...extracted, rawText: '',
           confidence: sf.confidence / 100,
           ...validation,
-          // @ts-ignore
           _engine: usedEngine,
         }
         setState({ isProcessing: false, progress: 100, stage: 'Terminé', result, error: null })
@@ -1039,7 +1039,6 @@ export function useDocumentOCR() {
         confidence: confidence / 100,
         rawText: fullText,
         ...validation,
-        // @ts-ignore — champ debug non typé
         _engine: usedEngine,
       }
 
