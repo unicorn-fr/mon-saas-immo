@@ -332,17 +332,24 @@ export function extractFieldsFromOCRText(
   let labelConfidence = 0
 
   if (docType === 'PERMIS_CONDUIRE') {
-    // Champs numérotés permis EU
+    // Champs numérotés permis EU — valeur sur la même ligne OU la ligne suivante
     const m1 = searchText.match(/1[.\)]\s*([A-ZÁÉÈÊÀÙÎÏÔÛÇ\-' ]{2,35})/im)
+      ?? searchText.match(/1[.\)]\s*\n\s*([A-ZÁÉÈÊÀÙÎÏÔÛÇ\-' ]{2,35})/im)
     if (m1) lastNameLabel = m1[1].trim().toUpperCase()
 
     const m2 = searchText.match(/2[.\)]\s*([A-ZÁÉÈÊÀÙÎÏÔÛÇa-záéèêàùîïôûç\-']{2,35})/im)
+      ?? searchText.match(/2[.\)]\s*\n\s*([A-ZÁÉÈÊÀÙÎÏÔÛÇa-záéèêàùîïôûç\-']{2,35})/im)
     if (m2) firstNameLabel = capitalizeToken(m2[1].trim().split(/\s+/)[0])
 
-    const m3 = searchText.match(/3[.\)]\s*(\d{2}[.\/\-]\d{2}[.\/\-]\d{4})\s+([A-ZÁÉÈÊÀÙÎÏÔÛÇ\-' ]{2,30})/im)
-    if (m3) {
-      birthDateLabel = normalizeDateStr(m3[1])
-      birthPlaceLabel = m3[2].trim()
+    // Champ 3 : date + lieu sur même ligne ou date seule
+    const m3same = searchText.match(/3[.\)]\s*(\d{2}[.\/\-]\d{2}[.\/\-]\d{4})\s+([A-ZÁÉÈÊÀÙÎÏÔÛÇ\-' ]{2,30})/im)
+    const m3date = searchText.match(/3[.\)]\s*(\d{2}[.\/\-]\d{2}[.\/\-]\d{4})/im)
+      ?? searchText.match(/3[.\)]\s*\n\s*(\d{2}[.\/\-]\d{2}[.\/\-]\d{4})/im)
+    if (m3same) {
+      birthDateLabel = normalizeDateStr(m3same[1])
+      birthPlaceLabel = m3same[2].trim()
+    } else if (m3date) {
+      birthDateLabel = normalizeDateStr(m3date[1])
     }
   } else {
     // CNI — labels textuels
