@@ -212,6 +212,217 @@ async function ocrWithTesseract(
   }
 }
 
+// ─── Tesseract field extractor ────────────────────────────────────────────────
+
+/** Convertit YYMMDD MRZ → YYYY-MM-DD. YY < 30 → 20YY, sinon 19YY */
+function mrzDateToISO(yymmdd: string): string | undefined {
+  if (!/^\d{6}$/.test(yymmdd)) return undefined
+  const yy = parseInt(yymmdd.slice(0, 2), 10)
+  const mm = yymmdd.slice(2, 4)
+  const dd = yymmdd.slice(4, 6)
+  const yyyy = yy < 30 ? `20${String(yy).padStart(2, '0')}` : `19${String(yy).padStart(2, '0')}`
+  return `${yyyy}-${mm}-${dd}`
+}
+
+/** Capitalise un token : premier caractère majuscule, reste minuscule */
+function capitalizeToken(s: string): string {
+  if (!s) return s
+  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
+}
+
+/** Normalise une date DD/MM/YYYY ou DD.MM.YYYY → YYYY-MM-DD */
+function normalizeDateStr(raw: string): string | undefined {
+  const m = raw.match(/(\d{1,2})[.\/\-](\d{2})[.\/\-](\d{4})/)
+  if (!m) return undefined
+  const dd = m[1].padStart(2, '0')
+  const mm = m[2].padStart(2, '0')
+  const yyyy = m[3]
+  return `${yyyy}-${mm}-${dd}`
+}
+
+// Mots à exclure du fallback CAPS (ne sont pas des noms)
+const CAPS_BLACKLIST = new Set([
+  'FRANCE', 'REPUBLIQUE', 'NATIONALE', 'IDENTITE', 'CARTE', 'EUROPEENNE',
+  'NOM', 'PRENOM', 'PRENOMS', 'NAISSANCE', 'DATE', 'SEXE', 'NATIONALITE',
+  'VALIDITE', 'DELIVREE', 'AUTORITE', 'PERMIS', 'CONDUIRE', 'CATEGORIE',
+])
+
+/**
+ * Extraction heuristique des champs à partir du texte brut OCR.
+ * Priorité : MRZ ICAO TD1 > labels visuels > fallback CAPS.
+ */
+export function extractFieldsFromOCRText(
+  fullText: string,
+  textZoneText: string,
+  mrzText: string,
+  docType: 'CNI' | 'PERMIS_CONDUIRE',
+): MindeeStructuredFields | null {
+
+  // ── Étape 1 : MRZ ICAO TD1 (3 lignes de 30 chars) ──────────────────────────
+  // Cherche dans mrzText ET fullText
+  const combinedForMRZ = `${mrzText}\n${fullText}`
+  const lines = combinedForMRZ.split(/\r?\n/).map(l => l.replace(/\s/g, '').toUpperCase())
+  const mrzLinePattern = /^[A-Z0-9<]{25,36}$/
+
+  let mrzL1 = '', mrzL2 = '', mrzL3 = ''
+  for (let i = 0; i < lines.length - 1; i++) {
+    if (mrzLinePattern.test(lines[i]) && mrzLinePattern.test(lines[i + 1])) {
+      if (i + 2 < lines.length && mrzLinePattern.test(lines[i + 2])) {
+        // TD1 : 3 lignes (CNI française)
+        mrzL1 = lines[i]
+        mrzL2 = lines[i + 1]
+        mrzL3 = lines[i + 2]
+        break
+      } else {
+        // TD3 : 2 lignes (passeport) — on ne gère que lastName/firstName depuis ligne 2
+        mrzL2 = lines[i]
+        mrzL3 = lines[i + 1]
+        break
+      }
+    }
+  }
+
+  let lastNameMRZ: string | undefined
+  let firstNameMRZ: string | undefined
+  let birthDateMRZ: string | undefined
+  let expiryMRZ: string | undefined
+  let sexMRZ: 'M' | 'F' | undefined
+  let mrzConfidence = 0
+
+  if (mrzL3) {
+    // Ligne de noms (TD1 → L3, TD3 → L2/L3)
+    const nameLine = mrzL3.includes('<<') ? mrzL3 : mrzL2
+    if (nameLine.includes('<<')) {
+      const parts = nameLine.split('<<')
+      const rawLast = parts[0].replace(/</g, ' ').trim()
+      const rawFirst = (parts[1] ?? '').split('<').filter(Boolean)[0] ?? ''
+      if (rawLast.length >= 2) lastNameMRZ = rawLast
+      if (rawFirst.length >= 2) firstNameMRZ = capitalizeToken(rawFirst)
+    }
+  }
+
+  // Ligne 2 (TD1) ou ligne 1 (TD3) contient birthdate + sex + expiry
+  const dataLine = mrzL2 || mrzL1
+  if (dataLine.length >= 14) {
+    // TD1 : positions 0-5 = birthdate, 6 = checkdigit, 7 = sex, 8-13 = expiry
+    // TD3 : positions 13-18 = birthdate, 20 = sex, 21-26 = expiry
+    // Tentative heuristique simple sur TD1
+    const bd6 = dataLine.slice(0, 6)
+    const sex = dataLine[7]
+    const exp6 = dataLine.slice(8, 14)
+
+    const bd = mrzDateToISO(bd6)
+    const exp = mrzDateToISO(exp6)
+    if (bd) birthDateMRZ = bd
+    if (exp) expiryMRZ = exp
+    if (sex === 'M' || sex === 'F') sexMRZ = sex as 'M' | 'F'
+  }
+
+  if (lastNameMRZ || firstNameMRZ || birthDateMRZ) {
+    mrzConfidence = 88
+  }
+
+  // ── Étape 2 : labels visuels ────────────────────────────────────────────────
+  const searchText = `${textZoneText}\n${fullText}`
+
+  let lastNameLabel: string | undefined
+  let firstNameLabel: string | undefined
+  let birthDateLabel: string | undefined
+  let birthPlaceLabel: string | undefined
+  let labelConfidence = 0
+
+  if (docType === 'PERMIS_CONDUIRE') {
+    // Champs numérotés permis EU
+    const m1 = searchText.match(/1[.\)]\s*([A-ZÁÉÈÊÀÙÎÏÔÛÇ\-' ]{2,35})/im)
+    if (m1) lastNameLabel = m1[1].trim().toUpperCase()
+
+    const m2 = searchText.match(/2[.\)]\s*([A-ZÁÉÈÊÀÙÎÏÔÛÇa-záéèêàùîïôûç\-']{2,35})/im)
+    if (m2) firstNameLabel = capitalizeToken(m2[1].trim().split(/\s+/)[0])
+
+    const m3 = searchText.match(/3[.\)]\s*(\d{2}[.\/\-]\d{2}[.\/\-]\d{4})\s+([A-ZÁÉÈÊÀÙÎÏÔÛÇ\-' ]{2,30})/im)
+    if (m3) {
+      birthDateLabel = normalizeDateStr(m3[1])
+      birthPlaceLabel = m3[2].trim()
+    }
+  } else {
+    // CNI — labels textuels
+    const mLast = searchText.match(/(?:Nom\s+(?:de\s+famille)?|^NOM)[:\s]+([A-ZÁÉÈÊÀÙÎÏÔÛÇ\-']{2,35})/im)
+    if (mLast) lastNameLabel = mLast[1].trim().toUpperCase()
+
+    const mFirst = searchText.match(/(?:Pr[ée]noms?|^PRENOM)[:\s]+([A-ZÁÉÈÊÀÙÎÏÔÛÇa-záéèêàùîïôûç\-']{2,35})/im)
+    if (mFirst) firstNameLabel = capitalizeToken(mFirst[1].trim().split(/\s+/)[0])
+
+    const mBirth = searchText.match(/(?:N[ée]e?\s*(?:le)?|[Dd]ate\s+de\s+naissance)[:\s]+(\d{1,2}[.\/\-]\d{2}[.\/\-]\d{4})/im)
+    if (mBirth) birthDateLabel = normalizeDateStr(mBirth[1])
+  }
+
+  if (lastNameLabel || firstNameLabel || birthDateLabel) {
+    labelConfidence = 75
+  }
+
+  // ── Étape 3 : fallback CAPS ─────────────────────────────────────────────────
+  let lastNameCaps: string | undefined
+  let capsConfidence = 0
+
+  if (!lastNameMRZ && !lastNameLabel) {
+    // Cherche une ligne entièrement en CAPS de 2-35 chars
+    const capsLines = searchText.split(/\r?\n/).map(l => l.trim())
+    for (const line of capsLines) {
+      if (/^[A-ZÁÉÈÊÀÙÎÏÔÛÇ\-' ]{2,35}$/.test(line) && line === line.toUpperCase()) {
+        const word = line.split(/\s+/)[0]
+        if (word.length >= 2 && !CAPS_BLACKLIST.has(word)) {
+          lastNameCaps = line
+          capsConfidence = 60
+          break
+        }
+      }
+    }
+  }
+
+  // ── Merge : MRZ > labels > CAPS ─────────────────────────────────────────────
+  const lastName = lastNameMRZ ?? lastNameLabel ?? lastNameCaps
+  const firstName = firstNameMRZ ?? firstNameLabel
+  const birthDate = birthDateMRZ ?? birthDateLabel
+
+  if (!lastName && !firstName && !birthDate) return null
+
+  // Cherche toute date dans fullText pour fallback birthDate si toujours vide
+  let birthDateFallback: string | undefined
+  if (!birthDate) {
+    const allDates: string[] = []
+    const dateRegex = /\b(\d{2}[.\/]\d{2}[.\/](19|20)\d{2})\b/g
+    let dm: RegExpExecArray | null
+    while ((dm = dateRegex.exec(fullText)) !== null) {
+      const d = normalizeDateStr(dm[1])
+      if (d) allDates.push(d)
+    }
+    if (allDates.length > 0) {
+      // Prend la plus ancienne (vraisemblablement la date de naissance)
+      allDates.sort()
+      birthDateFallback = allDates[0]
+    }
+  }
+
+  const finalConfidence = mrzConfidence > 0 ? mrzConfidence
+    : labelConfidence > 0 ? labelConfidence
+    : capsConfidence
+
+  const result: MindeeStructuredFields = {
+    confidence: finalConfidence,
+    ...(lastName && { lastName }),
+    ...(firstName && { firstName }),
+    ...((birthDate ?? birthDateFallback) && { birthDate: birthDate ?? birthDateFallback }),
+    ...(birthPlaceLabel && { birthPlace: birthPlaceLabel }),
+    ...(expiryMRZ && { documentExpiry: expiryMRZ }),
+    ...(sexMRZ && { sex: sexMRZ }),
+    ...(mrzL1 && { mrzLine1: mrzL1 }),
+    ...(mrzL2 && { mrzLine2: mrzL2 }),
+    ...(mrzL3 && { mrzLine3: mrzL3 }),
+  }
+
+  return result
+}
+
 // ─── Main service ─────────────────────────────────────────────────────────────
 
 export async function analyzeDocumentOCR(
@@ -319,6 +530,35 @@ export async function analyzeDocumentOCR(
     ? `${textZoneResult.text}\n${lowerResult.text}`
     : textZoneResult.text
 
+  // Essaie d'extraire les champs depuis le texte Tesseract
+  const extracted = extractFieldsFromOCRText(
+    fullResult.text,
+    textZoneCombined,
+    mrzResult.text,
+    docType,
+  )
+
+  console.info(
+    '[OCR Extract] lastName:', extracted?.lastName,
+    'firstName:', extracted?.firstName,
+    'birthDate:', extracted?.birthDate,
+  )
+
+  if (extracted && (extracted.lastName || extracted.firstName || extracted.birthDate)) {
+    return {
+      fullText: fullResult.text,
+      textZoneText: textZoneCombined,
+      mrzText: mrzResult.text,
+      confidence: Math.max(
+        extracted.confidence,
+        Math.round((fullResult.confidence + textZoneResult.confidence) / 2),
+      ),
+      engine: 'tesseract-best',
+      structuredFields: extracted,
+    }
+  }
+
+  // Fallback : retourne le texte brut si aucun champ extrait
   return {
     fullText: fullResult.text,
     textZoneText: textZoneCombined,
