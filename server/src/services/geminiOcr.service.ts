@@ -28,7 +28,14 @@ export interface GeminiStructuredFields {
   confidence: number      // 0-100
 }
 
-const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
+// Essaie en priorité le modèle le plus récent, fallback sur le modèle stable
+const GEMINI_MODELS = [
+  'gemini-2.5-flash-latest',
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
+]
+const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
 
 const PROMPT_CNI = `Tu es un système OCR expert en documents d'identité français.
 Analyse cette image d'une Carte Nationale d'Identité française (recto).
@@ -89,43 +96,43 @@ export async function analyzeWithGemini(
     const base64 = imageBuffer.toString('base64')
     const prompt = docType === 'CNI' ? PROMPT_CNI : PROMPT_PERMIS
 
-    const res = await fetch(`${GEMINI_ENDPOINT}?key=${key}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [
-            {
-              inlineData: {
-                mimeType: 'image/jpeg',
-                data: base64,
-              },
-            },
-            { text: prompt },
-          ],
-        }],
-        generationConfig: {
-          responseMimeType: 'application/json',
-          temperature: 0,       // déterministe — pas de créativité pour l'OCR
-          maxOutputTokens: 512,
-        },
-      }),
+    const body = JSON.stringify({
+      contents: [{
+        parts: [
+          { inlineData: { mimeType: 'image/jpeg', data: base64 } },
+          { text: prompt },
+        ],
+      }],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        temperature: 0,
+        maxOutputTokens: 512,
+      },
     })
 
-    if (!res.ok) {
-      const err = await res.text()
-      console.warn('[Gemini OCR] Erreur API:', res.status, err.substring(0, 200))
-      return null
+    // Essai en cascade sur plusieurs modèles Gemini
+    let rawText: string | undefined
+    for (const model of GEMINI_MODELS) {
+      const res = await fetch(`${GEMINI_BASE}/${model}:generateContent?key=${key}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      })
+      if (!res.ok) {
+        const err = await res.text()
+        console.warn(`[Gemini OCR] ${model} → ${res.status}: ${err.substring(0, 120)}`)
+        continue
+      }
+      const data = await res.json() as {
+        candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>
+      }
+      rawText = data.candidates?.[0]?.content?.parts?.[0]?.text
+      if (rawText) {
+        console.info(`[Gemini OCR] Succès avec ${model}`)
+        break
+      }
     }
 
-    const data = await res.json() as {
-      candidates?: Array<{
-        content?: { parts?: Array<{ text?: string }> }
-        finishReason?: string
-      }>
-    }
-
-    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text
     if (!rawText) return null
 
     // Parse le JSON retourné par Gemini

@@ -582,6 +582,46 @@ async function extractCNIFields(
     if (result.lastName && result.firstName && result.birthDate) break
   }
 
+  // ── Fallback CAPS — CNI sans labels lisibles ──────────────────────────────
+  // Sur toute CNI française, le nom + prénom sont en MAJUSCULES.
+  // Si les labels n'ont pas été trouvés, on cherche les lignes entièrement en CAPS.
+  const NON_NAMES = new Set([
+    'FRANCE', 'NATIONALE', 'IDENTITE', 'CARTE', 'EUROPEENNE', 'EUROPEENE',
+    'REPUBLIC', 'REPUBLIQUE', 'FRANCAISE', 'NATIONAL', 'IDENTITY',
+    'NOM', 'PRENOM', 'PRENOMS', 'SEXE', 'NAISSANCE', 'TAILLE', 'DATE',
+    'LIEU', 'SIGNATURE', 'VALIDITE', 'VALABLE', 'TITULAIRE',
+  ])
+  if (!result.lastName || !result.firstName) {
+    const allText = [textZoneText, fullText].join('\n')
+    const capsLines = allText
+      .split('\n')
+      .map(l => l.trim())
+      .filter(l =>
+        l.length >= 2 && l.length <= 35 &&
+        /^[A-ZÁÀÂÄÉÈÊËÎÏÔÖÙÛÜÇÆŒ][A-ZÁÀÂÄÉÈÊËÎÏÔÖÙÛÜÇÆŒ\s'\-]{1,34}$/.test(l) &&
+        !NON_NAMES.has(l.split(/\s/)[0])
+      )
+
+    if (!result.lastName && capsLines.length >= 1) {
+      result.lastName = cleanName(capsLines[0])
+    }
+    if (!result.firstName && capsLines.length >= 2) {
+      // Prendre uniquement le premier token du prénom
+      const raw = capsLines[1].split(/\s+/)[0]
+      result.firstName = cleanFirstName(raw)
+    }
+  }
+
+  // ── Fallback date — toute date plausible dans le texte ───────────────────
+  if (!result.birthDate) {
+    const allText = [textZoneText, fullText, mrzText].join('\n')
+    const allDates = [...allText.matchAll(/\b(\d{1,2}[.\-\/]\d{2}[.\-\/](?:19|20)\d{2})\b/g)]
+      .map(m => parseDateFr(m[1]))
+      .filter((d): d is string => !!d)
+      .sort()
+    if (allDates.length > 0) result.birthDate = allDates[0]
+  }
+
   return result
 }
 
@@ -674,6 +714,27 @@ function extractPermisFromText(text: string): Partial<ExtractedDocument> {
       .filter((d): d is string => !!d)
       .sort() // tri chronologique — la plus ancienne est la date de naissance
     if (dates.length > 0) result.birthDate = dates[0]
+  }
+
+  // ── Fallback CAPS pour nom/prénom (même heuristique que CNI) ─────────────
+  const NON_NAMES_PERMIS = new Set([
+    'FRANCE', 'REPUBLIQUE', 'PREFET', 'PREFECTURE', 'PERMIS', 'CONDUIRE',
+    'EUROPEEN', 'EUROPEENNE', 'NOM', 'PRENOM', 'PRENOMS', 'NAISSANCE',
+    'DELIVRE', 'CATEGORIE', 'CATEGORIES', 'TITULAIRE',
+  ])
+  if (!result.lastName || !result.firstName) {
+    const capsLines = t
+      .split('\n')
+      .map(l => l.trim())
+      .filter(l =>
+        l.length >= 2 && l.length <= 35 &&
+        /^[A-ZÁÀÂÄÉÈÊËÎÏÔÖÙÛÜÇÆŒ][A-ZÁÀÂÄÉÈÊËÎÏÔÖÙÛÜÇÆŒ\s'\-]{1,34}$/.test(l) &&
+        !NON_NAMES_PERMIS.has(l.split(/\s/)[0])
+      )
+    if (!result.lastName && capsLines.length >= 1) result.lastName = cleanName(capsLines[0])
+    if (!result.firstName && capsLines.length >= 2) {
+      result.firstName = cleanFirstName(capsLines[1].split(/\s+/)[0])
+    }
   }
 
   return result
