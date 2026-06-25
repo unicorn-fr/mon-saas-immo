@@ -294,10 +294,43 @@ def parse_docnumber(text):
 
 
 # ══════════════════════════════════════════════════════════════
-#  MRZ — Zone de Lecture Automatique
+#  MRZ — Checksum ICAO + auto-correction OCR
 # ══════════════════════════════════════════════════════════════
+#
+#  La MRZ ICAO 9303 a des check digits sur chaque champ critique.
+#  Si le checksum échoue → l'OCR a fait une erreur → on substitue
+#  les caractères ambigus (O↔0, I↔1, S↔5, Z↔2, B↔8) jusqu'à ce
+#  que le chiffre de contrôle soit valide.
+#  Résultat : confiance 0.97 si checksum OK, 0.70 sinon.
 
 _MRZ_CHAR = re.compile(r'^[A-Z0-9<]{5,}$')
+
+_OCR_SUBS = {'O': '0', '0': 'O', 'I': '1', '1': 'I', 'L': '1',
+             'S': '5', '5': 'S', 'Z': '2', '2': 'Z', 'B': '8',
+             '8': 'B', 'G': '6', '6': 'G', 'Q': '0', 'D': '0'}
+
+def _mrz_check(s):
+    """Chiffre de contrôle ICAO 9303 §4.9."""
+    w = [7, 3, 1]
+    v = {str(i): i for i in range(10)}
+    v.update({chr(ord('A') + i): i + 10 for i in range(26)}); v['<'] = 0
+    return sum(v.get(c, 0) * w[i % 3] for i, c in enumerate(s)) % 10
+
+def _autocorrect(field, expected):
+    """Corrige jusqu'à 2 caractères ambigus pour que le check digit passe."""
+    if _mrz_check(field) == expected: return field, True
+    fl = list(field)
+    for i, c in enumerate(fl):
+        if c not in _OCR_SUBS: continue
+        fl[i] = _OCR_SUBS[c]
+        if _mrz_check(''.join(fl)) == expected: return ''.join(fl), True
+        for j in range(i + 1, len(fl)):
+            if fl[j] not in _OCR_SUBS: continue
+            orig_j = fl[j]; fl[j] = _OCR_SUBS[fl[j]]
+            if _mrz_check(''.join(fl)) == expected: return ''.join(fl), True
+            fl[j] = orig_j
+        fl[i] = c
+    return field, False
 
 def extract_mrz(words):
     mrz_words = [w for w in words if cy(w) > 0.70 and _MRZ_CHAR.match(w['text'].upper())]
@@ -320,32 +353,55 @@ def extract_mrz(words):
     mrz_text = '\n'.join(td1 if len(td1) >= 3 else td3 if len(td3) >= 2 else raw_lines)
 
     fields = {}
+    checksums = {}
+
     if len(td1) >= 3:
         l1 = td1[0].ljust(30, '<')
         l2 = td1[1].ljust(30, '<')
         l3 = td1[2].ljust(30, '<')
 
-        doc_raw = l1[5:14].replace('<', '').strip()
-        if doc_raw: fields['documentNumber'] = {'value': doc_raw, 'confidence': 0.90}
+        # Numéro doc (L1 5-14 + check L1[14])
+        if l1[14:15].isdigit():
+            f, ok = _autocorrect(l1[5:14], int(l1[14]))
+            checksums['documentNumber'] = ok
+            clean = f.replace('<', '').strip()
+            if clean: fields['documentNumber'] = {'value': clean, 'confidence': 0.97 if ok else 0.72}
 
-        bd = _parse_mrz_date(l2[0:6])
-        if bd: fields['birthDate'] = {'value': bd, 'confidence': 0.92}
+        # Date naissance (L2 0-6 + check L2[6])
+        if l2[6:7].isdigit():
+            f, ok = _autocorrect(l2[0:6], int(l2[6]))
+            checksums['birthDate'] = ok
+            bd = _parse_mrz_date(f)
+            if bd: fields['birthDate'] = {'value': bd, 'confidence': 0.98 if ok else 0.70}
+
+        # Sexe (L2[7])
         sex = l2[7:8]
-        if sex in ('M', 'F'): fields['sex'] = {'value': sex, 'confidence': 0.95}
-        exp = _parse_mrz_date(l2[8:14])
-        if exp: fields['documentExpiry'] = {'value': exp, 'confidence': 0.90}
-        nat = l2[15:18].replace('<', '').strip()
-        if nat: fields['nationality'] = {'value': nat, 'confidence': 0.88}
+        if sex in ('M', 'F'): fields['sex'] = {'value': sex, 'confidence': 0.99}
 
+        # Expiration (L2 8-14 + check L2[14])
+        if l2[14:15].isdigit():
+            f, ok = _autocorrect(l2[8:14], int(l2[14]))
+            checksums['documentExpiry'] = ok
+            exp = _parse_mrz_date(f)
+            if exp: fields['documentExpiry'] = {'value': exp, 'confidence': 0.96 if ok else 0.70}
+
+        # Nationalité (L2 15-18)
+        nat = l2[15:18].replace('<', '').strip()
+        if nat: fields['nationality'] = {'value': nat, 'confidence': 0.92}
+
+        # Nom + Prénom (L3)
         if '<<' in l3:
             parts = l3.split('<<')
             sur = parts[0].replace('<', ' ').strip()
             giv = parts[1].replace('<', ' ').strip() if len(parts) > 1 else ''
-            if sur: fields['lastName']  = {'value': sur.upper(), 'confidence': 0.93}
+            if sur: fields['lastName']  = {'value': sur.upper(), 'confidence': 0.95}
             if giv:
-                # Prendre uniquement le PREMIER prénom
-                first = giv.split('<')[0].replace('<', '').strip().title()
-                if first: fields['firstName'] = {'value': first, 'confidence': 0.91}
+                first = giv.split('<')[0].strip().title()
+                if first: fields['firstName'] = {'value': first, 'confidence': 0.94}
+
+        all_ok = all(v for v in checksums.values()) if checksums else False
+        fields['_mrzValid']    = {'value': all_ok,     'confidence': 1.0}
+        fields['_checksums']   = {'value': checksums,  'confidence': 1.0}
 
     return {'mrzText': mrz_text, 'mrzFields': fields}
 

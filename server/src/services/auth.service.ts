@@ -154,15 +154,11 @@ class AuthService {
     const user = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
       select: {
-        id: true,
-        email: true,
-        password: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        avatar: true,
-        emailVerified: true,
-        totpEnabled: true,
+        id: true, email: true, password: true,
+        firstName: true, lastName: true, role: true,
+        avatar: true, emailVerified: true, totpEnabled: true,
+        onboardingCompleted: true, phone: true, city: true,
+        isBanned: true, stripeIdentityStatus: true,
       },
     })
 
