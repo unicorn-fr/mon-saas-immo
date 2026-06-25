@@ -19,6 +19,7 @@ import os from 'os'
 import { analyzeWithMindee, type MindeeStructuredFields } from './mindeeOcr.service.js'
 import { analyzeWithGemini, type GeminiStructuredFields } from './geminiOcr.service.js'
 import { ocrWithDoctr, preloadDoctrWorker } from './doctrOcr.service.js'
+import { analyzeWithPythonOcr, preloadPythonOcrService } from './pythonOcr.service.js'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -65,7 +66,8 @@ async function getTesseractWorker(): Promise<import('tesseract.js').Worker> {
 // Pré-chauffe les workers au démarrage
 export function preloadOcrWorker() {
   getTesseractWorker().catch(e => console.warn('[OCR] Preload Tesseract warning:', e?.message))
-  preloadDoctrWorker()  // Lance le subprocess Python doctr en arrière-plan
+  preloadDoctrWorker()        // Lance le subprocess Python doctr en arrière-plan
+  preloadPythonOcrService()   // Lance le service FastAPI Python (fastmrz + PaddleOCR)
 }
 
 // ─── Sharp preprocessing ──────────────────────────────────────────────────────
@@ -455,6 +457,33 @@ export async function analyzeDocumentOCR(
       confidence: mindeeFields.confidence,
       engine: 'mindee',
       structuredFields: mindeeFields,
+    }
+  }
+
+  // ── 1.5. Service Python OCR (fastmrz + PaddleOCR) ──
+  // Gratuit — fastmrz ICAO MRZ parser + PaddleOCR PP-OCRv5.
+  // Fonctionne sans clé API — open source.
+  const pythonResult = await analyzeWithPythonOcr(normalizedBuffer, docType)
+  if (pythonResult && (pythonResult.lastName || pythonResult.firstName || pythonResult.birthDate)) {
+    return {
+      fullText: '',
+      textZoneText: '',
+      mrzText: '',
+      confidence: pythonResult.confidence,
+      engine: `python-${pythonResult.engine}`,
+      structuredFields: {
+        lastName:        pythonResult.lastName,
+        firstName:       pythonResult.firstName,
+        birthDate:       pythonResult.birthDate,
+        birthPlace:      pythonResult.birthPlace,
+        documentNumber:  pythonResult.documentNumber,
+        documentExpiry:  pythonResult.documentExpiry,
+        nationality:     pythonResult.nationality,
+        sex:             pythonResult.sex,
+        confidence:      pythonResult.confidence,
+        issuingAuthority: undefined,
+        licenseCategories: undefined,
+      } as MindeeStructuredFields,
     }
   }
 
