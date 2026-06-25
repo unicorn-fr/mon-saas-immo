@@ -1,18 +1,25 @@
 #!/usr/bin/env python3
 """
-doctr OCR + Extracteur Spatial de Champs
-=========================================
-Les cartes d'identité et permis de conduire ont une mise en page NORMALISÉE par la loi.
-Au lieu de chercher des patterns dans du texte brut, on localise chaque champ
-par sa POSITION relative sur le document (coordonnées normalisées 0.0 → 1.0).
+OCR Document — Pipeline multi-moteur avec extracteur spatial
+=============================================================
 
-Architecture :
-  1. doctr → words[] avec géométrie + confiance (coordonnées normalisées)
-  2. extract_permis_fields() → trouve les numéros de champs "1." "2." "3." "4a." etc.
-  3. extract_cni_fields()    → trouve les labels "NOM" "PRÉNOMS" "NÉ(E) LE" + MRZ
-  4. Validation par type     → date DD.MM.YYYY, nom A-ZÁÉÈÊ, numéro alphanumérique
+Moteurs (cascade automatique) :
+  1. doctr  (pip install "python-doctr[torch]")   ← le modèle Mindee open source
+  2. EasyOCR (pip install easyocr)                ← CRAFT + CRNN, très robuste
+  Arrêt si aucun n'est disponible.
 
-Installation : pip install "python-doctr[torch]"
+Étapes de traitement :
+  1. OpenCV perspective correction  (pip install opencv-python)  ← OBLIGATOIRE pour l'incohérence
+  2. OCR multi-moteur → words[] avec coordonnées normalisées 0-1 + confiance
+  3. Extraction spatiale :
+       - Permis : numéros de champ EU "1." "2." "3." "4a." "4b." "4c." "5."
+       - CNI    : labels "NOM" "PRÉNOM" "NÉ(E) LE" + MRZ (y > 0.72)
+  4. Règles métier :
+       - Champ 2 → PREMIER prénom uniquement (pas tous les prénoms)
+       - Champ 3 → date de naissance + lieu sur la même ligne ou en dessous
+       - Confiance par champ → rejetés si < 0.50
+
+Subprocess persistant : modèle chargé une fois, réutilisé sur stdin/stdout.
 """
 
 import sys
@@ -21,6 +28,7 @@ import base64
 import os
 import re
 import logging
+from datetime import date as _date
 
 logging.disable(logging.CRITICAL)
 os.environ.update({
@@ -28,369 +36,493 @@ os.environ.update({
     'TRANSFORMERS_VERBOSITY': 'error',
     'DOCTR_CACHE_DIR': os.path.join(os.path.expanduser('~'), '.cache', 'doctr'),
     'PYTHONWARNINGS': 'ignore',
+    'KMP_DUPLICATE_LIB_OK': 'TRUE',
 })
 
 
 # ══════════════════════════════════════════════════════════════
-#  MODÈLE
+#  CORRECTION DE PERSPECTIVE (OpenCV)
+# ══════════════════════════════════════════════════════════════
+
+_CV2_AVAILABLE = None
+
+def _check_cv2():
+    global _CV2_AVAILABLE
+    if _CV2_AVAILABLE is None:
+        try:
+            import cv2
+            _CV2_AVAILABLE = True
+        except ImportError:
+            _CV2_AVAILABLE = False
+            sys.stderr.write('[doctr] OpenCV non disponible — correction perspective désactivée\n')
+    return _CV2_AVAILABLE
+
+
+def _order_corners(pts):
+    """Top-left, top-right, bottom-right, bottom-left."""
+    import numpy as np
+    rect = np.zeros((4, 2), dtype=np.float32)
+    s = pts.sum(axis=1)
+    diff = np.diff(pts, axis=1).ravel()
+    rect[0] = pts[s.argmin()]
+    rect[2] = pts[s.argmax()]
+    rect[1] = pts[diff.argmin()]
+    rect[3] = pts[diff.argmax()]
+    return rect
+
+
+def correct_perspective(img_np):
+    """
+    Détecte les bords du document et corrige la perspective via homographie.
+    Retourne l'image corrigée ou l'originale si détection échoue.
+    Standard carte ID : 85.6 × 54 mm → ratio 1.586:1.
+    """
+    if not _check_cv2():
+        return img_np
+
+    import cv2
+    import numpy as np
+
+    h, w = img_np.shape[:2]
+    gray = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY)
+    blur = cv2.GaussianBlur(gray, (5, 5), 0)
+    edges = cv2.Canny(blur, 60, 180)
+    edges = cv2.dilate(edges, np.ones((3, 3), np.uint8))
+
+    contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    contours = sorted(contours, key=cv2.contourArea, reverse=True)[:10]
+
+    doc_contour = None
+    min_area = 0.10 * h * w  # Le document doit couvrir au moins 10% de l'image
+    for c in contours:
+        peri = cv2.arcLength(c, True)
+        approx = cv2.approxPolyDP(c, 0.02 * peri, True)
+        if len(approx) == 4 and cv2.contourArea(approx) > min_area:
+            doc_contour = approx
+            break
+
+    if doc_contour is None:
+        return img_np
+
+    pts = doc_contour.reshape(4, 2).astype(np.float32)
+    rect = _order_corners(pts)
+
+    # Dimensions sortie : ratio ID card standard
+    W, H = 856, 540
+    dst = np.float32([[0, 0], [W - 1, 0], [W - 1, H - 1], [0, H - 1]])
+    M = cv2.getPerspectiveTransform(rect, dst)
+    corrected = cv2.warpPerspective(img_np, M, (W, H), flags=cv2.INTER_LANCZOS4)
+    return corrected
+
+
+# ══════════════════════════════════════════════════════════════
+#  CHARGEMENT DU MOTEUR OCR
 # ══════════════════════════════════════════════════════════════
 
 def load_model():
-    from doctr.models import ocr_predictor
-    return ocr_predictor(
-        det_arch='db_resnet50',
-        reco_arch='crnn_mobilenet_v3_large',
-        pretrained=True,
-        assume_straight_pages=True,
-        export_as_straight_boxes=True,
+    """
+    Charge le meilleur moteur OCR disponible.
+    Retourne (engine_name, model_object).
+    """
+    # ── Essai 1 : doctr (modèle Mindee, le meilleur pour les documents) ──
+    try:
+        from doctr.models import ocr_predictor
+        model = ocr_predictor(
+            det_arch='db_resnet50',
+            reco_arch='crnn_mobilenet_v3_large',
+            pretrained=True,
+            assume_straight_pages=True,
+            export_as_straight_boxes=True,
+        )
+        return ('doctr', model)
+    except ImportError:
+        pass
+    except Exception as e:
+        sys.stderr.write(f'[doctr] Erreur chargement: {e}\n')
+
+    # ── Essai 2 : EasyOCR (CRAFT + CRNN, excellent sur documents) ──
+    try:
+        import easyocr
+        # fr = français, en = anglais (pour les numéros et champs EU standard)
+        reader = easyocr.Reader(['fr', 'en'], gpu=False, verbose=False)
+        return ('easyocr', reader)
+    except ImportError:
+        pass
+    except Exception as e:
+        sys.stderr.write(f'[easyocr] Erreur chargement: {e}\n')
+
+    raise ImportError(
+        'Aucun moteur OCR installé.\n'
+        'Option A (recommandée) : pip install "python-doctr[torch]" opencv-python\n'
+        'Option B              : pip install easyocr opencv-python'
     )
+
+
+# ══════════════════════════════════════════════════════════════
+#  EXTRACTION DES MOTS AVEC COORDONNÉES NORMALISÉES
+# ══════════════════════════════════════════════════════════════
+
+def extract_words_doctr(model, img_np):
+    """Retourne words[] normalisés depuis doctr."""
+    import numpy as np
+    from doctr.io import DocumentFile
+
+    doc = DocumentFile.from_images([img_np])
+    result = model(doc)
+
+    words = []
+    lines_text = []
+    for page in result.pages:
+        for block in page.blocks:
+            for line in block.lines:
+                line_words = []
+                for word in line.words:
+                    words.append({
+                        'text':       word.value,
+                        'confidence': float(word.confidence),
+                        'geometry':   [list(word.geometry[0]), list(word.geometry[1])],
+                    })
+                    line_words.append(word.value)
+                lines_text.append(' '.join(line_words))
+    return words, '\n'.join(lines_text)
+
+
+def extract_words_easyocr(reader, img_np):
+    """Retourne words[] normalisés depuis EasyOCR."""
+    h, w = img_np.shape[:2]
+    results = reader.readtext(img_np, detail=1, paragraph=False)
+
+    words = []
+    line_texts = []
+    for (bbox, text, conf) in results:
+        # bbox EasyOCR = [[x1,y1],[x2,y1],[x2,y2],[x1,y2]] pixels
+        xs = [p[0] for p in bbox]
+        ys = [p[1] for p in bbox]
+        x1n, y1n = min(xs) / w, min(ys) / h
+        x2n, y2n = max(xs) / w, max(ys) / h
+        # Découpe les tokens du texte (EasyOCR retourne parfois des phrases)
+        for token in text.split():
+            words.append({
+                'text':       token,
+                'confidence': float(conf),
+                'geometry':   [[x1n, y1n], [x2n, y2n]],
+            })
+        line_texts.append(text)
+    return words, '\n'.join(line_texts)
 
 
 # ══════════════════════════════════════════════════════════════
 #  HELPERS GÉOMÉTRIQUES
 # ══════════════════════════════════════════════════════════════
 
-def cy(word):
-    """Centre vertical du mot (0.0 → 1.0)."""
-    return (word['geometry'][0][1] + word['geometry'][1][1]) / 2
+def cy(w): return (w['geometry'][0][1] + w['geometry'][1][1]) / 2
+def cx(w): return (w['geometry'][0][0] + w['geometry'][1][0]) / 2
+def x1w(w): return w['geometry'][0][0]
+def x2w(w): return w['geometry'][1][0]
+def y1w(w): return w['geometry'][0][1]
+def y2w(w): return w['geometry'][1][1]
 
-def cx(word):
-    """Centre horizontal du mot."""
-    return (word['geometry'][0][0] + word['geometry'][1][0]) / 2
-
-def x1(word): return word['geometry'][0][0]
-def x2(word): return word['geometry'][1][0]
-def y1(word): return word['geometry'][0][1]
-def y2(word): return word['geometry'][1][1]
-
-def words_on_same_line(w1, w2, tol=0.035):
+def same_line(w1, w2, tol=0.040):
     return abs(cy(w1) - cy(w2)) < tol
 
-def words_to_right(anchor, words, max_gap=0.55, line_tol=0.035):
-    """Mots situés à droite de l'ancre sur la même ligne, triés par x."""
-    return sorted(
-        [w for w in words
-         if w is not anchor
-         and words_on_same_line(anchor, w, line_tol)
-         and x1(w) >= x2(anchor) - 0.01
-         and x1(w) <= x2(anchor) + max_gap],
-        key=lambda w: x1(w)
-    )
+def words_right(anchor, words, max_gap=0.65, tol=0.040, max_n=8):
+    """Mots à droite de l'ancre sur la même ligne (triés par x)."""
+    res = [w for w in words
+           if w is not anchor
+           and same_line(anchor, w, tol)
+           and x1w(w) >= x2w(anchor) - 0.015
+           and x1w(w) <= x2w(anchor) + max_gap]
+    return sorted(res, key=x1w)[:max_n]
 
-def words_below(anchor, words, max_dy=0.12, x_range=0.55):
-    """Mots situés juste en dessous de l'ancre, dans la même colonne."""
-    ax_center = cx(anchor)
-    return sorted(
-        [w for w in words
-         if w is not anchor
-         and y1(w) > y2(anchor) - 0.01
-         and y1(w) - y2(anchor) < max_dy
-         and abs(cx(w) - ax_center) < x_range],
-        key=lambda w: (cy(w), cx(w))
-    )
+def words_below(anchor, words, max_dy=0.10, x_tol=0.50, max_n=6):
+    """Mots directement en dessous de l'ancre."""
+    ax = cx(anchor)
+    res = [w for w in words
+           if w is not anchor
+           and y1w(w) > y2w(anchor) - 0.005
+           and y1w(w) - y2w(anchor) < max_dy
+           and abs(cx(w) - ax) < x_tol]
+    return sorted(res, key=lambda w: (cy(w), cx(w)))[:max_n]
 
-def best_text(word_list, min_conf=0.45):
-    """Concatène les mots d'une liste en filtrant les mots de faible confiance."""
+def collect_text(word_list, min_conf=0.40):
     return ' '.join(w['text'] for w in word_list if w['confidence'] >= min_conf).strip()
 
+def field_conf(word_list):
+    if not word_list: return 0.0
+    return sum(w['confidence'] for w in word_list) / len(word_list)
+
 
 # ══════════════════════════════════════════════════════════════
-#  PARSERS DE CHAMPS
+#  PARSERS MÉTIER
 # ══════════════════════════════════════════════════════════════
 
-DATE_PATTERNS = [
-    r'(\d{2})[./\-](\d{2})[./\-](\d{4})',  # DD.MM.YYYY / DD/MM/YYYY
-    r'(\d{2})[./\-](\d{2})[./\-](\d{2})',  # DD.MM.YY
-    r'(\d{4})[./\-](\d{2})[./\-](\d{2})',  # YYYY-MM-DD
-]
+_DATE_RE = re.compile(r'(\d{2})[./\-](\d{2})[./\-](\d{2,4})')
 
 def parse_date(text):
-    """Extrait et normalise une date → YYYY-MM-DD."""
-    for pat in DATE_PATTERNS:
-        m = re.search(pat, text)
-        if m:
-            g = m.groups()
-            if len(g[0]) == 4:           # YYYY-MM-DD
-                return f'{g[0]}-{g[1]}-{g[2]}'
-            elif len(g[2]) == 2:         # DD.MM.YY
-                yy = int(g[2])
-                year = 2000 + yy if yy <= 30 else 1900 + yy
-                return f'{year}-{g[1]}-{g[0]}'
-            else:                        # DD.MM.YYYY
-                return f'{g[2]}-{g[1]}-{g[0]}'
-    return None
+    """DD.MM.YYYY → YYYY-MM-DD. Retourne None si pas de date."""
+    m = _DATE_RE.search(text)
+    if not m: return None
+    d, mo, y = m.group(1), m.group(2), m.group(3)
+    if len(y) == 2:
+        yy = int(y)
+        y = str(2000 + yy if yy <= 30 else 1900 + yy)
+    try:
+        _date(int(y), int(mo), int(d))
+        return f'{y}-{mo.zfill(2)}-{d.zfill(2)}'
+    except ValueError:
+        return None
 
-NAME_ALLOWED = re.compile(r"^[A-ZÁÀÂÄÉÈÊËÎÏÔÖÙÛÜÇÆŒ\-\s']{2,35}$", re.IGNORECASE)
+_NAME_OK = re.compile(r"^[A-ZÁÀÂÄÉÈÊËÎÏÔÖÙÛÜÇÆŒ\-']{2,}$", re.IGNORECASE)
 
 def clean_name(text):
-    """Nettoie un nom/prénom : supprime les caractères invalides."""
-    # Supprime les tokens qui ressemblent à des artefacts OCR
+    """Garde uniquement les tokens qui ressemblent à un nom propre."""
     tokens = []
     for tok in text.split():
-        tok_clean = re.sub(r'[^A-ZÁÀÂÄÉÈÊËÎÏÔÖÙÛÜÇÆŒa-záàâäéèêëîïôöùûüçæœ\-\']', '', tok)
-        if len(tok_clean) >= 2 and NAME_ALLOWED.match(tok_clean):
-            tokens.append(tok_clean.upper())
-    return ' '.join(tokens) if tokens else None
+        tok = re.sub(r'[^A-ZÁÀÂÄÉÈÊËÎÏÔÖÙÛÜÇÆŒa-záàâäéèêëîïôöùûüçæœ\-\']', '', tok)
+        if len(tok) >= 2 and _NAME_OK.match(tok):
+            tokens.append(tok.upper())
+    return ' '.join(tokens) or None
 
 def parse_docnumber(text):
-    """Extrait un numéro de document alphanumérique."""
-    # Numéro CNI : 12 chiffres
     m = re.search(r'\b(\d{12})\b', text)
     if m: return m.group(1)
-    # Numéro permis français : format XX-XX-XXXXXX-XX ou alphanumérique
-    m = re.search(r'\b([A-Z0-9]{2,4}[-\s]?[A-Z0-9]{2,4}[-\s]?[A-Z0-9]{4,8})\b', text.upper())
+    m = re.search(r'\b([A-Z0-9]{2}[-\s]?[A-Z0-9]{2}[-\s]?[A-Z0-9]{6,10})\b', text.upper())
     if m: return re.sub(r'[\s\-]', '', m.group(1))
-    # Alphanumérique 6-20 chars
     m = re.search(r'\b([A-Z0-9]{6,20})\b', text.upper())
     if m: return m.group(1)
     return None
 
 
 # ══════════════════════════════════════════════════════════════
-#  MRZ — Zone de Lecture Automatique (bas du document)
+#  MRZ — Zone de Lecture Automatique
 # ══════════════════════════════════════════════════════════════
 
-MRZ_CHAR = re.compile(r'^[A-Z0-9<]{6,}$')
+_MRZ_CHAR = re.compile(r'^[A-Z0-9<]{5,}$')
 
 def extract_mrz(words):
-    """
-    Extrait et parse le MRZ depuis les mots du bas du document (y > 0.72).
-    Retourne un dict {mrzText, fields} ou None.
-    """
-    # Mots MRZ = alphabet OCR-B (A-Z, 0-9, <) dans la zone inférieure
-    mrz_words = [w for w in words if cy(w) > 0.72 and MRZ_CHAR.match(w['text'])]
-    if not mrz_words:
-        return None
+    mrz_words = [w for w in words if cy(w) > 0.70 and _MRZ_CHAR.match(w['text'].upper())]
+    if not mrz_words: return None
 
-    # Groupe par ligne (y similaire)
-    mrz_words.sort(key=lambda w: cy(w))
-    lines = []
-    current = [mrz_words[0]]
+    mrz_words.sort(key=cy)
+    lines, cur = [], [mrz_words[0]]
     for w in mrz_words[1:]:
-        if abs(cy(w) - cy(current[-1])) < 0.04:
-            current.append(w)
-        else:
-            lines.append(current)
-            current = [w]
-    lines.append(current)
+        if abs(cy(w) - cy(cur[-1])) < 0.04: cur.append(w)
+        else: lines.append(cur); cur = [w]
+    lines.append(cur)
 
-    # Chaque ligne = tokens triés par x concaténés sans espace
-    mrz_lines = []
-    for line in lines:
-        line.sort(key=lambda w: x1(w))
-        mrz_lines.append(''.join(w['text'] for w in line))
+    raw_lines = []
+    for ln in lines:
+        ln.sort(key=x1w)
+        raw_lines.append(''.join(w['text'].upper() for w in ln))
 
-    # TD1 (CNI) = 3 lignes × 30 chars
-    td1 = [l[:30] for l in mrz_lines if 20 <= len(l) <= 36]
-    # TD3 (Passeport) = 2 lignes × 44 chars
-    td3 = [l[:44] for l in mrz_lines if 40 <= len(l) <= 48]
+    td1 = [l[:30] for l in raw_lines if 20 <= len(l) <= 36]
+    td3 = [l[:44] for l in raw_lines if 40 <= len(l) <= 48]
+    mrz_text = '\n'.join(td1 if len(td1) >= 3 else td3 if len(td3) >= 2 else raw_lines)
 
-    mrz_text = '\n'.join(td1 if len(td1) >= 3 else td3 if len(td3) >= 2 else mrz_lines)
-
-    # Parse MRZ TD1 (CNI)
     fields = {}
     if len(td1) >= 3:
-        line1, line2, line3 = td1[0].ljust(30, '<'), td1[1].ljust(30, '<'), td1[2].ljust(30, '<')
+        l1 = td1[0].ljust(30, '<')
+        l2 = td1[1].ljust(30, '<')
+        l3 = td1[2].ljust(30, '<')
 
-        # Ligne 1 : IDFRA + doc number (5-14) + check
-        if line1.startswith('ID'):
-            doc_raw = line1[5:14].replace('<', '').strip()
-            if doc_raw: fields['documentNumber'] = {'value': doc_raw, 'confidence': 0.90}
+        doc_raw = l1[5:14].replace('<', '').strip()
+        if doc_raw: fields['documentNumber'] = {'value': doc_raw, 'confidence': 0.90}
 
-        # Ligne 2 : date naissance (1-6) + check + sexe (7) + expiry (8-13) + check + nationalité (15-17)
-        bd_raw = line2[0:6]
-        bd = parse_mrz_date(bd_raw)
+        bd = _parse_mrz_date(l2[0:6])
         if bd: fields['birthDate'] = {'value': bd, 'confidence': 0.92}
-
-        sex = line2[7:8]
+        sex = l2[7:8]
         if sex in ('M', 'F'): fields['sex'] = {'value': sex, 'confidence': 0.95}
-
-        exp_raw = line2[8:14]
-        exp = parse_mrz_date(exp_raw)
+        exp = _parse_mrz_date(l2[8:14])
         if exp: fields['documentExpiry'] = {'value': exp, 'confidence': 0.90}
-
-        nat = line2[15:18].replace('<', '').strip()
+        nat = l2[15:18].replace('<', '').strip()
         if nat: fields['nationality'] = {'value': nat, 'confidence': 0.88}
 
-        # Ligne 3 : nom << prénoms
-        name_part = line3
-        if '<<' in name_part:
-            parts = name_part.split('<<')
+        if '<<' in l3:
+            parts = l3.split('<<')
             sur = parts[0].replace('<', ' ').strip()
             giv = parts[1].replace('<', ' ').strip() if len(parts) > 1 else ''
-            if sur: fields['lastName']  = {'value': sur.upper(), 'confidence': 0.92}
-            if giv: fields['firstName'] = {'value': giv.title(), 'confidence': 0.90}
+            if sur: fields['lastName']  = {'value': sur.upper(), 'confidence': 0.93}
+            if giv:
+                # Prendre uniquement le PREMIER prénom
+                first = giv.split('<')[0].replace('<', '').strip().title()
+                if first: fields['firstName'] = {'value': first, 'confidence': 0.91}
 
     return {'mrzText': mrz_text, 'mrzFields': fields}
 
 
-def parse_mrz_date(yymmdd):
-    """Date MRZ YYMMDD → YYYY-MM-DD avec convention ICAO (pivot +20 ans)."""
-    if len(yymmdd) < 6 or not yymmdd[:6].isdigit():
-        return None
+def _parse_mrz_date(yymmdd):
+    if len(yymmdd) < 6 or not yymmdd[:6].isdigit(): return None
     yy, mm, dd = int(yymmdd[:2]), yymmdd[2:4], yymmdd[4:6]
-    from datetime import date
-    pivot = (date.today().year % 100) + 20
+    pivot = (_date.today().year % 100) + 20
     year = 2000 + yy if yy <= pivot else 1900 + yy
-    try:
-        date(year, int(mm), int(dd))  # validation
-        return f'{year}-{mm}-{dd}'
-    except ValueError:
-        return None
+    try: _date(year, int(mm), int(dd)); return f'{year}-{mm}-{dd}'
+    except ValueError: return None
 
 
 # ══════════════════════════════════════════════════════════════
-#  EXTRACTION CNI — Carte Nationale d'Identité française
+#  EXTRACTION PERMIS EU (champs numérotés 1. 2. 3. 4a. 4b. 4c. 5.)
 # ══════════════════════════════════════════════════════════════
+#
+#  Norme EU permis de conduire (directive 2006/126/CE) :
+#    1.  Nom de famille
+#    2.  Prénom(s)          → on prend uniquement le PREMIER prénom
+#    3.  Date et lieu de naissance   "DD.MM.YYYY VILLE"
+#    4a. Date de délivrance
+#    4b. Date d'expiration
+#    4c. Autorité délivrante
+#    5.  Numéro du permis
+#    9.  Catégorie(s)
 
-CNI_LABEL_MAP = {
-    # Patterns regex → field name
-    r'^NOM$':        'lastName',
-    r'^FAMILLE$':    'lastName',
-    r'NOM.*FAMILLE': 'lastName',
-    r'^PR[EÉ]NOM':   'firstName',
-    r'^GIVEN':       'firstName',
-    r'^N[EÉ][E]?\b': 'birthDate',       # NÉ / NÉE / NE
-    r'^NAISSANCE$':  'birthDate',
-    r'^DATE.*NAIS':  'birthDate',
-    r'^LIEU':        'birthPlace',
-    r'^N°$':         'documentNumber',
-    r'^\d{12}$':     '_docnum_raw',     # le numéro LUI-MÊME s'il est reconnu directement
+PERMIS_NUMS = {
+    'lastName':       [r'^1[.,]?$'],
+    'firstName':      [r'^2[.,]?$'],
+    'birthInfo':      [r'^3[.,]?$'],          # date + lieu sur une ligne ou deux
+    'issueDate':      [r'^4[Aa][.,]?$'],
+    'documentExpiry': [r'^4[Bb][.,]?$'],
+    'authority':      [r'^4[Cc][.,]?$'],
+    'documentNumber': [r'^5[.,]?$'],
+    'categories':     [r'^9[.,]?$', r'^12[.,]?$'],
 }
 
-def extract_cni_fields(words):
-    """
-    Extraction spatiale des champs CNI.
-    Stratégie : trouver les mots-étiquettes, puis récupérer les mots à droite/en dessous.
-    """
+def extract_permis_fields(words):
     fields = {}
+    good = [w for w in words if w['confidence'] >= 0.38]
 
-    # Mots avec confiance raisonnable
-    confident_words = [w for w in words if w['confidence'] >= 0.45]
-
-    for w in confident_words:
-        t = w['text'].upper().replace('.', '').strip()
-
-        for pat, field in CNI_LABEL_MAP.items():
-            if not re.match(pat, t, re.IGNORECASE):
-                continue
-
-            # Numéro raw → directement le champ
-            if field == '_docnum_raw':
-                if 'documentNumber' not in fields:
-                    fields['documentNumber'] = {'value': t, 'confidence': w['confidence']}
+    for field_key, patterns in PERMIS_NUMS.items():
+        # Cherche le mot-numéro
+        label = None
+        for pat in patterns:
+            candidates = [w for w in good if re.match(pat, w['text'])]
+            if candidates:
+                label = max(candidates, key=lambda w: w['confidence'])
                 break
+        if not label: continue
 
-            # Cherche la valeur à droite en premier
-            value_words = words_to_right(w, confident_words, max_gap=0.60)
-            value_text = best_text(value_words)
+        # Valeurs à droite (même ligne)
+        vw = words_right(label, good, max_gap=0.72)
 
-            # Si rien à droite, cherche en dessous
-            if not value_text or len(value_text) < 2:
-                value_words = words_below(w, confident_words, max_dy=0.09)
-                value_text = best_text(value_words)
+        # Si rien à droite → cherche en dessous (champ sur la ligne suivante)
+        if not vw:
+            vw = words_below(label, good, max_dy=0.09)
 
-            if not value_text or len(value_text) < 2:
-                break
+        if not vw: continue
 
-            conf = sum(v['confidence'] for v in value_words) / len(value_words) if value_words else 0.5
+        text = collect_text(vw)
+        conf = field_conf(vw)
 
-            if field in ('lastName', 'firstName'):
-                cleaned = clean_name(value_text)
-                if cleaned and field not in fields:
-                    fields[field] = {'value': cleaned, 'confidence': conf}
+        if field_key == 'lastName':
+            n = clean_name(text)
+            if n: fields['lastName'] = {'value': n, 'confidence': conf}
 
-            elif field == 'birthDate':
-                d = parse_date(value_text)
-                if d and 'birthDate' not in fields:
-                    fields['birthDate'] = {'value': d, 'confidence': conf}
+        elif field_key == 'firstName':
+            # RÈGLE : premier prénom uniquement
+            first_token = text.split()[0] if text.split() else ''
+            n = clean_name(first_token)
+            if n: fields['firstName'] = {'value': n, 'confidence': conf}
+            # Stocker tous les prénoms dans un champ secondaire
+            all_names = clean_name(text)
+            if all_names: fields['allFirstNames'] = {'value': all_names, 'confidence': conf}
 
-            elif field == 'birthPlace':
-                cleaned = value_text.strip().upper()
-                if cleaned and 'birthPlace' not in fields:
-                    fields['birthPlace'] = {'value': cleaned, 'confidence': conf}
+        elif field_key == 'birthInfo':
+            # RÈGLE : date de naissance + lieu sur la même ligne "DD.MM.YYYY VILLE"
+            d = parse_date(text)
+            if d:
+                fields['birthDate'] = {'value': d, 'confidence': conf}
+            # Lieu = texte après la date (même ligne)
+            place_text = _DATE_RE.sub('', text).strip()
+            # Si lieu vide, chercher les mots juste en dessous de la date
+            if not place_text and vw:
+                below = words_below(vw[0], good, max_dy=0.08)
+                place_text = collect_text(below)
+            place = clean_name(place_text)
+            if place and len(place) >= 2:
+                fields['birthPlace'] = {'value': place, 'confidence': conf * 0.88}
 
-            elif field == 'documentNumber':
-                n = parse_docnumber(value_text)
-                if n and 'documentNumber' not in fields:
-                    fields['documentNumber'] = {'value': n, 'confidence': conf}
-            break
+        elif field_key in ('issueDate', 'documentExpiry'):
+            d = parse_date(text)
+            if d: fields[field_key] = {'value': d, 'confidence': conf}
+
+        elif field_key == 'documentNumber':
+            n = parse_docnumber(text)
+            if n: fields['documentNumber'] = {'value': n, 'confidence': conf}
+
+        elif field_key == 'authority':
+            fields['authority'] = {'value': text.strip(), 'confidence': conf}
+
+        elif field_key == 'categories':
+            cats = re.findall(r'\b(A[M12]?|B[E196]?|C1?E?|D1?E?)\b', text.upper())
+            if cats: fields['categories'] = {'value': list(dict.fromkeys(cats)), 'confidence': conf}
 
     return fields
 
 
 # ══════════════════════════════════════════════════════════════
-#  EXTRACTION PERMIS — Norme EU (champs numérotés)
+#  EXTRACTION CNI (labels français + MRZ)
 # ══════════════════════════════════════════════════════════════
 
-PERMIS_FIELD_NUMBERS = {
-    'lastName':      [r'^1[.,]?$'],
-    'firstName':     [r'^2[.,]?$'],
-    'birthDate':     [r'^3[.,]?$'],
-    'issueDate':     [r'^4[Aa][.,]?$'],
-    'documentExpiry':[r'^4[Bb][.,]?$'],
-    'authority':     [r'^4[Cc][.,]?$'],
-    'documentNumber':[r'^5[.,]?$'],
-    'categories':    [r'^9[.,]?$', r'^12[.,]?$'],
+_CNI_LABELS = {
+    r'^NOM$':         'lastName',
+    r'NOM.*FAMILLE':  'lastName',
+    r'^PR[EÉ]NOM':    'firstName',
+    r'^N[EÉ]E?\b':    'birthDate',
+    r'^NAISSANCE$':   'birthDate',
+    r'^DATE.*NAIS':   'birthDate',
+    r'^LIEU':         'birthPlace',
+    r'^N°$':          'documentNumber',
+    r'^\d{12}$':      '_docnum',
 }
 
-def extract_permis_fields(words):
-    """
-    Extraction spatiale des champs permis de conduire EU.
-    Stratégie : trouver les numéros de champ "1." "2." "3." "4a." etc.
-    Ces numéros sont IMPRIMÉS sur toutes les cartes EU — très fiable.
-    """
+def extract_cni_fields(words):
     fields = {}
-    confident_words = [w for w in words if w['confidence'] >= 0.40]
+    good = [w for w in words if w['confidence'] >= 0.42]
 
-    for field, patterns in PERMIS_FIELD_NUMBERS.items():
-        # Cherche le mot-numéro
-        label = None
-        for pat in patterns:
-            candidates = [w for w in confident_words if re.match(pat, w['text'])]
-            if candidates:
-                label = max(candidates, key=lambda w: w['confidence'])
+    for w in good:
+        t = w['text'].upper().replace('.', '').strip()
+        for pat, fld in _CNI_LABELS.items():
+            if not re.match(pat, t, re.IGNORECASE): continue
+
+            if fld == '_docnum':
+                if 'documentNumber' not in fields:
+                    fields['documentNumber'] = {'value': t, 'confidence': w['confidence']}
                 break
-        if not label:
-            continue
 
-        # Valeur = mots à droite sur la même ligne
-        value_words = words_to_right(label, confident_words, max_gap=0.70)
-        if not value_words:
-            # Ou juste en dessous
-            value_words = words_below(label, confident_words, max_dy=0.07)
+            vw = words_right(w, good)
+            text = collect_text(vw)
+            if not text or len(text) < 2:
+                vw = words_below(w, good, max_dy=0.08)
+                text = collect_text(vw)
+            if not text or len(text) < 2: break
 
-        if not value_words:
-            continue
+            conf = field_conf(vw)
 
-        value_text = best_text(value_words)
-        if not value_text:
-            continue
-
-        conf = sum(v['confidence'] for v in value_words) / len(value_words)
-
-        if field in ('lastName', 'firstName'):
-            cleaned = clean_name(value_text)
-            if cleaned:
-                fields[field] = {'value': cleaned, 'confidence': conf}
-
-        elif field in ('birthDate', 'issueDate', 'documentExpiry'):
-            d = parse_date(value_text)
-            if d:
-                fields[field] = {'value': d, 'confidence': conf}
-
-        elif field == 'documentNumber':
-            n = parse_docnumber(value_text)
-            if n:
-                fields[field] = {'value': n, 'confidence': conf}
-
-        elif field == 'categories':
-            # Format: "B" "AM" "B96" etc.
-            cats = re.findall(r'\b([A-D][A-Z0-9]{0,2}(?:\d+)?)\b', value_text.upper())
-            if cats:
-                fields['categories'] = {'value': cats, 'confidence': conf}
-        else:
-            fields[field] = {'value': value_text.strip(), 'confidence': conf}
+            if fld in ('lastName', 'firstName'):
+                if fld == 'firstName':
+                    # RÈGLE : premier prénom uniquement
+                    first = text.split()[0] if text.split() else text
+                    n = clean_name(first)
+                    if n and fld not in fields:
+                        fields[fld] = {'value': n, 'confidence': conf}
+                else:
+                    n = clean_name(text)
+                    if n and fld not in fields:
+                        fields[fld] = {'value': n, 'confidence': conf}
+            elif fld == 'birthDate':
+                d = parse_date(text)
+                if d and fld not in fields:
+                    fields[fld] = {'value': d, 'confidence': conf}
+                    # Lieu = texte après la date
+                    place = clean_name(_DATE_RE.sub('', text).strip())
+                    if place and len(place) >= 2 and 'birthPlace' not in fields:
+                        fields['birthPlace'] = {'value': place, 'confidence': conf * 0.85}
+            elif fld == 'birthPlace':
+                c = clean_name(text)
+                if c and fld not in fields:
+                    fields[fld] = {'value': c, 'confidence': conf}
+            elif fld == 'documentNumber':
+                n = parse_docnumber(text)
+                if n and fld not in fields:
+                    fields[fld] = {'value': n, 'confidence': conf}
+            break
 
     return fields
 
@@ -399,74 +531,57 @@ def extract_permis_fields(words):
 #  TRAITEMENT D'UNE IMAGE
 # ══════════════════════════════════════════════════════════════
 
-def process_image(model, b64_image: str, doc_type: str) -> dict:
+def process_image(engine_name, model, b64_image, doc_type):
     import numpy as np
     from PIL import Image
     from io import BytesIO
-    from doctr.io import DocumentFile
 
     img = Image.open(BytesIO(base64.b64decode(b64_image))).convert('RGB')
-    doc = DocumentFile.from_images([np.array(img)])
-    result = model(doc)
+    img_np = np.array(img)
 
-    # Collecte tous les mots avec positions et confiance
-    all_words = []
-    full_lines = []
+    # ── 1. Correction de perspective (OpenCV) ──
+    img_np = correct_perspective(img_np)
 
-    for page in result.pages:
-        for block in page.blocks:
-            for line in block.lines:
-                line_words = []
-                for word in line.words:
-                    word_data = {
-                        'text':       word.value,
-                        'confidence': float(word.confidence),
-                        'geometry':   [list(word.geometry[0]), list(word.geometry[1])],
-                    }
-                    all_words.append(word_data)
-                    line_words.append(word.value)
-                full_lines.append(' '.join(line_words))
-
-    full_text = '\n'.join(full_lines)
-
-    # Confiance globale (uniquement mots avec conf > 0.45)
-    good_words = [w for w in all_words if w['confidence'] > 0.45]
-    avg_conf = round(sum(w['confidence'] for w in good_words) / len(good_words) * 100) if good_words else 0
-
-    # Extraction MRZ
-    mrz_result = extract_mrz(all_words)
-    mrz_text   = mrz_result['mrzText']    if mrz_result else ''
-    mrz_fields = mrz_result['mrzFields']  if mrz_result else {}
-
-    # Extraction spatiale des champs visuels
-    if doc_type == 'PERMIS_CONDUIRE':
-        visual_fields = extract_permis_fields(all_words)
+    # ── 2. OCR → words[] normalisés ──
+    if engine_name == 'doctr':
+        words, full_text = extract_words_doctr(model, img_np)
     else:
-        visual_fields = extract_cni_fields(all_words)
+        words, full_text = extract_words_easyocr(model, img_np)
 
-    # Fusion : MRZ prioritaire (plus fiable) sur les champs visuels
-    merged_fields = {}
-    all_field_names = set(visual_fields.keys()) | set(mrz_fields.keys())
-    for fname in all_field_names:
-        if fname in mrz_fields:
-            merged_fields[fname] = mrz_fields[fname]
-        elif fname in visual_fields:
-            merged_fields[fname] = visual_fields[fname]
+    # ── 3. Confiance globale (mots > 0.45) ──
+    good = [w for w in words if w['confidence'] > 0.45]
+    avg_conf = round(sum(w['confidence'] for w in good) / len(good) * 100) if good else 0
 
-    # Zone texte (droite, sans photo) : x > 0.35, y < 0.80
-    text_zone = sorted(
-        [w for w in all_words if w['confidence'] > 0.45 and x1(w) > 0.35 and y1(w) < 0.80],
-        key=lambda w: (round(cy(w) / 0.05), x1(w))
+    # ── 4. MRZ ──
+    mrz_result = extract_mrz(words)
+    mrz_text   = mrz_result['mrzText']   if mrz_result else ''
+    mrz_fields = mrz_result['mrzFields'] if mrz_result else {}
+
+    # ── 5. Extraction spatiale des champs visuels ──
+    if doc_type == 'PERMIS_CONDUIRE':
+        visual_fields = extract_permis_fields(words)
+    else:
+        visual_fields = extract_cni_fields(words)
+
+    # ── 6. Fusion MRZ > champs visuels (MRZ = source de vérité) ──
+    merged = {}
+    for k in set(visual_fields) | set(mrz_fields):
+        merged[k] = mrz_fields[k] if k in mrz_fields else visual_fields[k]
+
+    # Zone texte (x > 0.35, y < 0.80, conf > 0.45)
+    zone_words = sorted(
+        [w for w in words if w['confidence'] > 0.45 and x1w(w) > 0.35 and y1w(w) < 0.80],
+        key=lambda w: (round(cy(w) / 0.05), x1w(w))
     )
-    text_zone_text = ' '.join(w['text'] for w in text_zone)
+    text_zone = ' '.join(w['text'] for w in zone_words)
 
     return {
-        'fullText':      full_text,
-        'textZoneText':  text_zone_text,
-        'mrzText':       mrz_text,
-        'confidence':    avg_conf,
-        'engine':        'doctr',
-        'fields':        merged_fields,   # champs structurés avec confiance par champ
+        'fullText':     full_text,
+        'textZoneText': text_zone,
+        'mrzText':      mrz_text,
+        'confidence':   avg_conf,
+        'engine':       engine_name,
+        'fields':       merged,
     }
 
 
@@ -476,8 +591,9 @@ def process_image(model, b64_image: str, doc_type: str) -> dict:
 
 def main():
     try:
-        model = load_model()
-        sys.stdout.write(json.dumps({'ready': True, 'engine': 'doctr'}) + '\n')
+        engine_name, model = load_model()
+        cv2_status = 'avec correction perspective' if _check_cv2() else 'sans OpenCV'
+        sys.stdout.write(json.dumps({'ready': True, 'engine': engine_name, 'info': cv2_status}) + '\n')
         sys.stdout.flush()
     except ImportError as e:
         sys.stdout.write(json.dumps({'error': 'not_installed', 'message': str(e)}) + '\n')
@@ -490,11 +606,10 @@ def main():
 
     for raw_line in sys.stdin:
         raw_line = raw_line.strip()
-        if not raw_line:
-            continue
+        if not raw_line: continue
         try:
             req    = json.loads(raw_line)
-            result = process_image(model, req['image'], req.get('docType', 'CNI'))
+            result = process_image(engine_name, model, req['image'], req.get('docType', 'CNI'))
             sys.stdout.write(json.dumps(result) + '\n')
             sys.stdout.flush()
         except Exception as e:

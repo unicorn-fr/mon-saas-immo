@@ -50,9 +50,9 @@ const STATE_MSG: Record<DetectionState, string> = {
   too_far:     'Approchez-vous du document',
   too_close:   'Reculez légèrement',
   bad_quality: 'Améliorez l\'éclairage ou réduisez le flou',
-  detected:    'Document détecté — restez immobile',
-  face_found:  'Pièce d\'identité confirmée ✓',
-  ready:       'Parfait — capture en cours…',
+  detected:    'Document cadré — appuyez pour capturer',
+  face_found:  'Pièce d\'identité détectée ✓ — appuyez',
+  ready:       'Prêt — appuyez pour capturer',
   captured:    'Capturé',
 }
 

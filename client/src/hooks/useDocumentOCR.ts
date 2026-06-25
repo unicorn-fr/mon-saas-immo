@@ -795,8 +795,9 @@ export function useDocumentOCR() {
         }
         // doctr : champs extraits spatialement (valeur + confiance par champ)
         spatialFields?: {
-          lastName?: SpatialFieldVal; firstName?: SpatialFieldVal; birthDate?: SpatialFieldVal
-          birthPlace?: SpatialFieldVal; documentNumber?: SpatialFieldVal; documentExpiry?: SpatialFieldVal
+          lastName?: SpatialFieldVal; firstName?: SpatialFieldVal; allFirstNames?: SpatialFieldVal
+          birthDate?: SpatialFieldVal; birthPlace?: SpatialFieldVal
+          documentNumber?: SpatialFieldVal; documentExpiry?: SpatialFieldVal
           issueDate?: SpatialFieldVal; authority?: SpatialFieldVal; sex?: SpatialFieldVal
           nationality?: SpatialFieldVal; categories?: SpatialFieldVal
         }
