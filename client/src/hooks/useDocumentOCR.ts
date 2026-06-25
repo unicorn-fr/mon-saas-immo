@@ -780,16 +780,25 @@ export function useDocumentOCR() {
       // → bien meilleur que Tesseract browser (tessdata_fast + CSS filters)
       setState(s => ({ ...s, progress: 8, stage: 'Analyse IA du document…' }))
 
-      // Type de la réponse backend (inclut structuredFields quand Mindee répond)
+      // Type de la réponse backend
+      type SpatialFieldVal = { value: string | string[]; confidence: number }
       type BackendData = {
         fullText: string; textZoneText: string; mrzText: string
         confidence: number; engine: string
+        // Mindee : champs directs (string)
         structuredFields?: {
           lastName?: string; firstName?: string; birthDate?: string; birthPlace?: string
           documentNumber?: string; documentExpiry?: string; nationality?: string
           sex?: 'M' | 'F'; issuedDate?: string; issuingAuthority?: string
           licenseCategories?: string[]; mrzLine1?: string; mrzLine2?: string; mrzLine3?: string
           confidence: number
+        }
+        // doctr : champs extraits spatialement (valeur + confiance par champ)
+        spatialFields?: {
+          lastName?: SpatialFieldVal; firstName?: SpatialFieldVal; birthDate?: SpatialFieldVal
+          birthPlace?: SpatialFieldVal; documentNumber?: SpatialFieldVal; documentExpiry?: SpatialFieldVal
+          issueDate?: SpatialFieldVal; authority?: SpatialFieldVal; sex?: SpatialFieldVal
+          nationality?: SpatialFieldVal; categories?: SpatialFieldVal
         }
       }
 
@@ -845,6 +854,48 @@ export function useDocumentOCR() {
         const result: ExtractedDocument = {
           ...extracted, rawText: '',
           confidence: sf.confidence / 100,
+          ...validation,
+        }
+        setState({ isProcessing: false, progress: 100, stage: 'Terminé', result, error: null })
+        return result
+      }
+
+      // ── doctr : champs extraits spatialement → skip regex ──
+      // Le modèle a localisé chaque champ par position sur le document.
+      // Confiance par champ → on n'accepte que ce qui est ≥ 0.55.
+      if (backendData?.spatialFields) {
+        const sf = backendData.spatialFields
+        const pick = (f: SpatialFieldVal | undefined): string | undefined => {
+          if (!f || f.confidence < 0.55) return undefined
+          return Array.isArray(f.value) ? f.value.join(' ') : f.value
+        }
+        const pickArr = (f: SpatialFieldVal | undefined): string[] | undefined => {
+          if (!f || f.confidence < 0.50) return undefined
+          return Array.isArray(f.value) ? f.value : f.value.split(/[\s,;]+/)
+        }
+        const extracted: Partial<ExtractedDocument> = {
+          lastName:          pick(sf.lastName),
+          firstName:         pick(sf.firstName),
+          birthDate:         pick(sf.birthDate),
+          birthPlace:        pick(sf.birthPlace),
+          documentNumber:    pick(sf.documentNumber),
+          documentExpiry:    pick(sf.documentExpiry),
+          issuedDate:        pick(sf.issueDate),
+          issuingAuthority:  pick(sf.authority),
+          nationality:       pick(sf.nationality),
+          sex:               (pick(sf.sex) as 'M' | 'F' | undefined),
+          licenseCategories: pickArr(sf.categories),
+        }
+        // Compléte avec regex si des champs manquent encore
+        const regexExtract = docType === 'CNI'
+          ? await extractCNIFields(fullText, textZoneText, mrzText)
+          : mergeExtracted(extractPermisFromText(fullText), extractPermisFromText(textZoneText))
+        const merged = mergeExtracted(regexExtract, extracted)  // spatial prioritaire
+        setState(s => ({ ...s, progress: 96, stage: 'Validation…' }))
+        const validation = validateExtracted(merged, docType)
+        const result: ExtractedDocument = {
+          ...merged, rawText: fullText,
+          confidence: backendData.confidence / 100,
           ...validation,
         }
         setState({ isProcessing: false, progress: 100, stage: 'Terminé', result, error: null })

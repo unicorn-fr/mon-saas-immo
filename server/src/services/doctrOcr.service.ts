@@ -26,11 +26,31 @@ interface PendingRequest {
   timer: ReturnType<typeof setTimeout>
 }
 
+interface DoctrFieldValue {
+  value: string | string[]
+  confidence: number
+}
+
+export interface DoctrFields {
+  lastName?:        DoctrFieldValue
+  firstName?:       DoctrFieldValue
+  birthDate?:       DoctrFieldValue
+  birthPlace?:      DoctrFieldValue
+  documentNumber?:  DoctrFieldValue
+  documentExpiry?:  DoctrFieldValue
+  issueDate?:       DoctrFieldValue
+  authority?:       DoctrFieldValue
+  sex?:             DoctrFieldValue
+  nationality?:     DoctrFieldValue
+  categories?:      DoctrFieldValue
+}
+
 interface DoctrResult {
   fullText: string
   textZoneText: string
   mrzText: string
   confidence: number
+  fields?: DoctrFields  // champs structurés extraits spatialement
 }
 
 interface DoctrWorker {
@@ -125,6 +145,7 @@ function initDoctrWorker(): Promise<DoctrWorker | null> {
             textZoneText:  result.textZoneText  ?? '',
             mrzText:       result.mrzText       ?? '',
             confidence:    result.confidence    ?? 0,
+            fields:        result.fields,        // extraction spatiale
           })
         }
       } catch {

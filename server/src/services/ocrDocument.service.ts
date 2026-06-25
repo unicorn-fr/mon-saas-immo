@@ -33,7 +33,8 @@ export interface OcrDocumentResult {
   mrzText: string
   confidence: number
   engine: string
-  structuredFields?: MindeeStructuredFields  // Champs directs (Mindee) — skip regex côté client
+  structuredFields?: MindeeStructuredFields   // Champs directs Mindee — skip regex
+  spatialFields?: import('./doctrOcr.service.js').DoctrFields  // Champs extraits par position (doctr)
 }
 
 // ─── Persistent Tesseract worker ─────────────────────────────────────────────
@@ -244,11 +245,12 @@ export async function analyzeDocumentOCR(
   const doctrResult = await ocrWithDoctr(normalizedBuffer, docType)
   if (doctrResult && doctrResult.fullText.length > 20) {
     return {
-      fullText:     doctrResult.fullText,
-      textZoneText: doctrResult.textZoneText,
-      mrzText:      doctrResult.mrzText,
-      confidence:   doctrResult.confidence,
-      engine:       'doctr',
+      fullText:      doctrResult.fullText,
+      textZoneText:  doctrResult.textZoneText,
+      mrzText:       doctrResult.mrzText,
+      confidence:    doctrResult.confidence,
+      engine:        'doctr',
+      spatialFields: doctrResult.fields,   // champs extraits par position
     }
   }
 
