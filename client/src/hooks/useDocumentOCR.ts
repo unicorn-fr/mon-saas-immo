@@ -894,9 +894,10 @@ export function useDocumentOCR() {
         // Backend indisponible → fallback browser
       }
 
-      // ── Mindee : champs structurés directs → skip regex ──
+      // ── Mindee / Gemini : champs structurés directs → skip regex ──
       if (backendData?.structuredFields) {
         const sf = backendData.structuredFields
+        console.log('[OCR] structuredFields reçus (moteur:', usedEngine, '):', JSON.stringify(sf, null, 2))
         setState(s => ({ ...s, progress: 95, stage: 'Validation…' }))
         const extracted: Partial<ExtractedDocument> = {
           lastName:          sf.lastName,
@@ -916,10 +917,13 @@ export function useDocumentOCR() {
           mrzValid:          !!(sf.mrzLine1 && sf.mrzLine2),
         }
         const validation = validateExtracted(extracted, docType)
+        console.log('[OCR] extracted final:', { lastName: extracted.lastName, firstName: extracted.firstName, birthDate: extracted.birthDate })
         const result: ExtractedDocument = {
           ...extracted, rawText: '',
           confidence: sf.confidence / 100,
           ...validation,
+          // @ts-ignore
+          _engine: usedEngine,
         }
         setState({ isProcessing: false, progress: 100, stage: 'Terminé', result, error: null })
         return result

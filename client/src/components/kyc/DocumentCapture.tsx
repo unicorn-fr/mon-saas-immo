@@ -516,6 +516,31 @@ export function DocumentCapture({ onComplete }: DocumentCaptureProps) {
                 ))}
               </div>
 
+              {/* Moteur OCR utilisé */}
+              {/* @ts-ignore */}
+              {currentResult._engine && (
+                <div style={{ marginBottom: 10 }}>
+                  <span style={{
+                    fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700,
+                    letterSpacing: '0.08em', textTransform: 'uppercase',
+                    padding: '3px 8px', borderRadius: 100,
+                    // @ts-ignore
+                    background: currentResult._engine === 'gemini-vision' ? '#e8f5e9'
+                      // @ts-ignore
+                      : currentResult._engine === 'mindee' ? '#e3f2fd'
+                      : BAI.bgMuted,
+                    // @ts-ignore
+                    color: currentResult._engine === 'gemini-vision' ? '#1b5e3b'
+                      // @ts-ignore
+                      : currentResult._engine === 'mindee' ? '#1a3270'
+                      : BAI.inkMid,
+                  }}>
+                    {/* @ts-ignore */}
+                    Moteur : {currentResult._engine}
+                  </span>
+                </div>
+              )}
+
               {/* Values */}
               <div style={{ marginBottom: 14 }}>
                 {currentResult.lastName && <ExtractedValue label="Nom" value={currentResult.lastName} />}
