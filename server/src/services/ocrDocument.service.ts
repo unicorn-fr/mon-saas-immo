@@ -17,6 +17,7 @@ import sharp from 'sharp'
 import path from 'path'
 import os from 'os'
 import { analyzeWithMindee, type MindeeStructuredFields } from './mindeeOcr.service.js'
+import { analyzeWithGemini, type GeminiStructuredFields } from './geminiOcr.service.js'
 import { ocrWithDoctr, preloadDoctrWorker } from './doctrOcr.service.js'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -33,7 +34,7 @@ export interface OcrDocumentResult {
   mrzText: string
   confidence: number
   engine: string
-  structuredFields?: MindeeStructuredFields   // Champs directs Mindee — skip regex
+  structuredFields?: MindeeStructuredFields | GeminiStructuredFields  // Champs directs — skip regex
   spatialFields?: import('./doctrOcr.service.js').DoctrFields  // Champs extraits par position (doctr)
 }
 
@@ -239,7 +240,22 @@ export async function analyzeDocumentOCR(
     }
   }
 
-  // ── 2. doctr — modèle open source de Mindee (subprocess Python, si installé) ──
+  // ── 2. Gemini 2.5 Flash Vision (si GEMINI_API_KEY disponible) ──
+  // Vision LLM : comprend le document comme un humain, ~97-98% précision.
+  // ~0,001$ par scan. Source : benchmark Koncile/Vellum 2025.
+  const geminiFields = await analyzeWithGemini(normalizedBuffer, docType)
+  if (geminiFields && (geminiFields.lastName || geminiFields.firstName || geminiFields.birthDate)) {
+    return {
+      fullText: '',
+      textZoneText: '',
+      mrzText: [geminiFields.mrzLine1, geminiFields.mrzLine2, geminiFields.mrzLine3].filter(Boolean).join('\n'),
+      confidence: geminiFields.confidence,
+      engine: 'gemini-vision',
+      structuredFields: geminiFields,
+    }
+  }
+
+  // ── 3. doctr — modèle open source de Mindee (subprocess Python, si installé) ──
   // db_resnet50 (détection) + crnn_mobilenet_v3_large (reconnaissance)
   // Même technologie que l'API Mindee — entièrement gratuit, MIT License.
   const doctrResult = await ocrWithDoctr(normalizedBuffer, docType)

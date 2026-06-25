@@ -114,6 +114,23 @@ def preprocess_mrz_zone(img_np):
 # ══════════════════════════════════════════════════════════════
 
 def load_model():
+    # ── Essai 1 : PaddleOCR PP-OCRv5 (meilleur moteur open source 2025) ──
+    # Benchmarks : 93% confiance vs EasyOCR 85%, Tesseract 89%
+    # Source : CodeSOTA/PaddleOCR benchmark 2026
+    try:
+        from paddleocr import PaddleOCR
+        model = PaddleOCR(
+            use_angle_cls=True,
+            lang='fr',
+            use_gpu=False,
+            show_log=False,
+            enable_mkldnn=False,
+        )
+        return ('paddleocr', model)
+    except ImportError: pass
+    except Exception as e: sys.stderr.write(f'[paddleocr] Erreur: {e}\n')
+
+    # ── Essai 2 : doctr (Mindee open source, MIT) ──
     try:
         from doctr.models import ocr_predictor
         model = ocr_predictor(
@@ -126,6 +143,8 @@ def load_model():
         return ('doctr', model)
     except ImportError: pass
     except Exception as e: sys.stderr.write(f'[doctr] Erreur: {e}\n')
+
+    # ── Essai 3 : EasyOCR (CRAFT + CRNN) ──
     try:
         import easyocr
         reader = easyocr.Reader(['fr', 'en'], gpu=False, verbose=False)
@@ -133,15 +152,39 @@ def load_model():
     except ImportError: pass
     except Exception as e: sys.stderr.write(f'[easyocr] Erreur: {e}\n')
     raise ImportError(
-        'Aucun moteur OCR.\n'
-        'Option A: pip install "python-doctr[torch]" opencv-python\n'
-        'Option B: pip install easyocr opencv-python'
+        'Aucun moteur OCR installé.\n'
+        'Option A (meilleure) : pip install paddlepaddle paddleocr opencv-python\n'
+        'Option B             : pip install "python-doctr[torch]" opencv-python\n'
+        'Option C             : pip install easyocr opencv-python'
     )
 
 
 # ══════════════════════════════════════════════════════════════
 #  EXTRACTION MOTS AVEC COORDONNÉES NORMALISÉES
 # ══════════════════════════════════════════════════════════════
+
+def extract_words_paddleocr(model, img_np):
+    """PaddleOCR PP-OCRv5 → words[] normalisés."""
+    import numpy as np
+    # PaddleOCR accepte un ndarray numpy directement
+    result = model.ocr(img_np, cls=True)
+    h, w = img_np.shape[:2]
+    words, lines_text = [], []
+    if not result or not result[0]: return words, ''
+    for line in result[0]:
+        if not line: continue
+        bbox, (text, conf) = line[0], line[1]
+        # bbox = [[x1,y1],[x2,y1],[x2,y2],[x1,y2]] pixels
+        xs = [p[0] for p in bbox]; ys = [p[1] for p in bbox]
+        x1n, y1n = min(xs)/w, min(ys)/h
+        x2n, y2n = max(xs)/w, max(ys)/h
+        # Découpe les tokens (PaddleOCR retourne parfois des phrases)
+        for token in text.split():
+            words.append({'text': token, 'confidence': float(conf),
+                          'geometry': [[x1n, y1n], [x2n, y2n]]})
+        lines_text.append(text)
+    return words, '\n'.join(lines_text)
+
 
 def extract_words_doctr(model, img_np):
     from doctr.io import DocumentFile
@@ -299,6 +342,62 @@ def _autocorrect(field, expected):
             fl[j] = orig_j
         fl[i] = c
     return field, False
+
+
+def _try_fastmrz(img_np):
+    """
+    fastmrz — bibliothèque MRZ dédiée avec détection par deep learning + ICAO-9303.
+    pip install fastmrz
+    Retourne un dict {lastName, firstName, birthDate, ...} ou None.
+    """
+    try:
+        from fastmrz import FastMRZ
+        import numpy as np
+        from PIL import Image as PILImage
+        from io import BytesIO
+
+        fmrz = FastMRZ()
+        pil_img = PILImage.fromarray(img_np)
+        buf = BytesIO()
+        pil_img.save(buf, format='JPEG', quality=92)
+        result = fmrz.get_info(buf.getvalue())
+
+        if not result or not result.get('valid_score', 0): return None
+
+        fields = {}
+        r = result
+        # fastmrz retourne : surname, names, date_of_birth, sex, nationality,
+        #                     document_number, expiry_date, valid_score
+        if r.get('surname'):
+            fields['lastName'] = {'value': r['surname'].upper(), 'confidence': 0.97}
+        if r.get('names'):
+            first = r['names'].split()[0] if r['names'].split() else r['names']
+            fields['firstName'] = {'value': first.title(), 'confidence': 0.96}
+        if r.get('date_of_birth'):
+            bd = _parse_mrz_date(r['date_of_birth'].replace('-', '').replace('/', ''))
+            if not bd:
+                # fastmrz peut retourner YYYYMMDD
+                d = r['date_of_birth'].replace('-', '').replace('/', '')
+                if len(d) == 8:
+                    bd = f'{d[:4]}-{d[4:6]}-{d[6:]}'
+            if bd: fields['birthDate'] = {'value': bd, 'confidence': 0.99}
+        if r.get('sex') in ('M', 'F'):
+            fields['sex'] = {'value': r['sex'], 'confidence': 0.99}
+        if r.get('nationality'):
+            fields['nationality'] = {'value': r['nationality'], 'confidence': 0.95}
+        if r.get('document_number'):
+            fields['documentNumber'] = {'value': r['document_number'], 'confidence': 0.97}
+        if r.get('expiry_date'):
+            exp = _parse_mrz_date(r['expiry_date'].replace('-', ''))
+            if exp: fields['documentExpiry'] = {'value': exp, 'confidence': 0.97}
+
+        score = r.get('valid_score', 0)
+        fields['_mrzValid']  = {'value': score >= 70, 'confidence': 1.0}
+        fields['_checksums'] = {'value': {'fastmrz_score': score}, 'confidence': 1.0}
+        return fields if any(k not in ('_mrzValid', '_checksums') for k in fields) else None
+
+    except Exception as e:
+        return None
 
 
 def _try_pytesseract_mrz(mrz_img):
@@ -638,7 +737,9 @@ def process_image(engine_name, model, b64_image, doc_type):
     img_np = correct_perspective(img_np)
 
     # ── 2. OCR full image → words[] normalisés ──
-    if engine_name == 'doctr':
+    if engine_name == 'paddleocr':
+        words, full_text = extract_words_paddleocr(model, img_np)
+    elif engine_name == 'doctr':
         words, full_text = extract_words_doctr(model, img_np)
     else:
         words, full_text = extract_words_easyocr(model, img_np)
@@ -647,11 +748,30 @@ def process_image(engine_name, model, b64_image, doc_type):
     good = [w for w in words if w['confidence'] > 0.40]
     avg_conf = round(sum(w['confidence'] for w in good) / len(good) * 100) if good else 0
 
-    # ── 4a. Preprocessing MRZ dédié (CNI seulement) ──
-    mrz_img    = preprocess_mrz_zone(img_np) if doc_type == 'CNI' else None
-    mrz_result = extract_mrz(words, mrz_img)
-    mrz_text   = mrz_result['mrzText']   if mrz_result else ''
-    mrz_fields = mrz_result['mrzFields'] if mrz_result else {}
+    # ── 4a. MRZ — stratégie cascade ──
+    # Priorité 1 : fastmrz (deep learning dédié + ICAO-9303)
+    # Priorité 2 : preprocessing dédié + pytesseract + parsing checksum
+    # Priorité 3 : extraction spatiale depuis words[]
+    mrz_fields = {}
+    mrz_text   = ''
+
+    if doc_type == 'CNI':
+        # Essai fastmrz (meilleur pour les MRZ, librairie dédiée)
+        fastmrz_fields = _try_fastmrz(img_np)
+        if fastmrz_fields and fastmrz_fields.get('birthDate'):
+            mrz_fields = fastmrz_fields
+            mrz_text   = '[fastmrz]'
+        else:
+            # Fallback : preprocessing dédié + spatial
+            mrz_img    = preprocess_mrz_zone(img_np)
+            mrz_result = extract_mrz(words, mrz_img)
+            mrz_text   = mrz_result['mrzText']   if mrz_result else ''
+            mrz_fields = mrz_result['mrzFields'] if mrz_result else {}
+    else:
+        # Permis : pas de MRZ
+        mrz_result = extract_mrz(words, None)
+        mrz_text   = mrz_result['mrzText']   if mrz_result else ''
+        mrz_fields = mrz_result['mrzFields'] if mrz_result else {}
 
     # ── 4b. Extraction visuelle ──
     if doc_type == 'PERMIS_CONDUIRE':

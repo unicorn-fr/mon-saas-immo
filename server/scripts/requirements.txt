@@ -1,12 +1,33 @@
-# OCR enterprise via doctr (modèle open source de Mindee — MIT License)
-# Installation : pip install -r server/scripts/requirements.txt
+# ─────────────────────────────────────────────────────────────────────────────
+#  Moteurs OCR — Bailio KYC document scanner
+#  Install : pip install -r server/scripts/requirements.txt
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Prétraitement image (OBLIGATOIRE) ──────────────────────────────────────
+opencv-python       # correction perspective, bilateral filter, CLAHE, Otsu
+
+# ── Option A : PaddleOCR PP-OCRv5 (RECOMMANDÉ — meilleur 2025/2026) ─────────
+# Benchmark : 93% confiance vs EasyOCR 85%, Tesseract 89%
+# Source : https://www.codesota.com/ocr/paddleocr-vs-tesseract
 #
-# Option A — avec PyTorch (recommandé, meilleure précision) :
-python-doctr[torch]
-#
-# Option B — avec TensorFlow :
-# python-doctr[tf]
-#
-# Option C — sans framework DL (plus léger, utilise ONNX Runtime) :
-# python-doctr
-# onnxruntime
+# paddlepaddle
+# paddleocr
+
+# ── Option B : doctr (Mindee open source, MIT License) ──────────────────────
+# Même moteur que l'API Mindee payante — gratuit, très précis sur CNI/permis
+# python-doctr[torch]      # avec PyTorch
+# python-doctr[tf]         # avec TensorFlow
+# python-doctr             # avec ONNX Runtime (plus léger)
+# onnxruntime              # si option ONNX ci-dessus
+
+# ── Option C : EasyOCR (CRAFT + CRNN) ───────────────────────────────────────
+# easyocr
+
+# ── MRZ spécialisé : fastmrz (FORTEMENT RECOMMANDÉ pour CNI) ────────────────
+# Bibliothèque dédiée MRZ avec validation ICAO-9303 complète
+# pip install fastmrz
+# fastmrz
+
+# ── Bonus MRZ : pytesseract (OCR-B natif, améliore encore la MRZ) ───────────
+# Requiert aussi : brew install tesseract (macOS) / apt install tesseract-ocr (Linux)
+# pytesseract
