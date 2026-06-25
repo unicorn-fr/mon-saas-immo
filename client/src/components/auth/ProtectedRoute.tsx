@@ -38,8 +38,9 @@ export const ProtectedRoute = ({
     return <Navigate to="/verify-email" state={{ email: user.email, from: location.pathname }} replace />
   }
 
-  // Profil incomplet (prénom/nom manquant) → compléter avant d'accéder
-  if (user && (!user.firstName?.trim() || !user.lastName?.trim()) && location.pathname !== '/complete-profile') {
+  // Profil incomplet — uniquement si le champ est explicitement vide ''
+  // (null/undefined = champ non chargé, pas un vrai profil incomplet)
+  if (user && (user.firstName === '' || user.lastName === '') && location.pathname !== '/complete-profile') {
     return <Navigate to="/complete-profile" replace />
   }
 

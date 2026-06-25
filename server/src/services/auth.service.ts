@@ -829,7 +829,7 @@ class AuthService {
         data: {
           email: email.toLowerCase(),
           firstName: emailPrefix,
-          lastName: '',
+          lastName: ' ',
           role: 'TENANT',
           emailVerified: false,
         },
