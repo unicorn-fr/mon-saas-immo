@@ -800,6 +800,9 @@ export function useDocumentOCR() {
           documentNumber?: SpatialFieldVal; documentExpiry?: SpatialFieldVal
           issueDate?: SpatialFieldVal; authority?: SpatialFieldVal; sex?: SpatialFieldVal
           nationality?: SpatialFieldVal; categories?: SpatialFieldVal
+          // MRZ checksum ICAO (ajouté par doctr_ocr.py v3)
+          _mrzValid?: { value: boolean; confidence: number }
+          _checksums?: { value: Record<string, boolean>; confidence: number }
         }
       }
 
@@ -863,16 +866,16 @@ export function useDocumentOCR() {
 
       // ── doctr : champs extraits spatialement → skip regex ──
       // Le modèle a localisé chaque champ par position sur le document.
-      // Confiance par champ → on n'accepte que ce qui est ≥ 0.55.
+      // _mrzValid = true  → seuil 0.45 (checksum ICAO valide, confiance accrue)
+      // _mrzValid = false → seuil 0.55 (extraction visuelle seulement)
       if (backendData?.spatialFields) {
-        const sf = backendData.spatialFields
+        const sf  = backendData.spatialFields
+        const mrzOk = sf._mrzValid?.value === true
+        const threshold = mrzOk ? 0.45 : 0.55
+
         const pick = (f: SpatialFieldVal | undefined): string | undefined => {
-          if (!f || f.confidence < 0.55) return undefined
-          return Array.isArray(f.value) ? f.value.join(' ') : f.value
-        }
-        const pickArr = (f: SpatialFieldVal | undefined): string[] | undefined => {
-          if (!f || f.confidence < 0.50) return undefined
-          return Array.isArray(f.value) ? f.value : f.value.split(/[\s,;]+/)
+          if (!f || typeof f.value !== 'string' || f.confidence < threshold) return undefined
+          return f.value
         }
         const extracted: Partial<ExtractedDocument> = {
           lastName:          pick(sf.lastName),
@@ -885,7 +888,7 @@ export function useDocumentOCR() {
           issuingAuthority:  pick(sf.authority),
           nationality:       pick(sf.nationality),
           sex:               (pick(sf.sex) as 'M' | 'F' | undefined),
-          licenseCategories: pickArr(sf.categories),
+          mrzValid:          mrzOk,
         }
         // Compléte avec regex si des champs manquent encore
         const regexExtract = docType === 'CNI'
