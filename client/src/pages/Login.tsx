@@ -196,6 +196,11 @@ export default function Login() {
         setIsSubmitting(false)
         return
       }
+      if (msg.includes('indisponible')) {
+        setError('Service temporairement indisponible. Réessayez dans quelques instants.')
+        setIsSubmitting(false)
+        return
+      }
       setError('Email ou mot de passe incorrect.')
       setShowRegisterHint(true)
     } finally {

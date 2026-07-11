@@ -79,13 +79,6 @@ const MARQUEE_ROW2 = [
 
 // ─── SearchBox ────────────────────────────────────────────────────────────────
 
-const BUDGET_PRESETS = [
-  { label: '800 €', value: '800' },
-  { label: '1 000 €', value: '1000' },
-  { label: '1 500 €', value: '1500' },
-  { label: '2 000 €+', value: '2000' },
-]
-
 const SUG_STYLE: React.CSSProperties = {
   position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 200,
   background: 'rgba(8,11,26,0.97)',
@@ -247,29 +240,6 @@ function SearchBox({ city, setCity, type, setType, maxBudget, setMaxBudget }: Se
               />
             </div>
           </div>
-        </div>
-
-        {/* Budget presets */}
-        <div style={{ display: 'flex', gap: 8, paddingLeft: 2 }}>
-          {BUDGET_PRESETS.map(({ label: lbl, value: v }) => {
-            const active = maxBudget === v
-            return (
-              <button
-                type="button" key={v}
-                onClick={() => setMaxBudget(active ? '' : v)}
-                style={{
-                  flex: 1, padding: '7px 0', borderRadius: 20, cursor: 'pointer',
-                  border: `1px solid ${active ? 'rgba(196,151,106,0.55)' : 'rgba(255,255,255,0.18)'}`,
-                  background: active ? 'rgba(196,151,106,0.20)' : 'rgba(255,255,255,0.04)',
-                  color: active ? '#ffffff' : 'rgba(255,255,255,0.58)',
-                  fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600,
-                  transition: 'all 0.15s', whiteSpace: 'nowrap',
-                }}
-              >
-                {lbl}
-              </button>
-            )
-          })}
         </div>
 
         {/* Submit */}
@@ -511,6 +481,10 @@ export default function Home() {
           .results-header a { align-self: flex-start; }
         }
 
+        /* ── Hero title — floor trop haut sur petits mobiles (mots sans espace = pas de wrap) ── */
+        .hero-title { font-size: clamp(56px, 8vw, 96px); }
+        @media (max-width: 480px) { .hero-title { font-size: clamp(38px, 11vw, 56px); } }
+
         /* ── Hero 2-col grid ── */
         .hero-layout {
           display: grid;
@@ -592,11 +566,10 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
               >
-                <h1 style={{
+                <h1 className="hero-title" style={{
                   fontFamily: BAI.fontDisplay,
                   fontStyle: 'italic',
                   fontWeight: 700,
-                  fontSize: 'clamp(56px, 8vw, 96px)',
                   lineHeight: 0.95,
                   color: '#ffffff',
                   margin: 0,
@@ -862,7 +835,7 @@ export default function Home() {
               <div style={{ marginTop: 'auto' }}>
                 <Link to="/register"
                   style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44,
                     fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600,
                     color: BAI.caramel, textDecoration: 'none',
                   }}>
@@ -1297,7 +1270,7 @@ export default function Home() {
 
           <Link
             to="/pricing"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: BAI.caramel, fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44, color: BAI.caramel, fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}
           >
             Voir le détail des fonctionnalités <ArrowRight size={15} />
           </Link>
@@ -1318,7 +1291,7 @@ export default function Home() {
                 Cherchez près de chez vous
               </h2>
             </div>
-            <Link to="/search" style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.caramel, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <Link to="/search" style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.caramel, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4, minHeight: 44 }}>
               Voir toutes les annonces <ChevronRight size={13} />
             </Link>
           </div>
@@ -1411,7 +1384,7 @@ export default function Home() {
           </div>
           <Link
             to="/search"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.caramel, textDecoration: 'none', border: `1px solid ${BAI.caramelBorder}`, borderRadius: 8, padding: '8px 16px', transition: 'all .15s', background: BAI.caramelLight }}
+            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 44, fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.caramel, textDecoration: 'none', border: `1px solid ${BAI.caramelBorder}`, borderRadius: 8, padding: '8px 16px', transition: 'all .15s', background: BAI.caramelLight }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.85' }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1' }}
           >
@@ -1439,7 +1412,7 @@ export default function Home() {
               <Building2 size={48} color={BAI.inkFaint} style={{ opacity: 0.25, margin: '0 auto 16px', display: 'block' }} />
               <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 22, color: BAI.inkMid, marginBottom: 8 }}>Aucun bien pour ces critères.</p>
               <p style={{ fontSize: 14, color: BAI.inkFaint, marginBottom: 24 }}>Essayez de modifier vos filtres.</p>
-              <button onClick={() => { setCity(''); setType(''); setMaxBudget('') }} style={{ background: BAI.night, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+              <button onClick={() => { setCity(''); setType(''); setMaxBudget('') }} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minHeight: 44, background: BAI.night, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                 Effacer les filtres
               </button>
             </motion.div>
@@ -1486,7 +1459,7 @@ export default function Home() {
               <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 4px' }}>Guide</p>
               <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3vw,30px)', color: BAI.ink, margin: 0 }}>Le guide de la location</h2>
             </div>
-            <Link to="/guide" style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.caramel, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <Link to="/guide" style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.caramel, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4, minHeight: 44 }}>
               Tous les articles <ChevronRight size={13} />
             </Link>
           </div>

@@ -61,6 +61,12 @@ export const errorHandler = (
     }
   }
 
+  // Prisma — base de données injoignable (Railway down, réseau, etc.)
+  else if (err.name === 'PrismaClientInitializationError' || err.name === 'PrismaClientUnknownRequestError') {
+    statusCode = 503
+    message = 'Service temporairement indisponible. Merci de réessayer dans quelques instants.'
+  }
+
   // JWT Errors
   else if (err.name === 'JsonWebTokenError') {
     statusCode = 401
