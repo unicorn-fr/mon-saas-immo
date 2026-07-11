@@ -835,7 +835,7 @@ export default function Home() {
               <div style={{ marginTop: 'auto' }}>
                 <Link to="/register"
                   style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44,
                     fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600,
                     color: BAI.caramel, textDecoration: 'none',
                   }}>
@@ -1270,7 +1270,7 @@ export default function Home() {
 
           <Link
             to="/pricing"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: BAI.caramel, fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44, color: BAI.caramel, fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}
           >
             Voir le détail des fonctionnalités <ArrowRight size={15} />
           </Link>
@@ -1291,7 +1291,7 @@ export default function Home() {
                 Cherchez près de chez vous
               </h2>
             </div>
-            <Link to="/search" style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.caramel, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <Link to="/search" style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.caramel, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4, minHeight: 44 }}>
               Voir toutes les annonces <ChevronRight size={13} />
             </Link>
           </div>
@@ -1459,7 +1459,7 @@ export default function Home() {
               <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 4px' }}>Guide</p>
               <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3vw,30px)', color: BAI.ink, margin: 0 }}>Le guide de la location</h2>
             </div>
-            <Link to="/guide" style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.caramel, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <Link to="/guide" style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.caramel, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4, minHeight: 44 }}>
               Tous les articles <ChevronRight size={13} />
             </Link>
           </div>
