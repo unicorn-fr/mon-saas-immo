@@ -481,6 +481,10 @@ export default function Home() {
           .results-header a { align-self: flex-start; }
         }
 
+        /* ── Hero title — floor trop haut sur petits mobiles (mots sans espace = pas de wrap) ── */
+        .hero-title { font-size: clamp(56px, 8vw, 96px); }
+        @media (max-width: 480px) { .hero-title { font-size: clamp(38px, 11vw, 56px); } }
+
         /* ── Hero 2-col grid ── */
         .hero-layout {
           display: grid;
@@ -562,11 +566,10 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
               >
-                <h1 style={{
+                <h1 className="hero-title" style={{
                   fontFamily: BAI.fontDisplay,
                   fontStyle: 'italic',
                   fontWeight: 700,
-                  fontSize: 'clamp(56px, 8vw, 96px)',
                   lineHeight: 0.95,
                   color: '#ffffff',
                   margin: 0,
@@ -1381,7 +1384,7 @@ export default function Home() {
           </div>
           <Link
             to="/search"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.caramel, textDecoration: 'none', border: `1px solid ${BAI.caramelBorder}`, borderRadius: 8, padding: '8px 16px', transition: 'all .15s', background: BAI.caramelLight }}
+            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 44, fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.caramel, textDecoration: 'none', border: `1px solid ${BAI.caramelBorder}`, borderRadius: 8, padding: '8px 16px', transition: 'all .15s', background: BAI.caramelLight }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.85' }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1' }}
           >
@@ -1409,7 +1412,7 @@ export default function Home() {
               <Building2 size={48} color={BAI.inkFaint} style={{ opacity: 0.25, margin: '0 auto 16px', display: 'block' }} />
               <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 22, color: BAI.inkMid, marginBottom: 8 }}>Aucun bien pour ces critères.</p>
               <p style={{ fontSize: 14, color: BAI.inkFaint, marginBottom: 24 }}>Essayez de modifier vos filtres.</p>
-              <button onClick={() => { setCity(''); setType(''); setMaxBudget('') }} style={{ background: BAI.night, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+              <button onClick={() => { setCity(''); setType(''); setMaxBudget('') }} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minHeight: 44, background: BAI.night, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                 Effacer les filtres
               </button>
             </motion.div>
