@@ -79,13 +79,6 @@ const MARQUEE_ROW2 = [
 
 // ─── SearchBox ────────────────────────────────────────────────────────────────
 
-const BUDGET_PRESETS = [
-  { label: '800 €', value: '800' },
-  { label: '1 000 €', value: '1000' },
-  { label: '1 500 €', value: '1500' },
-  { label: '2 000 €+', value: '2000' },
-]
-
 const SUG_STYLE: React.CSSProperties = {
   position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 200,
   background: 'rgba(8,11,26,0.97)',
@@ -247,29 +240,6 @@ function SearchBox({ city, setCity, type, setType, maxBudget, setMaxBudget }: Se
               />
             </div>
           </div>
-        </div>
-
-        {/* Budget presets */}
-        <div style={{ display: 'flex', gap: 8, paddingLeft: 2 }}>
-          {BUDGET_PRESETS.map(({ label: lbl, value: v }) => {
-            const active = maxBudget === v
-            return (
-              <button
-                type="button" key={v}
-                onClick={() => setMaxBudget(active ? '' : v)}
-                style={{
-                  flex: 1, padding: '7px 0', borderRadius: 20, cursor: 'pointer',
-                  border: `1px solid ${active ? 'rgba(196,151,106,0.55)' : 'rgba(255,255,255,0.18)'}`,
-                  background: active ? 'rgba(196,151,106,0.20)' : 'rgba(255,255,255,0.04)',
-                  color: active ? '#ffffff' : 'rgba(255,255,255,0.58)',
-                  fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600,
-                  transition: 'all 0.15s', whiteSpace: 'nowrap',
-                }}
-              >
-                {lbl}
-              </button>
-            )
-          })}
         </div>
 
         {/* Submit */}
