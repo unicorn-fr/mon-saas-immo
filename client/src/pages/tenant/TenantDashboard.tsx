@@ -999,13 +999,17 @@ export default function TenantDashboard() {
 
       </div>
 
-      <SpotlightTour
-        key={tourKey}
-        steps={spotlightSteps}
-        storageKey={TOUR_KEY}
-        immediate={tourImmediate}
-        onClose={() => setTourImmediate(false)}
-      />
+      {/* Ne pas superposer le tour au wizard de bienvenue (OnboardingWizard, affiché
+          par App.tsx tant que onboardingCompleted === false) */}
+      {user?.onboardingCompleted !== false && (
+        <SpotlightTour
+          key={tourKey}
+          steps={spotlightSteps}
+          storageKey={TOUR_KEY}
+          immediate={tourImmediate}
+          onClose={() => setTourImmediate(false)}
+        />
+      )}
     </>
   )
 }

@@ -31,8 +31,11 @@ export const Layout = ({ children, showHeader = true, showFooter, bodyBackground
 
   const dataRole = user?.role === 'OWNER' ? 'owner' : user?.role === 'TENANT' ? 'tenant' : undefined
 
+  // Ne pas lancer le guide interactif tant que le wizard de bienvenue (OnboardingWizard,
+  // affiché par App.tsx quand onboardingCompleted === false) est encore à l'écran —
+  // sinon les deux overlays s'affichent superposés.
   const { show: showOnboarding, dismiss: dismissOnboarding } = useOnboarding(
-    hasSidebar ? user?.id : undefined
+    hasSidebar && user?.onboardingCompleted !== false ? user?.id : undefined
   )
 
   // ── Layout sans sidebar (pages publiques, admin) ──────────────────────────
