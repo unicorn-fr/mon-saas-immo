@@ -541,9 +541,9 @@ function PropertyGroup({
         )}
 
         <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
-          <h3 style={{ fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 14, color: BAI.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 4 }}>
+          <h2 style={{ fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 14, color: BAI.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 4 }}>
             {property.title}
-          </h3>
+          </h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
             <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, display: 'flex', alignItems: 'center', gap: 4 }}>
               <MapPin size={12} />{property.city}

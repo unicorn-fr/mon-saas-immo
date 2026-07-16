@@ -454,7 +454,8 @@ export default function Login() {
       <LeftPanel />
 
       {/* Panneau droit */}
-      <div
+      <main
+        id="main-content"
         style={{
           background: BAI.bgBase,
           display: 'flex',
@@ -641,7 +642,7 @@ export default function Login() {
             </Link>
           </p>
         </motion.div>
-      </div>
+      </main>
     </div>
   )
 }

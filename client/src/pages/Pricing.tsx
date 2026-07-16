@@ -208,6 +208,7 @@ export default function Pricing() {
 
       <Header />
 
+      <main id="main-content">
       {/* ── HERO DARK ─────────────────────────────────────────────────────── */}
       <section style={{
         background: '#0a0d1a',
@@ -664,6 +665,7 @@ export default function Pricing() {
           </div>
         </div>
       </section>
+      </main>
 
       <Footer />
     </div>

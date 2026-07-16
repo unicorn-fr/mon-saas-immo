@@ -80,6 +80,7 @@ export default function Locataires() {
 
       <Header />
 
+      <main id="main-content">
       {/* ── HERO dark ── */}
       <section ref={heroRef} className="loc-hero-sec" style={{ background: '#0a0d1a', color: '#fff', padding: '80px 0 100px', overflow: 'hidden', position: 'relative' }}>
         {/* Ambient orb */}
@@ -541,6 +542,7 @@ export default function Locataires() {
           </div>
         </div>
       </section>
+      </main>
 
       <Footer />
     </div>

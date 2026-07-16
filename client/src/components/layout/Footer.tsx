@@ -107,9 +107,9 @@ export default function Footer() {
           {/* Colonnes nav */}
           {COLUMNS.map(({ heading, links }) => (
             <div key={heading}>
-              <h5 style={{ fontFamily: fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.9)', margin: '0 0 18px' }}>
+              <h2 style={{ fontFamily: fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.9)', margin: '0 0 18px' }}>
                 {heading}
-              </h5>
+              </h2>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {links.map((l) => (
                   <li key={l.to + l.label}>

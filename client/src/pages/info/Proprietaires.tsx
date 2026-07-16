@@ -120,6 +120,7 @@ export default function Proprietaires() {
 
       <Header />
 
+      <main id="main-content">
       {/* ── HERO ── */}
       <section ref={heroRef} style={{
         position: 'relative',
@@ -494,6 +495,7 @@ export default function Proprietaires() {
           </p>
         </div>
       </section>
+      </main>
 
       <Footer />
     </div>

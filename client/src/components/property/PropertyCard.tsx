@@ -229,14 +229,14 @@ export const PropertyCard = ({ property, variant = 'default', showStats = false 
         </div>
 
         {/* Titre */}
-        <h3 style={{
+        <h2 style={{
           fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
           fontSize: 17, color: BAI.ink, margin: '0 0 12px', lineHeight: 1.3,
           display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
           overflow: 'hidden',
         }}>
           {property.title}
-        </h3>
+        </h2>
 
         {/* Specs */}
         <div style={{

@@ -562,6 +562,7 @@ export default function Home() {
 
       <Header />
 
+      <main id="main-content">
       {/* ══════════════════════════════════════════════════════════════════════
           1. HERO — full viewport, 2-col desktop
       ══════════════════════════════════════════════════════════════════════ */}
@@ -1351,7 +1352,7 @@ export default function Home() {
                 >
                   <img
                     src={c.img}
-                    alt={c.name}
+                    alt=""
                     loading="lazy"
                     style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                   />
@@ -1720,6 +1721,7 @@ export default function Home() {
           </div>
         </motion.div>
       </section>
+      </main>
 
       <Footer />
     </div>

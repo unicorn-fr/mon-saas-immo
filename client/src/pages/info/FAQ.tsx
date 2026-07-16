@@ -113,6 +113,7 @@ export default function FAQ() {
     <div style={{ backgroundColor: BAI.bgBase, fontFamily: BAI.fontBody, color: BAI.ink, minHeight: '100vh' }}>
       <Header />
 
+      <main id="main-content">
       {/* Hero */}
       <section
         style={{
@@ -186,6 +187,7 @@ export default function FAQ() {
           </div>
         </div>
       </section>
+      </main>
 
       <Footer />
     </div>

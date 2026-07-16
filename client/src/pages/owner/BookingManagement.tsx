@@ -534,12 +534,12 @@ export const BookingManagement = () => {
                   }}>
                     <CalendarIcon size={28} style={{ color: BAI.owner }} />
                   </div>
-                  <h3 style={{
+                  <h2 style={{
                     fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 24, fontWeight: 700,
                     color: BAI.ink, marginBottom: 8,
                   }}>
                     Aucune visite
-                  </h3>
+                  </h2>
                   <p style={{ fontFamily: BAI.fontBody, fontSize: 13.5, color: BAI.inkMid }}>
                     {searchQuery || selectedProperty !== 'all' || selectedStatus !== 'all'
                       ? 'Aucune réservation ne correspond à vos filtres.'

@@ -26,6 +26,7 @@ export default function APropos() {
 
       <Header />
 
+      <main id="main-content">
       {/* ── SECTION 1 — Intro hero ── */}
       <section style={{
         background: '#0a0d1a',
@@ -177,6 +178,7 @@ export default function APropos() {
           </div>
         </div>
       </section>
+      </main>
 
       <Footer />
     </div>

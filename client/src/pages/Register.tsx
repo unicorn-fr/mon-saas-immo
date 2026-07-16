@@ -457,7 +457,8 @@ export default function Register() {
       <div style={{ minHeight: '100dvh', display: 'flex', ...fontBody }}>
         <LeftPanel />
 
-        <div
+        <main
+          id="main-content"
           style={{ background: BAI.bgBase, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}
           className="w-full md:w-[55%]"
         >
@@ -547,7 +548,7 @@ export default function Register() {
               </Link>
             </p>
           </div>
-        </div>
+        </main>
       </div>
     )
   }
@@ -563,7 +564,8 @@ export default function Register() {
       <div style={{ minHeight: '100dvh', display: 'flex', ...fontBody }}>
         <LeftPanel />
 
-        <div
+        <main
+          id="main-content"
           style={{ background: BAI.bgBase, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}
           className="w-full md:w-[55%]"
         >
@@ -646,7 +648,7 @@ export default function Register() {
               </Link>
             </p>
           </motion.div>
-        </div>
+        </main>
       </div>
     )
   }
@@ -660,7 +662,8 @@ export default function Register() {
       <LeftPanel />
 
       {/* Panneau droit */}
-      <div
+      <main
+        id="main-content"
         style={{
           background: BAI.bgBase,
           overflowY: 'auto', display: 'flex', justifyContent: 'center', position: 'relative',
@@ -840,7 +843,7 @@ export default function Register() {
             </Link>
           </p>
         </motion.div>
-      </div>
+      </main>
     </div>
   )
 }

@@ -1239,6 +1239,7 @@ export default function PropertyDetailsPublic() {
         </button>
         <button
           onClick={() => isAuthenticated ? setShowContactModal(true) : openAuthGate('contact')}
+          aria-label="Contacter le propriétaire"
           style={{
             flexShrink: 0,
             background: M.surface,
