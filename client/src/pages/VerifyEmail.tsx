@@ -155,7 +155,7 @@ function CodeEntry({ email: initialEmail }: { email: string }) {
                 finally { setResendLoading(false) }
               }}
               disabled={resendLoading || !email.trim()}
-              style={{ width: '100%', background: BAI.caramel, color: '#fff', border: 'none', borderRadius: 8, padding: '12px', fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 14, cursor: resendLoading ? 'not-allowed' : 'pointer', opacity: (resendLoading || !email.trim()) ? 0.5 : 1 }}
+              style={{ width: '100%', background: BAI.caramelText, color: '#fff', border: 'none', borderRadius: 8, padding: '12px', fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 14, cursor: resendLoading ? 'not-allowed' : 'pointer', opacity: (resendLoading || !email.trim()) ? 0.5 : 1 }}
             >
               {resendLoading ? 'Envoi…' : 'Envoyer le code'}
             </button>
@@ -216,7 +216,7 @@ function CodeEntry({ email: initialEmail }: { email: string }) {
             onClick={handleVerify}
             disabled={loading}
             style={{
-              width: '100%', background: loading ? 'rgba(255,255,255,0.2)' : BAI.caramel, color: '#fff', border: 'none',
+              width: '100%', background: loading ? 'rgba(255,255,255,0.2)' : BAI.caramelText, color: '#fff', border: 'none',
               borderRadius: '8px', padding: '14px 32px',
               ...font, fontWeight: 700, fontSize: '15px',
               cursor: loading ? 'not-allowed' : 'pointer', marginBottom: '20px', transition: 'background 0.15s',

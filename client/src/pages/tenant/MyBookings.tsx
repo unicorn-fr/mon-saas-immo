@@ -100,14 +100,14 @@ function InvitePanel({ invite }: { invite: CalendarInviteWithProperty }) {
               className="w-full sm:w-16 rounded-xl flex items-center justify-center"
               style={{ height: 120, background: '#f4f2ee' }}
             >
-              <Home className="w-7 h-7" style={{ color: '#9e9b96' }} />
+              <Home className="w-7 h-7" style={{ color: '#6e6b65' }} />
             </div>
           )}
         </div>
 
         <div className="flex-1 min-w-0 text-left">
           <p style={{ fontSize: 14, fontWeight: 600, color: '#0d0c0a', marginBottom: 2 }} className="truncate">{property?.title ?? 'Logement'}</p>
-          <p className="flex items-center gap-1 flex-wrap" style={{ fontSize: 12, color: '#9e9b96' }}>
+          <p className="flex items-center gap-1 flex-wrap" style={{ fontSize: 12, color: '#6e6b65' }}>
             <MapPin className="w-3 h-3 flex-shrink-0" />{property?.city ?? ''}
             <span className="mx-1">·</span>
             <Euro className="w-3 h-3 flex-shrink-0" />{Number(property?.price ?? 0).toLocaleString('fr-FR')} /mois
@@ -116,7 +116,7 @@ function InvitePanel({ invite }: { invite: CalendarInviteWithProperty }) {
             Invité par {invite.owner.firstName} {invite.owner.lastName}
           </p>
         </div>
-        <div style={{ color: '#9e9b96', flexShrink: 0, alignSelf: 'flex-start' }} className="hidden sm:block">
+        <div style={{ color: '#6e6b65', flexShrink: 0, alignSelf: 'flex-start' }} className="hidden sm:block">
           {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </div>
       </button>
@@ -124,12 +124,12 @@ function InvitePanel({ invite }: { invite: CalendarInviteWithProperty }) {
       {open && (
         <div style={{ borderTop: '1px solid #e4e1db', background: '#fafaf8', padding: '16px' }}>
           {/* Date picker — 14 jours */}
-          <p style={{ fontSize: 11, fontWeight: 600, color: '#9e9b96', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
+          <p style={{ fontSize: 11, fontWeight: 600, color: '#6e6b65', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
             Choisir une date
           </p>
           <div className="flex gap-2 flex-wrap mb-4">
             {validDates.length === 0 ? (
-              <p style={{ fontSize: 13, color: '#9e9b96' }}>Le propriétaire n'a pas encore configuré de créneaux de visite.</p>
+              <p style={{ fontSize: 13, color: '#6e6b65' }}>Le propriétaire n'a pas encore configuré de créneaux de visite.</p>
             ) : validDates.map(date => {
               const d = new Date(date + 'T00:00:00')
               const isSelected = selectedDate === date
@@ -153,13 +153,13 @@ function InvitePanel({ invite }: { invite: CalendarInviteWithProperty }) {
           {/* Créneaux disponibles — grid 2 cols mobile, 3 cols sm+ */}
           {selectedDate && (
             <>
-              <p style={{ fontSize: 11, fontWeight: 600, color: '#9e9b96', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#6e6b65', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
                 Créneaux disponibles
               </p>
               {loadingSlots ? (
-                <p style={{ fontSize: 13, color: '#9e9b96' }}>Chargement…</p>
+                <p style={{ fontSize: 13, color: '#6e6b65' }}>Chargement…</p>
               ) : availableSlots.length === 0 ? (
-                <p style={{ fontSize: 13, color: '#9e9b96' }}>Aucun créneau disponible à cette date. Essayez un autre jour.</p>
+                <p style={{ fontSize: 13, color: '#6e6b65' }}>Aucun créneau disponible à cette date. Essayez un autre jour.</p>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {availableSlots.map(time => (
@@ -320,7 +320,7 @@ export const MyBookings = () => {
                   {invites.length}
                 </span>
               </div>
-              <p style={{ fontSize: 13, color: '#9e9b96', marginBottom: 14 }}>
+              <p style={{ fontSize: 13, color: '#6e6b65', marginBottom: 14 }}>
                 Votre candidature a été approuvée — choisissez un créneau pour visiter.
               </p>
               <div className="flex flex-col gap-3">
@@ -345,7 +345,7 @@ export const MyBookings = () => {
             <div className="flex flex-wrap items-center gap-3">
               {/* Status Filter */}
               <div className="flex items-center gap-2 flex-1 min-w-0">
-                <Filter className="w-4 h-4 flex-shrink-0" style={{ color: '#9e9b96' }} />
+                <Filter className="w-4 h-4 flex-shrink-0" style={{ color: '#6e6b65' }} />
                 <select
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value as BookingStatus | 'all')}
@@ -389,7 +389,7 @@ export const MyBookings = () => {
                     whiteSpace: 'nowrap', minHeight: 36, transition: 'all 0.15s',
                     ...(viewMode === 'list'
                       ? { background: '#ffffff', color: '#1b5e3b', boxShadow: '0 1px 3px rgba(13,12,10,0.08)' }
-                      : { background: 'transparent', color: '#9e9b96' }),
+                      : { background: 'transparent', color: '#6e6b65' }),
                   }}
                 >
                   Liste
@@ -402,7 +402,7 @@ export const MyBookings = () => {
                     whiteSpace: 'nowrap', minHeight: 36, transition: 'all 0.15s',
                     ...(viewMode === 'calendar'
                       ? { background: '#ffffff', color: '#1b5e3b', boxShadow: '0 1px 3px rgba(13,12,10,0.08)' }
-                      : { background: 'transparent', color: '#9e9b96' }),
+                      : { background: 'transparent', color: '#6e6b65' }),
                   }}
                 >
                   Calendrier
@@ -453,7 +453,7 @@ export const MyBookings = () => {
                     className="w-16 h-16 flex items-center justify-center mx-auto mb-4"
                     style={{ background: '#f4f2ee', borderRadius: '50%' }}
                   >
-                    <CalendarIcon className="w-7 h-7" style={{ color: '#9e9b96' }} />
+                    <CalendarIcon className="w-7 h-7" style={{ color: '#6e6b65' }} />
                   </div>
                   <p
                     style={{
@@ -510,7 +510,7 @@ export const MyBookings = () => {
                   },
                   {
                     label: 'Passées',
-                    color: '#9e9b96',
+                    color: '#6e6b65',
                     items: bookings.filter(b =>
                       (b.status === 'COMPLETED') ||
                       (b.status === 'CONFIRMED' && new Date(b.visitDate) < today)
@@ -556,7 +556,7 @@ export const MyBookings = () => {
 
           {/* Pagination Info */}
           {bookings.length > 0 && viewMode === 'list' && (
-            <div className="mt-6 text-center" style={{ fontSize: 13, color: '#9e9b96' }}>
+            <div className="mt-6 text-center" style={{ fontSize: 13, color: '#6e6b65' }}>
               Affichage de {bookings.length} sur {bookingsTotal} visite
               {bookingsTotal > 1 ? 's' : ''}
             </div>

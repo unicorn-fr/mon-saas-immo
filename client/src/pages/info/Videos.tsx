@@ -105,7 +105,7 @@ export default function Videos() {
                 {v.icon}
                 {v.label}
                 {v.badge && (
-                  <span style={{ background: BAI.caramel, color: '#fff', fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, borderRadius: 4, padding: '1px 6px', letterSpacing: '0.06em' }}>
+                  <span style={{ background: BAI.caramelText, color: '#fff', fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, borderRadius: 4, padding: '1px 6px', letterSpacing: '0.06em' }}>
                     {v.badge}
                   </span>
                 )}
@@ -136,7 +136,7 @@ export default function Videos() {
             {current.badge && (
               <div style={{
                 position: 'absolute', top: 14, right: 14,
-                background: BAI.caramel, color: '#fff',
+                background: BAI.caramelText, color: '#fff',
                 fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700,
                 borderRadius: 6, padding: '3px 10px', letterSpacing: '0.08em',
               }}>

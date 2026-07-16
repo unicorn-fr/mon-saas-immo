@@ -134,14 +134,14 @@ export default function PhoneVerification({ onVerified, onClose }: PhoneVerifica
         {/* Header */}
         <div style={{ background: '#1a1a2e', padding: '24px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <div style={{ fontSize: '10px', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#9e9b96', marginBottom: '4px' }}>
+            <div style={{ fontSize: '10px', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#6e6b65', marginBottom: '4px' }}>
               Sécurité du compte
             </div>
             <div style={{ color: '#fff', fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '22px', fontWeight: 700, fontStyle: 'italic' }}>
               Vérification du téléphone
             </div>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#9e9b96', cursor: 'pointer', fontSize: '20px', lineHeight: 1 }}>×</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#6e6b65', cursor: 'pointer', fontSize: '20px', lineHeight: 1 }}>×</button>
         </div>
 
         <div style={{ padding: '28px' }}>
@@ -185,7 +185,7 @@ export default function PhoneVerification({ onVerified, onClose }: PhoneVerifica
               <p style={{ fontSize: '14px', color: '#5a5754', marginBottom: '4px', lineHeight: 1.6 }}>
                 Code envoyé au <strong>{phone}</strong>
               </p>
-              <p style={{ fontSize: '13px', color: '#9e9b96', marginBottom: '24px' }}>
+              <p style={{ fontSize: '13px', color: '#6e6b65', marginBottom: '24px' }}>
                 Entrez les 6 chiffres reçus par SMS.
               </p>
 
@@ -228,7 +228,7 @@ export default function PhoneVerification({ onVerified, onClose }: PhoneVerifica
 
               <div style={{ textAlign: 'center' }}>
                 {countdown > 0 ? (
-                  <span style={{ fontSize: '13px', color: '#9e9b96' }}>
+                  <span style={{ fontSize: '13px', color: '#6e6b65' }}>
                     Renvoyer dans {countdown}s
                   </span>
                 ) : (

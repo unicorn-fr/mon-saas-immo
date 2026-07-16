@@ -280,7 +280,7 @@ function VerifyCodeScreen({ email, onBack }: { email: string; onBack: () => void
             <button
               onClick={handleResend}
               disabled={resendLoading}
-              style={{ background: 'none', border: 'none', color: BAI.caramel, fontWeight: 500, cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontFamily: 'inherit' }}
+              style={{ background: 'none', border: 'none', color: BAI.caramelText, fontWeight: 500, cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontFamily: 'inherit' }}
             >
               {resendLoading ? 'Envoi…' : 'Renvoyer le code'}
             </button>
@@ -290,7 +290,7 @@ function VerifyCodeScreen({ email, onBack }: { email: string; onBack: () => void
           Mauvaise adresse ?{' '}
           <button
             onClick={onBack}
-            style={{ background: 'none', border: 'none', color: BAI.caramel, fontWeight: 500, cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontFamily: 'inherit' }}
+            style={{ background: 'none', border: 'none', color: BAI.caramelText, fontWeight: 500, cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontFamily: 'inherit' }}
           >
             Modifier l'email
           </button>
@@ -418,7 +418,7 @@ export default function Register() {
             M'inscrire sur la liste d'attente
           </a>
           <p style={{ ...fontBody, fontSize: '13px', color: BAI.inkFaint }}>
-            <Link to="/" style={{ color: BAI.caramel, textDecoration: 'none' }}>← Retour à l'accueil</Link>
+            <Link to="/" style={{ color: BAI.caramelText, textDecoration: 'none' }}>← Retour à l'accueil</Link>
           </p>
         </div>
       </div>
@@ -479,7 +479,7 @@ export default function Register() {
             </div>
 
             <div style={{ marginBottom: '36px' }}>
-              <p style={{ ...fontBody, fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 10px' }}>
+              <p style={{ ...fontBody, fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramelText, margin: '0 0 10px' }}>
                 Étape 1 sur 2
               </p>
               <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(28px, 6vw, 36px)', color: BAI.ink, margin: '0 0 8px', lineHeight: 1.1 }}>
@@ -593,7 +593,7 @@ export default function Register() {
 
             {/* Badge rôle sélectionné */}
             <div style={{ marginBottom: '28px' }}>
-              <p style={{ ...fontBody, fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 10px' }}>
+              <p style={{ ...fontBody, fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramelText, margin: '0 0 10px' }}>
                 Étape 2 sur 2
               </p>
               <h1 style={{ ...fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(26px, 5vw, 34px)', color: BAI.ink, margin: '0 0 12px', lineHeight: 1.1 }}>

@@ -28,7 +28,7 @@ import type { EtatDesLieux } from '../../data/etatDesLieuxTemplate'
 
 const ETAT_OPTIONS: EtatElement[] = ['NEUF', 'BON', 'USAGE', 'MAUVAIS', 'NA']
 const ETAT_COLORS: Record<EtatElement, string> = {
-  NEUF: '#1b5e3b', BON: '#1a3270', USAGE: '#92400e', MAUVAIS: '#9b1c1c', NA: '#9e9b96',
+  NEUF: '#1b5e3b', BON: '#1a3270', USAGE: '#92400e', MAUVAIS: '#9b1c1c', NA: '#6e6b65',
 }
 const ETAT_BG: Record<EtatElement, string> = {
   NEUF: '#edf7f2', BON: '#eaf0fb', USAGE: '#fdf5ec', MAUVAIS: '#fef2f2', NA: BAI.bgMuted,

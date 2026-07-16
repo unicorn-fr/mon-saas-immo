@@ -121,7 +121,7 @@ export default function Contact() {
 
             {/* Left column */}
             <div>
-              <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 14px' }}>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramelText, margin: '0 0 14px' }}>
                 On t'écoute
               </p>
               <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(28px,4vw,44px)', lineHeight: 1.1, color: BAI.ink, margin: '0 0 18px' }}>

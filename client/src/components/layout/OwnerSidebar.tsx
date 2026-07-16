@@ -109,7 +109,7 @@ function NavItem({
             animate={{ scale: 1, opacity: 1 }}
             style={{
               fontSize: 10, fontWeight: 700,
-              background: BAI.caramel, color: '#fff',
+              background: BAI.caramelText, color: '#fff',
               borderRadius: 20, minWidth: 18, height: 18,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               padding: '0 4px',

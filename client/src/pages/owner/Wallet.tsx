@@ -138,7 +138,7 @@ export default function Wallet() {
             <button
               onClick={() => toast.success('Fonctionnalité bientôt disponible')}
               style={{
-                background: BAI.caramel, color: '#fff', border: 'none', borderRadius: 8,
+                background: BAI.caramelText, color: '#fff', border: 'none', borderRadius: 8,
                 padding: '11px 22px', fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, cursor: 'pointer',
               }}
             >

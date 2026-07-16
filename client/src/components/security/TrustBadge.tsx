@@ -51,7 +51,7 @@ const TIER_CONFIG: Record<Tier, {
     bg: '#f4f2ee',
     border: '#e4e1db',
     text: '#5a5754',
-    dot: '#9e9b96',
+    dot: '#6e6b65',
   },
   basic: {
     label: 'Basique',

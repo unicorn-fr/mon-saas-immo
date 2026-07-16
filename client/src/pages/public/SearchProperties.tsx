@@ -29,6 +29,7 @@ const T = {
   muted:         BAI.bgMuted,
   input:         '#f8f7f4',
   caramel:       BAI.caramel,
+  caramelText:   BAI.caramelText,
   caramelLight:  '#fdf5ec',
   caramelBorder: 'rgba(196,151,106,0.35)',
   night:         BAI.night,

@@ -278,7 +278,7 @@ function SearchBox({ city, setCity, type, setType, maxBudget, setMaxBudget }: Se
           type="submit" whileTap={{ scale: 0.97 }}
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-            background: BAI.caramel, border: 'none', borderRadius: 14,
+            background: BAI.caramelText, border: 'none', borderRadius: 14,
             height: 56, marginTop: 2,
             fontFamily: BAI.fontBody, fontSize: 16, fontWeight: 700,
             color: '#fff', cursor: 'pointer',
@@ -365,7 +365,7 @@ function SearchBox({ city, setCity, type, setType, maxBudget, setMaxBudget }: Se
         type="submit" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          background: BAI.caramel, border: 'none', borderRadius: 10,
+          background: BAI.caramelText, border: 'none', borderRadius: 10,
           padding: '0 26px', height: 54, flexShrink: 0,
           fontFamily: BAI.fontBody, fontSize: 15, fontWeight: 700,
           color: '#fff', cursor: 'pointer',
@@ -639,7 +639,7 @@ export default function Home() {
                 <Link to="/search"
                   style={{
                     display: 'inline-flex', alignItems: 'center', gap: 8,
-                    background: BAI.caramel, color: '#fff',
+                    background: BAI.caramelText, color: '#fff',
                     borderRadius: 8, padding: '14px 28px',
                     fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 16,
                     textDecoration: 'none', border: 'none',
@@ -1063,7 +1063,7 @@ export default function Home() {
               <Link to="/search"
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 8,
-                  background: BAI.caramel, color: '#fff',
+                  background: BAI.caramelText, color: '#fff',
                   borderRadius: 8, padding: '13px 24px',
                   fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 15,
                   textDecoration: 'none', transition: 'opacity 0.18s',
@@ -1204,7 +1204,7 @@ export default function Home() {
               viewport={{ once: true, margin: '-60px' }}
               transition={{ duration: 0.45, delay: 0.15 }}
             >
-              <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 14px' }}>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramelText, margin: '0 0 14px' }}>
                 Pour les propriétaires
               </p>
               <h2 style={{
@@ -1283,7 +1283,7 @@ export default function Home() {
 
             {/* PRO */}
             <div style={{ background: 'rgba(196,151,106,0.08)', border: `2px solid ${BAI.caramel}`, borderRadius: 16, padding: '28px 24px', textAlign: 'left', position: 'relative' }}>
-              <span style={{ position: 'absolute', top: -12, left: 24, background: BAI.caramel, color: '#fff', fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', padding: '3px 12px', borderRadius: 20 }}>LE PLUS POPULAIRE</span>
+              <span style={{ position: 'absolute', top: -12, left: 24, background: BAI.caramelText, color: '#fff', fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', padding: '3px 12px', borderRadius: 20 }}>LE PLUS POPULAIRE</span>
               <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 8px' }}>Pro</p>
               <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 36, color: '#fff', margin: '0 0 4px', lineHeight: 1 }}>9,90 €<span style={{ fontSize: 16, fontStyle: 'normal', fontWeight: 400, color: 'rgba(255,255,255,0.5)' }}>/mois</span></p>
               <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: '0 0 16px' }}>Soit 118 €/an · Sans engagement</p>
@@ -1314,7 +1314,7 @@ export default function Home() {
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
             <div>
-              <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 6px' }}>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramelText, margin: '0 0 6px' }}>
                 Villes populaires
               </p>
               <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3vw,32px)', color: BAI.ink, margin: 0, lineHeight: 1.1 }}>
@@ -1400,7 +1400,7 @@ export default function Home() {
 
         <div className="results-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 4px' }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramelText, margin: '0 0 4px' }}>
               Annonces
             </p>
             <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(24px,3vw,34px)', color: BAI.ink, margin: 0, lineHeight: 1.1 }}>
@@ -1486,7 +1486,7 @@ export default function Home() {
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(20px,5vw,48px)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
             <div>
-              <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 4px' }}>Guide</p>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramelText, margin: '0 0 4px' }}>Guide</p>
               <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3vw,30px)', color: BAI.ink, margin: 0 }}>Le guide de la location</h2>
             </div>
             <Link to="/guide" style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.caramel, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
@@ -1505,7 +1505,7 @@ export default function Home() {
                 >
                   <img src={featured.image ?? 'https://picsum.photos/seed/rental-dossier/800/500'} alt={featured.title} className="guide-featured-img" loading="lazy" />
                   <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(13,12,10,0.90) 0%, rgba(13,12,10,0.45) 60%, transparent 100%)', padding: 'clamp(16px,3vw,28px)' }}>
-                    <span style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.caramel, background: 'rgba(196,151,106,0.15)', border: '1px solid rgba(196,151,106,0.35)', padding: '3px 9px', borderRadius: 4, display: 'inline-block', marginBottom: 10 }}>{featured.tag}</span>
+                    <span style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.caramelText, background: 'rgba(196,151,106,0.15)', border: '1px solid rgba(196,151,106,0.35)', padding: '3px 9px', borderRadius: 4, display: 'inline-block', marginBottom: 10 }}>{featured.tag}</span>
                     <h3 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(18px,2.5vw,24px)', color: '#fff', margin: '0 0 8px', lineHeight: 1.25 }}>{featured.title}</h3>
                     {featured.desc && <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: 'rgba(255,255,255,0.72)', margin: '0 0 10px', lineHeight: 1.5 }}>{featured.desc}</p>}
                     <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: 'rgba(255,255,255,0.50)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
@@ -1538,7 +1538,7 @@ export default function Home() {
       ══════════════════════════════════════════════════════════════════════ */}
       <section style={{ background: BAI.bgMuted, borderTop: `1px solid ${BAI.border}`, padding: 'clamp(48px,7vh,80px) clamp(20px,5vw,48px)' }}>
         <div style={{ maxWidth: 640, margin: '0 auto', textAlign: 'center' }}>
-          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 10px' }}>Alertes</p>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramelText, margin: '0 0 10px' }}>Alertes</p>
           <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(26px,3.5vw,36px)', color: BAI.ink, margin: '0 0 10px' }}>
             Soyez le premier informé
           </h2>
@@ -1588,7 +1588,7 @@ export default function Home() {
       <section style={{ background: BAI.bgMuted, borderTop: `1px solid ${BAI.border}`, padding: 'clamp(48px,7vh,80px) clamp(20px,5vw,48px)' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 10px' }}>Témoignages</p>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramelText, margin: '0 0 10px' }}>Témoignages</p>
             <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(26px,4vw,38px)', color: BAI.ink, margin: 0, lineHeight: 1.1 }}>
               Ils ont trouvé sans agence.
             </h2>
@@ -1696,7 +1696,7 @@ export default function Home() {
             <Link to="/register?role=TENANT"
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
-                background: BAI.caramel, color: '#fff',
+                background: BAI.caramelText, color: '#fff',
                 borderRadius: 8, padding: '14px 28px',
                 fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 16,
                 textDecoration: 'none', transition: 'opacity 0.18s',

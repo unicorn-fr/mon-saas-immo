@@ -20,7 +20,7 @@ export const BAI = {
   // ── Texte ────────────────────────────────────────────────────────────────
   ink:          '#0d0c0a',   // texte principal
   inkMid:       '#5a5754',   // texte secondaire
-  inkFaint:     '#9e9b96',   // placeholders, labels discrets
+  inkFaint:     '#6e6b65',   // texte tertiaire (méta, placeholders) — AA 4.5:1 sur bgSurface/bgBase/bgMuted
 
   // ── Couleur de nuit (sidebar) ─────────────────────────────────────────
   night:        '#1a1a2e',   // fond sidebar
@@ -28,7 +28,8 @@ export const BAI = {
   nightBorder:  '#2e2e46',   // séparateurs dans la sidebar
 
   // ── Caramel (marque, CTA, accent) ─────────────────────────────────────
-  caramel:      '#c4976a',
+  caramel:      '#c4976a',   // décoratif uniquement (icônes, bordures, fonds) — PAS pour du texte
+  caramelText:  '#8f6439',   // variante AA (4.5:1+) — texte caramel, ou texte blanc sur fond caramel
   caramelHover: '#b07f54',
   caramelLight: '#fdf5ec',   // fond clair pour badges caramel
   caramelBorder:'#e8ccaa',

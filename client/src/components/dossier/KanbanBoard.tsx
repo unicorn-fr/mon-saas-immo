@@ -130,12 +130,12 @@ function CardContent({
     >
       {/* Drag handle + file info */}
       <div className="flex items-center gap-2 px-3 pt-3 pb-2" {...dragProps}>
-        <GripVertical className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#9e9b96' }} />
+        <GripVertical className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#6e6b65' }} />
         <div className="flex-1 min-w-0">
           <p className="text-xs font-semibold truncate" style={{ color: '#0d0c0a' }}>
             {entry.file.name}
           </p>
-          <p className="text-[10px]" style={{ color: '#9e9b96' }}>
+          <p className="text-[10px]" style={{ color: '#6e6b65' }}>
             {(entry.file.size / 1024).toFixed(0)} Ko
             {entry.file.type.includes('pdf') ? ' · PDF' : ' · Image'}
           </p>
@@ -211,7 +211,7 @@ function CardContent({
           <button
             onClick={(e) => { e.stopPropagation(); setLogsOpen((v) => !v) }}
             className="text-[10px] flex items-center gap-1"
-            style={{ color: '#9e9b96' }}
+            style={{ color: '#6e6b65' }}
             onPointerDown={(e) => e.stopPropagation()}  // don't trigger drag
           >
             <FileText className="w-2.5 h-2.5" />

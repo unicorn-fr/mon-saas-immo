@@ -37,7 +37,7 @@ const T = {
   muted:       '#f4f2ee',
   ink:         '#0d0c0a',
   inkMid:      '#5a5754',
-  inkFaint:    '#9e9b96',
+  inkFaint:    '#6e6b65',
   border:      '#e4e1db',
   caramel:     '#c4976a',
   caramelLight:'#fdf5ec',

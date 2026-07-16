@@ -324,7 +324,7 @@ export default function ContractsList() {
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 8,
                   padding: '0 20px', minHeight: 44, borderRadius: 10,
-                  background: BAI.caramel, color: '#ffffff',
+                  background: BAI.caramelText, color: '#ffffff',
                   fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13,
                   textDecoration: 'none', border: 'none',
                   transition: 'opacity 0.15s', flexShrink: 0,

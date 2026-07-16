@@ -121,7 +121,7 @@ export function ReportUserModal({ targetId, targetName, isOpen, onClose }: Props
                       <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0d0c0a', margin: 0 }}>
                         Signaler un utilisateur
                       </h2>
-                      <p style={{ fontSize: '13px', color: '#9e9b96', margin: '2px 0 0' }}>
+                      <p style={{ fontSize: '13px', color: '#6e6b65', margin: '2px 0 0' }}>
                         {targetName}
                       </p>
                     </div>
@@ -133,7 +133,7 @@ export function ReportUserModal({ targetId, targetName, isOpen, onClose }: Props
                       borderRadius: '8px', padding: '6px', cursor: 'pointer', lineHeight: 0,
                     }}
                   >
-                    <X style={{ width: 16, height: 16, color: '#9e9b96' }} />
+                    <X style={{ width: 16, height: 16, color: '#6e6b65' }} />
                   </button>
                 </div>
 

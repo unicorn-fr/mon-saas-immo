@@ -1484,7 +1484,7 @@ export default function GuideArticle() {
             <button
               onClick={() => navigate(meta.role === 'tenant' ? '/search' : '/register?role=OWNER')}
               style={{
-                background: BAI.caramel,
+                background: BAI.caramelText,
                 color: '#fff',
                 border: 'none',
                 borderRadius: BAI.radius,

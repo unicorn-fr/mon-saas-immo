@@ -281,7 +281,7 @@ export default function TenantPayments() {
                       style={{
                         display: 'inline-flex', alignItems: 'center', gap: 6,
                         padding: '10px 20px', borderRadius: 9, border: 'none',
-                        background: BAI.caramel, color: '#ffffff',
+                        background: BAI.caramelText, color: '#ffffff',
                         fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700,
                         cursor: 'pointer',
                       }}

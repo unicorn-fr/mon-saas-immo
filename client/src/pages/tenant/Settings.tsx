@@ -1115,7 +1115,7 @@ export default function TenantSettings() {
                         <p style={{ fontSize: '13px', fontWeight: 600, color: '#92400e', fontFamily: BAI.fontBody }}>Plan actuel</p>
                         <p style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontStyle: 'italic', fontSize: '20px', color: BAI.ink, marginTop: '2px' }}>Gratuit</p>
                       </div>
-                      <span style={{ background: BAI.caramel, color: '#ffffff', borderRadius: '20px', padding: '4px 12px', fontSize: '12px', fontWeight: 600, fontFamily: BAI.fontBody }}>
+                      <span style={{ background: BAI.caramelText, color: '#ffffff', borderRadius: '20px', padding: '4px 12px', fontSize: '12px', fontWeight: 600, fontFamily: BAI.fontBody }}>
                         Actif
                       </span>
                     </div>

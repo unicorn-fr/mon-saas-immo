@@ -9,7 +9,7 @@ const M = {
   inputBg:     '#f8f7f4',
   ink:         '#0d0c0a',
   inkMid:      '#5a5754',
-  inkFaint:    '#9e9b96',
+  inkFaint:    '#6e6b65',
   owner:       '#1a3270',
   ownerLight:  '#eaf0fb',
   ownerBorder: '#b8ccf0',

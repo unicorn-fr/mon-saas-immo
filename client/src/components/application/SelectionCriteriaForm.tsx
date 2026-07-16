@@ -22,7 +22,7 @@ interface Tip {
 function Tooltip({ text }: Tip) {
   return (
     <span className="group relative inline-flex ml-1.5">
-      <Info className="w-3.5 h-3.5 cursor-help" style={{ color: '#9e9b96' }} />
+      <Info className="w-3.5 h-3.5 cursor-help" style={{ color: '#6e6b65' }} />
       <span className="pointer-events-none absolute left-5 top-0 z-20 w-64 rounded-lg px-3 py-2 text-xs text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100" style={{ background: '#1a1a2e' }}>
         {text}
       </span>

@@ -153,7 +153,7 @@ export default function Locataires() {
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 5,
                   padding: '5px 12px', borderRadius: 7,
-                  background: BAI.caramel, color: '#fff',
+                  background: BAI.caramelText, color: '#fff',
                   fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600,
                   flexShrink: 0,
                 }}>
@@ -169,11 +169,11 @@ export default function Locataires() {
                     display: 'inline-flex', alignItems: 'center', gap: 7,
                     padding: '14px 26px', borderRadius: 8,
                     fontFamily: BAI.fontBody, fontSize: 15, fontWeight: 600,
-                    background: BAI.caramel, color: '#fff', textDecoration: 'none',
+                    background: BAI.caramelText, color: '#fff', textDecoration: 'none',
                     minHeight: 44,
                   }}
                   onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = BAI.caramelHover }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = BAI.caramel }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = BAI.caramelText }}
                 >
                   Créer mon dossier <ArrowRight size={16} />
                 </Link>
@@ -480,7 +480,7 @@ export default function Locataires() {
             <Link to="/register?role=TENANT"
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
-                background: BAI.caramel, color: '#fff',
+                background: BAI.caramelText, color: '#fff',
                 borderRadius: 8, padding: '14px 28px',
                 fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 15,
                 textDecoration: 'none',
@@ -518,11 +518,11 @@ export default function Locataires() {
                 display: 'inline-flex', alignItems: 'center', gap: 7,
                 padding: '14px 26px', borderRadius: 8,
                 fontFamily: BAI.fontBody, fontSize: 15, fontWeight: 600,
-                background: BAI.caramel, color: '#fff', textDecoration: 'none',
+                background: BAI.caramelText, color: '#fff', textDecoration: 'none',
                 minHeight: 44,
               }}
               onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = BAI.caramelHover }}
-              onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = BAI.caramel }}
+              onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = BAI.caramelText }}
             >
               Lancer ma recherche <ArrowRight size={16} />
             </Link>

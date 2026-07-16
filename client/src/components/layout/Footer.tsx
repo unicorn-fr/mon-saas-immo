@@ -99,8 +99,8 @@ export default function Footer() {
               Location immobilière entre particuliers. Zéro frais d'agence, bail électronique, dossiers vérifiés par IA.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', margin: 0 }}>Bailio SAS · 75011 Paris</p>
-              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', margin: 0 }}>contact@bailio.fr</p>
+              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', margin: 0 }}>Bailio SAS · 75011 Paris</p>
+              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', margin: 0 }}>contact@bailio.fr</p>
             </div>
           </div>
 
@@ -130,7 +130,7 @@ export default function Footer() {
 
         {/* Barre du bas */}
         <div className="footer-bottom">
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>
             © {new Date().getFullYear()} Bailio. Tous droits réservés.
           </span>
           <div className="footer-legal">
@@ -138,9 +138,9 @@ export default function Footer() {
               <Link
                 key={l.to}
                 to={l.to}
-                style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', textDecoration: 'none', transition: 'color 0.15s' }}
+                style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textDecoration: 'none', transition: 'color 0.15s' }}
                 onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.75)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.55)' }}
               >
                 {l.label}
               </Link>

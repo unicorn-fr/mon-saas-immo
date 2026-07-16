@@ -293,7 +293,7 @@ export function GuidedTour({ steps, storageKey, onClose, immediate }: GuidedTour
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
                 width: '100%', padding: '11px 20px', borderRadius: 10,
-                background: BAI.caramel, color: '#fff', border: 'none',
+                background: BAI.caramelText, color: '#fff', border: 'none',
                 fontFamily: BAI.fontBody, fontSize: 13.5, fontWeight: 700,
                 cursor: 'pointer', marginBottom: 16,
                 boxShadow: '0 4px 16px rgba(196,151,106,0.30)',

@@ -567,7 +567,7 @@ export default function Login() {
                 <label htmlFor="login-pwd" style={{ ...fontBody, fontSize: '13px', fontWeight: 500, color: BAI.ink }}>Mot de passe</label>
                 <Link
                   to="/forgot-password"
-                  style={{ ...fontBody, fontSize: '13px', color: BAI.caramel, textDecoration: 'none' }}
+                  style={{ ...fontBody, fontSize: '13px', color: BAI.caramelText, textDecoration: 'none' }}
                   onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
                   onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
                 >
@@ -621,7 +621,7 @@ export default function Login() {
               <button
                 onClick={handleMagicLink}
                 style={{
-                  background: 'none', border: 'none', color: BAI.caramel,
+                  background: 'none', border: 'none', color: BAI.caramelText,
                   fontWeight: 500, cursor: 'pointer', fontSize: '12px',
                   textDecoration: 'underline', fontFamily: BAI.fontBody,
                 }}

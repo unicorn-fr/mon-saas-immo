@@ -46,9 +46,10 @@ const M = {
   inputBg: '#f8f7f4',
   ink: '#0d0c0a',
   inkMid: '#5a5754',
-  inkFaint: '#9e9b96',
+  inkFaint: '#6e6b65',
   night: '#1a1a2e',
   caramel: '#c4976a',
+  caramelText: '#8f6439',
   caramelLight: '#fdf5ec',
   tenant: '#1b5e3b',
   tenantLight: '#edf7f2',
@@ -1068,7 +1069,7 @@ export default function PropertyDetailsPublic() {
                           className="w-full flex items-center justify-center gap-2 px-4 py-3 mb-2"
                           style={{
                             background: '#f4f2ee',
-                            color: '#9e9b96',
+                            color: '#6e6b65',
                             fontFamily: M.body,
                             fontSize: '14px',
                             fontWeight: 600,

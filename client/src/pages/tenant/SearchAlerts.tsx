@@ -280,7 +280,7 @@ export default function SearchAlerts() {
 
               <button
                 type="submit" disabled={submitting}
-                style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: BAI.caramel, color: '#fff', fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, cursor: submitting ? 'default' : 'pointer', opacity: submitting ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 8 }}
+                style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: BAI.caramelText, color: '#fff', fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600, cursor: submitting ? 'default' : 'pointer', opacity: submitting ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 8 }}
               >
                 {submitting && <Loader size={14} style={{ animation: 'spin 1s linear infinite' }} />}
                 {submitting ? 'Création…' : 'Créer l\'alerte'}

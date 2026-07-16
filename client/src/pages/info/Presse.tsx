@@ -191,7 +191,7 @@ export default function Presse() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                background: BAI.caramel,
+                background: BAI.caramelText,
                 color: '#ffffff',
                 fontFamily: BAI.fontBody,
                 fontWeight: 600,

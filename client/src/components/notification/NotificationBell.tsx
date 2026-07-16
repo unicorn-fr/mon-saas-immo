@@ -145,7 +145,7 @@ export const NotificationBell = () => {
                       <p className="text-sm line-clamp-2 mb-1" style={{ color: '#5a5754' }}>
                         {notification.message}
                       </p>
-                      <p className="text-xs" style={{ color: '#9e9b96' }}>
+                      <p className="text-xs" style={{ color: '#6e6b65' }}>
                         {formatDistanceToNow(new Date(notification.createdAt), {
                           addSuffix: true,
                           locale: fr,
@@ -157,9 +157,9 @@ export const NotificationBell = () => {
                     <button
                       onClick={(e) => handleDelete(notification.id, e)}
                       className="p-1 transition-colors flex-shrink-0"
-                      style={{ color: '#9e9b96' }}
+                      style={{ color: '#6e6b65' }}
                       onMouseEnter={e => (e.currentTarget.style.color = '#9b1c1c')}
-                      onMouseLeave={e => (e.currentTarget.style.color = '#9e9b96')}
+                      onMouseLeave={e => (e.currentTarget.style.color = '#6e6b65')}
                       title="Supprimer"
                     >
                       <Trash2 className="w-4 h-4" />

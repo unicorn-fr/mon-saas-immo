@@ -774,7 +774,7 @@ export default function OwnerDashboard() {
                     to="/properties/new"
                     style={{
                       display: 'inline-flex', alignItems: 'center', gap: 8,
-                      background: BAI.caramel, color: '#fff',
+                      background: BAI.caramelText, color: '#fff',
                       fontFamily: BAI.fontBody, fontSize: 14, fontWeight: 600,
                       padding: '12px 24px', borderRadius: 10, textDecoration: 'none',
                       marginTop: 4,

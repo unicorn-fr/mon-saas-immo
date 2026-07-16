@@ -29,7 +29,7 @@ const STATUS_STYLE: Record<ApplicationStatus, React.CSSProperties> = {
   PENDING:   { background: '#fdf5ec', color: '#92400e', border: '1px solid #e8c99a' },
   APPROVED:  { background: '#edf7f2', color: '#1b5e3b', border: '1px solid #9fd4ba' },
   REJECTED:  { background: '#fef2f2', color: '#9b1c1c', border: '1px solid #fca5a5' },
-  WITHDRAWN: { background: '#f4f2ee', color: '#9e9b96', border: '1px solid #ccc9c3' },
+  WITHDRAWN: { background: '#f4f2ee', color: '#6e6b65', border: '1px solid #ccc9c3' },
 }
 
 const SERVER_BASE =
@@ -104,11 +104,11 @@ function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw:
             className="w-16 h-16 flex items-center justify-center flex-shrink-0"
             style={{ background: '#f4f2ee', borderRadius: 8 }}
           >
-            <Building2 className="w-6 h-6" style={{ color: '#9e9b96' }} />
+            <Building2 className="w-6 h-6" style={{ color: '#6e6b65' }} />
           </div>
           <div className="flex-1 min-w-0">
-            <p style={{ fontSize: 14, fontWeight: 600, color: '#9e9b96' }}>Logement non disponible</p>
-            <p style={{ fontSize: 12, color: '#9e9b96', marginTop: 2 }}>
+            <p style={{ fontSize: 14, fontWeight: 600, color: '#6e6b65' }}>Logement non disponible</p>
+            <p style={{ fontSize: 12, color: '#6e6b65', marginTop: 2 }}>
               Ce bien n'est plus accessible.
             </p>
           </div>
@@ -167,7 +167,7 @@ function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw:
               />
             ) : (
               <div style={{ position: 'absolute', inset: 0, background: '#f4f2ee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Building2 className="w-6 h-6" style={{ color: '#9e9b96' }} />
+                <Building2 className="w-6 h-6" style={{ color: '#6e6b65' }} />
               </div>
             )}
             {/* Status accent bar */}
@@ -214,7 +214,7 @@ function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw:
             </h3>
 
             {/* City + price */}
-            <p style={{ fontSize: 12, color: '#9e9b96', margin: '0 0 5px', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <p style={{ fontSize: 12, color: '#6e6b65', margin: '0 0 5px', display: 'flex', alignItems: 'center', gap: 4 }}>
               <span>{prop.city}</span>
               <span style={{ color: '#e4e1db' }}>·</span>
               <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 14, fontWeight: 700, color: '#5a5754' }}>
@@ -224,7 +224,7 @@ function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw:
 
             {/* Date + voir le bien */}
             <div className="flex items-center gap-3 flex-wrap">
-              <span style={{ fontSize: 11, color: '#9e9b96' }}>
+              <span style={{ fontSize: 11, color: '#6e6b65' }}>
                 Envoyée le {format(new Date(app.createdAt), 'd MMM yyyy', { locale: fr })}
               </span>
               <span
@@ -365,7 +365,7 @@ function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw:
       {isWithdrawn && (
         <div style={{ borderTop: '1px solid #ccc9c3', padding: '12px 16px', background: '#f4f2ee' }}>
           <div className="flex items-start gap-2">
-            <XCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#9e9b96' }} />
+            <XCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#6e6b65' }} />
             <div>
               <p style={{ fontSize: 12, fontWeight: 600, color: '#5a5754', fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: '2px' }}>
                 Retirée
@@ -392,7 +392,7 @@ function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw:
                 <div>
                   <p
                     className="uppercase tracking-wide mb-2"
-                    style={{ fontSize: 10, fontWeight: 500, color: '#9e9b96', letterSpacing: '0.08em' }}
+                    style={{ fontSize: 10, fontWeight: 500, color: '#6e6b65', letterSpacing: '0.08em' }}
                   >
                     Analyse de votre dossier
                   </p>
@@ -424,7 +424,7 @@ function AppCard({ app, onWithdraw, onReapply }: { app: Application; onWithdraw:
                 <div>
                   <p
                     className="uppercase tracking-wide mb-1"
-                    style={{ fontSize: 10, fontWeight: 500, color: '#9e9b96', letterSpacing: '0.08em' }}
+                    style={{ fontSize: 10, fontWeight: 500, color: '#6e6b65', letterSpacing: '0.08em' }}
                   >
                     Votre lettre de motivation
                   </p>
@@ -520,7 +520,7 @@ export default function MyApplications() {
         <div className="max-w-3xl mx-auto">
 
           {loading ? (
-            <div className="flex items-center justify-center py-16 gap-2" style={{ color: '#9e9b96' }}>
+            <div className="flex items-center justify-center py-16 gap-2" style={{ color: '#6e6b65' }}>
               <Loader2 className="w-5 h-5 animate-spin" />
               <span style={{ fontSize: 14 }}>Chargement…</span>
             </div>
@@ -538,7 +538,7 @@ export default function MyApplications() {
                 className="w-16 h-16 flex items-center justify-center mx-auto mb-4"
                 style={{ background: '#f4f2ee', borderRadius: '50%' }}
               >
-                <SendHorizonal className="w-7 h-7" style={{ color: '#9e9b96' }} />
+                <SendHorizonal className="w-7 h-7" style={{ color: '#6e6b65' }} />
               </div>
               <p
                 style={{
@@ -610,7 +610,7 @@ export default function MyApplications() {
                 <>
                   <div className="flex items-center gap-3 pt-2">
                     <div style={{ flex: 1, height: '1px', background: '#ccc9c3' }} />
-                    <span style={{ fontSize: 11, fontWeight: 600, color: '#9e9b96', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: "'DM Sans', system-ui, sans-serif", whiteSpace: 'nowrap' }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: '#6e6b65', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: "'DM Sans', system-ui, sans-serif", whiteSpace: 'nowrap' }}>
                       Candidatures retirées
                     </span>
                     <div style={{ flex: 1, height: '1px', background: '#ccc9c3' }} />

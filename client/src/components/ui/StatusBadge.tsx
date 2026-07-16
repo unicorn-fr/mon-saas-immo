@@ -9,10 +9,10 @@ const VARIANTS: Record<Variant, { bg: string; border: string; color: string; dot
   warning:   { bg: '#fdf5ec', border: '#f3c99a', color: '#92400e', dot: '#c4976a' },
   danger:    { bg: '#fef2f2', border: '#fca5a5', color: '#9b1c1c', dot: '#9b1c1c' },
   info:      { bg: '#eaf0fb', border: '#b8ccf0', color: '#1a3270', dot: '#1a3270' },
-  default:   { bg: '#f4f2ee', border: '#e4e1db', color: '#5a5754', dot: '#9e9b96' },
+  default:   { bg: '#f4f2ee', border: '#e4e1db', color: '#5a5754', dot: '#6e6b65' },
   pending:   { bg: '#fdf5ec', border: '#f3c99a', color: '#92400e', dot: '#c4976a', label: 'En attente' },
   active:    { bg: '#edf7f2', border: '#9fd4ba', color: '#1b5e3b', dot: '#1b5e3b', label: 'Actif' },
-  draft:     { bg: '#f4f2ee', border: '#e4e1db', color: '#5a5754', dot: '#9e9b96', label: 'Brouillon' },
+  draft:     { bg: '#f4f2ee', border: '#e4e1db', color: '#5a5754', dot: '#6e6b65', label: 'Brouillon' },
   signed:    { bg: '#eaf0fb', border: '#b8ccf0', color: '#1a3270', dot: '#1a3270', label: 'Signé' },
   completed: { bg: '#edf7f2', border: '#9fd4ba', color: '#1b5e3b', dot: '#1b5e3b', label: 'Complété' },
 }

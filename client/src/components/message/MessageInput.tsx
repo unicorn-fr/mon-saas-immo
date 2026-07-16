@@ -25,7 +25,7 @@ const formatFileSize = (bytes: number): string => {
 const M = {
   ink: '#0d0c0a',
   inkMid: '#5a5754',
-  inkFaint: '#9e9b96',
+  inkFaint: '#6e6b65',
   night: '#1a1a2e',
   muted: '#f4f2ee',
   border: '#e4e1db',

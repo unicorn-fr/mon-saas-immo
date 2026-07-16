@@ -287,8 +287,8 @@ function Tooltip({ step, idx, total, rect, vw, vh, onAdvance, onBack, onClose }:
               flex: idx > 0 ? 2 : 1, height: 52, borderRadius: 12,
               border: 'none',
               background: isLast
-                ? 'linear-gradient(135deg, rgba(196,151,106,0.9), rgba(196,151,106,0.7))'
-                : BAI.caramel,
+                ? 'linear-gradient(135deg, rgba(143,100,57,0.95), rgba(143,100,57,0.85))'
+                : BAI.caramelText,
               color: '#fff',
               fontFamily: BAI.fontBody, fontSize: 15, fontWeight: 700,
               cursor: 'pointer', pointerEvents: 'auto',

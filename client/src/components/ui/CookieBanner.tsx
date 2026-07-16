@@ -122,7 +122,7 @@ export default function CookieBanner() {
               padding: '10px 22px',
               borderRadius: 8,
               border: 'none',
-              background: BAI.caramel,
+              background: BAI.caramelText,
               color: '#fff',
               fontSize: 14,
               fontWeight: 600,
@@ -131,8 +131,8 @@ export default function CookieBanner() {
               transition: 'background 0.15s',
               minHeight: 40,
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = '#b07f54')}
-            onMouseLeave={e => (e.currentTarget.style.background = BAI.caramel)}
+            onMouseEnter={e => (e.currentTarget.style.background = '#7a552f')}
+            onMouseLeave={e => (e.currentTarget.style.background = BAI.caramelText)}
           >
             Accepter
           </button>

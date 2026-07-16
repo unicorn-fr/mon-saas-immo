@@ -60,14 +60,14 @@ export const CancelBookingModal = ({
               </div>
               <div>
                 <h2 className="text-lg font-bold" style={{ color: '#0d0c0a' }}>Annuler la reservation</h2>
-                <p className="text-sm" style={{ color: '#9e9b96' }}>Cette action est irreversible</p>
+                <p className="text-sm" style={{ color: '#6e6b65' }}>Cette action est irreversible</p>
               </div>
             </div>
             <button
               onClick={handleClose}
               disabled={isLoading}
               className="transition-colors"
-              style={{ color: '#9e9b96' }}
+              style={{ color: '#6e6b65' }}
             >
               <X className="w-5 h-5" />
             </button>

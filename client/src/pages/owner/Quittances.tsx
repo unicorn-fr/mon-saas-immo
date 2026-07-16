@@ -602,7 +602,7 @@ export default function Quittances() {
           borderBottom: `1px solid ${BAI.border}`,
         }}>
           <div>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>Quittance</p>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.caramelText, margin: 0 }}>Quittance</p>
             <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontSize: 20, fontWeight: 700, color: BAI.ink, margin: 0 }}>Prévisualisation</p>
           </div>
           <button

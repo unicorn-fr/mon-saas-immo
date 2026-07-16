@@ -428,7 +428,7 @@ export default function ContractDetails() {
                       style={{
                         display: 'inline-flex', alignItems: 'center', gap: 6,
                         padding: '10px 16px', borderRadius: 8, minHeight: 44,
-                        background: BAI.caramel, color: '#ffffff',
+                        background: BAI.caramelText, color: '#ffffff',
                         fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 12,
                         border: 'none', cursor: pdfLoading ? 'wait' : 'pointer',
                         opacity: pdfLoading ? 0.7 : 1,
@@ -1357,7 +1357,7 @@ export default function ContractDetails() {
                       style={{
                         display: 'inline-flex', alignItems: 'center', gap: 8,
                         padding: '11px 20px', borderRadius: 9,
-                        background: BAI.caramel, color: '#ffffff',
+                        background: BAI.caramelText, color: '#ffffff',
                         fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13,
                         border: 'none', cursor: 'pointer',
                         opacity: loading ? 0.6 : 1,

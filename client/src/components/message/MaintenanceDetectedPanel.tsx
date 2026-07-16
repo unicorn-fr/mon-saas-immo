@@ -345,7 +345,7 @@ export function MaintenanceDetectedPanel({ category, propertyCity, propertyLatit
                 padding: '10px 18px',
                 borderRadius: BAI.radius,
                 border: 'none',
-                background: BAI.caramel,
+                background: BAI.caramelText,
                 color: '#fff',
                 fontFamily: BAI.fontBody,
                 fontSize: 13,

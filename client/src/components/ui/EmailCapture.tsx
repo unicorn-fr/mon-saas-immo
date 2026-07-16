@@ -103,7 +103,7 @@ export default function EmailCapture({
             padding: '13px 22px',
             borderRadius: 10,
             border: 'none',
-            background: BAI.caramel,
+            background: BAI.caramelText,
             color: '#fff',
             fontFamily: BAI.fontBody,
             fontSize: 14,
@@ -115,7 +115,7 @@ export default function EmailCapture({
             opacity: status === 'loading' ? 0.7 : 1,
           }}
           onMouseEnter={e => { if (status !== 'loading') e.currentTarget.style.background = '#b07f54' }}
-          onMouseLeave={e => (e.currentTarget.style.background = BAI.caramel)}
+          onMouseLeave={e => (e.currentTarget.style.background = BAI.caramelText)}
         >
           {status === 'loading' ? '…' : ctaLabel}
         </button>

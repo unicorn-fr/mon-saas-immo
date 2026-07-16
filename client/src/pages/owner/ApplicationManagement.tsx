@@ -233,7 +233,7 @@ function ApplicationCard({
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0,
                 fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600,
-                background: '#fdf5ec', border: '1px solid rgba(196,151,106,0.3)', color: BAI.caramel,
+                background: '#fdf5ec', border: '1px solid rgba(196,151,106,0.3)', color: BAI.caramelText,
                 borderRadius: 8, minHeight: 36, padding: '0 14px', whiteSpace: 'nowrap',
                 textDecoration: 'none', cursor: 'pointer',
               }}
@@ -250,7 +250,7 @@ function ApplicationCard({
               style={{
                 display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
                 fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 600,
-                background: '#fdf5ec', border: '1px solid rgba(196,151,106,0.3)', color: BAI.caramel,
+                background: '#fdf5ec', border: '1px solid rgba(196,151,106,0.3)', color: BAI.caramelText,
                 borderRadius: 8, minHeight: 36, padding: '0 14px', whiteSpace: 'nowrap', cursor: aiLoading ? 'wait' : 'pointer',
                 opacity: aiLoading ? 0.7 : 1,
               }}
@@ -371,9 +371,9 @@ function ApplicationCard({
                       background: '#fdf5ec', border: '1px solid rgba(196,151,106,0.3)',
                     }}>
                       <Lock size={14} style={{ color: BAI.caramel, flexShrink: 0 }} />
-                      <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.caramel }}>
+                      <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.caramelText }}>
                         Le détail du score IA est disponible avec le plan{' '}
-                        <Link to="/owner/abonnement" style={{ fontWeight: 700, color: BAI.caramel, textDecoration: 'underline' }}>
+                        <Link to="/owner/abonnement" style={{ fontWeight: 700, color: BAI.caramelText, textDecoration: 'underline' }}>
                           Pro
                         </Link>.
                       </span>
@@ -392,14 +392,14 @@ function ApplicationCard({
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <Sparkles size={13} style={{ color: BAI.caramel }} />
-                      <span style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.caramel, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                      <span style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.caramelText, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                         Analyse IA (Claude)
                       </span>
                     </div>
                     <span style={{
                       fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
                       ...(aiResult.verdict === 'FORT'    ? { background: BAI.successLight, color: BAI.success, border: `1px solid #a8d5bc` } :
-                          aiResult.verdict === 'MOYEN'   ? { background: '#fdf5ec', color: BAI.caramel, border: '1px solid rgba(196,151,106,0.4)' } :
+                          aiResult.verdict === 'MOYEN'   ? { background: '#fdf5ec', color: BAI.caramelText, border: '1px solid rgba(196,151,106,0.4)' } :
                                                           { background: BAI.errorLight, color: BAI.error, border: `1px solid #f5c6c6` }),
                     }}>
                       {aiResult.verdict}
@@ -734,7 +734,7 @@ export default function ApplicationManagement() {
             <div>
               <p style={{
                 fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700,
-                letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, marginBottom: 8,
+                letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramelText, marginBottom: 8,
               }}>
                 Candidatures
               </p>
@@ -809,7 +809,7 @@ export default function ApplicationManagement() {
                     minHeight: 44, touchAction: 'manipulation',
                   }}
                 >
-                  {label} <span style={{ opacity: 0.6, fontSize: 12, marginLeft: 4 }}>({count})</span>
+                  {label} <span style={{ color: BAI.inkFaint, fontSize: 12, marginLeft: 4 }}>({count})</span>
                 </button>
               )
             })}

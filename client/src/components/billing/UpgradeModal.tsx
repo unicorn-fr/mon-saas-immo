@@ -106,7 +106,7 @@ export function UpgradeModal({ feature, requiredPlan, message, onClose }: Upgrad
         </div>
 
         {/* Titre */}
-        <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 6px' }}>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramelText, margin: '0 0 6px' }}>
           Fonctionnalité verrouillée
         </p>
         <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: BAI.ink, margin: '0 0 10px' }}>

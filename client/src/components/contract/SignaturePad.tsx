@@ -157,7 +157,7 @@ export const SignaturePad = ({
 
         {/* Signature canvas */}
         <div style={{ padding: '0 20px 16px' }} ref={containerRef}>
-          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9e9b96', marginBottom: 8 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#6e6b65', marginBottom: 8 }}>
             Votre signature
           </p>
           <div style={{ border: '2px dashed #ccc9c3', borderRadius: 12, background: '#fafaf8', position: 'relative', overflow: 'hidden' }}>
@@ -180,7 +180,7 @@ export const SignaturePad = ({
             />
             <p style={{
               position: 'absolute', bottom: 8, left: 0, right: 0,
-              textAlign: 'center', fontSize: 11, color: '#9e9b96',
+              textAlign: 'center', fontSize: 11, color: '#6e6b65',
               pointerEvents: 'none',
             }}>
               Tracez votre signature ici

@@ -58,7 +58,7 @@ export function SearchOnboarding({ onClose }: Props) {
           {/* Close */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
             <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-              <X style={{ width: 18, height: 18, color: '#9e9b96' }} />
+              <X style={{ width: 18, height: 18, color: '#6e6b65' }} />
             </button>
           </div>
 
@@ -84,7 +84,7 @@ export function SearchOnboarding({ onClose }: Props) {
 
           {/* Example */}
           {current.example && (
-            <p style={{ marginTop: 12, fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 13, color: '#9e9b96', fontStyle: 'italic', background: '#f4f2ee', padding: '8px 12px', borderRadius: 8 }}>
+            <p style={{ marginTop: 12, fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 13, color: '#6e6b65', fontStyle: 'italic', background: '#f4f2ee', padding: '8px 12px', borderRadius: 8 }}>
               {current.example}
             </p>
           )}

@@ -72,7 +72,7 @@ function InfoPanel({ ville }: { ville: VilleData }) {
     }}>
       {/* Prix moyen */}
       <div style={{ padding: '20px', borderBottom: `1px solid ${BAI.border}` }}>
-        <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: BAI.caramel, marginBottom: 6 }}>
+        <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: BAI.caramelText, marginBottom: 6 }}>
           Prix moyen
         </p>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
@@ -261,7 +261,7 @@ export default function LocationVille() {
               {/* En-tête */}
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
                 <div>
-                  <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 4px' }}>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramelText, margin: '0 0 4px' }}>
                     Observatoire des loyers
                   </p>
                   <h2 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(18px, 2.5vw, 22px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: 0 }}>

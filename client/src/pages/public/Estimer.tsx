@@ -196,7 +196,7 @@ function ToggleBtn({ label, active, onClick }: { label: string; active: boolean;
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: BAI.caramel, marginBottom: 10 }}>
+    <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: BAI.caramelText, marginBottom: 10 }}>
       {children}
     </p>
   )
@@ -405,7 +405,7 @@ function EstimResult({
       margin: '0 auto',
     }}>
       {/* Header */}
-      <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: BAI.caramel, textAlign: 'center', marginBottom: 8 }}>
+      <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: BAI.caramelText, textAlign: 'center', marginBottom: 8 }}>
         Estimation du loyer mensuel
       </p>
 
@@ -560,7 +560,7 @@ export default function Estimer() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 12 }}>
             <BarChart3 size={20} style={{ color: BAI.caramel }} />
           </div>
-          <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramel, marginBottom: 12 }}>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: BAI.caramelText, marginBottom: 12 }}>
             Outil d'estimation
           </p>
           <h1 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(26px, 4.5vw, 42px)', fontWeight: 700, fontStyle: 'italic', color: '#fff', marginBottom: 10, lineHeight: 1.2 }}>

@@ -339,7 +339,7 @@ export function SwipeStack({ properties, onFavorite, isFavorite, onClose }: Swip
           <Home style={{ width: 32, height: 32, color: '#1b5e3b' }} />
         </div>
         <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontStyle: 'italic', fontWeight: 700, color: '#0d0c0a' }}>Vous avez tout vu !</p>
-        <p style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 14, color: '#9e9b96', textAlign: 'center', maxWidth: 260, margin: 0 }}>
+        <p style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 14, color: '#6e6b65', textAlign: 'center', maxWidth: 260, margin: 0 }}>
           Modifiez vos filtres pour découvrir d'autres biens.
         </p>
         <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>

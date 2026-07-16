@@ -329,7 +329,7 @@ export default function Proprietaires() {
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           {/* Header */}
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 10px' }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramelText, margin: '0 0 10px' }}>
               Protection juridique
             </p>
             <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(26px,4vw,38px)', color: BAI.ink, margin: '0 0 12px', lineHeight: 1.1 }}>

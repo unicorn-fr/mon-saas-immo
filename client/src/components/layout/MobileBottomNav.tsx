@@ -42,7 +42,7 @@ const NAV_BG      = '#0a0d1a'
 const NAV_BORDER  = 'rgba(255,255,255,0.08)'
 const ICON_ACTIVE = BAI.caramel
 const ICON_IDLE   = 'rgba(255,255,255,0.40)'
-const LABEL_IDLE  = 'rgba(255,255,255,0.35)'
+const LABEL_IDLE  = 'rgba(255,255,255,0.45)'
 
 export function MobileBottomNav({
   role,
@@ -128,7 +128,7 @@ export function MobileBottomNav({
                       minWidth: 16, height: 16,
                       padding: '0 3px', borderRadius: 99,
                       fontSize: 9, fontWeight: 700, color: '#fff',
-                      background: BAI.caramel,
+                      background: BAI.caramelText,
                       fontFamily: BAI.fontBody,
                     }}
                   >

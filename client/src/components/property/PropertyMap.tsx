@@ -85,15 +85,6 @@ export const PropertyMap = ({
         marker.getElement()?.setAttribute('aria-label', `${address}, ${city} ${postalCode}`)
 
         mapInstanceRef.current = map
-
-        // Add CSS for Leaflet
-        if (!document.getElementById('leaflet-css')) {
-          const link = document.createElement('link')
-          link.id = 'leaflet-css'
-          link.rel = 'stylesheet'
-          link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
-          document.head.appendChild(link)
-        }
       })
     }
 
@@ -110,12 +101,12 @@ export const PropertyMap = ({
   if (!latitude || !longitude) {
     return (
       <div className="rounded-xl flex flex-col items-center justify-center p-6 text-center" style={{ background: '#f4f2ee', aspectRatio: '16/9' }}>
-        <MapPin className="w-12 h-12 mb-3" style={{ color: '#9e9b96' }} />
+        <MapPin className="w-12 h-12 mb-3" style={{ color: '#6e6b65' }} />
         <p className="font-medium mb-2" style={{ color: '#0d0c0a' }}>Localisation</p>
         <p className="text-sm max-w-md" style={{ color: '#5a5754' }}>
           {address}, {city} {postalCode}
         </p>
-        <p className="text-xs mt-4" style={{ color: '#9e9b96' }}>
+        <p className="text-xs mt-4" style={{ color: '#6e6b65' }}>
           Carte interactive disponible prochainement
         </p>
       </div>

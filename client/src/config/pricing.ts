@@ -42,7 +42,7 @@ export const PLANS: Plan[] = [
     trialDays: null,
     propertyLimit: 1,
     priceIds: null,
-    color: '#9e9b96',
+    color: '#6e6b65',
     description: 'Publiez un bien et recevez des candidatures, sans frais.',
     features: [
       '1 bien publié',

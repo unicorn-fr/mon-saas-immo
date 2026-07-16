@@ -67,7 +67,7 @@ export const PropertyCard = ({ property, variant = 'default', showStats = false 
           )}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 17, color: BAI.caramel, margin: '0 0 2px', lineHeight: 1 }}>
+          <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 17, color: BAI.caramelText, margin: '0 0 2px', lineHeight: 1 }}>
             {Number(property.price).toLocaleString('fr-FR')} €
             <span style={{ fontFamily: BAI.fontBody, fontStyle: 'normal', fontSize: 11, fontWeight: 400, color: BAI.inkFaint, marginLeft: 3 }}>/mois</span>
           </p>
@@ -181,7 +181,7 @@ export const PropertyCard = ({ property, variant = 'default', showStats = false 
           <span style={{
             position: 'absolute', top: 10, right: property.images?.length > 1 ? 54 : 52,
             fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
-            background: BAI.caramel, color: '#fff',
+            background: BAI.caramelText, color: '#fff',
             borderRadius: 5, padding: '3px 7px',
           }}>
             Nouveau

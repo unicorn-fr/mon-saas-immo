@@ -88,7 +88,7 @@ function ProfileSnapshot({
             {firstName && lastName ? `${firstName} ${lastName.toUpperCase()}` : 'Profil incomplet'}
           </p>
           {birthStr && (
-            <p style={{ margin: 0, fontSize: 11, color: '#9e9b96', fontFamily: 'DM Sans, system-ui, sans-serif', marginTop: 1 }}>
+            <p style={{ margin: 0, fontSize: 11, color: '#6e6b65', fontFamily: 'DM Sans, system-ui, sans-serif', marginTop: 1 }}>
               {birthStr}{nationality ? ` · ${nationality}` : ''}
             </p>
           )}
@@ -104,7 +104,7 @@ function ProfileSnapshot({
             <Briefcase style={{ width: 13, height: 13, color: '#5a5754', flexShrink: 0 }} />
             <span style={{ fontSize: 12, color: '#5a5754', fontFamily: 'DM Sans, system-ui, sans-serif' }}>
               {emploiLabel}
-              {hasComplementaire && <span style={{ marginLeft: 6, color: '#9e9b96' }}>+ revenu salarié</span>}
+              {hasComplementaire && <span style={{ marginLeft: 6, color: '#6e6b65' }}>+ revenu salarié</span>}
             </span>
           </div>
         )}
@@ -251,7 +251,7 @@ export function PreQualificationModal({
               <h2 className="text-base font-semibold" style={{ color: '#0d0c0a', fontFamily: 'DM Sans, system-ui, sans-serif' }}>
                 Postuler · {propertyTitle}
               </h2>
-              <p className="text-xs mt-0.5" style={{ color: '#9e9b96', fontFamily: 'DM Sans, system-ui, sans-serif' }}>
+              <p className="text-xs mt-0.5" style={{ color: '#6e6b65', fontFamily: 'DM Sans, system-ui, sans-serif' }}>
                 Loyer {propertyPrice} €/mois
               </p>
             </div>
@@ -262,7 +262,7 @@ export function PreQualificationModal({
               onMouseEnter={e => (e.currentTarget.style.background = '#f4f2ee')}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
             >
-              <X className="w-4 h-4" style={{ color: '#9e9b96' }} />
+              <X className="w-4 h-4" style={{ color: '#6e6b65' }} />
             </button>
           </div>
 
@@ -289,7 +289,7 @@ export function PreQualificationModal({
             {/* Phase: check */}
             {phase === 'check' && (
               <div className="p-5 space-y-4">
-                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#9e9b96', fontFamily: 'DM Sans, system-ui, sans-serif' }}>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#6e6b65', fontFamily: 'DM Sans, system-ui, sans-serif' }}>
                   Votre profil
                 </p>
 
@@ -347,18 +347,18 @@ export function PreQualificationModal({
                   borderRadius: 10, border: '1px solid #e4e1db', background: '#f8f7f4',
                   padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10,
                 }}>
-                  <User style={{ width: 14, height: 14, color: '#9e9b96', flexShrink: 0 }} />
+                  <User style={{ width: 14, height: 14, color: '#6e6b65', flexShrink: 0 }} />
                   <p style={{ margin: 0, fontSize: 12, color: '#5a5754', fontFamily: 'DM Sans, system-ui, sans-serif' }}>
                     <strong style={{ color: '#0d0c0a' }}>
                       {tenantFirstName && tenantLastName ? `${tenantFirstName} ${tenantLastName.toUpperCase()}` : 'Locataire'}
                     </strong>
                     {!!questionnaire.emploiType && (
-                      <span style={{ marginLeft: 8, color: '#9e9b96' }}>
+                      <span style={{ marginLeft: 8, color: '#6e6b65' }}>
                         · {EMPLOI_LABELS[String(questionnaire.emploiType)] ?? ''}
                       </span>
                     )}
                     {hasGuarantor && (
-                      <span style={{ marginLeft: 8, color: '#9e9b96' }}>
+                      <span style={{ marginLeft: 8, color: '#6e6b65' }}>
                         · {GARANT_LABELS[String(questionnaire.hasGarant)] ?? 'Avec garant'}
                       </span>
                     )}
@@ -373,7 +373,7 @@ export function PreQualificationModal({
                   >
                     <FileText className="w-3.5 h-3.5" />
                     Lettre de motivation
-                    <span className="text-xs font-normal" style={{ color: '#9e9b96' }}>(optionnel)</span>
+                    <span className="text-xs font-normal" style={{ color: '#6e6b65' }}>(optionnel)</span>
                   </label>
                   <textarea
                     rows={4}

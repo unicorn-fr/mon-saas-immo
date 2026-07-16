@@ -543,7 +543,7 @@ export default function TenantDashboard() {
               style={{
                 display: 'flex', alignItems: 'center', gap: 6,
                 fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600,
-                color: '#fff', background: BAI.caramel,
+                color: '#fff', background: BAI.caramelText,
                 padding: '9px 18px', borderRadius: 8, textDecoration: 'none',
                 whiteSpace: 'nowrap', minHeight: 44,
               }}

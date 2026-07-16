@@ -97,7 +97,7 @@ export default function Favorites() {
               <div className="md:col-span-2 relative">
                 <Search
                   className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
-                  style={{ color: '#9e9b96' }}
+                  style={{ color: '#6e6b65' }}
                 />
                 <input
                   type="text"
@@ -166,7 +166,7 @@ export default function Favorites() {
                           boxShadow: '0 1px 3px rgba(13,12,10,0.08)',
                           fontFamily: "'DM Sans', system-ui, sans-serif",
                         }
-                      : { color: '#9e9b96', fontFamily: "'DM Sans', system-ui, sans-serif" }
+                      : { color: '#6e6b65', fontFamily: "'DM Sans', system-ui, sans-serif" }
                   }
                 >
                   <Grid className="w-4 h-4" />
@@ -184,7 +184,7 @@ export default function Favorites() {
                           boxShadow: '0 1px 3px rgba(13,12,10,0.08)',
                           fontFamily: "'DM Sans', system-ui, sans-serif",
                         }
-                      : { color: '#9e9b96', fontFamily: "'DM Sans', system-ui, sans-serif" }
+                      : { color: '#6e6b65', fontFamily: "'DM Sans', system-ui, sans-serif" }
                   }
                 >
                   <List className="w-4 h-4" />
@@ -213,7 +213,7 @@ export default function Favorites() {
                 className="w-16 h-16 flex items-center justify-center mx-auto mb-4"
                 style={{ background: '#f4f2ee', borderRadius: '50%' }}
               >
-                <Heart className="w-7 h-7" style={{ color: '#9e9b96' }} />
+                <Heart className="w-7 h-7" style={{ color: '#6e6b65' }} />
               </div>
               <p
                 style={{
@@ -275,7 +275,7 @@ export default function Favorites() {
 
           {/* Results Count */}
           {sortedProperties.length > 0 && (
-            <div className="mt-8 text-center" style={{ fontSize: 13, color: '#9e9b96' }}>
+            <div className="mt-8 text-center" style={{ fontSize: 13, color: '#6e6b65' }}>
               Affichage de {sortedProperties.length} sur {favoriteProperties.length} propriété
               {favoriteProperties.length > 1 ? 's' : ''}
             </div>

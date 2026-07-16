@@ -282,7 +282,7 @@ export function PlatformTour({
                         fontSize: 9, fontWeight: 700, letterSpacing: '0.06em',
                         padding: '2px 6px', borderRadius: 4,
                         background: 'rgba(196,151,106,0.20)',
-                        color: BAI.caramel, textTransform: 'uppercase',
+                        color: BAI.caramelText, textTransform: 'uppercase',
                         flexShrink: 0,
                       }}>
                         {f.tag}
@@ -348,7 +348,7 @@ export function PlatformTour({
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7,
                     width: isSmall ? '100%' : 'auto',
                     padding: isSmall ? '14px 22px' : '11px 22px', borderRadius: 10,
-                    background: BAI.caramel, color: '#fff', border: 'none',
+                    background: BAI.caramelText, color: '#fff', border: 'none',
                     fontFamily: BAI.fontBody, fontSize: isSmall ? 15 : 13.5, fontWeight: 700,
                     cursor: 'pointer',
                     boxShadow: '0 4px 20px rgba(196,151,106,0.32)',

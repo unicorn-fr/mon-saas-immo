@@ -104,7 +104,7 @@ export default function ChangePasswordModal({
           <button
             onClick={handleClose}
             className="p-1 rounded-xl transition-colors"
-            style={{ color: '#9e9b96' }}
+            style={{ color: '#6e6b65' }}
             onMouseEnter={e => (e.currentTarget.style.background = '#f4f2ee')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
@@ -125,7 +125,7 @@ export default function ChangePasswordModal({
               Mot de passe actuel
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: '#9e9b96' }} />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: '#6e6b65' }} />
               <input
                 type={showCurrent ? 'text' : 'password'}
                 value={currentPassword}
@@ -137,7 +137,7 @@ export default function ChangePasswordModal({
                 type="button"
                 onClick={() => setShowCurrent(!showCurrent)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-                style={{ color: '#9e9b96' }}
+                style={{ color: '#6e6b65' }}
               >
                 {showCurrent ? (
                   <EyeOff className="w-5 h-5" />
@@ -154,7 +154,7 @@ export default function ChangePasswordModal({
               Nouveau mot de passe
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: '#9e9b96' }} />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: '#6e6b65' }} />
               <input
                 type={showNew ? 'text' : 'password'}
                 value={newPassword}
@@ -166,7 +166,7 @@ export default function ChangePasswordModal({
                 type="button"
                 onClick={() => setShowNew(!showNew)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-                style={{ color: '#9e9b96' }}
+                style={{ color: '#6e6b65' }}
               >
                 {showNew ? (
                   <EyeOff className="w-5 h-5" />
@@ -199,7 +199,7 @@ export default function ChangePasswordModal({
                   )}
                   <span
                     className="text-xs"
-                    style={{ color: req.met ? '#1b5e3b' : '#9e9b96' }}
+                    style={{ color: req.met ? '#1b5e3b' : '#6e6b65' }}
                   >
                     {req.text}
                   </span>
@@ -214,7 +214,7 @@ export default function ChangePasswordModal({
               Confirmer le nouveau mot de passe
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: '#9e9b96' }} />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: '#6e6b65' }} />
               <input
                 type="password"
                 value={confirmPassword}

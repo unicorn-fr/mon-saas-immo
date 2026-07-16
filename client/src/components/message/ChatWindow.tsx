@@ -804,7 +804,7 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
                   <p className="font-semibold text-[14px]" style={{ color: '#0d0c0a', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
                     Partager votre dossier ?
                   </p>
-                  <p className="text-[12px]" style={{ color: '#9e9b96' }}>
+                  <p className="text-[12px]" style={{ color: '#6e6b65' }}>
                     avec {otherUser.firstName} {otherUser.lastName}
                   </p>
                 </div>
@@ -812,7 +812,7 @@ export const ChatWindow = ({ conversation, onBack }: ChatWindowProps) => {
               <button
                 onClick={() => setShowSharePrompt(false)}
                 className="p-1 rounded-lg transition-colors"
-                style={{ color: '#9e9b96' }}
+                style={{ color: '#6e6b65' }}
                 onMouseEnter={(e) => (e.currentTarget.style.background = '#f4f2ee')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
               >
@@ -937,7 +937,7 @@ function SignaledConfirmPanel({ category, onYes, onNo }: SignaledConfirmPanelPro
             padding: '10px 0',
             borderRadius: BAI.radius,
             border: 'none',
-            background: BAI.caramel,
+            background: BAI.caramelText,
             color: '#ffffff',
             fontFamily: BAI.fontBody,
             fontSize: 13,

@@ -67,7 +67,7 @@ function RoiCalculator() {
           <Calculator size={18} color={BAI.caramel} />
         </div>
         <div>
-          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: BAI.caramel, margin: 0 }}>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: BAI.caramelText, margin: 0 }}>
             Calculateur ROI
           </p>
           <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 600, fontSize: 18, color: BAI.ink, margin: 0 }}>
@@ -324,7 +324,7 @@ export default function Pricing() {
                 {plan.badge && (
                   <div style={{
                     position: 'absolute', top: -13, left: '50%', transform: 'translateX(-50%)',
-                    background: BAI.caramel, color: '#fff',
+                    background: BAI.caramelText, color: '#fff',
                     fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
                     padding: '4px 14px', borderRadius: '999px', whiteSpace: 'nowrap',
                   }}>
@@ -461,7 +461,7 @@ export default function Pricing() {
       <section style={{ padding: 'clamp(32px,4vw,56px) clamp(16px,5vw,40px)', background: BAI.bgMuted }}>
         <div style={{ maxWidth: 800, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 10px' }}>
+            <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramelText, margin: '0 0 10px' }}>
               Votre économie réelle
             </p>
             <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(24px,4vw,36px)', color: BAI.ink, margin: 0 }}>
@@ -475,7 +475,7 @@ export default function Pricing() {
       {/* ── TABLE DE COMPARAISON ──────────────────────────────────────────── */}
       <section className="compare-table" style={{ padding: 'clamp(48px,6vw,80px) clamp(16px,5vw,40px)', maxWidth: 1260, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
-          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 10px' }}>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramelText, margin: '0 0 10px' }}>
             Tout comparer
           </p>
           <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(24px,4vw,36px)', color: BAI.ink, margin: 0 }}>
@@ -599,7 +599,7 @@ export default function Pricing() {
       {/* ── FAQ ────────────────────────────────────────────────────────────── */}
       <section style={{ padding: 'clamp(32px,4vw,56px) clamp(16px,5vw,40px) 80px', maxWidth: 720, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
-          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 10px' }}>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramelText, margin: '0 0 10px' }}>
             FAQ
           </p>
           <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(24px,4vw,36px)', color: BAI.ink, margin: 0 }}>
@@ -641,12 +641,12 @@ export default function Pricing() {
               onClick={() => handleCta('pro')}
               style={{
                 padding: '13px 28px', borderRadius: 10, border: 'none',
-                background: BAI.caramel, color: '#fff',
+                background: BAI.caramelText, color: '#fff',
                 fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 700,
                 cursor: 'pointer', minHeight: 46, display: 'flex', alignItems: 'center', gap: 8,
               }}
               onMouseEnter={e => (e.currentTarget.style.background = BAI.caramelHover)}
-              onMouseLeave={e => (e.currentTarget.style.background = BAI.caramel)}
+              onMouseLeave={e => (e.currentTarget.style.background = BAI.caramelText)}
             >
               Essayer Pro gratuitement <ArrowRight size={15} />
             </button>

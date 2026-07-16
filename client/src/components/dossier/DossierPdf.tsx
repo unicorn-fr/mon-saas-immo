@@ -18,7 +18,7 @@ const C = {
   caramel:    '#c4976a',
   ink:        '#0d0c0a',
   inkMid:     '#5a5754',
-  inkFaint:   '#9e9b96',
+  inkFaint:   '#6e6b65',
   muted:      '#f4f2ee',
   border:     '#e4e1db',
   surface:    '#ffffff',

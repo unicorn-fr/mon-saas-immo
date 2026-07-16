@@ -135,7 +135,7 @@ export const VisitSlotsManager = ({ propertyId, onClose }: Props) => {
             <h3 style={{ fontSize: 'clamp(13px, 3.5vw, 15px)', fontWeight: 600, color: '#0d0c0a' }}>
               Créneaux de visite disponibles
             </h3>
-            <p style={{ fontSize: 12, color: '#9e9b96', marginTop: 1 }}>
+            <p style={{ fontSize: 12, color: '#6e6b65', marginTop: 1 }}>
               Définissez vos plages horaires récurrentes
             </p>
           </div>

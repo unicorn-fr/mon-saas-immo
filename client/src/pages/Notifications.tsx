@@ -273,7 +273,7 @@ export default function Notifications() {
                       fontSize: 11,
                       fontWeight: 700,
                       borderRadius: 999,
-                      background: filterMode === 'unread' ? BAI.caramel : 'rgba(255,255,255,0.2)',
+                      background: filterMode === 'unread' ? BAI.caramelText : 'rgba(255,255,255,0.2)',
                       color: '#ffffff',
                     }}
                   >

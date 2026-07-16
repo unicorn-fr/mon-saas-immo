@@ -321,7 +321,7 @@ export default function Abonnement() {
                   {isCurrent && (
                     <div style={{
                       position: 'absolute', top: -13, left: '50%', transform: 'translateX(-50%)',
-                      background: BAI.caramel, color: '#fff', fontSize: 10, fontWeight: 700,
+                      background: BAI.caramelText, color: '#fff', fontSize: 10, fontWeight: 700,
                       padding: '3px 14px', borderRadius: 20, whiteSpace: 'nowrap',
                     }}>
                       Plan actuel
@@ -470,7 +470,7 @@ export default function Abonnement() {
 
           {/* ── FAQ ── */}
           <div>
-            <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 6px' }}>Questions fréquentes</p>
+            <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramelText, margin: '0 0 6px' }}>Questions fréquentes</p>
             <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 28, color: BAI.ink, margin: '0 0 24px' }}>
               Tout savoir sur les plans
             </h2>

@@ -510,7 +510,7 @@ export default function Rentabilite() {
                   borderRadius: 12,
                   padding: '16px 20px',
                 }}>
-                  <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 12px' }}>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.caramelText, margin: '0 0 12px' }}>
                     Préremplir depuis un de vos biens
                   </p>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>

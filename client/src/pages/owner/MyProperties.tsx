@@ -333,7 +333,7 @@ export default function MyProperties() {
               >
                 <p style={{
                   fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700,
-                  letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, marginBottom: 6,
+                  letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramelText, marginBottom: 6,
                 }}>
                   Mes biens
                 </p>

@@ -118,7 +118,7 @@ export default function TenantMaintenance() {
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               padding: '16px 24px', borderRadius: 16,
-              background: showForm ? 'rgba(255,255,255,0.15)' : BAI.caramel,
+              background: showForm ? 'rgba(255,255,255,0.15)' : BAI.caramelText,
               color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)',
               cursor: 'pointer', fontFamily: BAI.fontBody, fontWeight: 600, fontSize: 13,
               backdropFilter: showForm ? 'blur(20px)' : 'none',

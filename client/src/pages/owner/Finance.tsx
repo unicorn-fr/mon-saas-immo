@@ -554,7 +554,7 @@ export default function Finance() {
                     <Wallet style={{ width: 15, height: 15, color: BAI.caramel }} />
                   </div>
                 </div>
-                <p style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(24px,3.5vw,32px)', fontWeight: 700, fontStyle: 'italic', color: BAI.caramel, margin: '0 0 4px', lineHeight: 1 }}>
+                <p style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(24px,3.5vw,32px)', fontWeight: 700, fontStyle: 'italic', color: BAI.caramelText, margin: '0 0 4px', lineHeight: 1 }}>
                   {summary ? formatEuro(summary.totalExpenses) : '—'}
                 </p>
                 <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, margin: 0 }}>Dépenses & emprunts</p>
@@ -864,7 +864,7 @@ export default function Finance() {
                     </div>
 
                     {/* Meublé row */}
-                    <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.inkFaint, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px' }}>Meublé <span style={{ color: BAI.caramel, fontSize: 10, fontWeight: 600, textTransform: 'none' }}>(+18% estimé)</span></p>
+                    <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.inkFaint, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px' }}>Meublé <span style={{ color: BAI.caramelText, fontSize: 10, fontWeight: 600, textTransform: 'none' }}>(+18% estimé)</span></p>
                     <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
                       {[
                         { label: 'Min', value: minFurnished, highlight: false },
@@ -872,9 +872,9 @@ export default function Finance() {
                         { label: 'Max', value: maxFurnished, highlight: false },
                       ].map(item => (
                         <div key={item.label} style={{ flex: item.highlight ? 1.4 : 1, textAlign: 'center', padding: '12px 8px', borderRadius: 10, background: item.highlight ? BAI.caramelLight : BAI.bgMuted, border: item.highlight ? `2px solid ${BAI.caramelBorder}` : `1px solid ${BAI.border}` }}>
-                          <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, color: item.highlight ? BAI.caramel : BAI.inkFaint, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{item.label}</p>
-                          <p style={{ fontFamily: BAI.fontDisplay, fontSize: item.highlight ? 28 : 18, fontWeight: 700, fontStyle: 'italic', color: item.highlight ? BAI.caramel : BAI.inkMid, margin: '0 0 2px', lineHeight: 1 }}>{item.value}</p>
-                          <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: item.highlight ? BAI.caramel : BAI.inkFaint, margin: 0 }}>€/m²</p>
+                          <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, color: item.highlight ? BAI.caramelText : BAI.inkFaint, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{item.label}</p>
+                          <p style={{ fontFamily: BAI.fontDisplay, fontSize: item.highlight ? 28 : 18, fontWeight: 700, fontStyle: 'italic', color: item.highlight ? BAI.caramelText : BAI.inkMid, margin: '0 0 2px', lineHeight: 1 }}>{item.value}</p>
+                          <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: item.highlight ? BAI.caramelText : BAI.inkFaint, margin: 0 }}>€/m²</p>
                         </div>
                       ))}
                     </div>
@@ -1694,7 +1694,7 @@ export default function Finance() {
             {/* Market header */}
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, padding: '16px 20px', background: BAI.bgSurface, border: `1px solid ${BAI.border}`, borderRadius: 12 }}>
               <div>
-                <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 4px' }}>Analyse comparative</p>
+                <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramelText, margin: '0 0 4px' }}>Analyse comparative</p>
                 <h2 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(20px,3vw,26px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '0 0 4px' }}>Marché locatif</h2>
                 <p style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.inkMid, margin: 0 }}>
                   Positionnez vos loyers par rapport au marché · données ANIL 2025 · encadrement légal
@@ -1788,7 +1788,7 @@ export default function Finance() {
                                 </div>
                               </div>
                               <div style={{ flex: 2, minWidth: 160, padding: '12px 16px', borderLeft: `1px solid ${BAI.border}`, background: `${BAI.caramel}06` }}>
-                                <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.caramel, textTransform: 'uppercase', letterSpacing: '0.09em', margin: '0 0 6px' }}>Meublé (+18 %)</p>
+                                <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, color: BAI.caramelText, textTransform: 'uppercase', letterSpacing: '0.09em', margin: '0 0 6px' }}>Meublé (+18 %)</p>
                                 <div style={{ display: 'flex', gap: 16 }}>
                                   {[
                                     { label: 'Min', value: minM },
@@ -1797,7 +1797,7 @@ export default function Finance() {
                                   ].map(item => (
                                     <div key={item.label}>
                                       <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: BAI.inkFaint, margin: '0 0 2px' }}>{item.label}</p>
-                                      <p style={{ fontFamily: BAI.fontDisplay, fontSize: 18, fontWeight: 700, fontStyle: 'italic', color: BAI.caramel, margin: 0 }}>{item.value.toFixed(1)}</p>
+                                      <p style={{ fontFamily: BAI.fontDisplay, fontSize: 18, fontWeight: 700, fontStyle: 'italic', color: BAI.caramelText, margin: 0 }}>{item.value.toFixed(1)}</p>
                                     </div>
                                   ))}
                                 </div>
@@ -2024,7 +2024,7 @@ export default function Finance() {
 
             {/* Header */}
             <div>
-              <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 4px' }}>Outil personnalisé</p>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramelText, margin: '0 0 4px' }}>Outil personnalisé</p>
               <h2 style={{ fontFamily: BAI.fontDisplay, fontSize: 'clamp(24px,4vw,32px)', fontWeight: 700, fontStyle: 'italic', color: BAI.ink, margin: '0 0 8px' }}>Optimisation fiscale</h2>
               <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: BAI.inkMid, margin: 0 }}>Renseignez votre situation pour obtenir un conseil personnalisé et sauvegarder votre profil fiscal.</p>
             </div>

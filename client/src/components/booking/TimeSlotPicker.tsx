@@ -75,7 +75,7 @@ export const TimeSlotPicker = ({
             ? { background: '#1a1a2e', color: '#ffffff', boxShadow: '0 2px 8px rgba(26,26,46,0.2)' }
             : isAvailable
             ? { background: '#ffffff', color: '#5a5754', border: '1px solid #e4e1db' }
-            : { background: '#f4f2ee', color: '#9e9b96', cursor: 'not-allowed', opacity: 0.5 }
+            : { background: '#f4f2ee', color: '#6e6b65', cursor: 'not-allowed', opacity: 0.5 }
         }
       >
         {time}

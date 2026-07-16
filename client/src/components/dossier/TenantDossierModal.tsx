@@ -78,7 +78,7 @@ function DocItem({ doc }: { doc: TenantDocument }) {
         <p className="text-[13px] font-medium truncate" style={{ color: '#0d0c0a' }}>
           {DOC_TYPE_LABELS[doc.docType] ?? doc.docType}
         </p>
-        <p className="text-[11px]" style={{ color: '#9e9b96' }}>
+        <p className="text-[11px]" style={{ color: '#6e6b65' }}>
           {doc.fileName} · {sizeKB} KB · filigrané
         </p>
       </div>
@@ -193,16 +193,16 @@ export function TenantDossierModal({ tenantId, tenantName, onClose }: TenantDoss
                     : tenantName || 'Dossier locataire'}
                 </p>
                 {profile?.email && (
-                  <p className="text-[12px]" style={{ color: '#9e9b96' }}>{profile.email}</p>
+                  <p className="text-[12px]" style={{ color: '#6e6b65' }}>{profile.email}</p>
                 )}
               </div>
             </div>
             <button
               onClick={onClose}
               className="p-1.5 rounded-xl transition-colors"
-              style={{ color: '#9e9b96' }}
+              style={{ color: '#6e6b65' }}
               onMouseEnter={(e) => { e.currentTarget.style.background = '#f4f2ee'; e.currentTarget.style.color = '#5a5754' }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#9e9b96' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6e6b65' }}
             >
               <X className="w-5 h-5" />
             </button>
@@ -213,7 +213,7 @@ export function TenantDossierModal({ tenantId, tenantName, onClose }: TenantDoss
             {loading ? (
               <div className="flex flex-col items-center justify-center py-16 gap-3">
                 <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#1a3270' }} />
-                <p className="text-sm" style={{ color: '#9e9b96' }}>Chargement du dossier…</p>
+                <p className="text-sm" style={{ color: '#6e6b65' }}>Chargement du dossier…</p>
               </div>
             ) : shareRequired ? (
               <div className="rounded-xl p-6 flex flex-col items-center text-center gap-3"
@@ -221,7 +221,7 @@ export function TenantDossierModal({ tenantId, tenantName, onClose }: TenantDoss
               >
                 <div className="w-12 h-12 rounded-full flex items-center justify-center"
                   style={{ background: '#f4f2ee' }}>
-                  <ShieldOff className="w-6 h-6" style={{ color: '#9e9b96' }} />
+                  <ShieldOff className="w-6 h-6" style={{ color: '#6e6b65' }} />
                 </div>
                 <div>
                   <p className="font-semibold text-sm mb-1" style={{ color: '#0d0c0a' }}>
@@ -239,55 +239,55 @@ export function TenantDossierModal({ tenantId, tenantName, onClose }: TenantDoss
                 <div className="rounded-xl p-4 space-y-2"
                   style={{ background: '#ffffff', border: '1px solid #e4e1db' }}
                 >
-                  <p className="text-[11px] font-semibold uppercase tracking-wide mb-3" style={{ color: '#9e9b96' }}>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide mb-3" style={{ color: '#6e6b65' }}>
                     Informations personnelles
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-[13px]">
                     {profile.phone && (
                       <div className="flex items-center gap-1.5" style={{ color: '#5a5754' }}>
-                        <Phone className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#9e9b96' }} />
+                        <Phone className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#6e6b65' }} />
                         {profile.phone}
                       </div>
                     )}
                     {profile.email && (
                       <div className="flex items-center gap-1.5" style={{ color: '#5a5754' }}>
-                        <Mail className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#9e9b96' }} />
+                        <Mail className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#6e6b65' }} />
                         <span className="truncate">{profile.email}</span>
                       </div>
                     )}
                     {profile.birthDate && (
                       <div className="flex items-center gap-1.5" style={{ color: '#5a5754' }}>
-                        <CalendarDays className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#9e9b96' }} />
+                        <CalendarDays className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#6e6b65' }} />
                         {new Date(profile.birthDate).toLocaleDateString('fr-FR')}
                       </div>
                     )}
                     {profile.birthCity && (
                       <div className="flex items-center gap-1.5" style={{ color: '#5a5754' }}>
-                        <MapPin className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#9e9b96' }} />
+                        <MapPin className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#6e6b65' }} />
                         {profile.birthCity}
                       </div>
                     )}
                     {profile.nationality && (
                       <div className="flex items-center gap-1.5" style={{ color: '#5a5754' }}>
-                        <Globe className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#9e9b96' }} />
+                        <Globe className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#6e6b65' }} />
                         {profile.nationality}
                       </div>
                     )}
                     {!!composed?.employerName && (
                       <div className="flex items-center gap-1.5" style={{ color: '#5a5754' }}>
-                        <Briefcase className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#9e9b96' }} />
+                        <Briefcase className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#6e6b65' }} />
                         {String(composed.employerName)}
                       </div>
                     )}
                     {!!composed?.contractType && (
                       <div className="flex items-center gap-1.5" style={{ color: '#5a5754' }}>
-                        <FileText className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#9e9b96' }} />
+                        <FileText className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#6e6b65' }} />
                         {String(composed.contractType)}
                       </div>
                     )}
                     {!!composed?.netSalary && (
                       <div className="flex items-center gap-1.5 font-semibold" style={{ color: '#0d0c0a' }}>
-                        <span className="text-[11px] w-3.5 text-center flex-shrink-0" style={{ color: '#9e9b96' }}>€</span>
+                        <span className="text-[11px] w-3.5 text-center flex-shrink-0" style={{ color: '#6e6b65' }}>€</span>
                         {Number(composed.netSalary).toLocaleString('fr-FR')} €/mois net
                       </div>
                     )}
@@ -299,7 +299,7 @@ export function TenantDossierModal({ tenantId, tenantName, onClose }: TenantDoss
                   <div className="rounded-xl p-6 text-center"
                     style={{ background: '#ffffff', border: '1px solid #e4e1db' }}
                   >
-                    <p className="text-sm" style={{ color: '#9e9b96' }}>Aucun document déposé</p>
+                    <p className="text-sm" style={{ color: '#6e6b65' }}>Aucun document déposé</p>
                   </div>
                 ) : (
                   <div className="space-y-5">
