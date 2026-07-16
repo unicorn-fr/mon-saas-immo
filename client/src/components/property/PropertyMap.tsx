@@ -71,7 +71,7 @@ export const PropertyMap = ({
         })
 
         // Add marker
-        L.marker([latitude, longitude], { icon: customIcon })
+        const marker = L.marker([latitude, longitude], { icon: customIcon, alt: `${address}, ${city}` })
           .addTo(map)
           .bindPopup(
             `
@@ -82,6 +82,7 @@ export const PropertyMap = ({
           `
           )
           .openPopup()
+        marker.getElement()?.setAttribute('aria-label', `${address}, ${city} ${postalCode}`)
 
         mapInstanceRef.current = map
 

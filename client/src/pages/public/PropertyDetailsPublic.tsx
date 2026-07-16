@@ -363,12 +363,14 @@ export default function PropertyDetailsPublic() {
                         <>
                           <button
                             onClick={e => { e.stopPropagation(); setSelectedImage(prev => (prev - 1 + images.length) % images.length) }}
+                            aria-label="Photo précédente"
                             style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
                           >
                             <ChevronLeft style={{ width: 16, height: 16, color: M.ink }} />
                           </button>
                           <button
                             onClick={e => { e.stopPropagation(); setSelectedImage(prev => (prev + 1) % images.length) }}
+                            aria-label="Photo suivante"
                             style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
                           >
                             <ChevronRight style={{ width: 16, height: 16, color: M.ink }} />
@@ -412,6 +414,7 @@ export default function PropertyDetailsPublic() {
                   <div style={{ position: 'relative' }}>
                     <button
                       onClick={handleShare}
+                      aria-label="Partager cette annonce"
                       style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.92)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.12)' }}
                     >
                       <Share2 style={{ width: 15, height: 15, color: M.inkMid }} />

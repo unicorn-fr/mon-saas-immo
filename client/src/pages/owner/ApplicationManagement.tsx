@@ -195,6 +195,8 @@ function ApplicationCard({
           {/* Expand toggle */}
           <button
             onClick={() => setExpanded(!expanded)}
+            aria-label={expanded ? 'Réduire les détails' : 'Voir les détails'}
+            aria-expanded={expanded}
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: BAI.inkFaint, borderRadius: 8, minHeight: 36, minWidth: 36,

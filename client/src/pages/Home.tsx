@@ -225,6 +225,7 @@ function SearchBox({ city, setCity, type, setType, maxBudget, setMaxBudget }: Se
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Building2 size={15} color='rgba(255,255,255,0.38)' style={{ flexShrink: 0 }} />
               <select
+                aria-label="Type de bien"
                 value={type} onChange={e => setType(e.target.value)}
                 style={{ ...inputBase, fontSize: 15, appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', color: type ? '#fff' : 'rgba(255,255,255,0.50)' }}
               >
@@ -331,6 +332,7 @@ function SearchBox({ city, setCity, type, setType, maxBudget, setMaxBudget }: Se
       }}>
         <Building2 size={15} color={focused === 'type' ? BAI.caramel : 'rgba(255,255,255,0.38)'} style={{ flexShrink: 0, transition: 'color 0.18s' }} />
         <select
+          aria-label="Type de bien"
           value={type} onChange={e => setType(e.target.value)}
           onFocus={() => setFocused('type')} onBlur={() => setFocused(null)}
           style={{ ...inputBase, fontSize: 14, appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', color: type ? '#fff' : 'rgba(255,255,255,0.45)' }}

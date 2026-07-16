@@ -77,11 +77,12 @@ function RoiCalculator() {
       </div>
 
       <div style={{ marginBottom: 24 }}>
-        <label style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.ink, display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+        <label htmlFor="pricing-rent-range" style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.ink, display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
           <span>Votre loyer mensuel</span>
           <span style={{ color: BAI.caramel }}>{rent} €/mois</span>
         </label>
         <input
+          id="pricing-rent-range"
           type="range" min={300} max={3000} step={50} value={rent}
           onChange={e => setRent(Number(e.target.value))}
           style={{ width: '100%', accentColor: BAI.caramel, cursor: 'pointer' }}

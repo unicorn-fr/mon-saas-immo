@@ -365,6 +365,7 @@ export const BookingManagement = () => {
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3, 1fr)', gap: 10 }}>
                 {/* Property Filter */}
                 <select
+                  aria-label="Filtrer par propriété"
                   value={selectedProperty}
                   onChange={(e) => setSelectedProperty(e.target.value)}
                   style={inputStyle}
@@ -387,6 +388,7 @@ export const BookingManagement = () => {
 
                 {/* Status Filter */}
                 <select
+                  aria-label="Filtrer par statut"
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value as BookingStatus | 'all')}
                   style={inputStyle}

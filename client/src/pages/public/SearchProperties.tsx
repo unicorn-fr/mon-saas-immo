@@ -238,7 +238,7 @@ function AllFiltersSheet({ filters, city, onCity, onChange, onReset, total, onCl
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 0 12px', position: 'sticky', top: 0, background: T.surface, zIndex: 1, borderBottom: `1px solid ${T.border}`, marginBottom: 4 }}>
           <span style={{ fontFamily: T.display, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: T.ink }}>Tous les filtres</span>
-          <button onClick={onClose} style={{ background: T.muted, border: 'none', borderRadius: 8, cursor: 'pointer', padding: 8, minWidth: 40, minHeight: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={onClose} aria-label="Fermer les filtres" style={{ background: T.muted, border: 'none', borderRadius: 8, cursor: 'pointer', padding: 8, minWidth: 40, minHeight: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <X size={18} color={T.inkMid} />
           </button>
         </div>
@@ -501,7 +501,7 @@ export default function SearchProperties() {
                 }}
               />
               {cityInput && (
-                <button onClick={() => { setCityInput(''); setCity('') }} style={{ position: 'absolute', right: 12, background: 'none', border: 'none', cursor: 'pointer', color: T.inkFaint, padding: 4, display: 'flex', alignItems: 'center' }}>
+                <button onClick={() => { setCityInput(''); setCity('') }} aria-label="Effacer la ville" style={{ position: 'absolute', right: 12, background: 'none', border: 'none', cursor: 'pointer', color: T.inkFaint, padding: 4, display: 'flex', alignItems: 'center' }}>
                   <X size={14} />
                 </button>
               )}
@@ -509,6 +509,7 @@ export default function SearchProperties() {
             {/* Bouton recherche */}
             <button
               onClick={() => setCity(cityInput)}
+              aria-label="Rechercher"
               style={{
                 flexShrink: 0, padding: '0 clamp(18px,3vw,28px)',
                 background: T.caramel, border: 'none', cursor: 'pointer',
@@ -520,7 +521,6 @@ export default function SearchProperties() {
               onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
             >
               <Search size={16} />
-              <span style={{ display: 'none' }} className="sp-search-label">Rechercher</span>
             </button>
           </div>
 
@@ -632,6 +632,7 @@ export default function SearchProperties() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {/* Tri */}
             <select
+              aria-label="Trier les résultats"
               value={`${sortBy}-${sortOrder}`}
               onChange={e => { const [sb,so] = e.target.value.split('-'); setSortBy(sb as any); setSortOrder(so as any) }}
               style={{ height: 38, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: '0 10px', fontFamily: T.body, fontSize: 13, color: T.inkMid, outline: 'none', cursor: 'pointer' }}
@@ -645,7 +646,7 @@ export default function SearchProperties() {
             {/* Vue grille / carte */}
             <div style={{ display: 'flex', border: `1px solid ${T.border}`, borderRadius: 8, overflow: 'hidden', background: T.surface }}>
               {([{m:'grid' as const,I:Grid3x3},{m:'map' as const,I:MapIcon}] as {m:'grid'|'map';I:ElementType}[]).map(({m,I},i)=>(
-                <button key={m} onClick={() => setViewMode(m)} style={{ padding: '0 12px', height: 38, background: viewMode === m ? T.night : 'transparent', color: viewMode === m ? '#fff' : T.inkFaint, border: 'none', borderLeft: i > 0 ? `1px solid ${T.border}` : 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <button key={m} onClick={() => setViewMode(m)} aria-label={m === 'grid' ? 'Vue grille' : 'Vue carte'} aria-pressed={viewMode === m} style={{ padding: '0 12px', height: 38, background: viewMode === m ? T.night : 'transparent', color: viewMode === m ? '#fff' : T.inkFaint, border: 'none', borderLeft: i > 0 ? `1px solid ${T.border}` : 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                   <I size={15} />
                 </button>
               ))}

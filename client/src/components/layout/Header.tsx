@@ -177,7 +177,7 @@ export const Header = () => {
             {/* Actions droite */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
               {/* Messages */}
-              <Link to="/messages"
+              <Link to="/messages" aria-label="Messages"
                 style={{ position: 'relative', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10, border: `1px solid ${BAI.border}`, color: BAI.inkFaint, textDecoration: 'none' }}>
                 <MessageSquare className="w-4 h-4" />
                 {unreadCount > 0 && (
@@ -226,7 +226,7 @@ export const Header = () => {
               style={{ color: BAI.inkFaint, minWidth: 36, minHeight: 36 }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
-              title="Messages">
+              title="Messages" aria-label="Messages">
               <MessageSquare className="w-4 h-4" />
               {unreadCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] flex items-center justify-center rounded-full text-[9px] font-bold text-white px-0.5"
@@ -237,7 +237,7 @@ export const Header = () => {
               style={{ color: BAI.inkFaint, minWidth: 36, minHeight: 36 }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = BAI.bgMuted }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
-              title="Notifications">
+              title="Notifications" aria-label="Notifications">
               <Bell className="w-4 h-4" />
             </Link>
             <div className="w-px h-5 mx-0.5" style={{ background: BAI.border }} />
