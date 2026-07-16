@@ -168,7 +168,7 @@ function SearchBox({ city, setCity, type, setType, maxBudget, setMaxBudget }: Se
   const labelStyle: React.CSSProperties = {
     fontFamily: BAI.fontBody, fontSize: 10, fontWeight: 700,
     letterSpacing: '0.11em', textTransform: 'uppercase' as const,
-    color: 'rgba(255,255,255,0.38)', display: 'block', marginBottom: 5,
+    color: 'rgba(255,255,255,0.58)', display: 'block', marginBottom: 5,
   }
 
   const SuggestionsDropdown = showSug && suggestions.length > 0 ? (
@@ -227,7 +227,7 @@ function SearchBox({ city, setCity, type, setType, maxBudget, setMaxBudget }: Se
               <select
                 aria-label="Type de bien"
                 value={type} onChange={e => setType(e.target.value)}
-                style={{ ...inputBase, fontSize: 15, appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', color: type ? '#fff' : 'rgba(255,255,255,0.50)' }}
+                style={{ ...inputBase, fontSize: 15, appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', color: type ? '#fff' : 'rgba(255,255,255,0.58)' }}
               >
                 {PROPERTY_TYPES.map(o => <option key={o.value} value={o.value} style={{ background: '#111827', color: '#fff' }}>{o.label}</option>)}
               </select>
@@ -244,7 +244,7 @@ function SearchBox({ city, setCity, type, setType, maxBudget, setMaxBudget }: Se
                 value={maxBudget} onChange={e => setMaxBudget(e.target.value)}
                 onFocus={() => setFocused('budget')} onBlur={() => setFocused(null)}
                 min="0" step="50"
-                style={{ ...inputBase, fontSize: 16, color: maxBudget ? '#fff' : 'rgba(255,255,255,0.50)' }}
+                style={{ ...inputBase, fontSize: 16, color: maxBudget ? '#fff' : 'rgba(255,255,255,0.58)' }}
               />
             </div>
           </div>
@@ -335,7 +335,7 @@ function SearchBox({ city, setCity, type, setType, maxBudget, setMaxBudget }: Se
           aria-label="Type de bien"
           value={type} onChange={e => setType(e.target.value)}
           onFocus={() => setFocused('type')} onBlur={() => setFocused(null)}
-          style={{ ...inputBase, fontSize: 14, appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', color: type ? '#fff' : 'rgba(255,255,255,0.45)' }}
+          style={{ ...inputBase, fontSize: 14, appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', color: type ? '#fff' : 'rgba(255,255,255,0.58)' }}
         >
           {PROPERTY_TYPES.map(o => <option key={o.value} value={o.value} style={{ background: '#111827', color: '#fff' }}>{o.label}</option>)}
         </select>
@@ -356,7 +356,7 @@ function SearchBox({ city, setCity, type, setType, maxBudget, setMaxBudget }: Se
           value={maxBudget} onChange={e => setMaxBudget(e.target.value)}
           onFocus={() => setFocused('budget')} onBlur={() => setFocused(null)}
           min="0" step="50"
-          style={{ ...inputBase, fontSize: 14, color: maxBudget ? '#fff' : 'rgba(255,255,255,0.45)' }}
+          style={{ ...inputBase, fontSize: 14, color: maxBudget ? '#fff' : 'rgba(255,255,255,0.58)' }}
         />
       </div>
 
@@ -809,7 +809,7 @@ export default function Home() {
             <p style={{
               fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700,
               letterSpacing: '0.12em', textTransform: 'uppercase',
-              color: BAI.caramel, margin: '0 0 12px',
+              color: BAI.caramelText, margin: '0 0 12px',
             }}>
               Pourquoi Bailio
             </p>
@@ -858,7 +858,7 @@ export default function Home() {
                 <span style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, padding: '3px 10px', background: 'rgba(196,151,106,0.18)', border: '1px solid rgba(196,151,106,0.35)', borderRadius: 20, color: BAI.caramel, letterSpacing: '0.08em' }}>
                   ✦ IA OCR
                 </span>
-                <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>
+                <span style={{ fontFamily: BAI.fontBody, fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>
                   Vérification automatique
                 </span>
               </div>
@@ -909,7 +909,7 @@ export default function Home() {
             {/* Carte 4 — Zéro frais (col 2-4) */}
             <div className="bento-card-wide"
               style={{
-                background: BAI.caramel, borderRadius: 16,
+                background: BAI.caramelText, borderRadius: 16,
                 padding: 'clamp(20px, 2.5vw, 28px)',
                 display: 'flex', flexDirection: 'column', gap: 12,
               }}>
@@ -917,7 +917,7 @@ export default function Home() {
               <h3 style={{ fontFamily: BAI.fontBody, fontWeight: 700, fontSize: 17, color: '#ffffff', margin: 0 }}>
                 Zéro frais d'agence
               </h3>
-              <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.80)', margin: 0 }}>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 14, color: 'rgba(255,255,255,0.92)', margin: 0 }}>
                 Entre particuliers, de bout en bout.
               </p>
             </div>
@@ -1269,7 +1269,7 @@ export default function Home() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginBottom: 32 }}>
             {/* FREE */}
             <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 16, padding: '28px 24px', textAlign: 'left' }}>
-              <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', margin: '0 0 8px' }}>Gratuit</p>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.62)', margin: '0 0 8px' }}>Gratuit</p>
               <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 36, color: '#fff', margin: '0 0 16px', lineHeight: 1 }}>0 €</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {['1 bien en gestion', 'Messagerie sécurisée', 'Candidatures illimitées', 'Signature électronique'].map(f => (
@@ -1286,7 +1286,7 @@ export default function Home() {
               <span style={{ position: 'absolute', top: -12, left: 24, background: BAI.caramelText, color: '#fff', fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', padding: '3px 12px', borderRadius: 20 }}>LE PLUS POPULAIRE</span>
               <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.caramel, margin: '0 0 8px' }}>Pro</p>
               <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 36, color: '#fff', margin: '0 0 4px', lineHeight: 1 }}>9,90 €<span style={{ fontSize: 16, fontStyle: 'normal', fontWeight: 400, color: 'rgba(255,255,255,0.5)' }}>/mois</span></p>
-              <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: '0 0 16px' }}>Soit 118 €/an · Sans engagement</p>
+              <p style={{ fontFamily: BAI.fontBody, fontSize: 12, color: 'rgba(255,255,255,0.62)', margin: '0 0 16px' }}>Soit 118 €/an · Sans engagement</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {['Biens illimités', 'Bail loi ALUR + eIDAS', 'Quittances automatiques', 'IA analyse dossiers', 'Analytics & rentabilité'].map(f => (
                   <div key={f} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -1321,7 +1321,7 @@ export default function Home() {
                 Cherchez près de chez vous
               </h2>
             </div>
-            <Link to="/search" style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.caramel, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <Link to="/search" style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.caramelText, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
               Voir toutes les annonces <ChevronRight size={13} />
             </Link>
           </div>
@@ -1386,7 +1386,7 @@ export default function Home() {
             { stat: 'Gratuit', label: 'pour créer un compte' },
           ]).map((item, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 32px', borderRight: `1px solid ${BAI.border}`, flexShrink: 0 }}>
-              <span style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 16, color: BAI.caramel }}>{item.stat}</span>
+              <span style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 16, color: BAI.caramelText }}>{item.stat}</span>
               <span style={{ fontFamily: BAI.fontBody, fontSize: 12, color: BAI.inkFaint, whiteSpace: 'nowrap' }}>{item.label}</span>
             </div>
           ))}
@@ -1414,7 +1414,7 @@ export default function Home() {
           </div>
           <Link
             to="/search"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.caramel, textDecoration: 'none', border: `1px solid ${BAI.caramelBorder}`, borderRadius: 8, padding: '8px 16px', transition: 'all .15s', background: BAI.caramelLight }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.caramelText, textDecoration: 'none', border: `1px solid ${BAI.caramelBorder}`, borderRadius: 8, padding: '8px 16px', transition: 'all .15s', background: BAI.caramelLight }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.85' }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1' }}
           >
@@ -1489,7 +1489,7 @@ export default function Home() {
               <p style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: BAI.caramelText, margin: '0 0 4px' }}>Guide</p>
               <h2 style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(22px,3vw,30px)', color: BAI.ink, margin: 0 }}>Le guide de la location</h2>
             </div>
-            <Link to="/guide" style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.caramel, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <Link to="/guide" style={{ fontFamily: BAI.fontBody, fontSize: 13, color: BAI.caramelText, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
               Tous les articles <ChevronRight size={13} />
             </Link>
           </div>

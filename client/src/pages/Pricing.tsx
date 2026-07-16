@@ -42,7 +42,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 function FeatureCell({ value, isHighlight }: { value: boolean | string; isHighlight?: boolean }) {
   if (value === true)  return <Check size={15} color={isHighlight ? BAI.caramel : '#16a34a'} style={{ margin: '0 auto', display: 'block' }} />
   if (value === false) return <X size={14} color={BAI.inkFaint} style={{ margin: '0 auto', display: 'block' }} />
-  return <span style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 600, color: isHighlight ? BAI.caramel : BAI.owner, textAlign: 'center', display: 'block' }}>{value}</span>
+  return <span style={{ fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 600, color: isHighlight ? BAI.caramelText : BAI.owner, textAlign: 'center', display: 'block' }}>{value}</span>
 }
 
 // ─── ROI Calculator ───────────────────────────────────────────────────────────
@@ -79,7 +79,7 @@ function RoiCalculator() {
       <div style={{ marginBottom: 24 }}>
         <label htmlFor="pricing-rent-range" style={{ fontFamily: BAI.fontBody, fontSize: 13, fontWeight: 600, color: BAI.ink, display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
           <span>Votre loyer mensuel</span>
-          <span style={{ color: BAI.caramel }}>{rent} €/mois</span>
+          <span style={{ color: BAI.caramelText }}>{rent} €/mois</span>
         </label>
         <input
           id="pricing-rent-range"
@@ -103,10 +103,10 @@ function RoiCalculator() {
           </p>
         </div>
         <div style={{ background: BAI.caramelLight, border: `1px solid rgba(196,151,106,0.25)`, borderRadius: 10, padding: '16px 12px', textAlign: 'center' }}>
-          <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: BAI.caramel, margin: '0 0 4px' }}>
+          <p style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: BAI.caramelText, margin: '0 0 4px' }}>
             {proYear.toFixed(0)} €
           </p>
-          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.caramel, margin: 0, lineHeight: 1.4 }}>
+          <p style={{ fontFamily: BAI.fontBody, fontSize: 11, color: BAI.caramelText, margin: 0, lineHeight: 1.4 }}>
             Bailio Pro / an
           </p>
         </div>
@@ -275,7 +275,7 @@ export default function Pricing() {
                 {b === 'annual' && (
                   <span style={{
                     fontSize: 10, fontWeight: 700,
-                    background: billing === 'annual' ? BAI.caramel : 'rgba(196,151,106,0.22)',
+                    background: billing === 'annual' ? BAI.caramelText : 'rgba(196,151,106,0.22)',
                     color: billing === 'annual' ? '#fff' : BAI.caramel,
                     padding: '2px 7px', borderRadius: '999px',
                     transition: 'background 0.18s, color 0.18s',
@@ -351,7 +351,7 @@ export default function Pricing() {
                     <span style={{
                       fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
                       fontSize: plan.monthlyPrice === 0 ? 28 : 36,
-                      color: isHL ? BAI.caramel : BAI.ink, lineHeight: 1,
+                      color: isHL ? BAI.caramelText : BAI.ink, lineHeight: 1,
                     }}>
                       {plan.monthlyPrice === 0 ? 'Gratuit' : `${price} €`}
                     </span>
@@ -387,7 +387,7 @@ export default function Pricing() {
                         ? `1px solid ${BAI.night}`
                         : 'none',
                     background: plan.ctaStyle === 'primary'
-                      ? BAI.caramel
+                      ? BAI.caramelText
                       : plan.ctaStyle === 'secondary'
                         ? 'transparent'
                         : 'transparent',
@@ -495,10 +495,10 @@ export default function Pricing() {
                   background: plan.highlight ? BAI.caramelLight : 'transparent',
                   borderLeft: `1px solid ${BAI.border}`,
                 }}>
-                  <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: plan.highlight ? BAI.caramel : BAI.ink, margin: '0 0 2px' }}>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 12, fontWeight: 700, color: plan.highlight ? BAI.caramelText : BAI.ink, margin: '0 0 2px' }}>
                     {PLAN_NAMES[id]}
                   </p>
-                  <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: plan.highlight ? BAI.caramel : BAI.inkFaint, margin: 0 }}>
+                  <p style={{ fontFamily: BAI.fontBody, fontSize: 10, color: plan.highlight ? BAI.caramelText : BAI.inkFaint, margin: 0 }}>
                     {plan.monthlyPrice === 0 ? 'Gratuit' : `${plan.monthlyPrice.toFixed(2).replace('.', ',')} €/mois`}
                   </p>
                 </div>
@@ -582,7 +582,7 @@ export default function Pricing() {
                       padding: '8px 12px', borderRadius: 8,
                       fontFamily: BAI.fontBody, fontSize: 11, fontWeight: 600, cursor: 'pointer',
                       border: plan.highlight ? 'none' : `1px solid ${BAI.border}`,
-                      background: plan.highlight ? BAI.caramel : 'transparent',
+                      background: plan.highlight ? BAI.caramelText : 'transparent',
                       color: plan.highlight ? '#fff' : BAI.inkMid,
                       whiteSpace: 'nowrap', minHeight: 36,
                     }}

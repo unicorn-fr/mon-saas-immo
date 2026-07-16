@@ -208,7 +208,7 @@ export const PropertyCard = ({ property, variant = 'default', showStats = false 
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
           <span style={{
             fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
-            fontSize: 26, color: BAI.caramel, lineHeight: 1,
+            fontSize: 26, color: BAI.caramelText, lineHeight: 1,
           }}>
             {Number(property.price).toLocaleString('fr-FR')} €
           </span>

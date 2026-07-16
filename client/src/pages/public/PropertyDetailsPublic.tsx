@@ -487,7 +487,7 @@ export default function PropertyDetailsPublic() {
                       fontStyle: 'italic',
                       fontSize: 'clamp(28px, 7vw, 38px)',
                       fontWeight: 700,
-                      color: M.caramel,
+                      color: M.caramelText,
                       lineHeight: 1,
                       whiteSpace: 'nowrap',
                     }}
@@ -822,7 +822,7 @@ export default function PropertyDetailsPublic() {
                       {/* Montant emprunté */}
                       <div style={{ background: M.caramelLight, borderRadius: 10, padding: '10px 14px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontFamily: M.body, fontSize: 13, color: M.inkMid }}>Montant emprunté</span>
-                        <span style={{ fontFamily: M.display, fontStyle: 'italic', fontSize: 20, fontWeight: 700, color: M.caramel }}>
+                        <span style={{ fontFamily: M.display, fontStyle: 'italic', fontSize: 20, fontWeight: 700, color: M.caramelText }}>
                           {emprunt.toLocaleString('fr-FR')} €
                         </span>
                       </div>
@@ -844,7 +844,7 @@ export default function PropertyDetailsPublic() {
                               return (
                                 <tr key={annees} style={{ background: i % 2 === 0 ? 'transparent' : M.muted }}>
                                   <td style={{ padding: '10px 12px', color: M.ink, fontWeight: 600 }}>{annees} ans</td>
-                                  <td style={{ padding: '10px 12px', textAlign: 'right', color: M.caramel, fontFamily: M.display, fontStyle: 'italic', fontSize: 16, fontWeight: 700 }}>
+                                  <td style={{ padding: '10px 12px', textAlign: 'right', color: M.caramelText, fontFamily: M.display, fontStyle: 'italic', fontSize: 16, fontWeight: 700 }}>
                                     {Math.round(mensualite).toLocaleString('fr-FR')} €/mois
                                   </td>
                                   <td style={{ padding: '10px 12px', textAlign: 'right', color: M.inkMid }}>
@@ -864,7 +864,7 @@ export default function PropertyDetailsPublic() {
                       <div className="flex flex-wrap gap-3 mt-4">
                         <Link
                           to="/search"
-                          style={{ fontFamily: M.body, fontSize: 13, fontWeight: 600, color: M.caramel, textDecoration: 'none' }}
+                          style={{ fontFamily: M.body, fontSize: 13, fontWeight: 600, color: M.caramelText, textDecoration: 'none' }}
                         >
                           Affiner ma simulation →
                         </Link>
@@ -918,7 +918,7 @@ export default function PropertyDetailsPublic() {
                         fontStyle: 'italic',
                         fontSize: '32px',
                         fontWeight: 700,
-                        color: M.caramel,
+                        color: M.caramelText,
                         lineHeight: 1,
                       }}
                     >
@@ -1213,7 +1213,7 @@ export default function PropertyDetailsPublic() {
         }}
       >
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: M.display, fontStyle: 'italic', fontSize: 22, fontWeight: 700, color: M.caramel, lineHeight: 1 }}>
+          <div style={{ fontFamily: M.display, fontStyle: 'italic', fontSize: 22, fontWeight: 700, color: M.caramelText, lineHeight: 1 }}>
             {Number(property.price).toLocaleString('fr-FR')} €
           </div>
           <div style={{ fontFamily: M.body, fontSize: 12, color: M.inkFaint }}>/ mois CC</div>
