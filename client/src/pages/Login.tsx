@@ -40,7 +40,7 @@ const BULLETS = [
 
 function LeftPanel() {
   return (
-    <div
+    <aside
       className="hidden md:flex"
       style={{
         width: '45%',
@@ -117,7 +117,7 @@ function LeftPanel() {
           </span>
         ))}
       </div>
-    </div>
+    </aside>
   )
 }
 
@@ -234,7 +234,8 @@ export default function Login() {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', ...fontBody }}>
         <LeftPanel />
-        <div
+        <main
+          id="main-content"
           style={{ background: BAI.bgBase, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflowY: 'auto' }}
           className="w-full md:w-[55%]"
         >
@@ -318,7 +319,7 @@ export default function Login() {
               Google Authenticator · Authy · 1Password
             </p>
           </motion.div>
-        </div>
+        </main>
       </div>
     )
   }
@@ -330,7 +331,8 @@ export default function Login() {
         <LeftPanel />
 
         {/* Panneau droit */}
-        <div
+        <main
+          id="main-content"
           style={{
             background: BAI.bgBase,
             display: 'flex',
@@ -443,7 +445,7 @@ export default function Login() {
               </Link>
             </p>
           </motion.div>
-        </div>
+        </main>
       </div>
     )
   }

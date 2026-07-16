@@ -179,7 +179,7 @@ export default function MyProperties() {
 
         {/* Content */}
         <div style={{ padding: '14px 16px 16px' }}>
-          <h3
+          <h2
             className="mb-1 line-clamp-1"
             style={{
               fontFamily: BAI.fontBody,
@@ -189,7 +189,7 @@ export default function MyProperties() {
             }}
           >
             {property.title}
-          </h3>
+          </h2>
           <div className="flex items-center mb-3" style={{ gap: 4 }}>
             <MapPin style={{ width: 12, height: 12, color: BAI.inkFaint, flexShrink: 0 }} />
             <span
