@@ -62,16 +62,7 @@
     <!-- Plausible Analytics — RGPD-compliant, sans cookies, sans consentement requis -->
     <script defer data-domain="bailio.fr" src="https://plausible.io/js/script.js"></script>
 
-    <!-- Leaflet CSS — chargement non-bloquant (carte non critique au rendu initial) -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-      crossorigin=""
-      media="print" onload="this.media='all'">
-    <noscript>
-      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-        crossorigin="">
-    </noscript>
+    <!-- Leaflet CSS — bundlée via styles/index.css (@import 'leaflet/dist/leaflet.css'), pas de CDN externe -->
 
     <!-- Données Structurées JSON-LD — Schema.org (signal d'identité de marque pour Google) -->
     <script type="application/ld+json">
