@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Linkedin } from 'lucide-react'
 import { Header } from '../../components/layout/Header'
 import Footer from '../../components/layout/Footer'
 import { BAI } from '../../constants/bailio-tokens'
@@ -133,7 +133,7 @@ export default function APropos() {
             }}>
               <img
                 src="/enzo1.jpeg"
-                alt="Enzo, fondateur de Bailio"
+                alt="Enzo Mercier, fondateur de Bailio"
                 style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
               />
             </div>
@@ -144,10 +144,14 @@ export default function APropos() {
                 fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700,
                 fontSize: 'clamp(22px,3vw,32px)', color: BAI.ink, margin: '0 0 4px',
               }}>
-                Enzo
+                Enzo Mercier
               </p>
               <p style={{ fontSize: 13, color: BAI.inkFaint, margin: '0 0 24px' }}>
                 Fondateur & développeur · Étudiant entrepreneur
+              </p>
+
+              <p style={{ fontSize: 16, lineHeight: 1.75, color: BAI.inkMid, margin: '0 0 18px' }}>
+                Bailio est une startup PropTech montpelliéraine fondée par Enzo Mercier, étudiant en Bachelor BIBA à Montpellier Business School et consultant junior immobilier chez Foncia Naturisme (Cap d'Agde). L'idée : permettre aux propriétaires de gérer leur location sans agence — mise en location, candidatures, bail signé en ligne, suivi.
               </p>
 
               <p style={{ fontSize: 16, lineHeight: 1.75, color: BAI.inkMid, margin: '0 0 18px' }}>
@@ -173,6 +177,20 @@ export default function APropos() {
               >
                 Écrire à Enzo <ArrowRight size={15} />
               </Link>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, marginTop: 20, fontSize: 14 }}>
+                <a href="https://enzomercier.fr" style={{ color: BAI.inkMid, textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                  enzomercier.fr
+                </a>
+                <a
+                  href="https://www.linkedin.com/in/enzo-mercier/"
+                  target="_blank"
+                  rel="noopener"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: BAI.inkMid, textDecoration: 'underline', textUnderlineOffset: 3 }}
+                >
+                  <Linkedin size={14} aria-hidden /> LinkedIn
+                </a>
+              </div>
             </div>
           </div>
         </div>

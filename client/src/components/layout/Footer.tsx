@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { Linkedin } from 'lucide-react'
 
 const fontDisplay = "'Cormorant Garamond', Georgia, serif"
 const fontBody    = "'DM Sans', system-ui, sans-serif"
@@ -130,9 +131,36 @@ export default function Footer() {
 
         {/* Barre du bas */}
         <div className="footer-bottom">
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
-            © {new Date().getFullYear()} Bailio. Tous droits réservés.
-          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
+              © {new Date().getFullYear()} Bailio. Tous droits réservés.
+            </span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
+              <span>
+                Bailio a été fondé par{' '}
+                <a
+                  href="https://enzomercier.fr"
+                  style={{ color: 'rgba(255,255,255,0.55)', textDecoration: 'none', transition: 'color 0.15s' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.85)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.55)' }}
+                >
+                  Enzo Mercier
+                </a>
+              </span>
+              <a
+                href="https://www.linkedin.com/in/enzo-mercier/"
+                target="_blank"
+                rel="noopener"
+                aria-label="Enzo Mercier sur LinkedIn"
+                title="Enzo Mercier sur LinkedIn"
+                style={{ display: 'inline-flex', color: 'rgba(255,255,255,0.4)', transition: 'color 0.15s' }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.85)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)' }}
+              >
+                <Linkedin size={13} aria-hidden />
+              </a>
+            </span>
+          </div>
           <div className="footer-legal">
             {LEGAL.map((l) => (
               <Link
