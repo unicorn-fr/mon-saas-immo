@@ -1,0 +1,12 @@
+# Certificat HTTPS Let's Encrypt obtenu et renouvelé automatiquement par Caddy.
+{$API_DOMAIN} {
+	encode zstd gzip
+	request_body {
+		max_size 160MB
+	}
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+	reverse_proxy api:5000
+}

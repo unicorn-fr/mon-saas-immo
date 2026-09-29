@@ -54,7 +54,7 @@ https://bailio.fr et https://www.bailio.fr sont toujours autorisés.
 ## Déploiement
 
 - **Site** : Vercel, dossier racine `client`, commande `npm run build`, sortie `dist`.
-- **API** : Railway, `Dockerfile` à la racine (ou dossier `server/` avec `server/railway.json`). Au démarrage, `prisma migrate deploy` applique les migrations versionnées (jamais de suppression automatique de données).
+- **API** : un VPS (Infomaniak) avec Docker, voir [`deploy/vps/README.md`](deploy/vps/README.md). Le `Dockerfile` à la racine fonctionne aussi sur tout hébergeur de conteneurs (Railway, Clever Cloud, Koyeb…). Au démarrage, `prisma migrate deploy` applique les migrations versionnées (jamais de suppression automatique de données).
 - Un cron quotidien (8 h, heure de Paris) prolonge les échéances et envoie l'email de rappel aux propriétaires qui ont activé le suivi.
 
 ## Vérifications
