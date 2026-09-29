@@ -1,46 +1,14 @@
+# API Bailio (Railway). Le client est déployé séparément sur Vercel (dossier client/).
 FROM node:20-slim
-
-# ── Dépendances système ────────────────────────────────────────────────────────
-# Python3 + pip + Tesseract OCR (avec pack français) + libs OpenCV
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 python3-pip \
-    tesseract-ocr tesseract-ocr-fra \
-    libgl1 libglib2.0-0 \
-    && rm -rf /var/lib/apt/lists/*
-
-# ── Dépendances Python OCR ─────────────────────────────────────────────────────
-# Léger (~150MB) — fastmrz (MRZ ICAO) + pytesseract + OpenCV + FastAPI
-RUN pip3 install --no-cache-dir --break-system-packages \
-    fastapi \
-    "uvicorn[standard]" \
-    fastmrz \
-    pytesseract \
-    opencv-python-headless \
-    numpy \
-    Pillow
-
+RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-
-# ── Dépendances Node ───────────────────────────────────────────────────────────
-COPY package*.json ./
-COPY server/package*.json ./server/
-RUN npm --prefix server ci
-
-# ── Code source ────────────────────────────────────────────────────────────────
-COPY . .
-
-# ── Build TypeScript + génération client Prisma ────────────────────────────────
-RUN npm --prefix server run build
-
+COPY package.json package-lock.json ./
+COPY server/package.json ./server/
+COPY client/package.json ./client/
+RUN npm ci --workspace server --include-workspace-root
+COPY server ./server
+RUN npm run build --workspace server
+ENV NODE_ENV=production
 EXPOSE 5000
-
-# ── Démarrage production ───────────────────────────────────────────────────────
-# 1. ulimit pour les connexions SSE
-# 2. Prisma db push (applique le schema)
-# 3. PM2 cluster mode
-CMD ["sh", "-c", "\
-  ulimit -n 65535 2>/dev/null || true && \
-  cd server && \
-  ./node_modules/.bin/prisma db push --accept-data-loss --skip-generate && \
-  npx pm2-runtime ecosystem.config.cjs --env production \
-"]
+# migrate deploy n'applique que des migrations versionnées : il ne supprime jamais de données.
+CMD ["sh", "-c", "cd server && npx prisma migrate deploy && node dist/server.js"]

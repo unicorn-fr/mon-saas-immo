@@ -1,35 +1,8 @@
 User-agent: *
 Allow: /
-
-# Pages privées (dashboards, profil, admin)
-Disallow: /dashboard/
-Disallow: /admin/
-Disallow: /super-admin/
-Disallow: /profile
-Disallow: /messages
-Disallow: /notifications
-Disallow: /contracts/
-Disallow: /properties/new
-Disallow: /properties/*/edit
-Disallow: /dossier
-Disallow: /favorites
-Disallow: /my-bookings
-Disallow: /my-applications
-Disallow: /owner/
-Disallow: /tenant/
-Disallow: /bookings/
-Disallow: /applications/
-Disallow: /waitlist
-
-# Pages d'authentification (inutiles à indexer)
-Disallow: /select-role
-Disallow: /complete-profile
-Disallow: /verify-identity
-Disallow: /verify-email
-Disallow: /auth/
-Disallow: /edl/
-
-# Fichiers techniques
-Disallow: /api/
-
+Disallow: /espace
+Disallow: /commencer
+Disallow: /connexion
+Disallow: /reprendre
+Disallow: /bienvenue
 Sitemap: https://bailio.fr/sitemap.xml

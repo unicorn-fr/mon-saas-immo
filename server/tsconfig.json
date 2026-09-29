@@ -1,47 +1,17 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "ESNext",
-    "lib": ["ES2022"],
-    "moduleResolution": "node",
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"],
-      "@/controllers/*": ["./src/controllers/*"],
-      "@/services/*": ["./src/services/*"],
-      "@/routes/*": ["./src/routes/*"],
-      "@/middlewares/*": ["./src/middlewares/*"],
-      "@/utils/*": ["./src/utils/*"],
-      "@/config/*": ["./src/config/*"],
-      "@/types/*": ["./src/types/*"]
-    },
-
-    /* Emit */
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "removeComments": true,
-
-    /* Interop Constraints */
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true,
-
-    /* Type Checking */
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "dist",
+    "rootDir": "src",
     "strict": true,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noImplicitReturns": false,
-    "noFallthroughCasesInSwitch": true,
+    "esModuleInterop": true,
     "skipLibCheck": true,
-
-    /* Experimental */
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "jsx": "react-jsx",
+    "types": ["node"],
+    "sourceMap": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts"]
 }

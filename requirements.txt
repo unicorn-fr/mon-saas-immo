@@ -1,7 +1,0 @@
-fastapi
-uvicorn[standard]
-fastmrz
-pytesseract
-opencv-python-headless
-numpy
-Pillow

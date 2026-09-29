@@ -1,4 +1,5 @@
-// Prisma Schema for Plateforme Gestion Locative
+// Bailio — schéma de données
+// Montants en centimes (Int). Aucune suppression de colonne sans migration relue.
 
 generator client {
   provider = "prisma-client-js"
@@ -9,1283 +10,177 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ============================================
-// ENUMS
-// ============================================
-
-enum UserRole {
-  TENANT        // Locataire
-  OWNER         // Propriétaire
-  ADMIN         // Admin plateforme
-  SUPER_ADMIN   // Super Admin — accès total plateforme
+enum LeaseType {
+  UNFURNISHED // location vide
+  FURNISHED // location meublée
 }
 
-enum PropertyType {
-  APARTMENT   // Appartement
-  HOUSE       // Maison
-  STUDIO      // Studio
-  DUPLEX      // Duplex
-  LOFT        // Loft
+enum LeaseStatus {
+  ACTIVE
+  ENDED
+  IMPORTED // bail déjà signé, importé par le propriétaire
 }
 
-enum PropertyStatus {
-  AVAILABLE       // Disponible — approuvé par admin, visible aux locataires
-  OCCUPIED        // Occupé — en location active
-  RESERVED        // Réservé
-  DRAFT           // Brouillon — non soumis
-  PENDING_REVIEW  // En attente de vérification par un administrateur
+enum DocumentKind {
+  LEASE // bail généré par Bailio
+  LEASE_IMPORTED // bail signé importé (photo ou PDF)
 }
 
-enum BookingStatus {
-  PENDING     // En attente
-  CONFIRMED   // Confirmée
-  CANCELLED   // Annulée
-  COMPLETED   // Terminée
+enum ReminderType {
+  RENT_RECEIPT // quittance du mois
+  INSURANCE // attestation d'assurance du locataire
+  RENT_REVISION // révision annuelle du loyer
+  LEASE_END // fin de bail
+  INVENTORY_ENTRY // état des lieux d'entrée
 }
 
-enum ContractStatus {
-  DRAFT           // Brouillon
-  SENT            // Envoyé au locataire
-  SIGNED_OWNER    // Signé par le propriétaire
-  SIGNED_TENANT   // Signé par le locataire
-  COMPLETED       // Signé par les deux parties
-  ACTIVE          // Actif (en cours)
-  EXPIRED         // Expiré
-  TERMINATED      // Résilié
-  CANCELLED       // Annulé
+enum ReminderStatus {
+  TODO
+  DONE
 }
-
-enum DateOverrideType {
-  BLOCKED     // Bloquer une date (aucune visite)
-  EXTRA       // Ajouter une dispo exceptionnelle
-}
-
-enum ApplicationStatus {
-  PENDING     // En attente de décision du propriétaire
-  APPROVED    // Approuvée — accès aux créneaux de visite débloqué
-  REJECTED    // Refusée
-  WITHDRAWN   // Retirée par le locataire
-}
-
-enum EdlSessionStatus {
-  WAITING     // Créée, en attente que le locataire rejoigne
-  ACTIVE      // Les deux parties sont connectées
-  COMPLETED   // EDL finalisé et signé
-}
-
-enum TokenType {
-  EMAIL_VERIFY
-  PASSWORD_RESET
-  MAGIC_LINK
-}
-
-// ============================================
-// MODELS
-// ============================================
 
 model User {
-  id                String    @id @default(uuid())
-  email             String    @unique
-  password          String?   // bcrypt hashed, nullable for OAuth-only users
-  googleId          String?   @unique
-  role              UserRole  @default(TENANT)
+  id              String    @id @default(uuid())
+  email           String    @unique
+  firstName       String?
+  lastName        String?
+  googleId        String?   @unique
+  emailVerifiedAt DateTime?
+  followUpSince   DateTime? // « Activer le suivi » : emails de rappel actifs
+  createdAt       DateTime  @default(now())
 
-  // Personal Information
-  firstName         String
-  lastName          String
-  phone             String?
-  avatar            String?
-  bio               String?   @db.Text
-  address           String?   // Adresse personnelle du bailleur (obligatoire art. 21 loi 89-462)
-  city              String?   // Ville de résidence actuelle (locataire) ou du bien (propriétaire)
-  onboardingCompleted Boolean @default(false) // Wizard first-login complété
-
-  // Profil emploi/revenus locataire (minimum légal avant signature de bail)
-  monthlyIncome     Float?    // Revenus mensuels nets déclarés
-  employmentType    String?   // "CDI" | "CDD" | "freelance" | "étudiant" | "retraité" | "autre"
-
-  // Identity document data (extracted by AI scanner)
-  birthDate         String?   // date de naissance (DD/MM/YY)
-  birthCity         String?   // ville de naissance
-  nationality       String?   // nationalité (code 3 lettres, ex: "FRA")
-  nationalNumber    String?   // n° de sécu (masqué)
-  documentNumber    String?   // numéro CNI / passeport / titre de séjour
-  documentExpiry    String?   // date de validité du document
-
-  // Coordonnées bancaires (partagées entre locataire ↔ bailleur)
-  iban        String?   // IBAN complet
-  bic         String?   // BIC / SWIFT
-  bankName    String?   // Nom de la banque
-  bankHolder  String?   // Titulaire du compte (si différent du prénom+nom)
-
-  // Flexible AI-extracted metadata from all scanned documents (JSON)
-  profileMeta       Json?     // { IDENTITE: {...}, BULLETIN: {...}, REVENUS_FISCAUX: {...}, ... }
-
-  // Verification
-  emailVerified     Boolean   @default(false)
-  emailVerifiedAt   DateTime?
-  phoneVerified     Boolean   @default(false)
-  phoneVerifiedAt   DateTime?
-
-  // Dossier locataire — score calculé à chaque upload de document
-  tenantScore       Int?      // score global du dossier (0-100)
-  tenantScoreAt     DateTime? // dernière mise à jour du score
-
-  // Trust & Anti-Fraud
-  trustScore            Int       @default(50)   // 0-100 : calculé dynamiquement
-  isVerifiedOwner       Boolean   @default(false) // Vérifié manuellement par admin (badge premium)
-  reportCount           Int       @default(0)    // Nombre de signalements reçus
-  isBanned              Boolean   @default(false) // Banni suite à fraude confirmée
-
-  // Stripe Identity — vérification d'identité
-  stripeIdentityStatus  String?   // 'requires_input' | 'processing' | 'verified' | 'canceled'
-  stripeIdentitySessionId String? // VerificationSession ID Stripe
-
-  // 2FA — TOTP (Google Authenticator / Authy)
-  totpSecret        String?
-  totpEnabled       Boolean   @default(false)
-
-  // RGPD — Consentements et droits
-  tosAcceptedAt     DateTime? // Date d'acceptation des CGU (preuve légale)
-  tosVersion        String?   // Version des CGU acceptées (ex: "2026-01")
-  marketingConsent  Boolean   @default(false) // Consentement emails marketing (art. 7 RGPD)
-  marketingConsentAt DateTime?               // Date du consentement marketing
-  deletionRequestedAt DateTime?              // Demande de suppression en attente (art. 17 RGPD — délai 30j)
-
-  // Timestamps
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  lastLoginAt       DateTime?
-
-  // Fiscal settings (owner tax simulator — persisted per user)
-  fiscalSettings    Json?     // { hasSociety, currentRegime, annualRevenue, realCharges, isFurnished, savedAt }
-
-  // Relations
-  ownedProperties       Property[]            @relation("PropertyOwner")
-  bookings              Booking[]             @relation("BookingTenant")
-  sentMessages          Message[]             @relation("MessageSender")
-  receivedMessages      Message[]             @relation("MessageReceiver")
-  tenantContracts       Contract[]            @relation("ContractTenant")
-  ownerContracts        Contract[]            @relation("ContractOwner")
-  favorites             Favorite[]
-  notifications         Notification[]
-  refreshTokens         RefreshToken[]
-  conversationsUser1    Conversation[]        @relation("ConversationUser1")
-  conversationsUser2    Conversation[]        @relation("ConversationUser2")
-  verificationTokens    VerificationToken[]
-  uploadedDocuments     ContractDocument[]    @relation("DocumentUploader")
-  tenantDocuments       TenantDocument[]
-  applications          Application[]
-  dossierSharesGranted  DossierShare[]        @relation("ShareGrantedBy")
-  dossierSharesReceived DossierShare[]        @relation("ShareReceivedBy")
-  fraudReportsFiled     FraudReport[]         @relation("FraudReporter")
-  fraudReportsReceived  FraudReport[]         @relation("FraudTarget")
-  subscription          Subscription?
-  promoRedemptions      PromoRedemption[]
-  calendarInvitesSent   CalendarInvite[]      @relation("CalendarInviteSender")
-  calendarInvitesReceived CalendarInvite[]    @relation("CalendarInviteReceiver")
-  edlSessionsOwned      EdlSession[]          @relation("EdlSessionOwner")
-  edlSessionsJoined     EdlSession[]          @relation("EdlSessionTenant")
-  expenses              Expense[]             @relation("OwnerExpenses")
-  loans                 Loan[]                @relation("OwnerLoans")
-  ownedMaintenanceReqs  MaintenanceRequest[]  @relation("OwnerMaintenanceRequests")
-  tenantMaintenanceReqs MaintenanceRequest[]  @relation("TenantMaintenanceRequests")
-  aiUsageTracking        AiUsageTracking[]
-  searchAlerts           SearchAlert[]
-  kycVerification        KycVerification?
-
-  // Stripe Connect (propriétaires — pour recevoir les loyers)
-  stripeAccountId        String?              @unique
-  stripeAccountStatus    String?              // 'pending' | 'active' | 'restricted'
-
-  @@index([email])
-  @@index([role])
-  @@map("users")
+  sessions   Session[]
+  properties Property[]
+  leases     Lease[]
+  documents  Document[]
+  reminders  Reminder[]
+  drafts     Draft[]
 }
 
-model RefreshToken {
-  id        String   @id @default(uuid())
-  token     String   @unique
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+model Session {
+  id         String   @id @default(uuid())
+  tokenHash  String   @unique
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
 
   @@index([userId])
-  @@index([token])
-  @@map("refresh_tokens")
 }
 
-model VerificationToken {
+// Lien magique : connexion, ou rattachement d'un brouillon à un compte existant.
+model LoginToken {
   id        String    @id @default(uuid())
-  token     String    @unique
-  userId    String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type      TokenType
+  tokenHash String    @unique
+  email     String
+  draftId   String?
   expiresAt DateTime
+  usedAt    DateTime?
   createdAt DateTime  @default(now())
 
-  @@index([userId])
-  @@index([token])
-  @@map("verification_tokens")
+  @@index([email])
+}
+
+// Brouillon du tunnel, commencé sans compte. Le token (en clair) reste chez le client.
+model Draft {
+  id          String    @id @default(uuid())
+  tokenHash   String    @unique
+  data        Json      @default("{}")
+  step        String    @default("type")
+  resumeEmail String?
+  // « J'ai déjà un bail signé » : fichier d'origine, conservé jusqu'à la création du compte
+  importFile  Bytes?
+  importMime  String?
+  importName  String?
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  leaseId     String?   @unique
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([expiresAt])
 }
 
 model Property {
-  id            String         @id @default(uuid())
-  ownerId       String
-  owner         User           @relation("PropertyOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-
-  // Basic Information
-  title         String
-  description   String         @db.Text
-  type          PropertyType
-  status        PropertyStatus @default(DRAFT)
-
-  // Location
-  address       String
-  city          String
-  postalCode    String
-  country       String         @default("France")
-  latitude      Float?
-  longitude     Float?
-
-  // Characteristics
-  bedrooms      Int
-  bathrooms     Int
-  surface       Float          // m²
-  floor         Int?
-  totalFloors   Int?
-  furnished     Boolean        @default(false)
-
-  // Financial
-  price         Float          // Monthly rent
-  charges       Float?         // Charges
-  deposit       Float?         // Security deposit
-
-  // Media
-  images        String[]       // Array of image URLs
-  virtualTour   String?        // 360° tour URL
-
-  // Amenities
-  hasParking    Boolean        @default(false)
-  hasBalcony    Boolean        @default(false)
-  hasElevator   Boolean        @default(false)
-  hasGarden     Boolean        @default(false)
-  amenities     String[]       // ["wifi", "dishwasher", "ac", ...]
-
-  // Availability
-  availableFrom DateTime?
-  visitDuration Int            @default(30) // Duration of visit slots in minutes
-
-  // Owner Verification Documents (required to publish)
-  ownerIdDocument       String?  // URL to owner ID document (CNI/Passport)
-  propertyProofDocument String?  // URL to property proof (titre de propriete/taxe fonciere)
-
-  // Admin review
-  reviewNote            String?  // Admin note (rejection reason or approval comment)
-
-  // Selection Criteria (JSON) — owner's pre-qualification requirements
-  // { minSalaryRatio, requiredGuarantor, acceptedGuarantorTypes, requiredDocCategories,
-  //   preferredContractTypes, autoPilot, minScore }
-  selectionCriteria Json?
-
-  // Statistics
-  views         Int            @default(0)
-  contactCount  Int            @default(0)
-
-  // Timestamps
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  publishedAt   DateTime?
-
-  // Relations
-  bookings               Booking[]
-  conversations          Conversation[] @relation("ConversationProperty")
-  favorites              Favorite[]
-  contracts              Contract[]
-  visitAvailabilitySlots VisitAvailabilitySlot[]
-  visitDateOverrides     VisitDateOverride[]
-  applications           Application[]
-  syndications           PropertySyndication[]
-  calendarInvites        CalendarInvite[]
-  expenses               Expense[]
-  loan                   Loan?
-  maintenanceRequests    MaintenanceRequest[]
-  fraudReports           FraudReport[]         @relation("PropertyReports")
-
-  @@index([ownerId])
-  @@index([city])
-  @@index([status])
-  @@index([type])
-  @@index([price])
-  @@index([createdAt])
-  @@index([ownerId, status])            // Dashboard propriétaire
-  @@index([city, status])               // Recherche par ville
-  @@index([status, createdAt])          // Listing public trié par date
-  @@index([status, price])              // Listing filtré par prix
-  @@index([city, status, price])        // Recherche combinée ville + budget
-  @@map("properties")
-}
-
-model Booking {
-  id          String        @id @default(uuid())
-  propertyId  String
-  property    Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-
-  tenantId    String
-  tenant      User          @relation("BookingTenant", fields: [tenantId], references: [id], onDelete: Cascade)
-
-  // Visit Details
-  visitDate   DateTime      // Date of the visit
-  visitTime   String        // Time slot (e.g., "14:00")
-  duration    Int           @default(30) // Duration in minutes
-
-  status      BookingStatus @default(PENDING)
-
-  // Notes
-  tenantNotes String?       @db.Text
-  ownerNotes  String?       @db.Text
-
-  // Status tracking
-  confirmedAt         DateTime?
-  cancelledAt         DateTime?
-  cancellationReason  String?   @db.Text
-
-  // Timestamps
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-
-  @@index([propertyId])
-  @@index([tenantId])
-  @@index([visitDate])
-  @@index([status])
-  @@index([createdAt])
-  @@map("bookings")
-}
-
-model Conversation {
-  id            String    @id @default(uuid())
-
-  // Participants (always 2 users in a conversation)
-  user1Id       String
-  user1         User      @relation("ConversationUser1", fields: [user1Id], references: [id], onDelete: Cascade)
-
-  user2Id       String
-  user2         User      @relation("ConversationUser2", fields: [user2Id], references: [id], onDelete: Cascade)
-
-  // Last message info (denormalized for performance)
-  lastMessageAt     DateTime?
-  lastMessageText   String?   @db.Text
-
-  // Unread counts
-  unreadCountUser1  Int       @default(0)
-  unreadCountUser2  Int       @default(0)
-
-  // Timestamps
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  // Optional property context (set when conversation starts from a property/application)
-  propertyId    String?
-  property      Property? @relation("ConversationProperty", fields: [propertyId], references: [id], onDelete: SetNull)
-
-  // Relations
-  messages      Message[]
-
-  @@unique([user1Id, user2Id])
-  @@index([user1Id])
-  @@index([user2Id])
-  @@index([lastMessageAt])
-  @@index([propertyId])
-  @@map("conversations")
-}
-
-model Message {
-  id              String       @id @default(uuid())
-
-  conversationId  String
-  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-
-  senderId        String
-  sender          User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
-
-  receiverId      String
-  receiver        User         @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
-
-  // Content
-  content         String       @db.Text
-  attachments     String[]     // Array of file URLs
-
-  // Read status
-  isRead          Boolean      @default(false)
-  readAt          DateTime?
-
-  // Timestamps
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-
-  @@index([conversationId])
-  @@index([senderId])
-  @@index([receiverId])
-  @@index([isRead])
-  @@index([createdAt])
-  @@index([conversationId, createdAt])  // Chargement conversation
-  @@map("messages")
-}
-
-model Contract {
-  id          String         @id @default(uuid())
-
-  propertyId  String
-  property    Property       @relation(fields: [propertyId], references: [id], onDelete: Restrict) // Baux conservés 5 ans après expiration (obligation légale)
-
-  tenantId    String
-  tenant      User           @relation("ContractTenant", fields: [tenantId], references: [id], onDelete: Restrict)
-
-  ownerId     String
-  owner       User           @relation("ContractOwner", fields: [ownerId], references: [id], onDelete: Restrict)
-
-  // Lien facultatif vers la candidature d'origine (traçabilité)
-  applicationId String?      @unique
-  application   Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
-
-  status      ContractStatus @default(DRAFT)
-
-  // Contract Details
-  startDate   DateTime
-  endDate     DateTime
-
-  // Financial Terms
-  monthlyRent Float
-  charges     Float?
-  deposit     Float?
-
-  // Structured Content (wizard form data as JSON)
-  content         Json?         // Full form data from wizard steps
-  customClauses   Json?         // Array of custom clauses [{title, description, enabled}]
-
-  // Documents
-  pdfUrl          String?
-
-  // Signatures (mode SIMPLE — canvas)
-  ownerSignature  String?       @db.Text  // Base64 signature image
-  tenantSignature String?       @db.Text  // Base64 signature image
-  signedByOwner   DateTime?
-  signedByTenant  DateTime?
-  signedAt        DateTime?               // When both parties have signed
-
-  // Yousign — signature électronique eIDAS qualifiée
-  signingMode         String?   @default("SIMPLE")  // "SIMPLE" | "YOUSIGN"
-  yousignRequestId    String?   // ID de la demande Yousign
-  yousignOwnerLink    String?   // Lien de signature Yousign pour le bailleur
-  yousignTenantLink   String?   // Lien de signature Yousign pour le locataire
-  yousignSignedPdfUrl String?   // URL PDF signé téléchargé depuis Yousign
-  yousignCompletedAt  DateTime? // Date de completion Yousign
-
-  // Additional Terms
-  terms           String?       @db.Text
-
-  // Timestamps
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-
-  // Relations
-  documents        ContractDocument[]
-  payments         Payment[]
-  edlSession       EdlSession?
-  paymentSettings  PaymentSettings?
-  @@index([propertyId])
-  @@index([tenantId])
-  @@index([ownerId])
-  @@index([status])
-  @@index([startDate])
-  @@index([endDate])
-  @@map("contracts")
-}
-
-enum DocumentStatus {
-  PENDING
-  UPLOADED
-  VALIDATED
-  REJECTED
-}
-
-model ContractDocument {
-  id            String         @id @default(uuid())
-
-  contractId    String
-  contract      Contract       @relation(fields: [contractId], references: [id], onDelete: Cascade)
-
-  uploadedById  String
-  uploadedBy    User           @relation("DocumentUploader", fields: [uploadedById], references: [id], onDelete: Cascade)
-
-  // Document info
-  category      String         // DDT_DPE, IDENTITE_LOCATAIRE, etc.
-  status        DocumentStatus @default(UPLOADED)
-  fileName      String
-  fileUrl       String
-  fileSize      Int
-  mimeType      String
-
-  // Validation
-  rejectionReason String?      @db.Text
-
-  // Auto-import from dossier
-  fromDossier   Boolean        @default(false)
-
-  // Timestamps
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-
-  @@index([contractId])
-  @@index([uploadedById])
-  @@index([category])
-  @@map("contract_documents")
-}
-
-model TenantDocument {
-  id         String         @id @default(uuid())
-
-  userId     String
-  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Document classification
-  category   String         // IDENTITE | SITUATION_PRO | REVENUS | HISTORIQUE | GARANTIES
-  docType    String         // e.g. CNI, PASSEPORT, CONTRAT_TRAVAIL, etc.
-  status     DocumentStatus @default(UPLOADED)
-
-  // File info
-  fileName   String
-  fileUrl    String
-  fileSize   Int
-  mimeType   String
-
-  // Optional note / rejection reason
-  note       String?        @db.Text
-
-  // Auto-deletion — null = no expiry, set at upload
-  expiresAt  DateTime?
-
-  // Timestamps
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  address      String // libellé complet
+  postalCode   String?
+  city         String?
+  inseeCode    String?
+  banId        String?
+  surface      Float?
+  rooms        Int?
+  dpeClass     String?
+  dpeNumber    String?
+  createdAt    DateTime @default(now())
+
+  leases Lease[]
 
   @@index([userId])
-  @@index([category])
-  @@index([userId, status])  // Filtrage statut dossier locataire
-  @@index([expiresAt])
-  @@map("tenant_documents")
 }
 
-// Tracks every time an owner views a tenant's dossier — visible to the tenant
-model DossierAccessLog {
-  id          String   @id @default(uuid())
+model Lease {
+  id              String      @id @default(uuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId      String
+  property        Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  type            LeaseType
+  status          LeaseStatus @default(ACTIVE)
+  startDate       DateTime    @db.Date
+  durationMonths  Int
+  endDate         DateTime    @db.Date
+  rentCents       Int
+  chargesCents    Int
+  depositCents    Int
+  paymentDay      Int         @default(5)
+  // Copie complète des réponses du tunnel (bailleur, locataires, garant…) : sert à régénérer le bail à l'identique.
+  data            Json
+  createdAt       DateTime    @default(now())
 
-  tenantId    String   // whose dossier was accessed
-  viewerId    String   // owner who accessed
-  viewerName  String   // snapshot of owner name at time of access
-  viewerEmail String   // snapshot of owner email
+  documents Document[]
+  reminders Reminder[]
 
-  // Context (optional — from which application/conversation)
-  propertyId    String?
-  propertyTitle String?
-
-  createdAt   DateTime @default(now())
-
-  @@index([tenantId])
-  @@index([viewerId])
-  @@index([createdAt])
-  @@map("dossier_access_logs")
+  @@index([userId])
 }
 
-model Favorite {
-  id          String   @id @default(uuid())
-
+// Chaque version d'un document est conservée, jamais écrasée.
+model Document {
+  id          String       @id @default(uuid())
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  propertyId  String
-  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-
-  createdAt   DateTime @default(now())
-
-  @@unique([userId, propertyId])
-  @@index([userId])
-  @@index([propertyId])
-  @@map("favorites")
-}
-
-model SearchAlert {
-  id            String   @id @default(uuid())
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  name          String   // Ex: "Studio Paris 500-800€"
-  active        Boolean  @default(true)
-
-  // Filtres de recherche (même structure que PropertyFilters)
-  city          String?
-  type          String?  // APARTMENT, HOUSE, STUDIO, etc.
-  minPrice      Float?
-  maxPrice      Float?
-  minSurface    Float?
-  maxSurface    Float?
-  rooms         Int?
-  furnished     Boolean?
-
-  // Tracking nouveaux biens
-  lastNotifiedAt DateTime?
-  newCount       Int      @default(0)  // Biens non vus depuis dernière visite
-
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  @@index([userId])
-  @@index([userId, active])
-  @@index([active])
-  @@map("search_alerts")
-}
-
-model Notification {
-  id        String   @id @default(uuid())
-
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Notification Details
-  type      String   // "booking_created", "message_received", "payment_received", etc.
-  title     String
-  message   String   @db.Text
-
-  // Read status
-  isRead    Boolean  @default(false)
-  readAt    DateTime?
-
-  // Metadata (JSON for flexible data)
-  metadata  Json?
-
-  // Action link
-  actionUrl String?
-
-  createdAt DateTime @default(now())
-
-  @@index([userId])
-  @@index([isRead])
-  @@index([userId, isRead])           // Badge compteur non-lus
-  @@index([userId, createdAt])        // Liste paginée
-  @@index([userId, isRead, createdAt]) // Liste filtrée non-lus
-  @@index([createdAt])
-  @@map("notifications")
-}
-
-model VisitAvailabilitySlot {
-  id          String   @id @default(uuid())
-
-  propertyId  String
-  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-
-  dayOfWeek   Int      // 0 = Dimanche, 1 = Lundi, ..., 6 = Samedi
-  startTime   String   // "09:00"
-  endTime     String   // "18:00"
-
-  createdAt   DateTime @default(now())
-
-  @@index([propertyId])
-  @@map("visit_availability_slots")
-}
-
-model VisitDateOverride {
-  id          String           @id @default(uuid())
-
-  propertyId  String
-  property    Property         @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-
-  date        DateTime         // Date spécifique
-  type        DateOverrideType // BLOCKED ou EXTRA
-
-  startTime   String?          // Requis si type = EXTRA
-  endTime     String?          // Requis si type = EXTRA
-
-  createdAt   DateTime         @default(now())
-
-  @@index([propertyId])
-  @@index([date])
-  @@map("visit_date_overrides")
-}
-
-// Invitation propriétaire → locataire pour accéder au calendrier de visite
-model CalendarInvite {
-  id          String   @id @default(uuid())
-
-  propertyId  String
-  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-
-  ownerId     String
-  owner       User     @relation("CalendarInviteSender", fields: [ownerId], references: [id], onDelete: Cascade)
-
-  tenantId    String
-  tenant      User     @relation("CalendarInviteReceiver", fields: [tenantId], references: [id], onDelete: Cascade)
-
-  createdAt   DateTime @default(now())
-
-  @@unique([propertyId, tenantId])
-  @@index([tenantId])
-  @@index([ownerId])
-  @@map("calendar_invites")
-}
-
-model Application {
-  id            String            @id @default(uuid())
-
-  propertyId    String
-  property      Property          @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-
-  tenantId      String
-  tenant        User              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  status        ApplicationStatus @default(PENDING)
-
-  // Matching score (0–100) computed at submission time
-  score         Int               @default(0)
-  matchDetails  Json?             // { salary: {...}, guarantor: {...}, documents: {...}, contractType: {...} }
-
-  // Tenant's cover letter / message
-  coverLetter   String?           @db.Text
-
-  // Guarantor info supplied by tenant
-  hasGuarantor    Boolean         @default(false)
-  guarantorType   String?         // "physique" | "visale"
-
-  // Analyse IA qualitative (Claude Haiku)
-  aiCommentary  String?           @db.Text
-  aiScoredAt    DateTime?
-
-  // Timestamps
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-
-  // Contrat issu de cette candidature (1-1 facultatif)
-  contract      Contract?
-
-  // Each tenant can only have one active application per property
-  @@unique([propertyId, tenantId])
-  @@index([propertyId])
-  @@index([tenantId])
-  @@index([status])
-  @@index([score])
-  @@index([propertyId, status])  // CRM candidatures
-  @@index([tenantId, status])    // Dashboard locataire
-  @@index([createdAt])           // Tri par date
-  @@map("applications")
-}
-
-// ============================================
-// SÉCURITÉ — PARTAGE CONTRÔLÉ DU DOSSIER
-// ============================================
-
-// Le locataire accorde explicitement à un propriétaire un accès temporaire à son dossier.
-// Sans entrée active ici, aucun propriétaire ne peut voir le dossier.
-model DossierShare {
-  id          String    @id @default(uuid())
-
-  tenantId    String    // Le locataire qui accorde l'accès
-  tenant      User      @relation("ShareGrantedBy", fields: [tenantId], references: [id], onDelete: Cascade)
-
-  ownerId     String    // Le propriétaire qui reçoit l'accès
-  owner       User      @relation("ShareReceivedBy", fields: [ownerId], references: [id], onDelete: Cascade)
-
-  propertyId  String?   // Contexte facultatif (annonce liée)
-
-  expiresAt   DateTime  // Accès limité dans le temps (défaut: 7 jours)
-  revokedAt   DateTime? // Mis à jour si le locataire révoque manuellement
-
-  createdAt   DateTime  @default(now())
-
-  @@unique([tenantId, ownerId])
-  @@index([tenantId])
-  @@index([ownerId])
-  @@index([expiresAt])
-  @@map("dossier_shares")
-}
-
-// Signalement d'un utilisateur suspicieux
-model FraudReport {
-  id          String    @id @default(uuid())
-
-  reporterId  String    // Qui signale
-  reporter    User      @relation("FraudReporter", fields: [reporterId], references: [id], onDelete: Cascade)
-
-  targetId    String    // Qui est signalé (propriétaire de l'annonce)
-  target      User      @relation("FraudTarget", fields: [targetId], references: [id], onDelete: Cascade)
-
-  propertyId  String?   // Annonce concernée
-  property    Property? @relation("PropertyReports", fields: [propertyId], references: [id], onDelete: SetNull)
-
-  reason      String    // FAKE_LISTING | WRONG_PHOTOS | WRONG_PRICE | ALREADY_RENTED | HARASSMENT | OTHER
-  details     String?   @db.Text
-
-  status      String    @default("PENDING")   // PENDING | REVIEWED | DISMISSED | ACTIONED
-  reviewNote  String?   @db.Text
-  reviewedAt  DateTime?
-  reviewedBy  String?   // id du super-admin
-
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@index([reporterId])
-  @@index([targetId])
-  @@index([propertyId])
-  @@index([status])
-  @@map("fraud_reports")
-}
-
-// ============================================
-// SUPER ADMIN — AUDIT LOGS
-// ============================================
-
-model AuditLog {
-  id          String   @id @default(uuid())
-
-  // Who did the action
-  actorId     String?              // null if system action
-  actorEmail  String?
-
-  // What they did
-  action      String               // e.g. "DELETE_USER", "UPDATE_ROLE", "VIEW_MESSAGES"
-  resource    String               // e.g. "User", "Contract", "TenantDocument"
-  resourceId  String?              // ID of the affected resource
-
-  // Details
-  metadata    Json?                // { before: {...}, after: {...}, ip, userAgent, ... }
-  severity    String  @default("INFO")  // INFO | WARNING | CRITICAL
-
-  createdAt   DateTime @default(now())
-
-  @@index([actorId])
-  @@index([action])
-  @@index([resource])
-  @@index([createdAt])
-  @@index([severity])
-  @@map("audit_logs")
-}
-
-// ============================================
-// ABONNEMENTS STRIPE
-// ============================================
-
-enum KycStatus {
-  PENDING
-  DOCUMENT_VERIFIED
-  BIOMETRIC_VERIFIED
-  COMPLETED
-  FAILED
-  REJECTED
-}
-
-enum KycDocumentType {
-  CNI
-  PERMIS_CONDUIRE
-  PASSEPORT
-}
-
-enum PlanType {
-  FREE
-  SOLO
-  PRO
-  EXPERT
-}
-
-enum BillingCycle {
-  MONTHLY
-  ANNUAL
-}
-
-enum SubStatus {
-  TRIALING
-  ACTIVE
-  PAST_DUE
-  CANCELED
-  UNPAID
-}
-
-model Subscription {
-  id                   String       @id @default(cuid())
-  userId               String       @unique
-  user                 User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  stripeCustomerId     String       @unique
-  stripeSubscriptionId String?      @unique
-  plan                 PlanType     @default(FREE)
-  billingCycle         BillingCycle @default(MONTHLY)
-  status               SubStatus    @default(ACTIVE)
-  currentPeriodEnd     DateTime?
-  cancelAtPeriodEnd    Boolean      @default(false)
-  trialEndsAt          DateTime?
-  promoCodeId          String?      // Si le plan vient d'un code promo
-  promoExpiresAt       DateTime?    // Expiry du plan promo (null = permanent)
-  createdAt            DateTime     @default(now())
-  updatedAt            DateTime     @updatedAt
-
-  @@index([stripeCustomerId])
-  @@map("subscriptions")
-}
-
-// ============================================
-// PAIEMENTS DE LOYER + QUITTANCES
-// ============================================
-
-enum PaymentStatus {
-  PENDING   // loyer attendu, non payé
-  PAID      // payé, quittance générée
-  LATE      // en retard (dueDate dépassée)
-  WAIVED    // exonéré
-}
-
-model Payment {
-  id                  String        @id @default(cuid())
-  contractId          String
-  contract            Contract      @relation(fields: [contractId], references: [id], onDelete: Restrict) // Paiements conservés avec le contrat — données légales
-  amount              Float         // loyer en euros
-  charges             Float         @default(0)
-  dueDate             DateTime      // date d'échéance
-  paidDate            DateTime?     // null = non payé
-  status              PaymentStatus @default(PENDING)
-  month               Int           // 1-12
-  year                Int
-  receiptCloudinaryId String?       // public_id Cloudinary du PDF quittance
-  notes               String?       @db.Text
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
-
-  @@unique([contractId, month, year])
-  @@index([contractId, status])
-  @@index([contractId, year, month])
-  @@index([dueDate, status])
-  @@map("payments")
-}
-
-// ============================================
-// PARAMÈTRES QUITTANCES (par contrat)
-// ============================================
-
-model PaymentSettings {
-  id          String   @id @default(cuid())
-  contractId  String   @unique
-  contract    Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
-  dayOfMonth  Int      @default(5)    // Jour du mois pour la génération (1-28)
-  autoSend    Boolean  @default(true) // Envoyer automatiquement au locataire
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("payment_settings")
-}
-
-
-// ============================================
-// SUIVI USAGE IA (quota mensuel par plan)
-// ============================================
-
-model AiUsageTracking {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  usageType   String   // "dossier_analysis" | "assistant_message"
-  usageCount  Int      @default(0)
-  periodMonth Int
-  periodYear  Int
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@unique([userId, usageType, periodMonth, periodYear])
-  @@index([userId, periodMonth, periodYear])
-  @@map("ai_usage_tracking")
-}
-
-
-// ============================================
-// STRIPE EVENTS (idempotence webhooks)
-// ============================================
-
-model StripeEvent {
-  id          String    @id                   // Stripe event ID (evt_...)
-  type        String
-  processed   Boolean   @default(false)
-  processedAt DateTime?
-  payload     Json
-  createdAt   DateTime  @default(now())
-
-  @@index([processed])
-  @@map("stripe_events")
-}
-
-// ============================================
-// EDL SESSION (État des Lieux Synchrone)
-// ============================================
-
-model EdlSession {
-  id          String           @id @default(cuid())
-  contractId  String           @unique
-  contract    Contract         @relation(fields: [contractId], references: [id], onDelete: Cascade)
-
-  pin         String           // Code PIN 6 chiffres
-  ownerId     String
-  owner       User             @relation("EdlSessionOwner", fields: [ownerId], references: [id])
-  tenantId    String?          // Défini quand le locataire rejoint
-  tenant      User?            @relation("EdlSessionTenant", fields: [tenantId], references: [id])
-
-  status      EdlSessionStatus @default(WAITING)
-  edlType     String           @default("ENTREE") // ENTREE | SORTIE
-  data        Json             @default("{}") // État complet de l'EDL (pièces, éléments, photos)
-
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-
-  @@index([pin])
-  @@index([ownerId])
-  @@map("edl_sessions")
-}
-
-// ============================================
-// WAITLIST
-// ============================================
-
-model WaitlistEntry {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  firstName     String?
-  position      Int
-  isEarlyAccess Boolean   @default(false)
-  notifiedAt    DateTime?
-  createdAt     DateTime  @default(now())
-
-  @@index([email])
-  @@index([createdAt])
-  @@map("waitlist_entries")
-}
-
-// ============================================
-// FINANCES PROPRIÉTAIRE — DÉPENSES & PRÊT
-// ============================================
-
-enum ExpenseCategory {
-  TAXE_FONCIERE
-  ASSURANCE
-  TRAVAUX
-  CHARGES_COPRO
-  AUTRE
-}
-
-enum MaintenanceCategory {
-  PLOMBERIE
-  ELECTRICITE
-  CHAUFFAGE
-  SERRURERIE
-  AUTRE
-}
-
-enum MaintenancePriority {
-  LOW
-  MEDIUM
-  HIGH
-  URGENT
-}
-
-enum MaintenanceStatus {
-  OPEN
-  IN_PROGRESS
-  RESOLVED
-  CLOSED
-}
-
-model Expense {
-  id          String          @id @default(cuid())
-  propertyId  String
-  ownerId     String
-  category    ExpenseCategory
-  description String
-  amount      Float
-  date        DateTime
-  receiptUrl  String?
-
-  property    Property        @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  owner       User            @relation("OwnerExpenses", fields: [ownerId], references: [id], onDelete: Cascade)
-
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-
-  @@index([ownerId])
-  @@index([propertyId])
-  @@index([date])
-  @@index([ownerId, date])
-  @@map("expenses")
-}
-
-model Loan {
-  id             String   @id @default(cuid())
-  propertyId     String   @unique
-  ownerId        String
-  bankName       String?
-  totalAmount    Float
-  monthlyPayment Float
-  interestRate   Float
-  durationMonths Int
-  startDate      DateTime
-
-  property       Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  owner          User     @relation("OwnerLoans", fields: [ownerId], references: [id], onDelete: Cascade)
-
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  @@index([ownerId])
-  @@map("loans")
-}
-
-// ============================================
-// MAINTENANCE — SIGNALEMENTS & INTERVENTIONS
-// ============================================
-
-model MaintenanceRequest {
-  id          String              @id @default(cuid())
-  propertyId  String
-  ownerId     String
-  tenantId    String?
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaseId     String?
+  lease       Lease?       @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  kind        DocumentKind
+  version     Int          @default(1)
   title       String
-  description String              @db.Text
-  category    MaintenanceCategory
-  priority    MaintenancePriority @default(MEDIUM)
-  status      MaintenanceStatus   @default(OPEN)
-  aiAnalysis  Json?
+  mimeType    String
+  sha256      String
+  sizeBytes   Int
+  // Bail généré : snapshot des données (le PDF est re-rendu à l'identique). Bail importé : le fichier d'origine.
+  snapshot    Json?
+  file        Bytes?
+  createdAt   DateTime     @default(now())
 
-  property    Property            @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  owner       User                @relation("OwnerMaintenanceRequests", fields: [ownerId], references: [id], onDelete: Cascade)
-  tenant      User?               @relation("TenantMaintenanceRequests", fields: [tenantId], references: [id], onDelete: SetNull)
-
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-
-  @@index([ownerId])
-  @@index([propertyId])
-  @@index([tenantId])
-  @@index([status])
-  @@index([priority])
-  @@index([ownerId, status])
-  @@index([ownerId, propertyId])  // Vue groupée par bien (maintenance.routes.ts)
-  @@map("maintenance_requests")
-}
-
-model KycVerification {
-  id              String          @id @default(cuid())
-  userId          String          @unique
-  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  status          KycStatus       @default(PENDING)
-  documentType    KycDocumentType?
-
-  // Données extraites du document (JAMAIS le fichier lui-même)
-  firstName       String?
-  lastName        String?
-  birthDate       DateTime?
-  documentExpiry  DateTime?
-  nationality     String?
-  documentNumberEnc String?   // AES-256-GCM chiffré
-  mrzLine1        String?
-  mrzLine2        String?
-  documentDeletedAt DateTime? // Preuve RGPD : fichier supprimé à cette date
-
-  // Biométrie (embedding chiffré — pas de photo stockée)
-  faceEmbeddingEnc  String?   // JSON float[] chiffré AES-256-GCM
-  livenessScore     Float?    // 0.0 - 1.0
-  faceMatchScore    Float?    // Cosine similarity 0.0 - 1.0
-  biometricVerifiedAt DateTime?
-
-  // Preuve de signature vidéo
-  signatureVideoUrl   String?  // Cloudinary private URL
-  signatureVideoHash  String?  // SHA-256 du fichier vidéo
-  signatureImageUrl   String?  // Cloudinary — capture du moment de signature
-  signatureTimestamp  DateTime?
-  signatureAuditChain String?  // JSON hash-chain des événements
-
-  attempts        Int     @default(0) // Compteur tentatives (anti-fraude)
-  ipAddress       String?
-
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  verifiedAt      DateTime?
-
+  @@unique([leaseId, kind, version])
   @@index([userId])
-  @@index([status])
-  @@map("kyc_verifications")
 }
 
-model NewsletterSubscriber {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  source    String   @default("unknown")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Reminder {
+  id        String         @id @default(uuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaseId   String
+  lease     Lease          @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  type      ReminderType
+  dueDate   DateTime       @db.Date
+  status    ReminderStatus @default(TODO)
+  emailedAt DateTime?
+  doneAt    DateTime?
 
-  @@map("newsletter_subscribers")
-}
-
-// ============================================
-// CODES PROMO (accès offerts / réductions)
-// ============================================
-
-model PromoCode {
-  id           String            @id @default(cuid())
-  code         String            @unique
-  planGranted  PlanType          // Plan accordé (SOLO | PRO | EXPERT)
-  durationDays Int?              // Durée en jours (null = permanent)
-  maxUses      Int?              // Nombre max d'utilisations (null = illimité)
-  usedCount    Int               @default(0)
-  expiresAt    DateTime?         // Date d'expiration du code lui-même
-  isActive     Boolean           @default(true)
-  note         String?           // Note interne (admin uniquement)
-  createdAt    DateTime          @default(now())
-  redemptions  PromoRedemption[]
-
-  @@map("promo_codes")
-}
-
-model PromoRedemption {
-  id            String    @id @default(cuid())
-  promoCodeId   String
-  promoCode     PromoCode @relation(fields: [promoCodeId], references: [id])
-  userId        String
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  redeemedAt    DateTime  @default(now())
-  planExpires   DateTime? // Quand le plan promo expire pour cet utilisateur
-
-  @@unique([promoCodeId, userId]) // Un code = une utilisation par user
-  @@map("promo_redemptions")
-}
-
-// ============================================
-// SYNDICATION — DIFFUSION MULTI-PLATEFORMES
-// ============================================
-
-model PropertySyndication {
-  id          String    @id @default(uuid())
-
-  propertyId  String
-  property    Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-
-  platform    String    // "leboncoin" | "facebook" | "pap" | "seloger"
-  status      String    @default("DRAFT") // DRAFT | PUBLISHED | FAILED | PAUSED
-
-  externalId  String?   // ID sur la plateforme externe
-  externalUrl String?   // URL de l'annonce publiée
-
-  syncedAt    DateTime?
-  lastError   String?   @db.Text
-  metadata    Json?     // Données spécifiques à la plateforme
-
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@unique([propertyId, platform])
-  @@index([propertyId])
-  @@index([platform])
-  @@index([status])
-  @@map("property_syndications")
+  @@unique([leaseId, type, dueDate])
+  @@index([userId, dueDate])
 }

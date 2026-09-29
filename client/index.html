@@ -2,147 +2,42 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-
-    <!-- VIEWPORT — viewport-fit=cover pour les encoches iPhone / Dynamic Island -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-
-    <!-- SEO Essentiels -->
-    <title>Bailio — Gestion Locative & Location entre Particuliers</title>
-    <meta name="description" content="Bailio — plateforme de gestion locative entre particuliers en France. Bail électronique signé, zéro frais d'agence, calculateur de rentabilité locative." />
-    <meta name="keywords" content="Bailio, location immobilière, particulier à particulier, sans frais agence, gestion locative, bail électronique, calculateur rentabilité, investissement immobilier" />
-    <meta name="robots" content="index, follow" />
+    <title>Bailio — Votre bail conforme en 5 minutes, puis le suivi de votre location</title>
+    <meta name="description" content="Bail de location vide ou meublée conforme au modèle officiel, gratuit et prêt à imprimer. Puis Bailio prépare vos quittances, vos rappels et range vos factures." />
     <link rel="canonical" href="https://bailio.fr/" />
-
-    <!-- iOS Safari PWA -->
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="Bailio" />
-
-    <!-- Android Chrome PWA -->
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="theme-color" content="#1a3270" />
-
-    <!-- Évite le zoom automatique sur la détection téléphonique iOS -->
-    <meta name="format-detection" content="telephone=no" />
-
-    <!-- Open Graph -->
+    <meta name="theme-color" content="#1a1a2e" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Bailio" />
-    <meta property="og:title" content="Bailio — Gestion Locative & Location entre Particuliers" />
-    <meta property="og:description" content="Propriétaires et locataires se rencontrent directement. Bail électronique, zéro frais d'agence, communication simplifiée, 100 % sécurisé." />
-    <meta property="og:image" content="https://bailio.fr/og-image.png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Bailio — Plateforme de gestion locative entre particuliers" />
-    <meta property="og:url" content="https://bailio.fr" />
+    <meta property="og:title" content="Vos locations, sans la paperasse." />
+    <meta property="og:description" content="Bail, quittances, rappels, factures. Bailio fait l'administratif, vous validez." />
+    <meta property="og:url" content="https://bailio.fr/" />
     <meta property="og:locale" content="fr_FR" />
-
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Bailio — Gestion Locative & Location entre Particuliers" />
-    <meta name="twitter:description" content="Propriétaires et locataires se rencontrent directement. Bail électronique, zéro frais d'agence, 100 % sécurisé." />
-    <meta name="twitter:image" content="https://bailio.fr/og-image.png" />
-    <meta name="twitter:image:alt" content="Bailio — Plateforme de gestion locative entre particuliers" />
-
-    <!-- PWA Meta Tags -->
-    <link rel="manifest" href="/manifest.json" />
-    <link rel="apple-touch-icon" href="/icon.svg" />
-
-    <!-- Fonts — preconnect + chargement non-bloquant pour améliorer le LCP -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600;1,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600;1,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600;1,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap"></noscript>
-
-    <!-- Google OAuth — client ID pour la validation du domaine -->
-    <meta name="google-signin-client_id" content="389176767411-jr7ddtklmchsm0v0pfrrol631iu20e01.apps.googleusercontent.com" />
-
-    <!-- Plausible Analytics — RGPD-compliant, sans cookies, sans consentement requis -->
-    <script defer data-domain="bailio.fr" src="https://plausible.io/js/script.js"></script>
-
-    <!-- Leaflet CSS — chargement non-bloquant (carte non critique au rendu initial) -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-      crossorigin=""
-      media="print" onload="this.media='all'">
-    <noscript>
-      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-        crossorigin="">
-    </noscript>
-
-    <!-- Données Structurées JSON-LD — Schema.org (signal d'identité de marque pour Google) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,600;1,700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" />
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@graph": [
-        {
-          "@type": "Organization",
-          "@id": "https://bailio.fr/#organization",
-          "name": "Bailio",
-          "url": "https://bailio.fr",
-          "logo": {
-            "@type": "ImageObject",
-            "@id": "https://bailio.fr/#logo",
-            "url": "https://bailio.fr/icon.svg",
-            "contentUrl": "https://bailio.fr/icon.svg",
-            "caption": "Bailio"
-          },
-          "image": {"@id": "https://bailio.fr/#logo"},
-          "description": "Bailio est la plateforme de gestion locative entre particuliers en France. Bail électronique, zéro frais d'agence, calculateur de rentabilité locative.",
-          "areaServed": {
-            "@type": "Country",
-            "name": "France"
-          },
-          "foundingLocation": "Montpellier, France",
-          "founder": {
-            "@type": "Person",
-            "@id": "https://enzomercier.fr/#person",
-            "name": "Enzo Mercier",
-            "url": "https://enzomercier.fr/",
-            "sameAs": ["https://www.linkedin.com/in/enzo-mercier/"]
-          }
-        },
-        {
-          "@type": "WebSite",
-          "@id": "https://bailio.fr/#website",
-          "url": "https://bailio.fr",
-          "name": "Bailio",
-          "description": "Plateforme de gestion locative & location immobilière entre particuliers en France.",
-          "publisher": {"@id": "https://bailio.fr/#organization"},
-          "inLanguage": "fr-FR",
-          "potentialAction": {
-            "@type": "SearchAction",
-            "target": {
-              "@type": "EntryPoint",
-              "urlTemplate": "https://bailio.fr/search?q={search_term_string}"
-            },
-            "query-input": "required name=search_term_string"
-          }
-        }
-      ]
+      "@type": "Organization",
+      "@id": "https://bailio.fr/#organization",
+      "name": "Bailio",
+      "url": "https://bailio.fr",
+      "logo": "https://bailio.fr/favicon.svg",
+      "description": "Bailio prépare le bail, les quittances et les rappels des propriétaires bailleurs particuliers en France.",
+      "foundingLocation": "Montpellier, France",
+      "founder": {
+        "@type": "Person",
+        "@id": "https://enzomercier.fr/#person",
+        "name": "Enzo Mercier",
+        "url": "https://enzomercier.fr/",
+        "sameAs": ["https://www.linkedin.com/in/enzo-mercier/"]
+      }
     }
     </script>
   </head>
   <body>
-    <!-- Anti-flash dark mode: apply theme BEFORE React + CSS load to prevent white flash -->
-    <script>
-      (function() {
-        try {
-          var stored = JSON.parse(localStorage.getItem('immo-theme') || '{}')
-          if (stored.state && stored.state.isDark) {
-            document.documentElement.classList.add('dark')
-            // Set bg immediately so there's zero flash even before CSS parses
-            document.documentElement.style.backgroundColor = '#0a0a0a'
-            document.documentElement.style.color = '#e2e8f0'
-          } else {
-            document.documentElement.style.backgroundColor = '#fafaf8'
-          }
-        } catch(e) {}
-      })()
-    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

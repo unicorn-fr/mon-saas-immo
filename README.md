@@ -1,264 +1,64 @@
-# 🏠 Plateforme de Gestion Locative
+# Bailio
 
-Plateforme web moderne de gestion locative permettant la mise en relation directe entre propriétaires et locataires, sans frais d'agence.
+Le bail et le suivi locatif du propriétaire bailleur particulier.
+Le propriétaire crée un bail conforme en 5 minutes, sans compte ; Bailio prépare ensuite ses quittances et lui rappelle chaque échéance.
 
-## ✨ Fonctionnalités
+Maquette de référence : [`docs/maquette/bailio-refonte-proprietaire.html`](docs/maquette/bailio-refonte-proprietaire.html).
 
-### Pour les Propriétaires
-- 📝 Publication illimitée d'annonces
-- 📊 Tableau de bord avec statistiques
-- 📅 Gestion des visites (calendrier intégré)
-- 👥 Gestion des locataires
-- 📋 Gestion des contrats
-- 💬 Messagerie avec les locataires
-- 🔔 Notifications en temps réel
+## Démarrer en local
 
-### Pour les Locataires
-- 🔍 Recherche avancée de biens
-- 🗺️ Recherche géographique sur carte
-- ❤️ Système de favoris
-- 📅 Réservation de visites en ligne
-- 💬 Messagerie avec les propriétaires
-- 🔔 Alertes et notifications
+Prérequis : Node 20+, PostgreSQL.
 
-## 🏗️ Architecture Technique
-
-### Stack Frontend
-- **React 18** + **TypeScript**
-- **Vite** (build tool)
-- **TailwindCSS** (styling)
-- **Zustand** (state management)
-- **React Query** (data fetching)
-- **React Router** (routing)
-- **Socket.io Client** (real-time)
-- **Leaflet** (maps)
-- **PWA** (Progressive Web App)
-
-### Stack Backend
-- **Node.js 20** + **TypeScript**
-- **Express** (API framework)
-- **PostgreSQL 15** (database)
-- **Prisma** (ORM)
-- **Redis** (cache & sessions)
-- **Socket.io** (WebSocket)
-- **JWT** (authentication)
-- **Nodemailer** (emails)
-
-### Infrastructure
-- **Docker** + **Docker Compose**
-- **Nginx** (reverse proxy)
-- **GitHub Actions** (CI/CD ready)
-
-## 🚀 Installation
-
-### Prérequis
-- Node.js 20+
-- Docker & Docker Compose
-- Git
-
-### 1. Cloner le projet
-
-\`\`\`bash
-git clone <repo-url>
-cd plateforme-gestion-locative
-\`\`\`
-
-### 2. Configuration de l'environnement
-
-**Client :**
-\`\`\`bash
-cd client
-cp .env.example .env
-\`\`\`
-
-**Server :**
-\`\`\`bash
-cd server
-cp .env.example .env
-# Modifiez les variables d'environnement selon vos besoins
-\`\`\`
-
-### 3. Démarrer les services Docker
-
-\`\`\`bash
-# À la racine du projet
-docker-compose up -d
-\`\`\`
-
-Cela démarre :
-- PostgreSQL sur le port 5432
-- Redis sur le port 6379
-- pgAdmin sur le port 5050 (optionnel)
-
-### 4. Installation des dépendances
-
-**Client :**
-\`\`\`bash
-cd client
+```bash
 npm install
-\`\`\`
+cp server/.env.example server/.env        # renseigner DATABASE_URL
+npm run db:migrate --workspace server      # crée les tables
+npm run dev                                # API sur :5000, site sur :5173
+```
 
-**Server :**
-\`\`\`bash
-cd server
-npm install
-\`\`\`
+Sans `RESEND_API_KEY`, les emails (lien de reprise, lien de connexion) s'affichent dans le terminal de l'API.
 
-### 5. Configuration de la base de données
+## Structure
 
-\`\`\`bash
-cd server
+```
+client/   site et application (React 19, Vite, TypeScript) — déployé sur Vercel
+server/   API (Express 5, Prisma, PostgreSQL, React-PDF) — déployée sur Railway (Dockerfile)
+docs/     maquette et documents de conception
+```
 
-# Générer le client Prisma
-npm run prisma:generate
+## Parcours
 
-# Créer la base de données
-npm run prisma:push
+| Route | Écran |
+|---|---|
+| `/` | Accueil |
+| `/commencer` → `/logement` → `/personnes` → `/loyer` → `/relecture` | Tunnel « Créer mon bail » en 5 étapes, sans compte, enregistré à chaque saisie |
+| `/commencer/recevoir` | « Votre bail est prêt » : email ou Google, le compte est créé à ce moment-là |
+| `/bienvenue/:id` | Bail téléchargé, imprimé, suivi à activer |
+| `/importer` | « J'ai déjà un bail signé » : photos ou PDF lus par l'IA, puis relecture |
+| `/reprendre?brouillon=…` | Reprise d'un bail commencé (lien reçu par email) |
+| `/connexion` | Lien de connexion par email ou Google (pas de mot de passe) |
+| `/espace` | « Aujourd'hui » : la liste de ce qu'il y a à faire, les logements |
+| `/espace/baux/:id` | Un bail : documents, quittances, échéances |
+| `/espace/compte` | Nom, suivi par email, export et suppression des données |
 
-# Peupler avec des données de test (optionnel)
-npm run prisma:seed
-\`\`\`
+## Variables d'environnement
 
-### 6. Lancer l'application
+**API (`server/.env`)** — voir `server/.env.example` :
+`DATABASE_URL`, `CLIENT_URL` (URL publique du site, utilisée dans les emails), `CORS_ORIGINS`,
+`RESEND_API_KEY`, `EMAIL_FROM`, `GOOGLE_CLIENT_ID` (facultatif), `ANTHROPIC_API_KEY` et `ANTHROPIC_MODEL` (facultatif, import de bail).
 
-**Terminal 1 - Server :**
-\`\`\`bash
-cd server
-npm run dev
-\`\`\`
-Le serveur démarre sur http://localhost:5000
+**Site (Vercel)** : `VITE_API_URL` = URL de l'API, sans `/api` (ex. `https://api.bailio.fr`).
 
-**Terminal 2 - Client :**
-\`\`\`bash
-cd client
-npm run dev
-\`\`\`
-Le client démarre sur http://localhost:3000
+## Déploiement
 
-## 📁 Structure du Projet
+- **Site** : Vercel, dossier racine `client`, commande `npm run build`, sortie `dist`.
+- **API** : Railway, `Dockerfile` à la racine. Au démarrage, `prisma migrate deploy` applique les migrations versionnées (jamais de suppression automatique de données).
+- Un cron quotidien (8 h, heure de Paris) prolonge les échéances et envoie l'email de rappel aux propriétaires qui ont activé le suivi.
 
-\`\`\`
-plateforme-gestion-locative/
-├── client/                 # Frontend React
-│   ├── public/            # Static assets
-│   ├── src/
-│   │   ├── components/    # React components
-│   │   ├── pages/         # Page components
-│   │   ├── hooks/         # Custom hooks
-│   │   ├── services/      # API services
-│   │   ├── store/         # State management
-│   │   ├── types/         # TypeScript types
-│   │   └── utils/         # Utilities
-│   └── package.json
-│
-├── server/                # Backend Node.js
-│   ├── prisma/           # Database schema & migrations
-│   ├── src/
-│   │   ├── controllers/  # Route controllers
-│   │   ├── services/     # Business logic
-│   │   ├── routes/       # API routes
-│   │   ├── middlewares/  # Express middlewares
-│   │   ├── config/       # Configuration
-│   │   └── utils/        # Utilities
-│   └── package.json
-│
-├── docker/               # Docker configuration
-├── docs/                 # Documentation
-└── docker-compose.yml    # Docker Compose config
-\`\`\`
+## Vérifications
 
-## 🔑 Utilisateurs de Test
-
-Après avoir exécuté `npm run prisma:seed` :
-
-**Propriétaire :**
-- Email: `owner1@test.com`
-- Mot de passe: `password123`
-
-**Locataire :**
-- Email: `tenant1@test.com`
-- Mot de passe: `password123`
-
-## 📊 Base de Données
-
-Accéder à pgAdmin pour gérer la base de données :
-- URL: http://localhost:5050
-- Email: admin@immoparticuliers.fr
-- Mot de passe: admin
-
-Prisma Studio (interface graphique) :
-\`\`\`bash
-cd server
-npm run prisma:studio
-\`\`\`
-
-## 🔧 Scripts Disponibles
-
-### Client
-- `npm run dev` - Démarre le serveur de développement
-- `npm run build` - Build pour production
-- `npm run preview` - Prévisualise le build
-- `npm run lint` - Linte le code
-
-### Server
-- `npm run dev` - Démarre le serveur en mode développement
-- `npm run build` - Compile TypeScript
-- `npm start` - Démarre le serveur en production
-- `npm run prisma:generate` - Génère le client Prisma
-- `npm run prisma:push` - Synchronise le schéma avec la DB
-- `npm run prisma:migrate` - Crée une migration
-- `npm run prisma:studio` - Ouvre Prisma Studio
-- `npm run prisma:seed` - Peuple la DB avec des données de test
-
-## 🌐 Endpoints API
-
-L'API est disponible à `http://localhost:5000/api/v1`
-
-**Endpoints principaux :**
-- `/auth` - Authentification
-- `/users` - Gestion utilisateurs
-- `/properties` - Gestion des biens
-- `/bookings` - Gestion des visites
-- `/messages` - Messagerie
-- `/contracts` - Gestion des contrats
-- `/favorites` - Favoris
-- `/notifications` - Notifications
-
-Documentation complète : voir `docs/API.md`
-
-## 📱 Progressive Web App
-
-L'application est une PWA installable :
-- Fonctionne hors ligne
-- Installable sur mobile et desktop
-- Notifications push (à venir)
-- Synchronisation en arrière-plan
-
-## 🚢 Déploiement
-
-Voir la documentation complète dans `docs/DEPLOYMENT.md`
-
-## 🤝 Contribution
-
-1. Fork le projet
-2. Créer une branche (`git checkout -b feature/AmazingFeature`)
-3. Commit les changements (`git commit -m 'Add AmazingFeature'`)
-4. Push vers la branche (`git push origin feature/AmazingFeature`)
-5. Ouvrir une Pull Request
-
-## 📝 Licence
-
-Ce projet est sous licence MIT.
-
-## 👨‍💻 Auteur
-
-Développé avec ❤️ par [Votre Nom]
-
----
-
-**🎯 Prochaines étapes :**
-1. Implémentation de l'authentification complète
-2. Module de gestion des biens
-3. Calendrier des visites
-4. Messagerie en temps réel
-5. Système de contrats
+```bash
+npm run typecheck           # client + serveur
+npm test --workspace server # règles légales et échéances
+npm run build
+```
