@@ -49,7 +49,7 @@ emails par SMTP (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`) ou Resend (
 `GOOGLE_CLIENT_ID` (facultatif), `ANTHROPIC_API_KEY` et `ANTHROPIC_MODEL` (facultatif, import de bail).
 https://bailio.fr et https://www.bailio.fr sont toujours autorisés.
 
-**Site (Vercel)** : `VITE_API_URL` = URL de l'API (ex. `https://api.bailio.fr` ; un `/api` ou `/api/v1` final est ignoré).
+**Site (Vercel)** : `VITE_API_URL` = URL de l'API (ex. `https://api.bailio.eu` ; un `/api` ou `/api/v1` final est ignoré).
 
 ## Déploiement
 

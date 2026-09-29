@@ -10,7 +10,7 @@ Le site reste sur Vercel. Durée : environ 30 minutes.
 - À la commande, ajoutez votre **clé SSH** (plus sûr qu'un mot de passe ; le script désactive alors les mots de passe SSH).
 - Notez l'**adresse IP** du serveur.
 
-## 2. Faire pointer api.bailio.fr vers le serveur (Ionos)
+## 2. Faire pointer api.bailio.eu vers le serveur (Ionos)
 
 Ionos → Domaines → bailio.fr → DNS → Ajouter un enregistrement :
 - type **A**, nom d'hôte **api**, valeur = **l'IP du serveur**.
@@ -37,12 +37,12 @@ Le script :
 - crée le fichier `.env` avec un mot de passe de base aléatoire, et vous l'ouvre pour compléter les emails (SMTP Ionos) ;
 - démarre l'API, la base et le HTTPS, et programme une sauvegarde de la base chaque nuit (14 jours conservés).
 
-Vérification : https://api.bailio.fr/health doit afficher `{"ok":true}`.
+Vérification : https://api.bailio.eu/health doit afficher `{"ok":true}`.
 
 ## 4. Brancher le site (Vercel)
 
 Vercel → projet **bailio** → Settings → Environment Variables :
-- `VITE_API_URL` = `https://api.bailio.fr`
+- `VITE_API_URL` = `https://api.bailio.eu`
 
 Puis Deployments → dernier déploiement → **Redeploy**.
 
