@@ -10,9 +10,9 @@ Maquette de référence : [`docs/maquette/bailio-refonte-proprietaire.html`](doc
 Prérequis : Node 20+, PostgreSQL.
 
 ```bash
-npm install
+npm run install:all                        # installe server/ et client/ (un package-lock.json chacun)
 cp server/.env.example server/.env        # renseigner DATABASE_URL
-npm run db:migrate --workspace server      # crée les tables
+npm --prefix server run db:migrate         # crée les tables
 npm run dev                                # API sur :5000, site sur :5173
 ```
 
@@ -44,21 +44,23 @@ docs/     maquette et documents de conception
 ## Variables d'environnement
 
 **API (`server/.env`)** — voir `server/.env.example` :
-`DATABASE_URL`, `CLIENT_URL` (URL publique du site, utilisée dans les emails), `CORS_ORIGINS`,
-`RESEND_API_KEY`, `EMAIL_FROM`, `GOOGLE_CLIENT_ID` (facultatif), `ANTHROPIC_API_KEY` et `ANTHROPIC_MODEL` (facultatif, import de bail).
+`DATABASE_URL`, `CLIENT_URL` (URL publique du site, utilisée dans les emails ; `FRONTEND_URL` accepté), `CORS_ORIGINS` (`CORS_ORIGIN` accepté),
+emails par SMTP (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`) ou Resend (`RESEND_API_KEY`), `EMAIL_FROM`,
+`GOOGLE_CLIENT_ID` (facultatif), `ANTHROPIC_API_KEY` et `ANTHROPIC_MODEL` (facultatif, import de bail).
+https://bailio.fr et https://www.bailio.fr sont toujours autorisés.
 
-**Site (Vercel)** : `VITE_API_URL` = URL de l'API, sans `/api` (ex. `https://api.bailio.fr`).
+**Site (Vercel)** : `VITE_API_URL` = URL de l'API (ex. `https://api.bailio.fr` ; un `/api` ou `/api/v1` final est ignoré).
 
 ## Déploiement
 
 - **Site** : Vercel, dossier racine `client`, commande `npm run build`, sortie `dist`.
-- **API** : Railway, `Dockerfile` à la racine. Au démarrage, `prisma migrate deploy` applique les migrations versionnées (jamais de suppression automatique de données).
+- **API** : Railway, `Dockerfile` à la racine (ou dossier `server/` avec `server/railway.json`). Au démarrage, `prisma migrate deploy` applique les migrations versionnées (jamais de suppression automatique de données).
 - Un cron quotidien (8 h, heure de Paris) prolonge les échéances et envoie l'email de rappel aux propriétaires qui ont activé le suivi.
 
 ## Vérifications
 
 ```bash
-npm run typecheck           # client + serveur
-npm test --workspace server # règles légales et échéances
+npm run typecheck   # client + serveur
+npm test            # règles légales et échéances
 npm run build
 ```

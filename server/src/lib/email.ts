@@ -1,3 +1,4 @@
+import nodemailer from 'nodemailer'
 import { Resend } from 'resend'
 import { env } from '../env.js'
 
@@ -14,11 +15,32 @@ export interface Email {
   attachments?: EmailAttachment[]
 }
 
+const smtp =
+  env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS
+    ? nodemailer.createTransport({
+        host: env.SMTP_HOST,
+        port: env.SMTP_PORT,
+        secure: env.SMTP_PORT === 465,
+        auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
+      })
+    : null
 const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null
 
+/** Envoi : SMTP (Ionos) s'il est configuré, sinon Resend, sinon affichage dans les logs. */
 export async function sendEmail(email: Email): Promise<void> {
+  if (smtp) {
+    await smtp.sendMail({
+      from: env.EMAIL_FROM,
+      to: email.to,
+      subject: email.subject,
+      text: email.text,
+      html: email.html,
+      attachments: email.attachments?.map((a) => ({ filename: a.filename, content: a.content })),
+    })
+    return
+  }
   if (!resend) {
-    console.info(`[email] (non envoyé, RESEND_API_KEY absent) → ${email.to} · ${email.subject}\n${email.text}`)
+    console.info(`[email] (non envoyé, aucun service d'email configuré) → ${email.to} · ${email.subject}\n${email.text}`)
     return
   }
   const { error } = await resend.emails.send({

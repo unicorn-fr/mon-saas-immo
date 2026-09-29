@@ -1,6 +1,8 @@
 import { DRAFT_KEY, SESSION_KEY, storage } from './storage'
 
-const BASE = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ?? ''
+// URL de l'API, avec ou sans « /api » ou « /api/v1 » à la fin (ancien format accepté).
+export const API_BASE = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').replace(/\/+$/, '').replace(/\/api(\/v\d+)?$/, '')
+const BASE = API_BASE
 
 export class ApiError extends Error {
   constructor(message: string, public status: number, public details?: unknown) {

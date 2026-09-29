@@ -13,7 +13,7 @@
 | API | Express 5 + TypeScript (ESM), Zod 4 (`server/`) |
 | Base | Prisma 6 + PostgreSQL, **migrations versionnées** (`prisma migrate`) |
 | PDF | `@react-pdf/renderer`, côté serveur (`server/src/pdf/`) |
-| Emails | Resend (`lib/email.ts`), sinon affichage dans les logs |
+| Emails | SMTP (Ionos) ou Resend (`lib/email.ts`), sinon affichage dans les logs |
 | Auth | Sans mot de passe : lien magique par email, ou Google. Session = jeton aléatoire (empreinte en base), en-tête `Authorization: Bearer` |
 | IA | `@anthropic-ai/sdk`, lecture des baux importés (`services/importLease.ts`) |
 
@@ -42,7 +42,7 @@ Toute modification de ces règles s'accompagne d'un test dans `server/src/domain
 ## Base de données
 
 - Montants en **centimes** (`Int`).
-- Nouvelle colonne ou table : `npm run db:migrate --workspace server -- --name <nom>` en local, puis commit de la migration.
+- Nouvelle colonne ou table : `npm --prefix server run db:migrate -- --name <nom>` en local, puis commit de la migration.
 - En production, `prisma migrate deploy` au démarrage. **Jamais** de `db push --accept-data-loss`.
 - Toute migration qui supprime une colonne ou une table se fait uniquement après accord explicite.
 
@@ -61,8 +61,9 @@ const url = await pdfUrl(`/leases/${id}/lease.pdf`)   // PDF protégé → URL l
 ## Commandes
 
 ```bash
+npm run install:all # server/ et client/ ont chacun leur package-lock.json
 npm run dev          # API :5000 + site :5173
 npm run typecheck    # client + serveur
-npm test --workspace server
+npm test
 npm run build
 ```

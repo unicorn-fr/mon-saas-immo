@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { EspaceLayout } from '../../components/EspaceLayout'
 import { Button, Notice, TextField, display, overline } from '../../components/ui'
-import { api, ApiError, downloadPdf } from '../../lib/api'
+import { api, API_BASE, ApiError, downloadPdf } from '../../lib/api'
 import { SESSION_KEY, storage } from '../../lib/storage'
 import { useAuth } from '../../lib/auth'
 import type { User } from '../../lib/types'
@@ -29,7 +29,7 @@ export default function Compte() {
   }
 
   async function exportData() {
-    const res = await fetch(`${(import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ?? ''}/api/account/export`, {
+    const res = await fetch(`${API_BASE}/api/account/export`, {
       headers: { Authorization: `Bearer ${storage.get(SESSION_KEY) ?? ''}` },
     })
     if (!res.ok) return setError('Export impossible.')
