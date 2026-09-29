@@ -5,7 +5,8 @@ Le site reste sur Vercel. Durée : environ 30 minutes.
 
 ## 1. Commander le serveur (Infomaniak)
 
-- Produit : **VPS Lite**, système **Ubuntu 24.04**, **2 Go de RAM minimum** (la génération des PDF en a besoin).
+- Produit : **VPS Lite**, système **Ubuntu 24.04**, **2 Go de RAM minimum** (le script ajoute 2 Go de mémoire de secours).
+- Dans le Manager Infomaniak → **Régler le Firewall** : ouvrez les ports **80** et **443** (TCP), en plus du 22 (SSH).
 - À la commande, ajoutez votre **clé SSH** (plus sûr qu'un mot de passe ; le script désactive alors les mots de passe SSH).
 - Notez l'**adresse IP** du serveur.
 

@@ -21,6 +21,14 @@ apt-get install -yq ca-certificates curl git ufw fail2ban unattended-upgrades op
 dpkg-reconfigure -f noninteractive unattended-upgrades   # mises à jour de sécurité automatiques
 systemctl enable --now fail2ban                          # bloque les tentatives de connexion SSH répétées
 
+# Mémoire de secours (swap) : indispensable sur les serveurs à 2 Go pour construire l'application.
+if ! swapon --show | grep -q . ; then
+  fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile >/dev/null && swapon /swapfile
+  grep -q '^/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' >> /etc/fstab
+  sysctl -q vm.swappiness=10 && echo 'vm.swappiness=10' > /etc/sysctl.d/99-bailio-swap.conf
+  echo "Mémoire de secours de 2 Go activée."
+fi
+
 say "2/7 Pare-feu : seuls SSH, HTTP et HTTPS sont ouverts"
 ufw default deny incoming
 ufw default allow outgoing
