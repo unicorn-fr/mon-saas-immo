@@ -47,7 +47,8 @@ export default defineConfig({
     // En développement, /api est relayé vers l'API locale.
     proxy: { '/api': 'http://localhost:5000' },
   },
-  preview: { proxy: { '/api': 'http://localhost:5000' } },
+  // Mêmes en-têtes de sécurité qu'en ligne (vercel.json), pour les vérifier en local.
+  preview: { proxy: { '/api': 'http://localhost:5000' }, headers: { 'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self'; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests" } },
   // Un seul fichier pour tout le site (voir App.tsx) : environ 190 Ko compressés.
   build: { chunkSizeWarningLimit: 900 },
 })

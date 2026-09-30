@@ -80,9 +80,10 @@ export function Confidentialite() {
       <p>Vos locations contiennent des informations personnelles, les vôtres et celles de vos locataires. Voici ce que nous en faisons, simplement.</p>
       <H2>Ce que nous conservons</H2>
       <ul>
-        <li>Votre email, votre nom et votre adresse ;</li>
-        <li>Les informations de vos logements et de vos baux : noms et emails des locataires et du garant, loyers, dates ;</li>
-        <li>Les documents que vous importez (bail signé).</li>
+        <li>Votre email, votre identité et votre adresse de bailleur, votre signature et, si vous l'indiquez, votre IBAN (affiché seulement sur les avis d'échéance) ;</li>
+        <li>Vos logements : adresse, description, diagnostics et photos ;</li>
+        <li>Vos locataires et leurs garants : identité, date et lieu de naissance, coordonnées, justificatifs que vous déposez, attestation d'assurance ;</li>
+        <li>Vos baux, loyers reçus, quittances, courriers, états des lieux (photos et signatures comprises), dépenses et factures.</li>
       </ul>
       <p>Nous ne demandons jamais de pièces que la loi interdit d'exiger d'un locataire.</p>
       <H2>Pourquoi</H2>
@@ -95,21 +96,29 @@ export function Confidentialite() {
       </p>
       <H2>Qui y a accès</H2>
       <p>
-        Vous seul. Les baux que vous importez sont lus sur notre serveur : ils ne sont transmis à aucun service
-        d'intelligence artificielle ni à aucun autre tiers. Seule l'adresse du logement est vérifiée auprès de la Base
+        Vous seul. Les baux et les factures que vous importez sont lus sur notre serveur : ils ne sont transmis à aucun
+        service d'intelligence artificielle ni à aucun autre tiers. Seule l'adresse du logement est vérifiée auprès de la Base
         Adresse Nationale, un service public français.
       </p>
       <p>
         Deux prestataires techniques interviennent pour notre compte. Vercel sert les pages du site et transmet, chiffrés,
-        les échanges entre votre navigateur et notre serveur, sans les conserver. Resend achemine les emails que Bailio
-        vous envoie (liens de connexion, rappels) : il ne reçoit que votre adresse email et le contenu de ces messages.
-        Ces deux sociétés sont situées aux États-Unis ; ces transferts sont encadrés par les clauses contractuelles types
-        de la Commission européenne.
+        les échanges entre votre navigateur et notre serveur, sans les conserver. Les emails de Bailio (liens de connexion,
+        rappels, documents envoyés à vos locataires) partent par la messagerie d'Ionos, en Allemagne, ou en secours par
+        Resend. Vercel et Resend sont situés aux États-Unis ; ces transferts sont encadrés par les clauses contractuelles
+        types de la Commission européenne.
+      </p>
+      <H2>Les données de vos locataires</H2>
+      <p>
+        Pour les informations de vos locataires et de leurs garants, c'est vous qui êtes responsable du traitement ;
+        Bailio agit comme sous-traitant, uniquement sur vos instructions (article 28 du RGPD). Pensez à informer vos
+        locataires que vous utilisez Bailio pour gérer la location. Ne gardez que les justificatifs utiles : ceux d'un
+        candidat non retenu doivent être supprimés, et ceux de votre locataire ne se conservent pas au-delà de la location.
       </p>
       <H2>Combien de temps</H2>
       <ul>
         <li>Un bail commencé sans compte : 30 jours, puis il est effacé ;</li>
-        <li>Votre compte et vos documents : tant que vous gardez votre compte.</li>
+        <li>Votre compte et vos documents : tant que vous gardez votre compte. Supprimer le compte efface immédiatement toutes vos données ;</li>
+        <li>Les liens de connexion : 30 minutes, puis ils ne servent plus ; les sessions expirent d'elles-mêmes.</li>
       </ul>
       <H2>Vos droits</H2>
       <p>
@@ -120,8 +129,9 @@ export function Confidentialite() {
       <H2>Cookies</H2>
       <p>
         Bailio n'utilise aucun cookie : ni publicité, ni mesure d'audience, ni service tiers chargé dans vos pages (les
-        polices de caractères sont servies par notre propre serveur). Votre session est gardée dans votre navigateur,
-        sur votre appareil.
+        polices de caractères sont servies par notre propre site). Deux informations seulement sont gardées dans votre
+        navigateur, sur votre appareil, parce que le service ne fonctionne pas sans elles : votre session de connexion et
+        le brouillon du bail en cours. Aucun bandeau de consentement n'est donc nécessaire.
       </p>
     </SimplePage>
   )
