@@ -4,7 +4,7 @@ import type { LeaseType } from './types'
 export const durationMonths = (t: LeaseType) => (t === 'UNFURNISHED' ? 36 : 12)
 export const durationLabel = (t: LeaseType) => (t === 'UNFURNISHED' ? '3 ans' : '1 an')
 export const maxDepositCents = (t: LeaseType, rentCents: number) => (t === 'UNFURNISHED' ? rentCents : rentCents * 2)
-export const maxDepositLabel = (t: LeaseType) => (t === 'UNFURNISHED' ? '1 mois de loyer' : '2 mois de loyer')
+export const maxDepositLabel = (t: LeaseType) => (t === 'UNFURNISHED' ? '1 mois de loyer hors charges' : '2 mois de loyer hors charges')
 
 const MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
 

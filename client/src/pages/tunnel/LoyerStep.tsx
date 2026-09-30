@@ -87,7 +87,19 @@ export default function LoyerStep() {
           label="Dépôt de garantie"
           value={
             editDeposit ? (
-              <input aria-label="Montant du dépôt de garantie" inputMode="decimal" autoFocus value={deposit} placeholder={centsToInput(maxDeposit)} onChange={(e) => setDeposit(e.target.value.replace(/[^\d,.\s]/g, ''))} onBlur={() => setEditDeposit(false)} style={small} />
+              <input
+                aria-label="Montant du dépôt de garantie"
+                inputMode="decimal"
+                autoFocus
+                value={deposit}
+                placeholder={centsToInput(maxDeposit)}
+                onChange={(e) => setDeposit(e.target.value.replace(/[^\d,.\s]/g, ''))}
+                onBlur={() => setEditDeposit(false)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') setEditDeposit(false)
+                }}
+                style={small}
+              />
             ) : depositCents !== undefined ? (
               euros(depositCents)
             ) : (
@@ -95,17 +107,43 @@ export default function LoyerStep() {
             )
           }
           note={
-            depositTooHigh ? (
-              <span style={{ color: BAI.caramel }}>Au-dessus du maximum légal ({euros(maxDeposit)})</span>
-            ) : (
-              <>
-                {deposit.trim() && depositCents !== maxDeposit ? `Maximum légal : ${euros(maxDeposit)}` : `Le maximum légal : ${maxDepositLabel(type)}`}
-                {' · '}
-                <button type="button" style={editLink} onClick={() => setEditDeposit(true)}>
-                  Modifier
-                </button>
-              </>
-            )
+            <>
+              {depositTooHigh ? (
+                <span style={{ color: BAI.caramel }}>Au-dessus du maximum légal ({euros(maxDeposit)})</span>
+              ) : deposit.trim() && depositCents !== maxDeposit ? (
+                `Maximum légal : ${euros(maxDeposit)}`
+              ) : (
+                `Le maximum légal : ${maxDepositLabel(type)}`
+              )}
+              {' · '}
+              <button
+                type="button"
+                style={editLink}
+                onClick={() => {
+                  // On repart du montant affiché, modifiable autant de fois que nécessaire.
+                  if (!deposit.trim() && depositCents !== undefined) setDeposit(centsToInput(depositCents))
+                  setEditDeposit(true)
+                }}
+              >
+                Modifier
+              </button>
+              {deposit.trim() && depositCents !== maxDeposit ? (
+                <>
+                  {' · '}
+                  <button
+                    type="button"
+                    style={editLink}
+                    onClick={() => {
+                      setDeposit('')
+                      setEditDeposit(false)
+                      setErrors(({ deposit: _removed, ...rest }) => rest)
+                    }}
+                  >
+                    Revenir au maximum
+                  </button>
+                </>
+              ) : null}
+            </>
           }
         />
         <CalcRow label="Fin du bail" value={startDate ? dateFr(endDate(startDate, type)) : '—'} note={`${durationLabel(type)}, puis renouvelé tout seul`} />
@@ -131,6 +169,12 @@ export default function LoyerStep() {
           }
         />
       </div>
+      {editDeposit || depositTooHigh ? (
+        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5, color: BAI.inkMid }}>
+          Le dépôt de garantie est la somme versée à l'entrée et rendue à la sortie. La loi le limite à 1 mois de loyer hors
+          charges pour un logement vide, 2 mois pour un meublé.
+        </p>
+      ) : null}
       {errors.deposit ? (
         <span role="alert" style={{ color: BAI.error, fontSize: 14 }}>
           {errors.deposit}

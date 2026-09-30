@@ -1,5 +1,4 @@
 import { Router, type Request } from 'express'
-import { rateLimit } from 'express-rate-limit'
 import { z } from 'zod'
 import type { User } from '@prisma/client'
 import { prisma } from '../db.js'
@@ -7,12 +6,13 @@ import { env } from '../env.js'
 import { HttpError } from '../lib/http.js'
 import { hashToken, newToken } from '../lib/tokens.js'
 import { layout, sendEmail } from '../lib/email.js'
+import { allowEmailTo, limitPerVisitor } from '../lib/rateLimit.js'
 import { createSession, deleteSession, optionalUser, requireUser, sessionToken } from '../services/session.js'
 import { createLeaseFromDraft, draftToLeaseInput } from '../services/leases.js'
 import { draftFromRequest } from './drafts.js'
 
 const router = Router()
-const limiter = rateLimit({ windowMs: 15 * 60_000, limit: 20, standardHeaders: true, legacyHeaders: false })
+const limiter = limitPerVisitor(15, 20)
 const LINK_MINUTES = 30
 
 const emailSchema = z.object({ email: z.email('Email invalide').max(200).transform((e) => e.trim().toLowerCase()) })
@@ -48,6 +48,7 @@ async function sendMagicLink(email: string, draftId: string | null): Promise<voi
         paragraphs: [`Cliquez sur le bouton pour ouvrir votre espace Bailio. Ce lien est valable ${LINK_MINUTES} minutes.`, "Si vous n'avez rien demandé, ignorez cet email."],
         cta: { label: 'Ouvrir mon espace', url },
       })
+  allowEmailTo(email)
   await sendEmail({ to: email, subject: draftId ? 'Récupérez votre bail sur Bailio' : 'Connexion à Bailio', ...mail })
 }
 

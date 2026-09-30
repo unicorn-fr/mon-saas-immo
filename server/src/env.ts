@@ -24,7 +24,7 @@ const parsed = schema.parse(process.env)
 
 export const env = {
   ...parsed,
-  CLIENT_URL: (parsed.CLIENT_URL ?? parsed.FRONTEND_URL ?? (parsed.NODE_ENV === 'production' ? 'https://bailio.eu' : 'http://localhost:5173')).replace(/\/$/, ''),
+  CLIENT_URL: (parsed.CLIENT_URL ?? parsed.FRONTEND_URL ?? (parsed.NODE_ENV === 'production' ? 'https://bailio.fr' : 'http://localhost:5173')).replace(/\/$/, ''),
   // Adresse nue (ancien format) → « Bailio <adresse> ».
   EMAIL_FROM: parsed.EMAIL_FROM.includes('<') ? parsed.EMAIL_FROM : `Bailio <${parsed.EMAIL_FROM.trim()}>`,
 }

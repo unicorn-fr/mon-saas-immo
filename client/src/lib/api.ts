@@ -1,7 +1,9 @@
 import { DRAFT_KEY, SESSION_KEY, storage } from './storage'
 
-// URL de l'API, avec ou sans « /api » ou « /api/v1 » à la fin (ancien format accepté).
-export const API_BASE = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').replace(/\/+$/, '').replace(/\/api(\/v\d+)?$/, '')
+// L'API est toujours appelée sur la même adresse que le site (/api) : relayée par Vercel (vercel.json),
+// par Caddy sur le serveur, ou par Vite en local. Le navigateur ne contacte donc jamais un autre domaine,
+// ce qui évite les blocages (filtres réseau, bloqueurs, domaine récent) et les requêtes CORS.
+export const API_BASE = ''
 const BASE = API_BASE
 
 export class ApiError extends Error {

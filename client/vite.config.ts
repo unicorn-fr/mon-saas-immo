@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 declare const process: { env: Record<string, string | undefined> }
 
 // Adresse publique du site : balises canoniques, partage, robots.txt et plan du site.
-const SITE_URL = (process.env.VITE_SITE_URL || 'https://bailio.eu').replace(/\/$/, '')
+const SITE_URL = (process.env.VITE_SITE_URL || 'https://bailio.fr').replace(/\/$/, '')
 
 const PUBLIC_PAGES: [path: string, freq: string, priority: string][] = [
   ['/', 'weekly', '1.0'],

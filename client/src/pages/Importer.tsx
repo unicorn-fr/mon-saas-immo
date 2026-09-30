@@ -5,6 +5,7 @@ import { Upload } from '../components/Icons'
 import { Logo } from '../components/Logo'
 import { Button, Notice, Spinner, display } from '../components/ui'
 import { api, ApiError } from '../lib/api'
+import { compressImage } from '../lib/compressImage'
 import { useDraft } from '../lib/draft'
 import type { Draft } from '../lib/types'
 
@@ -40,7 +41,7 @@ export default function Importer() {
       reset()
       await ensure()
       const form = new FormData()
-      files.forEach((f) => form.append('files', f))
+      for (const f of await Promise.all(files.map(compressImage))) form.append('files', f)
       const draft = await api<Draft>('/drafts/current/import', { method: 'POST', form, draft: true, timeout: 300_000 })
       replace(draft)
       navigate('/commencer/relecture')

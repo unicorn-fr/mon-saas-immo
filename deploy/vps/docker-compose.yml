@@ -45,7 +45,7 @@ services:
       context: ../..
       dockerfile: deploy/vps/Dockerfile.caddy
       args:
-        VITE_SITE_URL: https://${SITE_DOMAIN:-bailio.eu}
+        VITE_SITE_URL: ${SITE_URL:-https://bailio.fr}
     restart: unless-stopped
     ports:
       - "80:80"
@@ -53,8 +53,9 @@ services:
       - "443:443/udp"
     environment:
       API_DOMAIN: ${API_DOMAIN:?API_DOMAIN manquant dans .env}
-      SITE_DOMAIN: ${SITE_DOMAIN:-bailio.eu}
-      SITE_REDIRECT_DOMAINS: ${SITE_REDIRECT_DOMAINS:-www.bailio.eu}
+      # Tant que SITE_DOMAIN n'est pas rempli dans .env, le site n'est pas servi ici (adresses inactives).
+      SITE_DOMAIN: ${SITE_DOMAIN:-http://site.localhost:8091}
+      SITE_REDIRECT_DOMAINS: ${SITE_REDIRECT_DOMAINS:-http://redirect.localhost:8092}
     volumes:
       - caddy_data:/data
       - caddy_config:/config

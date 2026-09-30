@@ -25,9 +25,10 @@ export function MentionsLegales() {
       <p>Directeur de la publication : Enzo Mercier.</p>
       <H2>Hébergement</H2>
       <p>
-        Le site, l'application et la base de données sont hébergés en Suisse par Infomaniak Network SA,
+        L'application et la base de données sont hébergées en Suisse par Infomaniak Network SA,
         rue Eugène-Marziano 25, 1227 Les Acacias (Genève), Suisse (infomaniak.com). La Suisse est reconnue par la
         Commission européenne comme offrant un niveau de protection des données équivalent à celui de l'Union européenne.
+        Les pages du site sont servies par Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis (vercel.com).
       </p>
       <H2>Propriété intellectuelle</H2>
       <p>La marque Bailio, le site et ses contenus sont protégés. Les modèles de documents suivent les contrats types publiés par l'État.</p>
@@ -90,7 +91,7 @@ export function Confidentialite() {
       <p>
         En Suisse, sur un serveur qui nous est dédié chez Infomaniak (Genève). La Suisse offre un niveau de protection
         reconnu équivalent à celui de l'Union européenne. Les échanges avec le site sont chiffrés (HTTPS) et la base de
-        données n'est pas accessible depuis internet.
+        données n'est pas accessible depuis internet. Rien n'est conservé ailleurs.
       </p>
       <H2>Qui y a accès</H2>
       <p>
@@ -99,9 +100,11 @@ export function Confidentialite() {
         Adresse Nationale, un service public français.
       </p>
       <p>
-        Un seul prestataire traite des données pour notre compte : Resend, qui achemine les emails que Bailio vous envoie
-        (liens de connexion, rappels). Il ne reçoit que votre adresse email et le contenu de ces messages. Resend est
-        situé aux États-Unis ; ce transfert est encadré par les clauses contractuelles types de la Commission européenne.
+        Deux prestataires techniques interviennent pour notre compte. Vercel sert les pages du site et transmet, chiffrés,
+        les échanges entre votre navigateur et notre serveur, sans les conserver. Resend achemine les emails que Bailio
+        vous envoie (liens de connexion, rappels) : il ne reçoit que votre adresse email et le contenu de ces messages.
+        Ces deux sociétés sont situées aux États-Unis ; ces transferts sont encadrés par les clauses contractuelles types
+        de la Commission européenne.
       </p>
       <H2>Combien de temps</H2>
       <ul>

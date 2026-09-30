@@ -1,12 +1,12 @@
 import { Router } from 'express'
-import { rateLimit } from 'express-rate-limit'
+import { limitPerVisitor } from '../lib/rateLimit.js'
 import { z } from 'zod'
 import { searchAddress } from '../lib/geo.js'
 import { findDpe } from '../lib/dpe.js'
 import { latestIrl } from '../lib/irl.js'
 
 const router = Router()
-router.use(rateLimit({ windowMs: 60_000, limit: 60, standardHeaders: true, legacyHeaders: false }))
+router.use(limitPerVisitor(1, 60))
 
 router.get('/addresses', async (req, res) => {
   const { q } = z.object({ q: z.string().trim().min(3).max(200) }).parse(req.query)

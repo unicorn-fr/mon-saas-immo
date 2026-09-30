@@ -1,6 +1,5 @@
 import { Router, type Request } from 'express'
 import multer from 'multer'
-import { rateLimit } from 'express-rate-limit'
 import { z } from 'zod'
 import type { Draft, Prisma } from '@prisma/client'
 import { prisma } from '../db.js'
@@ -9,6 +8,7 @@ import { draftDataSchema } from '../domain/lease.js'
 import { HttpError } from '../lib/http.js'
 import { hashToken, newToken } from '../lib/tokens.js'
 import { layout, sendEmail } from '../lib/email.js'
+import { allowEmailTo, limitPerVisitor } from '../lib/rateLimit.js'
 import { optionalUser } from '../services/session.js'
 import { draftToLeaseInput } from '../services/leases.js'
 import { renderLeasePdf } from '../pdf/lease.js'
@@ -17,9 +17,9 @@ import { extractLease, extractionToDraft, importAvailable, toArchivedFile, valid
 const DRAFT_DAYS = 30
 const router = Router()
 
-const createLimiter = rateLimit({ windowMs: 60 * 60_000, limit: 30, standardHeaders: true, legacyHeaders: false })
-const emailLimiter = rateLimit({ windowMs: 60 * 60_000, limit: 5, standardHeaders: true, legacyHeaders: false })
-const importLimiter = rateLimit({ windowMs: 60 * 60_000, limit: 10, standardHeaders: true, legacyHeaders: false })
+const createLimiter = limitPerVisitor(60, 30)
+const emailLimiter = limitPerVisitor(60, 8)
+const importLimiter = limitPerVisitor(60, 10)
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024, files: 10 } })
 
 /** Le brouillon est identifié par son jeton, envoyé dans l'en-tête X-Draft-Token. */
@@ -80,6 +80,7 @@ router.post('/current/resume-link', emailLimiter, optionalUser, async (req, res)
     ],
     cta: { label: 'Reprendre mon bail', url: `${env.CLIENT_URL}/reprendre?brouillon=${encodeURIComponent(token)}` },
   })
+  allowEmailTo(email)
   await sendEmail({ to: email, subject: 'Reprendre votre bail sur Bailio', ...mail })
   res.json({ success: true, data: { sent: true } })
 })

@@ -1,9 +1,13 @@
 # Bailio sur un VPS (Infomaniak)
 
-Un seul serveur, en Suisse, fait tout tourner :
-- **Caddy** : sert le site (bailio.eu), le HTTPS (certificats automatiques) et relaie `/api` vers l'API ;
+Un seul serveur, en Suisse, fait tourner :
 - **l'API** : bail, quittances, rappels, et la lecture des baux importés (Tesseract, sur le serveur) ;
-- **PostgreSQL** : jamais exposée sur internet.
+- **PostgreSQL** : jamais exposée sur internet ;
+- **Caddy** : le HTTPS (certificats automatiques) ; il peut aussi servir le site lui-même (voir plus bas).
+
+Pour l'instant, le site reste sur **bailio.fr (Vercel)**, et Vercel relaie `/api` vers `api.bailio.eu`
+(`client/vercel.json`). Le navigateur des visiteurs ne contacte donc que bailio.fr, un domaine ancien et connu :
+les filtres réseau qui bloquent les domaines récemment créés (comme bailio.eu) ne gênent personne.
 
 Aucun service extérieur ne reçoit les documents des propriétaires. Seul Resend reçoit les emails à envoyer.
 
@@ -14,35 +18,23 @@ ssh -i ~/.ssh/bailio_infomaniak ubuntu@IP_DU_SERVEUR
 sudo /opt/bailio/deploy/vps/update.sh
 ```
 
-La première fois après le passage du site sur le serveur, `update.sh` ajoute seul à `.env` :
-`SITE_DOMAIN=bailio.eu`, `SITE_REDIRECT_DOMAINS=www.bailio.eu`, et passe `CLIENT_URL` à `https://bailio.eu`.
+Vérification : https://api.bailio.eu/api/drafts/import/available doit afficher `"available":true`.
 
-## Faire pointer bailio.eu vers le serveur (zone DNS Infomaniak)
+## Servir le site depuis ce serveur (plus tard, quand bailio.fr sera récupéré chez Ionos)
 
-Manager Infomaniak → Domaines → bailio.eu → Zone DNS :
+1. Zone DNS de bailio.fr : A « @ » et A « www » vers l'IP du serveur (et AAAA vers l'IPv6), en supprimant les
+   enregistrements Vercel.
+2. Dans `/opt/bailio/deploy/vps/.env` :
+   ```
+   SITE_DOMAIN=bailio.fr
+   SITE_REDIRECT_DOMAINS=www.bailio.fr, bailio.eu, www.bailio.eu
+   SITE_URL=https://bailio.fr
+   ```
+   (pour bailio.eu et www : A/AAAA vers le serveur aussi, dans la zone DNS Infomaniak)
+3. `sudo /opt/bailio/deploy/vps/update.sh`. Caddy obtient les certificats seul, en quelques minutes.
+4. Le projet Vercel peut alors être supprimé.
 
-| Type | Nom | Valeur |
-|---|---|---|
-| A | (vide, « @ ») | IP du serveur (IPv4) |
-| AAAA | (vide, « @ ») | IPv6 du serveur (si vous en avez une) |
-| A | www | IP du serveur (IPv4) |
-| AAAA | www | IPv6 du serveur |
-| A / AAAA | api | IP du serveur (déjà en place) |
-
-Supprimez l'ancien enregistrement **A 216.198.79.1** (Vercel) et le **CNAME www** vers vercel-dns.
-Le certificat HTTPS est obtenu tout seul par Caddy quelques minutes après la propagation.
-
-Vérification : https://bailio.eu affiche le site, https://www.bailio.eu redirige vers https://bailio.eu,
-https://bailio.eu/health affiche `{"ok":true}`.
-
-## bailio.fr (en attendant la récupération du compte Ionos)
-
-bailio.fr pointe encore vers Vercel. Dans Vercel → projet → Settings → Domains :
-retirez bailio.eu et www.bailio.eu, puis pour **bailio.fr** et **www.bailio.fr** choisissez
-« Redirect to another domain » → `https://bailio.eu` (308). Vercel ne sert plus alors que cette redirection.
-
-Quand l'accès Ionos sera récupéré : faites pointer bailio.fr et www (A/AAAA) vers l'IP du serveur, puis dans `.env` :
-`SITE_REDIRECT_DOMAINS=www.bailio.eu, bailio.fr, www.bailio.fr` et relancez `update.sh`. Vous pourrez alors supprimer le projet Vercel.
+Tant que `SITE_DOMAIN` est vide, le serveur ne sert pas le site (seulement l'API).
 
 ## Première installation (nouveau serveur)
 

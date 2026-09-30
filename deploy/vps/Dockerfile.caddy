@@ -4,10 +4,9 @@ WORKDIR /app/client
 COPY client/package.json client/package-lock.json ./
 RUN npm ci
 COPY client ./
-# API sur la même adresse que le site (/api) : aucune requête vers un autre domaine.
-ARG VITE_API_URL=
-ARG VITE_SITE_URL=https://bailio.eu
-ENV VITE_API_URL=$VITE_API_URL VITE_SITE_URL=$VITE_SITE_URL
+# L'API est appelée sur la même adresse que le site (/api, relayé par Caddy).
+ARG VITE_SITE_URL=https://bailio.fr
+ENV VITE_SITE_URL=$VITE_SITE_URL
 RUN npm run build
 
 FROM caddy:2-alpine

@@ -24,7 +24,10 @@
 	}
 
 	handle /api/* {
-		reverse_proxy api:5000
+		reverse_proxy api:5000 {
+			# Visiteur direct : son adresse réelle (une valeur envoyée par le navigateur est écrasée).
+			header_up X-Original-Forwarded-For {remote_host}
+		}
 	}
 	handle /health {
 		reverse_proxy api:5000
@@ -51,12 +54,15 @@
 	redir https://{$SITE_DOMAIN}{uri} permanent
 }
 
-# L'API seule (ancienne adresse, toujours active).
+# L'API seule : appelée par le site bailio.fr (relais Vercel de /api).
 {$API_DOMAIN} {
 	import securite
 	encode zstd gzip
 	request_body {
 		max_size 160MB
 	}
-	reverse_proxy api:5000
+	reverse_proxy api:5000 {
+		# Requêtes relayées par Vercel (site bailio.fr) : Vercel place l'IP du visiteur dans X-Forwarded-For.
+		header_up X-Original-Forwarded-For {http.request.header.X-Forwarded-For}
+	}
 }

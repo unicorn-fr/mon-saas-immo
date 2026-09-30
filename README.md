@@ -49,11 +49,12 @@ docs/     maquette et documents de conception
 emails par SMTP (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`) ou Resend (`RESEND_API_KEY`), `EMAIL_FROM`,
 https://bailio.eu, https://www.bailio.eu, https://bailio.fr et https://www.bailio.fr sont toujours autorisés.
 
-**Site** : `VITE_API_URL` (vide = même adresse que le site, `/api`), `VITE_SITE_URL` (adresse publique, `https://bailio.eu` par défaut).
+**Site** : `VITE_SITE_URL` (adresse publique, `https://bailio.fr` par défaut). L'API est toujours appelée sur `/api`, même adresse que le site : relayée vers `https://api.bailio.eu` par Vercel (`client/vercel.json`), par Caddy sur le VPS, par Vite en local.
 
 ## Déploiement
 
-- **Tout sur un VPS** (Infomaniak, Genève) avec Docker, voir [`deploy/vps/README.md`](deploy/vps/README.md) : Caddy sert le site et le HTTPS et relaie `/api` vers l'API ; la base n'est pas exposée. Au démarrage, `prisma migrate deploy` applique les migrations versionnées (jamais de suppression automatique de données).
+- **Site** : Vercel (bailio.fr) tant que le domaine ne peut pas pointer vers le VPS ; `/api` y est relayé vers le VPS.
+- **API, base, lecture des baux** : VPS (Infomaniak, Genève) avec Docker, voir [`deploy/vps/README.md`](deploy/vps/README.md) : Caddy sert le site et le HTTPS et relaie `/api` vers l'API ; la base n'est pas exposée. Au démarrage, `prisma migrate deploy` applique les migrations versionnées (jamais de suppression automatique de données).
 - Un cron quotidien (8 h, heure de Paris) prolonge les échéances et envoie l'email de rappel aux propriétaires qui ont activé le suivi.
 
 ## Vérifications
