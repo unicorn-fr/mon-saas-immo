@@ -25,6 +25,8 @@ export function publicUser(u: User) {
     lastName: u.lastName,
     emailVerified: Boolean(u.emailVerifiedAt),
     followUpActive: Boolean(u.followUpSince),
+    notifyWeekly: u.notifyWeekly,
+    notifyUrgent: u.notifyUrgent,
   }
 }
 

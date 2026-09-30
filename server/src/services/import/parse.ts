@@ -147,7 +147,8 @@ function readStartDate(doc: Doc): string | null {
   for (const re of labels) {
     for (const hit of doc.find(re)) {
       const win = doc.window(hit.end, 90, 2)
-      const d = firstDate(win.low)
+      // Ne pas prendre la date de fin : « … jusqu'au 30 septembre 2029 ».
+      const d = firstDate(win.low.split(/jusqu|au terme|fin du (bail|contrat)/)[0])
       if (d && d.index < 70) return d.iso
     }
   }
@@ -295,7 +296,7 @@ function addressAt(doc: Doc, start: number): string | null {
   return raw
 }
 
-const ADDRESS_LABEL = /(demeurant|domicilie(e)?s?|residant|domicile|adresse( postale| du domicile)?|sise?|situee?s?|habitant)\s*(actuellement\s*)?(aux|au|a|en|:|,)?\s*(:)?\s*/
+const ADDRESS_LABEL = /(demeurant|domicilie(e)?s?|residant|domicile|adresse( postale| du domicile)?|sise?|situee?s?|habitant)\s*((du|de la|des) (bailleu?r\w*|locataires?|preneurs?|garant|caution)\s*)?(actuellement\s*)?(aux|au|a|en|:|,)?\s*(:)?\s*/
 
 function readPropertyAddress(doc: Doc, exclude: (string | null)[]): string | null {
   const skip = exclude.filter(Boolean).map((a) => fold(a!).replace(/\W/g, '').slice(0, 20))

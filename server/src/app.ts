@@ -7,6 +7,11 @@ import draftRoutes from './routes/drafts.js'
 import authRoutes from './routes/auth.js'
 import accountRoutes from './routes/account.js'
 import geoRoutes from './routes/geo.js'
+import spaceRoutes from './routes/space.js'
+import leaseRoutes from './routes/leases.js'
+import todayRoutes from './routes/today.js'
+import moneyRoutes from './routes/money.js'
+import inventoryRoutes from './routes/inventories.js'
 
 export function createApp() {
   const app = express()
@@ -20,13 +25,19 @@ export function createApp() {
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Draft-Token'],
     }),
   )
-  app.use(express.json({ limit: '200kb' }))
+  // Signatures dessinées (images) et états des lieux : quelques centaines de Ko.
+  app.use(express.json({ limit: '2mb' }))
 
   app.get('/health', (_req, res) => res.json({ ok: true }))
   app.use('/api/drafts', draftRoutes)
   app.use('/api/auth', authRoutes)
   app.use('/api/geo', geoRoutes)
   app.use('/api', accountRoutes)
+  app.use('/api', todayRoutes)
+  app.use('/api', spaceRoutes)
+  app.use('/api', leaseRoutes)
+  app.use('/api', moneyRoutes)
+  app.use('/api', inventoryRoutes)
   app.use((_req, _res, next) => next(new HttpError(404, 'Page introuvable.')))
   app.use(errorHandler)
   return app

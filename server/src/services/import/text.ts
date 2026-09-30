@@ -170,7 +170,7 @@ export function firstDate(low: string): { iso: string; index: number } | null {
     if (iso) found.push({ iso, index: m.index })
   }
   // « 1er octobre 2026 », « 01 oct. 2026 », « premier octobre 2026 » (et « ler » ou « 1°» mal reconnus)
-  const words = new RegExp(`(?<![\\d])(\\d{1,2}|premier|ler|1°)\\s*(?:er|e|°)?\\s+${MONTH_RE}\\s*,?\\s*(\\d{4})`, 'g')
+  const words = new RegExp(`(?<![\\d])(\\d{1,2}|premier|ler|1°|(?<![a-z])er)\\s*(?:er|e|°)?\\s+${MONTH_RE}\\s*,?\\s*(\\d{4})`, 'g')
   while ((m = words.exec(low))) {
     const day = /^\d+$/.test(m[1]) ? Number(m[1]) : 1
     const month = MONTHS[m[2].replace('.', '')]

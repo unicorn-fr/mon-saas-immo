@@ -13,6 +13,8 @@ export interface Email {
   text: string
   html: string
   attachments?: EmailAttachment[]
+  /** Adresse de réponse (le propriétaire, pour un email envoyé à son locataire). */
+  replyTo?: string
 }
 
 const smtp =
@@ -35,6 +37,7 @@ export async function sendEmail(email: Email): Promise<void> {
       subject: email.subject,
       text: email.text,
       html: email.html,
+      replyTo: email.replyTo,
       attachments: email.attachments?.map((a) => ({ filename: a.filename, content: a.content })),
     })
     return
@@ -49,6 +52,7 @@ export async function sendEmail(email: Email): Promise<void> {
     subject: email.subject,
     text: email.text,
     html: email.html,
+    replyTo: email.replyTo,
     attachments: email.attachments?.map((a) => ({ filename: a.filename, content: a.content })),
   })
   if (error) throw new Error(`Envoi de l'email impossible : ${error.message}`)

@@ -44,6 +44,8 @@ export async function optionalUser(req: Request, _res: Response, next: NextFunct
 }
 
 export async function requireUser(req: Request, _res: Response, next: NextFunction) {
+  // Plusieurs routeurs partagent le préfixe /api : la session n'est lue qu'une fois par requête.
+  if (req.user) return next()
   const user = await loadUser(req)
   if (!user) return next(new HttpError(401, 'Votre session a expiré. Reconnectez-vous.'))
   req.user = user

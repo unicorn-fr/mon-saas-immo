@@ -19,11 +19,21 @@ enum LeaseStatus {
   ACTIVE
   ENDED
   IMPORTED // bail déjà signé, importé par le propriétaire
+  DRAFT // bail en préparation dans l'espace
 }
 
 enum DocumentKind {
   LEASE // bail généré par Bailio
   LEASE_IMPORTED // bail signé importé (photo ou PDF)
+  RECEIPT // quittance
+  PARTIAL_RECEIPT // reçu de paiement partiel
+  RENT_NOTICE // avis d'échéance
+  GUARANTEE // acte de caution
+  INVENTORY // état des lieux
+  INVOICE // facture (travaux, entretien)
+  DIAGNOSTIC // diagnostic technique
+  LETTER // courrier (révision, relance, congé, régularisation, restitution)
+  OTHER
 }
 
 enum ReminderType {
@@ -32,6 +42,7 @@ enum ReminderType {
   RENT_REVISION // révision annuelle du loyer
   LEASE_END // fin de bail
   INVENTORY_ENTRY // état des lieux d'entrée
+  CHARGES_REGULARIZATION // régularisation annuelle des charges
 }
 
 enum ReminderStatus {
@@ -47,6 +58,10 @@ model User {
   googleId        String?   @unique
   emailVerifiedAt DateTime?
   followUpSince   DateTime? // « Activer le suivi » : emails de rappel actifs
+  // Profil du bailleur (domain/contract.ts, landlordProfileSchema) : repris dans tous les documents.
+  profile         Json      @default("{}")
+  notifyWeekly    Boolean   @default(true) // récapitulatif du lundi
+  notifyUrgent    Boolean   @default(true) // alertes urgentes (loyer en retard…)
   createdAt       DateTime  @default(now())
 
   sessions   Session[]
@@ -55,6 +70,11 @@ model User {
   documents  Document[]
   reminders  Reminder[]
   drafts     Draft[]
+  tenants     Tenant[]
+  payments    Payment[]
+  expenses    Expense[]
+  inventories Inventory[]
+  files       FileBlob[]
 }
 
 model Session {
@@ -115,9 +135,32 @@ model Property {
   rooms        Int?
   dpeClass     String?
   dpeNumber    String?
+  label        String? // nom court : « Studio rue Foch »
+  // Fiche complète du logement (domain/contract.ts, propertyFileSchema)
+  data         Json     @default("{}")
   createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
 
-  leases Lease[]
+  leases    Lease[]
+  tenants   Tenant[]
+  expenses  Expense[]
+  documents Document[]
+
+  @@index([userId])
+}
+
+// Locataire (et son garant) : fiche complète (domain/contract.ts, tenantFileSchema).
+model Tenant {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  data       Json      @default("{}")
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @default(now()) @updatedAt
+
+  documents Document[]
 
   @@index([userId])
 }
@@ -137,12 +180,18 @@ model Lease {
   chargesCents    Int
   depositCents    Int
   paymentDay      Int         @default(5)
-  // Copie complète des réponses du tunnel (bailleur, locataires, garant…) : sert à régénérer le bail à l'identique.
+  // Bail créé dans l'espace : { terms } (domain/contract.ts). Bail du tunnel : copie des réponses.
   data            Json
+  // Locataires signataires (fiches Tenant) ; vide pour les baux créés par l'ancien tunnel.
+  tenantIds       String[]    @default([])
+  signedAt        DateTime?
   createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @default(now()) @updatedAt
 
-  documents Document[]
-  reminders Reminder[]
+  documents   Document[]
+  reminders   Reminder[]
+  payments    Payment[]
+  inventories Inventory[]
 
   @@index([userId])
 }
@@ -154,6 +203,15 @@ model Document {
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   leaseId     String?
   lease       Lease?       @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  propertyId  String?
+  property    Property?    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  tenantId    String?
+  tenant      Tenant?      @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  // GENERATED (par Bailio) ou UPLOADED (ajouté par le propriétaire)
+  origin      String       @default("GENERATED")
+  // Période concernée (quittance : « 2026-09 »), ou autre repère
+  period      String?
+  meta        Json?
   kind        DocumentKind
   version     Int          @default(1)
   title       String
@@ -165,7 +223,77 @@ model Document {
   file        Bytes?
   createdAt   DateTime     @default(now())
 
-  @@unique([leaseId, kind, version])
+  @@index([userId])
+  @@index([leaseId, kind])
+  @@index([propertyId])
+}
+
+// Loyer reçu pour un mois : complet → quittance, partiel → reçu (art. 21).
+model Payment {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaseId      String
+  lease        Lease    @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  period       String // AAAA-MM
+  amountCents  Int
+  receivedAt   DateTime @db.Date
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+
+  @@unique([leaseId, period])
+  @@index([userId, period])
+}
+
+// Dépense d'un logement : travaux, entretien, impôt, copropriété…
+model Expense {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId       String?
+  property         Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  vendor           String
+  description      String?
+  category         String // REPAIR, MAINTENANCE, TAX, COPRO, INSURANCE, OTHER
+  amountCents      Int
+  recoverableCents Int      @default(0) // part récupérable sur le locataire
+  chargeTo         String   @default("OWNER") // OWNER ou TENANT
+  status           String   @default("OK") // TO_VERIFY (lue automatiquement) ou OK
+  date             DateTime @db.Date
+  documentId       String?
+  createdAt        DateTime @default(now())
+
+  @@index([userId, date])
+}
+
+// État des lieux d'entrée ou de sortie (décret n° 2016-382).
+model Inventory {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaseId   String
+  lease     Lease    @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  kind      String // ENTRY ou EXIT
+  status    String   @default("DRAFT") // DRAFT ou SIGNED
+  date      DateTime?
+  data      Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([leaseId])
+}
+
+// Fichier déposé (photo d'état des lieux, justificatif, diagnostic, facture) : visible seulement par son propriétaire.
+model FileBlob {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  mimeType  String
+  sizeBytes Int
+  data      Bytes
+  createdAt DateTime @default(now())
+
   @@index([userId])
 }
 
@@ -180,6 +308,8 @@ model Reminder {
   status    ReminderStatus @default(TODO)
   emailedAt DateTime?
   doneAt    DateTime?
+  // « Me le rappeler plus tard » : masqué jusqu'à cette date
+  snoozedUntil DateTime?
 
   @@unique([leaseId, type, dueDate])
   @@index([userId, dueDate])

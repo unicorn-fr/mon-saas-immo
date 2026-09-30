@@ -12,6 +12,8 @@
     "test": "tsx --test src/domain/*.test.ts src/services/import/*.test.ts"
   },
   "dependencies": {
+    "@fontsource/cormorant-garamond": "^5.3.0",
+    "@fontsource/dm-sans": "^5.3.0",
     "@prisma/client": "^6.19.3",
     "@react-pdf/renderer": "^4.9.0",
     "cors": "^2.8.6",

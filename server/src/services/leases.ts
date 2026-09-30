@@ -16,6 +16,7 @@ import { layout, sendEmail } from '../lib/email.js'
 import { sha256 } from '../lib/tokens.js'
 import { renderLeasePdf } from '../pdf/lease.js'
 import { ensureReminders } from './reminders.js'
+import { upgradeLegacyLeases } from './upgrade.js'
 
 /** Valide un brouillon complet. Le dépôt de garantie prend par défaut le maximum légal. */
 export function draftToLeaseInput(draft: Pick<Draft, 'data'>): LeaseInput {
@@ -124,6 +125,8 @@ export async function createLeaseFromDraft(user: User, draftId: string): Promise
   })
 
   await ensureReminders(lease)
+  // Les réponses du tunnel alimentent tout de suite les fiches du compte (profil, logement, locataires).
+  await upgradeLegacyLeases(user)
 
   if (pdf) {
     const mail = layout({

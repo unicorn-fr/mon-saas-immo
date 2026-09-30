@@ -83,7 +83,8 @@ export function readability(text: string): number {
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .split(/[^a-z]+/)
-    .filter((w) => w.length >= 1)
+    // Les lettres isolées (« a », « e », « s ») abondent dans une lecture ratée : elles ne comptent pas.
+    .filter((w) => w.length >= 2)
   if (words.length < 15) return 0
   return words.filter((w) => COMMON.has(w)).length / words.length
 }
