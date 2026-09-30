@@ -1,4 +1,4 @@
-# Bailio — API + PostgreSQL + HTTPS sur un seul serveur (VPS Infomaniak ou autre).
+# Bailio : site + API + PostgreSQL + HTTPS sur un seul serveur (VPS Infomaniak).
 # Lancement : docker compose up -d --build   (depuis ce dossier, avec un fichier .env rempli)
 name: bailio
 
@@ -40,7 +40,12 @@ services:
       start_period: 60s
 
   caddy:
-    image: caddy:2-alpine
+    # Caddy + le site, construits ensemble (deploy/vps/Dockerfile.caddy).
+    build:
+      context: ../..
+      dockerfile: deploy/vps/Dockerfile.caddy
+      args:
+        VITE_SITE_URL: https://${SITE_DOMAIN:-bailio.eu}
     restart: unless-stopped
     ports:
       - "80:80"
@@ -48,8 +53,9 @@ services:
       - "443:443/udp"
     environment:
       API_DOMAIN: ${API_DOMAIN:?API_DOMAIN manquant dans .env}
+      SITE_DOMAIN: ${SITE_DOMAIN:-bailio.eu}
+      SITE_REDIRECT_DOMAINS: ${SITE_REDIRECT_DOMAINS:-www.bailio.eu}
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
     depends_on:

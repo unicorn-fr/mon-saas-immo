@@ -7,7 +7,7 @@ Maquette de référence : [`docs/maquette/bailio-refonte-proprietaire.html`](doc
 
 ## Démarrer en local
 
-Prérequis : Node 20+, PostgreSQL.
+Prérequis : Node 20+, PostgreSQL. Pour l'import de baux : `tesseract-ocr`, `tesseract-ocr-fra` et `poppler-utils` (sinon l'import s'affiche comme indisponible).
 
 ```bash
 npm run install:all                        # installe server/ et client/ (un package-lock.json chacun)
@@ -21,8 +21,9 @@ Sans `RESEND_API_KEY`, les emails (lien de reprise, lien de connexion) s'affiche
 ## Structure
 
 ```
-client/   site et application (React 19, Vite, TypeScript) — déployé sur Vercel
-server/   API (Express 5, Prisma, PostgreSQL, React-PDF) — déployée sur Railway (Dockerfile)
+client/   site et application (React 19, Vite, TypeScript)
+server/   API (Express 5, Prisma, PostgreSQL, React-PDF, lecture des baux importés)
+deploy/   hébergement sur un VPS : site + API + base + HTTPS (deploy/vps)
 docs/     maquette et documents de conception
 ```
 
@@ -32,11 +33,11 @@ docs/     maquette et documents de conception
 |---|---|
 | `/` | Accueil |
 | `/commencer` → `/logement` → `/personnes` → `/loyer` → `/relecture` | Tunnel « Créer mon bail » en 5 étapes, sans compte, enregistré à chaque saisie |
-| `/commencer/recevoir` | « Votre bail est prêt » : email ou Google, le compte est créé à ce moment-là |
+| `/commencer/recevoir` | « Votre bail est prêt » : l'email suffit, le compte est créé à ce moment-là |
 | `/bienvenue/:id` | Bail téléchargé, imprimé, suivi à activer |
-| `/importer` | « J'ai déjà un bail signé » : photos ou PDF lus par l'IA, puis relecture |
+| `/importer` | « J'ai déjà un bail signé » : photos ou PDF lus sur le serveur (Tesseract + règles, `server/src/services/import`), puis relecture |
 | `/reprendre?brouillon=…` | Reprise d'un bail commencé (lien reçu par email) |
-| `/connexion` | Lien de connexion par email ou Google (pas de mot de passe) |
+| `/connexion` | Lien de connexion par email (pas de mot de passe) |
 | `/espace` | « Aujourd'hui » : la liste de ce qu'il y a à faire, les logements |
 | `/espace/baux/:id` | Un bail : documents, quittances, échéances |
 | `/espace/compte` | Nom, suivi par email, export et suppression des données |
@@ -46,21 +47,19 @@ docs/     maquette et documents de conception
 **API (`server/.env`)** — voir `server/.env.example` :
 `DATABASE_URL`, `CLIENT_URL` (URL publique du site, utilisée dans les emails ; `FRONTEND_URL` accepté), `CORS_ORIGINS` (`CORS_ORIGIN` accepté),
 emails par SMTP (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`) ou Resend (`RESEND_API_KEY`), `EMAIL_FROM`,
-`GOOGLE_CLIENT_ID` (facultatif), `ANTHROPIC_API_KEY` et `ANTHROPIC_MODEL` (facultatif, import de bail).
-https://bailio.fr et https://www.bailio.fr sont toujours autorisés.
+https://bailio.eu, https://www.bailio.eu, https://bailio.fr et https://www.bailio.fr sont toujours autorisés.
 
-**Site (Vercel)** : `VITE_API_URL` = URL de l'API (ex. `https://api.bailio.eu` ; un `/api` ou `/api/v1` final est ignoré).
+**Site** : `VITE_API_URL` (vide = même adresse que le site, `/api`), `VITE_SITE_URL` (adresse publique, `https://bailio.eu` par défaut).
 
 ## Déploiement
 
-- **Site** : Vercel, dossier racine `client`, commande `npm run build`, sortie `dist`.
-- **API** : un VPS (Infomaniak) avec Docker, voir [`deploy/vps/README.md`](deploy/vps/README.md). Le `Dockerfile` à la racine fonctionne aussi sur tout hébergeur de conteneurs (Railway, Clever Cloud, Koyeb…). Au démarrage, `prisma migrate deploy` applique les migrations versionnées (jamais de suppression automatique de données).
+- **Tout sur un VPS** (Infomaniak, Genève) avec Docker, voir [`deploy/vps/README.md`](deploy/vps/README.md) : Caddy sert le site et le HTTPS et relaie `/api` vers l'API ; la base n'est pas exposée. Au démarrage, `prisma migrate deploy` applique les migrations versionnées (jamais de suppression automatique de données).
 - Un cron quotidien (8 h, heure de Paris) prolonge les échéances et envoie l'email de rappel aux propriétaires qui ont activé le suivi.
 
 ## Vérifications
 
 ```bash
 npm run typecheck   # client + serveur
-npm test            # règles légales et échéances
+npm test            # règles légales, échéances, lecture des baux (photos incluses si Tesseract est installé)
 npm run build
 ```

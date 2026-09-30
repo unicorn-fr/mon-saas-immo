@@ -18,24 +18,19 @@ const schema = z.object({
   SMTP_PORT: z.coerce.number().default(587),
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
-  // Connexion Google (facultative).
-  GOOGLE_CLIENT_ID: z.string().optional(),
-  // Lecture des baux importés par l'IA (facultative).
-  ANTHROPIC_API_KEY: z.string().optional(),
-  ANTHROPIC_MODEL: z.string().default('claude-opus-5'),
 })
 
 const parsed = schema.parse(process.env)
 
 export const env = {
   ...parsed,
-  CLIENT_URL: (parsed.CLIENT_URL ?? parsed.FRONTEND_URL ?? (parsed.NODE_ENV === 'production' ? 'https://bailio.fr' : 'http://localhost:5173')).replace(/\/$/, ''),
+  CLIENT_URL: (parsed.CLIENT_URL ?? parsed.FRONTEND_URL ?? (parsed.NODE_ENV === 'production' ? 'https://bailio.eu' : 'http://localhost:5173')).replace(/\/$/, ''),
   // Adresse nue (ancien format) → « Bailio <adresse> ».
   EMAIL_FROM: parsed.EMAIL_FROM.includes('<') ? parsed.EMAIL_FROM : `Bailio <${parsed.EMAIL_FROM.trim()}>`,
 }
 
 export const allowedOrigins = new Set(
-  [env.CLIENT_URL, 'https://bailio.fr', 'https://www.bailio.fr', ...`${env.CORS_ORIGINS},${env.CORS_ORIGIN}`.split(',')]
+  [env.CLIENT_URL, 'https://bailio.eu', 'https://www.bailio.eu', 'https://bailio.fr', 'https://www.bailio.fr', ...`${env.CORS_ORIGINS},${env.CORS_ORIGIN}`.split(',')]
     .map((o) => o.trim().replace(/\/$/, ''))
     .filter(Boolean),
 )

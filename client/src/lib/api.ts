@@ -16,6 +16,8 @@ interface RequestOptions {
   form?: FormData
   draft?: boolean // envoie le jeton du brouillon
   signal?: AbortSignal
+  /** Délai maximum en millisecondes (20 s par défaut) : au-delà, un message s'affiche au lieu d'une attente sans fin. */
+  timeout?: number
 }
 
 function headers(opts: RequestOptions): Headers {
@@ -32,16 +34,30 @@ function headers(opts: RequestOptions): Headers {
 
 async function raw(path: string, opts: RequestOptions = {}): Promise<Response> {
   let res: Response
+  // AbortController + minuterie plutôt qu'AbortSignal.any/timeout, absents des iPhone plus anciens.
+  const controller = new AbortController()
+  let timedOut = false
+  const timer = window.setTimeout(() => {
+    timedOut = true
+    controller.abort()
+  }, opts.timeout ?? 20_000)
+  const forward = () => controller.abort()
+  opts.signal?.addEventListener('abort', forward)
+  const signal = controller.signal
   try {
     res = await fetch(`${BASE}/api${path}`, {
       method: opts.method ?? 'GET',
       headers: headers(opts),
       body: opts.form ?? (opts.body !== undefined ? JSON.stringify(opts.body) : undefined),
-      signal: opts.signal,
+      signal,
     })
   } catch (err) {
-    if ((err as Error).name === 'AbortError') throw err
+    if (opts.signal?.aborted) throw err
+    if (timedOut) throw new ApiError('Le serveur met trop de temps à répondre. Réessayez dans un instant.', 0)
     throw new ApiError('Connexion impossible. Vérifiez votre accès à internet.', 0)
+  } finally {
+    window.clearTimeout(timer)
+    opts.signal?.removeEventListener('abort', forward)
   }
   if (!res.ok) {
     const json = await res.json().catch(() => null)

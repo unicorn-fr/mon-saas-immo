@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
-import { GoogleButton } from '../../components/GoogleButton'
 import { Check } from '../../components/Icons'
 import { Logo } from '../../components/Logo'
 import { Button, Notice, TextField, display } from '../../components/ui'
@@ -29,7 +28,6 @@ export default function RecevoirStep() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [checkEmail, setCheckEmail] = useState<string | null>(null)
-  const [googleAvailable, setGoogleAvailable] = useState(false)
   const imported = data.source === 'import'
   // Une fois le bail créé, le brouillon est vidé : il ne faut plus renvoyer vers la relecture.
   const finished = useRef(false)
@@ -57,18 +55,6 @@ export default function RecevoirStep() {
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Une erreur est survenue.')
     } finally {
-      setLoading(false)
-    }
-  }
-
-  async function google(credential: string) {
-    setError(null)
-    setLoading(true)
-    try {
-      await flush()
-      done(await api<{ sessionToken: string; user: User; leaseId: string | null }>('/auth/google', { method: 'POST', body: { credential }, draft: true }))
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Connexion Google impossible.')
       setLoading(false)
     }
   }
@@ -123,14 +109,6 @@ export default function RecevoirStep() {
         ) : (
           <>
             <p style={{ margin: 0, fontSize: 19, color: BAI.inkMid }}>{imported ? 'Où voulez-vous le ranger ?' : 'Où voulez-vous le recevoir ?'}</p>
-            <GoogleButton onCredential={google} onReady={setGoogleAvailable} />
-            {googleAvailable ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: 14, color: BAI.inkSoft }}>
-                <div style={{ flexGrow: 1, height: 1, background: BAI.rule }} />
-                ou
-                <div style={{ flexGrow: 1, height: 1, background: BAI.rule }} />
-              </div>
-            ) : null}
             <form onSubmit={finish} className="stack" style={{ gap: 14 }}>
               <TextField label="Votre email" name="email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vous@email.fr" />
               <Button type="submit" full loading={loading}>

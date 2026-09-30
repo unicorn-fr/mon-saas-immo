@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { BAI } from '../constants/bailio-tokens'
-import { GoogleButton } from '../components/GoogleButton'
 import { SimplePage } from '../components/SiteChrome'
 import { Button, Notice, Spinner, TextField } from '../components/ui'
 import { api, ApiError } from '../lib/api'
@@ -15,13 +13,12 @@ interface Session {
 }
 
 export default function Connexion() {
-  const { signIn, user } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [googleAvailable, setGoogleAvailable] = useState(false)
 
   useEffect(() => {
     if (user) navigate('/espace', { replace: true })
@@ -41,16 +38,6 @@ export default function Connexion() {
     }
   }
 
-  async function google(credential: string) {
-    try {
-      const s = await api<Session>('/auth/google', { method: 'POST', body: { credential } })
-      signIn(s.sessionToken, s.user)
-      navigate('/espace', { replace: true })
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Connexion Google impossible.')
-    }
-  }
-
   return (
     <SimplePage title="Se connecter">
       <div className="stack" style={{ gap: 24, maxWidth: 480 }}>
@@ -61,14 +48,6 @@ export default function Connexion() {
         ) : (
           <>
             <p style={{ margin: 0 }}>Pas de mot de passe : nous vous envoyons un lien de connexion par email.</p>
-            <GoogleButton onCredential={google} onReady={setGoogleAvailable} />
-            {googleAvailable ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: 14, color: BAI.inkSoft }}>
-                <div style={{ flexGrow: 1, height: 1, background: BAI.rule }} />
-                ou
-                <div style={{ flexGrow: 1, height: 1, background: BAI.rule }} />
-              </div>
-            ) : null}
             <form onSubmit={submit} className="stack" style={{ gap: 14 }}>
               <TextField label="Votre email" name="email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
               <Button type="submit" full loading={loading}>

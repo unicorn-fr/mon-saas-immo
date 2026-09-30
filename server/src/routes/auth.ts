@@ -1,6 +1,5 @@
 import { Router, type Request } from 'express'
 import { rateLimit } from 'express-rate-limit'
-import { OAuth2Client } from 'google-auth-library'
 import { z } from 'zod'
 import type { User } from '@prisma/client'
 import { prisma } from '../db.js'
@@ -57,10 +56,6 @@ async function draftIdIfAny(req: Request): Promise<string | null> {
   return (await draftFromRequest(req)).id
 }
 
-router.get('/config', (_req, res) => {
-  res.json({ success: true, data: { googleClientId: env.GOOGLE_CLIENT_ID ?? null } })
-})
-
 /**
  * « Télécharger mon bail » : l'espace est créé avec l'email, sans mot de passe.
  * Si l'adresse a déjà un compte, on n'ouvre rien : un lien de confirmation est envoyé.
@@ -113,38 +108,6 @@ router.post('/magic-link/verify', limiter, async (req, res) => {
   const sessionTokenValue = await createSession(user.id)
   const fresh = await prisma.user.findUniqueOrThrow({ where: { id: user.id } })
   res.json({ success: true, data: { sessionToken: sessionTokenValue, user: publicUser(fresh), leaseId } })
-})
-
-// Connexion Google (Google Identity Services, jeton d'identité).
-router.post('/google', limiter, optionalUser, async (req, res) => {
-  if (!env.GOOGLE_CLIENT_ID) throw new HttpError(503, 'La connexion Google n’est pas disponible.')
-  const { credential } = z.object({ credential: z.string().min(20) }).parse(req.body)
-  const client = new OAuth2Client(env.GOOGLE_CLIENT_ID)
-  const ticket = await client.verifyIdToken({ idToken: credential, audience: env.GOOGLE_CLIENT_ID }).catch(() => null)
-  const payload = ticket?.getPayload()
-  if (!payload?.email || !payload.email_verified || !payload.sub) throw new HttpError(401, 'Connexion Google refusée.')
-  const email = payload.email.toLowerCase()
-
-  const byGoogle = await prisma.user.findUnique({ where: { googleId: payload.sub } })
-  const user =
-    byGoogle ??
-    (await prisma.user.upsert({
-      where: { email },
-      update: { googleId: payload.sub, emailVerifiedAt: new Date() },
-      create: {
-        email,
-        googleId: payload.sub,
-        emailVerifiedAt: new Date(),
-        firstName: payload.given_name ?? null,
-        lastName: payload.family_name ?? null,
-      },
-    }))
-
-  const draftId = await draftIdIfAny(req)
-  const leaseId = draftId ? (await createLeaseFromDraft(user, draftId)).lease.id : null
-  const token = await createSession(user.id)
-  const fresh = await prisma.user.findUniqueOrThrow({ where: { id: user.id } })
-  res.json({ success: true, data: { sessionToken: token, user: publicUser(fresh), leaseId } })
 })
 
 router.get('/me', requireUser, (req, res) => {

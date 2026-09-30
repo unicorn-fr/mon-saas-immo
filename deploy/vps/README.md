@@ -1,58 +1,73 @@
-# Mettre l'API Bailio en ligne sur un VPS (Infomaniak)
+# Bailio sur un VPS (Infomaniak)
 
-Un seul serveur fait tourner l'API, la base PostgreSQL (non exposée sur internet) et le HTTPS (Caddy, certificat automatique).
-Le site reste sur Vercel. Durée : environ 30 minutes.
+Un seul serveur, en Suisse, fait tout tourner :
+- **Caddy** : sert le site (bailio.eu), le HTTPS (certificats automatiques) et relaie `/api` vers l'API ;
+- **l'API** : bail, quittances, rappels, et la lecture des baux importés (Tesseract, sur le serveur) ;
+- **PostgreSQL** : jamais exposée sur internet.
 
-## 1. Commander le serveur (Infomaniak)
+Aucun service extérieur ne reçoit les documents des propriétaires. Seul Resend reçoit les emails à envoyer.
 
-- Produit : **VPS Lite**, système **Ubuntu 24.04**, **2 Go de RAM minimum** (le script ajoute 2 Go de mémoire de secours).
-- Dans le Manager Infomaniak → **Régler le Firewall** : ouvrez les ports **80** et **443** (TCP), en plus du 22 (SSH).
-- À la commande, ajoutez votre **clé SSH** (plus sûr qu'un mot de passe ; le script désactive alors les mots de passe SSH).
-- Notez l'**adresse IP** du serveur.
+## Mettre à jour (serveur déjà installé)
 
-## 2. Faire pointer api.bailio.eu vers le serveur (Ionos)
+```bash
+ssh -i ~/.ssh/bailio_infomaniak ubuntu@IP_DU_SERVEUR
+sudo /opt/bailio/deploy/vps/update.sh
+```
 
-Ionos → Domaines → bailio.fr → DNS → Ajouter un enregistrement :
-- type **A**, nom d'hôte **api**, valeur = **l'IP du serveur**.
-- (si le serveur a une IPv6 : type **AAAA**, nom **api**, valeur = l'IPv6)
+La première fois après le passage du site sur le serveur, `update.sh` ajoute seul à `.env` :
+`SITE_DOMAIN=bailio.eu`, `SITE_REDIRECT_DOMAINS=www.bailio.eu`, et passe `CLIENT_URL` à `https://bailio.eu`.
 
-Ne touchez pas aux enregistrements existants de bailio.fr (ils pointent vers Vercel).
+## Faire pointer bailio.eu vers le serveur (zone DNS Infomaniak)
 
-## 3. Installer
+Manager Infomaniak → Domaines → bailio.eu → Zone DNS :
 
-Connectez-vous au serveur (`ssh root@IP`, ou `ssh ubuntu@IP` puis `sudo -i`), puis :
+| Type | Nom | Valeur |
+|---|---|---|
+| A | (vide, « @ ») | IP du serveur (IPv4) |
+| AAAA | (vide, « @ ») | IPv6 du serveur (si vous en avez une) |
+| A | www | IP du serveur (IPv4) |
+| AAAA | www | IPv6 du serveur |
+| A / AAAA | api | IP du serveur (déjà en place) |
+
+Supprimez l'ancien enregistrement **A 216.198.79.1** (Vercel) et le **CNAME www** vers vercel-dns.
+Le certificat HTTPS est obtenu tout seul par Caddy quelques minutes après la propagation.
+
+Vérification : https://bailio.eu affiche le site, https://www.bailio.eu redirige vers https://bailio.eu,
+https://bailio.eu/health affiche `{"ok":true}`.
+
+## bailio.fr (en attendant la récupération du compte Ionos)
+
+bailio.fr pointe encore vers Vercel. Dans Vercel → projet → Settings → Domains :
+retirez bailio.eu et www.bailio.eu, puis pour **bailio.fr** et **www.bailio.fr** choisissez
+« Redirect to another domain » → `https://bailio.eu` (308). Vercel ne sert plus alors que cette redirection.
+
+Quand l'accès Ionos sera récupéré : faites pointer bailio.fr et www (A/AAAA) vers l'IP du serveur, puis dans `.env` :
+`SITE_REDIRECT_DOMAINS=www.bailio.eu, bailio.fr, www.bailio.fr` et relancez `update.sh`. Vous pourrez alors supprimer le projet Vercel.
+
+## Première installation (nouveau serveur)
+
+- Produit : **VPS Lite**, **Ubuntu 24.04**, **2 Go de RAM minimum** (le script ajoute 2 Go de mémoire de secours).
+- Manager Infomaniak → **Firewall** : ouvrez **80** et **443** (TCP), en plus du 22 (SSH). Ajoutez votre **clé SSH** à la commande.
+- DNS : voir plus haut.
+- Sur le serveur :
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/unicorn-fr/mon-saas-immo/main/deploy/vps/install.sh -o install.sh
-bash install.sh
+sudo bash install.sh
 ```
 
-Si le téléchargement échoue (dépôt privé), ouvrez `deploy/vps/install.sh` sur GitHub, copiez son contenu,
-puis sur le serveur : `nano install.sh`, collez, enregistrez, et `bash install.sh`.
-
-Le script :
-- met le système à jour et active les mises à jour de sécurité automatiques ;
-- ferme tous les ports sauf SSH, HTTP et HTTPS, et bloque les tentatives de connexion répétées (fail2ban) ;
-- installe Docker, récupère le code (il vous demandera d'ajouter une clé de déploiement GitHub si le dépôt est privé) ;
-- crée le fichier `.env` avec un mot de passe de base aléatoire, et vous l'ouvre pour compléter les emails (SMTP Ionos) ;
-- démarre l'API, la base et le HTTPS, et programme une sauvegarde de la base chaque nuit (14 jours conservés).
-
-Vérification : https://api.bailio.eu/health doit afficher `{"ok":true}`.
-
-## 4. Brancher le site (Vercel)
-
-Vercel → projet **bailio** → Settings → Environment Variables :
-- `VITE_API_URL` = `https://api.bailio.eu`
-
-Puis Deployments → dernier déploiement → **Redeploy**.
+Le script met le système à jour (mises à jour de sécurité automatiques), ferme tous les ports sauf SSH/HTTP/HTTPS,
+active fail2ban, installe Docker, crée `.env` (mot de passe de base aléatoire), démarre tout et programme une sauvegarde
+de la base chaque nuit (14 jours conservés).
 
 ## Au quotidien
 
 | Besoin | Commande (sur le serveur) |
 |---|---|
-| Mettre à jour Bailio après un push sur `main` | `/opt/bailio/deploy/vps/update.sh` |
-| Voir les journaux | `cd /opt/bailio/deploy/vps && docker compose logs -f api` |
-| Sauvegarder maintenant | `/opt/bailio/deploy/vps/backup.sh` |
-| Restaurer une sauvegarde | `gunzip -c /opt/bailio-backups/bailio-AAAA-MM-JJ.sql.gz \| docker compose exec -T db psql -U bailio -d bailio` |
+| Mettre à jour Bailio après un push sur `main` | `sudo /opt/bailio/deploy/vps/update.sh` |
+| Voir les journaux | `cd /opt/bailio/deploy/vps && sudo docker compose logs -f api` (ou `caddy`) |
+| Sauvegarder maintenant | `sudo /opt/bailio/deploy/vps/backup.sh` |
+| Restaurer une sauvegarde | `gunzip -c /opt/bailio-backups/bailio-AAAA-MM-JJ.sql.gz \| sudo docker compose exec -T db psql -U bailio -d bailio` |
 
-Conseil : copiez régulièrement `/opt/bailio-backups` ailleurs (par exemple Swiss Backup d'Infomaniak) : une sauvegarde sur le même serveur ne protège pas d'une panne du serveur.
+Conseil : copiez régulièrement `/opt/bailio-backups` ailleurs (par exemple Swiss Backup d'Infomaniak) : une sauvegarde
+sur le même serveur ne protège pas d'une panne du serveur.

@@ -1,6 +1,9 @@
-# API Bailio (Railway). Le site est déployé séparément sur Vercel (dossier client/).
+# API Bailio (VPS, voir deploy/vps). Le site est construit à part (deploy/vps/Dockerfile.caddy).
 FROM node:20-slim
-RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
+# openssl : Prisma. tesseract-ocr(-fra) et poppler-utils : lecture des baux importés, sur le serveur.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl tesseract-ocr tesseract-ocr-fra poppler-utils \
+  && rm -rf /var/lib/apt/lists/*
 WORKDIR /app/server
 COPY server/package.json server/package-lock.json ./
 RUN npm ci

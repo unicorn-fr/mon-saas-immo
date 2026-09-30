@@ -91,8 +91,8 @@ mkdir -p "$BACKUP_DIR" && chmod 700 "$BACKUP_DIR"
 echo "15 3 * * * root $COMPOSE_DIR/backup.sh >> /var/log/bailio-backup.log 2>&1" > /etc/cron.d/bailio-backup
 chmod +x "$COMPOSE_DIR/backup.sh" "$COMPOSE_DIR/update.sh"
 
-DOMAIN=$(grep '^API_DOMAIN=' .env | cut -d= -f2)
+DOMAIN=$(grep '^SITE_DOMAIN=' .env | cut -d= -f2)
 say "Terminé."
-echo "Vérification dans une minute : https://$DOMAIN/health doit afficher {\"ok\":true}"
+echo "Vérification dans une minute : https://${DOMAIN:-bailio.eu} doit afficher le site, et /health {\"ok\":true}"
 echo "Journaux de l'API :  cd $COMPOSE_DIR && docker compose logs -f api"
 echo "Mettre à jour :      $COMPOSE_DIR/update.sh"

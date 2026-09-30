@@ -1,53 +1,23 @@
-import Anthropic from '@anthropic-ai/sdk'
-import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod'
 import { Document, Image, Page, renderToBuffer } from '@react-pdf/renderer'
 import { createElement } from 'react'
-import { z } from 'zod'
-import { env } from '../env.js'
 import type { DraftData } from '../domain/lease.js'
 import { HttpError } from '../lib/http.js'
 import { searchAddress } from '../lib/geo.js'
+import { documentText, ocrAvailable, type UploadedFile } from './import/ocr.js'
+import { parseLease, type Extraction } from './import/parse.js'
 
-// Ce que l'IA doit lire dans un bail signé. Tout est facultatif : ce qui n'est pas lisible reste vide.
-const extractionSchema = z.object({
-  isLease: z.boolean().describe("true si le document est bien un contrat de location d'habitation"),
-  type: z.enum(['UNFURNISHED', 'FURNISHED']).nullable().describe('UNFURNISHED = location vide (nue), FURNISHED = meublée'),
-  property: z.object({
-    address: z.string().nullable().describe('Adresse complète du logement loué'),
-    surface: z.number().nullable().describe('Surface habitable en m²'),
-    rooms: z.number().int().nullable().describe('Nombre de pièces principales'),
-    dpeClass: z.enum(['A', 'B', 'C', 'D', 'E', 'F', 'G']).nullable(),
-  }),
-  landlord: z.object({
-    firstName: z.string().nullable(),
-    lastName: z.string().nullable(),
-    address: z.string().nullable().describe('Domicile du bailleur'),
-  }),
-  tenants: z.array(z.object({ firstName: z.string().nullable(), lastName: z.string().nullable(), email: z.string().nullable() })),
-  rent: z.object({
-    rentEuros: z.number().nullable().describe('Loyer mensuel hors charges, en euros'),
-    chargesEuros: z.number().nullable().describe('Provision ou forfait de charges mensuel, en euros'),
-    depositEuros: z.number().nullable().describe('Dépôt de garantie, en euros'),
-    startDate: z.string().nullable().describe("Date de prise d'effet au format AAAA-MM-JJ"),
-    paymentDay: z.number().int().nullable().describe('Jour du mois où le loyer est payé (1 à 28)'),
-  }),
-})
-type Extraction = z.infer<typeof extractionSchema>
+export type { UploadedFile }
 
-const SYSTEM = `Tu lis des contrats de location d'habitation français (loi du 6 juillet 1989) pour un propriétaire bailleur.
-Extrais uniquement ce qui est écrit dans le document. N'invente rien : si une information est absente, illisible ou ambiguë, renvoie null.
-Les montants sont en euros, sans symbole. Les dates au format AAAA-MM-JJ.`
-
-export interface UploadedFile {
-  buffer: Buffer
-  mimetype: string
-  originalname: string
-}
+/**
+ * Import d'un bail déjà signé. Le document est lu **sur nos serveurs**, sans aucun service extérieur :
+ * reconnaissance de caractères (Tesseract) puis lecture par règles (services/import/parse.ts).
+ * Seule l'adresse du logement est vérifiée auprès de la Base Adresse Nationale (service public).
+ */
 
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png'])
 
-export function importAvailable(): boolean {
-  return Boolean(env.ANTHROPIC_API_KEY)
+export function importAvailable(): Promise<boolean> {
+  return ocrAvailable()
 }
 
 /** Un PDF est conservé tel quel ; des photos sont réunies dans un seul PDF A4 (une page par photo, marges de 24 pt). */
@@ -77,40 +47,35 @@ export function validateFiles(files: UploadedFile[]): void {
   }
 }
 
+/** Nombre d'informations utiles trouvées : en dessous de 2, la lecture n'a rien donné d'exploitable. */
+function foundCount(x: Extraction): number {
+  return [
+    x.type, x.property.address, x.property.surface, x.property.rooms, x.landlord.lastName, x.tenants[0]?.lastName,
+    x.rent.rentEuros, x.rent.chargesEuros, x.rent.depositEuros, x.rent.startDate,
+  ].filter((v) => v !== null && v !== undefined).length
+}
+
 export async function extractLease(files: UploadedFile[]): Promise<Extraction> {
-  if (!env.ANTHROPIC_API_KEY) throw new HttpError(503, "La lecture automatique n'est pas encore disponible.")
-  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY })
-
-  const content: Anthropic.Beta.BetaContentBlockParam[] = files.map((f) =>
-    f.mimetype === 'application/pdf'
-      ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: f.buffer.toString('base64') } }
-      : { type: 'image', source: { type: 'base64', media_type: f.mimetype as 'image/jpeg' | 'image/png', data: f.buffer.toString('base64') } },
-  )
-  content.push({ type: 'text', text: 'Voici le bail. Extrais les informations demandées.' })
-
-  const response = await client.beta.messages.parse({
-    model: env.ANTHROPIC_MODEL,
-    max_tokens: 16000,
-    system: SYSTEM,
-    betas: ['server-side-fallback-2026-07-01'],
-    fallbacks: 'default',
-    output_config: { effort: 'medium', format: betaZodOutputFormat(extractionSchema) },
-    messages: [{ role: 'user', content }],
-  })
-
-  if (response.stop_reason === 'refusal' || !response.parsed_output) {
-    throw new HttpError(422, "Nous n'avons pas pu lire ce document. Essayez avec une photo plus nette ou un PDF.")
-  }
-  if (!response.parsed_output.isLease) {
+  const { text, scanned } = await documentText(files)
+  const extraction = parseLease(text)
+  if (!extraction.isLease) {
+    if (text.replace(/\s/g, '').length < 300) {
+      throw new HttpError(422, scanned
+        ? "Nous n'avons pas réussi à lire ces photos. Reprenez-les bien à plat, en pleine lumière, une page par photo."
+        : "Nous n'avons pas trouvé de texte dans ce document.")
+    }
     throw new HttpError(422, "Ce document ne ressemble pas à un bail d'habitation.")
   }
-  return response.parsed_output
+  if (foundCount(extraction) < 2) {
+    throw new HttpError(422, "Nous n'avons pas pu lire ce bail. Essayez avec des photos plus nettes, ou saisissez-le en 4 questions.")
+  }
+  return extraction
 }
 
 const toCents = (euros: number | null) => (euros === null || euros < 0 ? undefined : Math.round(euros * 100))
 const orUndef = <T,>(v: T | null) => (v === null ? undefined : v)
 
-/** Convertit la lecture de l'IA en données de brouillon ; l'adresse est rapprochée de la Base Adresse Nationale. */
+/** Convertit la lecture en données de brouillon ; l'adresse est rapprochée de la Base Adresse Nationale. */
 export async function extractionToDraft(x: Extraction): Promise<DraftData> {
   let property: DraftData['property'] = {
     address: orUndef(x.property.address),
@@ -126,19 +91,20 @@ export async function extractionToDraft(x: Extraction): Promise<DraftData> {
       // l'adresse lue est conservée telle quelle
     }
   }
-  const startOk = x.rent.startDate && /^\d{4}-\d{2}-\d{2}$/.test(x.rent.startDate)
   const day = x.rent.paymentDay
+  const g = x.guarantor
   return {
     source: 'import',
     type: orUndef(x.type),
     property,
     landlord: { firstName: orUndef(x.landlord.firstName), lastName: orUndef(x.landlord.lastName), address: orUndef(x.landlord.address) },
-    tenants: x.tenants.map((t) => ({ firstName: orUndef(t.firstName), lastName: orUndef(t.lastName), email: orUndef(t.email) })),
+    tenants: x.tenants.slice(0, 6).map((t) => ({ firstName: orUndef(t.firstName), lastName: orUndef(t.lastName), email: orUndef(t.email) })),
+    guarantor: g && (g.firstName || g.lastName) ? { firstName: orUndef(g.firstName), lastName: orUndef(g.lastName), address: orUndef(g.address) } : null,
     rent: {
       rentCents: toCents(x.rent.rentEuros),
       chargesCents: toCents(x.rent.chargesEuros) ?? 0,
       depositCents: toCents(x.rent.depositEuros),
-      startDate: startOk ? x.rent.startDate! : undefined,
+      startDate: orUndef(x.rent.startDate),
       paymentDay: day && day >= 1 && day <= 28 ? day : 5,
     },
   }

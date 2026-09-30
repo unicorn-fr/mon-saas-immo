@@ -2,25 +2,32 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { SimplePage } from '../../components/SiteChrome'
+import { CONTACT_EMAIL, FOUNDER_LINKEDIN } from '../../config'
 
 const H2 = ({ children }: { children: ReactNode }) => (
   <h2 style={{ margin: '36px 0 12px', fontSize: 20, fontWeight: 700, color: BAI.ink }}>{children}</h2>
 )
-const Todo = ({ children }: { children: ReactNode }) => <mark style={{ background: BAI.caramelLight, color: BAI.caramelDark, padding: '0 4px' }}>{children}</mark>
+const Mail = () => <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
 
 export function MentionsLegales() {
   return (
     <SimplePage title="Mentions légales">
       <H2>Éditeur du site</H2>
       <p>
-        Le site bailio.fr est édité par <Todo>[dénomination et forme juridique]</Todo>, <Todo>[adresse du siège]</Todo>,
-        immatriculée sous le numéro <Todo>[SIREN]</Todo>. Directeur de la publication : Enzo Mercier.
-        Contact : <a href="mailto:contact@bailio.fr">contact@bailio.fr</a>.
+        Bailio est édité par Enzo Mercier, personne physique, fondateur du service, à Montpellier.
+        Profil professionnel : <a href={FOUNDER_LINKEDIN} rel="noopener">linkedin.com/in/enzo-mercier</a>.
+        Contact : <Mail />.
       </p>
+      <p>
+        L'entreprise qui exploitera Bailio est en cours de création. Sa dénomination, son adresse et son numéro
+        d'immatriculation figureront ici dès qu'elle sera immatriculée.
+      </p>
+      <p>Directeur de la publication : Enzo Mercier.</p>
       <H2>Hébergement</H2>
       <p>
-        Site : Vercel Inc. (États-Unis). Application et base de données : Railway Corporation (États-Unis).
-        Emails : Resend (États-Unis). <Todo>[adresses postales des hébergeurs à compléter]</Todo>
+        Le site, l'application et la base de données sont hébergés en Suisse par Infomaniak Network SA,
+        rue Eugène-Marziano 25, 1227 Les Acacias (Genève), Suisse (infomaniak.com). La Suisse est reconnue par la
+        Commission européenne comme offrant un niveau de protection des données équivalent à celui de l'Union européenne.
       </p>
       <H2>Propriété intellectuelle</H2>
       <p>La marque Bailio, le site et ses contenus sont protégés. Les modèles de documents suivent les contrats types publiés par l'État.</p>
@@ -33,7 +40,7 @@ export function MentionsLegales() {
 export function Conditions() {
   return (
     <SimplePage title="Conditions d'utilisation">
-      <p>En vigueur au 29 septembre 2026.</p>
+      <p>En vigueur au 30 septembre 2026.</p>
       <H2>1. Le service</H2>
       <p>
         Bailio aide les propriétaires bailleurs particuliers à préparer leurs baux d'habitation (location vide ou meublée,
@@ -41,7 +48,7 @@ export function Conditions() {
       </p>
       <H2>2. Votre compte</H2>
       <p>
-        Votre espace est créé avec votre adresse email. La connexion se fait par un lien envoyé par email ou avec Google.
+        Votre espace est créé avec votre adresse email. Il n'y a pas de mot de passe : la connexion se fait par un lien envoyé à cette adresse.
         Vous êtes responsable des informations que vous saisissez : elles sont reprises telles quelles dans vos documents.
       </p>
       <H2>3. Les documents</H2>
@@ -54,8 +61,9 @@ export function Conditions() {
       <p>Le premier bail est gratuit. Le prix de l'offre de suivi est indiqué sur la page d'accueil avant toute souscription.</p>
       <H2>5. Lecture automatique des documents</H2>
       <p>
-        Lorsque vous importez un bail, son contenu est lu par un service d'intelligence artificielle pour remplir les
-        informations à votre place. Vous vérifiez toujours le résultat avant de l'enregistrer.
+        Lorsque vous importez un bail, il est lu automatiquement sur nos propres serveurs, sans être transmis à un
+        autre service, pour remplir les informations à votre place. Vous vérifiez toujours le résultat avant de
+        l'enregistrer.
       </p>
       <H2>6. Résiliation</H2>
       <p>Vous pouvez supprimer votre compte à tout moment depuis « Mon compte ». Toutes vos données sont alors effacées.</p>
@@ -78,12 +86,22 @@ export function Confidentialite() {
       <p>Nous ne demandons jamais de pièces que la loi interdit d'exiger d'un locataire.</p>
       <H2>Pourquoi</H2>
       <p>Uniquement pour préparer vos documents et vous rappeler vos échéances (exécution du service). Nous ne revendons aucune donnée et n'affichons aucune publicité.</p>
+      <H2>Où sont vos données</H2>
+      <p>
+        En Suisse, sur un serveur qui nous est dédié chez Infomaniak (Genève). La Suisse offre un niveau de protection
+        reconnu équivalent à celui de l'Union européenne. Les échanges avec le site sont chiffrés (HTTPS) et la base de
+        données n'est pas accessible depuis internet.
+      </p>
       <H2>Qui y a accès</H2>
       <p>
-        Vous seul. Nos prestataires techniques traitent les données pour notre compte : Vercel et Railway (hébergement),
-        Resend (envoi des emails), Google (si vous vous connectez avec Google) et Anthropic (lecture automatique des baux
-        importés, uniquement lorsque vous l'utilisez). Ces prestataires sont situés aux États-Unis ; les transferts sont
-        encadrés par les clauses contractuelles types de la Commission européenne.
+        Vous seul. Les baux que vous importez sont lus sur notre serveur : ils ne sont transmis à aucun service
+        d'intelligence artificielle ni à aucun autre tiers. Seule l'adresse du logement est vérifiée auprès de la Base
+        Adresse Nationale, un service public français.
+      </p>
+      <p>
+        Un seul prestataire traite des données pour notre compte : Resend, qui achemine les emails que Bailio vous envoie
+        (liens de connexion, rappels). Il ne reçoit que votre adresse email et le contenu de ces messages. Resend est
+        situé aux États-Unis ; ce transfert est encadré par les clauses contractuelles types de la Commission européenne.
       </p>
       <H2>Combien de temps</H2>
       <ul>
@@ -93,11 +111,15 @@ export function Confidentialite() {
       <H2>Vos droits</H2>
       <p>
         Vous pouvez télécharger toutes vos données ou supprimer votre compte depuis « Mon compte ». Pour toute autre
-        demande (rectification, opposition, limitation) : <a href="mailto:contact@bailio.fr">contact@bailio.fr</a>. Vous
+        demande (rectification, opposition, limitation) : <Mail />. Vous
         pouvez aussi saisir la CNIL (cnil.fr).
       </p>
       <H2>Cookies</H2>
-      <p>Bailio n'utilise pas de cookie publicitaire ni de mesure d'audience. Votre session est gardée dans votre navigateur, sur votre appareil.</p>
+      <p>
+        Bailio n'utilise aucun cookie : ni publicité, ni mesure d'audience, ni service tiers chargé dans vos pages (les
+        polices de caractères sont servies par notre propre serveur). Votre session est gardée dans votre navigateur,
+        sur votre appareil.
+      </p>
     </SimplePage>
   )
 }
@@ -106,11 +128,15 @@ export function Contact() {
   return (
     <SimplePage title="Contact">
       <p>
-        Une question, un souci avec un document ? Écrivez-nous à <a href="mailto:contact@bailio.fr">contact@bailio.fr</a>.
+        Une question, un souci avec un document ? Écrivez-nous à <Mail />.
         Nous répondons sous deux jours ouvrés.
       </p>
       <p>
-        Bailio a été fondé à Montpellier par <a href="https://enzomercier.fr">Enzo Mercier</a>.
+        Bailio a été fondé à Montpellier par{' '}
+        <a href={FOUNDER_LINKEDIN} rel="noopener">
+          Enzo Mercier
+        </a>
+        .
       </p>
     </SimplePage>
   )

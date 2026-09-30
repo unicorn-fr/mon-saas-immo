@@ -1,0 +1,15 @@
+# Site Bailio (fichiers statiques) servi par Caddy, qui assure aussi le HTTPS et relaie /api vers l'API.
+FROM node:20-slim AS site
+WORKDIR /app/client
+COPY client/package.json client/package-lock.json ./
+RUN npm ci
+COPY client ./
+# API sur la même adresse que le site (/api) : aucune requête vers un autre domaine.
+ARG VITE_API_URL=
+ARG VITE_SITE_URL=https://bailio.eu
+ENV VITE_API_URL=$VITE_API_URL VITE_SITE_URL=$VITE_SITE_URL
+RUN npm run build
+
+FROM caddy:2-alpine
+COPY deploy/vps/Caddyfile /etc/caddy/Caddyfile
+COPY --from=site /app/client/dist /srv/site

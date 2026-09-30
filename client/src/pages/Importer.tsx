@@ -10,7 +10,7 @@ import type { Draft } from '../lib/types'
 
 const ACCEPT = 'image/jpeg,image/png,application/pdf'
 
-/** « J'ai déjà un bail signé » : photos ou PDF, lus par l'IA, puis vérifiés par le propriétaire. */
+/** « J'ai déjà un bail signé » : photos ou PDF, lus sur le serveur, puis vérifiés par le propriétaire. */
 export default function Importer() {
   const navigate = useNavigate()
   const { reset, ensure, replace } = useDraft()
@@ -41,7 +41,7 @@ export default function Importer() {
       await ensure()
       const form = new FormData()
       files.forEach((f) => form.append('files', f))
-      const draft = await api<Draft>('/drafts/current/import', { method: 'POST', form, draft: true })
+      const draft = await api<Draft>('/drafts/current/import', { method: 'POST', form, draft: true, timeout: 300_000 })
       replace(draft)
       navigate('/commencer/relecture')
     } catch (err) {
@@ -60,6 +60,7 @@ export default function Importer() {
           <h1 style={display('clamp(40px, 5vw, 56px)')}>Importez votre bail signé</h1>
           <p style={{ margin: 0, fontSize: 18, lineHeight: 1.55, color: BAI.inkMid }}>
             Prenez chaque page en photo, ou déposez le PDF. Bailio lit le bail et remplit tout : le logement, le locataire, le loyer, les dates. Vous vérifiez ensuite.
+            Pour une bonne lecture : la page à plat, en pleine lumière, une photo par page.
           </p>
 
           {available === false ? (
@@ -75,7 +76,7 @@ export default function Importer() {
             <div className="stack" style={{ alignItems: 'center', gap: 16, background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 24, padding: 48, textAlign: 'center' }} role="status">
               <Spinner size={32} />
               <span style={{ fontSize: 18, fontWeight: 600 }}>Bailio lit votre bail…</span>
-              <span style={{ fontSize: 15, color: BAI.inkSoft }}>Cela peut prendre jusqu'à une minute. Ne fermez pas cette page.</span>
+              <span style={{ fontSize: 15, color: BAI.inkSoft }}>Comptez quelques secondes par page. Ne fermez pas cette page.</span>
             </div>
           ) : (
             <>

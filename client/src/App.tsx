@@ -1,9 +1,11 @@
-import { lazy, Suspense, useEffect, type ReactNode } from 'react'
+import { Suspense, useEffect, type ReactNode } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { BAI } from './constants/bailio-tokens'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { Spinner } from './components/ui'
 import { AuthProvider, useAuth } from './lib/auth'
 import { DraftProvider, useDraft } from './lib/draft'
+import { lazyPage as lazy } from './lib/lazyPage'
 import Home from './pages/Home'
 
 const TypeStep = lazy(() => import('./pages/tunnel/TypeStep'))
@@ -61,6 +63,17 @@ export default function App() {
       <AuthProvider>
         <DraftProvider>
           <ScrollToTop />
+          <Pages />
+        </DraftProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  )
+}
+
+function Pages() {
+  const { pathname } = useLocation()
+  return (
+    <ErrorBoundary resetKey={pathname}>
           <Suspense fallback={<Loading />}>
             <Routes>
               <Route path="/" element={<Home />} />
@@ -85,8 +98,6 @@ export default function App() {
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
-        </DraftProvider>
-      </AuthProvider>
-    </BrowserRouter>
+    </ErrorBoundary>
   )
 }

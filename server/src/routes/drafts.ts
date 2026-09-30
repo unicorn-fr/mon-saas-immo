@@ -94,11 +94,11 @@ router.get('/current/preview.pdf', optionalUser, async (req, res) => {
   res.send(pdf)
 })
 
-router.get('/import/available', (_req, res) => {
-  res.json({ success: true, data: { available: importAvailable() } })
+router.get('/import/available', async (_req, res) => {
+  res.json({ success: true, data: { available: await importAvailable() } })
 })
 
-// « J'ai déjà un bail signé » : l'IA lit le document et remplit le brouillon.
+// « J'ai déjà un bail signé » : le document est lu sur le serveur et remplit le brouillon.
 router.post('/current/import', importLimiter, optionalUser, upload.array('files', 10), async (req, res) => {
   const draft = await draftFromRequest(req)
   if (draft.leaseId) throw new HttpError(409, 'Ce bail a déjà été créé.')

@@ -14,8 +14,9 @@
 | Base | Prisma 6 + PostgreSQL, **migrations versionnées** (`prisma migrate`) |
 | PDF | `@react-pdf/renderer`, côté serveur (`server/src/pdf/`) |
 | Emails | SMTP (Ionos) ou Resend (`lib/email.ts`), sinon affichage dans les logs |
-| Auth | Sans mot de passe : lien magique par email, ou Google. Session = jeton aléatoire (empreinte en base), en-tête `Authorization: Bearer` |
-| IA | `@anthropic-ai/sdk`, lecture des baux importés (`services/importLease.ts`) |
+| Auth | Sans mot de passe : lien magique par email uniquement. Session = jeton aléatoire (empreinte en base), en-tête `Authorization: Bearer` |
+| Import de baux | Sur le serveur uniquement : Tesseract (OCR, `fra`) + poppler + `sharp` (redressement, éclairage), puis règles (`services/import/parse.ts`). Aucune donnée envoyée à un service d'IA |
+| Hébergement | VPS Infomaniak (`deploy/vps`) : Caddy (site + HTTPS + `/api`), API, PostgreSQL |
 
 ## Règles de design (maquette)
 

@@ -1,8 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /espace
-Disallow: /commencer
-Disallow: /connexion
-Disallow: /reprendre
-Disallow: /bienvenue
-Sitemap: https://bailio.fr/sitemap.xml

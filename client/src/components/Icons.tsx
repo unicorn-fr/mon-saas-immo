@@ -49,9 +49,3 @@ export const Sofa = ({ size = 56, color = BAI.owner, strokeWidth = 1.4 }: IconPr
 export const Upload = ({ size = 28, color = BAI.owner, strokeWidth = 1.7 }: IconProps) => (
   <svg {...base(size, color, strokeWidth)}><path d="M12 16V4" /><path d="m7 9 5-5 5 5" /><path d="M4 16v4h16v-4" /></svg>
 )
-export const Google = ({ size = 20, color = BAI.ink }: IconProps) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden style={{ flexShrink: 0 }}>
-    <circle cx="12" cy="12" r="9" fill="none" stroke={color} strokeWidth="2" />
-    <path d="M12 12h8" stroke={color} strokeWidth="2" />
-  </svg>
-)
