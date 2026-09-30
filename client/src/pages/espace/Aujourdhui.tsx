@@ -1,242 +1,242 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
-import { EspaceLayout } from '../../components/EspaceLayout'
-import { Check } from '../../components/Icons'
-import { Button, Notice, Spinner, display, overline } from '../../components/ui'
-import { api, ApiError, downloadPdf, pdfUrl } from '../../lib/api'
-import { useAuth } from '../../lib/auth'
-import { useDraft } from '../../lib/draft'
-import { addMonths, dateFr, euros, parseIso } from '../../lib/lease'
-import type { Reminder, Today, User } from '../../lib/types'
+import { AppShell, useSpace } from '../../components/AppShell'
+import { display } from '../../components/ui'
+import { Btn, Card, LoadError, Loader, Pill, TextLink, toneColor, useLoad, useToast } from '../../components/kit'
+import { Home, Page, Upload } from '../../components/Icons'
+import { api } from '../../lib/api'
+import { dayTitle, eurosCents, monthName, plural } from '../../lib/format'
+import type { Task, TodayView } from '../../lib/space'
 
-const TAGS: Record<Reminder['type'], { label: string; color: string; bg: string }> = {
-  RENT_RECEIPT: { label: 'Loyer', color: BAI.green, bg: BAI.greenLight },
-  RENT_REVISION: { label: 'Révision du loyer', color: BAI.owner, bg: BAI.ownerTint },
-  INSURANCE: { label: 'Assurance', color: BAI.caramelDark, bg: BAI.caramelLight },
-  LEASE_END: { label: 'Fin du bail', color: BAI.error, bg: BAI.errorLight },
-  INVENTORY_ENTRY: { label: 'État des lieux', color: BAI.owner, bg: BAI.ownerTint },
-}
-
-function monthOf(iso: string) {
-  const d = parseIso(iso)
-  return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1 }
-}
-
-const MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
-
-/** « d'octobre 2026 », « de novembre 2026 ». */
-function monthOfFr(iso: string) {
-  const { year, month } = monthOf(iso)
-  const name = MONTHS[month - 1]
-  return `${/^[aeiou]/.test(name) ? "d'" : 'de '}${name} ${year}`
-}
-
-function mailto(to: string | null, subject: string, body: string) {
-  return `mailto:${to ?? ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-}
-
-function describe(r: Reminder): { title: string; text: ReactNode } {
-  const total = euros(r.rentCents + r.chargesCents)
-  switch (r.type) {
-    case 'RENT_RECEIPT':
-      return r.status === 'DONE'
-        ? { title: `Quittance de ${r.tenantName} prête`, text: `Loyer ${monthOfFr(r.dueDate)} reçu · ${total}` }
-        : { title: `Loyer de ${r.tenantName} attendu le ${dateFr(r.dueDate, false)}`, text: `${total} · ${r.address}` }
-    case 'INSURANCE':
-      return { title: `Attestation d'assurance à demander à ${r.tenantName}`, text: "Le locataire doit être assuré. Il vous remet son attestation à l'entrée, puis chaque année." }
-    case 'RENT_REVISION':
-      return { title: `Révision du loyer le ${dateFr(r.dueDate)}`, text: r.revision?.message ?? "Le loyer peut être révisé une fois par an, selon l'indice de l'INSEE." }
-    case 'LEASE_END':
-      return {
-        title: `Fin du bail : décidez avant le ${dateFr(addMonths(parseIso(r.dueDate), 1))}`,
-        text: 'Sans rien faire, le bail continue tout seul. Pour vendre, reprendre le logement ou pour un motif sérieux, le congé doit être donné à temps.',
-      }
-    case 'INVENTORY_ENTRY':
-      return { title: `État des lieux d'entrée le ${dateFr(r.dueDate, false)}`, text: `À faire avec ${r.tenantName}, pièce par pièce, le jour de la remise des clés.` }
-  }
-}
-
-function ReminderCard({ r, landlord, onChange }: { r: Reminder; landlord: string; onChange: () => void }) {
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const tag = TAGS[r.type]
-  const { title, text } = describe(r)
-  const done = r.status === 'DONE'
-
-  async function mark(action: 'done' | 'undo') {
-    setBusy(true)
-    try {
-      await api(`/reminders/${r.id}/${action}`, { method: 'POST' })
-      onChange()
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Action impossible.')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function receipt() {
-    setBusy(true)
-    try {
-      const { year, month } = monthOf(r.dueDate)
-      downloadPdf(await pdfUrl(`/leases/${r.leaseId}/receipts/${year}/${month}.pdf`), `quittance-${year}-${String(month).padStart(2, '0')}.pdf`)
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Quittance indisponible.')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const actions: ReactNode[] = []
-  if (r.type === 'RENT_RECEIPT' && !done) {
-    actions.push(<Button key="paid" height={44} loading={busy} onClick={() => void mark('done')}>Loyer reçu</Button>)
-  } else if (r.type === 'RENT_RECEIPT' && done) {
-    actions.push(<Button key="pdf" height={44} loading={busy} onClick={() => void receipt()}>Télécharger la quittance</Button>)
-    if (r.tenantEmail)
-      actions.push(
-        <a key="send" href={mailto(r.tenantEmail, `Quittance de loyer ${monthOfFr(r.dueDate)}`, `Bonjour,\n\nVous trouverez ci-joint la quittance de loyer pour le logement situé ${r.address}.\n\nBien cordialement,\n${landlord}`)} style={{ fontSize: 15, fontWeight: 600, textDecoration: 'none', alignSelf: 'center' }}>
-          Préparer l'email
-        </a>,
-      )
-  } else if (r.type === 'INSURANCE' && !done) {
-    actions.push(
-      <a key="ask" href={mailto(r.tenantEmail, "Attestation d'assurance habitation", `Bonjour,\n\nPourriez-vous m'envoyer votre attestation d'assurance habitation pour le logement situé ${r.address} ? La loi prévoit qu'elle soit remise chaque année au propriétaire.\n\nMerci beaucoup,\n${landlord}`)} style={{ ...btnLink }}>
-        Demander
-      </a>,
-    )
-  }
-  if (!done && !(r.type === 'RENT_RECEIPT')) {
-    actions.push(<Button key="done" height={44} variant="light" loading={busy} onClick={() => void mark('done')}>C'est fait</Button>)
-  }
-  if (done) {
-    actions.push(
-      <button key="undo" type="button" onClick={() => void mark('undo')} style={{ background: 'none', border: 'none', color: BAI.inkSoft, fontSize: 14, textDecoration: 'underline', alignSelf: 'center' }}>
-        Annuler
-      </button>,
-    )
-  }
-
+/** « Aujourd'hui » : ce qu'il y a à faire cette semaine, déjà préparé. Maquette « Aujourd'hui ». */
+export default function Aujourdhui() {
   return (
-    <li style={{ background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 18, padding: '20px 22px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, opacity: done && r.type !== 'RENT_RECEIPT' ? 0.6 : 1 }} className="col-md">
-      <div className="stack" style={{ gap: 6, minWidth: 0 }}>
-        <span style={{ alignSelf: 'flex-start', fontSize: 12, fontWeight: 700, color: tag.color, background: tag.bg, padding: '5px 10px', borderRadius: 999, display: 'flex', gap: 6, alignItems: 'center' }}>
-          {done ? <Check size={12} color={tag.color} /> : null}
-          {tag.label}
-        </span>
-        <span style={{ fontSize: 17, fontWeight: 600 }}>{title}</span>
-        <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.45 }}>{text}</span>
-        {error ? <span role="alert" style={{ fontSize: 14, color: BAI.error }}>{error}</span> : null}
-      </div>
-      <div style={{ display: 'flex', gap: 10, flexShrink: 0, flexWrap: 'wrap' }}>{actions}</div>
-    </li>
+    <AppShell>
+      <TodayContent />
+    </AppShell>
   )
 }
 
-const btnLink = { textDecoration: 'none', background: BAI.owner, color: BAI.surface, height: 44, padding: '0 22px', borderRadius: 14, fontWeight: 600, fontSize: 16, display: 'inline-flex', alignItems: 'center' } as const
+function TodayContent() {
+  const { setTaskCount } = useSpace()
+  const { data, error, loading, reload } = useLoad(() => api<TodayView>('/today'))
+  useEffect(() => {
+    if (data) setTaskCount(data.tasks.length)
+  }, [data, setTaskCount])
 
-export default function Aujourdhui() {
-  const { user, setUser } = useAuth()
-  const { reset } = useDraft()
-  const navigate = useNavigate()
-  const [today, setToday] = useState<Today | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  if (loading && !data) return <Loader />
+  if (error || !data) return <LoadError message={error ?? ''} retry={reload} />
+  if (data.counts.properties === 0 && data.counts.leases === 0) return <FirstSteps name={data.user.firstName} />
 
-  const load = useCallback(() => {
-    api<Today>('/today')
-      .then(setToday)
-      .catch((err) => setError(err instanceof ApiError ? err.message : 'Chargement impossible.'))
-  }, [])
-  useEffect(load, [load])
-
-  async function activate() {
-    setUser(await api<User>('/account/follow-up', { method: 'POST' }))
-  }
-
-  if (error) return <EspaceLayout><Notice tone="warning">{error}</Notice></EspaceLayout>
-  if (!today) return <EspaceLayout><Spinner size={28} /></EspaceLayout>
-
-  const landlord = today.leases[0] ? `${today.leases[0].landlord.firstName} ${today.leases[0].landlord.lastName}` : [user?.firstName, user?.lastName].filter(Boolean).join(' ')
-  const todo = today.reminders.filter((r) => r.status === 'TODO')
-  const recentlyDone = today.reminders.filter((r) => r.status === 'DONE')
-  const s = today.summary
-
+  const month = monthName(Number(data.stats.month.slice(5)))
+  const first = data.user.firstName
   return (
-    <EspaceLayout>
-      <div className="stack" style={{ gap: 40 }}>
-        <div className="stack" style={{ gap: 10 }}>
-          <h1 style={display('clamp(40px, 5vw, 56px)')}>Bonjour{user?.firstName ? ` ${user.firstName}` : ''}.</h1>
-          <p style={{ margin: 0, fontSize: 18, color: BAI.inkMid }}>
-            {today.leases.length === 0
-              ? 'Ajoutez votre premier logement pour que Bailio prépare vos documents.'
-              : s.rentsExpected
-                ? `Ce mois : ${s.rentsExpected} loyer${s.rentsExpected > 1 ? 's' : ''} attendu${s.rentsExpected > 1 ? 's' : ''}, ${s.rentsReceived} reçu${s.rentsReceived > 1 ? 's' : ''}.`
-                : `${today.leases.length} logement${today.leases.length > 1 ? 's' : ''} suivi${today.leases.length > 1 ? 's' : ''}.`}
-          </p>
+    <>
+      <div className="col-md" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <span className="hide-md" style={{ fontSize: 15, color: BAI.inkSoft }}>
+            {dayTitle()}
+          </span>
+          <h1 style={display('clamp(38px, 5vw, 52px)')}>Bonjour{first ? ` ${first}` : ''}.</h1>
+          <span className="only-md" style={{ fontSize: 15, color: BAI.inkMid }}>
+            {data.tasks.length ? `${plural(data.tasks.length, 'action')} cette semaine, déjà préparée${data.tasks.length > 1 ? 's' : ''}.` : 'Rien à faire cette semaine.'}
+          </span>
         </div>
-
-        {!user?.followUpActive && today.leases.length > 0 ? (
-          <div className="col-md" style={{ background: BAI.caramelLight, border: `1px solid ${BAI.caramel}`, borderRadius: 18, padding: '18px 22px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
-            <span style={{ fontSize: 16 }}>Recevez un email avant chaque échéance : activez le suivi.</span>
-            <Button variant="dark" height={44} onClick={() => void activate()}>Activer le suivi</Button>
+        {data.stats.rentsExpected ? (
+          <div className="hide-md" style={{ display: 'flex', gap: 12 }}>
+            <MiniStat label={`Loyers de ${month}`} value={`${data.stats.rentsReceived} reçu${data.stats.rentsReceived > 1 ? 's' : ''} sur ${data.stats.rentsExpected}`} />
+            <MiniStat label="Encaissé ce mois" value={eurosCents(data.stats.cashedCents)} />
           </div>
-        ) : null}
-
-        <section className="stack" style={{ gap: 16 }} aria-labelledby="todo-title">
-          <h2 id="todo-title" style={{ ...overline, margin: 0 }}>À faire</h2>
-          {todo.length === 0 ? (
-            <p style={{ margin: 0, fontSize: 17, color: BAI.inkMid, background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 18, padding: '22px 24px' }}>
-              Rien à faire pour l'instant. Bailio vous préviendra à l'approche de la prochaine échéance.
-            </p>
-          ) : (
-            <ul className="stack" style={{ listStyle: 'none', margin: 0, padding: 0, gap: 12 }}>
-              {todo.map((r) => <ReminderCard key={r.id} r={r} landlord={landlord} onChange={load} />)}
-            </ul>
-          )}
-          {recentlyDone.length ? (
-            <ul className="stack" style={{ listStyle: 'none', margin: 0, padding: 0, gap: 12 }} aria-label="Fait récemment">
-              {recentlyDone.map((r) => <ReminderCard key={r.id} r={r} landlord={landlord} onChange={load} />)}
-            </ul>
-          ) : null}
-        </section>
-
-        <section className="stack" style={{ gap: 16 }} aria-labelledby="homes-title">
-          <h2 id="homes-title" style={{ ...overline, margin: 0 }}>Vos logements</h2>
-          <ul className="stack" style={{ listStyle: 'none', margin: 0, padding: 0, gap: 12 }}>
-            {today.leases.map((l) => (
-              <li key={l.id}>
-                <Link to={`/espace/baux/${l.id}`} style={{ textDecoration: 'none', color: BAI.ink, background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 18, padding: '20px 22px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
-                  <span className="stack" style={{ gap: 4, minWidth: 0 }}>
-                    <span style={{ fontSize: 17, fontWeight: 700 }}>{l.property.address}</span>
-                    <span style={{ fontSize: 15, color: BAI.inkMid }}>
-                      {l.tenants.map((t) => `${t.firstName} ${t.lastName}`).join(', ')} · {euros(l.rentCents + l.chargesCents)} par mois
-                    </span>
-                  </span>
-                  <span aria-hidden style={{ fontSize: 22, color: BAI.owner }}>→</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-          <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-            <Button variant="outline" height={52} onClick={() => { reset(); navigate('/commencer') }}>+ Créer un bail</Button>
-            <Button variant="ghost" height={52} onClick={() => { reset(); navigate('/importer') }}>Importer un bail signé</Button>
-          </div>
-        </section>
-
-        {today.upcoming.length ? (
-          <section className="stack" style={{ gap: 12 }} aria-labelledby="later-title">
-            <h2 id="later-title" style={{ ...overline, margin: 0 }}>Plus tard</h2>
-            <ul className="stack" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-              {today.upcoming.map((r) => (
-                <li key={r.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 16, padding: '12px 0', borderTop: `1px solid ${BAI.dividerSoft}`, fontSize: 15 }}>
-                  <span>{TAGS[r.type].label} · {r.tenantName}</span>
-                  <span style={{ color: BAI.inkSoft, whiteSpace: 'nowrap' }}>{dateFr(r.dueDate)}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
         ) : null}
       </div>
-    </EspaceLayout>
+
+      <div className="split-aside">
+        <section className="grow" style={{ gap: 14 }}>
+          <div className="hide-md" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>À faire cette semaine</h2>
+            {data.tasks.length ? <span style={{ fontSize: 14, color: BAI.inkSoft }}>Tout est préparé, il vous reste à valider</span> : null}
+          </div>
+          {data.tasks.length ? (
+            data.tasks.map((t) => <TaskCard key={t.id} task={t} onChange={reload} />)
+          ) : (
+            <Card>
+              <span style={{ fontSize: 17, fontWeight: 600 }}>Rien à faire cette semaine.</span>
+              <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>Bailio surveille les loyers, les dates du bail et les attestations. Vous serez prévenu dès qu’il y a quelque chose à valider.</span>
+            </Card>
+          )}
+        </section>
+
+        <aside className="aside">
+          {data.upcoming.length ? (
+            <Card dark title="Prochaines échéances" style={{ gap: 16 }}>
+              {data.upcoming.map((u, i) => (
+                <div key={i} style={{ display: 'flex', gap: 14 }}>
+                  <span style={{ width: 56, flexShrink: 0, color: BAI.caramel, fontWeight: 700, fontSize: 14 }}>{u.date}</span>
+                  <span style={{ fontSize: 14, lineHeight: 1.45 }}>{u.label}</span>
+                </div>
+              ))}
+            </Card>
+          ) : null}
+          <Card title="Vos logements" action={<TextLink to="/espace/logements" style={{ fontSize: 14 }}>Tout voir</TextLink>}>
+            {data.properties.length ? (
+              data.properties.map((p) => (
+                <Link key={p.id} to={`/espace/logements/${p.id}`} style={{ textDecoration: 'none', color: BAI.ink, display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 15 }}>
+                  <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
+                  <span style={{ color: toneColor(p.status.tone), fontWeight: 600, whiteSpace: 'nowrap' }}>{p.status.label}</span>
+                </Link>
+              ))
+            ) : (
+              <TextLink to="/espace/logements/nouveau">Ajouter un logement</TextLink>
+            )}
+          </Card>
+        </aside>
+      </div>
+    </>
+  )
+}
+
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 14, padding: '14px 20px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <span style={{ fontSize: 13, color: BAI.inkSoft }}>{label}</span>
+      <span style={{ fontSize: 18, fontWeight: 700 }}>{value}</span>
+    </div>
+  )
+}
+
+function TaskCard({ task: t, onChange }: { task: Task; onChange: () => void }) {
+  const toast = useToast()
+  const navigate = useNavigate()
+
+  const run = async (fn: () => Promise<unknown>, done: string) => {
+    try {
+      await fn()
+      toast.show(done)
+      onChange()
+    } catch (e) {
+      toast.error(e)
+    }
+  }
+  const reminder = (action: 'done' | 'snooze', done: string) => run(() => api(`/reminders/${t.reminderId}/${action}`, { method: 'POST' }), done)
+  const letters = (type: string) => navigate(`/espace/baux/${t.leaseId}/courriers?type=${type}`)
+
+  let actions: Array<{ label: string; onClick: () => unknown; variant?: 'primary' | 'outline' | 'ghost' }> = []
+  switch (t.type) {
+    case 'LATE_RENT':
+      actions = [
+        { label: 'Relire la relance', onClick: () => letters('REMINDER') },
+        { label: 'Le loyer est arrivé', variant: 'outline', onClick: () => run(() => api(`/leases/${t.leaseId}/payments`, { method: 'POST', body: { period: t.period } }), 'Loyer enregistré. La quittance est prête dans vos documents.') },
+      ]
+      break
+    case 'PARTIAL_RENT':
+      actions = [
+        { label: 'Le solde est arrivé', onClick: () => run(() => api(`/leases/${t.leaseId}/payments`, { method: 'POST', body: { period: t.period } }), 'Paiement complet enregistré. La quittance remplace le reçu.') },
+        { label: 'Voir le bail', variant: 'outline', onClick: () => navigate(`/espace/baux/${t.leaseId}`) },
+      ]
+      break
+    case 'REVISION':
+      actions = [
+        { label: 'Voir le calcul et la lettre', onClick: () => letters('REVISION') },
+        { label: 'Ne pas réviser cette année', variant: 'outline', onClick: () => reminder('done', 'C’est noté : le loyer reste inchangé cette année.') },
+      ]
+      break
+    case 'INSURANCE':
+      actions = [
+        {
+          label: 'Envoyer la demande par email',
+          onClick: () =>
+            run(async () => {
+              const defaults = await api<{ letter: Record<string, unknown> }>(`/leases/${t.leaseId}/letters/defaults/INSURANCE`)
+              const saved = await api<{ documentId: string }>(`/leases/${t.leaseId}/letters`, { method: 'POST', body: defaults.letter })
+              await api(`/documents/${saved.documentId}/send`, { method: 'POST' })
+            }, 'Demande envoyée à votre locataire.'),
+        },
+        { label: 'Me le rappeler plus tard', variant: 'ghost', onClick: () => reminder('snooze', 'Rappel reporté d’une semaine.') },
+      ]
+      break
+    case 'INVENTORY':
+      actions = [{ label: t.inventoryId ? 'Reprendre l’état des lieux' : 'Préparer l’état des lieux', onClick: () => navigate(t.inventoryId ? `/edl/${t.inventoryId}` : `/espace/baux/${t.leaseId}/etat-des-lieux`) }]
+      break
+    case 'LEASE_END':
+      actions = [
+        { label: 'Préparer un congé', onClick: () => letters('NOTICE_TO_LEAVE') },
+        { label: 'Laisser le bail se renouveler', variant: 'outline', onClick: () => reminder('done', 'C’est noté : le bail sera reconduit.') },
+      ]
+      break
+    case 'CHARGES':
+      actions = [
+        { label: 'Préparer le décompte', onClick: () => letters('CHARGES') },
+        { label: 'Me le rappeler plus tard', variant: 'ghost', onClick: () => reminder('snooze', 'Rappel reporté d’une semaine.') },
+      ]
+      break
+    case 'DRAFT_LEASE':
+      actions = [{ label: 'Reprendre le bail', onClick: () => navigate(`/espace/baux/${t.leaseId}`) }]
+      break
+    case 'INVOICE':
+      break
+  }
+
+  if (t.type === 'INVOICE') {
+    return (
+      <article className="col-md" style={{ background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 18, padding: '22px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <Pill tone="green">{t.tag}</Pill>
+          <span style={{ fontSize: 17, fontWeight: 600, lineHeight: 1.35 }}>{t.title}</span>
+        </div>
+        <Btn variant="outline" to={`/espace/argent/factures/${t.expenseId}`}>
+          Vérifier
+        </Btn>
+      </article>
+    )
+  }
+
+  return (
+    <article style={{ background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 18, padding: 'clamp(18px, 3vw, 22px) clamp(18px, 3vw, 24px)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+        <Pill tone={t.tone}>{t.tag}</Pill>
+        <span className="hide-md" style={{ fontSize: 13, color: BAI.inkSoft }}>
+          {t.place}
+        </span>
+      </div>
+      <div style={{ fontSize: 'clamp(16px, 2vw, 18px)', fontWeight: 600, lineHeight: 1.35 }}>{t.title}</div>
+      {t.text ? <div style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>{t.text}</div> : null}
+      {actions.length ? (
+        <div className="col-md" style={{ display: 'flex', gap: 10, paddingTop: 4, flexWrap: 'wrap' }}>
+          {actions.map((a) => (
+            <Btn key={a.label} variant={a.variant ?? 'primary'} onClick={a.onClick}>
+              {a.label}
+            </Btn>
+          ))}
+        </div>
+      ) : null}
+    </article>
+  )
+}
+
+/** Premier pas : l'espace est vide. Maquette « Premier pas, espace vide ». */
+function FirstSteps({ name }: { name: string | null }) {
+  const cards = [
+    { to: '/espace/logements/nouveau', icon: <Home color={BAI.caramel} size={26} />, title: 'Ajouter un logement', text: 'Quelques questions simples, une à la fois.', main: true },
+    { to: '/importer', icon: <Upload color={BAI.caramel} size={26} />, title: 'Importer un bail signé', text: 'Une photo suffit. Bailio remplit tout.' },
+    { to: '/espace/baux/nouveau', icon: <Page color={BAI.caramel} size={26} />, title: 'Créer un bail', text: 'Bailio vous demande seulement ce qu’il ne sait pas.' },
+  ]
+  return (
+    <>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 'clamp(8px, 3vw, 40px)' }}>
+        <h1 style={display('clamp(42px, 6vw, 60px)')}>Bienvenue{name ? `, ${name}` : ''}.</h1>
+        <p style={{ margin: 0, fontSize: 19, color: BAI.inkMid }}>Par quoi commence-t-on ?</p>
+      </div>
+      <div className="cards-3" style={{ gap: 20 }}>
+        {cards.map((c) => (
+          <Link key={c.to} to={c.to} style={{ textDecoration: 'none', color: BAI.ink, background: BAI.surface, border: c.main ? `2px solid ${BAI.owner}` : `1px solid ${BAI.divider}`, borderRadius: 22, padding: 'clamp(22px, 3vw, 32px)', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <span style={{ width: 52, height: 52, borderRadius: 14, background: BAI.night, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{c.icon}</span>
+            <span style={{ fontSize: 22, fontWeight: 700 }}>{c.title}</span>
+            <span style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.5 }}>{c.text}</span>
+          </Link>
+        ))}
+      </div>
+      <div style={{ fontSize: 15, color: BAI.inkSoft }}>Vous pourrez faire le reste plus tard, rien ne presse.</div>
+    </>
   )
 }

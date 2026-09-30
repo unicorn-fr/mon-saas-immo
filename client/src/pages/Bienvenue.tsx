@@ -8,7 +8,8 @@ import { api, ApiError, downloadPdf, pdfUrl, printPdf } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { useDraft } from '../lib/draft'
 import { addMonths, dateFr, parseIso } from '../lib/lease'
-import type { LeaseDetails, User } from '../lib/types'
+import type { User } from '../lib/types'
+import type { LeaseView } from '../lib/space'
 import { priceLabel } from '../config'
 
 export default function Bienvenue() {
@@ -17,7 +18,7 @@ export default function Bienvenue() {
   const { user, setUser } = useAuth()
   const { reset } = useDraft()
   const navigate = useNavigate()
-  const [lease, setLease] = useState<LeaseDetails | null>(null)
+  const [lease, setLease] = useState<LeaseView | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState<'print' | 'download' | 'followup' | null>(null)
   const url = useRef<string | null>(null)
@@ -26,7 +27,7 @@ export default function Bienvenue() {
   const getPdf = async () => (url.current ??= await pdfUrl(`/leases/${leaseId}/lease.pdf`))
 
   useEffect(() => {
-    api<LeaseDetails>(`/leases/${leaseId}`)
+    api<LeaseView>(`/leases/${leaseId}`)
       .then((l) => {
         setLease(l)
         // Juste après la création : le bail est téléchargé automatiquement.
@@ -80,10 +81,10 @@ export default function Bienvenue() {
   }
 
   const imported = lease.status === 'IMPORTED'
-  const start = parseIso(lease.startDate)
+  const start = parseIso(lease.columns.startDate)
   const revision = addMonths(start, 12)
-  const notice = lease.type === 'UNFURNISHED' ? 6 : 3
-  const firstName = user?.firstName ?? lease.landlord.firstName
+  const notice = lease.computed.noticeMonths
+  const firstName = user?.firstName ?? lease.contract.landlord.firstNames?.split(' ')[0]
   const inventoryFuture = !imported && start.getTime() >= Date.now() - 86_400_000
   const followUpActive = user?.followUpActive
 
@@ -91,7 +92,7 @@ export default function Bienvenue() {
     { title: 'Quittance chaque mois', text: 'Préparée dès que le loyer arrive' },
     { title: 'Assurance du locataire', text: 'Demande préparée chaque année' },
     { title: 'Révision du loyer', text: `Calculée le ${dateFr(revision)}` },
-    { title: 'Fin du bail', text: `Rappel ${notice + 1} mois avant, pour donner congé à temps` },
+    { title: 'Fin du bail', text: notice ? `Rappel ${notice + 1} mois avant, pour donner congé à temps` : 'Rappel avant la date de fin' },
   ]
 
   return (
@@ -119,7 +120,7 @@ export default function Bienvenue() {
           <div className="stack" style={{ gap: 14, paddingTop: 20 }}>
             <span style={overline}>Et maintenant</span>
             {inventoryFuture ? (
-              <Link to={`/espace/baux/${lease.id}`} style={{ textDecoration: 'none', color: BAI.ink, background: BAI.surface, border: `2px solid ${BAI.owner}`, borderRadius: 18, padding: '22px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
+              <Link to={`/espace/baux/${lease.id}/etat-des-lieux`} style={{ textDecoration: 'none', color: BAI.ink, background: BAI.surface, border: `2px solid ${BAI.owner}`, borderRadius: 18, padding: '22px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
                 <span className="stack" style={{ gap: 4 }}>
                   <span style={{ fontSize: 18, fontWeight: 700 }}>Préparer l'état des lieux d'entrée</span>
                   <span style={{ fontSize: 15, color: BAI.inkMid }}>À faire le {dateFr(start, false)}, avec votre locataire</span>
@@ -131,7 +132,7 @@ export default function Bienvenue() {
               type="button"
               onClick={() => {
                 reset()
-                navigate('/commencer')
+                navigate('/espace/logements/nouveau')
               }}
               style={{ textAlign: 'left', color: BAI.ink, background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 18, padding: '22px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}
             >

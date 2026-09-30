@@ -38,6 +38,8 @@ export function parseInvoice(text: string): InvoiceReading {
   // Fournisseur : première ligne significative (souvent en capitales), hors mots « facture », « devis », dates.
   const vendorLine = lines.find((l) => /[A-Za-zÀ-ÿ]{3}/.test(l) && !/^(facture|devis|avoir|date|n°|numero|page|client)/i.test(fold(l)) && l.length <= 60)
   const vendor = vendorLine ? vendorLine.replace(/\s{2,}.*/, '').replace(/[^\p{L}\p{N}' &.-]/gu, ' ').replace(/\s+/g, ' ').trim() : null
+  // « PLOMBERIE GARCIA » → « Plomberie Garcia » (les sigles courts restent en capitales).
+  const vendorName = vendor && vendor === vendor.toUpperCase() ? vendor.split(' ').map((w) => (w.length <= 3 ? w : w[0] + w.slice(1).toLowerCase())).join(' ') : vendor
 
   // Montant : « Total TTC », « Net à payer », « Montant TTC », sinon le plus grand montant en euros.
   let amount: number | null = null
@@ -74,7 +76,7 @@ export function parseInvoice(text: string): InvoiceReading {
   const category = CATEGORY.find(([re]) => re.test(all))?.[1] ?? 'OTHER'
   const tenantRepairHint = TENANT_REPAIRS.find(([re]) => re.test(all))?.[1] ?? null
 
-  return { vendor, amountCents: amount, date, address, description, category, tenantRepairHint }
+  return { vendor: vendorName, amountCents: amount, date, address, description, category, tenantRepairHint }
 }
 
 /** Rapproche une adresse lue d'un logement (numéro + nom de voie, ou code postal + ville). */

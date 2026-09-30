@@ -36,7 +36,7 @@ export function InventoryDocument(i: InventoryInput) {
   const roomTables = (d.rooms ?? []).map((r) => ({
     name: r.name,
     note: r.note,
-    rows: r.items.map((it) => [it.label, it.state ?? '', it.note ?? '', (it.photoIds ?? []).map((pid) => ref(pid, `${r.name} : ${it.label}`)).filter(Boolean).join(', ')]),
+    rows: r.items.map((it) => [it.label, it.state ?? 'Non vérifié', it.note ?? '', (it.photoIds ?? []).map((pid) => ref(pid, `${r.name} : ${it.label}`)).filter(Boolean).join(', ')]),
   }))
 
   return (

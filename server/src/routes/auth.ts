@@ -30,7 +30,7 @@ export function publicUser(u: User) {
   }
 }
 
-async function sendMagicLink(email: string, draftId: string | null): Promise<void> {
+async function sendMagicLink(email: string, draftId: string | null, isNew = false): Promise<void> {
   const token = newToken()
   await prisma.loginToken.create({
     data: { tokenHash: hashToken(token), email, draftId, expiresAt: new Date(Date.now() + LINK_MINUTES * 60_000) },
@@ -45,7 +45,13 @@ async function sendMagicLink(email: string, draftId: string | null): Promise<voi
         ],
         cta: { label: 'Récupérer mon bail', url },
       })
-    : layout({
+    : isNew
+      ? layout({
+          title: 'Bienvenue sur Bailio.',
+          paragraphs: [`Cliquez sur le bouton pour ouvrir votre espace. Ce lien est valable ${LINK_MINUTES} minutes.`, 'Pas de mot de passe à retenir : pour revenir, demandez simplement un nouveau lien.', "Si vous n'avez rien demandé, ignorez cet email."],
+          cta: { label: 'Ouvrir mon espace', url },
+        })
+      : layout({
         title: 'Votre lien de connexion.',
         paragraphs: [`Cliquez sur le bouton pour ouvrir votre espace Bailio. Ce lien est valable ${LINK_MINUTES} minutes.`, "Si vous n'avez rien demandé, ignorez cet email."],
         cta: { label: 'Ouvrir mon espace', url },
@@ -87,10 +93,11 @@ router.post('/finish-draft', limiter, optionalUser, async (req, res) => {
 })
 
 // Connexion par lien magique.
+// Avec « signup », l'espace sera créé au premier clic sur le lien (l'adresse est ainsi vérifiée).
 router.post('/magic-link', limiter, async (req, res) => {
-  const { email } = emailSchema.parse(req.body)
+  const { email, signup } = emailSchema.extend({ signup: z.boolean().optional() }).parse(req.body)
   const user = await prisma.user.findUnique({ where: { email } })
-  if (user) await sendMagicLink(email, null)
+  if (user || signup) await sendMagicLink(email, null, !user)
   // Même réponse que le compte existe ou non (on ne révèle pas les adresses inscrites).
   res.json({ success: true, data: { sent: true } })
 })

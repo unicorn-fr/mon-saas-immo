@@ -39,3 +39,49 @@ img { max-width: 100%; }
 @media print {
   .no-print { display: none !important; }
 }
+
+/* Espace propriétaire : menu latéral sur ordinateur, barre du bas sur téléphone. */
+.shell-main { padding: 48px 56px 64px; box-sizing: border-box; }
+.mobile-only { display: none !important; }
+.sidebar { display: flex; }
+.split-aside { display: flex; gap: 32px; align-items: flex-start; }
+.split-aside > .aside { width: 330px; flex-shrink: 0; display: flex; flex-direction: column; gap: 20px; }
+.split-aside > .aside-wide { width: 440px; flex-shrink: 0; display: flex; flex-direction: column; gap: 20px; }
+.split-aside > .grow { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+.cards-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.stats-bar { display: flex; align-items: center; flex-wrap: wrap; row-gap: 16px; }
+.stats-bar > .stat { padding: 0 28px; border-left: 1px solid var(--line); }
+.stats-bar > .stat:first-child { padding-left: 0; border-left: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.rows > * + * { border-top: 1px solid var(--line); }
+.fiche { display: flex; gap: 32px; padding: 32px 40px; align-items: flex-start; }
+.fiche > aside { width: 300px; flex-shrink: 0; position: sticky; top: 112px; display: flex; flex-direction: column; gap: 14px; }
+.fiche > main { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 24px; }
+.table-row { display: grid; align-items: center; gap: 16px; }
+
+@media (max-width: 1180px) {
+  .split-aside { flex-direction: column; align-items: stretch; }
+  .split-aside > .aside, .split-aside > .aside-wide { width: auto; }
+  .cards-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 1023px) {
+  .sidebar { display: none !important; }
+  .mobile-only { display: flex !important; }
+  .shell-main { padding: 12px 16px calc(112px + env(safe-area-inset-bottom)); gap: 20px !important; }
+  .fiche { flex-direction: column; padding: 20px 16px 96px; gap: 20px; }
+  .fiche > aside { width: auto; position: static; }
+  .fiche-steps { display: none !important; }
+}
+@media (max-width: 768px) {
+  .cards-3 { grid-template-columns: 1fr; }
+  .stats-bar > .stat { padding: 0 16px 0 0; border-left: none; width: calc(50% - 8px); }
+  .table-row { grid-template-columns: 1fr !important; gap: 4px; }
+  .hide-sm { display: none !important; }
+}
+@media (max-width: 768px) {
+  .auth-side { width: auto !important; }
+}
+.toast-wrap { bottom: 28px; }
+@media (max-width: 1023px) {
+  .toast-wrap { bottom: calc(96px + env(safe-area-inset-bottom)); }
+}

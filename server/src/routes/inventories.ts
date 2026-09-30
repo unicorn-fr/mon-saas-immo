@@ -4,6 +4,7 @@ import type { Inventory, User } from '@prisma/client'
 import { prisma } from '../db.js'
 import { env } from '../env.js'
 import { HttpError } from '../lib/http.js'
+import { layout, sendEmail } from '../lib/email.js'
 import { hashToken, newToken } from '../lib/tokens.js'
 import { requireUser } from '../services/session.js'
 import { contractFor, leaseKindOf, leaseOwned, propertyName } from '../services/contract.js'
@@ -92,6 +93,13 @@ router.post('/inventories/:id/sign', async (req, res) => {
   const lease = await leaseOwned(user.id, inv.leaseId)
   const names = input.tenants.map((t) => personName(t, false)).join(' et ')
   await saveGeneratedDocument({ userId: user.id, kind: 'INVENTORY', title: `État des lieux ${inv.kind === 'EXIT' ? 'de sortie' : 'd’entrée'}, ${names}`, pdf, snapshot: input, leaseId: lease.id, propertyId: lease.propertyId })
+  // Chacun reçoit son exemplaire : le locataire (s'il a un email) et le bailleur.
+  const what = `état des lieux ${inv.kind === 'EXIT' ? 'de sortie' : 'd’entrée'}`
+  const mail = layout({ title: `Votre ${what}.`, paragraphs: ['Bonjour,', `Vous trouverez en pièce jointe l’${what} signé du logement situé ${input.propertyAddress}.`, 'Conservez-le : il sert de référence à la fin de la location.'] })
+  const recipients = [...new Set([...(await contractFor(user, lease)).tenants.map((t) => t.email).filter((e): e is string => Boolean(e)), user.email])]
+  for (const to of recipients) {
+    await sendEmail({ to, subject: `${what[0].toUpperCase()}${what.slice(1)} signé`, ...mail, replyTo: user.email, attachments: [{ filename: `etat-des-lieux-${inv.kind === 'EXIT' ? 'sortie' : 'entree'}.pdf`, content: pdf }] }).catch((e) => console.error('Envoi de l’état des lieux impossible', e))
+  }
   if (inv.kind === 'ENTRY') await prisma.reminder.updateMany({ where: { leaseId: lease.id, type: 'INVENTORY_ENTRY', status: 'TODO' }, data: { status: 'DONE', doneAt: new Date() } })
   res.json({ success: true, data: { id: inv.id, status: 'SIGNED' } })
 })

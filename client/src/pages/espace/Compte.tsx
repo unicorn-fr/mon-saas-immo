@@ -1,111 +1,147 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
-import { EspaceLayout } from '../../components/EspaceLayout'
-import { Button, Notice, TextField, display, overline } from '../../components/ui'
-import { api, API_BASE, ApiError, downloadPdf } from '../../lib/api'
-import { SESSION_KEY, storage } from '../../lib/storage'
+import { AppShell } from '../../components/AppShell'
+import { Fields } from '../../components/FlowLayout'
+import { SignaturePad } from '../../components/media'
+import { Btn, Card, ChipButton, Input, Line, LoadError, Loader, Modal, PageHead, Progress, TextLink, Toggle, useToast } from '../../components/kit'
+import { api, downloadPdf, pdfUrl } from '../../lib/api'
 import { useAuth } from '../../lib/auth'
+import type { LandlordProfile } from '../../lib/contract'
+import { useFiche } from '../../lib/fiche'
+import type { ProfileView } from '../../lib/space'
 import type { User } from '../../lib/types'
 
+/** Mon compte. Maquette « Mon compte ». */
 export default function Compte() {
   const { user, setUser, signOut } = useAuth()
   const navigate = useNavigate()
-  const [firstName, setFirstName] = useState(user?.firstName ?? '')
-  const [lastName, setLastName] = useState(user?.lastName ?? '')
-  const [saved, setSaved] = useState(false)
-  const [confirmDelete, setConfirmDelete] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  async function save(body: Record<string, unknown>) {
-    setError(null)
-    try {
-      setUser(await api<User>('/account', { method: 'PATCH', body }))
-      setSaved(true)
-      window.setTimeout(() => setSaved(false), 2500)
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Enregistrement impossible.')
-    }
-  }
-
-  async function exportData() {
-    const res = await fetch(`${API_BASE}/api/account/export`, {
-      headers: { Authorization: `Bearer ${storage.get(SESSION_KEY) ?? ''}` },
-    })
-    if (!res.ok) return setError('Export impossible.')
-    downloadPdf(URL.createObjectURL(await res.blob()), 'bailio-mes-donnees.json')
-  }
-
-  async function remove() {
-    try {
-      await api('/account', { method: 'DELETE' })
-      storage.set(SESSION_KEY, null)
-      await signOut()
-      navigate('/', { replace: true })
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Suppression impossible.')
-    }
-  }
-
+  const toast = useToast()
+  const [confirm, setConfirm] = useState(false)
+  const { file: p, set, completion, loadError, reload } = useFiche<LandlordProfile>(
+    () => api<ProfileView>('/profile').then((v) => ({ file: v.profile, completion: v.completion })),
+    async (f) => {
+      const v = await api<ProfileView>('/profile', { method: 'PUT', body: f })
+      if (v.user) setUser(v.user)
+      return { completion: v.completion }
+    },
+  )
   if (!user) return null
 
+  const follow = user.followUpActive
+  const weekly = follow && user.notifyWeekly !== false
+  const urgent = follow && user.notifyUrgent !== false
+  const prefs = async (body: { notifyWeekly?: boolean; notifyUrgent?: boolean }) => {
+    const w = body.notifyWeekly ?? weekly
+    const u = body.notifyUrgent ?? urgent
+    try {
+      setUser(await api<User>('/account', { method: 'PATCH', body: { ...body, followUp: w || u } }))
+      toast.show('Préférences enregistrées.')
+    } catch (e) {
+      toast.error(e)
+    }
+  }
+  const exportData = async () => {
+    try {
+      downloadPdf(await pdfUrl('/account/export', { timeout: 60_000 }), 'bailio-mes-donnees.json')
+    } catch (e) {
+      toast.error(e)
+    }
+  }
+  const remove = async () => {
+    try {
+      await api('/account', { method: 'DELETE' })
+      await signOut()
+      navigate('/', { replace: true })
+    } catch (e) {
+      toast.error(e)
+    }
+  }
+
   return (
-    <EspaceLayout>
-      <div className="stack" style={{ gap: 40, maxWidth: 640 }}>
-        <h1 style={display('clamp(40px, 5vw, 56px)')}>Mon compte</h1>
-
-        <section className="stack" style={{ gap: 16 }}>
-          <h2 style={{ ...overline, margin: 0 }}>Vous</h2>
-          <p style={{ margin: 0, fontSize: 16, color: BAI.inkMid }}>Email de connexion : <strong style={{ color: BAI.ink }}>{user.email}</strong></p>
-          <div className="col-md" style={{ display: 'flex', gap: 16 }}>
-            <TextField label="Prénom" name="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-            <TextField label="Nom" name="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} />
-          </div>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            <Button height={52} onClick={() => void save({ firstName, lastName })}>Enregistrer</Button>
-            {saved ? <span role="status" style={{ color: BAI.green, fontSize: 15 }}>Enregistré</span> : null}
-          </div>
-        </section>
-
-        <section className="stack" style={{ gap: 12 }}>
-          <h2 style={{ ...overline, margin: 0 }}>Suivi par email</h2>
-          <p style={{ margin: 0, fontSize: 16, color: BAI.inkMid, lineHeight: 1.55 }}>
-            {user.followUpActive
-              ? 'Activé : vous recevez un email quelques jours avant chaque échéance (loyer, assurance, révision, fin de bail).'
-              : "Désactivé : vos échéances restent visibles dans « Aujourd'hui », mais vous ne recevez pas d'email."}
-          </p>
-          <div>
-            <Button height={48} variant={user.followUpActive ? 'light' : 'dark'} onClick={() => void save({ followUp: !user.followUpActive })}>
-              {user.followUpActive ? 'Désactiver les emails' : 'Activer le suivi'}
-            </Button>
-          </div>
-        </section>
-
-        <section className="stack" style={{ gap: 12 }}>
-          <h2 style={{ ...overline, margin: 0 }}>Vos données</h2>
-          <p style={{ margin: 0, fontSize: 16, color: BAI.inkMid, lineHeight: 1.55 }}>
-            Vous pouvez récupérer toutes vos données, ou supprimer votre compte. La suppression efface définitivement vos logements, vos baux et vos documents.
-          </p>
-          <div className="col-md" style={{ display: 'flex', gap: 12 }}>
-            <Button height={48} variant="outline" onClick={() => void exportData()}>Télécharger mes données</Button>
-            <Button height={48} variant="light" onClick={() => void signOut().then(() => navigate('/'))}>Me déconnecter</Button>
-          </div>
-          {confirmDelete ? (
-            <Notice tone="warning">
-              Supprimer définitivement votre compte et tous vos documents ? Cette action ne peut pas être annulée.
-              <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
-                <Button height={44} style={{ background: BAI.error, borderColor: BAI.error }} onClick={() => void remove()}>Oui, tout supprimer</Button>
-                <Button height={44} variant="ghost" onClick={() => setConfirmDelete(false)}>Annuler</Button>
+    <AppShell>
+      <PageHead title="Mon compte" sub={`Connecté avec ${user.email}`} />
+      {loadError ? (
+        <LoadError message={loadError} retry={reload} />
+      ) : !p || !completion ? (
+        <Loader />
+      ) : (
+        <div className="split-aside" style={{ gap: 24 }}>
+          <div className="grow">
+            <Card title="Vous, en tant que bailleur" action={<TextLink to="/espace/compte/profil" style={{ fontSize: 14 }}>Profil complet</TextLink>}>
+              <Fields>
+                <Input label="Prénom" value={p.firstNames} onChange={(v) => set({ firstNames: v })} />
+                <Input label="Nom" value={p.lastName} onChange={(v) => set({ lastName: v })} />
+              </Fields>
+              <Input label="Adresse" value={p.address} onChange={(v) => set({ address: v })} hint="Obligatoire dans le bail : c’est là que votre locataire peut vous écrire." />
+              <Fields>
+                <Input label="Code postal" value={p.postalCode} inputMode="numeric" maxLength={5} onChange={(v) => set({ postalCode: v })} />
+                <Input label="Ville" value={p.city} onChange={(v) => set({ city: v })} />
+              </Fields>
+              <fieldset style={{ margin: 0, padding: 0, border: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <legend style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Vous louez</legend>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <ChipButton pressed={p.kind !== 'SCI' && p.kind !== 'COMPANY'} onClick={() => set({ kind: p.kind === 'COUPLE' ? 'COUPLE' : 'PERSON' })}>
+                    En mon nom
+                  </ChipButton>
+                  <ChipButton pressed={p.kind === 'SCI'} onClick={() => set({ kind: 'SCI' })}>
+                    Via une SCI
+                  </ChipButton>
+                </div>
+              </fieldset>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 4 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
+                  <span style={{ color: BAI.inkSoft }}>Profil complété</span>
+                  <span style={{ fontWeight: 700, color: BAI.owner }}>{completion.percent} %</span>
+                </div>
+                <Progress percent={completion.percent} />
               </div>
-            </Notice>
-          ) : (
-            <button type="button" onClick={() => setConfirmDelete(true)} style={{ alignSelf: 'flex-start', background: 'none', border: 'none', padding: 0, color: BAI.error, fontSize: 15, textDecoration: 'underline' }}>
-              Supprimer mon compte
-            </button>
-          )}
-        </section>
-        {error ? <Notice tone="warning">{error}</Notice> : null}
-      </div>
-    </EspaceLayout>
+            </Card>
+            <Card title="Votre signature">
+              <SignaturePad value={p.signature} onChange={(v) => set({ signature: v ?? '' })} label="Signez ici avec la souris ou le doigt" />
+              <span style={{ fontSize: 13, color: BAI.inkSoft }}>Ajoutée sur vos quittances. Jamais sur un bail sans votre accord.</span>
+            </Card>
+          </div>
+          <aside className="aside" style={{ width: 400 }}>
+            <Card title="Abonnement">
+              <Line label="Formule" value="Bailio, tout inclus" />
+              <Line label="Prix" value="Offert pendant le lancement" />
+              <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.45 }}>Rien ne vous sera prélevé sans votre accord. Vous serez prévenu par email avant toute mise en place d’un abonnement.</span>
+            </Card>
+            <Card title="Emails de Bailio" style={{ gap: 0 }}>
+              <Toggle border={false} checked={weekly} onChange={(v) => prefs({ notifyWeekly: v })} label="Récapitulatif du lundi" sub="Ce qui arrive dans la semaine : loyers, révisions, attestations." />
+              <Toggle checked={urgent} onChange={(v) => prefs({ notifyUrgent: v })} label="Alertes urgentes" sub="Loyer en retard, échéance dans les trois jours." />
+            </Card>
+            <Card title="Vos données">
+              <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Vos données sont hébergées en Suisse, chez Infomaniak, et ne sont jamais revendues.</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-start' }}>
+                <TextLink onClick={exportData}>Tout exporter</TextLink>
+                <TextLink onClick={() => setConfirm(true)} style={{ color: BAI.error }}>
+                  Supprimer mon compte
+                </TextLink>
+                <TextLink onClick={() => void signOut().then(() => navigate('/'))}>Se déconnecter</TextLink>
+              </div>
+            </Card>
+          </aside>
+        </div>
+      )}
+      <Modal
+        open={confirm}
+        onClose={() => setConfirm(false)}
+        title="Supprimer votre compte ?"
+        actions={
+          <>
+            <Btn variant="outline" onClick={() => setConfirm(false)}>
+              Annuler
+            </Btn>
+            <Btn onClick={remove} style={{ background: BAI.error, borderColor: BAI.error }}>
+              Oui, tout supprimer
+            </Btn>
+          </>
+        }
+      >
+        <p style={{ margin: 0, fontSize: 16, color: BAI.inkMid, lineHeight: 1.55 }}>Vos logements, vos locataires, vos baux et tous vos documents seront effacés définitivement. Pensez à tout exporter avant.</p>
+      </Modal>
+    </AppShell>
   )
 }

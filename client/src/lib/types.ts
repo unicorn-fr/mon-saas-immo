@@ -45,49 +45,6 @@ export interface User {
   lastName: string | null
   emailVerified: boolean
   followUpActive: boolean
-}
-
-export type ReminderType = 'RENT_RECEIPT' | 'INSURANCE' | 'RENT_REVISION' | 'LEASE_END' | 'INVENTORY_ENTRY'
-
-export interface Reminder {
-  id: string
-  type: ReminderType
-  status: 'TODO' | 'DONE'
-  dueDate: string
-  leaseId: string
-  address: string
-  tenantName: string
-  tenantEmail: string | null
-  rentCents: number
-  chargesCents: number
-  revision: { blocked: boolean; message: string; newRentCents?: number } | null
-}
-
-export interface LeaseSummary {
-  id: string
-  type: LeaseType
-  status: 'ACTIVE' | 'ENDED' | 'IMPORTED'
-  startDate: string
-  endDate: string
-  rentCents: number
-  chargesCents: number
-  depositCents: number
-  paymentDay: number
-  property: { id: string; address: string; city: string | null; surface: number | null; rooms: number | null; dpeClass: string | null }
-  landlord: { firstName: string; lastName: string; address: string }
-  tenants: Array<{ firstName: string; lastName: string; email?: string }>
-  guarantor: { firstName: string; lastName: string; address: string } | null
-}
-
-export interface LeaseDetails extends LeaseSummary {
-  documents: Array<{ id: string; kind: 'LEASE' | 'LEASE_IMPORTED'; version: number; title: string; createdAt: string }>
-  reminders: Array<{ id: string; type: ReminderType; dueDate: string }>
-}
-
-export interface Today {
-  user: User
-  summary: { leases: number; rentsExpected: number; rentsReceived: number }
-  reminders: Reminder[]
-  upcoming: Reminder[]
-  leases: LeaseSummary[]
+  notifyWeekly?: boolean
+  notifyUrgent?: boolean
 }

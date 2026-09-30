@@ -1,5 +1,8 @@
 import type { NextFunction, Request, Response } from 'express'
-import { ZodError } from 'zod'
+import { ZodError, z } from 'zod'
+
+// Messages de validation en français : ils sont affichés tels quels au propriétaire.
+z.config(z.locales.fr())
 
 export class HttpError extends Error {
   constructor(public status: number, message: string, public details?: unknown) {
