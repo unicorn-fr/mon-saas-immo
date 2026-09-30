@@ -10,15 +10,15 @@ export function SiteHeader() {
     <header className="container" style={{ height: 'clamp(72px, 9vw, 88px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
       <Logo size={30} />
       <nav aria-label="Menu" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(12px, 3vw, 32px)', fontSize: 15, fontWeight: 500, whiteSpace: 'nowrap' }}>
-        <a href="/#tarifs" className="hide-md" style={{ textDecoration: 'none', color: BAI.inkMid }}>
+        <a href="/#tarifs" className="hide-md" style={{ textDecoration: 'none', color: BAI.inkMid, display: 'inline-block', padding: '13px 2px' }}>
           Tarif
         </a>
         {user ? (
-          <Link to="/espace" style={{ textDecoration: 'none', color: BAI.inkMid }}>
+          <Link to="/espace" style={{ textDecoration: 'none', color: BAI.inkMid, display: 'inline-block', padding: '13px 2px' }}>
             Mon espace
           </Link>
         ) : (
-          <Link to="/connexion" style={{ textDecoration: 'none', color: BAI.inkMid }}>
+          <Link to="/connexion" style={{ textDecoration: 'none', color: BAI.inkMid, display: 'inline-block', padding: '13px 2px' }}>
             Se connecter
           </Link>
         )}
@@ -41,9 +41,9 @@ export function SiteFooter() {
     <footer style={{ background: BAI.night }}>
       <div className="container col-md" style={{ padding: '40px clamp(20px, 6.6vw, 96px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20 }}>
         <Logo size={28} color={BAI.caramel} />
-        <nav aria-label="Liens légaux" className="wrap-md" style={{ display: 'flex', gap: 28, fontSize: 14, rowGap: 12 }}>
+        <nav aria-label="Liens légaux" className="wrap-md" style={{ display: 'flex', columnGap: 28, rowGap: 0, fontSize: 14 }}>
           {links.map((l) => (
-            <Link key={l.to} to={l.to} style={{ color: BAI.onDark, textDecoration: 'none' }}>
+            <Link key={l.to} to={l.to} style={{ color: BAI.onDark, textDecoration: 'none', display: 'inline-block', padding: '13px 0' }}>
               {l.label}
             </Link>
           ))}
