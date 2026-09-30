@@ -3,6 +3,7 @@ import cors from 'cors'
 import helmet from 'helmet'
 import { allowedOrigins, env } from './env.js'
 import { errorHandler, HttpError } from './lib/http.js'
+import { limitPerVisitor } from './lib/rateLimit.js'
 import draftRoutes from './routes/drafts.js'
 import authRoutes from './routes/auth.js'
 import accountRoutes from './routes/account.js'
@@ -29,6 +30,13 @@ export function createApp() {
   app.use(express.json({ limit: '2mb' }))
 
   app.get('/health', (_req, res) => res.json({ ok: true }))
+  // Erreurs survenues dans le navigateur d'un visiteur : écrites dans le journal du serveur pour les corriger.
+  app.post('/api/client-errors', limitPerVisitor(10, 30), express.json({ limit: '20kb' }), (req, res) => {
+    const b = (req.body ?? {}) as Record<string, unknown>
+    const s = (v: unknown, n: number) => String(v ?? '').slice(0, n)
+    console.error('[navigateur]', JSON.stringify({ message: s(b.message, 500), where: s(b.where, 60), url: s(b.url, 300), ua: s(req.headers['user-agent'], 300), stack: s(b.stack, 3000) }))
+    res.status(204).end()
+  })
   app.use('/api/drafts', draftRoutes)
   app.use('/api/auth', authRoutes)
   app.use('/api/geo', geoRoutes)

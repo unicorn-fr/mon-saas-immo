@@ -214,7 +214,7 @@ function Guarantee({ f, set }: { f: TenantFile; set: (p: Partial<TenantFile>) =>
             value={full}
             onChange={(v) => {
               const parts = v.trim().split(/\s+/)
-              set({ guarantor: { ...g, firstNames: parts.length > 1 ? parts.slice(0, -1).join(' ') : parts[0] ?? '', lastName: parts.length > 1 ? parts.at(-1) : '' } })
+              set({ guarantor: { ...g, firstNames: parts.length > 1 ? parts.slice(0, -1).join(' ') : parts[0] ?? '', lastName: parts.length > 1 ? parts[parts.length - 1] : '' } })
             }}
             hint="Le prénom d’abord, puis le nom."
           />

@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
+import { recoverOnce, reportError } from './lib/recover'
 // Polices servies par le site lui-même : aucune requête vers Google (adresse IP des visiteurs).
 import '@fontsource/cormorant-garamond/latin-600-italic.css'
 import '@fontsource/cormorant-garamond/latin-700-italic.css'
@@ -22,7 +23,16 @@ if ('serviceWorker' in navigator) {
     .catch(() => undefined)
 }
 
-createRoot(document.getElementById('root')!).render(
+window.addEventListener('error', (e) => reportError(e.error ?? e.message, 'window'))
+window.addEventListener('unhandledrejection', (e) => reportError(e.reason, 'promise'))
+
+createRoot(document.getElementById('root')!, {
+  // Erreur hors de toute page : sans cela React viderait l'écran (page beige). On recharge une fois.
+  onUncaughtError: (error) => {
+    reportError(error, 'racine')
+    recoverOnce()
+  },
+}).render(
   <StrictMode>
     <App />
   </StrictMode>,

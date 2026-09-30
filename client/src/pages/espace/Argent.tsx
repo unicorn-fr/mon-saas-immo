@@ -139,7 +139,7 @@ function explain(d: MoneyView): string {
   if (!short.length) return 'Tous les loyers attendus ont été encaissés.'
   const names = short.map((m) => monthName(m.month))
   const missing = short.reduce((a, m) => a + m.expectedCents - m.receivedCents, 0)
-  return `${names.length > 1 ? `${names.slice(0, -1).join(', ')} et ${names.at(-1)}` : names[0]} : ${eurosCents(missing)} de loyers attendus ne sont pas encore enregistrés.`
+  return `${names.length > 1 ? `${names.slice(0, -1).join(', ')} et ${names[names.length - 1]}` : names[0]} : ${eurosCents(missing)} de loyers attendus ne sont pas encore enregistrés.`
 }
 
 function Expenses({ data, onOpen }: { data: MoneyView; onOpen: (e: Expense) => void }) {
