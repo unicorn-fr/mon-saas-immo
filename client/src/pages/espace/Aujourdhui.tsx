@@ -27,6 +27,8 @@ function TodayContent() {
 
   if (loading && !data) return <Loader />
   if (error || !data) return <LoadError message={error ?? ''} retry={reload} />
+  // Serveur pas encore mis à jour (réponse à l'ancien format) : message clair plutôt qu'un plantage.
+  if (!Array.isArray(data.tasks) || !data.counts || !data.stats) return <LoadError message="Le serveur de Bailio est en cours de mise à jour. Réessayez dans quelques minutes." retry={reload} />
   if (data.counts.properties === 0 && data.counts.leases === 0) return <FirstSteps name={data.user.firstName} />
 
   const month = monthName(Number(data.stats.month.slice(5)))
