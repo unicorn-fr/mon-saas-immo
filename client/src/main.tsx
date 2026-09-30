@@ -10,7 +10,6 @@ import '@fontsource/dm-sans/latin-600.css'
 import '@fontsource/dm-sans/latin-700.css'
 import './styles.css'
 
-// Fichier d'une ancienne version introuvable après une mise en ligne : voir lib/lazyPage.ts (nouvel essai, puis rechargement).
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

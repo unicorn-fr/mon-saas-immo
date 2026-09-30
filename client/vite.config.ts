@@ -47,4 +47,7 @@ export default defineConfig({
     // En développement, /api est relayé vers l'API locale.
     proxy: { '/api': 'http://localhost:5000' },
   },
+  preview: { proxy: { '/api': 'http://localhost:5000' } },
+  // Un seul fichier pour tout le site (voir App.tsx) : environ 190 Ko compressés.
+  build: { chunkSizeWarningLimit: 900 },
 })

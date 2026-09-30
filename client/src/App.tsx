@@ -1,4 +1,4 @@
-import { Suspense, useEffect, type ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { BAI } from './constants/bailio-tokens'
 import { ErrorBoundary } from './components/ErrorBoundary'
@@ -6,49 +6,42 @@ import { ToastProvider } from './components/kit'
 import { Spinner } from './components/ui'
 import { AuthProvider, useAuth } from './lib/auth'
 import { DraftProvider, useDraft } from './lib/draft'
-import { lazyPage as lazy } from './lib/lazyPage'
 import Home from './pages/Home'
+// Toutes les pages sont dans le même fichier : changer de page ne télécharge plus rien,
+// donc plus de page qui reste bloquée (réseau mobile, mise à jour du site pendant la visite).
+import TypeStep from './pages/tunnel/TypeStep'
+import LogementStep from './pages/tunnel/LogementStep'
+import PersonnesStep from './pages/tunnel/PersonnesStep'
+import LoyerStep from './pages/tunnel/LoyerStep'
+import RelectureStep from './pages/tunnel/RelectureStep'
+import RecevoirStep from './pages/tunnel/RecevoirStep'
+import Importer from './pages/Importer'
+import Reprendre from './pages/Reprendre'
+import Bienvenue from './pages/Bienvenue'
+import Connexion, { Inscription, ConnexionLien } from './pages/Connexion'
+import Aujourdhui from './pages/espace/Aujourdhui'
+import Logements from './pages/espace/Logements'
+import Logement from './pages/espace/Logement'
+import Locataires from './pages/espace/Locataires'
+import Locataire from './pages/espace/Locataire'
+import Documents from './pages/espace/Documents'
+import Argent from './pages/espace/Argent'
+import { FactureAjout, FactureVerifier } from './pages/espace/Facture'
+import Bail from './pages/espace/Bail'
+import AjoutLogement from './pages/espace/parcours/AjoutLogement'
+import AjoutLocataire from './pages/espace/parcours/AjoutLocataire'
+import CreationBail from './pages/espace/parcours/CreationBail'
+import FicheBailleur from './pages/espace/fiches/FicheBailleur'
+import FicheLogement from './pages/espace/fiches/FicheLogement'
+import FicheLocataire from './pages/espace/fiches/FicheLocataire'
+import ActeCaution from './pages/espace/fiches/ActeCaution'
+import Contrat from './pages/espace/fiches/Contrat'
+import Courriers from './pages/espace/Courriers'
+import EtatDesLieux from './pages/espace/EtatDesLieux'
+import Edl from './pages/Edl'
+import Compte from './pages/espace/Compte'
+import { MentionsLegales, Conditions, Confidentialite, Contact, NotFound } from './pages/legal/Legal'
 
-const TypeStep = lazy(() => import('./pages/tunnel/TypeStep'))
-const LogementStep = lazy(() => import('./pages/tunnel/LogementStep'))
-const PersonnesStep = lazy(() => import('./pages/tunnel/PersonnesStep'))
-const LoyerStep = lazy(() => import('./pages/tunnel/LoyerStep'))
-const RelectureStep = lazy(() => import('./pages/tunnel/RelectureStep'))
-const RecevoirStep = lazy(() => import('./pages/tunnel/RecevoirStep'))
-const Importer = lazy(() => import('./pages/Importer'))
-const Reprendre = lazy(() => import('./pages/Reprendre'))
-const Bienvenue = lazy(() => import('./pages/Bienvenue'))
-const Connexion = lazy(() => import('./pages/Connexion'))
-const Inscription = lazy(() => import('./pages/Connexion').then((m) => ({ default: m.Inscription })))
-const ConnexionLien = lazy(() => import('./pages/Connexion').then((m) => ({ default: m.ConnexionLien })))
-const Aujourdhui = lazy(() => import('./pages/espace/Aujourdhui'))
-const Logements = lazy(() => import('./pages/espace/Logements'))
-const Logement = lazy(() => import('./pages/espace/Logement'))
-const Locataires = lazy(() => import('./pages/espace/Locataires'))
-const Locataire = lazy(() => import('./pages/espace/Locataire'))
-const Documents = lazy(() => import('./pages/espace/Documents'))
-const Argent = lazy(() => import('./pages/espace/Argent'))
-const FactureAjout = lazy(() => import('./pages/espace/Facture').then((m) => ({ default: m.FactureAjout })))
-const FactureVerifier = lazy(() => import('./pages/espace/Facture').then((m) => ({ default: m.FactureVerifier })))
-const Bail = lazy(() => import('./pages/espace/Bail'))
-const AjoutLogement = lazy(() => import('./pages/espace/parcours/AjoutLogement'))
-const AjoutLocataire = lazy(() => import('./pages/espace/parcours/AjoutLocataire'))
-const CreationBail = lazy(() => import('./pages/espace/parcours/CreationBail'))
-const FicheBailleur = lazy(() => import('./pages/espace/fiches/FicheBailleur'))
-const FicheLogement = lazy(() => import('./pages/espace/fiches/FicheLogement'))
-const FicheLocataire = lazy(() => import('./pages/espace/fiches/FicheLocataire'))
-const ActeCaution = lazy(() => import('./pages/espace/fiches/ActeCaution'))
-const Contrat = lazy(() => import('./pages/espace/fiches/Contrat'))
-const Courriers = lazy(() => import('./pages/espace/Courriers'))
-const EtatDesLieux = lazy(() => import('./pages/espace/EtatDesLieux'))
-const Edl = lazy(() => import('./pages/Edl'))
-const Compte = lazy(() => import('./pages/espace/Compte'))
-const legal = () => import('./pages/legal/Legal')
-const MentionsLegales = lazy(() => legal().then((m) => ({ default: m.MentionsLegales })))
-const Conditions = lazy(() => legal().then((m) => ({ default: m.Conditions })))
-const Confidentialite = lazy(() => legal().then((m) => ({ default: m.Confidentialite })))
-const Contact = lazy(() => legal().then((m) => ({ default: m.Contact })))
-const NotFound = lazy(() => legal().then((m) => ({ default: m.NotFound })))
 
 function Loading() {
   return (
@@ -97,7 +90,6 @@ function Pages() {
   const { pathname } = useLocation()
   return (
     <ErrorBoundary resetKey={pathname}>
-          <Suspense fallback={<Loading />}>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/commencer" element={<DraftReady><TypeStep /></DraftReady>} />
@@ -140,7 +132,6 @@ function Pages() {
               <Route path="/contact" element={<Contact />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </Suspense>
     </ErrorBoundary>
   )
 }
