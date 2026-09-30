@@ -81,7 +81,7 @@ export default function LoyerStep() {
       <TextField label="Date d'entrée du locataire" name="startDate" type="date" value={startDate} error={errors.startDate} onChange={(e) => setStartDate(e.target.value)} />
 
       <div className="stack" style={{ background: BAI.night, borderRadius: 20, padding: '24px 26px 10px' }} aria-live="polite">
-        <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.caramel, paddingBottom: 12 }}>Calculé pour vous</span>
+        <span style={{ fontSize: 15, fontWeight: 700, color: BAI.caramel, paddingBottom: 12 }}>Calculé pour vous</span>
         <CalcRow label="Total par mois" value={rentCents ? euros(rentCents + chargesCents) : '—'} note="Loyer et charges" />
         <CalcRow
           label="Dépôt de garantie"

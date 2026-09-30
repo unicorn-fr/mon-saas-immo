@@ -2,34 +2,47 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 import { SiteFooter, SiteHeader } from '../components/SiteChrome'
-import { Bell, Camera, Check, Cross, DocIcon, EuroIcon, Pin } from '../components/Icons'
+import { Check, Cross, Pin } from '../components/Icons'
 import { display } from '../components/ui'
 import { MONTHLY_PRICE, priceLabel } from '../config'
 
+// Ce que Bailio fait réellement, dit simplement. Chaque ligne correspond à une fonction du produit.
 const FEATURES = [
-  { icon: <DocIcon />, text: 'Un bail conforme en 5 minutes' },
-  { icon: <EuroIcon />, text: 'Des quittances envoyées toutes seules' },
-  { icon: <Bell />, text: 'Un rappel avant chaque échéance' },
-  { icon: <Camera />, text: 'Vos factures rangées en une photo' },
+  {
+    title: 'Le bail',
+    text: "Le contrat type du décret de 2015, vide ou meublé, rempli avec vos réponses. La durée, le dépôt maximum et le préavis sont calculés d'après la loi de 1989.",
+  },
+  {
+    title: 'Les quittances',
+    text: 'Chaque mois, la quittance au nom de votre locataire, prête à télécharger, imprimer ou joindre à un email.',
+  },
+  {
+    title: 'La révision du loyer',
+    text: "À la date anniversaire, le nouveau loyer est calculé avec l'indice publié par l'Insee (IRL). Rien n'augmente si le logement est classé F ou G.",
+  },
+  {
+    title: 'Les dates à ne pas oublier',
+    text: "Assurance du locataire, révision, date limite pour donner congé : vous recevez un email une semaine avant.",
+  },
 ]
 
 const STEPS = [
-  { title: 'Répondez à 4 questions', text: 'Le logement, les personnes, le loyer.' },
-  { title: 'Téléchargez votre bail', text: 'Prêt à imprimer et à signer.' },
-  { title: 'Bailio prend le relais', text: 'Quittances, rappels, courriers.' },
+  { when: 'Environ 5 minutes', title: 'Vous répondez aux questions', text: "Le logement, vous et votre locataire, le loyer. Rien n'est demandé deux fois." },
+  { when: 'Tout de suite', title: 'Vous téléchargez le bail', text: 'Un PDF prêt à imprimer, à signer en deux exemplaires.' },
+  { when: 'Pendant toute la location', title: 'Bailio garde les dates', text: 'Quittances, révision, fin du bail : vous êtes prévenu à temps.' },
 ]
 
 const TASKS = [
-  { tag: 'Loyer reçu', tagColor: BAI.green, tagBg: BAI.greenLight, text: 'Quittance de Thomas prête', cta: 'Envoyer' },
-  { tag: 'Révision du loyer', tagColor: BAI.owner, tagBg: BAI.ownerTint, text: 'Nouveau loyer calculé, lettre prête', cta: 'Relire' },
-  { tag: 'Assurance', tagColor: BAI.caramelDark, tagBg: BAI.caramelLight, text: 'Attestation à demander', cta: 'Demander' },
+  { tag: 'Loyer du 5 octobre', tagColor: BAI.green, tagBg: BAI.greenLight, text: 'Quittance de Thomas Martin prête', cta: 'Télécharger' },
+  { tag: 'Révision du loyer', tagColor: BAI.owner, tagBg: BAI.ownerTint, text: 'Nouveau loyer : 812,40 € au 1er novembre', cta: 'Relire' },
+  { tag: 'Assurance', tagColor: BAI.caramelDark, tagBg: BAI.caramelLight, text: 'Attestation à demander à votre locataire', cta: 'Demander' },
 ]
 
 const DOES = [
   'Des documents conformes au modèle officiel',
   'Le suivi de toutes vos dates importantes',
-  'Le rangement de vos factures et de vos preuves',
-  'Un historique clair si un jour il y a un litige',
+  'Vos baux et quittances rangés au même endroit',
+  "Chaque version d'un document conservée, en cas de litige",
 ]
 const DOES_NOT = [
   'Il ne remplace pas un avocat. Quand il en faut un, on vous le dit.',
@@ -39,10 +52,10 @@ const DOES_NOT = [
 ]
 
 const FAQ = [
-  { q: 'Mon bail est-il valable ?', a: 'Oui. Il suit le modèle officiel imposé par la loi.' },
-  { q: "J'ai déjà un locataire. Ça marche ?", a: 'Oui. Prenez votre bail en photo, Bailio fait le reste.' },
-  { q: "Mon locataire doit-il s'inscrire ?", a: 'Non. Il reçoit simplement ses documents par email.' },
-  { q: 'Je peux tout imprimer ?', a: 'Oui. Tous les documents sont prévus pour le papier.' },
+  { q: 'Mon bail est-il valable ?', a: "Oui. Il reprend le contrat type fixé par le décret n° 2015-587, que tout bail d'habitation doit suivre." },
+  { q: "J'ai déjà un locataire. Ça marche ?", a: 'Oui. Envoyez une photo ou le PDF de votre bail signé, vérifiez les informations, et le suivi démarre.' },
+  { q: "Mon locataire doit-il s'inscrire ?", a: "Non. C'est vous qui lui envoyez ses quittances, depuis votre propre adresse email." },
+  { q: 'Je peux tout imprimer ?', a: 'Oui. Tous les documents sont prévus pour le papier, au format A4.' },
 ]
 
 const section = { paddingTop: 'clamp(72px, 8vw, 120px)', paddingBottom: 'clamp(72px, 8vw, 120px)' }
@@ -64,7 +77,7 @@ export default function Home() {
         <section className="container stack" style={{ padding: 'clamp(56px, 7.8vw, 112px) 0 clamp(72px, 8.3vw, 120px)', alignItems: 'center', textAlign: 'center', gap: 32 }}>
           <h1 style={display('clamp(44px, 10vw, 104px)', { lineHeight: 0.95, maxWidth: 1000 })}>Vos locations, sans la paperasse.</h1>
           <p style={{ margin: 0, fontSize: 'clamp(18px, 2.2vw, 22px)', lineHeight: 1.5, color: BAI.inkMid, maxWidth: 680 }}>
-            Bail, quittances, rappels, factures. Bailio fait l'administratif, vous validez.
+            Bail, quittances, révision du loyer, fin de bail. Bailio prépare les papiers et vous rappelle les dates. Vous gardez la main.
           </p>
           <form
             onSubmit={start}
@@ -91,40 +104,37 @@ export default function Home() {
               Créer mon bail gratuit
             </button>
           </form>
-          <div className="wrap-md" style={{ display: 'flex', gap: '12px 28px', fontSize: 15, color: BAI.inkMid, justifyContent: 'center' }}>
-            {['5 minutes', 'Sans inscription pour commencer', 'Conforme à la loi'].map((t) => (
-              <span key={t} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <Check />
-                {t}
-              </span>
-            ))}
-          </div>
+          <p style={{ margin: 0, fontSize: 15, color: BAI.inkMid }}>Gratuit pour votre premier bail. Pas besoin de créer un compte pour commencer.</p>
           <Link to="/importer" style={{ fontSize: 15, fontWeight: 600, textDecoration: 'none' }}>
             Vous avez déjà un bail signé ? Importez-le en photo
           </Link>
         </section>
 
         <section style={{ background: BAI.surface, borderTop: `1px solid ${BAI.divider}`, borderBottom: `1px solid ${BAI.divider}` }}>
-          <div className="container grid-4" style={{ paddingTop: 72, paddingBottom: 72 }}>
-            {FEATURES.map((f) => (
-              <div key={f.text} className="stack" style={{ gap: 14 }}>
-                {f.icon}
-                <div style={{ fontSize: 20, fontWeight: 600, lineHeight: 1.3 }}>{f.text}</div>
-              </div>
-            ))}
+          <div className="container split" style={{ ...section, gap: 'clamp(32px, 6vw, 96px)' }}>
+            <div className="stack" style={{ flexShrink: 0, width: 'min(100%, 340px)', gap: 16 }}>
+              <h2 style={display('clamp(40px, 4.5vw, 56px)', { lineHeight: 1 })}>Ce que vous obtenez</h2>
+              <p style={{ margin: 0, fontSize: 17, lineHeight: 1.55, color: BAI.inkMid }}>Quatre choses, faites correctement. Pas de tableau de bord à apprendre.</p>
+            </div>
+            <dl style={{ flex: 1, margin: 0 }}>
+              {FEATURES.map((f, i) => (
+                <div key={f.title} className="defs" style={{ padding: '26px 0', borderTop: i ? `1px solid ${BAI.divider}` : 'none', paddingTop: i ? 26 : 0 }}>
+                  <dt style={{ fontSize: 19, fontWeight: 700 }}>{f.title}</dt>
+                  <dd style={{ margin: 0, fontSize: 17, lineHeight: 1.55, color: BAI.inkMid }}>{f.text}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
         </section>
 
-        <section className="container stack" style={{ ...section, alignItems: 'center', gap: 56 }}>
-          <h2 style={display('clamp(40px, 5vw, 60px)', { textAlign: 'center' })}>Comment ça marche</h2>
-          <ol className="grid-3" style={{ width: '100%', maxWidth: 1120, listStyle: 'none', margin: 0, padding: 0 }}>
-            {STEPS.map((s, i) => (
-              <li key={s.title} className="stack" style={{ gap: 16, alignItems: 'center', textAlign: 'center' }}>
-                <div aria-hidden style={{ width: 64, height: 64, borderRadius: 32, background: BAI.night, color: BAI.caramel, display: 'flex', alignItems: 'center', justifyContent: 'center', ...display(32, { color: BAI.caramel }) }}>
-                  {i + 1}
-                </div>
-                <div style={{ fontSize: 22, fontWeight: 600 }}>{s.title}</div>
-                <div style={{ fontSize: 17, color: BAI.inkMid }}>{s.text}</div>
+        <section className="container stack" style={{ ...section, gap: 48 }}>
+          <h2 style={display('clamp(40px, 5vw, 60px)')}>Comment ça marche</h2>
+          <ol className="grid-3" style={{ width: '100%', listStyle: 'none', margin: 0, padding: 0 }}>
+            {STEPS.map((s) => (
+              <li key={s.title} className="stack" style={{ gap: 10, borderTop: `2px solid ${BAI.ink}`, paddingTop: 20 }}>
+                <span style={{ fontSize: 14, fontWeight: 600, color: BAI.caramelInk }}>{s.when}</span>
+                <span style={{ fontSize: 22, fontWeight: 600 }}>{s.title}</span>
+                <span style={{ fontSize: 17, lineHeight: 1.5, color: BAI.inkMid }}>{s.text}</span>
               </li>
             ))}
           </ol>
@@ -133,17 +143,17 @@ export default function Home() {
         <section className="container" style={{ paddingBottom: 'clamp(72px, 8vw, 120px)' }}>
           <div className="split" style={{ background: BAI.night, borderRadius: 32, padding: 'clamp(32px, 5.5vw, 80px)', alignItems: 'center', gap: 'clamp(32px, 5vw, 72px)' }}>
             <div className="stack" style={{ maxWidth: 480, gap: 20 }}>
-              <h2 style={display('clamp(40px, 5vw, 60px)', { lineHeight: 1, color: BAI.surface })}>Chaque lundi, votre liste est prête.</h2>
-              <p style={{ margin: 0, fontSize: 19, lineHeight: 1.55, color: BAI.onDark }}>Bailio vous dit quoi faire, et le prépare pour vous. Un clic pour valider.</p>
+              <h2 style={display('clamp(40px, 5vw, 60px)', { lineHeight: 1, color: BAI.surface })}>Une liste, pas un tableau de bord.</h2>
+              <p style={{ margin: 0, fontSize: 19, lineHeight: 1.55, color: BAI.onDark }}>Dans votre espace, seulement ce qui est à faire dans les prochains jours, avec le document déjà prêt. Rien ne part sans vous.</p>
             </div>
-            <div className="stack" style={{ flex: 1, gap: 14, width: '100%' }} aria-label="Exemple de liste de la semaine">
+            <div className="stack" style={{ flex: 1, gap: 14, width: '100%' }} aria-label="Exemple de liste">
               {TASKS.map((t) => (
-                <div key={t.text} style={{ background: BAI.surface, borderRadius: 18, padding: '22px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
+                <div key={t.text} className="col-md" style={{ background: BAI.surface, borderRadius: 18, padding: '22px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
                   <div className="stack" style={{ gap: 6 }}>
                     <span style={{ alignSelf: 'flex-start', fontSize: 12, fontWeight: 700, color: t.tagColor, background: t.tagBg, padding: '5px 10px', borderRadius: 999 }}>{t.tag}</span>
                     <span style={{ fontSize: 17, fontWeight: 600 }}>{t.text}</span>
                   </div>
-                  <span aria-hidden style={{ flexShrink: 0, background: BAI.owner, color: BAI.surface, fontSize: 14, fontWeight: 600, padding: '11px 16px', borderRadius: 10 }}>{t.cta}</span>
+                  <span aria-hidden style={{ flexShrink: 0, textAlign: 'center', background: BAI.owner, color: BAI.surface, fontSize: 14, fontWeight: 600, padding: '11px 16px', borderRadius: 10 }}>{t.cta}</span>
                 </div>
               ))}
             </div>
@@ -189,7 +199,7 @@ export default function Home() {
                 <span style={display(MONTHLY_PRICE ? 64 : 44, { lineHeight: 1, color: BAI.caramel })}>{priceLabel()}</span>
                 {MONTHLY_PRICE ? <span style={{ fontSize: 16, color: BAI.onDarkMuted }}>par mois</span> : null}
               </div>
-              <div style={{ fontSize: 16, color: BAI.onDark }}>Quittances, rappels, états des lieux, factures. Sans engagement.</div>
+              <div style={{ fontSize: 16, color: BAI.onDark }}>Quittances chaque mois, révision du loyer, rappels par email avant chaque échéance. Sans engagement.</div>
               <Link to="/commencer" style={{ textDecoration: 'none', background: BAI.caramel, color: BAI.night, height: 56, borderRadius: 14, fontWeight: 700, fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 'auto' }}>
                 Essayer
               </Link>

@@ -14,10 +14,8 @@ export const display = (size: number | string, extra: CSSProperties = {}): CSSPr
 })
 
 export const overline: CSSProperties = {
-  fontSize: 13,
+  fontSize: 15,
   fontWeight: 700,
-  letterSpacing: '0.08em',
-  textTransform: 'uppercase',
   color: BAI.caramelInk,
 }
 

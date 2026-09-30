@@ -116,7 +116,8 @@ export default function Importer() {
                 </Button>
               </div>
               <p style={{ margin: 0, fontSize: 14, color: BAI.inkSoft, lineHeight: 1.6 }}>
-                Votre document est lu par une intelligence artificielle (Claude, d'Anthropic) uniquement pour remplir ces informations. Il est ensuite conservé dans votre espace, et nulle part ailleurs.
+                Votre document sert uniquement à remplir ces informations, par lecture automatique (voir la{' '}
+                <Link to="/confidentialite">politique de confidentialité</Link>). Il est ensuite conservé dans votre espace, et nulle part ailleurs.
               </p>
             </>
           )}
