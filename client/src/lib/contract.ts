@@ -148,6 +148,10 @@ export interface PropertyFile {
   market?: N<{ tense?: N<boolean>; refRentCentsM2?: N<number>; refRentMaxCentsM2?: N<number> }>
   furniture?: N<{ present?: N<FurnitureKey[]>; inventory?: N<Array<{ room?: N<string>; item: string; count: number; state?: N<string> }>> }>
   photos?: N<string[]>
+  /** Détecteurs de fumée installés (au moins un, obligatoire). */
+  smokeDetectors?: N<number>
+  /** Clés et moyens d'accès remis : « 2 clés, 1 badge ». */
+  keys?: N<string>
 }
 
 export interface Guarantor {

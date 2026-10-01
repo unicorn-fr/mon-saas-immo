@@ -10,14 +10,15 @@ interface ESignStatus {
   status: 'PENDING' | 'COMPLETED' | 'CANCELLED'
   createdAt: string
   completedAt: string | null
-  signers: Array<{ id: string; role: 'LANDLORD' | 'TENANT' | 'GUARANTOR'; roleLabel: string; name: string; email: string; signedAt: string | null }>
+  amendment: boolean
+  signers: Array<{ id: string; role: 'LANDLORD' | 'TENANT' | 'GUARANTOR'; roleLabel: string; name: string; email: string; signedAt: string | null; linkExpiresAt: string | null; linkExpired: boolean }>
 }
 
 /**
  * Signature en ligne du bail : lancement, suivi de chaque signataire, relance.
  * Le propriétaire signe lui aussi par le même parcours (code reçu par email).
  */
-export function ESignCard({ leaseId, ready, onChange }: { leaseId: string; ready: boolean; onChange: () => void }) {
+export function ESignCard({ leaseId, ready, amendment = false, onChange }: { leaseId: string; ready: boolean; amendment?: boolean; onChange: () => void }) {
   const { data, reload } = useLoad(() => api<ESignStatus | null>(`/leases/${leaseId}/esign`), [leaseId])
   const toast = useToast()
   const navigate = useNavigate()
@@ -26,6 +27,7 @@ export function ESignCard({ leaseId, ready, onChange }: { leaseId: string; ready
   const start = async () => {
     const r = await api<ESignStatus & { landlordUrl: string }>(`/leases/${leaseId}/esign`, { method: 'POST' })
     toast.show('Invitations envoyées. Signez à votre tour maintenant.')
+    onChange()
     navigate(r.landlordUrl)
   }
   const signMyself = async () => {
@@ -47,7 +49,7 @@ export function ESignCard({ leaseId, ready, onChange }: { leaseId: string; ready
     const me = pending.signers.find((s) => s.role === 'LANDLORD')
     const done = pending.signers.filter((s) => s.signedAt).length
     return (
-      <Card title="Signature en ligne en cours" action={<span style={{ fontSize: 14, color: BAI.inkSoft }}>{done} sur {pending.signers.length}</span>}>
+      <Card title={pending.amendment ? 'Signature de l’avenant en cours' : 'Signature en ligne en cours'} action={<span style={{ fontSize: 14, color: BAI.inkSoft }}>{done} sur {pending.signers.length}</span>}>
         {pending.signers.map((s) => (
           <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 12, flexWrap: 'wrap' }}>
             <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -65,9 +67,9 @@ export function ESignCard({ leaseId, ready, onChange }: { leaseId: string; ready
                 </Btn>
               ) : (
                 <>
-                  <Pill tone="caramel">En attente</Pill>
+                  <Pill tone={s.linkExpired ? 'error' : 'caramel'}>{s.linkExpired ? 'Lien expiré' : 'En attente'}</Pill>
                   <TextLink style={{ fontSize: 13 }} onClick={() => remind(s.id)().catch(toast.error)}>
-                    Renvoyer le lien
+                    {s.linkExpired ? 'Envoyer un nouveau lien' : 'Renvoyer le lien'}
                   </TextLink>
                 </>
               )}
@@ -75,7 +77,7 @@ export function ESignCard({ leaseId, ready, onChange }: { leaseId: string; ready
           </div>
         ))}
         <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.5 }}>
-          Lancée le {dateNum(pending.createdAt)}. Dès que tout le monde a signé, le bail passe en « signé » et chacun reçoit son exemplaire avec le certificat de preuve.
+          Lancée le {dateNum(pending.createdAt)}. Chaque lien reste valable 14 jours. Pendant la signature, le bail ne peut plus être modifié. Dès que tout le monde a signé, {pending.amendment ? 'la nouvelle version remplace l’ancienne' : 'le bail passe en « signé »'} et chacun reçoit son exemplaire avec le certificat de preuve.
           {me && !me.signedAt ? ' Il ne manque plus que vous quand les autres auront signé.' : ''}
         </span>
         <div>
@@ -88,7 +90,7 @@ export function ESignCard({ leaseId, ready, onChange }: { leaseId: string; ready
   }
 
   return (
-    <Card title="Faire signer le bail">
+    <Card title={amendment ? 'Faire signer la nouvelle version (avenant)' : 'Faire signer le bail'}>
       <div className="grid-2" style={{ gap: 12 }}>
         <div style={{ border: `2px solid ${BAI.owner}`, borderRadius: 16, padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <span style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center' }}>

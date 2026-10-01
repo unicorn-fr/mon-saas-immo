@@ -149,7 +149,7 @@ function TenantPage({ t, reload }: { t: TenantView; reload: () => void }) {
             </Card>
           )}
           {lease && lease.status !== 'DRAFT' ? (
-            <Card title="Paiements" action={<TextLink to={`/espace/baux/${lease.id}?onglet=paiements`} style={{ fontSize: 14 }}>Tout voir</TextLink>}>
+            <Card title="Paiements" action={<TextLink to={`/espace/baux/${lease.id}#paiements`} style={{ fontSize: 14 }}>Tout voir</TextLink>}>
               {t.payments.length ? (
                 t.payments.slice(0, 6).map((p) => (
                   <div key={p.period} className="col-md" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, fontSize: 15, borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 12 }}>

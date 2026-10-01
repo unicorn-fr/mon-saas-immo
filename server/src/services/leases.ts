@@ -3,7 +3,6 @@ import { prisma } from '../db.js'
 import { env } from '../env.js'
 import {
   durationMonths,
-  formatDateFr,
   leaseEndDate,
   leaseInputSchema,
   maxDepositCents,
@@ -14,7 +13,6 @@ import { HttpError } from '../lib/http.js'
 import { latestIrl } from '../lib/irl.js'
 import { layout, sendEmail } from '../lib/email.js'
 import { sha256 } from '../lib/tokens.js'
-import { renderLeasePdf } from '../pdf/lease.js'
 import { ensureReminders } from './reminders.js'
 import { upgradeLegacyLeases } from './upgrade.js'
 
@@ -52,7 +50,6 @@ export async function createLeaseFromDraft(user: User, draftId: string): Promise
 
   const start = parseIsoDate(input.rent.startDate)
   const months = durationMonths(input.type)
-  const pdf = imported ? null : await renderLeasePdf(input)
 
   const lease = await prisma.$transaction(async (tx) => {
     const property = await tx.property.create({
@@ -74,7 +71,8 @@ export async function createLeaseFromDraft(user: User, draftId: string): Promise
         userId: user.id,
         propertyId: property.id,
         type: input.type,
-        status: imported ? 'IMPORTED' : 'ACTIVE',
+        // Bail du tunnel : en préparation, complété puis signé dans l'espace (mentions obligatoires vérifiées).
+        status: imported ? 'IMPORTED' : 'DRAFT',
         startDate: start,
         durationMonths: months,
         endDate: leaseEndDate(start, months),
@@ -100,19 +98,6 @@ export async function createLeaseFromDraft(user: User, draftId: string): Promise
           file,
         },
       })
-    } else {
-      await tx.document.create({
-        data: {
-          userId: user.id,
-          leaseId: lease.id,
-          kind: 'LEASE',
-          title: `Bail — ${input.property.address}`,
-          mimeType: 'application/pdf',
-          sha256: sha256(pdf!),
-          sizeBytes: pdf!.length,
-          snapshot: input,
-        },
-      })
     }
     await tx.draft.update({ where: { id: draft.id }, data: { leaseId: lease.id, userId: user.id, importFile: null } })
     if (!user.firstName && !user.lastName) {
@@ -128,23 +113,17 @@ export async function createLeaseFromDraft(user: User, draftId: string): Promise
   // Les réponses du tunnel alimentent tout de suite les fiches du compte (profil, logement, locataires).
   await upgradeLegacyLeases(user)
 
-  if (pdf) {
+  if (!imported) {
     const mail = layout({
-      title: 'Votre bail est prêt.',
+      title: 'Votre bail est presque prêt.',
       paragraphs: [
         `Bonjour ${input.landlord.firstName},`,
-        `Vous trouverez en pièce jointe le bail du logement situé ${input.property.address}, qui prend effet le ${formatDateFr(start)}.`,
-        'Imprimez-le en autant d’exemplaires que de signataires. Chacun signe en faisant précéder sa signature de la mention « lu et approuvé ».',
-        'Votre bail reste disponible à tout moment dans votre espace Bailio.',
+        `Le bail du logement situé ${input.property.address} est enregistré dans votre espace.`,
+        'Il reste quelques mentions que la loi impose (diagnostics, chauffage, équipements…). Bailio vous les demande une par une, puis vous le faites signer en ligne ou sur papier.',
       ],
-      cta: { label: 'Ouvrir mon espace', url: `${env.CLIENT_URL}/connexion` },
+      cta: { label: 'Compléter mon bail', url: `${env.CLIENT_URL}/espace/baux/${lease.id}` },
     })
-    sendEmail({
-      to: user.email,
-      subject: 'Votre bail est prêt',
-      ...mail,
-      attachments: [{ filename: 'bail.pdf', content: pdf }],
-    }).catch((err) => console.error('[email] bail', err))
+    sendEmail({ to: user.email, subject: 'Votre bail est presque prêt', ...mail }).catch((err) => console.error('[email] bail', err))
   }
 
   return { lease, created: true }

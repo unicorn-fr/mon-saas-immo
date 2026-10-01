@@ -4,12 +4,13 @@
   "version": "2.0.0",
   "description": "Bailio — le bail et le suivi locatif du propriétaire particulier",
   "scripts": {
-    "install:all": "npm --prefix server install && npm --prefix client install",
+    "install:all": "npm --prefix server install && npm --prefix client install && npm --prefix e2e install",
     "dev": "npm --prefix server run dev & npm --prefix client run dev",
     "build": "npm --prefix server run build && npm --prefix client run build",
     "typecheck": "npm --prefix server run typecheck && npm --prefix client run typecheck",
-    "test": "npm --prefix server test",
-    "start": "npm --prefix server start"
+    "test": "npm --prefix server test && npm --prefix client test",
+    "start": "npm --prefix server start",
+    "test:e2e": "npm --prefix e2e test"
   },
   "engines": {
     "node": ">=20"

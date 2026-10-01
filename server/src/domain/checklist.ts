@@ -56,6 +56,7 @@ export function leaseMissing(c: ContractInput): Missing[] {
   if (!has(p.heating?.mode)) push('property.heating', 'Le mode de chauffage', 'PROPERTY', 'heating')
   if (!has(p.hotWater?.mode)) push('property.hotWater', 'Le mode de production d’eau chaude', 'PROPERTY', 'heating')
   if (!has(p.equipments) && !has(p.otherEquipments)) push('property.equipments', 'Les équipements du logement', 'PROPERTY', 'equipments')
+  if (!(p.smokeDetectors && p.smokeDetectors > 0) && !p.equipments?.includes('smokeDetector')) push('property.smoke', 'Le nombre de détecteurs de fumée (au moins un est obligatoire)', 'PROPERTY', 'equipments')
   if (!has(p.tv) || !has(p.internet)) push('property.tv', 'La réception de la télévision et l’accès à internet', 'PROPERTY', 'tv')
   if (!has(p.diagnostics?.dpe?.class)) push('property.dpe', 'La classe énergie du DPE', 'PROPERTY', 'diagnostics')
   for (const d of diagnosticsFor(p).filter((x) => x.required && x.annexed && x.key !== 'dpe')) {

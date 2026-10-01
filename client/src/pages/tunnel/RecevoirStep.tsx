@@ -83,7 +83,7 @@ export default function RecevoirStep() {
           <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 260, background: `linear-gradient(to bottom, rgba(255,255,255,0), ${BAI.surface} 60%)`, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 36 }}>
             <span style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 15, fontWeight: 600 }}>
               <Check />
-              {imported ? 'Lu et vérifié' : 'Prêt à imprimer'}
+              {imported ? 'Lu et vérifié' : 'Bientôt complet'}
             </span>
           </div>
         </div>
@@ -93,30 +93,30 @@ export default function RecevoirStep() {
         <div className="only-md" style={{ marginBottom: 8 }}>
           <Logo size={26} />
         </div>
-        <h1 style={display('clamp(44px, 5vw, 60px)', { lineHeight: 1 })}>{imported ? 'Votre bail est lu.' : 'Votre bail est prêt.'}</h1>
+        <h1 style={display('clamp(44px, 5vw, 60px)', { lineHeight: 1 })}>{imported ? 'Votre bail est lu.' : 'Votre bail est presque prêt.'}</h1>
 
         {checkEmail ? (
           <Notice tone="success">
-            <strong>Regardez vos emails.</strong> Vous avez déjà un espace Bailio avec {checkEmail}. Nous venons de vous envoyer un lien : cliquez dessus pour y ajouter ce bail.
+            <strong>Regardez vos emails.</strong> Nous venons d’envoyer un lien à {checkEmail}. Cliquez dessus pour confirmer votre adresse : votre bail vous attend dans votre espace. Pensez à regarder dans les indésirables.
           </Notice>
         ) : user ? (
           <>
             <p style={{ margin: 0, fontSize: 19, color: BAI.inkMid }}>Il sera rangé dans votre espace, avec le compte {user.email}.</p>
             <Button full loading={loading} onClick={() => void finish()}>
-              {imported ? 'Enregistrer dans mon espace' : 'Télécharger mon bail'}
+              {imported ? 'Enregistrer dans mon espace' : 'Ranger mon bail dans mon espace'}
             </Button>
           </>
         ) : (
           <>
-            <p style={{ margin: 0, fontSize: 19, color: BAI.inkMid }}>{imported ? 'Où voulez-vous le ranger ?' : 'Où voulez-vous le recevoir ?'}</p>
+            <p style={{ margin: 0, fontSize: 19, color: BAI.inkMid }}>{imported ? 'Où voulez-vous le ranger ?' : 'Il reste quelques mentions obligatoires à compléter dans votre espace, puis à le faire signer. Votre adresse email ?'}</p>
             <form onSubmit={finish} className="stack" style={{ gap: 14 }}>
               <TextField label="Votre email" name="email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vous@email.fr" />
               <Button type="submit" full loading={loading}>
-                {imported ? 'Enregistrer mon bail' : 'Télécharger mon bail'}
+                {imported ? 'Enregistrer mon bail' : 'Recevoir le lien'}
               </Button>
             </form>
             <div style={{ fontSize: 14, color: BAI.inkSoft, lineHeight: 1.6 }}>
-              Gratuit, sans carte bancaire. Votre espace est créé avec cet email : pas de mot de passe, vous vous connecterez avec un lien reçu par email.
+              Gratuit, sans carte bancaire. Vous recevez un lien pour confirmer votre adresse : votre espace est créé à ce moment-là. Pas de mot de passe.
             </div>
           </>
         )}

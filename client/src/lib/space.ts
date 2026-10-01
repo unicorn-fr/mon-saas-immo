@@ -164,6 +164,8 @@ export interface LeaseView {
   ready: boolean
   /** Mentions obligatoires manquantes, avec le lien vers la fiche à compléter. */
   checklist: MissingItem[]
+  /** Signature en ligne en cours : le contrat est figé. */
+  esignPending: boolean
   dirty: boolean
   signedAt: string | null
   kind: LeaseKind

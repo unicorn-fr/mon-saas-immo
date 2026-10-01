@@ -11,7 +11,7 @@ import { hashToken, newToken, sha256 } from '../lib/tokens.js'
 import { requireUser } from '../services/session.js'
 import { leaseOwned } from '../services/contract.js'
 import type { ContractInput } from '../domain/contract.js'
-import { CODE_ATTEMPTS, CODE_MINUTES, READ_AND_APPROVED, SIGN_WINDOW_MINUTES, maskEmail, mentionMatches } from '../domain/esign.js'
+import { CODE_ATTEMPTS, CODE_MINUTES, LINK_DAYS, READ_AND_APPROVED, SIGN_WINDOW_MINUTES, linkExpiry, maskEmail, mentionMatches } from '../domain/esign.js'
 import type { CertificateData } from '../pdf/certificate.js'
 import { renderContractPdf, type SignatureMark } from '../pdf/contract.js'
 import { cautionMention, renderGuaranteePdf } from '../pdf/guarantee.js'
@@ -29,7 +29,7 @@ import { sendPdf } from './helpers.js'
  */
 const router = Router()
 
-type Hashes = { lease: string; leaseFile: string; guarantees: Record<string, { hash: string; file: string }> }
+type Hashes = { lease: string; leaseFile: string; guarantees: Record<string, { hash: string; file: string }>; amendment?: boolean }
 type RequestWithSigners = SignatureRequest & { signers: Signer[] }
 
 const ROLE_LABEL: Record<string, string> = { LANDLORD: 'Bailleur', TENANT: 'Locataire', GUARANTOR: 'Caution' }
@@ -41,19 +41,19 @@ async function storePdf(userId: string, name: string, pdf: Buffer): Promise<stri
   return row.id
 }
 
-async function invite(signer: Signer, token: string, c: ContractInput, landlord: string) {
-  const what = signer.role === 'GUARANTOR' ? 'l’acte de cautionnement du bail' : 'le bail'
+async function invite(signer: Signer, token: string, c: ContractInput, landlord: string, amendment = false) {
+  const what = signer.role === 'GUARANTOR' ? 'l’acte de cautionnement du bail' : amendment ? 'la nouvelle version du bail (avenant)' : 'le bail'
   const mail = layout({
     title: 'Un bail vous attend pour signature.',
     paragraphs: [
       `Bonjour ${signer.name},`,
       `${landlord} vous invite à signer électroniquement ${what} du logement situé ${propertyAddress(c.property)}.`,
-      'Le lien ci-dessous vous est personnel. Vous pourrez relire le document en entier, puis recevoir un code à six chiffres à cette adresse pour confirmer votre identité.',
+      `Le lien ci-dessous vous est personnel et reste valable ${LINK_DAYS} jours. Vous pourrez relire le document en entier, puis recevoir un code à six chiffres à cette adresse pour confirmer votre identité.`,
       'La signature électronique a la même valeur qu’une signature sur papier (article 1367 du Code civil). Si vous ne vous attendiez pas à ce message, ignorez-le.',
     ],
     cta: { label: 'Relire et signer', url: signUrl(token) },
   })
-  await sendEmail({ to: signer.email, subject: signer.role === 'GUARANTOR' ? 'Signature de l’acte de cautionnement' : 'Signature du bail', ...mail })
+  await sendEmail({ to: signer.email, subject: signer.role === 'GUARANTOR' ? 'Signature de l’acte de cautionnement' : amendment ? 'Signature de l’avenant au bail' : 'Signature du bail', ...mail })
 }
 
 const statusView = (r: RequestWithSigners) => ({
@@ -63,7 +63,17 @@ const statusView = (r: RequestWithSigners) => ({
   completedAt: r.completedAt?.toISOString() ?? null,
   signers: r.signers
     .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
-    .map((s) => ({ id: s.id, role: s.role, roleLabel: ROLE_LABEL[s.role], name: s.name, email: s.email, signedAt: s.signedAt?.toISOString() ?? null })),
+    .map((s) => ({
+      id: s.id,
+      role: s.role,
+      roleLabel: ROLE_LABEL[s.role],
+      name: s.name,
+      email: s.email,
+      signedAt: s.signedAt?.toISOString() ?? null,
+      linkExpiresAt: s.tokenExpiresAt?.toISOString() ?? null,
+      linkExpired: Boolean(!s.signedAt && s.tokenExpiresAt && s.tokenExpiresAt < new Date()),
+    })),
+  amendment: Boolean((r.hashes as unknown as Hashes).amendment),
 })
 
 async function currentRequest(leaseId: string) {
@@ -81,7 +91,8 @@ router.get('/leases/:id/esign', requireUser, async (req, res) => {
 router.post('/leases/:id/esign', requireUser, async (req, res) => {
   const user = req.user!
   const lease = await leaseOwned(user.id, String(req.params.id))
-  if (lease.status !== 'DRAFT') throw new HttpError(409, 'La signature électronique se lance sur un bail en préparation.')
+  const amendment = lease.status === 'ACTIVE' && Boolean((lease.data as { dirty?: boolean }).dirty)
+  if (lease.status !== 'DRAFT' && !amendment) throw new HttpError(409, lease.status === 'ACTIVE' ? 'Rien à signer : le bail n’a pas changé depuis sa signature.' : 'Ce bail ne peut plus être signé.')
   const c0 = await assertReadyToSign(user, lease)
   const c: ContractInput = { ...c0, terms: { ...c0.terms, signature: { ...c0.terms.signature, mode: 'ELECTRONIC' } } }
   const withoutEmail = [...c.tenants.filter((t) => !t.email).map((t) => personName(t)), ...c.guarantors.filter((g) => !g.email).map((g) => `${personName(g)} (caution)`)]
@@ -91,7 +102,7 @@ router.post('/leases/:id/esign', requireUser, async (req, res) => {
   await prisma.signatureRequest.updateMany({ where: { leaseId: lease.id, status: 'PENDING' }, data: { status: 'CANCELLED' } })
 
   const leasePdf = await renderContractPdf(c)
-  const hashes: Hashes = { lease: sha256(leasePdf), leaseFile: await storePdf(user.id, 'bail-a-signer.pdf', leasePdf), guarantees: {} }
+  const hashes: Hashes = { lease: sha256(leasePdf), leaseFile: await storePdf(user.id, 'bail-a-signer.pdf', leasePdf), guarantees: {}, amendment }
   for (const [i, g] of c.guarantors.entries()) {
     const pdf = await renderGuaranteePdf(c, g)
     hashes.guarantees[i] = { hash: sha256(pdf), file: await storePdf(user.id, `caution-a-signer-${i + 1}.pdf`, pdf) }
@@ -109,7 +120,7 @@ router.post('/leases/:id/esign', requireUser, async (req, res) => {
       leaseId: lease.id,
       snapshot: c as unknown as Prisma.InputJsonObject,
       hashes: hashes as unknown as Prisma.InputJsonObject,
-      signers: { create: people.map((p, i) => ({ ...p, tokenHash: hashToken(tokens[i]) })) },
+      signers: { create: people.map((p, i) => ({ ...p, tokenHash: hashToken(tokens[i]), tokenExpiresAt: linkExpiry() })) },
     },
     include: { signers: true },
   })
@@ -117,7 +128,7 @@ router.post('/leases/:id/esign', requireUser, async (req, res) => {
   for (const [i, p] of people.entries()) {
     if (p.role === 'LANDLORD') continue
     const signer = request.signers.find((s) => s.tokenHash === hashToken(tokens[i]))!
-    await invite(signer, tokens[i], c, landlordLabel)
+    await invite(signer, tokens[i], c, landlordLabel, amendment)
   }
   await prisma.lease.update({ where: { id: lease.id }, data: { data: { ...(lease.data as object), terms: c.terms } as Prisma.InputJsonObject } })
   res.status(201).json({ success: true, data: { ...statusView(request), landlordUrl: `/signer/${encodeURIComponent(tokens[0])}` } })
@@ -131,7 +142,7 @@ router.post('/leases/:id/esign/landlord-link', requireUser, async (req, res) => 
   if (!r || !me) throw new HttpError(404, 'Aucune signature en cours.')
   if (me.signedAt) throw new HttpError(409, 'Vous avez déjà signé.')
   const token = newToken()
-  await prisma.signer.update({ where: { id: me.id }, data: { tokenHash: hashToken(token) } })
+  await prisma.signer.update({ where: { id: me.id }, data: { tokenHash: hashToken(token), tokenExpiresAt: linkExpiry() } })
   res.json({ success: true, data: { url: `/signer/${encodeURIComponent(token)}` } })
 })
 
@@ -143,8 +154,8 @@ router.post('/leases/:id/esign/remind/:signerId', requireUser, async (req, res) 
   if (!r || !signer || signer.role === 'LANDLORD') throw new HttpError(404, 'Signataire introuvable.')
   if (signer.signedAt) throw new HttpError(409, `${signer.name} a déjà signé.`)
   const token = newToken()
-  await prisma.signer.update({ where: { id: signer.id }, data: { tokenHash: hashToken(token) } })
-  await invite(signer, token, contractOf(r), landlordName(contractOf(r).landlord) || 'Votre bailleur')
+  await prisma.signer.update({ where: { id: signer.id }, data: { tokenHash: hashToken(token), tokenExpiresAt: linkExpiry() } })
+  await invite(signer, token, contractOf(r), landlordName(contractOf(r).landlord) || 'Votre bailleur', Boolean((r.hashes as unknown as Hashes).amendment))
   res.json({ success: true, data: { sentTo: signer.email } })
 })
 
@@ -162,6 +173,10 @@ async function signerOf(req: Request): Promise<{ signer: Signer; request: Reques
   if (!signer) throw new HttpError(404, 'Ce lien de signature n’est plus valable. Demandez au propriétaire de vous en renvoyer un.')
   const request = await prisma.signatureRequest.findUnique({ where: { id: signer.requestId }, include: { signers: true } })
   if (!request || request.status === 'CANCELLED') throw new HttpError(410, 'Cette signature a été annulée par le propriétaire. Un nouveau lien vous sera envoyé si besoin.')
+  // Lien expiré : seulement pour qui n'a pas encore signé (un signataire garde l'accès à son exemplaire).
+  if (!signer.signedAt && signer.tokenExpiresAt && signer.tokenExpiresAt < new Date()) {
+    throw new HttpError(410, 'Ce lien de signature a expiré. Demandez au propriétaire de vous en renvoyer un : il le fait en un clic.')
+  }
   return { signer, request }
 }
 
@@ -177,7 +192,7 @@ router.get('/esign/:token', limitPerVisitor(5, 60), async (req, res) => {
       roleLabel: ROLE_LABEL[signer.role],
       name: signer.name,
       email: maskEmail(signer.email),
-      document: signer.role === 'GUARANTOR' ? 'Acte de cautionnement' : 'Contrat de location',
+      document: signer.role === 'GUARANTOR' ? 'Acte de cautionnement' : (request.hashes as unknown as Hashes).amendment ? 'Avenant au contrat de location' : 'Contrat de location',
       landlord: landlordName(c.landlord),
       property: propertyAddress(c.property),
       mention: expectedMention(signer, c),
@@ -286,7 +301,7 @@ async function finalize(r: RequestWithSigners) {
   const landlord = r.signers.find((s) => s.role === 'LANDLORD')
   const tenants = r.signers.filter((s) => s.role === 'TENANT').sort((a, b) => a.position - b.position)
   const leaseSigners = [landlord, ...tenants].filter((s): s is Signer => Boolean(s))
-  const leasePdf = await renderContractPdf(c, { landlord: mark(landlord), tenants: c.tenants.map((_, i) => mark(tenants.find((t) => t.position === i))), certificate: cert('Contrat de location', h.lease, leaseSigners) })
+  const leasePdf = await renderContractPdf(c, { landlord: mark(landlord), tenants: c.tenants.map((_, i) => mark(tenants.find((t) => t.position === i))), certificate: cert(h.amendment ? 'Contrat de location, nouvelle version (avenant)' : 'Contrat de location', h.lease, leaseSigners) })
   const guarantees = new Map<number, Buffer>()
   for (const g of r.signers.filter((s) => s.role === 'GUARANTOR')) {
     const gf = c.guarantors[g.position]

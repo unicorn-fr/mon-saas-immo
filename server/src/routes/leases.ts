@@ -142,11 +142,13 @@ async function leaseView(user: User, lease: LeaseWithProperty) {
   ]
   const completion = termsCompletion(terms, { hasLandlord: Boolean(c.landlord.lastName || c.landlord.company?.name), hasProperty: Boolean(c.property.address && c.property.surface), hasTenant: c.tenants.length > 0, tense: Boolean(terms.zone?.tense) })
   const checklist = lease.status === 'DRAFT' ? withLinks(leaseMissing(c), lease) : []
+  const esignPending = Boolean(await prisma.signatureRequest.findFirst({ where: { leaseId: lease.id, status: 'PENDING' }, select: { id: true } }))
   return {
     id: lease.id,
     status: lease.status,
     ready: lease.status === 'DRAFT' && completion.percent === 100 && checklist.length === 0,
     checklist,
+    esignPending,
     dirty: Boolean((lease.data as { dirty?: boolean }).dirty),
     signedAt: iso(lease.signedAt),
     kind: leaseKindOf(lease),
@@ -248,6 +250,10 @@ router.get('/leases/:id', async (req, res) => {
 router.put('/leases/:id/terms', async (req, res) => {
   const user = req.user!
   const lease = await leaseOwned(user.id, String(req.params.id))
+  // Signature en ligne en cours : le contrat présenté aux signataires est figé.
+  if (await prisma.signatureRequest.findFirst({ where: { leaseId: lease.id, status: 'PENDING' }, select: { id: true } })) {
+    throw new HttpError(409, 'Une signature en ligne est en cours : le bail ne peut plus être modifié. Annulez-la depuis la page du bail pour le modifier.')
+  }
   if (lease.status === 'IMPORTED') throw new HttpError(409, 'Ce bail a été importé : ses conditions figurent dans le document signé.')
   if (lease.status === 'ENDED') throw new HttpError(409, 'Ce bail est terminé.')
   const body = leaseTermsSchema.partial().extend({ tenantIds: z.array(z.uuid()).min(1).max(6).optional() }).parse(req.body)

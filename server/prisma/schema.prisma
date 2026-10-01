@@ -352,6 +352,8 @@ model Signer {
   name         String
   email        String
   tokenHash    String    @unique
+  // Le lien personnel expire : un nouveau est envoyé sur demande (« Renvoyer le lien »).
+  tokenExpiresAt DateTime?
   codeHash     String?
   codeExpiresAt DateTime?
   codeAttempts Int       @default(0)

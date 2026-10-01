@@ -84,12 +84,14 @@ fi
 chmod 600 .env
 
 say "7/7 Démarrage (construction de l'image : quelques minutes)"
-docker compose up -d --build
+BAILIO_VERSION="$(git -C "$APP_DIR" rev-parse --short HEAD)" docker compose up -d --build
 
 # Sauvegarde quotidienne de la base à 3 h 15, conservée 14 jours.
 mkdir -p "$BACKUP_DIR" && chmod 700 "$BACKUP_DIR"
 echo "15 3 * * * root $COMPOSE_DIR/backup.sh >> /var/log/bailio-backup.log 2>&1" > /etc/cron.d/bailio-backup
-chmod +x "$COMPOSE_DIR/backup.sh" "$COMPOSE_DIR/update.sh"
+chmod +x "$COMPOSE_DIR/backup.sh" "$COMPOSE_DIR/update.sh" "$COMPOSE_DIR/auto-update.sh"
+# Mise à jour automatique après chaque push sur main.
+"$COMPOSE_DIR/auto-update.sh" --install
 
 DOMAIN=$(grep '^SITE_DOMAIN=' .env | cut -d= -f2)
 say "Terminé."

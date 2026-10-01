@@ -30,7 +30,7 @@ export function createApp() {
   // Signatures dessinées (images) et états des lieux : quelques centaines de Ko.
   app.use(express.json({ limit: '2mb' }))
 
-  app.get('/health', (_req, res) => res.json({ ok: true }))
+  app.get('/health', (_req, res) => res.json({ ok: true, version: process.env.BAILIO_VERSION ?? 'dev' }))
   // Erreurs survenues dans le navigateur d'un visiteur : écrites dans le journal du serveur pour les corriger.
   app.post('/api/client-errors', limitPerVisitor(10, 30), express.json({ limit: '20kb' }), (req, res) => {
     const b = (req.body ?? {}) as Record<string, unknown>

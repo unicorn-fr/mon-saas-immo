@@ -43,6 +43,31 @@ export default function Contrat() {
       </div>
     )
   }
+  if (view.esignPending) {
+    const cancel = async () => {
+      if (!window.confirm('Annuler la signature en ligne pour modifier le bail ? Les liens envoyés ne fonctionneront plus, et chacun devra signer à nouveau.')) return
+      try {
+        await api(`/leases/${id}/esign`, { method: 'DELETE' })
+        toast.show('Signature en ligne annulée. Vous pouvez modifier le bail.')
+        reload()
+      } catch (e) {
+        toast.error(e)
+      }
+    }
+    return (
+      <div style={{ padding: 24, maxWidth: 640, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <Callout tone="warn" title="Une signature en ligne est en cours">
+          Le bail envoyé aux signataires est figé : il ne peut plus être modifié, sinon chacun signerait un texte différent. Pour le modifier, annulez d’abord la signature, puis relancez-la.
+        </Callout>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <Btn to={`/espace/baux/${id}`}>Retour au bail</Btn>
+          <Btn variant="outline" onClick={cancel}>
+            Annuler la signature et modifier
+          </Btn>
+        </div>
+      </div>
+    )
+  }
   const c = view.computed
   const L = view.contract.landlord
   const P = view.contract.property
@@ -76,7 +101,8 @@ export default function Contrat() {
       }
     >
       {view.status === 'DRAFT' ? (
-        view.checklist.length ? (
+        // Liste absente : serveur pas encore à jour, on n'affiche rien plutôt que de planter.
+        !view.checklist ? null : view.checklist.length ? (
           <MissingList items={view.checklist} title={`Pour un bail complet, il manque ${view.checklist.length} information${view.checklist.length > 1 ? 's' : ''} :`} />
         ) : (
           <Callout tone="ok" title="Dossier complet">Toutes les mentions exigées par la loi sont renseignées. Vérifiez l’aperçu, puis passez à la signature.</Callout>

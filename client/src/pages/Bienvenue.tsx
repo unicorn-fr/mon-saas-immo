@@ -31,7 +31,7 @@ export default function Bienvenue() {
       .then((l) => {
         setLease(l)
         // Juste après la création : le bail est téléchargé automatiquement.
-        if (state?.justCreated && l.status !== 'IMPORTED' && !downloaded.current) {
+        if (state?.justCreated && l.status === 'ACTIVE' && !downloaded.current) {
           downloaded.current = true
           getPdf().then((u) => downloadPdf(u, 'bail.pdf')).catch(() => undefined)
         }
@@ -81,11 +81,13 @@ export default function Bienvenue() {
   }
 
   const imported = lease.status === 'IMPORTED'
+  const draft = lease.status === 'DRAFT'
+  const missing = lease.checklist?.length ?? 0
   const start = parseIso(lease.columns.startDate)
   const revision = addMonths(start, 12)
   const notice = lease.computed.noticeMonths
   const firstName = user?.firstName ?? lease.contract.landlord.firstNames?.split(' ')[0]
-  const inventoryFuture = !imported && start.getTime() >= Date.now() - 86_400_000
+  const inventoryFuture = !imported && !draft && start.getTime() >= Date.now() - 86_400_000
   const followUpActive = user?.followUpActive
 
   const care = [
@@ -105,18 +107,35 @@ export default function Bienvenue() {
       </header>
       <main className="split container" style={{ flex: 1, padding: 'clamp(40px, 5vw, 72px) clamp(20px, 8.3vw, 120px)', gap: 72, maxWidth: 1440 }}>
         <div className="stack" style={{ flex: 1, gap: 28, minWidth: 0 }}>
-          <h1 style={display('clamp(46px, 5vw, 64px)', { lineHeight: 1 })}>C'est fait{firstName ? `, ${firstName}` : ''}.</h1>
-          <p style={{ margin: 0, fontSize: 19, color: BAI.inkMid }}>
-            {imported ? 'Votre bail signé est rangé dans votre espace.' : 'Votre bail est téléchargé et envoyé par email.'}
+          <h1 style={display('clamp(46px, 5vw, 64px)', { lineHeight: 1 })}>{draft ? `Votre bail est enregistré${firstName ? `, ${firstName}` : ''}.` : `C'est fait${firstName ? `, ${firstName}` : ''}.`}</h1>
+          <p style={{ margin: 0, fontSize: 19, color: BAI.inkMid, lineHeight: 1.5 }}>
+            {imported
+              ? 'Votre bail signé est rangé dans votre espace.'
+              : draft
+                ? missing
+                  ? `Pour qu'il soit complet et valable, la loi impose encore ${missing} mention${missing > 1 ? 's' : ''} (diagnostics, chauffage, équipements…). Bailio vous les demande une par une, puis vous le faites signer en ligne ou sur papier.`
+                  : 'Toutes les mentions obligatoires sont renseignées. Il ne reste qu’à le faire signer, en ligne ou sur papier.'
+                : 'Votre bail est téléchargé et envoyé par email.'}
           </p>
-          <div className="col-md" style={{ display: 'flex', gap: 12 }}>
-            <Button height={56} loading={busy === 'print'} onClick={() => void act('print')}>
-              Imprimer le bail
-            </Button>
-            <Button height={56} variant="outline" loading={busy === 'download'} onClick={() => void act('download')}>
-              {imported ? 'Télécharger' : 'Télécharger à nouveau'}
-            </Button>
-          </div>
+          {draft ? (
+            <div className="col-md" style={{ display: 'flex', gap: 12 }}>
+              <Button height={56} onClick={() => navigate(`/espace/baux/${lease.id}`)}>
+                {missing ? 'Compléter mon bail' : 'Faire signer le bail'}
+              </Button>
+              <Button height={56} variant="outline" loading={busy === 'download'} onClick={() => void act('download')}>
+                Voir le brouillon
+              </Button>
+            </div>
+          ) : (
+            <div className="col-md" style={{ display: 'flex', gap: 12 }}>
+              <Button height={56} loading={busy === 'print'} onClick={() => void act('print')}>
+                Imprimer le bail
+              </Button>
+              <Button height={56} variant="outline" loading={busy === 'download'} onClick={() => void act('download')}>
+                {imported ? 'Télécharger' : 'Télécharger à nouveau'}
+              </Button>
+            </div>
+          )}
           <div className="stack" style={{ gap: 14, paddingTop: 20 }}>
             <span style={overline}>Et maintenant</span>
             {inventoryFuture ? (

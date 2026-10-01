@@ -8,6 +8,8 @@ import { Home, Page, Upload } from '../../components/Icons'
 import { api } from '../../lib/api'
 import { dayTitle, eurosCents, monthName, plural } from '../../lib/format'
 import type { Task, TodayView } from '../../lib/space'
+import { useAuth } from '../../lib/auth'
+import type { User } from '../../lib/types'
 
 /** « Aujourd'hui » : ce qu'il y a à faire cette semaine, déjà préparé. Maquette « Aujourd'hui ». */
 export default function Aujourdhui() {
@@ -35,6 +37,7 @@ function TodayContent() {
   const first = data.user.firstName
   return (
     <>
+      <FollowUpBanner />
       <div className="col-md" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 20 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <span className="hide-md" style={{ fontSize: 15, color: BAI.inkSoft }}>
@@ -240,5 +243,27 @@ function FirstSteps({ name }: { name: string | null }) {
       </div>
       <div style={{ fontSize: 15, color: BAI.inkSoft }}>Vous pourrez faire le reste plus tard, rien ne presse.</div>
     </>
+  )
+}
+
+/** Rappels par email désactivés : on le dit, avec un bouton pour les activer. */
+function FollowUpBanner() {
+  const { user, setUser } = useAuth()
+  const toast = useToast()
+  if (!user || user.followUpActive) return null
+  const activate = async () => {
+    setUser(await api<User>('/account/follow-up', { method: 'POST' }))
+    toast.show('Rappels activés : vous serez prévenu par email.')
+  }
+  return (
+    <div style={{ background: BAI.caramelLight, borderRadius: 16, padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+      <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <span style={{ fontSize: 15, fontWeight: 700 }}>Les rappels par email sont désactivés.</span>
+        <span style={{ fontSize: 14, color: BAI.inkMid }}>Loyer en retard, révision, attestation d’assurance, fin du bail : activez-les pour ne rien manquer.</span>
+      </span>
+      <Btn size="sm" onClick={() => activate().catch(toast.error)}>
+        Activer les rappels
+      </Btn>
+    </div>
   )
 }

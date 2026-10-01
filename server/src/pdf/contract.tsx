@@ -240,7 +240,7 @@ export function ContractDocument({ c, signed }: { c: ContractInput; signed?: Sig
           {p.roomList?.length ? ` Le logement comprend : ${p.roomList.map((r) => r.name.toLowerCase()).join(', ')}.` : ''}
         </P>
         <P>Autres parties du logement : {annexesLabel(p) || 'néant'}.</P>
-        <P>Clés et moyens d’accès remis au Locataire : {p.keys || BLANK}.</P>
+        <P>{p.keys ? `Clés et moyens d’accès remis au Locataire : ${p.keys}.` : 'Les clés et moyens d’accès remis au Locataire sont détaillés dans l’état des lieux d’entrée.'}</P>
         <Clause n={`${art}.4`}>Équipements privatifs</Clause>
         <P>{equipmentsLabel(p) ? `${equipmentsLabel(p)}.` : BLANK}</P>
         <Clause n={`${art}.5`}>Chauffage et eau chaude sanitaire</Clause>

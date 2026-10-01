@@ -282,6 +282,10 @@ function StepEquipments({ f, set }: { f: PropertyFile; set: (p: Partial<Property
           Fibre
         </ChipButton>
       </Group>
+      <div className="col-md" style={{ display: 'flex', gap: 16 }}>
+        <NumberField label="Détecteurs de fumée" value={f.smokeDetectors} onChange={(v) => set({ smokeDetectors: v, ...(v && v > 0 ? { equipments: [...eq].includes('smokeDetector') ? [...eq] : [...eq, 'smokeDetector'] } : {}) })} hint="Au moins un est obligatoire." />
+        <Input label="Clés remises" value={f.keys} onChange={(v) => set({ keys: v })} placeholder="2 clés, 1 badge" />
+      </div>
       {f.habitat === 'COLLECTIVE' ? (
         <Group legend="Dans l’immeuble">
           {(

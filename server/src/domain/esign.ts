@@ -8,6 +8,9 @@ export const CODE_MINUTES = 10
 export const CODE_ATTEMPTS = 5
 /** Délai pour signer une fois le code vérifié. */
 export const SIGN_WINDOW_MINUTES = 30
+/** Durée de validité d'un lien de signature ; « Renvoyer le lien » en crée un nouveau. */
+export const LINK_DAYS = 14
+export const linkExpiry = (from = new Date()) => new Date(from.getTime() + LINK_DAYS * 86_400_000)
 
 export const READ_AND_APPROVED = 'Lu et approuvé'
 

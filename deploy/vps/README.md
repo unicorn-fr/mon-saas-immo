@@ -11,14 +11,30 @@ les filtres réseau qui bloquent les domaines récemment créés (comme bailio.e
 
 Aucun service extérieur ne reçoit les documents des propriétaires. Seul Resend reçoit les emails à envoyer.
 
-## Mettre à jour (serveur déjà installé)
+## Mettre à jour
+
+**Automatique** : toutes les 5 minutes, le serveur regarde la branche `main` sur GitHub et se met à jour seul
+s'il y a du nouveau (`auto-update.sh`, activé par `install.sh`). Rien à faire après un push.
+
+Vérification : https://api.bailio.eu/health affiche la version en ligne (`"version":"abc1234"`, le début du
+numéro du dernier commit de `main`).
+
+**À la main** (ou pour activer la mise à jour automatique sur un serveur installé avant) — les commandes se tapent
+**sur le serveur**, pas sur votre ordinateur. Ouvrez d'abord une session sur le serveur :
 
 ```bash
-ssh -i ~/.ssh/bailio_infomaniak ubuntu@IP_DU_SERVEUR
-sudo /opt/bailio/deploy/vps/update.sh
+ssh -i ~/.ssh/VOTRE_CLE ubuntu@179.237.104.243
 ```
 
-Vérification : https://api.bailio.eu/api/drafts/import/available doit afficher `"available":true`.
+(ou, sans SSH : Manager Infomaniak → votre VPS → **Console**), puis :
+
+```bash
+cd /opt/bailio && sudo git pull --ff-only
+sudo deploy/vps/update.sh                 # mise à jour immédiate
+sudo deploy/vps/auto-update.sh --install  # mises à jour automatiques ensuite
+```
+
+Journal des mises à jour automatiques : `journalctl -u bailio-auto-update -n 50`.
 
 ## Servir le site depuis ce serveur (plus tard, quand bailio.fr sera récupéré chez Ionos)
 
@@ -56,7 +72,8 @@ de la base chaque nuit (14 jours conservés).
 
 | Besoin | Commande (sur le serveur) |
 |---|---|
-| Mettre à jour Bailio après un push sur `main` | `sudo /opt/bailio/deploy/vps/update.sh` |
+| Mettre à jour Bailio après un push sur `main` | automatique (5 min) ; à la main : `sudo /opt/bailio/deploy/vps/update.sh` |
+| Voir la version en ligne | https://api.bailio.eu/health |
 | Voir les journaux | `cd /opt/bailio/deploy/vps && sudo docker compose logs -f api` (ou `caddy`) |
 | Sauvegarder maintenant | `sudo /opt/bailio/deploy/vps/backup.sh` |
 | Restaurer une sauvegarde | `gunzip -c /opt/bailio-backups/bailio-AAAA-MM-JJ.sql.gz \| sudo docker compose exec -T db psql -U bailio -d bailio` |

@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { MissingList } from '../../components/Missing'
 import { ESignCard } from './ESign'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
 import { PaymentModal } from '../../components/PaymentModal'
@@ -34,6 +34,11 @@ const STATUS: Record<string, { label: string; tone: 'owner' | 'green' | 'caramel
 }
 
 function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; setLease: (v: LeaseView) => void }) {
+  const { hash } = useLocation()
+  // « Tout voir » depuis la page du locataire : on amène les paiements à l'écran.
+  useEffect(() => {
+    if (hash === '#paiements') document.getElementById('paiements')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [hash])
   const toast = useToast()
   const navigate = useNavigate()
   const [payOpen, setPayOpen] = useState(false)
@@ -88,8 +93,8 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
 
       <div className="split-aside" style={{ gap: 24 }}>
         <div className="grow">
-          {l.status === 'DRAFT' && l.checklist.length ? <MissingList items={l.checklist} /> : null}
-          {l.status === 'DRAFT' && !l.ready && !l.checklist.length && missing.length ? (
+          {l.status === 'DRAFT' && l.checklist?.length ? <MissingList items={l.checklist} /> : null}
+          {l.status === 'DRAFT' && !l.ready && !l.checklist?.length && missing.length ? (
             <Callout tone="tip" title="Encore quelques informations avant la signature">
               Il manque : {missing.map((s) => s.label.toLowerCase()).join(', ')}.{' '}
               <TextLink to={`/espace/baux/${l.id}/contrat`} style={{ fontSize: 13 }}>
@@ -104,7 +109,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
           ) : null}
           {l.computed.energyWarning ? <Callout tone="warn">{l.computed.energyWarning}</Callout> : null}
 
-          {l.status === 'DRAFT' ? <ESignCard leaseId={l.id} ready={l.ready} onChange={reload} /> : null}
+          {l.status === 'DRAFT' || (l.status === 'ACTIVE' && l.dirty) ? <ESignCard leaseId={l.id} ready={l.status === 'DRAFT' ? l.ready : true} amendment={l.status === 'ACTIVE'} onChange={reload} /> : null}
 
           <Card title="Que voulez-vous faire ?">
             <div className="grid-2" style={{ gap: 12 }}>
@@ -167,7 +172,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
           </Card>
 
           {l.status !== 'DRAFT' ? (
-            <Card title="Loyers et quittances" action={l.status !== 'ENDED' ? <Btn size="sm" onClick={() => setPayOpen(true)}>Loyer reçu</Btn> : null}>
+            <Card id="paiements" title="Loyers et quittances" action={l.status !== 'ENDED' ? <Btn size="sm" onClick={() => setPayOpen(true)}>Loyer reçu</Btn> : null}>
               <Line label="Ce mois-ci" value={l.rent.label} tone={l.rent.key === 'PAID' ? 'green' : l.rent.key === 'LATE' ? 'error' : undefined} />
               {l.payments.length ? (
                 l.payments.map((p) => (

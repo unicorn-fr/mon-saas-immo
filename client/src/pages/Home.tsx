@@ -4,7 +4,7 @@ import { BAI } from '../constants/bailio-tokens'
 import { SiteFooter, SiteHeader } from '../components/SiteChrome'
 import { Check, Cross, Pin } from '../components/Icons'
 import { display } from '../components/ui'
-import { MONTHLY_PRICE, priceLabel } from '../config'
+import { LAUNCH_OFFER, MONTHLY_PRICE, priceLabel } from '../config'
 
 // Ce que Bailio fait réellement, dit simplement. Chaque ligne correspond à une fonction du produit.
 const FEATURES = [
@@ -28,7 +28,7 @@ const FEATURES = [
 
 const STEPS = [
   { when: 'Environ 5 minutes', title: 'Vous répondez aux questions', text: "Le logement, vous et votre locataire, le loyer. Rien n'est demandé deux fois." },
-  { when: 'Tout de suite', title: 'Vous téléchargez le bail', text: 'Un PDF prêt à imprimer, à signer en deux exemplaires.' },
+  { when: 'Ensuite', title: 'Vous le faites signer', text: 'Bailio vérifie chaque mention obligatoire. Signature en ligne ou sur papier.' },
   { when: 'Pendant toute la location', title: 'Bailio garde les dates', text: 'Quittances, révision, fin du bail : vous êtes prévenu à temps.' },
 ]
 
@@ -199,7 +199,8 @@ export default function Home() {
                 <span style={display(MONTHLY_PRICE ? 64 : 44, { lineHeight: 1, color: BAI.caramel })}>{priceLabel()}</span>
                 {MONTHLY_PRICE ? <span style={{ fontSize: 16, color: BAI.onDarkMuted }}>par mois</span> : null}
               </div>
-              <div style={{ fontSize: 16, color: BAI.onDark }}>Quittances chaque mois, révision du loyer, rappels par email avant chaque échéance. Sans engagement.</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: BAI.caramel }}>{LAUNCH_OFFER} : rien à payer aujourd’hui.</div>
+              <div style={{ fontSize: 16, color: BAI.onDark }}>Quittances chaque mois, révision du loyer, rappels par email avant chaque échéance. Sans engagement. Vous serez prévenu par email avant tout paiement.</div>
               <Link to="/commencer" style={{ textDecoration: 'none', background: BAI.caramel, color: BAI.night, height: 56, borderRadius: 14, fontWeight: 700, fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 'auto' }}>
                 Essayer
               </Link>
@@ -220,7 +221,7 @@ export default function Home() {
 
         <section className="container" style={{ paddingBottom: 'clamp(72px, 8vw, 120px)' }}>
           <div className="stack" style={{ background: BAI.owner, borderRadius: 32, padding: 'clamp(40px, 5.5vw, 80px) 24px', alignItems: 'center', gap: 28, textAlign: 'center' }}>
-            <h2 style={display('clamp(40px, 5.5vw, 64px)', { color: BAI.surface })}>Votre bail dans 5 minutes.</h2>
+            <h2 style={display('clamp(40px, 5.5vw, 64px)', { color: BAI.surface })}>Votre bail, sans rien oublier.</h2>
             <Link to="/commencer" style={{ textDecoration: 'none', background: BAI.surface, color: BAI.owner, height: 64, padding: '0 36px', borderRadius: 16, fontWeight: 700, fontSize: 18, display: 'flex', alignItems: 'center' }}>
               Créer mon bail gratuit
             </Link>

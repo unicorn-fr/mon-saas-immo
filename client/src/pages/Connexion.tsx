@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { safePath } from '../lib/safePath'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 import { Callout, Input } from '../components/kit'
@@ -13,11 +14,6 @@ interface Session {
   leaseId: string | null
 }
 
-/** Chemin interne sûr (jamais une autre adresse) pour revenir là où l'on était. */
-function safePath(p: string | null | undefined): string | null {
-  if (!p || !p.startsWith('/') || p.startsWith('//') || p.includes('\\')) return null
-  return p
-}
 
 /** Écran partagé de la connexion et de l'inscription (maquettes « Connexion » et « Inscription directe »). */
 function AuthLayout({ children }: { children: ReactNode }) {

@@ -38,12 +38,14 @@ async function sendMagicLink(email: string, draftId: string | null, isNew = fals
   const url = `${env.CLIENT_URL}/connexion/lien?jeton=${encodeURIComponent(token)}`
   const mail = draftId
     ? layout({
-        title: 'Confirmez pour récupérer votre bail.',
+        title: 'Confirmez votre adresse pour retrouver votre bail.',
         paragraphs: [
-          'Vous avez déjà un espace Bailio avec cette adresse. Cliquez sur le bouton pour y ajouter votre nouveau bail et le télécharger.',
-          `Ce lien est valable ${LINK_MINUTES} minutes.`,
+          isNew
+            ? 'Cliquez sur le bouton : votre espace Bailio est créé et votre bail vous y attend. Pas de mot de passe à retenir.'
+            : 'Vous avez déjà un espace Bailio avec cette adresse. Cliquez sur le bouton pour y ajouter votre nouveau bail.',
+          `Ce lien est valable ${LINK_MINUTES} minutes. Si vous n'avez rien demandé, ignorez cet email.`,
         ],
-        cta: { label: 'Récupérer mon bail', url },
+        cta: { label: 'Retrouver mon bail', url },
       })
     : isNew
       ? layout({
@@ -78,18 +80,11 @@ router.post('/finish-draft', limiter, optionalUser, async (req, res) => {
     return res.json({ success: true, data: { status: 'created', leaseId: lease.id, user: publicUser(req.user) } })
   }
 
+  // Adresse vérifiée avant de créer quoi que ce soit : le bail est rattaché au compte au clic sur le lien.
   const { email } = emailSchema.parse(req.body)
   const existing = await prisma.user.findUnique({ where: { email } })
-  if (existing) {
-    await sendMagicLink(email, draft.id)
-    return res.json({ success: true, data: { status: 'check_email', email } })
-  }
-
-  const user = await prisma.user.create({ data: { email } })
-  const { lease } = await createLeaseFromDraft(user, draft.id)
-  const token = await createSession(user.id)
-  const fresh = await prisma.user.findUniqueOrThrow({ where: { id: user.id } })
-  res.json({ success: true, data: { status: 'created', leaseId: lease.id, sessionToken: token, user: publicUser(fresh) } })
+  await sendMagicLink(email, draft.id, !existing)
+  res.json({ success: true, data: { status: 'check_email', email } })
 })
 
 // Connexion par lien magique.
@@ -112,7 +107,8 @@ router.post('/magic-link/verify', limiter, async (req, res) => {
   const user = await prisma.user.upsert({
     where: { email: row.email },
     update: { emailVerifiedAt: new Date() },
-    create: { email: row.email, emailVerifiedAt: new Date() },
+    // Rappels par email actifs dès l'inscription (désactivables dans « Mon compte »).
+    create: { email: row.email, emailVerifiedAt: new Date(), followUpSince: new Date() },
   })
   const leaseId = row.draftId ? (await createLeaseFromDraft(user, row.draftId)).lease.id : null
   const sessionTokenValue = await createSession(user.id)

@@ -3,6 +3,9 @@ export const MONTHLY_PRICE: string | null = '9,99 €'
 
 export const priceLabel = () => MONTHLY_PRICE ?? 'Prix à venir'
 
+/** Aucun paiement n'est encore demandé : affiché partout où le prix apparaît (accueil, Mon compte). */
+export const LAUNCH_OFFER = 'Offert pendant le lancement'
+
 /** Adresse de contact affichée sur le site (mentions légales, confidentialité, contact). */
 export const CONTACT_EMAIL = 'contact@bailio.fr'
 

@@ -110,7 +110,11 @@ export default function FicheLogement() {
       <FicheSection id="equipments" guides={['decence']} n={++n} title="Équipements du logement" intro="Listés dans le bail et vérifiés à l’état des lieux." reference="Contrat type, rubrique II.A" done={done('equipments')}>
         <MultiChips options={opts(EQUIPMENTS)} value={f.equipments} onChange={(v) => set({ equipments: v })} />
         <Input label="Autres équipements" value={f.otherEquipments} onChange={(v) => set({ otherEquipments: v })} />
-        {!f.equipments?.includes('smokeDetector') ? <Callout tone="warn">Un détecteur de fumée est obligatoire dans tout logement.</Callout> : null}
+        <Fields>
+          <NumberField label="Détecteurs de fumée installés" value={f.smokeDetectors} onChange={(v) => set({ smokeDetectors: v, ...(v && v > 0 && !f.equipments?.includes('smokeDetector') ? { equipments: [...(f.equipments ?? []), 'smokeDetector'] } : {}) })} hint="Au moins un par logement, normalisé (marquage CE). Le nombre figure dans le bail." />
+          <Input label="Clés et moyens d’accès remis" value={f.keys} onChange={(v) => set({ keys: v })} placeholder="2 clés, 1 badge, 1 télécommande" hint="Repris dans le bail et dans l’état des lieux." />
+        </Fields>
+        {!f.smokeDetectors && !f.equipments?.includes('smokeDetector') ? <Callout tone="warn">Un détecteur de fumée est obligatoire dans tout logement.</Callout> : null}
       </FicheSection>
 
       <FicheSection id="annexes" n={++n} title="Annexes privatives" reference="Contrat type, rubrique II.C" done={done('annexes')}>

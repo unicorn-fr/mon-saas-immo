@@ -16,7 +16,7 @@
 | Emails | SMTP (Ionos) ou Resend (`lib/email.ts`), sinon affichage dans les logs |
 | Auth | Sans mot de passe : lien magique par email uniquement. Session = jeton aléatoire (empreinte en base), en-tête `Authorization: Bearer` |
 | Import de baux | Sur le serveur uniquement : Tesseract (OCR, `fra`) + poppler + `sharp` (redressement, éclairage), puis règles (`services/import/parse.ts`). Aucune donnée envoyée à un service d'IA |
-| Hébergement | VPS Infomaniak (`deploy/vps`) : Caddy (site + HTTPS + `/api`), API, PostgreSQL |
+| Hébergement | Site : Vercel (bailio.fr), qui relaie `/api` vers `api.bailio.eu`. API + PostgreSQL + Caddy (HTTPS) : VPS Infomaniak (`deploy/vps`), mis à jour automatiquement toutes les 5 minutes depuis `main` (`auto-update.sh`). Version en ligne : `https://api.bailio.eu/health` |
 
 ## Règles de design (maquette)
 
@@ -65,6 +65,7 @@ const url = await pdfUrl(`/leases/${id}/lease.pdf`)   // PDF protégé → URL l
 npm run install:all # server/ et client/ ont chacun leur package-lock.json
 npm run dev          # API :5000 + site :5173
 npm run typecheck    # client + serveur
-npm test
+npm test             # serveur (règles, OCR) + site (vitest)
 npm run build
+npm --prefix e2e test  # parcours complets dans un navigateur (API et site lancés en local, voir e2e/README.md)
 ```
