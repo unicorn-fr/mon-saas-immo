@@ -83,7 +83,11 @@ export function Confidentialite() {
         <li>Votre email, votre identité et votre adresse de bailleur, votre signature et, si vous l'indiquez, votre IBAN (affiché seulement sur les avis d'échéance) ;</li>
         <li>Vos logements : adresse, description, diagnostics et photos ;</li>
         <li>Vos locataires et leurs garants : identité, date et lieu de naissance, coordonnées, justificatifs que vous déposez, attestation d'assurance ;</li>
-        <li>Vos baux, loyers reçus, quittances, courriers, états des lieux (photos et signatures comprises), dépenses et factures.</li>
+        <li>Vos baux, loyers reçus, quittances, courriers, états des lieux (photos et signatures comprises), dépenses et factures ;</li>
+        <li>
+          Pour un bail signé en ligne, la preuve de chaque signature : nom, email, date et heure, adresse IP, type d'appareil, mention recopiée et signature dessinée. Elle figure
+          dans le certificat joint au bail signé et sert à prouver la signature en cas de désaccord (Code civil, article 1367). Elle est conservée aussi longtemps que le bail.
+        </li>
       </ul>
       <p>Nous ne demandons jamais de pièces que la loi interdit d'exiger d'un locataire.</p>
       <H2>Pourquoi</H2>

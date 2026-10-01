@@ -6,6 +6,7 @@ import { contractEndDate, diagnosticsFor, firstPayment, landlordNoticeMonthsFor,
 import { eurosInWords } from '../domain/words.js'
 import { quarterLabel } from '../lib/irl.js'
 import { CONSTRUCTION, ENERGY, NET, TV, annexesLabel, commonAreasLabel, dateLong, dateShort, durationText, equipmentsLabel, euros, guarantorName, landlordName, originalsCount, propertyAddress } from './labels.js'
+import { CertificatePage, type CertificateData } from './certificate.js'
 import { BLANK, Check, Footer, INK, MUTED, SignatureBoxes, Table, orBlank, s } from './theme.js'
 
 /**
@@ -102,7 +103,22 @@ const guarantorLine = (g: Guarantor) => `${formal(g)}${born(g)}${g.address ? `, 
 
 // ── Document ─────────────────────────────────────────────────────────────────
 
-export function ContractDocument({ c }: { c: ContractInput }) {
+/** Signature électronique apposée : image dessinée, mention recopiée, date. */
+export interface SignatureMark {
+  image: string | null
+  mention: string | null
+  signedAt: string
+}
+export interface SignedLease {
+  landlord?: SignatureMark
+  tenants?: (SignatureMark | undefined)[]
+  certificate?: CertificateData
+}
+
+const signedHint = (m?: SignatureMark) =>
+  m ? `${m.mention ? `« ${m.mention} » · ` : ''}Signé électroniquement le ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Europe/Paris' }).format(new Date(m.signedAt))}` : 'Mention manuscrite « Lu et approuvé », puis signature'
+
+export function ContractDocument({ c, signed }: { c: ContractInput; signed?: SignedLease }) {
   const t = c.terms
   const p = c.property
   const l = c.landlord
@@ -568,19 +584,21 @@ export function ContractDocument({ c }: { c: ContractInput }) {
 
         {/* Signatures */}
         <View wrap={false} style={{ marginTop: 14 }}>
-          <P>
-            Fait à <B>{t.signature?.place || (p.city ? upper(p.city) : BLANK)}</B>, le <B>{t.signature?.date ? dateLong(t.signature.date) : BLANK}</B>, en {originalsCount(c)} originaux dont un remis à chacune des Parties
-            {c.guarantors.length ? ' et un à la caution' : ''}, qui le reconnaît.
-          </P>
           {t.signature?.mode === 'ELECTRONIC' ? (
-            <Text style={{ fontSize: 7.8, color: MUTED, lineHeight: 1.4, marginBottom: 4 }}>
-              Contrat signé électroniquement : chaque signataire dispose d’un exemplaire numérique, qui vaut original (articles 1366, 1367 et 1375 du Code civil). Le certificat de signature est joint en dernière page.
-            </Text>
-          ) : null}
+            <P>
+              Fait à <B>{t.signature?.place || (p.city ? upper(p.city) : BLANK)}</B>, le <B>{t.signature?.date ? dateLong(t.signature.date) : BLANK}</B>, par voie électronique. Chacune des Parties
+              {c.guarantors.length ? ', ainsi que la caution,' : ''} reçoit un exemplaire numérique signé, qui vaut original (articles 1366, 1367 et 1375 du Code civil).{signed?.certificate ? ' Le certificat de signature est joint en dernière page.' : ''}
+            </P>
+          ) : (
+            <P>
+              Fait à <B>{t.signature?.place || (p.city ? upper(p.city) : BLANK)}</B>, le <B>{t.signature?.date ? dateLong(t.signature.date) : BLANK}</B>, en {originalsCount(c)} originaux dont un remis à chacune des Parties
+              {c.guarantors.length ? ' et un à la caution' : ''}, qui le reconnaît.
+            </P>
+          )}
           <SignatureBoxes
             boxes={[
-              { label: agent ? 'Le Bailleur ou son mandataire' : 'Le Bailleur', name: l.kind === 'SCI' || l.kind === 'COMPANY' ? landlordName(l) : formal(l), hint: 'Mention manuscrite « Lu et approuvé », puis signature' },
-              ...tenants.map((tn, i) => ({ label: plural ? `Le Locataire ${i + 1}` : 'Le Locataire', name: formal(tn), hint: 'Mention manuscrite « Lu et approuvé », puis signature' })),
+              { label: agent ? 'Le Bailleur ou son mandataire' : 'Le Bailleur', name: l.kind === 'SCI' || l.kind === 'COMPANY' ? landlordName(l) : formal(l), image: signed?.landlord?.image, hint: signedHint(signed?.landlord) },
+              ...tenants.map((tn, i) => ({ label: plural ? `Le Locataire ${i + 1}` : 'Le Locataire', name: formal(tn), image: signed?.tenants?.[i]?.image, hint: signedHint(signed?.tenants?.[i]) })),
             ]}
           />
         </View>
@@ -607,14 +625,15 @@ export function ContractDocument({ c }: { c: ContractInput }) {
           </View>
         ) : null}
 
-        <Footer left={`Bail ${lastNames || ''}${version}`} paraphs={paraphs} />
+        <Footer left={`Bail ${lastNames || ''}${version}${signed?.certificate ? ` · signé électroniquement, réf. ${signed.certificate.requestId.slice(0, 8)}` : ''}`} paraphs={signed?.certificate ? 0 : paraphs} />
       </Page>
+      {signed?.certificate ? <CertificatePage data={signed.certificate} /> : null}
     </Document>
   )
 }
 
-export function renderContractPdf(c: ContractInput): Promise<Buffer> {
-  return renderToBuffer(<ContractDocument c={c} />)
+export function renderContractPdf(c: ContractInput, signed?: SignedLease): Promise<Buffer> {
+  return renderToBuffer(<ContractDocument c={c} signed={signed} />)
 }
 
 /** Libellé court du trimestre, réexporté pour les écrans. */

@@ -75,6 +75,7 @@ model User {
   expenses    Expense[]
   inventories Inventory[]
   files       FileBlob[]
+  signatures  SignatureRequest[]
 }
 
 model Session {
@@ -192,6 +193,7 @@ model Lease {
   reminders   Reminder[]
   payments    Payment[]
   inventories Inventory[]
+  signatures  SignatureRequest[]
 
   @@index([userId])
 }
@@ -313,4 +315,54 @@ model Reminder {
 
   @@unique([leaseId, type, dueDate])
   @@index([userId, dueDate])
+}
+
+// Signature électronique d'un bail (Code civil, art. 1366 et 1367 ; règlement eIDAS) :
+// document figé (empreinte SHA-256), chaque signataire identifié par un lien personnel
+// et un code reçu par email, horodatage, adresse IP et appareil conservés comme preuve.
+model SignatureRequest {
+  id           String    @id @default(uuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaseId      String
+  lease        Lease     @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  // PENDING, COMPLETED, CANCELLED
+  status       String    @default("PENDING")
+  // Contrat figé au lancement : le PDF signé est rendu à l'identique depuis ces données.
+  snapshot     Json
+  // Empreintes SHA-256 des documents présentés : { lease, guarantees: { [index]: hash } }
+  hashes       Json
+  // Document final (signatures + certificat), une fois tous les signataires passés.
+  signedDocumentId String?
+  createdAt    DateTime  @default(now())
+  completedAt  DateTime?
+  signers      Signer[]
+
+  @@index([leaseId])
+}
+
+model Signer {
+  id           String    @id @default(uuid())
+  requestId    String
+  request      SignatureRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  // LANDLORD, TENANT, GUARANTOR
+  role         String
+  // Rang du locataire ou du garant dans le contrat figé
+  position     Int       @default(0)
+  name         String
+  email        String
+  tokenHash    String    @unique
+  codeHash     String?
+  codeExpiresAt DateTime?
+  codeAttempts Int       @default(0)
+  codeVerifiedAt DateTime?
+  // Mention recopiée (« Lu et approuvé », ou mention de l'article 2297 pour le garant)
+  mention      String?
+  image        String?
+  signedAt     DateTime?
+  ip           String?
+  userAgent    String?
+  createdAt    DateTime  @default(now())
+
+  @@index([requestId])
 }

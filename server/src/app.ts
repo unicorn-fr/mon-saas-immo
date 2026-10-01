@@ -9,6 +9,7 @@ import authRoutes from './routes/auth.js'
 import accountRoutes from './routes/account.js'
 import geoRoutes from './routes/geo.js'
 import spaceRoutes from './routes/space.js'
+import esignRoutes from './routes/esign.js'
 import leaseRoutes from './routes/leases.js'
 import todayRoutes from './routes/today.js'
 import moneyRoutes from './routes/money.js'
@@ -40,6 +41,7 @@ export function createApp() {
   app.use('/api/drafts', draftRoutes)
   app.use('/api/auth', authRoutes)
   app.use('/api/geo', geoRoutes)
+  app.use('/api', esignRoutes)
   app.use('/api', accountRoutes)
   app.use('/api', todayRoutes)
   app.use('/api', spaceRoutes)

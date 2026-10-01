@@ -286,7 +286,7 @@ router.delete('/leases/:id', async (req, res) => {
 
 // ── PDF du bail et de l'acte de caution ──────────────────────────────────────
 
-async function currentContract(user: User, lease: LeaseWithProperty): Promise<ContractInput> {
+export async function currentContract(user: User, lease: LeaseWithProperty): Promise<ContractInput> {
   const c = await contractFor(user, lease)
   const last = await prisma.document.findFirst({ where: { leaseId: lease.id, kind: 'LEASE' }, orderBy: { version: 'desc' } })
   const version = lease.status === 'DRAFT' || (lease.data as { dirty?: boolean }).dirty ? (last?.version ?? 0) + 1 : last?.version ?? 1
@@ -303,6 +303,11 @@ router.get('/leases/:id/lease.pdf', async (req, res) => {
     res.setHeader('Content-Type', doc.mimeType)
     return res.send(Buffer.from(doc.file))
   }
+  // Bail signé électroniquement : le fichier signé (signatures et certificat), à l'identique.
+  if (lease.status === 'ACTIVE' && !(lease.data as { dirty?: boolean }).dirty) {
+    const signedDoc = await prisma.document.findFirst({ where: { leaseId: lease.id, kind: 'LEASE' }, orderBy: { version: 'desc' } })
+    if (signedDoc?.file) return sendPdf(res, Buffer.from(signedDoc.file), `bail-signe.pdf`, download)
+  }
   const c = await currentContract(user, lease)
   const pdf = await renderContractPdf(c)
   sendPdf(res, pdf, `bail-${fileSlug(c.tenants.map((t) => t.lastName).join('-'))}.pdf`, download)
@@ -318,10 +323,34 @@ router.get('/leases/:id/guarantee/:tenantId.pdf', async (req, res) => {
   sendPdf(res, pdf, `acte-de-caution-${fileSlug(g.lastName ?? 'garant')}.pdf`, req.query.download === '1')
 })
 
-// Signature : le bail en cours est figé (version conservée), les loyers et échéances démarrent.
-router.post('/leases/:id/sign', async (req, res) => {
-  const user = req.user!
-  const lease = await leaseOwned(user.id, String(req.params.id))
+/**
+ * Le bail en cours est figé (version conservée), les loyers et échéances démarrent.
+ * Signature électronique : les PDF signés (signatures et certificat) sont conservés tels quels.
+ */
+export async function activateLease(user: User, lease: LeaseWithProperty, c: ContractInput, signed?: { leasePdf: Buffer; guarantees: Map<number, Buffer> }) {
+  const view = await leaseView(user, lease)
+  const pdf = signed?.leasePdf ?? (await renderContractPdf(c))
+  const { version: _v, ...snapshot } = c
+  await saveGeneratedDocument({ userId: user.id, kind: 'LEASE', title: `Bail ${view.kind === 'VIDE' ? 'vide' : 'meublé'}, ${view.tenantName}${signed ? ', signé électroniquement' : ''}`, pdf, snapshot: c, keepFile: Boolean(signed), leaseId: lease.id, propertyId: lease.propertyId })
+  // Actes de caution : un document par garant.
+  for (const g of view.guarantors) {
+    const tenant = await prisma.tenant.findFirst({ where: { id: g.tenantId, userId: user.id } })
+    const gf = tenant ? readTenant(tenant).guarantor : null
+    if (!gf) continue
+    const index = c.guarantors.findIndex((x) => x.lastName === gf.lastName && x.firstNames === gf.firstNames)
+    const signedPdf = index >= 0 ? signed?.guarantees.get(index) : undefined
+    await saveGeneratedDocument({ userId: user.id, kind: 'GUARANTEE', title: `Acte de caution de ${g.name}${signedPdf ? ', signé électroniquement' : ''}`, pdf: signedPdf ?? (await renderGuaranteePdf(c, gf)), snapshot: { contract: c, guarantor: gf }, keepFile: Boolean(signedPdf), leaseId: lease.id, propertyId: lease.propertyId, tenantId: g.tenantId })
+  }
+  const data = lease.data as Record<string, unknown>
+  const updated = await prisma.lease.update({
+    where: { id: lease.id },
+    data: { status: 'ACTIVE', signedAt: lease.signedAt ?? new Date(), data: { ...data, terms: data.terms, snapshot, dirty: false } as unknown as Prisma.InputJsonObject, ...leaseColumns(readTerms(lease), user) },
+  })
+  await ensureReminders(updated)
+}
+
+/** Vérifications avant signature : fiches complètes et mentions obligatoires présentes. */
+export async function assertReadyToSign(user: User, lease: LeaseWithProperty): Promise<ContractInput> {
   if (lease.status === 'IMPORTED' || lease.status === 'ENDED') throw new HttpError(409, 'Ce bail ne peut plus être modifié.')
   const view = await leaseView(user, lease)
   if (lease.status === 'DRAFT' && view.completion.percent < 100) {
@@ -330,21 +359,15 @@ router.post('/leases/:id/sign', async (req, res) => {
   }
   const c = await currentContract(user, lease)
   if (lease.status === 'DRAFT') assertComplete(leaseMissing(c))
-  const pdf = await renderContractPdf(c)
-  const { version: _v, ...snapshot } = c
-  await saveGeneratedDocument({ userId: user.id, kind: 'LEASE', title: `Bail ${view.kind === 'VIDE' ? 'vide' : 'meublé'}, ${view.tenantName}`, pdf, snapshot: c, leaseId: lease.id, propertyId: lease.propertyId })
-  // Actes de caution : un document par garant.
-  for (const g of view.guarantors) {
-    const tenant = await prisma.tenant.findFirst({ where: { id: g.tenantId, userId: user.id } })
-    const gf = tenant ? readTenant(tenant).guarantor : null
-    if (gf) await saveGeneratedDocument({ userId: user.id, kind: 'GUARANTEE', title: `Acte de caution de ${g.name}`, pdf: await renderGuaranteePdf(c, gf), snapshot: { contract: c, guarantor: gf }, leaseId: lease.id, propertyId: lease.propertyId, tenantId: g.tenantId })
-  }
-  const data = lease.data as Record<string, unknown>
-  const updated = await prisma.lease.update({
-    where: { id: lease.id },
-    data: { status: 'ACTIVE', signedAt: lease.signedAt ?? new Date(), data: { ...data, terms: data.terms, snapshot, dirty: false } as unknown as Prisma.InputJsonObject, ...leaseColumns(readTerms(lease), user) },
-  })
-  await ensureReminders(updated)
+  return c
+}
+
+// Signature sur papier : le propriétaire indique que le bail est signé.
+router.post('/leases/:id/sign', async (req, res) => {
+  const user = req.user!
+  const lease = await leaseOwned(user.id, String(req.params.id))
+  const c = await assertReadyToSign(user, lease)
+  await activateLease(user, lease, c)
   res.json({ success: true, data: await leaseView(user, await leaseOwned(user.id, lease.id)) })
 })
 

@@ -77,6 +77,8 @@ export async function saveGeneratedDocument(input: {
   tenantId?: string | null
   period?: string | null
   meta?: unknown
+  /** Conserver le PDF tel quel (document signé) au lieu de le régénérer depuis la copie figée. */
+  keepFile?: boolean
 }) {
   const last = input.leaseId
     ? await prisma.document.findFirst({ where: { leaseId: input.leaseId, kind: input.kind, period: input.period ?? null }, orderBy: { version: 'desc' } })
@@ -95,6 +97,7 @@ export async function saveGeneratedDocument(input: {
       tenantId: input.tenantId ?? null,
       period: input.period ?? null,
       meta: (input.meta ?? undefined) as object | undefined,
+      file: input.keepFile ? new Uint8Array(input.pdf) : undefined,
       version: (last?.version ?? 0) + 1,
     },
   })

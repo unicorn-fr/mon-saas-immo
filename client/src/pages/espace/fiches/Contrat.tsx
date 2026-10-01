@@ -323,13 +323,19 @@ export default function Contrat() {
         ))}
       </FicheSection>
 
-      <FicheSection id="signature" n={++n} title="Signature" done={done('signature')}>
+      <FicheSection id="signature" guides={['signature']} n={++n} title="Signature" reference="Code civil, art. 1366 ; Code civil, art. 1367" done={done('signature')}>
         <Fields>
           <Input label="Fait à" value={t.signature?.place} onChange={(v) => set({ signature: { ...t.signature, place: v } })} />
           <Input label="Le" type="date" value={t.signature?.date} onChange={(v) => set({ signature: { ...t.signature, date: v || null } })} hint="Laissez vide pour l’écrire à la main." />
         </Fields>
         <Chips legend="Signature" value={t.signature?.mode ?? null} onChange={(v) => set({ signature: { ...t.signature, mode: v } })} options={[{ value: 'PAPER', label: 'Sur papier' }, { value: 'ELECTRONIC', label: 'Électronique' }]} />
-        <Callout tone="tip">Sur papier : un exemplaire original par partie{view.guarantors.length ? ', plus un pour le garant' : ''}. Bailio imprime le bail avec les cases de paraphe.</Callout>
+        {t.signature?.mode === 'ELECTRONIC' ? (
+          <Callout tone="tip">
+            En ligne : chaque signataire reçoit un lien et un code par email, puis signe sur son téléphone. Il faut donc l’adresse email de chacun{view.guarantors.length ? ', garant compris' : ''}. La signature se lance depuis la page du bail.
+          </Callout>
+        ) : (
+          <Callout tone="tip">Sur papier : un exemplaire original par partie{view.guarantors.length ? ', plus un pour le garant' : ''}. Bailio imprime le bail avec les cases de paraphe.</Callout>
+        )}
         <div>
           <Btn variant="outline" onClick={preview}>
             Voir le bail complet

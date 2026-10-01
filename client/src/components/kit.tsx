@@ -145,6 +145,8 @@ interface BtnProps {
   size?: 'sm' | 'md' | 'lg'
   to?: string
   href?: string
+  /** Lien externe ou document : ouvert dans un nouvel onglet. */
+  newTab?: boolean
   onClick?: () => unknown
   loading?: boolean
   disabled?: boolean
@@ -175,7 +177,7 @@ export function btnStyle(variant: BtnVariant = 'primary', size: 'sm' | 'md' | 'l
 }
 
 /** Bouton ou lien. Une action asynchrone affiche un indicateur et ne peut pas être lancée deux fois. */
-export function Btn({ children, variant = 'primary', size = 'md', to, href, onClick, loading, disabled, full, type = 'button', style, title, icon }: BtnProps) {
+export function Btn({ children, variant = 'primary', size = 'md', to, href, newTab, onClick, loading, disabled, full, type = 'button', style, title, icon }: BtnProps) {
   const [busy, setBusy] = useState(false)
   const s = { ...btnStyle(variant, size, full), ...style }
   if (to) {
@@ -188,7 +190,7 @@ export function Btn({ children, variant = 'primary', size = 'md', to, href, onCl
   }
   if (href) {
     return (
-      <a href={href} style={s} title={title}>
+      <a href={href} style={s} title={title} {...(newTab ? { target: '_blank', rel: 'noreferrer' } : {})}>
         {icon}
         {children}
       </a>

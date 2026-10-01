@@ -5,6 +5,8 @@ import { contractEndDate, leaseDurationMonths, rentRevisionAllowed } from '../do
 import { eurosInWords } from '../domain/words.js'
 import { quarterLabel } from '../lib/irl.js'
 import { dateLong, durationText, euros, guarantorName, landlordAddress, landlordName, personName, personWithBirth, propertyAddress } from './labels.js'
+import { CertificatePage, type CertificateData } from './certificate.js'
+import type { SignatureMark } from './contract.js'
 import { BLANK, Footer, P, RULE, Row, Section, SignatureBoxes, Title, orBlank, s } from './theme.js'
 
 /**
@@ -13,7 +15,17 @@ import { BLANK, Footer, P, RULE, Row, Section, SignatureBoxes, Title, orBlank, s
  * mention apposée par la caution elle-même, reproduction de l'avant-dernier alinéa de l'article 22-1,
  * remise d'un exemplaire du bail à la caution.
  */
-export function GuaranteeDocument({ c, g }: { c: ContractInput; g: Guarantor }) {
+/** Mention de l'article 2297 du Code civil, que la caution recopie elle-même. */
+export function cautionMention(c: ContractInput, g: Guarantor): string {
+  const tenants = c.tenants.map((x) => personName(x)).join(' et ') || BLANK
+  const landlord = landlordName(c.landlord) || BLANK
+  const solidaire = g.engagement !== 'SIMPLE'
+  const cap = g.maxCents ?? null
+  const durationLabel = g.duration === 'OPEN' ? 'une durée indéterminée' : g.until ? `une durée déterminée, jusqu’au ${dateLong(g.until)}` : BLANK
+  return `Je m’engage, en qualité de caution${solidaire ? ' solidaire' : ''}, à payer à ${landlord} ce que lui doit ${tenants} en cas de défaillance de celui-ci, au titre du bail du logement situé ${propertyAddress(c.property) || BLANK} (loyers, charges, réparations locatives, indemnités d’occupation et frais), dans la limite de la somme de ${cap !== null ? `${eurosInWords(cap)} (${euros(cap)})` : BLANK} couvrant le paiement du principal et des accessoires, pour ${durationLabel}.${solidaire ? ' Je reconnais ne pouvoir exiger du bailleur qu’il poursuive d’abord le locataire ou qu’il divise ses poursuites entre les cautions.' : ''}`
+}
+
+export function GuaranteeDocument({ c, g, signed }: { c: ContractInput; g: Guarantor; signed?: { guarantor?: SignatureMark; landlord?: SignatureMark; certificate?: CertificateData } }) {
   const t = c.terms
   const kind = t.kind ?? 'VIDE'
   const months = leaseDurationMonths(kind, c.landlord, t)
@@ -24,7 +36,7 @@ export function GuaranteeDocument({ c, g }: { c: ContractInput; g: Guarantor }) 
   const revisable = kind !== 'MOBILITE' && t.revision?.enabled !== false && rentRevisionAllowed(c.property.diagnostics?.dpe?.class)
   const cap = g.maxCents ?? null
   const durationLabel = g.duration === 'OPEN' ? 'une durée indéterminée' : g.until ? `une durée déterminée, jusqu’au ${dateLong(g.until)}` : BLANK
-  const mention = `Je m’engage, en qualité de caution${solidaire ? ' solidaire' : ''}, à payer à ${landlord} ce que lui doit ${tenants} en cas de défaillance de celui-ci, au titre du bail du logement situé ${propertyAddress(c.property) || BLANK} (loyers, charges, réparations locatives, indemnités d’occupation et frais), dans la limite de la somme de ${cap !== null ? `${eurosInWords(cap)} (${euros(cap)})` : BLANK} couvrant le paiement du principal et des accessoires, pour ${durationLabel}.${solidaire ? ' Je reconnais ne pouvoir exiger du bailleur qu’il poursuive d’abord le locataire ou qu’il divise ses poursuites entre les cautions.' : ''}`
+  const mention = cautionMention(c, g)
 
   return (
     <Document title={`Acte de cautionnement, ${guarantorName(g)}`} author={landlord} creator="Bailio" language="fr-FR">
@@ -63,10 +75,21 @@ export function GuaranteeDocument({ c, g }: { c: ContractInput; g: Guarantor }) 
         <View style={[s.box, { backgroundColor: '#ffffff' }]}>
           <Text style={{ fontSize: 9.5, lineHeight: 1.5, fontStyle: 'italic', textAlign: 'justify' }}>« {mention} »</Text>
         </View>
-        <P small>Espace réservé à la mention écrite par la caution :</P>
-        {Array.from({ length: 6 }, (_, i) => (
-          <View key={i} style={{ height: 20, borderBottomWidth: 0.8, borderBottomColor: RULE }} />
-        ))}
+        {signed?.guarantor?.mention ? (
+          <>
+            <P small>Mention recopiée par la caution lors de la signature électronique :</P>
+            <View style={[s.box, { backgroundColor: '#ffffff' }]}>
+              <Text style={{ fontSize: 9.5, lineHeight: 1.5, textAlign: 'justify' }}>{signed.guarantor.mention}</Text>
+            </View>
+          </>
+        ) : (
+          <>
+            <P small>Espace réservé à la mention écrite par la caution :</P>
+            {Array.from({ length: 6 }, (_, i) => (
+              <View key={i} style={{ height: 20, borderBottomWidth: 0.8, borderBottomColor: RULE }} />
+            ))}
+          </>
+        )}
 
         <Section>Reproduction de l’avant-dernier alinéa de l’article 22-1</Section>
         <View style={s.box}>
@@ -84,17 +107,18 @@ export function GuaranteeDocument({ c, g }: { c: ContractInput; g: Guarantor }) 
           </P>
           <SignatureBoxes
             boxes={[
-              { label: 'Signature de la caution', name: guarantorName(g), hint: 'Après la mention ci-dessus' },
-              { label: 'Signature du bailleur', name: landlord },
+              { label: 'Signature de la caution', name: guarantorName(g), image: signed?.guarantor?.image, hint: signed?.guarantor ? `Signé électroniquement le ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Europe/Paris' }).format(new Date(signed.guarantor.signedAt))}` : 'Après la mention ci-dessus' },
+              { label: 'Signature du bailleur', name: landlord, image: signed?.landlord?.image },
             ]}
           />
         </View>
-        <Footer left={`Bailio · Acte de caution ${g.lastName ?? ''}`} />
+        <Footer left={`Bailio · Acte de caution ${g.lastName ?? ''}${signed?.certificate ? ` · signé électroniquement, réf. ${signed.certificate.requestId.slice(0, 8)}` : ''}`} />
       </Page>
+      {signed?.certificate ? <CertificatePage data={signed.certificate} /> : null}
     </Document>
   )
 }
 
-export function renderGuaranteePdf(c: ContractInput, g: Guarantor): Promise<Buffer> {
-  return renderToBuffer(<GuaranteeDocument c={c} g={g} />)
+export function renderGuaranteePdf(c: ContractInput, g: Guarantor, signed?: { guarantor?: SignatureMark; landlord?: SignatureMark; certificate?: CertificateData }): Promise<Buffer> {
+  return renderToBuffer(<GuaranteeDocument c={c} g={g} signed={signed} />)
 }

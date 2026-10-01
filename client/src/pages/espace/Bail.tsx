@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { MissingList } from '../../components/Missing'
+import { ESignCard } from './ESign'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
@@ -103,9 +104,11 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
           ) : null}
           {l.computed.energyWarning ? <Callout tone="warn">{l.computed.energyWarning}</Callout> : null}
 
+          {l.status === 'DRAFT' ? <ESignCard leaseId={l.id} ready={l.ready} onChange={reload} /> : null}
+
           <Card title="Que voulez-vous faire ?">
             <div className="grid-2" style={{ gap: 12 }}>
-              <Btn size="lg" onClick={guard(() => printDoc(pdf))} style={{ fontSize: 15, padding: '0 16px' }}>
+              <Btn size="lg" variant={l.status === 'DRAFT' ? 'outline' : 'primary'} onClick={guard(() => printDoc(pdf))} style={{ fontSize: 15, padding: '0 16px' }}>
                 {l.status === 'DRAFT' ? 'Imprimer pour signer à la main' : 'Imprimer'}
               </Btn>
               <Btn size="lg" variant="outline" onClick={guard(() => downloadDoc(pdf, 'bail.pdf'))} style={{ fontSize: 15, padding: '0 16px' }}>
@@ -126,10 +129,10 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
             </div>
             {l.status === 'DRAFT' || (l.status === 'ACTIVE' && l.dirty) ? (
               <div style={{ borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>{l.status === 'DRAFT' ? 'Une fois le bail signé par vous et votre locataire, indiquez-le : Bailio lance les quittances, les rappels et prépare l’état des lieux.' : 'Quand la nouvelle version est signée, indiquez-le pour la conserver.'}</span>
+                <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>{l.status === 'DRAFT' ? 'Signé sur papier par vous et votre locataire ? Indiquez-le : Bailio lance les quittances, les rappels et prépare l’état des lieux.' : 'Quand la nouvelle version est signée, indiquez-le pour la conserver.'}</span>
                 <div>
                   <Btn variant="dark" onClick={() => setSignOpen(true)} disabled={l.status === 'DRAFT' && !l.ready}>
-                    {l.status === 'DRAFT' ? 'Le bail est signé' : 'La nouvelle version est signée'}
+                    {l.status === 'DRAFT' ? 'Le bail est signé sur papier' : 'La nouvelle version est signée'}
                   </Btn>
                 </div>
               </div>

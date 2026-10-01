@@ -35,6 +35,7 @@ import FicheBailleur from './pages/espace/fiches/FicheBailleur'
 import FicheLogement from './pages/espace/fiches/FicheLogement'
 import FicheLocataire from './pages/espace/fiches/FicheLocataire'
 import ActeCaution from './pages/espace/fiches/ActeCaution'
+import Signer from './pages/Signer'
 import Contrat from './pages/espace/fiches/Contrat'
 import Courriers from './pages/espace/Courriers'
 import EtatDesLieux from './pages/espace/EtatDesLieux'
@@ -130,6 +131,7 @@ function Pages() {
               <Route path="/espace/locataires/:id/fiche" element={<RequireAuth><FicheLocataire /></RequireAuth>} />
               <Route path="/espace/locataires/:id/caution" element={<RequireAuth><ActeCaution /></RequireAuth>} />
               <Route path="/espace/baux/:id/contrat" element={<RequireAuth><Contrat /></RequireAuth>} />
+              <Route path="/signer/:token" element={<Signer />} />
               <Route path="/mentions-legales" element={<MentionsLegales />} />
               <Route path="/conditions" element={<Conditions />} />
               <Route path="/confidentialite" element={<Confidentialite />} />
