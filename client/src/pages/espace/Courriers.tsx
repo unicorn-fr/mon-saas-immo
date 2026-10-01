@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
+import type { GuideKey } from '../../lib/sources'
 import { BAI } from '../../constants/bailio-tokens'
 import { FicheSection, Fields, FlowHeader } from '../../components/FlowLayout'
 import { Btn, Callout, Chips, Computed, Input, LoadError, Loader, Money, NumberField, Select, TextArea, TextLink, Toggle, useLoad, useToast } from '../../components/kit'
@@ -125,7 +126,7 @@ function Receipt({ lease, onChange }: { lease: LeaseView; onChange: () => void }
   }
 
   return (
-    <FicheSection id="receipt" n={1} title="Quittance, reçu et avis d’échéance" reference="loi n° 89-462 du 6 juillet 1989, art. 21">
+    <FicheSection id="receipt" guides={['quittance']} n={1} title="Quittance, reçu et avis d’échéance" reference="loi n° 89-462 du 6 juillet 1989, art. 21">
       <Chips
         legend="Document"
         value={doc}
@@ -187,14 +188,14 @@ function Receipt({ lease, onChange }: { lease: LeaseView; onChange: () => void }
 
 type Letter = Record<string, unknown> & { type: LetterType }
 
-const INFO: Partial<Record<LetterType, { text: string; ref: string }>> = {
-  REVISION: { text: 'Bailio récupère l’indice officiel de l’INSEE. La révision n’est pas rétroactive : passé un an après la date prévue, elle est perdue pour cette année.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 17-1' },
-  INSURANCE: { text: 'Le locataire doit être assuré contre les risques locatifs et remettre une attestation chaque année.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 7 g' },
-  CHARGES: { text: 'Envoyez le décompte par nature de charges au moins un mois avant la régularisation. Les justificatifs restent consultables six mois. Si la régularisation arrive plus d’un an en retard, le locataire peut étaler le paiement sur 12 mois.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 23' },
-  NOTICE_TO_LEAVE: { text: 'Vente : le congé vaut offre de vente au locataire, avec le prix et les conditions. Reprise : joignez la notice d’information sur vos obligations. Locataire de plus de 65 ans aux ressources modestes : des protections particulières s’appliquent.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 15' },
-  DEPOSIT_RETURN: { text: 'Chaque retenue doit être justifiée (devis, facture, état des lieux). En cas de retard, le locataire a droit à 10 % du loyer mensuel par mois de retard.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 22' },
-  REMINDER: { text: 'Pensez à prévenir le garant. Pour aller plus loin, un commissaire de justice délivre le commandement de payer : Bailio ne remplace pas un professionnel du droit.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 24' },
-  FORMAL_NOTICE: { text: 'La mise en demeure part en lettre recommandée avec accusé de réception. Le garant doit être informé dans les 15 jours d’un commandement de payer.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 24 ; Code civil, art. 1344' },
+const INFO: Partial<Record<LetterType, { text: string; ref: string; guides?: GuideKey[] }>> = {
+  REVISION: { text: 'Bailio récupère l’indice officiel de l’INSEE. La révision n’est pas rétroactive : passé un an après la date prévue, elle est perdue pour cette année.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 17-1', guides: ['revision', 'irl'] },
+  INSURANCE: { text: 'Le locataire doit être assuré contre les risques locatifs et remettre une attestation chaque année.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 7 g', guides: ['assurance'] },
+  CHARGES: { text: 'Envoyez le décompte par nature de charges au moins un mois avant la régularisation. Les justificatifs restent consultables six mois. Si la régularisation arrive plus d’un an en retard, le locataire peut étaler le paiement sur 12 mois.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 23', guides: ['charges'] },
+  NOTICE_TO_LEAVE: { text: 'Vente : le congé vaut offre de vente au locataire, avec le prix et les conditions. Reprise : joignez la notice d’information sur vos obligations. Locataire de plus de 65 ans aux ressources modestes : des protections particulières s’appliquent.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 15', guides: ['conge'] },
+  DEPOSIT_RETURN: { text: 'Chaque retenue doit être justifiée (devis, facture, état des lieux). En cas de retard, le locataire a droit à 10 % du loyer mensuel par mois de retard.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 22', guides: ['depot', 'edlSortie'] },
+  REMINDER: { text: 'Pensez à prévenir le garant. Pour aller plus loin, un commissaire de justice délivre le commandement de payer : Bailio ne remplace pas un professionnel du droit.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 24', guides: ['impayes'] },
+  FORMAL_NOTICE: { text: 'La mise en demeure part en lettre recommandée avec accusé de réception. Le garant doit être informé dans les 15 jours d’un commandement de payer.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 24 ; Code civil, art. 1344', guides: ['impayes'] },
 }
 
 function useLetter(leaseId: string, type: LetterType) {
@@ -235,7 +236,7 @@ function LetterFrame({ lease, n, title, letter, note, recipient, children }: { l
   }
   const hasEmail = lease.tenants.some((t) => t.email)
   return (
-    <FicheSection id={letter.type} n={n} title={title} reference={info?.ref}>
+    <FicheSection id={letter.type} n={n} title={title} reference={info?.ref} guides={info?.guides}>
       {note ? <Callout tone={/interdit|pas encore|Aucun/.test(note) ? 'warn' : 'info'}>{note}</Callout> : null}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
         <span style={{ color: BAI.inkSoft }}>Destinataire</span>
@@ -527,7 +528,7 @@ function Unpaid({ lease, initial }: { lease: LeaseView; initial: 'REMINDER' | 'F
         />
       </div>
       {step === 'COMMAND' ? (
-        <FicheSection id="command" n={7} title="Commandement de payer" reference="loi n° 89-462 du 6 juillet 1989, art. 24">
+        <FicheSection id="command" guides={['impayes']} n={7} title="Commandement de payer" reference="loi n° 89-462 du 6 juillet 1989, art. 24">
           <p style={{ margin: 0, fontSize: 15, color: BAI.inkMid, lineHeight: 1.55 }}>Le commandement de payer est délivré par un commissaire de justice (anciennement huissier). Il laisse six semaines au locataire pour régler sa dette, et déclenche la clause résolutoire du bail. Le garant doit en recevoir une copie dans les 15 jours.</p>
           <Callout tone="tip">Contactez un commissaire de justice près du logement. Bailio prépare pour lui le bail, le décompte des sommes dues et les relances déjà envoyées : tout est dans vos documents.</Callout>
           <div>

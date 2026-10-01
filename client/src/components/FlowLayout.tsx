@@ -4,6 +4,8 @@ import { BAI } from '../constants/bailio-tokens'
 import type { Completion } from '../lib/contract'
 import { Close } from './Icons'
 import { Btn, Progress } from './kit'
+import { Sources } from './Sources'
+import type { GuideKey } from '../lib/sources'
 import { Spinner, display } from './ui'
 
 /** En-tête blanc des écrans plein écran (facture, parcours, fiches). */
@@ -207,7 +209,7 @@ export function FicheLayout({
 }
 
 /** Une étape d'une fiche : « Étape N », titre, explication, champs, référence juridique. */
-export function FicheSection({ id, n, title, intro, children, reference, done }: { id: string; n: number; title: string; intro?: ReactNode; children: ReactNode; reference?: string; done?: boolean }) {
+export function FicheSection({ id, n, title, intro, children, reference, guides, done }: { id: string; n: number; title: string; intro?: ReactNode; children: ReactNode; reference?: string; guides?: GuideKey[]; done?: boolean }) {
   return (
     <section id={id} style={{ background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 20, padding: 'clamp(18px, 3vw, 28px)', display: 'flex', flexDirection: 'column', gap: 18, scrollMarginTop: 100 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
@@ -219,7 +221,7 @@ export function FicheSection({ id, n, title, intro, children, reference, done }:
       </div>
       {intro ? <p style={{ margin: 0, fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>{intro}</p> : null}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>{children}</div>
-      {reference ? <div style={{ fontSize: 12, color: BAI.inkSoft, borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 10 }}>Référence : {reference}</div> : null}
+      <Sources reference={reference} guides={guides} />
     </section>
   )
 }

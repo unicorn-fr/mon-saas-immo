@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Cite } from '../../../components/Sources'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { BAI } from '../../../constants/bailio-tokens'
 import { StepFlow, StepNote, StepTitle, Fields } from '../../../components/FlowLayout'
@@ -240,7 +241,7 @@ function Documents({ f, set }: { f: TenantFile; set: (p: Partial<TenantFile>) =>
   return (
     <>
       <StepTitle>Ses justificatifs</StepTitle>
-      <StepNote>Facultatif. Seules les pièces que la loi autorise à demander sont proposées (décret n° 2015-1437).</StepNote>
+      <StepNote>Facultatif. Seules les pièces que la loi autorise à demander sont proposées (<Cite reference="décret n° 2015-1437" />).</StepNote>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {keys.map((k) => {
           const d = docs.find((x) => x.category === k)

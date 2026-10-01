@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Cite } from '../../../components/Sources'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { BAI } from '../../../constants/bailio-tokens'
 import { AddressField } from '../../../components/AddressField'
@@ -318,7 +319,7 @@ function StepFurniture({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyF
   return (
     <>
       <StepTitle>Les meubles obligatoires</StepTitle>
-      <StepNote>Pour louer en meublé, la loi impose ces 11 équipements (décret n° 2015-981). Cochez ce qui est présent.</StepNote>
+      <StepNote>Pour louer en meublé, la loi impose ces 11 équipements (<Cite reference="décret n° 2015-981" />). Cochez ce qui est présent.</StepNote>
       <div style={{ background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: '18px 20px', display: 'grid', gap: 12 }}>
         {keys.map((k) => (
           <Check

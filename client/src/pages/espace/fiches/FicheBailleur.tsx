@@ -32,7 +32,7 @@ export default function FicheBailleur() {
 
   return (
     <FicheLayout backTo={back} title="Profil du bailleur" subtitle="Rempli une seule fois, repris dans tous vos documents" completion={completion} save={save} onSave={saveNow}>
-      <FicheSection id="kind" n={++n} title="Qui loue ?" intro="Le bail doit désigner précisément le propriétaire." reference="loi n° 89-462 du 6 juillet 1989, art. 3 et 10" done={done('kind')}>
+      <FicheSection id="kind" guides={['bail']} n={++n} title="Qui loue ?" intro="Le bail doit désigner précisément le propriétaire." reference="loi n° 89-462 du 6 juillet 1989, art. 3 et 10" done={done('kind')}>
         <Chips
           legend="Le bailleur est"
           value={p.kind ?? null}
@@ -98,7 +98,7 @@ export default function FicheBailleur() {
         </Fields>
       </FicheSection>
 
-      <FicheSection id="agent" n={++n} title="Passez-vous par un professionnel ?" reference="loi n° 89-462 du 6 juillet 1989, art. 5" done={done('agent')}>
+      <FicheSection id="agent" guides={['agence']} n={++n} title="Passez-vous par un professionnel ?" reference="loi n° 89-462 du 6 juillet 1989, art. 5" done={done('agent')}>
         <Chips
           legend="Un agent ou un administrateur de biens intervient"
           value={agent.enabled ?? null}

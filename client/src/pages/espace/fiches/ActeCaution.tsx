@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Cite } from '../../../components/Sources'
 import { useParams } from 'react-router-dom'
 import { BAI } from '../../../constants/bailio-tokens'
 import { FicheLayout, FicheSection, Fields } from '../../../components/FlowLayout'
@@ -85,7 +86,7 @@ export default function ActeCaution() {
         <Callout tone="tip">Solidaire : vous pouvez réclamer au garant dès le premier impayé. Simple : vous devez d’abord poursuivre le locataire.</Callout>
       </FicheSection>
 
-      <FicheSection id="duration" n={++n} title="Durée et plafond" reference="loi n° 89-462 du 6 juillet 1989, art. 22-1" done={done('duration')}>
+      <FicheSection id="duration" guides={['caution']} n={++n} title="Durée et plafond" reference="loi n° 89-462 du 6 juillet 1989, art. 22-1" done={done('duration')}>
         <Chips legend="Durée de l’engagement" value={g.duration ?? null} onChange={(v) => set({ duration: v })} options={[{ value: 'FIXED', label: 'Durée déterminée' }, { value: 'OPEN', label: 'Durée indéterminée' }]} />
         {g.duration === 'FIXED' ? <Input label="Jusqu’au" type="date" value={g.until} onChange={(v) => set({ until: v || null })} hint="Par exemple : la fin du bail et un renouvellement." /> : null}
         <Money
@@ -97,7 +98,7 @@ export default function ActeCaution() {
         {g.duration === 'OPEN' ? <Callout tone="tip">À durée indéterminée, le garant peut résilier à tout moment ; la résiliation prend effet à la fin du bail en cours.</Callout> : null}
       </FicheSection>
 
-      <FicheSection id="mentions" n={++n} title="Ce que Bailio écrit pour vous" reference="loi n° 89-462 du 6 juillet 1989, art. 22-1 ; Code civil, art. 2297" done={done('mentions')}>
+      <FicheSection id="mentions" guides={['caution']} n={++n} title="Ce que Bailio écrit pour vous" reference="loi n° 89-462 du 6 juillet 1989, art. 22-1 ; Code civil, art. 2297" done={done('mentions')}>
         <Computed
           rows={[
             ['Montant du loyer', l ? `${euros(l.columns.rentCents)} + ${euros(l.columns.chargesCents)} de charges` : 'Repris du bail'],
@@ -106,7 +107,7 @@ export default function ActeCaution() {
             ['Reproduction de l’article 22-1', 'Ajoutée'],
           ]}
         />
-        <Callout tone="tip">Le garant écrit lui-même la mention de l’article 2297 du Code civil (montant et durée de son engagement), à la main ou dans la signature électronique. Un exemplaire du bail doit lui être remis.</Callout>
+        <Callout tone="tip">Le garant écrit lui-même la mention prévue par le <Cite reference="Code civil, art. 2297" /> (montant et durée de son engagement), à la main ou dans la signature électronique. Un exemplaire du bail doit lui être remis.</Callout>
       </FicheSection>
 
       <FicheSection id="signature" n={++n} title="Signature" done={done('signature')}>

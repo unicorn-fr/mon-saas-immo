@@ -45,7 +45,7 @@ export default function FicheLogement() {
 
   return (
     <FicheLayout backTo={`/espace/logements/${id}`} title="Fiche du logement" subtitle={[view.name, f.city].filter(Boolean).join(', ')} completion={completion} save={save} onSave={saveNow}>
-      <FicheSection id="address" n={++n} title="Adresse et localisation" reference="Contrat type, décret n° 2015-587 du 29 mai 2015, rubrique II.A" done={done('address')}>
+      <FicheSection id="address" guides={['bail']} n={++n} title="Adresse et localisation" reference="Contrat type, décret n° 2015-587 du 29 mai 2015, rubrique II.A" done={done('address')}>
         <Input label="Adresse" value={f.address} onChange={(v) => set({ address: v })} />
         <Fields>
           <Input label="Code postal" value={f.postalCode} inputMode="numeric" maxLength={5} onChange={(v) => set({ postalCode: v })} />
@@ -62,7 +62,7 @@ export default function FicheLogement() {
         <Callout tone="info">Certaines communes imposent un permis de louer (autorisation ou déclaration de mise en location). Renseignez-vous auprès de votre mairie avant la signature.</Callout>
       </FicheSection>
 
-      <FicheSection id="type" n={++n} title="Type et régime" intro="Ces mentions sont obligatoires dans le bail." reference="Contrat type, rubriques II.A et II.B" done={done('type')}>
+      <FicheSection id="type" guides={['meuble']} n={++n} title="Type et régime" intro="Ces mentions sont obligatoires dans le bail." reference="Contrat type, rubriques II.A et II.B" done={done('type')}>
         <Chips legend="Type d’habitat" value={f.habitat ?? null} onChange={(v) => set({ habitat: v })} options={[{ value: 'COLLECTIVE', label: 'Immeuble collectif' }, { value: 'INDIVIDUAL', label: 'Maison individuelle' }]} />
         <Chips legend="Régime juridique de l’immeuble" value={f.legalRegime ?? null} onChange={(v) => set({ legalRegime: v })} options={[{ value: 'MONO', label: 'Monopropriété' }, { value: 'COPRO', label: 'Copropriété' }]} />
         <Chips legend="Le logement est loué" value={f.furnished ?? null} onChange={(v) => set({ furnished: v })} options={[{ value: false, label: 'Vide' }, { value: true, label: 'Meublé' }]} />
@@ -80,7 +80,7 @@ export default function FicheLogement() {
         </FicheSection>
       ) : null}
 
-      <FicheSection id="size" n={++n} title="Construction et surface" intro="La période de construction détermine les diagnostics obligatoires." reference="loi n° 89-462 du 6 juillet 1989, art. 3-1" done={done('size')}>
+      <FicheSection id="size" guides={['decence']} n={++n} title="Construction et surface" intro="La période de construction détermine les diagnostics obligatoires." reference="loi n° 89-462 du 6 juillet 1989, art. 3-1" done={done('size')}>
         <Chips legend="Période de construction" value={f.constructionPeriod ?? null} onChange={(v) => set({ constructionPeriod: v, permitBefore1997: v === 'AFTER_2005' ? false : v === '1990_2005' ? f.permitBefore1997 : true })} options={opts(CONSTRUCTION_LABEL)} />
         {f.constructionPeriod === '1990_2005' ? <Chips legend="Permis de construire délivré avant le 1er juillet 1997 ?" value={f.permitBefore1997 ?? null} onChange={(v) => set({ permitBefore1997: v })} options={[{ value: true, label: 'Oui' }, { value: false, label: 'Non' }]} /> : null}
         <Fields>
@@ -107,7 +107,7 @@ export default function FicheLogement() {
         {f.heating?.mode === 'COLLECTIVE' || f.hotWater?.mode === 'COLLECTIVE' ? <Callout tone="tip">Avec un chauffage ou une eau chaude collectifs, le bail doit préciser comment la consommation est répartie.</Callout> : null}
       </FicheSection>
 
-      <FicheSection id="equipments" n={++n} title="Équipements du logement" intro="Listés dans le bail et vérifiés à l’état des lieux." reference="Contrat type, rubrique II.A" done={done('equipments')}>
+      <FicheSection id="equipments" guides={['decence']} n={++n} title="Équipements du logement" intro="Listés dans le bail et vérifiés à l’état des lieux." reference="Contrat type, rubrique II.A" done={done('equipments')}>
         <MultiChips options={opts(EQUIPMENTS)} value={f.equipments} onChange={(v) => set({ equipments: v })} />
         <Input label="Autres équipements" value={f.otherEquipments} onChange={(v) => set({ otherEquipments: v })} />
         {!f.equipments?.includes('smokeDetector') ? <Callout tone="warn">Un détecteur de fumée est obligatoire dans tout logement.</Callout> : null}
@@ -148,7 +148,7 @@ export default function FicheLogement() {
         <Chips legend="Accès à internet" value={f.internet ?? null} onChange={(v) => set({ internet: v })} options={[{ value: 'FIBER', label: 'Fibre' }, { value: 'ADSL', label: 'ADSL' }, { value: 'NONE', label: 'Aucun raccordement' }]} />
       </FicheSection>
 
-      <FicheSection id="diagnostics" n={++n} title="Diagnostics" intro="Ils forment le dossier de diagnostic technique, annexé au bail." reference="loi n° 89-462 du 6 juillet 1989, art. 3-3" done={done('diagnostics')}>
+      <FicheSection id="diagnostics" guides={['diagnostics', 'dpe']} n={++n} title="Diagnostics" intro="Ils forment le dossier de diagnostic technique, annexé au bail." reference="loi n° 89-462 du 6 juillet 1989, art. 3-3" done={done('diagnostics')}>
         <Fields>
           <Select label="Classe énergie (DPE)" value={d.dpe?.class ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, class: v || null } } })} options={(['A', 'B', 'C', 'D', 'E', 'F', 'G'] as const).map((c) => ({ value: c, label: c }))} />
           <Select label="Classe climat (GES)" value={d.dpe?.ges ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, ges: v || null } } })} options={(['A', 'B', 'C', 'D', 'E', 'F', 'G'] as const).map((c) => ({ value: c, label: c }))} />
@@ -200,8 +200,8 @@ export default function FicheLogement() {
         {d.dpe?.class === 'G' || d.dpe?.class === 'F' ? <Callout tone="warn">Classe G : le logement ne peut plus être loué depuis 2025. Classe F ou G : le loyer ne peut plus être augmenté, ni en cours de bail, ni au changement de locataire.</Callout> : null}
       </FicheSection>
 
-      <FicheSection id="market" n={++n} title="Loyer de marché et encadrement" reference="loi n° 89-462 du 6 juillet 1989, art. 17 et 18" done={done('market')}>
-        <Chips legend="La commune est en zone tendue" value={f.market?.tense ?? null} onChange={(v) => set({ market: { ...f.market, tense: v } })} options={[{ value: true, label: 'Oui' }, { value: false, label: 'Non' }]} hint={<>Liste officielle : <a href="https://www.service-public.fr/simulateur/calcul/zones-tendues" target="_blank" rel="noreferrer">vérifier ma commune</a>.</>} />
+      <FicheSection id="market" guides={['encadrement', 'zonesTendues']} n={++n} title="Loyer de marché et encadrement" reference="loi n° 89-462 du 6 juillet 1989, art. 17 et 18" done={done('market')}>
+        <Chips legend="La commune est en zone tendue" value={f.market?.tense ?? null} onChange={(v) => set({ market: { ...f.market, tense: v } })} options={[{ value: true, label: 'Oui' }, { value: false, label: 'Non' }]} hint={<>Liste officielle : <a href="https://www.service-public.gouv.fr/simulateur/calcul/zones-tendues" target="_blank" rel="noreferrer">vérifier ma commune</a>.</>} />
         {view.rentControlLikely ? (
           <Fields>
             <MoneyM2 label="Loyer de référence" cents={f.market?.refRentCentsM2} onChange={(c) => set({ market: { ...f.market, refRentCentsM2: c } })} />
@@ -219,7 +219,7 @@ export default function FicheLogement() {
       </FicheSection>
 
       {f.furnished ? (
-        <FicheSection id="furniture" n={++n} title="Le mobilier" intro="Les 11 éléments exigés par la loi, puis l’inventaire détaillé qui sera annexé au bail." reference="Décret n° 2015-981 du 31 juillet 2015" done={done('furniture')}>
+        <FicheSection id="furniture" guides={['meubleRegles']} n={++n} title="Le mobilier" intro="Les 11 éléments exigés par la loi, puis l’inventaire détaillé qui sera annexé au bail." reference="Décret n° 2015-981 du 31 juillet 2015" done={done('furniture')}>
           <div className="grid-2" style={{ gap: 10 }}>
             {(Object.keys(FURNITURE_REQUIRED) as FurnitureKey[]).map((k) => (
               <Check

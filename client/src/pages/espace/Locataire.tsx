@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Cite } from '../../components/Sources'
 import { useNavigate, useParams } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
@@ -110,7 +111,7 @@ function TenantPage({ t, reload }: { t: TenantView; reload: () => void }) {
               {insuranceOk ? <Check /> : <Circle />}
               <span style={{ color: insuranceOk ? BAI.ink : BAI.error }}>{f.insurance?.expiresAt ? `Attestation d’assurance, valable jusqu’au ${dateNum(f.insurance.expiresAt)}` : 'Attestation d’assurance, à demander'}</span>
             </div>
-            <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.45 }}>Seules les pièces autorisées par le décret n° 2015-1437 peuvent être demandées.</span>
+            <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.45 }}>Seules les pièces autorisées par le <Cite reference="décret n° 2015-1437" /> peuvent être demandées.</span>
           </Card>
           <div>
             <Btn variant="danger" size="sm" onClick={remove}>

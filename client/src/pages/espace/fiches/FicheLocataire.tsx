@@ -64,7 +64,7 @@ export default function FicheLocataire() {
         <Callout tone="tip">{e('Étudiant', 'Étudiante')} : un bail meublé de 9 mois non reconduit est possible. Formation, stage, mission temporaire : le bail mobilité de 1 à 10 mois devient possible.</Callout>
       </FicheSection>
 
-      <FicheSection id="colocation" n={++n} title="Colocation" reference="loi n° 89-462 du 6 juillet 1989, art. 8-1" done={done('colocation')}>
+      <FicheSection id="colocation" guides={['colocation']} n={++n} title="Colocation" reference="loi n° 89-462 du 6 juillet 1989, art. 8-1" done={done('colocation')}>
         <Chips legend={`${e('Il', 'Elle')} loue`} value={f.living ?? null} onChange={(v) => set({ living: v })} options={[{ value: 'ALONE', label: e('Seul', 'Seule') }, { value: 'COUPLE', label: 'En couple' }, { value: 'COLOCATION', label: 'En colocation' }]} />
         {f.living === 'COUPLE' || f.living === 'COLOCATION' ? (
           <>
@@ -81,7 +81,7 @@ export default function FicheLocataire() {
         ) : null}
       </FicheSection>
 
-      <FicheSection id="guarantee" n={++n} title="Garantie" reference="loi n° 89-462 du 6 juillet 1989, art. 22-1" done={done('guarantee')}>
+      <FicheSection id="guarantee" guides={['caution', 'visale']} n={++n} title="Garantie" reference="loi n° 89-462 du 6 juillet 1989, art. 22-1" done={done('guarantee')}>
         <Chips
           legend="Quelle garantie ?"
           value={f.guarantee ?? null}
@@ -110,12 +110,12 @@ export default function FicheLocataire() {
         ) : null}
       </FicheSection>
 
-      <FicheSection id="documents" n={++n} title="Justificatifs" intro="Uniquement les documents que la loi vous autorise à demander." reference="Décret n° 2015-1437 du 5 novembre 2015" done={done('documents')}>
+      <FicheSection id="documents" guides={['justificatifs']} n={++n} title="Justificatifs" intro="Uniquement les documents que la loi vous autorise à demander." reference="Décret n° 2015-1437 du 5 novembre 2015" done={done('documents')}>
         <DocList f={f} set={set} />
         <Callout tone="warn">Interdit de demander : photo d’identité, carte Vitale, relevés de compte, attestation de bonne tenue de compte, dossier médical, extrait de casier judiciaire, chèque de réservation.</Callout>
       </FicheSection>
 
-      <FicheSection id="insurance" n={++n} title="Assurance habitation" reference="loi n° 89-462 du 6 juillet 1989, art. 7" done={done('insurance')}>
+      <FicheSection id="insurance" guides={['assurance']} n={++n} title="Assurance habitation" reference="loi n° 89-462 du 6 juillet 1989, art. 7" done={done('insurance')}>
         <Fields>
           <Input label="Assureur" value={f.insurance?.insurer} onChange={(v) => set({ insurance: { ...f.insurance, insurer: v } })} />
           <Input label="Échéance de l’attestation" type="date" value={f.insurance?.expiresAt} onChange={(v) => set({ insurance: { ...f.insurance, expiresAt: v || null } })} />
