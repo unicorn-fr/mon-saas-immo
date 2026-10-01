@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { MissingList } from '../../components/Missing'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
@@ -86,7 +87,8 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
 
       <div className="split-aside" style={{ gap: 24 }}>
         <div className="grow">
-          {l.status === 'DRAFT' && !l.ready ? (
+          {l.status === 'DRAFT' && l.checklist.length ? <MissingList items={l.checklist} /> : null}
+          {l.status === 'DRAFT' && !l.ready && !l.checklist.length && missing.length ? (
             <Callout tone="tip" title="Encore quelques informations avant la signature">
               Il manque : {missing.map((s) => s.label.toLowerCase()).join(', ')}.{' '}
               <TextLink to={`/espace/baux/${l.id}/contrat`} style={{ fontSize: 13 }}>

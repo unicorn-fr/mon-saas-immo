@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { MissingList } from '../../../components/Missing'
 import { useParams } from 'react-router-dom'
 import { BAI } from '../../../constants/bailio-tokens'
 import { FicheLayout, FicheSection, Fields } from '../../../components/FlowLayout'
@@ -74,6 +75,13 @@ export default function Contrat() {
         </Btn>
       }
     >
+      {view.status === 'DRAFT' ? (
+        view.checklist.length ? (
+          <MissingList items={view.checklist} title={`Pour un bail complet, il manque ${view.checklist.length} information${view.checklist.length > 1 ? 's' : ''} :`} />
+        ) : (
+          <Callout tone="ok" title="Dossier complet">Toutes les mentions exigées par la loi sont renseignées. Vérifiez l’aperçu, puis passez à la signature.</Callout>
+        )
+      ) : null}
       {view.status === 'ACTIVE' ? <Callout tone="warn" title="Ce bail est signé">Toute modification crée une nouvelle version, à faire signer par les deux parties (avenant). La version signée reste conservée.</Callout> : null}
 
       <FicheSection id="type" guides={['meuble', 'mobilite']} n={++n} title="Type de bail" intro="Chaque type a ses règles de durée, de dépôt et de charges. Bailio les applique." reference="loi n° 89-462 du 6 juillet 1989, titres Ier, Ier bis et Ier ter" done={done('type')}>

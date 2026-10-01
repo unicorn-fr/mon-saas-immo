@@ -26,7 +26,12 @@ export function PaymentModal({ open, onClose, onSaved, leaseId, dueCents, tenant
   const save = async (send: boolean) => {
     if (!amount) return toast.show('Indiquez le montant reçu.', 'error')
     try {
-      await api(`/leases/${leaseId}/payments`, { method: 'POST', body: { period, amountCents: amount, receivedAt: date } })
+      const saved = await api<{ missing?: Array<{ label: string }> }>(`/leases/${leaseId}/payments`, { method: 'POST', body: { period, amountCents: amount, receivedAt: date } })
+      if (saved.missing?.length) {
+        toast.show(`Loyer enregistré. Pour établir la quittance, complétez d’abord : ${saved.missing.map((m) => m.label.charAt(0).toLowerCase() + m.label.slice(1)).join(', ')}.`, 'error')
+        onSaved?.()
+        return onClose()
+      }
       if (send) await api(`/leases/${leaseId}/receipts/${period}/send`, { method: 'POST' })
       toast.show(send ? `${partial ? 'Reçu' : 'Quittance'} envoyé${partial ? '' : 'e'} au locataire.` : `Loyer enregistré. ${partial ? 'Le reçu' : 'La quittance'} est dans vos documents.`)
       onSaved()

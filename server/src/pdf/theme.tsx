@@ -38,7 +38,7 @@ export const s = StyleSheet.create({
   // lineHeight sur la page casse les textes dynamiques (pagination) : il est porté par chaque bloc de texte.
   title: { fontSize: 16, fontWeight: 700, letterSpacing: 1.6, textAlign: 'center', textTransform: 'uppercase' },
   subtitle: { fontSize: 11, fontWeight: 500, textAlign: 'center', marginTop: 6 },
-  intro: { fontSize: 7.8, color: MUTED, textAlign: 'center', marginTop: 6, marginBottom: 14 },
+  intro: { fontSize: 7.8, color: MUTED, textAlign: 'center', marginTop: 8, marginBottom: 14, lineHeight: 1.45 },
   section: { fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 16, paddingBottom: 5, borderBottomWidth: 1, borderBottomColor: INK, marginBottom: 8 },
   sub: { fontSize: 9.5, fontWeight: 700, marginTop: 8, marginBottom: 4 },
   row: { flexDirection: 'row', paddingVertical: 3.5 },
@@ -64,8 +64,10 @@ export const orBlank = (v: string | number | null | undefined) => (v === null ||
 export function Title({ children, subtitle, intro }: { children: ReactNode; subtitle?: ReactNode; intro?: ReactNode }) {
   return (
     <View>
-      <Text style={s.title}>{children}</Text>
-      {subtitle ? <Text style={s.subtitle}>{subtitle}</Text> : null}
+      <View style={{ borderTopWidth: 2, borderBottomWidth: 2, borderColor: INK, paddingVertical: 11, paddingHorizontal: 10 }}>
+        <Text style={s.title}>{children}</Text>
+        {subtitle ? <Text style={s.subtitle}>{subtitle}</Text> : null}
+      </View>
       {intro ? <Text style={s.intro}>{intro}</Text> : <View style={{ height: 12 }} />}
     </View>
   )

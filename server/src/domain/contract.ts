@@ -184,6 +184,10 @@ export const propertyFileSchema = z.object({
     }),
   ),
   photos: opt(z.array(z.string().uuid()).max(60)),
+  /** Détecteurs de fumée installés (code de la construction et de l'habitation). */
+  smokeDetectors: opt(z.number().int().min(0).max(20)),
+  /** Clés et moyens d'accès remis : « 2 clés, 1 badge, 1 télécommande ». */
+  keys: opt(text(200)),
 })
 export type PropertyFile = z.infer<typeof propertyFileSchema>
 

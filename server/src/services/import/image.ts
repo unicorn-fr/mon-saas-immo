@@ -85,6 +85,21 @@ export async function analysePage(input: Buffer): Promise<{ skew: number; linePi
     const v = ac(lag)
     if (v > peak) [pitch, peak] = [lag, v]
   }
+  // Page aérée (titres, paragraphes espacés) : le pic trouvé peut être un multiple de l'interligne.
+  // On retient la plus petite fraction de ce pic qui reste nettement périodique.
+  if (pitch && peak > 0) {
+    let bestSub = 0
+    let bestValue = peak * 0.5
+    for (const k of [2, 3, 4]) {
+      const sub = Math.round(pitch / k)
+      if (sub < 8) continue
+      for (const lagAround of [sub - 1, sub, sub + 1]) {
+        const v = ac(lagAround)
+        if (v > bestValue) [bestSub, bestValue] = [lagAround, v]
+      }
+    }
+    if (bestSub) pitch = bestSub
+  }
   return { skew: Math.round(best * 10) / 10, linePitch: pitch && peak > 0 ? pitch * scale : null }
 }
 

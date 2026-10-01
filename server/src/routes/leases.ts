@@ -11,6 +11,7 @@ import { ensureReminders } from '../services/reminders.js'
 import { contractFor, leaseKindOf, leaseOwned, propertyName, readProfile, readProperty, readTenant, readTerms, tenantName } from '../services/contract.js'
 import { leaseTermsSchema, type ContractInput, type LeaseKind, type LeaseTerms } from '../domain/contract.js'
 import { termsCompletion } from '../domain/completion.js'
+import { leaseMissing, partiesMissing, type Missing } from '../domain/checklist.js'
 import { formatDateFr, monthYearFr, parseIsoDate } from '../domain/lease.js'
 import {
   allowedChargesModes,
@@ -89,6 +90,29 @@ function computed(c: ContractInput) {
   }
 }
 
+/** Chaque information manquante, avec le lien vers la fiche et l'étape où la compléter. */
+function withLinks(missing: Missing[], lease: LeaseWithProperty) {
+  return missing.map((m) => {
+    const tenantId = m.tenant !== undefined ? lease.tenantIds[m.tenant] ?? lease.tenantIds[0] : lease.tenantIds[0]
+    const coTenant = m.tenant !== undefined && m.tenant >= lease.tenantIds.length
+    const to = {
+      LANDLORD: `/espace/compte/profil#${m.section}`,
+      PROPERTY: `/espace/logements/${lease.propertyId}/fiche#${m.section}`,
+      TENANT: tenantId ? `/espace/locataires/${tenantId}/fiche#${coTenant ? 'colocation' : m.section}` : `/espace/baux/${lease.id}/contrat#parties`,
+      GUARANTOR: tenantId ? `/espace/locataires/${tenantId}/caution#${m.section}` : `/espace/baux/${lease.id}/contrat#parties`,
+      TERMS: `/espace/baux/${lease.id}/contrat#${m.section}`,
+    }[m.where]
+    return { key: m.key, label: m.label, where: m.where, to }
+  })
+}
+
+/** Refuse un document tant qu'une mention obligatoire manque, en disant laquelle. */
+export function assertComplete(missing: Missing[]) {
+  if (!missing.length) return
+  const list = missing.slice(0, 4).map((m) => m.label.charAt(0).toLowerCase() + m.label.slice(1))
+  throw new HttpError(400, `Pour que ce document soit valable, il manque : ${list.join(' ; ')}${missing.length > 4 ? ` (et ${missing.length - 4} autre${missing.length > 5 ? 's' : ''})` : ''}.`)
+}
+
 async function leaseView(user: User, lease: LeaseWithProperty) {
   const c = await contractFor(user, lease)
   const [payments, documents, inventories, reminders, tenants] = await Promise.all([
@@ -117,10 +141,12 @@ async function leaseView(user: User, lease: LeaseWithProperty) {
     ...(leaseKindOf(lease) !== 'VIDE' ? [{ key: 'furniture', label: 'Inventaire du mobilier', status: c.property.furniture?.inventory?.length ? 'Joint' : 'Avec l’état des lieux', done: Boolean(c.property.furniture?.inventory?.length) }] : []),
   ]
   const completion = termsCompletion(terms, { hasLandlord: Boolean(c.landlord.lastName || c.landlord.company?.name), hasProperty: Boolean(c.property.address && c.property.surface), hasTenant: c.tenants.length > 0, tense: Boolean(terms.zone?.tense) })
+  const checklist = lease.status === 'DRAFT' ? withLinks(leaseMissing(c), lease) : []
   return {
     id: lease.id,
     status: lease.status,
-    ready: lease.status === 'DRAFT' && completion.percent === 100,
+    ready: lease.status === 'DRAFT' && completion.percent === 100 && checklist.length === 0,
+    checklist,
     dirty: Boolean((lease.data as { dirty?: boolean }).dirty),
     signedAt: iso(lease.signedAt),
     kind: leaseKindOf(lease),
@@ -303,6 +329,7 @@ router.post('/leases/:id/sign', async (req, res) => {
     throw new HttpError(400, `Il manque encore : ${missing.join(', ')}.`)
   }
   const c = await currentContract(user, lease)
+  if (lease.status === 'DRAFT') assertComplete(leaseMissing(c))
   const pdf = await renderContractPdf(c)
   const { version: _v, ...snapshot } = c
   await saveGeneratedDocument({ userId: user.id, kind: 'LEASE', title: `Bail ${view.kind === 'VIDE' ? 'vide' : 'meublé'}, ${view.tenantName}`, pdf, snapshot: c, leaseId: lease.id, propertyId: lease.propertyId })
@@ -418,6 +445,11 @@ router.post('/leases/:id/payments', async (req, res) => {
   // Quittance (paiement complet) ou reçu (paiement partiel), rangé dans les documents.
   const c = await contractFor(user, lease)
   const kind = amount >= due ? 'RECEIPT' : 'PARTIAL'
+  const missing = partiesMissing(c)
+  if (missing.length) {
+    // Le loyer est enregistré ; la quittance attend les mentions obligatoires (nom et adresse du bailleur…).
+    return res.json({ success: true, data: { period: payment.period, amountCents: payment.amountCents, receivedAt: iso(payment.receivedAt), full: amount >= due, documentId: null, missing: withLinks(missing, lease) } })
+  }
   const input = receiptInput(c, lease, body.period, kind, payment)
   const pdf = await renderReceiptPdf(input)
   const names = c.tenants.map((t) => personName(t, false)).join(' et ')
@@ -444,7 +476,9 @@ router.get('/leases/:id/receipts/:period.pdf', async (req, res) => {
   const payment = await prisma.payment.findUnique({ where: { leaseId_period: { leaseId: lease.id, period } } })
   const due = lease.rentCents + lease.chargesCents
   const kind = !payment || payment.amountCents >= due ? 'RECEIPT' : 'PARTIAL'
-  const pdf = await renderReceiptPdf(receiptInput(await contractFor(user, lease), lease, period, kind, payment))
+  const c = await contractFor(user, lease)
+  assertComplete(partiesMissing(c))
+  const pdf = await renderReceiptPdf(receiptInput(c, lease, period, kind, payment))
   sendPdf(res, pdf, `${kind === 'RECEIPT' ? 'quittance' : 'recu'}-${period}.pdf`, req.query.download === '1')
 })
 
@@ -458,7 +492,9 @@ router.get('/leases/:id/notice/:period.pdf', async (req, res) => {
   const user = req.user!
   const lease = await leaseOwned(user.id, String(req.params.id))
   const period = z.string().regex(periodRe).parse(req.params.period)
-  const pdf = await renderReceiptPdf(receiptInput(await contractFor(user, lease), lease, period, 'NOTICE'))
+  const c = await contractFor(user, lease)
+  assertComplete(partiesMissing(c))
+  const pdf = await renderReceiptPdf(receiptInput(c, lease, period, 'NOTICE'))
   sendPdf(res, pdf, `avis-echeance-${period}.pdf`, req.query.download === '1')
 })
 
@@ -470,6 +506,7 @@ router.post('/leases/:id/receipts/:period/send', async (req, res) => {
   const payment = await prisma.payment.findUnique({ where: { leaseId_period: { leaseId: lease.id, period } } })
   if (!payment) throw new HttpError(400, 'Enregistrez d’abord le loyer reçu pour ce mois.')
   const c = await contractFor(user, lease)
+  assertComplete(partiesMissing(c))
   const to = c.tenants.map((t) => t.email).filter((e): e is string => Boolean(e))
   if (!to.length) throw new HttpError(400, 'Ajoutez l’email du locataire dans sa fiche pour lui envoyer sa quittance.')
   const full = payment.amountCents >= lease.rentCents + lease.chargesCents
@@ -560,6 +597,7 @@ router.get('/leases/:id/letters/defaults/:type', async (req, res) => {
 
 async function letterPdf(user: User, lease: LeaseWithProperty, letter: LetterInput) {
   const c = await contractFor(user, lease)
+  assertComplete(partiesMissing(c))
   const recipient = await recipientOf(user, lease, c)
   const content = letterContent(letter, { tenantName: recipient.name, propertyAddress: propertyAddress(c.property), guarantorName: c.guarantors[0] ? personName(c.guarantors[0]) : null })
   const input = { content, landlord: c.landlord, recipient, date: new Date() }

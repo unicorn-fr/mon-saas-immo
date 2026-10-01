@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useRef, type ReactNode } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 import type { Completion } from '../lib/contract'
 import { Close } from './Icons'
@@ -210,8 +210,15 @@ export function FicheLayout({
 
 /** Une étape d'une fiche : « Étape N », titre, explication, champs, référence juridique. */
 export function FicheSection({ id, n, title, intro, children, reference, guides, done }: { id: string; n: number; title: string; intro?: ReactNode; children: ReactNode; reference?: string; guides?: GuideKey[]; done?: boolean }) {
+  const { hash } = useLocation()
+  const ref = useRef<HTMLElement>(null)
+  const target = hash === `#${id}`
+  // Arrivée depuis « Il manque… » : on amène l'étape à l'écran et on la signale.
+  useEffect(() => {
+    if (target) ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [target])
   return (
-    <section id={id} style={{ background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 20, padding: 'clamp(18px, 3vw, 28px)', display: 'flex', flexDirection: 'column', gap: 18, scrollMarginTop: 100 }}>
+    <section ref={ref} id={id} style={{ background: BAI.surface, border: `${target && !done ? 2 : 1}px solid ${target && !done ? BAI.caramel : BAI.divider}`, borderRadius: 20, padding: 'clamp(18px, 3vw, 28px)', display: 'flex', flexDirection: 'column', gap: 18, scrollMarginTop: 100 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.caramelInk }}>Étape {n}</span>

@@ -162,6 +162,8 @@ export interface LeaseView {
   id: string
   status: LeaseStatus
   ready: boolean
+  /** Mentions obligatoires manquantes, avec le lien vers la fiche à compléter. */
+  checklist: MissingItem[]
   dirty: boolean
   signedAt: string | null
   kind: LeaseKind
@@ -298,4 +300,11 @@ export interface InventoryView {
   property: { id: string; name: string; address: string }
   landlordName: string
   tenantName: string
+}
+
+export interface MissingItem {
+  key: string
+  label: string
+  where: 'LANDLORD' | 'PROPERTY' | 'TENANT' | 'TERMS' | 'GUARANTOR'
+  to: string
 }

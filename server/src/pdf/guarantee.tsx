@@ -24,7 +24,7 @@ export function GuaranteeDocument({ c, g }: { c: ContractInput; g: Guarantor }) 
   const revisable = kind !== 'MOBILITE' && t.revision?.enabled !== false && rentRevisionAllowed(c.property.diagnostics?.dpe?.class)
   const cap = g.maxCents ?? null
   const durationLabel = g.duration === 'OPEN' ? 'une durée indéterminée' : g.until ? `une durée déterminée, jusqu’au ${dateLong(g.until)}` : BLANK
-  const mention = `Je me porte caution${solidaire ? ' solidaire' : ''} de ${tenants} envers ${landlord}, pour le paiement du loyer, des charges, des réparations locatives, des indemnités d’occupation et de tous frais dus au titre du bail, dans la limite de la somme de ${cap !== null ? `${eurosInWords(cap)} (${euros(cap)})` : BLANK} couvrant le paiement du principal et des accessoires, pour ${durationLabel}.${solidaire ? ' En renonçant au bénéfice de discussion, je reconnais ne pouvoir exiger du bailleur qu’il poursuive d’abord le locataire.' : ''}`
+  const mention = `Je m’engage, en qualité de caution${solidaire ? ' solidaire' : ''}, à payer à ${landlord} ce que lui doit ${tenants} en cas de défaillance de celui-ci, au titre du bail du logement situé ${propertyAddress(c.property) || BLANK} (loyers, charges, réparations locatives, indemnités d’occupation et frais), dans la limite de la somme de ${cap !== null ? `${eurosInWords(cap)} (${euros(cap)})` : BLANK} couvrant le paiement du principal et des accessoires, pour ${durationLabel}.${solidaire ? ' Je reconnais ne pouvoir exiger du bailleur qu’il poursuive d’abord le locataire ou qu’il divise ses poursuites entre les cautions.' : ''}`
 
   return (
     <Document title={`Acte de cautionnement, ${guarantorName(g)}`} author={landlord} creator="Bailio" language="fr-FR">

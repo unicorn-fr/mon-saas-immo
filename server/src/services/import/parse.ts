@@ -357,7 +357,7 @@ function nameAt(doc: Doc, start: number, lastNameFirst: boolean): { name: Person
 }
 
 function roleWord(s: string): Role | null {
-  if (/bailleur|proprietaire|loueur/.test(s)) return 'landlord'
+  if (/bailleur|proprietaire|loueur|^b[a-z]{1,2}i?ll?eu?r$/.test(s)) return 'landlord'
   if (/locataire|preneur|colocataire|occupant/.test(s)) return 'tenant'
   if (/garant|caution/.test(s)) return 'guarantor'
   return null
@@ -379,6 +379,8 @@ function readParties(doc: Doc): { landlord: Person; tenants: (PersonName & { ema
   const labelled = /(?<=^|\n|[-•*]\s?)[ \t]*(?:(le |la |les )?(bailleur|bailleresse|proprietaire|loueur|locataire|preneur|colocataire|garant|caution)s?\s*(?:n°\s*)?\d?\s*(?:\(s\))?\s*(?:[:=]|\n)|(nom (?:et |, )?prenoms?|nom|identite|prenoms? (?:et )?nom)\s*(?:du |de la |des )?(bailleur|proprietaire|locataire|preneur|garant|caution)?s?\s*(?:\d\s*)?[:=])[ \t]*/g
   for (const hit of doc.find(labelled, 0, end)) {
     if (overlaps(hit.index)) continue
+    // « …RÉSIDENCE PRINCIPALE DU / LOCATAIRE » : suite d'un titre coupé, pas un libellé
+    if (/\b(du|de|des|au|la|le)\s*\n[\s:]*$/.test(doc.low.slice(Math.max(0, hit.index - 8), hit.index))) continue
     const at = hit.end
     const lastFirst = /^nom( et |, )?prenom|^nom\s*$/.test((hit.match[3] ?? '').trim())
     const n = nameAt(doc, at, lastFirst)
@@ -398,10 +400,19 @@ function readParties(doc: Doc): { landlord: Person; tenants: (PersonName & { ema
     mentions.push({ index: hit.index, end: n.end, name: n.name, role: null, labelled: false })
     taken.push([hit.index, n.end])
   }
+  // 2 bis. Acte rédigé sans civilité : « ENTRE LES SOUSSIGNÉS / Jean DUPONT, né le… ; / ET / Marie MARTIN… ; Paul BERNARD… ; »
+  for (const hit of doc.find(/entre les soussigne(?:e)?s?\s*[:,]?\s*\n|\n[\s:]*et\s*\n|;\s*\n/g, 0, end)) {
+    if (overlaps(hit.end)) continue
+    if (/^[\s:]*([cg]i-?\s?(apres|dessous)|pour|le|la|les|il|d'une|d'autre)\b/.test(doc.low.slice(hit.end, hit.end + 30))) continue
+    const n = nameAt(doc, hit.end, false)
+    if (!n?.name.firstName || !n.name.lastName) continue
+    mentions.push({ index: hit.end, end: n.end, name: n.name, role: null, labelled: false })
+    taken.push([hit.end, n.end])
+  }
   mentions.sort((a, b) => a.index - b.index)
 
   // 3. Rôle des mentions sans libellé : « … ci-après dénommé le bailleur » qui suit, sinon intitulé de bloc qui précède.
-  const designations = doc.find(/ci-?\s?(apres|dessous)\s*(designee?s?|denommee?s?|appelee?s?|nommee?s?)?\s*(ensemble\s*)?(ou\s*)?[«"]?\s*(le |la |les |l')?(bailleur|bailleresse|proprietaire|loueur|locataire|preneur|colocataire|garant|caution)/, 0, end)
+  const designations = doc.find(/[cg]i-?\s?(apres|dessous)\s*(designee?s?|denommee?s?|appelee?s?|nommee?s?)?\s*(ensemble\s*)?(ou\s*)?[«"]?\s*(le |la |les |l')?(b[a-z]{1,2}i?ll?eu?r|bailleresse|proprietaire|loueur|locataire|preneur|colocataire|garant|caution)/, 0, end)
   const headers = doc.find(/(?:^|\n)\s*(?:[a-z]\.|\d\.|[-•])?\s*(le |la |les |l')?(bailleur|bailleresse|proprietaire|loueur|locataires?|preneurs?|colocataires?|garants?|caution)s?\s*(\(s\))?\s*(?=\n|$)|\bd'une part\b|\bd'autre part\b/, 0, end)
   for (const [i, m] of mentions.entries()) {
     if (m.role) continue
@@ -409,6 +420,12 @@ function readParties(doc: Doc): { landlord: Person; tenants: (PersonName & { ema
     const des = designations.find((d) => d.index > m.index && d.index < Math.max(nextIndex, m.end + 1) + 400 && !mentions.some((o) => o.index > m.index && o.index < d.index && o.role))
     if (des) {
       m.role = roleWord(des.match[6])
+      continue
+    }
+    // « Jean DUPONT, demeurant… / D'UNE PART » : la partie désignée avant « d'une part » est le bailleur
+    const partOne = headers.find((h) => /d'une part/.test(h.match[0]) && h.index > m.index && h.index < nextIndex)
+    if (partOne && !mentions.some((o) => o.index < m.index && o.role === 'landlord')) {
+      m.role = 'landlord'
       continue
     }
     const header = [...headers].reverse().find((h) => h.index < m.index)
