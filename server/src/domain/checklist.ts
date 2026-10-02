@@ -59,6 +59,10 @@ export function leaseMissing(c: ContractInput): Missing[] {
   if (!(p.smokeDetectors && p.smokeDetectors > 0) && !p.equipments?.includes('smokeDetector')) push('property.smoke', 'Le nombre de détecteurs de fumée (au moins un est obligatoire)', 'PROPERTY', 'equipments')
   if (!has(p.tv) || !has(p.internet)) push('property.tv', 'La réception de la télévision et l’accès à internet', 'PROPERTY', 'tv')
   if (!has(p.diagnostics?.dpe?.class)) push('property.dpe', 'La classe énergie du DPE', 'PROPERTY', 'diagnostics')
+  if (!has(p.diagnostics?.dpe?.costMin) || !has(p.diagnostics?.dpe?.costMax) || !has(p.diagnostics?.dpe?.costYear)) push('property.dpeCost', 'Les dépenses d’énergie estimées par le DPE (fourchette et année des prix)', 'PROPERTY', 'diagnostics')
+  if (!has(p.fiscalId)) push('property.fiscalId', 'L’identifiant fiscal du logement', 'PROPERTY', 'address')
+  if (p.heating?.mode === 'COLLECTIVE' && !has(p.heating.split)) push('property.heatingSplit', 'La répartition de la consommation de chauffage collectif', 'PROPERTY', 'heating')
+  if (p.hotWater?.mode === 'COLLECTIVE' && !has(p.hotWater.split)) push('property.hotWaterSplit', 'La répartition de la consommation d’eau chaude collective', 'PROPERTY', 'heating')
   for (const d of diagnosticsFor(p).filter((x) => x.required && x.annexed && x.key !== 'dpe')) {
     const v = p.diagnostics?.[d.key]
     if (!has(v?.date) && !has(v?.fileId)) push(`property.diag.${d.key}`, `Le diagnostic « ${d.label} » (date ou fichier)`, 'PROPERTY', 'diagnostics')

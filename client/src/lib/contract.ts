@@ -148,6 +148,8 @@ export interface PropertyFile {
   market?: N<{ tense?: N<boolean>; refRentCentsM2?: N<number>; refRentMaxCentsM2?: N<number> }>
   furniture?: N<{ present?: N<FurnitureKey[]>; inventory?: N<Array<{ room?: N<string>; item: string; count: number; state?: N<string> }>> }>
   photos?: N<string[]>
+  /** Autorisation préalable de mise en location (« permis de louer »). */
+  rentalPermit?: N<{ required?: N<boolean>; reference?: N<string>; date?: N<string> }>
   /** Détecteurs de fumée installés (au moins un, obligatoire). */
   smokeDetectors?: N<number>
   /** Clés et moyens d'accès remis : « 2 clés, 1 badge ». */

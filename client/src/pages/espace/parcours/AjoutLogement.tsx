@@ -3,35 +3,55 @@ import { Cite } from '../../../components/Sources'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { BAI } from '../../../constants/bailio-tokens'
 import { AddressField } from '../../../components/AddressField'
-import { StepFlow, StepNote, StepTitle } from '../../../components/FlowLayout'
+import { Fields, StepFlow, StepNote, StepTitle } from '../../../components/FlowLayout'
 import { UploadModal } from '../../../components/UploadModal'
 import { AuthImage, uploadPhotos } from '../../../components/media'
-import { Callout, Check, ChipButton, Chips, ChoiceCard, Input, Loader, NumberField, Pill, errorMessage, useToast } from '../../../components/kit'
+import { Callout, Check, ChipButton, Chips, ChoiceCard, Input, Loader, NumberField, Pill, TextArea, errorMessage, useToast } from '../../../components/kit'
 import { Spinner } from '../../../components/ui'
 import { Camera } from '../../../components/Icons'
 import { api } from '../../../lib/api'
-import { CONSTRUCTION_LABEL, FURNITURE_REQUIRED, type DiagnosticRule, type FurnitureKey, type PropertyFile } from '../../../lib/contract'
+import { ANNEXES, COMMON_AREAS, CONSTRUCTION_LABEL, ENERGY_LABEL, EQUIPMENTS, FURNITURE_REQUIRED, type AnnexKey, type CommonKey, type DiagnosticRule, type EquipmentKey, type FurnitureKey, type PropertyFile } from '../../../lib/contract'
 import type { PropertyView } from '../../../lib/space'
 
-const LABELS = ['Adresse', 'Type', 'Taille', 'Chauffage', 'Équipements', 'Meublé', 'Diagnostics', 'Photos']
+type StepId = 'address' | 'type' | 'copro' | 'size' | 'heating' | 'annexes' | 'equipments' | 'furniture' | 'diagnostics' | 'photos'
+const LABELS: Record<StepId, string> = {
+  address: 'Adresse',
+  type: 'Type de location',
+  copro: 'Copropriété',
+  size: 'Construction et pièces',
+  heating: 'Chauffage et eau chaude',
+  annexes: 'Annexes et parties communes',
+  equipments: 'Équipements',
+  furniture: 'Mobilier',
+  diagnostics: 'Diagnostics',
+  photos: 'Photos',
+}
+/** Étapes utiles pour ce logement : la copropriété et le mobilier seulement quand ils le concernent. */
+const stepsFor = (f: PropertyFile): StepId[] =>
+  (['address', 'type', f.legalRegime === 'COPRO' ? 'copro' : null, 'size', 'heating', 'annexes', 'equipments', f.furnished === true ? 'furniture' : null, 'diagnostics', 'photos'] as const).filter(
+    (x): x is StepId => Boolean(x),
+  )
 
 /**
- * Ajouter un logement, une question à la fois (maquette « Ajouter un logement, 8 étapes »).
- * Le logement est créé dès la première étape, puis complété à chaque « Continuer » :
- * on peut s'arrêter et reprendre plus tard, rien n'est perdu.
+ * Ajouter un logement, une question à la fois. Chaque étape demande ce que le bail (contrat type, rubrique II),
+ * les diagnostics et l'état des lieux exigent : à la fin, le logement est prêt pour le bail.
+ * Le logement est créé dès la première étape, puis complété à chaque « Continuer » : rien n'est perdu.
  */
 export default function AjoutLogement() {
   const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
   const toast = useToast()
   const id = params.get('id')
-  const step = Math.min(8, Math.max(1, Number(params.get('etape') ?? 1)))
   const [f, setF] = useState<PropertyFile>({})
   const [diagnostics, setDiagnostics] = useState<DiagnosticRule[]>([])
   const [loading, setLoading] = useState(Boolean(id))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const set = (patch: Partial<PropertyFile>) => setF((x) => ({ ...x, ...patch }))
+  const steps = stepsFor(f)
+  const asked = params.get('etape') as StepId | null
+  const current: StepId = asked && steps.includes(asked) ? asked : 'address'
+  const index = steps.indexOf(current)
 
   useEffect(() => {
     if (!id) return
@@ -45,16 +65,14 @@ export default function AjoutLogement() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
-  const goto = (n: number, newId = id) => {
+  const goto = (step: StepId, newId = id) => {
     const next = new URLSearchParams(params)
     if (newId) next.set('id', newId)
-    next.set('etape', String(n))
+    next.set('etape', step)
     setParams(next)
     setError(null)
+    window.scrollTo(0, 0)
   }
-  const furnishedStep = f.furnished === true
-  const nextStep = (n: number) => (n === 6 && !furnishedStep ? 7 : n)
-  const prevStep = (n: number) => (n === 6 && !furnishedStep ? 5 : n)
 
   const save = async (patch: Partial<PropertyFile>) => {
     if (!id) {
@@ -67,23 +85,21 @@ export default function AjoutLogement() {
   }
 
   const next = async () => {
-    const check = validate(step, f)
+    const check = validate(current, f)
     if (check) return setError(check)
     setBusy(true)
     try {
-      const patch = patchFor(step, f)
-      const newId = await save(patch)
-      if (step === 8) {
+      const newId = await save(patchFor(current, f))
+      const after = stepsFor(f)
+      const following = after[after.indexOf(current) + 1]
+      if (!following) {
         toast.show('Logement enregistré.')
         const back = params.get('retour')
-        navigate(back === 'bail' ? `/espace/baux/nouveau?logement=${newId}` : `/espace/logements/${newId}`, { replace: true })
+        navigate(back === 'bail' ? `/espace/baux/nouveau?logement=${newId}` : back === 'locataire' ? `/espace/locataires/nouveau?logement=${newId}` : `/espace/logements/${newId}`, { replace: true })
         return
       }
-      if (!id && newId) {
-        // Diagnostics exigés, connus dès la création.
-        api<PropertyView>(`/properties/${newId}`).then((p) => setDiagnostics(p.diagnostics)).catch(() => undefined)
-      }
-      goto(nextStep(step + 1), newId)
+      if (!id && newId) api<PropertyView>(`/properties/${newId}`).then((p) => setDiagnostics(p.diagnostics)).catch(() => undefined)
+      goto(following, newId)
     } catch (e) {
       setError(errorMessage(e))
     } finally {
@@ -97,59 +113,24 @@ export default function AjoutLogement() {
     <StepFlow
       title="Ajouter un logement"
       closeTo={id ? `/espace/logements/${id}` : '/espace/logements'}
-      label={LABELS[step - 1]}
-      step={step}
-      total={8}
-      onBack={step > 1 ? () => goto(prevStep(step - 1)) : undefined}
+      label={LABELS[current]}
+      step={index + 1}
+      total={steps.length}
+      onBack={index > 0 ? () => goto(steps[index - 1]) : undefined}
       onNext={next}
       busy={busy}
-      nextLabel={step === 8 ? 'Enregistrer le logement' : 'Continuer'}
+      nextLabel={index === steps.length - 1 ? 'Enregistrer le logement' : 'Continuer'}
     >
       {error ? <Callout tone="warn">{error}</Callout> : null}
-      {step === 1 ? <StepAddress f={f} set={set} /> : null}
-      {step === 2 ? (
-        <>
-          <StepTitle>C’est…</StepTitle>
-          <div className="grid-2" style={{ gap: 14 }}>
-            <ChoiceCard column selected={f.habitat === 'COLLECTIVE'} onClick={() => set({ habitat: 'COLLECTIVE', legalRegime: f.legalRegime ?? 'COPRO' })} title="Un appartement" sub="Dans un immeuble" />
-            <ChoiceCard column selected={f.habitat === 'INDIVIDUAL'} onClick={() => set({ habitat: 'INDIVIDUAL', legalRegime: f.legalRegime ?? 'MONO' })} title="Une maison" sub="Individuelle ou mitoyenne" />
-          </div>
-          <Chips big legend="Il sera loué" value={f.furnished ?? null} onChange={(v) => set({ furnished: v })} options={[{ value: false, label: 'Vide' }, { value: true, label: 'Meublé' }]} />
-          {f.habitat === 'COLLECTIVE' ? <Chips legend="L’immeuble est" value={f.legalRegime ?? null} onChange={(v) => set({ legalRegime: v })} options={[{ value: 'COPRO', label: 'En copropriété' }, { value: 'MONO', label: 'À un seul propriétaire' }]} /> : null}
-        </>
-      ) : null}
-      {step === 3 ? (
-        <>
-          <StepTitle>Quelle taille ?</StepTitle>
-          <NumberField big label="Surface habitable" suffix="m²" step="decimal" value={f.surface} onChange={(v) => set({ surface: v })} hint="Sans les balcons, caves et parkings. Elle figure obligatoirement dans le bail." />
-          <Chips big legend="Pièces principales" value={f.rooms && f.rooms >= 5 ? 5 : (f.rooms ?? null)} onChange={(v) => set({ rooms: v })} options={[1, 2, 3, 4].map((n) => ({ value: n, label: String(n) })).concat([{ value: 5, label: '5 et plus' }])} hint="Séjour et chambres. La cuisine et la salle de bain ne comptent pas." />
-          {f.rooms && f.rooms >= 5 ? <NumberField label="Nombre exact de pièces principales" value={f.rooms} onChange={(v) => set({ rooms: v ?? 5 })} /> : null}
-        </>
-      ) : null}
-      {step === 4 ? (
-        <>
-          <StepTitle>Chauffage et eau chaude</StepTitle>
-          <Chips big legend="Le chauffage est" value={f.heating?.mode ?? null} onChange={(v) => set({ heating: { ...f.heating, mode: v } })} options={[{ value: 'INDIVIDUAL', label: 'Individuel' }, { value: 'COLLECTIVE', label: 'Collectif' }]} />
-          <Chips
-            big
-            legend="Il fonctionne à"
-            value={f.heating?.energy ?? null}
-            onChange={(v) => set({ heating: { ...f.heating, energy: v } })}
-            options={[
-              { value: 'ELECTRIC', label: 'Électricité' },
-              { value: 'GAS', label: 'Gaz' },
-              { value: 'HEAT_PUMP', label: 'Pompe à chaleur' },
-              { value: 'FUEL', label: 'Fioul' },
-              { value: 'WOOD', label: 'Bois' },
-              { value: 'NETWORK', label: 'Réseau de chaleur' },
-            ]}
-          />
-          <Chips big legend="L’eau chaude est" value={f.hotWater?.mode ?? null} onChange={(v) => set({ hotWater: { ...f.hotWater, mode: v } })} options={[{ value: 'INDIVIDUAL', label: 'Individuelle' }, { value: 'COLLECTIVE', label: 'Collective' }]} />
-        </>
-      ) : null}
-      {step === 5 ? <StepEquipments f={f} set={set} /> : null}
-      {step === 6 ? <StepFurniture f={f} set={set} /> : null}
-      {step === 7 ? (
+      {current === 'address' ? <StepAddress f={f} set={set} /> : null}
+      {current === 'type' ? <StepType f={f} set={set} /> : null}
+      {current === 'copro' ? <StepCopro f={f} set={set} /> : null}
+      {current === 'size' ? <StepSize f={f} set={set} /> : null}
+      {current === 'heating' ? <StepHeating f={f} set={set} /> : null}
+      {current === 'annexes' ? <StepAnnexes f={f} set={set} /> : null}
+      {current === 'equipments' ? <StepEquipments f={f} set={set} /> : null}
+      {current === 'furniture' ? <StepFurniture f={f} set={set} /> : null}
+      {current === 'diagnostics' ? (
         <StepDiagnostics
           f={f}
           set={(p) => {
@@ -161,8 +142,8 @@ export default function AjoutLogement() {
           propertyId={id}
         />
       ) : null}
-      {step === 8 ? <StepPhotos f={f} set={set} /> : null}
-      {step === 8 ? (
+      {current === 'photos' ? <StepPhotos f={f} set={set} /> : null}
+      {current === 'photos' ? (
         <button type="button" onClick={next} style={{ alignSelf: 'flex-start', background: 'none', border: 'none', fontFamily: 'inherit', fontSize: 15, fontWeight: 600, color: BAI.owner, padding: 0, cursor: 'pointer' }}>
           Passer cette étape
         </button>
@@ -171,30 +152,58 @@ export default function AjoutLogement() {
   )
 }
 
-function validate(step: number, f: PropertyFile): string | null {
-  if (step === 1 && !f.address?.trim()) return 'Indiquez l’adresse du logement.'
-  if (step === 2 && (!f.habitat || f.furnished === null || f.furnished === undefined)) return 'Choisissez le type de logement et s’il est loué vide ou meublé.'
-  if (step === 3 && (!f.surface || !f.rooms)) return 'Indiquez la surface et le nombre de pièces.'
-  return null
+/** Ce qui est indispensable au bail avant de passer à l'étape suivante. */
+function validate(step: StepId, f: PropertyFile): string | null {
+  switch (step) {
+    case 'address':
+      return f.address?.trim() ? null : 'Indiquez l’adresse du logement.'
+    case 'type':
+      if (!f.habitat || f.furnished === null || f.furnished === undefined) return 'Choisissez le type de logement et s’il est loué vide ou meublé.'
+      if (!f.legalRegime) return 'Indiquez si l’immeuble est en copropriété.'
+      return null
+    case 'size':
+      if (!f.constructionPeriod) return 'Indiquez la période de construction : elle figure dans le bail et décide des diagnostics.'
+      if (!f.surface || !f.rooms) return 'Indiquez la surface habitable et le nombre de pièces principales.'
+      return f.roomList?.some((r) => r.name.trim()) ? null : 'Indiquez au moins une pièce.'
+    case 'heating':
+      if (!f.heating?.mode || !f.heating.energy) return 'Indiquez le mode et l’énergie du chauffage.'
+      if (!f.hotWater?.mode) return 'Indiquez comment l’eau chaude est produite.'
+      if (f.heating.mode === 'COLLECTIVE' && !f.heating.split?.trim()) return 'Chauffage collectif : indiquez comment la consommation est répartie (le bail doit le préciser).'
+      if (f.hotWater.mode === 'COLLECTIVE' && !f.hotWater.split?.trim()) return 'Eau chaude collective : indiquez comment la consommation est répartie (le bail doit le préciser).'
+      return null
+    case 'equipments':
+      if (!f.equipments?.length && !f.otherEquipments?.trim()) return 'Indiquez au moins un équipement du logement.'
+      if (!f.smokeDetectors || f.smokeDetectors < 1) return 'Indiquez le nombre de détecteurs de fumée : au moins un est obligatoire.'
+      if (!f.tv || !f.internet) return 'Indiquez la réception de la télévision et l’accès à internet.'
+      return null
+    case 'diagnostics':
+      return f.diagnostics?.dpe?.class ? null : 'Indiquez la classe énergie du DPE.'
+    default:
+      return null
+  }
 }
 
 /** Ce que chaque étape enregistre. */
-function patchFor(step: number, f: PropertyFile): Partial<PropertyFile> {
+function patchFor(step: StepId, f: PropertyFile): Partial<PropertyFile> {
   switch (step) {
-    case 1:
+    case 'address':
       return { address: f.address, postalCode: f.postalCode, city: f.city, inseeCode: f.inseeCode, banId: f.banId, building: f.building, floorDoor: f.floorDoor, label: f.label }
-    case 2:
-      return { habitat: f.habitat, furnished: f.furnished, legalRegime: f.legalRegime, destination: f.destination ?? 'HABITATION' }
-    case 3:
-      return { surface: f.surface, rooms: f.rooms, roomList: f.roomList?.length ? f.roomList : defaultRooms(f) }
-    case 4:
+    case 'type':
+      return { habitat: f.habitat, furnished: f.furnished, legalRegime: f.legalRegime, destination: f.destination ?? 'HABITATION', fiscalId: f.fiscalId, rentalPermit: f.rentalPermit }
+    case 'copro':
+      return { copro: f.copro, lotNumber: f.lotNumber }
+    case 'size':
+      return { constructionPeriod: f.constructionPeriod, permitBefore1997: f.permitBefore1997, surface: f.surface, rooms: f.rooms, roomList: (f.roomList ?? []).filter((r) => r.name.trim()) }
+    case 'heating':
       return { heating: f.heating, hotWater: f.hotWater }
-    case 5:
-      return { equipments: f.equipments ?? [], annexes: f.annexes ?? [], commonAreas: f.commonAreas ?? [], internet: f.internet }
-    case 6:
+    case 'annexes':
+      return { annexes: f.annexes ?? [], garageNumber: f.garageNumber, gardenArea: f.gardenArea, commonAreas: f.habitat === 'COLLECTIVE' ? (f.commonAreas ?? []) : [] }
+    case 'equipments':
+      return { equipments: f.equipments ?? [], otherEquipments: f.otherEquipments, smokeDetectors: f.smokeDetectors, keys: f.keys, tv: f.tv, internet: f.internet }
+    case 'furniture':
       return { furniture: { ...f.furniture, present: f.furniture?.present ?? [] } }
-    case 7:
-      return { constructionPeriod: f.constructionPeriod, permitBefore1997: f.permitBefore1997, diagnostics: f.diagnostics }
+    case 'diagnostics':
+      return { diagnostics: f.diagnostics, constructionPeriod: f.constructionPeriod, permitBefore1997: f.permitBefore1997 }
     default:
       return { photos: f.photos ?? [] }
   }
@@ -231,78 +240,194 @@ function StepAddress({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFil
   )
 }
 
-function StepEquipments({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile>) => void }) {
-  const annexes = new Set(f.annexes ?? [])
-  const eq = new Set(f.equipments ?? [])
-  const common = new Set(f.commonAreas ?? [])
-  const toggle = <T extends string>(s: Set<T>, v: T) => {
-    const n = new Set(s)
-    if (n.has(v)) n.delete(v)
-    else n.add(v)
-    return [...n]
-  }
+function StepType({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile>) => void }) {
   return (
     <>
-      <StepTitle>Ce qui va avec</StepTitle>
-      <Group legend="Annexes privées">
-        {(
-          [
-            ['cellar', 'Cave'],
-            ['parking', 'Parking'],
-            ['garage', 'Garage'],
-            ['balcony', 'Balcon'],
-            ['terrace', 'Terrasse'],
-            ['garden', 'Jardin'],
-            ['attic', 'Grenier'],
-          ] as const
-        ).map(([k, l]) => (
-          <ChipButton key={k} big pressed={annexes.has(k)} onClick={() => set({ annexes: toggle(annexes, k) })}>
-            {l}
-          </ChipButton>
-        ))}
-      </Group>
-      <Group legend="Équipements">
-        {(
-          [
-            ['kitchen', 'Cuisine équipée'],
-            ['intercom', 'Interphone'],
-            ['washer', 'Lave-linge'],
-            ['doubleGlazing', 'Double vitrage'],
-            ['shutters', 'Volets roulants'],
-            ['shower', 'Douche'],
-            ['bathtub', 'Baignoire'],
-            ['smokeDetector', 'Détecteur de fumée'],
-          ] as const
-        ).map(([k, l]) => (
-          <ChipButton key={k} big pressed={eq.has(k)} onClick={() => set({ equipments: toggle(eq, k) })}>
-            {l}
-          </ChipButton>
-        ))}
-        <ChipButton big pressed={f.internet === 'FIBER'} onClick={() => set({ internet: f.internet === 'FIBER' ? 'NONE' : 'FIBER' })}>
-          Fibre
-        </ChipButton>
-      </Group>
-      <div className="col-md" style={{ display: 'flex', gap: 16 }}>
-        <NumberField label="Détecteurs de fumée" value={f.smokeDetectors} onChange={(v) => set({ smokeDetectors: v, ...(v && v > 0 ? { equipments: [...eq].includes('smokeDetector') ? [...eq] : [...eq, 'smokeDetector'] } : {}) })} hint="Au moins un est obligatoire." />
-        <Input label="Clés remises" value={f.keys} onChange={(v) => set({ keys: v })} placeholder="2 clés, 1 badge" />
+      <StepTitle>C’est…</StepTitle>
+      <div className="grid-2" style={{ gap: 14 }}>
+        <ChoiceCard column selected={f.habitat === 'COLLECTIVE'} onClick={() => set({ habitat: 'COLLECTIVE', legalRegime: f.legalRegime ?? 'COPRO' })} title="Un appartement" sub="Dans un immeuble" />
+        <ChoiceCard column selected={f.habitat === 'INDIVIDUAL'} onClick={() => set({ habitat: 'INDIVIDUAL', legalRegime: f.legalRegime ?? 'MONO' })} title="Une maison" sub="Individuelle ou mitoyenne" />
       </div>
+      <Chips big legend="Il sera loué" value={f.furnished ?? null} onChange={(v) => set({ furnished: v })} options={[{ value: false, label: 'Vide' }, { value: true, label: 'Meublé' }]} hint="Meublé : il faut au moins les 11 éléments de mobilier fixés par la loi." />
+      <Chips legend={f.habitat === 'INDIVIDUAL' ? 'La maison fait partie d’une copropriété ?' : 'L’immeuble est'} value={f.legalRegime ?? null} onChange={(v) => set({ legalRegime: v })} options={[{ value: 'COPRO', label: f.habitat === 'INDIVIDUAL' ? 'Oui, copropriété' : 'En copropriété' }, { value: 'MONO', label: f.habitat === 'INDIVIDUAL' ? 'Non' : 'À un seul propriétaire' }]} hint="Copropriété : il y a un syndic et un règlement de copropriété." />
+      <Chips legend="Usage" value={f.destination ?? 'HABITATION'} onChange={(v) => set({ destination: v })} options={[{ value: 'HABITATION', label: 'Habitation seulement' }, { value: 'MIXTE', label: 'Habitation et activité professionnelle' }]} />
+      <Input label="Identifiant fiscal du logement" value={f.fiscalId ?? ''} onChange={(v) => set({ fiscalId: v })} placeholder="12 chiffres" hint="Mention obligatoire du bail depuis 2024. Vous le trouvez sur impots.gouv.fr, espace « Gérer mes biens immobiliers », ou sur l’avis de taxe foncière." />
+      <Chips
+        legend="La commune impose une autorisation avant de louer (« permis de louer ») ?"
+        value={f.rentalPermit?.required ?? null}
+        onChange={(v) => set({ rentalPermit: { ...f.rentalPermit, required: v } })}
+        options={[{ value: false, label: 'Non' }, { value: true, label: 'Oui' }]}
+        hint="Certaines communes l’exigent pour les logements anciens. Renseignez-vous auprès de la mairie en cas de doute."
+      />
+      {f.rentalPermit?.required ? (
+        <Fields>
+          <Input label="Numéro de l’autorisation" value={f.rentalPermit.reference ?? ''} onChange={(v) => set({ rentalPermit: { ...f.rentalPermit, reference: v } })} />
+          <Input label="Date de l’autorisation" type="date" value={f.rentalPermit.date ?? ''} onChange={(v) => set({ rentalPermit: { ...f.rentalPermit, date: v || null } })} />
+        </Fields>
+      ) : null}
+    </>
+  )
+}
+
+function StepCopro({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile>) => void }) {
+  return (
+    <>
+      <StepTitle>La copropriété</StepTitle>
+      <StepNote>Ces informations sont sur le règlement de copropriété et sur les appels de charges du syndic.</StepNote>
+      <Input big label="Syndic" value={f.copro?.syndic ?? ''} onChange={(v) => set({ copro: { ...f.copro, syndic: v } })} placeholder="Nom du syndic" hint="Il rejoint votre carnet." />
+      <Fields>
+        <Input label="Numéro de lot" value={f.lotNumber ?? ''} onChange={(v) => set({ lotNumber: v })} placeholder="12" />
+        <Input label="Quote-part des parties communes" value={f.copro?.quotePart ?? ''} onChange={(v) => set({ copro: { ...f.copro, quotePart: v } })} placeholder="245 / 10 000es" hint="Les tantièmes du lot." />
+      </Fields>
+      <Check checked={Boolean(f.copro?.extractsProvided)} onChange={(v) => set({ copro: { ...f.copro, extractsProvided: v } })} label="J’ai les extraits du règlement de copropriété à remettre au locataire" sub="Destination de l’immeuble, usage des parties privatives et communes, quote-part des charges. Ils sont annexés au bail." />
+    </>
+  )
+}
+
+function StepSize({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile>) => void }) {
+  const period = f.constructionPeriod
+  const rooms = f.roomList ?? []
+  const setRooms = (list: Array<{ name: string }>) => set({ roomList: list })
+  return (
+    <>
+      <StepTitle>Construction et pièces</StepTitle>
+      <Chips
+        big
+        legend="Période de construction"
+        value={period ?? null}
+        onChange={(v) => set({ constructionPeriod: v, permitBefore1997: v === 'BEFORE_1949' || v === '1949_1974' || v === '1975_1989' ? true : v === 'AFTER_2005' ? false : f.permitBefore1997 })}
+        options={(Object.keys(CONSTRUCTION_LABEL) as Array<keyof typeof CONSTRUCTION_LABEL>).map((k) => ({ value: k, label: CONSTRUCTION_LABEL[k] }))}
+        hint="Elle figure dans le bail et décide des diagnostics à fournir (plomb, amiante)."
+      />
+      {period === '1990_2005' ? <Chips legend="Permis de construire délivré avant le 1er juillet 1997 ?" value={f.permitBefore1997 ?? null} onChange={(v) => set({ permitBefore1997: v })} options={[{ value: true, label: 'Oui' }, { value: false, label: 'Non' }]} hint="Il détermine si le repérage de l’amiante est exigé." /> : null}
+      <NumberField big label="Surface habitable" suffix="m²" step="decimal" value={f.surface} onChange={(v) => set({ surface: v })} hint="Sans les balcons, caves, parkings ni les parties de moins de 1,80 m de hauteur. Elle figure obligatoirement dans le bail." />
+      <Chips
+        big
+        legend="Pièces principales"
+        value={f.rooms && f.rooms >= 5 ? 5 : (f.rooms ?? null)}
+        onChange={(v) => set({ rooms: v, roomList: rooms.length ? rooms : defaultRooms({ ...f, rooms: v }) })}
+        options={[1, 2, 3, 4].map((n) => ({ value: n, label: String(n) })).concat([{ value: 5, label: '5 et plus' }])}
+        hint="Séjour et chambres. La cuisine et la salle de bain ne comptent pas."
+      />
+      {f.rooms && f.rooms >= 5 ? <NumberField label="Nombre exact de pièces principales" value={f.rooms} onChange={(v) => set({ rooms: v ?? 5 })} /> : null}
+      {f.rooms ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <span style={{ fontSize: 15, fontWeight: 600 }}>Composition du logement</span>
+          <span style={{ fontSize: 13, color: BAI.inkSoft }}>Elle sert au bail et prépare l’état des lieux, pièce par pièce. Modifiez-la si besoin.</span>
+          {rooms.map((r, i) => (
+            <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <Input label="" value={r.name} onChange={(v) => setRooms(rooms.map((x, j) => (j === i ? { ...x, name: v } : x)))} style={{ flex: '1 1 0' }} />
+              <button type="button" onClick={() => setRooms(rooms.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', color: BAI.inkSoft, fontFamily: 'inherit', fontSize: 14, cursor: 'pointer' }}>
+                Retirer
+              </button>
+            </div>
+          ))}
+          <button type="button" onClick={() => setRooms([...rooms, { name: '' }])} style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: BAI.owner, fontFamily: 'inherit', fontSize: 15, fontWeight: 600, cursor: 'pointer', padding: 0 }}>
+            + Ajouter une pièce
+          </button>
+        </div>
+      ) : null}
+    </>
+  )
+}
+
+function StepHeating({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile>) => void }) {
+  const boiler = f.heating?.mode === 'INDIVIDUAL' && ['GAS', 'FUEL', 'WOOD'].includes(String(f.heating?.energy))
+  return (
+    <>
+      <StepTitle>Chauffage et eau chaude</StepTitle>
+      <Chips big legend="Le chauffage est" value={f.heating?.mode ?? null} onChange={(v) => set({ heating: { ...f.heating, mode: v } })} options={[{ value: 'INDIVIDUAL', label: 'Individuel' }, { value: 'COLLECTIVE', label: 'Collectif' }]} hint="Collectif : une chaudière pour tout l’immeuble." />
+      <Chips
+        big
+        legend="Il fonctionne à"
+        value={f.heating?.energy ?? null}
+        onChange={(v) => set({ heating: { ...f.heating, energy: v } })}
+        options={(Object.keys(ENERGY_LABEL) as Array<keyof typeof ENERGY_LABEL>).map((k) => ({ value: k, label: ENERGY_LABEL[k] }))}
+      />
+      <Input label="Appareil de chauffage" value={f.heating?.appliance ?? ''} onChange={(v) => set({ heating: { ...f.heating, appliance: v } })} placeholder="Chaudière gaz murale, radiateurs électriques…" />
+      {f.heating?.mode === 'COLLECTIVE' ? <TextArea label="Comment la consommation de chauffage est-elle répartie ?" value={f.heating?.split ?? ''} onChange={(v) => set({ heating: { ...f.heating, split: v } })} placeholder="Selon les tantièmes de copropriété, ou selon des répartiteurs sur les radiateurs" hint="Le bail doit le préciser." /> : null}
+      {boiler ? <Input label="Date du dernier entretien de la chaudière" type="date" value={f.heating?.lastMaintenance ?? ''} onChange={(v) => set({ heating: { ...f.heating, lastMaintenance: v || null } })} hint="L’entretien annuel est obligatoire. Bailio vous rappellera de demander l’attestation chaque année." /> : null}
+      <Chips big legend="L’eau chaude est" value={f.hotWater?.mode ?? null} onChange={(v) => set({ hotWater: { ...f.hotWater, mode: v } })} options={[{ value: 'INDIVIDUAL', label: 'Individuelle' }, { value: 'COLLECTIVE', label: 'Collective' }]} hint="Individuelle : un ballon ou une chaudière propre au logement." />
+      {f.hotWater?.mode === 'COLLECTIVE' ? <TextArea label="Comment la consommation d’eau chaude est-elle répartie ?" value={f.hotWater?.split ?? ''} onChange={(v) => set({ hotWater: { ...f.hotWater, split: v } })} placeholder="Selon un compteur d’eau chaude individuel" hint="Le bail doit le préciser." /> : null}
+    </>
+  )
+}
+
+function StepAnnexes({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile>) => void }) {
+  const annexes = new Set(f.annexes ?? [])
+  const common = new Set(f.commonAreas ?? [])
+  return (
+    <>
+      <StepTitle>Annexes et parties communes</StepTitle>
+      <Group legend="Annexes à l’usage du locataire seul">
+        {(Object.keys(ANNEXES) as AnnexKey[]).map((k) => (
+          <ChipButton key={k} big pressed={annexes.has(k)} onClick={() => set({ annexes: toggle(annexes, k) })}>
+            {ANNEXES[k]}
+          </ChipButton>
+        ))}
+      </Group>
+      {annexes.has('garage') || annexes.has('parking') || annexes.has('cellar') ? <Input label="Numéro de garage, de place ou de cave" value={f.garageNumber ?? ''} onChange={(v) => set({ garageNumber: v })} /> : null}
+      {annexes.has('garden') ? <NumberField label="Superficie du jardin" suffix="m²" value={f.gardenArea} onChange={(v) => set({ gardenArea: v })} hint="Son entretien courant revient au locataire." /> : null}
       {f.habitat === 'COLLECTIVE' ? (
-        <Group legend="Dans l’immeuble">
-          {(
-            [
-              ['elevator', 'Ascenseur'],
-              ['bikes', 'Local vélos'],
-              ['bins', 'Local poubelles'],
-              ['green', 'Espaces verts'],
-              ['caretaker', 'Gardien'],
-            ] as const
-          ).map(([k, l]) => (
+        <Group legend="Dans l’immeuble, à l’usage de tous">
+          {(Object.keys(COMMON_AREAS) as CommonKey[]).map((k) => (
             <ChipButton key={k} big pressed={common.has(k)} onClick={() => set({ commonAreas: toggle(common, k) })}>
-              {l}
+              {COMMON_AREAS[k]}
             </ChipButton>
           ))}
         </Group>
       ) : null}
+      <StepNote>Rien ne s’applique ? Continuez : le bail indiquera « néant ».</StepNote>
+    </>
+  )
+}
+
+const toggle = <T extends string>(s: Set<T>, v: T) => {
+  const n = new Set(s)
+  if (n.has(v)) n.delete(v)
+  else n.add(v)
+  return [...n]
+}
+
+function StepEquipments({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile>) => void }) {
+  const eq = new Set(f.equipments ?? [])
+  return (
+    <>
+      <StepTitle>Les équipements</StepTitle>
+      <Group legend="Équipements du logement">
+        {(Object.keys(EQUIPMENTS) as EquipmentKey[]).map((k) => (
+          <ChipButton key={k} big pressed={eq.has(k)} onClick={() => set({ equipments: toggle(eq, k) })}>
+            {EQUIPMENTS[k]}
+          </ChipButton>
+        ))}
+      </Group>
+      <Input label="Autres équipements" value={f.otherEquipments ?? ''} onChange={(v) => set({ otherEquipments: v })} placeholder="Climatisation, sèche-serviettes, cheminée…" />
+      <div className="col-md" style={{ display: 'flex', gap: 16 }}>
+        <NumberField label="Détecteurs de fumée" value={f.smokeDetectors} onChange={(v) => set({ smokeDetectors: v, ...(v && v > 0 && !eq.has('smokeDetector') ? { equipments: [...eq, 'smokeDetector'] } : {}) })} hint="Au moins un est obligatoire." />
+        <Input label="Clés et badges remis" value={f.keys ?? ''} onChange={(v) => set({ keys: v })} placeholder="2 clés, 1 badge" />
+      </div>
+      <Chips
+        legend="Télévision"
+        value={f.tv ?? null}
+        onChange={(v) => set({ tv: v })}
+        options={[
+          { value: 'INDIVIDUAL', label: 'Antenne individuelle' },
+          { value: 'COLLECTIVE', label: 'Antenne collective' },
+          { value: 'CABLE', label: 'Câble' },
+          { value: 'SATELLITE', label: 'Satellite' },
+          { value: 'NONE', label: 'Aucune' },
+        ]}
+      />
+      <Chips
+        legend="Internet"
+        value={f.internet ?? null}
+        onChange={(v) => set({ internet: v })}
+        options={[
+          { value: 'FIBER', label: 'Fibre raccordée' },
+          { value: 'ADSL', label: 'ADSL (ligne téléphonique)' },
+          { value: 'NONE', label: 'Aucun raccordement' },
+        ]}
+      />
     </>
   )
 }
@@ -347,47 +472,59 @@ function StepFurniture({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyF
 function StepDiagnostics({ f, set, diagnostics, propertyId }: { f: PropertyFile; set: (p: Partial<PropertyFile>) => void; diagnostics: DiagnosticRule[]; propertyId: string | null }) {
   const [upload, setUpload] = useState<string | null>(null)
   const d = f.diagnostics ?? {}
-  const period = f.constructionPeriod
-  // Liste indicative mise à jour tout de suite, avant l'enregistrement (le serveur fait foi ensuite).
-  const rules = diagnostics.length ? diagnostics : []
+  const rules = diagnostics.filter((r) => r.required && r.key !== 'dpe')
+  type DiagKey = 'erp' | 'electricity' | 'gas' | 'lead' | 'asbestos' | 'noise'
+  const setDiag = (key: DiagKey, patch: Record<string, unknown>) => set({ diagnostics: { ...d, [key]: { ...(d[key] ?? {}), ...patch } } })
   return (
     <>
       <StepTitle>Les diagnostics</StepTitle>
-      <Chips
-        big
-        legend="Année de construction"
-        value={period ?? null}
-        onChange={(v) => set({ constructionPeriod: v, permitBefore1997: v === 'BEFORE_1949' || v === '1949_1974' || v === '1975_1989' ? true : v === 'AFTER_2005' ? false : f.permitBefore1997 })}
-        options={(Object.keys(CONSTRUCTION_LABEL) as Array<keyof typeof CONSTRUCTION_LABEL>).map((k) => ({ value: k, label: CONSTRUCTION_LABEL[k] }))}
-      />
-      {period === '1990_2005' ? <Chips legend="Permis de construire délivré avant le 1er juillet 1997 ?" value={f.permitBefore1997 ?? null} onChange={(v) => set({ permitBefore1997: v })} options={[{ value: true, label: 'Oui' }, { value: false, label: 'Non' }]} hint="Il détermine si le repérage de l’amiante est exigé." /> : null}
-      <Chips legend="Classe énergie (DPE)" value={d.dpe?.class ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, class: v } } })} options={(['A', 'B', 'C', 'D', 'E', 'F', 'G'] as const).map((c) => ({ value: c, label: c }))} hint="Sur le diagnostic de performance énergétique, ou sur l’annonce du logement." />
+      <StepNote>Ils sont annexés au bail. Les informations du DPE y sont recopiées.</StepNote>
+      <Chips big legend="Classe énergie (DPE)" value={d.dpe?.class ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, class: v } } })} options={(['A', 'B', 'C', 'D', 'E', 'F', 'G'] as const).map((c) => ({ value: c, label: c }))} hint="Sur le diagnostic de performance énergétique (DPE)." />
       {d.dpe?.class === 'G' ? <Callout tone="warn">Depuis le 1er janvier 2025, un logement classé G ne peut plus être proposé à la location (décence énergétique).</Callout> : d.dpe?.class === 'F' ? <Callout tone="warn">Classé F : le loyer ne peut pas être augmenté, et le logement ne pourra plus être loué à partir de 2028.</Callout> : null}
+      <Chips legend="Classe climat (gaz à effet de serre)" value={d.dpe?.ges ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, ges: v } } })} options={(['A', 'B', 'C', 'D', 'E', 'F', 'G'] as const).map((c) => ({ value: c, label: c }))} />
+      <Fields>
+        <Input label="Date du DPE" type="date" value={d.dpe?.date ?? ''} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, date: v || null } } })} hint="Valable 10 ans." />
+        <Input label="Numéro du DPE" value={d.dpe?.number ?? ''} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, number: v } } })} placeholder="13 caractères" />
+      </Fields>
+      <span style={{ fontSize: 15, fontWeight: 600 }}>Dépenses d’énergie estimées par le DPE</span>
+      <span style={{ fontSize: 13, color: BAI.inkSoft, marginTop: -8 }}>Mention obligatoire du bail. Sur le DPE : « Estimation des coûts annuels d’énergie du logement ».</span>
+      <div className="col-md" style={{ display: 'flex', gap: 12 }}>
+        <NumberField label="Entre (€ par an)" value={d.dpe?.costMin ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, costMin: v } } })} />
+        <NumberField label="Et (€ par an)" value={d.dpe?.costMax ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, costMax: v } } })} />
+        <NumberField label="Prix de l’année" value={d.dpe?.costYear ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, costYear: v } } })} />
+      </div>
+      <Chips legend="L’installation électrique a plus de 15 ans ?" value={d.electricity?.installOver15 ?? null} onChange={(v) => setDiag('electricity', { installOver15: v })} options={[{ value: true, label: 'Oui' }, { value: false, label: 'Non' }]} hint="Si oui, un diagnostic électricité de moins de 6 ans est obligatoire." />
+      <Chips legend="Le logement a une installation de gaz ?" value={d.gas?.hasGas ?? (f.heating?.energy === 'GAS' ? true : null)} onChange={(v) => setDiag('gas', { hasGas: v })} options={[{ value: true, label: 'Oui' }, { value: false, label: 'Non' }]} />
+      {d.gas?.hasGas ?? f.heating?.energy === 'GAS' ? <Chips legend="L’installation de gaz a plus de 15 ans ?" value={d.gas?.installOver15 ?? null} onChange={(v) => setDiag('gas', { installOver15: v })} options={[{ value: true, label: 'Oui' }, { value: false, label: 'Non' }]} /> : null}
+      <Chips legend="Le logement est dans une zone de bruit d’aéroport ?" value={d.noise?.inZone ?? null} onChange={(v) => setDiag('noise', { inZone: v })} options={[{ value: false, label: 'Non' }, { value: true, label: 'Oui' }]} hint="Indiqué sur l’état des risques (Géorisques)." />
       {rules.length ? (
         <>
-          <StepNote>Selon l’âge du logement, la loi n’exige pas les mêmes diagnostics. Voici ceux qu’il vous faut :</StepNote>
+          <span style={{ fontSize: 15, fontWeight: 600 }}>Diagnostics à joindre à ce bail</span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {rules
-              .filter((r) => r.required)
-              .map((r) => (
-                <div key={r.key} style={{ background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 14, padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+            {rules.map((r) => (
+              <div key={r.key} style={{ background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 14, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <span style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'baseline', flexWrap: 'wrap' }}>
                   <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <span style={{ fontSize: 16, fontWeight: 600 }}>{r.label}</span>
-                    <span style={{ fontSize: 13, color: BAI.inkSoft }}>{r.reason}</span>
+                    <span style={{ fontSize: 13, color: BAI.inkSoft }}>
+                      {r.reason} · valable {r.validity}
+                    </span>
                   </span>
                   {r.key === 'erp' ? (
                     <a href="https://errial.georisques.gouv.fr/" target="_blank" rel="noreferrer" style={{ fontSize: 14, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                      Le faire en ligne
+                      Le faire en ligne, gratuitement
                     </a>
                   ) : propertyId ? (
-                    <button type="button" onClick={() => setUpload(r.key)} style={{ background: 'none', border: 'none', color: BAI.owner, fontFamily: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    <button type="button" onClick={() => setUpload(r.key)} style={{ background: 'none', border: 'none', color: BAI.owner, fontFamily: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', padding: 0 }}>
                       Ajouter le PDF
                     </button>
                   ) : null}
-                </div>
-              ))}
+                </span>
+                <Input label="Date du diagnostic" type="date" value={d[r.key as DiagKey]?.date ?? ''} onChange={(v) => setDiag(r.key as DiagKey, { date: v || null })} />
+              </div>
+            ))}
           </div>
-          <span style={{ fontSize: 13, color: BAI.inkSoft }}>L’état des risques se fait gratuitement sur le site officiel Géorisques. Vous pourrez ajouter les diagnostics plus tard.</span>
+          <span style={{ fontSize: 13, color: BAI.inkSoft }}>Pas encore fait ? Continuez : Bailio vous le rappellera avant la signature du bail.</span>
         </>
       ) : null}
       {propertyId ? <UploadModal open={upload !== null} onClose={() => setUpload(null)} onSaved={() => undefined} propertyId={propertyId} kind="DIAGNOSTIC" diagnostic={upload ?? undefined} /> : null}

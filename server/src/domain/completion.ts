@@ -41,7 +41,7 @@ export function landlordCompletion(p: LandlordProfile): Completion {
 export function propertyCompletion(p: PropertyFile): Completion {
   const d = p.diagnostics ?? {}
   return summarize([
-    { key: 'address', label: 'Adresse', done: filled(p.address), applicable: true },
+    { key: 'address', label: 'Adresse et identifiant fiscal', done: filled(p.address, p.fiscalId), applicable: true },
     { key: 'type', label: 'Type et régime', done: filled(p.habitat, p.legalRegime) && p.furnished !== undefined && p.furnished !== null, applicable: true },
     { key: 'copro', label: 'Copropriété', done: filled(p.copro?.syndic) || p.copro?.extractsProvided === true, applicable: p.legalRegime === 'COPRO' },
     { key: 'size', label: 'Construction et surface', done: filled(p.constructionPeriod, p.surface, p.rooms), applicable: true },
@@ -51,7 +51,7 @@ export function propertyCompletion(p: PropertyFile): Completion {
     { key: 'annexes', label: 'Annexes', done: p.annexes !== undefined && p.annexes !== null, applicable: true },
     { key: 'common', label: 'Parties communes', done: p.commonAreas !== undefined && p.commonAreas !== null, applicable: p.habitat === 'COLLECTIVE' },
     { key: 'tv', label: 'TV et internet', done: filled(p.tv, p.internet), applicable: true },
-    { key: 'diagnostics', label: 'Diagnostics', done: filled(d.dpe?.class, d.erp?.date), applicable: true },
+    { key: 'diagnostics', label: 'Diagnostics', done: filled(d.dpe?.class, d.dpe?.costMin, d.dpe?.costMax, d.erp?.date), applicable: true },
     { key: 'market', label: 'Loyer de marché', done: p.market?.tense !== undefined && p.market?.tense !== null, applicable: true },
     { key: 'furniture', label: 'Mobilier', done: (p.furniture?.present?.length ?? 0) === 11, applicable: p.furnished === true },
     { key: 'photos', label: 'Photos', done: (p.photos?.length ?? 0) > 0, applicable: true },

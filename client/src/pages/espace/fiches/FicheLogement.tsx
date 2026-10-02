@@ -57,7 +57,14 @@ export default function FicheLogement() {
         </Fields>
         <Fields>
           <Input label="Nom pour le reconnaître" value={f.label} onChange={(v) => set({ label: v })} placeholder="Studio rue Foch" />
-          <Input label="Identifiant fiscal du logement" value={f.fiscalId} onChange={(v) => set({ fiscalId: v })} hint="Facultatif. Sur votre avis de taxe foncière." />
+          <Input label="Identifiant fiscal du logement" value={f.fiscalId} onChange={(v) => set({ fiscalId: v })} hint="Mention obligatoire du bail depuis 2024. Sur impots.gouv.fr (« Gérer mes biens immobiliers ») ou sur l’avis de taxe foncière." />
+          <Chips legend="Autorisation préalable de mise en location (« permis de louer ») exigée par la commune ?" value={f.rentalPermit?.required ?? null} onChange={(v) => set({ rentalPermit: { ...f.rentalPermit, required: v } })} options={[{ value: false, label: 'Non' }, { value: true, label: 'Oui' }]} />
+          {f.rentalPermit?.required ? (
+            <Fields>
+              <Input label="Numéro de l’autorisation" value={f.rentalPermit.reference} onChange={(v) => set({ rentalPermit: { ...f.rentalPermit, reference: v } })} />
+              <Input label="Date de l’autorisation" type="date" value={f.rentalPermit.date} onChange={(v) => set({ rentalPermit: { ...f.rentalPermit, date: v || null } })} />
+            </Fields>
+          ) : null}
         </Fields>
         <Callout tone="info">Certaines communes imposent un permis de louer (autorisation ou déclaration de mise en location). Renseignez-vous auprès de votre mairie avant la signature.</Callout>
       </FicheSection>
