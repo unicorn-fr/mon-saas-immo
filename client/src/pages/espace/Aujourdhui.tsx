@@ -127,6 +127,12 @@ function TaskCard({ task: t, onChange }: { task: Task; onChange: () => void }) {
     }
   }
   const reminder = (action: 'done' | 'snooze', done: string) => run(() => api(`/reminders/${t.reminderId}/${action}`, { method: 'POST' }), done)
+  // Lien sans compte : le locataire y dépose ses attestations, enregistrées directement avec le bail.
+  const askWithLink = (done: string) =>
+    run(async () => {
+      await api(`/leases/${t.leaseId}/tenant-link`, { method: 'POST', body: { open: true } })
+      await api(`/leases/${t.leaseId}/tenant-link/send`, { method: 'POST' })
+    }, done)
   const letters = (type: string) => navigate(`/espace/baux/${t.leaseId}/courriers?type=${type}`)
 
   let actions: Array<{ label: string; onClick: () => unknown; variant?: 'primary' | 'outline' | 'ghost' }> = []
@@ -152,8 +158,10 @@ function TaskCard({ task: t, onChange }: { task: Task; onChange: () => void }) {
       break
     case 'INSURANCE':
       actions = [
+        { label: 'Demander par email, avec un lien', onClick: () => askWithLink('Votre locataire a reçu un lien pour envoyer son attestation.') },
         {
-          label: 'Envoyer la demande par email',
+          variant: 'outline',
+          label: 'Envoyer une lettre de demande',
           onClick: () =>
             run(async () => {
               const defaults = await api<{ letter: Record<string, unknown> }>(`/leases/${t.leaseId}/letters/defaults/INSURANCE`)
@@ -194,7 +202,8 @@ function TaskCard({ task: t, onChange }: { task: Task; onChange: () => void }) {
       break
     case 'BOILER':
       actions = [
-        { label: 'Préparer la demande', onClick: () => letters('BOILER') },
+        { label: 'Demander par email, avec un lien', onClick: () => askWithLink('Votre locataire a reçu un lien pour envoyer l’attestation d’entretien.') },
+        { label: 'Préparer une lettre', variant: 'outline', onClick: () => letters('BOILER') },
         { label: 'Me le rappeler dans un mois', variant: 'ghost', onClick: () => run(() => api(`/leases/${t.leaseId}/snooze/BOILER`, { method: 'POST' }), 'Rappel reporté d’un mois.') },
       ]
       break

@@ -8,7 +8,7 @@ import { Btn, Callout, Input, Modal, Money, Select, useToast } from './kit'
  * « Loyer reçu » : paiement complet → quittance ; paiement partiel → reçu (jamais une quittance).
  * Le document est rangé dans les documents du bail, et peut être envoyé au locataire.
  */
-export function PaymentModal({ open, onClose, onSaved, leaseId, dueCents, tenantEmail }: { open: boolean; onClose: () => void; onSaved: () => void; leaseId: string; dueCents: number; tenantEmail?: string | null }) {
+export function PaymentModal({ open, onClose, onSaved, leaseId, dueCents, tenantEmail, emailConsent }: { open: boolean; onClose: () => void; onSaved: () => void; leaseId: string; dueCents: number; tenantEmail?: string | null; emailConsent?: boolean }) {
   const toast = useToast()
   const [period, setPeriod] = useState(currentPeriod())
   const [amount, setAmount] = useState<number | null>(dueCents)
@@ -65,6 +65,9 @@ export function PaymentModal({ open, onClose, onSaved, leaseId, dueCents, tenant
       ) : (
         <span style={{ fontSize: 13, color: BAI.inkSoft }}>La quittance est gratuite et due au locataire qui la demande.</span>
       )}
+      {tenantEmail && emailConsent === false ? (
+        <span style={{ fontSize: 13, color: BAI.inkSoft }}>Envoi par email : la loi demande l’accord du locataire. Demandez-le avec le lien « Documents du locataire », sur la page du bail.</span>
+      ) : null}
     </Modal>
   )
 }

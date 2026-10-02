@@ -29,7 +29,7 @@ import {
 } from '../domain/rules.js'
 import { buildJourney, type JourneyInput } from '../domain/journeys.js'
 import { toTrash } from '../services/trash.js'
-import { LETTER_TITLES, letterContent, letterSchema, revisedRent, tenantNoticeEnd, tenantNoticeMonths, type LetterInput, type LetterType } from '../domain/letters.js'
+import { LETTER_TITLES, THIRD_PARTY_LETTERS, letterContent, letterSchema, revisedRent, tenantNoticeEnd, tenantNoticeMonths, type LetterInput, type LetterType } from '../domain/letters.js'
 import { renderContractPdf } from '../pdf/contract.js'
 import { renderGuaranteePdf } from '../pdf/guarantee.js'
 import { renderReceiptPdf, type ReceiptInput } from '../pdf/receipt.js'
@@ -168,7 +168,7 @@ async function leaseView(user: User, lease: LeaseWithProperty) {
     status: lease.status,
     ready: lease.status === 'DRAFT' && completion.percent === 100 && checklist.length === 0,
     /** Ce que Bailio a retenu des courriers (fin du préavis, remise des clés) pour pré-remplir la suite. */
-    facts: { tenantNotice: (lease.data as { tenantNotice?: unknown }).tenantNotice ?? null, keysDate: (lease.data as { keysDate?: string }).keysDate ?? null },
+    facts: { tenantNotice: (lease.data as { tenantNotice?: unknown }).tenantNotice ?? null, keysDate: (lease.data as { keysDate?: string }).keysDate ?? null, eReceiptConsent: (lease.data as { tenantLink?: { eReceiptConsent?: { email: string; at: string } | null } }).tenantLink?.eReceiptConsent ?? null },
     checklist,
     esignPending,
     reopen,
@@ -616,17 +616,42 @@ interface LeaseFacts {
 const leaseFacts = (lease: Lease): LeaseFacts => (lease.data ?? {}) as LeaseFacts
 
 /** Mise à jour d'une partie des données du bail, relues juste avant l'écriture. */
-async function patchLeaseData(leaseId: string, patch: (facts: LeaseFacts & Record<string, unknown>) => Record<string, unknown>) {
+export async function patchLeaseData(leaseId: string, patch: (facts: LeaseFacts & Record<string, unknown>) => Record<string, unknown>) {
   const fresh = await prisma.lease.findUniqueOrThrow({ where: { id: leaseId } })
   const data = (fresh.data ?? {}) as LeaseFacts & Record<string, unknown>
   await prisma.lease.update({ where: { id: leaseId }, data: { data: { ...data, ...patch(data) } as Prisma.InputJsonObject } })
 }
 
 /** Destinataire : le locataire, sauf l'appel à la caution (le garant). */
-function recipientFor(type: LetterType, tenant: { name: string; address: string }, c: ContractInput) {
+function recipientFor(letter: { type: string; recipient?: unknown }, tenant: { name: string; address: string }, c: ContractInput) {
+  const type = letter.type
+  if (isThirdParty(type)) {
+    const r = (letter.recipient ?? {}) as { name?: string; address?: string }
+    return { name: r.name ?? '', address: r.address ?? '' }
+  }
   if (type !== 'GUARANTOR_CALL') return tenant
   const g = c.guarantors[0]
   return g ? { name: personName(g), address: g.address ?? '' } : { name: 'Garant', address: '' }
+}
+
+const isThirdParty = (type: string) => (THIRD_PARTY_LETTERS as readonly string[]).includes(type)
+
+const contactRecipient = (c: { id: string; name: string; address: string | null; email: string | null } | null) => ({ name: c?.name ?? '', address: c?.address ?? '', email: c?.email ?? '', contactId: c?.id ?? null })
+
+/** Assureur ou artisan saisi dans un courrier : il rejoint le carnet (ou ses coordonnées y sont complétées). */
+async function rememberRecipient(userId: string, lease: Lease, letter: LetterInput) {
+  if (letter.type !== 'INSURANCE_CLAIM' && letter.type !== 'CONTRACTOR_CLAIM') return
+  const r = letter.recipient
+  const kind = letter.type === 'INSURANCE_CLAIM' ? 'INSURER' : 'ARTISAN'
+  const existing = r.contactId ? await prisma.contact.findFirst({ where: { id: r.contactId, userId } }) : await prisma.contact.findFirst({ where: { userId, kind, name: { equals: r.name, mode: 'insensitive' } } })
+  const contact = existing
+    ? await prisma.contact.update({ where: { id: existing.id }, data: { address: existing.address || r.address || null, email: existing.email || r.email || null } })
+    : await prisma.contact.create({ data: { userId, kind, name: r.name, address: r.address || null, email: r.email || null } })
+  if (letter.type === 'INSURANCE_CLAIM') {
+    const p = await prisma.property.findUniqueOrThrow({ where: { id: lease.propertyId } })
+    const file = readProperty(p)
+    await prisma.property.update({ where: { id: p.id }, data: { data: { ...file, ownerInsurance: { policyNumber: letter.policyNumber || file.ownerInsurance?.policyNumber || null, contactId: contact.id } } } })
+  }
 }
 
 /** Mois échus non payés (ou payés partiellement), du plus ancien au plus récent. */
@@ -730,6 +755,15 @@ router.get('/leases/:id/letters/defaults/:type', async (req, res) => {
     data = { type, newOwnerName: '', newOwnerAddress: '', effectiveDate: iso(new Date()), paymentInfo: '' }
   } else if (type === 'SMOKE_DETECTOR') {
     data = { type, count: Math.max(1, c.property.smokeDetectors ?? 1), installedDate: facts.smokeInstalledDate ?? null }
+  } else if (type === 'INSURANCE_CLAIM') {
+    // Assureur du logement : repris du carnet, avec le numéro de contrat retenu la dernière fois.
+    const own = readProperty(lease.property).ownerInsurance
+    const insurer = (own?.contactId ? await prisma.contact.findFirst({ where: { id: own.contactId, userId: user.id } }) : null) ?? (await prisma.contact.findFirst({ where: { userId: user.id, kind: 'INSURER' }, orderBy: { createdAt: 'asc' } }))
+    data = { type, recipient: contactRecipient(insurer), policyNumber: own?.policyNumber ?? '', eventDate: iso(new Date()), cause: 'WATER', circumstances: '', damages: '' }
+  } else if (type === 'CONTRACTOR_CLAIM') {
+    // Dernière intervention terminée dans le logement : artisan, travaux et date déjà connus.
+    const last = await prisma.intervention.findFirst({ where: { propertyId: lease.propertyId, status: 'DONE', contactId: { not: null } }, include: { contact: true }, orderBy: [{ date: 'desc' }, { updatedAt: 'desc' }] })
+    data = { type, recipient: contactRecipient(last?.contact ?? null), work: last?.title ?? '', workDate: last?.date ? iso(last.date) : null, invoiceRef: '', problems: '', delayDays: 15 }
   } else if (type === 'E_RECEIPT_CONSENT') {
     data = { type, email: c.tenants.find((t) => t.email)?.email ?? '' }
     if (!c.tenants.some((t) => t.email)) note = 'Ajoutez l’email du locataire dans sa fiche : il sera repris ici.'
@@ -737,7 +771,7 @@ router.get('/leases/:id/letters/defaults/:type', async (req, res) => {
   // Ce que le propriétaire a déjà saisi pour ce courrier et pas encore enregistré est repris tel quel.
   const draft = facts.letterDrafts?.[type as LetterType]
   if (draft?.letter) data = { ...data, ...draft.letter, type }
-  res.json({ success: true, data: { title: LETTER_TITLES[type as keyof typeof LETTER_TITLES], letter: data, note, recipient: recipientFor(type as LetterType, await recipientOf(user, lease, c), c), draftSavedAt: draft?.savedAt ?? null } })
+  res.json({ success: true, data: { title: LETTER_TITLES[type as keyof typeof LETTER_TITLES], letter: data, note, recipient: recipientFor(data as { type: string }, await recipientOf(user, lease, c), c), draftSavedAt: draft?.savedAt ?? null } })
 })
 
 /** Désignation des locaux loués, comme au bail : type, surface, pièces, annexes. */
@@ -770,7 +804,7 @@ async function letterPdf(user: User, lease: LeaseWithProperty, letter: LetterInp
     landlordAddress: landlordAddress(c.landlord),
     leaseStart: c.terms.startDate ?? iso(lease.startDate),
   })
-  const input = { content, landlord: c.landlord, recipient: recipientFor(letter.type, recipient, c), date: new Date() }
+  const input = { content, landlord: c.landlord, recipient: recipientFor(letter, recipient, c), date: new Date() }
   return { pdf: await renderLetterPdf(input), content, input }
 }
 
@@ -837,6 +871,7 @@ router.post('/leases/:id/letters', async (req, res) => {
   const { pdf, content, input } = await letterPdf(user, lease, letter)
   const doc = await saveGeneratedDocument({ userId: user.id, kind: 'LETTER', title: LETTER_TITLES[letter.type], pdf, snapshot: { letter: input, input: letter }, leaseId: lease.id, propertyId: lease.propertyId, meta: { type: letter.type } })
   await rememberLetter(lease, letter)
+  await rememberRecipient(user.id, lease, letter)
   // Révision : le nouveau loyer s'applique au bail et devient la nouvelle référence.
   if (letter.type === 'REVISION') {
     const next = revisedRent(letter.oldRentCents, letter.irlRef.value, letter.irlNew.value)
@@ -905,12 +940,24 @@ export { leaseView }
 export default router
 
 /** Envoi d'un courrier déjà enregistré (utilisé par la route documents). */
-export async function emailLetter(user: User, leaseId: string, pdf: Buffer, subject: string) {
+export async function emailLetter(user: User, leaseId: string, pdf: Buffer, subject: string, letter?: { type?: string; recipient?: { email?: string | null } } | null) {
   const lease = await leaseOwned(user.id, leaseId)
   const c = await contractFor(user, lease)
-  const to = c.tenants.map((t) => t.email).filter((e): e is string => Boolean(e))
-  if (!to.length) throw new HttpError(400, 'Ajoutez l’email du locataire dans sa fiche pour lui envoyer ce courrier.')
-  const mail = layout({ title: subject, paragraphs: ['Bonjour,', 'Vous trouverez en pièce jointe un courrier de votre bailleur.', 'Bonne journée.'] })
+  // Chaque courrier part à son destinataire : le garant pour l'appel à la caution, l'assureur ou l'artisan pour une réclamation.
+  let to: string[]
+  let from = 'votre bailleur'
+  if (letter?.type === 'GUARANTOR_CALL') {
+    to = c.guarantors.map((g) => g.email).filter((e): e is string => Boolean(e)).slice(0, 1)
+    if (!to.length) throw new HttpError(400, 'Ajoutez l’email du garant dans la fiche du locataire pour lui envoyer ce courrier.')
+  } else if (letter?.type && isThirdParty(letter.type)) {
+    to = letter.recipient?.email ? [letter.recipient.email] : []
+    if (!to.length) throw new HttpError(400, 'Ce courrier n’a pas d’adresse email de destinataire : imprimez-le, ou recréez-le avec l’email.')
+    from = landlordName(c.landlord) || 'un propriétaire'
+  } else {
+    to = c.tenants.map((t) => t.email).filter((e): e is string => Boolean(e))
+    if (!to.length) throw new HttpError(400, 'Ajoutez l’email du locataire dans sa fiche pour lui envoyer ce courrier.')
+  }
+  const mail = layout({ title: subject, paragraphs: ['Bonjour,', `Vous trouverez en pièce jointe un courrier de ${from}.`, 'Bonne journée.'] })
   for (const email of to) await sendEmail({ to: email, subject, ...mail, replyTo: user.email, attachments: [{ filename: `${fileSlug(subject)}.pdf`, content: pdf }] })
   return to
 }

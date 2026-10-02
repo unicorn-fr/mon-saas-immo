@@ -52,3 +52,19 @@ test('annexes officielles complètes (décrets 87-712 et 87-713)', () => {
   assert.match(all, /L\. 35-5 du code de la santé publique/)
   assert.match(all, /Taxe ou redevance d'enlèvement des ordures ménagères/)
 })
+
+test('sinistre et réclamation à un artisan : destinataire tiers, textes de loi cités', () => {
+  const claim = letterContent(
+    letterSchema.parse({ type: 'INSURANCE_CLAIM', recipient: { name: 'MAIF', address: '200 avenue Salvador Allende, Niort' }, policyNumber: 'PNO-1234', eventDate: '2026-09-20', cause: 'WATER', circumstances: 'fuite du ballon d’eau chaude.', damages: 'plafond de la salle de bains taché' }),
+    ctx,
+  )
+  assert.match(claim.subject, /contrat n° PNO-1234/)
+  assert.match(claim.paragraphs[0], /dégât des eaux.*20 septembre 2026.*12 chemin des Vignes/)
+  assert.match(claim.paragraphs[1], /ballon d’eau chaude\.$/)
+  assert.ok(claim.paragraphs.some((p) => /L\. 113-2 du code des assurances/.test(p)))
+  const contractor = letterContent(letterSchema.parse({ type: 'CONTRACTOR_CLAIM', recipient: { name: 'Plomberie Martin' }, work: 'remplacement du mitigeur', workDate: '2026-09-02', problems: 'fuite au raccord', delayDays: 15 }), ctx)
+  assert.match(contractor.paragraphs[0], /le 2 septembre 2026.*remplacement du mitigeur/)
+  assert.match(contractor.paragraphs[2], /15 jours/)
+  assert.ok(contractor.paragraphs.some((p) => /article 1344.*article 1222/.test(p)))
+  assert.throws(() => letterSchema.parse({ type: 'CONTRACTOR_CLAIM', recipient: { name: '' }, work: 'x', problems: 'y' }))
+})

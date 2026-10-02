@@ -8,6 +8,7 @@ import { CHARGES_LIST, LEASE_NOTICE, REPAIRS_LIST, renderNoticePdf } from './pdf
 import draftRoutes from './routes/drafts.js'
 import candidateRoutes from './routes/candidates.js'
 import contactRoutes from './routes/contacts.js'
+import tenantLinkRoutes from './routes/tenantLink.js'
 import authRoutes from './routes/auth.js'
 import accountRoutes from './routes/account.js'
 import geoRoutes from './routes/geo.js'
@@ -62,6 +63,7 @@ export function createApp() {
   })
   app.use('/api', candidateRoutes)
   app.use('/api', contactRoutes)
+  app.use('/api', tenantLinkRoutes)
   app.use('/api/drafts', draftRoutes)
   app.use('/api/auth', authRoutes)
   app.use('/api/geo', geoRoutes)

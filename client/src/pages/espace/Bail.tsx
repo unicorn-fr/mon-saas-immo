@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { MissingList } from '../../components/Missing'
 import { ESignCard } from './ESign'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { TenantLink } from '../../components/TenantLink'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
 import { PaymentModal } from '../../components/PaymentModal'
@@ -316,6 +317,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
               <Line key={g.tenantId} label="Garant" value={<Link to={`/espace/locataires/${g.tenantId}/caution`} style={{ textDecoration: 'none' }}>{g.name}</Link>} />
             ))}
           </Card>
+          {l.status === 'ACTIVE' || l.status === 'IMPORTED' ? <TenantLink leaseId={l.id} tenantEmail={l.tenants.find((x) => x.email)?.email} /> : null}
         </aside>
       </div>
 
@@ -340,7 +342,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
         <span style={{ fontSize: 13, color: BAI.inkSoft }}>Chaque partie garde un exemplaire original signé, avec ses annexes.</span>
       </Modal>
       <EndModal open={endOpen} onClose={() => setEndOpen(false)} lease={l} onDone={setLease} />
-      <PaymentModal open={payOpen} onClose={() => setPayOpen(false)} onSaved={reload} leaseId={l.id} dueCents={l.columns.rentCents + l.columns.chargesCents} tenantEmail={l.tenants.find((x) => x.email)?.email} />
+      <PaymentModal open={payOpen} onClose={() => setPayOpen(false)} onSaved={reload} leaseId={l.id} dueCents={l.columns.rentCents + l.columns.chargesCents} tenantEmail={l.tenants.find((x) => x.email)?.email} emailConsent={Boolean(l.facts?.eReceiptConsent)} />
     </>
   )
 }

@@ -200,6 +200,8 @@ export const propertyFileSchema = z.object({
   keys: opt(text(200)),
   /** Achat du logement : sert au rendement brut du bilan. */
   purchase: opt(z.object({ priceCents: opt(z.number().int().min(0).max(1_000_000_000)), date: opt(isoDate) })),
+  /** Assurance du propriétaire (PNO) : numéro de contrat repris dans les déclarations de sinistre. */
+  ownerInsurance: opt(z.object({ policyNumber: opt(text(60)), contactId: opt(z.string().uuid()) })),
   /** Par année de déclaration : sommes saisies une fois pour l'aide fiscale (intérêts d'emprunt, honoraires). */
   tax: opt(z.record(z.string().regex(/^\d{4}$/), z.object({ loanInterestCents: opt(cents), adminFeesCents: opt(cents) }))),
   /** Annonce de mise en location : réglages gardés pour la prochaine fois. */

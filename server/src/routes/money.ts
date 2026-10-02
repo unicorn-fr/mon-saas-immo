@@ -425,7 +425,7 @@ router.post('/documents/:id/send', async (req, res) => {
   const doc = await ownDocument(user.id, String(req.params.id))
   if (!doc.leaseId) throw new HttpError(400, 'Ce document n’est rattaché à aucun bail.')
   const { bytes } = await documentBytes(user, doc)
-  const to = await emailLetter(user, doc.leaseId, bytes, doc.title)
+  const to = await emailLetter(user, doc.leaseId, bytes, doc.title, doc.kind === 'LETTER' ? ((doc.snapshot as { input?: { type?: string; recipient?: { email?: string | null } } } | null)?.input ?? null) : null)
   res.json({ success: true, data: { sentTo: to } })
 })
 

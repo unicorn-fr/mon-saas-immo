@@ -188,7 +188,7 @@ export interface LeaseView {
   leaseDocumentId: string | null
   inventories: Array<{ id: string; kind: 'ENTRY' | 'EXIT'; status: 'DRAFT' | 'SIGNED'; date: string | null }>
   reminders: Array<{ id: string; type: string; dueDate: string }>
-  facts?: { tenantNotice: { receivedDate: string; reduced: boolean; reducedReason: string | null; endDate: string } | null; keysDate: string | null }
+  facts?: { tenantNotice: { receivedDate: string; reduced: boolean; reducedReason: string | null; endDate: string } | null; keysDate: string | null; eReceiptConsent?: { email: string; at: string } | null }
 }
 
 export interface Task {
@@ -275,6 +275,8 @@ export type LetterType =
   | 'OWNER_CHANGE'
   | 'SMOKE_DETECTOR'
   | 'E_RECEIPT_CONSENT'
+  | 'INSURANCE_CLAIM'
+  | 'CONTRACTOR_CLAIM'
 
 export const LETTER_TITLES: Record<LetterType, string> = {
   REVISION: 'Révision annuelle du loyer',
@@ -295,6 +297,8 @@ export const LETTER_TITLES: Record<LetterType, string> = {
   OWNER_CHANGE: 'Changement de propriétaire',
   SMOKE_DETECTOR: 'Attestation d’installation de détecteurs de fumée',
   E_RECEIPT_CONSENT: 'Accord pour recevoir les quittances par email',
+  INSURANCE_CLAIM: 'Déclaration de sinistre à l’assureur',
+  CONTRACTOR_CLAIM: 'Réclamation à un artisan',
 }
 
 export interface LetterDefaults {

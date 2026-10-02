@@ -11,6 +11,14 @@ import { eurosInWords } from './words.js'
 const cents = z.number().int().min(0).max(100_000_000)
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 
+/** Destinataire qui n'est pas le locataire (assureur, artisan) : repris du carnet, ou ajouté au carnet. */
+const thirdParty = z.object({
+  name: z.string().trim().min(1, 'Indiquez le destinataire.').max(160),
+  address: z.string().trim().max(300).default(''),
+  email: z.string().trim().email().max(200).or(z.literal('')).optional().nullable(),
+  contactId: z.uuid().optional().nullable(),
+})
+
 export const letterSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('REVISION'),
@@ -67,6 +75,24 @@ export const letterSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('OWNER_CHANGE'), newOwnerName: z.string().min(1).max(200), newOwnerAddress: z.string().min(1).max(300), effectiveDate: isoDate, paymentInfo: z.string().max(500).optional().nullable() }),
   z.object({ type: z.literal('SMOKE_DETECTOR'), count: z.number().int().min(1).max(30), installedDate: isoDate.optional().nullable() }),
   z.object({ type: z.literal('E_RECEIPT_CONSENT'), email: z.string().trim().email().max(200) }),
+  z.object({
+    type: z.literal('INSURANCE_CLAIM'),
+    recipient: thirdParty,
+    policyNumber: z.string().trim().max(60).optional().nullable(),
+    eventDate: isoDate,
+    cause: z.enum(['WATER', 'FIRE', 'THEFT', 'STORM', 'BREAKAGE', 'OTHER']),
+    circumstances: z.string().trim().min(1).max(2000),
+    damages: z.string().trim().min(1).max(2000),
+  }),
+  z.object({
+    type: z.literal('CONTRACTOR_CLAIM'),
+    recipient: thirdParty,
+    work: z.string().trim().min(1).max(300),
+    workDate: isoDate.optional().nullable(),
+    invoiceRef: z.string().trim().max(80).optional().nullable(),
+    problems: z.string().trim().min(1).max(2000),
+    delayDays: z.number().int().min(8).max(90).default(15),
+  }),
 ])
 export type LetterInput = z.infer<typeof letterSchema>
 export type LetterType = LetterInput['type']
@@ -90,7 +116,14 @@ export const LETTER_TITLES: Record<LetterType, string> = {
   OWNER_CHANGE: 'Changement de propriétaire',
   SMOKE_DETECTOR: 'Attestation d’installation de détecteurs de fumée',
   E_RECEIPT_CONSENT: 'Accord pour recevoir les quittances par email',
+  INSURANCE_CLAIM: 'Déclaration de sinistre à l’assureur',
+  CONTRACTOR_CLAIM: 'Réclamation à un artisan',
 }
+
+/** Courriers adressés à un tiers (ni le locataire ni le garant). */
+export const THIRD_PARTY_LETTERS = ['INSURANCE_CLAIM', 'CONTRACTOR_CLAIM'] as const
+
+export const CLAIM_CAUSES = { WATER: 'dégât des eaux', FIRE: 'incendie', THEFT: 'vol ou cambriolage', STORM: 'tempête ou intempéries', BREAKAGE: 'bris de glace', OTHER: 'autre sinistre' } as const
 
 export interface LetterContent {
   subject: string
@@ -321,6 +354,29 @@ export function letterContent(l: LetterInput, ctx: LetterContext): LetterContent
         ],
       }
     }
+    case 'INSURANCE_CLAIM':
+      return {
+        subject: `Déclaration de sinistre${l.policyNumber ? `, contrat n° ${l.policyNumber}` : ''}`,
+        recommended: true,
+        paragraphs: [
+          `Je vous déclare un sinistre (${CLAIM_CAUSES[l.cause]}) survenu le ${d(l.eventDate)} dans le logement dont je suis propriétaire, situé ${ctx.propertyAddress}${l.policyNumber ? `, assuré auprès de vous par le contrat n° ${l.policyNumber}` : ''}.`,
+          `Circonstances : ${l.circumstances.trim().replace(/\.$/, '')}.`,
+          `Dommages constatés : ${l.damages.trim().replace(/\.$/, '')}.`,
+          'Je tiens à votre disposition les photos et les justificatifs (factures, devis). Je vous remercie de m’indiquer la suite donnée à cette déclaration et, le cas échéant, la date du passage de l’expert.',
+          'Cette déclaration vous est adressée dans le délai prévu par mon contrat (article L. 113-2 du code des assurances).',
+        ],
+      }
+    case 'CONTRACTOR_CLAIM':
+      return {
+        subject: `Réclamation : ${l.work.trim().replace(/\.$/, '')}`,
+        recommended: true,
+        paragraphs: [
+          `Vous êtes intervenu${l.workDate ? ` le ${d(l.workDate)}` : ''} dans le logement dont je suis propriétaire, situé ${ctx.propertyAddress}, pour les travaux suivants : ${l.work.trim().replace(/\.$/, '')}${l.invoiceRef ? ` (facture ou devis n° ${l.invoiceRef})` : ''}.`,
+          `Je constate les problèmes suivants : ${l.problems.trim().replace(/\.$/, '')}.`,
+          `Je vous demande de reprendre ces travaux, sans frais, dans un délai de ${l.delayDays} jours à compter de la réception de ce courrier.`,
+          'Ce courrier vaut mise en demeure (article 1344 du code civil). À défaut de reprise dans ce délai, je pourrai faire réaliser les travaux par une autre entreprise et vous en demander le remboursement (article 1222 du code civil).',
+        ],
+      }
     case 'NUISANCE':
       return {
         subject: 'Mise en demeure de cesser un trouble de voisinage',

@@ -66,6 +66,14 @@ Chaque information saisie est enregistrée et réutilisée :
 
 `server/src/domain/journeys.ts` (testé dans `journeys.test.ts`) : départ du locataire, impayé, vente ou reprise, problème dans le logement. L'état de chaque étape est déduit des courriers enregistrés, des états des lieux et des faits du bail ; seules les démarches faites hors de Bailio (commandement de payer) se cochent à la main. Pages : `/espace/situations` et `/espace/baux/:id/parcours/:kind`. Les tâches d'« Aujourd'hui » (départ, solde de tout compte, chaudière) sont déduites de la même façon.
 
+## Lien du locataire
+
+`routes/tenantLink.ts`, page publique `/locataire/:code` (colonne `Lease.tenantCode`) : sans compte, le locataire envoie son attestation d'assurance (fiches des locataires et rappel mis à jour), l'attestation d'entretien de la chaudière (bail et fiche du logement) et donne ou retire son accord pour la quittance par email (art. 21, avec la date). Les fichiers rejoignent les documents du bail (`meta.from = 'TENANT'`). Côté propriétaire : carte « Documents du locataire » sur la page du bail, et tâches d'« Aujourd'hui » (assurance, chaudière) qui envoient le lien.
+
+## Courriers à un tiers
+
+Déclaration de sinistre à l'assureur et réclamation à un artisan (`THIRD_PARTY_LETTERS`) : destinataire repris du carnet (ou ajouté au carnet à l'enregistrement), numéro de contrat gardé dans la fiche du logement (`ownerInsurance`), réclamation pré-remplie avec la dernière intervention terminée. L'envoi par email part au bon destinataire (`emailLetter` : garant pour l'appel à la caution, tiers pour ces courriers, locataire sinon).
+
 ## Bilan, carnet, corbeille
 
 - Bilan par logement (`domain/report.ts`, testé) : `/espace/argent/bilan`, loyers, dépenses, résultat ; prix d'achat gardé dans la fiche (`purchase`) pour le rendement brut.

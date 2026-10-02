@@ -8,6 +8,7 @@ import { api } from '../../lib/api'
 import { openDoc } from '../../lib/docs'
 import { currentPeriod, dateNum, eurosCents, periodLabel, recentPeriods, todayIso } from '../../lib/format'
 import { LETTER_TITLES, type LeaseView, type LetterDefaults, type LetterType } from '../../lib/space'
+import type { Contact } from '../../lib/contacts'
 
 type Tab =
   | 'RECEIPT'
@@ -27,6 +28,8 @@ type Tab =
   | 'TENANT_NOTICE'
   | 'SHORT_NOTICE_PROOF'
   | 'DEPOSIT_RETURN'
+  | 'INSURANCE_CLAIM'
+  | 'CONTRACTOR_CLAIM'
 
 /** Courriers rangés par moment de la location : on trouve vite celui qu'il faut. */
 const GROUPS: Array<{ title: string; tabs: Array<{ value: Tab; label: string }> }> = [
@@ -62,7 +65,16 @@ const GROUPS: Array<{ title: string; tabs: Array<{ value: Tab; label: string }> 
       { value: 'DEPOSIT_RETURN', label: 'Solde de tout compte' },
     ],
   },
+  {
+    title: 'Autres courriers',
+    tabs: [
+      { value: 'INSURANCE_CLAIM', label: 'Sinistre : votre assureur' },
+      { value: 'CONTRACTOR_CLAIM', label: 'Réclamation à un artisan' },
+    ],
+  },
 ]
+/** Courriers adressés à un tiers : le destinataire se choisit dans le carnet. */
+const THIRD_PARTY: LetterType[] = ['INSURANCE_CLAIM', 'CONTRACTOR_CLAIM']
 const TABS = GROUPS.flatMap((g) => g.tabs)
 const UNPAID_TYPES = ['REMINDER', 'FORMAL_NOTICE', 'GUARANTOR_CALL']
 /** Rubrique affichée au-dessus du titre de chaque courrier. */
@@ -263,6 +275,8 @@ const INFO: Partial<Record<LetterType, { text: string; ref: string; guides?: Gui
   SMOKE_DETECTOR: { text: 'Au moins un détecteur de fumée est obligatoire dans chaque logement. Le propriétaire l’installe, le locataire en assure l’entretien.', ref: 'loi n° 2010-238 du 9 mars 2010' },
   E_RECEIPT_CONSENT: { text: 'Envoyer la quittance par email demande l’accord écrit du locataire. Faites-lui signer ce formulaire une fois, puis gardez-le dans vos documents.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 21', guides: ['quittance'] },
   REMINDER: { text: 'Pensez à prévenir le garant. Pour aller plus loin, un commissaire de justice délivre le commandement de payer : Bailio ne remplace pas un professionnel du droit.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 24', guides: ['impayes'] },
+  INSURANCE_CLAIM: { text: 'Déclarez le sinistre à l’assurance du logement (assurance propriétaire non occupant ou de copropriété) dans le délai du contrat : 5 jours ouvrés au moins, 2 pour un vol. Si le locataire est concerné, il déclare aussi le sinistre à son propre assureur.', ref: 'Code des assurances, art. L. 113-2' },
+  CONTRACTOR_CLAIM: { text: 'Après une mise en demeure restée sans effet, vous pouvez faire reprendre les travaux par une autre entreprise, à un coût raisonnable, et en demander le remboursement à l’artisan. Gardez la facture, les photos et les échanges.', ref: 'Code civil, art. 1222 et 1344' },
   FORMAL_NOTICE: { text: 'La mise en demeure part en lettre recommandée avec accusé de réception. Le garant doit être informé dans les 15 jours d’un commandement de payer.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 24 ; Code civil, art. 1344', guides: ['impayes'] },
 }
 
@@ -332,11 +346,12 @@ function LetterFrame({ lease, n, title, letter, note, recipient, savedAt, onRese
     setSaved(r.documentId)
     return r.documentId
   }
-  const hasEmail = lease.tenants.some((t) => t.email)
+  const thirdParty = THIRD_PARTY.includes(letter.type)
+  const hasEmail = thirdParty ? Boolean((letter.recipient as { email?: string } | undefined)?.email) : lease.tenants.some((t) => t.email)
   return (
     <FicheSection id={letter.type} n={n} kicker={kickerOf(letter.type)} title={title} reference={info?.ref} guides={info?.guides}>
       {note ? <Callout tone={/interdit|pas encore|Aucun/.test(note) ? 'warn' : 'info'}>{note}</Callout> : null}
-      {ATTESTATIONS.includes(letter.type) ? null : (
+      {ATTESTATIONS.includes(letter.type) || thirdParty ? null : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
           <span style={{ color: BAI.inkSoft }}>Destinataire</span>
           <span style={{ fontWeight: 600 }}>
@@ -390,7 +405,7 @@ function LetterFrame({ lease, n, title, letter, note, recipient, savedAt, onRese
           </TextLink>
         </span>
       ) : null}
-      {['NOTICE_TO_LEAVE', 'FORMAL_NOTICE', 'GUARANTOR_CALL', 'NUISANCE', 'DAMAGE_REPAIR', 'SHORT_NOTICE_PROOF', 'OWNER_CHANGE'].includes(letter.type) ? <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.45 }}>À envoyer en lettre recommandée avec accusé de réception : imprimez le PDF, ou utilisez un service de lettre recommandée en ligne.</span> : null}
+      {['NOTICE_TO_LEAVE', 'FORMAL_NOTICE', 'GUARANTOR_CALL', 'NUISANCE', 'DAMAGE_REPAIR', 'SHORT_NOTICE_PROOF', 'OWNER_CHANGE', 'INSURANCE_CLAIM', 'CONTRACTOR_CLAIM'].includes(letter.type) ? <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.45 }}>À envoyer en lettre recommandée avec accusé de réception : imprimez le PDF, ou utilisez un service de lettre recommandée en ligne.</span> : null}
     </FicheSection>
   )
 }
@@ -433,6 +448,12 @@ function check(l: Letter): string | null {
       return has(l.receivedDate) && l.amountCents ? null : 'Indiquez le montant et la date du versement.'
     case 'DEPOSIT_RETURN':
       return has(l.keysDate) ? null : 'Indiquez la date de remise des clés.'
+    case 'INSURANCE_CLAIM':
+      if (!str((l.recipient as { name?: string } | undefined)?.name).trim()) return 'Indiquez votre assureur.'
+      return has(l.eventDate) && str(l.circumstances).trim() && str(l.damages).trim() ? null : 'Indiquez la date, les circonstances et les dommages.'
+    case 'CONTRACTOR_CLAIM':
+      if (!str((l.recipient as { name?: string } | undefined)?.name).trim()) return 'Indiquez l’artisan.'
+      return str(l.work).trim() && str(l.problems).trim() ? null : 'Indiquez les travaux et les problèmes constatés.'
   }
   return null
 }
@@ -480,6 +501,32 @@ function LetterFields({ lease, letter, set }: { lease: LeaseView; letter: Letter
       )
     case 'DAMAGE_REPAIR':
       return <DamageFields letter={letter} set={set} />
+    case 'INSURANCE_CLAIM':
+      return (
+        <>
+          <RecipientFields kind="INSURER" letter={letter} set={set} />
+          <Fields>
+            <Input label="Numéro de contrat" value={str(letter.policyNumber)} onChange={(v) => set({ policyNumber: v || null })} hint="Gardé avec le logement pour la prochaine fois." />
+            <Input label="Date du sinistre" type="date" value={str(letter.eventDate)} onChange={(v) => set({ eventDate: v })} />
+          </Fields>
+          <Select label="Nature du sinistre" value={str(letter.cause) as Cause} onChange={(v) => set({ cause: v })} options={CAUSES} />
+          <TextArea label="Circonstances" value={str(letter.circumstances)} onChange={(v) => set({ circumstances: v })} rows={3} placeholder="fuite du ballon d’eau chaude, constatée par le locataire le matin" />
+          <TextArea label="Dommages constatés" value={str(letter.damages)} onChange={(v) => set({ damages: v })} rows={3} placeholder="plafond de la salle de bains taché, parquet du couloir gonflé" />
+        </>
+      )
+    case 'CONTRACTOR_CLAIM':
+      return (
+        <>
+          <RecipientFields kind="ARTISAN" letter={letter} set={set} />
+          <Fields>
+            <Input label="Travaux réalisés" value={str(letter.work)} onChange={(v) => set({ work: v })} placeholder="remplacement du mitigeur de la cuisine" />
+            <Input label="Date de l’intervention" type="date" value={str(letter.workDate)} onChange={(v) => set({ workDate: v || null })} />
+          </Fields>
+          <Input label="Numéro de facture ou de devis" value={str(letter.invoiceRef)} onChange={(v) => set({ invoiceRef: v || null })} />
+          <TextArea label="Problèmes constatés" value={str(letter.problems)} onChange={(v) => set({ problems: v })} rows={3} placeholder="fuite au raccord depuis l’intervention" />
+          <NumberField label="Délai pour reprendre les travaux (jours)" value={num(letter.delayDays) ?? 15} onChange={(v) => set({ delayDays: Math.max(8, v ?? 15) })} />
+        </>
+      )
     case 'BOILER':
       return <Input label="Date du dernier entretien connu" type="date" value={str(letter.lastServiceDate)} onChange={(v) => set({ lastServiceDate: v || null })} hint="Laissez vide si vous n’avez jamais reçu d’attestation. Bailio s’en souviendra pour l’an prochain." />
     case 'SHORT_NOTICE_PROOF':
@@ -531,6 +578,38 @@ function LetterFields({ lease, letter, set }: { lease: LeaseView; letter: Letter
     case 'E_RECEIPT_CONSENT':
       return <Input label="Email du locataire" type="email" value={str(letter.email)} onChange={(v) => set({ email: v })} hint="Repris de la fiche du locataire. Le formulaire est à faire signer par lui." />
   }
+}
+
+type Cause = 'WATER' | 'FIRE' | 'THEFT' | 'STORM' | 'BREAKAGE' | 'OTHER'
+const CAUSES: Array<{ value: Cause; label: string }> = [
+  { value: 'WATER', label: 'Dégât des eaux' },
+  { value: 'FIRE', label: 'Incendie' },
+  { value: 'THEFT', label: 'Vol ou cambriolage' },
+  { value: 'STORM', label: 'Tempête ou intempéries' },
+  { value: 'BREAKAGE', label: 'Bris de glace' },
+  { value: 'OTHER', label: 'Autre' },
+]
+
+/** Destinataire repris du carnet ; un nouveau contact y est ajouté à l'enregistrement du courrier. */
+function RecipientFields({ kind, letter, set }: { kind: 'INSURER' | 'ARTISAN'; letter: Letter; set: (p: Record<string, unknown>) => void }) {
+  const { data: contacts } = useLoad(() => api<Contact[]>('/contacts'))
+  const r = (letter.recipient as { name: string; address: string; email: string; contactId: string | null } | undefined) ?? { name: '', address: '', email: '', contactId: null }
+  const mine = (contacts ?? []).filter((c) => c.kind === kind)
+  const pick = (id: string) => {
+    const c = mine.find((x) => x.id === id)
+    set({ recipient: c ? { name: c.name, address: c.address ?? '', email: c.email ?? '', contactId: c.id } : { name: '', address: '', email: '', contactId: null } })
+  }
+  const edit = (patch: Partial<typeof r>) => set({ recipient: { ...r, ...patch } })
+  return (
+    <>
+      {mine.length ? <Select label={kind === 'INSURER' ? 'Assureur' : 'Artisan'} value={r.contactId ?? ''} onChange={pick} options={[...mine.map((c) => ({ value: c.id, label: c.trade ? `${c.name} (${c.trade})` : c.name })), { value: '', label: 'Un autre contact' }]} hint="Repris de votre carnet." /> : null}
+      <Fields>
+        <Input label={kind === 'INSURER' ? 'Nom de l’assureur' : 'Nom de l’artisan ou de l’entreprise'} value={r.name} onChange={(v) => edit({ name: v })} hint={r.contactId ? undefined : 'Ajouté à votre carnet.'} />
+        <Input label="Email" type="email" value={r.email} onChange={(v) => edit({ email: v })} inputMode="email" />
+      </Fields>
+      <Input label="Adresse postale" value={r.address} onChange={(v) => edit({ address: v })} />
+    </>
+  )
 }
 
 function DamageFields({ letter, set }: { letter: Letter; set: (p: Record<string, unknown>) => void }) {

@@ -230,6 +230,8 @@ model Lease {
   // Locataires signataires (fiches Tenant) ; vide pour les baux créés par l'ancien tunnel.
   tenantIds      String[]    @default([])
   signedAt       DateTime?
+  // Lien sans compte remis au locataire (attestation d'assurance, entretien de la chaudière, quittance par email).
+  tenantCode     String?     @unique
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @default(now()) @updatedAt
 
