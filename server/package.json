@@ -9,7 +9,7 @@
     "start": "prisma migrate deploy && node dist/server.js",
     "typecheck": "prisma generate && tsc -p tsconfig.json --noEmit",
     "db:migrate": "prisma migrate dev",
-    "test": "tsx --test src/domain/*.test.ts src/services/import/*.test.ts"
+    "test": "tsx --test src/domain/*.test.ts src/pdf/*.test.ts src/services/import/*.test.ts"
   },
   "dependencies": {
     "@fontsource/cormorant-garamond": "^5.3.0",

@@ -77,10 +77,10 @@ export async function completeLease(token, { furnished = true } = {}) {
     method: 'POST',
     token,
     body: {
-      label: 'Studio Agde',
-      address: '25 boulevard de l’Etna, 34300 Agde',
+      label: 'Studio Sète',
+      address: '14 quai de Bosc, 34200 Sète',
       postalCode: '34300',
-      city: 'Agde',
+      city: 'Sète',
       habitat: 'COLLECTIVE',
       legalRegime: 'COPRO',
       furnished,
@@ -110,22 +110,22 @@ export async function completeLease(token, { furnished = true } = {}) {
     body: {
       propertyId: p.id,
       civility: 'MONSIEUR',
-      firstNames: 'Enzo',
-      lastName: 'Mercier',
-      birthDate: '2006-03-28',
-      birthPlace: 'Avignon',
+      firstNames: 'Lucas',
+      lastName: 'Garnier',
+      birthDate: '2004-05-12',
+      birthPlace: 'Arles',
       email: `locataire+${Date.now()}@example.fr`,
       situation: 'STUDENT',
       living: 'ALONE',
       guarantee: 'CAUTION',
-      guarantor: { civility: 'MONSIEUR', firstNames: 'Benoît', lastName: 'Mercier', address: '1 chemin Frejaus, 30650 Rochefort-du-Gard', email: `garant+${Date.now()}@example.fr`, engagement: 'SOLIDAIRE', duration: 'FIXED', until: '2029-09-05', maxCents: 2000000, signMode: 'ELECTRONIC' },
+      guarantor: { civility: 'MONSIEUR', firstNames: 'Hervé', lastName: 'Garnier', address: '6 rue des Lavandes, 30000 Nîmes', email: `garant+${Date.now()}@example.fr`, engagement: 'SOLIDAIRE', duration: 'FIXED', until: '2029-09-05', maxCents: 2000000, signMode: 'ELECTRONIC' },
     },
   })
   const l = await api('/leases', { method: 'POST', token, body: { propertyId: p.id, tenantIds: [t.id], terms: { kind: furnished ? 'MEUBLE' : 'VIDE', startDate: '2026-10-06' } } })
   const v = await api(`/leases/${l.id}/terms`, {
     method: 'PUT',
     token,
-    body: { rentCents: 51000, chargesCents: 5000, chargesMode: 'PROVISION', depositCents: furnished ? 102000 : 51000, paymentDay: 4, zone: { tense: true, control: false }, previous: { rentedWithin18Months: false }, works: { sinceLast: '' }, clauses: { resolutoire: true, solidarite: false, custom: [] }, signature: { place: 'Agde', mode: 'ELECTRONIC' } },
+    body: { rentCents: 51000, chargesCents: 5000, chargesMode: 'PROVISION', depositCents: furnished ? 102000 : 51000, paymentDay: 4, zone: { tense: true, control: false }, previous: { rentedWithin18Months: false }, works: { sinceLast: '' }, clauses: { resolutoire: true, solidarite: false, custom: [] }, signature: { place: 'Sète', mode: 'ELECTRONIC' } },
   })
   return { leaseId: l.id, propertyId: p.id, tenantId: t.id, lease: v }
 }

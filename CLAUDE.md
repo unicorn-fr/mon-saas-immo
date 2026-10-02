@@ -37,7 +37,8 @@ Elles sont codées dans `server/src/domain/lease.ts` (et reprises pour l'afficha
 - durée : 3 ans en vide (bailleur personne physique), 1 an en meublé ;
 - dépôt de garantie maximum : 1 mois de loyer hors charges en vide, 2 mois en meublé ;
 - congé du bailleur : 6 mois avant l'échéance en vide, 3 mois en meublé ;
-- bail : contrat type du décret n° 2015-587 (annexe 1 vide, annexe 2 meublé) ; quittance : article 21.
+- bail : contrat type du décret n° 2015-587 (annexe 1 vide, annexe 2 meublé, version en vigueur depuis le 1er janvier 2024) ; quittance : article 21.
+- le PDF du bail (`server/src/pdf/contract.tsx`) reprend les rubriques I à XI du contrat type, dans l'ordre et avec leurs intitulés (dont « Dépenses énergétiques » et le rappel des critères de décence) ; les clauses licites ajoutées vont dans la rubrique X. Aucune mise en forme ni formulation reprise d'un bail fourni par un utilisateur. Test : `server/src/pdf/contract.test.ts`.
 Toute modification de ces règles s'accompagne d'un test dans `server/src/domain/lease.test.ts`.
 
 Textes officiels reproduits **à l'identique** (ne jamais les reformuler, seulement la mise en page) :

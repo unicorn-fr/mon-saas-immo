@@ -50,8 +50,8 @@ test('congé du locataire enregistré : repris pour le justificatif et le solde 
   assert.equal(receipt.letter.method, 'virement')
   // Appel à la caution : adressé au garant
   const call = await api(`/leases/${leaseId}/letters/defaults/GUARANTOR_CALL`, { token })
-  assert.match(call.recipient.name, /Mercier/)
-  assert.match(call.recipient.address, /Rochefort-du-Gard/)
+  assert.match(call.recipient.name, /Garnier/)
+  assert.match(call.recipient.address, /Nîmes/)
   // Chaque nouveau document se génère
   for (const body of [
     { type: 'RENT_CERTIFICATE', since: '2026-10-06', rentCents: 51000, chargesCents: 5000, upToDate: true },

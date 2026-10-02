@@ -11,40 +11,48 @@ import { NoticePages } from './notice.js'
 import { BLANK, Check, Footer, INK, MUTED, SignatureBoxes, Table, orBlank, s } from './theme.js'
 
 /**
- * Contrat de location rédigé comme un acte : parties désignées en toutes lettres, articles numérotés,
- * clauses complètes. Le contenu suit, dans l'ordre, les rubriques du contrat type du décret n° 2015-587
- * du 29 mai 2015 (annexe 1 : logement nu ; annexe 2 : logement meublé), rappelées sous chaque article,
- * complétées des clauses qui reprennent les obligations légales des parties (loi n° 89-462 du 6 juillet 1989).
- * Aucune clause interdite par l'article 4 de la loi. Une information inconnue laisse une ligne à compléter.
+ * Contrat de location établi selon le contrat type du décret n° 2015-587 du 29 mai 2015 (annexe 1 : logement nu ;
+ * annexe 2 : logement meublé ; version en vigueur depuis le 1er janvier 2024) : mêmes rubriques I à XI, dans le même
+ * ordre et avec les mêmes intitulés, remplies avec les fiches du propriétaire. Les clauses utiles et licites (assurance,
+ * entretien, animaux, visites, congé…) figurent à la rubrique X « Autres conditions particulières ». Aucune clause
+ * interdite par l'article 4 de la loi du 6 juillet 1989. Une information inconnue laisse une ligne à compléter.
  */
 
 // ── Mise en page propre à l'acte ─────────────────────────────────────────────
 
 const st = {
   p: { fontSize: 10, lineHeight: 1.5, textAlign: 'justify' as const, marginBottom: 5 },
-  article: { fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: 0.4, marginTop: 16, marginBottom: 2 },
-  rubric: { fontSize: 7.5, color: MUTED, marginBottom: 7, paddingBottom: 5, borderBottomWidth: 0.8, borderBottomColor: INK },
+  article: { fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: 0.4 },
+  small: { fontSize: 7.8, lineHeight: 1.45, color: MUTED, textAlign: 'justify' as const, marginBottom: 6 },
   clause: { fontSize: 9.5, fontWeight: 700, marginTop: 7, marginBottom: 3 },
-  center: { fontSize: 10, fontWeight: 700, textAlign: 'center' as const, letterSpacing: 1.2, marginVertical: 10 },
-  right: { fontSize: 9.5, fontWeight: 700, textAlign: 'right' as const, marginTop: 4, marginBottom: 8 },
-  role: { fontSize: 9, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: 0.8, color: MUTED, marginBottom: 4 },
-  named: { fontSize: 10, fontWeight: 500, marginTop: 2 },
 }
 
 const P = ({ children }: { children: ReactNode }) => <Text style={st.p}>{children}</Text>
 const B = ({ children }: { children: ReactNode }) => <Text style={{ fontWeight: 700 }}>{children}</Text>
-const Clause = ({ n, children }: { n: string; children: ReactNode }) => (
+/** Rubrique du contrat type : « IV. Conditions financières ». */
+function Rubric({ n, title }: { n: string; title: string }) {
+  return (
+    <View minPresenceAhead={80} style={{ marginTop: 16, marginBottom: 6, paddingBottom: 4, borderBottomWidth: 0.8, borderBottomColor: INK }}>
+      <Text style={st.article}>
+        {n}. {title}
+      </Text>
+    </View>
+  )
+}
+const Sub = ({ children }: { children: ReactNode }) => (
   <Text style={st.clause} minPresenceAhead={40}>
-    {n}. {children}
+    {children}
   </Text>
 )
-function Article({ n, title, rubric }: { n: number; title: string; rubric?: string }) {
+/** Ligne « intitulé : valeur » du contrat type. */
+function Item({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <View minPresenceAhead={80}>
-      <Text style={st.article}>
-        Article {n} – {title}
+    <View style={{ flexDirection: 'row', marginBottom: 3, paddingLeft: 10 }} wrap={false}>
+      <Text style={{ width: 12, fontSize: 9.5 }}>–</Text>
+      <Text style={{ flex: 1, fontSize: 9.5, lineHeight: 1.5, textAlign: 'justify' }}>
+        <Text style={{ fontWeight: 500 }}>{label} : </Text>
+        {children}
       </Text>
-      <Text style={st.rubric}>{rubric ?? ' '}</Text>
     </View>
   )
 }
@@ -153,235 +161,225 @@ export function ContractDocument({ c, signed }: { c: ContractInput; signed?: Sig
   const landlordNotice = landlordNoticeMonthsFor(kind)
   const tenantNotice = kind === 'VIDE' ? 'trois mois, réduit à un mois dans les cas prévus par l’article 15 de la loi du 6 juillet 1989 (notamment logement situé en zone tendue, premier emploi, mutation, perte d’emploi, nouvel emploi consécutif à une perte d’emploi, état de santé justifiant un changement de domicile, bénéficiaire du revenu de solidarité active ou de l’allocation aux adultes handicapés)' : 'un mois'
   const cityUpper = (p.city || '').toLocaleUpperCase('fr-FR')
-  let art = 0
-  const next = () => ++art
-
-  const subtitle = {
-    VIDE: 'de locaux vides à usage d’habitation constituant la résidence principale du locataire',
-    MEUBLE: 'de locaux meublés à usage d’habitation constituant la résidence principale du locataire',
-    ETUDIANT: 'de locaux meublés à usage d’habitation, consenti à un étudiant pour une durée de neuf mois',
-    MOBILITE: 'bail mobilité portant sur des locaux meublés à usage d’habitation',
-  }[kind]
+  const kindTitle = { VIDE: 'logement nu', MEUBLE: 'logement meublé', ETUDIANT: 'logement meublé, location à un étudiant', MOBILITE: 'logement meublé, bail mobilité' }[kind]
+  const ownerQuality =
+    l.kind === 'SCI' ? `personne morale${l.sciFamily ? ', société civile constituée exclusivement entre parents et alliés jusqu’au quatrième degré inclus' : ''}` : l.kind === 'COMPANY' ? 'personne morale' : 'personne physique'
+  const boiler = p.heating?.mode === 'INDIVIDUAL' && ['GAS', 'FUEL', 'WOOD'].includes(String(p.heating.energy))
+  const garden = (p.annexes ?? []).includes('garden' as never)
+  const dpeCost = p.diagnostics?.dpe
+  const decencyText =
+    'Rappel : un logement décent doit respecter les critères minimaux de performance suivants. En France métropolitaine : à compter du 1er janvier 2025, le niveau de performance minimal du logement correspond à la classe F du DPE ; à compter du 1er janvier 2028, à la classe E ; à compter du 1er janvier 2034, à la classe D. En Guadeloupe, en Martinique, en Guyane, à La Réunion et à Mayotte : à compter du 1er janvier 2028, à la classe F ; à compter du 1er janvier 2031, à la classe E. La consommation d’énergie finale et le niveau de performance du logement sont déterminés selon la méthode du diagnostic de performance énergétique mentionné à l’article L. 126-26 du code de la construction et de l’habitation.'
 
   return (
     <Document title={`Contrat de location, ${p.address ?? ''}`} author={landlordName(l)} creator="Bailio" language="fr-FR">
       <Page size="A4" style={s.page}>
-        {/* En-tête encadré */}
-        <View style={{ borderTopWidth: 2, borderBottomWidth: 2, borderColor: INK, paddingVertical: 12, paddingHorizontal: 10, marginBottom: 10 }}>
-          <Text style={{ fontSize: 17, fontWeight: 700, letterSpacing: 2.2, textAlign: 'center', textTransform: 'uppercase' }}>Contrat de location</Text>
-          <Text style={{ fontSize: 10, fontWeight: 600, textAlign: 'center', marginTop: 5, textTransform: 'uppercase', letterSpacing: 0.6 }}>{subtitle}</Text>
-          {colocation ? <Text style={{ fontSize: 9, textAlign: 'center', marginTop: 3 }}>Colocation</Text> : null}
-        </View>
-        <Text style={{ fontSize: 8, color: MUTED, textAlign: 'center', lineHeight: 1.45, marginBottom: 12 }}>
-          {mobility
-            ? 'Régi par le titre Ier ter de la loi n° 89-462 du 6 juillet 1989 tendant à améliorer les rapports locatifs (articles 25-12 à 25-18).'
-            : `Régi par le ${titleLaw} de la loi n° 89-462 du 6 juillet 1989 tendant à améliorer les rapports locatifs. Établi conformément au contrat type défini par le décret n° 2015-587 du 29 mai 2015 (annexe ${furnished ? '2' : '1'}).`}
-        </Text>
-
-        <View style={[s.box, { marginBottom: 4 }]}>
-          <Text style={{ fontSize: 7.8, lineHeight: 1.45, textAlign: 'justify' }}>
-            Le régime de droit commun en matière de baux d’habitation est défini principalement par la loi n° 89-462 du 6 juillet 1989. L’ensemble de ces dispositions étant d’ordre public, elles
-            s’imposent aux parties qui, en principe, ne peuvent pas y renoncer. Le présent contrat contient les clauses essentielles dont la loi impose la mention ; les autres dispositions d’ordre public
-            applicables sont rappelées dans la notice d’information jointe au contrat.
+        {/* En-tête : intitulé du contrat type */}
+        <View style={{ borderBottomWidth: 1.5, borderColor: INK, paddingBottom: 10, marginBottom: 10 }}>
+          <Text style={{ fontSize: 8, color: MUTED, letterSpacing: 1, textTransform: 'uppercase' }}>{mobility ? 'Bail mobilité' : `Contrat type – décret n° 2015-587 du 29 mai 2015, annexe ${furnished ? '2' : '1'}`}</Text>
+          <Text style={{ fontSize: 16, fontWeight: 700, marginTop: 6, textTransform: 'uppercase', letterSpacing: 0.6 }}>
+            Contrat de location{colocation ? ' ou de colocation' : ''}
+          </Text>
+          <Text style={{ fontSize: 11, fontWeight: 600, marginTop: 2 }}>{kindTitle}</Text>
+          <Text style={{ fontSize: 8.5, color: MUTED, marginTop: 6, lineHeight: 1.45 }}>
+            {mobility
+              ? 'Soumis au titre Ier ter de la loi n° 89-462 du 6 juillet 1989 tendant à améliorer les rapports locatifs (articles 25-12 à 25-18).'
+              : `Soumis au ${titleLaw} de la loi du 6 juillet 1989 tendant à améliorer les rapports locatifs et portant modification de la loi n° 86-1290 du 23 décembre 1986.`}
           </Text>
         </View>
 
-        {/* Parties */}
-        <Text style={st.center}>ENTRE LES SOUSSIGNÉS</Text>
-        <Text style={st.role}>Le Bailleur</Text>
+        <View style={[s.box, { marginBottom: 6 }]}>
+          <Text style={{ fontSize: 7.8, lineHeight: 1.45, textAlign: 'justify' }}>
+            Modalités d’application : le régime de droit commun en matière de baux d’habitation est défini principalement par la loi du 6 juillet 1989 modifiée. L’ensemble de ces dispositions étant d’ordre
+            public, elles s’imposent aux parties qui, en principe, ne peuvent pas y renoncer. Le présent contrat contient les clauses essentielles dont la loi impose la mention ; les autres dispositions d’ordre
+            public applicables sont rappelées dans la notice d’information jointe. Les parties sont libres de prévoir d’autres clauses particulières, dans la mesure où elles sont conformes à la loi (rubrique X).
+          </Text>
+        </View>
+
+        {/* I. Désignation des parties */}
+        <Rubric n="I" title="Désignation des parties" />
+        <P>Le présent contrat est conclu entre les soussignés :</P>
+        <Sub>Le bailleur</Sub>
         <Party v={landlordParagraph(l)} />
+        <P>Qualité du bailleur : {ownerQuality}. Ci-après désigné{l.kind === 'COUPLE' || (l.coOwners ?? []).length ? 's' : ''} « le bailleur ».</P>
         {agent ? (
           <P>
-            Représenté(e) par son mandataire, {[agent.name, agent.address].filter(Boolean).join(', ') || BLANK}
+            Représenté par le mandataire : {[agent.name, agent.address].filter(Boolean).join(', ') || BLANK}
             {agent.cardNumber ? `, titulaire de la carte professionnelle n° ${agent.cardNumber}` : ''}
-            {agent.cardIssuer ? ` délivrée par ${agent.cardIssuer}` : ''} ;
+            {agent.cardIssuer ? ` délivrée par ${agent.cardIssuer}` : ''}.
           </P>
         ) : null}
-        <Text style={st.named}>Ci-après dénommé{l.kind === 'COUPLE' ? 's' : ''} « le Bailleur »,</Text>
-        <Text style={st.right}>D’UNE PART,</Text>
-
-        <Text style={st.center}>ET</Text>
-        <Text style={st.role}>{plural ? 'Les Locataires' : 'Le Locataire'}</Text>
+        <Sub>{plural ? 'Les colocataires' : 'Le locataire'}</Sub>
         {tenants.map((tn, i) => (
           <Party key={i} v={tenantParagraph(tn)} />
         ))}
-        <Text style={st.named}>{plural ? 'Ci-après dénommés ensemble « les Locataires »,' : 'Ci-après dénommé « le Locataire »,'}</Text>
-        <Text style={st.right}>D’AUTRE PART,</Text>
+        <P>Ci-après désigné{plural ? 's ensemble' : ''} « {plural ? 'les locataires' : 'le locataire'} ».</P>
+        <P>Il a été convenu ce qui suit :</P>
 
+        {/* II. Objet du contrat */}
+        <Rubric n="II" title="Objet du contrat" />
         <P>
-          Pour la lecture des présentes : « le Bailleur » et « {plural ? 'les Locataires' : 'le Locataire'} » désignent les personnes identifiées ci-dessus, ensemble « les Parties » ; « les Locaux » désignent
-          le logement loué et ses dépendances ; « le Bail » désigne le présent contrat.
+          Le présent contrat a pour objet la location d’un logement{furnished ? ' meublé' : ''} ainsi déterminé{furnished ? ', avec les meubles et équipements décrits à l’inventaire annexé' : ''} :
         </P>
-        <Text style={[st.center, { marginTop: 12 }]}>IL A ÉTÉ CONVENU ET ARRÊTÉ CE QUI SUIT</Text>
-        <P>
-          Le Bailleur donne en location {plural ? 'aux Locataires, qui acceptent,' : 'au Locataire, qui accepte,'} les Locaux désignés ci-après{furnished ? ', avec les meubles, équipements et objets mobiliers décrits à l’inventaire annexé' : ''}, pour la durée et
-          aux conditions suivantes.
-        </P>
-
-        {/* Objet */}
-        <Article n={next()} title="Désignation des Locaux" rubric="Contrat type, rubrique II – Objet du contrat" />
-        <Clause n={`${art}.1`}>Adresse et situation</Clause>
-        <P>
+        <Sub>A. Consistance du logement</Sub>
+        <Item label="Localisation du logement">
           {orBlank(propertyAddress(p))}
           {p.postalCode && !p.address?.includes(p.postalCode) ? `, ${p.postalCode}` : ''}
-          {cityUpper && !p.address?.toLocaleUpperCase('fr-FR').includes(cityUpper) ? ` ${cityUpper}` : ''}.
-          {p.habitat === 'COLLECTIVE' ? ' Les Locaux dépendent d’un immeuble collectif' : p.habitat === 'INDIVIDUAL' ? ' Il s’agit d’une maison individuelle' : ' Type d’habitat : ' + BLANK}
-          {p.legalRegime === 'COPRO'
-            ? ` soumis au régime de la copropriété${p.lotNumber ? `, lot n° ${p.lotNumber}` : ''}${p.copro?.quotePart ? `, représentant ${p.copro.quotePart} des parties communes générales` : ''}.`
-            : p.legalRegime === 'MONO'
-              ? ', en monopropriété.'
-              : '.'}
-          {p.fiscalId ? ` Identifiant fiscal du logement : ${p.fiscalId}.` : ''}
-        </P>
-        <Clause n={`${art}.2`}>Période de construction</Clause>
-        <P>{p.constructionPeriod ? `${CONSTRUCTION[p.constructionPeriod]}.` : BLANK}</P>
-        <Clause n={`${art}.3`}>Consistance</Clause>
-        <P>
-          Surface habitable : {p.surface ? `${String(p.surface).replace('.', ',')} m²` : BLANK}. Nombre de pièces principales : {orBlank(p.rooms)}.
-          {p.roomList?.length ? ` Le logement comprend : ${p.roomList.map((r) => r.name.toLowerCase()).join(', ')}.` : ''}
-        </P>
-        <P>Autres parties du logement : {annexesLabel(p) || 'néant'}.</P>
-        <P>{p.keys ? `Clés et moyens d’accès remis au Locataire : ${p.keys}.` : 'Les clés et moyens d’accès remis au Locataire sont détaillés dans l’état des lieux d’entrée.'}</P>
-        <Clause n={`${art}.4`}>Équipements privatifs</Clause>
-        <P>{equipmentsLabel(p) ? `${equipmentsLabel(p)}.` : BLANK}</P>
-        <Clause n={`${art}.5`}>Chauffage et eau chaude sanitaire</Clause>
-        <P>
-          Chauffage : {p.heating?.mode ? `${p.heating.mode === 'COLLECTIVE' ? 'collectif' : 'individuel'}${p.heating.energy ? `, ${ENERGY[p.heating.energy]}` : ''}${p.heating.appliance ? ` (${p.heating.appliance})` : ''}` : BLANK}
-          {p.heating?.mode === 'COLLECTIVE' ? `. Répartition de la consommation : ${orBlank(p.heating.split)}` : ''}. Eau chaude sanitaire : {p.hotWater?.mode ? (p.hotWater.mode === 'COLLECTIVE' ? 'collective' : 'individuelle') : BLANK}
-          {p.hotWater?.mode === 'COLLECTIVE' ? `. Répartition : ${orBlank(p.hotWater.split)}` : ''}.
-        </P>
-        <Clause n={`${art}.6`}>Performance énergétique</Clause>
-        <P>
-          {dpe ? `Classe énergie ${dpe}${p.diagnostics?.dpe?.ges ? `, classe climat (émissions de gaz à effet de serre) ${p.diagnostics.dpe.ges}` : ''}${p.diagnostics?.dpe?.number ? `, diagnostic n° ${p.diagnostics.dpe.number}` : ''}.` : BLANK}
-        </P>
-        <Clause n={`${art}.7`}>Locaux et équipements accessoires à usage privatif</Clause>
-        <P>{annexesLabel(p) ? `${annexesLabel(p)}.` : 'Néant.'}</P>
-        <Clause n={`${art}.8`}>Parties et équipements à usage commun</Clause>
-        <P>{p.habitat === 'COLLECTIVE' ? (commonAreasLabel(p) ? `${commonAreasLabel(p)}.` : 'Néant.') : 'Sans objet (maison individuelle).'}</P>
-        <Clause n={`${art}.9`}>Accès aux technologies de l’information et de la communication</Clause>
-        <P>{[p.tv ? `Réception de la télévision : ${TV[p.tv].toLowerCase()}` : '', p.internet ? `accès à internet : ${NET[p.internet]}` : ''].filter(Boolean).join(' ; ') || BLANK}.</P>
-        <Clause n={`${art}.10`}>Logement décent</Clause>
-        <P>
-          Le Bailleur déclare que les Locaux répondent aux caractéristiques du logement décent définies par le décret n° 2002-120 du 30 janvier 2002 : ils ne laissent pas apparaître de risques
-          manifestes pouvant porter atteinte à la sécurité physique ou à la santé, sont exempts de toute infestation d’espèces nuisibles et parasites, répondent au critère de performance énergétique
-          minimale et sont dotés des éléments les rendant conformes à l’usage d’habitation (article 6 de la loi du 6 juillet 1989).
-        </P>
-        <Clause n={`${art}.11`}>Destination</Clause>
-        <P>
-          {p.destination === 'MIXTE'
-            ? `Les Locaux sont loués à usage mixte professionnel et d’habitation, ${theTenant} y installant ${plural ? 'leur' : 'sa'} résidence principale.`
-            : `Les Locaux sont loués à usage exclusif d’habitation, ${theTenant} déclarant y installer ${plural ? 'leur' : 'sa'} résidence principale.`}
-        </P>
+          {cityUpper && !p.address?.toLocaleUpperCase('fr-FR').includes(cityUpper) ? ` ${cityUpper}` : ''}
+          {p.legalRegime === 'COPRO' && p.lotNumber ? `, lot de copropriété n° ${p.lotNumber}` : ''}
+        </Item>
+        <Item label="Identifiant fiscal du logement">{orBlank(p.fiscalId)}</Item>
+        <Item label="Type d’habitat">{p.habitat === 'COLLECTIVE' ? 'immeuble collectif' : p.habitat === 'INDIVIDUAL' ? 'individuel' : BLANK}</Item>
+        <Item label="Régime juridique de l’immeuble">
+          {p.legalRegime === 'COPRO' ? `copropriété${p.copro?.quotePart ? ` (quote-part du lot : ${p.copro.quotePart})` : ''}` : p.legalRegime === 'MONO' ? 'mono propriété' : BLANK}
+        </Item>
+        <Item label="Période de construction">{p.constructionPeriod ? CONSTRUCTION[p.constructionPeriod].replace(/^Construit /, '') : BLANK}</Item>
+        <Item label="Surface habitable">{p.surface ? `${String(p.surface).replace('.', ',')} m²` : BLANK}</Item>
+        <Item label="Nombre de pièces principales">{orBlank(p.rooms)}</Item>
+        {p.roomList?.length ? <Item label="Composition">{p.roomList.map((r) => r.name.toLowerCase()).join(', ')}</Item> : null}
+        <Item label="Autres parties du logement">{annexesLabel(p) || 'néant'}</Item>
+        <Item label="Éléments d’équipement du logement">{equipmentsLabel(p) || BLANK}</Item>
+        <Item label="Modalité de production de chauffage">
+          {p.heating?.mode ? `${p.heating.mode === 'COLLECTIVE' ? 'collectif' : 'individuel'}${p.heating.energy ? `, ${ENERGY[p.heating.energy]}` : ''}${p.heating.appliance ? ` (${p.heating.appliance})` : ''}` : BLANK}
+          {p.heating?.mode === 'COLLECTIVE' ? ` ; répartition de la consommation du locataire : ${orBlank(p.heating.split)}` : ''}
+        </Item>
+        <Item label="Modalité de production d’eau chaude sanitaire">
+          {p.hotWater?.mode ? (p.hotWater.mode === 'COLLECTIVE' ? 'collective' : 'individuelle') : BLANK}
+          {p.hotWater?.mode === 'COLLECTIVE' ? ` ; répartition de la consommation du locataire : ${orBlank(p.hotWater.split)}` : ''}
+        </Item>
+        <Item label="Performance énergétique">
+          {dpe ? `classe ${dpe}${p.diagnostics?.dpe?.ges ? `, émissions de gaz à effet de serre classe ${p.diagnostics.dpe.ges}` : ''}${p.diagnostics?.dpe?.number ? ` (diagnostic n° ${p.diagnostics.dpe.number})` : ''}` : BLANK}
+        </Item>
+        <Text style={[st.small, { marginTop: 4 }]}>{decencyText}</Text>
+        <Sub>B. Destination des locaux</Sub>
+        <P>{p.destination === 'MIXTE' ? 'Usage mixte professionnel et d’habitation.' : 'Usage d’habitation.'} Le logement constitue la résidence principale {plural ? 'des locataires' : 'du locataire'}.</P>
+        <Sub>C. Locaux et équipements accessoires de l’immeuble à usage privatif du locataire</Sub>
+        <P>{annexesLabel(p) ? `${annexesLabel(p)}${p.garageNumber ? ` (n° ${p.garageNumber})` : ''}.` : 'Néant.'}</P>
+        <Sub>D. Locaux, parties, équipements et accessoires de l’immeuble à usage commun</Sub>
+        <P>{p.habitat === 'COLLECTIVE' ? (commonAreasLabel(p) ? `${commonAreasLabel(p)}.` : 'Néant.') : 'Sans objet.'}</P>
+        <Sub>E. Équipement d’accès aux technologies de l’information et de la communication</Sub>
+        <P>{[p.tv ? `réception de la télévision : ${TV[p.tv].toLowerCase()}` : '', p.internet ? `raccordement internet : ${NET[p.internet]}` : ''].filter(Boolean).join(' ; ') || BLANK}.</P>
         {furnished ? (
           <>
-            <Clause n={`${art}.12`}>Mobilier</Clause>
-            <P>Le logement est loué meublé. Il comporte au minimum les éléments de mobilier fixés par le décret n° 2015-981 du 31 juillet 2015, énumérés en annexe et détaillés dans l’inventaire établi à l’entrée dans les lieux.</P>
+            <Sub>F. Mobilier</Sub>
+            <P>Le logement comporte au minimum les éléments de mobilier fixés par le décret n° 2015-981 du 31 juillet 2015, énumérés en annexe et détaillés dans l’inventaire établi à l’entrée dans les lieux.</P>
           </>
         ) : null}
 
-        {/* Durée */}
-        <Article n={next()} title="Date de prise d’effet et durée" rubric="Contrat type, rubrique III" />
+        {/* III. Date de prise d'effet et durée */}
+        <Rubric n="III" title="Date de prise d’effet et durée du contrat" />
+        <Sub>A. Date de prise d’effet du contrat</Sub>
         <P>
-          Le Bail prend effet le <B>{t.startDate ? dateLong(t.startDate) : BLANK}</B>. Il est conclu pour une durée de <B>{durationText(months)}</B>
+          <B>{t.startDate ? dateLong(t.startDate) : BLANK}</B>.
+        </P>
+        <Sub>B. Durée du contrat</Sub>
+        <P>
+          <B>{durationText(months)}</B>
           {end ? `, soit jusqu’au ${formatDateFr(end)} inclus` : ''}.
         </P>
+        {t.reduced?.enabled && kind === 'VIDE' ? (
+          <>
+            <Sub>C. Événement et raison justifiant la durée réduite du contrat</Sub>
+            <P>{orBlank(t.reduced.reason)}.</P>
+          </>
+        ) : null}
         {mobility ? (
           <>
-            <P>Motif du bail mobilité : {t.mobilityReason ? `${theTenant} justifie, à la date de prise d’effet du Bail, être en ${MOBILITY_REASONS[t.mobilityReason as keyof typeof MOBILITY_REASONS]}.` : BLANK}</P>
+            <P>Motif du bail mobilité : {t.mobilityReason ? `${theTenant} justifie, à la date de prise d’effet du contrat, être en ${MOBILITY_REASONS[t.mobilityReason as keyof typeof MOBILITY_REASONS]}.` : BLANK}</P>
             <P>Le bail mobilité est conclu pour une durée d’un à dix mois. Il n’est ni renouvelable ni reconductible. Sa durée peut être modifiée une fois par avenant, sans que la durée totale du contrat dépasse dix mois.</P>
           </>
         ) : student ? (
-          <P>{TheTenant} étant étudiant{plural ? 's' : ''}, le Bail est conclu pour neuf mois. Il n’est pas reconduit tacitement et prend fin à son terme, sans qu’un congé soit nécessaire.</P>
+          <P>La location étant consentie à un étudiant pour une durée de neuf mois, le contrat n’est pas reconduit tacitement et prend fin à son terme, sans qu’un congé soit nécessaire.</P>
+        ) : kind === 'VIDE' ? (
+          <P>
+            En l’absence de proposition de renouvellement du contrat, celui-ci est, à son terme, reconduit tacitement pour {months > 36 ? '6' : '3'} ans et dans les mêmes conditions. Le locataire peut mettre fin au bail à tout
+            moment, après avoir donné congé. Le bailleur, quant à lui, peut mettre fin au bail à son échéance et après avoir donné congé, soit pour reprendre le logement en vue de l’occuper lui-même ou une personne
+            de sa famille, soit pour le vendre, soit pour un motif sérieux et légitime.
+          </P>
         ) : (
           <P>
-            À défaut de congé donné dans les conditions de l’article « Congé » ci-après, le Bail est, à son terme, reconduit tacitement pour une durée de {durationText(kind === 'MEUBLE' ? 12 : months > 36 ? 72 : 36)}, aux mêmes conditions.
-            Le Bailleur qui souhaite modifier les conditions du Bail à son échéance doit en faire la proposition {kind === 'MEUBLE' ? 'au moins trois mois' : 'au moins six mois'} avant le terme, dans les formes prévues par la loi.
+            En l’absence de proposition de renouvellement du contrat, celui-ci est, à son terme, reconduit tacitement pour un an et dans les mêmes conditions. Le locataire peut mettre fin au bail à tout moment,
+            après avoir donné congé. Le bailleur, quant à lui, peut mettre fin au bail à son échéance et après avoir donné congé, soit pour reprendre le logement en vue de l’occuper lui-même ou une personne de sa
+            famille, soit pour le vendre, soit pour un motif sérieux et légitime.
           </P>
         )}
-        {t.reduced?.enabled && kind === 'VIDE' ? <P>Durée réduite : événement précis justifiant la reprise du logement à l’échéance : {orBlank(t.reduced.reason)}.</P> : null}
 
-        {/* Conditions financières */}
-        <Article n={next()} title="Conditions financières" rubric="Contrat type, rubrique IV" />
-        <Clause n={`${art}.1`}>Loyer</Clause>
-        <P>
-          Le loyer mensuel est fixé à la somme de <B>{rent !== null ? `${euros(rent)} (${eurosInWords(rent)})` : BLANK}</B>, hors charges.
-        </P>
-        <P>
-          {t.zone?.tense === true
-            ? 'Le logement est situé dans une zone d’urbanisation continue de plus de 50 000 habitants où existe un déséquilibre marqué entre l’offre et la demande de logements (zone tendue) : le loyer est soumis au décret fixant annuellement le montant maximum d’évolution des loyers à la relocation.'
-            : t.zone?.tense === false
-              ? 'Le logement n’est pas situé en zone tendue au sens de l’article 17 de la loi du 6 juillet 1989 : le loyer est fixé librement entre les Parties.'
-              : `Zone tendue : ${BLANK}.`}
-        </P>
+        {/* IV. Conditions financières */}
+        <Rubric n="IV" title="Conditions financières" />
+        <P>Les parties conviennent des conditions financières suivantes :</P>
+        <Sub>A. Loyer</Sub>
+        <Item label="1° a) Montant du loyer mensuel">
+          <B>{rent !== null ? `${euros(rent + (t.zone?.complementCents ?? 0))} (${eurosInWords(rent + (t.zone?.complementCents ?? 0))})` : BLANK}</B>, hors charges
+        </Item>
+        <Item label="1° b) Loyer soumis au décret fixant annuellement le montant maximum d’évolution des loyers à la relocation">{t.zone?.tense === true ? 'oui' : t.zone?.tense === false ? 'non' : BLANK}</Item>
+        <Item label="Loyer soumis au loyer de référence majoré fixé par arrêté préfectoral">{t.zone?.control === true ? 'oui' : t.zone?.control === false ? 'non' : BLANK}</Item>
         {t.zone?.control ? (
-          <P>
-            Le logement est soumis à l’encadrement des loyers. Loyer de référence : {t.zone.refRentCentsM2 ? `${euros(t.zone.refRentCentsM2)} par m²` : BLANK} ; loyer de référence majoré :{' '}
-            {t.zone.refRentMaxCentsM2 ? `${euros(t.zone.refRentMaxCentsM2)} par m²` : BLANK}. Complément de loyer : {t.zone.complementCents ? `${euros(t.zone.complementCents)}, justifié par : ${orBlank(t.zone.complementJustification)}` : 'aucun'}.
-          </P>
-        ) : null}
-        <P>
-          Dernier loyer acquitté par le précédent locataire :{' '}
-          {t.previous?.rentedWithin18Months === false
-            ? 'sans objet, le logement n’ayant pas été loué dans les dix-huit mois précédant la signature.'
-            : t.previous?.rentedWithin18Months
-              ? `${orBlank(euros(t.previous.lastRentCents))}, versé le ${orBlank(dateShort(t.previous.lastPaymentDate))}, dernière révision le ${orBlank(dateShort(t.previous.lastRevisionDate))}.`
-              : BLANK}
-        </P>
-        <Clause n={`${art}.2`}>Révision du loyer</Clause>
-        {mobility ? (
-          <P>Le loyer ne peut pas être révisé en cours de bail mobilité (article 25-16 de la loi du 6 juillet 1989).</P>
-        ) : revisionBlocked ? (
-          <P>Le logement étant classé {dpe} au diagnostic de performance énergétique, le loyer ne peut faire l’objet d’aucune révision ni majoration (article 17-1 de la loi du 6 juillet 1989).</P>
-        ) : t.revision?.enabled === false ? (
-          <P>Le loyer n’est pas révisable en cours de Bail.</P>
-        ) : (
-          <P>
-            Le loyer est révisé chaque année {t.revision?.date ? `le ${dateLong(`2000-${t.revision.date}`).replace(' 2000', '')}` : 'à la date anniversaire du Bail'}, dans la limite de la variation de l’indice de
-            référence des loyers (IRL) publié par l’INSEE. Trimestre de référence : {t.revision?.irlQuarter ? `${quarterLabel(t.revision.irlQuarter)}${t.revision.irlValue ? ` (valeur ${String(t.revision.irlValue).replace('.', ',')})` : ''}` : BLANK}. La révision
-            n’est pas rétroactive : le Bailleur dispose d’un an à compter de la date de révision pour la demander (article 17-1).
-          </P>
-        )}
-        <Clause n={`${art}.3`}>Charges récupérables</Clause>
-        {chargesMode === 'FORFAIT' ? (
-          <P>
-            Les charges sont payées sous la forme d’un forfait mensuel de <B>{t.chargesCents !== undefined && t.chargesCents !== null ? euros(charges) : BLANK}</B>, versé avec le loyer.{' '}
-            {mobility ? 'Ce forfait est fixé pour toute la durée du bail et ne donne lieu à aucun complément ni régularisation (article 25-16).' : 'Il est révisé chaque année dans les mêmes conditions que le loyer et ne donne pas lieu à régularisation.'}
-          </P>
-        ) : chargesMode === 'PERIODIC' ? (
-          <P>Les charges récupérables, dont la liste est fixée par le décret n° 87-713 du 26 août 1987, sont payées périodiquement sur justificatifs, sans provision.</P>
-        ) : (
           <>
-            <P>
-              En sus du loyer, {theTenant} rembourse au Bailleur les charges récupérables dont la liste est fixée par le décret n° 87-713 du 26 août 1987, par provisions mensuelles de{' '}
-              <B>{t.chargesCents !== undefined && t.chargesCents !== null ? euros(charges) : BLANK}</B>, payées avec le loyer.
-            </P>
-            <P>
-              Les provisions font l’objet d’une régularisation annuelle. Un mois avant celle-ci, le Bailleur communique le décompte par nature de charges et, en immeuble collectif, le mode de répartition
-              entre les locataires ; les pièces justificatives sont tenues à disposition pendant six mois (article 23 de la loi du 6 juillet 1989).
-            </P>
+            <Item label="Loyer de référence / loyer de référence majoré">
+              {t.zone.refRentCentsM2 ? `${euros(t.zone.refRentCentsM2)}/m²` : BLANK} / {t.zone.refRentMaxCentsM2 ? `${euros(t.zone.refRentMaxCentsM2)}/m²` : BLANK}
+            </Item>
+            <Item label="Complément de loyer">
+              {t.zone.complementCents ? `loyer de base ${orBlank(euros(rent))}, complément ${euros(t.zone.complementCents)} ; caractéristiques le justifiant : ${orBlank(t.zone.complementJustification)}` : 'aucun'}
+            </Item>
           </>
-        )}
-        {kind === 'VIDE' ? (
-          <P>
-            Contribution pour le partage des économies de charges :{' '}
-            {t.works?.energyContribution?.enabled ? `${euros(energy)} par mois. Travaux réalisés : ${orBlank(t.works.energyContribution.description)}.` : 'sans objet.'}
-          </P>
         ) : null}
-        {colocation ? <P>Assurance pour compte des colocataires : sans objet, chaque colocataire justifiant de sa propre assurance contre les risques locatifs.</P> : null}
-        <Clause n={`${art}.4`}>Modalités de paiement</Clause>
+        <Item label="1° c) Loyer du dernier locataire">
+          {t.previous?.rentedWithin18Months === false
+            ? 'sans objet, le précédent locataire ayant quitté le logement plus de dix-huit mois avant la signature (ou aucun locataire précédent)'
+            : t.previous?.rentedWithin18Months
+              ? `${orBlank(euros(t.previous.lastRentCents))}, versé le ${orBlank(dateShort(t.previous.lastPaymentDate))} ; dernière révision le ${orBlank(dateShort(t.previous.lastRevisionDate))}`
+              : BLANK}
+        </Item>
+        <Item label="2° Modalités de révision">
+          {mobility
+            ? 'le loyer ne peut pas être révisé en cours de bail mobilité (article 25-16 de la loi du 6 juillet 1989)'
+            : revisionBlocked
+              ? `aucune : le logement étant classé ${dpe} au DPE, le loyer ne peut faire l’objet d’aucune révision ni majoration (article 17-1)`
+              : t.revision?.enabled === false
+                ? 'le loyer n’est pas révisable en cours de bail'
+                : `a) date de révision : ${t.revision?.date ? dateLong(`2000-${t.revision.date}`).replace(' 2000', '') + ' de chaque année' : 'date anniversaire du contrat'} ; b) trimestre de référence de l’IRL : ${t.revision?.irlQuarter ? `${quarterLabel(t.revision.irlQuarter)}${t.revision.irlValue ? ` (valeur ${String(t.revision.irlValue).replace('.', ',')})` : ''}` : BLANK}. La révision ne peut excéder la variation de l’indice de référence des loyers publié par l’INSEE ; elle n’est pas rétroactive et le bailleur dispose d’un an à compter de la date de révision pour la demander`}
+        </Item>
+        <Sub>B. Charges récupérables</Sub>
+        <Item label="1. Modalité de règlement">
+          {chargesMode === 'FORFAIT'
+            ? `forfait de charges${mobility ? ', fixé pour toute la durée du bail, sans complément ni régularisation (article 25-16)' : ', révisé chaque année dans les mêmes conditions que le loyer, sans régularisation'}`
+            : chargesMode === 'PERIODIC'
+              ? 'paiement périodique des charges sans provision, sur justificatifs'
+              : 'provisions sur charges avec régularisation annuelle'}
+        </Item>
+        {chargesMode !== 'PERIODIC' ? (
+          <Item label={`2. Montant ${chargesMode === 'FORFAIT' ? 'du forfait' : 'des provisions'} sur charges`}>
+            <B>{t.chargesCents !== undefined && t.chargesCents !== null ? `${euros(charges)} par mois` : BLANK}</B>
+          </Item>
+        ) : null}
         <P>
-          Le loyer et les charges sont payables mensuellement {t.paymentTerm === 'ARREARS' ? 'à terme échu' : 'et d’avance'}, au plus tard le {t.paymentDay ? (t.paymentDay === 1 ? '1er' : t.paymentDay) : BLANK} de chaque mois, par{' '}
-          {{ TRANSFER: 'virement bancaire sur le compte désigné par le Bailleur', CHEQUE: 'chèque', CASH: 'espèces, contre reçu', OTHER: orBlank(t.paymentPlace) }[t.paymentMethod ?? 'TRANSFER']}
-          {t.paymentPlace && t.paymentMethod !== 'OTHER' ? `, à ${t.paymentPlace}` : ''}.
+          Les charges récupérables sont celles dont la liste est fixée par le décret n° 87-713 du 26 août 1987.{chargesMode === 'PROVISION' ? ' Un mois avant la régularisation annuelle, le bailleur communique le décompte par nature de charges et, en immeuble collectif, le mode de répartition entre les locataires ; les pièces justificatives sont tenues à disposition pendant six mois (article 23).' : ''}
+        </P>
+        {kind === 'VIDE' ? (
+          <>
+            <Sub>C. Contribution pour le partage des économies de charges</Sub>
+            <P>{t.works?.energyContribution?.enabled ? `${euros(energy)} par mois. Travaux réalisés : ${orBlank(t.works.energyContribution.description)}.` : 'Sans objet.'}</P>
+          </>
+        ) : null}
+        {colocation ? (
+          <>
+            <Sub>{furnished ? 'C' : 'D'}. Assurance souscrite par le bailleur pour le compte des colocataires</Sub>
+            <P>Non : chaque colocataire justifie de sa propre assurance contre les risques locatifs.</P>
+          </>
+        ) : null}
+        <Sub>{furnished ? 'D' : 'E'}. Modalités de paiement</Sub>
+        <P>
+          Le loyer et les charges sont payables mensuellement, {t.paymentTerm === 'ARREARS' ? 'à terme échu' : 'à échoir'}, au plus tard le {t.paymentDay ? (t.paymentDay === 1 ? '1er' : t.paymentDay) : BLANK} de chaque mois, par{' '}
+          {{ TRANSFER: 'virement bancaire sur le compte désigné par le bailleur', CHEQUE: 'chèque', CASH: 'espèces, contre reçu', OTHER: orBlank(t.paymentPlace) }[t.paymentMethod ?? 'TRANSFER']}
+          {t.paymentPlace && t.paymentMethod !== 'OTHER' ? ` ; lieu de paiement : ${t.paymentPlace}` : ''}.
         </P>
         <Table
-          columns={['Montant dû pour une période complète', 'Montant']}
+          columns={['Montant total dû à la première échéance pour une période complète', 'Montant']}
           widths={[70, 30]}
           rows={[
-            ['Loyer hors charges', rent !== null ? euros(rent) : ''],
+            ['Loyer hors charges', rent !== null ? euros(rent + (t.zone?.complementCents ?? 0)) : ''],
             [chargesMode === 'FORFAIT' ? 'Forfait de charges' : chargesMode === 'PERIODIC' ? 'Charges (sur justificatifs)' : 'Provision sur charges', chargesMode === 'PERIODIC' ? '' : euros(charges)],
             ...(energy ? [['Contribution au partage des économies de charges', euros(energy)]] : []),
-            ['Total mensuel', rent !== null ? euros(rent + (chargesMode === 'PERIODIC' ? 0 : charges) + energy) : ''],
+            ['Total', rent !== null ? euros(rent + (t.zone?.complementCents ?? 0) + (chargesMode === 'PERIODIC' ? 0 : charges) + energy) : ''],
           ]}
         />
         {first && !first.fullMonth ? (
@@ -390,131 +388,169 @@ export function ContractDocument({ c, signed }: { c: ContractInput; signed?: Sig
             {euros(first.rentCents + first.chargesCents)}.
           </P>
         ) : null}
-        <Clause n={`${art}.5`}>Quittance</Clause>
+        <Sub>{furnished ? 'F' : 'G'}. Dépenses énergétiques (pour information)</Sub>
         <P>
-          Le Bailleur transmet gratuitement une quittance au Locataire qui en fait la demande, portant le détail des sommes versées en distinguant le loyer et les charges. Avec l’accord du Locataire, elle peut
-          être transmise par voie dématérialisée (article 21 de la loi du 6 juillet 1989).
+          Montant estimé des dépenses annuelles d’énergie pour un usage standard de l’ensemble des usages énumérés dans le diagnostic de performance énergétique (chauffage, refroidissement, production d’eau chaude
+          sanitaire, éclairage et auxiliaires) mentionné à l’article L. 126-26 du code de la construction et de l’habitation :{' '}
+          <B>{dpeCost?.costMin || dpeCost?.costMax ? `entre ${dpeCost.costMin ?? '…'} € et ${dpeCost.costMax ?? '…'} € par an` : BLANK}</B> (estimation réalisée à partir des prix énergétiques de référence de
+          l’année {dpeCost?.costYear ?? BLANK}).
         </P>
 
-        {/* Travaux */}
+        {/* V. Travaux */}
         {!mobility ? (
           <>
-            <Article n={next()} title="Travaux" rubric="Contrat type, rubrique V" />
-            <P>Travaux d’amélioration ou de mise en conformité effectués depuis la fin du dernier contrat ou le dernier renouvellement : {t.works?.sinceLast || 'néant'}.</P>
-            <P>Majoration du loyer en cours de bail consécutive à des travaux du Bailleur : {revisionBlocked ? 'sans objet (logement classé F ou G)' : t.works?.increase || 'néant'}.</P>
-            <P>Diminution de loyer consécutive à des travaux entrepris par le Locataire : {t.works?.decrease || 'néant'}.</P>
+            <Rubric n="V" title="Travaux" />
+            <Item label="A. Travaux d’amélioration ou de mise en conformité effectués depuis la fin du dernier contrat ou le dernier renouvellement">{t.works?.sinceLast || 'néant'}</Item>
+            <Item label="B. Majoration du loyer en cours de bail consécutive à des travaux d’amélioration du bailleur">{revisionBlocked ? 'sans objet (logement classé F ou G)' : t.works?.increase || 'néant'}</Item>
+            <Item label="C. Diminution de loyer en cours de bail consécutive à des travaux entrepris par le locataire">{t.works?.decrease || 'néant'}</Item>
           </>
         ) : null}
 
-        {/* Garanties */}
-        <Article n={next()} title="Dépôt de garantie et cautionnement" rubric="Contrat type, rubrique VI – Garanties" />
+        {/* VI. Garanties */}
+        <Rubric n="VI" title="Garanties" />
         {mobility ? (
-          <P>Aucun dépôt de garantie ne peut être exigé dans le cadre d’un bail mobilité (article 25-17 de la loi du 6 juillet 1989).</P>
+          <P>Aucun dépôt de garantie ne peut être exigé dans le cadre d’un bail mobilité (article 25-17). Le locataire peut bénéficier de la garantie Visale.</P>
         ) : (
           <>
+            <Item label="Montant du dépôt de garantie">
+              <B>{deposit !== null ? `${euros(deposit)} (${eurosInWords(deposit)})` : BLANK}</B>, au plus {kind === 'VIDE' ? 'un mois' : 'deux mois'} de loyer hors charges
+            </Item>
             <P>
-              À la signature du Bail, {theTenant} verse{plural ? 'nt' : ''} au Bailleur un dépôt de garantie de <B>{deposit !== null ? `${euros(deposit)} (${eurosInWords(deposit)})` : BLANK}</B>, destiné à garantir l’exécution de{' '}
-              {plural ? 'leurs' : 'ses'} obligations. Ce montant ne peut excéder {kind === 'VIDE' ? 'un mois' : 'deux mois'} de loyer hors charges. Il n’est pas productif d’intérêts et ne peut être révisé en cours de Bail.
+              Le dépôt de garantie n’est pas productif d’intérêts et ne peut être révisé en cours de bail. Il est restitué dans un délai maximal d’un mois à compter de la remise des clés lorsque l’état des lieux de
+              sortie est conforme à l’état des lieux d’entrée, et de deux mois dans le cas contraire, déduction faite des sommes restant dues et dûment justifiées.
+              {p.legalRegime === 'COPRO' ? ' En immeuble collectif, une provision d’au plus 20 % peut être conservée jusqu’à l’arrêté annuel des comptes de l’immeuble.' : ''} À défaut de restitution dans le délai prévu,
+              le solde dû est majoré de 10 % du loyer mensuel hors charges pour chaque période mensuelle commencée en retard (article 22).
             </P>
-            <P>
-              Le dépôt de garantie est restitué dans un délai maximal d’un mois à compter de la remise des clés lorsque l’état des lieux de sortie est conforme à l’état des lieux d’entrée, et de deux mois
-              dans le cas contraire, déduction faite des sommes restant dues au Bailleur et de celles dont il pourrait être tenu aux lieu et place du Locataire, sous réserve qu’elles soient dûment justifiées.
-              Lors de la remise des clés, le Locataire indique au Bailleur l’adresse de son nouveau domicile.
-            </P>
-            {p.legalRegime === 'COPRO' ? (
-              <P>Le logement étant situé dans un immeuble collectif, le Bailleur peut conserver une provision ne dépassant pas 20 % du dépôt de garantie jusqu’à l’arrêté annuel des comptes de l’immeuble ; la régularisation intervient dans le mois qui suit leur approbation.</P>
-            ) : null}
-            <P>À défaut de restitution dans le délai prévu, le solde dû est majoré d’une somme égale à 10 % du loyer mensuel hors charges pour chaque période mensuelle commencée en retard (article 22 de la loi du 6 juillet 1989).</P>
           </>
         )}
         {c.guarantors.length ? (
           <P>
-            Par acte séparé, {c.guarantors.map((g) => `${guarantorLine(g)}, s’est porté${g.civility === 'MADAME' ? 'e' : ''} caution ${g.engagement === 'SIMPLE' ? 'simple' : 'solidaire'}`).join(' ; ')} des obligations du Locataire. L’acte de cautionnement est
-            annexé au Bail et un exemplaire du Bail est remis à la caution (article 22-1 de la loi du 6 juillet 1989).
+            Cautionnement : {c.guarantors.map((g) => `${guarantorLine(g)}, caution ${g.engagement === 'SIMPLE' ? 'simple' : 'solidaire'}`).join(' ; ')}, par acte séparé annexé au contrat ; un exemplaire du contrat est remis à la caution (article 22-1).
           </P>
+        ) : tenants.some((x) => x.guarantee === 'VISALE') ? (
+          <P>Garantie Visale (Action Logement){tenants.find((x) => x.visaleNumber)?.visaleNumber ? `, visa n° ${tenants.find((x) => x.visaleNumber)?.visaleNumber}` : ''}.</P>
         ) : (
           <P>Cautionnement : néant.</P>
         )}
 
+        {/* VII. Clause de solidarité */}
+        <Rubric n="VII" title="Clause de solidarité" />
         {showSolidarity ? (
-          <>
-            <Article n={next()} title="Solidarité des colocataires" rubric="Contrat type, rubrique VII – Clause de solidarité" />
-            <P>
-              Les colocataires sont tenus solidairement et indivisiblement de l’ensemble des obligations du Bail, notamment du paiement du loyer et des charges. La solidarité d’un colocataire qui donne congé,
-              et celle de sa caution, prennent fin à la date d’effet du congé lorsqu’un nouveau colocataire figure au Bail, et au plus tard six mois après cette date (article 8-1 de la loi du 6 juillet 1989).
-            </P>
-          </>
-        ) : null}
+          <P>
+            Les colocataires sont tenus solidairement et indivisiblement de l’ensemble des obligations du bail, notamment du paiement du loyer et des charges. La solidarité d’un colocataire qui donne congé, et
+            celle de sa caution, prennent fin à la date d’effet du congé lorsqu’un nouveau colocataire figure au bail, et au plus tard six mois après cette date (article 8-1).
+          </P>
+        ) : (
+          <P>Sans objet{colocation ? ' : les parties ont convenu de ne pas prévoir de solidarité entre les colocataires' : ' : un seul locataire'}.</P>
+        )}
 
+        {/* VIII. Clause résolutoire */}
+        <Rubric n="VIII" title="Clause résolutoire" />
         {showResolutoire ? (
           <>
-            <Article n={next()} title="Clause résolutoire" rubric="Contrat type, rubrique VIII" />
-            <P>Le Bail sera résilié de plein droit, sans qu’il soit besoin de faire ordonner cette résiliation en justice :</P>
+            <P>Le présent contrat sera résilié de plein droit :</P>
             <Dash>
-              six semaines après un commandement de payer demeuré infructueux, à défaut de paiement aux termes convenus de tout ou partie du loyer et des charges dûment justifiées{mobility ? '' : ', ou à défaut de versement du dépôt de garantie'} ;
+              six semaines après un commandement de payer demeuré infructueux, à défaut de paiement aux termes convenus de tout ou partie du loyer et des charges dûment justifiées{mobility ? '' : ', ou de versement du dépôt de garantie'} ;
             </Dash>
-            <Dash>un mois après un commandement demeuré infructueux, à défaut d’assurance du Locataire contre les risques locatifs ;</Dash>
-            <Dash>en cas de manquement du Locataire à l’obligation d’user paisiblement des Locaux, résultant de troubles de voisinage constatés par une décision de justice passée en force de chose jugée.</Dash>
-            <P>Le commandement de payer est délivré par commissaire de justice et reproduit les mentions prévues à l’article 24 de la loi du 6 juillet 1989.</P>
+            <Dash>un mois après un commandement demeuré infructueux, à défaut de souscription d’une assurance des risques locatifs ;</Dash>
+            <Dash>en cas de non-respect de l’obligation d’user paisiblement des locaux loués, résultant de troubles de voisinage constatés par une décision de justice passée en force de chose jugée.</Dash>
+            <P>Le commandement est délivré par commissaire de justice et reproduit les mentions prévues à l’article 24 de la loi du 6 juillet 1989.</P>
           </>
-        ) : null}
+        ) : (
+          <P>Sans objet : les parties ont convenu de ne pas prévoir de clause résolutoire.</P>
+        )}
 
-        <Article n={next()} title="Honoraires de location" rubric="Contrat type, rubrique IX" />
+        {/* IX. Honoraires */}
+        <Rubric n="IX" title="Honoraires de location" />
         {agent ? (
           <>
             <P>
-              Les honoraires de l’intermédiaire liés à la visite, à la constitution du dossier, à la rédaction du Bail et à l’état des lieux sont partagés entre le Bailleur et le Locataire. La part du Locataire ne
-              peut excéder celle du Bailleur ni les plafonds fixés par le décret n° 2014-890 du 1er août 2014.
+              Il est rappelé les dispositions du I de l’article 5 de la loi du 6 juillet 1989 : la rémunération des personnes mandatées pour la mise en location est à la charge exclusive du bailleur, à l’exception des
+              honoraires liés à la visite du preneur, à la constitution de son dossier, à la rédaction du bail et à l’état des lieux, partagés entre le bailleur et le preneur. La part imputée au preneur ne peut
+              excéder celle du bailleur ni les plafonds fixés par voie réglementaire.
             </P>
-            <P>
-              À la charge du Locataire : {orBlank(euros(t.fees?.tenantVisitFileCents))} (visite, dossier, bail) et {orBlank(euros(t.fees?.tenantInventoryCents))} (état des lieux). À la charge du Bailleur :{' '}
-              {orBlank(euros(t.fees?.landlordCents))}.
-            </P>
+            <Item label="À la charge du locataire">
+              {orBlank(euros(t.fees?.tenantVisitFileCents))} (visite, dossier, bail) ; {orBlank(euros(t.fees?.tenantInventoryCents))} (état des lieux d’entrée)
+            </Item>
+            <Item label="À la charge du bailleur">{orBlank(euros(t.fees?.landlordCents))}</Item>
           </>
         ) : (
-          <P>Néant. Le Bail est conclu directement entre le Bailleur et le Locataire, sans intermédiaire.</P>
+          <P>Sans objet : le contrat est conclu directement entre le bailleur et le locataire, sans intermédiaire rémunéré.</P>
         )}
 
-        {/* Obligations des parties (rappel de la loi) */}
-        <Article n={next()} title="Obligations du Locataire" rubric="Article 7 de la loi du 6 juillet 1989" />
-        <P>{TheTenant} {plural ? 'sont tenus' : 'est tenu'} notamment :</P>
-        <Dash>de payer le loyer et les charges aux termes convenus ;</Dash>
-        <Dash>d’user paisiblement des Locaux suivant la destination prévue au Bail ;</Dash>
-        <Dash>de répondre des dégradations et pertes survenant pendant la durée du Bail dans les Locaux dont il a la jouissance exclusive, à moins qu’il ne prouve qu’elles ont eu lieu par cas de force majeure, par la faute du Bailleur ou par le fait d’un tiers qu’il n’a pas introduit dans le logement ;</Dash>
-        <Dash>de prendre à sa charge l’entretien courant du logement et des équipements, les menues réparations et les réparations locatives définies par le décret n° 87-712 du 26 août 1987, sauf si elles sont occasionnées par vétusté, malfaçon, vice de construction, cas fortuit ou force majeure ;</Dash>
-        <Dash>de ne pas transformer les Locaux et équipements sans l’accord écrit du Bailleur ; à défaut, le Bailleur peut exiger la remise en l’état ou conserver les transformations sans indemnité ;</Dash>
-        <Dash>de laisser exécuter les travaux d’amélioration, d’entretien, de mise en décence ou de performance énergétique, après notification de leur nature et de leurs modalités ; aucun travail ne peut avoir lieu les samedis, dimanches et jours fériés sans son accord ;</Dash>
-        <Dash>de permettre la visite des Locaux en vue de leur relocation ou de leur vente, dans la limite de deux heures par jour ouvrable ;</Dash>
-        <Dash>de ne pas sous-louer ni céder le Bail sans l’accord écrit du Bailleur, y compris sur le prix du loyer ;</Dash>
-        {furnished ? <Dash>d’utiliser le mobilier et les équipements conformément à leur destination, de les maintenir dans les Locaux et de les restituer en bon état, sous réserve de l’usure normale ;</Dash> : null}
-        {p.legalRegime === 'COPRO' ? <Dash>de respecter le règlement de copropriété, dont les extraits lui sont communiqués ;</Dash> : null}
-        <Dash>de signaler sans délai au Bailleur toute dégradation ou tout dysfonctionnement.</Dash>
-
-        <Article n={next()} title="Obligations du Bailleur" rubric="Article 6 de la loi du 6 juillet 1989" />
-        <P>Le Bailleur est tenu notamment :</P>
-        <Dash>de remettre au Locataire un logement décent, ainsi que les équipements mentionnés au Bail en bon état d’usage et de réparation ;</Dash>
-        <Dash>d’assurer au Locataire la jouissance paisible des Locaux et de le garantir des vices ou défauts de nature à y faire obstacle ;</Dash>
-        <Dash>d’entretenir les Locaux en état de servir à l’usage prévu et d’y faire toutes les réparations, autres que locatives, nécessaires à leur maintien en état ;</Dash>
-        <Dash>de ne pas s’opposer aux aménagements réalisés par le Locataire dès lors qu’ils ne constituent pas une transformation des Locaux ;</Dash>
-        <Dash>de remettre gratuitement une quittance au Locataire qui en fait la demande.</Dash>
-
-        <Article n={next()} title="Assurance" rubric="Article 7, g de la loi du 6 juillet 1989" />
+        {/* X. Autres conditions particulières */}
+        <Rubric n="X" title="Autres conditions particulières" />
+        <Sub>1. Assurance</Sub>
         <P>
-          {TheTenant} {plural ? 'doivent' : 'doit'} s’assurer contre les risques locatifs auprès de l’assureur de {plural ? 'leur' : 'son'} choix et en justifier lors de la remise des clés, puis chaque année à la demande du Bailleur, par la
-          remise d’une attestation. Cette assurance est maintenue pendant toute la durée du Bail. À défaut, et un mois après une mise en demeure restée sans effet, le Bailleur peut souscrire une assurance
-          pour le compte du Locataire et en récupérer le montant, majoré de 10 %, ou mettre en œuvre la clause résolutoire.
+          {TheTenant} {plural ? 'doivent' : 'doit'} s’assurer contre les risques locatifs et en justifier lors de la remise des clés, puis chaque année à la demande du bailleur (article 7, g). À défaut, un mois après une
+          mise en demeure restée sans effet, le bailleur peut souscrire une assurance pour le compte du locataire et en récupérer le montant, majoré de 10 %, ou mettre en œuvre la clause résolutoire.
         </P>
-
-        <Article n={next()} title="Détecteur de fumée" rubric="Code de la construction et de l’habitation" />
+        <Sub>2. Entretien et réparations</Sub>
+        <P>
+          {TheTenant} {plural ? 'prennent' : 'prend'} à sa charge l’entretien courant du logement et des équipements, les menues réparations et les réparations locatives définies par le décret n° 87-712 du 26 août 1987,
+          sauf vétusté, malfaçon, vice de construction, cas fortuit ou force majeure.
+          {boiler ? ' Il fait réaliser chaque année l’entretien de la chaudière par un professionnel et en remet l’attestation au bailleur (décret n° 2009-649 du 9 juin 2009).' : ''}
+          {p.heating?.energy === 'WOOD' ? ' Il fait ramoner les conduits de fumée selon la réglementation locale.' : ''}
+          {garden ? ' Il assure l’entretien courant du jardin (tonte, taille des haies et arbustes, désherbage).' : ''} Le bailleur assure les autres réparations nécessaires au maintien en état du logement.
+        </P>
+        <Sub>3. Détecteur de fumée</Sub>
         <P>
           Le logement est équipé de {p.smokeDetectors ? `${p.smokeDetectors} détecteur${p.smokeDetectors > 1 ? 's' : ''}` : 'au moins un détecteur'} de fumée normalisé{(p.smokeDetectors ?? 1) > 1 ? 's' : ''}.{' '}
-          {furnished
-            ? 'Le logement étant loué meublé, le Bailleur assure la vérification du bon fonctionnement et l’entretien du dispositif.'
-            : 'Le Locataire veille à l’entretien et au bon fonctionnement du dispositif, notamment au remplacement des piles, pendant toute la durée de son occupation.'}
+          {furnished ? 'Le logement étant loué meublé, le bailleur en assure la vérification et l’entretien.' : 'Le locataire veille à son entretien et à son bon fonctionnement, notamment au remplacement des piles.'}
         </P>
+        <Sub>4. Clés</Sub>
+        <P>{p.keys ? `Remis au locataire : ${p.keys}.` : 'Le détail des clés et moyens d’accès remis est porté à l’état des lieux d’entrée.'}</P>
+        <Sub>5. Animaux</Sub>
+        <P>
+          {TheTenant} peu{plural ? 'vent' : 't'} détenir des animaux familiers, à condition qu’ils ne causent ni dégât au logement ni trouble de jouissance aux occupants de l’immeuble. La détention de chiens de
+          première catégorie (chiens d’attaque) est interdite (loi n° 70-598 du 9 juillet 1970, article 10).
+        </P>
+        <Sub>6. Usage des lieux, sous-location, visites</Sub>
+        <P>
+          {TheTenant} use{plural ? 'nt' : ''} paisiblement des lieux suivant leur destination, ne {plural ? 'les transforment' : 'les transforme'} pas sans l’accord écrit du bailleur et ne {plural ? 'peuvent' : 'peut'} ni
+          sous-louer ni céder le bail sans l’accord écrit du bailleur, y compris sur le prix (article 8). En vue de la vente ou de la relocation, les visites sont permises dans la limite de deux heures par jour
+          ouvrable, en dehors des jours fériés.{p.legalRegime === 'COPRO' ? ' Le locataire respecte le règlement de copropriété dont les extraits lui sont remis.' : ''}
+          {furnished ? ' Le mobilier est maintenu dans les lieux et restitué en bon état, sous réserve de l’usure normale.' : ''}
+        </P>
+        <Sub>7. État des lieux{furnished ? ' et inventaire' : ''}</Sub>
+        <P>
+          Un état des lieux{furnished ? ' et un inventaire détaillé du mobilier' : ''} sont établis contradictoirement à la remise et à la restitution des clés (article 3-2 ; décret n° 2016-382 du 30 mars 2016). Le
+          locataire peut demander que l’état des lieux d’entrée soit complété dans les dix jours, et pour le chauffage pendant le premier mois de la période de chauffe.
+        </P>
+        <Sub>8. Congé</Sub>
+        {!mobility && !student ? (
+          <P>
+            Le congé est notifié par lettre recommandée avec avis de réception, par acte de commissaire de justice ou par remise en main propre contre récépissé ; le délai court à compter de sa réception. Le
+            locataire peut donner congé à tout moment avec un préavis de {tenantNotice}. Le bailleur peut donner congé pour le terme du bail avec un préavis de {landlordNotice === 6 ? 'six' : 'trois'} mois, pour reprendre le
+            logement, le vendre ou pour un motif légitime et sérieux ; le congé indique le motif à peine de nullité{kind === 'VIDE' ? ' (articles 15 et 15-1)' : ' (article 25-8)'}.
+          </P>
+        ) : (
+          <P>
+            Le locataire peut résilier le contrat à tout moment avec un préavis d’un mois, notifié par lettre recommandée avec avis de réception, par acte de commissaire de justice ou par remise en main propre contre
+            récépissé. Le contrat prend fin à son terme sans que le bailleur ait à délivrer de congé.
+          </P>
+        )}
+        <Sub>9. Quittance et domicile</Sub>
+        <P>
+          Le bailleur remet gratuitement une quittance au locataire qui en fait la demande ; avec son accord, elle peut lui être transmise par voie dématérialisée (article 21). Pour l’exécution du contrat, le bailleur
+          fait élection de domicile à l’adresse indiquée ci-dessus{agent ? ' ou chez son mandataire' : ''}, et le locataire dans les lieux loués.
+        </P>
+        {t.clauses?.custom?.length ? (
+          <>
+            <Sub>10. Clauses convenues entre les parties</Sub>
+            {t.clauses.custom.map((cl, i) => (
+              <Dash key={i}>{cl}</Dash>
+            ))}
+          </>
+        ) : null}
 
-        <Article n={next()} title="Diagnostics" rubric="Article 3-3 de la loi du 6 juillet 1989 – Dossier de diagnostic technique" />
-        <P>Le Bailleur remet au Locataire le dossier de diagnostic technique, annexé au Bail, comprenant :</P>
+        {/* XI. Annexes */}
+        <Rubric n="XI" title="Annexes" />
+        <P>Sont annexées et jointes au contrat de location les pièces suivantes :</P>
+        {p.legalRegime === 'COPRO' ? (
+          <Check on={Boolean(p.copro?.extractsProvided)}>A. Extrait du règlement de copropriété concernant la destination de l’immeuble, la jouissance et l’usage des parties privatives et communes, et la quote-part afférente au lot loué dans chacune des catégories de charges</Check>
+        ) : null}
+        <Check on>B. Dossier de diagnostic technique :</Check>
         {diags
           .filter((d) => d.required && d.annexed)
           .map((d) => {
@@ -526,60 +562,10 @@ export function ContractDocument({ c, signed }: { c: ContractInput; signed?: Sig
               </Dash>
             )
           })}
-        {diags.find((d) => d.key === 'asbestos')?.required ? <P>Le repérage de l’amiante dans les parties privatives est tenu à la disposition du Locataire.</P> : null}
-        {!diags.find((d) => d.key === 'lead')?.required ? <P>L’immeuble ayant été construit après le 1er janvier 1949, le constat de risque d’exposition au plomb n’est pas exigé.</P> : null}
-
-        <Article n={next()} title={furnished ? 'État des lieux et inventaire' : 'État des lieux'} rubric="Article 3-2 de la loi du 6 juillet 1989 et décret n° 2016-382 du 30 mars 2016" />
-        <P>
-          Un état des lieux{furnished ? ' et un inventaire détaillé du mobilier' : ''} sont établis contradictoirement par les Parties lors de la remise et de la restitution des clés, et joints au Bail. À défaut, ils
-          sont établis par un commissaire de justice à l’initiative de la Partie la plus diligente, à frais partagés par moitié.
-        </P>
-        <P>
-          {TheTenant} peut demander que l’état des lieux d’entrée soit complété dans un délai de dix jours à compter de son établissement, et, pour les éléments de chauffage, pendant le premier mois de la période de
-          chauffe.
-        </P>
-
-        {!mobility && !student ? (
-          <>
-            <Article n={next()} title="Congé" rubric={kind === 'VIDE' ? 'Article 15 de la loi du 6 juillet 1989' : 'Article 25-8 de la loi du 6 juillet 1989'} />
-            <P>Le congé est notifié par lettre recommandée avec demande d’avis de réception, signifié par acte de commissaire de justice ou remis en main propre contre récépissé ou émargement. Le délai de préavis court à compter de sa réception.</P>
-            <P>
-              <B>Congé donné par le Locataire.</B> {TheTenant} peut donner congé à tout moment, avec un préavis de {tenantNotice}. Pendant le préavis, il reste redevable du loyer et des charges, sauf si le logement est
-              occupé avant la fin du préavis par un autre locataire en accord avec le Bailleur.
-            </P>
-            <P>
-              <B>Congé donné par le Bailleur.</B> Le Bailleur peut donner congé pour le terme du Bail, avec un préavis de {landlordNotice === 6 ? 'six' : 'trois'} mois, soit pour reprendre le logement afin de l’habiter ou d’y loger un proche
-              désigné par la loi, soit pour le vendre, soit pour un motif légitime et sérieux, notamment l’inexécution par le Locataire de l’une de ses obligations. À peine de nullité, le congé indique le motif
-              allégué{kind === 'VIDE' ? ' et, en cas de reprise, les nom et adresse du bénéficiaire et la nature de son lien avec le Bailleur ; en cas de vente, il vaut offre de vente au profit du Locataire' : ''}.
-            </P>
-          </>
-        ) : (
-          <>
-            <Article n={next()} title="Congé" rubric={mobility ? 'Article 25-12 de la loi du 6 juillet 1989' : 'Articles 25-7 et 25-8 de la loi du 6 juillet 1989'} />
-            <P>
-              {TheTenant} peut résilier le Bail à tout moment, en respectant un préavis d’un mois, notifié par lettre recommandée avec demande d’avis de réception, par acte de commissaire de justice ou par remise en
-              main propre contre récépissé. Le Bail prend fin à son terme sans que le Bailleur ait à délivrer de congé.
-            </P>
-          </>
-        )}
-
-        <Article n={next()} title="Autres conditions particulières" rubric="Contrat type, rubrique X" />
-        {t.clauses?.custom?.length ? t.clauses.custom.map((cl, i) => <Dash key={i}>{cl}</Dash>) : <P>Néant.</P>}
-
-        <Article n={next()} title="Élection de domicile" />
-        <P>
-          Pour l’exécution du Bail, le Bailleur fait élection de domicile à l’adresse indiquée en tête des présentes{agent ? ' ou chez son mandataire' : ''}, et {theTenant} dans les Locaux loués. Tout changement d’adresse du
-          Bailleur est notifié au Locataire.
-        </P>
-
-        <Article n={next()} title="Annexes" rubric="Contrat type, rubrique XI" />
-        <P>Sont annexées au Bail et remises au Locataire les pièces suivantes :</P>
-        {p.legalRegime === 'COPRO' ? (
-          <Check on={Boolean(p.copro?.extractsProvided)}>Extraits du règlement de copropriété relatifs à la destination de l’immeuble, à la jouissance et à l’usage des parties privatives et communes, et à la quote-part du lot loué dans chaque catégorie de charges</Check>
-        ) : null}
-        <Check on>Dossier de diagnostic technique</Check>
-        <Check on>Notice d’information relative aux droits et obligations des locataires et des bailleurs (arrêté du 29 mai 2015 modifié), reproduite ci-après</Check>
-        <Check on>État des lieux d’entrée{furnished ? ' et inventaire détaillé du mobilier' : ''}</Check>
+        {diags.find((d) => d.key === 'asbestos')?.required ? <Dash>état mentionnant l’absence ou la présence d’amiante, tenu à la disposition du locataire ;</Dash> : null}
+        <Check on>C. Notice d’information relative aux droits et obligations des locataires et des bailleurs (reproduite ci-après)</Check>
+        <Check on>D. État des lieux{furnished ? ', inventaire et état détaillé du mobilier' : ''}</Check>
+        {p.rentalPermit?.required ? <Check on={Boolean(p.rentalPermit.reference)}>E. Autorisation préalable de mise en location{p.rentalPermit.reference ? ` n° ${p.rentalPermit.reference}` : ''}{p.rentalPermit.date ? ` du ${dateShort(p.rentalPermit.date)}` : ''}</Check> : null}
         {furnished ? <Check on>Liste des éléments de mobilier (ci-après)</Check> : null}
         {c.guarantors.length ? <Check on>Acte de cautionnement</Check> : null}
 
@@ -587,19 +573,19 @@ export function ContractDocument({ c, signed }: { c: ContractInput; signed?: Sig
         <View wrap={false} style={{ marginTop: 14 }}>
           {t.signature?.mode === 'ELECTRONIC' ? (
             <P>
-              Fait à <B>{t.signature?.place || (p.city ? upper(p.city) : BLANK)}</B>, le <B>{t.signature?.date ? dateLong(t.signature.date) : BLANK}</B>, par voie électronique. Chacune des Parties
-              {c.guarantors.length ? ', ainsi que la caution,' : ''} reçoit un exemplaire numérique signé, qui vaut original (articles 1366, 1367 et 1375 du Code civil).{signed?.certificate ? ' Le certificat de signature est joint en dernière page.' : ''}
+              Le <B>{t.signature?.date ? dateLong(t.signature.date) : BLANK}</B>, à <B>{t.signature?.place || (p.city ? upper(p.city) : BLANK)}</B>, par voie électronique. Chacune des parties
+              {c.guarantors.length ? ', ainsi que la caution,' : ''} reçoit un exemplaire numérique signé, qui vaut original (articles 1366, 1367 et 1375 du code civil).{signed?.certificate ? ' Le certificat de signature est joint en dernière page.' : ''}
             </P>
           ) : (
             <P>
-              Fait à <B>{t.signature?.place || (p.city ? upper(p.city) : BLANK)}</B>, le <B>{t.signature?.date ? dateLong(t.signature.date) : BLANK}</B>, en {originalsCount(c)} originaux dont un remis à chacune des Parties
-              {c.guarantors.length ? ' et un à la caution' : ''}, qui le reconnaît.
+              Le <B>{t.signature?.date ? dateLong(t.signature.date) : BLANK}</B>, à <B>{t.signature?.place || (p.city ? upper(p.city) : BLANK)}</B>, en {originalsCount(c)} exemplaires originaux dont un remis à chacune des parties
+              {c.guarantors.length ? ' et un à la caution' : ''}.
             </P>
           )}
           <SignatureBoxes
             boxes={[
-              { label: agent ? 'Le Bailleur ou son mandataire' : 'Le Bailleur', name: l.kind === 'SCI' || l.kind === 'COMPANY' ? landlordName(l) : formal(l), image: signed?.landlord?.image, hint: signedHint(signed?.landlord) },
-              ...tenants.map((tn, i) => ({ label: plural ? `Le Locataire ${i + 1}` : 'Le Locataire', name: formal(tn), image: signed?.tenants?.[i]?.image, hint: signedHint(signed?.tenants?.[i]) })),
+              { label: agent ? 'Signature du bailleur ou de son mandataire' : 'Signature du bailleur', name: l.kind === 'SCI' || l.kind === 'COMPANY' ? landlordName(l) : formal(l), image: signed?.landlord?.image, hint: signedHint(signed?.landlord) },
+              ...tenants.map((tn, i) => ({ label: plural ? `Signature du colocataire ${i + 1}` : 'Signature du locataire', name: formal(tn), image: signed?.tenants?.[i]?.image, hint: signedHint(signed?.tenants?.[i]) })),
             ]}
           />
         </View>
@@ -607,8 +593,8 @@ export function ContractDocument({ c, signed }: { c: ContractInput; signed?: Sig
         {/* Annexe mobilier (meublé) */}
         {furnished ? (
           <View break>
-            <Text style={[st.article, { marginTop: 0 }]}>Annexe – Éléments de mobilier</Text>
-            <Text style={st.rubric}>Décret n° 2015-981 du 31 juillet 2015</Text>
+            <Text style={[st.article, { marginBottom: 2 }]}>Annexe – Éléments de mobilier</Text>
+            <Text style={st.small}>Décret n° 2015-981 du 31 juillet 2015</Text>
             <P>Éléments de mobilier présents dans le logement :</P>
             {Object.entries(FURNITURE_REQUIRED).map(([k, label]) => (
               <Check key={k} on={Boolean(p.furniture?.present?.includes(k as keyof typeof FURNITURE_REQUIRED))}>

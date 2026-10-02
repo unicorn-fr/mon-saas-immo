@@ -50,11 +50,11 @@ test('congé pour reprise d’un logement vide : bénéficiaire, lien, motif, no
 })
 
 test('congé en meublé : pas d’offre de vente au locataire, pas de notice (art. 25-8)', () => {
-  const c = letterContent({ type: 'NOTICE_TO_LEAVE', reason: 'SALE', leaseEnd: '2027-09-30', priceCents: 15000000 }, { tenantName: 'M. Leroy', propertyAddress: 'Agde', kind: 'MEUBLE' })
+  const c = letterContent({ type: 'NOTICE_TO_LEAVE', reason: 'SALE', leaseEnd: '2027-09-30', priceCents: 15000000 }, { tenantName: 'M. Leroy', propertyAddress: 'Sète', kind: 'MEUBLE' })
   assert.doesNotMatch(c.paragraphs.join(' '), /offre de vente/)
   assert.equal(c.quote, undefined)
   assert.equal(c.appendNotice, undefined)
-  const legit = letterContent({ type: 'NOTICE_TO_LEAVE', reason: 'LEGITIMATE', leaseEnd: '2027-09-30', justification: 'Retards de paiement répétés' }, { tenantName: 'M. Leroy', propertyAddress: 'Agde', kind: 'VIDE' })
+  const legit = letterContent({ type: 'NOTICE_TO_LEAVE', reason: 'LEGITIMATE', leaseEnd: '2027-09-30', justification: 'Retards de paiement répétés' }, { tenantName: 'M. Leroy', propertyAddress: 'Sète', kind: 'VIDE' })
   assert.equal(legit.appendNotice, undefined)
 })
 

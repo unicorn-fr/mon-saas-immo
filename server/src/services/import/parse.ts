@@ -160,7 +160,7 @@ function readPaymentDay(doc: Doc): number | null {
     `(?:le|au|avant le|au plus tard le)\\s+(\\d{1,2}|${NUMBER_WORD_RE}|ler|1°)\\s*(?:er|e|°)?\\s*(?:jour\\s*)?(?:ouvre\\s*)?(?:de chaque|du|de|par|chaque)\\s+(?:mois|periode)`,
   )
   const labels = [
-    /date (ou periode )?de paiement/,
+    /date (ou periode )?de pa[il1]?e?ment/,
     /(payable|paye|verse|regle|acquitte|exigible)s?( mensuellement)?( d'avance| a terme echu| a echoir)?/,
     /paiement (du loyer|des loyers|mensuel)/,
     /(au plus tard|avant) le/,
