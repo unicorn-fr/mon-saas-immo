@@ -117,6 +117,8 @@ export const GUIDES = {
   couple: { url: `${SP}/F1159`, label: 'Un couple marié locataire' },
   cles: { url: `${SP}/F12244`, label: 'Garder un double des clés' },
   agence: { url: `${SP}/F375`, label: 'Les frais d’agence' },
+  impotsVide: { url: `${SP}/F1991`, label: 'Impôt sur le revenu : revenus d’une location vide' },
+  impotsMeuble: { url: `${SP}/F32744`, label: 'Impôt sur le revenu : revenus d’une location meublée' },
   zonesTendues: { url: 'https://www.service-public.gouv.fr/simulateur/calcul/zones-tendues', label: 'Vérifier si une commune est en zone tendue' },
   contratType: { url: DECRETS['2015-587'], label: 'Le contrat type (décret n° 2015-587)' },
   signature: { url: CODE_CIVIL['1367'], label: 'La signature électronique (Code civil, art. 1367)' },

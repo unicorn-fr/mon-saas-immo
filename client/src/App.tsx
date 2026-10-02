@@ -57,6 +57,7 @@ const Situations = page('Situations')
 const Parcours = page('Parcours')
 const Annonce = page('Annonce')
 const Candidats = page('Candidats')
+const Declaration = page('Declaration')
 const Candidature = page('Candidature')
 const EtatDesLieux = page('EtatDesLieux')
 const Compte = page('Compte')
@@ -159,6 +160,7 @@ function Pages() {
               <Route path="/espace/logements/:id/fiche" element={<RequireAuth><FicheLogement /></RequireAuth>} />
               <Route path="/espace/logements/:id/annonce" element={<RequireAuth><Annonce /></RequireAuth>} />
               <Route path="/espace/logements/:id/candidats" element={<RequireAuth><Candidats /></RequireAuth>} />
+              <Route path="/espace/argent/declaration" element={<RequireAuth><Declaration /></RequireAuth>} />
               <Route path="/espace/locataires/:id/fiche" element={<RequireAuth><FicheLocataire /></RequireAuth>} />
               <Route path="/espace/locataires/:id/caution" element={<RequireAuth><ActeCaution /></RequireAuth>} />
               <Route path="/espace/baux/:id/contrat" element={<RequireAuth><Contrat /></RequireAuth>} />

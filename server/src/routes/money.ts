@@ -6,13 +6,14 @@ import { HttpError } from '../lib/http.js'
 import { requireUser } from '../services/session.js'
 import { documentText, ocrAvailable } from '../services/import/ocr.js'
 import { matchProperty, parseInvoice } from '../services/import/invoice.js'
-import { contractFor, leaseOwned, propertyName } from '../services/contract.js'
+import { contractFor, leaseKindOf, leaseOwned, propertyName, readProperty } from '../services/contract.js'
 import { renderContractPdf } from '../pdf/contract.js'
 import { renderGuaranteePdf } from '../pdf/guarantee.js'
 import { renderReceiptPdf, type ReceiptInput } from '../pdf/receipt.js'
 import { renderLetterPdf, type LetterRender } from '../pdf/letter.js'
 import { renderInventoryPdf, type InventoryInput } from '../pdf/inventory.js'
-import type { ContractInput, Guarantor } from '../domain/contract.js'
+import { propertyFileSchema, type ContractInput, type Guarantor } from '../domain/contract.js'
+import { splitPayment, taxSummary, type TaxProperty } from '../domain/tax.js'
 import { parseIsoDate } from '../domain/lease.js'
 import { emailLetter } from './leases.js'
 import { fileSlug, filesAsDataUrls, iso, sendFile, sendPdf, storeFile, upload } from './helpers.js'
@@ -20,7 +21,7 @@ import { fileSlug, filesAsDataUrls, iso, sendFile, sendPdf, storeFile, upload } 
 /** Dépenses, factures lues automatiquement, tableau « Argent », documents et fichiers du propriétaire. */
 const router = Router()
 // Session exigée sur les adresses de ce routeur seulement : une adresse inconnue reçoit « Page introuvable ».
-router.use(['/documents', '/expenses', '/files', '/money'], requireUser)
+router.use(['/documents', '/expenses', '/files', '/money', '/properties'], requireUser)
 
 const CATEGORIES = ['REPAIR', 'MAINTENANCE', 'TAX', 'COPRO', 'INSURANCE', 'OTHER'] as const
 export const CATEGORY_LABEL: Record<string, string> = { REPAIR: 'réparation', MAINTENANCE: 'entretien', TAX: 'impôt', COPRO: 'copropriété', INSURANCE: 'assurance', OTHER: 'autre' }
@@ -183,6 +184,52 @@ router.get('/money/export', async (req, res) => {
   res.setHeader('Content-Type', 'text/csv; charset=utf-8')
   res.setHeader('Content-Disposition', `attachment; filename="bailio-${year}.csv"`)
   res.send(`﻿${rows.join('\r\n')}\r\n`)
+})
+
+// ── Aide à la déclaration des revenus locatifs ───────────────────────────────
+
+router.get('/money/tax', async (req, res) => {
+  const userId = req.user!.id
+  // Par défaut : l'année précédente, celle que l'on déclare au printemps.
+  const year = z.coerce.number().int().min(2000).max(2100).default(new Date().getUTCFullYear() - 1).parse(req.query.year)
+  const from = new Date(Date.UTC(year, 0, 1))
+  const to = new Date(Date.UTC(year + 1, 0, 1))
+  const [properties, payments, expenses] = await Promise.all([
+    prisma.property.findMany({ where: { userId }, orderBy: { createdAt: 'asc' } }),
+    prisma.payment.findMany({ where: { userId, receivedAt: { gte: from, lt: to } }, include: { lease: true } }),
+    prisma.expense.findMany({ where: { userId, date: { gte: from, lt: to }, status: 'OK' } }),
+  ])
+  const input: TaxProperty[] = []
+  for (const p of properties) {
+    const file = readProperty(p)
+    const mine = payments.filter((x) => x.lease.propertyId === p.id)
+    const kinds = new Set(mine.map((x) => leaseKindOf(x.lease) !== 'VIDE'))
+    if (!kinds.size) kinds.add(Boolean(file.furnished))
+    for (const furnished of kinds) {
+      input.push({
+        id: p.id,
+        name: propertyName(p),
+        furnished,
+        payments: mine.filter((x) => (leaseKindOf(x.lease) !== 'VIDE') === furnished).map((x) => splitPayment(x.amountCents, x.lease.rentCents)),
+        expenses: kinds.size > 1 && furnished ? [] : expenses.filter((e) => e.propertyId === p.id),
+        extra: file.tax?.[String(year)] ?? null,
+      })
+    }
+  }
+  const unassigned = expenses.filter((e) => !e.propertyId).reduce((a, e) => a + e.amountCents, 0)
+  res.json({ success: true, data: { ...taxSummary(year, input), unassignedExpensesCents: unassigned, extras: Object.fromEntries(properties.map((p) => [p.id, readProperty(p).tax?.[String(year)] ?? {}])) } })
+})
+
+// Intérêts d'emprunt et honoraires de l'année, saisis une fois et gardés avec le logement.
+router.put('/properties/:id/tax/:year', async (req, res) => {
+  const p = await prisma.property.findFirst({ where: { id: String(req.params.id), userId: req.user!.id } })
+  if (!p) throw new HttpError(404, 'Logement introuvable.')
+  const year = z.string().regex(/^\d{4}$/).parse(req.params.year)
+  const body = z.object({ loanInterestCents: z.number().int().min(0).max(100_000_000).nullable().optional(), adminFeesCents: z.number().int().min(0).max(100_000_000).nullable().optional() }).parse(req.body)
+  const file = readProperty(p)
+  const next = propertyFileSchema.parse({ ...file, tax: { ...(file.tax ?? {}), [year]: { ...(file.tax?.[year] ?? {}), ...body } } })
+  await prisma.property.update({ where: { id: p.id }, data: { data: next } })
+  res.json({ success: true, data: next.tax?.[year] ?? {} })
 })
 
 // ── Documents ────────────────────────────────────────────────────────────────
