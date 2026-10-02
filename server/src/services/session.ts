@@ -3,19 +3,32 @@ import type { User } from '@prisma/client'
 import { prisma } from '../db.js'
 import { hashToken, newToken } from '../lib/tokens.js'
 import { HttpError } from '../lib/http.js'
+import { clientIp } from '../lib/rateLimit.js'
 
 const SESSION_DAYS = 60
+/** Sans aucune visite pendant ce délai, la session expire (appareil oublié, perdu, partagé). */
+export const IDLE_DAYS = 30
+/** L'heure de dernière visite est enregistrée au plus toutes les 5 minutes. */
+const TOUCH_MS = 5 * 60_000
 
 declare module 'express-serve-static-core' {
   interface Request {
     user?: User
+    sessionId?: string
   }
 }
 
-export async function createSession(userId: string): Promise<string> {
+export async function createSession(userId: string, req?: Request): Promise<string> {
   const token = newToken()
   await prisma.session.create({
-    data: { userId, tokenHash: hashToken(token), expiresAt: new Date(Date.now() + SESSION_DAYS * 86_400_000) },
+    data: {
+      userId,
+      tokenHash: hashToken(token),
+      expiresAt: new Date(Date.now() + SESSION_DAYS * 86_400_000),
+      lastSeenAt: new Date(),
+      ip: req ? clientIp(req).slice(0, 80) : null,
+      userAgent: req ? String(req.headers['user-agent'] ?? '').slice(0, 300) : null,
+    },
   })
   return token
 }
@@ -33,7 +46,17 @@ async function loadUser(req: Request): Promise<User | null> {
   const token = bearer(req)
   if (!token) return null
   const session = await prisma.session.findUnique({ where: { tokenHash: hashToken(token) }, include: { user: true } })
-  if (!session || session.expiresAt < new Date()) return null
+  if (!session) return null
+  const now = Date.now()
+  const lastSeen = (session.lastSeenAt ?? session.createdAt).getTime()
+  if (session.expiresAt.getTime() < now || now - lastSeen > IDLE_DAYS * 86_400_000) {
+    await prisma.session.deleteMany({ where: { id: session.id } })
+    return null
+  }
+  if (now - lastSeen > TOUCH_MS) {
+    await prisma.session.update({ where: { id: session.id }, data: { lastSeenAt: new Date(now), ip: clientIp(req).slice(0, 80), userAgent: String(req.headers['user-agent'] ?? '').slice(0, 300) } }).catch(() => undefined)
+  }
+  req.sessionId = session.id
   return session.user
 }
 

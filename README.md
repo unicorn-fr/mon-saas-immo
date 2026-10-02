@@ -55,9 +55,16 @@ https://bailio.eu, https://www.bailio.eu, https://bailio.fr et https://www.baili
 
 ## Déploiement
 
-- **Site** : Vercel (bailio.fr) tant que le domaine ne peut pas pointer vers le VPS ; `/api` y est relayé vers le VPS.
+- **Site** : Vercel (bailio.fr) tant que le domaine ne peut pas pointer vers le VPS ; `/api` y est relayé vers le VPS. Dans Vercel, la « Production Branch » doit être `production` : le site n'est alors publié qu'après des tests verts, comme l'API.
 - **API, base, lecture des baux** : VPS (Infomaniak, Genève) avec Docker, voir [`deploy/vps/README.md`](deploy/vps/README.md) : Caddy assure le HTTPS de l'API (et pourra servir le site plus tard) ; la base n'est pas exposée. À chaque push sur `main`, GitHub Actions vérifie tout (types, tests, construction, parcours dans un navigateur) puis avance la branche `production` ; le serveur suit cette branche et se met à jour seul toutes les 5 minutes ; la version en ligne est affichée par https://api.bailio.eu/health. Au démarrage, `prisma migrate deploy` applique les migrations versionnées (jamais de suppression automatique de données).
 - Un cron quotidien (8 h, heure de Paris) prolonge les échéances et envoie l'email de rappel aux propriétaires qui ont activé le suivi (actif par défaut à l'inscription).
+
+## Sécurité
+
+- Connexion sans mot de passe (lien magique, 30 minutes). Une session inutilisée 30 jours est fermée.
+- « Mon compte » liste les appareils connectés (appareil, adresse IP, dernière visite) ; chacun peut être déconnecté, ou tous les autres d'un coup.
+- L'export des données et la suppression du compte demandent un code à 6 chiffres envoyé par email (10 minutes, 5 essais, usage unique).
+- Dependabot propose chaque semaine les mises à jour des dépendances ; la CI refuse une faille connue de gravité haute (`npm audit`).
 
 ## Vérifications
 

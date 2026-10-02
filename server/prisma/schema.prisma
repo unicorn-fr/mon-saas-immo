@@ -76,6 +76,7 @@ model User {
   inventories Inventory[]
   files       FileBlob[]
   signatures  SignatureRequest[]
+  actionCodes ActionCode[]
 }
 
 model Session {
@@ -85,6 +86,25 @@ model Session {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt  DateTime
   createdAt  DateTime @default(now())
+  // Journal des connexions (« Mon compte ») et expiration après inactivité.
+  lastSeenAt DateTime?
+  ip         String?
+  userAgent  String?
+
+  @@index([userId])
+}
+
+// Code à usage unique envoyé par email avant une action sensible (export des données, suppression du compte).
+model ActionCode {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // EXPORT, DELETE
+  purpose   String
+  codeHash  String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 
   @@index([userId])
 }

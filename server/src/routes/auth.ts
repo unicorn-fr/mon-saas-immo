@@ -111,7 +111,7 @@ router.post('/magic-link/verify', limiter, async (req, res) => {
     create: { email: row.email, emailVerifiedAt: new Date(), followUpSince: new Date() },
   })
   const leaseId = row.draftId ? (await createLeaseFromDraft(user, row.draftId)).lease.id : null
-  const sessionTokenValue = await createSession(user.id)
+  const sessionTokenValue = await createSession(user.id, req)
   const fresh = await prisma.user.findUniqueOrThrow({ where: { id: user.id } })
   res.json({ success: true, data: { sessionToken: sessionTokenValue, user: publicUser(fresh), leaseId } })
 })

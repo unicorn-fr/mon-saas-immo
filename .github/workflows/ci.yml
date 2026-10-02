@@ -30,6 +30,8 @@ jobs:
         run: sudo apt-get update -q && sudo apt-get install -yq tesseract-ocr tesseract-ocr-fra poppler-utils
       - run: npm ci --prefix server
       - run: npm ci --prefix client
+      - name: Failles connues dans les dépendances
+        run: npm audit --prefix server --omit=dev --audit-level=high && npm audit --prefix client --omit=dev --audit-level=high
       - name: Types (serveur et site)
         run: npm run typecheck
       - name: Tests (règles juridiques, OCR, site)

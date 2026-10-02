@@ -88,6 +88,7 @@ export function Confidentialite() {
           Pour un bail signé en ligne, la preuve de chaque signature : nom, email, date et heure, adresse IP, type d'appareil, mention recopiée et signature dessinée. Elle figure
           dans le certificat joint au bail signé et sert à prouver la signature en cas de désaccord (Code civil, article 1367). Elle est conservée aussi longtemps que le bail.
         </li>
+        <li>Pour votre sécurité, chaque appareil connecté à votre compte : type d'appareil et de navigateur, adresse IP, date de connexion et de dernière visite. Vous les voyez dans « Mon compte » et pouvez les déconnecter.</li>
       </ul>
       <p>Nous ne demandons jamais de pièces que la loi interdit d'exiger d'un locataire.</p>
       <H2>Pourquoi</H2>
@@ -122,7 +123,7 @@ export function Confidentialite() {
       <ul>
         <li>Un bail commencé sans compte : 30 jours, puis il est effacé ;</li>
         <li>Votre compte et vos documents : tant que vous gardez votre compte. Supprimer le compte efface immédiatement toutes vos données ;</li>
-        <li>Les liens de connexion : 30 minutes, puis ils ne servent plus ; les sessions expirent d'elles-mêmes.</li>
+        <li>Les liens de connexion : 30 minutes, puis ils ne servent plus. Un appareil inutilisé pendant 30 jours est déconnecté et son relevé effacé. Les codes de confirmation : 10 minutes.</li>
       </ul>
       <H2>Vos droits</H2>
       <p>
