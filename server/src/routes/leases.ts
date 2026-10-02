@@ -32,7 +32,7 @@ import { renderContractPdf } from '../pdf/contract.js'
 import { renderGuaranteePdf } from '../pdf/guarantee.js'
 import { renderReceiptPdf, type ReceiptInput } from '../pdf/receipt.js'
 import { renderLetterPdf } from '../pdf/letter.js'
-import { personName, propertyAddress } from '../pdf/labels.js'
+import { annexesLabel, personName, propertyAddress } from '../pdf/labels.js'
 import { fileSlug, iso, mergeFile, saveGeneratedDocument, sendPdf } from './helpers.js'
 import { leaseTenantLabel, rentStatus } from './space.js'
 
@@ -143,7 +143,7 @@ async function leaseView(user: User, lease: LeaseWithProperty) {
   const entry = inventories.find((i) => i.kind === 'ENTRY')
   const dpeDone = Boolean(c.property.diagnostics?.dpe?.class)
   const annexes = [
-    { key: 'notice', label: 'Notice d’information', status: 'Jointe', done: true },
+    { key: 'notice', label: 'Notice d’information (arrêté du 29 mai 2015)', status: 'Incluse à la fin du bail', done: true },
     ...diagnosticsFor(c.property)
       .filter((d) => d.required && d.annexed)
       .map((d) => {
@@ -642,13 +642,25 @@ router.get('/leases/:id/letters/defaults/:type', async (req, res) => {
     data = { type, reason: 'SALE', leaseEnd: iso(end) }
     const notice = landlordNoticeMonthsFor(leaseKindOf(lease))
     if (!notice) note = 'Ce bail prend fin tout seul à son terme : aucun congé n’est nécessaire.'
-    else note = `À envoyer au plus tard le ${formatDateFr(new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth() - notice, end.getUTCDate())))} (${notice} mois avant la fin), par lettre recommandée, commissaire de justice ou remise contre signature.`
+    else
+      note = `À envoyer au plus tard le ${formatDateFr(new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth() - notice, end.getUTCDate())))} (${notice} mois avant la fin), à chaque locataire, par lettre recommandée avec avis de réception, commissaire de justice ou remise en main propre contre signature. ${
+        leaseKindOf(lease) === 'VIDE'
+          ? 'La notice officielle est jointe automatiquement au congé pour vendre ou pour reprendre.'
+          : 'En meublé, le congé pour vendre ne donne pas au locataire de droit de priorité pour acheter.'
+      } Attention : un locataire de plus de 65 ans aux revenus modestes ne peut recevoir un congé que si vous lui proposez un relogement proche, sauf si vous avez vous-même plus de 65 ans ou des revenus modestes (article ${leaseKindOf(lease) === 'VIDE' ? '15, III' : '25-8, III'}).`
   } else if (type === 'CHARGES') {
     const year = new Date().getUTCFullYear() - 1
     const payments = await prisma.payment.findMany({ where: { leaseId: lease.id, period: { startsWith: String(year) } } })
     const provisions = payments.reduce((a, p) => a + Math.min(lease.chargesCents, Math.max(0, p.amountCents - lease.rentCents)), 0)
     const expenses = await prisma.expense.findMany({ where: { userId: user.id, propertyId: lease.propertyId, recoverableCents: { gt: 0 }, date: { gte: new Date(Date.UTC(year, 0, 1)), lt: new Date(Date.UTC(year + 1, 0, 1)) } } })
     data = { type, year, provisionsCents: provisions, lines: expenses.map((e) => ({ label: e.description || e.vendor, amountCents: e.recoverableCents })) }
+  } else if (type === 'TENANT_NOTICE') {
+    const tense = Boolean(terms.zone?.tense)
+    data = { type, receivedDate: iso(new Date()), reduced: leaseKindOf(lease) === 'VIDE' && tense, reducedReason: tense ? 'logement situé en zone tendue' : null }
+    note =
+      leaseKindOf(lease) === 'VIDE'
+        ? `Logement vide : préavis de trois mois, réduit à un mois si le logement est en zone tendue${tense ? ' (c’est le cas ici)' : ''} ou si le locataire justifie d’un premier emploi, d’une mutation, d’une perte d’emploi, d’un nouvel emploi après une perte d’emploi, de son état de santé, du RSA ou de l’AAH, ou d’un logement social attribué.`
+        : 'Location meublée : le préavis du locataire est toujours d’un mois.'
   } else if (type === 'DEPOSIT_RETURN') {
     const keys = (lease.data as { keysDate?: string }).keysDate ?? iso(lease.endDate)
     data = { type, depositCents: lease.depositCents, keysDate: keys, conform: true, deductions: [] }
@@ -656,11 +668,24 @@ router.get('/leases/:id/letters/defaults/:type', async (req, res) => {
   res.json({ success: true, data: { title: LETTER_TITLES[type as keyof typeof LETTER_TITLES], letter: data, note, recipient: await recipientOf(user, lease, c) } })
 })
 
+/** Désignation des locaux loués, comme au bail : type, surface, pièces, annexes. */
+function premisesLabel(p: ContractInput['property']): string {
+  const type = p.habitat === 'INDIVIDUAL' ? 'maison individuelle' : 'logement dans un immeuble collectif'
+  const parts = [`${type} situé${p.habitat === 'INDIVIDUAL' ? 'e' : ''} ${propertyAddress(p)}`, p.surface ? `d’une surface habitable de ${p.surface} m²` : '', p.rooms ? `comprenant ${p.rooms} pièce${p.rooms > 1 ? 's' : ''} principale${p.rooms > 1 ? 's' : ''}` : '']
+  const annexes = annexesLabel(p)
+  return parts.filter(Boolean).join(', ') + (annexes ? `, avec ${annexes.charAt(0).toLowerCase()}${annexes.slice(1)}` : '')
+}
+
 async function letterPdf(user: User, lease: LeaseWithProperty, letter: LetterInput) {
   const c = await contractFor(user, lease)
   assertComplete(partiesMissing(c))
   const recipient = await recipientOf(user, lease, c)
-  const content = letterContent(letter, { tenantName: recipient.name, propertyAddress: propertyAddress(c.property), guarantorName: c.guarantors[0] ? personName(c.guarantors[0]) : null })
+  const kind = leaseKindOf(lease)
+  if (letter.type === 'NOTICE_TO_LEAVE' && !landlordNoticeMonthsFor(kind)) throw new HttpError(400, 'Ce bail prend fin tout seul à son terme : aucun congé n’est nécessaire.')
+  if (letter.type === 'NOTICE_TO_LEAVE' && letter.reason === 'SALE' && kind === 'VIDE' && !letter.priceCents) throw new HttpError(400, 'Indiquez le prix de vente : sans lui, le congé pour vendre est nul.')
+  if (letter.type === 'NOTICE_TO_LEAVE' && letter.reason === 'RESUMPTION' && (!letter.beneficiary?.name || !letter.beneficiary.address || !letter.beneficiary.link)) throw new HttpError(400, 'Indiquez le nom, l’adresse et le lien de parenté du bénéficiaire de la reprise : ces mentions sont obligatoires.')
+  if (letter.type === 'NOTICE_TO_LEAVE' && letter.reason !== 'SALE' && !letter.justification?.trim()) throw new HttpError(400, letter.reason === 'RESUMPTION' ? 'Expliquez en une phrase pourquoi la reprise est réelle et sérieuse : cette mention est obligatoire.' : 'Indiquez le motif légitime et sérieux du congé.')
+  const content = letterContent(letter, { tenantName: recipient.name, propertyAddress: propertyAddress(c.property), guarantorName: c.guarantors[0] ? personName(c.guarantors[0]) : null, kind, premises: premisesLabel(c.property) })
   const input = { content, landlord: c.landlord, recipient, date: new Date() }
   return { pdf: await renderLetterPdf(input), content, input }
 }

@@ -7,6 +7,7 @@ import { eurosInWords } from '../domain/words.js'
 import { quarterLabel } from '../lib/irl.js'
 import { CONSTRUCTION, ENERGY, NET, TV, annexesLabel, commonAreasLabel, dateLong, dateShort, durationText, equipmentsLabel, euros, guarantorName, landlordName, originalsCount, propertyAddress } from './labels.js'
 import { CertificatePage, type CertificateData } from './certificate.js'
+import { NoticePages } from './notice.js'
 import { BLANK, Check, Footer, INK, MUTED, SignatureBoxes, Table, orBlank, s } from './theme.js'
 
 /**
@@ -577,7 +578,7 @@ export function ContractDocument({ c, signed }: { c: ContractInput; signed?: Sig
           <Check on={Boolean(p.copro?.extractsProvided)}>Extraits du règlement de copropriété relatifs à la destination de l’immeuble, à la jouissance et à l’usage des parties privatives et communes, et à la quote-part du lot loué dans chaque catégorie de charges</Check>
         ) : null}
         <Check on>Dossier de diagnostic technique</Check>
-        <Check on>Notice d’information relative aux droits et obligations des locataires et des bailleurs (arrêté du 29 mai 2015)</Check>
+        <Check on>Notice d’information relative aux droits et obligations des locataires et des bailleurs (arrêté du 29 mai 2015 modifié), reproduite ci-après</Check>
         <Check on>État des lieux d’entrée{furnished ? ' et inventaire détaillé du mobilier' : ''}</Check>
         {furnished ? <Check on>Liste des éléments de mobilier (ci-après)</Check> : null}
         {c.guarantors.length ? <Check on>Acte de cautionnement</Check> : null}
@@ -627,6 +628,7 @@ export function ContractDocument({ c, signed }: { c: ContractInput; signed?: Sig
 
         <Footer left={`Bail ${lastNames || ''}${version}${signed?.certificate ? ` · signé électroniquement, réf. ${signed.certificate.requestId.slice(0, 8)}` : ''}`} paraphs={signed?.certificate ? 0 : paraphs} />
       </Page>
+      <NoticePages footer={`Bail ${lastNames || ''} · annexe : notice d’information`} paraphs={signed?.certificate ? 0 : paraphs} />
       {signed?.certificate ? <CertificatePage data={signed.certificate} /> : null}
     </Document>
   )

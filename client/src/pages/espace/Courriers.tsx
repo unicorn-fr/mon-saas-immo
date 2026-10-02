@@ -9,14 +9,15 @@ import { openDoc } from '../../lib/docs'
 import { currentPeriod, dateNum, eurosCents, periodLabel, recentPeriods, todayIso } from '../../lib/format'
 import { LETTER_TITLES, type LeaseView, type LetterDefaults, type LetterType } from '../../lib/space'
 
-type Tab = 'RECEIPT' | 'REVISION' | 'INSURANCE' | 'CHARGES' | 'NOTICE_TO_LEAVE' | 'DEPOSIT_RETURN' | 'UNPAID'
+type Tab = 'RECEIPT' | 'REVISION' | 'INSURANCE' | 'CHARGES' | 'NOTICE_TO_LEAVE' | 'TENANT_NOTICE' | 'DEPOSIT_RETURN' | 'UNPAID'
 
 const TABS: Array<{ value: Tab; label: string }> = [
   { value: 'RECEIPT', label: 'Quittance' },
   { value: 'REVISION', label: 'Révision' },
   { value: 'INSURANCE', label: 'Assurance' },
   { value: 'CHARGES', label: 'Charges' },
-  { value: 'NOTICE_TO_LEAVE', label: 'Congé' },
+  { value: 'NOTICE_TO_LEAVE', label: 'Donner congé' },
+  { value: 'TENANT_NOTICE', label: 'Congé du locataire' },
   { value: 'DEPOSIT_RETURN', label: 'Dépôt de garantie' },
   { value: 'UNPAID', label: 'Impayés' },
 ]
@@ -192,7 +193,8 @@ const INFO: Partial<Record<LetterType, { text: string; ref: string; guides?: Gui
   REVISION: { text: 'Bailio récupère l’indice officiel de l’INSEE. La révision n’est pas rétroactive : passé un an après la date prévue, elle est perdue pour cette année.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 17-1', guides: ['revision', 'irl'] },
   INSURANCE: { text: 'Le locataire doit être assuré contre les risques locatifs et remettre une attestation chaque année.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 7 g', guides: ['assurance'] },
   CHARGES: { text: 'Envoyez le décompte par nature de charges au moins un mois avant la régularisation. Les justificatifs restent consultables six mois. Si la régularisation arrive plus d’un an en retard, le locataire peut étaler le paiement sur 12 mois.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 23', guides: ['charges'] },
-  NOTICE_TO_LEAVE: { text: 'Vente : le congé vaut offre de vente au locataire, avec le prix et les conditions. Reprise : joignez la notice d’information sur vos obligations. Locataire de plus de 65 ans aux ressources modestes : des protections particulières s’appliquent.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 15', guides: ['conge'] },
+  NOTICE_TO_LEAVE: { text: 'Vente d’un logement vide : le congé vaut offre de vente au locataire, avec le prix et les conditions ; Bailio y recopie l’article de loi obligatoire. Vente ou reprise d’un logement vide : la notice officielle est jointe automatiquement. Locataire de plus de 65 ans aux ressources modestes : des protections particulières s’appliquent.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 15', guides: ['conge'] },
+  TENANT_NOTICE: { text: 'Le préavis court à partir du jour où vous recevez la lettre du locataire. Le motif d’un préavis réduit doit être justifié par le locataire dans sa lettre de congé.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 15 et 25-8', guides: ['congeLocataire'] },
   DEPOSIT_RETURN: { text: 'Chaque retenue doit être justifiée (devis, facture, état des lieux). En cas de retard, le locataire a droit à 10 % du loyer mensuel par mois de retard.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 22', guides: ['depot', 'edlSortie'] },
   REMINDER: { text: 'Pensez à prévenir le garant. Pour aller plus loin, un commissaire de justice délivre le commandement de payer : Bailio ne remplace pas un professionnel du droit.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 24', guides: ['impayes'] },
   FORMAL_NOTICE: { text: 'La mise en demeure part en lettre recommandée avec accusé de réception. Le garant doit être informé dans les 15 jours d’un commandement de payer.', ref: 'loi n° 89-462 du 6 juillet 1989, art. 24 ; Code civil, art. 1344', guides: ['impayes'] },
@@ -302,6 +304,8 @@ function check(l: Letter): string | null {
       return (l.lines as Array<{ label: string }> | undefined)?.some((x) => x.label.trim()) ? null : 'Ajoutez au moins une charge récupérable.'
     case 'NOTICE_TO_LEAVE':
       return has(l.leaseEnd) ? null : 'Indiquez la date de fin du bail.'
+    case 'TENANT_NOTICE':
+      return has(l.receivedDate) ? null : 'Indiquez la date de réception du congé.'
     case 'DEPOSIT_RETURN':
       return has(l.keysDate) ? null : 'Indiquez la date de remise des clés.'
   }
@@ -321,6 +325,18 @@ function LetterFields({ lease, letter, set }: { lease: LeaseView; letter: Letter
       return <ChargesFields letter={letter} set={set} />
     case 'NOTICE_TO_LEAVE':
       return <NoticeFields lease={lease} letter={letter} set={set} />
+    case 'TENANT_NOTICE':
+      return (
+        <>
+          <Input label="Date de réception de la lettre de congé" type="date" value={str(letter.receivedDate)} onChange={(v) => set({ receivedDate: v || null })} hint="Date de remise de la lettre recommandée, de l’acte du commissaire de justice ou de la remise en main propre." />
+          {lease.kind === 'VIDE' ? (
+            <>
+              <Toggle checked={Boolean(letter.reduced)} onChange={(v) => set({ reduced: v })} label="Préavis réduit à un mois" sub="Zone tendue, premier emploi, mutation, perte d’emploi, santé, RSA, AAH ou logement social attribué." />
+              {letter.reduced ? <Input label="Motif indiqué par le locataire" value={str(letter.reducedReason)} onChange={(v) => set({ reducedReason: v || null })} placeholder="mutation professionnelle" /> : null}
+            </>
+          ) : null}
+        </>
+      )
     case 'DEPOSIT_RETURN':
       return <DepositFields lease={lease} letter={letter} set={set} />
     case 'REMINDER':
@@ -419,7 +435,7 @@ function NoticeFields({ lease, letter, set }: { lease: LeaseView; letter: Letter
       {reason === 'SALE' ? (
         <>
           <Money label="Prix de vente demandé" cents={num(letter.priceCents)} onChange={(c) => set({ priceCents: c })} />
-          <TextArea label="Conditions de la vente" value={str(letter.saleConditions)} onChange={(v) => set({ saleConditions: v || null })} hint="Le locataire a deux mois pour accepter l’offre." />
+          <TextArea label="Conditions de la vente" value={str(letter.saleConditions)} onChange={(v) => set({ saleConditions: v || null })} hint="Facultatif. Sans précision, le congé indique un paiement comptant à la signature chez le notaire. Le locataire a deux mois pour accepter l’offre." />
         </>
       ) : null}
       {reason === 'RESUMPTION' ? (

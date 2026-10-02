@@ -255,7 +255,7 @@ export interface ExpenseDetails extends Expense {
   document: null | { id: string; mimeType: string; title: string; meta: { reading?: InvoiceReading; matchedBy?: string | null } | null; createdAt: string }
 }
 
-export type LetterType = 'REVISION' | 'INSURANCE' | 'REMINDER' | 'FORMAL_NOTICE' | 'NOTICE_TO_LEAVE' | 'CHARGES' | 'DEPOSIT_RETURN'
+export type LetterType = 'REVISION' | 'INSURANCE' | 'REMINDER' | 'FORMAL_NOTICE' | 'NOTICE_TO_LEAVE' | 'TENANT_NOTICE' | 'CHARGES' | 'DEPOSIT_RETURN'
 
 export const LETTER_TITLES: Record<LetterType, string> = {
   REVISION: 'Révision annuelle du loyer',
@@ -263,6 +263,7 @@ export const LETTER_TITLES: Record<LetterType, string> = {
   REMINDER: 'Relance amiable',
   FORMAL_NOTICE: 'Mise en demeure',
   NOTICE_TO_LEAVE: 'Congé donné par le bailleur',
+  TENANT_NOTICE: 'Accusé de réception du congé du locataire',
   CHARGES: 'Régularisation annuelle des charges',
   DEPOSIT_RETURN: 'Restitution du dépôt de garantie',
 }

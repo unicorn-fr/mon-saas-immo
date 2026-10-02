@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { formatDateFr, formatEuros, parseIsoDate } from './lease.js'
+import { ART_15_II_FIRST_FIVE } from '../pdf/notice-conge-text.js'
 import { eurosInWords } from './words.js'
 
 /**
@@ -37,6 +38,13 @@ export const letterSchema = z.discriminatedUnion('type', [
     provisionsCents: cents,
   }),
   z.object({
+    type: z.literal('TENANT_NOTICE'),
+    receivedDate: isoDate,
+    /** Préavis réduit à un mois (logement vide) : zone tendue, mutation, perte d'emploi, santé, RSA, AAH… */
+    reduced: z.boolean().default(false),
+    reducedReason: z.string().max(300).optional().nullable(),
+  }),
+  z.object({
     type: z.literal('DEPOSIT_RETURN'),
     depositCents: cents,
     keysDate: isoDate,
@@ -54,6 +62,7 @@ export const LETTER_TITLES: Record<LetterType, string> = {
   FORMAL_NOTICE: 'Mise en demeure',
   NOTICE_TO_LEAVE: 'Congé donné par le bailleur',
   CHARGES: 'Régularisation annuelle des charges',
+  TENANT_NOTICE: 'Accusé de réception du congé du locataire',
   DEPOSIT_RETURN: 'Restitution du dépôt de garantie',
 }
 
@@ -63,6 +72,10 @@ export interface LetterContent {
   paragraphs: string[]
   table?: { columns: string[]; widths: number[]; rows: string[][] }
   annexes?: string[]
+  /** Texte de loi reproduit tel quel dans le courrier (congé pour vendre : art. 15, II). */
+  quote?: { title: string; paragraphs: string[] }
+  /** Notice officielle à joindre en pages suivantes (congé pour vendre ou reprendre un logement vide). */
+  appendNotice?: 'CONGE'
   /** Montant calculé à afficher dans l'interface (nouveau loyer, solde, somme à restituer). */
   computed?: { label: string; cents: number }[]
 }
@@ -79,13 +92,36 @@ export function revisedRent(oldRentCents: number, refValue: number, newValue: nu
   return Math.round((oldRentCents * newValue) / refValue)
 }
 
+/**
+ * Fin du préavis du locataire (art. 15, I et 25-8) : un mois en meublé, trois mois en vide, réduit à un mois dans
+ * les cas prévus par la loi. Le délai court de la réception du congé et expire le jour du dernier mois qui porte le
+ * même quantième, ou le dernier jour du mois à défaut (code de procédure civile, art. 641).
+ */
+export function tenantNoticeEnd(receivedIso: string, months: number): Date {
+  const r = parseIsoDate(receivedIso)
+  const lastDay = new Date(Date.UTC(r.getUTCFullYear(), r.getUTCMonth() + months + 1, 0)).getUTCDate()
+  return new Date(Date.UTC(r.getUTCFullYear(), r.getUTCMonth() + months, Math.min(r.getUTCDate(), lastDay)))
+}
+
+export const tenantNoticeMonths = (kind: LetterContext['kind'], reduced: boolean) => ((kind ?? 'VIDE') === 'VIDE' && !reduced ? 3 : 1)
+
 /** Échéance de restitution : 1 mois après la remise des clés si l'état des lieux est conforme, 2 mois sinon (art. 22). */
 export function depositDeadline(keysDateIso: string, conform: boolean): Date {
   const k = parseIsoDate(keysDateIso)
   return new Date(Date.UTC(k.getUTCFullYear(), k.getUTCMonth() + (conform ? 1 : 2), k.getUTCDate()))
 }
 
-export function letterContent(l: LetterInput, ctx: { tenantName: string; propertyAddress: string; guarantorName?: string | null }): LetterContent {
+export interface LetterContext {
+  tenantName: string
+  propertyAddress: string
+  guarantorName?: string | null
+  /** Type de bail : le congé ne suit pas les mêmes règles en vide (art. 15) et en meublé (art. 25-8). */
+  kind?: 'VIDE' | 'MEUBLE' | 'ETUDIANT' | 'MOBILITE'
+  /** Désignation des locaux loués, reprise du bail (obligatoire dans le congé pour vendre). */
+  premises?: string
+}
+
+export function letterContent(l: LetterInput, ctx: LetterContext): LetterContent {
   switch (l.type) {
     case 'REVISION': {
       const next = revisedRent(l.oldRentCents, l.irlRef.value, l.irlNew.value)
@@ -133,24 +169,49 @@ export function letterContent(l: LetterInput, ctx: { tenantName: string; propert
         ],
       }
     case 'NOTICE_TO_LEAVE': {
-      const common = `Je vous donne congé pour la fin de votre bail, soit le ${d(l.leaseEnd)}, date à laquelle vous devrez avoir libéré le logement.`
+      const empty = (ctx.kind ?? 'VIDE') === 'VIDE'
+      const common = `Je vous donne congé pour la fin de votre bail, soit le ${d(l.leaseEnd)}, date à laquelle vous devrez avoir libéré le logement situé ${ctx.propertyAddress}.`
       const why =
         l.reason === 'SALE'
-          ? [
-              `Ce congé est motivé par ma décision de vendre le logement. Il vaut offre de vente à votre profit, au prix de ${e(l.priceCents ?? 0)} (${eurosInWords(l.priceCents ?? 0)})${l.saleConditions ? `, aux conditions suivantes : ${l.saleConditions}` : ''}.`,
-              'Cette offre est valable pendant les deux premiers mois du délai de préavis. Si vous l’acceptez, vous disposez d’un délai de deux mois à compter de l’envoi de votre acceptation pour réaliser la vente, porté à quatre mois si vous recourez à un prêt (article 15 II de la loi du 6 juillet 1989).',
-            ]
+          ? empty
+            ? [
+                `Ce congé est motivé par ma décision de vendre le logement. Il vaut offre de vente à votre profit, au prix de ${e(l.priceCents ?? 0)} (${eurosInWords(l.priceCents ?? 0)})${l.saleConditions ? `, aux conditions suivantes : ${l.saleConditions}` : ', payable comptant le jour de la signature de l’acte authentique de vente'}.`,
+                `Désignation des locaux loués et de leurs dépendances, telle qu’elle figure au bail : ${ctx.premises || ctx.propertyAddress}.`,
+                'Cette offre est valable pendant les deux premiers mois du délai de préavis. Conformément à l’article 15, II, de la loi n° 89-462 du 6 juillet 1989, dont les cinq premiers alinéas sont reproduits ci-dessous, vous pouvez l’accepter par écrit pendant ce délai.',
+              ]
+            : [`Ce congé est motivé par ma décision de vendre le logement (article 25-8 de la loi n° 89-462 du 6 juillet 1989).`]
           : l.reason === 'RESUMPTION'
             ? [
-                `Ce congé est motivé par ma décision de reprendre le logement pour y habiter : bénéficiaire ${l.beneficiary?.name ?? ''} (${l.beneficiary?.link ?? ''}), demeurant ${l.beneficiary?.address ?? ''}.`,
-                `Caractère réel et sérieux de la reprise : ${l.justification ?? ''}`,
+                `Ce congé est motivé par ma décision de reprendre le logement pour y habiter ou y loger un proche, à titre de résidence principale. Bénéficiaire de la reprise : ${l.beneficiary?.name ?? ''}, demeurant ${l.beneficiary?.address ?? ''}. Lien avec le bailleur : ${l.beneficiary?.link ?? ''}.`,
+                `Caractère réel et sérieux de la décision de reprise : ${l.justification ?? ''}`,
               ]
-            : [`Ce congé est fondé sur un motif légitime et sérieux : ${l.justification ?? ''}`]
+            : [`Ce congé est fondé sur un motif légitime et sérieux, à savoir : ${l.justification ?? ''}`]
+      const withNotice = empty && l.reason !== 'LEGITIMATE'
       return {
         subject: 'Congé pour la fin du bail',
         recommended: true,
-        paragraphs: [common, ...why],
-        annexes: ['Notice d’information relative aux obligations du bailleur et aux voies de recours et d’indemnisation du locataire (arrêté du 13 décembre 2017)'],
+        paragraphs: [common, ...why, 'Vous pouvez quitter le logement avant cette date : vous ne devrez alors le loyer et les charges que jusqu’à la remise des clés. Nous conviendrons ensemble de la date de l’état des lieux de sortie.'],
+        quote: empty && l.reason === 'SALE' ? { title: 'Article 15, II, alinéas 1 à 5, de la loi n° 89-462 du 6 juillet 1989', paragraphs: ART_15_II_FIRST_FIVE } : undefined,
+        annexes: withNotice ? ['Notice d’information relative aux obligations du bailleur et aux voies de recours et d’indemnisation du locataire (arrêté du 13 décembre 2017), reproduite ci-après'] : undefined,
+        appendNotice: withNotice ? 'CONGE' : undefined,
+      }
+    }
+    case 'TENANT_NOTICE': {
+      const months = tenantNoticeMonths(ctx.kind, l.reduced)
+      const end = formatDateFr(tenantNoticeEnd(l.receivedDate, months))
+      const empty = (ctx.kind ?? 'VIDE') === 'VIDE'
+      return {
+        subject: 'Votre congé : accusé de réception et fin du préavis',
+        recommended: false,
+        paragraphs: [
+          `J’accuse réception de votre lettre de congé concernant le logement situé ${ctx.propertyAddress}, reçue le ${d(l.receivedDate)}.`,
+          empty && l.reduced
+            ? `Votre préavis est réduit à un mois${l.reducedReason ? ` (${l.reducedReason})` : ''} : il prend fin le ${end}.`
+            : `Votre préavis est de ${months === 1 ? 'un mois' : 'trois mois'}${empty ? '' : ', comme pour toute location meublée'} : il prend fin le ${end}.`,
+          'Vous restez redevable du loyer et des charges jusqu’à cette date, sauf si le logement est occupé avant la fin du préavis par un autre locataire, en accord avec moi (article 15 de la loi n° 89-462 du 6 juillet 1989). Si vous partez plus tôt, prévenez-moi : nous fixerons ensemble la date de l’état des lieux de sortie et de la remise des clés.',
+          'Le dépôt de garantie vous sera restitué dans un délai d’un mois après la remise des clés si l’état des lieux de sortie est conforme à celui d’entrée, et de deux mois dans le cas contraire, déduction faite des sommes dues et justifiées (article 22). Merci de m’indiquer votre nouvelle adresse.',
+        ],
+        computed: [],
       }
     }
     case 'CHARGES': {

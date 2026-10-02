@@ -33,7 +33,8 @@ async function photos(): Promise<UploadedFile[]> {
   const dir = mkdtempSync(join(tmpdir(), 'bailio-test-'))
   try {
     writeFileSync(join(dir, 'bail.pdf'), await renderLeasePdf(lease))
-    execFileSync('pdftoppm', ['-r', '200', '-gray', '-png', join(dir, 'bail.pdf'), join(dir, 'pg')])
+    // Photos des pages du bail lui-même (la notice d'information qui suit n'est pas lue).
+    execFileSync('pdftoppm', ['-r', '200', '-gray', '-png', '-l', '10', join(dir, 'bail.pdf'), join(dir, 'pg')])
     const angles = [1.8, -2.4, 90, 0.7]
     const pages = readdirSync(dir).filter((f) => f.startsWith('pg')).sort()
     return Promise.all(

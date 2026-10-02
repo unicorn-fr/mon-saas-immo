@@ -528,8 +528,17 @@ function looksLikeLease(doc: Doc): boolean {
   return doc.low.length >= 200 && score >= 3
 }
 
+/**
+ * La notice d'information officielle (arrêté du 29 mai 2015) est souvent jointe au bail : elle parle de meublé, de
+ * dépôt de garantie, de durées… pour tous les cas. On ne lit que le bail lui-même, avant la notice.
+ */
+export function withoutNotice(text: string): string {
+  const at = text.search(/(?:Le|LE)\s+r[ée]gime\s+de\s+droit\s+commun\s+des\s+baux\s+d.habitation|CONTENU\s+DE\s+LA\s+NOTICE\s+D.INFORMATION|Notice\s+d.information\s*\n+\s*Annex[ée]e\s+aux\s+contrats/)
+  return at > 400 ? text.slice(0, at) : text
+}
+
 export function parseLease(text: string): Extraction {
-  const doc = new Doc(text)
+  const doc = new Doc(withoutNotice(text))
   const parties = readParties(doc)
   const rent = readRent(doc)
   return {

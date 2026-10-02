@@ -3,6 +3,7 @@ import type { LandlordProfile } from '../domain/contract.js'
 import { formatDateFr } from '../domain/lease.js'
 import type { LetterContent } from '../domain/letters.js'
 import { landlordAddress, landlordName } from './labels.js'
+import { CONGE_NOTICE, NoticePages } from './notice.js'
 import { BLANK, MUTED, P, RULE, ScriptName, Table, s } from './theme.js'
 
 /** Courrier au locataire : expéditeur, destinataire, lieu et date, objet, texte, signature. */
@@ -50,6 +51,16 @@ export function LetterDocument({ content, landlord, recipient, date = new Date()
           ))}
         </View>
         {content.table ? <Table columns={content.table.columns} widths={content.table.widths} rows={content.table.rows} /> : null}
+        {content.quote ? (
+          <View style={[s.box, { marginTop: 4 }]}>
+            <Text style={{ fontSize: 9, fontWeight: 700, marginBottom: 4 }}>{content.quote.title}</Text>
+            {content.quote.paragraphs.map((q, i) => (
+              <Text key={i} style={{ fontSize: 9, lineHeight: 1.45, textAlign: 'justify', marginBottom: 4 }}>
+                « {q} »
+              </Text>
+            ))}
+          </View>
+        ) : null}
         <Text style={{ fontSize: 10.5, lineHeight: 1.55, marginTop: 10 }}>Je vous prie d’agréer, Madame, Monsieur, l’expression de mes salutations distinguées.</Text>
 
         <View style={{ alignItems: 'flex-end', marginTop: 26 }}>
@@ -71,6 +82,7 @@ export function LetterDocument({ content, landlord, recipient, date = new Date()
           Courrier préparé avec Bailio
         </Text>
       </Page>
+      {content.appendNotice === 'CONGE' ? <NoticePages notice={CONGE_NOTICE} footer="Annexe au congé · notice d’information (arrêté du 13 décembre 2017)" /> : null}
     </Document>
   )
 }

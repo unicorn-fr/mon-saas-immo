@@ -4,6 +4,7 @@ import helmet from 'helmet'
 import { allowedOrigins, env } from './env.js'
 import { errorHandler, HttpError } from './lib/http.js'
 import { limitPerVisitor } from './lib/rateLimit.js'
+import { renderNoticePdf } from './pdf/notice.js'
 import draftRoutes from './routes/drafts.js'
 import authRoutes from './routes/auth.js'
 import accountRoutes from './routes/account.js'
@@ -37,6 +38,20 @@ export function createApp() {
     const s = (v: unknown, n: number) => String(v ?? '').slice(0, n)
     console.error('[navigateur]', JSON.stringify({ message: s(b.message, 500), where: s(b.where, 60), url: s(b.url, 300), ua: s(req.headers['user-agent'], 300), stack: s(b.stack, 3000) }))
     res.status(204).end()
+  })
+  // Notice d'information officielle (arrêté du 29 mai 2015 modifié), publique : elle est identique pour tous les baux.
+  let noticePdf: Promise<Buffer> | null = null
+  app.get('/api/notice-information.pdf', async (_req, res, next) => {
+    try {
+      noticePdf ??= renderNoticePdf()
+      res.setHeader('Content-Type', 'application/pdf')
+      res.setHeader('Content-Disposition', 'inline; filename="notice-information-bail.pdf"')
+      res.setHeader('Cache-Control', 'public, max-age=86400')
+      res.send(await noticePdf)
+    } catch (e) {
+      noticePdf = null
+      next(e)
+    }
   })
   app.use('/api/drafts', draftRoutes)
   app.use('/api/auth', authRoutes)
