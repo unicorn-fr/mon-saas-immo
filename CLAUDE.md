@@ -53,6 +53,11 @@ Chaque information saisie est enregistrée et réutilisée :
 - état des lieux de sortie : nouvelle adresse du locataire et date de remise des clés reprises dans sa fiche et le solde de tout compte ;
 - toute écriture dans `lease.data` relit les données juste avant (`patchLeaseData`) pour ne rien effacer.
 
+## Mise en location
+
+- Annonce (`domain/ad.ts`, `/espace/logements/:id/annonce`) : mentions obligatoires (loyer charges comprises par mois, charges, dépôt, surface, classes DPE, dépenses d'énergie estimées, « Logement à consommation énergétique excessive » en F et G). Réglages gardés dans la fiche du logement (`ad`), repris du dernier bail (`services/ad.ts`).
+- Candidats (`domain/candidates.ts`, `routes/candidates.ts`, table `Candidate`) : lien public `/candidature/:code`, sans compte ni pièce jointe (DossierFacile). « Choisir ce candidat » crée la fiche du locataire et efface la candidature ; les autres sont effacées après 90 jours (tâche quotidienne). Pièces autorisées : décret 2015-1437 ; interdites : art. 22-2.
+
 ## Parcours guidés « Que se passe-t-il ? »
 
 `server/src/domain/journeys.ts` (testé dans `journeys.test.ts`) : départ du locataire, impayé, vente ou reprise, problème dans le logement. L'état de chaque étape est déduit des courriers enregistrés, des états des lieux et des faits du bail ; seules les démarches faites hors de Bailio (commandement de payer) se cochent à la main. Pages : `/espace/situations` et `/espace/baux/:id/parcours/:kind`. Les tâches d'« Aujourd'hui » (départ, solde de tout compte, chaudière) sont déduites de la même façon.

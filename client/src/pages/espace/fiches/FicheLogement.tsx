@@ -162,6 +162,11 @@ export default function FicheLogement() {
           <Input label="Numéro ADEME du DPE" value={d.dpe?.number} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, number: v } } })} />
         </Fields>
         <Fields>
+          <NumberField label="Dépenses d’énergie estimées, minimum (€ par an)" value={d.dpe?.costMin ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, costMin: v } } })} />
+          <NumberField label="Maximum (€ par an)" value={d.dpe?.costMax ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, costMax: v } } })} hint="Fourchette indiquée sur le DPE. Obligatoire dans l’annonce." />
+          <NumberField label="Année des prix" value={d.dpe?.costYear ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, costYear: v } } })} />
+        </Fields>
+        <Fields>
           <Chips legend="Installation de gaz" value={d.gas?.hasGas ?? null} onChange={(v) => set({ diagnostics: { ...d, gas: { ...d.gas, hasGas: v } } })} options={[{ value: true, label: 'Oui' }, { value: false, label: 'Non' }]} />
           <Chips legend="Installation électrique de plus de 15 ans" value={d.electricity?.installOver15 ?? null} onChange={(v) => set({ diagnostics: { ...d, electricity: { ...d.electricity, installOver15: v } } })} options={[{ value: true, label: 'Oui' }, { value: false, label: 'Non' }]} />
         </Fields>

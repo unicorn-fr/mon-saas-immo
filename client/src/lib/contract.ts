@@ -137,7 +137,7 @@ export interface PropertyFile {
   tv?: N<'INDIVIDUAL' | 'COLLECTIVE' | 'CABLE' | 'SATELLITE' | 'NONE'>
   internet?: N<'FIBER' | 'ADSL' | 'NONE'>
   diagnostics?: N<{
-    dpe?: N<Diag & { class?: N<Dpe>; ges?: N<Dpe>; number?: N<string> }>
+    dpe?: N<Diag & { class?: N<Dpe>; ges?: N<Dpe>; number?: N<string>; costMin?: N<number>; costMax?: N<number>; costYear?: N<number> }>
     erp?: N<Diag>
     electricity?: N<Diag & { installOver15?: N<boolean> }>
     gas?: N<Diag & { hasGas?: N<boolean>; installOver15?: N<boolean> }>
@@ -152,6 +152,7 @@ export interface PropertyFile {
   smokeDetectors?: N<number>
   /** Clés et moyens d'accès remis : « 2 clés, 1 badge ». */
   keys?: N<string>
+  ad?: N<{ title?: N<string>; description?: N<string>; rentCents?: N<number>; chargesCents?: N<number>; chargesMode?: N<'PROVISION' | 'FORFAIT'>; depositCents?: N<number>; complementCents?: N<number>; availableFrom?: N<string> }>
 }
 
 export interface Guarantor {

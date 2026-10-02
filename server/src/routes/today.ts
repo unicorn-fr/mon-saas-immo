@@ -139,9 +139,9 @@ router.get('/today', async (req, res) => {
       tasks.push({ id: `settle-${l.id}`, type: 'SETTLEMENT', tag: 'Dépôt de garantie', tone: limit < today ? 'error' : 'caramel', place, title: `Envoyer le solde de tout compte à ${who}${limit < today ? ' : la date limite est passée' : ` avant le ${short(limit)}`}`, text: 'Dépôt de garantie, retenues justifiées, loyers restant dus et charges : le document est déjà rempli.', leaseId: l.id })
     }
     // Chaudière individuelle : attestation d'entretien chaque année.
-    const heating = (l.property.data as { heating?: { mode?: string; energy?: string } } | null)?.heating
+    const heating = (l.property.data as { heating?: { mode?: string; energy?: string; lastMaintenance?: string } } | null)?.heating
     if (l.status === 'ACTIVE' && heating?.mode === 'INDIVIDUAL' && ['GAS', 'FUEL', 'WOOD'].includes(String(heating.energy)) && !snoozed('BOILER')) {
-      const last = [facts.boilerServiceDate ? new Date(`${facts.boilerServiceDate}T00:00:00Z`) : null, lastLetter(l.id, 'BOILER')].filter((d): d is Date => Boolean(d)).sort((a, b) => b.getTime() - a.getTime())[0] ?? l.startDate
+      const last = [facts.boilerServiceDate ? new Date(`${facts.boilerServiceDate}T00:00:00Z`) : null, heating.lastMaintenance ? new Date(`${heating.lastMaintenance}T00:00:00Z`) : null, lastLetter(l.id, 'BOILER')].filter((d): d is Date => Boolean(d)).sort((a, b) => b.getTime() - a.getTime())[0] ?? l.startDate
       if (today.getTime() - last.getTime() >= 365 * DAY)
         tasks.push({ id: `boiler-${l.id}`, type: 'BOILER', tag: 'Chaudière', tone: 'caramel', place, title: `Demander l’attestation d’entretien de la chaudière à ${who}`, text: 'L’entretien annuel est obligatoire et à la charge du locataire. Le courrier est prêt.', leaseId: l.id })
     }

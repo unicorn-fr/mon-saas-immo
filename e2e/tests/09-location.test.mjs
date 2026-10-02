@@ -1,0 +1,76 @@
+import assert from 'node:assert/strict'
+import { after, before, test } from 'node:test'
+import { BASE, api, completeLease, launch, newAccount, shot, signedInContext, watch } from '../lib.mjs'
+
+/** Mettre en location : annonce reprise du bail et de la fiche, réglages gardés. */
+let browser
+before(async () => (browser = await launch()))
+after(() => browser?.close())
+
+test('annonce : montants repris du bail, mentions obligatoires, saisie gardée', async () => {
+  const { token } = await newAccount()
+  const { propertyId } = await completeLease(token)
+  const first = await api(`/properties/${propertyId}/ad`, { token })
+  assert.equal(first.settings.rentCents, 51000)
+  assert.equal(first.settings.depositCents, 102000)
+  assert.match(first.ad.text, /560 € par mois charges comprises/)
+  const ctx = await signedInContext(browser, token)
+  const page = await ctx.newPage()
+  const errors = []
+  watch(page, errors)
+  await page.goto(`${BASE}/espace/logements/${propertyId}`)
+  await page.getByRole('link', { name: 'Rédiger l’annonce' }).click()
+  await page.getByText('Mentions obligatoires', { exact: true }).waitFor()
+  await page.getByLabel('Description').fill('Studio lumineux à deux pas de la plage.')
+  await page.getByText('Enregistré automatiquement').waitFor()
+  await page.getByText('Studio lumineux à deux pas de la plage.').nth(1).waitFor()
+  await shot(page, 'annonce')
+  await page.reload()
+  assert.equal(await page.getByLabel('Description').inputValue(), 'Studio lumineux à deux pas de la plage.')
+  await ctx.close()
+  assert.deepEqual(errors, [])
+})
+
+test('candidature : formulaire public sans compte, choix du candidat, fiche locataire pré-remplie', async () => {
+  const { token } = await newAccount()
+  const { propertyId } = await completeLease(token)
+  const { applyCode } = await api(`/properties/${propertyId}/apply-link`, { method: 'POST', token, body: { open: true } })
+  assert.ok(applyCode)
+  // Le candidat, sans compte
+  const visitor = await browser.newContext({ viewport: { width: 390, height: 844 } })
+  const page = await visitor.newPage()
+  const errors = []
+  watch(page, errors)
+  await page.goto(`${BASE}/candidature/${applyCode}`)
+  await page.getByText('L’annonce').waitFor()
+  await page.getByLabel('Prénom', { exact: true }).fill('Léa')
+  await page.getByLabel('Nom', { exact: true }).fill('Martin')
+  await page.getByLabel('Email').fill('lea.martin@example.fr')
+  await page.getByLabel('Situation professionnelle').selectOption('EMPLOYEE')
+  await page.getByLabel('Revenus nets du foyer, par mois').fill('2400')
+  await page.getByRole('button', { name: 'Garantie Visale' }).click()
+  await page.getByText('J’accepte que ces informations').click()
+  await shot(page, 'candidature')
+  await page.getByRole('button', { name: 'Envoyer ma candidature' }).click()
+  await page.getByText('Candidature envoyée.').waitFor()
+  await visitor.close()
+  assert.deepEqual(errors, [])
+  // Le propriétaire choisit
+  const list = await api(`/properties/${propertyId}/candidates`, { token })
+  assert.equal(list.candidates.length, 1)
+  assert.equal(list.candidates[0].rentShare, 23)
+  const ctx = await signedInContext(browser, token)
+  const owner = await ctx.newPage()
+  owner.on('dialog', (d) => d.accept())
+  await owner.goto(`${BASE}/espace/logements/${propertyId}/candidats`)
+  await owner.getByRole('button', { name: 'Choisir ce candidat' }).click()
+  await owner.waitForURL('**/espace/baux/nouveau?**')
+  const tenants = await api('/tenants', { token })
+  const lea = tenants.find((t) => /Martin/.test(t.name) && /Léa/.test(t.name))
+  assert.ok(lea, 'fiche locataire créée')
+  const file = (await api(`/tenants/${lea.id}`, { token })).file
+  assert.equal(file.email, 'lea.martin@example.fr')
+  assert.equal(file.guarantee, 'VISALE')
+  assert.equal((await api(`/properties/${propertyId}/candidates`, { token })).candidates.length, 0, 'candidature effacée')
+  await ctx.close()
+})

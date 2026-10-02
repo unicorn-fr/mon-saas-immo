@@ -77,6 +77,7 @@ model User {
   files       FileBlob[]
   signatures  SignatureRequest[]
   actionCodes ActionCode[]
+  candidates  Candidate[]
 }
 
 model Session {
@@ -157,16 +158,35 @@ model Property {
   dpeClass     String?
   dpeNumber    String?
   label        String? // nom court : « Studio rue Foch »
+  // Lien public de candidature (/candidature/:code), null si désactivé
+  applyCode    String?  @unique
   // Fiche complète du logement (domain/contract.ts, propertyFileSchema)
   data         Json     @default("{}")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @default(now()) @updatedAt
 
-  leases    Lease[]
-  tenants   Tenant[]
-  expenses  Expense[]
-  documents Document[]
+  leases     Lease[]
+  tenants    Tenant[]
+  expenses   Expense[]
+  documents  Document[]
+  candidates Candidate[]
 
+  @@index([userId])
+}
+
+/// Candidature reçue par le lien public d'un logement. Effacée quand le candidat devient locataire,
+/// ou trois mois après réception (données personnelles gardées le moins longtemps possible).
+model Candidate {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  status     String   @default("NEW") // NEW, SHORTLIST, REJECTED
+  data       Json
+  createdAt  DateTime @default(now())
+
+  @@index([propertyId])
   @@index([userId])
 }
 

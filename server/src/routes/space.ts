@@ -9,6 +9,8 @@ import { guarantorCompletion, landlordCompletion, propertyCompletion, tenantComp
 import { diagnosticsFor, energyRentalWarning, rentControlLikely } from '../domain/rules.js'
 import { propertyColumns, propertyName, readProfile, readProperty, readTenant, readTerms, leaseKindOf, tenantName } from '../services/contract.js'
 import { iso, mergeFile } from './helpers.js'
+import { buildAd } from '../domain/ad.js'
+import { adSettings } from '../services/ad.js'
 import { publicUser } from './auth.js'
 
 /**
@@ -193,6 +195,22 @@ router.put('/properties/:id', async (req, res) => {
   const file = propertyFileSchema.parse(mergeFile(readProperty(p), patch))
   await prisma.property.update({ where: { id: p.id }, data: { ...propertyColumns(file), data: file } })
   res.json({ success: true, data: { id: p.id, file, completion: propertyCompletion(file), diagnostics: diagnosticsFor(file), energyWarning: energyRentalWarning(file.diagnostics?.dpe?.class) } })
+})
+
+// ── Annonce ──────────────────────────────────────────────────────────────────
+
+router.get('/properties/:id/ad', async (req, res) => {
+  const p = await ownProperty(req.user!.id, String(req.params.id))
+  const settings = adSettings(p, p.leases)
+  res.json({ success: true, data: { settings, ad: buildAd(readProperty(p), settings), saved: Boolean(readProperty(p).ad) } })
+})
+
+router.put('/properties/:id/ad', async (req, res) => {
+  const p = await ownProperty(req.user!.id, String(req.params.id))
+  const settings = propertyFileSchema.shape.ad.parse(req.body) ?? {}
+  const file = propertyFileSchema.parse({ ...readProperty(p), ad: settings })
+  await prisma.property.update({ where: { id: p.id }, data: { data: file } })
+  res.json({ success: true, data: { settings, ad: buildAd(file, settings), saved: true } })
 })
 
 router.delete('/properties/:id', async (req, res) => {

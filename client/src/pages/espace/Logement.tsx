@@ -98,6 +98,17 @@ function Overview({ p }: { p: PropertyView }) {
             </>
           )}
         </Card>
+        <Card title="Mettre en location">
+          <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>{lease && lease.status !== 'DRAFT' ? 'Pour la prochaine location : l’annonce reprend la fiche du logement et le loyer actuel.' : 'Une annonce prête à copier, avec toutes les mentions obligatoires.'}</span>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <Btn size="sm" variant={lease ? 'outline' : 'primary'} to={`/espace/logements/${p.id}/annonce`}>
+              Rédiger l’annonce
+            </Btn>
+            <Btn size="sm" variant="outline" to={`/espace/logements/${p.id}/candidats`}>
+              Candidats
+            </Btn>
+          </div>
+        </Card>
         <Card title="Fiche du logement" action={<TextLink to={`/espace/logements/${p.id}/fiche`} style={{ fontSize: 14 }}>{p.completion.percent < 100 ? 'Compléter' : 'Modifier'}</TextLink>}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
             <span style={{ color: BAI.inkSoft }}>Complétée</span>

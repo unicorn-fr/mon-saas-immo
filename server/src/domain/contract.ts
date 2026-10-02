@@ -160,7 +160,17 @@ export const propertyFileSchema = z.object({
   internet: opt(z.enum(['FIBER', 'ADSL', 'NONE'])),
   diagnostics: opt(
     z.object({
-      dpe: opt(diagnosticSchema.extend({ class: opt(dpeClass), ges: opt(dpeClass), number: opt(text(40)) })),
+      dpe: opt(
+        diagnosticSchema.extend({
+          class: opt(dpeClass),
+          ges: opt(dpeClass),
+          number: opt(text(40)),
+          /** Dépenses annuelles d'énergie estimées par le DPE (euros, fourchette) et année des prix de référence. */
+          costMin: opt(z.number().int().min(0).max(100_000)),
+          costMax: opt(z.number().int().min(0).max(100_000)),
+          costYear: opt(z.number().int().min(2015).max(2100)),
+        }),
+      ),
       erp: opt(diagnosticSchema),
       electricity: opt(diagnosticSchema.extend({ installOver15: opt(z.boolean()) })),
       gas: opt(diagnosticSchema.extend({ hasGas: opt(z.boolean()), installOver15: opt(z.boolean()) })),
@@ -188,6 +198,19 @@ export const propertyFileSchema = z.object({
   smokeDetectors: opt(z.number().int().min(0).max(20)),
   /** Clés et moyens d'accès remis : « 2 clés, 1 badge, 1 télécommande ». */
   keys: opt(text(200)),
+  /** Annonce de mise en location : réglages gardés pour la prochaine fois. */
+  ad: opt(
+    z.object({
+      title: opt(text(140)),
+      description: opt(text(3000)),
+      rentCents: opt(cents),
+      chargesCents: opt(cents),
+      chargesMode: opt(z.enum(['PROVISION', 'FORFAIT'])),
+      depositCents: opt(cents),
+      complementCents: opt(cents),
+      availableFrom: opt(isoDate),
+    }),
+  ),
 })
 export type PropertyFile = z.infer<typeof propertyFileSchema>
 

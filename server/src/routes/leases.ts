@@ -712,7 +712,7 @@ router.get('/leases/:id/letters/defaults/:type', async (req, res) => {
   } else if (type === 'DAMAGE_REPAIR') {
     data = { type, items: [{ label: '' }], delayDays: 30 }
   } else if (type === 'BOILER') {
-    data = { type, lastServiceDate: facts.boilerServiceDate ?? null }
+    data = { type, lastServiceDate: facts.boilerServiceDate ?? c.property.heating?.lastMaintenance ?? null }
     const h = c.property.heating
     if (h?.mode !== 'INDIVIDUAL' || !['GAS', 'FUEL', 'WOOD'].includes(String(h.energy))) note = 'D’après la fiche du logement, il n’y a pas de chaudière individuelle au gaz, au fioul ou au bois : ce courrier n’est peut-être pas nécessaire.'
   } else if (type === 'SHORT_NOTICE_PROOF') {
@@ -789,6 +789,12 @@ async function rememberLetter(lease: Lease, letter: LetterInput) {
     if (letter.type === 'DEPOSIT_RETURN') patch.keysDate = f.keysDate ?? letter.keysDate
     return patch
   })
+  // Dernier entretien de la chaudière : aussi dans la fiche du logement, pour le prochain bail.
+  if (letter.type === 'BOILER' && letter.lastServiceDate) {
+    const p = await prisma.property.findUniqueOrThrow({ where: { id: lease.propertyId } })
+    const file = readProperty(p)
+    await prisma.property.update({ where: { id: p.id }, data: { data: { ...file, heating: { ...(file.heating ?? {}), lastMaintenance: letter.lastServiceDate } } } })
+  }
 }
 
 // Brouillon d'un courrier : chaque saisie est gardée, même sans enregistrer le PDF.
