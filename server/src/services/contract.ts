@@ -150,6 +150,28 @@ export async function contractFor(user: User, lease: LeaseWithProperty): Promise
   }
 }
 
+/**
+ * Bail signé, pour les quittances, courriers, états des lieux et envois : l'identité des parties reste celle du bail,
+ * mais les coordonnées viennent des fiches actuelles (email ajouté après la signature, nouvelle adresse au départ,
+ * adresse, IBAN et signature du bailleur). Le PDF du bail, lui, reste la copie figée.
+ */
+export async function liveContract(user: User, lease: LeaseWithProperty): Promise<ContractInput> {
+  const c = await contractFor(user, lease)
+  const data = lease.data as Record<string, unknown>
+  if (isLegacy(data) || !data.snapshot || lease.status === 'DRAFT') return c
+  const rows = lease.tenantIds.length ? await prisma.tenant.findMany({ where: { id: { in: lease.tenantIds }, userId: user.id } }) : []
+  const files = lease.tenantIds.map((id) => rows.find((t) => t.id === id)).filter((t): t is Tenant => Boolean(t)).map(readTenant)
+  const filled = <T extends object>(o: T) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== null && v !== undefined && v !== '')) as Partial<T>
+  const profile = readProfile(user)
+  const liveGuarantors = files.filter((f) => f.guarantee === 'CAUTION' && f.guarantor).map((f) => f.guarantor!)
+  return {
+    ...c,
+    landlord: { ...c.landlord, ...filled({ address: profile.address, postalCode: profile.postalCode, city: profile.city, email: profile.email, phone: profile.phone, payment: profile.payment, signature: profile.signature, agent: profile.agent }) },
+    tenants: c.tenants.map((t, i) => (files[i] ? { ...t, ...filled({ email: files[i].email, phone: files[i].phone, newAddress: files[i].newAddress }) } : t)),
+    guarantors: c.guarantors.map((g, i) => (liveGuarantors[i] ? { ...g, ...filled({ email: liveGuarantors[i].email, address: liveGuarantors[i].address }) } : g)),
+  }
+}
+
 export async function leaseOwned(userId: string, leaseId: string): Promise<LeaseWithProperty> {
   const lease = await prisma.lease.findFirst({ where: { id: leaseId, userId }, include: { property: true } })
   if (!lease) throw new HttpError(404, 'Bail introuvable.')

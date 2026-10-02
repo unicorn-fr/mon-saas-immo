@@ -100,3 +100,17 @@ test('autres courriers : réclamation reprise de l’intervention, envoyée à l
   assert.equal(sent.sentTo.length, 1)
   assert.match(sent.sentTo[0], /^garant\+/)
 })
+
+test('bail signé : coordonnées à jour reprises (email changé après la signature), accord retiré respecté', async () => {
+  const { token } = await newAccount()
+  const { leaseId, tenantId } = await completeLease(token)
+  await api(`/leases/${leaseId}/sign`, { method: 'POST', token })
+  await api(`/tenants/${tenantId}`, { method: 'PUT', token, body: { email: 'nouvel.email@example.fr' } })
+  const period = new Date().toISOString().slice(0, 7)
+  await api(`/leases/${leaseId}/payments`, { method: 'POST', token, body: { period } })
+  const sent = await api(`/leases/${leaseId}/receipts/${period}/send`, { method: 'POST', token })
+  assert.deepEqual(sent.sentTo, ['nouvel.email@example.fr'])
+  const { code } = await api(`/leases/${leaseId}/tenant-link`, { method: 'POST', token, body: { open: true } })
+  await api(`/locataire/${code}/e-receipt`, { method: 'POST', body: { accept: false } })
+  await assert.rejects(api(`/leases/${leaseId}/receipts/${period}/send`, { method: 'POST', token }), /retiré son accord/)
+})

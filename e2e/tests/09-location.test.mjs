@@ -128,8 +128,10 @@ test('intervention : artisan ajouté au carnet, dépense créée quand elle est 
   const { token } = await newAccount()
   const { propertyId } = await completeLease(token)
   const i = await api(`/properties/${propertyId}/interventions`, { method: 'POST', token, body: { title: 'Fuite sous l’évier', status: 'PLANNED', date: new Date(Date.now() + 3 * 86_400_000).toISOString().slice(0, 10), newContact: { name: 'Plomberie Martin', trade: 'plombier', phone: '06 12 34 56 78' } } })
-  const contacts = await api('/contacts', { token })
+  const contacts = (await api('/contacts', { token })).filter((c) => c.kind === 'ARTISAN')
   assert.equal(contacts.length, 1)
+  // Le syndic de la fiche du logement est aussi dans le carnet.
+  assert.ok((await api('/contacts', { token })).some((c) => c.kind === 'SYNDIC'))
   assert.equal(contacts[0].name, 'Plomberie Martin')
   const today = await api('/today', { token })
   assert.ok(today.upcoming.some((u) => /Fuite sous l’évier avec Plomberie Martin/.test(u.label)))

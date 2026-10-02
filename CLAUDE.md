@@ -52,6 +52,8 @@ Chaque information saisie est enregistrée et réutilisée :
 - courriers : la saisie en cours est gardée automatiquement (`lease.data.letterDrafts`), et les faits utiles d'un courrier enregistré sont retenus avec le bail (`tenantNotice`, `depositReceivedAt`, `boilerServiceDate`…) puis repris par les courriers suivants ;
 - état des lieux de sortie : nouvelle adresse du locataire et date de remise des clés reprises dans sa fiche et le solde de tout compte ;
 - toute écriture dans `lease.data` relit les données juste avant (`patchLeaseData`) pour ne rien effacer.
+- bail signé : le PDF du bail reste la copie figée (`contractFor`), mais quittances, courriers, états des lieux et envois utilisent `liveContract` (coordonnées actuelles des fiches : email ajouté après la signature, nouvelle adresse, adresse, IBAN et signature du bailleur) ;
+- attestation d'assurance saisie (fiche ou lien du locataire) : les rappels suivent sa date de fin (`alignInsuranceReminders`) ; syndic de la fiche du logement ajouté au carnet ; lien du locataire fermé à la fin du bail.
 
 ## Mise en location
 

@@ -8,7 +8,7 @@ import { layout, sendEmail } from '../lib/email.js'
 import { irlOneYearLater, latestIrl, quarterLabel } from '../lib/irl.js'
 import { requireUser } from '../services/session.js'
 import { ensureReminders } from '../services/reminders.js'
-import { contractFor, leaseKindOf, leaseOwned, propertyName, readProfile, readProperty, readTenant, readTerms, tenantName } from '../services/contract.js'
+import { contractFor, liveContract, leaseKindOf, leaseOwned, propertyName, readProfile, readProperty, readTenant, readTerms, tenantName } from '../services/contract.js'
 import { leaseTermsSchema, type ContractInput, type LeaseKind, type LeaseTerms } from '../domain/contract.js'
 import { termsCompletion } from '../domain/completion.js'
 import { leaseMissing, partiesMissing, type Missing } from '../domain/checklist.js'
@@ -424,7 +424,7 @@ router.post('/leases/:id/end', async (req, res) => {
   const body = z.object({ keysDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), newAddress: z.string().trim().max(300).optional() }).parse(req.body)
   if (lease.status === 'DRAFT') throw new HttpError(409, 'Ce bail n’a pas encore été signé.')
   await prisma.$transaction([
-    prisma.lease.update({ where: { id: lease.id }, data: { status: 'ENDED', endDate: parseIsoDate(body.keysDate), data: { ...(lease.data as object), keysDate: body.keysDate } } }),
+    prisma.lease.update({ where: { id: lease.id }, data: { status: 'ENDED', endDate: parseIsoDate(body.keysDate), tenantCode: null, data: { ...(lease.data as object), keysDate: body.keysDate } } }),
     prisma.reminder.deleteMany({ where: { leaseId: lease.id, status: 'TODO' } }),
   ])
   if (body.newAddress) {
@@ -512,7 +512,7 @@ router.post('/leases/:id/payments', async (req, res) => {
     })
   }
   // Quittance (paiement complet) ou reçu (paiement partiel), rangé dans les documents.
-  const c = await contractFor(user, lease)
+  const c = await liveContract(user, lease)
   const kind = amount >= due ? 'RECEIPT' : 'PARTIAL'
   const missing = partiesMissing(c)
   if (missing.length) {
@@ -545,7 +545,7 @@ router.get('/leases/:id/receipts/:period.pdf', async (req, res) => {
   const payment = await prisma.payment.findUnique({ where: { leaseId_period: { leaseId: lease.id, period } } })
   const due = lease.rentCents + lease.chargesCents
   const kind = !payment || payment.amountCents >= due ? 'RECEIPT' : 'PARTIAL'
-  const c = await contractFor(user, lease)
+  const c = await liveContract(user, lease)
   assertComplete(partiesMissing(c))
   const pdf = await renderReceiptPdf(receiptInput(c, lease, period, kind, payment))
   sendPdf(res, pdf, `${kind === 'RECEIPT' ? 'quittance' : 'recu'}-${period}.pdf`, req.query.download === '1')
@@ -561,7 +561,7 @@ router.get('/leases/:id/notice/:period.pdf', async (req, res) => {
   const user = req.user!
   const lease = await leaseOwned(user.id, String(req.params.id))
   const period = z.string().regex(periodRe).parse(req.params.period)
-  const c = await contractFor(user, lease)
+  const c = await liveContract(user, lease)
   assertComplete(partiesMissing(c))
   const pdf = await renderReceiptPdf(receiptInput(c, lease, period, 'NOTICE'))
   sendPdf(res, pdf, `avis-echeance-${period}.pdf`, req.query.download === '1')
@@ -574,9 +574,12 @@ router.post('/leases/:id/receipts/:period/send', async (req, res) => {
   const period = z.string().regex(periodRe).parse(req.params.period)
   const payment = await prisma.payment.findUnique({ where: { leaseId_period: { leaseId: lease.id, period } } })
   if (!payment) throw new HttpError(400, 'Enregistrez d’abord le loyer reçu pour ce mois.')
-  const c = await contractFor(user, lease)
+  const c = await liveContract(user, lease)
   assertComplete(partiesMissing(c))
-  const to = c.tenants.map((t) => t.email).filter((e): e is string => Boolean(e))
+  // Accord du locataire pour la quittance par email (art. 21) : son adresse sert à l'envoi ; un accord retiré bloque l'envoi.
+  const link = (lease.data as { tenantLink?: { eReceiptConsent?: { email: string } | null; eReceiptWithdrawnAt?: string | null } }).tenantLink
+  if (link?.eReceiptWithdrawnAt && !link.eReceiptConsent) throw new HttpError(400, 'Votre locataire a retiré son accord pour recevoir ses quittances par email : remettez-la-lui sur papier.')
+  const to = [...new Set([...c.tenants.map((t) => t.email), link?.eReceiptConsent?.email].filter((e): e is string => Boolean(e)))]
   if (!to.length) throw new HttpError(400, 'Ajoutez l’email du locataire dans sa fiche pour lui envoyer sa quittance.')
   const full = payment.amountCents >= lease.rentCents + lease.chargesCents
   const pdf = await renderReceiptPdf(receiptInput(c, lease, period, full ? 'RECEIPT' : 'PARTIAL', payment))
@@ -680,7 +683,7 @@ router.get('/leases/:id/letters/defaults/:type', async (req, res) => {
   const lease = await leaseOwned(user.id, String(req.params.id))
   const type = z.enum(Object.keys(LETTER_TITLES) as [string, ...string[]]).parse(req.params.type)
   const terms = readTerms(lease)
-  const c = await contractFor(user, lease)
+  const c = await liveContract(user, lease)
   const facts = leaseFacts(lease)
   let data: Record<string, unknown> = { type }
   let note: string | null = null
@@ -783,7 +786,7 @@ function premisesLabel(p: ContractInput['property']): string {
 }
 
 async function letterPdf(user: User, lease: LeaseWithProperty, letter: LetterInput) {
-  const c = await contractFor(user, lease)
+  const c = await liveContract(user, lease)
   assertComplete(partiesMissing(c))
   const recipient = await recipientOf(user, lease, c)
   const kind = leaseKindOf(lease)
@@ -901,7 +904,7 @@ router.get('/leases/:id/journeys/:kind', async (req, res) => {
   const user = req.user!
   const lease = await leaseOwned(user.id, String(req.params.id))
   const kind = journeyKind.parse(req.params.kind)
-  const c = await contractFor(user, lease)
+  const c = await liveContract(user, lease)
   const [docs, inventories, u] = await Promise.all([
     prisma.document.findMany({ where: { leaseId: lease.id, kind: 'LETTER' }, select: { meta: true, createdAt: true } }),
     prisma.inventory.findMany({ where: { leaseId: lease.id }, select: { kind: true, status: true, date: true } }),
@@ -942,7 +945,7 @@ export default router
 /** Envoi d'un courrier déjà enregistré (utilisé par la route documents). */
 export async function emailLetter(user: User, leaseId: string, pdf: Buffer, subject: string, letter?: { type?: string; recipient?: { email?: string | null } } | null) {
   const lease = await leaseOwned(user.id, leaseId)
-  const c = await contractFor(user, lease)
+  const c = await liveContract(user, lease)
   // Chaque courrier part à son destinataire : le garant pour l'appel à la caution, l'assureur ou l'artisan pour une réclamation.
   let to: string[]
   let from = 'votre bailleur'

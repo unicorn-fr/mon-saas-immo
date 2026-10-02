@@ -73,3 +73,15 @@ export async function ensureReminders(lease: Parameters<typeof computeReminders>
   const rows = computeReminders(lease)
   if (rows.length) await prisma.reminder.createMany({ data: rows, skipDuplicates: true })
 }
+
+/**
+ * Attestation d'assurance reçue (fiche du locataire ou lien du locataire) : les rappels qui tombent avant sa fin sont
+ * faits, et un rappel est posé 15 jours avant qu'elle n'expire.
+ */
+export async function alignInsuranceReminders(leaseId: string, userId: string, expiresAt: string): Promise<void> {
+  const end = new Date(`${expiresAt}T00:00:00Z`)
+  if (Number.isNaN(end.getTime())) return
+  await prisma.reminder.updateMany({ where: { leaseId, type: 'INSURANCE', status: 'TODO', dueDate: { lt: new Date(end.getTime() - 30 * DAY) } }, data: { status: 'DONE', doneAt: new Date() } })
+  const due = new Date(end.getTime() - 15 * DAY)
+  if (due > todayUtc()) await prisma.reminder.createMany({ data: [{ userId, leaseId, type: 'INSURANCE', dueDate: due }], skipDuplicates: true })
+}

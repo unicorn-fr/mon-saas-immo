@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { alignInsuranceReminders } from '../services/reminders.js'
 import { z } from 'zod'
 import type { Lease, Payment, Property, Tenant } from '@prisma/client'
 import { prisma } from '../db.js'
@@ -126,6 +127,14 @@ function propertySummary(p: Property & { leases: LeaseFull[] }, names: Record<st
   }
 }
 
+/** Syndic saisi dans la fiche du logement : il rejoint le carnet, une seule fois. */
+async function rememberSyndic(userId: string, file: { copro?: { syndic?: string | null } | null }) {
+  const name = file.copro?.syndic?.trim()
+  if (!name) return
+  if (await prisma.contact.findFirst({ where: { userId, kind: 'SYNDIC', name: { equals: name, mode: 'insensitive' } } })) return
+  await prisma.contact.create({ data: { userId, kind: 'SYNDIC', name } })
+}
+
 router.get('/properties', async (req, res) => {
   const userId = req.user!.id
   const props = await prisma.property.findMany({ where: { userId }, include: { leases: { include: { payments: true } } }, orderBy: { createdAt: 'asc' } })
@@ -137,6 +146,7 @@ router.post('/properties', async (req, res) => {
   const file = propertyFileSchema.parse(req.body)
   if (!file.address) throw new HttpError(400, 'Indiquez l’adresse du logement.')
   const p = await prisma.property.create({ data: { userId: req.user!.id, ...propertyColumns(file), data: file } })
+  await rememberSyndic(req.user!.id, file)
   res.status(201).json({ success: true, data: { id: p.id } })
 })
 
@@ -195,6 +205,7 @@ router.put('/properties/:id', async (req, res) => {
   const patch = propertyFileSchema.partial().parse(req.body)
   const file = propertyFileSchema.parse(mergeFile(readProperty(p), patch))
   await prisma.property.update({ where: { id: p.id }, data: { ...propertyColumns(file), data: file } })
+  await rememberSyndic(req.user!.id, file)
   res.json({ success: true, data: { id: p.id, file, completion: propertyCompletion(file), diagnostics: diagnosticsFor(file), energyWarning: energyRentalWarning(file.diagnostics?.dpe?.class) } })
 })
 
@@ -310,6 +321,11 @@ router.put('/tenants/:id', async (req, res) => {
   const file = tenantFileSchema.parse(mergeFile(readTenant(t), patch))
   if (propertyId && !(await prisma.property.findFirst({ where: { id: propertyId, userId: req.user!.id } }))) throw new HttpError(404, 'Logement introuvable.')
   await prisma.tenant.update({ where: { id: t.id }, data: { data: file, ...(propertyId !== undefined ? { propertyId } : {}) } })
+  // Nouvelle attestation d'assurance saisie : les rappels des baux en cours suivent sa date de fin.
+  const expires = file.insurance?.expiresAt
+  if (expires && expires !== readTenant(t).insurance?.expiresAt) {
+    for (const l of await prisma.lease.findMany({ where: { userId: req.user!.id, tenantIds: { has: t.id }, status: { in: ['ACTIVE', 'IMPORTED'] } } })) await alignInsuranceReminders(l.id, l.userId, expires)
+  }
   res.json({ success: true, data: { id: t.id, file, completion: tenantCompletion(file), guarantorCompletion: file.guarantor ? guarantorCompletion(file.guarantor) : null } })
 })
 

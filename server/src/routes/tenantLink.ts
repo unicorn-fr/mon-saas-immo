@@ -8,7 +8,8 @@ import { layout, sendEmail } from '../lib/email.js'
 import { limitPerVisitor } from '../lib/rateLimit.js'
 import { newToken, sha256 } from '../lib/tokens.js'
 import { requireUser } from '../services/session.js'
-import { contractFor, leaseOwned, propertyName, readProperty, readTenant, tenantName } from '../services/contract.js'
+import { alignInsuranceReminders } from '../services/reminders.js'
+import { liveContract, leaseOwned, propertyName, readProperty, readTenant, tenantName } from '../services/contract.js'
 import { landlordName } from '../pdf/labels.js'
 import { storeFile, upload } from './helpers.js'
 import { patchLeaseData } from './leases.js'
@@ -66,7 +67,7 @@ router.post('/leases/:id/tenant-link/send', requireUser, async (req, res) => {
   const user = req.user!
   const lease = await leaseOwned(user.id, String(req.params.id))
   if (!lease.tenantCode) throw new HttpError(400, 'Activez d’abord le lien.')
-  const c = await contractFor(user, lease)
+  const c = await liveContract(user, lease)
   const to = c.tenants.map((t) => t.email).filter((e): e is string => Boolean(e))
   if (!to.length) throw new HttpError(400, 'Ajoutez l’email du locataire dans sa fiche pour lui envoyer le lien.')
   const from = landlordName(c.landlord) || 'Votre bailleur'
@@ -98,7 +99,7 @@ async function tenantsOf(lease: Lease) {
 
 router.get('/locataire/:code', async (req, res) => {
   const lease = await leaseByCode(String(req.params.code))
-  const c = await contractFor(lease.user, lease)
+  const c = await liveContract(lease.user, lease)
   const f = linkFacts(lease)
   res.json({
     success: true,
@@ -125,6 +126,8 @@ async function saveTenantFile(lease: Lease, file: Express.Multer.File | undefine
       userId: lease.userId,
       leaseId: lease.id,
       propertyId: lease.propertyId,
+      // Aussi visible dans la fiche du locataire.
+      tenantId: lease.tenantIds[0] ?? null,
       kind: 'OTHER',
       origin: 'UPLOADED',
       title,
@@ -163,7 +166,7 @@ router.post('/locataire/:code/insurance', limitPerVisitor(60, 10), upload.single
     await prisma.tenant.update({ where: { id: t.id }, data: { data: { ...file, insurance: { ...(file.insurance ?? {}), insurer: insurer ?? file.insurance?.insurer ?? null, expiresAt: body.expiresAt } } } })
   }
   await patchLeaseData(lease.id, (f) => ({ tenantLink: { ...((f.tenantLink as TenantLinkFacts) ?? {}), insurance: { insurer, expiresAt: body.expiresAt, at: new Date().toISOString(), documentId } } }))
-  await prisma.reminder.updateMany({ where: { leaseId: lease.id, type: 'INSURANCE', status: 'TODO', dueDate: { lte: new Date(Date.now() + 60 * 86_400_000) } }, data: { status: 'DONE', doneAt: new Date() } })
+  await alignInsuranceReminders(lease.id, lease.userId, body.expiresAt)
   notifyOwner(lease, 'son attestation d’assurance')
   res.status(201).json({ success: true, data: { received: true } })
 })
@@ -193,6 +196,11 @@ router.post('/locataire/:code/e-receipt', limitPerVisitor(60, 10), async (req, r
     const prev = (f.tenantLink as TenantLinkFacts) ?? {}
     return { tenantLink: body.accept ? { ...prev, eReceiptConsent: { email: body.email!, at: now }, eReceiptWithdrawnAt: null } : { ...prev, eReceiptConsent: null, eReceiptWithdrawnAt: now } }
   })
+  // Email donné par le locataire : repris dans sa fiche s'il n'y en avait pas.
+  if (body.accept && body.email) {
+    const [first] = await tenantsOf(lease)
+    if (first && !readTenant(first).email) await prisma.tenant.update({ where: { id: first.id }, data: { data: { ...readTenant(first), email: body.email } } })
+  }
   notifyOwner(lease, body.accept ? 'son accord pour recevoir les quittances par email' : 'le retrait de son accord pour les quittances par email')
   res.json({ success: true, data: { accepted: body.accept } })
 })

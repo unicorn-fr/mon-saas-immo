@@ -7,7 +7,7 @@ import { HttpError } from '../lib/http.js'
 import { layout, sendEmail } from '../lib/email.js'
 import { hashToken, newToken } from '../lib/tokens.js'
 import { requireUser } from '../services/session.js'
-import { contractFor, leaseKindOf, leaseOwned, propertyName, readTenant } from '../services/contract.js'
+import { contractFor, liveContract, leaseKindOf, leaseOwned, propertyName, readTenant } from '../services/contract.js'
 import { initialInventory, inventoryDataSchema, inventoryProgress, type InventoryData } from '../domain/inventory.js'
 import { renderInventoryPdf, type InventoryInput } from '../pdf/inventory.js'
 import { landlordName, personName, propertyAddress } from '../pdf/labels.js'
@@ -43,7 +43,7 @@ router.post('/leases/:id/inventories', async (req, res) => {
 
 async function inventoryInput(user: User, inv: Inventory): Promise<Omit<InventoryInput, 'photos'> & { photoIds: string[] }> {
   const lease = await leaseOwned(user.id, inv.leaseId)
-  const c = await contractFor(user, lease)
+  const c = await liveContract(user, lease)
   const data = inventoryDataSchema.parse(inv.data)
   const photoIds = [...(data.meters ?? []).map((m) => m.photoId), ...(data.rooms ?? []).flatMap((r) => r.items.flatMap((i) => i.photoIds ?? []))].filter((x): x is string => Boolean(x))
   return { kind: inv.kind as 'ENTRY' | 'EXIT', data, landlord: c.landlord, tenants: c.tenants, propertyAddress: propertyAddress(c.property), furnished: leaseKindOf(lease) !== 'VIDE', photoIds }
@@ -53,7 +53,7 @@ router.get('/inventories/:id', async (req, res) => {
   const user = req.user!
   const inv = await ownInventory(user.id, String(req.params.id))
   const lease = await leaseOwned(user.id, inv.leaseId)
-  const c = await contractFor(user, lease)
+  const c = await liveContract(user, lease)
   const data = inventoryDataSchema.parse(inv.data)
   res.json({
     success: true,
@@ -97,7 +97,7 @@ router.post('/inventories/:id/sign', async (req, res) => {
   // Chacun reçoit son exemplaire : le locataire (s'il a un email) et le bailleur.
   const what = `état des lieux ${inv.kind === 'EXIT' ? 'de sortie' : 'd’entrée'}`
   const mail = layout({ title: `Votre ${what}.`, paragraphs: ['Bonjour,', `Vous trouverez en pièce jointe l’${what} signé du logement situé ${input.propertyAddress}.`, 'Conservez-le : il sert de référence à la fin de la location.'] })
-  const recipients = [...new Set([...(await contractFor(user, lease)).tenants.map((t) => t.email).filter((e): e is string => Boolean(e)), user.email])]
+  const recipients = [...new Set([...(await liveContract(user, lease)).tenants.map((t) => t.email).filter((e): e is string => Boolean(e)), user.email])]
   for (const to of recipients) {
     await sendEmail({ to, subject: `${what[0].toUpperCase()}${what.slice(1)} signé`, ...mail, replyTo: user.email, attachments: [{ filename: `etat-des-lieux-${inv.kind === 'EXIT' ? 'sortie' : 'entree'}.pdf`, content: pdf }] }).catch((e) => console.error('Envoi de l’état des lieux impossible', e))
   }

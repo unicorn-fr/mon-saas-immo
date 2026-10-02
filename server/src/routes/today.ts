@@ -104,6 +104,8 @@ router.get('/today', async (req, res) => {
     } else if (r.type === 'INSURANCE' && r.dueDate <= in30) {
       const t = l.tenantIds[0] ? tenants.find((x) => x.id === l.tenantIds[0]) : null
       const expires = t ? readTenant(t).insurance?.expiresAt : null
+      // Attestation reçue et encore valable plus d'un mois : rien à demander.
+      if (expires && new Date(`${expires}T00:00:00Z`) > new Date(r.dueDate.getTime() + 30 * DAY)) continue
       tasks.push({ id: r.id, type: 'INSURANCE', tag: 'Assurance', tone: 'caramel', place, title: expires ? `L’attestation d’assurance de ${who} expire le ${short(new Date(`${expires}T00:00:00Z`))}` : `Demander l’attestation d’assurance de ${who}`, leaseId: l.id, reminderId: r.id })
     } else if (r.type === 'INVENTORY_ENTRY' && r.dueDate <= new Date(today.getTime() + 10 * DAY)) {
       const inv = inventories.find((i) => i.leaseId === l.id && i.kind === 'ENTRY')
